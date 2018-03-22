@@ -61,8 +61,8 @@ header_type nvme_sq_state_t {
     cq_qaddr		: 34;	// NVME CQ queue state address
     arm_lif		: 11;	// ARM Q LIF number
     arm_qtype		: 3;	// ARM Q LIF type (within the LIF)
-    arm_qid		: 24;	// ARM Q queue number (within the LIF)
-    arm_qaddr		: 34;	// ARM Q queue state address
+    arm_base_qid	: 24;	// ARM Base Q queue number (within the LIF)
+    arm_base_qaddr	: 34;	// ARM Base Q queue state address
     io_map_base_addr	: 34;	// IO map table base address (entry = base + (nsid * size))
     io_map_num_entries	: 16;	// Number of entries in the IO map table
     iob_ring_base_addr	: 34;	// IOB ring base address (free list of IOBs)
@@ -116,26 +116,46 @@ header_type arm_q_state_t {
     base_addr		: 64;	// Base address of queue entries
     entry_size		: 16;	// Size of each queue entry
     next_pc		: 28;	// Next program's PC
+    dst_lif		: 11;	// Destination LIF number
+    dst_qtype		: 3;	// Destination LIF type (within the LIF)
+    dst_qid		: 24;	// Destination queue number (within the LIF)
+    dst_qaddr		: 34;	// Destination queue state address
     intr_addr		: 32;	// MSI-X interrupt address
     intr_data		: 32;	// MSI-X interrupt data
     intr_en		: 1;	// 1 => Fire the MSI-X interrupt, 0 => don't fire
     phase		: 1;	// Phase bit
-    pad			: 210;	// Align to 64 bytes
+    iob_ring_base_addr	: 34;	// IOB ring base address (free list of IOBs)
+    pad			: 104;	// Align to 64 bytes
   }
 }
 
-// ARM Q is the same format as NVME CQ
 
 // Generic Ring State. Total size can be 64 bytes at most.
 header_type ring_state_t {
   fields {
     p_ndx	: 16;	// Producer Index
     c_ndx	: 16;	// Consumer Index
-    w_ndx	: 16;	// Working consumer index
+    wp_ndx	: 16;	// Working producer index
     num_entries	: 16;	// Number of queue entries (power of 2 of this value)
     base_addr	: 64;	// Base address of queue entries
     entry_size	: 16;	// Size of each queue entry
     pad		: 368;	// Align to 64 bytes
+  }
+}
+
+// Doorbell cleanup state
+header_type doorbell_cleanup_q_state_t {
+  fields {
+    p_ndx	: 16;	// Producer Index
+    c_ndx	: 16;	// Consumer Index
+    w_ndx	: 16;	// Working consumer index
+  }
+}
+
+// Queue push p_ndx data
+header_type qpush_pndx_data_t {
+  fields {
+    p_ndx	: 16;	// Producer Index
   }
 }
 
@@ -148,16 +168,14 @@ header_type seq_db_info_t {
     qaddr	: 34;	// Queue state address
   }
 }
+
+// IO Map table entry
 header_type io_map_entry_t {
   fields {
     entry_addr		: 64;	// Address of the IO map entry (points to itself)
     nsid		: 32;	// Namespace identifier
     vf_id		: 16;	// VF number
     dst_flags		: 32;	// Destination Flags (encryption, compression etc)
-    arm_lif		: 11;	// Destination LIF number
-    arm_qtype		: 3;	// Destination LIF type (within the LIF)
-    arm_qid		: 24;	// Destination queue number (within the LIF)
-    arm_qaddr		: 34;	// Destination queue state address
     r2n_lif		: 11;	// Destination LIF number
     r2n_qtype		: 3;	// Destination LIF type (within the LIF)
     r2n_qid		: 24;	// Destination queue number (within the LIF)
@@ -169,22 +187,30 @@ header_type io_map_entry_t {
     src_queue_id	: 32;	// ROCE source queue id
     ssd_handle		: 16;	// SSD handle to select NVME backend
     io_priority		: 8;	// I/O priority to select ring with the queue
-    pad			: 96;
+    pad			: 168;
   }
 }
 
+// IO context entry
 header_type io_ctx_entry_t {
   fields {
-    iob_addr		: 64;	// Base address of the R2N I/O buffer
-    nvme_data_len	: 32;	// Data length
     oper_status		: 8;	// Free/InUse/TimedOut/Punt2Arm/Error etc
+    iob_addr		: 34;	// Base address of the I/O buffer
+    nvme_data_len	: 32;	// Data length
     is_read		: 8;	// Whether it is read command
     is_remote		: 8;	// Whether destination is remote
     nvme_sq_qaddr	: 34;	// NVME VF SQ address for which this IOB was used
   }
 }
 
+// IO buffer address
+header_type iob_addr_t {
+  fields {
+    iob_addr		: 34;	// Base address of the I/O buffer
+  }
+}
 
+// Scratch metadata used only in P4 (mirrored in registers)
 header_type nvme_scratch_t {
   fields {
     data_len_xferred	: 32;	// Data length that is transferred
@@ -255,6 +281,13 @@ header_type nvme_kivec_sq_info_t {
   }
 }
 
+// header union with to_stage_3 and to_stage_4
+header_type nvme_kivec_iob_ring_t {
+  fields {
+    base_addr	: 34;		// IOB ring base address (free list of IOBs)
+  }
+}
+
 // header union with to_stage_5
 header_type nvme_kivec_prp_base_t {
   fields {
@@ -272,6 +305,7 @@ header_type nvme_kivec_arm_dst_t {
     arm_qaddr		: 34;	// ARM Q queue state address
   }
 }
+
 
 #define Q_STATE_COPY_INTRINSIC(q_state)			\
   modify_field(q_state.pc_offset, pc_offset);		\
@@ -319,8 +353,8 @@ header_type nvme_kivec_arm_dst_t {
   modify_field(q_state.cq_qaddr, cq_qaddr);			\
   modify_field(q_state.arm_lif, arm_lif);			\
   modify_field(q_state.arm_qtype, arm_qtype);			\
-  modify_field(q_state.arm_qid, arm_qid);			\
-  modify_field(q_state.arm_qaddr, arm_qaddr);			\
+  modify_field(q_state.arm_base_qid, arm_base_qid);		\
+  modify_field(q_state.arm_base_qaddr, arm_base_qaddr);		\
   modify_field(q_state.io_map_base_addr, io_map_base_addr);	\
   modify_field(q_state.io_map_num_entries, io_map_num_entries);	\
   modify_field(q_state.iob_ring_base_addr, iob_ring_base_addr);	\
@@ -357,10 +391,16 @@ header_type nvme_kivec_arm_dst_t {
   modify_field(q_state.base_addr, base_addr);		\
   modify_field(q_state.entry_size, entry_size);		\
   modify_field(q_state.next_pc, next_pc);		\
+  modify_field(q_state.dst_lif, dst_lif);		\
+  modify_field(q_state.dst_qtype, dst_qtype);		\
+  modify_field(q_state.dst_qid, dst_qid);		\
+  modify_field(q_state.dst_qaddr, dst_qaddr);		\
   modify_field(q_state.intr_addr, intr_addr);		\
   modify_field(q_state.intr_data, intr_data);		\
   modify_field(q_state.intr_en, intr_en);		\
   modify_field(q_state.phase, phase);			\
+  modify_field(q_state.iob_ring_base_addr,		\
+               iob_ring_base_addr);			\
 
 #define ARM_Q_STATE_COPY(q_state)			\
   ARM_Q_STATE_COPY_STAGE0(q_state)			\
@@ -370,7 +410,7 @@ header_type nvme_kivec_arm_dst_t {
 #define RING_STATE_COPY_STAGE0(ring_state)		\
   modify_field(ring_state.p_ndx, p_ndx);		\
   modify_field(ring_state.c_ndx, c_ndx);		\
-  modify_field(ring_state.w_ndx, w_ndx);		\
+  modify_field(ring_state.wp_ndx, wp_ndx);		\
   modify_field(ring_state.num_entries, num_entries);	\
   modify_field(ring_state.base_addr, base_addr);	\
   modify_field(ring_state.entry_size, entry_size);	\
@@ -378,6 +418,7 @@ header_type nvme_kivec_arm_dst_t {
 #define RING_STATE_COPY(ring)				\
   RING_STATE_COPY_STAGE0(ring)				\
   modify_field(ring.pad, pad);				\
+
 
 #define SEQ_DB_INFO_COPY(entry)				\
   modify_field(entry.lif, lif);				\
@@ -404,12 +445,15 @@ header_type nvme_kivec_arm_dst_t {
   modify_field(entry.pad, pad);				\
 
 #define IO_CTX_ENTRY_COPY(entry)			\
-  modify_field(entry.iob_addr, iob_addr);	\
+  modify_field(entry.iob_addr, iob_addr);		\
   modify_field(entry.nvme_data_len, nvme_data_len);	\
   modify_field(entry.oper_status, oper_status);		\
   modify_field(entry.is_read, is_read);			\
   modify_field(entry.is_remote, is_remote);		\
   modify_field(entry.nvme_sq_qaddr, nvme_sq_qaddr);	\
+
+#define IOB_ADDR_COPY(entry)				\
+  modify_field(entry.iob_addr, iob_addr);		\
 
 #define NVME_PRP_LIST_COPY(list)			\
   modify_field(list.entry0, entry0);			\
@@ -462,6 +506,9 @@ header_type nvme_kivec_arm_dst_t {
   modify_field(scratch.arm_qid, kivec.arm_qid);				\
   modify_field(scratch.arm_qaddr, kivec.arm_qaddr);			\
 
+#define NVME_KIVEC_IOB_RING_USE(scratch, kivec)				\
+  modify_field(scratch.base_addr, kivec.base_addr);	                \
+
 // PRP entry based data xfer marcos from host (for write command)
 // TODO: FIXME: In ASM, use min(remaining_len, PRP_DATA_XFER_SIZE)
 #define NVME_DATA_XFER_FROM_HOST(s2s_kivec, global_kivec, src_dma_cmd,	\
@@ -471,11 +518,11 @@ header_type nvme_kivec_arm_dst_t {
       (prp_entry != 0) and						\
       (scratch.data_len_xferred < global_kivec.nvme_data_len)) {	\
     DMA_COMMAND_MEM2MEM_FILL(src_dma_cmd, dst_dma_cmd, prp_entry,	\
-                             s2s_kivec.iob_addr +			\ 
+                             s2s_kivec.iob_addr +			\
                              IO_BUF_DATA_OFFSET +			\
-                             scratch.data_len_xferred,			\ 
+                             scratch.data_len_xferred,			\
                              0, 0, PRP_DATA_XFER_SIZE, 0, 0, 0)		\
-    modify_field(nvme_scratch.data_len_xferred,				\ 
+    modify_field(nvme_scratch.data_len_xferred,				\
                  nvme_scratch.data_len_xferred + PRP_DATA_XFER_SIZE);	\
   }									\
 
@@ -488,34 +535,41 @@ header_type nvme_kivec_arm_dst_t {
       (prp_entry != 0) and						\
       (scratch.data_len_xferred < global_kivec.nvme_data_len)) {	\
     DMA_COMMAND_MEM2MEM_FILL(src_dma_cmd, dst_dma_cmd, 			\
-                             s2s_kivec.iob_addr +			\ 
+                             s2s_kivec.iob_addr +			\
                              IO_BUF_DATA_OFFSET +			\
-                             scratch.data_len_xferred,			\ 
+                             scratch.data_len_xferred,			\
                              prp_entry,					\
                              0, 0, PRP_DATA_XFER_SIZE, 0, 0, 0)		\
-    modify_field(nvme_scratch.data_len_xferred,				\ 
+    modify_field(nvme_scratch.data_len_xferred,				\
                  nvme_scratch.data_len_xferred + PRP_DATA_XFER_SIZE);	\
   }									\
 
 
-
+// Dummy function pointers for P4
 #define allocate_iob_start		0x81000000
 #define pop_sq_start			0x81010000
 #define handle_cmd_start		0x81020000
-#define process_io_map_start		0x81030000
-#define handle_no_prp_list_start	0x81040000
-#define handle_prp_list0_start		0x81050000
-#define handle_prp_list1_start		0x81060000
-#define save_io_ctx_start		0x81070000
-#define process_dst_seq_start		0x81080000
-#define push_arm_q_start		0x81090000
-#define push_dst_seq_q_start		0x810A0000
-#define handle_r2n_wqe_start		0x810B0000
-#define process_be_status_start		0x810C0000
-#define process_io_ctx_start		0x810D0000
-#define send_read_data_start		0x810E0000
-#define lookup_sq_start			0x810F0000
-#define push_cq_start			0x81100000
+#define send_cmd_free_iob_start		0x81030000
+#define process_io_map_start		0x81040000
+#define handle_no_prp_list_start	0x81050000
+#define handle_prp_list0_start		0x81060000
+#define handle_prp_list1_start		0x81070000
+#define save_io_ctx_start		0x81080000
+#define process_dst_seq_start		0x81090000
+#define push_arm_q_start		0x810A0000
+#define push_dst_seq_q_start		0x810B0000
+#define handle_r2n_wqe_start		0x810C0000
+#define process_be_status_start		0x810D0000
+#define process_io_ctx_start		0x810E0000
+#define send_read_data_start		0x810F0000
+#define lookup_sq_start			0x81100000
+#define push_cq_start			0x81110000
+#define send_sta_free_iob_start		0x81120000
+#define cleanup_iob_start		0x81130000
+#define cleanup_io_ctx_start		0x81140000
+#define free_iob_start			0x81150000
+#define timeout_iob_skip_start		0x81160000
+#define timeout_io_ctx_start		0x81170000
 
 
 #endif     // STORAGE_NVME_P4_HDR_H

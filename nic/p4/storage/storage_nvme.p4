@@ -10,26 +10,36 @@
 #define tx_table_s1_t0		s1_tbl0
 #define tx_table_s2_t0		s2_tbl0
 #define tx_table_s3_t0		s3_tbl0
+#define tx_table_s3_t1		s3_tbl1
 #define tx_table_s4_t0		s4_tbl0
 #define tx_table_s5_t0		s5_tbl0
 #define tx_table_s6_t0		s6_tbl0
 #define tx_table_s7_t0		s7_tbl0
-#define tx_table_s7_t1		s7_tbl1
 
 #define tx_table_s0_t0_action	check_sq_state
 #define tx_table_s0_t0_action1	pop_r2n_sq
+#define tx_table_s0_t0_action2	pop_arm_q
 
 #define tx_table_s1_t0_action	allocate_iob
 #define tx_table_s1_t0_action1	handle_r2n_wqe
+#define tx_table_s1_t0_action2	free_iob_addr
+#define tx_table_s1_t0_action3	timeout_iob_addr
 
 #define tx_table_s2_t0_action	pop_sq
 #define tx_table_s2_t0_action1	process_be_status
+#define tx_table_s2_t0_action2	cleanup_iob
+#define tx_table_s2_t0_action3	timeout_iob_skip
 
 #define tx_table_s3_t0_action	handle_cmd
-#define tx_table_s3_t0_action1	process_io_ctx
+#define tx_table_s3_t0_action1	send_cmd_free_iob
+#define tx_table_s3_t0_action2	process_io_ctx
+#define tx_table_s3_t0_action3	cleanup_io_ctx
+#define tx_table_s3_t0_action4	timeout_io_ctx
+#define tx_table_s3_t1_action	save_io_ctx
 
 #define tx_table_s4_t0_action	process_io_map
 #define tx_table_s4_t0_action1	send_read_data
+#define tx_table_s4_t0_action2	free_iob
 
 #define tx_table_s5_t0_action	handle_no_prp_list
 #define tx_table_s5_t0_action1	lookup_sq
@@ -38,7 +48,8 @@
 #define tx_table_s6_t0_action1	push_cq
 
 #define tx_table_s7_t0_action	push_arm_q
-#define tx_table_s7_t1_action	push_dst_seq_q
+#define tx_table_s7_t0_action1	push_dst_seq_q
+#define tx_table_s7_t0_action2	send_sta_free_iob
 
 #include "../common-p4+/common_txdma.p4"
 
@@ -61,6 +72,10 @@ metadata nvme_kivec_global_t nvme_kivec_global;
 // To stage K+I vectors
 @pragma pa_header_union ingress to_stage_3
 metadata nvme_kivec_sq_info_t nvme_kivec_sq_info;
+@pragma pa_header_union ingress to_stage_3
+metadata nvme_kivec_iob_ring_t nvme_kivec_iob_ring3;
+@pragma pa_header_union ingress to_stage_4
+metadata nvme_kivec_iob_ring_t nvme_kivec_iob_ring4;
 @pragma pa_header_union ingress to_stage_5
 metadata nvme_kivec_prp_base_t nvme_kivec_prp_base;
 @pragma pa_header_union ingress to_stage_6
@@ -79,6 +94,13 @@ metadata storage_doorbell_data_t qpop_doorbell_data;
 metadata storage_pci_data_t pci_push_data;
 @pragma dont_trim
 metadata storage_pci_data_t pci_intr_data;
+
+// Doorbell cleanup Qstate
+@pragma dont_trim
+metadata doorbell_cleanup_q_state_t doorbell_cleanup_q_state;
+
+@pragma dont_trim
+metadata qpush_pndx_data_t qpush_pndx_data;
 
 // Keep the WQEs/commands that occupy full flit aligned at flit boundaries
 
@@ -252,6 +274,9 @@ metadata nvme_kivec_global_t nvme_kivec_global_scratch;
 metadata nvme_kivec_sq_info_t nvme_kivec_sq_info_scratch;
 
 @pragma scratch_metadata
+metadata nvme_kivec_iob_ring_t nvme_kivec_iob_ring_scratch;
+
+@pragma scratch_metadata
 metadata nvme_kivec_prp_base_t nvme_kivec_prp_base_scratch;
 
 @pragma scratch_metadata
@@ -274,6 +299,9 @@ metadata r2n_wqe_t r2n_wqe_scratch;
 
 @pragma scratch_metadata
 metadata io_ctx_entry_t io_ctx_scratch;
+
+@pragma scratch_metadata
+metadata iob_addr_t iob_addr_scratch;
 
 
 /*****************************************************************************
@@ -300,7 +328,7 @@ action check_sq_state(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                       total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                       num_entries, base_addr, entry_size, next_pc, vf_id, 
                       sq_id, cq_lif, cq_qtype, cq_qid, cq_qaddr,
-                      arm_lif, arm_qtype, arm_qid, arm_qaddr,
+                      arm_lif, arm_qtype, arm_base_qid, arm_base_qaddr,
                       io_map_base_addr, io_map_num_entries, iob_ring_base_addr,
                       pad) {
 
@@ -337,7 +365,7 @@ action check_sq_state(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                 error flag is set in the  K+I vector part of the PHV.
  *****************************************************************************/
 
-action allocate_iob(p_ndx, c_ndx, w_ndx, num_entries, base_addr, entry_size, 
+action allocate_iob(p_ndx, c_ndx, wp_ndx, num_entries, base_addr, entry_size, 
                     pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -365,15 +393,14 @@ action allocate_iob(p_ndx, c_ndx, w_ndx, num_entries, base_addr, entry_size,
                  iob_ring_state_scratch.base_addr + 
                  (iob_ring_state_scratch.c_ndx * 
                   iob_ring_state_scratch.entry_size));
-    modify_field(io_ctx.oper_status, IO_CTX_OPER_STATUS_IN_USE);
 
     // Increment the consumer index. In ASM this should be a table write.
-    QUEUE_POP(iob_ring_state_scratch)
+    _QUEUE_PUSH(iob_ring_state_scratch.c_ndx, iob_ring_state_scratch.num_entries)
 
   }
 
   // Load the table and program for processing the SQ entry in the next stage
-  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, nvme_kivec_global.src_qaddr,
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, nvme_kivec_global_scratch.src_qaddr,
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, pop_sq_start)
 }
 
@@ -388,7 +415,7 @@ action pop_sq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
               total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
               num_entries, base_addr, entry_size, next_pc, vf_id, 
               sq_id, cq_lif, cq_qtype, cq_qid, cq_qaddr,
-              arm_lif, arm_qtype, arm_qid, arm_qaddr,
+              arm_lif, arm_qtype, arm_base_qid, arm_base_qaddr,
               io_map_base_addr, io_map_num_entries, iob_ring_base_addr,
               pad) {
 
@@ -398,16 +425,6 @@ action pop_sq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   // Store the K+I vector into scratch to get the K+I generated correctly
   NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
   NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
-
-  // Store fields in the K+I vector
-  modify_field(nvme_kivec_arm_dst6.arm_lif, arm_lif);
-  modify_field(nvme_kivec_arm_dst6.arm_qtype, arm_qtype);
-  modify_field(nvme_kivec_arm_dst6.arm_qid, arm_qid);
-  modify_field(nvme_kivec_arm_dst6.arm_qaddr, arm_qaddr);
-  modify_field(nvme_kivec_arm_dst7.arm_lif, arm_lif);
-  modify_field(nvme_kivec_arm_dst7.arm_qtype, arm_qtype);
-  modify_field(nvme_kivec_arm_dst7.arm_qid, arm_qid);
-  modify_field(nvme_kivec_arm_dst7.arm_qaddr, arm_qaddr);
 
   // If non starter (IOB is not allocated, so clear doorbell and exit)
   if (nvme_kivec_global_scratch.oper_status == IO_CTX_OPER_STATUS_NON_STARTER) {
@@ -421,18 +438,45 @@ action pop_sq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   if (QUEUE_EMPTY(nvme_sq_state_scratch)) {
     // Don't dequeue
     
+    // Store fields in the K+I vector
+    modify_field(nvme_kivec_t0_s2s.dst_lif, nvme_sq_state_scratch.arm_lif);
+    modify_field(nvme_kivec_t0_s2s.dst_qtype, nvme_sq_state_scratch.arm_qtype);
+    modify_field(nvme_kivec_t0_s2s.dst_qid, 
+                 nvme_sq_state_scratch.arm_base_qid + ARM_QID_OFFSET_CMD_FREE_IOB_Q);
+    modify_field(nvme_kivec_t0_s2s.dst_qaddr, 
+                 ARM_LIF_QADDR(nvme_sq_state_scratch.arm_base_qaddr, 
+                               ARM_QID_OFFSET_CMD_FREE_IOB_Q));
+
     // Evaluate and clear the doorbell if p_ndx == c_ndx
     //QUEUE_POP_DOORBELL_UPDATE
 
-    // TODO: Go through stages and push IOB to ARM
+    // Load the table and program for reading the arm queue
+    // state in the next stage to free the IOB via P4+ program
+    CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
+                          ARM_LIF_QADDR(nvme_sq_state_scratch.arm_base_qaddr, 
+                                        ARM_QID_OFFSET_CMD_FREE_IOB_Q),
+                          STORAGE_DEFAULT_TBL_LOAD_SIZE, send_cmd_free_iob_start)
   } else {
 
     // Increment the consumer index. In ASM this should be a table write.
     QUEUE_POP(nvme_sq_state_scratch)
    
-
     // Store fields in the K+I vector
-    modify_field(nvme_kivec_t0_s2s.w_ndx, w_ndx);
+    modify_field(nvme_kivec_arm_dst6.arm_lif, nvme_sq_state_scratch.arm_lif);
+    modify_field(nvme_kivec_arm_dst6.arm_qtype, nvme_sq_state_scratch.arm_qtype);
+    modify_field(nvme_kivec_arm_dst6.arm_qid, 
+                 nvme_sq_state_scratch.arm_base_qid + ARM_QID_OFFSET_SQ);
+    modify_field(nvme_kivec_arm_dst6.arm_qaddr,
+                 ARM_LIF_QADDR(nvme_sq_state_scratch.arm_base_qaddr, 
+                               ARM_QID_OFFSET_SQ));
+    modify_field(nvme_kivec_arm_dst7.arm_lif, arm_lif);
+    modify_field(nvme_kivec_arm_dst7.arm_qtype, arm_qtype);
+    modify_field(nvme_kivec_arm_dst7.arm_qid,
+                 nvme_sq_state_scratch.arm_base_qid + ARM_QID_OFFSET_SQ);
+    modify_field(nvme_kivec_arm_dst7.arm_qaddr,
+                 ARM_LIF_QADDR(nvme_sq_state_scratch.arm_base_qaddr, 
+                               ARM_QID_OFFSET_SQ));
+    modify_field(nvme_kivec_t0_s2s.w_ndx, nvme_sq_state_scratch.w_ndx);
 
     // Load the table and program for processing the queue entry in the next stage
     CAPRI_LOAD_TABLE_IDX(common_te0_phv,
@@ -441,7 +485,73 @@ action pop_sq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                          nvme_sq_state_scratch.entry_size,
                          nvme_sq_state_scratch.entry_size,
                          handle_cmd_start)
+
+    // Load another table for saving the oper_status in the the I/O context 
+    // in the next stage
+    CAPRI_LOAD_TABLE_ADDR(common_te1_phv, nvme_kivec_t0_s2s.iob_addr + IO_BUF_IO_CTX_OFFSET,
+                          STORAGE_DEFAULT_TBL_LOAD_SIZE, save_io_ctx_start)
   }
+}
+
+/*****************************************************************************
+ *  send_cmd_free_iob: Post a message to the P4+ program to free the IOB 
+ *                     from the NVME command handling path. 
+ *****************************************************************************/
+
+@pragma little_endian p_ndx c_ndx
+action send_cmd_free_iob(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
+                         total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
+                         num_entries, base_addr, entry_size, next_pc, 
+                         dst_lif, dst_qtype, dst_qid, dst_qaddr, intr_addr, 
+                         intr_data, intr_en, phase, iob_ring_base_addr, pad) {
+
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  ARM_Q_STATE_COPY(arm_q_state_scratch)
+
+  // Check for queue full condition before pushing
+  if (QUEUE_FULL(arm_q_state_scratch)) {
+
+    // Exit pipeline here without error handling for now. This event of 
+    // destination queue being full should never happen with constraints 
+    // imposed by the control path programming.
+    exit();
+
+  } 
+
+  // DMA the I/O context (which contains the I/O buffer address etc.) to ARM
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_1,
+                           arm_q_state_scratch.base_addr +
+                           (arm_q_state_scratch.p_ndx * arm_q_state_scratch.entry_size),
+                           PHV_FIELD_OFFSET(io_ctx.iob_addr),
+                           PHV_FIELD_OFFSET(io_ctx.iob_addr),
+                           0, 0, 0, 0)
+
+  // Push the entry to the queue.  
+  QUEUE_PUSH(arm_q_state_scratch)
+
+  // Form the doorbell and setup the DMA command to push the entry by
+  // incrementing p_ndx
+  modify_field(doorbell_addr_scratch.addr,
+               STORAGE_DOORBELL_ADDRESS(nvme_kivec_t0_s2s.dst_qtype, 
+                                        nvme_kivec_t0_s2s.dst_lif,
+                                        DOORBELL_SCHED_WR_SET, 
+                                        DOORBELL_UPDATE_NONE));
+  modify_field(qpush_doorbell_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
+
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_2, 
+                           0,
+                           PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                           PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                           0, 0, 0, 0)
+
+  // Fence the DMA command to ring the interrupt
+
+  // Exit the pipeline here 
 }
 
 
@@ -489,7 +599,6 @@ action handle_cmd(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
       (psdt != 0) or
       (LB_SIZE(nlb + 1) > MAX_ASSIST_SIZE)) {
     modify_field(nvme_kivec_t0_s2s.punt_to_arm, 1);
-    modify_field(io_ctx.oper_status, IO_CTX_OPER_STATUS_PUNT);
   }
 
   // NVMe PRP list download determination (AND of all these conditions)
@@ -538,6 +647,34 @@ action handle_cmd(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
                        IO_MAP_ENTRY_SIZE_LOG2,
                        STORAGE_DEFAULT_TBL_LOAD_SIZE,
                        process_io_map_start)
+}
+
+
+/*****************************************************************************
+ *  save_io_ctx: Save the oper_status in I/O context via a locked table write
+ *****************************************************************************/
+
+action save_io_ctx(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+                   nvme_sq_qaddr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  IO_CTX_ENTRY_COPY(io_ctx_scratch)
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t1_s2s_scratch, nvme_kivec_t1_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+
+  // Set the oper_status to completed in the K+I vector and write it to the table.
+  modify_field(io_ctx_scratch.oper_status, IO_CTX_OPER_STATUS_IN_PROGRESS);
+  modify_field(nvme_kivec_global.oper_status, IO_CTX_OPER_STATUS_IN_PROGRESS);
+  // In ASM, table write
+#if 0
+  tblwr	d.oper_status, IO_CTX_OPER_STATUS_IN_PROGRESS
+#endif
+
+
+  // Table loading is done by program handling table 0 config
+
 }
 
 
@@ -765,22 +902,20 @@ action process_dst_seq(lif, qtype, qid, qaddr) {
                            PHV_FIELD_OFFSET(io_ctx.nvme_sq_qaddr),
                            0, 0, 0, 0)
 
-  // Load the table and program for reading the destination sequencer queue
-  // state in the next stage
-  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, nvme_kivec_arm_dst6.arm_qaddr, 
-                        STORAGE_DEFAULT_TBL_LOAD_SIZE, push_arm_q_start)
-
   // If punt to arm is not set, load the sequencer destination queue state
   // for pushing the sequencer R2N WQE
   if (nvme_kivec_t0_s2s.punt_to_arm == 0) {
-    // Copy over the Stage 2 Stage data from table 0 to table 1
-    NVME_KIVEC_S2S_USE(nvme_kivec_t1_s2s, nvme_kivec_t0_s2s)
-
     // Load the table and program for reading the destination sequencer queue
     // state in the next stage
-    CAPRI_LOAD_TABLE_ADDR(common_te1_phv, qaddr, STORAGE_DEFAULT_TBL_LOAD_SIZE, 
+    CAPRI_LOAD_TABLE_ADDR(common_te0_phv, qaddr, STORAGE_DEFAULT_TBL_LOAD_SIZE, 
                           push_dst_seq_q_start)
+  } else {
+    // Load the table and program for reading the destination arm queue
+    // state in the next stage for punting the WQE to ARM
+    CAPRI_LOAD_TABLE_ADDR(common_te0_phv, nvme_kivec_arm_dst6.arm_qaddr,
+                          STORAGE_DEFAULT_TBL_LOAD_SIZE, push_arm_q_start)
   }
+
 }
 
 /*****************************************************************************
@@ -799,7 +934,8 @@ action process_dst_seq(lif, qtype, qid, qaddr) {
 action push_arm_q(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                   total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                   num_entries, base_addr, entry_size, next_pc, 
-                  intr_addr, intr_data, intr_en, phase, pad) {
+                  dst_lif, dst_qtype, dst_qid, dst_qaddr, intr_addr, 
+                  intr_data, intr_en, phase, iob_ring_base_addr, pad) {
 
 
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -821,7 +957,7 @@ action push_arm_q(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   } 
 
   // DMA the I/O context (which contains the I/O buffer address etc.) to ARM
-  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_14,
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_12,
                            arm_q_state_scratch.base_addr +
                            (arm_q_state_scratch.p_ndx * arm_q_state_scratch.entry_size),
                            PHV_FIELD_OFFSET(io_ctx.iob_addr),
@@ -835,7 +971,7 @@ action push_arm_q(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   if (arm_q_state_scratch.intr_en == 1) {
     modify_field(pci_intr_addr_scratch.addr, arm_q_state_scratch.intr_addr);
     modify_field(pci_intr_data.data, arm_q_state_scratch.intr_data);
-    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_15, 
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_13, 
                              0,
                              PHV_FIELD_OFFSET(pci_intr_data.data),
                              PHV_FIELD_OFFSET(pci_intr_data.data),
@@ -860,7 +996,7 @@ action push_dst_seq_q(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 
 
   // Store the K+I vector into scratch to get the K+I generated correctly
-  NVME_KIVEC_S2S_USE(nvme_kivec_t1_s2s_scratch, nvme_kivec_t1_s2s)
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
   NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
   NVME_KIVEC_ARM_DST_USE(nvme_kivec_arm_dst_scratch, nvme_kivec_arm_dst7)
 
@@ -891,8 +1027,8 @@ action push_dst_seq_q(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
     // Form the doorbell and setup the DMA command to push the entry by
     // incrementing p_ndx
     modify_field(doorbell_addr_scratch.addr,
-                 STORAGE_DOORBELL_ADDRESS(nvme_kivec_t1_s2s.dst_qtype, 
-                                          nvme_kivec_t1_s2s.dst_lif,
+                 STORAGE_DOORBELL_ADDRESS(nvme_kivec_t0_s2s.dst_qtype, 
+                                          nvme_kivec_t0_s2s.dst_lif,
                                           DOORBELL_SCHED_WR_SET, 
                                           DOORBELL_UPDATE_NONE));
     modify_field(qpush_doorbell_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
@@ -1037,7 +1173,7 @@ action process_be_status(time_us, be_status, is_q0, be_rsvd, r2n_buf_handle,
  *                     back to host.
  *****************************************************************************/
 
-action process_io_ctx(iob_addr, nvme_data_len, oper_status, is_read, is_remote,
+action process_io_ctx(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
                       nvme_sq_qaddr) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -1047,20 +1183,29 @@ action process_io_ctx(iob_addr, nvme_data_len, oper_status, is_read, is_remote,
   NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
   NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
 
-  // Form the oper status in the K+I vector 
-  if ((nvme_kivec_global_scratch.oper_status != IO_CTX_OPER_STATUS_BE_ERROR) and
-      (io_ctx_scratch.oper_status != IO_CTX_OPER_STATUS_TIMED_OUT)) {
-    modify_field(nvme_kivec_global.oper_status, IO_CTX_OPER_STATUS_COMPLETED);
+  // If I/O is not in progress drop the PHV
+  if (io_ctx_scratch.oper_status != IO_CTX_OPER_STATUS_IN_PROGRESS) {
+    exit();
   }
 
-  // DMA the Operation status. Keep it as the last DMA command so that the ARM
-  // sees the update after the I/O is truly complete.
-  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_15, 
-                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_IO_CTX_OFFSET +
-                           IO_CTX_ENTRY_OPER_STATUS_OFFSET,
-                           PHV_FIELD_OFFSET(nvme_kivec_global.oper_status),
-                           PHV_FIELD_OFFSET(nvme_kivec_global.oper_status),
-                           0, 0, 0, 0)
+  // Set the oper_status to completed in the K+I vector and write it to the table.
+  // In the event of backend error, exit the pipeline and let the ARM handle it.
+  if (nvme_kivec_global_scratch.oper_status != IO_CTX_OPER_STATUS_BE_ERROR) {
+    modify_field(nvme_kivec_global.oper_status, IO_CTX_OPER_STATUS_COMPLETED);
+    modify_field(io_ctx_scratch.oper_status, IO_CTX_OPER_STATUS_COMPLETED);
+    // In ASM, table write
+#if 0
+    tblwr	d.oper_status, IO_CTX_OPER_STATUS_COMPLETED
+#endif
+  } else {
+    modify_field(nvme_kivec_global.oper_status, IO_CTX_OPER_STATUS_BE_ERROR);
+    modify_field(io_ctx_scratch.oper_status, IO_CTX_OPER_STATUS_BE_ERROR);
+    // In ASM, table write
+#if 0
+    tblwr	d.oper_status, IO_CTX_OPER_STATUS_BE_ERROR
+#endif
+    exit();
+  }
 
   // Store the NVME SQ address as the destination (for now) in the K+I vector 
   // This will be used to derive the actual destination CQ with a lookup later
@@ -1130,7 +1275,7 @@ action lookup_sq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                  total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                  num_entries, base_addr, entry_size, next_pc, vf_id, 
                  sq_id, cq_lif, cq_qtype, cq_qid, cq_qaddr,
-                 arm_lif, arm_qtype, arm_qid, arm_qaddr,
+                 arm_lif, arm_qtype, arm_base_qid, arm_base_qaddr,
                  io_map_base_addr, io_map_num_entries, iob_ring_base_addr,
                  pad) {
 
@@ -1145,6 +1290,22 @@ action lookup_sq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 
   // Store the c_ndx in the NVME status as SQ head
   modify_field(nvme_sta.sq_head, nvme_sq_state_scratch.c_ndx);
+
+  // Store fields in the K+I vector
+  modify_field(nvme_kivec_arm_dst6.arm_lif, arm_lif);
+  modify_field(nvme_kivec_arm_dst6.arm_qtype, arm_qtype);
+  modify_field(nvme_kivec_arm_dst6.arm_qid, 
+               nvme_sq_state_scratch.arm_base_qid + ARM_QID_OFFSET_STA_FREE_IOB_Q);
+  modify_field(nvme_kivec_arm_dst6.arm_qaddr,
+               ARM_LIF_QADDR(nvme_sq_state_scratch.arm_base_qaddr, 
+                             ARM_QID_OFFSET_STA_FREE_IOB_Q));
+  modify_field(nvme_kivec_arm_dst7.arm_lif, arm_lif);
+  modify_field(nvme_kivec_arm_dst7.arm_qtype, arm_qtype);
+  modify_field(nvme_kivec_arm_dst7.arm_qid,
+               nvme_sq_state_scratch.arm_base_qid + ARM_QID_OFFSET_STA_FREE_IOB_Q);
+  modify_field(nvme_kivec_arm_dst7.arm_qaddr,
+               ARM_LIF_QADDR(nvme_sq_state_scratch.arm_base_qaddr, 
+                             ARM_QID_OFFSET_STA_FREE_IOB_Q));
 
   // Load the NVME CQ to push the NVME status in the next stage
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, nvme_sq_state_scratch.cq_qaddr, 
@@ -1166,6 +1327,7 @@ action push_cq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   // Store the K+I vector into scratch to get the K+I generated correctly
   NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
   NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+  NVME_KIVEC_ARM_DST_USE(nvme_kivec_arm_dst_scratch, nvme_kivec_arm_dst6)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   NVME_CQ_STATE_COPY(nvme_cq_state_scratch)
@@ -1184,7 +1346,7 @@ action push_cq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   } else {
 
     // DMA the NVME status entry to the CQ ring buffer
-    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_13,
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_5,
                              nvme_cq_state_scratch.base_addr +
                              (nvme_cq_state_scratch.p_ndx * nvme_cq_state_scratch.entry_size),
                              PHV_FIELD_OFFSET(nvme_sta.cspec),
@@ -1203,7 +1365,7 @@ action push_cq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
     if (nvme_cq_state_scratch.intr_en == 1) {
       modify_field(pci_intr_addr_scratch.addr, nvme_cq_state_scratch.intr_addr);
       modify_field(pci_intr_data.data, nvme_cq_state_scratch.intr_data);
-      DMA_COMMAND_PHV2MEM_FILL(dma_p2m_14, 
+      DMA_COMMAND_PHV2MEM_FILL(dma_p2m_6, 
                                0,
                                PHV_FIELD_OFFSET(pci_intr_data.data),
                                PHV_FIELD_OFFSET(pci_intr_data.data),
@@ -1211,10 +1373,414 @@ action push_cq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
       // Fence the DMA command to set the interrupt
     }
 
-    // Exit the pipeline here 
+    // Load the table and program for reading the destination arm queue
+    // state in the next stage for sending command to free the IOB
+    CAPRI_LOAD_TABLE_ADDR(common_te0_phv, nvme_kivec_arm_dst6.arm_qaddr,
+                          STORAGE_DEFAULT_TBL_LOAD_SIZE, send_sta_free_iob_start)
   }
+}
+
+/*****************************************************************************
+ *  send_sta_free_iob: Post a message to the P4+ program to free the IOB 
+ *                     from the NVME status handling path. 
+ *****************************************************************************/
+
+@pragma little_endian p_ndx c_ndx
+action send_sta_free_iob(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
+                         total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
+                         num_entries, base_addr, entry_size, next_pc, 
+                         dst_lif, dst_qtype, dst_qid, dst_qaddr, intr_addr, 
+                         intr_data, intr_en, phase, iob_ring_base_addr, pad) {
+
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+  NVME_KIVEC_ARM_DST_USE(nvme_kivec_arm_dst_scratch, nvme_kivec_arm_dst7)
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  ARM_Q_STATE_COPY(arm_q_state_scratch)
+
+  // Check for queue full condition before pushing
+  if (QUEUE_FULL(arm_q_state_scratch)) {
+
+    // Exit pipeline here without error handling for now. This event of 
+    // destination queue being full should never happen with constraints 
+    // imposed by the control path programming.
+    exit();
+
+  } 
+
+  // DMA the I/O context (which contains the I/O buffer address etc.) to ARM
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_7,
+                           arm_q_state_scratch.base_addr +
+                           (arm_q_state_scratch.p_ndx * arm_q_state_scratch.entry_size),
+                           PHV_FIELD_OFFSET(io_ctx.iob_addr),
+                           PHV_FIELD_OFFSET(io_ctx.iob_addr),
+                           0, 0, 0, 0)
+
+  // Push the entry to the queue.  
+  QUEUE_PUSH(arm_q_state_scratch)
+
+  // Form the doorbell and setup the DMA command to push the entry by
+  // incrementing p_ndx
+  modify_field(doorbell_addr_scratch.addr,
+               STORAGE_DOORBELL_ADDRESS(nvme_kivec_t0_s2s.dst_qtype, 
+                                        nvme_kivec_t0_s2s.dst_lif,
+                                        DOORBELL_SCHED_WR_SET, 
+                                        DOORBELL_UPDATE_NONE));
+  modify_field(qpush_doorbell_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
+
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_8, 
+                           0,
+                           PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                           PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                           0, 0, 0, 0)
+
+  // Fence the DMA command to ring the interrupt
+
+  // Exit the pipeline here 
 }
 
 /*****************************************************************************
  * Storage Tx NVME initiator status processing END
  *****************************************************************************/
+
+/*****************************************************************************
+ * Storage Tx ARM LIF processing BEGIN
+ *****************************************************************************/
+
+/*****************************************************************************
+ *
+ *  ARM Queues and their handlers (Qid 0 is not handled by P4+):	
+ *	Qid	QName		From		To
+ *	0	Submission Q	NVME Cmd P4+	ARM
+ *	1	Completion Q	ARM		NVME Comp xfer P4+
+ *	2	Timeout Q	ARM		Timeout handler P4+
+ *	3	Free IOB Q 	NVME Cmd P4+	Free IOB handler P4+
+ *	4	Free IOB Q 	NVME Sta P4+	Free IOB handler P4+
+ *	5	Free IOB Q 	ARM		Free IOB handler P4+
+ *         
+ *****************************************************************************/
+
+/*****************************************************************************
+ *  pop_arm_q: Pop the ARM queue to see if there is some activity queued by
+ *             ARM or NVME command/status handling P4+ programs. This is a
+ *             common pop function with next_pc determining the next action.
+ *****************************************************************************/
+
+@pragma little_endian p_ndx c_ndx
+action pop_arm_q(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
+                 total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
+                 num_entries, base_addr, entry_size, next_pc, 
+                 dst_lif, dst_qtype, dst_qid, dst_qaddr, intr_addr, 
+                 intr_data, intr_en, phase, iob_ring_base_addr, pad) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  ARM_Q_STATE_COPY_STAGE0(arm_q_state_scratch)
+
+  // If queue is empty exit
+  if (QUEUE_EMPTY(q_state_scratch)) {
+    // Evaluate and clear the doorbell if p_ndx == c_ndx
+    //QUEUE_POP_DOORBELL_UPDATE
+
+    exit();
+  } else {
+    // Increment the working consumer index. In ASM this should be a table write.
+    QUEUE_POP(q_state_scratch)
+   
+    // In ASM, derive these from the K+I for stage 0
+    modify_field(nvme_kivec_global.src_qaddr, 0);
+    modify_field(nvme_kivec_global.src_lif, 0);
+    modify_field(nvme_kivec_global.src_qtype, 0);
+    modify_field(nvme_kivec_global.src_qid, 0);
+
+    // Store fields needed in the K+I vector
+    modify_field(nvme_kivec_t0_s2s.w_ndx, w_ndx);
+    modify_field(nvme_kivec_t0_s2s.dst_lif, dst_lif);
+    modify_field(nvme_kivec_t0_s2s.dst_qtype, dst_qtype);
+    modify_field(nvme_kivec_t0_s2s.dst_qid, dst_qid);
+    modify_field(nvme_kivec_t0_s2s.dst_qaddr, dst_qaddr);
+    modify_field(nvme_kivec_iob_ring3.base_addr, 
+                 iob_ring_base_addr);
+    modify_field(nvme_kivec_iob_ring4.base_addr, 
+                 iob_ring_base_addr);
+   
+
+    // Load the table and program for processing the queue entry in the next stage
+    CAPRI_LOAD_TABLE_IDX(common_te0_phv,
+                         q_state_scratch.base_addr,
+                         q_state_scratch.w_ndx,
+                         q_state_scratch.entry_size,
+                         q_state_scratch.entry_size,
+                         q_state_scratch.next_pc)
+  }
+}
+
+/*****************************************************************************
+ *  free_iob_addr: Get the address of the IOB that needs to be freed
+ *****************************************************************************/
+
+action free_iob_addr(iob_addr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  IOB_ADDR_COPY(iob_addr_scratch)
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+
+  // Save the IOB address into K+I vector and into PHV
+  modify_field(nvme_kivec_t0_s2s.iob_addr, iob_addr_scratch.iob_addr);
+  modify_field(io_ctx.iob_addr, iob_addr_scratch.iob_addr);
+
+  // Load the IOB for the next stage to cleanup
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, iob_addr_scratch.iob_addr,
+                        STORAGE_DEFAULT_TBL_LOAD_SIZE, cleanup_iob_start)
+}
+
+/*****************************************************************************
+ *  cleanup_iob: Cleanup the I/O buffer by issuing DMA commands to reset the
+ *               various sequencer doorbells.
+ *****************************************************************************/
+
+action cleanup_iob(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+                   nvme_sq_qaddr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  IO_CTX_ENTRY_COPY(io_ctx_scratch)
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+
+  // Form the fields needed to be cleaned up in the doorbell q_state
+  // in the PHV
+  modify_field(doorbell_cleanup_q_state.p_ndx, 1);
+  modify_field(doorbell_cleanup_q_state.c_ndx, 0);
+  modify_field(doorbell_cleanup_q_state.w_ndx, 0);
+
+  // Issue PHV2MEM DMA commands to cleanup the queue states of various doorbells
+ 
+  // Sequencer for Barco XTS encryption doorbell
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_1,
+                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
+                           IO_BUF_SEQ_BARCO_XTS_ENC_DB_OFFSET +
+                           DOORBELL_CLEANUP_Q_STATE_OFFSET,
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
+                           0, 0, 0, 0)
+
+  // Sequencer for Barco XTS decryption doorbell
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_2,
+                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
+                           IO_BUF_SEQ_BARCO_XTS_DEC_DB_OFFSET +
+                           DOORBELL_CLEANUP_Q_STATE_OFFSET,
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
+                           0, 0, 0, 0)
+
+  // Sequencer for compression request doorbell
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3,
+                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
+                           IO_BUF_SEQ_COMP_DB_OFFSET +
+                           DOORBELL_CLEANUP_Q_STATE_OFFSET,
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
+                           0, 0, 0, 0)
+
+  // Sequencer for decompression request doorbell
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_4,
+                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
+                           IO_BUF_SEQ_DECOMP_DB_OFFSET +
+                           DOORBELL_CLEANUP_Q_STATE_OFFSET,
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
+                           0, 0, 0, 0)
+
+  // Sequencer for integrity tag generation doorbell
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_5,
+                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
+                           IO_BUF_SEQ_INT_TAG_DB_OFFSET +
+                           DOORBELL_CLEANUP_Q_STATE_OFFSET,
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
+                           0, 0, 0, 0)
+
+  // Sequencer for dedup tag generation doorbell
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_6,
+                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
+                           IO_BUF_SEQ_DEDUP_TAG_DB_OFFSET +
+                           DOORBELL_CLEANUP_Q_STATE_OFFSET,
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
+                           0, 0, 0, 0)
+
+  // Sequencer for R2N WQE xfer doorbell
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_7,
+                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
+                           IO_BUF_SEQ_R2N_DB_OFFSET +
+                           DOORBELL_CLEANUP_Q_STATE_OFFSET,
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
+                           0, 0, 0, 0)
+
+  // Sequencer for PDMA doorbell
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_8,
+                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
+                           IO_BUF_SEQ_PDMA_DB_OFFSET +
+                           DOORBELL_CLEANUP_Q_STATE_OFFSET,
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.p_ndx),
+                           PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
+                           0, 0, 0, 0)
+
+  // Load the IO context for the next stage to modify oper status with table locking
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
+                        nvme_kivec_t0_s2s.iob_addr + IO_BUF_IO_CTX_OFFSET,
+                        STORAGE_DEFAULT_TBL_LOAD_SIZE, cleanup_io_ctx_start)
+}
+
+/*****************************************************************************
+ *  cleanup_io_ctx: Cleanup I/O context via a locked table write of the 
+ *                  oper_status
+ *****************************************************************************/
+
+action cleanup_io_ctx(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+                      nvme_sq_qaddr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  IO_CTX_ENTRY_COPY(io_ctx_scratch)
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+  NVME_KIVEC_IOB_RING_USE(nvme_kivec_iob_ring_scratch, nvme_kivec_iob_ring3)
+
+  // Load the table and program for freeing the IOB to the free ring 
+  // in the next stage
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv,
+                        nvme_kivec_iob_ring_scratch.base_addr,
+                        STORAGE_DEFAULT_TBL_LOAD_SIZE, free_iob_start)
+}
+
+/*****************************************************************************
+ *  free_iob : Free IO buffer from free list by producing an item to the 
+ *             to the iob_ring. Ring being full is an error condition which
+ *             should never be hit.
+ *****************************************************************************/
+
+action free_iob(p_ndx, c_ndx, wp_ndx, num_entries, base_addr, entry_size, pad) {
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+  NVME_KIVEC_IOB_RING_USE(nvme_kivec_iob_ring_scratch, nvme_kivec_iob_ring4)
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  RING_STATE_COPY(iob_ring_state_scratch)
+
+  // If IOB ring is full, dont free it. This error condition should never be hit
+  // but for a bug. 
+  if (_QUEUE_FULL(iob_ring_state_scratch.wp_ndx, iob_ring_state_scratch.c_ndx,
+                  iob_ring_state_scratch.num_entries, 1)) {
+    exit();
+  }
+
+  // DMA the I/O buffer address to be freed
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_9,
+                           iob_ring_state_scratch.base_addr +
+                           (iob_ring_state_scratch.wp_ndx * iob_ring_state_scratch.entry_size),
+                           PHV_FIELD_OFFSET(io_ctx.iob_addr),
+                           PHV_FIELD_OFFSET(io_ctx.iob_addr),
+                           0, 0, 0, 0)
+
+  // Push the entry to the queue by doing a table increment of the 
+  // working producer index
+  _QUEUE_PUSH(iob_ring_state_scratch.wp_ndx, iob_ring_state_scratch.num_entries)
+
+  // DMA the wp_ndx to p_ndx via fenced DMA
+  modify_field(qpush_pndx_data.p_ndx, iob_ring_state_scratch.wp_ndx);
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_10,
+                           nvme_kivec_iob_ring_scratch.base_addr + 
+                           RING_STATE_P_NDX_OFFSET,
+                           PHV_FIELD_OFFSET(qpush_pndx_data.p_ndx),
+                           PHV_FIELD_OFFSET(qpush_pndx_data.p_ndx),
+                           0, 0, 0, 0)
+
+  // exit pipeline
+}
+
+/*****************************************************************************
+ *  timeout_iob_addr: Get the address of the IOB that needs to be marked as
+ *                    timed out.
+ *****************************************************************************/
+
+action timeout_iob_addr(iob_addr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  IOB_ADDR_COPY(iob_addr_scratch)
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+
+  // Save the IOB address into K+I vector
+  modify_field(nvme_kivec_t0_s2s.iob_addr, iob_addr_scratch.iob_addr);
+
+  // Load the IOB for the next stage to cleanup
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, iob_addr_scratch.iob_addr,
+                        STORAGE_DEFAULT_TBL_LOAD_SIZE, timeout_iob_skip_start)
+}
+
+/*****************************************************************************
+ *  timeout_iob_skip: Stage with no work to align the write of the oper_status
+ *                    via a locked table write in stage 3
+ *****************************************************************************/
+
+action timeout_iob_skip(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+                        nvme_sq_qaddr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  IO_CTX_ENTRY_COPY(io_ctx_scratch)
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+
+  // Load the IO context for the next stage to modify oper status with table locking
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
+                        nvme_kivec_t0_s2s.iob_addr + IO_BUF_IO_CTX_OFFSET,
+                        STORAGE_DEFAULT_TBL_LOAD_SIZE, timeout_io_ctx_start)
+}
+
+/*****************************************************************************
+ *  timeout_io_ctx: Marked the oper_status to have timed out via a locked 
+ *                  table write 
+ *****************************************************************************/
+
+action timeout_io_ctx(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+                      nvme_sq_qaddr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  IO_CTX_ENTRY_COPY(io_ctx_scratch)
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+ 
+  // Set the oper_status to timed out only if the I/O is in progress already.
+  // Is ASM do a locked table write.
+  if (nvme_kivec_global_scratch.oper_status == IO_CTX_OPER_STATUS_IN_PROGRESS) {
+    modify_field(io_ctx_scratch.oper_status, IO_CTX_OPER_STATUS_TIMED_OUT);
+    // In ASM, table write
+#if 0
+    tblwr	d.oper_status, IO_CTX_OPER_STATUS_TIMED_OUT
+#endif
+  }
+  // Exit the pipeline
+
+}
+/*****************************************************************************
+ * Storage Tx ARM LIF processing END
+ *****************************************************************************/
+

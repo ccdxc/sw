@@ -39,15 +39,15 @@ storage_nvme_process_dst_seq_start:
    phvwr	p.{nvme_kivec_t1_s2s_dst_lif...nvme_kivec_t1_s2s_dst_qaddr}, 	\
 		d.{lif...qaddr}
 
-   // Set table 1 and program address to push the IO buffer to ARM in the
-   // next stage. This CANNOT be the last table config in this path.
-   LOAD_TABLE1_FOR_ADDR34_PC_IMM(d.qaddr,
-                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
-                                 storage_nvme_push_dst_seq_q_start)
+   // Set table 0 and program address to push the WQE to the destination
+   // sequencer in the next stage. 
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(d.qaddr,
+                                STORAGE_DEFAULT_TBL_LOAD_SIZE,
+                                storage_nvme_push_dst_seq_q_start)
 
 push_to_arm:
    // Set table 0 and program address to push the IO buffer to ARM in the
-   // next stage. This MUST be the last table config in this path.
+   // next stage. 
    LOAD_TABLE_FOR_ADDR34_PC_IMM(NVME_KIVEC_ARM_DST6_ARM_QADDR,
                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
                                 storage_nvme_push_arm_q_start)

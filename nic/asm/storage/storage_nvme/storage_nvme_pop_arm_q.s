@@ -1,6 +1,7 @@
 /*****************************************************************************
- *  pop_r2n_sq: Pop the R2N SQ to dequeue the R2N WQE entry which contains a
- *              pointer to the status buffer.
+ *  pop_arm_q: Pop the ARM queue to see if there is some activity queued by
+ *             ARM or NVME command/status handling P4+ programs. This is a
+ *             common pop function with next_pc determining the next action.
  *****************************************************************************/
 
 #include "storage_asm_defines.h"
@@ -10,11 +11,10 @@
 
 struct s0_tbl0_k k;
 // Use push_dst_seq_q d-vector as the stage 0 d-vector has space for action-pc
-struct s7_tbl0_push_dst_seq_q_d d;
+struct s7_tbl0_push_arm_q_d d;
 struct phv_ p;
 
 %%
-   .param storage_nvme_handle_r2n_wqe_start
 
 storage_nvme_pop_r2n_sq_start:
    // If queue is empty, exit
@@ -34,6 +34,9 @@ storage_nvme_pop_r2n_sq_start:
    
    phvwr	p.{nvme_kivec_t0_s2s_dst_lif...nvme_kivec_t0_s2s_dst_qaddr},	\
                 d.{dst_lif...dst_qaddr}
+
+   phvwr	p.nvme_kivec_iob_ring3_base_addr, d.iob_ring_base_addr
+   phvwr	p.nvme_kivec_iob_ring4_base_addr, d.iob_ring_base_addr
                 
    phvwrpair	p.nvme_kivec_global_src_lif, STAGE0_KIVEC_LIF,			\
         	p.nvme_kivec_global_src_qtype, STAGE0_KIVEC_QTYPE
@@ -42,8 +45,8 @@ storage_nvme_pop_r2n_sq_start:
 
    // Set the table and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).
-   LOAD_TABLE_FOR_INDEX_PARAM(d.base_addr, r6, d.entry_size, d.entry_size[2:0],
-                              storage_nvme_handle_r2n_wqe_start)
+   LOAD_TABLE_FOR_INDEX(d.base_addr, r6, d.entry_size, d.entry_size[2:0],
+                        d.next_pc)
 
 clear_doorbell:
    QUEUE_EMPTY(d.c_ndx, d.w_ndx, drop_n_exit)

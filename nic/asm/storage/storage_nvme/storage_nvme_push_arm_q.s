@@ -32,7 +32,7 @@ storage_nvme_push_arm_q_start:
 
    // DMA the I/O context from PHV to the ARM queue
    DMA_PHV2MEM_SETUP_ADDR34(io_ctx_iob_addr, io_ctx_nvme_sq_qaddr, 
-                            r7, dma_p2m_14)
+                            r7, dma_p2m_12)
 
    // Push the entry to the queue (this increments p_ndx and writes to table)
    QUEUE_PUSH(d.p_ndx, d.num_entries)
@@ -50,11 +50,12 @@ storage_nvme_push_arm_q_start:
 
 send_intr:
    // Raise the interrupt with a DMA update
-   PCI_RAISE_INTERRUPT(dma_p2m_15)
+   PCI_RAISE_INTERRUPT(dma_p2m_13)
 
    // Setup the start and end DMA pointers
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_15_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
-
+  
 tbl_load:
+   // Load no tables and exit the pipeline
    LOAD_NO_TABLES

@@ -224,11 +224,35 @@
 #define IO_CTX_ENTRY_OPER_STATUS_OFFSET		12
 
 #define	IO_CTX_OPER_STATUS_FREE			0
-#define	IO_CTX_OPER_STATUS_IN_USE		1
+#define	IO_CTX_OPER_STATUS_IN_PROGRESS		1
 #define	IO_CTX_OPER_STATUS_PUNT			2
 #define	IO_CTX_OPER_STATUS_TIMED_OUT		3
 #define	IO_CTX_OPER_STATUS_BE_ERROR		4
 #define	IO_CTX_OPER_STATUS_COMPLETED		5
 #define	IO_CTX_OPER_STATUS_NON_STARTER		7
+
+
+#define ARM_QID_OFFSET_SQ			0
+#define ARM_QID_OFFSET_CQ			1
+#define ARM_QID_OFFSET_TIMEOUT_Q		2
+#define ARM_QID_OFFSET_CMD_FREE_IOB_Q		3
+#define ARM_QID_OFFSET_STA_FREE_IOB_Q		4
+#define ARM_QID_OFFSET_ARM_FREE_IOB_Q		5
+
+#define ARM_QSTATE_ENTRY_SIZE_LOG2		6
+#define ARM_QSTATE_ENTRY_SIZE_BYTES		64
+
+#define ARM_LIF_QADDR(arm_base_qaddr, arm_qid_offset)	\
+	(arm_base_qaddr + (arm_qid_offset * ARM_QSTATE_ENTRY_SIZE_BYTES))				
+
+// Offset in bytes within a queue state at which doorbell cleanup is 
+// to be issued.  Derived from the common queue state definitions 
+// based on the offset of the first field in doorbell_cleanup_q_state_t.
+#define DOORBELL_CLEANUP_Q_STATE_OFFSET		8
+
+// Offset in bytes within a ring state at p_ndx write is to be issued.
+// Derived from offset of the p_ndx field in ring_state_t.
+#define RING_STATE_P_NDX_OFFSET	0
+
 
 #endif     // STORAGE_COMMON_DEFINES_H

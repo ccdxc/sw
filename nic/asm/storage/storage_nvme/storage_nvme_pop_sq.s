@@ -16,14 +16,10 @@ struct phv_ p;
 
 %%
    .param storage_nvme_handle_cmd_start
+   .param storage_nvme_save_io_ctx_start
+   .param storage_nvme_send_cmd_free_iob_start
 
 storage_nvme_pop_sq_start:
-
-   // Store fields needed in the K+I vector into the PHV
-   phvwr	p.{nvme_kivec_arm_dst6_arm_lif...nvme_kivec_arm_dst6_arm_qaddr}, \
-                d.{arm_lif...arm_qaddr}
-   phvwr	p.{nvme_kivec_arm_dst7_arm_lif...nvme_kivec_arm_dst7_arm_qaddr}, \
-                d.{arm_lif...arm_qaddr}
 
    // Is oper_status is a non starter
    seq		c1, NVME_KIVEC_GLOBAL_OPER_STATUS, IO_CTX_OPER_STATUS_NON_STARTER
@@ -41,15 +37,15 @@ storage_nvme_pop_sq_start:
    sne		c5, d.c_ndx, d.w_ndx
 
    // if c1 && c5			clear_doorbell; load no tables
-   // if c4 && c2 && c5			clear_doorbell; setup arm xfer of unused allocated iob 
-   // if c4 && c2 && c3			setup arm xfer of unused allocated iob 
+   // if c4 && c2 && c5			clear_doorbell; free unused allocated iob 
+   // if c4 && c2 && c3			free unused allocated iob 
    // Catchall				drop PHV; load no tables
 
    bcf		[c1 & c5], clear_doorbell_n_exit
    nop
-   bcf		[c4 & c2 & c5], clear_doorbell_n_iob_xfer
+   bcf		[c4 & c2 & c5], clear_doorbell_n_iob_free
    nop
-   bcf		[c4 & c2 & c3], iob_xfer
+   bcf		[c4 & c2 & c3], iob_free
    nop
 
    // Set PHV to drop
@@ -69,19 +65,26 @@ clear_doorbell_n_exit:
    // Nothing more to process in subsequent stages
    LOAD_NO_TABLES
 
-clear_doorbell_n_iob_xfer:
+clear_doorbell_n_iob_free:
    // Update the queue doorbell to clear the scheduler bit
    NVME_QUEUE_POP_DOORBELL_CLEAR
 
-iob_xfer:
-   // TODO: FIXME. Don't setup DMA. Load tables for skipping 
-   //              until stage 7 for pushing IOB to ARM
-   // Setup the start and end DMA pointers to the doorbell pop
-   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_0_dma_cmd_eop,
-                 p4_txdma_intr_dma_cmd_ptr)
+iob_free:
+   // Store fields needed in the K+I vector into the PHV
+   phvwr	p.{nvme_kivec_t0_s2s_dst_lif...nvme_kivec_t0_s2s_dst_qtype}, \
+                d.{arm_lif...arm_qtype}
+   phvwr	p.{nvme_kivec_t0_s2s_dst_lif...nvme_kivec_t0_s2s_dst_qtype}, \
+                d.{arm_lif...arm_qtype}
+   add		r1, d.arm_base_qid, ARM_QID_OFFSET_CMD_FREE_IOB_Q
+   add		r2, d.arm_base_qaddr, ARM_QID_OFFSET_CMD_FREE_IOB_Q, ARM_QSTATE_ENTRY_SIZE_LOG2
+   phvwrpair	p.nvme_kivec_t0_s2s_dst_qid, r1, p.nvme_kivec_t0_s2s_dst_qaddr, r2
+   phvwrpair	p.nvme_kivec_t0_s2s_dst_qid, r1, p.nvme_kivec_t0_s2s_dst_qaddr, r2
+   phvwr	p.nvme_kivec_t0_s2s_w_ndx, d.w_ndx
 
-   // Nothing more to process in subsequent stages
-   LOAD_NO_TABLES
+   // Set table 0 and program address for the next stage to read the ARM queue
+   // state entry to send a posted free of the IOB
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE,
+                                storage_nvme_send_cmd_free_iob_start)
 
 process_sq_entry:
    // Pop the entry from the queue. Note: The working consumer index is updated
@@ -94,10 +97,26 @@ process_sq_entry:
    QUEUE_POP(d.w_ndx, d.num_entries)
 
    // Store fields needed in the K+I vector into the PHV
+   phvwr	p.{nvme_kivec_arm_dst6_arm_lif...nvme_kivec_arm_dst6_arm_qtype}, \
+                d.{arm_lif...arm_qtype}
+   phvwr	p.{nvme_kivec_arm_dst7_arm_lif...nvme_kivec_arm_dst7_arm_qtype}, \
+                d.{arm_lif...arm_qtype}
+   add		r1, d.arm_base_qid, ARM_QID_OFFSET_SQ
+   add		r2, d.arm_base_qaddr, ARM_QID_OFFSET_SQ, ARM_QSTATE_ENTRY_SIZE_LOG2
+   phvwrpair	p.nvme_kivec_arm_dst6_arm_qid, r1, p.nvme_kivec_arm_dst6_arm_qaddr, r2
+   phvwrpair	p.nvme_kivec_arm_dst7_arm_qid, r1, p.nvme_kivec_arm_dst7_arm_qaddr, r2
    phvwr	p.nvme_kivec_t0_s2s_w_ndx, d.w_ndx
    
-   // Set the table and program address for the next stage to process
+   // Set table 1 and program address for next stage to save the oper_status in 
+   // the I/O context. This CANNOT be the last table config in this path.
+   add		r7, NVME_KIVEC_T0_S2S_IOB_ADDR, IO_BUF_IO_CTX_OFFSET
+   LOAD_TABLE1_FOR_ADDR34_PC_IMM(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE,
+                                 storage_nvme_save_io_ctx_start)
+
+   // Set table 0 and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).
+   // This MUST be the last table config in this path.
    LOAD_TABLE_FOR_INDEX_PARAM(d.base_addr, r6, d.entry_size, d.entry_size[2:0],
                               storage_nvme_handle_cmd_start)
+
 
