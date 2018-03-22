@@ -92,6 +92,10 @@ run "ln -s /usr/share/pkgconfig /usr/lib/pkgconfig"
 run "curl -sSL https://dl.google.com/go/go1.10.linux-amd64.tar.gz | tar xz -C /usr/local"
 run "go get github.com/golang/protobuf/..."
 
+# install docker. This is needed for e2e
+run "curl -sSL https://get.docker.com | CHANNEL=stable bash"
+copy "tools/test-build/daemon.json", "/etc/docker/daemon.json"
+
 inside BASE_BUILD_DIR do
   run "curl ftp://ftp.gnu.org/pub/gnu/gcc/gcc-6.1.0/gcc-6.1.0.tar.bz2 | tar xj"
 end
@@ -265,7 +269,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.17"
+tag "pensando/nic:1.18"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 

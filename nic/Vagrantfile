@@ -26,7 +26,7 @@ Vagrant.configure("2") do |config|
     node_addr = $node_ips[n]
 
     configure_node(config, n, node_name, node_addr)
-  end 
+  end
 end
 
 # configure nodes
@@ -51,7 +51,7 @@ def configure_node(config, nid, node_name, node_addr)
     end
 
     get_files_into_server(node)
-    
+
   end
 end
 
@@ -72,11 +72,11 @@ ln -s /usr/bin/python3.6 /usr/bin/python3
 ln -s /usr/bin/pip3.6 /usr/bin/pip3
 yum install -y vim
 yum install -y bison
-yum install -y python36u-devel python-pip python-devel python-yaml 
+yum install -y python36u-devel python-pip python-devel python-yaml
 yum install -y Judy-devel cmake git git gcc-c++ gcc-c++ wget autoconf automake libtool libtool make g++
 yum install -y unzip pkg-config graphviz flex gmp-devel mpfr-devel mpc-devel libmpc-devel bzip2 which
 yum install -y python-setuptools python-enum34 swig openssl-devel libpcap-devel
-yum install -y cscope 
+yum install -y cscope
 yum install -y ctags
 yum install -y softhsm libtool-ltdl-devel
 yum install -y nfs-utils nfs-utils-lib
@@ -87,6 +87,9 @@ ln -s /usr/share/pkgconfig /usr/lib/pkgconfig
 curl -sSL https://dl.google.com/go/go1.10.linux-amd64.tar.gz | tar xz -C /usr/local
 go get github.com/golang/protobuf/... google.golang.org/grpc
 go get golang.org/x/tools/cmd/goimports
+
+# install docker
+curl -sSL https://get.docker.com | CHANNEL=stable bash
 
 # install gcc 6.1
 cd /tmp

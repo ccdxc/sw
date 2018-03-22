@@ -1,4 +1,7 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.17"
+from "registry.test.pensando.io:5000/pensando/nic:1.18"
+
+copy "tools/test-build/dind", "/dind"
+run "chmod +x /dind"
 
 env GOPATH: "/usr"
 
