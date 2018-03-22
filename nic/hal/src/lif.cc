@@ -70,7 +70,7 @@ lif_init (lif_t *lif)
     if (!lif) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&lif->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&lif->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     lif->hal_handle    = HAL_HANDLE_INVALID;

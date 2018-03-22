@@ -146,7 +146,7 @@ nwsec_policy_svc_init(nwsec_policy_svc_t *nwsec_plcy_svcs)
     if (!nwsec_plcy_svcs) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&nwsec_plcy_svcs->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&nwsec_plcy_svcs->slock, PTHREAD_PROCESS_SHARED);
     dllist_reset(&nwsec_plcy_svcs->lentry);
     return nwsec_plcy_svcs;
 }
@@ -183,7 +183,7 @@ nwsec_policy_appid_init(nwsec_policy_appid_t *nwsec_plcy_appids)
     if (!nwsec_plcy_appids) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&nwsec_plcy_appids->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&nwsec_plcy_appids->slock, PTHREAD_PROCESS_SHARED);
     dllist_reset(&nwsec_plcy_appids->lentry);
     return nwsec_plcy_appids;
 }
@@ -226,7 +226,7 @@ nwsec_policy_rules_init(nwsec_policy_rules_t *nwsec_plcy_rules)
     dllist_reset(&nwsec_plcy_rules->fw_svc_list_head);
     dllist_reset(&nwsec_plcy_rules->appid_list_head);
     dllist_reset(&nwsec_plcy_rules->lentry);
-    HAL_SPINLOCK_INIT(&nwsec_plcy_rules->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&nwsec_plcy_rules->slock, PTHREAD_PROCESS_SHARED);
 
     return nwsec_plcy_rules;
 }
@@ -370,7 +370,7 @@ nwsec_group_init (nwsec_group_t *nwsec_grp)
     nwsec_grp->hal_handle = HAL_HANDLE_INVALID;
     dllist_reset(&nwsec_grp->nw_list_head);
     dllist_reset(&nwsec_grp->ep_list_head);
-    HAL_SPINLOCK_INIT(&nwsec_grp->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&nwsec_grp->slock, PTHREAD_PROCESS_SHARED);
  
     return nwsec_grp;
 }

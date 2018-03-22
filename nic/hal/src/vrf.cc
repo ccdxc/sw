@@ -82,7 +82,7 @@ vrf_init (vrf_t *vrf)
     if (!vrf) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&vrf->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&vrf->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     vrf->hal_handle   = HAL_HANDLE_INVALID;
@@ -1365,7 +1365,6 @@ end:
     hal_api_trace(" API End: vrf delete ");
     return ret;
 }
-
 
 //-----------------------------------------------------------------------------
 // adds l2seg into vrf list

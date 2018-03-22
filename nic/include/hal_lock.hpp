@@ -23,13 +23,13 @@ typedef pthread_spinlock_t    hal_spinlock_t;
 // writer preferred read-write lock implemented using spinlocks ... this lock is
 // safe for use by real-time (FTE threads) and control threads (like cfg
 // thread). if there is a writer waiting (on active readers) for the lock, no
-// new reader coming after the writer will acquire the lock, this avoid starving
-// of the writer forever
+// new reader coming after the writer will acquire the lock, this avoids
+// starving of the writer forever
 //------------------------------------------------------------------------------
 class wp_rwlock {
 public:
     wp_rwlock() {
-        HAL_SPINLOCK_INIT(&mutex_, PTHREAD_PROCESS_PRIVATE);
+        HAL_SPINLOCK_INIT(&mutex_, PTHREAD_PROCESS_SHARED);
         nwriters_ = nreaders_ = 0;
     }
 

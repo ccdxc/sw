@@ -117,7 +117,7 @@ network_init (network_t *network)
     if (!network) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&network->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&network->slock, PTHREAD_PROCESS_SHARED);
 
     sdk::lib::dllist_reset(&network->sg_list_head);
     sdk::lib::dllist_reset(&network->l2seg_list_head);

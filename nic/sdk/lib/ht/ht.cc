@@ -22,8 +22,11 @@ ht::init(uint32_t ht_size, ht_get_key_func_t get_key_func,
     get_key_func_ = get_key_func;
     compare_key_func_ = compare_func;
     if (thread_safe) {
-        SDK_ASSERT_RETURN(!SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE),
-                          false);
+        if (mmgr) {
+            SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
+        } else {
+            SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+        }
     }
                            
     num_entries_ = 0;
@@ -35,7 +38,11 @@ ht::init(uint32_t ht_size, ht_get_key_func_t get_key_func,
     num_collisions_ = 0;
 
     for (i = 0; i < ht_size; i++) {
-        SDK_SPINLOCK_INIT(&ht_buckets_[i].slock_, PTHREAD_PROCESS_PRIVATE);
+        if (mmgr) {
+            SDK_SPINLOCK_INIT(&ht_buckets_[i].slock_, PTHREAD_PROCESS_SHARED);
+        } else {
+            SDK_SPINLOCK_INIT(&ht_buckets_[i].slock_, PTHREAD_PROCESS_PRIVATE);
+        }
     }
     return true;
 }

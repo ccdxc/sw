@@ -12,6 +12,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic:spdlog",
         "@sdk//obj:sdk_list",
+        "@sdk//obj:sdk_shmmgr",
         "//nic/utils/iterator:iterator",
     ],
     copts = sdk_copts,
@@ -29,6 +30,9 @@ cc_test(
         "//nic/hal/test:hal_mock",
         # External
         "//:gtest",
+    ],
+    linkopts = [
+        "-lrt",
     ],
     copts = sdk_copts,
 )

@@ -216,7 +216,7 @@ gft_exact_match_profile_init (gft_exact_match_profile_t *profile)
     if (!profile) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&profile->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&profile->slock, PTHREAD_PROCESS_SHARED);
     profile->profile_id = 0;
     profile->flags = 0;
     profile->table_type = GFT_TABLE_TYPE_NONE;
@@ -392,7 +392,7 @@ gft_hdr_transposition_profile_init (gft_hdr_xposition_profile_t *profile)
     if (!profile) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&profile->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&profile->slock, PTHREAD_PROCESS_SHARED);
     profile->profile_id = 0;
     profile->flags = 0;
     profile->table_type = GFT_TABLE_TYPE_NONE;
@@ -566,7 +566,7 @@ gft_exact_match_flow_entry_init (gft_exact_match_flow_entry_t *flow_entry)
     if (!flow_entry) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&flow_entry->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&flow_entry->slock, PTHREAD_PROCESS_SHARED);
     flow_entry->flow_entry_id = 0;
     flow_entry->flags = 0;
     flow_entry->table_type = GFT_TABLE_TYPE_NONE;

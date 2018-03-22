@@ -23,7 +23,12 @@ slab::init(const char *name, slab_id_t slab_id, uint32_t elem_sz,
 {
     mmgr_ = mmgr;
     if (thread_safe) {
-        SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+        if (mmgr) {
+            SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
+        } else {
+            SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+        }
+
     }
     this->thread_safe_ = thread_safe;
 
@@ -134,12 +139,15 @@ slab::~slab()
 void
 slab::destroy(slab *slb)
 {
+    shmmgr    *mmgr;
+
     if (!slb) {
         return;
     }
+    mmgr = slb->mmgr_;
     slb->~slab();
-    if (slb->mmgr_) {
-        slb->mmgr_->free(slb);
+    if (mmgr) {
+        mmgr->free(slb);
     } else {
         SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, slb);
     }

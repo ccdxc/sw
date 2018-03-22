@@ -63,6 +63,7 @@ class hal_cfg_db {
 public:
     static hal_cfg_db *factory(shmmgr *mmgr = NULL);
     static void destroy(hal_cfg_db *cfg_db);
+    void init_on_restart(void);
 
     void rlock(void) { rwlock_.rlock(); }
     void runlock(void) { rwlock_.runlock(); }
@@ -193,9 +194,11 @@ private:
     obj_meta_t    obj_meta_[HAL_OBJ_ID_MAX];
 
 private:
-    bool init(shmmgr *mmgr = NULL);
     hal_cfg_db();
     ~hal_cfg_db();
+    bool init_pss(shmmgr *mmgr);
+    bool init_vss(void);
+    bool init(shmmgr *mmgr = NULL);
 };
 
 // HAL operational database
@@ -204,13 +207,13 @@ class hal_oper_db {
 public:
     static hal_oper_db *factory(shmmgr *mmgr = NULL);
     static void destroy(hal_oper_db *oper_db);
+    void init_on_restart(void);
 
     ht *hal_handle_id_ht(void) const { return hal_handle_id_ht_; };
     hal_handle_t infra_vrf_handle(void) const { return infra_vrf_handle_; }
     void set_infra_vrf_handle(hal_handle_t infra_vrf_hdl) { infra_vrf_handle_ = infra_vrf_hdl; }
     ht *ep_l2_ht(void) const { return ep_l2_ht_; }
     ht *ep_l3_entry_ht(void) const { return ep_l3_entry_ht_; }
-    ht *flow_ht(void) const { return flow_ht_; }
     ip_addr_t *mytep(void) { return &mytep_ip; }
     eventmgr *event_mgr(void) const { return event_mgr_; }
 
@@ -220,13 +223,14 @@ private:
     ht              *hal_handle_id_ht_;
     ht              *ep_l2_ht_;
     ht              *ep_l3_entry_ht_;
-    ht              *flow_ht_;
     ip_addr_t       mytep_ip;
 
     // following comes from linux process virtual memory
     shmmgr       *mmgr_;
 
 private:
+    bool init_pss(shmmgr *mmgr);
+    bool init_vss(void);
     bool init(shmmgr *mmgr = NULL);
     hal_oper_db();
     ~hal_oper_db();
@@ -237,6 +241,7 @@ class hal_mem_db {
 public:
     static hal_mem_db *factory(shmmgr *mmgr = NULL);
     static void destroy(hal_mem_db *mem_db);
+    void init_on_restart(void);
 
     slab *get_slab(hal_slab_t slab_id);
     slab *hal_handle_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE]); }
@@ -291,6 +296,8 @@ private:
     shmmgr        *mmgr_;
 
 private:
+    bool init_pss(shmmgr *mmgr);
+    bool init_vss(void);
     bool init(shmmgr *mmgr);
     hal_mem_db();
     ~hal_mem_db();
@@ -306,6 +313,8 @@ class hal_state {
 public:
     hal_state(shmmgr *mmgr = NULL);
     ~hal_state();
+    void init_on_restart(void);
+    shmmgr *mmgr(void) const { return mmgr_; }
 
     // get APIs for various DBs
     hal_cfg_db *cfg_db(void) const { return cfg_db_; }
@@ -471,14 +480,13 @@ public:
 
     eventmgr *event_mgr(void) const { return oper_db_->event_mgr(); }
 
-    sdk::lib::catalog* catalog(void) const { return catalog_; }
+    sdk::lib::catalog *catalog(void) const { return catalog_; }
     void set_catalog(sdk::lib::catalog *catalog) { catalog_ = catalog; }
 
     hal_stats_t api_stats(int idx) const { return api_stats_[idx]; }
     void set_api_stats(int idx, int val) { api_stats_[idx] = val; }
-    void reset_on_restart(void);
-    uint64_t preserve_state(void *pmem);
-    uint64_t restore_state(void *pmem);
+    uint64_t preserve_state(void *mem, uint32_t len);
+    uint64_t restore_state(void *mem);
 
 private:
     // following come from shared memory or non-linux HBM memory

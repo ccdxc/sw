@@ -54,10 +54,6 @@ typedef struct vrf_s {
     // Back references
     block_list         *l2seg_list;           // L2 segment list
 
-    // TODO: Check 
-    // dllist_ctxt_t      ep_list_head;         // endpoint list
-    // dllist_ctxt_t      session_list_head;    // session list
-
     // PD state
     void               *pd;                  // all PD specific state
 } __PACK__ vrf_t;

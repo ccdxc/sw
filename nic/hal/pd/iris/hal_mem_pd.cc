@@ -715,10 +715,10 @@ p4pd_table_info_dump_ (void)
     p4pd_table_properties_t    tinfo;
 
     // print the header
-    printf("======================================================================\n");
+    printf("=====================================================\nn");
     printf("%-25s\tId\t%-18sIn/Egress\tStage\tStage Tbl Id\tSize\n",
            "Table", "Type");
-    printf("===============================================================\n");
+    printf("======================================================\n");
 
     // dump ingress tables stage-by-stage first
     while (stage < P4PD_NUM_INGRESS_STAGES) {
@@ -728,10 +728,10 @@ p4pd_table_info_dump_ (void)
                 continue;
             }
             printf("%-25s\t%u\t%-18s%s\t\t%u\t%u\t\t%u\n",
-                   tinfo.tablename, tid, p4pd_table_type2str(tinfo.table_type),
+                   tinfo.tablename, tid,
+                   p4pd_table_type2str(tinfo.table_type),
                    (tinfo.gress == P4_GRESS_INGRESS) ? "ING" : "EGR",
-                   tinfo.stage,
-                   tinfo.stage_tableid, tinfo.tabledepth);
+                   tinfo.stage, tinfo.stage_tableid, tinfo.tabledepth);
         }
         stage++;
     }
@@ -745,14 +745,14 @@ p4pd_table_info_dump_ (void)
                 continue;
             }
             printf("%-25s\t%u\t%-18s%s\t\t%u\t%u\t\t%u\n",
-                   tinfo.tablename, tid, p4pd_table_type2str(tinfo.table_type),
+                   tinfo.tablename, tid,
+                   p4pd_table_type2str(tinfo.table_type),
                    (tinfo.gress == P4_GRESS_INGRESS) ? "ING" : "EGR",
-                   tinfo.stage,
-                   tinfo.stage_tableid, tinfo.tabledepth);
+                   tinfo.stage, tinfo.stage_tableid, tinfo.tabledepth);
         }
         stage++;
     }
-    printf("===============================================================\n");
+    printf("======================================================\n");
 }
 
 //------------------------------------------------------------------------------

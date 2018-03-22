@@ -49,7 +49,7 @@ hal_cpu_if_create (uint32_t lif_id)
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = interface_create(spec, &response);
-    if (ret == HAL_RET_OK) {
+    if ((ret == HAL_RET_OK) || (ret == HAL_RET_ENTRY_EXISTS)) {
         HAL_TRACE_ERR("{}: CPU if create success, handle = {}",
                       __FUNCTION__, response.status().if_handle());
     } else {
@@ -86,7 +86,7 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error getting qos_class configs from catalog: ret {}",
                       ret);
-        return ret;
+        goto end;
     }
 
     sdk_ret = sdk::lib::catalog::get_child_str(hal_cfg->catalog_file, 
@@ -95,7 +95,7 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error getting copp configs from catalog: ret {}", ret);
-        return ret;
+        goto end;
     }
 
     google::protobuf::util::JsonStringToMessage(qos_class_configs,
@@ -103,7 +103,7 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
     for (int i = 0; i < qos_class_request.request_size(); i++) {
         auto spec = qos_class_request.request(i);
         ret = qosclass_create(spec, &qos_class_rsp);
-        if (qos_class_rsp.api_status() != types::API_STATUS_OK) {
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
             HAL_TRACE_ERR("Error  creating qos class ret: {}",
                           ret);
             goto end;
@@ -114,12 +114,13 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
     for (int i = 0; i < copp_request.request_size(); i++) {
         auto spec = copp_request.request(i);
         ret = copp_create(spec, &copp_rsp);
-        if (copp_rsp.api_status() != types::API_STATUS_OK) {
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
             HAL_TRACE_ERR("Error  creating copp ret: {}",
                           ret);
             goto end;
         }
     }
+    ret = HAL_RET_OK;
 
 end:
 
@@ -158,11 +159,12 @@ hal_smart_nic_acl_config_init (void)
     action->set_action(acl::AclAction::ACL_ACTION_DENY);
 
     ret = hal::acl_create(spec, &rsp);
-    if (ret != HAL_RET_OK) {
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
         HAL_TRACE_ERR("IP Fragment drop acl entry create failed ret {}", ret);
         goto end;
     }
     HAL_TRACE_DEBUG("IP fragment drop acl entry created");
+    return HAL_RET_OK;
 
 end:
 
@@ -215,7 +217,7 @@ hal_eplearn_acl_config_init (void)
         match->mutable_internal_mask()->set_flow_miss(true);
 
         ret = hal::acl_create(spec, &rsp);
-        if (ret != HAL_RET_OK) {
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
             return ret;
         }
     }
@@ -238,7 +240,7 @@ hal_eplearn_acl_config_init (void)
         match->mutable_internal_mask()->set_flow_miss(true);
 
         ret = hal::acl_create(spec, &rsp);
-        if (ret != HAL_RET_OK) {
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
             return ret;
         }
     }
@@ -261,7 +263,7 @@ hal_eplearn_acl_config_init (void)
         match->mutable_internal_mask()->set_flow_miss(true);
 
         ret = hal::acl_create(spec, &rsp);
-        if (ret != HAL_RET_OK) {
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
             return ret;
         }
     }
@@ -280,7 +282,7 @@ hal_eplearn_acl_config_init (void)
         ip_selector->mutable_udp_selector()->mutable_dst_port_range()->set_port_high(DHCP_CLIENT_PORT);
 
         ret = hal::acl_create(spec, &rsp);
-        if (ret != HAL_RET_OK) {
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
             return ret;
         }
     }
@@ -299,7 +301,7 @@ hal_eplearn_acl_config_init (void)
         ip_selector->mutable_udp_selector()->mutable_dst_port_range()->set_port_high(DHCP_SERVER_PORT);
 
         ret = hal::acl_create(spec, &rsp);
-        if (ret != HAL_RET_OK) {
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
             return ret;
         }
     }
@@ -353,11 +355,10 @@ hal_acl_config_init (void)
         action->mutable_copp_key_handle()->set_copp_type(kh::COPP_TYPE_FLOW_MISS);
 
         ret = hal::acl_create(spec, &rsp);
-        if (ret != HAL_RET_OK) {
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
             HAL_TRACE_ERR("Quiesce acl entry create failed ret {}", ret);
             goto end;
         }
-
         HAL_TRACE_DEBUG("Quiesce acl entry created");
     }
 
@@ -367,6 +368,7 @@ hal_acl_config_init (void)
         goto end;
     }
     HAL_TRACE_DEBUG("Eplearn acl entry created");
+    ret = HAL_RET_OK;
 
 end:
 

@@ -77,7 +77,7 @@ l2seg_init (l2seg_t *l2seg)
     if (!l2seg) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&l2seg->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&l2seg->slock, PTHREAD_PROCESS_SHARED);
     l2seg->vrf_handle       = 0;
     l2seg->seg_id           = 0;
     l2seg->segment_type     = types::L2_SEGMENT_TYPE_NONE;
@@ -89,10 +89,16 @@ l2seg_init (l2seg_t *l2seg)
     l2seg->pd     = NULL;
 
     // initialize meta information
-    l2seg->if_list = block_list::factory(sizeof(hal_handle_t));
-    l2seg->nw_list = block_list::factory(sizeof(hal_handle_t));
-    l2seg->eplearn_cfg.dhcp_cfg.trusted_servers_list = block_list::factory(sizeof(ip_addr_t));
-
+    l2seg->if_list = block_list::factory(sizeof(hal_handle_t),
+                                         BLOCK_LIST_DEFAULT_ELEMS_PER_BLOCK,
+                                         hal_mmgr());
+    l2seg->nw_list = block_list::factory(sizeof(hal_handle_t),
+                                         BLOCK_LIST_DEFAULT_ELEMS_PER_BLOCK,
+                                         hal_mmgr());
+    l2seg->eplearn_cfg.dhcp_cfg.trusted_servers_list =
+        block_list::factory(sizeof(ip_addr_t),
+                            BLOCK_LIST_DEFAULT_ELEMS_PER_BLOCK,
+                            hal_mmgr());
     return l2seg;
 }
 

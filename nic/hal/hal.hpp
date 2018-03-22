@@ -48,6 +48,11 @@ extern hal_ret_t hal_destroy(void);
 extern hal_ret_t hal_wait(void);
 
 //------------------------------------------------------------------------------
+// return's HAL memory manager
+//------------------------------------------------------------------------------
+shmmgr *hal_mmgr(void);
+
+//------------------------------------------------------------------------------
 // one time memory related initializatino for HAL
 //------------------------------------------------------------------------------
 extern hal_ret_t hal_mem_init(bool shm_mode);

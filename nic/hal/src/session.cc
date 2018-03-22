@@ -589,7 +589,7 @@ flow_create_fte(const flow_cfg_t *cfg,
     }
 
     *flow = {};
-    HAL_SPINLOCK_INIT(&flow->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&flow->slock, PTHREAD_PROCESS_SHARED);
     flow->flow_key_ht_ctxt.reset();
 
     if (cfg){
@@ -609,7 +609,7 @@ flow_create_fte(const flow_cfg_t *cfg,
             return NULL;
         }
         *assoc_flow = {};
-        HAL_SPINLOCK_INIT(&assoc_flow->slock, PTHREAD_PROCESS_PRIVATE);
+        HAL_SPINLOCK_INIT(&assoc_flow->slock, PTHREAD_PROCESS_SHARED);
         assoc_flow->flow_key_ht_ctxt.reset();
         assoc_flow->config = *cfg_assoc;
         if (attrs_assoc) {

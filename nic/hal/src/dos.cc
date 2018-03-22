@@ -49,7 +49,7 @@ dos_policy_init (dos_policy_t *dos_policy)
     if (!dos_policy) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&dos_policy->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&dos_policy->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
 

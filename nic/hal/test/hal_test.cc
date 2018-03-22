@@ -1603,23 +1603,6 @@ main (int argc, char** argv)
 
     native_l2seg_handle = l2seg_handle;
 
-#if 0
-    // create L2 segments
-    l2seg_encap.set_encap_type(::types::ENCAP_TYPE_DOT1Q);
-    l2seg_encap.set_encap_value(100);
-    native_l2seg_handle = l2seg_handle =
-        hclient.l2segment_create(vrf_id, l2seg_id, nw1_handle,
-                                 ::types::L2_SEGMENT_TYPE_TENANT,
-                                 ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
-                                 ::l2segment::MULTICAST_FWD_POLICY_FLOOD,
-                                 l2seg_encap);
-    assert(l2seg_handle != 0);
-    // create uplinks with this L2 seg as native L2 seg
-    uplink_if_handle = hclient.uplinks_create(if_id, 4, l2seg_id);
-    // bringup this L2seg on all uplinks
-    hclient.add_l2seg_on_uplinks(if_id, 4, l2seg_id);
-#endif
-
     uint64_t dest_encap_value = encap_value + num_l2segments;
     uint64_t dest_l2seg_id    = l2seg_id    + num_l2segments;
     uint64_t dest_if_id       = if_id       + 1;

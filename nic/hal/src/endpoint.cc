@@ -110,7 +110,7 @@ ep_init (ep_t *ep)
         return NULL;
     }
     memset(ep, 0, sizeof(ep_t));
-    HAL_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_SHARED);
     
     sdk::lib::dllist_reset(&ep->ip_list_head);
     sdk::lib::dllist_reset(&ep->session_list_head);
@@ -765,7 +765,6 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     }
 
     // initialize the EP record
-    HAL_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_PRIVATE);
     ep->l2_key.l2_segid = l2seg->seg_id;
     MAC_UINT64_TO_ADDR(ep->l2_key.mac_addr, spec.key_or_handle().endpoint_key().l2_key().mac_address());
     HAL_TRACE_DEBUG("PI-EP:{}: Seg Id:{}, Mac: {} If: {}", __FUNCTION__, 

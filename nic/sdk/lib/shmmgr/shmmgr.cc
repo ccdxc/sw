@@ -94,21 +94,6 @@ shmmgr::factory(const char *name, const std::size_t size,
 }
 
 //------------------------------------------------------------------------------
-// destroy method
-//------------------------------------------------------------------------------
-void
-shmmgr::destroy(shmmgr *mmgr)
-{
-    if (!mmgr) {
-        return;
-    }
-    SDK_TRACE_DEBUG("Deleting segment {}", mmgr->name_);
-    shared_memory_object::remove(mmgr->name_);
-    mmgr->~shmmgr();
-    SDK_FREE(HAL_MEM_ALLOC_LIB_SHM, mmgr);
-}
-
-//------------------------------------------------------------------------------
 // remove shm segment given its name
 //------------------------------------------------------------------------------
 void
@@ -117,8 +102,22 @@ shmmgr::remove(const char *name)
     if (!name) {
         return;
     }
-    SDK_TRACE_DEBUG("Deleting segment {}", name);
+    SDK_TRACE_DEBUG("Deleting segment %s", name);
     shared_memory_object::remove(name);
+}
+
+//------------------------------------------------------------------------------
+// destroy method
+//------------------------------------------------------------------------------
+void
+shmmgr::destroy(shmmgr *mmgr)
+{
+    if (!mmgr) {
+        return;
+    }
+    shmmgr::remove(mmgr->name_);
+    mmgr->~shmmgr();
+    SDK_FREE(HAL_MEM_ALLOC_LIB_SHM, mmgr);
 }
 
 //------------------------------------------------------------------------------
@@ -134,8 +133,10 @@ shmmgr::exists(const char *name, void *baseaddr)
         fixed_managed_shared_memory seg(open_only, name, baseaddr);
         //return segment.check_sanity();
         return true;
+    } catch (const boost::interprocess::interprocess_exception &ex) {
+        SDK_TRACE_DEBUG("shmmgr bip exception : ",  ex.what());
     } catch (const std::exception &ex) {
-        SDK_TRACE_DEBUG("shmmgr exception : ",  ex.what());
+        SDK_TRACE_DEBUG("shmmgr general exception : ",  ex.what());
     }
     return false;
 }

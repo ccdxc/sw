@@ -76,7 +76,7 @@ nwsec_profile_init (nwsec_profile_t *sec_prof)
     memset(sec_prof, 0, sizeof(nwsec_profile_t));
 
 
-    HAL_SPINLOCK_INIT(&sec_prof->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&sec_prof->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     sdk::lib::dllist_reset(&sec_prof->vrf_list_head);

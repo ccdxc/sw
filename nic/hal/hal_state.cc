@@ -40,8 +40,8 @@
 #define HAL_STATE_STORE_SIZE                    0x80000000     // 2G
 #define HAL_SERIALIZED_STATE_STORE              "h3s"
 #define HAL_SERIALIZED_STATE_STORE_SIZE         0x80000000     // 2G
-#define HAL_STATE_STORE_VM_ADDR                 0x400000000    // starting from 16G
-#define HAL_SERIALIZED_STATE_STORE_VM_ADDR      0x480000000    // starting from 18G
+#define HAL_STATE_STORE_VADDR                   0x400000000    // starting from 16G
+#define HAL_SERIALIZED_STATE_STORE_VADDR        0x480000000    // starting from 18G
 #define HAL_STATE_OBJ                           "halstate"
 
 using namespace boost::interprocess;
@@ -53,19 +53,18 @@ class hal_state    *g_hal_state;
 class shmmgr       *g_h2s_shmmgr, *g_h3s_shmmgr;
 
 //------------------------------------------------------------------------------
-// init() function to instantiate all the config db init state
+// initialize DBs and caches that needs to be persisted across restarts/upgrades
 //------------------------------------------------------------------------------
 bool
-hal_cfg_db::init(shmmgr *mmgr)
+hal_cfg_db::init_pss(shmmgr *mmgr)
 {
-    mmgr_ = mmgr;
 
     // initialize vrf related data structures
     vrf_id_ht_ = ht::factory(HAL_MAX_VRFS,
                              hal::vrf_id_get_key_func,
                              hal::vrf_id_compute_hash_func,
                              hal::vrf_id_compare_key_func,
-                             mmgr);
+                             true, mmgr);
     HAL_ASSERT_RETURN((vrf_id_ht_ != NULL), false);
 
     // initialize network related data structures
@@ -73,7 +72,7 @@ hal_cfg_db::init(shmmgr *mmgr)
                                   hal::network_get_key_func,
                                   hal::network_compute_hash_func,
                                   hal::network_compare_key_func,
-                                  mmgr);
+                                  true, mmgr);
     HAL_ASSERT_RETURN((network_key_ht_ != NULL), false);
 
     // initialize security profile related data structures
@@ -81,7 +80,7 @@ hal_cfg_db::init(shmmgr *mmgr)
                                        hal::nwsec_profile_id_get_key_func,
                                        hal::nwsec_profile_id_compute_hash_func,
                                        hal::nwsec_profile_id_compare_key_func,
-                                       mmgr);
+                                       true, mmgr);
     HAL_ASSERT_RETURN((nwsec_profile_id_ht_ != NULL), false);
 
     // initialize L2 segment related data structures
@@ -89,7 +88,7 @@ hal_cfg_db::init(shmmgr *mmgr)
                                hal::l2seg_id_get_key_func,
                                hal::l2seg_id_compute_hash_func,
                                hal::l2seg_id_compare_key_func,
-                               mmgr);
+                               true, mmgr);
     HAL_ASSERT_RETURN((l2seg_id_ht_ != NULL), false);
 
     // initialize mc entry related data structures
@@ -97,7 +96,7 @@ hal_cfg_db::init(shmmgr *mmgr)
                              hal::mc_entry_get_key_func,
                              hal::mc_entry_compute_hash_func,
                              hal::mc_entry_compare_key_func,
-                             mmgr);
+                             true, mmgr);
     HAL_ASSERT_RETURN((mc_key_ht_ != NULL), false);
 
     // initialize LIF related data structures
@@ -105,7 +104,7 @@ hal_cfg_db::init(shmmgr *mmgr)
                              hal::lif_id_get_key_func,
                              hal::lif_id_compute_hash_func,
                              hal::lif_id_compare_key_func,
-                             mmgr);
+                             true, mmgr);
     HAL_ASSERT_RETURN((lif_id_ht_ != NULL), false);
 
     // initialize interface related data structures
@@ -113,7 +112,7 @@ hal_cfg_db::init(shmmgr *mmgr)
                             hal::if_id_get_key_func,
                             hal::if_id_compute_hash_func,
                             hal::if_id_compare_key_func,
-                            mmgr);
+                            true, mmgr);
     HAL_ASSERT_RETURN((if_id_ht_ != NULL), false);
 
     // initialize flow/session related data structures
@@ -121,28 +120,28 @@ hal_cfg_db::init(shmmgr *mmgr)
                                  hal::session_get_key_func,
                                  hal::session_compute_hash_func,
                                  hal::session_compare_key_func,
-                                 mmgr);
+                                 true, mmgr);
     HAL_ASSERT_RETURN((session_id_ht_ != NULL), false);
 
     session_hal_handle_ht_ = ht::factory(HAL_MAX_SESSIONS,
                                          hal::session_get_handle_key_func,
                                          hal::session_compute_handle_hash_func,
                                          hal::session_compare_handle_key_func,
-                                         mmgr);
+                                         true, mmgr);
     HAL_ASSERT_RETURN((session_hal_handle_ht_ != NULL), false);
 
     session_hal_iflow_ht_ = ht::factory(HAL_MAX_SESSIONS,
                                         hal::session_get_iflow_key_func,
                                         hal::session_compute_iflow_hash_func,
                                         hal::session_compare_iflow_key_func,
-                                        mmgr);
+                                        true, mmgr);
     HAL_ASSERT_RETURN((session_hal_iflow_ht_ != NULL), false);
 
     session_hal_rflow_ht_ = ht::factory(HAL_MAX_SESSIONS,
                                         hal::session_get_rflow_key_func,
                                         hal::session_compute_rflow_hash_func,
                                         hal::session_compare_rflow_key_func,
-                                        mmgr);
+                                        true, mmgr);
     HAL_ASSERT_RETURN((session_hal_rflow_ht_ != NULL), false);
 
     // initialize l4lb related data structures
@@ -150,9 +149,72 @@ hal_cfg_db::init(shmmgr *mmgr)
                            hal::l4lb_get_key_func,
                            hal::l4lb_compute_key_hash_func,
                            hal::l4lb_compare_key_func,
-                           mmgr);
+                           true, mmgr);
     HAL_ASSERT_RETURN((l4lb_ht_ != NULL), false);
 
+    // initialize Qos-class related data structures
+    qos_class_ht_ = ht::factory(HAL_MAX_QOS_CLASSES,
+                                hal::qos_class_get_key_func,
+                                hal::qos_class_compute_hash_func,
+                                hal::qos_class_compare_key_func,
+                                true, mmgr);
+    HAL_ASSERT_RETURN((qos_class_ht_ != NULL), false);
+
+    // initialize Copp related data structures
+    copp_ht_ = ht::factory(HAL_MAX_COPPS,
+                           hal::copp_get_key_func,
+                           hal::copp_compute_hash_func,
+                           hal::copp_compare_key_func,
+                           true, mmgr);
+    HAL_ASSERT_RETURN((copp_ht_ != NULL), false);
+
+    // initialize acl related data structures
+    acl_ht_ = ht::factory(HAL_MAX_ACLS,
+                          hal::acl_get_key_func,
+                          hal::acl_compute_hash_func,
+                          hal::acl_compare_key_func,
+                          true, mmgr);
+    HAL_ASSERT_RETURN((acl_ht_ != NULL), false);
+
+    nwsec_group_ht_ = ht::factory(HAL_MAX_NW_SEC_GROUP_CFG,
+                                  hal::nwsec_group_get_key_func,
+                                  hal::nwsec_group_compute_hash_func,
+                                  hal::nwsec_group_compare_key_func,
+                                  true, mmgr);
+    HAL_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
+
+    gft_exact_match_profile_id_ht_ = ht::factory(HAL_MAX_GFT_EXACT_MATCH_PROFILES,
+                                                 hal::gft_exact_match_profile_id_get_key_func,
+                                                 hal::gft_exact_match_profile_id_compute_hash_func,
+                                                 hal::gft_exact_match_profile_id_compare_key_func,
+                                                 true, mmgr);
+    HAL_ASSERT_RETURN((gft_exact_match_profile_id_ht_ != NULL), false);
+
+    gft_hdr_transposition_profile_id_ht_ =
+        ht::factory(HAL_MAX_GFT_HDR_TRANSPOSITION_PROFILES,
+                    hal::gft_hdr_transposition_profile_id_get_key_func,
+                    hal::gft_hdr_transposition_profile_id_compute_hash_func,
+                    hal::gft_hdr_transposition_profile_id_compare_key_func,
+                    true, mmgr);
+    HAL_ASSERT_RETURN((gft_hdr_transposition_profile_id_ht_ != NULL), false);
+
+    gft_exact_match_flow_entry_id_ht_ = ht::factory(HAL_MAX_GFT_EXACT_MATCH_FLOW_ENTRIES,
+                                                    hal::gft_exact_match_flow_entry_id_get_key_func,
+                                                    hal::gft_exact_match_flow_entry_id_compute_hash_func,
+                                                    hal::gft_exact_match_flow_entry_id_compare_key_func,
+                                                    true, mmgr);
+    HAL_ASSERT_RETURN((gft_exact_match_flow_entry_id_ht_ != NULL), false);
+
+    return true;
+}
+
+//------------------------------------------------------------------------------
+// initialize DBs and caches that don't to be persisted (i.e., volatile) across
+// restarts/upgrades and these will have to be rebuilt after restart/upgrade
+//------------------------------------------------------------------------------
+bool
+hal_cfg_db::init_vss(void)
+{
     // initialize TLS CB related data structures
     tlscb_id_ht_ = ht::factory(HAL_MAX_TLSCB,
                                hal::tlscb_get_key_func,
@@ -167,35 +229,11 @@ hal_cfg_db::init(shmmgr *mmgr)
                                hal::tcpcb_compare_key_func);
     HAL_ASSERT_RETURN((tcpcb_id_ht_ != NULL), false);
 
-    // initialize Qos-class related data structures
-    qos_class_ht_ = ht::factory(HAL_MAX_QOS_CLASSES,
-                                hal::qos_class_get_key_func,
-                                hal::qos_class_compute_hash_func,
-                                hal::qos_class_compare_key_func,
-                                mmgr);
-    HAL_ASSERT_RETURN((qos_class_ht_ != NULL), false);
-
     qos_cmap_pcp_bmp_ = bitmap::factory(HAL_MAX_DOT1Q_PCP_VALS, true);
     HAL_ASSERT_RETURN((qos_cmap_pcp_bmp_ != NULL), false);
 
     qos_cmap_dscp_bmp_ = bitmap::factory(HAL_MAX_IP_DSCP_VALS, true);
     HAL_ASSERT_RETURN((qos_cmap_dscp_bmp_ != NULL), false);
-
-    // initialize Copp related data structures
-    copp_ht_ = ht::factory(HAL_MAX_COPPS,
-                           hal::copp_get_key_func,
-                           hal::copp_compute_hash_func,
-                           hal::copp_compare_key_func,
-                           mmgr);
-    HAL_ASSERT_RETURN((copp_ht_ != NULL), false);
-
-    // initialize acl related data structures
-    acl_ht_ = ht::factory(HAL_MAX_ACLS,
-                          hal::acl_get_key_func,
-                          hal::acl_compute_hash_func,
-                          hal::acl_compare_key_func,
-                          mmgr);
-    HAL_ASSERT_RETURN((acl_ht_ != NULL), false);
 
     // initialize WRing related data structures
     wring_id_ht_ = ht::factory(HAL_MAX_WRING,
@@ -265,36 +303,27 @@ hal_cfg_db::init(shmmgr *mmgr)
                                    hal::nwsec_policy_compare_key_func);
     HAL_ASSERT_RETURN((nwsec_policy_ht_ != NULL), false);
 
-    nwsec_group_ht_ = ht::factory(HAL_MAX_NW_SEC_GROUP_CFG,
-                                  hal::nwsec_group_get_key_func,
-                                  hal::nwsec_group_compute_hash_func,
-                                  hal::nwsec_group_compare_key_func,
-                                  mmgr);
-    HAL_ASSERT_RETURN((nwsec_policy_cfg_ht_ != NULL), false);
-
-    gft_exact_match_profile_id_ht_ = ht::factory(HAL_MAX_GFT_EXACT_MATCH_PROFILES,
-                                                 hal::gft_exact_match_profile_id_get_key_func,
-                                                 hal::gft_exact_match_profile_id_compute_hash_func,
-                                                 hal::gft_exact_match_profile_id_compare_key_func,
-                                                 mmgr);
-    HAL_ASSERT_RETURN((gft_exact_match_profile_id_ht_ != NULL), false);
-
-    gft_hdr_transposition_profile_id_ht_ =
-        ht::factory(HAL_MAX_GFT_HDR_TRANSPOSITION_PROFILES,
-                    hal::gft_hdr_transposition_profile_id_get_key_func,
-                    hal::gft_hdr_transposition_profile_id_compute_hash_func,
-                    hal::gft_hdr_transposition_profile_id_compare_key_func,
-                    mmgr);
-    HAL_ASSERT_RETURN((gft_hdr_transposition_profile_id_ht_ != NULL), false);
-
-    gft_exact_match_flow_entry_id_ht_ = ht::factory(HAL_MAX_GFT_EXACT_MATCH_FLOW_ENTRIES,
-                                                    hal::gft_exact_match_flow_entry_id_get_key_func,
-                                                    hal::gft_exact_match_flow_entry_id_compute_hash_func,
-                                                    hal::gft_exact_match_flow_entry_id_compare_key_func,
-                                                    mmgr);
-    HAL_ASSERT_RETURN((gft_exact_match_flow_entry_id_ht_ != NULL), false);
-
     return true;
+}
+
+//------------------------------------------------------------------------------
+// init() function to instantiate all the config db init state
+//------------------------------------------------------------------------------
+bool
+hal_cfg_db::init(shmmgr *mmgr)
+{
+    mmgr_ = mmgr;
+    HAL_ASSERT_RETURN((init_pss(mmgr) == true), false);
+    HAL_ASSERT_RETURN((init_vss() == true), false);
+    return true;
+}
+
+//------------------------------------------------------------------------------
+// initialize the state that is not valid after a process restart
+//------------------------------------------------------------------------------
+void
+hal_cfg_db::init_on_restart(void) {
+    init_vss();
 }
 
 //------------------------------------------------------------------------------
@@ -505,44 +534,66 @@ hal_cfg_db::object_size(hal_obj_id_t obj_id) const
 }
 
 //------------------------------------------------------------------------------
-// init() function to instantiate all the oper db init state
+// initialize DBs and caches that needs to be persisted across restarts/upgrades
 //------------------------------------------------------------------------------
 bool
-hal_oper_db::init(shmmgr *mmgr)
+hal_oper_db::init_pss(shmmgr *mmgr)
 {
-    mmgr_ = mmgr;
-
     hal_handle_id_ht_ = ht::factory(HAL_MAX_HANDLES,
                                     hal::hal_handle_id_get_key_func,
                                     hal::hal_handle_id_compute_hash_func,
                                     hal::hal_handle_id_compare_key_func,
-                                    mmgr);
+                                    true, mmgr);
     HAL_ASSERT_RETURN((hal_handle_id_ht_ != NULL), false);
 
     ep_l2_ht_ = ht::factory(HAL_MAX_ENDPOINTS,
                             hal::ep_get_l2_key_func,
                             hal::ep_compute_l2_hash_func,
                             hal::ep_compare_l2_key_func,
-                            mmgr);
+                            true, mmgr);
     HAL_ASSERT_RETURN((ep_l2_ht_ != NULL), false);
 
     ep_l3_entry_ht_ = ht::factory(HAL_MAX_ENDPOINTS << 1,
                                   hal::ep_get_l3_key_func,
                                   hal::ep_compute_l3_hash_func,
                                   hal::ep_compare_l3_key_func,
-                                  mmgr);
+                                  true, mmgr);
     HAL_ASSERT_RETURN((ep_l3_entry_ht_ != NULL), false);
 
-    flow_ht_ = ht::factory(HAL_MAX_FLOWS,
-                           hal::flow_get_key_func,
-                           hal::flow_compute_hash_func,
-                           hal::flow_compare_key_func);
-    HAL_ASSERT_RETURN((flow_ht_ != NULL), false);
+    return true;
+}
 
+//------------------------------------------------------------------------------
+// initialize DBs and caches that don't to be persisted (i.e., volatile) across
+// restarts/upgrades and these will have to be rebuilt after restart/upgrade
+//------------------------------------------------------------------------------
+bool
+hal_oper_db::init_vss(void)
+{
     event_mgr_ = eventmgr::factory(HAL_MAX_EVENTS);
     HAL_ASSERT_RETURN((event_mgr_ != NULL), false);
 
     return true;
+}
+
+//------------------------------------------------------------------------------
+// init() function to instantiate all the oper db init state
+//------------------------------------------------------------------------------
+bool
+hal_oper_db::init(shmmgr *mmgr)
+{
+    mmgr_ = mmgr;
+    HAL_ASSERT_RETURN((init_pss(mmgr) == true), false);
+    HAL_ASSERT_RETURN((init_vss() == true), false);
+    return true;
+}
+
+//------------------------------------------------------------------------------
+// initialize the state that is not valid after a process restart
+//------------------------------------------------------------------------------
+void
+hal_oper_db::init_on_restart(void) {
+    init_vss();
 }
 
 //------------------------------------------------------------------------------
@@ -555,7 +606,6 @@ hal_oper_db::hal_oper_db()
     hal_handle_id_ht_  = NULL;
     ep_l2_ht_ = NULL;
     ep_l3_entry_ht_ = NULL;
-    flow_ht_ = NULL;
     memset(&mytep_ip, 0, sizeof(mytep_ip));
     mmgr_ = NULL;
 }
@@ -565,13 +615,9 @@ hal_oper_db::hal_oper_db()
 //------------------------------------------------------------------------------
 hal_oper_db::~hal_oper_db()
 {
-    hal_handle_id_ht_ ? ht::destroy(hal_handle_id_ht_) : HAL_NOP;
-
-    ep_l2_ht_ ? ht::destroy(ep_l2_ht_) : HAL_NOP;
-    ep_l3_entry_ht_ ? ht::destroy(ep_l3_entry_ht_) : HAL_NOP;
-
-    flow_ht_ ? ht::destroy(flow_ht_) : HAL_NOP;
-
+    hal_handle_id_ht_ ? ht::destroy(hal_handle_id_ht_, mmgr_) : HAL_NOP;
+    ep_l2_ht_ ? ht::destroy(ep_l2_ht_, mmgr_) : HAL_NOP;
+    ep_l3_entry_ht_ ? ht::destroy(ep_l3_entry_ht_, mmgr_) : HAL_NOP;
     event_mgr_ ? eventmgr::destroy(event_mgr_) : HAL_NOP;
 }
 
@@ -627,141 +673,215 @@ hal_oper_db::destroy(hal_oper_db *oper_db)
 }
 
 //------------------------------------------------------------------------------
-// init() function to instantiate all the mem db init state
+// initialize DBs and caches that needs to be persisted across restarts/upgrades
 //------------------------------------------------------------------------------
 bool
-hal_mem_db::init(shmmgr *mmgr)
+hal_mem_db::init_pss(shmmgr *mmgr)
 {
-    mmgr_ = mmgr;
-
     // initialize slab for HAL handles
-    slabs_[HAL_SLAB_HANDLE] = slab::factory("hal-handle",
-                                            HAL_SLAB_HANDLE, sizeof(hal_handle),
-                                            64, true, true, true);
+    slabs_[HAL_SLAB_HANDLE] =
+        slab::factory("hal-handle",
+                      HAL_SLAB_HANDLE, sizeof(hal_handle),
+                      64, true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE] != NULL), false);
 
-    slabs_[HAL_SLAB_HANDLE_HT_ENTRY] = slab::factory("hal-handle-ht-entry",
-                                              HAL_SLAB_HANDLE_HT_ENTRY,
-                                              sizeof(hal_handle_ht_entry_t),
-                                              64, true, true, true);
+    slabs_[HAL_SLAB_HANDLE_HT_ENTRY] =
+        slab::factory("hal-handle-ht-entry",
+                      HAL_SLAB_HANDLE_HT_ENTRY,
+                      sizeof(hal_handle_ht_entry_t),
+                      64, true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_HT_ENTRY] != NULL), false);
 
-    slabs_[HAL_SLAB_HANDLE_LIST_ENTRY] = slab::factory("hal-handle-list-entry",
-                                                HAL_SLAB_HANDLE_LIST_ENTRY,
-                                                sizeof(hal_handle_list_entry_t),
-                                                64, true, true, true);
+    slabs_[HAL_SLAB_HANDLE_LIST_ENTRY] =
+        slab::factory("hal-handle-list-entry",
+                      HAL_SLAB_HANDLE_LIST_ENTRY,
+                      sizeof(hal_handle_list_entry_t),
+                      64, true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_LIST_ENTRY] != NULL), false);
 
-	slabs_[HAL_SLAB_HANDLE_ID_HT_ENTRY] = slab::factory("hal-handle-id-ht-entry",
-                                                 HAL_SLAB_HANDLE_ID_HT_ENTRY,
-                                                 sizeof(hal_handle_id_ht_entry_t),
-                                                 64, true, true, true);
+	slabs_[HAL_SLAB_HANDLE_ID_HT_ENTRY] =
+        slab::factory("hal-handle-id-ht-entry",
+                      HAL_SLAB_HANDLE_ID_HT_ENTRY,
+                      sizeof(hal_handle_id_ht_entry_t),
+                      64, true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_ID_HT_ENTRY] != NULL), false);
 
-    slabs_[HAL_SLAB_HANDLE_ID_LIST_ENTRY] = slab::factory("hal-handle-id-list-entry",
-                                                   HAL_SLAB_HANDLE_ID_LIST_ENTRY,
-                                                   sizeof(hal_handle_id_list_entry_t),
-                                                   64, true, true, true);
+    slabs_[HAL_SLAB_HANDLE_ID_LIST_ENTRY] =
+        slab::factory("hal-handle-id-list-entry",
+                      HAL_SLAB_HANDLE_ID_LIST_ENTRY,
+                      sizeof(hal_handle_id_list_entry_t),
+                      64, true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_ID_LIST_ENTRY] != NULL), false);
 
 	// initialize vrf related data structures
-	slabs_[HAL_SLAB_VRF] = slab::factory("vrf", HAL_SLAB_VRF,
-                                 sizeof(hal::vrf_t), 16,
-                                 false, true, true);
+	slabs_[HAL_SLAB_VRF] =
+        slab::factory("vrf", HAL_SLAB_VRF,
+                      sizeof(hal::vrf_t), 16,
+                      false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_VRF] != NULL), false);
 
     // initialize network related data structures
-    slabs_[HAL_SLAB_NETWORK] = slab::factory("network", HAL_SLAB_NETWORK,
-                                 sizeof(hal::network_t), 16,
-                                 false, true, true);
+    slabs_[HAL_SLAB_NETWORK] =
+        slab::factory("network", HAL_SLAB_NETWORK,
+                      sizeof(hal::network_t), 16,
+                      false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NETWORK] != NULL), false);
 
     // initialize security profile related data structures
-    slabs_[HAL_SLAB_SECURITY_PROFILE] = slab::factory("nwsec-profile",
-                                        HAL_SLAB_SECURITY_PROFILE,
-                                        sizeof(hal::nwsec_profile_t), 8,
-                                        false, true, true);
+    slabs_[HAL_SLAB_SECURITY_PROFILE] =
+        slab::factory("nwsec-profile",
+                      HAL_SLAB_SECURITY_PROFILE,
+                      sizeof(hal::nwsec_profile_t), 8,
+                      false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_SECURITY_PROFILE] != NULL), false);
     
     // initialize dos policy related data structures
-    slabs_[HAL_SLAB_DOS_POLICY] = slab::factory("dos-policy",
-                                      HAL_SLAB_DOS_POLICY,
-                                      sizeof(hal::dos_policy_t), 8,
-                                      false, true, true);
+    slabs_[HAL_SLAB_DOS_POLICY] =
+        slab::factory("dos-policy",
+                      HAL_SLAB_DOS_POLICY,
+                      sizeof(hal::dos_policy_t), 8,
+                      false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_DOS_POLICY] != NULL), false);
 
     // initialize dos policy sg list related data structures
-    slabs_[HAL_SLAB_DOS_POLICY_SG_LIST] = slab::factory("dos-policy-sg-list",
-                                      HAL_SLAB_DOS_POLICY_SG_LIST,
-                                      sizeof(hal::dos_policy_sg_list_entry_t), 8,
-                                      false, true, true);
+    slabs_[HAL_SLAB_DOS_POLICY_SG_LIST] =
+        slab::factory("dos-policy-sg-list",
+                      HAL_SLAB_DOS_POLICY_SG_LIST,
+                      sizeof(hal::dos_policy_sg_list_entry_t), 8,
+                      false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_DOS_POLICY_SG_LIST] != NULL), false);
 
     // initialize L2 segment related data structures
-    slabs_[HAL_SLAB_L2SEG] = slab::factory("l2seg", HAL_SLAB_L2SEG,
-                                sizeof(hal::l2seg_t), 16,
-                                false, true, true);
+    slabs_[HAL_SLAB_L2SEG] =
+        slab::factory("l2seg", HAL_SLAB_L2SEG,
+                      sizeof(hal::l2seg_t), 16,
+                      false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_L2SEG] != NULL), false);
 
     // initialize multicast related data structures
-    slabs_[HAL_SLAB_MC_ENTRY] = slab::factory("mc_entry", HAL_SLAB_MC_ENTRY,
-                                   sizeof(hal::mc_entry_t), 16,
-                                   false, true, true);
+    slabs_[HAL_SLAB_MC_ENTRY] =
+        slab::factory("mc_entry", HAL_SLAB_MC_ENTRY,
+                      sizeof(hal::mc_entry_t), 16,
+                      false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_MC_ENTRY] != NULL), false);
 
     // initialize LIF related data structures
-    slabs_[HAL_SLAB_LIF] = slab::factory("LIF", HAL_SLAB_LIF,
-                              sizeof(hal::lif_t), 8,
-                             false, true, true);
+    slabs_[HAL_SLAB_LIF] =
+        slab::factory("LIF", HAL_SLAB_LIF,
+                      sizeof(hal::lif_t), 8,
+                      false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_LIF] != NULL), false);
 
     // initialize interface related data structures
-    slabs_[HAL_SLAB_IF] = slab::factory("interface", HAL_SLAB_IF,
-                             sizeof(hal::if_t), 16,
-                             false, true, true);
+    slabs_[HAL_SLAB_IF] =
+        slab::factory("interface", HAL_SLAB_IF,
+                      sizeof(hal::if_t), 16,
+                      false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IF] != NULL), false);
 
     // initialize enic l2seg entry related data structures
     slabs_[HAL_SLAB_ENIC_L2SEG_ENTRY] =
-        slab::factory("interface", HAL_SLAB_ENIC_L2SEG_ENTRY,
+        slab::factory("if_l2seg_entry", HAL_SLAB_ENIC_L2SEG_ENTRY,
                       sizeof(hal::if_l2seg_entry_t), 16,
-                      false, true, true);
+                      false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ENIC_L2SEG_ENTRY] != NULL), false);
 
     // initialize endpoint related data structures
     slabs_[HAL_SLAB_EP] =
         slab::factory("EP", HAL_SLAB_EP, sizeof(hal::ep_t), 128,
-                      true, true, true);
+                      true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_EP] != NULL), false);
 
     slabs_[HAL_SLAB_EP_IP_ENTRY] = slab::factory("EP IP entry",
                                                  HAL_SLAB_EP_IP_ENTRY,
                                                  sizeof(hal::ep_ip_entry_t),
-                                                 64, true, true, true);
+                                                 64, true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_EP_IP_ENTRY] != NULL), false);
 
     slabs_[HAL_SLAB_EP_L3_ENTRY] =
         slab::factory("EP L3 entry", HAL_SLAB_EP_L3_ENTRY,
                       sizeof(hal::ep_l3_entry_t),
-                      64, true, true, true);
+                      64, true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_EP_L3_ENTRY] != NULL), false);
 
     // initialize flow/session related data structures
-    slabs_[HAL_SLAB_FLOW] = slab::factory("Flow", HAL_SLAB_FLOW, sizeof(hal::flow_t), 128,
-                               true, true, true);
+    slabs_[HAL_SLAB_FLOW] =
+        slab::factory("Flow", HAL_SLAB_FLOW, sizeof(hal::flow_t), 128,
+                      true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_FLOW] != NULL), false);
 
-    slabs_[HAL_SLAB_SESSION] = slab::factory("Session", HAL_SLAB_SESSION,
-                                  sizeof(hal::session_t), 128,
-                                  true, true, true);
+    slabs_[HAL_SLAB_SESSION] =
+        slab::factory("Session", HAL_SLAB_SESSION,
+                      sizeof(hal::session_t), 128,
+                      true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_SESSION] != NULL), false);
 
     // initialize l4lb related data structures
-    slabs_[HAL_SLAB_L4LB] = slab::factory("L4LB", HAL_SLAB_L4LB,
-                               sizeof(hal::l4lb_service_entry_t), 16,
-                               true, true, true);
+    slabs_[HAL_SLAB_L4LB] =
+        slab::factory("L4LB", HAL_SLAB_L4LB,
+                      sizeof(hal::l4lb_service_entry_t), 16,
+                      true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_L4LB] != NULL), false);
 
+    // initialize Qos-class related data structures
+    slabs_[HAL_SLAB_QOS_CLASS] =
+        slab::factory("QosClass", HAL_SLAB_QOS_CLASS,
+                      sizeof(hal::qos_class_t), 8,
+                      false, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_QOS_CLASS] != NULL), false);
+
+    // initialize Copp related data structures
+    slabs_[HAL_SLAB_COPP] =
+        slab::factory("Copp", HAL_SLAB_COPP,
+                      sizeof(hal::copp_t), 8,
+                      false, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_COPP] != NULL), false);
+
+    // initialize Acl related data structures
+    slabs_[HAL_SLAB_ACL] =
+        slab::factory("Acl", HAL_SLAB_ACL,
+                      sizeof(hal::acl_t), 8,
+                      false, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ACL] != NULL), false);
+
+    slabs_[HAL_SLAB_NWSEC_GROUP] =
+        slab::factory("nwsec_group", HAL_SLAB_NWSEC_GROUP,
+                      sizeof(hal::nwsec_group_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_GROUP] != NULL), false);
+
+    // initialize GFT related slabs
+    slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] =
+        slab::factory("gft_exact_match_profile",
+                      HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
+                      sizeof(hal::gft_exact_match_profile_t),
+                      16, false, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] != NULL), false);
+
+    slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] =
+        slab::factory("gft_hdr_xposition_profile",
+                      HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE,
+                      sizeof(hal::gft_hdr_xposition_profile_t),
+                      16, false, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] != NULL), false);
+
+    slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] =
+         slab::factory("gft_exact_match_flow_entry",
+                       HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY,
+                       sizeof(hal::gft_exact_match_flow_entry_t),
+                       16, false, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] != NULL), false);
+
+    return true;
+}
+
+//------------------------------------------------------------------------------
+// initialize DBs and caches that don't to be persisted (i.e., volatile) across
+// restarts/upgrades and these will have to be rebuilt after restart/upgrade
+//------------------------------------------------------------------------------
+bool
+hal_mem_db::init_vss(void)
+{
     // initialize TLS CB related data structures
     slabs_[HAL_SLAB_TLSCB] = slab::factory("tlscb", HAL_SLAB_TLSCB,
                                 sizeof(hal::tlscb_t), 16,
@@ -774,29 +894,11 @@ hal_mem_db::init(shmmgr *mmgr)
                                 false, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_TCPCB] != NULL), false);
 
-    // initialize Qos-class related data structures
-    slabs_[HAL_SLAB_QOS_CLASS] = slab::factory("QosClass", HAL_SLAB_QOS_CLASS,
-                                sizeof(hal::qos_class_t), 8,
-                                false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_QOS_CLASS] != NULL), false);
-
-    // initialize Copp related data structures
-    slabs_[HAL_SLAB_COPP] = slab::factory("Copp", HAL_SLAB_COPP,
-                                sizeof(hal::copp_t), 8,
-                                false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_COPP] != NULL), false);
-
     // initialize WRing related data structures
     slabs_[HAL_SLAB_WRING] = slab::factory("wring", HAL_SLAB_WRING,
                                 sizeof(hal::wring_t), 16,
                                 false, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_WRING] != NULL), false);
-
-    // initialize Acl related data structures
-    slabs_[HAL_SLAB_ACL] = slab::factory("Acl", HAL_SLAB_ACL,
-                              sizeof(hal::acl_t), 8,
-                              false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ACL] != NULL), false);
 
     // initialize IPSEC CB related data structures
     slabs_[HAL_SLAB_IPSECCB] = slab::factory("ipseccb", HAL_SLAB_IPSECCB,
@@ -859,12 +961,6 @@ hal_mem_db::init(shmmgr *mmgr)
                       64, true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY_APPID] != NULL), false);
 
-    slabs_[HAL_SLAB_NWSEC_GROUP] =
-        slab::factory("nwsec_group", HAL_SLAB_NWSEC_GROUP,
-                      sizeof(hal::nwsec_group_t), 64,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_GROUP] != NULL), false);
-
     // TODO - cleanup !! why same slab id for the 2 slabs below ?
     slabs_[HAL_SLAB_NWSEC_RULE] =
         slab::factory("ipv4_rule", HAL_SLAB_NWSEC_RULE,
@@ -890,29 +986,27 @@ hal_mem_db::init(shmmgr *mmgr)
                       false, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PROXY_FLOW_INFO] != NULL), false);
 
-    // initialize GFT related slabs
-    slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] =
-        slab::factory("gft_exact_match_profile",
-                      HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
-                      sizeof(hal::gft_exact_match_profile_t),
-                      16, false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] != NULL), false);
-
-    slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] =
-        slab::factory("gft_hdr_xposition_profile",
-                      HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE,
-                      sizeof(hal::gft_hdr_xposition_profile_t),
-                      16, false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] != NULL), false);
-
-    slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] =
-         slab::factory("gft_exact_match_flow_entry",
-                       HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY,
-                       sizeof(hal::gft_exact_match_flow_entry_t),
-                       16, false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] != NULL), false);
-
     return true;
+}
+
+//------------------------------------------------------------------------------
+// init() function to instantiate all the mem db init state
+//------------------------------------------------------------------------------
+bool
+hal_mem_db::init(shmmgr *mmgr)
+{
+    mmgr_ = mmgr;
+    HAL_ASSERT_RETURN((init_pss(mmgr) == true), false);
+    HAL_ASSERT_RETURN((init_vss() == true), false);
+    return true;
+}
+
+//------------------------------------------------------------------------------
+// initialize the state that is not valid after a process restart
+//------------------------------------------------------------------------------
+void
+hal_mem_db::init_on_restart(void) {
+    init_vss();
 }
 
 //------------------------------------------------------------------------------
@@ -1173,8 +1267,8 @@ hal_state::hal_state(shmmgr *mmgr)
 
     oper_db_ = hal_oper_db::factory(mmgr);
     HAL_ASSERT_GOTO(oper_db_, error);
-    mem_db_ = hal_mem_db::factory(mmgr);
 
+    mem_db_ = hal_mem_db::factory(mmgr);
     HAL_ASSERT_GOTO(mem_db_, error);
     if (mmgr) {
         api_stats_ =
@@ -1200,23 +1294,22 @@ hal_state::~hal_state() {
 }
 
 //------------------------------------------------------------------------------
-// reset the state that is not valid after a process restart
+// initialize the state that is not valid after a process restart
 //------------------------------------------------------------------------------
 void
-hal_state::reset_on_restart(void) {
+hal_state::init_on_restart(void) {
     catalog_ = NULL;
-    // TODO:
-    // cfg_db_->reset_on_restart()
-    // oper_db_->reset_on_restart()
-    // mem_db_->reset_on_restart()
+    cfg_db_->init_on_restart();
+    oper_db_->init_on_restart();
+    mem_db_->init_on_restart();
 }
 
 //------------------------------------------------------------------------------
 // preserve the state in the class in the given persistent memory and return
 // the number of bytes used up
 //------------------------------------------------------------------------------
-uint32_t
-preserve_state(void *mem, uint32_t len)
+uint64_t
+hal_state::preserve_state(void *mem, uint32_t len)
 {
     return 0;
 }
@@ -1225,7 +1318,7 @@ preserve_state(void *mem, uint32_t len)
 // restore the state from given memory segment
 //------------------------------------------------------------------------------
 uint64_t
-preserve_state(void *mem)
+hal_state::restore_state(void *mem)
 {
     return 0;
 }
@@ -1240,9 +1333,9 @@ hal_mem_init (bool shm_mode)
 
     // check if memory segments of interest exist
     h2s_exists = shmmgr::exists(HAL_STATE_STORE,
-                                (void *)HAL_STATE_STORE_VM_ADDR);
+                                (void *)HAL_STATE_STORE_VADDR);
     h3s_exists = shmmgr::exists(HAL_SERIALIZED_STATE_STORE,
-                                (void *)HAL_SERIALIZED_STATE_STORE_VM_ADDR);
+                                (void *)HAL_SERIALIZED_STATE_STORE_VADDR);
 
     if (!shm_mode) {
         // stateless restart or upgrade
@@ -1259,7 +1352,6 @@ hal_mem_init (bool shm_mode)
             shmmgr::remove(HAL_SERIALIZED_STATE_STORE);
         }
         // instantiate HAL state in regular linux memory
-        //g_hal_state = hal_state::factory();
         g_hal_state = new hal_state();
     } else if (h2s_exists) {
         // stateful restart case
@@ -1267,7 +1359,7 @@ hal_mem_init (bool shm_mode)
         g_h2s_shmmgr =
             shmmgr::factory(HAL_STATE_STORE, HAL_STATE_STORE_SIZE,
                             sdk::lib::SHM_OPEN_ONLY,
-                            (void *)HAL_STATE_STORE_VM_ADDR);
+                            (void *)HAL_STATE_STORE_VADDR);
         HAL_ABORT(g_h2s_shmmgr != NULL);
         // reconstruct hal state
         fixed_managed_shared_memory    *fm_shm_mgr;
@@ -1279,12 +1371,11 @@ hal_mem_init (bool shm_mode)
             return HAL_RET_ERR;
         }
         // there may be some state in g_hal_state that needs to be
-        // recomputed (e.g., pointers to objects in non-shared memory like
-        // catalog pointer etc. pointers to such objects aren't valid after
-        // restart, so need to reset to NULL at this point .. the pointers to
-        // objects that exist in shared memory are still valid, so we don't
-        // reset them
-        g_hal_state->reset_on_restart();
+        // reset/reinitialized (e.g., pointers to objects in non-shared memory
+        // like catalog pointer etc. aren't valid after restart, so need to
+        // reset to NULL at this point .. the pointers to objects that exist in
+        // shared memory are still valid, so we don't reset them
+        g_hal_state->init_on_restart();
         HAL_TRACE_DEBUG("HAL state obj found, state restored");
     } else if (h3s_exists) {
         // stateful upgrade case
@@ -1294,14 +1385,14 @@ hal_mem_init (bool shm_mode)
             shmmgr::factory(HAL_SERIALIZED_STATE_STORE,
                             HAL_SERIALIZED_STATE_STORE_SIZE,
                             sdk::lib::SHM_OPEN_ONLY,
-                            (void *)HAL_SERIALIZED_STATE_STORE_VM_ADDR);
+                            (void *)HAL_SERIALIZED_STATE_STORE_VADDR);
         HAL_ABORT(g_h3s_shmmgr != NULL);
 
         // open state store to restore the state to
         g_h2s_shmmgr =
             shmmgr::factory(HAL_STATE_STORE, HAL_STATE_STORE_SIZE,
                             sdk::lib::SHM_CREATE_ONLY,
-                            (void *)HAL_STATE_STORE_VM_ADDR);
+                            (void *)HAL_STATE_STORE_VADDR);
         HAL_ABORT(g_h2s_shmmgr != NULL);
 
         // TODO:
@@ -1309,16 +1400,19 @@ hal_mem_init (bool shm_mode)
         // 2. nuke HAL_SERIALIZED_STATE_STORE (i.e., g_h3s_shmmgr->destroy())
     } else {
         // coming up in shm mode, but no existing state store
-        HAL_TRACE_DEBUG("Creating new HAL state store");
+        HAL_TRACE_DEBUG("Creating new HAL state store in shared memory");
         g_h2s_shmmgr =
             shmmgr::factory(HAL_STATE_STORE, HAL_STATE_STORE_SIZE,
                             sdk::lib::SHM_CREATE_ONLY,
-                            (void *)HAL_STATE_STORE_VM_ADDR);
+                            (void *)HAL_STATE_STORE_VADDR);
         HAL_ABORT(g_h2s_shmmgr != NULL);
 
         // instantiate HAL state in regular linux memory
         //g_hal_state = hal_state::factory(g_h2s_shmmgr);
-        g_hal_state = new hal_state(g_h2s_shmmgr);
+        fixed_managed_shared_memory    *fm_shm_mgr;
+        fm_shm_mgr = (fixed_managed_shared_memory *)g_h2s_shmmgr->mmgr();
+        g_hal_state = fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(g_h2s_shmmgr);
+        //g_hal_state = new hal_state(g_h2s_shmmgr);
     }
 
     // in all cases g_hal_state must be setup by now
@@ -1524,6 +1618,12 @@ free_to_slab (hal_slab_t slab_id, void *elem)
     }
 
     return HAL_RET_OK;
+}
+
+shmmgr *
+hal_mmgr (void)
+{
+    return g_hal_state->mmgr();
 }
 
 }    // namespace hal

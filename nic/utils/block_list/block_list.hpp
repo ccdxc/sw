@@ -5,14 +5,18 @@
  *  - Maintaines block of elements.
  *  - Reduces the overhead needed to store each element.
  *----------------------------------------------------------------------------*/
+
 #ifndef __BLOCK_LIST_HPP__
 #define __BLOCK_LIST_HPP__
 
 #include "nic/include/base.h"
 #include "sdk/list.hpp"
+#include "sdk/shmmgr.hpp"
 #include "nic/utils/iterator/iterator_tpl.h"
 
 using sdk::lib::dllist_ctxt_t;
+
+#define BLOCK_LIST_DEFAULT_ELEMS_PER_BLOCK        8
 
 namespace hal {
 namespace utils {
@@ -29,8 +33,9 @@ struct list_node_s {
 
 class block_list {
 public:
-    static block_list *factory(uint32_t elem_size, 
-                               uint32_t elems_per_block = 8);
+    static block_list *factory(uint32_t elem_size,
+                               uint32_t elems_per_block = BLOCK_LIST_DEFAULT_ELEMS_PER_BLOCK,
+                               shmmgr *mmgr = NULL);
     static void destroy(block_list *blist);
 
     /* Insert element in the list */
@@ -108,16 +113,16 @@ public:
     SETUP_ITERATORS(block_list, void*, iterator_state);
     // SETUP_MUTABLE_ITERATOR(block_list, void*, iterator_state);
 
-
 private:
     uint8_t         elems_per_block_;
     uint32_t        elem_size_;
     dllist_ctxt_t   list_head_;
+    shmmgr          *mmgr_;
 
 private:
     block_list() {};
     ~block_list();
-    int init(uint32_t elem_size, uint32_t elems_per_block); 
+    bool init(uint32_t elem_size, uint32_t elems_per_block, shmmgr *mmgr);
     list_node_t *get_last_node_();
     hal_ret_t find_(void *elem, list_node_t **elem_in_node, 
                     uint32_t *elem_id);
@@ -126,7 +131,6 @@ private:
     void *element_location_(list_node_t *node, 
                             uint32_t elem_id);
     hal_ret_t remove_elem_(list_node_t *node, uint32_t elem_id, bool *last_elem);
-
 };
 
 }

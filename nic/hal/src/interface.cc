@@ -82,7 +82,7 @@ if_init (if_t *hal_if)
         return NULL;
     }
     memset(hal_if, 0, sizeof(if_t));
-    HAL_SPINLOCK_INIT(&hal_if->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&hal_if->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     hal_if->num_ep = 0;
@@ -1290,36 +1290,36 @@ if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     }
 
     switch (hal_if->if_type) {
-        case intf::IF_TYPE_ENIC:
-            ret = enic_if_update_check_for_change(spec, hal_if, app_ctxt, 
-                                                  has_changed);
-            break;
-        case intf::IF_TYPE_UPLINK:
-            ret = uplink_if_update_check_for_change(spec, hal_if, app_ctxt, 
-                                                    has_changed);
-            break;
-        case intf::IF_TYPE_UPLINK_PC:
-            ret = uplink_pc_update_check_for_change(spec, hal_if, app_ctxt, 
-                                                    has_changed);
-            break;
-        case intf::IF_TYPE_TUNNEL:
-            ret = tunnelif_update_check_for_change(spec, hal_if, app_ctxt,
-                                                   has_changed);
-            break;
-        case intf::IF_TYPE_CPU:
-            ret = cpuif_update_check_for_change(spec, hal_if, app_ctxt,
+    case intf::IF_TYPE_ENIC:
+        ret = enic_if_update_check_for_change(spec, hal_if, app_ctxt, 
+                                              has_changed);
+        break;
+    case intf::IF_TYPE_UPLINK:
+        ret = uplink_if_update_check_for_change(spec, hal_if, app_ctxt, 
                                                 has_changed);
-            break;
+        break;
+    case intf::IF_TYPE_UPLINK_PC:
+        ret = uplink_pc_update_check_for_change(spec, hal_if, app_ctxt, 
+                                                has_changed);
+        break;
+    case intf::IF_TYPE_TUNNEL:
+        ret = tunnelif_update_check_for_change(spec, hal_if, app_ctxt,
+                                               has_changed);
+        break;
+    case intf::IF_TYPE_CPU:
+        ret = cpuif_update_check_for_change(spec, hal_if, app_ctxt,
+                                            has_changed);
+        break;
 
-        case intf::IF_TYPE_APP_REDIR:
-            ret = app_redir_if_update_check_for_change(spec, hal_if, app_ctxt,
-                                                       has_changed);
-            break;
+    case intf::IF_TYPE_APP_REDIR:
+        ret = app_redir_if_update_check_for_change(spec, hal_if, app_ctxt,
+                                                   has_changed);
+        break;
 
-        default:
-            HAL_TRACE_ERR("invalid if type: {}", 
-                          hal_if->if_type);
-            ret = HAL_RET_INVALID_ARG;
+    default:
+        HAL_TRACE_ERR("invalid if type: {}", 
+                      hal_if->if_type);
+        ret = HAL_RET_INVALID_ARG;
     }
 
     return ret;
@@ -1815,8 +1815,8 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
                              if_update_cleanup_cb);
 
 end:
+
     if_prepare_rsp(rsp, ret, hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID);
-    hal_api_trace(" API End: interface update ");
     return ret;
 
 }

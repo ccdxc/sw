@@ -94,7 +94,7 @@ static inline mc_entry_t *mc_entry_init (mc_entry_t *mc_entry)
         return NULL;
     }
 
-    HAL_SPINLOCK_INIT(&mc_entry->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&mc_entry->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     mc_entry->pd = NULL;

@@ -8,25 +8,33 @@ namespace utils {
 // Factory method to construct the block list
 //-----------------------------------------------------------------------------
 block_list *
-block_list::factory (uint32_t elem_size, uint32_t elems_per_block)
+block_list::factory (uint32_t elem_size, uint32_t elems_per_block, shmmgr *mmgr)
 {
-    int         rv              = 0;
     block_list  *new_block_list = NULL;
+    void        *mem;
 
     if (elems_per_block == 0 || elem_size == 0) {
         return NULL;
     }
 
-    void *mem = HAL_CALLOC(HAL_MEM_ALLOC_BLOCK_LIST, sizeof(block_list));
+    if (mmgr) {
+        mem = mmgr->alloc(sizeof(block_list), 4, true);
+    } else {
+        mem = HAL_CALLOC(HAL_MEM_ALLOC_BLOCK_LIST, sizeof(block_list));
+    }
+
     if (mem == NULL) {
         return NULL;
     }
 
     new_block_list = new (mem) block_list();
-    rv = new_block_list->init(elem_size, elems_per_block);
-    if (rv < 0) {
+    if (new_block_list->init(elem_size, elems_per_block, mmgr) == false) {
         new_block_list->~block_list();
-        HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST, mem);
+        if (mmgr) {
+            mmgr->free(mem);
+        } else {
+            HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST, mem);
+        }
         return NULL;
     }
 
@@ -36,14 +44,15 @@ block_list::factory (uint32_t elem_size, uint32_t elems_per_block)
 //-----------------------------------------------------------------------------
 // Init method to construct the block list
 //-----------------------------------------------------------------------------
-int
-block_list::init(uint32_t elem_size, uint32_t elems_per_block)
+bool
+block_list::init(uint32_t elem_size, uint32_t elems_per_block, shmmgr *mmgr)
 {
+    mmgr_                  = mmgr;
     this->elem_size_       = elem_size;
     this->elems_per_block_ = elems_per_block;
     dllist_reset(&this->list_head_);
 
-    return 0;
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -51,13 +60,17 @@ block_list::init(uint32_t elem_size, uint32_t elems_per_block)
 //-----------------------------------------------------------------------------
 block_list::~block_list()
 {
-    dllist_ctxt_t               *curr, *next;
-    list_node_t                 *node = NULL;
+    dllist_ctxt_t    *curr, *next;
+    list_node_t      *node = NULL;
+
     dllist_for_each_safe(curr, next, &list_head_) {
         node = dllist_entry(curr, list_node_t, ctxt_);
-
         dllist_del(&node->ctxt_);
-        HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST_NODE, node);
+        if (mmgr_) {
+            mmgr_->free(node);
+        } else {
+            HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST_NODE, node);
+        }
     }
 }
 
@@ -67,11 +80,18 @@ block_list::~block_list()
 void
 block_list::destroy(block_list *blist)
 {
+    shmmgr    *mmgr;
+
     if (!blist) {
         return;
     }
+    mmgr = blist->mmgr_;
     blist->~block_list();
-    HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST, blist);
+    if (mmgr) {
+        mmgr->free(blist);
+    } else {
+        HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST, blist);
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -80,7 +100,7 @@ block_list::destroy(block_list *blist)
 hal_ret_t 
 block_list::remove_all()
 {
-    // Make sure the destructor is just removing blocks
+    // make sure the destructor is just removing blocks
     this->~block_list();
 
     return HAL_RET_OK;
@@ -90,7 +110,7 @@ block_list::remove_all()
 // Gets last node in the list of nodes
 //-----------------------------------------------------------------------------
 list_node_t *
-block_list::get_last_node_()
+block_list::get_last_node_(void)
 {
     dllist_ctxt_t               *curr, *next;
     list_node_t                 *last_node = NULL;
@@ -124,9 +144,17 @@ block_list::insert(void *elem)
     // If first block or no space in last block
     if (last_node == NULL || last_node->num_in_use_ == elems_per_block_) {
         // Allocate new block
-        insert_in_node = (list_node_t *)HAL_MALLOC(HAL_MEM_ALLOC_BLOCK_LIST_NODE, 
-                                                   sizeof(list_node_t) +
-                                                   elems_per_block_ * elem_size_);
+        if (mmgr_) {
+            insert_in_node =
+                (list_node_t *)mmgr_->alloc(sizeof(list_node_t) +
+                                            (elems_per_block_ * elem_size_),
+                                            4, false);
+        } else {
+            insert_in_node =
+                (list_node_t *)HAL_MALLOC(HAL_MEM_ALLOC_BLOCK_LIST_NODE, 
+                                          sizeof(list_node_t) +
+                                          (elems_per_block_ * elem_size_));
+        }
         if (insert_in_node == NULL) {
             HAL_TRACE_DEBUG("{}:Unable to allocate memory for list node",
                             __FUNCTION__);
@@ -149,6 +177,7 @@ block_list::insert(void *elem)
     insert_in_node->num_in_use_++;
 
 end:
+
     return ret;
 }
 
@@ -168,7 +197,6 @@ block_list::is_present(void *elem)
         // Match
         return true;
     }
-
     return false;
 }
 
@@ -203,6 +231,7 @@ block_list::find_(void *elem, list_node_t **elem_in_node,
     }
 
 end:
+
     return ret;
 }
 
@@ -212,8 +241,8 @@ end:
 void *
 block_list::element_location_(list_node_t *node, uint32_t elem_id)
 {
-    return (uint8_t *)node + sizeof(list_node_t) + 
-        elem_id * this->elem_size_;
+    return (((uint8_t *)node) + sizeof(list_node_t) +
+            elem_id * this->elem_size_);
 }
 
 //-----------------------------------------------------------------------------
@@ -241,7 +270,11 @@ block_list::consolidate_(list_node_t *node, uint32_t elem_id,
         // Last element of Last node
         // Delete & free last node
         dllist_del(&last_node->ctxt_);
-        HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST_NODE, last_node);
+        if (mmgr_) {
+            mmgr_->free(last_node);
+        } else {
+            HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST_NODE, last_node);
+        }
     }
 
     return ret;
@@ -273,14 +306,18 @@ block_list::remove(void *elem)
             // Last element of Last node
             // Delete & free last node
             dllist_del(&node->ctxt_);
-            HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST_NODE, node);
+            if (mmgr_) {
+                mmgr_->free(node);
+            } else {
+                HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST_NODE, node);
+            }
         }
     } else {
         this->consolidate_(node, elem_id, last_node);
     }
 
-
 end:
+
     return ret;
 }
 
@@ -288,7 +325,7 @@ end:
 // Get number of elements 
 //-----------------------------------------------------------------------------
 uint32_t
-block_list::num_elems()
+block_list::num_elems(void)
 {
     dllist_ctxt_t       *curr, *next;
     list_node_t         *node = NULL;
@@ -319,7 +356,11 @@ block_list::remove_elem_(list_node_t *node, uint32_t elem_id, bool *last_elem)
             // Last element of Last node
             // Delete & free last node
             dllist_del(&node->ctxt_);
-            HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST_NODE, node);
+            if (mmgr_) {
+                mmgr_->free(node);
+            } else {
+                HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST_NODE, node);
+            }
         }
     } else {
         this->consolidate_(node, elem_id, last_node);
@@ -352,6 +393,7 @@ block_list::iterate(block_list_cb_t cb, void *data)
     }
 
 end:
+
     return ret;
 }
 

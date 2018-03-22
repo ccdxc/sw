@@ -72,7 +72,7 @@ qos_class_init (qos_class_t *qos_class)
     if (!qos_class) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_SHARED);
 
     return qos_class;
 }
@@ -838,7 +838,7 @@ qosclass_create (QosClassSpec& spec, QosClassResponse *rsp)
     }
 
     // initialize the qos class record
-    HAL_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_SHARED);
 
     // populate from the spec
     ret = qos_class_populate_from_spec(qos_class, spec);
@@ -1541,7 +1541,7 @@ copp_init (copp_t *copp)
     if (!copp) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_SHARED);
 
     return copp;
 }
@@ -1970,7 +1970,7 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
     }
 
     // initialize the copp record
-    HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_SHARED);
 
     // populate from the spec
     ret = copp_populate_from_spec(copp, spec);
