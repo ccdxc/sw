@@ -32,11 +32,6 @@ class DOLTestCase(TestCase):
     def IsDrop(self):
         return self.drop
 
-    def ShowScapyObject(self, scapyobj):
-        scapyobj.show2(indent = 0,
-                        label_lvl = self.GetLogPrefix())
-
-
     def __generate_packets_from_spec(self, pspec):
         pktspec = getattr(pspec, 'packet', None)
         if pktspec is None: return
@@ -203,5 +198,6 @@ class DOLTestCase(TestCase):
     def TeardownCallback(self):
         super().TeardownCallback()
         ModelConnector.TestCaseEnd(self.GID(), self.loopid)
+        logger.SetTestcase(None)
         self.coverage.Process()
-
+        return

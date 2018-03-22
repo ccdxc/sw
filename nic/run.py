@@ -249,7 +249,7 @@ def run_hal(args):
     
     os.environ["HAL_LOG_DIR"] = hal_log_dir
     hal_log = hal_log_dir + "/hal.log"
-    os.system("rm -r %s/hal.log.*" % hal_log_dir)
+    os.system("rm -rf %s/hal.log.*" % hal_log_dir)
     os.system("cp " + nic_dir + "/conf/hal_switch.ini " + nic_dir + "/conf/hal.ini")
     if args.hostpin:
         #jsonfile = 'hal_hostpin.json'
@@ -376,7 +376,7 @@ def run_dol(args):
     dol_dir = nic_dir + "/../dol"
     os.chdir(dol_dir)
 
-    log = open(dol_log, "w")
+    #log = open(dol_log, "w")
     cmd = ['./main.py', '--topo', args.topology ]
     if args.modlist is not None:
         cmd.append('--modlist')
@@ -451,7 +451,7 @@ def run_dol(args):
     lock.write(str(p.pid) + "\n")
     lock.close()
     #p.communicate()
-    log.close()
+    #log.close()
 
     return check_for_completion(p, model_process, hal_process, args)
 
