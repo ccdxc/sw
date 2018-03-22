@@ -2,7 +2,6 @@ meta:
     id: FRAMEWORK_DATA
 
 TestModuleID    : None # Test Module ID
-Logger          : None # Logger Instance
 Factory         : None # Handle to Factory module
 TestSpec        : None # Instance of Template:testobjects/testpec
 CfgObjectStore  : None # Store of Configuration Objects

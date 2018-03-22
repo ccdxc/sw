@@ -278,14 +278,12 @@ class EthQueueObject(QueueObject):
                     i)
                 # Create Buffer
                 buf = buffer_template.CreateObjectInstance()
-                buf.Logger(logger)
                 buf.GID('%s_%s' % (buffer_template.meta.id, uid))
                 buf_spec = AttrDict(fields=AttrDict(size=1518, bind=True))
                 buf.Init(buf_spec)
                 buf.Write()
                 # Create descriptor
                 desc = descriptor_template.CreateObjectInstance()
-                buf.Logger(logger)
                 buf.GID('%s_%s' % (descriptor_template.meta.id, uid))
                 desc_spec = AttrDict(fields=AttrDict(addr=buf.addr, len=buf.size))
                 desc.Init(desc_spec)
