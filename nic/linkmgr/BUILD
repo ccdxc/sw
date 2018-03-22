@@ -10,8 +10,8 @@ cc_library(
     ] + glob(["*.h", "*.hpp"])
 )
 
-cc_binary(
-    name = "linkmgr",
+cc_library(
+    name = "linkmgr_src",
     srcs = [
             "linkmgr.cc",
             "linkmgr_src.cc",
@@ -39,6 +39,15 @@ cc_binary(
         "//nic/utils/trace:trace",
         "@sdk//obj:sdk_linkmgr",
         "//nic:google_includes",
+    ],
+    copts = sdk_copts,
+)
+
+cc_binary(
+    name = "linkmgr",
+    srcs = [],
+    deps = [
+        ":linkmgr_src"
     ],
     linkopts = [
         "-lzmq",

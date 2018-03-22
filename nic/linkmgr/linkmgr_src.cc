@@ -190,7 +190,7 @@ svc_reg (const std::string& server_addr)
 //------------------------------------------------------------------------------
 // parse configuration
 //------------------------------------------------------------------------------
-static hal_ret_t
+hal_ret_t
 linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 {
     ptree             pt;
@@ -1188,7 +1188,7 @@ port_get (PortGetRequest& req, PortGetResponse *rsp)
     pi_p = port_lookup_key_or_handle(req.key_or_handle());
     if (!pi_p) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_INVALID_ARG;
+        return HAL_RET_PORT_NOT_FOUND;
     }
 
     // fill in the config spec of this port
