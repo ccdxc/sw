@@ -310,6 +310,16 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 	stats->clean++;
 }
 
+static void ionic_tx_clean_wake(struct queue *q, struct desc_info *desc_info,
+				struct cq_info *cq_info, void *cb_arg)
+{
+	struct sk_buff *skb = cb_arg;
+	u16 queue_index = skb_get_queue_mapping(skb);
+
+	ionic_tx_clean(q, desc_info, cq_info, cb_arg);
+	netif_wake_subqueue(q->lif->netdev, queue_index);
+}
+
 static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info,
 			     void *cb_arg)
 {
@@ -522,6 +532,8 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 	struct lif *lif = netdev_priv(netdev);
 	struct queue *q = lif_to_txq(lif, queue_index);
 	struct tx_stats *stats = q_to_tx_stats(q);
+	bool ring_db = !skb->xmit_more;
+	desc_cb clean_cb = ionic_tx_clean;
 	int err;
 
 	if (!ionic_tx_fit_check(q, skb))
@@ -544,16 +556,18 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 		goto err_out_drop;
 
 	skb_tx_timestamp(skb);
-	// TODO do we honor skb->xmit_more to not ring doorbell?
-	ionic_q_post(q, true, ionic_tx_clean, skb);
 
 	stats->pkts++;
 	stats->bytes += skb->len;
 
-	if (!ionic_q_has_space(q, 1)) {
+	if (!ionic_q_has_space(q, 2)) {
+		ring_db = true;
+		clean_cb = ionic_tx_clean_wake;
 		netif_stop_subqueue(netdev, queue_index);
 		stats->stop++;
 	}
+
+	ionic_q_post(q, ring_db, clean_cb, skb);
 
 	return NETDEV_TX_OK;
 
