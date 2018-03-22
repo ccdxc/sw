@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/api"
 	alerts "github.com/pensando/sw/api/generated/alerts"
 	"github.com/pensando/sw/api/generated/alerts/grpc/client"
+	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,47 +35,137 @@ import (
 var _ api.TypeMeta
 
 type sAlertDestinationV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterAlertDestinationV1 struct {
 	conn    *rpckit.RPCClient
 	service alerts.ServiceAlertDestinationV1Client
+	gwSvc   *sAlertDestinationV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterAlertDestinationV1) AutoAddAlertDestination(oldctx oldcontext.Context, t *alerts.AlertDestination, options ...grpc.CallOption) (*alerts.AlertDestination, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddAlertDestination(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddAlertDestination")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.AlertDestination)
+		return a.service.AutoAddAlertDestination(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.AlertDestination), err
 }
 
 func (a adapterAlertDestinationV1) AutoDeleteAlertDestination(oldctx oldcontext.Context, t *alerts.AlertDestination, options ...grpc.CallOption) (*alerts.AlertDestination, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteAlertDestination(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAlertDestination")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.AlertDestination)
+		return a.service.AutoDeleteAlertDestination(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.AlertDestination), err
 }
 
 func (a adapterAlertDestinationV1) AutoGetAlertDestination(oldctx oldcontext.Context, t *alerts.AlertDestination, options ...grpc.CallOption) (*alerts.AlertDestination, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetAlertDestination(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetAlertDestination")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.AlertDestination)
+		return a.service.AutoGetAlertDestination(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.AlertDestination), err
 }
 
 func (a adapterAlertDestinationV1) AutoListAlertDestination(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*alerts.AlertDestinationList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListAlertDestination(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListAlertDestination")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListAlertDestination(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.AlertDestinationList), err
 }
 
 func (a adapterAlertDestinationV1) AutoUpdateAlertDestination(oldctx oldcontext.Context, t *alerts.AlertDestination, options ...grpc.CallOption) (*alerts.AlertDestination, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateAlertDestination(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAlertDestination")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.AlertDestination)
+		return a.service.AutoUpdateAlertDestination(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.AlertDestination), err
 }
 
 func (a adapterAlertDestinationV1) AutoWatchAlertDestination(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (alerts.AlertDestinationV1_AutoWatchAlertDestinationClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchAlertDestination(ctx, in)
+}
+
+func (e *sAlertDestinationV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sAlertDestinationV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sAlertDestinationV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sAlertDestinationV1GwService) CompleteRegistration(ctx context.Context,
@@ -95,6 +187,7 @@ func (e *sAlertDestinationV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -163,52 +256,142 @@ func (e *sAlertDestinationV1GwService) newClient(ctx context.Context, grpcAddr s
 		}()
 	}()
 
-	cl := &adapterAlertDestinationV1{conn: client, service: grpcclient.NewAlertDestinationV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterAlertDestinationV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewAlertDestinationV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
 type sAlertPolicyV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterAlertPolicyV1 struct {
 	conn    *rpckit.RPCClient
 	service alerts.ServiceAlertPolicyV1Client
+	gwSvc   *sAlertPolicyV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterAlertPolicyV1) AutoAddAlertPolicy(oldctx oldcontext.Context, t *alerts.AlertPolicy, options ...grpc.CallOption) (*alerts.AlertPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddAlertPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.AlertPolicy)
+		return a.service.AutoAddAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.AlertPolicy), err
 }
 
 func (a adapterAlertPolicyV1) AutoDeleteAlertPolicy(oldctx oldcontext.Context, t *alerts.AlertPolicy, options ...grpc.CallOption) (*alerts.AlertPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteAlertPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.AlertPolicy)
+		return a.service.AutoDeleteAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.AlertPolicy), err
 }
 
 func (a adapterAlertPolicyV1) AutoGetAlertPolicy(oldctx oldcontext.Context, t *alerts.AlertPolicy, options ...grpc.CallOption) (*alerts.AlertPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetAlertPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.AlertPolicy)
+		return a.service.AutoGetAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.AlertPolicy), err
 }
 
 func (a adapterAlertPolicyV1) AutoListAlertPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*alerts.AlertPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListAlertPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.AlertPolicyList), err
 }
 
 func (a adapterAlertPolicyV1) AutoUpdateAlertPolicy(oldctx oldcontext.Context, t *alerts.AlertPolicy, options ...grpc.CallOption) (*alerts.AlertPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateAlertPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.AlertPolicy)
+		return a.service.AutoUpdateAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.AlertPolicy), err
 }
 
 func (a adapterAlertPolicyV1) AutoWatchAlertPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (alerts.AlertPolicyV1_AutoWatchAlertPolicyClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchAlertPolicy(ctx, in)
+}
+
+func (e *sAlertPolicyV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sAlertPolicyV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sAlertPolicyV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sAlertPolicyV1GwService) CompleteRegistration(ctx context.Context,
@@ -230,6 +413,7 @@ func (e *sAlertPolicyV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -292,7 +476,7 @@ func (e *sAlertPolicyV1GwService) newClient(ctx context.Context, grpcAddr string
 		}()
 	}()
 
-	cl := &adapterAlertPolicyV1{conn: client, service: grpcclient.NewAlertPolicyV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterAlertPolicyV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewAlertPolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

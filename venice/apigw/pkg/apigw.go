@@ -24,6 +24,7 @@ import (
 type apiGw struct {
 	svcmap  map[string]apigw.APIGatewayService
 	svcname map[string]string
+	hooks   map[string]apigw.ServiceHookCb
 	logger  log.Logger
 	doneCh  chan error
 	// runstate is set when the API server is ready to serve requests
@@ -54,7 +55,7 @@ func initAPIGw() {
 	singletonAPIGw.doneCh = make(chan error)
 	singletonAPIGw.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
 	singletonAPIGw.backendOverride = make(map[string]string)
-
+	singletonAPIGw.hooks = make(map[string]apigw.ServiceHookCb)
 }
 
 // Register a service with the APi Gateway service. Duplicate registrations
@@ -72,6 +73,14 @@ func (a *apiGw) Register(name, path string, svc apigw.APIGatewayService) apigw.A
 	a.svcmap[name] = svc
 	a.svcname[name] = name
 	return a.svcmap[name]
+}
+
+// RegisterHookCb registers a hooks registration callback
+func (a *apiGw) RegisterHooksCb(name string, cb apigw.ServiceHookCb) {
+	if _, ok := a.hooks[name]; ok {
+		panic(fmt.Sprintf("Duplicate hooks registration for %s", name))
+	}
+	a.hooks[name] = cb
 }
 
 // GetService returns registered Service, nil if not found.
@@ -189,6 +198,19 @@ func (a *apiGw) Run(config apigw.Config) {
 			panic(fmt.Sprintf("Failed to complete registration of %v (%v)", name, err))
 		}
 	}
+
+	// Call any callbacks that may be registered for Hooks
+	for name, cb := range a.hooks {
+		config.Logger.Log("Svc", name, "msg", "RegisterHooksCb")
+		svc, ok := a.svcmap[name]
+		if !ok {
+			a.logger.Fatalf("Invalid service name %v registered for hooks", name)
+		}
+		err := cb(svc, a.logger)
+		if err != nil {
+			a.logger.Fatalf("hooks cb returned error (%s)", err)
+		}
+	}
 	wg.Wait()
 	// Now RUN!
 	if config.DebugMode {
@@ -252,4 +274,76 @@ func (a *apiGw) GetAPIServerAddr(addr string) string {
 // GetDevMode returns true if running in dev mode
 func (a *apiGw) GetDevMode() bool {
 	return a.devmode
+}
+
+func (a *apiGw) copyToOutgoingContext(nctx, outgoingCtx context.Context) {
+	// Copy relevant metadata from nctx to the outgoingCtx
+	//  TBD
+}
+
+// HandleRequest handles the API gateway request and applies all Hooks
+func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.ServiceProfile, call func(ctx context.Context, in interface{}) (interface{}, error)) (interface{}, error) {
+	var out, i interface{}
+	var err error
+	i = in
+	nctx := ctx
+	// Call all PreAuthZHooks, if any of them return err then abort
+	pnHooks := prof.PreAuthNHooks()
+	skipAuth := false
+	skip := false
+	for _, h := range pnHooks {
+		nctx, i, skip, err = h(nctx, i)
+		skipAuth = skipAuth || skip
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Call all PreAuthZHooks, if any of them return err then abort
+	if !skipAuth {
+		// Call to Authenticate
+		// if !skipAuth {
+		//	token, err := auth.Authenticate(nctx, i)
+		// }
+
+		pzHooks := prof.PreAuthZHooks()
+		for _, h := range pzHooks {
+			nctx, i, err = h(nctx, i)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// Call the Auth module to Authorize - TBD
+		// 	authRes, err := authz.Authorize(nctx, token, i)
+		// 	if !authResult {
+		// 		return nil, errors.New("Not Authorized")
+		//	}
+	}
+
+	// Call pre Call Hooks
+	skipCall := false
+	skip = false
+	precall := prof.PreCallHooks()
+	for _, h := range precall {
+		nctx, i, skip, err = h(nctx, i)
+		if err != nil {
+			return nil, err
+		}
+		skipCall = skip || skipCall
+	}
+	out = i
+	if !skipCall {
+		out, err = call(nctx, i)
+	}
+	postCall := prof.PostCallHooks()
+	for _, h := range postCall {
+		nctx, out, err = h(nctx, out)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	a.copyToOutgoingContext(nctx, ctx)
+	return out, err
 }

@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/api"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/api/generated/bookstore/grpc/client"
+	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,186 +35,538 @@ import (
 var _ api.TypeMeta
 
 type sBookstoreV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterBookstoreV1 struct {
 	conn    *rpckit.RPCClient
 	service bookstore.ServiceBookstoreV1Client
+	gwSvc   *sBookstoreV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterBookstoreV1) AddOutage(oldctx oldcontext.Context, t *bookstore.OutageRequest, options ...grpc.CallOption) (*bookstore.Store, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AddOutage(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AddOutage")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.OutageRequest)
+		return a.service.AddOutage(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Store), err
 }
 
 func (a adapterBookstoreV1) Applydiscount(oldctx oldcontext.Context, t *bookstore.ApplyDiscountReq, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.Applydiscount(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("Applydiscount")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.ApplyDiscountReq)
+		return a.service.Applydiscount(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Order), err
 }
 
 func (a adapterBookstoreV1) AutoAddBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddBook(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddBook")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Book)
+		return a.service.AutoAddBook(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Book), err
 }
 
 func (a adapterBookstoreV1) AutoAddCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddCoupon(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddCoupon")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Coupon)
+		return a.service.AutoAddCoupon(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Coupon), err
 }
 
 func (a adapterBookstoreV1) AutoAddOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddOrder(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddOrder")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Order)
+		return a.service.AutoAddOrder(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Order), err
 }
 
 func (a adapterBookstoreV1) AutoAddPublisher(oldctx oldcontext.Context, t *bookstore.Publisher, options ...grpc.CallOption) (*bookstore.Publisher, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddPublisher(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddPublisher")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Publisher)
+		return a.service.AutoAddPublisher(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Publisher), err
 }
 
 func (a adapterBookstoreV1) AutoAddStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddStore(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddStore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Store)
+		return a.service.AutoAddStore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Store), err
 }
 
 func (a adapterBookstoreV1) AutoDeleteBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteBook(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteBook")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Book)
+		return a.service.AutoDeleteBook(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Book), err
 }
 
 func (a adapterBookstoreV1) AutoDeleteCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteCoupon(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteCoupon")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Coupon)
+		return a.service.AutoDeleteCoupon(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Coupon), err
 }
 
 func (a adapterBookstoreV1) AutoDeleteOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteOrder(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteOrder")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Order)
+		return a.service.AutoDeleteOrder(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Order), err
 }
 
 func (a adapterBookstoreV1) AutoDeletePublisher(oldctx oldcontext.Context, t *bookstore.Publisher, options ...grpc.CallOption) (*bookstore.Publisher, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeletePublisher(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeletePublisher")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Publisher)
+		return a.service.AutoDeletePublisher(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Publisher), err
 }
 
 func (a adapterBookstoreV1) AutoDeleteStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteStore(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteStore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Store)
+		return a.service.AutoDeleteStore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Store), err
 }
 
 func (a adapterBookstoreV1) AutoGetBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetBook(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetBook")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Book)
+		return a.service.AutoGetBook(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Book), err
 }
 
 func (a adapterBookstoreV1) AutoGetCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetCoupon(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetCoupon")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Coupon)
+		return a.service.AutoGetCoupon(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Coupon), err
 }
 
 func (a adapterBookstoreV1) AutoGetOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetOrder(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetOrder")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Order)
+		return a.service.AutoGetOrder(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Order), err
 }
 
 func (a adapterBookstoreV1) AutoGetPublisher(oldctx oldcontext.Context, t *bookstore.Publisher, options ...grpc.CallOption) (*bookstore.Publisher, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetPublisher(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetPublisher")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Publisher)
+		return a.service.AutoGetPublisher(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Publisher), err
 }
 
 func (a adapterBookstoreV1) AutoGetStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetStore(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetStore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Store)
+		return a.service.AutoGetStore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Store), err
 }
 
 func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.BookList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListBook(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListBook")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListBook(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.BookList), err
 }
 
 func (a adapterBookstoreV1) AutoListCoupon(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.CouponList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListCoupon(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListCoupon")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListCoupon(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.CouponList), err
 }
 
 func (a adapterBookstoreV1) AutoListOrder(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.OrderList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListOrder(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListOrder")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListOrder(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.OrderList), err
 }
 
 func (a adapterBookstoreV1) AutoListPublisher(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.PublisherList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListPublisher(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListPublisher")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListPublisher(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.PublisherList), err
 }
 
 func (a adapterBookstoreV1) AutoListStore(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.StoreList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListStore(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListStore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListStore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.StoreList), err
 }
 
 func (a adapterBookstoreV1) AutoUpdateBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateBook(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateBook")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Book)
+		return a.service.AutoUpdateBook(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Book), err
 }
 
 func (a adapterBookstoreV1) AutoUpdateCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateCoupon(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateCoupon")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Coupon)
+		return a.service.AutoUpdateCoupon(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Coupon), err
 }
 
 func (a adapterBookstoreV1) AutoUpdateOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateOrder(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateOrder")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Order)
+		return a.service.AutoUpdateOrder(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Order), err
 }
 
 func (a adapterBookstoreV1) AutoUpdatePublisher(oldctx oldcontext.Context, t *bookstore.Publisher, options ...grpc.CallOption) (*bookstore.Publisher, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdatePublisher(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdatePublisher")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Publisher)
+		return a.service.AutoUpdatePublisher(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Publisher), err
 }
 
 func (a adapterBookstoreV1) AutoUpdateStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateStore(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateStore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.Store)
+		return a.service.AutoUpdateStore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Store), err
 }
 
 func (a adapterBookstoreV1) Cleardiscount(oldctx oldcontext.Context, t *bookstore.ApplyDiscountReq, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.Cleardiscount(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("Cleardiscount")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.ApplyDiscountReq)
+		return a.service.Cleardiscount(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.Order), err
 }
 
 func (a adapterBookstoreV1) Restock(oldctx oldcontext.Context, t *bookstore.RestockRequest, options ...grpc.CallOption) (*bookstore.RestockResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.Restock(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("Restock")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*bookstore.RestockRequest)
+		return a.service.Restock(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*bookstore.RestockResponse), err
 }
 
 func (a adapterBookstoreV1) AutoWatchOrder(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchOrderClient, error) {
@@ -240,6 +594,42 @@ func (a adapterBookstoreV1) AutoWatchCoupon(oldctx oldcontext.Context, in *api.L
 	return a.service.AutoWatchCoupon(ctx, in)
 }
 
+func (e *sBookstoreV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AddOutage"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["Applydiscount"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddStore"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteStore"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetBook"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetStore"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateBook"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateStore"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["Cleardiscount"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["Restock"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sBookstoreV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sBookstoreV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
+}
+
 func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
@@ -259,6 +649,7 @@ func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -327,7 +718,7 @@ func (e *sBookstoreV1GwService) newClient(ctx context.Context, grpcAddr string, 
 		}()
 	}()
 
-	cl := &adapterBookstoreV1{conn: client, service: grpcclient.NewBookstoreV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterBookstoreV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewBookstoreV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/api"
 	network "github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/network/grpc/client"
+	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,47 +35,137 @@ import (
 var _ api.TypeMeta
 
 type sEndpointV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterEndpointV1 struct {
 	conn    *rpckit.RPCClient
 	service network.ServiceEndpointV1Client
+	gwSvc   *sEndpointV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterEndpointV1) AutoAddEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddEndpoint(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddEndpoint")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Endpoint)
+		return a.service.AutoAddEndpoint(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Endpoint), err
 }
 
 func (a adapterEndpointV1) AutoDeleteEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteEndpoint(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteEndpoint")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Endpoint)
+		return a.service.AutoDeleteEndpoint(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Endpoint), err
 }
 
 func (a adapterEndpointV1) AutoGetEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetEndpoint(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetEndpoint")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Endpoint)
+		return a.service.AutoGetEndpoint(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Endpoint), err
 }
 
 func (a adapterEndpointV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.EndpointList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListEndpoint(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListEndpoint")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListEndpoint(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.EndpointList), err
 }
 
 func (a adapterEndpointV1) AutoUpdateEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateEndpoint(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateEndpoint")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Endpoint)
+		return a.service.AutoUpdateEndpoint(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Endpoint), err
 }
 
 func (a adapterEndpointV1) AutoWatchEndpoint(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.EndpointV1_AutoWatchEndpointClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchEndpoint(ctx, in)
+}
+
+func (e *sEndpointV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sEndpointV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sEndpointV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sEndpointV1GwService) CompleteRegistration(ctx context.Context,
@@ -95,6 +187,7 @@ func (e *sEndpointV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -163,52 +256,142 @@ func (e *sEndpointV1GwService) newClient(ctx context.Context, grpcAddr string, r
 		}()
 	}()
 
-	cl := &adapterEndpointV1{conn: client, service: grpcclient.NewEndpointV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterEndpointV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewEndpointV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
 type sLbPolicyV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterLbPolicyV1 struct {
 	conn    *rpckit.RPCClient
 	service network.ServiceLbPolicyV1Client
+	gwSvc   *sLbPolicyV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterLbPolicyV1) AutoAddLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddLbPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddLbPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.LbPolicy)
+		return a.service.AutoAddLbPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.LbPolicy), err
 }
 
 func (a adapterLbPolicyV1) AutoDeleteLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteLbPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteLbPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.LbPolicy)
+		return a.service.AutoDeleteLbPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.LbPolicy), err
 }
 
 func (a adapterLbPolicyV1) AutoGetLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetLbPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetLbPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.LbPolicy)
+		return a.service.AutoGetLbPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.LbPolicy), err
 }
 
 func (a adapterLbPolicyV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.LbPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListLbPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListLbPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListLbPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.LbPolicyList), err
 }
 
 func (a adapterLbPolicyV1) AutoUpdateLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateLbPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateLbPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.LbPolicy)
+		return a.service.AutoUpdateLbPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.LbPolicy), err
 }
 
 func (a adapterLbPolicyV1) AutoWatchLbPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.LbPolicyV1_AutoWatchLbPolicyClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchLbPolicy(ctx, in)
+}
+
+func (e *sLbPolicyV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sLbPolicyV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sLbPolicyV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sLbPolicyV1GwService) CompleteRegistration(ctx context.Context,
@@ -230,6 +413,7 @@ func (e *sLbPolicyV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -292,52 +476,142 @@ func (e *sLbPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, r
 		}()
 	}()
 
-	cl := &adapterLbPolicyV1{conn: client, service: grpcclient.NewLbPolicyV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterLbPolicyV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewLbPolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
 type sNetworkV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterNetworkV1 struct {
 	conn    *rpckit.RPCClient
 	service network.ServiceNetworkV1Client
+	gwSvc   *sNetworkV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterNetworkV1) AutoAddNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddNetwork(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddNetwork")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Network)
+		return a.service.AutoAddNetwork(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Network), err
 }
 
 func (a adapterNetworkV1) AutoDeleteNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteNetwork(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteNetwork")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Network)
+		return a.service.AutoDeleteNetwork(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Network), err
 }
 
 func (a adapterNetworkV1) AutoGetNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetNetwork(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetNetwork")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Network)
+		return a.service.AutoGetNetwork(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Network), err
 }
 
 func (a adapterNetworkV1) AutoListNetwork(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.NetworkList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListNetwork(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListNetwork")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListNetwork(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.NetworkList), err
 }
 
 func (a adapterNetworkV1) AutoUpdateNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateNetwork(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateNetwork")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Network)
+		return a.service.AutoUpdateNetwork(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Network), err
 }
 
 func (a adapterNetworkV1) AutoWatchNetwork(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchNetworkClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchNetwork(ctx, in)
+}
+
+func (e *sNetworkV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sNetworkV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sNetworkV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sNetworkV1GwService) CompleteRegistration(ctx context.Context,
@@ -359,6 +633,7 @@ func (e *sNetworkV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -421,52 +696,142 @@ func (e *sNetworkV1GwService) newClient(ctx context.Context, grpcAddr string, rs
 		}()
 	}()
 
-	cl := &adapterNetworkV1{conn: client, service: grpcclient.NewNetworkV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterNetworkV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewNetworkV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
 type sSecurityGroupV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterSecurityGroupV1 struct {
 	conn    *rpckit.RPCClient
 	service network.ServiceSecurityGroupV1Client
+	gwSvc   *sSecurityGroupV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterSecurityGroupV1) AutoAddSecurityGroup(oldctx oldcontext.Context, t *network.SecurityGroup, options ...grpc.CallOption) (*network.SecurityGroup, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddSecurityGroup(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddSecurityGroup")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.SecurityGroup)
+		return a.service.AutoAddSecurityGroup(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.SecurityGroup), err
 }
 
 func (a adapterSecurityGroupV1) AutoDeleteSecurityGroup(oldctx oldcontext.Context, t *network.SecurityGroup, options ...grpc.CallOption) (*network.SecurityGroup, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteSecurityGroup(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteSecurityGroup")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.SecurityGroup)
+		return a.service.AutoDeleteSecurityGroup(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.SecurityGroup), err
 }
 
 func (a adapterSecurityGroupV1) AutoGetSecurityGroup(oldctx oldcontext.Context, t *network.SecurityGroup, options ...grpc.CallOption) (*network.SecurityGroup, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetSecurityGroup(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetSecurityGroup")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.SecurityGroup)
+		return a.service.AutoGetSecurityGroup(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.SecurityGroup), err
 }
 
 func (a adapterSecurityGroupV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.SecurityGroupList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListSecurityGroup(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListSecurityGroup")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListSecurityGroup(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.SecurityGroupList), err
 }
 
 func (a adapterSecurityGroupV1) AutoUpdateSecurityGroup(oldctx oldcontext.Context, t *network.SecurityGroup, options ...grpc.CallOption) (*network.SecurityGroup, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateSecurityGroup(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateSecurityGroup")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.SecurityGroup)
+		return a.service.AutoUpdateSecurityGroup(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.SecurityGroup), err
 }
 
 func (a adapterSecurityGroupV1) AutoWatchSecurityGroup(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.SecurityGroupV1_AutoWatchSecurityGroupClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchSecurityGroup(ctx, in)
+}
+
+func (e *sSecurityGroupV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sSecurityGroupV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sSecurityGroupV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sSecurityGroupV1GwService) CompleteRegistration(ctx context.Context,
@@ -488,6 +853,7 @@ func (e *sSecurityGroupV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -550,52 +916,142 @@ func (e *sSecurityGroupV1GwService) newClient(ctx context.Context, grpcAddr stri
 		}()
 	}()
 
-	cl := &adapterSecurityGroupV1{conn: client, service: grpcclient.NewSecurityGroupV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterSecurityGroupV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewSecurityGroupV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
 type sServiceV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterServiceV1 struct {
 	conn    *rpckit.RPCClient
 	service network.ServiceServiceV1Client
+	gwSvc   *sServiceV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterServiceV1) AutoAddService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddService(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddService")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Service)
+		return a.service.AutoAddService(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Service), err
 }
 
 func (a adapterServiceV1) AutoDeleteService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteService(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteService")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Service)
+		return a.service.AutoDeleteService(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Service), err
 }
 
 func (a adapterServiceV1) AutoGetService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetService(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetService")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Service)
+		return a.service.AutoGetService(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Service), err
 }
 
 func (a adapterServiceV1) AutoListService(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.ServiceList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListService(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListService")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListService(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.ServiceList), err
 }
 
 func (a adapterServiceV1) AutoUpdateService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateService(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateService")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Service)
+		return a.service.AutoUpdateService(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Service), err
 }
 
 func (a adapterServiceV1) AutoWatchService(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.ServiceV1_AutoWatchServiceClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchService(ctx, in)
+}
+
+func (e *sServiceV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddService"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteService"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetService"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListService"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateService"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sServiceV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sServiceV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sServiceV1GwService) CompleteRegistration(ctx context.Context,
@@ -617,6 +1073,7 @@ func (e *sServiceV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -679,52 +1136,142 @@ func (e *sServiceV1GwService) newClient(ctx context.Context, grpcAddr string, rs
 		}()
 	}()
 
-	cl := &adapterServiceV1{conn: client, service: grpcclient.NewServiceV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterServiceV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewServiceV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
 type sSgpolicyV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterSgpolicyV1 struct {
 	conn    *rpckit.RPCClient
 	service network.ServiceSgpolicyV1Client
+	gwSvc   *sSgpolicyV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterSgpolicyV1) AutoAddSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddSgpolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddSgpolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Sgpolicy)
+		return a.service.AutoAddSgpolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Sgpolicy), err
 }
 
 func (a adapterSgpolicyV1) AutoDeleteSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteSgpolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteSgpolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Sgpolicy)
+		return a.service.AutoDeleteSgpolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Sgpolicy), err
 }
 
 func (a adapterSgpolicyV1) AutoGetSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetSgpolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetSgpolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Sgpolicy)
+		return a.service.AutoGetSgpolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Sgpolicy), err
 }
 
 func (a adapterSgpolicyV1) AutoListSgpolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.SgpolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListSgpolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListSgpolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListSgpolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.SgpolicyList), err
 }
 
 func (a adapterSgpolicyV1) AutoUpdateSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateSgpolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateSgpolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Sgpolicy)
+		return a.service.AutoUpdateSgpolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Sgpolicy), err
 }
 
 func (a adapterSgpolicyV1) AutoWatchSgpolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.SgpolicyV1_AutoWatchSgpolicyClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchSgpolicy(ctx, in)
+}
+
+func (e *sSgpolicyV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sSgpolicyV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sSgpolicyV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sSgpolicyV1GwService) CompleteRegistration(ctx context.Context,
@@ -746,6 +1293,7 @@ func (e *sSgpolicyV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -808,52 +1356,142 @@ func (e *sSgpolicyV1GwService) newClient(ctx context.Context, grpcAddr string, r
 		}()
 	}()
 
-	cl := &adapterSgpolicyV1{conn: client, service: grpcclient.NewSgpolicyV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterSgpolicyV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewSgpolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
 type sTenantV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterTenantV1 struct {
 	conn    *rpckit.RPCClient
 	service network.ServiceTenantV1Client
+	gwSvc   *sTenantV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterTenantV1) AutoAddTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddTenant(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddTenant")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Tenant)
+		return a.service.AutoAddTenant(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Tenant), err
 }
 
 func (a adapterTenantV1) AutoDeleteTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteTenant(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteTenant")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Tenant)
+		return a.service.AutoDeleteTenant(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Tenant), err
 }
 
 func (a adapterTenantV1) AutoGetTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetTenant(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetTenant")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Tenant)
+		return a.service.AutoGetTenant(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Tenant), err
 }
 
 func (a adapterTenantV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.TenantList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListTenant(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListTenant")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListTenant(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.TenantList), err
 }
 
 func (a adapterTenantV1) AutoUpdateTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateTenant(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateTenant")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.Tenant)
+		return a.service.AutoUpdateTenant(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.Tenant), err
 }
 
 func (a adapterTenantV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.TenantV1_AutoWatchTenantClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchTenant(ctx, in)
+}
+
+func (e *sTenantV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sTenantV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sTenantV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sTenantV1GwService) CompleteRegistration(ctx context.Context,
@@ -875,6 +1513,7 @@ func (e *sTenantV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -937,7 +1576,7 @@ func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string, rsl
 		}()
 	}()
 
-	cl := &adapterTenantV1{conn: client, service: grpcclient.NewTenantV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterTenantV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewTenantV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

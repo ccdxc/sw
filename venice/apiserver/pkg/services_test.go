@@ -40,7 +40,6 @@ func TestSvcAddMethod(t *testing.T) {
 	}
 }
 func TestGetCrudServiceName(t *testing.T) {
-	svc := NewService("testSvc").(*ServiceHdlr)
 	// Test different options of GetCrudService
 	for _, c := range []struct {
 		oper   apiserver.APIOperType
@@ -54,7 +53,7 @@ func TestGetCrudServiceName(t *testing.T) {
 		{oper: apiserver.WatchOper, output: "AutoWatchTestMethod"},
 		{oper: "junk", output: ""},
 	} {
-		o := svc.getCrudServiceName("TestMethod", c.oper)
+		o := apiserver.GetCrudServiceName("TestMethod", c.oper)
 		if c.output != o {
 			t.Errorf("Expected [%s] got [%s]", c.output, o)
 		}

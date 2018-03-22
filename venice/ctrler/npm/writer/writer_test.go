@@ -11,7 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/network"
-	_ "github.com/pensando/sw/api/hooks"
+	_ "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"

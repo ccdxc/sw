@@ -40,7 +40,7 @@ import (
 
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/generated/network/gateway"
-	_ "github.com/pensando/sw/api/hooks"
+	_ "github.com/pensando/sw/api/hooks/apiserver"
 
 	"github.com/golang/mock/gomock"
 

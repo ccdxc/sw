@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"sync"
 	"testing"
 	"time"
@@ -16,9 +17,12 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/venice/apigw"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
+
+var hooksCalled int
 
 type testGwService struct {
 	regevents int
@@ -28,6 +32,14 @@ func (t *testGwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, rslvr resolver.Interface, wg *sync.WaitGroup) error {
 	t.regevents = t.regevents + 1
 	return nil
+}
+
+func (t *testGwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	return nil, nil
+}
+
+func (t *testGwService) GetCrudServiceProfile(object string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	return nil, nil
 }
 
 // TestInitOnce
@@ -56,6 +68,11 @@ func TestRegistration(t *testing.T) {
 	s1 := testGwService{}
 	a.Register("register-test1", "/test1", &s)
 	a.Register("register-test2", "/test2", &s1)
+	hookscb := func(svc apigw.APIGatewayService, l log.Logger) error {
+		hooksCalled++
+		return nil
+	}
+	a.RegisterHooksCb("register-test1", hookscb)
 	if len(a.svcmap) != 2 {
 		t.Errorf("Mismatched number of registered services Want 2 found [%v]", len(a.svcmap))
 	}
@@ -64,6 +81,10 @@ func TestRegistration(t *testing.T) {
 		if name != "register-test1" && name != "register-test2" {
 			t.Errorf("invalid name %s", name)
 		}
+	}
+
+	if len(a.hooks) != 1 {
+		t.Errorf("hook not registered")
 	}
 
 	s2 := a.GetService("register-test1")
@@ -217,6 +238,7 @@ func TestRunApiGw(t *testing.T) {
 	}
 	_ = MustGetAPIGateway()
 	a := singletonAPIGw
+	hooks := hooksCalled
 	go a.Run(config)
 	err := errors.New("Testing Exit for ApiGateway")
 	a.doneCh <- err
@@ -228,6 +250,9 @@ func TestRunApiGw(t *testing.T) {
 	_, err = a.GetAddr()
 	if err != nil {
 		t.Fatalf("failed to get API gateway address")
+	}
+	if hooksCalled != hooks+len(a.hooks) {
+		t.Errorf("hooks not called")
 	}
 	// Try again
 	doneCh := make(chan bool)
@@ -244,5 +269,90 @@ func TestRunApiGw(t *testing.T) {
 		// Good
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Timeout waiting on lock")
+	}
+}
+
+func TestHandleRequest(t *testing.T) {
+	prof := NewServiceProfile(nil)
+	mock := &testHooks{}
+	prof.AddPreAuthNHook(mock.preAuthNHook)
+	prof.AddPreAuthNHook(mock.preAuthNHook)
+	prof.AddPreAuthNHook(mock.preAuthNHook)
+	prof.AddPreAuthZHook(mock.preAuthZHook)
+	prof.AddPreAuthZHook(mock.preAuthZHook)
+	prof.AddPreAuthZHook(mock.preAuthZHook)
+	prof.AddPreAuthZHook(mock.preAuthZHook)
+	prof.AddPreCallHook(mock.preCallHook)
+	prof.AddPreCallHook(mock.preCallHook)
+	prof.AddPostCallHook(mock.postCallHook)
+	called := 0
+	input := struct {
+		Test string
+	}{"testing"}
+	call := func(ctx context.Context, in interface{}) (interface{}, error) {
+		called++
+		return in, nil
+	}
+	mock.retObj = &input
+	gw := MustGetAPIGateway()
+	out, err := gw.HandleRequest(context.TODO(), &input, prof, call)
+	if !reflect.DeepEqual(&input, out) {
+		t.Errorf("returned object does not match [%v]/[%v]", input, out)
+	}
+	if err != nil {
+		t.Errorf("expecting nil, got error (%v)", err)
+	}
+	if called != 1 {
+		t.Errorf("Expecting 1 call, got %d", called)
+	}
+	pa := prof.PreAuthNHooks()
+	if len(pa) != 3 || mock.preAuthNCnt != len(pa) {
+		t.Errorf("expecting 3 pre authN hooks got %d", len(pa))
+	}
+	pz := prof.PreAuthZHooks()
+	if len(pz) != 4 || mock.preAuthZCnt != len(pz) {
+		t.Errorf("expecting 4 pre authZ hooks got %d", len(pz))
+	}
+	pc := prof.PreCallHooks()
+	if len(pc) != 2 || mock.preCallCnt != len(pc) {
+		t.Errorf("expecting 2 pre call hooks got %d", len(pc))
+	}
+	tc := prof.PostCallHooks()
+	if len(tc) != 1 || mock.postCallCnt != len(tc) {
+		t.Errorf("expecting 1 pre call hooks got %d", len(tc))
+	}
+
+	// Test with the one preAuthn hook returning skip
+	skipfn := func() bool {
+		return mock.preCallCnt == 1
+	}
+	mock.skipCallFn = skipfn
+	mock.preCallCnt, mock.postCallCnt, mock.preAuthNCnt, mock.preAuthZCnt = 0, 0, 0, 0
+	called = 0
+	out, err = gw.HandleRequest(context.TODO(), &input, prof, call)
+	if !reflect.DeepEqual(&input, out) {
+		t.Errorf("returned object does not match [%v]/[%v]", input, out)
+	}
+	if err != nil {
+		t.Errorf("expecting nil, got error (%v)", err)
+	}
+	if called != 0 {
+		t.Errorf("Expecting 1 call, got %d", called)
+	}
+	pa = prof.PreAuthNHooks()
+	if len(pa) != 3 || mock.preAuthNCnt != len(pa) {
+		t.Errorf("expecting 3 pre authN hooks got %d/%d", len(pa), mock.preAuthNCnt)
+	}
+	pz = prof.PreAuthZHooks()
+	if len(pz) != 4 || mock.preAuthZCnt != len(pz) {
+		t.Errorf("expecting 4 pre authZ hooks got %d/%d", len(pz), mock.preAuthZCnt)
+	}
+	pc = prof.PreCallHooks()
+	if len(pc) != 2 || mock.preCallCnt != len(pc) {
+		t.Errorf("expecting 2 pre call hooks got %d/%d", len(pc), mock.preCallCnt)
+	}
+	tc = prof.PostCallHooks()
+	if len(tc) != 1 || mock.postCallCnt != len(tc) {
+		t.Errorf("expecting 1 pre call hooks got %d/%d", len(tc), mock.postCallCnt)
 	}
 }

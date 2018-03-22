@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/api"
 	networkencryption "github.com/pensando/sw/api/generated/networkencryption"
 	"github.com/pensando/sw/api/generated/networkencryption/grpc/client"
+	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,47 +35,136 @@ import (
 var _ api.TypeMeta
 
 type sTrafficEncryptionPolicyV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterTrafficEncryptionPolicyV1 struct {
 	conn    *rpckit.RPCClient
 	service networkencryption.ServiceTrafficEncryptionPolicyV1Client
+	gwSvc   *sTrafficEncryptionPolicyV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterTrafficEncryptionPolicyV1) AutoAddTrafficEncryptionPolicy(oldctx oldcontext.Context, t *networkencryption.TrafficEncryptionPolicy, options ...grpc.CallOption) (*networkencryption.TrafficEncryptionPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddTrafficEncryptionPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddTrafficEncryptionPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*networkencryption.TrafficEncryptionPolicy)
+		return a.service.AutoAddTrafficEncryptionPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*networkencryption.TrafficEncryptionPolicy), err
 }
 
 func (a adapterTrafficEncryptionPolicyV1) AutoDeleteTrafficEncryptionPolicy(oldctx oldcontext.Context, t *networkencryption.TrafficEncryptionPolicy, options ...grpc.CallOption) (*networkencryption.TrafficEncryptionPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteTrafficEncryptionPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteTrafficEncryptionPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*networkencryption.TrafficEncryptionPolicy)
+		return a.service.AutoDeleteTrafficEncryptionPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*networkencryption.TrafficEncryptionPolicy), err
 }
 
 func (a adapterTrafficEncryptionPolicyV1) AutoGetTrafficEncryptionPolicy(oldctx oldcontext.Context, t *networkencryption.TrafficEncryptionPolicy, options ...grpc.CallOption) (*networkencryption.TrafficEncryptionPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetTrafficEncryptionPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetTrafficEncryptionPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*networkencryption.TrafficEncryptionPolicy)
+		return a.service.AutoGetTrafficEncryptionPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*networkencryption.TrafficEncryptionPolicy), err
 }
 
 func (a adapterTrafficEncryptionPolicyV1) AutoListTrafficEncryptionPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*networkencryption.TrafficEncryptionPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListTrafficEncryptionPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListTrafficEncryptionPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListTrafficEncryptionPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*networkencryption.TrafficEncryptionPolicyList), err
 }
 
 func (a adapterTrafficEncryptionPolicyV1) AutoUpdateTrafficEncryptionPolicy(oldctx oldcontext.Context, t *networkencryption.TrafficEncryptionPolicy, options ...grpc.CallOption) (*networkencryption.TrafficEncryptionPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateTrafficEncryptionPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateTrafficEncryptionPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*networkencryption.TrafficEncryptionPolicy)
+		return a.service.AutoUpdateTrafficEncryptionPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*networkencryption.TrafficEncryptionPolicy), err
 }
 
 func (a adapterTrafficEncryptionPolicyV1) AutoWatchTrafficEncryptionPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (networkencryption.TrafficEncryptionPolicyV1_AutoWatchTrafficEncryptionPolicyClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchTrafficEncryptionPolicy(ctx, in)
+}
+
+func (e *sTrafficEncryptionPolicyV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sTrafficEncryptionPolicyV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sTrafficEncryptionPolicyV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sTrafficEncryptionPolicyV1GwService) CompleteRegistration(ctx context.Context,
@@ -95,6 +186,7 @@ func (e *sTrafficEncryptionPolicyV1GwService) CompleteRegistration(ctx context.C
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -163,7 +255,7 @@ func (e *sTrafficEncryptionPolicyV1GwService) newClient(ctx context.Context, grp
 		}()
 	}()
 
-	cl := &adapterTrafficEncryptionPolicyV1{conn: client, service: grpcclient.NewTrafficEncryptionPolicyV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterTrafficEncryptionPolicyV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewTrafficEncryptionPolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

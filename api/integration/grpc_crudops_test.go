@@ -315,8 +315,21 @@ func TestCrudOps(t *testing.T) {
 		if selflink != retorder.SelfLink {
 			t.Errorf("Self link does not match expect [%s] got [%s]", selflink, retorder.SelfLink)
 		}
+		// The Status message should have been overwritten by the API gateway hooks
+		if retorder.Status.Message != "Message filled by hook" {
+			t.Errorf("API gateway post hook not called [%+v]", retorder)
+		}
 		evp := order2
 		oExpectWatchEvents = addToWatchList(&oExpectWatchEvents, &evp, kvstore.Created)
+	}
+
+	{ // ---  POST an object that will be rejected by APIGw hooks --- //
+		order3 := order2
+		order3.Spec.Id = "order-reject"
+		_, err := restcl.BookstoreV1().Order().Create(ctx, &order3)
+		if err == nil {
+			t.Fatalf("Create of Order should have failed")
+		}
 	}
 
 	{ // ---  Get  object via REST --- //

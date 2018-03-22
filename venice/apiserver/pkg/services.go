@@ -48,7 +48,7 @@ func (s *ServiceHdlr) GetMethod(n string) apiserver.Method {
 
 // GetCrudService is a helper function to retrieve a auto generated CRUD method
 func (s *ServiceHdlr) GetCrudService(in string, oper apiserver.APIOperType) apiserver.Method {
-	mname := fmt.Sprintf(s.getCrudServiceName(in, oper))
+	mname := fmt.Sprintf(apiserver.GetCrudServiceName(in, oper))
 	return s.GetMethod(mname)
 }
 
@@ -61,23 +61,4 @@ func (s *ServiceHdlr) AddMethod(n string, m apiserver.Method) apiserver.Method {
 // NewService initializes and returns a new service object.
 func NewService(n string) apiserver.Service {
 	return &ServiceHdlr{Name: n, Methods: make(map[string]apiserver.Method)}
-}
-
-func (s *ServiceHdlr) getCrudServiceName(method string, oper apiserver.APIOperType) string {
-	switch oper {
-	case apiserver.CreateOper:
-		return fmt.Sprintf("AutoAdd%s", method)
-	case apiserver.UpdateOper:
-		return fmt.Sprintf("AutoUpdate%s", method)
-	case apiserver.GetOper:
-		return fmt.Sprintf("AutoGet%s", method)
-	case apiserver.DeleteOper:
-		return fmt.Sprintf("AutoDelete%s", method)
-	case apiserver.ListOper:
-		return fmt.Sprintf("AutoList%s", method)
-	case apiserver.WatchOper:
-		return fmt.Sprintf("AutoWatch%s", method)
-	default:
-		return ""
-	}
 }

@@ -202,6 +202,9 @@ func testTxnPreCommithook(ctx context.Context,
 func TestTxn(t *testing.T) {
 	req := mocks.NewFakeMessage("/requestmsg/A", true).(*mocks.FakeMessage)
 	resp := mocks.NewFakeMessage("/responsmsg/A", true).(*mocks.FakeMessage)
+	req = req.WithTransform("v1", "v2", req.TransformCb).(*mocks.FakeMessage)
+	resp = resp.WithTransform("v2", "v1", resp.TransformCb).(*mocks.FakeMessage)
+
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
 
@@ -234,5 +237,30 @@ func TestTxn(t *testing.T) {
 	}
 	if req.Txndels != 1 {
 		t.Fatalf("Txn Del: expecting [1] saw [%d]", req.Txndels)
+	}
+}
+
+func TestTransforms(t *testing.T) {
+	req := mocks.NewFakeMessage("/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("/responsmsg/A", true).(*mocks.FakeMessage)
+	req = req.WithTransform("v1", "v2", req.TransformCb).(*mocks.FakeMessage)
+	resp = resp.WithTransform("v2", "v1", resp.TransformCb).(*mocks.FakeMessage)
+
+	MustGetAPIServer()
+	singletonAPISrv.runstate.running = true
+	singletonAPISrv.version = "v2"
+	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
+	reqmsg := TestType1{}
+
+	// Set the same version as the apiServer
+	md := metadata.Pairs(apisrv.RequestParamVersion, "v1",
+		apisrv.RequestParamMethod, "GET")
+	ctx := metadata.NewIncomingContext(context.Background(), md)
+	m.HandleInvocation(ctx, reqmsg)
+	if len(req.CalledTxfms) != 1 || len(resp.CalledTxfms) != 1 {
+		t.Fatalf("transforms not called req[%v] resp[%v]", req.CalledTxfms, resp.CalledTxfms)
+	}
+	if req.CalledTxfms[0] != "v1-v2" || resp.CalledTxfms[0] != "v2-v1" {
+		t.Errorf("transforms not called with right versions req[%v] resp[%v]", req.CalledTxfms, resp.CalledTxfms)
 	}
 }

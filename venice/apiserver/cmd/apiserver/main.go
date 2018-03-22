@@ -10,7 +10,7 @@ import (
 
 	"github.com/pensando/sw/api/cache"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	_ "github.com/pensando/sw/api/hooks"
+	_ "github.com/pensando/sw/api/hooks/apiserver"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"

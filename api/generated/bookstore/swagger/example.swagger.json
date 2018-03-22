@@ -422,6 +422,12 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "Status.Message",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1080,6 +1086,9 @@
           "items": {
             "$ref": "#/definitions/bookstoreOrderSpec"
           }
+        },
+        "Message": {
+          "type": "string"
         }
       }
     },

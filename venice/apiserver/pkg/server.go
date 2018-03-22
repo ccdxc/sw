@@ -142,12 +142,18 @@ func (a *apiSrv) RegisterMessages(svc string, msgs map[string]apiserver.Message)
 // RegisterService is used by the service backends/modules to register a defined service. The
 //  registration is driven by auto-generated code.
 func (a *apiSrv) RegisterService(name string, svc apiserver.Service) {
+	if _, ok := a.services[name]; ok {
+		panic(fmt.Sprintf("Duplicate service registration for %s", name))
+	}
 	a.services[name] = svc
 }
 
 // RegisterHookCb registers a callback to register hooks for a service. One callback can be registered per
 //  service.
 func (a *apiSrv) RegisterHooksCb(name string, fn apiserver.ServiceHookCb) {
+	if _, ok := a.hookregs[name]; ok {
+		panic(fmt.Sprintf("Duplicate hooks registration for %s", name))
+	}
 	a.hookregs[name] = fn
 }
 

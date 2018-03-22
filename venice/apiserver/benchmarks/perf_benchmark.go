@@ -39,7 +39,7 @@ import (
 	"github.com/pensando/sw/venice/utils/trace"
 
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	_ "github.com/pensando/sw/api/hooks"
+	_ "github.com/pensando/sw/api/hooks/apiserver"
 )
 
 type result struct {

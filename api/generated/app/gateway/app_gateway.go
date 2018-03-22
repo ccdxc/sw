@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/api"
 	app "github.com/pensando/sw/api/generated/app"
 	"github.com/pensando/sw/api/generated/app/grpc/client"
+	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,102 +35,286 @@ import (
 var _ api.TypeMeta
 
 type sAppV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterAppV1 struct {
 	conn    *rpckit.RPCClient
 	service app.ServiceAppV1Client
+	gwSvc   *sAppV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterAppV1) AutoAddApp(oldctx oldcontext.Context, t *app.App, options ...grpc.CallOption) (*app.App, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddApp(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddApp")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.App)
+		return a.service.AutoAddApp(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.App), err
 }
 
 func (a adapterAppV1) AutoAddAppUser(oldctx oldcontext.Context, t *app.AppUser, options ...grpc.CallOption) (*app.AppUser, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddAppUser(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddAppUser")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.AppUser)
+		return a.service.AutoAddAppUser(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.AppUser), err
 }
 
 func (a adapterAppV1) AutoAddAppUserGrp(oldctx oldcontext.Context, t *app.AppUserGrp, options ...grpc.CallOption) (*app.AppUserGrp, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddAppUserGrp(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddAppUserGrp")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.AppUserGrp)
+		return a.service.AutoAddAppUserGrp(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.AppUserGrp), err
 }
 
 func (a adapterAppV1) AutoDeleteApp(oldctx oldcontext.Context, t *app.App, options ...grpc.CallOption) (*app.App, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteApp(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteApp")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.App)
+		return a.service.AutoDeleteApp(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.App), err
 }
 
 func (a adapterAppV1) AutoDeleteAppUser(oldctx oldcontext.Context, t *app.AppUser, options ...grpc.CallOption) (*app.AppUser, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteAppUser(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAppUser")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.AppUser)
+		return a.service.AutoDeleteAppUser(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.AppUser), err
 }
 
 func (a adapterAppV1) AutoDeleteAppUserGrp(oldctx oldcontext.Context, t *app.AppUserGrp, options ...grpc.CallOption) (*app.AppUserGrp, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteAppUserGrp(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAppUserGrp")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.AppUserGrp)
+		return a.service.AutoDeleteAppUserGrp(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.AppUserGrp), err
 }
 
 func (a adapterAppV1) AutoGetApp(oldctx oldcontext.Context, t *app.App, options ...grpc.CallOption) (*app.App, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetApp(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetApp")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.App)
+		return a.service.AutoGetApp(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.App), err
 }
 
 func (a adapterAppV1) AutoGetAppUser(oldctx oldcontext.Context, t *app.AppUser, options ...grpc.CallOption) (*app.AppUser, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetAppUser(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetAppUser")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.AppUser)
+		return a.service.AutoGetAppUser(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.AppUser), err
 }
 
 func (a adapterAppV1) AutoGetAppUserGrp(oldctx oldcontext.Context, t *app.AppUserGrp, options ...grpc.CallOption) (*app.AppUserGrp, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetAppUserGrp(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetAppUserGrp")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.AppUserGrp)
+		return a.service.AutoGetAppUserGrp(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.AppUserGrp), err
 }
 
 func (a adapterAppV1) AutoListApp(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*app.AppList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListApp(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListApp")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListApp(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.AppList), err
 }
 
 func (a adapterAppV1) AutoListAppUser(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*app.AppUserList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListAppUser(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListAppUser")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListAppUser(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.AppUserList), err
 }
 
 func (a adapterAppV1) AutoListAppUserGrp(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*app.AppUserGrpList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListAppUserGrp(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListAppUserGrp")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListAppUserGrp(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.AppUserGrpList), err
 }
 
 func (a adapterAppV1) AutoUpdateApp(oldctx oldcontext.Context, t *app.App, options ...grpc.CallOption) (*app.App, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateApp(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateApp")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.App)
+		return a.service.AutoUpdateApp(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.App), err
 }
 
 func (a adapterAppV1) AutoUpdateAppUser(oldctx oldcontext.Context, t *app.AppUser, options ...grpc.CallOption) (*app.AppUser, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateAppUser(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAppUser")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.AppUser)
+		return a.service.AutoUpdateAppUser(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.AppUser), err
 }
 
 func (a adapterAppV1) AutoUpdateAppUserGrp(oldctx oldcontext.Context, t *app.AppUserGrp, options ...grpc.CallOption) (*app.AppUserGrp, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateAppUserGrp(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAppUserGrp")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*app.AppUserGrp)
+		return a.service.AutoUpdateAppUserGrp(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*app.AppUserGrp), err
 }
 
 func (a adapterAppV1) AutoWatchApp(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (app.AppV1_AutoWatchAppClient, error) {
@@ -144,6 +330,39 @@ func (a adapterAppV1) AutoWatchAppUser(oldctx oldcontext.Context, in *api.ListWa
 func (a adapterAppV1) AutoWatchAppUserGrp(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (app.AppV1_AutoWatchAppUserGrpClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchAppUserGrp(ctx, in)
+}
+
+func (e *sAppV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sAppV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sAppV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sAppV1GwService) CompleteRegistration(ctx context.Context,
@@ -165,6 +384,7 @@ func (e *sAppV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -233,7 +453,7 @@ func (e *sAppV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr 
 		}()
 	}()
 
-	cl := &adapterAppV1{conn: client, service: grpcclient.NewAppV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterAppV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewAppV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

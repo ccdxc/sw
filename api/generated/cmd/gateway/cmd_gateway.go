@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/cmd/grpc/client"
+	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,102 +35,286 @@ import (
 var _ api.TypeMeta
 
 type sCmdV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterCmdV1 struct {
 	conn    *rpckit.RPCClient
 	service cmd.ServiceCmdV1Client
+	gwSvc   *sCmdV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterCmdV1) AutoAddCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddCluster(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddCluster")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.Cluster)
+		return a.service.AutoAddCluster(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.Cluster), err
 }
 
 func (a adapterCmdV1) AutoAddNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddNode(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddNode")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.Node)
+		return a.service.AutoAddNode(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.Node), err
 }
 
 func (a adapterCmdV1) AutoAddSmartNIC(oldctx oldcontext.Context, t *cmd.SmartNIC, options ...grpc.CallOption) (*cmd.SmartNIC, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddSmartNIC(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddSmartNIC")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.SmartNIC)
+		return a.service.AutoAddSmartNIC(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.SmartNIC), err
 }
 
 func (a adapterCmdV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteCluster(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteCluster")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.Cluster)
+		return a.service.AutoDeleteCluster(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.Cluster), err
 }
 
 func (a adapterCmdV1) AutoDeleteNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteNode(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteNode")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.Node)
+		return a.service.AutoDeleteNode(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.Node), err
 }
 
 func (a adapterCmdV1) AutoDeleteSmartNIC(oldctx oldcontext.Context, t *cmd.SmartNIC, options ...grpc.CallOption) (*cmd.SmartNIC, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteSmartNIC(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteSmartNIC")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.SmartNIC)
+		return a.service.AutoDeleteSmartNIC(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.SmartNIC), err
 }
 
 func (a adapterCmdV1) AutoGetCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetCluster(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetCluster")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.Cluster)
+		return a.service.AutoGetCluster(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.Cluster), err
 }
 
 func (a adapterCmdV1) AutoGetNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetNode(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetNode")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.Node)
+		return a.service.AutoGetNode(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.Node), err
 }
 
 func (a adapterCmdV1) AutoGetSmartNIC(oldctx oldcontext.Context, t *cmd.SmartNIC, options ...grpc.CallOption) (*cmd.SmartNIC, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetSmartNIC(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetSmartNIC")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.SmartNIC)
+		return a.service.AutoGetSmartNIC(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.SmartNIC), err
 }
 
 func (a adapterCmdV1) AutoListCluster(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.ClusterList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListCluster(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListCluster")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListCluster(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.ClusterList), err
 }
 
 func (a adapterCmdV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.NodeList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListNode(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListNode")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListNode(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.NodeList), err
 }
 
 func (a adapterCmdV1) AutoListSmartNIC(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.SmartNICList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListSmartNIC(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListSmartNIC")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListSmartNIC(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.SmartNICList), err
 }
 
 func (a adapterCmdV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateCluster(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateCluster")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.Cluster)
+		return a.service.AutoUpdateCluster(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.Cluster), err
 }
 
 func (a adapterCmdV1) AutoUpdateNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateNode(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateNode")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.Node)
+		return a.service.AutoUpdateNode(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.Node), err
 }
 
 func (a adapterCmdV1) AutoUpdateSmartNIC(oldctx oldcontext.Context, t *cmd.SmartNIC, options ...grpc.CallOption) (*cmd.SmartNIC, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateSmartNIC(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateSmartNIC")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cmd.SmartNIC)
+		return a.service.AutoUpdateSmartNIC(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cmd.SmartNIC), err
 }
 
 func (a adapterCmdV1) AutoWatchCluster(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cmd.CmdV1_AutoWatchClusterClient, error) {
@@ -144,6 +330,41 @@ func (a adapterCmdV1) AutoWatchNode(oldctx oldcontext.Context, in *api.ListWatch
 func (a adapterCmdV1) AutoWatchSmartNIC(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cmd.CmdV1_AutoWatchSmartNICClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchSmartNIC(ctx, in)
+}
+
+func (e *sCmdV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sCmdV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sCmdV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
@@ -165,6 +386,7 @@ func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -233,7 +455,7 @@ func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr 
 		}()
 	}()
 
-	cl := &adapterCmdV1{conn: client, service: grpcclient.NewCmdV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterCmdV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewCmdV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

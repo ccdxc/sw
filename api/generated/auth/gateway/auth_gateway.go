@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/api"
 	auth "github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/auth/grpc/client"
+	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,72 +35,196 @@ import (
 var _ api.TypeMeta
 
 type sAuthV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterAuthV1 struct {
 	conn    *rpckit.RPCClient
 	service auth.ServiceAuthV1Client
+	gwSvc   *sAuthV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterAuthV1) AutoAddAuthenticationPolicy(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddAuthenticationPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddAuthenticationPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.AuthenticationPolicy)
+		return a.service.AutoAddAuthenticationPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.AuthenticationPolicy), err
 }
 
 func (a adapterAuthV1) AutoAddUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddUser(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddUser")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.User)
+		return a.service.AutoAddUser(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.User), err
 }
 
 func (a adapterAuthV1) AutoDeleteAuthenticationPolicy(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteAuthenticationPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAuthenticationPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.AuthenticationPolicy)
+		return a.service.AutoDeleteAuthenticationPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.AuthenticationPolicy), err
 }
 
 func (a adapterAuthV1) AutoDeleteUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteUser(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteUser")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.User)
+		return a.service.AutoDeleteUser(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.User), err
 }
 
 func (a adapterAuthV1) AutoGetAuthenticationPolicy(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetAuthenticationPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetAuthenticationPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.AuthenticationPolicy)
+		return a.service.AutoGetAuthenticationPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.AuthenticationPolicy), err
 }
 
 func (a adapterAuthV1) AutoGetUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetUser(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetUser")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.User)
+		return a.service.AutoGetUser(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.User), err
 }
 
 func (a adapterAuthV1) AutoListAuthenticationPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.AuthenticationPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListAuthenticationPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListAuthenticationPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListAuthenticationPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.AuthenticationPolicyList), err
 }
 
 func (a adapterAuthV1) AutoListUser(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.UserList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListUser(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListUser")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListUser(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.UserList), err
 }
 
 func (a adapterAuthV1) AutoUpdateAuthenticationPolicy(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateAuthenticationPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAuthenticationPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.AuthenticationPolicy)
+		return a.service.AutoUpdateAuthenticationPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.AuthenticationPolicy), err
 }
 
 func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateUser(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateUser")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.User)
+		return a.service.AutoUpdateUser(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.User), err
 }
 
 func (a adapterAuthV1) AutoWatchUser(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchUserClient, error) {
@@ -109,6 +235,36 @@ func (a adapterAuthV1) AutoWatchUser(oldctx oldcontext.Context, in *api.ListWatc
 func (a adapterAuthV1) AutoWatchAuthenticationPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchAuthenticationPolicyClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchAuthenticationPolicy(ctx, in)
+}
+
+func (e *sAuthV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sAuthV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sAuthV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sAuthV1GwService) CompleteRegistration(ctx context.Context,
@@ -130,6 +286,7 @@ func (e *sAuthV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -198,7 +355,7 @@ func (e *sAuthV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr
 		}()
 	}()
 
-	cl := &adapterAuthV1{conn: client, service: grpcclient.NewAuthV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterAuthV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewAuthV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

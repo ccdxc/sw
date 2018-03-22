@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/api"
 	x509 "github.com/pensando/sw/api/generated/x509"
 	"github.com/pensando/sw/api/generated/x509/grpc/client"
+	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,47 +35,137 @@ import (
 var _ api.TypeMeta
 
 type sCertificateV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterCertificateV1 struct {
 	conn    *rpckit.RPCClient
 	service x509.ServiceCertificateV1Client
+	gwSvc   *sCertificateV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterCertificateV1) AutoAddCertificate(oldctx oldcontext.Context, t *x509.Certificate, options ...grpc.CallOption) (*x509.Certificate, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddCertificate(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddCertificate")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*x509.Certificate)
+		return a.service.AutoAddCertificate(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*x509.Certificate), err
 }
 
 func (a adapterCertificateV1) AutoDeleteCertificate(oldctx oldcontext.Context, t *x509.Certificate, options ...grpc.CallOption) (*x509.Certificate, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteCertificate(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteCertificate")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*x509.Certificate)
+		return a.service.AutoDeleteCertificate(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*x509.Certificate), err
 }
 
 func (a adapterCertificateV1) AutoGetCertificate(oldctx oldcontext.Context, t *x509.Certificate, options ...grpc.CallOption) (*x509.Certificate, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetCertificate(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetCertificate")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*x509.Certificate)
+		return a.service.AutoGetCertificate(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*x509.Certificate), err
 }
 
 func (a adapterCertificateV1) AutoListCertificate(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*x509.CertificateList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListCertificate(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListCertificate")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListCertificate(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*x509.CertificateList), err
 }
 
 func (a adapterCertificateV1) AutoUpdateCertificate(oldctx oldcontext.Context, t *x509.Certificate, options ...grpc.CallOption) (*x509.Certificate, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateCertificate(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateCertificate")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*x509.Certificate)
+		return a.service.AutoUpdateCertificate(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*x509.Certificate), err
 }
 
 func (a adapterCertificateV1) AutoWatchCertificate(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (x509.CertificateV1_AutoWatchCertificateClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchCertificate(ctx, in)
+}
+
+func (e *sCertificateV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sCertificateV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sCertificateV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sCertificateV1GwService) CompleteRegistration(ctx context.Context,
@@ -95,6 +187,7 @@ func (e *sCertificateV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -163,7 +256,7 @@ func (e *sCertificateV1GwService) newClient(ctx context.Context, grpcAddr string
 		}()
 	}()
 
-	cl := &adapterCertificateV1{conn: client, service: grpcclient.NewCertificateV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterCertificateV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewCertificateV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

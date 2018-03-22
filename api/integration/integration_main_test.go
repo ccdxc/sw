@@ -19,7 +19,8 @@ import (
 	apicache "github.com/pensando/sw/api/cache"
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	_ "github.com/pensando/sw/api/hooks"
+	_ "github.com/pensando/sw/api/hooks/apigw"
+	_ "github.com/pensando/sw/api/hooks/apiserver"
 )
 
 type tInfo struct {

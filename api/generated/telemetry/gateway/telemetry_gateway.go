@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/api"
 	telemetry "github.com/pensando/sw/api/generated/telemetry"
 	"github.com/pensando/sw/api/generated/telemetry/grpc/client"
+	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,47 +35,137 @@ import (
 var _ api.TypeMeta
 
 type sFlowExportPolicyV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterFlowExportPolicyV1 struct {
 	conn    *rpckit.RPCClient
 	service telemetry.ServiceFlowExportPolicyV1Client
+	gwSvc   *sFlowExportPolicyV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterFlowExportPolicyV1) AutoAddFlowExportPolicy(oldctx oldcontext.Context, t *telemetry.FlowExportPolicy, options ...grpc.CallOption) (*telemetry.FlowExportPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddFlowExportPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddFlowExportPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.FlowExportPolicy)
+		return a.service.AutoAddFlowExportPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.FlowExportPolicy), err
 }
 
 func (a adapterFlowExportPolicyV1) AutoDeleteFlowExportPolicy(oldctx oldcontext.Context, t *telemetry.FlowExportPolicy, options ...grpc.CallOption) (*telemetry.FlowExportPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteFlowExportPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteFlowExportPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.FlowExportPolicy)
+		return a.service.AutoDeleteFlowExportPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.FlowExportPolicy), err
 }
 
 func (a adapterFlowExportPolicyV1) AutoGetFlowExportPolicy(oldctx oldcontext.Context, t *telemetry.FlowExportPolicy, options ...grpc.CallOption) (*telemetry.FlowExportPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetFlowExportPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetFlowExportPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.FlowExportPolicy)
+		return a.service.AutoGetFlowExportPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.FlowExportPolicy), err
 }
 
 func (a adapterFlowExportPolicyV1) AutoListFlowExportPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*telemetry.FlowExportPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListFlowExportPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListFlowExportPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListFlowExportPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.FlowExportPolicyList), err
 }
 
 func (a adapterFlowExportPolicyV1) AutoUpdateFlowExportPolicy(oldctx oldcontext.Context, t *telemetry.FlowExportPolicy, options ...grpc.CallOption) (*telemetry.FlowExportPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateFlowExportPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateFlowExportPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.FlowExportPolicy)
+		return a.service.AutoUpdateFlowExportPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.FlowExportPolicy), err
 }
 
 func (a adapterFlowExportPolicyV1) AutoWatchFlowExportPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (telemetry.FlowExportPolicyV1_AutoWatchFlowExportPolicyClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchFlowExportPolicy(ctx, in)
+}
+
+func (e *sFlowExportPolicyV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sFlowExportPolicyV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sFlowExportPolicyV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sFlowExportPolicyV1GwService) CompleteRegistration(ctx context.Context,
@@ -95,6 +187,7 @@ func (e *sFlowExportPolicyV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -163,52 +256,142 @@ func (e *sFlowExportPolicyV1GwService) newClient(ctx context.Context, grpcAddr s
 		}()
 	}()
 
-	cl := &adapterFlowExportPolicyV1{conn: client, service: grpcclient.NewFlowExportPolicyV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterFlowExportPolicyV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewFlowExportPolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
 type sFwlogPolicyV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterFwlogPolicyV1 struct {
 	conn    *rpckit.RPCClient
 	service telemetry.ServiceFwlogPolicyV1Client
+	gwSvc   *sFwlogPolicyV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterFwlogPolicyV1) AutoAddFwlogPolicy(oldctx oldcontext.Context, t *telemetry.FwlogPolicy, options ...grpc.CallOption) (*telemetry.FwlogPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddFwlogPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddFwlogPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.FwlogPolicy)
+		return a.service.AutoAddFwlogPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.FwlogPolicy), err
 }
 
 func (a adapterFwlogPolicyV1) AutoDeleteFwlogPolicy(oldctx oldcontext.Context, t *telemetry.FwlogPolicy, options ...grpc.CallOption) (*telemetry.FwlogPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteFwlogPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteFwlogPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.FwlogPolicy)
+		return a.service.AutoDeleteFwlogPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.FwlogPolicy), err
 }
 
 func (a adapterFwlogPolicyV1) AutoGetFwlogPolicy(oldctx oldcontext.Context, t *telemetry.FwlogPolicy, options ...grpc.CallOption) (*telemetry.FwlogPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetFwlogPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetFwlogPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.FwlogPolicy)
+		return a.service.AutoGetFwlogPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.FwlogPolicy), err
 }
 
 func (a adapterFwlogPolicyV1) AutoListFwlogPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*telemetry.FwlogPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListFwlogPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListFwlogPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListFwlogPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.FwlogPolicyList), err
 }
 
 func (a adapterFwlogPolicyV1) AutoUpdateFwlogPolicy(oldctx oldcontext.Context, t *telemetry.FwlogPolicy, options ...grpc.CallOption) (*telemetry.FwlogPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateFwlogPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateFwlogPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.FwlogPolicy)
+		return a.service.AutoUpdateFwlogPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.FwlogPolicy), err
 }
 
 func (a adapterFwlogPolicyV1) AutoWatchFwlogPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (telemetry.FwlogPolicyV1_AutoWatchFwlogPolicyClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchFwlogPolicy(ctx, in)
+}
+
+func (e *sFwlogPolicyV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sFwlogPolicyV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sFwlogPolicyV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sFwlogPolicyV1GwService) CompleteRegistration(ctx context.Context,
@@ -230,6 +413,7 @@ func (e *sFwlogPolicyV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -292,52 +476,142 @@ func (e *sFwlogPolicyV1GwService) newClient(ctx context.Context, grpcAddr string
 		}()
 	}()
 
-	cl := &adapterFwlogPolicyV1{conn: client, service: grpcclient.NewFwlogPolicyV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterFwlogPolicyV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewFwlogPolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
 type sStatsPolicyV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterStatsPolicyV1 struct {
 	conn    *rpckit.RPCClient
 	service telemetry.ServiceStatsPolicyV1Client
+	gwSvc   *sStatsPolicyV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterStatsPolicyV1) AutoAddStatsPolicy(oldctx oldcontext.Context, t *telemetry.StatsPolicy, options ...grpc.CallOption) (*telemetry.StatsPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddStatsPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddStatsPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.StatsPolicy)
+		return a.service.AutoAddStatsPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.StatsPolicy), err
 }
 
 func (a adapterStatsPolicyV1) AutoDeleteStatsPolicy(oldctx oldcontext.Context, t *telemetry.StatsPolicy, options ...grpc.CallOption) (*telemetry.StatsPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteStatsPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteStatsPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.StatsPolicy)
+		return a.service.AutoDeleteStatsPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.StatsPolicy), err
 }
 
 func (a adapterStatsPolicyV1) AutoGetStatsPolicy(oldctx oldcontext.Context, t *telemetry.StatsPolicy, options ...grpc.CallOption) (*telemetry.StatsPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetStatsPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetStatsPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.StatsPolicy)
+		return a.service.AutoGetStatsPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.StatsPolicy), err
 }
 
 func (a adapterStatsPolicyV1) AutoListStatsPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*telemetry.StatsPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListStatsPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListStatsPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListStatsPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.StatsPolicyList), err
 }
 
 func (a adapterStatsPolicyV1) AutoUpdateStatsPolicy(oldctx oldcontext.Context, t *telemetry.StatsPolicy, options ...grpc.CallOption) (*telemetry.StatsPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateStatsPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateStatsPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry.StatsPolicy)
+		return a.service.AutoUpdateStatsPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry.StatsPolicy), err
 }
 
 func (a adapterStatsPolicyV1) AutoWatchStatsPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (telemetry.StatsPolicyV1_AutoWatchStatsPolicyClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchStatsPolicy(ctx, in)
+}
+
+func (e *sStatsPolicyV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sStatsPolicyV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sStatsPolicyV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sStatsPolicyV1GwService) CompleteRegistration(ctx context.Context,
@@ -359,6 +633,7 @@ func (e *sStatsPolicyV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -421,7 +696,7 @@ func (e *sStatsPolicyV1GwService) newClient(ctx context.Context, grpcAddr string
 		}()
 	}()
 
-	cl := &adapterStatsPolicyV1{conn: client, service: grpcclient.NewStatsPolicyV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterStatsPolicyV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewStatsPolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

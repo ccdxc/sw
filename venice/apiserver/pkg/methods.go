@@ -445,7 +445,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 
 	// transform to request Version.
 	if singletonAPISrv.version != ver {
-		resp, err = m.requestType.PrepareMsg(singletonAPISrv.version, ver, resp)
+		resp, err = m.responseType.PrepareMsg(singletonAPISrv.version, ver, resp)
 		if err != nil {
 			l.ErrorLog("msg", "response version transformation failed", "ver-from", singletonAPISrv.version, "ver-to", ver)
 			return nil, errVersionTransform.makeError(err.Error())

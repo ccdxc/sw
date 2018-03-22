@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/api"
 	events "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/events/grpc/client"
+	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,47 +35,136 @@ import (
 var _ api.TypeMeta
 
 type sEventPolicyV1GwService struct {
-	logger log.Logger
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
 }
 
 type adapterEventPolicyV1 struct {
 	conn    *rpckit.RPCClient
 	service events.ServiceEventPolicyV1Client
+	gwSvc   *sEventPolicyV1GwService
+	gw      apigw.APIGateway
 }
 
 func (a adapterEventPolicyV1) AutoAddEventPolicy(oldctx oldcontext.Context, t *events.EventPolicy, options ...grpc.CallOption) (*events.EventPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddEventPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddEventPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*events.EventPolicy)
+		return a.service.AutoAddEventPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*events.EventPolicy), err
 }
 
 func (a adapterEventPolicyV1) AutoDeleteEventPolicy(oldctx oldcontext.Context, t *events.EventPolicy, options ...grpc.CallOption) (*events.EventPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteEventPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteEventPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*events.EventPolicy)
+		return a.service.AutoDeleteEventPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*events.EventPolicy), err
 }
 
 func (a adapterEventPolicyV1) AutoGetEventPolicy(oldctx oldcontext.Context, t *events.EventPolicy, options ...grpc.CallOption) (*events.EventPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetEventPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetEventPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*events.EventPolicy)
+		return a.service.AutoGetEventPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*events.EventPolicy), err
 }
 
 func (a adapterEventPolicyV1) AutoListEventPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*events.EventPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListEventPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListEventPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListEventPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*events.EventPolicyList), err
 }
 
 func (a adapterEventPolicyV1) AutoUpdateEventPolicy(oldctx oldcontext.Context, t *events.EventPolicy, options ...grpc.CallOption) (*events.EventPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateEventPolicy(ctx, t)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateEventPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*events.EventPolicy)
+		return a.service.AutoUpdateEventPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*events.EventPolicy), err
 }
 
 func (a adapterEventPolicyV1) AutoWatchEventPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (events.EventPolicyV1_AutoWatchEventPolicyClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchEventPolicy(ctx, in)
+}
+
+func (e *sEventPolicyV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sEventPolicyV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sEventPolicyV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
 }
 
 func (e *sEventPolicyV1GwService) CompleteRegistration(ctx context.Context,
@@ -95,6 +186,7 @@ func (e *sEventPolicyV1GwService) CompleteRegistration(ctx context.Context,
 		mux = runtime.NewServeMux(opts)
 	}
 	muxMutex.Unlock()
+	e.setupSvcProfile()
 
 	fileCount++
 
@@ -163,7 +255,7 @@ func (e *sEventPolicyV1GwService) newClient(ctx context.Context, grpcAddr string
 		}()
 	}()
 
-	cl := &adapterEventPolicyV1{conn: client, service: grpcclient.NewEventPolicyV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterEventPolicyV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewEventPolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

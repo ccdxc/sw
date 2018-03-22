@@ -107,6 +107,7 @@ message OrderStatus {
   }
   string Status = 3 [(venice.check) = "StrEnum(OrderStatus.OrderStatus)"];
   repeated OrderSpec Filled = 4;
+  string Message = 5;
 }
 
 message Coupon {

@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc"
 
@@ -322,4 +323,26 @@ type Service interface {
 	GetCrudService(in string, oper APIOperType) Method
 	// AddMethod add a method to the list of methods served by the Service.
 	AddMethod(n string, m Method) Method
+}
+
+// Utility functions
+
+// GetCrudServiceName generates the name for a auto generated service endpoint
+func GetCrudServiceName(method string, oper APIOperType) string {
+	switch oper {
+	case CreateOper:
+		return fmt.Sprintf("AutoAdd%s", method)
+	case UpdateOper:
+		return fmt.Sprintf("AutoUpdate%s", method)
+	case GetOper:
+		return fmt.Sprintf("AutoGet%s", method)
+	case DeleteOper:
+		return fmt.Sprintf("AutoDelete%s", method)
+	case ListOper:
+		return fmt.Sprintf("AutoList%s", method)
+	case WatchOper:
+		return fmt.Sprintf("AutoWatch%s", method)
+	default:
+		return ""
+	}
 }

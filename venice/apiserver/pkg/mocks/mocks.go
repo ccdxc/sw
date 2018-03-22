@@ -422,6 +422,9 @@ func (m *FakeMessage) WriteModTime(i interface{}) (interface{}, error) {
 
 // NewFakeMessage create a new FakeMessage
 func NewFakeMessage(Kvpath string, validateResult bool) apisrv.Message {
-	r := FakeMessage{Kvpath: Kvpath, ValidateRslt: validateResult}
+	r := FakeMessage{
+		Kvpath:       Kvpath,
+		ValidateRslt: validateResult,
+	}
 	return &r
 }
