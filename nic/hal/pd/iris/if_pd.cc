@@ -131,6 +131,44 @@ pd_if_delete (pd_if_delete_args_t *args)
 }
 
 // ----------------------------------------------------------------------------
+// PD If Get
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_if_get (pd_if_get_args_t *args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    intf::IfType    if_type;
+
+    HAL_TRACE_DEBUG("{}: if get", __FUNCTION__);
+
+    if_type = hal::intf_get_if_type(args->hal_if);
+    switch(if_type) {
+        case intf::IF_TYPE_ENIC:
+            ret = pd_enicif_get(args);
+            break;
+        case intf::IF_TYPE_UPLINK:
+            ret = pd_uplinkif_get(args);
+            break;
+        case intf::IF_TYPE_UPLINK_PC:
+            ret = pd_uplinkpc_get(args);
+            break;
+        case intf::IF_TYPE_TUNNEL:
+            ret = pd_tunnelif_get(args);
+            break;
+        case intf::IF_TYPE_CPU:
+            ret = pd_cpuif_get(args);
+            break;
+        case intf::IF_TYPE_APP_REDIR:
+            ret = pd_app_redir_if_get(args);
+            break;
+        default:
+            HAL_ASSERT(0);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Lif params update. For enics
 // ----------------------------------------------------------------------------
 hal_ret_t 

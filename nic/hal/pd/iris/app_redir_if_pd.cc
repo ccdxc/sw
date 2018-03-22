@@ -90,6 +90,23 @@ pd_app_redir_if_delete (pd_if_delete_args_t *args)
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// PD App redir if Get
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_app_redir_if_get (pd_if_get_args_t *args)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    if_t                    *hal_if = args->hal_if;
+    pd_app_redir_if_t       *app_redir_if_pd =  (pd_app_redir_if_t*)hal_if->pd_if;
+    InterfaceGetResponse    *rsp = args->rsp;
+
+    auto app_info = rsp->mutable_status()->mutable_app_redir_info();
+    app_info->set_lport_id(app_redir_if_pd->lport_id);
+
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Allocate resources for PD APPREDIR if
 // ----------------------------------------------------------------------------

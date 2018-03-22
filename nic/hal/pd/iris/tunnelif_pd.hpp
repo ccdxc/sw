@@ -114,6 +114,7 @@ hal_ret_t pd_tunnelif_cleanup(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_create(pd_if_create_args_t *args);
 hal_ret_t pd_tunnelif_update(pd_if_update_args_t *args);
 hal_ret_t pd_tunnelif_delete(pd_if_delete_args_t *args);
+hal_ret_t pd_tunnelif_get (pd_if_get_args_t *args);
 hal_ret_t pd_tunnelif_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_tunnelif_mem_free(pd_if_mem_free_args_t *args);
 

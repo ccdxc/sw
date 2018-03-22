@@ -222,6 +222,9 @@ post-make:
 	mkdir -p obj/cano
 	find obj -name '*.cano'  -type f  | xargs -i mv {} obj/cano 2>/dev/null || :
 
+halctl:
+	$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/cmd/halctl
+
 pd: pd_iris pd_stub
 
 # code generation stage
@@ -234,7 +237,7 @@ stage1: asm capmodel build-proto third-party
 stage2: plugins linkmgr platform pd hal
 
 # post build stage
-stage3: post-make package package-size-check
+stage3: post-make package package-size-check halctl
 
 nic:
 	$(MAKE) stage0

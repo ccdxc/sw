@@ -81,6 +81,7 @@ PD_FUNC_STUB(pd_if_mem_free);
 PD_FUNC_STUB(pd_if_make_clone);
 PD_FUNC_STUB(pd_if_nwsec_update);
 PD_FUNC_STUB(pd_if_lif_update);
+PD_FUNC_STUB(pd_if_get);
 
 // ep calls
 PD_FUNC_STUB(pd_ep_create);

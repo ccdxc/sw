@@ -96,6 +96,27 @@ pd_tunnelif_delete (pd_if_delete_args_t *args)
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// PD Tunnelif Get
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_tunnelif_get (pd_if_get_args_t *args)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    if_t                    *hal_if = args->hal_if;
+    pd_tunnelif_t           *tunnelif_pd = (pd_tunnelif_t *)hal_if->pd_if;
+    InterfaceGetResponse    *rsp = args->rsp;
+
+    auto tnnl_info = rsp->mutable_status()->mutable_tunnel_info();
+    for (int i = 0; i < 3; i++) {
+        tnnl_info->add_inp_map_nat_idx(tunnelif_pd->imn_idx[i]);
+        tnnl_info->add_inp_map_tnl_idx(tunnelif_pd->imt_idx[i]);
+    }
+    tnnl_info->set_tunnel_rw_idx(tunnelif_pd->tunnel_rw_idx);
+
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Tunnel IF
 // ----------------------------------------------------------------------------

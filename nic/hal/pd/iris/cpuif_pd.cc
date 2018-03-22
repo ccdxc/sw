@@ -96,6 +96,23 @@ pd_cpuif_delete (pd_if_delete_args_t *args)
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// PD Cpuif Get
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_cpuif_get (pd_if_get_args_t *args)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    if_t                    *hal_if = args->hal_if;
+    pd_cpuif_t              *cpuif_pd = (pd_cpuif_t *)hal_if->pd_if;
+    InterfaceGetResponse    *rsp = args->rsp;
+
+    auto cpu_info = rsp->mutable_status()->mutable_cpu_info();
+    cpu_info->set_cpu_lport_id(cpuif_pd->cpu_lport_id);
+
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Allocate resources for PD CPU if
 // ----------------------------------------------------------------------------

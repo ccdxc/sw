@@ -106,6 +106,7 @@ pd_lif_t *pd_cpuif_get_pd_lif(pd_cpuif_t *pd_cpuif);
 hal_ret_t pd_cpuif_create(pd_if_create_args_t *args);
 hal_ret_t pd_cpuif_update(pd_if_update_args_t *args);
 hal_ret_t pd_cpuif_delete(pd_if_delete_args_t *args);
+hal_ret_t pd_cpuif_get (pd_if_get_args_t *args);
 hal_ret_t pd_cpuif_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_cpuif_mem_free(pd_if_mem_free_args_t *args);
 

@@ -27,25 +27,21 @@ const (
 // test vectors for halctl
 
 // valid short flag vrf get cmd
-var getVrfCmdValidShort = []string{"get", "vrf", "-k", "1"}
+var getVrfCmdValidShort = []string{"show", "vrf"}
 
-// valid long flag vrf get cmd
-var getVrfCmdValidLong = []string{"get", "vrf", "--vrf-id", "1"}
+var getL2SegmentCmdValidShort = []string{"show", "l2seg"}
 
-// missing required --vrf-id flag
-var getVrfCmdInvalidMissingRequiredKey = []string{"get", "vrf"}
+var getIfCmdValidShort = []string{"show", "if"}
 
-// valid short flag l2segment get cmd
-var getL2SegmentCmdValidShort = []string{"get", "l2segment", "-k", "1", "-v", "1"}
+var getIfUplinkCmdValidShort = []string{"show", "if", "uplink"}
 
-// valid short flag l2segment get cmd
-var getL2SegmentCmdValidLong = []string{"get", "l2segment", "--l2segment-id", "1", "--vrf-id", "1"}
+var getIfUplinkPcCmdValidShort = []string{"show", "if", "uplink-pc"}
 
-// missing --vrf-id flag for l2segment gets
-var getL2SegmentCmdInvalidMissingRequiredKey = []string{"get", "l2segment", "-k", "1"}
+var getIfEnicCmdValidShort = []string{"show", "if", "enic"}
 
-// invalid flag command
-var invalidFlagCmd = []string{"get", "vrf", "--foo", "42"}
+var getIfTunnelCmdValidShort = []string{"show", "if", "tunnel"}
+
+var getIfCPUCmdValidShort = []string{"show", "if", "cpu"}
 
 // veniceIntegSuite is the state of integ test
 type halCtlSuite struct {
@@ -64,6 +60,7 @@ func (m *mockServer) VrfUpdate(context.Context, *halproto.VrfRequestMsg) (*halpr
 func (m *mockServer) VrfDelete(context.Context, *halproto.VrfDeleteRequestMsg) (*halproto.VrfDeleteResponseMsg, error) {
 	return nil, nil
 }
+
 func (m *mockServer) VrfGet(context.Context, *halproto.VrfGetRequestMsg) (*halproto.VrfGetResponseMsg, error) {
 	resp := &halproto.VrfGetResponseMsg{
 		Response: []*halproto.VrfGetResponse{
@@ -90,7 +87,6 @@ func (m *mockServer) VrfGet(context.Context, *halproto.VrfGetRequestMsg) (*halpr
 		},
 	}
 	return resp, nil
-
 }
 
 func (m *mockServer) L2SegmentCreate(context.Context, *halproto.L2SegmentRequestMsg) (*halproto.L2SegmentResponseMsg, error) {
@@ -154,12 +150,127 @@ func (m *mockServer) L2SegmentGet(context.Context, *halproto.L2SegmentGetRequest
 	}
 	return resp, nil
 }
+
+func (m *mockServer) LifCreate(context.Context, *halproto.LifRequestMsg) (*halproto.LifResponseMsg, error) {
+	return nil, nil
+}
+
+func (m *mockServer) LifUpdate(context.Context, *halproto.LifRequestMsg) (*halproto.LifResponseMsg, error) {
+	return nil, nil
+}
+
+func (m *mockServer) LifDelete(context.Context, *halproto.LifDeleteRequestMsg) (*halproto.LifDeleteResponseMsg, error) {
+	return nil, nil
+}
+
+func (m *mockServer) LifGet(context.Context, *halproto.LifGetRequestMsg) (*halproto.LifGetResponseMsg, error) {
+	return nil, nil
+}
+
+func (m *mockServer) LifGetQState(context.Context, *halproto.GetQStateRequestMsg) (*halproto.GetQStateResponseMsg, error) {
+	return nil, nil
+}
+
+func (m *mockServer) LifSetQState(context.Context, *halproto.SetQStateRequestMsg) (*halproto.SetQStateResponseMsg, error) {
+	return nil, nil
+}
+
+func (m *mockServer) AddL2SegmentOnUplink(context.Context, *halproto.InterfaceL2SegmentRequestMsg) (*halproto.InterfaceL2SegmentResponseMsg, error) {
+	return nil, nil
+}
+
+func (m *mockServer) DelL2SegmentOnUplink(context.Context, *halproto.InterfaceL2SegmentRequestMsg) (*halproto.InterfaceL2SegmentResponseMsg, error) {
+	return nil, nil
+}
+
+func (m *mockServer) InterfaceCreate(context.Context, *halproto.InterfaceRequestMsg) (*halproto.InterfaceResponseMsg, error) {
+	return nil, nil
+}
+func (m *mockServer) InterfaceUpdate(context.Context, *halproto.InterfaceRequestMsg) (*halproto.InterfaceResponseMsg, error) {
+	return nil, nil
+}
+func (m *mockServer) InterfaceDelete(context.Context, *halproto.InterfaceDeleteRequestMsg) (*halproto.InterfaceDeleteResponseMsg, error) {
+	return nil, nil
+}
+func (m *mockServer) InterfaceGet(context.Context, *halproto.InterfaceGetRequestMsg) (*halproto.InterfaceGetResponseMsg, error) {
+	resp := &halproto.InterfaceGetResponseMsg{
+		Response: []*halproto.InterfaceGetResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Spec: &halproto.InterfaceSpec{
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+							InterfaceId: 1,
+						},
+					},
+				},
+			},
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Spec: &halproto.InterfaceSpec{
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+							InterfaceId: 2,
+						},
+					},
+					Type: halproto.IfType_IF_TYPE_UPLINK,
+				},
+			},
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Spec: &halproto.InterfaceSpec{
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+							InterfaceId: 3,
+						},
+					},
+					Type: halproto.IfType_IF_TYPE_UPLINK_PC,
+				},
+			},
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Spec: &halproto.InterfaceSpec{
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+							InterfaceId: 4,
+						},
+					},
+					Type: halproto.IfType_IF_TYPE_ENIC,
+				},
+			},
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Spec: &halproto.InterfaceSpec{
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+							InterfaceId: 5,
+						},
+					},
+					Type: halproto.IfType_IF_TYPE_TUNNEL,
+				},
+			},
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Spec: &halproto.InterfaceSpec{
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+							InterfaceId: 6,
+						},
+					},
+					Type: halproto.IfType_IF_TYPE_CPU,
+				},
+			},
+		},
+	}
+	return resp, nil
+}
 func (h *halCtlSuite) runMockHALServer(c *C) {
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%v", testGRPCPort))
 	c.Assert(err, IsNil)
 	h.mockSrv = grpc.NewServer()
 	halproto.RegisterVrfServer(h.mockSrv, &mockServer{})
 	halproto.RegisterL2SegmentServer(h.mockSrv, &mockServer{})
+	halproto.RegisterInterfaceServer(h.mockSrv, &mockServer{})
 	h.mockSrv.Serve(lis)
 }
 
@@ -214,7 +325,8 @@ func (h *halCtlSuite) TestVrfGet(c *C) {
 		resp, err = h.getVrfs(vrfGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get VRFs")
-	AssertEquals(c, true, strings.Contains(resp, "vrfid: 1"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "1         0"), fmt.Sprintf("halctl returned: %v", resp))
+	// AssertEquals(c, true, strings.Contains(resp, "vrfid: 1"), fmt.Sprintf("halctl returned: %v", resp))
 }
 
 // basic test to get all l2 segments
@@ -236,9 +348,148 @@ func (h *halCtlSuite) TestL2SegmentGet(c *C) {
 		resp, err = h.getL2Segments(l2SegGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get L2Segments")
-	AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "1         0"), fmt.Sprintf("halctl returned: %v", resp))
+	//AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
 }
 
+// basic test to get all l2 interfaces
+func (h *halCtlSuite) TestInterfaceGet(c *C) {
+	var err error
+	var resp string
+	req := &halproto.InterfaceGetRequest{
+		KeyOrHandle: &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: uint64(1),
+			},
+		},
+	}
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: []*halproto.InterfaceGetRequest{req},
+	}
+
+	AssertEventually(c, func() (bool, interface{}) {
+		resp, err = h.getInterfaces(ifGetReqMsg)
+		return err == nil, nil
+	}, "Failed to get Interfaces")
+	AssertEquals(c, true, strings.Contains(resp, "1         0"), fmt.Sprintf("halctl returned: %v", resp))
+	//AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
+}
+
+// basic test to get all uplinks
+func (h *halCtlSuite) TestUplinksGet(c *C) {
+	var err error
+	var resp string
+	req := &halproto.InterfaceGetRequest{
+		KeyOrHandle: &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: uint64(1),
+			},
+		},
+	}
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: []*halproto.InterfaceGetRequest{req},
+	}
+
+	AssertEventually(c, func() (bool, interface{}) {
+		resp, err = h.getUplinks(ifGetReqMsg)
+		return err == nil, nil
+	}, "Failed to get Uplinks")
+	AssertEquals(c, true, strings.Contains(resp, "2         0"), fmt.Sprintf("halctl returned: %v", resp))
+	//AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
+}
+
+// basic test to get all uplinkPCs
+func (h *halCtlSuite) TestUplinkPCsGet(c *C) {
+	var err error
+	var resp string
+	req := &halproto.InterfaceGetRequest{
+		KeyOrHandle: &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: uint64(1),
+			},
+		},
+	}
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: []*halproto.InterfaceGetRequest{req},
+	}
+
+	AssertEventually(c, func() (bool, interface{}) {
+		resp, err = h.getUplinkPCs(ifGetReqMsg)
+		return err == nil, nil
+	}, "Failed to get Uplinks")
+	AssertEquals(c, true, strings.Contains(resp, "3         0"), fmt.Sprintf("halctl returned: %v", resp))
+	//AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
+}
+
+// basic test to get all enics
+func (h *halCtlSuite) TestEnicsGet(c *C) {
+	var err error
+	var resp string
+	req := &halproto.InterfaceGetRequest{
+		KeyOrHandle: &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: uint64(1),
+			},
+		},
+	}
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: []*halproto.InterfaceGetRequest{req},
+	}
+
+	AssertEventually(c, func() (bool, interface{}) {
+		resp, err = h.getEnics(ifGetReqMsg)
+		return err == nil, nil
+	}, "Failed to get Enics")
+	AssertEquals(c, true, strings.Contains(resp, "4         0"), fmt.Sprintf("halctl returned: %v", resp))
+}
+
+/*
+// basic test to get all tunnels
+func (h *halCtlSuite) TestTunnelsGet(c *C) {
+	var err error
+	var resp string
+	req := &halproto.InterfaceGetRequest{
+		KeyOrHandle: &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: uint64(1),
+			},
+		},
+	}
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: []*halproto.InterfaceGetRequest{req},
+	}
+
+	AssertEventually(c, func() (bool, interface{}) {
+		resp, err = h.getTunnels(ifGetReqMsg)
+		return err == nil, nil
+	}, "Failed to get Tunnels")
+	AssertEquals(c, true, strings.Contains(resp, "5         0"), fmt.Sprintf("halctl returned: %v", resp))
+}
+*/
+
+// basic test to get all cpu
+func (h *halCtlSuite) TestCPUGet(c *C) {
+	var err error
+	var resp string
+	req := &halproto.InterfaceGetRequest{
+		KeyOrHandle: &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: uint64(1),
+			},
+		},
+	}
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: []*halproto.InterfaceGetRequest{req},
+	}
+
+	AssertEventually(c, func() (bool, interface{}) {
+		resp, err = h.getCPU(ifGetReqMsg)
+		return err == nil, nil
+	}, "Failed to get CPU")
+	AssertEquals(c, true, strings.Contains(resp, "6         0"), fmt.Sprintf("halctl returned: %v", resp))
+}
+
+/*
 func (h *halCtlSuite) TestVRFGetCornerCases(c *C) {
 	// test long version of the flags
 	b, err := exec.Command(halCtlBinaryName, getVrfCmdValidLong...).CombinedOutput()
@@ -285,7 +536,7 @@ func (h *halCtlSuite) TestInvalidFlags(c *C) {
 	AssertEquals(c, true, strings.Contains(string(b), "Error: unknown flag: --foo"), fmt.Sprintf("halctl returned: %v", string(b)))
 
 }
-
+*/
 func (h *halCtlSuite) getVrfs(v *halproto.VrfGetRequestMsg) (string, error) {
 	b, err := exec.Command(halCtlBinaryName, getVrfCmdValidShort...).CombinedOutput()
 	return string(b), err
@@ -295,3 +546,35 @@ func (h *halCtlSuite) getL2Segments(v *halproto.L2SegmentGetRequestMsg) (string,
 	b, err := exec.Command(halCtlBinaryName, getL2SegmentCmdValidShort...).CombinedOutput()
 	return string(b), err
 }
+
+func (h *halCtlSuite) getInterfaces(v *halproto.InterfaceGetRequestMsg) (string, error) {
+	b, err := exec.Command(halCtlBinaryName, getIfCmdValidShort...).CombinedOutput()
+	return string(b), err
+}
+
+func (h *halCtlSuite) getUplinks(v *halproto.InterfaceGetRequestMsg) (string, error) {
+	b, err := exec.Command(halCtlBinaryName, getIfUplinkCmdValidShort...).CombinedOutput()
+	return string(b), err
+}
+
+func (h *halCtlSuite) getUplinkPCs(v *halproto.InterfaceGetRequestMsg) (string, error) {
+	b, err := exec.Command(halCtlBinaryName, getIfUplinkPcCmdValidShort...).CombinedOutput()
+	return string(b), err
+}
+
+func (h *halCtlSuite) getEnics(v *halproto.InterfaceGetRequestMsg) (string, error) {
+	b, err := exec.Command(halCtlBinaryName, getIfEnicCmdValidShort...).CombinedOutput()
+	return string(b), err
+}
+
+func (h *halCtlSuite) getCPU(v *halproto.InterfaceGetRequestMsg) (string, error) {
+	b, err := exec.Command(halCtlBinaryName, getIfCPUCmdValidShort...).CombinedOutput()
+	return string(b), err
+}
+
+/*
+func (h *halCtlSuite) getTunnels(v *halproto.InterfaceGetRequestMsg) (string, error) {
+	b, err := exec.Command(halCtlBinaryName, getIfTunnelCmdValidShort...).CombinedOutput()
+	return string(b), err
+}
+*/

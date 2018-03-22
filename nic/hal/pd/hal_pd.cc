@@ -121,6 +121,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_IF_MAKE_CLONE, pd_if_make_clone);
     PD_SYMBOL_LOAD(PD_FUNC_ID_IF_NWSEC_UPDATE, pd_if_nwsec_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_IF_LIF_UPDATE, pd_if_lif_update);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_IF_GET, pd_if_get);
 
     // ep pd calls
     PD_SYMBOL_LOAD(PD_FUNC_ID_EP_CREATE, pd_ep_create);
@@ -455,6 +456,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_IF_MAKE_CLONE, pd_if_make_clone);
     PD_SYMBOL_CALL(PD_FUNC_ID_IF_NWSEC_UPDATE, pd_if_nwsec_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_IF_LIF_UPDATE, pd_if_lif_update);
+    PD_SYMBOL_CALL(PD_FUNC_ID_IF_GET, pd_if_get);
 
     // ep pd calls
     PD_SYMBOL_CALL(PD_FUNC_ID_EP_CREATE, pd_ep_create);

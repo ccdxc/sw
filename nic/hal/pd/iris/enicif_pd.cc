@@ -124,6 +124,25 @@ pd_enicif_delete (pd_if_delete_args_t *args)
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// PD Enicif Get
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_get (pd_if_get_args_t *args)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    if_t                    *hal_if = args->hal_if;
+    pd_enicif_t             *enicif_pd = (pd_enicif_t *)hal_if->pd_if;
+    InterfaceGetResponse    *rsp = args->rsp;
+
+    auto enic_info = rsp->mutable_status()->mutable_enic_info();
+    enic_info->set_enic_lport_id(enicif_pd->enic_lport_id);
+    enic_info->set_inp_prop_mac_vlan_idx_host(enicif_pd->inp_prop_mac_vlan_idx_host);
+    enic_info->set_inp_prop_mac_vlan_idx_net(enicif_pd->inp_prop_mac_vlan_idx_upl);
+    enic_info->set_inp_prop_nat_l2seg_classic(enicif_pd->inp_prop_native_l2seg_clsc);
+
+    return ret;
+}
 // ----------------------------------------------------------------------------
 // Enicif Update: Handling pinned uplink change
 // ----------------------------------------------------------------------------

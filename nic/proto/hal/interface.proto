@@ -481,6 +481,7 @@ message UplinkResponseInfo {
     uint32      uplink_lport_id = 1;    // Uplink/Uplink PC's lport id
     uint32      hw_lif_id       = 2;    // hw lif id for Uplink/UplinkPC
     uint32      uplink_idx      = 3;    // Unique id for every Uplink/Uplink PC. Used to maintain l2seg membership
+    uint32      num_l2segs      = 4;    // number of l2segs configured on this uplink
 }
 
 // Enic <-> L2seg membership info

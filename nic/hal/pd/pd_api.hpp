@@ -558,6 +558,10 @@ typedef struct pd_if_mem_free_args_s {
     } __PACK__;
 } __PACK__ pd_if_mem_free_args_t;
 
+typedef struct pd_if_get_args_s {
+    if_t *hal_if;
+    InterfaceGetResponse *rsp;
+} __PACK__ pd_if_get_args_t;
 
 typedef struct pd_if_make_clone_args_s {
     if_t *hal_if;
@@ -2456,7 +2460,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_SWPHV_INJECT,          205, "PD_FUNC_ID_SWPHV_INJECT")\
     ENTRY(PD_FUNC_ID_SWPHV_GET_STATE,       206, "PD_FUNC_ID_SWPHV_GET_STATE")\
     ENTRY(PD_FUNC_ID_CLR_HONOR_ING,         207, "PD_FUNC_ID_CLR_HONOR_ING")\
-    ENTRY(PD_FUNC_ID_MAX,                   208, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_IF_GET,                208, "PD_FUNC_ID_IF_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                   209, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2531,6 +2536,7 @@ PD_FUNCP_TYPEDEF(pd_if_mem_free);
 PD_FUNCP_TYPEDEF(pd_if_make_clone);
 PD_FUNCP_TYPEDEF(pd_if_nwsec_update);
 PD_FUNCP_TYPEDEF(pd_if_lif_update);
+PD_FUNCP_TYPEDEF(pd_if_get);
 
 // ep calls
 PD_FUNCP_TYPEDEF(pd_ep_create);
@@ -2853,7 +2859,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_lif_make_clone);
         PD_UNION_FIELD(pd_lif_get);
 
-        // lif pd calls
+        // if pd calls
         PD_UNION_FIELD(pd_if_create);
         PD_UNION_FIELD(pd_if_delete);
         PD_UNION_FIELD(pd_if_update);
@@ -2861,6 +2867,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_if_make_clone);
         PD_UNION_FIELD(pd_if_nwsec_update);
         PD_UNION_FIELD(pd_if_lif_update);
+        PD_UNION_FIELD(pd_if_get);
 
         // ep calls
         PD_UNION_FIELD(pd_ep_create);

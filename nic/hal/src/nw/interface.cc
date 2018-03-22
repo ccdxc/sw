@@ -1824,8 +1824,11 @@ end:
 static void
 if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
 {
-    InterfaceSpec    *spec;
-    l2seg_t          *l2seg;
+    hal_ret_t               ret    = HAL_RET_OK;
+    InterfaceSpec           *spec  = NULL;
+    l2seg_t                 *l2seg = NULL;
+    if_t                    *up_if = NULL;
+    pd::pd_if_get_args_t    args   = {0};
 
     // fill in the config spec of this interface
     spec = rsp->mutable_spec();
@@ -1857,6 +1860,8 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
         //Port number is 0 based.
         uplink_if_info->set_port_num(hal_if->uplink_port_num + 1);
         uplink_if_info->set_native_l2segment_id(hal_if->native_l2seg);
+        rsp->mutable_status()->mutable_uplink_info()->
+            set_num_l2segs(dllist_count(&hal_if->l2seg_list_head));
         // TODO: is this populated today ?
         //uplink_if_info->set_l2segment_id();
         // TODO: don't see this info populated in if today
@@ -1873,22 +1878,15 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
         hal_handle_id_list_entry_t *entry;
         dllist_for_each_safe(curr, next, &hal_if->mbr_if_list_head) {
             entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            HAL_TRACE_ERR("READ ..unable to add non-uplinkif. "
-                          "Skipping if id: {}", entry->handle_id);
-            auto mif_key_handle = uplink_pc_info->add_member_if_key_handle();
-            mif_key_handle->set_interface_id(entry->handle_id);
-        }
-#if 0
-        dllist_for_each_safe(curr, next, &hal_if->l2seg_list_head) {
-            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            HAL_TRACE_ERR("READ ..unable to add segment id "
-                          "Skipping segment ID: {}", entry->handle_id);
-            l2seg_t *l2seg = l2seg_lookup_by_handle(entry->handle_id);
-            if (l2seg != NULL) {
-                uplink_pc_info->add_l2segment_id(l2seg->seg_id);
+            up_if = find_if_by_handle(entry->handle_id);
+            if (!up_if) {
+                HAL_TRACE_ERR("unable to find uplinkif with handle:{}",
+                              entry->handle_id);
+                continue;
             }
+            auto mif_key_handle = uplink_pc_info->add_member_if_key_handle();
+            mif_key_handle->set_interface_id(up_if->if_id);
         }
-#endif
     }
         break;
 
@@ -1921,6 +1919,16 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
     default:
         break;
     }
+
+    // Getting PD information
+    args.hal_if = hal_if;
+    args.rsp = rsp;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_GET, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to do PD get for If id: {}. ret:{}",
+                      hal_if->if_id, ret);
+    }
+    
 }
 
 static bool

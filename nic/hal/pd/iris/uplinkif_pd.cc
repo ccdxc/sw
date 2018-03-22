@@ -94,6 +94,25 @@ pd_uplinkif_delete (pd_if_delete_args_t *args)
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// PD Uplinkif Get
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_uplinkif_get (pd_if_get_args_t *args)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    if_t                    *hal_if = args->hal_if;
+    pd_uplinkif_t           *uplinkif_pd = (pd_uplinkif_t *)hal_if->pd_if;
+    InterfaceGetResponse    *rsp = args->rsp;
+
+    auto up_info = rsp->mutable_status()->mutable_uplink_info();
+    up_info->set_uplink_lport_id(uplinkif_pd->upif_lport_id);
+    up_info->set_hw_lif_id(uplinkif_pd->hw_lif_id);
+    up_info->set_uplink_idx(uplinkif_pd->up_ifpc_id);
+
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Uplink if
 // ----------------------------------------------------------------------------

@@ -1068,7 +1068,7 @@ vrf_process_get (vrf_t *vrf, VrfGetResponse *rsp)
     rsp->mutable_status()->set_vrf_handle(vrf->hal_handle);
 
     // fill stats of this vrf
-    rsp->mutable_stats()->set_num_l2_segments(vrf->num_l2seg);
+    rsp->mutable_stats()->set_num_l2_segments(vrf->l2seg_list->num_elems());
     rsp->mutable_stats()->set_num_security_groups(vrf->num_sg);
     rsp->mutable_stats()->set_num_l4lb_services(vrf->num_l4lb_svc);
     rsp->mutable_stats()->set_num_endpoints(vrf->num_ep);

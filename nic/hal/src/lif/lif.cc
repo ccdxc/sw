@@ -1480,6 +1480,8 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
 
     rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
 
+    rsp->mutable_status()->set_lif_handle(lif->hal_handle);
+    HAL_TRACE_ERR("lif_handle: {}", lif->hal_handle);
     rsp->set_api_status(types::API_STATUS_OK);
 }
 
@@ -1503,6 +1505,8 @@ hal_ret_t
 lif_get (LifGetRequest& req, LifGetResponseMsg *rsp)
 {
     lif_t   *lif;
+    HAL_TRACE_ERR("lif_get ---------------------");
+    printf("%s: Trying to get lif =================", __FUNCTION__);
 
     if (!req.has_key_or_handle()) {
         g_hal_state->lif_id_ht()->walk(lif_get_ht_cb, rsp);
@@ -1515,6 +1519,7 @@ lif_get (LifGetRequest& req, LifGetResponseMsg *rsp)
         }
         lif_process_get(lif, response);
     }
+    fflush(stdout);
 
     return HAL_RET_OK;
 }

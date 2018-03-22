@@ -157,6 +157,7 @@ hal_ret_t pd_enicif_upd_native_l2seg_clsc_change(pd_if_update_args_t *args);
 hal_ret_t pd_enicif_create(pd_if_create_args_t *args);
 hal_ret_t pd_enicif_update(pd_if_update_args_t *args);
 hal_ret_t pd_enicif_delete(pd_if_delete_args_t *args);
+hal_ret_t pd_enicif_get (pd_if_get_args_t *args);
 hal_ret_t pd_enicif_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_enicif_mem_free(pd_if_mem_free_args_t *args);
 }   // namespace pd
