@@ -16,13 +16,14 @@ using telemetry::ExportControlId;
 using telemetry::ExportControlConfigMsg;
 using telemetry::ExportControlResponseMsg;
 using telemetry::ExportControlResponseMsg;
-using telemetry::FlowMonitorRuleConfigMsg;
-using telemetry::FlowMonitorRuleResponseMsg;
 using telemetry::MirrorSessionConfigMsg;
 using telemetry::MirrorSessionDeleteMsg;
 using telemetry::MirrorSessionResponseMsg;
 using telemetry::MirrorSessionId;
 using telemetry::MirrorSession;
+using telemetry::FlowMonitorRule;
+using telemetry::FlowMonitorRuleConfigMsg;
+using telemetry::FlowMonitorRuleResponseMsg;
 using types::Empty;
 
 class TelemetryServiceImpl final : public Telemetry::Service {

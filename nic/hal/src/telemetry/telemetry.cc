@@ -8,40 +8,19 @@
 #include "nic/gen/proto/hal/telemetry.pb.h"
 #include "nic/gen/proto/hal/types.pb.h"
 
-using telemetry::MirrorSession;
-using telemetry::MirrorSessionStatus;
-using telemetry::MirrorSessionSpec;
-using telemetry::MirrorSessionId;
 using hal::pd::pd_mirror_session_create_args_t;
 using hal::pd::pd_mirror_session_delete_args_t;
 using hal::pd::pd_mirror_session_get_args_t;
 using hal::mirror_session_t;
+using hal::pd::pd_flow_monitor_rule_create_args_t;
+using hal::pd::pd_flow_monitor_rule_delete_args_t;
+using hal::pd::pd_flow_monitor_rule_get_args_t;
+using hal::flow_monitor_rule_t;
 
 namespace hal {
 
-typedef struct flow_monitor_spec_ {
-    mac_addr_t src_mac;
-    bool src_mac_valid;
-    mac_addr_t dst_mac;
-    bool dst_mac_valid;
-    ip_prefix_t src_ip;
-    bool src_ip_valid;
-    ip_prefix_t dst_ip;
-    bool dst_ip_valid;
-    uint8_t protocol;
-    bool protocol_valid;
-    uint16_t src_port;
-    bool src_port_valid;
-    uint16_t dst_port;
-    bool dst_port_valid;
-    // Add Source and Dest Tags.
-    bool collect_flow_action;
-    uint8_t mirror_destinations;
-} flow_monitor_spec_t;
-
-
 if_t
-*get_if_from_key_or_handle(kh::InterfaceKeyHandle ifid)
+*get_if_from_key_or_handle (kh::InterfaceKeyHandle ifid)
 {
     if_t *ift;
 
@@ -60,9 +39,8 @@ if_t
 }
 
 hal_ret_t
-mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp)
+mirror_session_create (MirrorSessionSpec *spec, MirrorSession *rsp)
 {
-
     pd_mirror_session_create_args_t args;
     mirror_session_t session;
     kh::InterfaceKeyHandle ifid;
@@ -187,7 +165,7 @@ mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp)
 }
 
 hal_ret_t
-mirror_session_get(MirrorSessionId *id, MirrorSession *rsp)
+mirror_session_get (MirrorSessionId *id, MirrorSession *rsp)
 {
     pd_mirror_session_get_args_t args;
     mirror_session_t session;
@@ -231,7 +209,7 @@ mirror_session_get(MirrorSessionId *id, MirrorSession *rsp)
 }
 
 hal_ret_t
-mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp)
+mirror_session_delete (MirrorSessionId *id, MirrorSession *rsp)
 {
     pd_mirror_session_delete_args_t args;
     mirror_session_t session;
@@ -254,7 +232,8 @@ mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp)
 }
 
 hal_ret_t
-collector_create(CollectorSpec *spec, Collector *resp) {
+collector_create (CollectorSpec *spec, Collector *resp)
+{
     collector_config_t cfg;
     pd::pd_collector_create_args_t args;
     hal_ret_t ret = HAL_RET_OK;
@@ -317,21 +296,78 @@ collector_create(CollectorSpec *spec, Collector *resp) {
 }
 
 hal_ret_t
-collector_update(CollectorSpec *spec, Collector *resp) {
+collector_update (CollectorSpec *spec, Collector *resp)
+{
     // implementation TBD
     return HAL_RET_OK;
 }
 
 hal_ret_t
-collector_get(ExportControlId *id, Collector *resp) {
+collector_get (ExportControlId *id, Collector *resp) {
     
     return HAL_RET_OK;
 }
 
 hal_ret_t
-collector_delete(ExportControlId *id, Collector *resp) {
+collector_delete (ExportControlId *id, Collector *resp)
+{
     
     return HAL_RET_OK;
+}
+
+hal_ret_t
+flow_monitor_rule_create (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
+{
+    //pd_flow_monitor_rule_create_args_t args;
+    //flow_monitor_rule_t rule;
+    hal_ret_t ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("PI-FlowMonitorRule:{}", __FUNCTION__);
+    if (spec->meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+        HAL_TRACE_ERR("vrf {}", spec->meta().vrf_id());
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+end:
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return ret;
+}
+
+hal_ret_t
+flow_monitor_rule_delete (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
+{
+    //pd_flow_monitor_rule_delete_args_t args;
+    //flow_monitor_rule_t rule;
+    hal_ret_t ret;
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("PI-FlowMonitorRule:{}", __FUNCTION__);
+    if (spec->meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+        HAL_TRACE_ERR("vrf {}", spec->meta().vrf_id());
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+end:
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return ret;
+}
+
+hal_ret_t
+flow_monitor_rule_get (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    
+    // TODO
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("PI-FlowMonitorRule:{}", __FUNCTION__);
+
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return ret;
 }
 
 } // namespace hal

@@ -172,19 +172,20 @@ message FlowMonitorRuleStatus {
 
 // FlowMonitorRule is a container for the configuration and operational status
 message FlowMonitorRule {
-  FlowMonitorRuleSpec     spec    = 1;
-  FlowMonitorRuleStatus   status  = 2;
+  types.ApiStatus         api_status  = 1;
+  FlowMonitorRuleSpec     spec        = 2;
+  FlowMonitorRuleStatus   status      = 3;
 }
 
 // FlowMonitorRuleConfigMsg is used in api requests for flow monitor configuration
 message FlowMonitorRuleConfigMsg {
-  repeated FlowMonitorRuleSpec rules = 1;
+  repeated FlowMonitorRuleSpec request = 1;
 }
 
 // FlowMonitorRuleResponseMsg is used in responses for flow monitor rule operations
 message FlowMonitorRuleResponseMsg {
-  types.ApiStatus           status  = 1; // Status of the API
-  repeated FlowMonitorRule  rules   = 2; // Flow monitor rule ressults
+  types.ApiStatus           status     = 1; // Status of the API
+  repeated FlowMonitorRule  response   = 2; // Flow monitor rule responses
 }
 
 // RspanSpec is the configuration specification for RSPAN.

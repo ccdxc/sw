@@ -9,9 +9,13 @@ using telemetry::Telemetry;
 using telemetry::MirrorSessionSpec;
 using telemetry::MirrorSession;
 using telemetry::MirrorSessionId;
+using telemetry::MirrorSessionStatus;
 using telemetry::CollectorSpec;
 using telemetry::Collector;
 using telemetry::ExportControlId;
+using telemetry::FlowMonitorRule;
+using telemetry::FlowMonitorRuleSpec;
+using telemetry::FlowMonitorRuleStatus;
 
 namespace hal {
 
@@ -38,6 +42,46 @@ DEFINE_ENUM(export_formats_en, EXPORT_FORMATS)
 
 // Session ID used by L7 app redirect (visibility mode)
 #define MIRROR_SESSION_APP_REDIR_VISIB_ID    7
+// Iris pipeline can support upto 8 mirror destinations
+#define MAX_MIRROR_SESSION_DEST     8
+
+typedef struct flow_monitor_rule_s {
+    hal_spinlock_t slock;
+    uint64_t vrf_id;
+    // Flow key fields
+    union {
+        struct {
+            mac_addr_t src_mac;
+            mac_addr_t dst_mac;
+            uint16_t ethertype;
+            bool src_mac_valid;
+            bool dst_mac_valid;
+            bool ethertype_valid;;
+        };
+        struct {
+            ip_prefix_t sip;
+            ip_prefix_t dip;
+            uint8_t proto;
+            uint16_t sport;
+            uint16_t dport;
+            bool sip_valid;
+            bool dip_valid;
+            bool proto_valid;
+            bool sport_valid;
+            bool dport_valid;
+        };
+    };
+    // Source and Dest workload group ids
+    uint64_t src_groupid;
+    uint64_t dst_groupid;
+    uint8_t mirror_destinations[MAX_MIRROR_SESSION_DEST];
+    bool src_groupid_valid;
+    bool dst_groupid_valid;
+    // Is it a collect action ?
+    bool collect_flow_action;
+    // Mirror to cpu - additional mirror destination
+    bool mirror_to_cpu;
+} __PACK__ flow_monitor_rule_t;
 
 typedef struct mirror_session_s {
     hal_spinlock_t slock;
@@ -70,16 +114,15 @@ typedef struct collector_config_s {
     export_formats_en   format;
 } collector_config_t;
 
-typedef struct flow_monitor_rule_s {
-    hal_spinlock_t slock;
-} __PACK__ flow_monitor_rule_t;
-
 hal_ret_t mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp);
 hal_ret_t mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp);
 hal_ret_t collector_create(CollectorSpec *spec, Collector *resp);
 hal_ret_t collector_update(CollectorSpec *spec, Collector *resp);
 hal_ret_t collector_get(ExportControlId *id, Collector *resp);
 hal_ret_t collector_delete(ExportControlId *id, Collector *resp);
+hal_ret_t flow_monitor_rule_create(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
+hal_ret_t flow_monitor_rule_delete(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
+hal_ret_t flow_monitor_rule_get(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
 }
 
 #endif // __TELEMETRY_HPP__

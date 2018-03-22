@@ -11,7 +11,7 @@ TelemetryServiceImpl::CollectorCreate(ServerContext* context,
 {
     HAL_TRACE_DEBUG("Rcvd Collector Create Request");
     Collector *resp;
-    uint32_t                i, nreqs = request->request_size();
+    uint32_t i, nreqs = request->request_size();
 
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
@@ -94,6 +94,37 @@ TelemetryServiceImpl::FlowMonitorRuleCreate(ServerContext* context,
                             FlowMonitorRuleResponseMsg* response)
 {
     HAL_TRACE_DEBUG("Rcvd FlowMonitorRuleCreate Request");
+    FlowMonitorRule *resp;
+    uint32_t i, nreqs = request->request_size();
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+    for (i = 0; i < nreqs; ++i) {
+        resp = response->add_response();
+        auto spec = request->request(i);
+        hal::flow_monitor_rule_create(&spec, resp);
+    }
+    return Status::OK;
+}
+
+Status
+TelemetryServiceImpl::FlowMonitorRuleDelete(ServerContext* context,
+                            const FlowMonitorRuleConfigMsg* request,
+                            FlowMonitorRuleResponseMsg* response)
+{
+    HAL_TRACE_DEBUG("Rcvd FlowMonitorRuleDelete Request");
+    FlowMonitorRule *resp;
+    uint32_t i, nreqs = request->request_size();
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+    for (i = 0; i < nreqs; ++i) {
+        resp = response->add_response();
+        auto spec = request->request(i);
+        hal::flow_monitor_rule_delete(&spec, resp);
+    }
     return Status::OK;
 }
 
@@ -125,23 +156,13 @@ TelemetryServiceImpl::FlowMonitorRuleGet(ServerContext* context,
 }
 
 Status
-TelemetryServiceImpl::FlowMonitorRuleDelete(ServerContext* context,
-                            const FlowMonitorRuleConfigMsg* request,
-                            FlowMonitorRuleResponseMsg* response)
-{
-    HAL_TRACE_DEBUG("Rcvd FlowMonitorRuleDelete Request");
-    return Status::OK;
-}
-
-
-Status
 TelemetryServiceImpl::MirrorSessionCreate(ServerContext* context,
                             const MirrorSessionConfigMsg* request,
                             MirrorSessionResponseMsg* response)
 {
     HAL_TRACE_DEBUG("RcvdMirrorSessionCreate Request");
     MirrorSession *resp;
-    uint32_t                i, nreqs = request->request_size();
+    uint32_t i, nreqs = request->request_size();
 
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
@@ -188,7 +209,7 @@ TelemetryServiceImpl::MirrorSessionDelete(ServerContext* context,
 {
     HAL_TRACE_DEBUG("Rcvd MirrorSession Delete Request");
     MirrorSession *resp;
-    uint32_t                i, nreqs = request->request_size();
+    uint32_t i, nreqs = request->request_size();
 
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
