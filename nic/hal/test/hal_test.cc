@@ -316,7 +316,7 @@ public:
                 std::cout << "Port Get succeeded for port "
                           << port_id << std::endl
                           << " Port oper status: "
-                          << rsp_msg.response(0).status() << std::endl
+                          << rsp_msg.response(0).status().oper_status() << std::endl
                           << " Port type: "
                           << rsp_msg.response(0).spec().port_type() << std::endl
                           << " Admin state: "
@@ -335,7 +335,8 @@ public:
 
             if (compare == true) {
                 if (port_oper_status != port::PORT_OPER_STATUS_NONE) {
-                    assert(rsp_msg.response(0).status() == port_oper_status);
+                    assert(rsp_msg.response(0).status().oper_status()
+                                                == port_oper_status);
                 }
                 if (port_type != port::PORT_TYPE_NONE) {
                     assert(rsp_msg.response(0).spec().port_type() == port_type);

@@ -48,19 +48,31 @@ enum PortSpeed {
     PORT_SPEED_100G = 3;     // port speed is 100Gbps
 }
 
+enum PortFecType {
+    PORT_FEC_TYPE_NONE = 0;  // Disable FEC
+    PORT_FEC_TYPE_FC   = 1;  // Enable FireCode FEC
+    PORT_FEC_TYPE_RS   = 2;  // Enable ReedSolomon FEC
+}
+
 // PortSpec message is used to do add/mod properties of a port
 message PortSpec {
-  types.ObjectMeta  meta            = 1;    // common object meta
+  types.ObjectMeta  meta             = 1;    // common object meta
 
   // key_or_handle is the port number
-  kh.PortKeyHandle  key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:\"key\""];
 
-  PortType          port_type       = 3;    // port type
-  PortAdminState    admin_state     = 4;    // admin status of the port
-  PortSpeed         port_speed      = 6;    // speed of the port
-  uint32            mac_id          = 7;    // mac associated with the port
-  uint32            mac_ch          = 8;    // mac channel associated with the port
-  uint32            num_lanes       = 9;    // number of lanes for the port
+  PortType          port_type        = 3 [(gogoproto.moretags) = "venice:immutable"];    // port type
+  PortAdminState    admin_state      = 4;    // admin status of the port
+  PortSpeed         port_speed       = 6;    // speed of the port
+  uint32            mac_id           = 7 [(gogoproto.moretags) = "venice:immutable"];    // mac associated with the port
+  uint32            mac_ch           = 8 [(gogoproto.moretags) = "venice:immutable"];    // mac channel associated with the port
+  uint32            num_lanes        = 9 [(gogoproto.moretags) = "venice:immutable"];    // number of lanes for the port
+  PortFecType       fec_type         = 10;   // FEC type
+  bool              auto_neg_enable  = 11;   // Enable AutoNeg
+}
+
+message PortStatus {
+    PortOperStatus   oper_status  = 1;    // operational state of port
 }
 
 //------------------------------------------------------------------------------
@@ -73,6 +85,7 @@ message PortRequestMsg {
 // PortResponse is response to PortSpec
 message PortResponse {
   types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  PortStatus       status     = 2;    // status of port
 }
 
 //------------------------------------------------------------------------------
@@ -114,37 +127,6 @@ message PortDeleteResponseMsg {
 // PortStats captures all the statistics of given Port
 message PortStats {
     MacStats mac_stats            =  1;  // Port MAC stats
-}
-
-// PortGetRequest is used to get information about a port
-message PortGetRequest {
-  types.ObjectMeta  meta          = 1;    // object meta
-
-  // key_or_handle is the port number
-  kh.PortKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
-}
-
-//------------------------------------------------------------------------------
-// PortGetRequestMsg is batched GET request for ports
-//------------------------------------------------------------------------------
-message PortGetRequestMsg {
-  repeated PortGetRequest  request = 1;    // batched get request
-}
-
-// PortGetResponse captures all the information about a port
-// only if api_status indicates success, other fields are valid
-message PortGetResponse {
-  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  PortSpec         spec       = 2;    // port configuration
-  PortOperStatus   status     = 3;    // operational state of port
-  PortStats        stats      = 4;    // Port statistics
-}
-
-//------------------------------------------------------------------------------
-// PortGetResponseMsg is the batched response to PortGetRequestMsg
-//------------------------------------------------------------------------------
-message PortGetResponseMsg {
-  repeated PortGetResponse  response = 1;    // batched get response
 }
 
 message MacStats {
@@ -238,3 +220,35 @@ message MacStats {
    uint64 rx_pause_1us_count      = 88;
    uint64 frames_tx_truncated     = 89;
 }
+
+// PortGetRequest is used to get information about a port
+message PortGetRequest {
+  types.ObjectMeta  meta          = 1;    // object meta
+
+  // key_or_handle is the port number
+  kh.PortKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+//------------------------------------------------------------------------------
+// PortGetRequestMsg is batched GET request for ports
+//------------------------------------------------------------------------------
+message PortGetRequestMsg {
+  repeated PortGetRequest  request = 1;    // batched get request
+}
+
+// PortGetResponse captures all the information about a port
+// only if api_status indicates success, other fields are valid
+message PortGetResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  PortSpec         spec       = 2;    // port configuration
+  PortStatus       status     = 3;    // status of port
+  PortStats        stats      = 4;    // Port statistics
+}
+
+//------------------------------------------------------------------------------
+// PortGetResponseMsg is the batched response to PortGetRequestMsg
+//------------------------------------------------------------------------------
+message PortGetResponseMsg {
+  repeated PortGetResponse  response = 1;    // batched get response
+}
+

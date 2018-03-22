@@ -571,6 +571,7 @@
 		SecurityPolicyGetResponse
 		SecurityPolicyGetResponseMsg
 		PortSpec
+		PortStatus
 		PortRequestMsg
 		PortResponse
 		PortResponseMsg
@@ -579,11 +580,11 @@
 		PortDeleteResponse
 		PortDeleteResponseMsg
 		PortStats
+		MacStats
 		PortGetRequest
 		PortGetRequestMsg
 		PortGetResponse
 		PortGetResponseMsg
-		MacStats
 		ProxyKeyHandle
 		ProxySpec
 		ProxyRequestMsg

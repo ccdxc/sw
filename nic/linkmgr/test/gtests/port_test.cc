@@ -134,7 +134,7 @@ int port_get(
     std::cout << "Port Get succeeded for port "
               << port_id << std::endl
               << " Port oper status: "
-              << rsp.status() << std::endl
+              << rsp.status().oper_status() << std::endl
               << " Port type: "
               << rsp.spec().port_type() << std::endl
               << " Admin state: "
@@ -150,13 +150,13 @@ int port_get(
 
     if (compare == true) {
         if (port_oper_status != port::PORT_OPER_STATUS_NONE) {
-            if (rsp.status() != port_oper_status) {
+            if (rsp.status().oper_status() != port_oper_status) {
                 std::cout << __func__
                           << ": oper_status get does not match."
                           << " Expected: "
                           << port_oper_status
                           << ", Got: "
-                          << rsp.status()
+                          << rsp.status().oper_status()
                           << std::endl;
                 return -1;
             }

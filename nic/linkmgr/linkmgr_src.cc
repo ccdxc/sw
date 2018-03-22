@@ -1213,9 +1213,9 @@ port_get (PortGetRequest& req, PortGetResponse *rsp)
         spec->set_admin_state
                 (hal::sdk_port_admin_st_to_port_admin_st_spec
                                         (port_args.admin_state));
-        rsp->set_status
+        rsp->mutable_status()->set_oper_status(
                 (hal::sdk_port_oper_st_to_port_oper_st_spec
-                                        (port_args.oper_status));
+                                        (port_args.oper_status)));
         spec->set_mac_id    (port_args.mac_id);
         spec->set_mac_ch    (port_args.mac_ch);
         spec->set_num_lanes (port_args.num_lanes);

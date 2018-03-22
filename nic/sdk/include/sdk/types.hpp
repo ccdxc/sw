@@ -44,6 +44,12 @@ enum class port_oper_status_t {
     PORT_OPER_STATUS_DOWN = 2,
 };
 
+enum class port_fec_type_t {
+    PORT_FEC_TYPE_NONE,  // Disable FEC
+    PORT_FEC_TYPE_FC,    // Enable FireCode FEC
+    PORT_FEC_TYPE_RS,    // Enable ReedSolomon FEC
+};
+
 }    // namespace types
 }    // namespace sdk
 
@@ -52,6 +58,7 @@ using sdk::types::port_type_t;
 using sdk::types::port_admin_state_t;
 using sdk::types::port_oper_status_t;
 using sdk::types::platform_type_t;
+using sdk::types::port_fec_type_t;
 
 #endif    // __SDK_TYPES_HPP__
 
