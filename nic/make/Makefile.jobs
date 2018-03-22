@@ -1,7 +1,11 @@
 .PHONY: l4lb l4lb_dsr pull-assets
 
 l4lb: pull-assets bazel-build
-	./run.py --topo l4lb --feature l4lb 
+	./run.py --topo l4lb --feature l4lb
 
 pull-assets:
 	make -C .. pull-assets
+
+pull-assets-force:
+	rm -f ../minio/.VERSIONS.orig
+	$(MAKE) pull-assets
