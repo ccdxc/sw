@@ -14,6 +14,8 @@ from grpc_meta.utils import ApiStatus
 def exit_error():
     sys.exit(1)
 
+dol_message_request_cache = []
+
 class ConfigMetaMapper():
     
     def __init__(self):
@@ -170,7 +172,15 @@ class ConfigObject():
             crud_oper._post_cb.call(self.data, req_message, resp_message)
         self._msg_cache[op_type] = req_message
         return api_status, resp_message
-   
+
+    def dol_msg_init(self, req_message):
+        self.key_or_handle     = GrpcReqRspMsg.GetKeyObject(req_message)
+        self.ext_ref_objects   = GrpcReqRspMsg.GetExtRefObjects(req_message)
+        self.immutable_objects = GrpcReqRspMsg.GetImmutableObjects(req_message)
+
+    def dol_msg_send(self, op_type, req_message):
+        return self.send_message(op_type, req_message, False, False)
+
     def dol_process(self, op_type, req_message=None, redo=False):
         api_status = ApiStatus.API_STATUS_OK
 
@@ -190,7 +200,7 @@ class ConfigObject():
         should_call_callback = (op_type != ConfigObjectMeta.CREATE and not redo)
 
         return self.send_message(op_type, req_message, should_call_callback, redo)
- 
+
     def process(self, op_type, redo=False, ext_refs={}, dol_message=None, external_constraints=None):
         req_message = None
         api_status = ApiStatus.API_STATUS_OK
@@ -258,6 +268,17 @@ class ConfigObjectHelper(object):
 
     def __repr__(self):
         return str(self._spec.Service) + " " + str(self._service_object.name)
+
+    def reinit_grpc(self, hal_channel):
+        self._hal_channel = hal_channel
+        stub_attr = self._spec.Service + "Stub"
+        self._stub = getattr(self._pb2, stub_attr)(hal_channel)
+        self._cfg_meta = ConfigObjectMeta(self._pb2, self._stub, self._spec, self._service_object)
+
+    def ReplayDolConfig(self, op_type, req_message):
+        config_object = ConfigObject(self._cfg_meta, self, is_dol_created=True)
+        config_object.dol_msg_init(req_message)
+        return config_object.dol_msg_send(op_type, req_message)
 
     def ReadDolConfig(self, message):
         print("Reading DOL config for %s" %(self))
@@ -412,9 +433,69 @@ def AddConfigSpec(config_spec, hal_channel):
 def GetOrderedConfigSpecs(rev = False):
     return cfg_meta_mapper.config_objects
 
+def get_hal_channel():
+    if 'HAL_GRPC_PORT' in os.environ:
+        port = os.environ['HAL_GRPC_PORT']
+    else:
+        port = '50054'
+    print("Creating GRPC channel to HAL on port %s" %(port))
+    server = 'localhost:' + port
+    import grpc
+    hal_channel = grpc.insecure_channel(server)
+    print("Waiting for HAL to be ready ...")
+    grpc.channel_ready_future(hal_channel).result()
+    print("Connected to HAL!")
+    return hal_channel
+
+def ReplayConfigFromDol():
+    hal_channel = get_hal_channel()
+
+    for request_method_name, incoming_message in dol_message_request_cache:
+        try:
+            object_helper = cfg_meta_mapper.dol_message_map[type(incoming_message).__name__]
+        except KeyError:
+            # This object hasn't been enabled in MBT as yet. Return
+            print("MBT disabled. Not reading config from DOL for %s" %(type(incoming_message)))
+            return None, True
+
+        # If this object has not been enabled for DOL yet, skip over it.
+        # We handle one request as a config object for which the CRUD operations can be performed.
+        # The message sent by DOL contains several requests, so split them here. 
+        messages = GrpcReqRspMsg.split_repeated_messages(incoming_message)
+        #if not object_helper._spec.dolEnabled:
+        #    print("Dol Disabled. Not reading config from DOL for %s" %(type(incoming_message)))
+        #    continue
+
+        object_helper.reinit_grpc(hal_channel)
+
+        if not 'Create' in request_method_name and not 'Update' in request_method_name:
+            pdb.set_trace()
+        else:
+            op_type = ConfigObjectMeta.CREATE
+
+            if 'Update' in request_method_name:
+                op_type = ConfigObjectMeta.UPDATE
+
+            api_status = 'API_STATUS_OK'
+
+            for message in messages:
+                api_status, resp_msg = object_helper.ReplayDolConfig(op_type, message)
+                if (api_status != 'API_STATUS_OK'):
+                    print ('************ Failed to invoke: ' + request_method_name)
+                    break
+
+            if (api_status != 'API_STATUS_OK'):
+                break
+
+    print ('config done')
+
+
 # This function has 2 return values. The second field indicates whether an error was encountered in 
 # processing, in which case the message will be sent as is to HAL.
-def CreateConfigFromDol(incoming_message):
+def CreateConfigFromDol(incoming_message, request_method_name):
+
+    dol_message_request_cache.append((request_method_name, incoming_message))
+
     try:
         object_helper = cfg_meta_mapper.dol_message_map[type(incoming_message).__name__]
     except KeyError:

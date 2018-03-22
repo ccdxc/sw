@@ -90,6 +90,16 @@ for config_spec in config_specs:
 
 print("Building Config dependency information")
 
+def handle_pdb(sig, frame):
+    print ('Signal handler called with signal', sig)
+    pdb.set_trace()
+    config_mgr.ReplayConfigFromDol()
+    print ("DONE SIGNAL")
+
+import signal
+print ('Registering signal handler')
+signal.signal(signal.SIGUSR1, handle_pdb)
+
 if GlobalOptions.mbt:
     # This is blocking.
     grpc_proxy.serve()

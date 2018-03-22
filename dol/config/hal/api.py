@@ -138,7 +138,7 @@ def init():
     if IsHalDisabled(): return
 
     if 'MBT_GRPC_PORT' in os.environ: # If MBT toggle mode is enabled
-        assert GlobalOptions.mbt
+        # assert GlobalOptions.mbt
         port = os.environ['MBT_GRPC_PORT']
     elif 'HAL_GRPC_PORT' in os.environ:
         port = os.environ['HAL_GRPC_PORT']

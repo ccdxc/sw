@@ -670,6 +670,9 @@ def main():
     parser.add_argument('--mbt', dest='mbt', default=None,
                         action='store_true',
                         help='Modify DOL config testre starting packet tests')
+    parser.add_argument('--mbt_test', dest='mbt_test', default=None,
+                        action='store_true',
+                        help='Modify DOL config testre starting packet tests')
     parser.add_argument('--storage_test', dest='storage_test', default=None,
                         help='Run only a subtest of storage test suite')
     parser.add_argument('--no_error_check', dest='no_error_check', default=None,
@@ -727,6 +730,10 @@ def main():
         sys.exit(1)
 
     port = find_port()
+
+    if args.mbt_test:
+        port = int(os.environ["HAL_GRPC_PORT"])
+
     print "* Using port (" + str(port) + ") for HAL\n"
     os.environ["HAL_GRPC_PORT"] = str(port)
 
@@ -750,6 +757,20 @@ def main():
         status = run_mbt(args)
         if status != 0:
             print "- MBT test failed, status=", status
+    elif args.mbt_test:
+        mbt_port = int(os.environ["MBT_GRPC_PORT"])
+        print "* Using port (" + str(mbt_port) + ") for mbt\n"
+
+        status = run_dol(args)
+        if status == 0:
+            if (args.e2etls):
+                status = run_e2e_tlsproxy_dol()
+            elif (args.e2el7):
+                status = run_e2e_l7_dol()
+            elif (args.v6e2etls):
+                    status = run_v6_e2e_tlsproxy_dol()
+            elif (args.e2e_mode == "manual"):
+                status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec)
     else:
         if args.mbt:
             mbt_port = find_port()
@@ -758,7 +779,6 @@ def main():
             run_mbt(args, standalone=False)
 
         status = run_dol(args)
-        #status = 0
         if status == 0:
             if (args.e2etls):
                 status = run_e2e_tlsproxy_dol()
