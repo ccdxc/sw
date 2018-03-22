@@ -7,7 +7,8 @@
 #include "nic/include/trace.hpp"
 #include "nic/include/hal_state.hpp"
 //::
-//::  hdr_file = fileName.replace('_pb2.py', '') + '_svc_gen.hpp'
+//::  file_name_prefix = fileName.replace('_pb2.py', '')
+//::  hdr_file = file_name_prefix + '_svc_gen.hpp'
 //::
 #include "nic/gen/hal/svc/${hdr_file}"
 //::
@@ -46,26 +47,25 @@
 //::     import re
 //::     import os
 //::     global ws_top
+//::     global file_name_prefix
 //::     s1 = re.sub('([A-Z])(.)', r'\1_\2', name[::-1], 1).lower()
 //::     s1 = s1[::-1]
 //::     s2 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
 //::     hal_src_path = ws_top + '/nic/hal/src/'
-//::     #for file_name in os.listdir(hal_src_path):
 //::     for root, dirs, files in os.walk(hal_src_path):
 //::         for file_name in files:
-//::            if file_name.endswith('.hpp') and fileName.replace('_pb2.py', '') in file_name:
+//::            if file_name.endswith('.hpp') and file_name_prefix in file_name:
 //::                contents = open(os.path.join(root, file_name)).read()
-//::                #contents = open(os.path.join(hal_src_path, file_name)).read()
-//::                #search_str = 'hal_ret_t ' + s1 + '.*' + input_name + '.*\n.*' + output_name + '.*\);'
-//::                #re.search(search_str, contents) == None:
-//::                if s1 in contents:
+//::                if re.search(r'\b{0}\b'.format(s1), contents):
 //::                    return s1
 //::                #endif
-//::                if s2 in contents:
-//::                    print ('******************************* using ' + s2 + ' in ' + file_name + ' proto: ' + fileName + 'root: ' + os.path.basename(root))
+//::                if re.search(r'\b{0}\b'.format(s2), contents):
+//::                    print ('using ' + s2 + ' in ' + file_name + ' proto: ' + fileName + 'root: ' + os.path.basename(root))
 //::                    return s2
 //::                #endif
-//::                print ('******************************* could not find method ' + s1 + ' or ' + s2 + ' in ' + file_name + ' proto: ' + fileName)
+//::                if file_name == (file_name_prefix + '.hpp'):
+//::                    print ('could NOT find method ' + s1 + ' or ' + s2 + ' in ' + file_name + ' proto: ' + fileName)
+//::                #endif
 //::            #endif
 //::         #endfor
 //::     #endfor
@@ -73,11 +73,12 @@
 //::
 //:: def get_src_dir(fileName):
 //::    import os
+//::    global file_name_prefix
 //::    hal_src_path = ws_top + '/nic/hal/src/'
 //::    for root, dirs, files in os.walk(hal_src_path):
 //::        for file_name in files:
-//::            if file_name.endswith('.hpp') and fileName.replace('_pb2.py', '.hpp') in file_name:
-//::                print ('file_name: ' + file_name + 'fileName: ' + fileName.replace('_pb2.py', '') + 'root: ' + root)
+//::            if file_name == (file_name_prefix + '.hpp'):
+//::                # print ('get_src_dir: file_name: ' + file_name + ', fileName: ' + file_name_prefix + ', root: ' + root)
 //::                return os.path.basename(root)
 //::            #endif
 //::        #endfor
@@ -92,7 +93,6 @@
 //::
 #include "nic/hal/src/${src_dir_name}/${includeFileName}.hpp"
 //:: enumC = int(enumCount)
-//:: # Remove the _pb2.py from file and store it for now.
 //:: for service in fileModule.DESCRIPTOR.services_by_name.items():
 //::     pkg = fileModule.DESCRIPTOR.package.lower()
 //::
@@ -109,7 +109,7 @@ using ${pkg}::${service[0]};
 //::             if field.type == 11:
 //::                 repeated_field = True
 //::             else:
-//::                 print ('*********** RESPONSE NOT REPEATED: ' + pkg)
+//::                 print ('***** RESPONSE NOT REPEATED: ' + pkg)
 //::             #endif
 //::         #endfor
 //::         hal_name = convert_to_snake_case(method[0], fileName, input_name, output_name)
