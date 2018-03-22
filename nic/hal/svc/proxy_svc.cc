@@ -5,7 +5,7 @@
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 
 Status
 ProxyServiceImpl::ProxyEnable(ServerContext *context,

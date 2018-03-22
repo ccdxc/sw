@@ -7,7 +7,7 @@
 #include "nic/utils/fsm/fsm.hpp"
 #include "nic/fte/fte.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/endpoint.hpp"
+#include "nic/hal/src/nw/endpoint.hpp"
 #include "sdk/ht.hpp"
 #include "sdk/twheel.hpp"
 #include "../common/trans.hpp"

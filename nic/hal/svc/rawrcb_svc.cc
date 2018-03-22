@@ -5,7 +5,7 @@
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/rawrcb_svc.hpp"
-#include "nic/hal/src/rawrcb.hpp"
+#include "nic/hal/src/internal/rawrcb.hpp"
 
 Status
 RawrCbServiceImpl::RawrCbCreate(ServerContext *context,

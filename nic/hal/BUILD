@@ -59,10 +59,32 @@ cc_library(
         "hal.cc",
         "hal_state.cc",
         "hal_cfg.cc",
-    ] + glob(["src/*.cc"]),
+    ] + 
+    glob(["src/nw/*.cc"]) +
+    glob(["src/aclqos/*.cc"]) +
+    glob(["src/telemetry/*.cc"]) +
+    glob(["src/debug/*.cc"]) +
+    glob(["src/internal/*.cc"]) +
+    glob(["src/l4lb/*.cc"]) +
+    glob(["src/mcast/*.cc"]) +
+    glob(["src/lif/*.cc"]) +
+    glob(["src/security/*.cc"]) +
+    glob(["src/utils/*.cc"]) +
+    glob(["src/gft/*.cc"]),
     hdrs = [
         "hal.hpp",
-    ] + glob(["src/*.hpp"]) +
+    ] + 
+    glob(["src/nw/*.hpp"]) +
+    glob(["src/aclqos/*.hpp"]) +
+    glob(["src/telemetry/*.hpp"]) +
+    glob(["src/debug/*.hpp"]) +
+    glob(["src/internal/*.hpp"]) +
+    glob(["src/l4lb/*.hpp"]) +
+    glob(["src/mcast/*.hpp"]) +
+    glob(["src/lif/*.hpp"]) +
+    glob(["src/security/*.hpp"]) +
+    glob(["src/utils/*.hpp"]) +
+    glob(["src/gft/*.hpp"]) +
     glob(["src/export/*.hpp"]),
     copts = sdk_copts,
     deps = [
@@ -108,15 +130,25 @@ cc_library(
 cc_library(
     name = "hal_includes",
     srcs = [],
-    hdrs = ["hal.hpp"] + glob([
-        "src/*.hpp",
-    ]),
+    hdrs = ["hal.hpp"] + 
+        glob(["src/nw/*.hpp"]) +
+        glob(["src/aclqos/*.hpp"]) +
+        glob(["src/telemetry/*.hpp"]) +
+        glob(["src/debug/*.hpp"]) +
+        glob(["src/internal/*.hpp"]) +
+        glob(["src/l4lb/*.hpp"]) +
+        glob(["src/mcast/*.hpp"]) +
+        glob(["src/lif/*.hpp"]) +
+        glob(["src/security/*.hpp"]) +
+        glob(["src/utils/*.hpp"]) +
+        glob(["src/gft/*.hpp"]) +
+        glob(["src/export/*.hpp"]),
 )
 
 cc_library(
     name = "hal_utils_includes",
     srcs = [],
-    hdrs = ["src/utils.hpp"],
+    hdrs = ["src/utils/utils.hpp"],
 )
 
 cc_binary(

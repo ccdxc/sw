@@ -3,10 +3,10 @@
 #ifndef __ENDPOINT_API_HPP__
 #define __ENDPOINT_API_HPP__
 
-#include "nic/hal/src/l2segment.hpp"
-#include "nic/hal/src/nw.hpp"
-#include "nic/hal/src/endpoint.hpp"
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/l2segment.hpp"
+#include "nic/hal/src/nw/nw.hpp"
+#include "nic/hal/src/nw/endpoint.hpp"
+#include "nic/hal/src/nw/session.hpp"
 
 namespace hal {
 

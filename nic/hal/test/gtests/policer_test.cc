@@ -1,4 +1,4 @@
-#include "nic/hal/src/qos.hpp"
+#include "nic/hal/src/aclqos/qos.hpp"
 #include "nic/gen/proto/hal/qos.pb.h"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nic/p4/iris/include/defines.h"
-#include "nic/hal/src/qos.hpp"
+#include "nic/hal/src/aclqos/qos.hpp"
 
 using qos::PolicerSpec;
 using qos::PolicerResponse;

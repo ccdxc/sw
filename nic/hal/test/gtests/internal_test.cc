@@ -1,4 +1,4 @@
-#include "nic/hal/src/internal.hpp"
+#include "nic/hal/src/internal/internal.hpp"
 #include "nic/gen/proto/hal/internal.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>

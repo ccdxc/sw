@@ -3,7 +3,7 @@
 #include "nic/include/base.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/cpupkt_headers.hpp"
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 
 namespace hal {
 namespace pd {

@@ -1,7 +1,7 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/utils.hpp"
+#include "nic/hal/src/utils/utils.hpp"
 #include <cxxabi.h>
 #include <execinfo.h>
 #include <iostream>

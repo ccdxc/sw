@@ -1,5 +1,5 @@
 #include "nic/fte/fte.hpp"
-#include "nic/hal/src/l4lb.hpp"
+#include "nic/hal/src/l4lb/l4lb.hpp"
 
 namespace hal {
 namespace lb {

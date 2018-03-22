@@ -5,7 +5,7 @@
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
-#include "nic/hal/src/barco_rings.hpp"
+#include "nic/hal/src/aclqos/barco_rings.hpp"
 
 namespace hal {
 

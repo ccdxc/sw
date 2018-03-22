@@ -1,10 +1,10 @@
 #pragma once
 
-#include "nic/hal/src/rawrcb.hpp"
-#include "nic/hal/src/rawccb.hpp"
-#include "nic/hal/src/proxyrcb.hpp"
-#include "nic/hal/src/proxyccb.hpp"
-#include "nic/hal/src/telemetry.hpp"
+#include "nic/hal/src/internal/rawrcb.hpp"
+#include "nic/hal/src/internal/rawccb.hpp"
+#include "nic/hal/src/internal/proxyrcb.hpp"
+#include "nic/hal/src/internal/proxyccb.hpp"
+#include "nic/hal/src/telemetry/telemetry.hpp"
 
 namespace hal {
 namespace app_redir {

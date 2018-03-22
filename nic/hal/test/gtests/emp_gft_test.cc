@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 
-#include "nic/hal/src/gft.hpp"
+#include "nic/hal/src/gft/gft.hpp"
 #include "nic/gen/proto/hal/gft.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>

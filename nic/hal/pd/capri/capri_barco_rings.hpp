@@ -1,7 +1,7 @@
 #ifndef __CAPRI_BARCO_RINGS_H__
 #define __CAPRI_BARCO_RINGS_H__
 
-#include "nic/hal/src/barco_rings.hpp"
+#include "nic/hal/src/aclqos/barco_rings.hpp"
 
 namespace hal {
 namespace pd {

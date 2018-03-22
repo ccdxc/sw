@@ -7,7 +7,7 @@
 #include "nic/hal/hal.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/cpupkt_headers.hpp"
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/session.hpp"
 
 #include <netinet/in.h>
 #include <memory>

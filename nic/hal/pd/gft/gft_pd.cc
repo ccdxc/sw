@@ -3,7 +3,7 @@
 #include "nic/include/base.h"
 #include "nic/gen/gft/include/p4pd.h"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/gft.hpp"
+#include "nic/hal/src/gft/gft.hpp"
 #include "nic/hal/pd/gft/gft_pd.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/p4/gft/include/defines.h"

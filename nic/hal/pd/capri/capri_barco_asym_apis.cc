@@ -3,7 +3,7 @@
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
-#include "nic/hal/src/crypto_keys.hpp"
+#include "nic/hal/src/internal/crypto_keys.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 
 namespace hal {

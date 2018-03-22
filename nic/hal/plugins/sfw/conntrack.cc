@@ -2,7 +2,7 @@
 
 #include "nic/fte/fte.hpp"
 #include "nic/include/periodic.hpp"
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/session.hpp"
 #include "nic/p4/iris/include/defines.h"
 
 namespace hal {

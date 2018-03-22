@@ -6,7 +6,7 @@
 
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/iris/swphv_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"

@@ -18,7 +18,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/asic/capri/model/cap_psp/cap_psp_csr.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/src/qos.hpp"
+#include "nic/hal/src/aclqos/qos.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
 #include "nic/hal/pd/capri/capri_state.hpp"

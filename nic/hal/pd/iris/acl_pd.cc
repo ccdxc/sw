@@ -1,5 +1,5 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
-#include "nic/hal/src/vrf.hpp"
+#include "nic/hal/src/nw/vrf.hpp"
 #include "nic/hal/pd/iris/vrf_pd.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
@@ -9,7 +9,7 @@
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/p4/iris/include/defines.h"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
-#include "nic/hal/src/l2segment.hpp"
+#include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/hal/pd/iris/l2seg_pd.hpp"
 #include "nic/include/l2segment_api.hpp"
 #include "nic/include/eth.h"

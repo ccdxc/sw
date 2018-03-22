@@ -1,9 +1,9 @@
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/hal/tls/tls_api.hpp"
-#include "nic/hal/src/tls_proxy_cb.hpp"
+#include "nic/hal/src/internal/tls_proxy_cb.hpp"
 
 #define TLS_DDOL_ARM_LOOP_CTRL_PKTS     16   /* Loopback control packets in ARM */
 

@@ -1,4 +1,4 @@
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/session.hpp"
 #include "app_redir_plugin.hpp"
 #include "app_redir.hpp"
 #include "app_redir_scanner.hpp"

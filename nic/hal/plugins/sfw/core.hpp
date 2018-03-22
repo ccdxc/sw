@@ -1,6 +1,6 @@
 #pragma once
-#include "nic/hal/src/session.hpp"
-#include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/nw/session.hpp"
+#include "nic/hal/src/security/nwsec.hpp"
 
 using session::FlowAction;
 using nwsec::ALGName;

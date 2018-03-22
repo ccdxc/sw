@@ -5,7 +5,7 @@
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/session_svc.hpp"
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/session.hpp"
 #include "nic/include/fte.hpp"
 
 Status

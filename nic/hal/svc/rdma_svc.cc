@@ -5,7 +5,7 @@
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/rdma_svc.hpp"
-#include "nic/hal/src/rdma.hpp"
+#include "nic/hal/src/internal/rdma.hpp"
 
 Status
 RdmaServiceImpl::RdmaQpCreate(ServerContext *context,

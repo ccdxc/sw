@@ -1,4 +1,4 @@
-#include "nic/hal/src/tls_proxy_cb.hpp"
+#include "nic/hal/src/internal/tls_proxy_cb.hpp"
 #include "nic/gen/proto/hal/tls_proxy_cb.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>

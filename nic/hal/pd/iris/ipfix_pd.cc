@@ -1,8 +1,8 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif.hpp"
-#include "nic/hal/src/proxy.hpp"
-#include "nic/hal/src/lif_manager.hpp"
+#include "nic/hal/src/lif/lif.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
+#include "nic/hal/src/lif/lif_manager.hpp"
 
 #include "nic/p4/iris/include/defines.h"
 #include "nic/hal/pd/p4pd_api.hpp"

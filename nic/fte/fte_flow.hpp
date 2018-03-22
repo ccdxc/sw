@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fte_ctx.hpp"
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/session.hpp"
 
 namespace fte {
 

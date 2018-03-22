@@ -13,9 +13,9 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif_manager.hpp"
+#include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/app_redir_shared.h"
 

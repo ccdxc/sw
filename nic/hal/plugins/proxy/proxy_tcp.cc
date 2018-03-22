@@ -2,10 +2,10 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
-#include "nic/hal/src/tcp_proxy_cb.hpp"
-#include "nic/hal/src/proxyrcb.hpp"
+#include "nic/hal/src/internal/tcp_proxy_cb.hpp"
+#include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/interface_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"

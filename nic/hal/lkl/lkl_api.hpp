@@ -1,7 +1,7 @@
 #ifndef __LKL_API_HPP__
 #define __LKL_API_HPP__
 #include "nic/include/cpupkt_headers.hpp"
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/session.hpp"
 
 namespace hal {
 namespace pd {

@@ -1,8 +1,8 @@
 //{C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include "nic/fte/fte.hpp"
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/session.hpp"
 #include "nic/p4/iris/include/defines.h"
-#include "nic/hal/src/nwsec_group.hpp"
+#include "nic/hal/src/security/nwsec_group.hpp"
 #include "core.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 #include "nic/hal/plugins/alg_utils/alg_db.hpp"

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "nic/include/base.h"
-#include "nic/hal/src/session.hpp"
-#include "nic/hal/src/proxy.hpp"
-#include "nic/hal/src/rawrcb.hpp"
+#include "nic/hal/src/nw/session.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
+#include "nic/hal/src/internal/rawrcb.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/include/cpupkt_api.hpp"
 #include <netinet/ether.h>

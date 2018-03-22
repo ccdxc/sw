@@ -7,7 +7,7 @@
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/event.hpp"
+#include "nic/hal/src/internal/event.hpp"
 
 Status
 EventServiceImpl::EventListen(ServerContext* context,

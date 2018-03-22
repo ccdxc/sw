@@ -6,9 +6,9 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif_manager.hpp"
+#include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/gen/esp_v4_tunnel_n2h_rxdma/include/esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
 

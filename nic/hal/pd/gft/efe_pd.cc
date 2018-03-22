@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/hal/src/eth.hpp"
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/lif/eth.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/gft/efe_pd.hpp"
 #include "nic/hal/pd/gft/pd_utils.hpp"

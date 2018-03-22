@@ -4,8 +4,8 @@
 #define __HAL_IF_PD_UTILS_HPP__
 
 #include "nic/include/base.h"
-#include "nic/hal/src/interface.hpp"
-#include "nic/hal/src/gft.hpp"
+#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/src/gft/gft.hpp"
 
 namespace hal {
 namespace pd {

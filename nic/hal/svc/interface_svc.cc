@@ -5,8 +5,8 @@
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
-#include "nic/hal/src/interface.hpp"
-#include "nic/hal/src/lif.hpp"
+#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/src/lif/lif.hpp"
 
 Status
 InterfaceServiceImpl::LifCreate(ServerContext *context,

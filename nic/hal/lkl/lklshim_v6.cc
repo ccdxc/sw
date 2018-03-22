@@ -8,8 +8,8 @@
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/tls/tls_api.hpp"
-#include "nic/hal/src/proxyrcb.hpp"
-#include "nic/hal/src/proxyccb.hpp"
+#include "nic/hal/src/internal/proxyrcb.hpp"
+#include "nic/hal/src/internal/proxyccb.hpp"
 
 extern "C" {
 #include "lkl.h"

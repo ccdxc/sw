@@ -2,10 +2,10 @@
 #include "ssl_helper.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/hal/pd/pd_api.hpp"
-#include "nic/hal/src/tls_proxy_cb.hpp"
+#include "nic/hal/src/internal/tls_proxy_cb.hpp"
 #include "nic/hal/lkl/lklshim_tls.hpp"
-#include "nic/hal/src/crypto_keys.hpp"
-#include "nic/hal/src/proxyccb.hpp"
+#include "nic/hal/src/internal/crypto_keys.hpp"
+#include "nic/hal/src/internal/proxyccb.hpp"
 
 namespace hal {
 namespace tls {

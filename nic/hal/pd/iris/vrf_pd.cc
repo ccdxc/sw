@@ -4,7 +4,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/vrf_pd.hpp"
 #include "nic/p4/iris/include/defines.h"
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "if_pd_utils.hpp"
 
 namespace hal {

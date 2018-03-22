@@ -3,12 +3,12 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/gft/lif_pd.hpp"
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/p4/gft/include/defines.h"
-#include "nic/hal/src/proxy.hpp"
-#include "nic/hal/src/eth.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
+#include "nic/hal/src/lif/eth.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
 
 namespace hal {

@@ -2,10 +2,10 @@
 
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/interface.hpp"
-#include "nic/hal/src/proxy.hpp"
-#include "nic/hal/src/qos.hpp"
-#include "nic/hal/src/acl.hpp"
+#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
+#include "nic/hal/src/aclqos/qos.hpp"
+#include "nic/hal/src/aclqos/acl.hpp"
 #include "nic/include/pkt_hdrs.hpp"
 #include <google/protobuf/util/json_util.h>
 

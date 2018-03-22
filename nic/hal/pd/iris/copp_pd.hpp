@@ -2,7 +2,7 @@
 #define __HAL_COPP_PD_HPP__
 
 #include "nic/include/base.h"
-#include "nic/hal/src/qos.hpp"
+#include "nic/hal/src/aclqos/qos.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"

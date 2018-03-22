@@ -14,7 +14,7 @@
 #include "nic/gen/proto/hal/port.pb.h"
 
 #include "nic/hal/lib/hal_handle.hpp"
-#include "nic/hal/src/utils.hpp"
+#include "nic/hal/src/utils/utils.hpp"
 #include "linkmgr_state.hpp"
 
 using port::PortDeleteRequest;

@@ -1,5 +1,5 @@
 #include "nic/include/base.h"
-#include "nic/hal/src/acl.hpp"
+#include "nic/hal/src/aclqos/acl.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/gen/proto/hal/acl.pb.h"
 #include "nic/hal/hal.hpp"
@@ -10,7 +10,7 @@
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include <google/protobuf/util/message_differencer.h>
 #include <google/protobuf/text_format.h>
-#include "nic/hal/src/qos.hpp"
+#include "nic/hal/src/aclqos/qos.hpp"
 #include "nic/gen/proto/hal/qos.pb.h"
 
 using google::protobuf::util::MessageDifferencer;

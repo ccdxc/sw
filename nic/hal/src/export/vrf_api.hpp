@@ -3,7 +3,7 @@
 #ifndef __VRF_API_HPP__
 #define __VRF_API_HPP__
 
-#include "nic/hal/src/vrf.hpp"
+#include "nic/hal/src/nw/vrf.hpp"
 
 namespace hal {
 

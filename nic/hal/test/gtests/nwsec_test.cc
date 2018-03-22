@@ -1,6 +1,6 @@
-#include "nic/hal/src/interface.hpp"
-#include "nic/hal/src/nw.hpp"
-#include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/src/nw/nw.hpp"
+#include "nic/hal/src/security/nwsec.hpp"
 #include "nic/hal/hal.hpp"
 #include "sdk/list.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
@@ -15,7 +15,7 @@
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include "nic/fte/fte_ctx.hpp"
-#include "nic/hal/src/nwsec_group.hpp"
+#include "nic/hal/src/security/nwsec_group.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 

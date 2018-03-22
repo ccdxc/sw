@@ -1,5 +1,5 @@
 // Functions related to Capri LIF 2 Qstate programming.
-#include "nic/hal/src/lif_manager.hpp"
+#include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/include/asic_pd.hpp"

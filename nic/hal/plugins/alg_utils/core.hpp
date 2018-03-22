@@ -1,9 +1,9 @@
 #pragma once
 #include "alg_db.hpp"
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/session.hpp"
 #include "sdk/list.hpp"
 #include "nic/fte/fte_ctx.hpp"
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/session.hpp"
 
 namespace hal {
 namespace plugins {

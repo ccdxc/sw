@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/plugins/alg_rpc/msrpc_proto_def.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
 #include "nic/hal/plugins/alg_rpc/core.hpp"

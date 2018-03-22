@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/nw/interface.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>

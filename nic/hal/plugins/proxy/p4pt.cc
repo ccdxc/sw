@@ -1,4 +1,4 @@
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 
 namespace hal {

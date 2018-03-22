@@ -1,9 +1,9 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif.hpp"
-#include "nic/hal/src/proxy.hpp"
-#include "nic/hal/src/p4pt.hpp"
-#include "nic/hal/src/lif_manager.hpp"
+#include "nic/hal/src/lif/lif.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
+#include "nic/hal/src/internal/p4pt.hpp"
+#include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 
 namespace hal {

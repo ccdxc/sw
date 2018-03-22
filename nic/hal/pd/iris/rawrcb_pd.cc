@@ -7,10 +7,10 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
-#include "nic/hal/src/proxy.hpp"
-#include "nic/hal/src/rawrcb.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
+#include "nic/hal/src/internal/rawrcb.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif_manager.hpp"
+#include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/gen/rawr_rxdma/include/rawr_rxdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
 

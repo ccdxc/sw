@@ -4,7 +4,7 @@
 #include "nic/include/base.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/telemetry.hpp"
+#include "nic/hal/src/telemetry/telemetry.hpp"
 #include "nic/hal/pd/cpupkt_headers.hpp"
 
 namespace hal {

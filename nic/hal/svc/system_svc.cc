@@ -10,7 +10,7 @@
 #include "nic/hal/svc/system_svc.hpp"
 #include "nic/gen/proto/hal/system.pb.h"
 #include "nic/gen/proto/hal/types.pb.h"
-#include "nic/hal/src/system.hpp"
+#include "nic/hal/src/internal/system.hpp"
 
 Status
 SystemServiceImpl::ApiStatsGet(ServerContext *context,

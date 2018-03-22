@@ -1,7 +1,7 @@
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/barco_rings_svc.hpp"
-#include "nic/hal/src/barco_rings.hpp"
+#include "nic/hal/src/aclqos/barco_rings.hpp"
 
 
 Status BarcoRingsServiceImpl::GetOpaqueTagAddr(ServerContext* context,

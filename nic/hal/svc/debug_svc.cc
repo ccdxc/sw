@@ -8,7 +8,7 @@
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/debug.hpp"
+#include "nic/hal/src/debug/debug.hpp"
 #include "nic/include/asic_pd.hpp"
 #include <vector>
 #include <tuple>

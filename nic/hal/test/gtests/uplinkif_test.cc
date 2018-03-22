@@ -1,12 +1,12 @@
-#include "nic/hal/src/interface.hpp"
-#include "nic/hal/src/nw.hpp"
+#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/src/nw/nw.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/nwsec.hpp"
-#include "nic/hal/src/l2segment.hpp"
+#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/nw/l2segment.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>

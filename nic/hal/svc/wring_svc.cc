@@ -5,7 +5,7 @@
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/wring_svc.hpp"
-#include "nic/hal/src/wring.hpp"
+#include "nic/hal/src/internal/wring.hpp"
 
 Status
 WRingServiceImpl::WRingCreate(ServerContext *context,

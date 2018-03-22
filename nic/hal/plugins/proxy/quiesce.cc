@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
@@ -10,7 +10,7 @@
 //#include "nic/hal/pd/iris/endpoint_pd.hpp"
 #include "nic/p4/iris/include/defines.h"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
-#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nw/session.hpp"
 #include "nic/include/base.h"
 #include "nic/include/encap.hpp"
 #include "sdk/list.hpp"
