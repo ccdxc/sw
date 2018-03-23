@@ -455,6 +455,7 @@ port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     port_args.mac_ch      = app_ctxt->mac_ch;
     port_args.num_lanes   = app_ctxt->num_lanes;
     port_args.auto_neg_enable = app_ctxt->auto_neg_enable;
+    port_args.debounce_time   = app_ctxt->debounce_time;
     memcpy(port_args.sbus_addr, app_ctxt->sbus_addr,
                                 PORT_MAX_LANES * sizeof(uint32_t));
 
@@ -792,6 +793,7 @@ port_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     port_args.fec_type =
                 hal::port_fec_type_spec_to_sdk_port_fec_type(app_ctxt->fec_type);
     port_args.auto_neg_enable = app_ctxt->auto_neg_enable;
+    port_args.debounce_time = app_ctxt->debounce_time;
 
     sdk_ret = sdk::linkmgr::port_update(pi_p->pd_p, &port_args);
     if (sdk_ret != SDK_RET_OK) {

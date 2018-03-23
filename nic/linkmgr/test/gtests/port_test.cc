@@ -68,11 +68,14 @@ int port_create(uint32_t vrf_id,
     return 0;
 }
 
-int port_update(uint32_t vrf_id,
-                uint32_t port_id,
-                port::PortSpeed speed,
+int port_update(uint32_t             vrf_id,
+                uint32_t             port_id,
+                port::PortSpeed      speed,
                 port::PortAdminState admin_state,
-                types::ApiStatus api_status)
+                port::PortFecType    fec_type,
+                uint32_t             debounce_time,
+                bool                 auto_neg_enable,
+                types::ApiStatus     api_status)
 {
     hal_ret_t     ret;
     PortSpec      spec;
@@ -83,6 +86,9 @@ int port_update(uint32_t vrf_id,
     spec.mutable_meta()->set_vrf_id(vrf_id);
     spec.set_port_speed(speed);
     spec.set_admin_state(admin_state);
+    spec.set_fec_type(fec_type);
+    spec.set_debounce_time(debounce_time);
+    spec.set_auto_neg_enable(auto_neg_enable);
 
     g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
     ret = linkmgr::port_update(spec, &rsp);
@@ -100,15 +106,18 @@ int port_update(uint32_t vrf_id,
 }
 
 int port_get(
-        uint32_t vrf_id,
-        uint32_t port_id,
-        types::ApiStatus api_status,
-        hal_ret_t ret_exp,
-        bool compare = false,
+        uint32_t             vrf_id,
+        uint32_t             port_id,
+        types::ApiStatus     api_status,
+        hal_ret_t            ret_exp,
+        bool                 compare          = false,
         port::PortOperStatus port_oper_status = port::PORT_OPER_STATUS_NONE,
-        port::PortType       port_type = port::PORT_TYPE_NONE,
+        port::PortType       port_type        = port::PORT_TYPE_NONE,
+        port::PortSpeed      port_speed       = port::PORT_SPEED_NONE,
         port::PortAdminState port_admin_state = port::PORT_ADMIN_STATE_NONE,
-        port::PortSpeed      port_speed = port::PORT_SPEED_NONE)
+        port::PortFecType    fec_type         = port::PORT_FEC_TYPE_NONE,
+        uint32_t             debounce_time    = 100,
+        bool                 auto_neg_enable  = false)
 {
     hal_ret_t     ret;
     PortGetRequest   req;
@@ -161,6 +170,7 @@ int port_get(
                 return -1;
             }
         }
+
         if (port_type != port::PORT_TYPE_NONE) {
             if (rsp.spec().port_type() != port_type) {
                 std::cout << __func__
@@ -173,6 +183,20 @@ int port_get(
                 return -1;
             }
         }
+
+        if (port_speed != port::PORT_SPEED_NONE) {
+            if (rsp.spec().port_speed() != port_speed) {
+                std::cout << __func__
+                          << ": port_speed get response does not match"
+                          << " Expected: "
+                          << port_speed
+                          << ", Got: "
+                          << rsp.spec().port_speed()
+                          << std::endl;
+                return -1;
+            }
+        }
+
         if (port_admin_state != port::PORT_ADMIN_STATE_NONE) {
             if (rsp.spec().admin_state() != port_admin_state) {
                 std::cout << __func__
@@ -185,17 +209,38 @@ int port_get(
                 return -1;
             }
         }
-        if (port_speed != port::PORT_SPEED_NONE) {
-            if (rsp.spec().port_speed() != port_speed) {
-                std::cout << __func__
-                          << ": port_speed get response does not match"
-                          << " Expected: "
-                          << port_speed
-                          << ", Got: "
-                          << rsp.spec().port_speed()
-                          << std::endl;
-                return -1;
-            }
+
+        if (rsp.spec().fec_type() != fec_type) {
+            std::cout << __func__
+                      << ": fec_type get response does not match"
+                      << " Expected: "
+                      << fec_type
+                      << ", Got: "
+                      << rsp.spec().fec_type()
+                      << std::endl;
+            return -1;
+        }
+
+        if (rsp.spec().debounce_time() != debounce_time) {
+            std::cout << __func__
+                      << ": debounce_time get response does not match"
+                      << " Expected: "
+                      << debounce_time
+                      << ", Got: "
+                      << rsp.spec().debounce_time()
+                      << std::endl;
+            return -1;
+        }
+
+        if (rsp.spec().auto_neg_enable() != auto_neg_enable) {
+            std::cout << __func__
+                      << ": AutoNeg get response does not match"
+                      << " Expected: "
+                      << auto_neg_enable
+                      << ", Got: "
+                      << rsp.spec().auto_neg_enable()
+                      << std::endl;
+            return -1;
         }
     }
     return 0;
@@ -225,16 +270,16 @@ int port_delete(uint32_t vrf_id, uint32_t port_id, types::ApiStatus api_status) 
     return 0;
 }
 
-// Creating ports
+// Create and get
 TEST_F(port_test, test1)
 {
+    int ret    = 0;
     int vrf_id = 1;
-    int port = 1;
-    int ret = 0;
+    int port   = 1;
 
     ret = port_create(vrf_id,
-                port,
-                types::ApiStatus::API_STATUS_OK);
+                      port,
+                      types::ApiStatus::API_STATUS_OK);
     ASSERT_TRUE(ret == 0);
 
     ret = port_get(vrf_id,
@@ -242,24 +287,54 @@ TEST_F(port_test, test1)
                    types::ApiStatus::API_STATUS_OK,
                    HAL_RET_OK);
     ASSERT_TRUE(ret == 0);
+}
+
+// update and get
+TEST_F(port_test, test2)
+{
+    int                  ret              = 0;
+    int                  vrf_id           = 1;
+    int                  port             = 1;
+    port::PortSpeed      speed            = ::port::PORT_SPEED_10G;
+    port::PortAdminState admin_state      = ::port::PORT_ADMIN_STATE_NONE;
+    port::PortFecType    fec_type         = ::port::PORT_FEC_TYPE_RS;
+    uint32_t             debounce_time    = 100; // ms
+    bool                 auto_neg_enable  = true;
+    types::ApiStatus     api_status       = types::ApiStatus::API_STATUS_OK;
+    port::PortOperStatus port_oper_status = port::PORT_OPER_STATUS_NONE;
+    port::PortType       port_type        = port::PORT_TYPE_NONE;
 
     ret = port_update(vrf_id,
-                port,
-                ::port::PORT_SPEED_10G,
-                ::port::PORT_ADMIN_STATE_NONE,
-                types::ApiStatus::API_STATUS_OK);
+                      port,
+                      speed,
+                      admin_state,
+                      fec_type,
+                      debounce_time,
+                      auto_neg_enable,
+                      api_status);
     ASSERT_TRUE(ret == 0);
 
     ret = port_get(vrf_id,
-             port,
-             types::ApiStatus::API_STATUS_OK,
-             HAL_RET_OK,
-             true,
-             port::PORT_OPER_STATUS_NONE,
-             port::PORT_TYPE_NONE,
-             port::PORT_ADMIN_STATE_NONE,
-             port::PORT_SPEED_10G);
+                   port,
+                   types::ApiStatus::API_STATUS_OK,
+                   HAL_RET_OK,
+                   true,
+                   port_oper_status,
+                   port_type,
+                   speed,
+                   admin_state,
+                   fec_type,
+                   debounce_time,
+                   auto_neg_enable);
     ASSERT_TRUE(ret == 0);
+}
+
+// delete and get
+TEST_F(port_test, test3)
+{
+    int ret    = 0;
+    int vrf_id = 1;
+    int port   = 1;
 
     ret = port_delete(vrf_id, port, types::ApiStatus::API_STATUS_OK);
     ASSERT_TRUE(ret == 0);
