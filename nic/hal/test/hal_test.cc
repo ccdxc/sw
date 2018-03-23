@@ -50,6 +50,9 @@ using endpoint::EndpointSpec;
 using endpoint::EndpointRequestMsg;
 using endpoint::EndpointResponse;
 using endpoint::EndpointResponseMsg;
+using endpoint::EndpointDeleteRequestMsg;
+using endpoint::EndpointDeleteRequest;
+using endpoint::EndpointDeleteResponseMsg;
 
 using nwsec::NwSecurity;
 using nwsec::SecurityGroupSpec;
@@ -692,6 +695,41 @@ public:
         std::cout << "ENIC if create failed, error = "
                   << rsp_msg.response(0).api_status() << std::endl;
         return 0;
+    }
+
+    int ep_delete(uint64_t vrf_id, uint64_t l2seg_id, uint64_t mac_addr) {
+
+        EndpointDeleteRequestMsg  req_msg;
+        EndpointDeleteResponseMsg rsp_msg;
+        EndpointDeleteRequest     *req;
+        ClientContext             context;
+        Status                    status;
+
+        req = req_msg.add_request();
+
+        req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
+        req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac_addr);
+        req->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+
+        status = ep_stub_->EndpointDelete(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "Endpoint delete succeeded."
+                      << " vrf: "       << vrf_id
+                      << ", l2seg_id: " << l2seg_id
+                      << ", mac_addr: " << mac_addr
+                      << std::endl;
+            return 0;
+        }
+
+        std::cout << "Endpoint delete failed for: "
+                  << " vrf: "       << vrf_id
+                  << ", l2seg_id: " << l2seg_id
+                  << ", mac_addr: " << mac_addr
+                  << ", error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return -1;
     }
 
     uint64_t ep_create(uint64_t vrf_id, uint64_t l2seg_id,
@@ -1510,9 +1548,19 @@ main (int argc, char** argv)
     bool         mpu_trace = false;
     bool         enable = false;
     bool         size_check = false;
+    bool         ep_del_check = false;
     int          stage_id = -1;
     int          mpu = -1;
     char         pipeline_type[32] = {0};
+    int          count = 10;
+
+    uint64_t num_l2segments = 10;
+    uint64_t encap_value    = 100;
+    uint64_t num_uplinks    = 4;
+
+    uint64_t dest_encap_value = encap_value + num_l2segments;
+    uint64_t dest_l2seg_id    = l2seg_id    + num_l2segments;
+    uint64_t dest_if_id       = if_id       + 1;
 
     if (argc > 1) {
         if (!strcmp(argv[1], "port_test")) {
@@ -1528,6 +1576,8 @@ main (int argc, char** argv)
             mpu_trace = true;
         } else if (!strcmp(argv[1], "size_check")) {
             size_check = true;
+        } else if (!strcmp(argv[1], "ep_del_check")) {
+            ep_del_check = true;
         }
     }
 
@@ -1556,6 +1606,20 @@ main (int argc, char** argv)
         return 0;
     } else if (size_check == true) {
         gft_proto_size_check();
+        return 0;
+    } else if (ep_del_check == true) {
+        for (int i = 0; i < count; ++i) {
+            hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0102);
+            hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a0202);
+            hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0103);
+
+            hclient.ep_create(vrf_id, l2seg_id, enic_if_id, sg_id,
+                              0x020a0a0103, 0x0a0a0103);
+            hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id,
+                              0x020a0a0102, 0x0a0a0102);
+            hclient.ep_create(vrf_id, dest_l2seg_id, dest_if_id, sg_id,
+                              0x020a0a0202, 0x0a0a0202);
+        }
         return 0;
     }
 
@@ -1588,10 +1652,6 @@ main (int argc, char** argv)
     nw2_handle = hclient.nw_create(nw_id, vrf_id, 0x0a0a0200, 24, 0x020a0a0201, sg_id);
     assert(nw2_handle != 0);
 
-    uint64_t num_l2segments = 10;
-    uint64_t encap_value    = 100;
-    uint64_t num_uplinks    = 4;
-
     // create uplinks with this L2 seg as native L2 seg
     uplink_if_handle = hclient.uplinks_create(if_id,
                                               num_uplinks,
@@ -1603,10 +1663,6 @@ main (int argc, char** argv)
                       &l2seg_handle);
 
     native_l2seg_handle = l2seg_handle;
-
-    uint64_t dest_encap_value = encap_value + num_l2segments;
-    uint64_t dest_l2seg_id    = l2seg_id    + num_l2segments;
-    uint64_t dest_if_id       = if_id       + 1;
 
     l2seg_encap.set_encap_type(::types::ENCAP_TYPE_DOT1Q);
     l2seg_encap.set_encap_value(dest_encap_value);
