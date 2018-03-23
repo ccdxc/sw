@@ -102,15 +102,19 @@ def TestCaseSetup(tc):
 
     if tc.pvtdata.same_flow:
         tlscb.other_fid = 0xffff
+        tlscb2.other_fid = 0xffff
     else:
         tlscb.other_fid = other_fid
+        tlscb2.other_fid = id
 
 
     if not skip_config:    
        if tc.module.args.key_size == 16:
            tcp_tls_proxy.tls_aes128_encrypt_setup(tc, tlscb)
+           tcp_tls_proxy.tls_aes128_encrypt_setup(tc, tlscb2)
        elif tc.module.args.key_size == 32:
            tcp_tls_proxy.tls_aes256_encrypt_setup(tc, tlscb)
+           tcp_tls_proxy.tls_aes256_encrypt_setup(tc, tlscb2)
 
        tlscb.SetObjValPd()
        tlscb2.SetObjValPd()
@@ -142,15 +146,20 @@ def TestCaseSetup(tc):
 
     tcpcb = copy.deepcopy(tcb)
     tcpcb.GetObjValPd()
+    tc.pvtdata.Add(tcpcb)
+    tcpcb2 = copy.deepcopy(tcb2)
+    tcpcb2.GetObjValPd()
+    tc.pvtdata.Add(tcpcb2)
 
-
-
+    tlscb.GetObjValPd()
     tc.pvtdata.Add(tlscb)
+    tlscb2.GetObjValPd()
+    tc.pvtdata.Add(tlscb2)
     tc.pvtdata.Add(rnmdr)
     tc.pvtdata.Add(rnmpr)
     tc.pvtdata.Add(tnmdr)
     tc.pvtdata.Add(tnmpr)
-    tc.pvtdata.Add(tcpcb)
+
 
     return
 
@@ -168,13 +177,40 @@ def TestCaseVerify(tc):
 
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    if tc.config.flow.IsIflow():
+        print("This is iflow")
+        tcbid = "TcpCb%04d" % id
+        tlscbid = "TlsCb%04d" % id
+        other_tcbid = "TcpCb%04d" % (id + 1)
+        other_tlscbid = "TlsCb%04d" % (id + 1)
+    else:
+        print("This is rflow")
+        tcbid = "TcpCb%04d" % (id + 1)
+        tlscbid = "TlsCb%04d" % (id + 1)
+        other_tcbid = "TcpCb%04d" % id
+        other_tlscbid = "TlsCb%04d" % id
+
+    same_flow = False
+    if tc.pvtdata.same_flow:
+        other_tcbid = tcbid
+        other_tlscbid = tlscbid
+        same_flow = True
+
+
     tlscbid = "TlsCb%04d" % id
     tlscb = tc.pvtdata.db[tlscbid]
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
+    other_tlscb = tc.pvtdata.db[other_tlscbid]
+    other_tlscb_cur = tc.infra_data.ConfigStore.objects.db[other_tlscbid]
     print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d mac_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests, tlscb_cur.mac_requests))
     print("pre-sync: rnmdr_free %d rnmpr_free %d enc_completions %d mac_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions, tlscb_cur.mac_completions))
     print("pre-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
+
+
     tlscb_cur.GetObjValPd()
+    other_tlscb_cur.GetObjValPd()
+
+
     print("post-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d mac_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests, tlscb_cur.mac_requests))
     print("post-sync: rnmdr_free %d rnmpr_free %d enc_completions %d mac_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions, tlscb_cur.mac_completions))
     print("post-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))

@@ -228,6 +228,20 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : UL_TO_HOST_AES256_GCM_ENCRYPT
+        spec    : uplink_to_host_brq.testspec
+        module  : pkt_to_bsq_encrypt
+        rtl     : True
+        enable  : False
+        args :
+              cipher_suite: GCM
+              maxflows: 1
+              key_size : 32
+              same_flow : 1
+        iterate :
+            - flow: filter://type=IPV4,direction=IFLOW
+
+    - module:
         name    : PKT_TO_BSQ_AES128_GCM_ENCRYPT_MULTI_PACKET
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt

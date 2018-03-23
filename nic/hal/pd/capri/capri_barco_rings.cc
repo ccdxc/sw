@@ -1680,11 +1680,13 @@ hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t s
         HAL_TRACE_ERR("{}@{:x}: Failed to read the explicit IV information from HBM",
 		      barco_ring->ring_name, (uint64_t) (req_descr->iv_address + 4));  
     }
-    if(capri_hbm_read_mem(req_descr->status_addr, 
-			   (uint8_t*)&symm_req_descr->barco_status, 
-			   sizeof(symm_req_descr->barco_status))) {
-       HAL_TRACE_ERR("{}@{:x}: Failed to read the Barco Status information from HBM",
-		     barco_ring->ring_name, (uint64_t) req_descr->status_addr);
+    if (req_descr->status_addr) {
+        if(capri_hbm_read_mem(req_descr->status_addr, 
+	    		   (uint8_t*)&symm_req_descr->barco_status, 
+	   		   sizeof(symm_req_descr->barco_status))) {
+           HAL_TRACE_ERR("{}@{:x}: Failed to read the Barco Status information from HBM",
+	    	     barco_ring->ring_name, (uint64_t) req_descr->status_addr);
+        }
     }
     return HAL_RET_OK;
 }
