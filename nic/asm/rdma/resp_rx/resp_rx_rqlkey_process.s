@@ -4,7 +4,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_key_process_k_t k;
+struct resp_rx_s2_t1_k k;
 struct key_entry_aligned_t d;
 
 #define MY_PT_BASE_ADDR r2
@@ -22,7 +22,9 @@ struct key_entry_aligned_t d;
 #define T2_ARG r5
 
 #define LKEY_TO_PT_INFO_T   struct resp_rx_lkey_to_pt_info_t
-#define INFO_WBCB1_T struct resp_rx_rqcb1_write_back_info_t
+#define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
+
+#define IN_P t1_s2s_key_info
 
 %%
     .param  resp_rx_ptseg_process
@@ -32,20 +34,20 @@ struct key_entry_aligned_t d;
 resp_rx_rqlkey_process:
 
     //ARE_ALL_FLAGS_SET_B(c1, r1, ACC_CTRL_LOCAL_WRITE)
-    and         r1, d.acc_ctrl, k.args.acc_ctrl
-    seq         c1, r1, k.args.acc_ctrl
+    and         r1, d.acc_ctrl, CAPRI_KEY_FIELD(IN_P, acc_ctrl)
+    seq         c1, r1, CAPRI_KEY_FIELD(IN_P, acc_ctrl)
     bcf         [!c1], error_completion
 
     //  if ((lkey_info_p->sge_va < lkey_p->base_va) ||
     //  ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len))) {
-    slt         c1, k.args.va, d.base_va  // BD Slot
+    slt         c1, CAPRI_KEY_FIELD(IN_P, va), d.base_va  // BD Slot
     add         r1, d.base_va, d.len
     //add         r2, k.args.va, k.args.len
     //slt         c2, r1, r2
-    sslt        c2, r1, k.args.va, k.args.len
+    sslt        c2, r1, CAPRI_KEY_FIELD(IN_P, va), CAPRI_KEY_FIELD(IN_P, len)
     bcf         [c1 | c2], error_completion
     
-    seq         c1, k.args.skip_pt, 1   //BD Slot
+    seq         c1, CAPRI_KEY_FIELD(IN_P, skip_pt), 1   //BD Slot
     bcf         [c1], skip_pt
     CAPRI_SET_TABLE_1_VALID_C(c1, 0)    //BD Slot
 
@@ -53,7 +55,7 @@ resp_rx_rqlkey_process:
     //     (hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
     //         (lkey_p->pt_base * sizeof(u64)));
 
-    PT_BASE_ADDR_GET(r2) //BD Slot
+    PT_BASE_ADDR_GET2(r2) //BD Slot
     add         MY_PT_BASE_ADDR, r2, d.pt_base, CAPRI_LOG_SIZEOF_U64
     // now r2 has my_pt_base_addr
     
@@ -68,7 +70,7 @@ resp_rx_rqlkey_process:
     // base_va % pt_seg_size
     mincr       r3, LOG_PT_SEG_SIZE, r0
     // add sge_va
-    add         r3, r3, k.args.va
+    add         r3, r3, CAPRI_KEY_FIELD(IN_P, va)
     // subtract base_va
     sub         r3, r3, d.base_va
     // now r3 has transfer_offset
@@ -82,9 +84,9 @@ resp_rx_rqlkey_process:
     //add         r7, r7, k.args.len
     // pt_seg_size <= ((transfer_offset % pt_seg_size) + transfer_bytes)
     //sle         c1, r6, r7
-    ssle        c1, r6, r7, k.args.len
+    ssle        c1, r6, r7, CAPRI_KEY_FIELD(IN_P, len)
     bcf         [!c1], aligned_pt
-    seq         c2, k.args.tbl_id, 0    //BD Slot
+    seq         c2, CAPRI_KEY_FIELD(IN_P, tbl_id), 0    //BD Slot
 
 unaligned_pt:
     // pt_offset = transfer_offset % lkey_info_p->page_size;
@@ -115,17 +117,17 @@ invoke_pt:
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_bytes, k.args.len)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, sge_index, k.args.tbl_id)
-    CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, pt_bytes, sge_index, k.{args.len...args.tbl_id})
+    CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, pt_bytes, sge_index, CAPRI_KEY_RANGE(IN_P, len, tbl_id))
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, d.log_page_size)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 0)
     CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, override_lif_vld, override_lif, d.{override_lif_vld...override_lif})
 
 skip_pt:
-    add         GLOBAL_FLAGS, r0, k.global.flags // BD Slot
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS // BD Slot
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_ATOMIC_CSWAP)
-    phvwr.c2    p.pcie_atomic.compare_data_or_add_data, k.{to_stage.s2.ext_hdr.ext_hdr_data[63:0]}.dx
+    phvwr.c2    p.pcie_atomic.compare_data_or_add_data, k.{to_s2_ext_hdr_info_ext_hdr_data[63:0]}.dx
 
-    seq         c3, k.args.dma_cmdeop, 1
+    seq         c3, CAPRI_KEY_FIELD(IN_P, dma_cmdeop), 1
     bcf         [!c3], check_write_back
 
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_RING_DBELL)
@@ -133,12 +135,12 @@ skip_pt:
     CAPRI_SET_FIELD_C(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1, !c2)
     
 check_write_back:
-    bbeq        k.args.invoke_writeback, 0, exit
+    bbeq        CAPRI_KEY_FIELD(IN_P, invoke_writeback), 0, exit
     RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
 
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, incr_nxt_to_go_token_id, k.args.incr_nxt_to_go_token_id)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, incr_c_index, k.args.incr_c_index)
+    CAPRI_RESET_TABLE_2_ARG()
+    CAPRI_SET_FIELD2(INFO_WBCB1_P, incr_nxt_to_go_token_id, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id))
+    CAPRI_SET_FIELD2(INFO_WBCB1_P, incr_c_index, CAPRI_KEY_FIELD(IN_P, incr_c_index))
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, RQCB1_ADDR)
 
 exit:
@@ -146,11 +148,11 @@ exit:
     nop
 
 error_completion:
-    add         GLOBAL_FLAGS, r0, k.global.flags
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
     IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION)
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
 
-    phvwr       p.ack_info.aeth.syndrome, k.args.nak_code
+    phvwr       p.ack_info.aeth.syndrome, CAPRI_KEY_RANGE(IN_P, nak_code_sbit0_ebit6, nak_code_sbit7_ebit7)
     phvwr       p.cqwqe.status, CQ_STATUS_LOCAL_ACC_ERR
 
     // set error disable flag such that ptseg code wouldn't enqueue
@@ -163,8 +165,7 @@ error_completion:
     // need to generate completion queue entry.
     or.c1       GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION
     
-    add r3, r0, offsetof(struct phv_, common_global_global_data)
-    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, GLOBAL_FLAGS)
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
 
     RQCB2_ADDR_GET(RQCB2_ADDR)
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c2)
@@ -172,9 +173,9 @@ error_completion:
 
     // prepare for NAK
     RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB2_ADDR, TMP, \
-                                   k.global.lif,
-                                   k.global.qtype,
-                                   k.global.qid,
+                                   K_GLOBAL_LIF,
+                                   K_GLOBAL_QTYPE,
+                                   K_GLOBAL_QID,
                                    DB_ADDR, DB_DATA)
     
     //Generate DMA command to skip to payload end

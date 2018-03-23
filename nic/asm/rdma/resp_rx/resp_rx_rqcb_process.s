@@ -2,25 +2,23 @@
 #include "resp_rx.h"
 #include "rqcb.h"
 #include "common_phv.h"
-#include "ingress.h"
 
 struct resp_rx_phv_t p;
 struct rqcb1_t d;
 //struct resp_rx_rqcb_process_k_t k;
 struct common_p4plus_stage0_app_header_table_k k;
 
-#define RQCB_TO_WRITE_T struct resp_rx_rqcb_to_write_rkey_info_t
-#define INFO_OUT1_T struct resp_rx_rqcb_to_pt_info_t
-#define RSQ_BT_S2S_INFO_T struct resp_rx_rsq_backtrack_info_t 
-#define RSQ_BT_TO_S_INFO_T struct resp_rx_to_stage_backtrack_info_t
-#define TO_S_FWD_INFO_T struct resp_rx_to_stage_wb1_info_t
-#define RQCB_TO_RQCB1_T struct resp_rx_rqcb_to_rqcb1_info_t
-#define TO_S_WB1_T struct resp_rx_to_stage_wb1_info_t
-#define TO_S_STATS_INFO_T struct resp_rx_to_stage_stats_info_t
-#define ECN_INFO_T  struct resp_rx_ecn_info_t
-#define RQCB_TO_RD_ATOMIC_T struct resp_rx_rqcb_to_read_atomic_rkey_info_t
-#define TO_S_ATOMIC_INFO_T struct resp_rx_to_stage_atomic_info_t
-#define WQE_INFO_T struct resp_rx_rqcb_to_wqe_info_t
+#define RQCB_TO_WRITE_P t1_s2s_rqcb_to_write_rkey_info
+#define INFO_OUT1_P t0_s2s_rqcb_to_pt_info
+//#define RSQ_BT_S2S_INFO_T struct resp_rx_rsq_backtrack_info_t 
+//#define RSQ_BT_TO_S_INFO_T struct resp_rx_to_stage_backtrack_info_t
+#define RQCB_TO_RQCB1_P t0_s2s_rqcb_to_rqcb1_info
+#define TO_S_WB1_P to_s3_wb1_info
+//#define TO_S_STATS_INFO_T struct resp_rx_to_stage_stats_info_t
+#define ECN_INFO_P  t3_s2s_ecn_info
+#define RQCB_TO_RD_ATOMIC_P t1_s2s_rqcb_to_read_atomic_rkey_info
+#define TO_S_ATOMIC_INFO_P to_s1_atomic_info
+#define WQE_INFO_P t0_s2s_rqcb_to_wqe_info
 
 #define REM_PYLD_BYTES  r6
 #define RSQWQE_P r2
@@ -62,7 +60,6 @@ resp_rx_rqcb_process:
 
     //fresh packet
     // populate global fields
-    add r3, r0, offsetof(struct phv_, common_global_global_data) //BD Slot
 
 #  // moved to _ext program
 #  CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT))
@@ -84,8 +81,7 @@ skip_roce_opt_parsing:
     // get a tokenid for the fresh packet
     phvwr  p.common.rdma_recirc_token_id, d.token_id
 
-    CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, TO_S_FWD_INFO_T, my_token_id, d.token_id)
+    CAPRI_SET_FIELD2(TO_S_WB1_P, my_token_id, d.token_id)
 
 #   CAPRI_GET_STAGE_7_ARG(resp_rx_phv_t, r4)
 #   CAPRI_SET_FIELD(r4, TO_S_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
@@ -105,8 +101,8 @@ start_recirc_packet:
     bcf      [c2], skip_cnp_send
 
     //Process sending CNP packet to the requester.
-    CAPRI_GET_TABLE_3_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, ECN_INFO_T, p_key, CAPRI_APP_DATA_BTH_P_KEY)
+    CAPRI_RESET_TABLE_3_ARG() 
+    CAPRI_SET_FIELD2(ECN_INFO_P, p_key, CAPRI_APP_DATA_BTH_P_KEY)
     add     r5, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_ecn_process, r5) 
 
@@ -126,7 +122,7 @@ skip_cnp_receive:
     or.c7   r7, r7, RESP_RX_FLAG_ACK_REQ
 
     bcf     [c1 | c6 | c5 | c3], process_only_rd_atomic
-    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r7) //BD Slot
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7) //BD Slot
 
 /****** Slow path: SEND/WRITE FIRST/MIDDLE/LAST ******/
 process_send_write_fml:
@@ -197,17 +193,17 @@ process_write:
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_write_dummy_process, r5)
 
     // only first packet has reth header
-    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
+    CAPRI_RESET_TABLE_1_ARG()
 
     bcf [!c1], write_non_first_pkt
-    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 1, !c1) //BD Slot
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, va, CAPRI_RXDMA_RETH_VA)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, len, CAPRI_RXDMA_RETH_DMA_LEN)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
+    CAPRI_SET_FIELD2_C(RQCB_TO_WRITE_P, load_reth, 1, !c1)  //BD Slot
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, va, CAPRI_RXDMA_RETH_VA)
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, len, CAPRI_RXDMA_RETH_DMA_LEN)
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, r_key, CAPRI_RXDMA_RETH_R_KEY)
 
 write_non_first_pkt:
     bcf             [!c6], exit
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, remaining_payload_bytes, REM_PYLD_BYTES) //BD Slot
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, remaining_payload_bytes, REM_PYLD_BYTES) //BD Slot
 
     seq         c7, d.immdt_as_dbell, 1
     bcf         [!c7], wr_skip_immdt_as_dbell
@@ -229,10 +225,10 @@ write_non_first_pkt:
     DMA_SET_END_OF_CMDS(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
 
     b           exit
-    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r7) //BD Slot
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7) //BD Slot
 
 wr_skip_immdt_as_dbell:
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, incr_c_index, 1)
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, incr_c_index, 1)
     // increment the spec_cindex, but we don't need to access the
     // actual wqe to get the WRID as driver is now taking care of 
     // wrid population when application reads cqwqe.
@@ -258,8 +254,7 @@ process_send:
     nop         //BD Slot
 
     phvwrpair   p.cqwqe.rkey_inv_vld, 1, p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
-    CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, TO_S_WB1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
+    CAPRI_SET_FIELD2(TO_S_WB1_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_check_immdt:
     bcf         [!c5], send_in_progress
@@ -282,7 +277,7 @@ send_check_immdt:
                                    DB_ADDR, DB_DATA)
 
     b           send_in_progress
-    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r7) //BD Slot
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7) //BD Slot
 
 send_skip_immdt_as_dbell:
     phvwr       p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA //BD Slot
@@ -291,11 +286,11 @@ send_in_progress:
     //invoke an MPU only program to continue the activity
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_in_progress_process, r0)
 
-    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD_RANGE(r4, RQCB_TO_RQCB1_T, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
-    CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, in_progress, d.in_progress)
+    CAPRI_RESET_TABLE_0_ARG()
+    CAPRI_SET_FIELD_RANGE2(RQCB_TO_RQCB1_P, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
+    CAPRI_SET_FIELD2(RQCB_TO_RQCB1_P, in_progress, d.in_progress)
     b           exit
-    CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, remaining_payload_bytes, REM_PYLD_BYTES)   //BD Slot
+    CAPRI_SET_FIELD2(RQCB_TO_RQCB1_P, remaining_payload_bytes, REM_PYLD_BYTES)   //BD Slot
 
 
 /******  Common logic for ONLY packets (send/write) ******/
@@ -355,7 +350,7 @@ process_send_only:
 
     phvwrpair   p.cqwqe.rkey_inv_vld, 1, p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
 
-    CAPRI_SET_FIELD(r4, TO_S_WB1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
+    CAPRI_SET_FIELD2(TO_S_WB1_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_only_check_immdt:
     bcf         [!c6], rc_checkout
@@ -378,7 +373,7 @@ send_only_check_immdt:
                                    DB_ADDR, DB_DATA)
 
     b           rc_checkout
-    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r7) //BD Slot
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7) //BD Slot
 
 send_only_skip_immdt_as_dbell:
     b           rc_checkout
@@ -393,13 +388,13 @@ process_write_only:
     add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_write_dummy_process, r5)
 
-    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, va, CAPRI_RXDMA_RETH_VA)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, len, CAPRI_RXDMA_RETH_DMA_LEN)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
+    CAPRI_RESET_TABLE_1_ARG()
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, va, CAPRI_RXDMA_RETH_VA)
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, len, CAPRI_RXDMA_RETH_DMA_LEN)
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, r_key, CAPRI_RXDMA_RETH_R_KEY)
 
     bcf             [!c6], exit
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, remaining_payload_bytes, REM_PYLD_BYTES) //BD Slot
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, remaining_payload_bytes, REM_PYLD_BYTES) //BD Slot
 
     seq         c7, d.immdt_as_dbell, 1
     bcf         [!c7], wr_only_skip_immdt_as_dbell
@@ -421,11 +416,10 @@ process_write_only:
     DMA_SET_END_OF_CMDS(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
 
     b           exit
-    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r7) //BD Slot
-
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7) //BD Slot
     
 wr_only_skip_immdt_as_dbell:
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, incr_c_index, 1)
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, incr_c_index, 1)
     // increment the spec_cindex, but we don't need to access the
     // actual wqe to get the WRID as driver is now taking care of 
     // wrid population when application reads cqwqe.
@@ -459,12 +453,12 @@ process_read_atomic:
     tblwr.!c1   d.rsq_pindex, NEW_RSQ_P_INDEX
 
     // common params for both read/atomic
-    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
+    CAPRI_RESET_TABLE_1_ARG()
     phvwrpair   p.rsqwqe.read.r_key, CAPRI_RXDMA_RETH_R_KEY, p.rsqwqe.read.va, CAPRI_RXDMA_RETH_VA
-    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, va, CAPRI_RXDMA_RETH_VA)
-    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
-    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, rsq_p_index, NEW_RSQ_P_INDEX)
-    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, skip_rsq_dbell, d.rsq_quiesce)
+    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, va, CAPRI_RXDMA_RETH_VA)
+    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, r_key, CAPRI_RXDMA_RETH_R_KEY)
+    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, rsq_p_index, NEW_RSQ_P_INDEX)
+    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, skip_rsq_dbell, d.rsq_quiesce)
 
     bcf         [c6 | c5], process_atomic
     phvwr       p.rsqwqe.psn, d.e_psn   //BD Slot
@@ -475,7 +469,7 @@ process_read:
     // end of commands is set in atomic_resource_process function.
     DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, c1)
     phvwr       p.rsqwqe.read.len, CAPRI_RXDMA_RETH_DMA_LEN
-    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, len, CAPRI_RXDMA_RETH_DMA_LEN)
+    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, len, CAPRI_RXDMA_RETH_DMA_LEN)
     // do a MPU-only lookup
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, resp_rx_read_mpu_only_process, r0)
     
@@ -491,9 +485,8 @@ process_read:
     tblmincri.!c6  d.e_psn, 24, 1       //Exit Slot
 
 process_atomic:
-    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, read_or_atomic, RSQ_OP_TYPE_ATOMIC)
-    CAPRI_GET_STAGE_1_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, TO_S_ATOMIC_INFO_T, rsqwqe_ptr, RSQWQE_P)
+    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, read_or_atomic, RSQ_OP_TYPE_ATOMIC)
+    CAPRI_SET_FIELD2(TO_S_ATOMIC_INFO_P, rsqwqe_ptr, RSQWQE_P)
 
     // do a MPU-only lookup
     addui           r3, r0, hiword(rdma_atomic_resource_addr)
@@ -642,7 +635,7 @@ nak:
 /****** Logic for UD ******/
 
 process_ud:
-    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r7)
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
 
     seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type
     seq         c3, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
@@ -687,12 +680,10 @@ rc_checkout:
     sll         r2, r1, d.log_wqe_size
     add         r2, r2, d.hbm_rq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
 
-    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4) 
-
-    //CAPRI_SET_FIELD(r4, WQE_INFO__T, cache, )
-    CAPRI_SET_FIELD(r4, WQE_INFO_T, remaining_payload_bytes, REM_PYLD_BYTES)
-    CAPRI_SET_FIELD(r4, WQE_INFO_T, curr_wqe_ptr, r2)
-    CAPRI_SET_FIELD(r4, WQE_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_PYLD_BASE)
+    CAPRI_RESET_TABLE_0_ARG()
+    CAPRI_SET_FIELD2(WQE_INFO_P, remaining_payload_bytes, REM_PYLD_BYTES)
+    CAPRI_SET_FIELD2(WQE_INFO_P, curr_wqe_ptr, r2)
+    CAPRI_SET_FIELD2(WQE_INFO_P, dma_cmd_index, RESP_RX_DMA_CMD_PYLD_BASE)
 
     //MPU only
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_dummy_rqpt_process, r0)
@@ -725,10 +716,10 @@ pt_process:
     add         r3, r4, r3, CAPRI_LOG_SIZEOF_U64
     // now r3 has page_p to load
     
-    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4) 
-    CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_seg_offset, r5)
-    CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_offset, r1)
-    CAPRI_SET_FIELD(r4, INFO_OUT1_T, remaining_payload_bytes, REM_PYLD_BYTES)
+    CAPRI_RESET_TABLE_0_ARG()
+    CAPRI_SET_FIELD2(INFO_OUT1_P, page_seg_offset, r5)
+    CAPRI_SET_FIELD2(INFO_OUT1_P, page_offset, r1)
+    CAPRI_SET_FIELD2(INFO_OUT1_P, remaining_payload_bytes, REM_PYLD_BYTES)
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqpt_process, r3)
     nop.e
@@ -772,8 +763,8 @@ recirc_sge_work_pending:
     // Hence pass these RQCB1 variables to recirc process code. 
     
     //invoke an MPU only program to continue the activity
-    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD_RANGE(r4, RQCB_TO_RQCB1_T, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
+    CAPRI_RESET_TABLE_0_ARG()
+    CAPRI_SET_FIELD_RANGE2(RQCB_TO_RQCB1_P, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_recirc_sge_process, r0)
 
     nop.e

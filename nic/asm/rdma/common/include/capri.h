@@ -186,6 +186,45 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_SET_FIELD_RANGE_C(_base_r, _s, _f1, _fn, _src_range, _c_flag)    \
     phvwrp._c_flag  _base_r, offsetof(_s, _fn), CAPRI_SIZEOF_RANGE(_s, _f1, _fn), _src_range
 
+
+// new macros
+
+#define CAT7(a,b,c,d,e,f,g) a##b##c##d##e##f##g
+#define CAT9(a,b,c,d,e,f,g,h,i) a##b##c##d##e##f##g##h##i
+#define CAT3(a,b,c) a##b##c
+#define CAT4(a,b,c,d) a##b##c##d
+
+#define CAPRI_KEY_RANGE(_kp, _kf1, _kfn) \
+    k.{CAT7(_kp, _, _kf1, ..., _kp, _, _kfn)}
+
+#define CAPRI_PHV_RANGE(_pp, _pf1, _pfn) \
+    p.{CAT9(common., _pp, _, _pf1, ..., common., _pp, _, _pfn)}
+
+#define CAPRI_KEY_FIELD(_kp, _kf) \
+    k.CAT3(_kp, _, _kf)
+
+#define CAPRI_PHV_FIELD(_pp, _pf) \
+    p.CAT4(common., _pp, _, _pf)
+
+#define CAPRI_SET_FIELD2(_pp, _pf, _src) \
+    phvwr   p.CAT4(common., _pp, _, _pf), _src
+
+#define CAPRI_SET_FIELD2_C(_pp, _pf, _src, _c_flag) \
+    phvwr._c_flag   p.CAT4(common., _pp, _, _pf), _src 
+
+#define CAPRI_SET_FIELD_RANGE2(_pp, _pf1, _pfn, _src_range) \
+    phvwr   CAPRI_PHV_RANGE(_pp, _pf1, _pfn), _src_range
+
+#define CAPRI_SET_FIELD_RANGE2_C(_pp, _pf1, _pfn, _src_range, _c_flag) \
+    phvwr._c_flag   CAPRI_PHV_RANGE(_pp, _pf1, _pfn), _src_range
+
+#define CAPRI_SET_FIELD_RANGE2_IMM(_pp, _pf1, _pfn, _imm) \
+    phvwr   CAPRI_PHV_RANGE(_pp, _pf1, _pfn), _imm
+
+#define CAPRI_SET_FIELD_RANGE2_IMM_C(_pp, _pf1, _pfn, _imm, _c_flag) \
+    phvwr._c_flag   CAPRI_PHV_RANGE(_pp, _pf1, _pfn), _imm
+
+
 #define CAPRI_GET_TABLE_ADDR(_addr_r, _table_base_r, _eid, _entry_size_shift) \
     add  _addr_r, r0, _eid; \
     sll  _addr_r, _addr_r, _entry_size_shift; \
@@ -437,18 +476,33 @@ _next2:;
     cmov    _arg_base_r, _cf, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data), offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
 
 
+#define CAPRI_RESET_TABLE_0_ARG() \
+    phvwr   p.common.common_t0_s2s_s2s_data, r0; \
+
+#define CAPRI_RESET_TABLE_1_ARG() \
+    phvwr   p.common.common_t1_s2s_s2s_data, r0; \
+
+#define CAPRI_RESET_TABLE_2_ARG() \
+    phvwr   p.common.common_t2_s2s_s2s_data, r0; \
+
+#define CAPRI_RESET_TABLE_3_ARG() \
+    phvwr   p.common.common_t3_s2s_s2s_data, r0; \
+
 #define CAPRI_GET_TABLE_0_ARG(_phv_name, _arg_base_r) \
     CAPRI_GET_TABLE_0_ARG_NO_RESET(_phv_name, _arg_base_r) \
-    phvwr   p.common.common_t0_s2s_s2s_data, r0
+    CAPRI_RESET_TABLE_0_ARG();
+
 #define CAPRI_GET_TABLE_1_ARG(_phv_name, _arg_base_r) \
     CAPRI_GET_TABLE_1_ARG_NO_RESET(_phv_name, _arg_base_r) \
-    phvwr   p.common.common_t1_s2s_s2s_data, r0
+    CAPRI_RESET_TABLE_1_ARG();
+
 #define CAPRI_GET_TABLE_2_ARG(_phv_name, _arg_base_r) \
     CAPRI_GET_TABLE_2_ARG_NO_RESET(_phv_name, _arg_base_r) \
-    phvwr   p.common.common_t2_s2s_s2s_data, r0
+    CAPRI_RESET_TABLE_2_ARG();
+
 #define CAPRI_GET_TABLE_3_ARG(_phv_name, _arg_base_r) \
     CAPRI_GET_TABLE_3_ARG_NO_RESET(_phv_name, _arg_base_r) \
-    phvwr   p.common.common_t3_s2s_s2s_data, r0
+    CAPRI_RESET_TABLE_3_ARG();
 
 #define CAPRI_GET_TABLE_0_OR_1_ARG(_phv_name, _arg_base_r, _cf) \
     CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(_phv_name, _arg_base_r, _cf) \
@@ -456,8 +510,8 @@ _next2:;
     phvwr.!_cf   p.common.common_t1_s2s_s2s_data, r0
 
 #define CAPRI_RESET_TABLE_0_AND_1_ARG() \
-    phvwr   p.common.common_t0_s2s_s2s_data, r0; \
-    phvwr   p.common.common_t1_s2s_s2s_data, r0
+    CAPRI_RESET_TABLE_0_ARG(); \
+    CAPRI_RESET_TABLE_1_ARG(); \
 
 #define CAPRI_GET_TABLE_I_ARG(_phv_name, _tbl_id_r, _arg_base_r) \
     .brbegin; \

@@ -4,7 +4,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_inv_rkey_process_k_t k;
+struct resp_rx_s4_t3_k k;
 struct key_entry_aligned_t d;
 
 #define DMA_CMD_BASE r1
@@ -25,7 +25,7 @@ resp_rx_inv_rkey_process:
     // Since this program is always called and also has 
     // less instructions, enqueuing ACK DMA instructions in this stage.
 
-    add             GLOBAL_FLAGS, r0, k.global.flags
+    add             GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
     crestore        [c7, c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_RX_FLAG_UD | RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_ERR_DIS_QP)
     //c7: ud c6: ack c5: inv_rkey c4: cswap c3: fna c2: read c1: err_dis_qp
     
@@ -47,9 +47,9 @@ resp_rx_inv_rkey_process:
     // also if ack req bit is not set, even then do not ring doorbell
     bcf         [c1 | !c6], check_invalidate
     RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
-                                   k.global.lif,
-                                   k.global.qtype,
-                                   k.global.qid,
+                                   K_GLOBAL_LIF,
+                                   K_GLOBAL_QTYPE,
+                                   K_GLOBAL_QID,
                                    DB_ADDR, DB_DATA)    //BD Slot
 check_invalidate:
 

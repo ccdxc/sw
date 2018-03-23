@@ -2,6 +2,7 @@
 #define __COMMON_PHV_H
 
 #include "types.h"
+#include "capri.h"
 
 #define S2S_DATA_WIDTH 160
 #define GLOBAL_DATA_WIDTH 128
@@ -37,10 +38,18 @@ struct phv_to_stage_t {
 #define PT_BASE_ADDR_GET(_r) \
     sll     _r, k.global.pt_base_addr_page_id, HBM_PAGE_SIZE_SHIFT;
 
+#define PT_BASE_ADDR_GET2(_r) \
+    sll     _r, k.{phv_global_common_pt_base_addr_page_id_sbit0_ebit0...phv_global_common_pt_base_addr_page_id_sbit17_ebit21}, HBM_PAGE_SIZE_SHIFT;
+
 #define KT_BASE_ADDR_GET(_r, _tmp_r) \
     add    _tmp_r, CAPRI_LOG_SIZEOF_U64, k.global.log_num_pt_entries; \
     sllv   _tmp_r, 1, _tmp_r; \
     add    _r, _tmp_r, k.global.pt_base_addr_page_id, HBM_PAGE_SIZE_SHIFT;
+
+#define KT_BASE_ADDR_GET2(_r, _tmp_r) \
+    add    _tmp_r, CAPRI_LOG_SIZEOF_U64, k.{phv_global_common_log_num_pt_entries_sbit0_ebit2...phv_global_common_log_num_pt_entries_sbit3_ebit4}; \
+    sllv   _tmp_r, 1, _tmp_r; \
+    add    _r, _tmp_r, CAPRI_KEY_RANGE(phv_global_common_pt_base_addr_page_id,sbit0_ebit0, sbit17_ebit21), HBM_PAGE_SIZE_SHIFT;
 
 #define CQCB_BASE_ADDR_GET(_r, _cqcb_page_id) \
     sll     _r, _cqcb_page_id, HBM_PAGE_SIZE_SHIFT;
@@ -71,5 +80,12 @@ struct phv_global_common_t {
     //prefetch_pool_base_addr_page_id: 20;
     //log_num_prefetch_pool_entries: 5;
 };
+
+#define K_GLOBAL_LIF CAPRI_KEY_RANGE(phv_global_common, lif_sbit0_ebit7, lif_sbit8_ebit10)
+#define K_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
+#define K_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
+#define K_GLOBAL_FLAGS k.{common_global_global_data_sbit112_ebit119...common_global_global_data_sbit120_ebit127}
+
+#define K_GLOBAL_FLAG(_f) CAPRI_KEY_FIELD(phv_global_common, _f)
 
 #endif //__COMMON_PHV_H

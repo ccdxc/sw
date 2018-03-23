@@ -4,15 +4,16 @@
 #include "types.h"
 #include "resp_rx_args.h"
 #include "INGRESS_p.h"
+#include "ingress.h"
 #include "common_phv.h"
 
 #define RESP_RX_MAX_DMA_CMDS        16
 
 #define RESP_RX_CQCB_ADDR_GET(_r, _cqid) \
-    CQCB_ADDR_GET(_r, _cqid, k.to_stage.s3.wb1.cqcb_base_addr_page_id);
+    CQCB_ADDR_GET(_r, _cqid, CAPRI_KEY_RANGE(to_s3_wb1_info, cqcb_base_addr_page_id_sbit0_ebit15, cqcb_base_addr_page_id_sbit16_ebit21));
 
 #define RESP_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid) \
-    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.to_stage.s5.cqpt.cqcb_base_addr_page_id, k.to_stage.s5.cqpt.log_num_cq_entries);
+    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.{to_s5_cqpt_info_cqcb_base_addr_page_id_sbit0_ebit15...to_s5_cqpt_info_cqcb_base_addr_page_id_sbit16_ebit21}, k.{to_s5_cqpt_info_log_num_cq_entries_sbit0_ebit1...to_s5_cqpt_info_log_num_cq_entries_sbit2_ebit3});
 
 // currently PYLD_BASE starts at 2, each PTSEG can generate upto 3
 // dma instructions. so, (2,3,4),(5,6,7),(8,9,10),(11,12,13) will
@@ -167,6 +168,43 @@ struct resp_rx_phv_t {
     struct phv_ common;
 };
 
+// we still need to retain these structures due to the special nature of wqe/pt 
+// functions which deal with Table 0 and/or Table 1.
+// TBD: either auto-generate this structure from P4 or migrate to regular phvwr
+//20
+struct resp_rx_key_info_t {
+    va: 64;
+    //keep len...tbl_id in the same order
+    //aligning with resp_rx_lkey_to_pt_info_t
+    len: 32;
+    dma_cmd_start_index: 8;
+    tbl_id: 8;
+    acc_ctrl: 8;
+    dma_cmdeop: 1;
+    nak_code: 8;
+    incr_nxt_to_go_token_id: 1;
+    incr_c_index: 1;
+    skip_pt: 1;
+    invoke_writeback: 1;
+    pad:27;
+};
+
+struct resp_rx_lkey_to_pt_info_t {
+    pt_offset: 32;
+    //keep pt_bytes...sge_index in the same order
+    //aligning with resp_rx_key_info_t
+    pt_bytes: 32;
+    dma_cmd_start_index: 8;
+    sge_index: 8;
+    log_page_size: 5;
+    dma_cmdeop: 1;
+    rsvd: 2;
+    override_lif_vld: 1;
+    override_lif: 12;
+    pad: 59;
+};
+
+#if 0
 struct resp_rx_phv_global_t {
     struct phv_global_common_t common;
 };
@@ -252,7 +290,7 @@ struct resp_rx_rqcb1_write_back_info_t {
     pad: 40;
 };
 
-struct resp_rx_rqcb0_write_back_process_k_t {
+struct resp_rx_rqcb1_write_back_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct resp_rx_rqcb1_write_back_info_t args;
     struct resp_rx_to_stage_t to_stage;
@@ -462,5 +500,6 @@ struct resp_rx_ecn_process_k_t {
     struct resp_rx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
+#endif
 
 #endif //__RESP_RX_H

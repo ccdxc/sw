@@ -4,9 +4,9 @@
 #include "rqcb.h"
 #include "common_phv.h"
 
-struct resp_rx_phv_t p;
-struct resp_rx_rsq_backtrack_adjust_process_k_t k;
-struct rqcb0_t d;
+//struct resp_rx_phv_t p;
+//struct resp_rx_rsq_backtrack_adjust_process_k_t k;
+//struct rqcb0_t d;
 
 #define NEW_RSQ_PINDEX  r1
 #define DB_ADDR         r2

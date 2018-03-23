@@ -104,9 +104,9 @@
 
 #define rx_table_s5_t2_action resp_rx_cqpt_process
 
-#define rx_table_s5_t3_action resp_rx_stats_process
-
 #define rx_table_s6_t2_action resp_rx_eqcb_process
+
+#define rx_table_s7_t3_action resp_rx_stats_process
 
 #include "../common-p4+/common_rxdma.p4"
 
@@ -274,6 +274,7 @@ header_type resp_rx_cqcb_to_pt_info_t {
         no_dma                           :    1;
         rsvd1                            :    4;
         cqcb_addr                        :   34;
+        rsvd2                            :    6;
         pa_next_index                    :   16;
         pad                              :   24;
     }
@@ -526,15 +527,25 @@ metadata resp_rx_to_stage_atomic_info_t to_s1_atomic_info;
 @pragma scratch_metadata
 metadata resp_rx_to_stage_atomic_info_t to_s1_atomic_info_scr;
 
+@pragma pa_header_union ingress to_stage_2
+metadata resp_rx_to_stage_ext_hdr_info_t to_s2_ext_hdr_info;
+@pragma scratch_metadata
+metadata resp_rx_to_stage_ext_hdr_info_t to_s2_ext_hdr_info_scr;
+
 @pragma pa_header_union ingress to_stage_3
 metadata resp_rx_to_stage_wb1_info_t to_s3_wb1_info;
 @pragma scratch_metadata
 metadata resp_rx_to_stage_wb1_info_t to_s3_wb1_info_scr;
 
 @pragma pa_header_union ingress to_stage_5
-metadata resp_rx_to_stage_stats_info_t to_s5_stats_info;
+metadata resp_rx_to_stage_cqpt_info_t to_s5_cqpt_info;
 @pragma scratch_metadata
-metadata resp_rx_to_stage_stats_info_t to_s5_stats_info_scr;
+metadata resp_rx_to_stage_cqpt_info_t to_s5_cqpt_info_scr;
+
+@pragma pa_header_union ingress to_stage_7
+metadata resp_rx_to_stage_stats_info_t to_s7_stats_info;
+@pragma scratch_metadata
+metadata resp_rx_to_stage_stats_info_t to_s7_stats_info_scr;
 
 /**** stage to stage header unions ****/
 
@@ -568,17 +579,16 @@ metadata resp_rx_lkey_to_pt_info_t t0_s2s_lkey_to_pt_info;
 @pragma scratch_metadata
 metadata resp_rx_lkey_to_pt_info_t t0_s2s_lkey_to_pt_info_scr;
 
-@pragma pa_header_union ingress common_t1_s2s
+@pragma pa_header_union ingress common_t1_s2s t1_s2s_rqcb_to_write_rkey_info t1_s2s_rqcb_to_read_atomic_rkey_info t1_s2s_key_info
+
 metadata resp_rx_rqcb_to_write_rkey_info_t t1_s2s_rqcb_to_write_rkey_info;
 @pragma scratch_metadata
 metadata resp_rx_rqcb_to_write_rkey_info_t t1_s2s_rqcb_to_write_rkey_info_scr;
 
-@pragma pa_header_union ingress common_t1_s2s
 metadata resp_rx_rqcb_to_read_atomic_rkey_info_t t1_s2s_rqcb_to_read_atomic_rkey_info;
 @pragma scratch_metadata
 metadata resp_rx_rqcb_to_read_atomic_rkey_info_t t1_s2s_rqcb_to_read_atomic_rkey_info_scr;
 
-@pragma pa_header_union ingress common_t1_s2s
 metadata resp_rx_key_info_t t1_s2s_key_info;
 @pragma scratch_metadata
 metadata resp_rx_key_info_t t1_s2s_key_info_scr;
@@ -1332,6 +1342,8 @@ action resp_rx_rqlkey_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s2_ext_hdr_info_scr.ext_hdr_data, to_s2_ext_hdr_info.ext_hdr_data);
+    modify_field(to_s2_ext_hdr_info_scr.pad, to_s2_ext_hdr_info.pad);
 
     // stage to stage
     modify_field(t1_s2s_key_info_scr.va, t1_s2s_key_info.va);
@@ -1406,8 +1418,8 @@ action resp_rx_stats_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s5_stats_info_scr.pyld_bytes, to_s5_stats_info.pyld_bytes);
-    modify_field(to_s5_stats_info_scr.pad, to_s5_stats_info.pad);
+    modify_field(to_s7_stats_info_scr.pyld_bytes, to_s7_stats_info.pyld_bytes);
+    modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage
     modify_field(t3_s2s_stats_info_scr.pad, t3_s2s_stats_info.pad);
@@ -1444,6 +1456,9 @@ action resp_rx_cqpt_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s5_cqpt_info_scr.cqcb_base_addr_page_id, to_s5_cqpt_info.cqcb_base_addr_page_id);
+    modify_field(to_s5_cqpt_info_scr.log_num_cq_entries, to_s5_cqpt_info.log_num_cq_entries);
+    modify_field(to_s5_cqpt_info_scr.pad, to_s5_cqpt_info.pad);
 
     // stage to stage
     modify_field(t2_s2s_cqcb_to_pt_info_scr.page_offset, t2_s2s_cqcb_to_pt_info.page_offset);
@@ -1456,6 +1471,7 @@ action resp_rx_cqpt_process () {
     modify_field(t2_s2s_cqcb_to_pt_info_scr.no_dma, t2_s2s_cqcb_to_pt_info.no_dma);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.rsvd1, t2_s2s_cqcb_to_pt_info.rsvd1);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.cqcb_addr, t2_s2s_cqcb_to_pt_info.cqcb_addr);
+    modify_field(t2_s2s_cqcb_to_pt_info_scr.rsvd2, t2_s2s_cqcb_to_pt_info.rsvd2);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.pa_next_index, t2_s2s_cqcb_to_pt_info.pa_next_index);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.pad, t2_s2s_cqcb_to_pt_info.pad);
 
@@ -1483,6 +1499,8 @@ action resp_rx_rqwqe_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s2_ext_hdr_info_scr.ext_hdr_data, to_s2_ext_hdr_info.ext_hdr_data);
+    modify_field(to_s2_ext_hdr_info_scr.pad, to_s2_ext_hdr_info.pad);
 
     // stage to stage
     modify_field(t0_s2s_rqcb_to_wqe_info_scr.rsvd, t0_s2s_rqcb_to_wqe_info.rsvd);

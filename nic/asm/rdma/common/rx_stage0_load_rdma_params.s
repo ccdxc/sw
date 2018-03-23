@@ -10,8 +10,8 @@ struct rx_stage0_load_rdma_params_d d;
 struct phv_ p;
 
 #define REQ_RX_TO_STAGE_T struct req_rx_to_stage_t
-#define RESP_RX_TO_S3_T struct resp_rx_s3_info_t
-#define RESP_RX_TO_S5_T struct resp_rx_s5_info_t
+#define RESP_RX_TO_S3_T struct resp_rx_to_stage_wb1_info_t
+#define RESP_RX_TO_S5_T struct resp_rx_to_stage_cqpt_info_t
 
 %%
 
@@ -40,12 +40,12 @@ rq:
 
     // copy to stage 3 and 5
     add r2, r0, offsetof(struct phv_, to_stage_3_to_stage_data)
-    CAPRI_SET_FIELD(r2, RESP_RX_TO_S3_T, wb1.cqcb_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_page_id)
-    CAPRI_SET_FIELD(r2, RESP_RX_TO_S3_T, wb1.log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
+    CAPRI_SET_FIELD(r2, RESP_RX_TO_S3_T, cqcb_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_page_id)
+    CAPRI_SET_FIELD(r2, RESP_RX_TO_S3_T, log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
 
     add r2, r0, offsetof(struct phv_, to_stage_5_to_stage_data)
-    CAPRI_SET_FIELD(r2, RESP_RX_TO_S5_T, cqpt.cqcb_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_page_id)
-    CAPRI_SET_FIELD(r2, RESP_RX_TO_S5_T, cqpt.log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
+    CAPRI_SET_FIELD(r2, RESP_RX_TO_S5_T, cqcb_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_page_id)
+    CAPRI_SET_FIELD(r2, RESP_RX_TO_S5_T, log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
     b   done
     nop
 

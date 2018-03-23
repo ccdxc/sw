@@ -4,7 +4,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_cqcb_process_k_t k;
+struct resp_rx_s4_t2_k k;
 struct cqcb_t d;
 
 #define ARG_P               r5
@@ -22,7 +22,7 @@ struct cqcb_t d;
 #define DB_DATA             r2
 #define NUM_LOG_WQE         r2    
     
-#define CQ_PT_INFO_T    struct resp_rx_cqcb_to_pt_info_t
+#define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
 
     #c1 : CQ_P_INDEX == 0
     #c2 : d.arm == 1
@@ -34,7 +34,7 @@ struct cqcb_t d;
 resp_rx_cqcb_process:
 
     // if completion is not necessary, die down
-    bbeq    k.global.flags.resp_rx._completion, 0, exit
+    bbeq    K_GLOBAL_FLAG(_completion), 0, exit
 
     seq             c1, CQ_P_INDEX, 0   //BD Slot
     // flip the color if cq is wrap around
@@ -89,18 +89,17 @@ fire_cqpt:
     // now r3 has page_p to load
 
     
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
+    CAPRI_RESET_TABLE_2_ARG()
     #copy fields cq_id, eq_id, and arm
-    CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_seg_offset, PAGE_SEG_OFFSET)
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_offset, PAGE_OFFSET)
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, no_translate, 0)
-    CAPRI_SET_FIELD_C(ARG_P, CQ_PT_INFO_T, no_dma, 1, c3)    
-
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, pa_next_index, PA_NEXT_INDEX)  
+    CAPRI_SET_FIELD_RANGE2(CQ_PT_INFO_P, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
+    CAPRI_SET_FIELD2(CQ_PT_INFO_P, page_seg_offset, PAGE_SEG_OFFSET)
+    CAPRI_SET_FIELD2(CQ_PT_INFO_P, page_offset, PAGE_OFFSET)
+    CAPRI_SET_FIELD2(CQ_PT_INFO_P, no_translate, 0)
+    CAPRI_SET_FIELD2_C(CQ_PT_INFO_P, no_dma, 1, c3)    
+    CAPRI_SET_FIELD2(CQ_PT_INFO_P, pa_next_index, PA_NEXT_INDEX)  
     
     mfspr          CQCB_ADDR, spr_tbladdr
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, cqcb_addr, CQCB_ADDR)
+    CAPRI_SET_FIELD2(CQ_PT_INFO_P, cqcb_addr, CQCB_ADDR)
     
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqpt_process, PAGE_INDEX)
 
@@ -111,10 +110,10 @@ fire_cqpt:
     
 no_translate_dma:
     
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
+    CAPRI_RESET_TABLE_2_ARG()
     #copy fields cq_id, eq_id, and arm
-    CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
-    CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, no_translate, no_dma, 0x3)
+    CAPRI_SET_FIELD_RANGE2(CQ_PT_INFO_P, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
+    CAPRI_SET_FIELD_RANGE2(CQ_PT_INFO_P, no_translate, no_dma, 0x3)
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_cqpt_process, r0)
     
 do_dma:

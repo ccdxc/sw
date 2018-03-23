@@ -2,13 +2,12 @@
 #include "resp_rx.h"
 #include "rqcb.h"
 #include "common_phv.h"
-#include "ingress.h"
 
 struct resp_rx_phv_t p;
 struct rdma_atomic_resource_t d;
-struct resp_rx_read_atomic_process_k_t k;
+struct resp_rx_s1_t1_k k;
 
-#define RKEY_INFO_T struct resp_rx_key_info_t
+#define RKEY_INFO_P t1_s2s_key_info
 #define R_KEY r2
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r2
@@ -20,6 +19,10 @@ struct resp_rx_read_atomic_process_k_t k;
 #define FILL_PATTERN_W      0x01010101
 #define FILL_PATTERN_H      0x0101   
 #define FILL_PATTERN_B      0x01
+
+#define IN_P        t1_s2s_rqcb_to_read_atomic_rkey_info
+#define IN_TO_S_P   to_s1_atomic_info
+
 %%
     .param  resp_rx_rqlkey_process
     .param  rdma_atomic_resource_addr
@@ -85,7 +88,7 @@ next:
 loop_exit:
     
     // skip ring rsq dbell ?
-    seq    c2, k.args.skip_rsq_dbell, 1
+    seq    c2, CAPRI_KEY_FIELD(IN_P, skip_rsq_dbell), 1
 
     //r1 has the offset where byte value is 0, claim the resource
     tblwrp      r1, 0, 8, FILL_PATTERN_B
@@ -119,7 +122,7 @@ loop_exit:
     DMA_HBM_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, 8, r3)
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ATOMIC_RESOURCE_TO_RSQWQE)
-    add     r3, k.to_stage.s1.atomic.rsqwqe_ptr, RSQWQE_ORIG_DATA_OFFSET
+    add     r3, CAPRI_KEY_RANGE(IN_TO_S_P, rsqwqe_ptr_sbit0_ebit15, rsqwqe_ptr_sbit16_ebit63), RSQWQE_ORIG_DATA_OFFSET
     DMA_HBM_MEM2MEM_DST_SETUP(DMA_CMD_BASE, 8, r3)
       
     // DMA for releasing atomic resource
@@ -127,23 +130,23 @@ loop_exit:
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RELEASE_ATOMIC_RESOURCE)
     DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, atomic_release_byte, atomic_release_byte, r2)
 
-    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD_RANGE(r4, RKEY_INFO_T, va, len, k.{args.va...args.len})
+    CAPRI_RESET_TABLE_1_ARG()
+    CAPRI_SET_FIELD_RANGE2(RKEY_INFO_P, va, len, CAPRI_KEY_RANGE(IN_P, va, len))
 
-    add     R_KEY, r0, k.args.r_key
+    add     R_KEY, r0, CAPRI_KEY_RANGE(IN_P, r_key_sbit0_ebit23, r_key_sbit24_ebit31)
 
-    KT_BASE_ADDR_GET(KT_BASE_ADDR, r1)
+    KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, R_KEY)
 
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, dma_cmd_start_index, RESP_RX_DMA_CMD_PYLD_BASE)
+    CAPRI_SET_FIELD2(RKEY_INFO_P, dma_cmd_start_index, RESP_RX_DMA_CMD_PYLD_BASE)
 
     // tbl_id: 1, acc_ctrl: ATOMIC_READ, cmdeop: 0, nak_code: REM_ACC_ERR
-    CAPRI_SET_FIELD_RANGE(r4, RKEY_INFO_T, tbl_id, nak_code, ((TABLE_1 << 17) | (ACC_CTRL_REMOTE_ATOMIC << 9) | (0 << 8) | (AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR))))
+    CAPRI_SET_FIELD_RANGE2(RKEY_INFO_P, tbl_id, nak_code, ((TABLE_1 << 17) | (ACC_CTRL_REMOTE_ATOMIC << 9) | (0 << 8) | (AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR))))
 
     // set write back related params
     // incr_nxt_to_go_token_id: 1, incr_c_index: 0, 
     // skip_pt: 0, invoke_writeback: 1
-    CAPRI_SET_FIELD_RANGE(r4, RKEY_INFO_T, incr_nxt_to_go_token_id, invoke_writeback, (1<<3 | 0 << 2 | 0 << 1 | 1))
+    CAPRI_SET_FIELD_RANGE2(RKEY_INFO_P, incr_nxt_to_go_token_id, invoke_writeback, (1<<3 | 0 << 2 | 0 << 1 | 1))
 
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)
@@ -152,8 +155,8 @@ loop_exit:
     bcf    [c2], exit
     DMA_SET_END_OF_CMDS_C(DMA_CMD_MEM2MEM_T, DMA_CMD_BASE, c2) //BD Slot
 
-    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, k.global.lif, k.global.qtype, DB_ADDR)
-    CAPRI_SETUP_DB_DATA(k.global.qid, RSQ_RING_ID, k.args.rsq_p_index, DB_DATA)
+    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, K_GLOBAL_LIF, K_GLOBAL_QTYPE, DB_ADDR)
+    CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15), DB_DATA)
     // store db_data in LE format
     phvwr   p.db_data1, DB_DATA.dx
 

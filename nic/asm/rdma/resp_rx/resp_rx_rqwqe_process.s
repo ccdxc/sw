@@ -5,12 +5,12 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_rqwqe_process_k_t k;
+struct resp_rx_s2_t0_k k;
 struct rqwqe_base_t d;
 
 #define INFO_LKEY_T struct resp_rx_key_info_t
-#define INFO_WBCB1_T struct resp_rx_rqcb1_write_back_info_t
-#define TO_S_RECIRC_T struct resp_rx_to_stage_recirc_info_t
+#define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
+#define TO_S_RECIRC_P to_s1_recirc_info
 
 
 #define SGE_OFFSET_SHIFT 32
@@ -26,6 +26,8 @@ struct rqwqe_base_t d;
 
 #define F_FIRST_PASS  c7
 
+#define IN_P    t0_s2s_rqcb_to_wqe_info
+
 %%
     .param  resp_rx_rqlkey_process
     .param  resp_rx_rqcb1_write_back_process
@@ -40,13 +42,13 @@ resp_rx_rqwqe_process:
     //DANGER: because of register scarcity, encode both
     // current_sge_id and current_sge_offset in r1 and free r2 
     // now r1 = (current_sge_id << 32) + current_sge_offset
-    add         r1, k.args.current_sge_offset, k.args.current_sge_id, SGE_OFFSET_SHIFT
+    add         r1, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit24_ebit31), CAPRI_KEY_FIELD(IN_P, current_sge_id), SGE_OFFSET_SHIFT
 
-    seq         c1, k.args.in_progress, 1
+    seq         c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1
 
     //num_valid_sges = (in_progress == TRUE) ? 
     //  rqcb_to_wqe_info_info_p->num_valid_sges ? wqe_p->num_sges;
-    cmov        NUM_VALID_SGES, c1, k.args.num_valid_sges, d.num_sges
+    cmov        NUM_VALID_SGES, c1, CAPRI_KEY_FIELD(IN_P, num_valid_sges), d.num_sges
 
     //sge_p = (in_progress == TRUE) ? d_p : (d_p + RQWQE_SGE_OFFSET)
     // we need to add SIZEOF_SGE_T_BITS because SGE is accessed from bottom to top in big-endian
@@ -62,7 +64,7 @@ resp_rx_rqwqe_process:
 
     cmov        r7, c1, offsetof(struct rqwqe_base_t, rsvd2), offsetof(struct rqwqe_base_t, rsvd)
 
-    add         REM_PYLD_BYTES, r0, k.args.remaining_payload_bytes
+    add         REM_PYLD_BYTES, r0, CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
    
    #CAPRI_RESET_TABLE_0_AND_1_ARG()
 
@@ -90,7 +92,7 @@ loop:
     // sge_to_lkey_info_p->sge_bytes = transfer_bytes;
     CAPRI_SET_TABLE_FIELD_LOCAL(r7, INFO_LKEY_T, len, r6)
     // sge_to_lkey_info_p->dma_cmd_start_index = dma_cmd_index;
-    add         r2, r0, k.args.dma_cmd_index
+    add         r2, r0, CAPRI_KEY_FIELD(IN_P, dma_cmd_index)
     add.!F_FIRST_PASS r2, r2, MAX_PYLD_DMA_CMDS_PER_SGE
     //cmov        r2, F_FIRST_PASS, RESP_RX_DMA_CMD_PYLD_BASE, (RESP_RX_DMA_CMD_PYLD_BASE + MAX_PYLD_DMA_CMDS_PER_SGE)
     CAPRI_SET_TABLE_FIELD_LOCAL(r7, INFO_LKEY_T, dma_cmd_start_index, r2)
@@ -117,7 +119,7 @@ loop:
     //current_sge_offset = 0;
     sll.c2      r1, r1, SGE_OFFSET_SHIFT
 
-    KT_BASE_ADDR_GET(r6, r2)
+    KT_BASE_ADDR_GET2(r6, r2)
 
     // r2 <- sge_p->l_key
     CAPRI_TABLE_GET_FIELD(r2, SGE_P, SGE_T, l_key)
@@ -190,21 +192,21 @@ exit:
     CAPRI_SET_TABLE_0_VALID(1)
     CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1)
 
-    add         r7, r0, k.global.flags
+    add         r7, r0, K_GLOBAL_FLAGS
 
     ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_UD|RESP_RX_FLAG_IMMDT)
-    phvwr.c2    p.cqwqe.smac[31:0], k.{to_stage.s2.ext_hdr.ext_hdr_data[95:64]}
+    phvwr.c2    p.cqwqe.smac[31:0], k.to_s2_ext_hdr_info_ext_hdr_data[95:64]
 
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
-    seq         c3, k.args.recirc_path, 1
+    seq         c3, CAPRI_KEY_FIELD(IN_P, recirc_path), 1
     bcf         [!c2 | c3], non_first_or_recirc_pkt
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)    //BD Slot
+    CAPRI_RESET_TABLE_2_ARG()
 
 
     // only first packet need to set num_sges and wqe_ptr values into
     // rqcb1. middle/last packets will simply use these fields from cb
-    CAPRI_SET_FIELD_RANGE_C(T2_ARG, INFO_WBCB1_T, update_wqe_ptr, update_num_sges, 3, c2)
-    CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB1_T, num_sges, NUM_VALID_SGES, c2)
+    CAPRI_SET_FIELD_RANGE2_C(INFO_WBCB1_P, update_wqe_ptr, update_num_sges, 3, c2)
+    CAPRI_SET_FIELD2_C(INFO_WBCB1_P, num_sges, NUM_VALID_SGES, c2)
 
 non_first_or_recirc_pkt:
 
@@ -220,24 +222,24 @@ non_first_or_recirc_pkt:
 
     //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, in_progress, 1)
     //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, incr_nxt_to_go_token_id, 1)
-    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB1_T, in_progress, incr_nxt_to_go_token_id, 3)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, tbl_id, TABLE_2)
+    CAPRI_SET_FIELD_RANGE2(INFO_WBCB1_P, in_progress, incr_nxt_to_go_token_id, 3)
+    CAPRI_SET_FIELD2(INFO_WBCB1_P, tbl_id, TABLE_2)
 
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, current_sge_id, r1[63:32])
+    CAPRI_SET_FIELD2(INFO_WBCB1_P, current_sge_id, r1[63:32])
 
     b       cb0_cb1_wb_exit
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, current_sge_offset, CURR_SGE_OFFSET) //BD Slot
+    CAPRI_SET_FIELD2(INFO_WBCB1_P, current_sge_offset, CURR_SGE_OFFSET) //BD Slot
 
     .cscase 1
     
     b       cb0_cb1_wb_exit
     // incr_nxt_to_go_token_id, incr_c_index, tbl_id
-    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB1_T, incr_nxt_to_go_token_id, tbl_id, (1<<4 | 1<<3 | TABLE_2)) //BD Slot
+    CAPRI_SET_FIELD_RANGE2(INFO_WBCB1_P, incr_nxt_to_go_token_id, tbl_id, (1<<4 | 1<<3 | TABLE_2)) //BD Slot
     .csend
 
 cb0_cb1_wb_exit:
     
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
+    CAPRI_SET_FIELD2(INFO_WBCB1_P, curr_wqe_ptr, CAPRI_KEY_RANGE(IN_P,curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63))
     // Current program is going to spawn 4 parallel lookups for next stage.
     // They are: T0-Lkey0, T1-Lkey1, T2-WB0, T3-WB1. 
     // T2 and T3 programs would reset their table valid bits upon completing
@@ -263,21 +265,20 @@ recirc:
     //      if not, generate NAK
 
     // we are recircing means, we would have consumed 2 lkey's worth of DMA commands
-    add     r2, k.args.dma_cmd_index, (MAX_PYLD_DMA_CMDS_PER_SGE * 2)
+    add     r2, CAPRI_KEY_FIELD(IN_P, dma_cmd_index), (MAX_PYLD_DMA_CMDS_PER_SGE * 2)
 
     // if we reached to the max number of pyld DMA commands and still
     // pkt transfer is not complete, generate NAK 
     seq     c1, r2, RESP_RX_DMA_CMD_PYLD_BASE_END
     bcf     [c1], nak
-    CAPRI_GET_STAGE_1_ARG(resp_rx_phv_t, RECIRC_ARG) //BD Slot
 
     // store recirc info so that stage 1 program upon recirculation
     // can access this info
-    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
-    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, current_sge_id, r1[63:32])
-    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, current_sge_offset, CURR_SGE_OFFSET)
-    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, num_sges, NUM_VALID_SGES)
-    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, remaining_payload_bytes, REM_PYLD_BYTES)
+    CAPRI_SET_FIELD2_C(TO_S_RECIRC_P, curr_wqe_ptr, CAPRI_KEY_RANGE(IN_P, curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63), !c1)
+    CAPRI_SET_FIELD2(TO_S_RECIRC_P, current_sge_id, r1[63:32])
+    CAPRI_SET_FIELD2(TO_S_RECIRC_P, current_sge_offset, CURR_SGE_OFFSET)
+    CAPRI_SET_FIELD2(TO_S_RECIRC_P, num_sges, NUM_VALID_SGES)
+    CAPRI_SET_FIELD2(TO_S_RECIRC_P, remaining_payload_bytes, REM_PYLD_BYTES)
     
     // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)

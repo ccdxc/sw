@@ -1,15 +1,9 @@
 #ifndef __RESP_RX_ARGS_H
 #define __RESP_RX_ARGS_H
 
-#include "capri.h"
-#include "common_phv.h"
-
-struct resp_rx_to_stage_backtrack_info_t {
-    va: 64;
-    r_key: 32;
-    len: 32;
-};
-
+// we still need to retain these structures due to the special nature of wqe/pt 
+// functions which deal with Table 0 and/or Table 1.
+// TBD: either auto-generate this structure from P4 or migrate to regular phvwr
 struct resp_rx_to_stage_wb1_info_t {
     my_token_id: 8;
     inv_r_key: 32;
@@ -22,6 +16,16 @@ struct resp_rx_to_stage_cqpt_info_t {
     cqcb_base_addr_page_id  : 22;
     log_num_cq_entries      : 4;
     pad                     : 102;
+};
+
+#if 0
+#include "capri.h"
+#include "common_phv.h"
+
+struct resp_rx_to_stage_backtrack_info_t {
+    va: 64;
+    r_key: 32;
+    len: 32;
 };
 
 struct resp_rx_to_stage_stats_info_t {
@@ -117,5 +121,6 @@ struct resp_rx_to_stage_t {
         struct resp_rx_s7_info_t s7;
     };
 };
+#endif
 
 #endif //__RESP_RX_ARGS_H

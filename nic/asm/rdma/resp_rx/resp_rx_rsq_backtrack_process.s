@@ -5,7 +5,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_rsq_backtrack_process_k_t k;
+struct resp_rx_s1_t0_k k;
 struct rsqwqe_d_t d;
 
 #define RSQWQE_CMP_FULL_MATCH   0

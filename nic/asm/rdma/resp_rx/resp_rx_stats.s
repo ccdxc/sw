@@ -4,13 +4,14 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_stats_process_k_t k;
+struct resp_rx_s7_t3_k k;
 struct rqcb5_t d;
+
+#define IN_P    to_s7_stats_info
 
 #define GLOBAL_FLAGS r7
 #define RQCB5_ADDR   r3
 #define STATS_PC     r6
-
 
 #define MASK_16 16
 #define MASK_32 32
@@ -25,9 +26,9 @@ resp_rx_stats_process:
     seq              c1, r1[4:2], STAGE_7
     bcf              [!c1], bubble_to_next_stage
 
-    add              GLOBAL_FLAGS, r0, k.global.flags //BD slot
+    add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
 
-    tbladd           d.num_bytes, k.to_stage.s7.stats.bytes
+    tbladd           d.num_bytes, CAPRI_KEY_FIELD(to_s7_stats_info, pyld_bytes)
     tblmincri        d.num_pkts, MASK_32, 1
 
     crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_RX_FLAG_RING_DBELL | RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_READ_REQ)
