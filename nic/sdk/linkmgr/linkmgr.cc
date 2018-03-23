@@ -307,6 +307,9 @@ port_create (port_args_t *args)
     port_p->set_mac_id(args->mac_id);
     port_p->set_mac_ch(args->mac_ch);
     port_p->set_num_lanes(args->num_lanes);
+    port_p->set_debounce_time(args->debounce_time);
+    port_p->set_fec_type(args->fec_type);
+    port_p->set_auto_neg_enable(args->auto_neg_enable);
 
     for (uint32_t i = 0; i < args->num_lanes; ++i) {
         port_p->sbus_addr_set(i, args->sbus_addr[i]);
@@ -350,6 +353,15 @@ port_update (void *pd_p, port_args_t *args)
     if (configured == true) {
         ret = port::port_disable(port_p);
     }
+
+    if (args->fec_type != port_fec_type_t::PORT_FEC_TYPE_NONE) {
+        port_p->set_fec_type(args->fec_type);
+        configured = true;
+    }
+
+    // TODO check for AutoNeg/Debounce time change
+    port_p->set_auto_neg_enable(args->auto_neg_enable);
+    port_p->set_debounce_time(args->debounce_time);
 
     // Enable the port if -
     //      admin-up state is set in request msg OR
@@ -409,6 +421,9 @@ port_get (void *pd_p, port_args_t *args)
     args->mac_ch      = port_p->mac_ch();
     args->num_lanes   = port_p->num_lanes();
     args->oper_status = port_p->oper_status();
+    args->fec_type    = port_p->fec_type();
+    args->debounce_time = port_p->debounce_time();
+    args->auto_neg_enable = port_p->auto_neg_enable();
 
     return ret;
 }

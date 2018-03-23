@@ -23,11 +23,12 @@ typedef struct port_args_s {
     port_speed_t          port_speed;                 // port speed
     port_admin_state_t    admin_state;                // admin state of the port
     port_oper_status_t    oper_status;                // oper status of the port
-    port_fec_type_t       fec_type_;                  // FEC type
+    port_fec_type_t       fec_type;                   // FEC type
     bool                  auto_neg_enable;            // Enable AutoNeg
     uint32_t              mac_id;                     // mac id associated with the port
     uint32_t              mac_ch;                     // mac channel associated with port
     uint32_t              num_lanes;                  // number of lanes for the port
+    uint32_t              debounce_time;              // Debounce time in ms
     uint32_t              sbus_addr[PORT_MAX_LANES];  // set the sbus addr for each lane
 } __PACK__ port_args_t;
 

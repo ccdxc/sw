@@ -43,6 +43,11 @@ sdk_port_admin_st_to_port_admin_st_spec (port_admin_state_t admin_st);
 port_admin_state_t
 port_admin_st_spec_to_sdk_port_admin_st (::port::PortAdminState admin_st);
 
+::port::PortFecType
+sdk_port_fec_type_to_port_fec_type_spec (port_fec_type_t fec_type);
+port_fec_type_t
+port_fec_type_spec_to_sdk_port_fec_type (::port::PortFecType fec_type);
+
 ::port::PortOperStatus
 sdk_port_oper_st_to_port_oper_st_spec(port_oper_status_t oper_st);
 }    // namespace hal

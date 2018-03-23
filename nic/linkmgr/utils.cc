@@ -428,6 +428,40 @@ port_admin_st_spec_to_sdk_port_admin_st (::port::PortAdminState admin_st)
     return port_admin_state_t::PORT_ADMIN_STATE_NONE;
 }
 
+::port::PortFecType
+sdk_port_fec_type_to_port_fec_type_spec (port_fec_type_t fec_type)
+{
+    switch(fec_type) {
+    case port_fec_type_t::PORT_FEC_TYPE_RS:
+        return ::port::PORT_FEC_TYPE_RS;
+
+    case port_fec_type_t::PORT_FEC_TYPE_FC:
+        return ::port::PORT_FEC_TYPE_FC;
+
+    default:
+        return ::port::PORT_FEC_TYPE_NONE;
+    }
+
+    return ::port::PORT_FEC_TYPE_NONE;
+}
+
+port_fec_type_t
+port_fec_type_spec_to_sdk_port_fec_type (::port::PortFecType fec_type)
+{
+    switch(fec_type) {
+    case ::port::PORT_FEC_TYPE_RS:
+        return port_fec_type_t::PORT_FEC_TYPE_RS;
+
+    case ::port::PORT_FEC_TYPE_FC:
+        return port_fec_type_t::PORT_FEC_TYPE_FC;
+
+    default:
+        return port_fec_type_t::PORT_FEC_TYPE_NONE;
+    }
+
+    return port_fec_type_t::PORT_FEC_TYPE_NONE;
+}
+
 ::port::PortOperStatus
 sdk_port_oper_st_to_port_oper_st_spec(port_oper_status_t oper_st)
 {

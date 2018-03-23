@@ -106,6 +106,19 @@ public:
     uint32_t num_lanes(void) const { return this->num_lanes_; }
     void set_num_lanes(uint32_t num_lanes) { this->num_lanes_ = num_lanes; }
 
+    port_fec_type_t fec_type(void) const { return this->fec_type_; }
+    void set_fec_type(port_fec_type_t fec_type) { this->fec_type_ = fec_type; }
+
+    bool auto_neg_enable(void) const { return this->auto_neg_enable_; }
+    void set_auto_neg_enable(bool auto_neg_enable) {
+        this->auto_neg_enable_ = auto_neg_enable;
+    }
+
+    uint32_t debounce_time(void) const { return this->debounce_time_; }
+    void set_debounce_time(uint32_t debounce_time) {
+        this->debounce_time_ = debounce_time;
+    }
+
     port_link_sm_t port_link_sm(void) const { return this->link_sm_; }
     void set_port_link_sm(port_link_sm_t link_sm) {
         this->link_sm_ = link_sm;
@@ -228,11 +241,12 @@ private:
     port_admin_state_t    admin_state_;               // port admin state
     port_link_sm_t        link_sm_;                   // port link state machine
     port_fec_type_t       fec_type_;                  // FEC type
-    bool                  auto_neg_enable;            // Enable AutoNeg
+    bool                  auto_neg_enable_;           // Enable AutoNeg
     void                  *link_bring_up_timer_;      // port link bring up timer
     uint32_t              mac_id_;                    // mac instance for this port
     uint32_t              mac_ch_;                    // mac channel within mac instance
     uint32_t              num_lanes_;                 // number of lanes for this port
+    uint32_t              debounce_time_;             // Debounce time in ms
     uint32_t              sbus_addr_[PORT_MAX_LANES]; // sbus addr for each serdes
 
     // MAC port num calculation based on mac instance and mac channel

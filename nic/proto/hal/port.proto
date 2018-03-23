@@ -69,6 +69,7 @@ message PortSpec {
   uint32            num_lanes        = 9 [(gogoproto.moretags) = "venice:immutable"];    // number of lanes for the port
   PortFecType       fec_type         = 10;   // FEC type
   bool              auto_neg_enable  = 11;   // Enable AutoNeg
+  uint32            debounce_time    = 12;   // Debounce time in ms
 }
 
 message PortStatus {

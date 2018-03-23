@@ -449,9 +449,12 @@ port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
             hal::port_admin_st_spec_to_sdk_port_admin_st(app_ctxt->admin_state);
     port_args.port_speed  =
             hal::port_speed_spec_to_sdk_port_speed(app_ctxt->port_speed);
+    port_args.fec_type =
+            hal::port_fec_type_spec_to_sdk_port_fec_type(app_ctxt->fec_type);
     port_args.mac_id      = app_ctxt->mac_id;
     port_args.mac_ch      = app_ctxt->mac_ch;
     port_args.num_lanes   = app_ctxt->num_lanes;
+    port_args.auto_neg_enable = app_ctxt->auto_neg_enable;
     memcpy(port_args.sbus_addr, app_ctxt->sbus_addr,
                                 PORT_MAX_LANES * sizeof(uint32_t));
 
@@ -649,6 +652,9 @@ port_create (PortSpec& spec, PortResponse *rsp)
     app_ctxt.mac_id      = spec.mac_id();
     app_ctxt.mac_ch      = spec.mac_ch();
     app_ctxt.num_lanes   = spec.num_lanes();
+    app_ctxt.fec_type    = spec.fec_type();
+    app_ctxt.auto_neg_enable = spec.auto_neg_enable();
+    app_ctxt.debounce_time   = spec.debounce_time();
 
     for (uint32_t i = 0; i < spec.num_lanes(); ++i) {
         app_ctxt.sbus_addr[i] = sbus_addr(spec.key_or_handle().port_id(), i);
@@ -779,15 +785,13 @@ port_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     sdk::linkmgr::port_args_init(&port_args);
 
-    port_args.port_type   =
-                hal::port_type_spec_to_sdk_port_type(app_ctxt->port_type);
     port_args.admin_state =
                 hal::port_admin_st_spec_to_sdk_port_admin_st(app_ctxt->admin_state);
     port_args.port_speed  =
                 hal::port_speed_spec_to_sdk_port_speed(app_ctxt->port_speed);
-    port_args.mac_id      = app_ctxt->mac_id;
-    port_args.mac_ch      = app_ctxt->mac_ch;
-    port_args.num_lanes   = app_ctxt->num_lanes;
+    port_args.fec_type =
+                hal::port_fec_type_spec_to_sdk_port_fec_type(app_ctxt->fec_type);
+    port_args.auto_neg_enable = app_ctxt->auto_neg_enable;
 
     sdk_ret = sdk::linkmgr::port_update(pi_p->pd_p, &port_args);
     if (sdk_ret != SDK_RET_OK) {
@@ -938,12 +942,11 @@ port_update (PortSpec& spec, PortResponse *rsp)
                     __FUNCTION__, kh.port_id(), kh.port_handle());
 
     // form ctxt and call infra add
-    app_ctxt.port_type   = spec.port_type();
     app_ctxt.admin_state = spec.admin_state();
     app_ctxt.port_speed  = spec.port_speed();
-    app_ctxt.mac_id      = spec.mac_id();
-    app_ctxt.mac_ch      = spec.mac_ch();
-    app_ctxt.num_lanes   = spec.num_lanes();
+    app_ctxt.fec_type    = spec.fec_type();
+    app_ctxt.auto_neg_enable = spec.auto_neg_enable();
+    app_ctxt.debounce_time   = spec.debounce_time();
 
     dhl_entry.cloned_obj = pi_p;
 
@@ -1213,12 +1216,17 @@ port_get (PortGetRequest& req, PortGetResponse *rsp)
         spec->set_admin_state
                 (hal::sdk_port_admin_st_to_port_admin_st_spec
                                         (port_args.admin_state));
+        spec->set_fec_type
+                (hal::sdk_port_fec_type_to_port_fec_type_spec
+                                            (port_args.fec_type));
         rsp->mutable_status()->set_oper_status(
                 (hal::sdk_port_oper_st_to_port_oper_st_spec
                                         (port_args.oper_status)));
         spec->set_mac_id    (port_args.mac_id);
         spec->set_mac_ch    (port_args.mac_ch);
         spec->set_num_lanes (port_args.num_lanes);
+        spec->set_auto_neg_enable (port_args.auto_neg_enable);
+        spec->set_debounce_time   (port_args.debounce_time);
     }
 
     rsp->set_api_status(hal::hal_prepare_rsp(ret));

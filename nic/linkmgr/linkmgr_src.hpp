@@ -24,6 +24,7 @@ using port::PortOperStatus;
 using port::PortType;
 using port::PortSpeed;
 using port::PortAdminState;
+using port::PortFecType;
 using port::PortResponse;
 using port::PortRequestMsg;
 using port::PortResponseMsg;
@@ -72,6 +73,9 @@ typedef struct port_create_app_ctxt_s {
     uint32_t         mac_id;                    // mac id associated with the port
     uint32_t         mac_ch;                    // mac channel associated with the port
     uint32_t         num_lanes;                 // number of lanes for the port
+    PortFecType      fec_type;                  // FEC type
+    bool             auto_neg_enable;           // Enable AutoNeg
+    uint32_t         debounce_time;             // Debounce time in ms
     uint32_t         sbus_addr[PORT_MAX_LANES]; // sbus addr for each lane
 } __PACK__ port_create_app_ctxt_t;
 
