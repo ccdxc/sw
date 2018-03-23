@@ -39,6 +39,9 @@ using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentRequestMsg;
 using l2segment::L2SegmentResponse;
 using l2segment::L2SegmentResponseMsg;
+using l2segment::L2SegmentDeleteRequest;
+using l2segment::L2SegmentDeleteRequestMsg;
+using l2segment::L2SegmentDeleteResponseMsg;
 using kh::L2SegmentKeyHandle;
 
 using nw::Network;
@@ -52,6 +55,9 @@ using endpoint::EndpointSpec;
 using endpoint::EndpointRequestMsg;
 using endpoint::EndpointResponse;
 using endpoint::EndpointResponseMsg;
+using endpoint::EndpointDeleteRequest;
+using endpoint::EndpointDeleteRequestMsg;
+using endpoint::EndpointDeleteResponseMsg;
 
 using nwsec::NwSecurity;
 using nwsec::SecurityGroupSpec;
@@ -699,6 +705,30 @@ public:
         return 0;
     }
 
+    void ep_delete(uint64_t vrf_id, uint64_t l2seg_id, uint64_t mac_addr) {
+        EndpointDeleteRequest     *spec;
+        EndpointDeleteRequestMsg  req_msg;
+        EndpointDeleteResponseMsg rsp_msg;
+        ClientContext             context;
+        Status                    status;
+
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
+        spec->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac_addr);
+        spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+
+        status = ep_stub_->EndpointDelete(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "Endpoint delete succeeded"
+                      << std::endl;
+            return;
+        }
+        std::cout << "Endpoint delete failed"
+                  << std::endl;
+        return;
+    }
+
     uint64_t session_create(SessionRequestMsg &req_msg,
                             uint64_t session_id, uint64_t vrf_id, uint32_t sip, uint32_t dip,
                             ::types::IPProtocol proto, uint16_t sport, uint16_t dport,
@@ -910,6 +940,29 @@ public:
         return 0;
     }
 
+    void l2segment_delete(uint64_t vrf_id,
+                              uint64_t l2segment_id) {
+        L2SegmentDeleteRequest          *spec;
+        L2SegmentDeleteRequestMsg       req_msg;
+        L2SegmentDeleteResponseMsg      rsp_msg;
+        ClientContext                   context;
+        Status                          status;
+
+        spec = req_msg.add_request();
+        spec->mutable_meta()->set_vrf_id(vrf_id);
+        spec->mutable_key_or_handle()->set_segment_id(l2segment_id);
+        status = l2seg_stub_->L2SegmentDelete(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "L2 segment delete succeeded"
+                      << std::endl;
+            return;
+        }
+        std::cout << "L2 segment delete failed"
+                  << std::endl;
+        return;
+    }
+
     // create few uplinks and return the handle for the 1st one
     uint64_t uplinks_create(uint64_t if_id_start, uint32_t num_uplinks,
                             uint64_t native_l2seg_id) {
@@ -972,6 +1025,38 @@ public:
             for (uint32_t i = 0; i < num_uplinks; i++) {
                 std::cout << "L2 Segment " << l2seg_id
                           << " add on uplink " << i + 1
+                          << " failed, err " << rsp_msg.response(i).api_status()
+                          << std::endl;
+            }
+        }
+
+        return;
+    }
+
+    void delete_l2seg_on_uplinks(uint64_t if_id_start, uint32_t num_uplinks, uint64_t l2seg_id) {
+        InterfaceL2SegmentSpec           *spec;
+        InterfaceL2SegmentRequestMsg     req_msg;
+        InterfaceL2SegmentResponseMsg    rsp_msg;
+        ClientContext                    context;
+        Status                           status;
+
+        for (uint32_t i = 0; i < num_uplinks; i++) {
+            spec = req_msg.add_request();
+            spec->mutable_l2segment_key_or_handle()->set_segment_id(l2seg_id);
+            spec->mutable_if_key_handle()->set_interface_id(if_id_start++);
+        }
+        status = intf_stub_->DelL2SegmentOnUplink(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            for (uint32_t i = 0; i < num_uplinks; i++) {
+                assert(rsp_msg.response(i).api_status() == types::API_STATUS_OK);
+                std::cout << "L2 Segment " << l2seg_id
+                          << " delete on uplink " << i + 1
+                          << " succeeded" << std::endl;
+            }
+        } else {
+            for (uint32_t i = 0; i < num_uplinks; i++) {
+                std::cout << "L2 Segment " << l2seg_id
+                          << " delete on uplink " << i + 1
                           << " failed, err " << rsp_msg.response(i).api_status()
                           << std::endl;
             }
@@ -1287,6 +1372,28 @@ create_l2segments(uint64_t   l2seg_id_start,
     return 0;
 }
 
+static int
+delete_l2segments(uint64_t   l2seg_id_start,
+                  uint64_t   if_id_start,
+                  uint64_t   num_l2segments,
+                  uint64_t   vrf_id,
+                  uint64_t   num_uplinks,
+                  hal_client &hclient)
+{
+    for (uint64_t l2seg_id = l2seg_id_start;
+                  l2seg_id < l2seg_id_start + num_l2segments;
+                  ++l2seg_id) {
+
+        // Delete this L2seg from all uplinks
+        hclient.delete_l2seg_on_uplinks(if_id_start,
+                                     num_uplinks,
+                                     l2seg_id);
+
+        hclient.l2segment_delete(vrf_id, l2seg_id);
+    }
+
+    return 0;
+}
 //------------------------------------------------------------------------------
 // Supported arguments
 // --m seq | random or --mode seq | random: Source and Destination IP addresses 
@@ -1310,7 +1417,7 @@ main (int argc, char** argv)
     uint64_t     start_ns, end_ns;
     uint64_t     num_l2segments = 10;
     uint64_t     encap_value    = 100;
-    uint64_t     num_uplinks    = 4;
+    uint64_t     num_uplinks    = 8;
     uint32_t     session_count = 0, batch_count = 0;
     int          oc;
 
@@ -1406,7 +1513,7 @@ main (int argc, char** argv)
     assert(l2seg_handle != 0);
 
     // bringup this L2seg on all uplinks
-    hclient.add_l2seg_on_uplinks(if_id, 4, dest_l2seg_id);
+    hclient.add_l2seg_on_uplinks(if_id, num_uplinks, dest_l2seg_id);
 
     if (random) {
         // create random remote endpoints
@@ -1500,5 +1607,41 @@ done:
               << time << " secs" << std::endl;
     std::cout << "Session/sec is " << num_sessions/time << std::endl;
 
+    // Delete EPs
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0102);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0103);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0104);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0105);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0106);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0107);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0108);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0109);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a010a);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a010b);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a010c);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a010d);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a010e);
+    hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a010f);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a0202);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a0203);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a0204);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a0205);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a0206);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a0207);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a0208);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a0209);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a020a);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a020b);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a020c);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a020d);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a020e);
+    hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a020f);
+
+    // Delete L2 segments
+    hclient.delete_l2seg_on_uplinks(if_id, num_uplinks, dest_l2seg_id);
+    hclient.l2segment_delete(vrf_id, dest_l2seg_id);
+    delete_l2segments(l2seg_id, if_id, num_l2segments,
+                      vrf_id, num_uplinks, hclient);
+ 
     return 0;
 }

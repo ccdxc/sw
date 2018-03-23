@@ -718,6 +718,11 @@ ep_pd_depgm_registered_mac(pd_ep_t *pd_ep)
     registered_macs_actiondata  data;
     sdk_hash                    *reg_mac_tbl = NULL;
 
+    if (pd_ep->reg_mac_tbl_idx == INVALID_INDEXER_INDEX) {
+        HAL_TRACE_DEBUG("Skipping as it was never programmed");
+        goto end;
+    }
+
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
 

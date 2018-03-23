@@ -27,7 +27,7 @@
 //::     hal_name_upper = hal_name.upper();
 //::     e1 = "ENTRY(HAL_API_"
 //::     e2 = hal_name_upper
-//::     e3 = "_CALL,"
+//::     e3 = ","
 //::     e4 = "_SUCCESS,"
 //::     e5 = "_FAIL,"
 //::     enum_str = str(enumC) + ","
@@ -135,7 +135,7 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
 //::    write_api_stats_enum(enumC, hal_name)
 //::    enumC = enumC + 3
 
-    HAL_API_STATS_ADD(hal::HAL_API_${hal_name_upper}_CALL, nreqs);
+    HAL_API_STATS_ADD(hal::HAL_API_${hal_name_upper}, nreqs);
     hal::hal_cfg_db_open(hal::${op});
     for (i = 0; i < nreqs; i++) {
         auto request = req->request(i);

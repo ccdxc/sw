@@ -47,6 +47,7 @@ ep_pd_init (pd_ep_t *ep)
     }
 
     // Set here if you want to initialize any fields
+    ep->reg_mac_tbl_idx = INVALID_INDEXER_INDEX;
 
     return ep;
 }

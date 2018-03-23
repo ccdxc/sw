@@ -20,9 +20,9 @@ cc_library(
 )
 
 cc_binary(
-    name = "hal_flow_test",
+    name = "hal_scale_test",
     srcs = [
-        "hal_flow_test.cc",
+        "hal_scale_test.cc",
     ],
     deps = [
         "//nic/include:base_includes",
