@@ -10,15 +10,15 @@ import "google/protobuf/timestamp.proto";
 // TypeMeta contains the metadata about kind and version for all API objects.
 message TypeMeta {
   // Kind represents the type of the API object.
-  string Kind=1;
+  string Kind=1 [(gogoproto.jsontag) = "kind"];
   // APIVersion defines the version of the API object.
-  string APIVersion=2;
+  string APIVersion=2 [(gogoproto.jsontag) = "api-version,omitempty"];
 }
 
 // ListMeta contains the metadata for list of objects.
 message ListMeta {
   // Resource version of object store at the time of list generation.
-  string ResourceVersion=1;
+  string ResourceVersion=1 [(gogoproto.jsontag) = "resource-version,omitempty"];
 }
 
 message Timestamp {
@@ -27,38 +27,38 @@ message Timestamp {
 // ObjectMeta contains metadata that all objects stored in kvstore must have.
 message ObjectMeta {
   // Name of the object, unique within a Namespace for scoped objects.
-  string Name = 1;
+  string Name = 1 [(gogoproto.jsontag) = "name"];
   // Tenant is global namespace isolation for various objects. This can be automatically
   // filled in many cases based on the tenant a user, who created the object, belongs go.
-  string Tenant = 2;
+  string Tenant = 2 [(gogoproto.jsontag) = "tenant,omitempty"];
   // Namespace of the object, for scoped objects.
-  string Namespace = 3;
+  string Namespace = 3 [(gogoproto.jsontag) = "namespace,omitempty"];
   // Resource version in the object store. This can only be set by the server.
-  string ResourceVersion = 4;
+  string ResourceVersion = 4 [(gogoproto.jsontag) = "resource-version,omitempty"];
   // UUID is the unique identifier for the object. This can only be set by the server.
-  string UUID = 5;
+  string UUID = 5 [(gogoproto.jsontag) = "uuid,omitempty"];
   // Labels are arbitrary (key,value) pairs associated with any object.
-  map <string, string> Labels = 6;
+  map <string, string> Labels = 6 [(gogoproto.jsontag) = "labels,omitempty"];
   // CreationTime is the creation time of Object
-  Timestamp CreationTime = 7 [(gogoproto.nullable) = false];
+  Timestamp CreationTime = 7 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "creation-time,omitempty"];
   // ModTime is the Last Modification time of Object
-  Timestamp ModTime = 8 [(gogoproto.nullable) = false];
+  Timestamp ModTime = 8 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "mod-time,omitempty"];
   // SelfLink is a link to accessing this object. When stored in the KV store this is
   //  the key in the kvstore and when the object is served from the API-GW it is the
   //  URI path. Examples
   //    - "/venice/tenants/tenants/tenant2" in the kvstore
   //    - "/v1/tenants/tenants/tenant2" when served by API Gateway.
-  string SelfLink = 9;
+  string SelfLink = 9 [(gogoproto.jsontag) = "self-link,omitempty"];
 }
 
 // ObjectRef contains identifying information about an object.
 message ObjectRef {
   // Kind represents the type of the API object.
-  string Kind = 1;
+  string Kind = 1 [(gogoproto.jsontag) = "kind"];
   // Namespace of the object, for scoped objects.
-  string Namespace = 2;
+  string Namespace = 2 [(gogoproto.jsontag) = "namespace,omitempty"];
   // Name of the object, unique within a Namespace for scoped objects.
-  string Name = 3;
+  string Name = 3 [(gogoproto.jsontag) = "name"];
 }
 
 message ListWatchOptions {
@@ -78,13 +78,13 @@ message StatusResult {
 message Status {
   TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ""];
   // Result contains the status of the operation, success or failure.
-  StatusResult Result = 2;
+  StatusResult Result = 2 [(gogoproto.jsontag) = "result,omitempty"];
   // Message contains human readable form of the error.
-  string Message = 3;
+  string Message = 3 [(gogoproto.jsontag) = "message,omitempty"];
   // Code is the HTTP status code.
-  int32 Code = 4;
+  int32 Code = 4 [(gogoproto.jsontag) = "labels,omitempty"];
   // Reference to the object (optional) for which this status is being sent.
-  ObjectRef Ref = 5;
+  ObjectRef Ref = 5 [(gogoproto.jsontag) = "object-ref,omitempty"];
 }
 
 // Watch event types

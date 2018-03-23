@@ -52,13 +52,13 @@ var (
 					"Meta": {
 						"type" : "nested",
 						"properties": {
-							"Name": {"type": "text"},
-							"UUID": {"type": "text"},
-							"Tenant": {"type": "text"},
-							"Namespace": {"type": "text"},
-							"CreationTime": {"type": "date"},
-							"ModTime": {"type": "date"},
-							"ResourceVersion": {"type": "short"}
+							"name": {"type": "text"},
+							"uuid": {"type": "text"},
+							"tenant": {"type": "text"},
+							"namespace": {"type": "text"},
+							"creation-time": {"type": "date"},
+							"mod-time": {"type": "date"},
+							"resource-version": {"type": "short"}
 						}
 					}
 				}
@@ -154,7 +154,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	// this is a query on the nested object events.Meta.ModTime
 	now := time.Now()
 
-	query1 := es.NewNestedQuery("Meta", es.NewRangeQuery("Meta.ModTime").
+	query1 := es.NewNestedQuery("Meta", es.NewRangeQuery("Meta.mod-time").
 		Gte(now.Add(-30*time.Second)).Lte(now))
 	result, err := client.Search(ctx, indexName, indexType, query1)
 	if err != nil {
@@ -182,7 +182,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 
 	// Query 3: match all the events;
 	// creationTime is the same for all the events indexed during this run.
-	query3 := es.NewNestedQuery("Meta", es.NewMatchQuery("Meta.CreationTime", cTime))
+	query3 := es.NewNestedQuery("Meta", es.NewMatchQuery("Meta.creation-time", cTime))
 	result, err = client.Search(ctx, indexName, indexType, query3)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query3, err)

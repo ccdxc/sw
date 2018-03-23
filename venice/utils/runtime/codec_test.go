@@ -42,13 +42,13 @@ func newCodec(codec string) Codec {
 
 func TestJSONEncode(t *testing.T) {
 	test := TestObj{foo: "abc", Bar: "def"}
-	expectedOut := "{\"Bar\":\"def\"}"
+	expectedOut := "{\"kind\":\"\",\"Bar\":\"def\"}"
 
 	codec := newCodec("json")
 
 	out, err := codec.Encode(&test)
 	if err != nil || string(out) != expectedOut {
-		t.Fatalf("Encode test failed, err %v, out %v", err, string(out))
+		t.Fatalf("Encode test failed, err %v, out %v, expected: %v", err, string(out), expectedOut)
 	}
 }
 

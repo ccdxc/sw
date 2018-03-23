@@ -54,7 +54,9 @@ func (m *Field) String() string            { return proto.CompactTextString(m) }
 func (*Field) ProtoMessage()               {}
 func (*Field) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-type isField_F interface{ isField_F() }
+type isField_F interface {
+	isField_F()
+}
 
 type Field_Int64 struct {
 	Int64 int64 `protobuf:"varint,1,opt,name=Int64,oneof"`

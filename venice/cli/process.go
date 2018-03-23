@@ -110,13 +110,13 @@ func createCmdInternal(c *cli.Context, rmw bool) {
 		stringLabels = append(stringLabels, fmt.Sprintf("%s:%s", key, value))
 	}
 	metaKvs := make(map[string]ref.FInfo)
-	metaKvs["Kind"] = ref.NewFInfo([]string{ctx.subcmd})
-	metaKvs["Tenant"] = ref.NewFInfo([]string{ctx.tenant})
+	metaKvs["kind"] = ref.NewFInfo([]string{ctx.subcmd})
+	metaKvs["tenant"] = ref.NewFInfo([]string{ctx.tenant})
 	if len(stringLabels) != 0 {
-		metaKvs["Labels"] = ref.NewFInfo(stringLabels)
+		metaKvs["labels"] = ref.NewFInfo(stringLabels)
 	}
 
-	metaKvs["Name"] = ref.NewFInfo([]string{objName})
+	metaKvs["name"] = ref.NewFInfo([]string{objName})
 
 	obj, _ := getObj(ctx)
 	if rmw {
@@ -984,19 +984,19 @@ func getLineHeader(ctx *context, objmValidKvs, specValidKvs map[string]bool, use
 	hdrNames := ""
 	hdrUL := ""
 	if useTenant != "" {
-		if _, ok := objmValidKvs["Tenant"]; ok {
+		if _, ok := objmValidKvs["tenant"]; ok {
 			hdrNames += useTenant + "\t"
 			hdrUL += getHdrUL(len(useTenant)) + "\t"
 		}
 	}
-	if _, ok := objmValidKvs["Name"]; ok {
+	if _, ok := objmValidKvs["name"]; ok {
 		hdrNames += "Name" + "\t"
-		hdrUL += getHdrUL(len("Name"))
+		hdrUL += getHdrUL(len("name"))
 	}
 	hdrUL += "\t"
-	if _, ok := objmValidKvs["Labels"]; ok {
+	if _, ok := objmValidKvs["labels"]; ok {
 		hdrNames += "Labels" + "\t"
-		hdrUL += getHdrUL(len("Labels"))
+		hdrUL += getHdrUL(len("labels"))
 		hdrUL += "\t"
 	}
 
@@ -1015,20 +1015,20 @@ func getLineData(ctx *context, specIdx *int, objmKvs, specKvs map[string]ref.FIn
 	more := false
 	objLine := ""
 	if useTenant != "" {
-		if fi, ok := objmKvs["Tenant"]; ok && objmValidKvs["Tenants"] {
+		if fi, ok := objmKvs["tenant"]; ok && objmValidKvs["tenant"] {
 			if *specIdx == 0 {
 				objLine += fi.ValueStr[0]
 			}
 			objLine += "\t"
 		}
 	}
-	if fi, ok := objmKvs["Name"]; ok && objmValidKvs["Name"] {
+	if fi, ok := objmKvs["name"]; ok && objmValidKvs["name"] {
 		if *specIdx == 0 {
 			objLine += fi.ValueStr[0]
 		}
 	}
 	objLine += "\t"
-	if fi, ok := objmKvs["Labels"]; ok && objmValidKvs["Labels"] {
+	if fi, ok := objmKvs["labels"]; ok && objmValidKvs["labels"] {
 		vals := fi.ValueStr
 		sort.Strings(vals)
 		if len(vals) >= *specIdx+1 {
