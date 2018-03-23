@@ -60,7 +60,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetRqPreEpsn
                 a       : 1
-                p_key   : 55
+                p_key   : 65535
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
@@ -132,7 +132,7 @@ packets:
                 psn     : 0
                 se      : 0
                 m       : 0
-                p_key   : 55 # Same p_key as IN_PKT
+                p_key   : 65535 # Same p_key as IN_PKT
             payload: # CNP packet has 16 bytes reserved. Set to zero.
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO16/data
 

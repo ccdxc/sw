@@ -4,15 +4,21 @@
 
 struct req_tx_phv_t p;
 struct dcqcn_cb_t d;
-struct req_tx_add_headers_process_k_t k;
+struct req_tx_write_back_process_k_t k;
 
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
-// NOTE: Feeding timestamp from dcqcn_cb for now since model doesn't have timestamps.
+// NOTE: Non-RTL - feeding timestamp from dcqcn_cb since model doesn't have timestamps.
+
+#ifdef RTL
+#define CUR_TIMESTAMP r4
+#else
 #define CUR_TIMESTAMP d.cur_timestamp
+#endif
+
 #define TO_STAGE_T struct req_tx_to_stage_t
 
 #define SECS_IN_KSEC         1000
-#define NUM_TOKENS_ACQUIRED  r4
+#define NUM_TOKENS_ACQUIRED  r6
 #define NUM_TOKENS_REQUIRED  r5
 
 %%
@@ -32,7 +38,16 @@ req_tx_dcqcn_enforce_process:
     // Skip this stage if congestion_mgmt is disabled.
     seq           c2, k.to_stage.sq.congestion_mgmt_enable, 0 //delay slot
     bcf           [c2], load_write_back
+
+    // if speculative cindex matches cindex, then this wqe is being
+    // processed in the right order and state update is allowed. Otherwise
+    // discard and continue with speculation until speculative cindex
+    // matches current cindex. 
+    seq            c1, k.to_stage.sq.spec_cindex, d.sq_cindex // BD-slot
+    bcf            [!c1], spec_fail
     nop
+
+    bbeq          k.args.poll_failed, 1, poll_fail 
 
     /* Rate enforcement logic.
      * This is done in 2 steps.
@@ -41,7 +56,7 @@ req_tx_dcqcn_enforce_process:
      * Note: Unit of token here is bit. Each token corresponds to 1 bit of data.                     
      */
      // Check if we have reached max-tokens. If so, skip token-replenish.                             
-     slt           c3, d.cur_avail_tokens, d.token_bucket_size                                        
+     slt           c3, d.cur_avail_tokens, d.token_bucket_size //BD-slot 
      bcf           [!c3], rate_enforce             
 
 token_replenish:                                  
@@ -62,6 +77,8 @@ token_replenish:
 
     // Replenish tokens in bucket.
     add           r3, NUM_TOKENS_ACQUIRED, d.cur_avail_tokens 
+    slt           c3, r3, d.token_bucket_size
+    add.!c3       r3, d.token_bucket_size, r0 
     tblwr         d.cur_avail_tokens, r3  
 
 rate_enforce:
@@ -81,16 +98,19 @@ rate_enforce:
     tblwr         d.cur_byte_counter, r2
     slt           c2, d.cur_byte_counter, d.byte_counter_thr
     seq           c4, d.max_rate_reached, 1
-    bcf           [c2 | c4], load_write_back
+    bcf           [c2 | c4], skip_dcqcn_doorbell
     nop
-
-ring_dcqcn_doorbell:
     // Reset cur-byte-counter, incr byte counter expiry count and ring dcqcn doorbell to update rate.
     tblwr         d.cur_byte_counter, 0
     tblmincri     d.byte_counter_exp_cnt, 0x10, 1 // byte_counter_exp_cnt is 16-bit value. 
     DOORBELL_INC_PINDEX(k.global.lif,  Q_TYPE_RDMA_RQ, k.global.qid, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
 
-load_write_back:            
+skip_dcqcn_doorbell:            
+    // Increment sq_cindex after successful rate-enforcement/speculative-check.
+    seq             c1, k.args.last, 1  
+    tblmincri.c1    d.sq_cindex, 12, 1  // TODO: Hardcoding log_sq_size to 12 for now. This has to come from HAL.
+
+load_write_back:
     // DCQCN rate-enforcement passed. Load stage 5 for write-back
     SQCB0_ADDR_GET(r2)
     //It is assumed that hdr_template_inline flag is passed untouched to next table-2.
@@ -123,6 +143,8 @@ exit:
     nop.e
     nop
 
+poll_fail:
+spec_fail:
 drop_phv:
     // DCQCN rate-enforcement failed. Drop PHV. Loading writeback to adjust spec_cindex
     CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
@@ -135,6 +157,8 @@ drop_phv:
     phvwr          p.common.common_t3_s2s_s2s_data, k.args
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
 
+#ifdef RTL
+#else
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 
      * Below code is for testing on model only since there are no timestamps on model.
@@ -143,6 +167,6 @@ drop_phv:
     add         r1, CUR_TIMESTAMP, 100000
     tblwr       d.cur_timestamp, r1
     tblmincri   d.num_sched_drop, 8, 1 // Increment num_sched_drop by 1
-
+#endif
     nop.e
     nop

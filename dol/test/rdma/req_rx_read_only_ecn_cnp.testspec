@@ -96,7 +96,7 @@ packets:
                  opcode  : 16
                  destqp  : ref://testcase/config/rdmasession/lqp/id
                  psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
-                 p_key   : 55
+                 p_key   : 65535
              aeth:
                 syndrome : 14 # TODO - credits
                 msn      : callback://rdma/rdma/GetPktMsn/ack_num=0
@@ -135,7 +135,7 @@ packets:
                 psn     : 0
                 se      : 0
                 m       : 0
-                p_key   : 55 # Same p_key as READ_RESP
+                p_key   : 65535 # Same p_key as READ_RESP
             payload: # CNP packet has 16 bytes reserved. Set to zero.
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO16/data
 

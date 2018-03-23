@@ -84,8 +84,15 @@ exit:
 poll_fail:
     DOORBELL_NO_UPDATE(k.global.lif, k.global.qtype, k.global.qid, r1, r2)
     tblwr        d.poll_in_progress, 0 
-    //fall through 
+    phvwr.e      p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_2_VALID(0)
+
 rate_enforce_fail:
+    bbeq        d.dcqcn_rl_failure, 1, spec_fail
+    nop // BD-slot
+    tblwr       d.dcqcn_rl_failure, 1
+    // fall-through
+
 spec_fail:
     phvwr.e      p.common.p4_intr_global_drop, 1
     CAPRI_SET_TABLE_2_VALID(0)

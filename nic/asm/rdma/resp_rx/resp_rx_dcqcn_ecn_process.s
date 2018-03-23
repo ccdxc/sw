@@ -26,9 +26,8 @@ resp_rx_dcqcn_ecn_process:
     blti  r2, rdma_num_clock_ticks_per_cnp, exit
     nop //BD slot 
 
-    // Store cur-timestamp and pkey in cb
+    // Store cur-timestamp in cb
     tblwr  d.last_cnp_timestamp, CUR_TIMESTAMP
-    tblwr  d.partition_key, k.args.p_key  
     // Trigger local doorbell to TXDMA CNP ring.
     DOORBELL_INC_PINDEX(k.global.lif,  Q_TYPE_RDMA_SQ, k.global.qid, CNP_RING_ID, DB_ADDR, DB_DATA)
 

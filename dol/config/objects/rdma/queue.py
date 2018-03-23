@@ -216,7 +216,7 @@ class RdmaSQstate(Packet):
         BitField("log_num_wqes", 0, 5),
         BitField("serv_type", 0, 4),
 
-        BitField("rsvd_cfg_flags", 0, 5),
+        BitField("rsvd_cfg_flags", 0, 4),
         BitField("poll_for_work", 0, 1),
         BitField("signalled_completion", 0, 1),
         BitField("disable_e2e_fc", 0, 1),
@@ -224,6 +224,7 @@ class RdmaSQstate(Packet):
         BitField("sq_in_hbm", 0, 1),
         BitField("congestion_mgmt_enable",0, 1),
         BitField("local_ack_timeout", 0, 5),
+        BitField("ring_empty_sched_eval_done", 0, 1),
 
         ShortField("spec_sq_cindex", 0),
 
@@ -233,8 +234,8 @@ class RdmaSQstate(Packet):
         ByteField("num_sges", 0),
 
         BitField("rsvd_state_flags", 0, 5),
+        BitField("dcqcn_rl_failure", 0, 1),
         BitField("bktrack_in_progress", 0, 1),
-        BitField("ring_empty_sched_eval_done", 0, 1),
         BitField("retry_timer_on", 0, 1),
 
         BitField("poll_in_progress", 0, 1),

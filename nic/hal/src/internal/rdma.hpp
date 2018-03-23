@@ -911,9 +911,9 @@ typedef struct sqcb0_s {
     uint16_t  color: 1;
     uint16_t  poll_in_progress: 1;
 
-    uint16_t retry_timer_on: 1;
-    uint16_t ring_empty_sched_eval_done: 1;
+    uint16_t  retry_timer_on: 1;
     uint16_t  bktrack_in_progress:1;
+    uint16_t  dcqcn_rl_failure:1;
     uint16_t  rsvd_stage_flags: 5;
 
     uint8_t  num_sges;
@@ -923,6 +923,7 @@ typedef struct sqcb0_s {
 
     uint16_t spec_sq_cindex: 16;
 
+    uint16_t ring_empty_sched_eval_done: 1;
     uint16_t local_ack_timeout: 5;
     uint16_t congestion_mgmt_enable: 1;
     uint16_t sq_in_hbm: 1;
@@ -930,7 +931,7 @@ typedef struct sqcb0_s {
     uint16_t disable_e2e_fc: 1;//tx
     uint16_t signalled_completion: 1;//rx
     uint16_t poll_for_work: 1;
-    uint16_t rsvd_cfg_flags: 5;
+    uint16_t rsvd_cfg_flags: 4;
 
     uint32_t service: 4;
     uint32_t log_num_wqes: 5;
@@ -1213,11 +1214,13 @@ typedef struct dcqcn_cb_s {
     uint64_t            cur_timestamp: 32; // For model testing only. Will be removed.
     uint8_t             num_sched_drop; // For model testing only. Number of times packet was scheduled
                                         // and dropped due to insufficient tokens. 
+    uint16_t            sq_cindex;
     uint64_t            token_bucket_size: 48;
     uint64_t            cur_avail_tokens: 48;
     uint16_t            delta_ticks_last_sched;
     uint64_t            last_sched_timestamp: 48;
-    uint8_t             rsvd0: 7;
+    uint8_t             rsvd0: 2;
+    uint32_t            log_sq_size: 5;
     uint8_t             max_rate_reached: 1;
     uint8_t             num_cnp_processed;
     uint8_t             num_cnp_rcvd;
@@ -1231,7 +1234,6 @@ typedef struct dcqcn_cb_s {
     uint16_t            g_val;
     uint16_t            timer_exp_thr;
     uint32_t            byte_counter_thr;
-    uint16_t            partition_key;
     uint64_t            last_cnp_timestamp: 48;
 } PACKED dcqcn_cb_t;
 

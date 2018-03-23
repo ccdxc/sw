@@ -19,6 +19,7 @@ def TestCaseSetup(tc):
     rs.lqp.sq.qstate.WriteWithDelay()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
+    tc.pvtdata.sq_cindex = tc.pvtdata.sq_pre_qstate.c_index0
 
     logger.info("RDMA DCQCN State read/write")
     # Feeding timestamp from dcqcn_cb since model doesn't support timestamps.
@@ -41,7 +42,7 @@ def TestCaseSetup(tc):
     rs.lqp.dcqcn_data.byte_counter_thr = 31
     rs.lqp.dcqcn_data.byte_counter_exp_cnt = 5
     rs.lqp.dcqcn_data.timer_exp_cnt = 0
- 
+    rs.lqp.dcqcn_data.sq_cindex = tc.pvtdata.sq_cindex 
     rs.lqp.WriteDcqcnCb()
 
     # ARM CQ and Set EQ's CI=PI for EQ enablement

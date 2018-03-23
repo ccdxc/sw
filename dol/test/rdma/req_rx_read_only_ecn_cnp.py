@@ -23,6 +23,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.dma_len = 64
     tc.pvtdata.r_key = 2
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
+    tc.pvtdata.sq_cindex = tc.pvtdata.sq_pre_qstate.c_index0
 
     # Feeding timestamp from dcqcn_cb since model doesn't support timestamps.
     # CNP delay timer is set to 50us. Capri clock runs at 1 tick per ns.
@@ -30,6 +31,7 @@ def TestCaseSetup(tc):
     rs.lqp.ReadDcqcnCb()
     rs.lqp.dcqcn_data.last_cnp_timestamp = 0xC350 # 50k ticks
     rs.lqp.dcqcn_data.cur_timestamp = 0x186A0 # 100k ticks
+    rs.lqp.dcqcn_data.sq_cindex = tc.pvtdata.sq_cindex 
     rs.lqp.WriteDcqcnCb()
 
     # Read CQ pre state

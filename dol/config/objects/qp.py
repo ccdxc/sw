@@ -342,7 +342,6 @@ class RdmaDCQCNstate(scapy.Packet):
     name = "RdmaDCQCNstate"
     fields_desc = [
         scapy.BitField("last_cnp_timestamp", 0, 48),
-        scapy.BitField("partition_key", 0, 16),
 
         scapy.IntField("byte_counter_thr",0),
         scapy.BitField("timer_exp_thr", 0, 16),
@@ -359,12 +358,15 @@ class RdmaDCQCNstate(scapy.Packet):
         scapy.ByteField("num_cnp_rcvd", 0),
         scapy.ByteField("num_cnp_processed", 0),
         scapy.BitField("max_rate_reached", 0, 1),
-        scapy.BitField("rsvd0", 0, 7),
+        scapy.BitField("log_sq_size", 0, 5),
+        scapy.BitField("rsvd0", 0, 2),
+        
 
         scapy.BitField("last_sched_timestamp", 0, 48),
         scapy.BitField("delta_tokens_last_sched", 0, 16),
         scapy.BitField("cur_avail_tokens", 0, 48),
         scapy.BitField("token_bucket_size", 0, 48),
+        scapy.BitField("sq_cindex", 0, 16),
 
         scapy.ByteField("num_sched_drop", 0),
         scapy.BitField("cur_timestamp", 0, 32),

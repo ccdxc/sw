@@ -939,7 +939,6 @@ struct p4_to_p4plus_roce_header_t {
 struct dcqcn_cb_t {
     // CNP generation params.
     last_cnp_timestamp: 48;
-    partition_key:      16;
 
     /* DCQCN algorithm params*/
 
@@ -959,13 +958,15 @@ struct dcqcn_cb_t {
     num_cnp_rcvd:           8;  // Num of CNP received used by rate-compute-ring for processing CNPs.
     num_cnp_processed:      8;  // Num of CNP processed used by rate-compute-ring.
     max_rate_reached:       1;  // This will be set if we have reached max-qp-rate and dcqcn rate-increase timers are stopped.
-    rsvd0:                  7;
+    log_sq_size:            5;
+    rsvd0:                  2;
 
     // Rate-limiter token-bucket related params.
     last_sched_timestamp:   48;
     delta_ticks_last_sched: 16;
     cur_avail_tokens:       48;
     token_bucket_size:      48; // DCQCN enforced BC (committed-burst) in bits.
+    sq_cindex:              16;
 
     // For model testing only.
     num_sched_drop: 8; // Number of times packet was scheduled and dropped due to insufficient tokens.

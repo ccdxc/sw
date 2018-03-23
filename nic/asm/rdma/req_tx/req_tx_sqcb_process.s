@@ -69,8 +69,11 @@ req_tx_sqcb_process:
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.congestion_mgmt_enable, 1)
 
         CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
-        CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.congestion_mgmt_enable, 1)
-         
+        bbeq           d.dcqcn_rl_failure, 0, process_send
+        CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.congestion_mgmt_enable, 1) // Branch Delay Slot
+        // Reset spec-cindex to cindex and resend packet on dcqcn-rl-failure.
+        tblwr          SPEC_SQ_C_INDEX, SQ_C_INDEX
+        tblwr          d.dcqcn_rl_failure, 0
 
 process_send:
         bbeq           d.need_credits, 1, exit
@@ -119,6 +122,9 @@ poll_for_work:
         CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, poll_in_progress, d.poll_in_progress)
         CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, color, d.color)
         CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, remaining_payload_bytes, r4)
+
+        CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+        CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
         
         CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, r2)
@@ -173,6 +179,9 @@ pt_process:
         
         // populate t0 PC and table address
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqpt_process, r3)
+
+        CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+        CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
         
         CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
@@ -223,6 +232,9 @@ in_progress:
         
         CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
+
+        CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+        CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, r1)
         
         CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)

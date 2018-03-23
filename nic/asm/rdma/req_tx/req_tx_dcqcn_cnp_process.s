@@ -23,7 +23,7 @@ req_tx_dcqcn_cnp_process:
     // Update BTH opcode
     phvwr       p.bth.opcode, RDMA_PKT_OPC_CNP
     // Update partition key in CNP packet
-    phvwr       p.bth.pkey, d.partition_key
+    phvwr       p.bth.pkey, 0xffff
 
     // For PAD and ICRC
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_PAD_ICRC)
