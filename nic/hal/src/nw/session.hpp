@@ -178,6 +178,8 @@ typedef struct flow_cfg_s {
     uint16_t                  action:3;            // flow action(s)
     uint16_t                  role:1;              // flow role (initiator or responder)
     uint16_t                  nat_type:3;          // type of NAT
+    uint16_t                  is_ing_proxy_mirror:1; // Is ing mirror a proxy
+    uint16_t                  is_eg_proxy_mirror:1; // Is eg mirror a proxy
     ip_addr_t                 nat_sip;             // source NAT IP, if any
     ip_addr_t                 nat_dip;             // destination NAT IP, if any
     uint16_t                  nat_sport;           // NAT source port
@@ -201,7 +203,9 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  lkp_inst:1;          // Flow instance
     uint64_t                  expected_src_lif_en:1;  // src lif check for host pinning
     uint64_t                  qos_class_en: 1;        // Qos class enable
-
+    uint64_t                  is_proxy_mcast: 1;      // Is mcast ptr proxy ?
+    uint64_t                  is_proxy_en: 1;         // Is this flow prxy enabled?
+    
     uint32_t                  vrf_hwid;         // source l2seg vrf hwid (lkp_vrf)
     rewrite_actions_en        rw_act;              // rewrite action
     uint32_t                  rw_idx;              // rewrite index

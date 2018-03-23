@@ -45,6 +45,7 @@ class TestCaseTrigExpCommandObject:
         self.object     = None
         self.command    = None
         self.background = False
+        self.timeout    = None
         self.status     = None
         return
     

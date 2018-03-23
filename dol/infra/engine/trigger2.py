@@ -158,7 +158,7 @@ class E2ETriggerEngineObject(TriggerEngineObject):
             logger.info("Running command %s : %s" % (cmd.object.GID(), cmd.command))
             if GlobalOptions.dryrun:
                 return        
-            cmd.status = E2E.RunCommand(cmd.object.GID(), cmd.command,
+            cmd.status = E2E.RunCommand(cmd.object.GID(), cmd.command, timeout=cmd.timeout,
                                          background=cmd.background)
         return
     

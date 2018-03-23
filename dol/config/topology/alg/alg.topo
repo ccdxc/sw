@@ -17,7 +17,6 @@ uplink:
         sriov   : True
         status  : UP
 
-uplinkpc:
 acls: None
 qos : True
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_ALG

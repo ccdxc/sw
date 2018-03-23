@@ -254,14 +254,14 @@ ctx_t::get_proxy_mirror_flow(hal::flow_role_t role)
 // Initialize context from the existing session
 //-----------------------------------------------------------------------------
 void
-ctx_t::init_ctxt_from_session(hal::session_t *session)
+ctx_t::init_ctxt_from_session(hal::session_t *sess)
 {
     hal::flow_t *hflow = NULL;
     int          stage = 0;
 
-    session_ = session;
+    session_ = sess;
 
-    hflow = session->iflow;
+    hflow = sess->iflow;
     if (role_ != hal::FLOW_ROLE_INITIATOR) {
         role_ = hal::FLOW_ROLE_INITIATOR;
         key_ = hflow->config.key;
@@ -270,7 +270,7 @@ ctx_t::init_ctxt_from_session(hal::session_t *session)
 
     // Init feature sepcific session state
     sdk::lib::dllist_ctxt_t   *entry;
-    dllist_for_each(entry, &session->feature_list_head) {
+    dllist_for_each(entry, &sess->feature_list_head) {
         feature_session_state_t *state =
             dllist_entry(entry, feature_session_state_t, session_feature_lentry);
         uint16_t id = feature_id(state->feature_name);
@@ -287,14 +287,34 @@ ctx_t::init_ctxt_from_session(hal::session_t *session)
     // TODO(goli) handle post svc flows
     if (hflow->config.role == hal::FLOW_ROLE_INITIATOR) {
         iflow_[stage]->from_config(hflow->config, hflow->pgm_attrs);
-            if (hflow->reverse_flow) {
-                rflow_[stage]->from_config(hflow->reverse_flow->config,
-                                               hflow->reverse_flow->pgm_attrs);
+            if (sess->rflow) {
+                rflow_[stage]->from_config(sess->rflow->config,
+                                           sess->rflow->pgm_attrs);
                 valid_rflow_ = true;
+                if (sess->rflow->assoc_flow) {
+                    rflow_[++stage]->from_config(
+                                       sess->rflow->assoc_flow->config,
+                                       sess->rflow->assoc_flow->pgm_attrs);
+                }
+            }
+            if (hflow->assoc_flow) {
+                iflow_[++stage]->from_config(hflow->assoc_flow->config, 
+                                           hflow->assoc_flow->pgm_attrs);
             }
     } else {
         rflow_[stage]->from_config(hflow->config, hflow->pgm_attrs);
-        iflow_[stage]->from_config(hflow->reverse_flow->config, hflow->reverse_flow->pgm_attrs);
+        if (hflow->assoc_flow) {
+            rflow_[++stage]->from_config(hflow->assoc_flow->config,
+                                         hflow->assoc_flow->pgm_attrs);
+        }
+        iflow_[stage]->from_config(hflow->reverse_flow->config, 
+                                   hflow->reverse_flow->pgm_attrs);
+        if (sess->iflow->assoc_flow) {
+            iflow_[++stage]->from_config(
+                                       sess->iflow->assoc_flow->config,
+                                       sess->iflow->assoc_flow->pgm_attrs);
+        }
+ 
         valid_rflow_ = true;
     }
 }
@@ -454,6 +474,13 @@ ctx_t::update_flow_table()
         hal::flow_cfg_t &iflow_cfg = iflow_cfg_list[stage];
         hal::flow_pgm_attrs_t& iflow_attrs = iflow_attrs_list[stage];
 
+        // For existing sessions initialize with the configs the session
+        // came with and update anything else
+        if (existing_session() && stage == 0 && session_->iflow) {
+            iflow_cfg = session_->iflow->config; 
+            iflow_attrs = session_->iflow->pgm_attrs;
+        }
+
         iflow->to_config(iflow_cfg, iflow_attrs);
         iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
 
@@ -462,9 +489,9 @@ ctx_t::update_flow_table()
             iflow_attrs.lkp_inst = 1;
         }
 
-		args.l2seg = sl2seg_;
-		hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
-		iflow_attrs.vrf_hwid = args.hwid;
+        args.l2seg = sl2seg_;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+        iflow_attrs.vrf_hwid = args.hwid;
         // iflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_flow_lkupid(sl2seg_);
 
         // TODO(goli) fix tnnl_rw_idx lookup
@@ -487,12 +514,17 @@ ctx_t::update_flow_table()
             session_args.session_state = &session_state;
             session_state.iflow_state = iflow->flow_state();
         }
+       
+        if (is_proxy_enabled()) {
+            iflow_attrs.is_proxy_en = 1;
+        }
 
         HAL_TRACE_DEBUG("fte::update_flow_table: iflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
-                        "nat_dip={} nat_sport={} nat_dport={} nat_type={} slif_en={} slif={} "
-                        "qos_class_en={} qos_class_id={}",
+                        "nat_dip={} nat_sport={} nat_dport={} nat_type={} is_ing_proxy_mirror={} "
+                        "is_eg_proxy_mirror={} slif_en={} slif={} qos_class_en={} "
+                        "qos_class_id={} is_proxy_en={} is_proxy_mcast={}",
                         stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_cfg.action,
                         iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
@@ -500,14 +532,23 @@ ctx_t::update_flow_table()
                         iflow_attrs.rw_act, iflow_attrs.rw_idx, iflow_attrs.tnnl_rw_act,
                         iflow_attrs.tnnl_rw_idx, iflow_attrs.tnnl_vnid, iflow_cfg.nat_sip,
                         iflow_cfg.nat_dip, iflow_cfg.nat_sport, iflow_cfg.nat_dport,
-                        iflow_cfg.nat_type, iflow_attrs.expected_src_lif_en, iflow_attrs.expected_src_lif,
-                        iflow_attrs.qos_class_en, iflow_attrs.qos_class_id);
+                        iflow_cfg.nat_type, iflow_cfg.is_ing_proxy_mirror, iflow_cfg.is_eg_proxy_mirror,
+                        iflow_attrs.expected_src_lif_en, iflow_attrs.expected_src_lif,
+                        iflow_attrs.qos_class_en, iflow_attrs.qos_class_id, iflow_attrs.is_proxy_en,
+                        iflow_attrs.is_proxy_mcast);
     }
 
     for (uint8_t stage = 0; valid_rflow_ && !hal_cleanup() && stage <= rstage_; stage++) {
         flow_t *rflow = rflow_[stage];
         hal::flow_cfg_t &rflow_cfg = rflow_cfg_list[stage];
         hal::flow_pgm_attrs_t& rflow_attrs = rflow_attrs_list[stage];
+
+        // For existing sessions initialize with the configs the session
+        // came with and update anything else
+        if (existing_session() && stage == 0 && session_->rflow) {
+            rflow_cfg = session_->rflow->config;
+            rflow_attrs = session_->rflow->pgm_attrs;
+        }
 
         rflow->to_config(rflow_cfg, rflow_attrs);
         rflow_cfg.role = rflow_attrs.role = hal::FLOW_ROLE_RESPONDER;
@@ -579,8 +620,11 @@ ctx_t::update_flow_table()
             ret = hal::session_delete(&session_args, session_);
         }
     } else if (session_) {
-        // Update session if it already exists
-        ret = hal::session_update(&session_args, session_);
+        if (update_session_) {
+            HAL_TRACE_DEBUG("Updating Session");
+            // Update session if it already exists
+            ret = hal::session_update(&session_args, session_);
+        }
     } else {
         // Create a new HAL session
         ret = hal::session_create(&session_args, &session_handle, &session);
@@ -724,6 +768,7 @@ ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_
     *this = {};
 
     arm_lifq_ = lifq;
+    update_session_ = false;
 
     num_features_ = num_features;
     feature_state_ = feature_state;
@@ -874,13 +919,14 @@ ctx_t::update_flow(const flow_update_t& flowupd,
             drop_ = false;
             drop_flow_ = false;
         }
-        LOG_FLOW_UPDATE(action);
+        if (ret == HAL_RET_OK)
+            LOG_FLOW_UPDATE(action);
         break;
 
     case FLOWUPD_HEADER_REWRITE:
         ret = flow->header_rewrite(flowupd.header_rewrite);
-        LOG_FLOW_UPDATE(header_rewrite);
         if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(header_rewrite);
             // check if dep needs to be updated
             ret = update_for_dnat(role, flowupd.header_rewrite);
         }
@@ -888,56 +934,80 @@ ctx_t::update_flow(const flow_update_t& flowupd,
 
     case FLOWUPD_HEADER_PUSH:
         ret = flow->header_push(flowupd.header_push);
-        LOG_FLOW_UPDATE(header_push);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(header_push);
+        }
         break;
 
     case FLOWUPD_HEADER_POP:
         ret = flow->header_pop(flowupd.header_pop);
-        LOG_FLOW_UPDATE(header_pop);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(header_pop);
+        }
         break;
 
     case FLOWUPD_FLOW_STATE:
         ret = flow->set_flow_state(flowupd.flow_state);
-        LOG_FLOW_UPDATE(flow_state);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(flow_state);
+        }
         break;
 
     case FLOWUPD_FWDING_INFO:
         ret = flow->set_fwding(flowupd.fwding);
-        LOG_FLOW_UPDATE(fwding);
-        if (flowupd.fwding.dif) {
-            dif_ = flowupd.fwding.dif;
-        }
-        if (flowupd.fwding.dl2seg) {
-            dl2seg_ =  flowupd.fwding.dl2seg;
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(fwding);
+            if (flowupd.fwding.dif) {
+                dif_ = flowupd.fwding.dif;
+            }
+            if (flowupd.fwding.dl2seg) {
+                dl2seg_ =  flowupd.fwding.dl2seg;
+            }
         }
         break;
 
     case FLOWUPD_KEY:
         ret = flow->set_key(flowupd.key);
-        LOG_FLOW_UPDATE(key);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(key);
+        }
         break;
 
     case FLOWUPD_MCAST_COPY:
         ret = flow->merge_mcast_info(flowupd.mcast_info);
-        LOG_FLOW_UPDATE(mcast_info);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(mcast_info); 
+        }
         break;
 
     case FLOWUPD_INGRESS_INFO:
         ret = flow->set_ingress_info(flowupd.ingress_info);
-        LOG_FLOW_UPDATE(ingress_info);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(ingress_info);
+        }
         break;
 
     case FLOWUPD_MIRROR_INFO:
         ret = flow->merge_mirror_info(flowupd.mirror_info);
-        LOG_FLOW_UPDATE(mirror_info);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(mirror_info);
+        }
         break;
 
     case FLOWUPD_QOS_INFO:
         ret = flow->set_qos_info(flowupd.qos_info);
-        LOG_FLOW_UPDATE(qos_info);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(qos_info);
+        }
         break;
     }
 
+    if (ret == HAL_RET_OK)  {
+        update_session_ = true;
+    }
+
+    if (ret == HAL_RET_ENTRY_EXISTS)
+        ret = HAL_RET_OK;
 
     return ret;
 }
@@ -947,14 +1017,30 @@ ctx_t::update_flow(const flow_update_t& flowupd,
 //------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::advance_to_next_stage() {
-    if (role_ == hal::FLOW_ROLE_INITIATOR && iflow_[istage_]->valid_fwding()) {
-        HAL_ASSERT_RETURN(istage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
-        istage_++;
-        HAL_TRACE_DEBUG("fte: advancing to next iflow stage {}", istage_);
-    } else if (rflow_[rstage_]->valid_fwding()){
-        HAL_ASSERT_RETURN(rstage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
-        rstage_++;
-        HAL_TRACE_DEBUG("fte: advancing to next rflow stage {}", rstage_);
+
+    if (existing_session()) {
+        if (role_ == hal::FLOW_ROLE_INITIATOR && 
+            session()->iflow && session()->iflow->assoc_flow) {
+            HAL_ASSERT_RETURN(istage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
+            istage_++;
+            HAL_TRACE_DEBUG("fte: advancing to next iflow stage {}", istage_);
+        } else if (role_ == hal::FLOW_ROLE_RESPONDER &&
+                   session()->rflow && session()->rflow->assoc_flow) {
+            HAL_ASSERT_RETURN(rstage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
+            rstage_++;
+            HAL_TRACE_DEBUG("fte: advancing to next rflow stage {}", rstage_);    
+        }
+    } else {
+
+        if (role_ == hal::FLOW_ROLE_INITIATOR && iflow_[istage_]->valid_fwding()) {
+            HAL_ASSERT_RETURN(istage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
+            istage_++;
+            HAL_TRACE_DEBUG("fte: advancing to next iflow stage {}", istage_);
+        } else if (rflow_[rstage_]->valid_fwding()){
+            HAL_ASSERT_RETURN(rstage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
+            rstage_++;
+            HAL_TRACE_DEBUG("fte: advancing to next rflow stage {}", rstage_);
+        }
     }
     return HAL_RET_OK;
 }
@@ -1163,6 +1249,15 @@ bool
 ctx_t::is_proxy_enabled()
 {
     flow_t **flow = (role_ == hal::FLOW_ROLE_INITIATOR) ? iflow_ : rflow_;
+
+    // For existing sessions, fwding will be set to TRUE even if it is 
+    // not proxy. So, get it from the pgm attrs
+    if (existing_session()) {
+        if (stage() == 0 && flow[stage()]->is_proxy_enabled())
+            return true;
+        else
+            return false;
+    }
 
     // For proxy flow we need to be either in stage 1 or
     // in stage 0 with forwarding info set by the proxy.

@@ -8,5 +8,5 @@ def GetWgetArgs(testcase):
 
 def GetPythonArgs(testcase):
     src_ip = testcase.config.src_endpoints[0].ipaddrs[0].get()
-    return "-m pyftpdlib -i " + src_ip + " -p 21 -u admin -P root"
+    return "-m pyftpdlib -i " + src_ip + " -p 21 -u admin -P root -d /sw/dol"
     

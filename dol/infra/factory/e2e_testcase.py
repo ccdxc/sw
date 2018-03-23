@@ -33,6 +33,8 @@ class E2ETestCase(TestCase):
         cmd.command = " ".join(command_with_args)
         if hasattr(command, "background"):
             cmd.background = command.background
+        if hasattr(command, "timeout"):
+            cmd.timeout = command.timeout            
         return cmd
    
     def __setup_commands(self, tcsn, spsn):

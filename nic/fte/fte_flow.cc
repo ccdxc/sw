@@ -1,4 +1,3 @@
-#include "nic/include/pd_api.hpp"
 #include "nic/fte/fte_flow.hpp"
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/hal/src/nw/session.hpp"
@@ -15,7 +14,11 @@ flow_t::merge_header_rewrite(header_rewrite_info_t &dst,
     if (src.flags.dec_ttl) {
         dst.flags.dec_ttl = 1;
     }
-    
+
+    if (!memcmp(&dst, &src, sizeof(header_rewrite_info_t))) {
+        return HAL_RET_ENTRY_EXISTS;
+    } 
+
     // L2 header fields
     switch(src.valid_hdrs&FTE_L2_HEADERS) {
     case FTE_HEADER_ether:
@@ -401,7 +404,85 @@ hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
     return HAL_RET_OK;
 }
 
+hal_ret_t flow_t::get_rewrite_config(const hal::flow_cfg_t &config, 
+                                     const hal::flow_pgm_attrs_t  &attrs,
+                                     header_rewrite_info_t *rewrite)
+{
+    hal_ret_t ret = HAL_RET_OK;
+  
+    rewrite->flags.dec_ttl =  attrs.ttl_dec;
+    if (attrs.mac_sa_rewrite) {
+        rewrite->valid_flds.smac = true;
+        // How to get the actual mac - its not stored anywhere!!
+    }
 
+    if (attrs.mac_da_rewrite) {
+        rewrite->valid_flds.dmac = true;
+        // How to get the actual mac - its not stored anywhere!!
+    }
+   
+    if (attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID) {
+        rewrite->ether.vlan_id = attrs.tnnl_vnid;
+    } 
+
+    //If SIP was valid then we would have the nat type set. 
+    //Make sure we have both set
+    if (config.nat_sip.af == IP_AF_IPV4 && (config.nat_type&0x1)) {
+        rewrite->ipv4.sip = config.nat_sip.addr.v4_addr;
+        rewrite->valid_hdrs = FTE_HEADER_ipv4;
+        if (rewrite->ipv4.sip != key_.sip.v4_addr)
+            rewrite->valid_flds.sip = true;
+    } else if (config.nat_sip.af == IP_AF_IPV6) {
+        rewrite->ipv6.sip = config.nat_sip.addr.v6_addr;
+        rewrite->valid_hdrs = FTE_HEADER_ipv6;
+        if (!memcmp(&rewrite->ipv6.sip, &key_.sip.v6_addr, sizeof(ipv6_addr_t)))
+            rewrite->valid_flds.sip = true;
+    }
+
+    //If DIP was valid then we would have the nat type set.
+    //Make sure we have both set
+    if (config.nat_dip.af == IP_AF_IPV4 && (config.nat_type&0x2)) {
+        rewrite->ipv4.dip = config.nat_dip.addr.v4_addr;
+        rewrite->valid_hdrs = FTE_HEADER_ipv4;
+        if (rewrite->ipv4.dip != key_.dip.v4_addr)
+            rewrite->valid_flds.dip = true;
+    } else if (config.nat_dip.af == IP_AF_IPV6) {
+        rewrite->ipv6.dip = config.nat_dip.addr.v6_addr;
+        rewrite->valid_hdrs = FTE_HEADER_ipv6;
+        if (!memcmp(&rewrite->ipv6.dip, &key_.dip.v6_addr, sizeof(ipv6_addr_t)))
+            rewrite->valid_flds.dip = true;
+    }
+
+    if (config.nat_type != session::NAT_TYPE_NONE) {
+        switch (key_.proto) {
+        case IP_PROTO_TCP:
+            rewrite->tcp.sport = config.nat_sport;
+            rewrite->tcp.dport = config.nat_dport;
+            rewrite->valid_hdrs = FTE_HEADER_tcp;
+            if (rewrite->tcp.sport != key_.sport) 
+                rewrite->valid_flds.sport = true;
+            if (rewrite->tcp.dport != key_.sport)
+                rewrite->valid_flds.dport = true;
+            break;
+        case IP_PROTO_UDP:
+            rewrite->udp.sport = config.nat_sport;
+            rewrite->udp.dport = config.nat_dport;
+            rewrite->valid_hdrs = FTE_HEADER_udp;
+            if (rewrite->udp.sport != key_.sport)
+                rewrite->valid_flds.sport = true;
+            if (rewrite->udp.dport != key_.sport)
+                rewrite->valid_flds.dport = true;
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID)
+        rewrite->valid_flds.vlan_id = true; 
+
+    return ret;
+}
 
 hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attrs) const
 {
@@ -425,6 +506,9 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
                 ret = HAL_RET_INVALID_OP;
                 goto end;
             }
+  
+            if (mcast_info_.proxy_mcast_ptr)
+                attrs.is_proxy_mcast = 1;
 
             attrs.mcast_ptr = mcast_info_.mcast_ptr ? mcast_info_.mcast_ptr :
                                                       mcast_info_.proxy_mcast_ptr;
@@ -434,11 +518,7 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
     if (valid_.ingress_info) {
         if (ingress_info_.expected_sif) {
             attrs.expected_src_lif_en = 1;
-            hal::pd::pd_if_get_hw_lif_id_args_t args;
-            args.pi_if = ingress_info_.expected_sif;
-            attrs.expected_src_lif = args.hw_lif_id; 
-            // attrs.expected_src_lif = hal::pd::if_get_hw_lif_id(ingress_info_.expected_sif);
-            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, (void *)&args);
+            attrs.expected_src_lif = ingress_info_.hw_lif_id;
         }
     }
 
@@ -455,6 +535,11 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
     }
 
     if (valid_.mirror_info) {
+        if (mirror_info_.proxy_ing_mirror_session)
+            config.is_ing_proxy_mirror = 1;
+        if (mirror_info_.proxy_egr_mirror_session)
+            config.is_eg_proxy_mirror = 1;
+
         config.ing_mirror_session = mirror_info_.ing_mirror_session |
                                     mirror_info_.proxy_ing_mirror_session;
         config.eg_mirror_session = mirror_info_.egr_mirror_session |
@@ -534,7 +619,52 @@ hal_ret_t flow_t::merge_flow(const flow_t &flow)
 
 void flow_t::from_config(const hal::flow_cfg_t &flow_cfg, const hal::flow_pgm_attrs_t  &attrs)
 {
+    header_update_t *entry;
+
     key_ = flow_cfg.key;
+
+    is_proxy_enabled_ = attrs.is_proxy_en;
+
+    action_ = (session::FlowAction)flow_cfg.action;
+    
+    if (attrs.mcast_en) {
+        if (attrs.is_proxy_mcast)
+            mcast_info_.proxy_mcast_ptr = attrs.mcast_ptr;
+        else
+            mcast_info_.mcast_ptr = attrs.mcast_ptr;
+        mcast_info_.mcast_en = attrs.mcast_en;
+    }
+
+    if (attrs.expected_src_lif_en) {
+        ingress_info_.hw_lif_id = attrs.expected_src_lif;
+    }
+    
+    if (attrs.qos_class_en) {
+        qos_info_.qos_class_en = attrs.qos_class_en;
+        qos_info_.qos_class_id = attrs.qos_class_id;
+    }
+
+    if (attrs.lport || attrs.qid_en || attrs.qtype || attrs.qid) {
+        fwding_.lport = attrs.lport;
+        fwding_.qid_en = attrs.qid_en;
+        fwding_.qtype = attrs.qtype;
+        fwding_.qid = attrs.qid;
+    }
+
+    if (flow_cfg.is_ing_proxy_mirror)
+        mirror_info_.proxy_ing_mirror_session = flow_cfg.ing_mirror_session;
+    else
+        mirror_info_.ing_mirror_session = flow_cfg.ing_mirror_session;
+
+    if (flow_cfg.is_eg_proxy_mirror)
+        mirror_info_.proxy_egr_mirror_session = flow_cfg.eg_mirror_session;
+    else
+        mirror_info_.egr_mirror_session = flow_cfg.eg_mirror_session;
+
+    // Header rewrite
+    entry = &header_updates_[num_header_updates_++];
+    entry->type = HEADER_REWRITE;
+    get_rewrite_config(flow_cfg, attrs, &entry->header_rewrite);
 }
 
 } // namespace fte

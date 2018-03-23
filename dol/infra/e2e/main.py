@@ -54,8 +54,8 @@ def Stop():
     EpMgr.TearDownEndpoints()
     __stop_hntap()
 
-def RunCommand(ep_name, cmd, background=False):
-    return EpMgr.Run(ep_name, cmd, background=background)
+def RunCommand(ep_name, cmd, background=False, timeout=None):
+    return EpMgr.Run(ep_name, cmd, background=background, timeout=timeout)
 
 def CleanUp(ep_name):
     return EpMgr.CleanUp(ep_name)

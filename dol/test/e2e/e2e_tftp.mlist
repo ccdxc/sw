@@ -5,7 +5,7 @@ feature:
     package  : test.e2e.tftp
     module   : tftp
     runorder : 0
-    enable   : False
+    enable   : True
     ignore   : False
     rtl      : False
     args     :
@@ -20,24 +20,4 @@ modules:
                     max  : 1
               dst_endpoints : 
                     type : filter://remote=True
-                    max  : 1
-    - module:
-        name    : TFTP_REMOTE_LOCAL
-        spec    : tftp.testspec
-        selectors :
-              src_endpoints :
-                    type : filter://remote=True
-                    max  : 1
-              dst_endpoints : 
-                    type : filter://remote=False
-                    max  : 1                    
-    - module:
-        name    : TFTP_LOCAL_LOCAL
-        spec    : tftp.testspec
-        selectors :
-              src_endpoints :
-                    type : filter://remote=False
-                    max  : 1
-              dst_endpoints : 
-                    type : filter://remote=False
                     max  : 1

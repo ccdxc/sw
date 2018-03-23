@@ -289,9 +289,11 @@ sfw_exec(fte::ctx_t& ctx)
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
 
     // ALG Wild card entry table lookup. 
-    expected_flow_t *expected_flow = lookup_expected_flow(ctx.key());
-    if (expected_flow) {
-        ret = expected_flow->handler(ctx, expected_flow);
+    if (!ctx.existing_session() && ctx.role() == hal::FLOW_ROLE_INITIATOR) {
+        expected_flow_t *expected_flow = lookup_expected_flow(ctx.key());
+        if (expected_flow) {
+            ret = expected_flow->handler(ctx, expected_flow);
+        }
     }
     // reset the feature name back to sfw
     // (expected_flow_handler might have changed the name)

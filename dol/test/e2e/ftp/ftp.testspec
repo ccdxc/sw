@@ -2,7 +2,7 @@
 type: ref://factory/templates/id=E2E_TESTCASE
 selectors:
     root            : ref://store/templates/id=E2E
-    tenant          : filter://overlay=VLAN,type=TENANT
+    tenant          : filter://type=TENANT
     segment         : filter://any
     src_endpoints :
          type    : filter://remote=True
@@ -17,11 +17,14 @@ trigger:
             endpoint    : ref://testcase/config/src_endpoints/0
             cmd         : python3
             background  : True
+            delay       : 120
             args        :
                 - arg   : callback://e2e/ftp/GetPythonArgs
         - command:
             endpoint    : ref://testcase/config/dst_endpoints/0
             cmd         : wget
+            delay       : 120
+            timeout     : 3600000
             args        :
                 - arg   : callback://e2e/ftp/GetWgetArgs
 expect:

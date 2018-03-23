@@ -22,6 +22,7 @@ trigger:
         - command:
             endpoint    : ref://testcase/config/dst_endpoints/0
             cmd         : python
+            timeout     : 3600000
             args        :
                 - arg   : callback://e2e/tftp/GetDstPythonArgs
 expect:

@@ -97,7 +97,7 @@ class EndpointManager(object):
                 raise ex
 
     def Run(self, ep_name, cmd, timeout=None, background=False):
-        print ("Running Command on EP : %s , command : %s " % (ep_name, cmd))
+        print ("Running Command on EP : %s , command : %s, timeout : %s" % (ep_name, cmd, str(timeout)))
         try:
             return self._ep_map[ep_name].Run(ep_name, cmd, timeout, background)
         except Exception as ex:

@@ -101,7 +101,6 @@ static int __parse_port(const char *data, int start, uint32_t dlen,
             if (tmp_port == 0)
                 break;
             *port = tmp_port;
-            HAL_TRACE_DEBUG("__parse_port: {}", tmp_port);
             return i + 1;
         } else if (data[i] >= '0' && data[i] <= '9') {
             tmp_port = tmp_port*10 + data[i] - '0';
@@ -122,7 +121,6 @@ static int __parse_ipv6(const char *src, uint32_t dlen,
     const char *end;
     int ret = in6_pton(src, 
                 min_t(uint32_t, dlen, 0xffff), dst, term, &end);
-    HAL_TRACE_DEBUG("Ret: {}", ret);
     if (ret > 0)
         return (int)(end - src);
 
@@ -138,7 +136,6 @@ static int __parse_ipv4(const char *data, uint32_t dlen, u_int32_t array[],
 
     memset(array, 0, sizeof(array[0])*array_size);
 
-    HAL_TRACE_DEBUG("Dlen: {}", dlen);
     /* Keep data pointing at next char. */
     for (i = 0, len = 0; len < dlen && i < array_size; len++, data++) {
         if (*data >= '0' && *data <= '9') {
@@ -216,7 +213,6 @@ static int __parse_eprt_cmd(const char *data, uint32_t dlen,
         return 0;
     }
 
-    HAL_TRACE_DEBUG("EPRT: Got {}{}{}", delim, data[1], delim);
 
     if (data[1] == 1) {
         u_int32_t array[4];
@@ -238,7 +234,6 @@ static int __parse_eprt_cmd(const char *data, uint32_t dlen,
         return 0;
     }
 
-    HAL_TRACE_DEBUG("EPRT: Got IP address!");
 
     /* Start offset includes initial "|1|", and trailing delimiter */
     ret = __parse_port(data, 3 + length + 1, dlen, delim, &ftp_info->dport);
@@ -269,7 +264,6 @@ static int __parse_pasv_response(const char *data, uint32_t dlen,
 
     *offset += i;
 
-    HAL_TRACE_DEBUG("Offset to parse: {} data: {}", *offset, (data+i));
     ret = __parse_port_cmd(data + i, dlen - i, 0, offset, ftp_info);
     if (!ret) {
         incr_parse_error(ftp_info);
@@ -439,7 +433,6 @@ static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
     if (!isNullip(info->dip, (info->isIPv6)?IP_PROTO_IPV6:IP_PROTO_IPV4)) {
         key.dip = info->dip;
     }
-    HAL_TRACE_DEBUG("Dip: {} Dport: {}", key.dip.v4_addr, key.dport);
     g_ftp_state->alloc_and_insert_exp_flow(l4_sess->app_session, key, &exp_flow);
     exp_flow->entry.handler = expected_flow_handler;
     exp_flow->isCtrl = FALSE;
@@ -466,7 +459,6 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
     ftp_state_t      prev_state;
     l4_alg_status_t *exp_flow = NULL;
 
-    HAL_TRACE_DEBUG("In __parse_ftp_rsp");
 
     info->callback = __parse_ftp_req;
     prev_state = info->state; 
@@ -546,8 +538,6 @@ void __parse_ftp_req(fte::ctx_t &ctx, ftp_info_t *info) {
     uint8_t         *pkt = ctx.pkt();
     ftp_search_t     cmd;
     int              found = 0;
-
-    HAL_TRACE_DEBUG("In __parse_ftp_req");
 
     /*
      * Compute total datalen

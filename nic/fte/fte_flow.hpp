@@ -2,6 +2,7 @@
 
 #include "fte_ctx.hpp"
 #include "nic/hal/src/nw/session.hpp"
+#include "nic/include/pd_api.hpp"
 
 namespace fte {
 
@@ -32,6 +33,9 @@ public:
     };
 
     hal_ret_t set_action(session::FlowAction action) {
+        if (action_ == action) {
+            return HAL_RET_ENTRY_EXISTS;
+        }
         action_ = action;
         valid_.action = true;
         return HAL_RET_OK;
@@ -56,6 +60,11 @@ public:
     };
 
     hal_ret_t set_fwding(const fwding_info_t& fwding) {
+        HAL_TRACE_DEBUG("Existing: {} updated: {}", fwding_, fwding);
+        if (!memcmp(&fwding_, &fwding, sizeof(fwding_info_t))) {
+            return HAL_RET_ENTRY_EXISTS;
+        }
+
         fwding_ = fwding;
         valid_.fwding = true;
         return HAL_RET_OK;
@@ -76,6 +85,10 @@ public:
 
         // Merge the argument mcast_info; the final evaluation of which
         // mcast ptr is ultimately applicable will be done in fte::to_config()
+
+        if (!memcmp(&mcast_info, &mcast_info_, sizeof(mcast_info_t))) {
+            return HAL_RET_ENTRY_EXISTS;
+        }
         
         if (mcast_info.mcast_en) {
             if (mcast_info.mcast_ptr) {
@@ -105,8 +118,18 @@ public:
     }
 
     hal_ret_t set_ingress_info(const ingress_info_t& ingress_info) {
+        hal::pd::pd_if_get_hw_lif_id_args_t args;
+
+        args.pi_if = ingress_info.expected_sif;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, (void *)&args);
+        if (args.hw_lif_id == ingress_info_.hw_lif_id) {
+            return HAL_RET_ENTRY_EXISTS;
+        }
+
         ingress_info_ = ingress_info;
         valid_.ingress_info = true;
+        ingress_info_.hw_lif_id = args.hw_lif_id;
+
         return HAL_RET_OK;
     }
     const ingress_info_t& ingress_info() const {
@@ -117,6 +140,10 @@ public:
     }
 
     hal_ret_t merge_mirror_info(const mirror_info_t& mirror_info) {
+        if (!memcmp(&mirror_info, &mirror_info_, sizeof(mirror_info_t))) {
+            return HAL_RET_ENTRY_EXISTS;
+        }
+
         if (mirror_info.mirror_en) {
             mirror_info_.egr_mirror_session |= mirror_info.egr_mirror_session;
             mirror_info_.ing_mirror_session |= mirror_info.ing_mirror_session;
@@ -139,6 +166,10 @@ public:
     }
 
     hal_ret_t set_qos_info(const qos_info_t& qos_info) {
+        if (!memcmp(&qos_info, &qos_info_, sizeof(qos_info_t))) {
+            return HAL_RET_ENTRY_EXISTS;
+        }
+
         qos_info_ = qos_info;
         valid_.qos_info = true;
         return HAL_RET_OK;
@@ -150,7 +181,9 @@ public:
         return valid_.qos_info;
     }
 
-
+    bool is_proxy_enabled() const {
+        return is_proxy_enabled_;
+    }
 
 private:
     // Max header updates we track per flow
@@ -181,6 +214,7 @@ private:
 
     uint8_t                   num_header_updates_; // no.of valid updates
     header_update_t           header_updates_[MAX_HEADER_UPDATES];
+    bool                      is_proxy_enabled_;     // used only on existing sessions
 
     static hal_ret_t merge_header_rewrite(header_rewrite_info_t &dst,
                                           const  header_rewrite_info_t &src);
@@ -194,6 +228,10 @@ private:
                                           const header_rewrite_info_t &rewrite) const;
     hal_ret_t build_push_header_config(hal::flow_pgm_attrs_t &attrs,
                                        const header_push_info_t &header) const;
+    
+    hal_ret_t get_rewrite_config(const hal::flow_cfg_t &flow_cfg, 
+                                 const hal::flow_pgm_attrs_t  &attrs,
+                                 header_rewrite_info_t *rewrite);
 };
 
 } // namespace fte

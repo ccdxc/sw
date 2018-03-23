@@ -197,8 +197,6 @@ fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx) {
     if (alg_state != NULL) 
         l4_sess = (l4_alg_status_t *)alg_status(alg_state);
 
-    HAL_TRACE_DEBUG("Firewall Info ALG Proto: {} l4_sess {:p}", 
-                    sfw_info->alg_proto, (void *)l4_sess);
     if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC ||
         (l4_sess && l4_sess->alg == nwsec::APP_SVC_MSFT_RPC)) {
         ret = alg_msrpc_exec(ctx, sfw_info, l4_sess); 

@@ -265,6 +265,7 @@ std::ostream& operator<<(std::ostream& os, const mcast_info_t& val);
 typedef struct ingress_info_s {
     // Expected source interface for host pinning mode
     hal::if_t *expected_sif;
+    uint32_t   hw_lif_id;
 } ingress_info_t;
 
 std::ostream& operator<<(std::ostream& os, const ingress_info_t& val);
@@ -609,6 +610,7 @@ private:
     hal_handle_t          sep_handle_;
     hal_handle_t          dep_handle_;
     pipeline_event_t      event_;
+    bool                  update_session_;
 
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
