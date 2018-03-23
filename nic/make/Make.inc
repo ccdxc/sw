@@ -17,6 +17,7 @@ ifeq ($(c),1)
 	GCOV = --collect_code_coverage --copt=--coverage --copt=-DCOVERAGE --cxxopt=--coverage --cxxopt=-fprofile-arcs --cxxopt=-ftest-coverage --linkopt=-coverage --linkopt=-lgcov --action_env COVFILE=$(COVFILE) --spawn_strategy=standalone 
 else
   GCOV = 
+  c    = 0
 endif
 
 CAPAS_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capas

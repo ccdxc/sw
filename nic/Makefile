@@ -223,7 +223,10 @@ post-make:
 	find obj -name '*.cano'  -type f  | xargs -i mv {} obj/cano 2>/dev/null || :
 
 halctl:
-	$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/cmd/halctl
+	#Disable halctl for coverage
+    ifeq ($(c),0)
+		$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/cmd/halctl
+    endif
 
 pd: pd_iris pd_stub
 
