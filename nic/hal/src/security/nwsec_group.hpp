@@ -588,7 +588,7 @@ typedef struct nwsec_policy_s {
     nwsec_rule_t   *dense_rules[MAX_RULES]; // Dense rules will be linearly arranged hashes with pointer to the rules.
     ht             *rules_ht[MAX_VERSION];
     hal_handle_t    hal_handle;
-    acl_ctx_t      *acl_ctx;
+    const acl_ctx_t      *acl_ctx;
     ht_ctxt_t       ht_ctxt;
 } nwsec_policy_t;
 
@@ -604,6 +604,15 @@ nwsec_policy_alloc(void)
         return NULL;
     }
     return policy;
+}
+
+static inline const char *nwsec_acl_ctx_name(vrf_id_t vrf_id)
+{
+    thread_local static char name[ACL_NAMESIZE];
+
+    std::snprintf(name, sizeof(name), "nwsec-ipv4-rules:%lu", vrf_id);
+
+    return name;
 }
 
 // Initialize a nwsec_policy instance
@@ -623,7 +632,6 @@ nwsec_policy_init (nwsec_policy_t *policy)
         HAL_ASSERT_RETURN((policy->rules_ht != NULL), NULL);
     }
     policy->ht_ctxt.reset();
-    policy->acl_ctx = (acl::acl_ctx_t *)lib_acl_create(&ip_acl_config);
 
     return policy;
 }

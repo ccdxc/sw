@@ -5,6 +5,8 @@
 namespace acl {
 
 using sdk::sdk_spinlock_t;
+using sdk::lib::ht;
+using sdk::lib::ht_ctxt_t;
 
 //------------------------------------------------------------------------
 // lock to protect ctx list
@@ -12,29 +14,32 @@ using sdk::sdk_spinlock_t;
 static sdk_spinlock_t g_ctx_lock;
 static int g_ctx_lock_init = SDK_SPINLOCK_INIT(&g_ctx_lock, PTHREAD_PROCESS_PRIVATE);
 
-static const acl_ctx_t *g_ctx;  // single instance for now
+static void *ctx_get_key_func_(void *entry)
+{
+    return (void *)((acl_ctx_t *)entry)->name();
+}
+
+static uint32_t ctx_compute_hash_func_(void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, strlen((char *)key)) % ht_size;
+}
+
+static bool  ctx_compare_key_func_(void *key1, void *key2) {
+    return strcmp((char *)key1, (char *)key2) == 0;
+}
+
+static ht *g_ctx_ht = ht::factory(16, ctx_get_key_func_,
+                                  ctx_compute_hash_func_,
+                                  ctx_compare_key_func_,
+                                  false /* not thread_safe */);
 
 //------------------------------------------------------------------------
 // Creates a new ACL context.
-// Inserts the ctx into global list, which can be looked up
-// by other threads using acl_get(name)
 //------------------------------------------------------------------------
 const acl_ctx_t *
-lib_acl_create(const acl_config_t *cfg)
+lib_acl_create(const char *name, const acl_config_t *cfg)
 {
-    const acl_ctx_t *ctx = acl_ctx_t::create(cfg);
-
-    // TODO(goli) - single instance for now
-    SDK_ASSERT_RETURN(g_ctx == NULL, NULL);
-
-    SDK_ASSERT_RETURN((SDK_SPINLOCK_LOCK(&g_ctx_lock) == 0), NULL);
-
-    // store the instance in global list
-    g_ctx = ctx->clone();
-
-    SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&g_ctx_lock) == 0), NULL);
-
-    return ctx;
+    return acl_ctx_t::create(name, cfg);
 }
 
 //------------------------------------------------------------------------
@@ -47,8 +52,9 @@ acl_get(const char *name)
     const acl_ctx_t *ctx = NULL;
 
     SDK_ASSERT_RETURN((SDK_SPINLOCK_LOCK(&g_ctx_lock) == 0), NULL);
-    if (g_ctx) {
-        ctx = g_ctx->clone();
+    ctx = (const acl_ctx_t *)g_ctx_ht->lookup((void *)name);
+    if (ctx) {
+        ctx = ctx->clone();
     }
     SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&g_ctx_lock) == 0), NULL);
 
@@ -72,9 +78,9 @@ lib_acl_delete(const acl_ctx_t *ctx)
 {
     // remove from global list and deref
     SDK_ASSERT(SDK_SPINLOCK_LOCK(&g_ctx_lock) == 0);
-    if (g_ctx) {
-        g_ctx->deref();
-        g_ctx = NULL;
+    const acl_ctx_t *gctx = (const acl_ctx_t *)g_ctx_ht->remove((void *)ctx->name());
+    if (gctx) {
+        gctx->deref();
     }
     SDK_ASSERT(SDK_SPINLOCK_UNLOCK(&g_ctx_lock) == 0);
 
@@ -88,12 +94,18 @@ lib_acl_delete(const acl_ctx_t *ctx)
 hal_ret_t
 acl_commit(const acl_ctx_t *ctx, acl_update_cb_t cb)
 {
+    const acl_ctx_t *old;
+
     // Update the global list
     SDK_ASSERT_RETURN((SDK_SPINLOCK_LOCK(&g_ctx_lock) == 0), HAL_RET_INVALID_OP);
-    if (g_ctx) {
-        g_ctx->deref();
+    ctx = ctx->clone();
+
+    old = (const acl_ctx_t *)g_ctx_ht->remove((void *)ctx->name());
+    if (old) {
+        old->deref();
     }
-    g_ctx = ctx->clone();
+
+    g_ctx_ht->insert((void *)ctx, ctx->ht_ctxt());
     SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&g_ctx_lock) == 0), HAL_RET_INVALID_OP);
 
     return HAL_RET_OK;

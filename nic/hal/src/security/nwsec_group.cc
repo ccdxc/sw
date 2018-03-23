@@ -35,7 +35,6 @@ using nwsec::ALGName;
 
 // Globals used in nwsec
 acl::acl_config_t ip_acl_config = {
-    name: "ip.rules",
     num_categories: 1,
     num_fields: NUM_FIELDS,
     defs:  { ACL_FLD_DEF(ACL_FIELD_TYPE_EXACT, ipv4_tuple, proto),
@@ -927,7 +926,7 @@ nwsec_policy_compute_hash_func (void *key, uint32_t ht_size)
 
 
 hal_ret_t
-rule_lib_add(acl_ctx_t **acl_ctx, ipv4_rule_t *rule)
+rule_lib_add(const acl_ctx_t **acl_ctx, ipv4_rule_t *rule)
 {
     hal_ret_t   ret = HAL_RET_OK;
     ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
@@ -969,7 +968,7 @@ rule_lib_alloc()
 
 
 hal_ret_t
-security_rule_commit(acl_ctx_t *acl_ctx)
+security_rule_commit(const acl_ctx_t *acl_ctx)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -983,7 +982,7 @@ security_rule_commit(acl_ctx_t *acl_ctx)
 }
 
 hal_ret_t
-security_rule_add(acl_ctx_t **acl_ctx, nwsec_rule_t *nwsec_rule)
+security_rule_add(const acl_ctx_t **acl_ctx, nwsec_rule_t *nwsec_rule)
 {
     ipv4_rule_t  *rule;
     hal_ret_t    ret = HAL_RET_OK;
@@ -1232,7 +1231,7 @@ security_policy_cleanup_ruledb(nwsec_policy_t *policy)
 }
 
 hal_ret_t
-security_policy_commit_to_ruledb(acl_ctx_t *acl_ctx)
+security_policy_commit_to_ruledb(const acl_ctx_t *acl_ctx)
 {
     return security_rule_commit(acl_ctx);
 }
@@ -1308,6 +1307,11 @@ nwsec_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     policy = (nwsec_policy_t *) dhl_entry->obj;
     hal_handle = dhl_entry->handle;
+
+    if (!policy->acl_ctx) {
+        policy->acl_ctx = lib_acl_create(nwsec_acl_ctx_name(policy->key.vrf_id_or_handle),
+                                         &ip_acl_config);
+    }
 
     HAL_TRACE_DEBUG("policy handle {}", hal_handle);
     ret = add_nwsec_policy_to_db(policy);

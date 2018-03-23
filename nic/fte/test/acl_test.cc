@@ -35,7 +35,6 @@ enum {
             offsetof(struct_name, fld_name) }
 
 static acl_config_t acl_cfg = {
- name: "test.rules",
  num_categories: 1,
  num_fields: FLD_NUM_FIELDS,
  defs: {
@@ -82,7 +81,6 @@ enum {
 };
 
 static acl_config_t acl_flow_cfg = {
- name: "flow.rules",
  num_categories: 1,
  num_fields: FLD_MAX_FLDS,
  defs: {
@@ -139,16 +137,18 @@ protected:
 
 
 TEST_F(acl_test, acl_create) {
-    const acl_ctx_t *ctx = lib_acl_create(&acl_cfg);
+    const acl_ctx_t *ctx = lib_acl_create("test.rules", &acl_cfg);
+
+    acl_commit(ctx);
 
     acl_deref(ctx);
 
-    ctx = acl_get(acl_cfg.name);
+    ctx = acl_get("test.rules");
     EXPECT_NE(ctx, nullptr);
 
     lib_acl_delete(ctx);
 
-    ctx = acl_get(acl_cfg.name);
+    ctx = acl_get("test.rules");
     EXPECT_EQ(ctx, nullptr);
 }
 
@@ -193,7 +193,7 @@ TEST_F(acl_test, acl_create) {
     CHECK_INVALID_RULE(ctx, fld, invalid) 
 
 TEST_F(acl_test, acl_add_rule) {
-    const acl_ctx_t *ctx = lib_acl_create(&acl_cfg);
+    const acl_ctx_t *ctx = lib_acl_create("test.rules", &acl_cfg);
 
     ADD_RULE(ctx, 0, "exact8", FLD_EXACT8, u8, 0xA0, 0xF0);
     ADD_RULE(ctx, 0, "exact16", FLD_EXACT16, u16, 0xAB00, 0xFF00);
@@ -243,7 +243,7 @@ TEST_F(acl_test, acl_add_rule) {
 }
 
 TEST_F(acl_test, acl_add_muti_field_rule) {
-    const acl_ctx_t *ctx = lib_acl_create(&acl_cfg);
+    const acl_ctx_t *ctx = lib_acl_create("test.rules", &acl_cfg);
 
     test_rule_t *rule;
 
@@ -288,7 +288,7 @@ TEST_F(acl_test, acl_add_muti_field_rule) {
 }
 
 TEST_F(acl_test, acl_rule_priority) {
-    const acl_ctx_t *ctx = lib_acl_create(&acl_cfg);
+    const acl_ctx_t *ctx = lib_acl_create("test.rules", &acl_cfg);
 
     ADD_RULE(ctx, 0, "rule0", FLD_PREFIX32, u32, 0xAABBCCDD, 32);
     ADD_RULE(ctx, 1, "rule1", FLD_PREFIX32, u32, 0xAABBCCDD, 24);
@@ -318,7 +318,7 @@ TEST_F(acl_test, acl_rule_priority) {
 }
 
 TEST_F(acl_test, acl_rule_update) {
-    const acl_ctx_t *ctx = lib_acl_create(&acl_cfg);
+    const acl_ctx_t *ctx = lib_acl_create("test.rules", &acl_cfg);
 
     ADD_RULE(ctx, 0, "rule0", FLD_PREFIX32, u32, 0xAABBCCDD, 32);
     ADD_RULE(ctx, 1, "rule1", FLD_PREFIX32, u32, 0xAABBCCDD, 24);
@@ -333,7 +333,7 @@ TEST_F(acl_test, acl_rule_update) {
 
     EXPECT_EQ(acl_commit(ctx), HAL_RET_OK);
 
-    const acl_ctx_t *old = acl_get(acl_cfg.name);
+    const acl_ctx_t *old = acl_get("test.rules");
 
     DEL_RULE(ctx, 1, "rule1", FLD_PREFIX32, u32, 0xAABBCCDD, 24);
     ADD_RULE(ctx, 1, "rule1", FLD_PREFIX32, u32, 0xAABBCC88, 32);
@@ -486,7 +486,7 @@ TEST_F(acl_test, rule_random)
     gen_rules(10 * 1000, 100, rules, keys);
 
     // insert all entries
-    ctx = lib_acl_create(&acl_flow_cfg);
+    ctx = lib_acl_create("flow.rules", &acl_flow_cfg);
     for (const auto rule: rules) {
         EXPECT_EQ(acl_add_rule(&ctx, acl_rule_clone((const acl_rule_t *)rule)), HAL_RET_OK);
     }
@@ -619,7 +619,7 @@ TEST_F(acl_test, rule_benchmark)
     gen_rules(num_rules, 100, rules, keys);
 
     // insert all entries
-    ctx = lib_acl_create(&acl_flow_cfg);
+    ctx = lib_acl_create("flow.rules", &acl_flow_cfg);
     timeit("insert", rules.size(), [&]() {
             for (const auto rule: rules) {
                 EXPECT_EQ(acl_add_rule(&ctx, acl_rule_clone((const acl_rule_t *)rule)), HAL_RET_OK);

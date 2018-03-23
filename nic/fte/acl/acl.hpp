@@ -101,7 +101,6 @@ static inline void acl_rule_deref(const acl_rule_t *rule) {
  * Parameters used when creating the ACL context.
  */
 struct acl_config_t {
-	const char *name;       /**< Name of the ACL context. */
     uint8_t num_categories; /**< Number of categories to build with. */
 	uint8_t num_fields;     /**< Number of field definitions. */
 	struct acl_field_def_t defs[ACL_MAX_FIELDS];
@@ -123,7 +122,7 @@ class acl_ctx_t;
  *   acl_deref()/acl_delete()
  */
 const acl_ctx_t *
-lib_acl_create(const acl_config_t *cfg);
+lib_acl_create(const char *name, const acl_config_t *cfg);
 
 /**
  * Remove the ctx from the global list and release the reference.

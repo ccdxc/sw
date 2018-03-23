@@ -141,13 +141,9 @@ net_sfw_check_security_policy(fte::ctx_t &ctx, net_sfw_match_result_t *match_rsl
     const hal::ipv4_rule_t *rule = NULL;
     const acl::acl_ctx_t *acl_ctx = NULL;
 
-    char name[ACL_NAMESIZE];
-
     HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy acl rule lookup for key={}", ctx.key());
 
-    std::snprintf(name, sizeof(name), "sfw-rules:%lu", ctx.key().vrf_id);
-
-    acl_ctx = acl::acl_get(name);
+    acl_ctx = acl::acl_get(nwsec_acl_ctx_name(ctx.key().vrf_id));
     if (acl_ctx == NULL) {
         HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy failed to lookup acl_ctx");
         return HAL_RET_FTE_RULE_NO_MATCH;

@@ -328,12 +328,14 @@ acl_rule_compare(const acl_rule_t *rule,
 slab *acl_ctx_t::ctx_slab_ = slab::factory("acl_ctx", hal::HAL_SLAB_ACL_CTX,
                                            sizeof(acl_ctx_t), 8, true, true, true);
 acl_ctx_t *
-acl_ctx_t::factory(const acl_config_t *cfg)
+acl_ctx_t::factory(const char *name, const acl_config_t *cfg)
 {
     acl_ctx_t *ctx = (acl_ctx_t *)ctx_slab_->alloc();
 
     // TODO (goli) validate config
+    std::strncpy(ctx->name_, name, sizeof(ctx->name_));
     ctx->cfg_ = *cfg;
+    ctx->ht_ctxt_.reset();
 
     ref_init(&ctx->ref_count_, [](const ref_t *ref) {
             acl_ctx_t *ctx = container_of(ref, acl_ctx_t, ref_count_);
@@ -350,9 +352,9 @@ acl_ctx_t::factory(const acl_config_t *cfg)
 
 
 const acl_ctx_t *
-acl_ctx_t::create(const acl_config_t *cfg)
+acl_ctx_t::create(const char *name, const acl_config_t *cfg)
 {
-    acl_ctx_t *ctx = acl_ctx_t::factory(cfg);
+    acl_ctx_t *ctx = acl_ctx_t::factory(name, cfg);
 
     // create sub-tables
     for (uint8_t fid = 0; fid < ctx->cfg_.num_fields; fid++) {
@@ -370,7 +372,7 @@ acl_ctx_t::copy() const
         return (acl_ctx_t *)this;
     }
 
-    acl_ctx_t *ctx = acl_ctx_t::factory(&cfg_);
+    acl_ctx_t *ctx = acl_ctx_t::factory(name_, &cfg_);
 
     // clone sub-tables
     for (uint8_t fid = 0; fid < cfg_.num_fields; fid++) {
