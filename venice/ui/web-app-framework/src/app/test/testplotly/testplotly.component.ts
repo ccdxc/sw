@@ -39,6 +39,17 @@ export class TestplotlyComponent implements OnInit {
   public plotlyDataToImageWidget_width = 200;
   public plotlyDataToImageWidget_height = 100;
   public plotlyDataToImageWidget_fillcolor = '#abc000';
+  public plotlyFlex_fillcolor1 = '#ff0000';
+  public plotlyFlex_fillcolor2 = '#00ff00';
+  public plotlyFlex_fillcolor3 = '#0000ff';
+  public plotlyFlex_fillcolor4 = '#abc000';
+  public plotlyFlex_fillcolor5 = '#000abc';
+
+  public plotlyDataToImageWidgetOption: any;
+  public plotlyLayoutToImageWidgetOptions: any;
+  public plotlyOptionsToImageWidgetOptions: any;
+
+  public layout_setup: any;
 
   constructor() { }
 
@@ -56,6 +67,7 @@ export class TestplotlyComponent implements OnInit {
     this._testPlotlyFrame();
     this._testPlotlyToImage();
     this._testPlotlyToImageWidget();
+    this._testPlotlyToImageWidgetOptions();
   }
 
   private _testPlotlyChart() {
@@ -74,7 +86,65 @@ export class TestplotlyComponent implements OnInit {
 
     this.plotlyOptions = defaultPlotlyConfiguration;
   }
-
+  _testPlotlyToImageWidgetOptions() {
+    this.plotlyDataToImageWidgetOption = [
+      //passed in graph data
+      {
+        x: [1, 2, 5, 6],
+        y: [2, 5, 3, 7],
+        type: 'scatter',
+        mode: 'lines',
+        line: {
+          shape: 'spline',
+          // shape: 'linear'
+          color: '#7db1ea'
+        }
+      },
+      //second trace to add marker on last point
+      {
+        x: [6],
+        y: [7],
+        type: 'scatter',
+        mode: 'marker',
+        line: {
+          color: '#7db1ea'
+        }
+      }
+    ];
+    this.plotlyLayoutToImageWidgetOptions = {
+      showlegend: false,
+      paper_bgcolor:'rgba(0,0,0,0)',
+      plot_bgcolor:'rgba(0,0,0,0)',
+      autosize: true,
+      margin: {
+        t: 7,
+        l: 4.5,
+        r: 13.5,
+        b: 9.5
+      },
+      yaxis: {
+        autorange: true,
+        showgrid: false,
+        zeroline: false,
+        showline: false,
+        autotick: true,
+        ticks: '',
+        showticklabels: false
+      },
+      xaxis: {
+        autorange: true,
+        showgrid: false,
+        zeroline: false,
+        showline: false,
+        autotick: true,
+        ticks: '',
+        showticklabels: false
+      }
+    };
+    this.plotlyOptionsToImageWidgetOptions = {
+      displayModeBar: false
+    };
+  }
  _testPlotlyToImageWidget() {
     this.plotlyDataToImageWidget = {
         x: [1, 2, 5, 6],
@@ -322,8 +392,8 @@ export class TestplotlyComponent implements OnInit {
       x: mockPlotlyX,
       y: mockPlotlyY
      };
-     console.log ("x", mockPlotlyX);
-     console.log ("y", mockPlotlyY);
+     //console.log ("x", mockPlotlyX);
+     //console.log ("y", mockPlotlyY);
      //*/
   }
 

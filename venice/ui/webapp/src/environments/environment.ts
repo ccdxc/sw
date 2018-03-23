@@ -13,9 +13,14 @@ export const environment = {
   logger_localstorage: false,
   logger_webapi: false,
 
+  mockdata: {
+    alert_list_total: 20,
+    alert_table_total: 120,
+  },
+
 
   // for example: http://192.168.30.11:9000/v1/cmd/nodes
-  server_url: 'http://192.168.30.11',
+  server_url: 'http://192.168.30.10',
   server_port: '9000',
   version_api_string: '/v1/',
   venice_nodes: 'cmd/nodes',

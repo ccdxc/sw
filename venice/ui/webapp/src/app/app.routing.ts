@@ -1,6 +1,8 @@
 import { ModuleWithProviders } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { SettingsComponent} from './components/settings';
+import { SettingsComponent } from './components/settings';
+import { DashboardComponent } from './components/dashboard';
+
 
 /**
  * This is the application route configuration file.
@@ -9,9 +11,9 @@ import { SettingsComponent} from './components/settings';
 
 export const routes: Routes = [
 
-   {
+  {
     path: '',
-    redirectTo: '/login',
+    redirectTo: '/dashboard',
     pathMatch: 'full'
   },
   {
@@ -20,12 +22,16 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadChildren: '@components/dashboard/dashboard.module#DashboardModule'
+    component: DashboardComponent
 
   },
   {
     path: 'workload',
     loadChildren: '@components/workload/workload.module#WorkloadModule'
+  },
+  {
+    path: 'alerttable',
+    loadChildren: '@components/alerttable/alerttable.module#AlerttableModule'
   },
   {
     path: 'settings',

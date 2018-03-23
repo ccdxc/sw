@@ -1,15 +1,14 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/delay';
-import { _throw } from 'rxjs/observable/throw';
 import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/delay';
 
-import { Utility } from '../common/Utility';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
+import { _throw } from 'rxjs/observable/throw';
+
 import { MockDataUtil } from '../common/MockDataUtil';
-import { Eventtypes } from '../enum/eventtypes.enum';
-import { environment } from '../../environments/environment';
+import { Utility } from '../common/Utility';
 import { LogService } from './logging/log.service';
 
 @Injectable()
@@ -105,8 +104,6 @@ export class AbstractService {
     this.logger.clear();
   }
 
-
-
   /**
    * Handle any errors from the API
    */
@@ -141,12 +138,11 @@ export class AbstractService {
 
 
   // TODO:just for development when Venice REST API is not available
-  private _isToUseGET(payload: any): Boolean {
-    return false;
-  }
+  // private _isToUseGET(payload: any): Boolean {
+  //   return false;
+  // }
 
   protected publishAJAX(eventpayload: any) {
-
     const utility = Utility.getInstance();
     utility.publishAJAXStart(eventpayload);
   }
@@ -160,7 +156,7 @@ export class AbstractService {
 
     if (this.isToMockData() ) {
       const method = 'POST';
-      return this.handleOffineAJAX(url, method, eventpayload);
+      return this.handleOfflineAJAX(url, method, eventpayload);
     } else {
       return http.post(url, payload).catch((err: HttpErrorResponse) => {
         return _throw(this.handleError(err));
@@ -181,11 +177,11 @@ export class AbstractService {
    * @param http
    * @param eventpayload
    */
-  protected invokeAJAXGetCall(url: string, http: HttpClient, eventpayload: any): Observable<any> {
+  protected invokeAJAXGetCall(url: string, http: HttpClient, eventpayload: any, forceReal: boolean = false): Observable<any> {
     this.publishAJAX(eventpayload);
-    if (this.isToMockData()) {
+    if (this.isToMockData() && !forceReal) {
       const method = 'GET';
-      return this.handleOffineAJAX(url, method, eventpayload);
+      return this.handleOfflineAJAX(url, method, eventpayload);
     }
     return http.get(url).catch((err: HttpErrorResponse) => {
       return _throw(this.handleError(err));
@@ -198,7 +194,7 @@ export class AbstractService {
    * @param method
    * @param eventpayload
    */
-  protected handleOffineAJAX(url: string, method: string,  eventpayload: any): Observable<any> {
+  protected handleOfflineAJAX(url: string, method: string,  eventpayload: any): Observable<any> {
      const mockedData =  MockDataUtil.getMockedData(url, method, eventpayload);
      const fakeObservable = Observable.create(obs => {
       obs.next(mockedData);
@@ -206,8 +202,6 @@ export class AbstractService {
     }).delay(1000);
     return fakeObservable;
   }
-
-
 
   /**
    * This API  enables one UI logical step to make multiple REST API calls.
@@ -234,7 +228,7 @@ export class AbstractService {
       let obserable: Observable<any>;
       if (this.isToMockData()) {
         const method = methodString;
-        return this.handleOffineAJAX(url, method, eventpayload);
+        return this.handleOfflineAJAX(url, method, eventpayload);
       } else {
           if (methodString === 'GET') {
             obserable = http.get(url, payload);

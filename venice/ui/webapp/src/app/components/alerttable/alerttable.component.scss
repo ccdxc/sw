@@ -1,0 +1,167 @@
+.alerttable-widget {
+  margin: 0px 10px;
+  font-family: "Fira Sans" !important;
+}
+
+/*====== alert table =====*/
+
+.alerttablerecord-icon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 5px;
+  margin-right: 5px;
+  text-align: left;
+  line-height: initial;
+  vertical-align: middle;
+}
+
+.alerttablerecord-icon-critical {
+  background-color: #dd3b09;
+}
+
+.alerttablerecord-icon-warning {
+  background-color: #fcb710;
+}
+
+.alerttablerecord-icon-info {
+  background-color: #6ba0e5;
+}
+
+.alerttablerecord-action-column-div {
+  display: inline-flex;
+}
+
+.alerttablerecord-action-column-icon {
+  margin: auto 5px;
+  padding: 0px;
+  color: #676763;
+}
+
+.ui-state-highlight .alerttablerecord-action-column-icon {
+  color: #fff;
+}
+
+.alerttable-table.ui-widget {
+  font-family: "Roboto" !important;
+  color: #676763;
+  font-size: 12px;
+}
+
+.alerttable-table.ui-datatable thead th {
+  text-align: left;
+}
+
+.alerttable-column-date {
+  width: 15%;
+  max-width: 200px !important;
+}
+
+.ui-state-highlight .alerttablerecord-date-row {
+  color: #fff;
+}
+
+.alerttable-column-name {
+  width: 20%;
+  max-width: 200px !important;
+}
+
+.alerttable-column-action {
+  width: 100px !important;
+}
+
+.alerttable-column-severtiy {
+  width: 100px !important;
+}
+
+.alerttable-header-div {
+  width: 100%;
+  height: 43px;
+  background-color: transparent;
+  color: #676763;
+}
+
+.alerttable-main-menu {
+  display: inherit;
+  vertical-align: middle;
+  padding: 10px 5px;
+  font-size: 12px;
+  font-weight: bold;
+  font-style: normal;
+  font-stretch: condensed;
+}
+
+.alerttable-main-menu-label {
+  font-size: 20px;
+  font-weight: 500;
+  height: 22px;
+  margin-right: 5px;
+}
+
+.alerttable-main-menu-number-front-group-div {
+  float: left;
+  display: inline-flex;
+}
+
+.alerttablerecord-header-button {
+  background-color: #97b8df;
+  color: #fff;
+  font-size: 14px !important;
+  padding: 3px 12px;
+  margin: auto 5px;
+  border-radius: 3px;
+}
+
+.alerttablerecord-header-button-icon {
+  margin-right: 5px;
+}
+
+.alerttable-main-menu-number-back-group-div {
+  float: right;
+  margin-top: 4px;
+}
+
+.alerttable-main-menu-number {
+  height: 30px;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: left;
+  border-radius: 3px;
+  padding: 3px 8px;
+  margin: auto 10px;
+  cursor: pointer;
+  color: #fff;
+}
+
+.alerttable-main-menu-number-total {
+  background-color: #898989;
+}
+
+.alerttable-main-menu-number-critical {
+  background-color: #dd3b09;
+}
+
+.alerttable-main-menu-number-warning {
+  background-color: #fcb710;
+}
+
+.alerttable-main-menu-number-info {
+  background-color: #6ba0e5;
+}
+/*----- alert table -----*/
+
+.alerttable-toolbar-refresh-button {
+  background-color: #97b8df;
+  height: 30px;
+  font-family: Fira Sans;
+  font-size: 16px;
+  font-weight: 500;
+  font-stretch: condensed;
+  text-align: center;
+  color: #ffffff;
+  width: 80px;
+  display: block;
+  padding: 0px 10px;
+}
+

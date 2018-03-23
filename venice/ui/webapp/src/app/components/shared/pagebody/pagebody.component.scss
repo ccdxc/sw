@@ -1,0 +1,27 @@
+.pagebody-container {
+    height:100%;
+    margin: 0px 10px 10px 10px;
+    border: solid 1px;
+}
+
+.pagebody-header {
+    height: 48px;
+    
+}
+
+.pagebody-headercontent {
+    font-family: Fira Sans;
+    font-size: 26px;
+    font-stretch: condensed;
+    text-align: left;
+    margin: auto;
+}
+
+.pagebody-icon {
+    opacity: 0.2;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 30px;
+    height: 30px;
+}

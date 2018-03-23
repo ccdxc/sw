@@ -1,4 +1,4 @@
-import { Eventtypes } from '../enum/eventtypes.enum';
+import { environment } from '../../environments/environment';
 import { Utility } from './Utility';
 
 export class MockDataUtil {
@@ -17,7 +17,7 @@ export class MockDataUtil {
 
   public static getGlobalSearchResult(searched, data): any {
     const suggestions = [];
-    const eLen = 5;
+    // const eLen = 5;
     const hLen = Utility.getRandomInt(10, 25);
     for (let i = 0; i < hLen; i++) {
       const obj = {};
@@ -28,126 +28,56 @@ export class MockDataUtil {
     return suggestions;
   }
 
-  public static getWorkloadItems(): any {
+  public static getWorkloadItems(count): any {
+    const items = [];
+    for (let i = 0; i < count; i++) {
+      const id = 'unique' + i;
+      items.push({
+        'Kind': 'Endpoint',
+        'APIVersion': 'v1',
+        'meta': {
+          'Name': id,
+          'Tenant': 'default',
+          'ResourceVersion': '308',
+          'UUID': '62ee6857-c971-41b1-bf06-089d45327b85',
+          'Labels': {
+            'label-1': 'label-1-value',
+            'label-2': 'label-2-value'
+          },
+          'CreationTime': '2018-02-06T02:09:23.504713687Z',
+          'ModTime': '2018-02-06T02:09:23.511932951Z'
+        },
+        'spec': {
+
+        },
+        'status': {
+          'endpoint-uuid': 'uuid-' + id ,
+          'workload-uuid': 'workload-' + id,
+          'workload-name': 'vm1-' + id,
+          'network': 'default',
+          'homing-host-addr': '02:02:02:02:02:01',
+          'homing-host-name': '02:02:02:02:02:01',
+          'ipv4-address': '10.1.0.102/16',
+          'ipv4-gateway': '10.1.254.254',
+          'mac-address': '00:50:0a:01:00:12',
+          'node-uuid': '02:02:02:02:02:01',
+          'SecurityGroups': [
+            'SG_1'
+          ],
+          'micro-segment-vlan': 2,
+          'workload-attributes': [
+            'wl-1',
+            'wl-2'
+          ]
+        }
+      });
+    }
     return {
       'T': {},
       'ListMeta': {
-        'ResourceVersion': '233370'
+        'ResourceVersion': '340331'
       },
-      'Items': [
-        {
-          'Kind': 'Endpoint',
-          'APIVersion': 'v1',
-          'meta': {
-            'Name': '192.168.30.10:8989:virtualmachine-63::00:50:0a:01:00:01',
-            'Tenant': 'default',
-            'ResourceVersion': '57408',
-            'UUID': '99e008f1-da16-4c26-b23e-214b0153594a',
-            'CreationTime': '2018-01-04T22:37:11.10908642Z',
-            'ModTime': '2018-01-04T22:37:11.109088162Z'
-          },
-          'spec': {},
-          'status': {
-            'endpoint-uuid': '192.168.30.10:8989:virtualmachine-63::00:50:0a:01:00:01',
-            'workload-uuid': '192.168.30.10:8989:virtualmachine-63',
-            'workload-name': 'vm1',
-            'network': 'default',
-            'homing-host-addr': '02:02:02:02:02:01',
-            'homing-host-name': '02:02:02:02:02:01',
-            'ipv4-address': '10.1.0.1/16',
-            'ipv4-gateway': '10.1.254.254',
-            'mac-address': '00:50:0a:01:00:01',
-            'node-uuid': '02:02:02:02:02:01',
-            'micro-segment-vlan': 2
-          }
-        },
-        {
-          'Kind': 'Endpoint',
-          'APIVersion': 'v1',
-          'meta': {
-            'Name': '192.168.30.10:8989:virtualmachine-63::00:50:0a:01:00:01-unique_a',
-            'Tenant': 'default',
-            'ResourceVersion': '103860',
-            'UUID': '87147a43-c11f-4933-93f1-5d83a5d44c05',
-            'Labels': {
-              'label-1': 'label-1-value',
-              'label-2': 'label-2-value'
-            },
-            'CreationTime': '2018-01-05T19:30:55.178921978Z',
-            'ModTime': '2018-01-05T19:30:55.352358192Z'
-          },
-          'spec': {},
-          'status': {
-            'endpoint-uuid': '192.168.30.10:8989:virtualmachine-63::00:50:0a:01:00:01-unique_a',
-            'workload-uuid': '192.168.30.10:8989:virtualmachine-63-unique_a',
-            'workload-name': 'vm1-unique_a',
-            'network': 'default',
-            'homing-host-addr': '02:02:02:02:02:01',
-            'homing-host-name': '02:02:02:02:02:01',
-            'ipv4-address': '10.1.0.100/16',
-            'ipv4-gateway': '10.1.254.254',
-            'mac-address': '00:50:0a:01:00:10',
-            'node-uuid': '02:02:02:02:02:01',
-            'micro-segment-vlan': 2,
-            'workload-attributes': [
-              'wl-1',
-              'wl-2'
-            ]
-          }
-        },
-        {
-          'Kind': 'Endpoint',
-          'APIVersion': 'v1',
-          'meta': {
-            'Name': '192.168.30.10:8989:virtualmachine-79::00:50:0a:01:00:03',
-            'Tenant': 'default',
-            'ResourceVersion': '57717',
-            'UUID': '84f8c9e4-c1af-40a7-a42d-0df2e45f551b',
-            'CreationTime': '2018-01-04T22:41:15.451726698Z',
-            'ModTime': '2018-01-04T22:41:15.451728435Z'
-          },
-          'spec': {},
-          'status': {
-            'endpoint-uuid': '192.168.30.10:8989:virtualmachine-79::00:50:0a:01:00:03',
-            'workload-uuid': '192.168.30.10:8989:virtualmachine-79',
-            'workload-name': 'vm2',
-            'network': 'default',
-            'homing-host-addr': '02:02:02:02:02:01',
-            'homing-host-name': '02:02:02:02:02:01',
-            'ipv4-address': '10.1.0.3/16',
-            'ipv4-gateway': '10.1.254.254',
-            'mac-address': '00:50:0a:01:00:03',
-            'node-uuid': '02:02:02:02:02:01',
-            'micro-segment-vlan': 4
-          }
-        },
-        {
-          'Kind': 'Endpoint',
-          'APIVersion': 'v1',
-          'meta': {
-            'Name': '192.168.30.10:8989:virtualmachine-83::00:50:0a:01:00:05',
-            'Tenant': 'default',
-            'ResourceVersion': '57796',
-            'UUID': '2ca815e5-eca6-4d05-94d6-b7cb104446cb',
-            'CreationTime': '2018-01-04T22:42:17.51176591Z',
-            'ModTime': '2018-01-04T22:42:17.511767353Z'
-          },
-          'spec': {},
-          'status': {
-            'endpoint-uuid': '192.168.30.10:8989:virtualmachine-83::00:50:0a:01:00:05',
-            'workload-uuid': '192.168.30.10:8989:virtualmachine-83',
-            'workload-name': 'vm5',
-            'network': 'default',
-            'homing-host-addr': '02:02:02:02:02:01',
-            'homing-host-name': '02:02:02:02:02:01',
-            'ipv4-address': '10.1.0.5/16',
-            'ipv4-gateway': '10.1.254.254',
-            'mac-address': '00:50:0a:01:00:05',
-            'node-uuid': '02:02:02:02:02:01',
-            'micro-segment-vlan': 5
-          }
-        }
-      ]
+      'Items': items
     };
   }
 
@@ -177,12 +107,42 @@ export class MockDataUtil {
       ['3.31234', '2.996142', '7.306965', '68.58819', '17.26048', '2.698536', '7.370775', '12.70328', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '1.167', '2.39255', '2.287471', '21.73166', '33.96221', '8.600739', '0.0', '0.0', '3.896037', '0.1236256', '5.868994'],
       ['1.156517', '2.967954', '5.73684', '46.49812', '31.22245', '5.886086', '0.03711011', '1.729771', '0.09449376', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '-0.0003636982', '2.156372', '7.575688', '5.21889', '0.0', '0.0', '1.077756', '3.985531', '5.833817'],
       ['-0.147662', '1.999594', '3.625628', '0.2360095', '46.71704', '5.268358', '0.6423392', '0.0', '0.07732264', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.5317867', '-0.04880907', '0.0', '0.0', '0.0', '0.0', '-0.1835741', '3.568177']
-          ];
-}
+    ];
+  }
 
-public static getMockedData(url: string, method: string,  eventpayload: any): any {
+  public static getRandomItemFromList(list): any {
+    const item = list[Utility.getRandomInt(0, list.length - 1)];
+    return item;
+  }
+
+  public static getRandomLineSplineData(lenPlotly: number): any {
+    const mockPlotlyX = this.generateRandomPlotlyMockData(lenPlotly);
+    const mockPlotlyY = this.generateRandomPlotlyMockData(lenPlotly);
+
+    mockPlotlyX.sort(function (a, b) { return a - b; });
+    const xyObj = {
+      x: mockPlotlyX,
+      y: mockPlotlyY
+    };
+    return xyObj;
+  }
+
+  public static generateRandomPlotlyMockData(len: number) {
+    const chartData = [];
+    for (let i = 0; i < len; i++) {
+      chartData.push(Math.floor(Math.random() * 100));
+    }
+    return chartData;
+  }
+
+  public static getRandomWorkloadStyle(): String {
+    const options = ['positive', 'negative'];
+    return this.getRandomItemFromList(options);
+  }
+
+  public static getMockedData(url: string, method: string, eventpayload: any): any {
     const reqID = this.getMockRequestID(url, method, eventpayload);
-    if (reqID === 'login' ) {
+    if (reqID === 'login') {
       return {
         'result': 'success',
         'response': {
@@ -195,35 +155,155 @@ public static getMockedData(url: string, method: string,  eventpayload: any): an
             'responseName': 'PENSANDO_USERR_SIGNIN_RESPONSE'
           },
           'data': {
-                  'username': 'Pensando',
-                  'role': 'Admin'
+            'username': 'Pensando',
+            'role': 'Admin'
           }
         },
         'message': null
       };
     }
     if (reqID === 'endpoints') {
-      return {'T': {}, 'ListMeta': {'ResourceVersion': '340331'}, 'Items': [{'Kind': 'Endpoint', 'APIVersion': 'v1', 'meta': {'Name': 'unique_2', 'Tenant': 'default', 'ResourceVersion': '308', 'UUID': '62ee6857-c971-41b1-bf06-089d45327b85', 'Labels': {'label-1': 'label-1-value', 'label-2': 'label-2-value'}, 'CreationTime': '2018-02-06T02:09:23.504713687Z', 'ModTime': '2018-02-06T02:09:23.511932951Z'}, 'spec': {}, 'status': {'endpoint-uuid': 'uuid-unique_', 'workload-uuid': 'workload-unique_2', 'workload-name': 'vm1-unique_2', 'network': 'default', 'homing-host-addr': '02:02:02:02:02:01', 'homing-host-name': '02:02:02:02:02:01', 'ipv4-address': '10.1.0.102/16', 'ipv4-gateway': '10.1.254.254', 'mac-address': '00:50:0a:01:00:12', 'node-uuid': '02:02:02:02:02:01', 'SecurityGroups': ['SG_1'], 'micro-segment-vlan': 2, 'workload-attributes': ['wl-1', 'wl-2']}}]};
+      return this.getWorkloadItems(8);
     }
     if (reqID === 'globalsearch') {
       return [
         { login: 'John' },
         { login: 'Doe' }
       ];
-    }else {
+    } if (reqID === 'alertlist') {
+      return this.mockAlertlist();
+    } else if (reqID === 'alerttable') {
+      return this.mockAlerttable();
+    } else if (reqID === 'workloadwidget') {
+      return {
+        totalworkloads: this.mockWorkloadWidget(8, 1000, 10000),
+        newworkloads: this.mockWorkloadWidget(8, 2, 400),
+        unprotectedworkloads: this.mockWorkloadWidget(8, 0, 50),
+        workloadalerts: this.mockWorkloadWidget(8, 0, 50),
+      };
+    } else if (reqID === 'workloadwidget-totalworkloads') {
+      return this.mockWorkloadWidget(8, 1000, 10000);
+    } else if (reqID === 'workloadwidget-newworkloads') {
+      return this.mockWorkloadWidget(8, 2, 400);
+    } else if (reqID === 'workloadwidget-unprotectedworkloads') {
+      return this.mockWorkloadWidget(8, 0, 50);
+    } else if (reqID === 'workloadwidget-workloadalerts') {
+      return this.mockWorkloadWidget(8, 0, 50);
+    } else if (reqID === 'dsbdworkloadwidget') {
+      const endpointPercent = Utility.getRandomIntList(3, 20, 30);
+      return {
+        veniceEndpointCount: Utility.getRandomInt(200000, 500000),
+        veniceNewEndpointCount: Utility.getRandomInt(200, 2000),
+        endpointList: Utility.getRandomIntList(3, 30, 41),
+        endpointPercent: endpointPercent,
+        endpointPercentCompliment: Utility.getComplimentaryList(endpointPercent),
+      };
+    } else {
       return {};
     }
-}
-
-public static getMockRequestID(url: string, method: string,  eventpayload: any): string {
-  if (url.indexOf('venice-signin-response.json') >= 0) {
-    return 'login';
-  }else if  (url.indexOf('nodes') >= 0) {
-    return 'globalsearch';
-  }else if  (url.indexOf('endpoints') >= 0) {
-    return 'endpoints';
   }
-  return 'dummy';
-}
+
+  public static mockWorkloadWidget(dataPoints, randLower, randUpper) {
+    return {
+      data: this.getRandomLineSplineData(dataPoints),
+      label: Utility.getRandomInt(randLower, randUpper),
+    };
+  }
+
+  public static getTopPolicyHealthRecords(len: number, start: number, end: number, idPattern: string, namePattern: string): any {
+    let topViolatedPolicies = [];
+    for (let i = 0; i < len; i++) {
+      const s4 = Utility.s4();
+      const obj = {
+        id: idPattern + s4,
+        name: namePattern + s4,
+        times: Utility.getRandomInt(start, end)
+      };
+      topViolatedPolicies.push(obj);
+    }
+    topViolatedPolicies = Utility.getLodash().sortBy(topViolatedPolicies, [function (o) { return o.times; }]);
+    topViolatedPolicies = topViolatedPolicies.reverse();
+    return topViolatedPolicies;
+  }
+
+  public static getMockRequestID(url: string, method: string, eventpayload: any): string {
+    if (url.indexOf('venice-signin-response.json') >= 0) {
+      return 'login';
+    } else if (url.indexOf('nodes') >= 0) {
+      return 'globalsearch';
+    } else if (url.indexOf('endpoints') >= 0) {
+      return 'endpoints';
+    } else if (url.indexOf('alertlist') >= 0) {
+      return 'alertlist';
+    } else if (url.indexOf('alerttable') >= 0) {
+      return 'alerttable';
+    } else if (url.indexOf('workloadwidgetById') >= 0) {
+      if (url.indexOf('totalworkloads') >= 0) {
+        return 'workloadwidget-totalworkloads';
+      } else if (url.indexOf('newworkloads') >= 0) {
+        return 'workloadwidget-newworkloads';
+      } else if (url.indexOf('unprotectedworkloads') >= 0) {
+        return 'workloadwidget-unprotectedworkloads';
+      } else if (url.indexOf('workloadalerts') >= 0) {
+        return 'workloadwidget-workloadalerts';
+      }
+    } else if (url.indexOf('dsbdworkloadwidget') >= 0) {
+      return 'dsbdworkloadwidget';
+    } else if (url.indexOf('workloadwidget') >= 0) {
+      return 'workloadwidget';
+    }
+    return 'dummy';
+  }
+
+  public static mockAlerttable(): any {
+    const list = [];
+    const total = (environment.mockdata && environment.mockdata.alert_table_total !== undefined) ? environment.mockdata.alert_table_total : 10;
+    const len = Utility.getRandomInt(0, total);
+    for (let i = 0; i < len; i++) {
+      const date = Utility.getRandomDate(Utility.getRandomInt(0, 10), Utility.getRandomInt(0, 24), Utility.getRandomInt(0, 24));
+      const severity = this.getRandomItemFromList(['critical', 'warning', 'info']);
+      const type = this.getRandomItemFromList(['endpoint', 'policy', 'naples', 'telemetry', 'security', 'cluster', 'diagnostics']);
+      const name = type + ' ' + Utility.getRandomInt(0, 20000);
+      const message = this.getRandomItemFromList(['Authentication Failure User authentication failed',
+        'Cluster Security DTLS configuration changed',
+        'Security Policy policy-SC-0994 is recovered',
+        'System Update Version 1.13 is available',
+        'Orchestration Alert 1 duplicate IP address found'
+      ]);
+      const obj = {
+        id: i,
+        date: date,
+        type: type,
+        name: name,
+        severity: severity,
+        message: message
+      };
+      list.push(obj);
+    }
+    return list;
+  }
+
+  public static mockAlertlist(): any {
+    const total = (environment.mockdata && environment.mockdata.alert_list_total !== undefined) ? environment.mockdata.alert_list_total : 20;
+    const len = Utility.getRandomInt(0, total);
+    const list = [];
+    for (let i = 0; i < len; i++) {
+      const user = this.getRandomItemFromList(['admin', 'operator', 'super-admin', 'security-admin']);
+      const severity = this.getRandomItemFromList(['critical', 'warning', 'info']);
+      const source = this.getRandomItemFromList(['endpoint', 'policy', 'naples', 'telemetry', 'security', 'cluster', 'diagnostics']);
+      const time = Utility.getRandomInt(1, 200);
+      const obj = {
+        id: i,
+        label: 'problem' + i,
+        description: 'something is wrong ' + i,
+        user: user,
+        severity: severity,
+        time: time + ' mininutes ago',
+        source: source
+      };
+      list.push(obj);
+    }
+    return list;
+  }
 
 }

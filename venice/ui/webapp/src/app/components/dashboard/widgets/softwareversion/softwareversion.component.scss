@@ -1,0 +1,78 @@
+.softwareversion-widget {
+  padding: 0px 10px;
+}
+
+.softwareversion-verion-content {
+  font-size: 42px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: condensed;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  color: #97b8df;
+}
+
+.softwareversion-verion-current-label {
+  font-size: 14px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: condensed;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: right;
+  color: #676763;
+  margin: 5px 0px;
+}
+
+.softwareversion-container {
+  height: 100%;
+  width: 100%;
+}
+
+.softwareversion-upgrade-button {
+  border-radius: 3px;
+  background-color: #97b8df;
+  font-size: 16px;
+  font-weight: 500;
+  font-style: normal;
+  font-stretch: condensed;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  color: #ffffff;
+  padding: 5px 0px;
+  margin: 10px 10px;
+}
+
+.softwareversion-right-top-policy-label {
+    font-size: 14px;
+    font-weight: normal;
+    font-style: normal;
+    font-stretch: condensed;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: left;
+    color: #6ba0e5;
+    cursor: pointer;
+  }
+
+  .softwareversion-features-item {
+      width:50%;
+  }
+
+  .softwareversion-features-div{
+    column-count: 2;
+    padding: 0px 10px;
+  }
+
+  .softwareversion-icon{
+    margin-top:12px;
+    display:block;
+    width:25px;
+    height: 25px;
+    cursor: pointer;
+    margin: 10px 5px;
+  }
+
+

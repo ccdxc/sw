@@ -1,0 +1,19 @@
+@import '~@angular/material/theming';
+
+@mixin pagebody-theme($theme) {
+
+  // $primary: map-get($theme, primary);
+  // $warn: map-get($theme, warn);
+  $primary: map-get($theme, primary);
+  $background: map-get($theme, background);
+
+  .pagebody-container{
+      background: map-get($primary, 50);
+      border-color: map-get($background, border);
+  }
+
+  .pagebody-header {
+      border-color: map-get($background, secondary-border);
+  }
+}
+

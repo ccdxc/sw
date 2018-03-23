@@ -1,123 +1,230 @@
-.pensUI-app{
-    width: 100vw;
-    height: 100vh;
-    padding: 0px;
-    margin: 0px;
-    font-family: "Fira Sans" !important;
-    
+.pensUI-app {
+  width: 100vw;
+  height: 100vh;
+  padding: 0px;
+  margin: 0px;
+  font-family: "Fira Sans" !important;
 }
 
-.app-shell-tool-bar-row.mat-toolbar-row{
-    padding:0px;
-    height:60px;
-
+.app-shell-tool-bar-row.mat-toolbar-row {
+  padding: 0px;
+  height: 60px;
+  -moz-box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.5);
+  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.5);
+  z-index: 10;
 }
+
+.app-shell-tool-bar-row.mat-toolbar-row .mat-icon {
+  height: 36px;
+  width: 36px;
+  line-height: 36px;
+  font-size: 36px;
+}
+
+.app-shell-header-logo-div .mat-icon-button {
+  height: 30px;
+  width: 30px;
+  padding:1px 3px;
+  margin: auto 4px auto 1px;
+}
+
+.app-shell-header-logo-div .mat-icon-button .mat-icon {
+  height: 24px;
+  width: 24px;
+  line-height: 24px;
+  font-size: 24px;
+}
+
+.app-shell-toolbar-icon-div .mat-icon {
+  border-radius: 50%;
+  color: #97b8df;
+  background-color: #3e3e3e;
+}
+
+.app-shell-toolbar-icon-div {
+  margin-right: 10px;
+}
+
 .app-shell-icon {
-    padding: 0 14px;
-  }
-  
-  .app-shell-spacer {
-    flex: 1 1 auto;
+  padding: 0 14px;
+}
+
+.app-shell-spacer {
+  flex: 1 1 auto;
+}
+
+.app-shell-container {
+  top: 60px;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+}
+
+/*====== alert notification icon =====*/
+.app-notification-number {
+  background-color: #dd3b09;
+  color: #fff;
+  border-radius: 50%;
+  min-width: 20px;
+  height: 20px;
+  display: initial;
+  position: absolute;
+  top: 1px;
+  left: 10px;
+  vertical-align: top !important;
+  text-align: center;
+  border: 1px solid;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: left;
+  padding: 1px 5px;
+  margin: auto 10px;
+  box-shadow: 0 0 0 rgba(221, 59, 9, 0.4);
+  animation: notification-number-pulse 2s infinite;
+}
+
+.app-notification-number:hover {
+  animation: none;
+}
+
+@-webkit-keyframes notification-number-pulse {
+  0% {
+    -webkit-box-shadow: 0 0 0 0 rgba(221, 59, 9, 0.4);
   }
 
-  .app-shell-container {    
-    top: 60px;
-    bottom: 60px;
-    left: 0;
-    right: 0;
+  70% {
+    -webkit-box-shadow: 0 0 0 20px rgba(221, 59, 9, 0);
   }
+
+  100% {
+    -webkit-box-shadow: 0 0 0 0 rgba(221, 59, 9, 0);
+  }
+}
+
+@keyframes notification-number-pulse {
+  0% {
+    -moz-box-shadow: 0 0 0 0 rgba(221, 59, 9, 0.4);
+    box-shadow: 0 0 0 0 rgba(221, 59, 9, 0.4);
+  }
+
+  70% {
+    -moz-box-shadow: 0 0 0 20px rgba(221, 59, 9, 0);
+    box-shadow: 0 0 0 10px rgba(221, 59, 9, 0);
+  }
+
+  100% {
+    -moz-box-shadow: 0 0 0 0 rgba(221, 59, 9, 0);
+    box-shadow: 0 0 0 0 rgba(221, 59, 9, 0);
+  }
+}
+/*----- alert notification icon -----*/
 
 /*====== header left =====*/
-  $sidenavWidth:200px;
+$sidenavWidth: 200px;
 
-  .app-shell-header-logo-div{
-      width:$sidenavWidth;
-  }
+.app-shell-header-logo-div {
+  min-width: $sidenavWidth;
+}
 
-  .app-header-logo{
-      margin-right: 45px;
-      margin-left:10px;
-  }
+.app-header-logo.navbar-btn {
+  margin-right: 45px;
+  margin-left: 10px;
+  margin-top:5px;
+  margin-bottom: 5pxl;
+}
 /*----- header left -----*/
 
-  .app-shell-container.mat-drawer-container{
-    position: absolute;
-  }
-  
-  .app-shell-left-sidenav, .app-shell-right-sidenav {
-    display: flex;
-    align-items: top;
-    justify-content: center;
-    width: 300px;
-    background: #C5CAE9;
-    padding: 2px;
-  }
-  
-  
-  
-.app-shell-sidenav-content {
-    display: flex;
-    height: 100%;
-    align-items: top;
-    justify-content: center;
+.app-shell-container.mat-drawer-container {
+  position: absolute;
 }
-  
 
-  .app-shell-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-  }
-  
-  .app-shell-footer {
-    background: #5C6BC0;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    font-family: "Fira Sans" !important;
-  }
+.app-shell-left-sidenav,
+.app-shell-right-sidenav {
+  display: flex;
+  align-items: top;
+  justify-content: center;
+  width: 300px;
+  background: #c5cae9;
+  padding: 0px;
+}
+
+.app-shell-right-sidenav {
+  width: 360px;
+  padding: 2px;
+}
+
+.app-shell-sidenav-content {
+  display: flex;
+  height: 100%;
+  align-items: top;
+  justify-content: center;
+}
+
+.app-shell-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.app-shell-footer {
+  background: #5c6bc0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-family: "Fira Sans" !important;
+}
+
+.app-shell-sideNav-right-Settings {
+  display: flex;
+  flex-direction: column;
+}
 
 /*======= Seach =========*/
 
-.app-shell-header-search-div{
-    background: #BFD2EB;
-    border-radius: 2px;
-}
-.app-search-button{
-    color: #383383;
-    font-size: 20px;
-    padding: 5px;
-    margin: 0px -40px 3px 5px;
-}
-.app-header-search-autocomplete-widget{
-    background: transparent;
-}
-.app-header-search-autocomplete-widget.ui-autocomplete  .ui-inputtext{
-    background: transparent !important; 
-    color: #222222;
-    transition: .2s;
-    width: 570px;
-    text-indent: 30px;
-    margin-top: 1px;
-    border: 0px;
+.app-shell-header-search-div {
+  margin-left: 10px;
+  background: #bfd2eb;
+  border-radius: 2px;
 }
 
-.app-header-search-autocomplete-widget.ui-autocomplete  .ui-inputtext:focus{
-    box-shadow:none;
+.app-search-button {
+  color: #383383;
+  font-size: 20px;
+  padding: 5px;
+  margin: 0px -40px 3px 5px;
 }
 
-.app-search-autocomplete-suggestion-div{
-    display:flex;
+.app-header-search-autocomplete-widget {
+  background: transparent;
 }
 
-.app-search-autocomplete-suggestion-item-name{
-    width:50%
+.app-header-search-autocomplete-widget.ui-autocomplete  .ui-inputtext {
+  background: transparent !important;
+  color: #222222;
+  transition: .2s;
+  width: 570px;
+  text-indent: 30px;
+  margin-top: 1px;
+  border: 0px;
 }
-.app-search-autocomplete-suggestion-item-desc{
-    width:50%
+
+.app-header-search-autocomplete-widget.ui-autocomplete  .ui-inputtext:focus {
+  box-shadow: none;
+}
+
+.app-search-autocomplete-suggestion-div {
+  display: flex;
+}
+
+.app-search-autocomplete-suggestion-item-name {
+  width: 50%;
+}
+
+.app-search-autocomplete-suggestion-item-desc {
+  width: 50%;
 }
 /*-------- Seach --------*/
 
-  

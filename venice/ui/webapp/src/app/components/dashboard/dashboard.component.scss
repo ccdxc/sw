@@ -1,70 +1,87 @@
 :host {
-    position: relative;
-    display: block;
-    height: 100%;
-    width: 100%;
-}  
+  position: relative;
+  display: block;
+  height: 100%;
+  width: 100%;
+}
 
-h1 {
-    font-size: 22px;
-    padding: 0 20px;
-    height: 50px;
-    margin: 0;
+.dbsd-refresh-button {
+  background-color: #97b8df;
+  height: 30px;
+  font-family: Fira Sans;
+  font-size: 16px;
+  font-weight: 500;
+  font-stretch: condensed;
+  text-align: center;
+  color: #ffffff;
+  width: 80px;
+  display: block;
+  padding: 0px 10px;
 }
 
 .dsbd-toolbar {
-    position: relative;
-    width: 100%;
-    padding: 0 20px;
-    height: 100px;
+  position: relative;
+  width: 100%;
+  padding: 0 20px;
+  height: 100px;
+}
+
+.dsbd-gridster {
+  background-color: rgb(242,238,234);
+}
+
+.dsbd-gridster-item {
+  border: solid 1px #cec5bd;
 }
 
 .dsbd-main-gridster-content {
-    position: relative;
-    padding: 0 10px;
-    top: 0px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height:650px;
-    overflow-y: auto;
+  // as each grid-item is 275x275 ,  there are 6x2 cells and  gridster.option.margin=10,so we set the height as 565px, width=1705px.
+  position: relative; 
+  padding: 0 10px;
+  top: 0px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 565px;
+  width: 1705px;
+  overflow-y: auto;
+  
 }
 
-.dsbd-panel-heading {
-    border-bottom: 1px solid #F0F0F0;
-    display: inline-block;
-    position: relative;
-    width: 100%;
-    top: 0;
-}
-.pdsbd-anel-heading .dsbd-panel-title {
-    padding: 10px;
-    margin: 0;
+.dsbd-pinned-gridster-content {
+  position: relative;
+  margin: 10px 10px;
+  height: 580px;
+  width: 100%;
+  overflow-y: auto;
 }
 
-.dsbd-panel-body {
-    padding: 10px;
+.dsbd-item-div {
+  margin: 0px;
+  height:100%;
 }
 
-/*====== CUSTOMIZATION =====*/
-.dsbd-main-content .gridster-item-inner{
-    border:1px solid #ccc;
-}
-.dsbd-panel-div{
-    border:1px solid #ccc;
-    width:250;
-    height:300px;
+.dsbd-main-content .gridster-item-inner {
+  border: 1px solid #ccc;
 }
 
-/* .dsbd-panel-div.bsdb-SystemCompacity{
-    width:250;
-    height:300px;
-} */
+.dsbd-panel-div {
+  // width: 250;
+  height: 100%;
+}
+
 
 
 
-.bsdb-SoftwareVersion-content{
-    font-size: 28px;
-    color: #86A9E7;
-}
-/*----- CUSTOMIZATION -----*/
+
+
+
+
+
+
+
+
+
+
+
+

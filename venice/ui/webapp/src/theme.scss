@@ -1,15 +1,26 @@
 @import '~@angular/material/theming';
+@import 'src/app/widgets/toolbar/toolbar.component.scss-theme';
+@import 'src/app/app.component.sidenav.scss-theme';
+@import 'src/app/components/shared/pagebody/pagebody.component.scss-theme';
+@import url('https://fonts.googleapis.com/css?family=Fira+Sans+Condensed');
 @include mat-core();
 
 @import 'default-theme.scss';
 @import 'light-theme.scss';
 @import 'black-theme.scss';
 
-/* 
-.default-theme {
-  @include angular-material-theme($veniceui-theme);
+
+@mixin component-themes($theme) {
+  @include toolbar-theme($theme);
+  @include sidenav-theme($theme);
+  @include pagebody-theme($theme);
 }
- */
+
+.default-theme {
+  @include angular-material-theme($custom-theme);
+  @include component-themes($custom-theme);
+}
+
 .light-theme {
   @include angular-material-theme($veniceui-light-theme);
 }
@@ -17,3 +28,6 @@
 .black-theme {
   @include angular-material-theme($veniceui-black-theme);
 }
+
+
+

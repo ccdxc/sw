@@ -4,3 +4,140 @@ $veniceui-accent:  mat-palette($mat-pink, A200, A100, A400);
 $veniceui-warn:    mat-palette($mat-red);
 $veniceui-theme: mat-light-theme($veniceui-primary, $veniceui-accent, $veniceui-warn); 
 
+
+$md-veniceuipalette1: (
+    50 : #ffffff, //Added, not originally generated
+    100 : #dde7f4,
+    200 : #c6d7ed,
+    300 : #afc7e5,
+    400 : #9dbbe0,
+    500 : #8cafda,
+    600 : #84a8d6,
+    700 : #799fd0,
+    800 : #6f96cb,
+    900 : #5c86c2,
+    A100 : #ffffff,
+    A200 : #f8fbff,
+    A400 : #c5dcff,
+    A700 : #accdff,
+    contrast: (
+        50 : #000000,
+        100 : #000000,
+        200 : #000000,
+        300 : #000000,
+        400 : #000000,
+        500 : #000000,
+        600 : #000000,
+        700 : #000000,
+        800 : #000000,
+        900 : #000000,
+        A100 : #000000,
+        A200 : #000000,
+        A400 : #000000,
+        A700 : #000000,
+    )
+);
+
+$md-sidenavpalette: (
+    50 : #ebebeb,
+    100 : #cececd,
+    200 : #aeaeac,
+    300 : #8d8d8a,
+    400 : #747471,
+    500 : #5c5c58,
+    600 : #545450,
+    700 : #4a4a47,
+    800 : #4f4f4f, //Added, not originally generated
+    900 : #3e3e3e, //Added, not originally generated
+    A100 : #f5f58c,
+    A200 : #f2f25c,
+    A400 : #ffff1c,
+    A700 : #ffff03,
+    contrast: (
+        50 : #000000,
+        100 : #000000,
+        200 : #000000,
+        300 : #000000,
+        400 : #ffffff,
+        500 : #ffffff,
+        600 : #ffffff,
+        700 : #ffffff,
+        800 : #ffffff,
+        900 : #ffffff,
+        A100 : #000000,
+        A200 : #000000,
+        A400 : #000000,
+        A700 : #000000,
+    )
+);
+
+
+
+// Foreground palette for light themes.
+$my-custom-theme-background: (
+  status-bar:  map_get($mat-grey, 200),
+  app-bar:    map_get($mat-grey, 100),
+  background: rgb(242,238,234),
+  hover:      rgba(black, 0.04), 
+  card:       map_get($mat-grey, 50),
+  dialog:     rgb(242,238,234),
+  disabled-button: $white-12-opacity,
+  raised-button: map-get($mat-grey, 800),
+  focused-button: $white-6-opacity,
+  selected-button: map_get($mat-grey, 900),
+  selected-disabled-button: map_get($mat-grey, 800),
+  disabled-button-toggle: black,
+  unselected-chip: map_get($mat-grey, 700),
+  disabled-list-option: black,
+  //added options
+  border: map_get($mat-grey, 400),
+  secondary-border: map_get($mat-grey, 300) 
+);
+
+$my-custom-theme-foreground: (
+  base:              yellow,
+  divider:           $white-12-opacity,
+  dividers:          $white-12-opacity,
+  disabled:          rgba(209,209,208, 1), //sets slider color
+  disabled-button:   rgba(209,209,208, 0.1),
+  disabled-text:     rgba(209,209,208, 0.1),
+  hint-text:         rgba(209,209,208, 0.1),
+  secondary-text:    #676763,
+  icon:              white,
+  icons:             white,
+  text:              black,
+  slider-min:        rgba(red, 0.1),
+  slider-off:        rgba(209,209,208, 0.3),
+  slider-off-active: rgba(209,209,208, 0.3),
+);
+
+$my-custom-theme-sidenav: (
+  text: white,
+  background: map-get($md-sidenavpalette, 500),
+  selected_text: map-get($md-veniceuipalette1, 500),
+  selected: map-get($md-sidenavpalette, 900),
+  hover: map-get($md-sidenavpalette, 800),
+  nested: rgb(47,47,44),
+  nested_hover: rgb(32, 32, 29),
+  navheader: #a1bfe1,
+);
+
+
+@function create-custom-theme($primary, $accent, $warn: mat-palette($mat-red)) {
+    @return (
+      primary: $primary,
+      accent: $accent,
+      warn: $warn,
+      is-dark: false,
+      foreground: $my-custom-theme-foreground,
+      background: $my-custom-theme-background,
+      //added options
+      sidenav: $my-custom-theme-sidenav
+    );
+  }
+
+$custom-theme-primary: mat-palette($md-veniceuipalette1);
+$custom-theme-accent: mat-palette($mat-orange);
+$custom-theme-warn: mat-palette($mat-red);
+
+$custom-theme: create-custom-theme($custom-theme-primary, $custom-theme-accent, $custom-theme-warn);

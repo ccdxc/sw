@@ -12,6 +12,8 @@ import { WidgetsModule } from './modules/widgets/widgets.module';
 import { TestbarchartComponent } from './test/testbarchart/testbarchart.component';
 import { TestplotlyComponent } from './test/testplotly/testplotly.component';
 import { TestRecursiveListComponent } from './test/test-recursive-list/test-recursive-list.component';
+import { FlexLayoutModule } from "@angular/flex-layout";
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -25,7 +27,8 @@ import { TestRecursiveListComponent } from './test/test-recursive-list/test-recu
     WidgetsModule ,
 
     MaterialModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    FlexLayoutModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -6,8 +6,10 @@ import {
   BlockUIModule, DropdownModule, SelectItem, SliderModule,
   ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
   MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, Message, OverlayPanelModule,
-  SelectButtonModule, TooltipModule, AutoCompleteModule
+  SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule
+
 } from 'primeng/primeng';
+import {TableModule} from 'primeng/table';
 
 /**
  * This module control what primeNG widgets to use in our application.
@@ -20,14 +22,14 @@ import {
     BlockUIModule, DropdownModule,  SliderModule,
     ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
-    SelectButtonModule, TooltipModule, AutoCompleteModule
+    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule
   ],
   exports: [
     ChartModule, SplitButtonModule, StepsModule, AccordionModule, CalendarModule, PanelModule, DataTableModule, SharedModule,
     BlockUIModule, DropdownModule,  SliderModule,
     ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
-    SelectButtonModule, TooltipModule, AutoCompleteModule
+    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule
   ],
   declarations: []
 })

@@ -46,7 +46,7 @@ export class AuthEffects {
                    this.localStorageService.setItem(AUTH_KEY, { isAuthenticated: true });
                    this._controllerService.publish(Eventtypes.LOGIN_SUCCESS, userData );
                    this._store.dispatch(authReducer.login_success(userData));
-                }else {
+                } else {
                   this.localStorageService.setItem(AUTH_KEY, { isAuthenticated: false });
                   this._controllerService.publish(Eventtypes.LOGIN_FAILURE,  {'ajax': 'end', 'name': 'login'});
                   this._store.dispatch(authReducer.login_failue(userData));

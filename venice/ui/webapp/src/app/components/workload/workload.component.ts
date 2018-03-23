@@ -1,125 +1,133 @@
-import { Component, OnInit, OnDestroy, ViewEncapsulation, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnChanges, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { ControllerService } from '@app/services/controller.service';
+import { WorkloadService } from '@app/services/workload.service';
+import { Table } from 'primeng/table';
+import { Subscription } from 'rxjs/Subscription';
 
-import { ControllerService } from '../../services/controller.service';
-import { Eventtypes } from '../../enum/eventtypes.enum';
-import { Logintypes } from '../../enum/logintypes.enum';
-import { Utility } from '../../common/Utility';
-
-import { WorkloadService } from '../../services/workload.service';
 import { BaseComponent } from '../base/base.component';
-import { MockDataUtil } from '@common/MockDataUtil';
 
-
+/**
+ * Creates the workload page. Uses workload widget for the hero stats
+ * section and a PrimeNG data table to list the workloads.
+ */
 @Component({
   selector: 'app-workload',
   templateUrl: './workload.component.html',
   styleUrls: ['./workload.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class WorkloadComponent extends BaseComponent implements OnInit, OnDestroy {
+export class WorkloadComponent extends BaseComponent implements OnInit, OnDestroy, OnChanges {
+  @ViewChild('workloadtable') workloadTable: Table;
 
-  items: any;
-  protected content: any = {
-    'totalworkloads': {
-      data: [],
-      layout: {},
-      option: {},
-      text: '',
-      id: 'totalworkloads'
+  private subscription: Subscription;
+  // Workload Widget vars
+  totalworkloadsWidget: any;
+  newworkloadsWidget: any;
+  unprotectedworkloadsWidget: any;
+  workloadalertsWidget: any;
+  widgets: string[] = ['totalworkloads',
+  'newworkloads',
+  'unprotectedworkloads',
+  'workloadalerts'];
+  totalworkload: any;
+  selectedWorkloadWidget: string;
+  bodyicon: any = {
+    margin: {
+      top: '9px',
+      left: '8px'
     },
-    'newworkloads': {
-      data: [],
-      option: {},
-      text: '',
-      id: 'newworkloads',
-      layout: {
-        title: 'Workload Alerts Trend',
-        margin: { t: 0 }
-      }
-    },
-    'plotlychart': {
-      'plotlyData': [],
-      'plotlyLayout': {},
-      'plotlyOptions': {}
-    },
-    'plotly3Dchart': {
-      'plotlyData':  [{
-        z: MockDataUtil.getPlotly3DChartData(),
-        type: 'surface'
-      }],
-      'plotlyLayout': {
-        title: 'Workloads Resource consumption' ,
-        scene: {
-          xaxis: {
-            title: 'X Axis',
-            titlefont: {
-               color: 'red',
-               family: 'Arial, Open Sans',
-               size: 12
-            }
-          },
-          yaxis: {
-            title: 'Y Axis',
-            titlefont: {
-               color: 'red',
-               family: 'Arial, Open Sans',
-               size: 12
-            }
-          },
-          zaxis: {
-            title: 'Z Axis',
-            titlefont: {
-               color: 'red',
-               family: 'Arial, Open Sans',
-               size: 12
-            }
-          }
-        },
-        autosize: false,
-        width: 500,
-        height: 500,
-        margin: {
-          l: 65,
-          r: 50,
-          b: 65,
-          t: 90
-        }
-      },
-
-      'plotlyOptions': this.getPlotlyChartConfiguration()
-    }
+    url: '/assets/images/icons/workload/icon-workloads.svg'
   };
+
+  // Workload table vars
+  globalFilterFields: string[] = ['name'];
+  items: any;
+  workloadCount: any = {
+    shown: 10,
+    total: 200
+  };
+  idToFilter: any = {
+    newworkloads: 'neutral',
+    unprotectedworkloads: 'deleted',
+    workloadalerts: 'alert',
+    savedChangesToggle: 'changed',
+  };
+  selectedWorkloads: any[];
+  loading = false;
+
+  workloads: any;
+  cols: any[] = [
+    { field: 'name', header: 'Workload Name' },
+    { field: 'labels', header: 'Labels' },
+    { field: 'securityGroups', header: 'Security groups' },
+    { field: 'orchestration', header: 'Orchestration' },
+    { field: 'loadBalancer', header: 'Load Balancer' },
+    { field: 'appId', header: 'App ID' },
+  ];
 
   constructor(
     private _workloadService: WorkloadService,
     protected _controllerService: ControllerService) {
     super(_controllerService);
-    this._testPlotlyChart();
   }
 
   ngOnInit() {
     if (!this._controllerService.isUserLogin()) {
       this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
     } else {
-      const self = this;
       this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
         'component': 'WorkloadComponent', 'state':
           Eventtypes.COMPONENT_INIT
       });
+      // Setting the toolbar of the app
+      this._controllerService.setToolbarData({
+        buttons: [
+          {
+            cssClass: 'workload-button workload-toolbar-button',
+            text: 'NEW WORKLOAD',
+            callback: () => {this.buttoncallback('new workload'); }
+          },
+          {
+            cssClass: 'workload-button workload-toolbar-button',
+            text: 'COMMIT CHANGES',
+            callback: () => {this.buttoncallback('commit changes'); }
+          }],
+        breadcrumb: [{ label: 'Workloads Overview', url: '' }]
+      });
+      // Fetching workload items
       this.getItems();
-      // set a timeout in 1 second.  The timeout function has a setInterval to generate mock-data in every 3 seconds
-      setTimeout(() => {
-        this.generateData();
-        // change the data periodically
-        setInterval(() => this.generateData(), 3000);
-      }, 10);
+      // Default selected workloadwidget
+      this.selectedWorkloadWidget = 'totalworkloads';
     }
   }
+
+  buttoncallback(text) {
+    console.log(text);
+  }
+
   ngOnDestroy() {
+    if (this.subscription != null) {
+      this.subscription.unsubscribe();
+    }
     this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, {
       'component': 'WorkloadComponent', 'state':
         Eventtypes.COMPONENT_DESTROY
     });
+  }
+
+
+  ngOnChanges() {
+  }
+
+  workloadTableRowStyle(rowData) {
+    const classMapping = {
+      neutral: 'workload-item-neutral ',
+      alert: 'workload-item-alert ',
+      deleted: 'workload-item-deleted',
+      changed: 'workload-item-changed'
+    };
+    return classMapping[rowData.state];
   }
 
   /**
@@ -130,159 +138,56 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     return this.constructor.name;
   }
 
-  getLineSplineData(lenPlotly: number): any {
-    const mockPlotlyX = this.generatePlotlyMockData(lenPlotly);
-    const mockPlotlyY = this.generatePlotlyMockData(lenPlotly);
-
-    mockPlotlyX.sort();
-    const xyObj = {
-      x: mockPlotlyX,
-      y: mockPlotlyY
-    };
-    return xyObj;
-  }
-  generateData() {
-    const len = (8 + Math.floor(Math.random() * 10));
-    const totalXYObj = this.getLineSplineData(len);
-    const totalXYData =  {
-      x: totalXYObj.x,
-      y: totalXYObj.y,
-      fill: 'tonexty',
-      type: 'scatter',
-      mode: 'none',
-      line: {
-        shape: 'spline',
-        color: 'rgb(255, 157, 98)'
-      }
-    };
-    this.content.totalworkloads.data = [totalXYData];
-    const newXYObj = this.getLineSplineData(len);
-    const newXYData =  {
-      x: newXYObj.x,
-      y: newXYObj.y,
-      fill: 'tozeroy',
-      type: 'scatter',
-      mode: 'none',
-      line: {
-        shape: 'spline',
-        color: 'rgb(107, 295, 67)'
-      }
-    };
-    this.content.newworkloads.data = [this.getLineSplineData(len)];
-
-    this.content.totalworkloads.text = Utility.getRandomInt(1000, 10000) + ' Workloads';
-    this.content.newworkloads.text = Utility.getRandomInt(10, 100) + ' New Workloads';
-
-    const lenPlotly = (8 + Math.floor(Math.random() * 10));
-
-
-    const myXYObj = this.getLineSplineData(lenPlotly);
-    const tempTrace = {
-      x: myXYObj.x,
-      y: myXYObj.y,
-      fill: 'tonexty',
-      type: 'scatter',
-      mode: 'none',
-      line: {
-        shape: 'spline',
-        color: 'rgb(157, 255, 98)'
-      }
-    };
-    this.content.plotlychart.plotlyData = [tempTrace];
-  }
-
-  generateBarchartMockData(len: number) {
-    const chartData = [];
-    for (let i = 0; i < len; i++) {
-      chartData.push([
-        `Index ${i}`,
-        Math.floor(Math.random() * 100)
-      ]);
-    }
-    return chartData;
-  }
-
-  generatePlotlyMockData(len: number) {
-    const chartData = [];
-    for (let i = 0; i < len; i++) {
-      chartData.push( Math.floor(Math.random() * 100));
-    }
-    return chartData;
-  }
-
   getItems() {
-
-    this._workloadService.getItems().subscribe(
-      data => {
-        // Publish AJAX-END Event
-
-        const isRESTPassed = Utility.isRESTFailed(data);
-        if (isRESTPassed) {
-          // process server response
-          const isLoginPassed = Utility.isRESTFailed(data);
-          if (isLoginPassed) {
-            this._controllerService.publish(Eventtypes.AJAX_END, { 'ajax': 'end', 'name': 'WORKLOAD_GET_ITEMS' });
-            this.items = data.Items;
-          } else {
-            this.errorMessage = 'Failed to get items! ' + Utility.getRESTMessage(data);
-          }
-        } else {
-          this.errorMessage = 'Failed to get items!  Please try again later ' + Utility.getRESTMessage(data);
-          this._controllerService.publish(Eventtypes.AJAX_END, { 'ajax': 'end', 'name': 'WORKLOAD_GET_ITEMS' });
-        }
-        this.successMessage = '';
-      },
-      err => {
-        this.successMessage = '';
-        this.errorMessage = 'Failed to get items! ' + err;
-        this.error(err);
-      }
-    );
-  }
-
-
-
-  private _testPlotlyChart() {
-    const trace2 = {
-      x: [1, 2, 3, 4],
-      y: [3, 5, 1, 7],
-      fill: 'tonexty',
-      type: 'scatter',
-      mode: 'none',
-      line: {
-        shape: 'spline',
-        color: 'rgb(157, 255, 98)'
-      }
-    };
-
-      /* let layout = {
-        title: 'Workload Alerts Trend',
-        margin: { t: 0 }
-      }; */
-
-      this.content.plotlychart.plotlyData = [trace2];
-      this.content.plotlychart.plotlyLayout = this.getSimpleChartLayout('Workload Alerts Trend');
-      this.content.plotlychart.plotlyOptions = { displayModeBar: false };
-
-
-  }
-
-  getPlotlyChartConfiguration(): any {
-    const defaultPlotlyConfiguration = { modeBarButtonsToRemove: ['sendDataToCloud', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'lasso2d', 'select2d'], displaylogo: false, showTips: true };
-    return defaultPlotlyConfiguration;
-  }
-
-  getSimpleChartLayout(titleString: string): any {
-    return {
-      title: titleString,
-      margin: {
-        t: 50,
-
-      }
-    };
+    this.subscription = this._workloadService.getItems().subscribe(data => {
+      this.workloads = data;
+      this.workloadCount.total = this.workloads.length;
+    });
   }
 
   workloadClickHandler(id) {
-    alert(id);
+    this.selectedWorkloadWidget = id;
+    this.applyFilterById(id);
   }
+
+  workloadTableToggleHandler($event) {
+    if ($event.checked) {
+      this.workloadTable.filter(this.idToFilter['savedChangesToggle'], 'state', 'equals');
+    } else {
+      this.applyFilterById(this.selectedWorkloadWidget);
+    }
+  }
+
+  applyFilterById(id) {
+    this.workloadTable.filter(this.idToFilter[id], 'state', 'equals');
+  }
+
+  onWorkloadtableDeleteRecord($event, record) {
+    console.log('WorkloadComponent.onWorkloadtableDeleteRecord()', record);
+  }
+
+  workloadTableAddToGroup($event) {
+    console.log('add to group');
+  }
+
+  workloadTableAddLabel($event) {
+    console.log('add label');
+  }
+
+  workloadTableDeleteWorkload($event) {
+    console.log('add label');
+  }
+
+  workloadTableMoreActions($event) {
+    console.log('more actions clicked', $event);
+  }
+
+  onWorkloadTableArchiveRecord($event) {
+    console.log('archive', $event);
+  }
+
+  onWorkloadTableDeleteRecord($event) {
+    console.log('delete', $event);
+  }
+
 }

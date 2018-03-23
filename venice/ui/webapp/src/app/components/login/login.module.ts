@@ -1,11 +1,9 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { Routes, RouterModule } from '@angular/router';
 
-import {LoginComponent} from './login.component';
-import {loginRouter} from './login.router';
+import { LoginComponent } from './login.component';
+import { loginRouter } from './login.router';
 
 
 
@@ -15,6 +13,7 @@ import {loginRouter} from './login.router';
     FormsModule,
     loginRouter
   ],
-  declarations: [LoginComponent]
+  declarations: [LoginComponent],
+  exports: [LoginComponent]
 })
 export class LoginModule { }

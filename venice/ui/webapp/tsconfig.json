@@ -1,6 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    // "noUnusedLocals": true,
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
@@ -22,6 +23,6 @@
       "@common/*": ["app/common/*"],
       "@lib/*": ["app/lib/*"],
       "@env/*": ["environments/*"]
-    }
+    },
   }
 }

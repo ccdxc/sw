@@ -1,0 +1,28 @@
+<div fxFlex fxLayout="row" class="dsbd-widgetheader">
+    <div fxFlex="44px" class="dsbd-widgetheader-mat-icon-container">
+        <mat-icon *ngIf="icon.svgIcon" [ngStyle]="_iconStyles" [svgIcon]="icon.svgIcon" class="dsbd-widgetheader-icon">
+        </mat-icon>
+        <mat-icon *ngIf="icon.matIcon" [ngStyle]="_iconStyles" class="dsbd-widgetheader-icon dsbd-widgetheader-icon-byname">
+            {{icon.matIcon}}
+        </mat-icon>
+    </div>
+    <div fxFlex class="dsbd-widgetheader-title">{{title}}</div>
+    <div *ngIf="has_update_string" fxFlex="140px" fxLayout="column" fxLayoutAlign="center" class="dsbd-widgetheader-update">
+        <div fxFlex="12px" class="dsbd-widgetheader-update-text">
+            {{last_update}}
+        </div>
+    </div>    
+    <div fxFlex="36px" class="dsbd-widgetheader-info" *ngIf="items.length>0">
+        <mat-icon class="dsbd-widgetheader-morevert" [matMenuTriggerFor]="menu" aria-label="Open basic menu">
+            more_vert 
+        </mat-icon>
+        <mat-menu #menu="matMenu">
+            <button mat-menu-item *ngFor="let item of items" (click)="menuSelect(item)" [disabled]="item.disabled">
+              {{ item.text }}
+            </button>
+          </mat-menu>
+    </div>
+</div>
+
+        
+        

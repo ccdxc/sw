@@ -4,11 +4,35 @@
   </div>
   <br>
   <div class="row penui-setting-theme-div">
+      <mat-card>
+        <mat-card-title>
+          Theme
+        </mat-card-title>
     <mat-select class="col-md-6" placeholder="Select theme" name="theme"
                [ngModel]="theme" (change)="onThemeSelect($event)">
       <mat-option *ngFor="let t of themes" [value]="t.value">
         {{t.label}}
       </mat-option>
     </mat-select>
+  </mat-card>
+  </div>
+  <div class="row penui-setting-endpoint">
+    <mat-card>
+      <mat-card-title>Endpoint settings</mat-card-title>
+      <mat-form-field class="mat-input-url">
+        <input matInput (blur)="setEnvironmentUrl($event.target.value)" [placeholder]="envUrl">
+      </mat-form-field>
+      <mat-form-field class="mat-input-port">
+        <input matInput [placeholder]="envPort">
+      </mat-form-field>
+      <mat-slide-toggle [checked]="startState" (change)="toggleHandlerEndpoint($event)">
+        Use endpoint instead of fake data
+      </mat-slide-toggle>
+    </mat-card>
+    <mat-card>
+      <mat-slide-toggle [checked]="startStateIdle" (change)="toggleHandlerIdle($event)">
+        Enable idling feature
+      </mat-slide-toggle> 
+    </mat-card>
   </div>
 </div>

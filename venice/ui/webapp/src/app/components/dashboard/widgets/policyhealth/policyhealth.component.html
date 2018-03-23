@@ -1,0 +1,51 @@
+<div fxLayout="column" class="policyhealth-container">
+  <!-- Header -->
+  <app-dsbdwidgetheader fxFlex="36px" fxLayout="row" [title]="title" [last_update]="last_update"
+    [icon]="icon" [menuItems]="menuItems" (widgetMenuSelect)="menuselect($event)">
+  </app-dsbdwidgetheader>
+  <!-- Body -->
+  <div fxFlex fxLayout="row">
+    <div fxFlex=40 fxLayout="row" fxLayoutAlign="center" class="policyhealth-left">
+      <!-- Policy Health donut chart -->
+      <div class="policyhealth-content-div" fxLayout="column" fxLayoutAlign="center">
+        <div class="policyhealth-chart-div">
+          <canvas id="policy_health_text" class="policyhealt-label-canvas"></canvas>
+          <p-chart type="doughnut" [data]="data" [options]="options" (onDataSelect)="itemClick($event, 'policy_health')"></p-chart>
+        </div>
+
+        <div class="policyhealth-total-count-label-div">Total 
+          <span class="policyhealth-total-count-label-span">{{venice_total_policies|number}} </span> 
+          Policies
+        </div>
+
+        <div class="policyhealth-category-labels-div">
+            <span class="policyhealth-category-labels-span policyhealth-category-labels-vio-span">{{venice_total_violated_policies|number}} VIO</span>
+            <span class="policyhealth-category-labels-span policyhealth-category-labels-ok-span">{{venice_total_ok_policies|number}} OK</span>
+        </div>
+      </div>
+    </div>
+    <!-- Top 10 violations -->
+    <div fxFlex=30 class="policyhealth-right policyhealth-right-most-violate-div" >
+      <div class="policyhealth-right-top-label policyhealth-right-top-violation-label">Top 10 Violations</div>
+      <div *ngFor="let policy of topViolatedPolicies" >
+          <a (click)="onTopViolatePolicyClick($event, policy)">
+            <img src="/assets/images/dashboard/ico-policy-violate.svg"> 
+            <span class="policyhealth-right-top-policy-label policyhealth-right-top-violation-policy-label"
+              title="Violated {{policy.times}} times">{{policy.name}}</span>
+          </a>
+      </div>
+    </div>
+    <!-- Top 10 most applied -->
+    <div fxFlex=30 class="policyhealth-right policyhealth-right-most-apply-div" >
+        <div class="policyhealth-right-top-label policyhealth-right-top-applied-label">Top 10 Most Applied</div>
+        <div *ngFor="let policy of topMostAppliedPolicies" class="policyhealth-right-top-policy-div">
+            <img src="/assets/images/dashboard/ico-policy-applied.svg"> 
+          <a (click)="onTopAppliedPolicyClick($event, policy)" >
+              <span class="policyhealth-right-top-policy-label policyhealth-right-top-applied-policy-label"
+                title="Applied {{policy.times}} times">{{policy.name}}
+            </span>
+          </a>
+        </div>
+    </div>
+  </div>
+</div>

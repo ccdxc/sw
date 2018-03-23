@@ -1,15 +1,15 @@
-import { TestBed, async, inject } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { inject, TestBed } from '@angular/core/testing';
+import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
-import { HttpClient } from '@angular/common/http';
-import { HttpClientTestingModule} from '@angular/common/http/testing';
-
-import { ControllerService } from './controller.service';
 
 import { AuthService } from './auth.service';
+import { ControllerService } from './controller.service';
+
 describe('AuthService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [AuthService, ControllerService],
+      providers: [AuthService, ControllerService, MatIconRegistry],
       imports: [
                 HttpClientTestingModule,
                 RouterTestingModule

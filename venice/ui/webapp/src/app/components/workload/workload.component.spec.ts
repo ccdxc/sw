@@ -2,15 +2,11 @@
  Angular imports
  ------------------*/
 import { async, ComponentFixture, TestBed, inject } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
 import { RouterTestingModule } from '@angular/router/testing';
-import { HttpClient } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs/Observable';
-import { combineAll } from 'rxjs/operator/combineAll';
-
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 /**-----
  VeniceUI Framework -  imports
  ------------------*/
@@ -19,21 +15,24 @@ import {WidgetsModule} from 'web-app-framework';
 /**-----
  Venice UI -  imports
  ------------------*/
-import { ControllerService } from '../../services/controller.service';
-import { WorkloadService } from '../../services/workload.service';
+import { ControllerService } from '@app/services/controller.service';
+import { WorkloadService } from '@app/services/workload.service';
 
 import { WorkloadComponent } from './workload.component';
-
 import { WorkloadwidgetComponent } from './workloadwidget/workloadwidget.component';
-import { MockDataUtil } from '../../common/MockDataUtil';
+import { SharedModule} from '@app/components/shared//shared.module';
+import { MockDataUtil } from '@app/common/MockDataUtil';
 
 /**-----
  Third-parties imports
  ------------------*/
 import { MomentModule } from 'angular2-moment';
+import {MatIconRegistry} from '@angular/material';
+
 
 import {PrimengModule} from '@lib/primeng.module';
 import { Component } from '@angular/core';
+import {MaterialdesignModule} from '@lib/materialdesign.module';
 @Component( {
   template: ''
 })
@@ -61,9 +60,9 @@ class DummyComponent { }
  */
 class MockWorkloadService extends WorkloadService {
   public getItems() {
-    const items = MockDataUtil.getWorkloadItems();
+    const items = MockDataUtil.getWorkloadItems(10);
     // make sure to return an Obervable as component is going to call subscribe(..) on observable
-    return Observable.of(items);
+    return Observable.of(items.Items);
   }
 }
 
@@ -73,7 +72,6 @@ describe('WorkloadComponent', () => {
 
   let testBedService: WorkloadService;
   let componentService: WorkloadService;
-  let spy: any;
 
 
   beforeEach(async(() => {
@@ -93,11 +91,15 @@ describe('WorkloadComponent', () => {
         // Moment.js
         MomentModule,
         // primeNG.js
-        PrimengModule
+        PrimengModule,
+        MaterialdesignModule,
+        SharedModule,
+        BrowserAnimationsModule
       ],
       providers: [
         ControllerService,
-        WorkloadService
+        WorkloadService,
+        MatIconRegistry
       ]
     });
 
@@ -149,10 +151,10 @@ describe('WorkloadComponent', () => {
 
   // test-3
   it('should call getItems()', () => {
-    spy = spyOn(componentService, 'getItems').and.callThrough();  // Since we are using mock-service. using callThrough() is very important. See reference-3 above
+    spyOn(componentService, 'getItems').and.callThrough();  // Since we are using mock-service. using callThrough() is very important. See reference-3 above
     component.getItems();  // invoke the call component API.
-    expect(component.items).toBeDefined();
-    expect(component.items.length).toBeGreaterThan(0);
+    expect(component.workloads).toBeDefined();
+    expect(component.workloads.length).toBeGreaterThan(0);
 
     expect(componentService.getItems).toHaveBeenCalled();
   });

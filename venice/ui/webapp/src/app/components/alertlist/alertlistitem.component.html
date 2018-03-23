@@ -1,0 +1,17 @@
+<div *ngIf="alert" class="alertlistitem-widget" [ngClass]="{'alertlistitem-widget-check':alert.check}" (click)="onAlertItemClick($event)">
+  <div class="alertlistitem-front-group-div">
+      <span class="alertlistitem-icon" [ngClass]="getAlertItemIconClass()" title="{{getAlertItemIconTooltip()}}">{{getAlertItemIconText()}}</span>
+  </div>
+  <div class="alertlistitem-back-group-div">
+    <div class="alertlistitem-back-group-div-toprow">
+        <span class="alertlistitem-display-text-bold alertlistitem-label">{{alert.label}}</span>
+        <span class="alertlistitem-display-text alertlistitem-check" *ngIf="alert.check"><i class="fa fa-check"></i></span>
+    </div>    
+    <div class="alertlistitem-display-text-bold alertlistitem-desc">{{alert.description}}</div>
+    <div>
+        <span class="alertlistitem-display-text-small alertlistitem-user">{{alert.user}}</span>
+        <span class="alertlistitem-display-text-small alertlistitem-time">{{alert.time}}</span>
+    </div> 
+  </div>
+  
+</div>

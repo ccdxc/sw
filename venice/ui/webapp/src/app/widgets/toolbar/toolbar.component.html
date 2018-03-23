@@ -1,0 +1,9 @@
+<mat-toolbar class="toolbarcomponent-toolbar">
+  <p-breadcrumb class="toolbarcomponent-breadcrumb" [model]="breadcrumb" ></p-breadcrumb>
+  <div class="toolbar-buffer" fxLayout="row">
+    <div fxFlex></div>
+    <span *ngFor="let button of buttons" [ngClass]="button.cssClass" class="toolbar-button" (click)="buttonCallback($event, button)">
+      {{button.text}}
+    </span>
+  </div>
+</mat-toolbar>

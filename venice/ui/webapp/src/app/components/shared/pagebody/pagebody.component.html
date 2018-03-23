@@ -1,0 +1,13 @@
+<div class="pagebody-container">
+    <div fxLayoutAlign="row" class="pagebody-header">
+        <div fxFlex="48px" class="pagebody-iconcontainer">
+            <div [ngStyle]="_iconStyles" class="pagebody-icon"></div>
+        </div>
+        <div fxFlex class="pagebody-headercontent">
+            {{title}}
+        </div>
+        <div *ngIf="hasOptions" fxFlex="48px" class="pagebody-optionsicon">
+        </div>
+    </div>
+    <ng-content></ng-content>
+</div>

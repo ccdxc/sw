@@ -3,17 +3,14 @@
 ----------------------------------------------------- */
 import { TestBed, async } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OverlayContainer } from '@angular/cdk/overlay';
 
-import { HttpClient } from '@angular/common/http';
+
 import {HttpClientTestingModule} from '@angular/common/http/testing';
 import {WidgetsModule} from 'web-app-framework';
 
 import { Store } from '@ngrx/store';
-import { Subject } from 'rxjs/Subject';
-import { takeUntil } from 'rxjs/operators/takeUntil';
 /* ---------------------------------------------------
     Venice App libraries
 ----------------------------------------------------- */
@@ -23,21 +20,26 @@ import { DatafetchService } from './services/datafetch.service';
 import { LogService } from './services/logging/log.service';
 import { LogPublishersService } from './services/logging/log-publishers.service';
 import { AuthService } from './services/auth.service';
-import { Eventtypes } from './enum/eventtypes.enum';
 import { CoreModule } from '@app/core';
+import { AlertlistModule } from '@app/components/alertlist';
+import { LoginModule } from './components/login/login.module';
+import { ToolbarComponent } from './widgets/toolbar/toolbar.component';
 
 /* ---------------------------------------------------
     Third-party libraries
 ----------------------------------------------------- */
 import {PrimengModule} from './lib/primeng.module';
 import {MaterialdesignModule} from './lib/materialdesign.module';
+import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
+import { AlerttableService } from '@app/services/alerttable.service';
 
 
 describe('AppComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [
-        AppComponent
+        AppComponent,
+        ToolbarComponent,
       ],
       imports: [
                 // Other modules...
@@ -47,17 +49,21 @@ describe('AppComponent', () => {
                 PrimengModule,
                 MaterialdesignModule,
                 WidgetsModule,
-                CoreModule
+                CoreModule,
+                AlertlistModule,
+                LoginModule,
+                NgIdleKeepaliveModule.forRoot()
 
             ],
       providers: [
             ControllerService,
             DatafetchService,
+            AlerttableService,
             AuthService,
             LogService,
             LogPublishersService,
             Store,
-            OverlayContainer
+            OverlayContainer,
         ],
     });
 

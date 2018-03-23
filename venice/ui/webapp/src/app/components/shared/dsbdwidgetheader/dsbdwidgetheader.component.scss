@@ -1,0 +1,58 @@
+.dsbd-widgetheader{
+  font-family: Fira Sans;
+}
+.dsbd-widgetheader-icon {
+  opacity: 0.3;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.dsbd-widgetheader-title {
+  padding: 10px 0px 2px 10px;
+  
+  font-size: 18px;
+  font-stretch: condensed;
+  text-align: left;
+  color: #676763;
+}
+
+.dsbd-widgetheader-update-text {
+  font-family: Fira Sans;
+  font-size: 12px;
+  font-stretch: condensed;
+  text-align: right;
+  color: #cccccc;
+}
+
+.dsbd-widgetheader-info {
+  position: relative;
+  cursor: pointer;
+}
+
+.dsbd-widgetheader-morevert {
+  font-size: 30px;
+  height: 30px;
+  width: 30px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: 5px 0px 1px 6px;
+  opacity: 0.6;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+}
+
+/* In case we use mat-icon by name (not svgIcon), we have to adjust padding a little bit. */
+.dsbd-widgetheader-icon-byname{
+  padding-left:10px;
+}
+
+/* override the */
+.pensendo-ui  .mat-menu-panel {
+  background: #fff !important;
+}
+

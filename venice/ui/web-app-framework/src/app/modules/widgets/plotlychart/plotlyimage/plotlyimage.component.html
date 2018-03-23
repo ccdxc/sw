@@ -1,4 +1,4 @@
-<div id="{{id}}" class="pw-plotlychartimage-outter-div" [ngStyle]="setWidgetStyles()">
+<div id="{{id}}" class="pw-plotlychartimage-outter-div" [ngStyle]="setWidgetStyles">
   <pw-plotly-chart *ngIf="!isImageReady" 
       [data]="dataset"  
       [layout]="layout" 
@@ -7,7 +7,6 @@
   ></pw-plotly-chart>
   <div class="pw-plotlychartimage-image-div" >
       <img  id="{{id}}_pw-plotlychartimage-image-tag" class="pw-plotlychartimage-image-tag" 
-      [ngStyle]="setImageStyles()"
       src="{{imagesource}}"/>
   </div>
 </div>

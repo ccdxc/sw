@@ -1,0 +1,22 @@
+<div style="height:100%;width:100%;" class="systemCapacity-container" fxLayout="column">
+  <!-- Header -->
+  <app-dsbdwidgetheader fxFlex="36px" fxLayout="row" [title]="title" [last_update]="last_update" [icon]="icon"
+    [id]="id + '_header'" [menuItems]="menuItems" (widgetMenuSelect)="menuselect($event)">
+  </app-dsbdwidgetheader>
+  <!-- Body -->
+  <div fxFlex fxLayout="row">
+    <div [ngStyle]="_background_img" fxFlex=40 fxLayout="row" fxLayoutAlign="center" class="systemCapacity-left">
+      <div fxFlex=20 class="systemCapacity-nodecount">
+        {{venice_node_count}}
+      </div>
+    </div>
+    <div  *ngIf="menuItems[0]?.text == 'Toggle Trend Line'" fxFlex class="systemCapacity-right">
+      <p-chart type="bar" [data]="data" [options]="options" (onDataSelect)="itemClick($event, 'snapshot')" ></p-chart>
+    </div>
+    <div  *ngIf="menuItems[0]?.text == 'Toggle Bar Chart'" fxFlex class="systemCapacity-right">
+      <p-chart type="line" [data]="trendline?.data"  [options]="trendline?.options" (onDataSelect)="itemClick($event, 'trendline')"></p-chart>
+    </div>
+  </div>
+</div>
+
+

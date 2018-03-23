@@ -1,0 +1,85 @@
+<div class="alerttable-widget">
+  <p-table [columns]="cols" [value]="alerts" [(selection)]="selectedAlerts" dataKey="id" [rows]="15" [paginator]="true" #alerttable
+    styleClass="alerttable-table" [responsive]="true" [loading]="loading" [resizableColumns]="true">
+    <!-- Table Caption -->
+    <ng-template pTemplate="caption">
+      <div class="alerttable-header-div">
+        <div class="alerttable-main-menu">
+          <div class="alerttable-main-menu-number-front-group-div">
+            <mat-icon>notifications </mat-icon>
+            <span class="alerttable-main-menu-label">
+              All Alerts ({{alertnumber.total | number}})
+            </span>
+            <button *ngIf="selectedAlerts.length>0" type="button" class="btn alerttablerecord-header-button" (click)="onAlerttableDeleteMultiRecords($event)"
+              title="Delete">
+              <i class="fa fa-trash alerttablerecord-header-button-icon"></i>Delete
+            </button>
+            <button *ngIf="selectedAlerts.length>0" type="button" class="btn alerttablerecord-header-button" (click)="onAlerttableArchiveMultiRecords($event)"
+              title="Archive">
+              <i class="fa fa-archive alerttablerecord-header-button-icon"></i>Archive
+            </button>
+          </div>
+          <div class="alerttable-main-menu-number-back-group-div">
+            <span class="alerttable-main-menu-number alerttable-main-menu-number-total" (click)="onAlertNumberClick($event, 'total')">All</span>
+            <span class="alerttable-main-menu-number alerttable-main-menu-number-critical" (click)="onAlertNumberClick($event, 'critical')"
+              *ngIf="alertnumber.critical>0">{{alertnumber.critical}}</span>
+            <span class="alerttable-main-menu-number alerttable-main-menu-number-warning" (click)="onAlertNumberClick($event, 'warning')"
+              *ngIf="alertnumber.warning>0">{{alertnumber.warning}}</span>
+            <span class="alerttable-main-menu-number alerttable-main-menu-number-info" (click)="onAlertNumberClick($event, 'info')" *ngIf="alertnumber.warning>0">{{alertnumber.info}}</span>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+    <!-- Table Header -->
+    <ng-template pTemplate="header" let-columns>
+      <tr>
+        <th style="width: 2.25em">
+          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+        </th>
+        <th [pSortableColumn]="columns[1].field" class="alerttable-column-date">Date
+          <p-sortIcon [field]="columns[1].field"></p-sortIcon>
+        </th>
+        <th [pSortableColumn]="columns[2].field" class="alerttable-column-name" pResizableColumn>Name
+          <p-sortIcon [field]="columns[2].field"></p-sortIcon>
+        </th>
+        <th pResizableColumn>Message</th>
+        <th [pSortableColumn]="columns[4].field" class="alerttable-column-severtiy">Severity
+          <p-sortIcon [field]="columns[4].field"></p-sortIcon>
+        </th>
+        <th class="alerttable-column-action">
+          Actions
+        </th>
+      </tr>
+    </ng-template>
+    <!-- Table Body -->
+    <ng-template pTemplate="body" let-rowData let-alert>
+      <tr [pSelectableRow]="rowData">
+        <td>
+          <p-tableCheckbox [value]="alert"></p-tableCheckbox>
+        </td>
+        <td>
+          <button type="button" class="btn btn-link alerttablerecord-date-row" (click)="onAlertClick($event,alert)">
+            {{alert.date | date:'MM-dd-yyyy HH:mm a'}}
+          </button>
+        </td>
+        <td>{{alert.name}}</td>
+        <td>{{alert.message}}</td>
+        <td>
+          <span class="alerttablerecord-icon" [ngClass]="getAlertItemIconClass(alert)">&nbsp;</span> {{alert.severity}}
+        </td>
+        <td>
+          <div class="alerttablerecord-action-column-div">
+            <button type="button" class="btn btn-link alerttablerecord-action-column-icon" (click)="onAlerttableArchiveRecord($event, alert)"
+              title="Archive">
+              <mat-icon>folder_open</mat-icon>
+            </button>
+            <button type="button" class="btn btn-link alerttablerecord-action-column-icon" (click)="onAlerttableDeleteRecord($event, alert)"
+              title="Delete">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

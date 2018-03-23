@@ -1,0 +1,44 @@
+<div class="alertlist-widget" *ngIf="alertnumber.total >0">
+  <div class="alertlist-header-div">
+    <div class="alertlist-main-menu">
+      <div class="alertlist-main-menu-number-front-group-div">
+        <span class="alertlist-main-menu-label">Alerts</span>
+        <span class="alertlist-main-menu-number alertlist-main-menu-number-total" (click)="onAlertNumberClick($event, 'total')">{{alertnumber.total | number}}</span>
+      </div>
+      <div class="alertlist-main-menu-number-back-group-div">
+        <span class="alertlist-main-menu-number alertlist-main-menu-number-critical" (click)="onAlertNumberClick($event, 'critical')"
+          *ngIf="alertnumber.critical>0">{{alertnumber.critical}}</span>
+        <span class="alertlist-main-menu-number alertlist-main-menu-number-warning" (click)="onAlertNumberClick($event, 'warning')"
+          *ngIf="alertnumber.warning>0">{{alertnumber.warning}}</span>
+        <span class="alertlist-main-menu-number alertlist-main-menu-number-info" (click)="onAlertNumberClick($event, 'info')" *ngIf="alertnumber.warning>0">{{alertnumber.info}}</span>
+      </div>
+    </div>
+    <div class="alertlist-menu-indicator" [ngStyle]="menuIndicatorCSS">
+    </div>
+  </div>
+  <div class="alertlist-items-div">
+    <ng-container *ngFor="let alert of alerts ">
+      <app-alertlistitem [data]="alert" (alertClick)="onAlertClick(alert)" *ngIf="isToShowThisAlert(alert)"></app-alertlistitem>
+    </ng-container>
+  </div>
+  <div class="alertlist-footer-div">
+    <span class="alertlist-footer-label">VIEW ALL ALERTS AND NOTIFICATIONS</span>
+    <span class="alertlist-foote-expand" (click)="onExpandAlertsClick($event)" title="Go to alerts table">
+      <i class="fa fa-external-link"></i>
+    </span>
+  </div>
+</div>
+<div class="alertlist-widget" *ngIf="alertnumber.total ==0">
+  <div class="alertlist-header-div">
+    <div class="alertlist-main-menu">
+      <div class="alertlist-main-menu-number-front-group-div">
+        <span class="alertlist-main-menu-label">Alerts</span>
+        <span class="alertlist-main-menu-number alertlist-main-menu-number-total" (click)="onAlertNumberClick($event, 'total')">{{alertnumber.total | number}}</span>
+      </div>
+    </div>
+    <div class="alertlist-empty-items-div">
+      <div class="alertlist-empty-items-img"></div>
+       <span class="alertlist-empty-items-label">NO ALERTS</span>
+    </div>
+  </div>
+</div>

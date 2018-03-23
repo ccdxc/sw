@@ -5,7 +5,57 @@
 -->
 
 <h3>Test Using plotly chart Component</h3>
+<!-- <div fxLayout="column" class="test-plotly-chart-toimage-flex-widget-outter-div">
+    <div fxFlex="30" style="background-color: blue">test1</div>
+    <div fxFlex="50" style="background-color: red">test2</div>
+    <div fxFlex style="background-color: green">test3</div>
+</div>
+<br/> -->
+<h5>plotly to image widget with custom data options</h5>
+<pw-plotlyimage 
+    [data]="plotlyDataToImageWidgetOption"
+    [layout]="plotlyLayoutToImageWidgetOptions"
+    [options]="plotlyOptionsToImageWidgetOptions"
+    [imageWidth]="plotlyDataToImageWidget_width" 
+    [imageHeight]="plotlyDataToImageWidget_height"
+    id="line"
+></pw-plotlyimage>
+<h5>plotly to image widget with flex layout</h5>
+<div fxLayout="row wrap" fxLayoutAlign="start" class="test-plotly-chart-toimage-flex-widget-outter-div">
+    <pw-plotlyimage 
+        [data]="plotlyDataToImageWidget"  
+        [fillcolor]="plotlyFlex_fillcolor1" 
+        [imageWidth]="plotlyDataToImageWidget_width" 
+        [imageHeight]="plotlyDataToImageWidget_height"
+    ></pw-plotlyimage>
+    <pw-plotlyimage 
+        [data]="plotlyDataToImageWidget"  
+        [fillcolor]="plotlyFlex_fillcolor2" 
+        [imageWidth]="plotlyDataToImageWidget_width" 
+        [imageHeight]="plotlyDataToImageWidget_height"
+    ></pw-plotlyimage>
+    <pw-plotlyimage 
+        [data]="plotlyDataToImageWidget"  
+        [fillcolor]="plotlyFlex_fillcolor3" 
+        [imageWidth]="plotlyDataToImageWidget_width" 
+        [imageHeight]="plotlyDataToImageWidget_height"
+    ></pw-plotlyimage>
+    <pw-plotlyimage 
+        [data]="plotlyDataToImageWidget"  
+        [fillcolor]="plotlyFlex_fillcolor4" 
+        [imageWidth]="plotlyDataToImageWidget_width" 
+        [imageHeight]="plotlyDataToImageWidget_height"
+    ></pw-plotlyimage>
+    <pw-plotlyimage 
+        [data]="plotlyDataToImageWidget"  
+        [fillcolor]="plotlyFlex_fillcolor5" 
+        [imageWidth]="plotlyDataToImageWidget_width" 
+        [imageHeight]="plotlyDataToImageWidget_height"
+    ></pw-plotlyimage>
+</div>
+<br/>
 <h5>plotly to image widget</h5>
+
 <div class="test-plotly-chart-toimage-widget-outter-div">
     <pw-plotlyimage 
         [data]="plotlyDataToImageWidget"  

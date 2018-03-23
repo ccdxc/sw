@@ -10,19 +10,21 @@ import { Routes, RouterModule } from '@angular/router';
  Thrid-party -  imports
  ------------------*/
 import { MomentModule } from 'angular2-moment';
-import {PrimengModule} from '@lib/primeng.module';
-import {MaterialdesignModule} from '@lib/materialdesign.module';
+import { PrimengModule } from '@lib/primeng.module';
+import { MaterialdesignModule } from '@lib/materialdesign.module';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import { GridsterModule } from 'angular-gridster2';
 /**-----
  Venice Framework UI -  imports
  ------------------*/
-import {WidgetsModule} from 'web-app-framework';
+import { WidgetsModule } from 'web-app-framework';
 /**-----
  Venice UI -  imports
  ------------------*/
-import {WorkloadComponent} from './workload.component';
-import {workloadRouter} from './workload.router';
+import { WorkloadComponent } from './workload.component';
+import { workloadRouter } from './workload.router';
 import { WorkloadwidgetComponent } from './workloadwidget/workloadwidget.component';
-
+import { SharedModule } from '@app/components/shared//shared.module';
 
 @NgModule({
   imports: [
@@ -30,12 +32,21 @@ import { WorkloadwidgetComponent } from './workloadwidget/workloadwidget.compone
     FormsModule,
 
     MomentModule,
+    GridsterModule,
     PrimengModule,
+    FlexLayoutModule,
+    MaterialdesignModule,
 
     WidgetsModule,
 
-    workloadRouter
+    workloadRouter,
+    SharedModule
+
   ],
-  declarations: [WorkloadComponent, WorkloadwidgetComponent]
+  declarations: [WorkloadComponent, WorkloadwidgetComponent],
+  exports: [WorkloadComponent, WorkloadwidgetComponent],
+  entryComponents: [
+    WorkloadwidgetComponent
+  ],
 })
 export class WorkloadModule { }

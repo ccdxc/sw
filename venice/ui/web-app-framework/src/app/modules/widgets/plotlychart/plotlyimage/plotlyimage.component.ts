@@ -8,7 +8,7 @@ import { PlotlyComponent } from '../plotly/plotly.component';
   styleUrls: ['./plotlyimage.component.css'],
   encapsulation: ViewEncapsulation.None
 })
-export class PlotlyimageComponent  implements OnInit, OnChanges {
+export class PlotlyimageComponent implements OnInit, OnChanges {
 
   protected id_prefix = 'pw-PloyChartToImage_';
 
@@ -30,6 +30,7 @@ export class PlotlyimageComponent  implements OnInit, OnChanges {
   callbackToImage: any;
   imagesource: string;
   isImageReady = false;
+  setWidgetStyles: any;
 
   constructor() {
   }
@@ -39,35 +40,31 @@ export class PlotlyimageComponent  implements OnInit, OnChanges {
     if (!this.id) {
       this.id = this.id_prefix + ModuleUtility.s4() + ModuleUtility.s4();
     }
-
   }
 
   ngOnChanges() {
     this.setup();
   }
 
-  setImageStyles() {
+  genWidgetStyles() {
     const styles = {
       'width': this.imageWidth + 'px',
       'height': this.imageHeight + 'px'
     };
+    // console.log(this.imageWidth, this.imageHeight);
     return styles;
   }
 
-
-  setWidgetStyles() {
-    return this.setImageStyles();
-  }
-
   protected setup() {
+    this.setWidgetStyles = this.genWidgetStyles();
     this._setupDefaults();
-    if (! this.options) {
+    if (!this.options) {
       this.options = this.options_default;
     }
-    if (! this.layout) {
+    if (!this.layout) {
       this.layout = this.layout_default;
     }
-    if (! this.callback) {
+    if (!this.callback) {
       this.callback = this.callbackToImage;
     }
   }
@@ -75,21 +72,33 @@ export class PlotlyimageComponent  implements OnInit, OnChanges {
   protected _setupDefaults() {
     this.isImageReady = false;
     if (this.fillcolor) {
-        this.fillcolorOption = this.fillcolor;
+      this.fillcolorOption = this.fillcolor;
     }
-    this.dataset = [
-      {
-        x: this.data.x,
-        y: this.data.y,
-        fill: 'tonexty',
-        type: 'scatter',
-        mode: 'none',
-        fillcolor: this.fillcolorOption,
-        line: {
-          shape: 'spline',
+    //If passed in data is an array,
+    //we assume it is in the data format for plotly
+    if (!this.dataset) {
+      this.dataset = [];
+    }
+    this.dataset.length = 0;
+    if (Array.isArray(this.data)) {
+      this.dataset = this.data;
+    } else {
+      this.dataset = [
+        //passed in graph data
+        {
+          x: this.data.x,
+          y: this.data.y,
+          fill: 'tonexty',
+          type: 'scatter',
+          mode: 'none',
+          fillcolor: this.fillcolorOption,
+          line: {
+            shape: 'spline',
+          }
         }
-      }
-    ];
+      ];
+    }
+
     this.layout_default = {
       autosize: true,
       margin: {
@@ -123,7 +132,7 @@ export class PlotlyimageComponent  implements OnInit, OnChanges {
     this.callbackToImage = function (Plotly, element) {
       const d3 = Plotly.d3;
       const img_png = d3.select('#' + this.id + '_pw-plotlychartimage-image-tag');
-      Plotly.toImage(element, { height: 60, width: 150 })
+      Plotly.toImage(element, { height: self.imageHeight, width: self.imageWidth })
         .then(function (url) {
           self.imagesource = url;
           self.isImageReady = true;

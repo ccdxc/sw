@@ -12,9 +12,6 @@ import { LogService } from './services/logging/log.service';
  * This is the root Component of application.
  *
  * Put shared data in this class.
- *
- *
- *
  */
 export class CommonComponent implements OnInit {
     protected successMessage = '';

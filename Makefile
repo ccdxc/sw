@@ -175,6 +175,7 @@ unit-test-verbose:
 install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
 
+# Target to create env for Venice-UI unit test
 test-debug-ui: install_box
 	box -t venice-ui:test-debug venice/ui/box.rb
 	docker rm -f venice-ui || :

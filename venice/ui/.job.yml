@@ -1,6 +1,6 @@
 ---
 targets:
-  venice-ui: [ "sh", "-c", "cd venice/ui/web-app-framework && npm install && npm run packagr && cd dist && npm pack . && cd ../ && ng test --watch false --browser ChromeHeadlessCI && cd ../webapp && npm install  ../web-app-framework/dist/web-app-framework-0.0.0.tgz && npm install && ng test --watch false --browser ChromeHeadlessCI" ]
+  venice-ui: [ "sh", "-c", "cd venice/ui/web-app-framework && npm install && npm rebuild node-sass --force && npm run packagr && cd dist && npm pack . && cd ../ && ng test --watch false --browser ChromeHeadlessCI && cd ../webapp &&  npm rebuild node-sass --force && npm install  ../web-app-framework/dist/web-app-framework-0.0.0.tgz && npm install   && ng -v && ng test --watch false  -sm=false --browser ChromeHeadlessCI" ]
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw"

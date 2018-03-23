@@ -1,0 +1,25 @@
+<div fxLayout="column" class="naples-container">
+  <app-dsbdwidgetheader fxFlex="36px" fxLayout="row" [title]="title" [last_update]="last_update"
+    [icon]="icon" [id]="id + '_header'" [menuItems]="menuItems" (widgetMenuSelect)="menuselect($event)">
+  </app-dsbdwidgetheader>
+  <div fxFlex fxLayout="row" class="naples-body">
+    <div [ngStyle]="_background_img_left" fxFlex=30 fxLayout="column" fxLayoutAlign="center" class="naples-left">
+      <div fxFlex=20 class="naples-nodecount">
+        {{venice_naples_count | number}}
+      </div>
+      <div class="naples-note-label naples-total-label">NAPLES</div>
+    </div>
+    <div fxFlex=40 class="naples-center">
+      <div class="naples-chart-div">
+        <canvas id="naples_text" class="naples-label-canvas"></canvas>
+        <p-chart type="doughnut" [data]="data" [options]="options" (onDataSelect)="itemClick($event, 'naples')"></p-chart>
+      </div>
+    </div>
+    <div [ngStyle]="_background_img_right" fxFlex=30 fxLayout="column" fxLayoutAlign="center" class="naples-right">
+      <div fxFlex=20 class="naples-discover-count">
+        {{venice_naples_discovered_count|number}}
+      </div>
+      <div class="naples-note-label  naples-discover-label">DISCOVERED</div>
+    </div>
+  </div>
+</div>

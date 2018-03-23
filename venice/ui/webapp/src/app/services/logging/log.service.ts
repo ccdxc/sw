@@ -87,7 +87,7 @@ export class LogEntry {
         let stringifyOutput = '';
         try {
           stringifyOutput = JSON.stringify(item) ;
-        }catch (err) {
+        } catch (err) {
           stringifyOutput = item.toString();
         }
 

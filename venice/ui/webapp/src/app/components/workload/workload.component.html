@@ -1,94 +1,78 @@
-<!-- 
-<h1>Workload Using Framework Bar Chart Component</h1>
-        <pw-bar-chart [data]="content.totalworkloads.chartData"></pw-bar-chart>
-<hr/> 
--->
-<h1>Workload Using Framework plotly Chart Component</h1>
-    <div class="test-3d-plotly-div">
-        <pw-plotly-chart 
-            [data]="content.plotly3Dchart.plotlyData"  
-            [layout]="content.plotly3Dchart.plotlyLayout" 
-            [options]="content.plotly3Dchart.plotlyOptions" 
-        ></pw-plotly-chart>
-    </div>
-
-<hr/> 
-<div class="row">
-    <!-- <div class="col-md-3">
-        <app-workloadwidget [data]="content.totalworkloads.chartData" [content]="content.totalworkloads.text"> </app-workloadwidget>
-    </div> -->
-    <div class="col-md-3">
-            <app-workloadwidget [data]="content.totalworkloads.data" 
-                                [layout]="content.totalworkloads.layout" 
-                                [options]="content.totalworkloads.options" 
-                                [id]="content.totalworkloads.id"
-                                [content]="content.totalworkloads.text"
-                                (widgetHeaderClick)="workloadClickHandler($event)"
-                                > 
-            </app-workloadwidget>
+<app-pagebody [icon]="bodyicon" title="Workloads">
+    <div fxLayout="row wrap" fxLayoutAlign="start" class="workload-widgetcontainer">
+        <div *ngFor="let widget of widgets">
+            <ng-container *ngTemplateOutlet="workloadCard; context:{item:widget}" ></ng-container>
         </div>
-    <div class="col-md-3">
-        <app-workloadwidget [data]="content.newworkloads.data" 
-                            [layout]="content.newworkloads.layout" 
-                            [options]="content.newworkloads.options" 
-                            [id]="content.newworkloads.id"
-                            [content]="content.newworkloads.text"
-                            (widgetHeaderClick)="workloadClickHandler($event)"> 
-        </app-workloadwidget>
     </div>
-    <div class="col-md-6">
-        <pw-plotly-chart 
-            [data]="content.plotlychart.plotlyData"  
-            [layout]="content.plotlychart.plotlyLayout" 
-            [options]="content.plotlychart.plotlyOptions" 
-        ></pw-plotly-chart>
-    </div>
-</div>
-Datatable
-<!--
-    2018-01-04. REST API's response JSON is like this. 
-    {
-      "Kind": "Endpoint",
-      "APIVersion": "v1",
-      "meta": {
-        "Name": "192.168.30.10:8989:virtualmachine-63::00:50:0a:01:00:01",
-        "Tenant": "default",
-        "ResourceVersion": "57408",
-        "UUID": "99e008f1-da16-4c26-b23e-214b0153594a",
-        "CreationTime": "2018-01-04T22:37:11.10908642Z",
-        "ModTime": "2018-01-04T22:37:11.109088162Z"
-      },
-      "spec": {},
-      "status": {
-        "endpoint-uuid": "192.168.30.10:8989:virtualmachine-63::00:50:0a:01:00:01",
-        "workload-uuid": "192.168.30.10:8989:virtualmachine-63",
-        "workload-name": "vm1",
-        "network": "default",
-        "homing-host-addr": "02:02:02:02:02:01",
-        "homing-host-name": "02:02:02:02:02:01",
-        "ipv4-address": "10.1.0.1/16",
-        "ipv4-gateway": "10.1.254.254",
-        "mac-address": "00:50:0a:01:00:01",
-        "node-uuid": "02:02:02:02:02:01",
-        "micro-segment-vlan": 2
-      }
-    }
--->
-<div>
-    <p-dataTable [value]="items" >
-        <p-column field="Kind" header="Kind"></p-column>
-        <p-column field="meta.Name" header="Workload Name"></p-column>
-        <p-column field="meta.ResourceVersion" header="meta.ResourceVersion"></p-column>
-        <p-column field="meta" header="meta.CreationTime">
-          <ng-template let-col let-record="rowData" pTemplate="body">
-              {{record[col.field]['CreationTime']|amUtc|amDateFormat: 'YYYY-MM-DD HH:mm:ss a z' }}
-          </ng-template>
-        </p-column>
-        <p-column field="meta" header="meta.ModTime">
-            <ng-template let-col let-record="rowData" pTemplate="body">
-                {{record[col.field]['ModTime']| date:'yyyy-MM-dd HH:mm a z':'-0800'}}
-            </ng-template>
-          </p-column>        
-    </p-dataTable>
+    <ng-container *ngTemplateOutlet="DataTable" ></ng-container>
+</app-pagebody>
 
-</div>
+<ng-template #workloadCard let-item="item" >
+    <app-workloadwidget
+                        [id]="item"
+                        [selected]="selectedWorkloadWidget"
+                        (workloadWidgetClick)="workloadClickHandler($event)"
+                        > 
+    </app-workloadwidget>
+</ng-template>
+
+<ng-template #DataTable>
+  <!-- Table Caption -->
+  <div fxLayout="row" class="workload-table-header">
+    <i fxFlex='nogrow' class="fa fa-table workload-table-icon"></i>
+    <div fxFlex='nogrow' class="workload-table-headercontent">
+        Total Workloads (Showing <strong>{{workloadtable?.totalRecords | number}}</strong> of {{workloadCount.total | number}})
+    </div>
+    <span fxFlex='nogrow' (click)="workloadTableAddToGroup()" class="workload-button workload-table-button workload-table-button-addtogroup">ADD TO GROUP</span>
+    <span fxFlex='nogrow' (click)="workloadTableAddLabel()" class="workload-button workload-table-button workload-table-button-addlabel">ADD LABEL</span>
+    <span fxFlex='nogrow' (click)="workloadTableDeleteWorkload()" class="workload-button workload-table-button workload-table-button-deleteworkload">DELETE WORKLOADS</span>
+    <div fxFlex='nogrow' (click)="workloadTableMoreActions()" class="workload-table-moreactions">
+      <span >More actions...</span>
+    </div>
+    <span fxFlex></span>
+    <mat-slide-toggle (change)="workloadTableToggleHandler($event)" fxFlex='nogrow' class="workload-table-toggle">Show Saved Changes</mat-slide-toggle>
+    <input fxFlex='nogrow' type="text" class="workload-table-filter" placeholder="Filter by..." (input)="workloadtable?.filterGlobal($event.target.value, 'contains')" id="myField" />
+  </div>
+  <!-- PrimeNG Turbo Table -->
+  <p-table #workloadtable [value]="workloads" [(selection)]="selectedWorkloads" dataKey="name" [rows]="10" [paginator]="true"
+  class="workload-table" [responsive]="true" [globalFilterFields]="globalFilterFields" [loading]="loading">
+    <!-- Table Header -->  
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 2.25em">
+          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+        </th>
+        <th *ngFor="let col of cols" [pSortableColumn]="col.field">
+            {{col.header}}
+            <p-sortIcon style="float: right;" [field]="col.field"></p-sortIcon>
+        </th>
+        <th class="workload-column-action">
+          Actions
+        </th>
+      </tr>
+    </ng-template>
+    <!-- Table Body -->
+    <ng-template pTemplate="body" let-rowData>
+      <tr [ngClass]="workloadTableRowStyle(rowData)" [pSelectableRow]="rowData">
+        <td>
+          <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
+        </td>
+        <td *ngFor="let col of cols">
+            {{rowData[col.field]}}
+        </td>
+        <td>
+          <div class="workloadtable-action-column-div">
+            <button type="button" class="btn btn-link workloadtable-action-column-icon" (click)="onWorkloadTableArchiveRecord($event, record)"
+              title="Archive">
+              <i class="fa fa-archive "></i>
+            </button>
+            <button type="button" class="btn btn-link workloadtable-action-column-icon" (click)="onWorkloadTableDeleteRecord($event, record)"
+              title="Delete">
+              <i class="fa fa-trash "></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</ng-template>

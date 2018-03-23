@@ -1,0 +1,21 @@
+@import '~@angular/material/theming';
+
+@mixin toolbar-theme($theme) {
+
+  $background: map-get($theme, background);
+  $foreground: map-get($theme, foreground);
+
+  .ui-breadcrumb {
+    background: if(map-has-key($background, breadcrumb_background), map-get($background, breadcrumb_background), map-get($background, background));
+  }
+
+  .ui-menuitem-text {
+    color: if(map-has-key($background, breadcrumb_color), map-get($background, breadcrumb_color), map-get($foreground, secondary-text));
+  }
+
+  .toolbarcomponent-toolbar {
+    background: if(map-has-key($background, breadcrumb_background), map-get($background, breadcrumb_background), map-get($background, background));
+  }
+}
+
+

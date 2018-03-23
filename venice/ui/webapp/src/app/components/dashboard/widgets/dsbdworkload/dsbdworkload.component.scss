@@ -1,0 +1,48 @@
+.dsbdworkloads {
+  height: 100%;
+  width: 100%;
+  font-family: "Fira Sans Condensed";
+  color: #676763;
+  font-size: 14px;
+}
+
+.dsbdworkload-left {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.dsbdworkload-right {
+  padding-top: 30px;
+}
+
+.dsbdworkload-nodecount {
+  text-align: center;
+  font-stretch: condensed;
+  width: 200px;
+  height: 64px;
+  font-size: 54px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: condensed;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: right;
+  color: #97b8df;
+}
+
+.dsbdworkload-new_nodecount {
+  font-size: 50px;
+  text-align: right;
+  color: #97b8df;
+}
+
+.dsbdworkload-content-div{
+    margin-top: -35px;
+}
+
+.dsbdworkload-count-label{
+    text-align: right;
+    color: #676763;
+}
+  

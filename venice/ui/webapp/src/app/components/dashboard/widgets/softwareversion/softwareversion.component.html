@@ -1,0 +1,31 @@
+<div fxLayout="column" class="softwareversion-container">
+  <!-- Header -->
+  <div fxLayout="row" fxFlex="50px">
+    <app-dsbdwidgetheader class="dsbd-widget-header" fxFlex fxLayout="row" [title]="title" 
+      [icon]="icon" [menuItems]="menuItems">
+    </app-dsbdwidgetheader>
+    <mat-icon class="softwareversion-icon" fxFlex="24px" 
+              (click)="onIconClick($event, 'leftIcon')">open_with
+    </mat-icon>
+    <mat-icon svgIcon="un-pin"  class="softwareversion-icon" fxFlex="24px" 
+               (click)="onIconClick($event, 'rightIcon')">
+    </mat-icon>
+  </div>
+  <!-- Body -->
+  <div class="softwareversion-widget" fxFlex fxLayout="column" fxLayoutAlign="center" >
+    <div  class="softwareversion-verion-content">{{content}}</div>
+    <div  class="softwareversion-verion-current-label">CURRENT VERSION</div>
+    <button  class="softwareversion-upgrade-button">{{upgrademessage}}</button>
+    <div  class="softwareversion-verion-current-label">License and Features</div>
+    <div class="softwareversion-features-div">
+      <div *ngFor="let feature of features; let i = index"  >
+        <a (click)="onSoftwareFeatureClick($event, feature)"  class="softwareversion-features-item">
+          <span class="softwareversion-right-top-policy-label softwareversion-right-top-violation-policy-label"
+              title="{{feature.detail}} ">{{feature.name}}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+

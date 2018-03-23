@@ -1,0 +1,23 @@
+<div fxLayout="column" class="dsbdworkloads">
+  <app-dsbdwidgetheader fxFlex="36px" fxLayout="row" [title]="title" [last_update]="last_update"
+    [icon]="icon" [id]="id + '_header'" [menuItems]="menuItems" (widgetMenuSelect)="menuselect($event)">
+  </app-dsbdwidgetheader>
+  <div fxFlex fxLayout="row">
+    <div [ngStyle]="_background_img" fxFlex=45 fxLayout="row" fxLayoutAlign="center" class="dsbdworkload-left">
+      <div class="dsbdworkload-content-div" fxLayout="column" fxLayoutAlign="center" >
+        <div class="dsbdworkload-nodecount">
+          {{veniceEndpointCount | number}}
+        </div>
+        <div class="dsbdworkload-count-label"> TOTAL WORKLOADS</div>
+        <div class="dsbdworkload-new_nodecount">
+          {{veniceNewEndpointCount| number}}
+        </div>
+        <div  class="dsbdworkload-count-label">NEW WORKLOADS</div>
+      </div>
+
+    </div>
+    <div fxFlex=55 class="dsbdworkload-right">
+      <p-chart type="bar" [data]="data" [options]="options" (onDataSelect)="itemClick($event, 'system_capacity')"></p-chart>
+    </div>
+  </div>
+  </div>

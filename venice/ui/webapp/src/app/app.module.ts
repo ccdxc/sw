@@ -14,34 +14,44 @@ import 'rxjs/add/observable/throw';
 
 // Venice Widget NPM Module
 import {WidgetsModule} from 'web-app-framework';
-import {MaterialdesignModule } from './lib/materialdesign.module';
-import {PrimengModule} from './lib/primeng.module';
+import {MaterialdesignModule } from '@app/lib/materialdesign.module';
+import {PrimengModule} from '@app/lib/primeng.module';
 
 // Third party NPM Module
 import { MomentModule } from 'angular2-moment';
-import { GridsterModule } from 'angular2gridster';
+import { GridsterModule } from 'angular-gridster2';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
 
 
 // Pensando UI services
-import { ControllerService} from './services/controller.service';
-import { AbstractService } from './services/abstract.service';
-import { AuthService } from './services/auth.service';
-import { WorkloadService } from './services/workload.service';
-import { DatafetchService } from './services/datafetch.service';
-import { VeniceUIHttpInterceptor} from './inteceptors/httpinterceptor.service';
-import { LogService } from './services/logging/log.service';
-import { LogPublishersService } from './services/logging/log-publishers.service';
-
+import { ControllerService} from '@app/services/controller.service';
+import { AbstractService } from '@app/services/abstract.service';
+import { AuthService } from '@app/services/auth.service';
+import { WorkloadService } from '@app/services/workload.service';
+import { DatafetchService } from '@app/services/datafetch.service';
+import { VeniceUIHttpInterceptor} from '@app/inteceptors/httpinterceptor.service';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { AlerttableService } from '@app/services/alerttable.service';
 // Pensando UI components
-import { routing } from './app.routing';
-import { AppComponent } from './app.component';
+import { routing } from '@app/app.routing';
+import { AppComponent } from '@app/app.component';
 
 
-import { BaseComponent } from './components/base/base.component';
-import { CommonComponent } from './common.component';
+import { BaseComponent } from '@app/components/base/base.component';
+import { CommonComponent } from '@app/common.component';
 
+// import VeniceUI modules so that they will load fast
 import { CoreModule } from '@app/core';
-import { SettingsModule } from './components/settings';
+import { SettingsModule } from '@app/components/settings';
+import { DashboardModule } from '@app/components/dashboard';
+import { AlertlistModule } from '@app/components/alertlist';
+import { AlerttableModule} from '@app/components/alerttable';
+import { LoginModule } from '@app/components/login/login.module';
+import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
+import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.component';
+
 
 /**
  * This is pensando UI web-app module. It imports all required libraries.
@@ -57,6 +67,12 @@ import { SettingsModule } from './components/settings';
     AppComponent,
     BaseComponent,
     CommonComponent,
+    ToolbarComponent,
+    IdleWarningComponent,
+  ],
+  entryComponents: [
+    BaseComponent,
+    IdleWarningComponent
   ],
   imports: [
 
@@ -71,9 +87,15 @@ import { SettingsModule } from './components/settings';
     BrowserModule,
     HttpClientModule,
     FormsModule,
+    NgIdleKeepaliveModule.forRoot(),
 
+    // VeniceUI modules
     CoreModule,
     SettingsModule,
+    AlertlistModule,
+    AlerttableModule,
+    LoginModule,
+    DashboardModule,
 
     // material-design
     MaterialdesignModule,
@@ -83,8 +105,8 @@ import { SettingsModule } from './components/settings';
 
     // moment.js
     MomentModule,
-    // angular2gridster
-    GridsterModule ,
+    GridsterModule,
+    FlexLayoutModule
 
   ],
   providers: [
@@ -95,6 +117,8 @@ import { SettingsModule } from './components/settings';
     DatafetchService,
     LogService,
     LogPublishersService,
+    AlerttableService,
+
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true }  ,
   ],

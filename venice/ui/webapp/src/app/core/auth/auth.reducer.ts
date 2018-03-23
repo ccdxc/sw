@@ -1,4 +1,3 @@
-import { UIAction } from '../core.interfaces';
 import { Action } from '@ngrx/store';
 
 export const initialState = {

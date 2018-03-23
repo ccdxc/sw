@@ -10,7 +10,13 @@
       "assets": [
         "assets",
         "data",
-        "favicon.ico"
+        "favicon.ico",
+        {
+          "glob": "*.svg",
+          "input": "../node_modules/material-design-icons/sprites/svg-sprite/",
+          "output": "assets/svg-icons"
+
+        }
       ],
       "index": "index.html",
       "main": "main.ts",

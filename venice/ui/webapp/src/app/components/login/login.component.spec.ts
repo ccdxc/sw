@@ -1,18 +1,13 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
-import { RouterTestingModule } from '@angular/router/testing';
-import { HttpClient } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-
-import { Store } from '@ngrx/store';
-
-import * as authActions from '@app/core';
-import { ControllerService } from '../../services/controller.service';
-import { AuthService } from '../../services/auth.service';
-import { LoginComponent } from './login.component';
+import { MatIconRegistry } from '@angular/material';
+import { RouterTestingModule } from '@angular/router/testing';
 import { CoreModule } from '@app/core';
+
+import { AuthService } from '../../services/auth.service';
+import { ControllerService } from '../../services/controller.service';
+import { LoginComponent } from './login.component';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -30,6 +25,7 @@ describe('LoginComponent', () => {
       providers: [
           ControllerService,
           AuthService,
+          MatIconRegistry
         ]
     })
     .compileComponents();

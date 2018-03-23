@@ -1,15 +1,12 @@
-import { Component, OnDestroy, OnInit, ViewEncapsulation, ViewChild, ElementRef } from '@angular/core';
-
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonComponent } from '@app/common.component';
+import * as authActions from '@app/core';
+import { Store } from '@ngrx/store';
+
+import { Utility } from '../../common/Utility';
+import { Eventtypes } from '../../enum/eventtypes.enum';
 import { AuthService } from '../../services/auth.service';
 import { ControllerService } from '../../services/controller.service';
-
-import {Eventtypes} from '../../enum/eventtypes.enum';
-import {Logintypes} from '../../enum/logintypes.enum';
-import { Utility } from '../../common/Utility';
-
-import { Store } from '@ngrx/store';
-import * as authActions from '@app/core';
 
 
 @Component({
@@ -34,12 +31,10 @@ export class LoginComponent  extends CommonComponent implements OnInit, OnDestro
    * Component enters init stage. It is about to show up
    */
   ngOnInit() {
-
     if (this._controllerService.isUserLogin()) {
-        this._controllerService.directPageAsUserAlreadyLogin();
+      this._controllerService.directPageAsUserAlreadyLogin();
     }
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'LoginComponent', 'state': Eventtypes.COMPONENT_INIT });
-
   }
 
   /**
@@ -85,18 +80,12 @@ export class LoginComponent  extends CommonComponent implements OnInit, OnDestro
         data => {
           // Publish AJAX-END Event
 
-          const isRESTPassed = Utility.isRESTFailed(data);
+          const isRESTPassed = Utility.isRESTSuccess(data);
           if (isRESTPassed) {
-              // process server response
-              const isLoginPassed = Utility.isRESTFailed(data);
-              if (isLoginPassed) {
-
-                this._controllerService.publish(Eventtypes.LOGIN_SUCCESS, data['response']);
-                this._controllerService.publish(Eventtypes.AJAX_END, {'ajax': 'end', 'name': 'login'});
-              }else {
-                this.errorMessage = 'Failed to login! ' + Utility.getRESTMessage(data);
-              }
-          }else {
+            // process server response
+              this._controllerService.publish(Eventtypes.LOGIN_SUCCESS, data['response']);
+              this._controllerService.publish(Eventtypes.AJAX_END, {'ajax': 'end', 'name': 'login'});
+          } else {
             this.errorMessage = 'Failed to sign in!  Please try again later '  + Utility.getRESTMessage(data);
             this._controllerService.publish(Eventtypes.AJAX_END, {'ajax': 'end', 'name': 'login'});
             this._controllerService.publish(Eventtypes.LOGIN_FAILURE,  {'ajax': 'end', 'name': 'login'});

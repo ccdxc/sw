@@ -1,0 +1,115 @@
+.policyhealth-container {
+  font-family: Fira Sans;
+  height: 300px;
+}
+
+.policyhealth-left {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: fit;
+}
+
+.policyhealth-right {
+  padding-left: 15px;
+}
+
+.policyhealth-right-most-apply-div{
+    padding-left: 10px;
+}
+
+.policyhealth-content-div {
+  margin-top: -35px;
+}
+
+.policyhealth-count-label {
+  text-align: right;
+}
+
+.policyhealt-label-canvas {
+  z-index: -1;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
+.policyhealth-chart-div {
+  position: relative;
+  width: 380px;
+  margin-left: -70px;
+}
+
+.policyhealth-right-top-label {
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: condensed;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: left;
+  color: #676763;
+  margin-bottom: 10px;
+}
+
+.policyhealth-right-top-policy-label {
+  font-size: 14px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: condensed;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: left;
+  color: #6ba0e5;
+  cursor: pointer;
+}
+
+.policyhealth-right-top-violation-policy-label{
+    color: #d66340;;
+}
+
+.policyhealth-category-labels-div {
+  text-align: center;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: condensed;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  color: #676763;
+  padding-left: 30px;
+}
+
+.policyhealth-total-count-label-div {
+  text-align: center;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: condensed;
+  line-height: normal;
+  letter-spacing: normal;
+  margin: 2px auto;
+  color: #676763;
+  padding-left: 30px;
+}
+
+.policyhealth-total-count-label-span {
+  font-weight: bold;
+}
+
+.policyhealth-category-labels-span {
+  display: inline-block;
+  width: 79.2px;
+  height: 20px;
+  border-radius: 2px;
+  text-align: center;
+  color: #fff;
+  line-height: 20px;
+}
+
+.policyhealth-category-labels-vio-span {
+  background-color: #d66340;
+}
+
+.policyhealth-category-labels-ok-span {
+  background-color: #a3cbf6;
+}

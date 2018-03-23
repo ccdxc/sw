@@ -1,8 +1,9 @@
+import * as _ from 'lodash';
+
+import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
-import { Eventtypes } from '../enum/eventtypes.enum';
-import { environment } from '../../environments/environment';
-import * as _ from 'lodash';
+
 declare var $: any;
 
 
@@ -10,12 +11,13 @@ export class Utility {
 
   static instance: Utility;
 
-  // alernate comments on/off the following two lines to use on-line or off-line REST API
-  // public static isOffLine = false;
+  // Determines wheter to use on-line or off-line REST API
   public static isOffLine = true;
 
   myControllerService: ControllerService;
   myLogService: LogService;
+
+  private constructor() { }
 
   static isIE(): boolean {
     // IF IE > 10
@@ -39,16 +41,51 @@ export class Utility {
     return hash2Obj;
   }
 
+  public static computeAlertNumbers(alerts) {
+    return {
+      total: alerts.length,
+      critical: alerts.filter((alert) => {
+        return alert.severity === 'critical';
+      }).length,
+      warning: alerts.filter((alert) => {
+        return alert.severity === 'warning';
+      }).length,
+      info: alerts.filter((alert) => {
+        return alert.severity === 'info';
+      }).length
+    };
+  }
+
   static getRandomInt(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  static getGUID() {
-    function s4() {
-      return Math.floor((1 + Math.random()) * 0x10000)
-        .toString(16)
-        .substring(1);
+  public static getRandomIntList(len: number, start: number, end: number): any {
+    const list = [];
+    for (let i = 0; i < len; i++) {
+      const value = this.getRandomInt(start, end);
+      list.push(value);
     }
+    return list;
+  }
+
+  /**
+   * Returns the complimentary values from 100
+   * Ex: [20, 30, 45] --> [80, 70, 55]
+   * @param list
+   */
+  public static getComplimentaryList(list): any {
+    const newList = [];
+
+    for (let i = 0; i < list.length; i++) {
+      const value = 100 - list[i];
+      newList.push(value);
+    }
+    return newList;
+  }
+
+  static getGUID() {
+    const s4 = this.s4;
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
   }
 
@@ -57,7 +94,6 @@ export class Utility {
       .toString(16)
       .substring(1);
   }
-
 
   static getPayloadDatetime() {
     const d = new Date();
@@ -81,7 +117,9 @@ export class Utility {
   }
 
   static convertToDate(dateInput: any): Date {
-    // server may give date string as'2014-07-06T00:00:00.000+0000', IE and Safari can deal with that.  Thus, we have a util function to parse it Date object
+    // server may give date string as'2014-07-06T00:00:00.000+0000',
+    // IE and Safari can't deal with that.
+    // Thus, we have a util function to parse it Date object
     let d;
     if (dateInput instanceof Date) {
       return dateInput;
@@ -102,11 +140,12 @@ export class Utility {
     return d;
   }
 
-  static makeFirstLetterUppercase(inputString: string): string {
-    return inputString.charAt(0).toUpperCase() + inputString.slice(1);
+  static makeFirstLetterUppercase(inputString: string, firstCharOnly: boolean = false): string {
+    if (!inputString) {
+      return inputString;
+    }
+    return (!firstCharOnly) ? inputString.charAt(0).toUpperCase() + inputString.slice(1) : inputString.charAt(0).toUpperCase();
   }
-
-
 
   static isValidDate(date: any): boolean {
     return (date instanceof Date && !isNaN(date.valueOf()));
@@ -122,7 +161,7 @@ export class Utility {
     return age;
   }
 
-  static isRESTFailed(res: any): Boolean {
+  static isRESTSuccess(res: any): Boolean {
     return (res['result'] !== 'failure');
   }
 
@@ -133,7 +172,6 @@ export class Utility {
   static getRESTMessageCode(res: any): string {
     return res['message']['errorCode'];
   }
-
 
   static getRandomDate(rangeOfDays: number, startHour: number, hourRange: number, isMinus: Boolean = true): Date {
     const today = new Date();
@@ -151,7 +189,6 @@ export class Utility {
     const dayDiff = Math.floor(diff / 1000 / 3600 / 24);
     const hourDiff = Math.floor(diff / 1000 / 60 / 24);
     const minutesDiff = Math.floor(diff / 1000 / 60);
-    const diffUnit = '';
     let unit = '';
     if (dayDiff > 0) {
       unit = (dayDiff === 1) ? 'day' : 'days';
@@ -196,7 +233,6 @@ export class Utility {
 
   /**
    * This is API recursively traverse the JSON hiearchy. I will invoke callback functions.
-   * Sample reference is in ICDView.component.ts
    *
    * objectCallback and nonObjectCallback are functions.
    * linkComponent is a compontent.ts
@@ -337,7 +373,7 @@ export class Utility {
   }
 
   static getBrowserInfomation(): Object {
-    const nVer = navigator.appVersion;
+    // const nVer = navigator.appVersion;
     const nAgt = navigator.userAgent;
     let browserName = navigator.appName;
     let fullVersion = '' + parseFloat(navigator.appVersion);
@@ -438,9 +474,6 @@ export class Utility {
     document.body.removeChild(selBox);
   }
 
-
-
-
   /**
    * Find distinct item from an array
    * input "array" is object list
@@ -501,7 +534,6 @@ export class Utility {
    *
    *  My username is tjcafferkey on Github
    */
-
   public static stringInject(str, data): string {
     if (typeof str === 'string' && (data instanceof Array)) {
 
@@ -513,7 +545,7 @@ export class Utility {
       for (const key in data) {
         if (data.hasOwnProperty(key)) {
           return str.replace(/({([^}]+)})/g, function (i) {
-            const _key = i.replace(/{/, '').replace(/}/, '');
+            i.replace(/{/, '').replace(/}/, '');
             if (!data[key]) {
               return i;
             }
@@ -526,10 +558,6 @@ export class Utility {
       return str;
     }
   }
-
-
-
-  private constructor() { }
 
   setControllerService(controllerService: ControllerService) {
     this.myControllerService = controllerService;
@@ -557,8 +585,5 @@ export class Utility {
       this.myControllerService.publish(Eventtypes.AJAX_START, { 'ajax': 'start', 'name': 'pv-AJAX' });
     }
   }
-
-
-
-
 }
+

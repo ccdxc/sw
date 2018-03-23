@@ -1,0 +1,71 @@
+.naples-container {
+  font-family: "Fira Sans Condensed";
+  height: 100%;
+  width: 100%;
+}
+
+.naples-left {
+  background-repeat: no-repeat;
+  background-position: center center;
+  margin-top: -35px;
+}
+
+.naples-right {
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-top: -35px;
+}
+
+.naples-nodecount {
+  text-align: right;
+  font-size: 54px;
+  font-stretch: condensed;
+  line-height: 1;
+  color: #ffc430;
+}
+
+.naples-discover-count {
+  font-size: 64px;
+  text-align: center;
+  font-stretch: condensed;
+  line-height: 0;
+  color: #b592e3;
+  margin-right: 50px;
+}
+
+.naples-note-label {
+  font-size: 18px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: condensed;
+  line-height: normal;
+  letter-spacing: normal;
+  color: #676763;
+}
+
+.naples-total-label {
+  text-align: right;
+}
+
+.naples-discover-label {
+  text-align: center;
+  line-height: 0;
+  margin-right: 50px;
+  margin-top: -10px;
+}
+
+.naples-label-canvas{
+  z-index: -1;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  height:225px;
+  width:450px;
+  margin-left: -50px;
+}
+
+.naples-chart-div {
+  position: relative;
+  width: 450px;
+  margin-left: -50px;
+}

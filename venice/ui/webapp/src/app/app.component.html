@@ -1,147 +1,186 @@
-
 <div class="pensUI-app {{isLoggedIn? 'pensUI-login-state':'pensUI-logoff-state'}} {{os}} {{browsertype}} {{browserversion}} {{_currentComponent? _currentComponent['component']: ''}} "
     id="pensando-ui-screen">
     <div class="pensUI-app-center " *ngIf="!isLoggedIn">
-        <router-outlet></router-outlet>
+        <app-login></app-login>
     </div>
-    <div class="pensUI-app-center " [class.alternative]="otherTheme" *ngIf="isLoggedIn">
+    <div class="pensUI-app-center " *ngIf="isLoggedIn">
         <ng-container>
             <mat-toolbar color="primary">
                 <mat-toolbar-row class="app-shell-tool-bar-row">
                     <div class="app-shell-header-logo-div">
-                            <img id="app-header-logo" class="navbar-btn app-header-logo" src="../../../assets/images/headers/pensando-header-logo.svg"
-                            />
-                            <button mat-icon-button (click)="sidenav.toggle()" title="Show Or Hide Side Menu">
-                                    <mat-icon>menu</mat-icon>
-                            </button>
-                            
-                            <button mat-icon-button (click)="onSidebarCollapseClick($event);" title="Expand Or Collapse Side Menu" [style.visibility]="sidenav.opened ? 'visible' : 'hidden'">
-                                    <mat-icon *ngIf="!isSideNavExpanded">chevron_right</mat-icon>
-                                    <mat-icon *ngIf="isSideNavExpanded">chevron_left</mat-icon>
-                            </button>
+                        <img id="app-header-logo" class="navbar-btn app-header-logo" src="../../../assets/images/headers/pensando-header-logo.svg"
+                        />
+                        <button mat-icon-button (click)="sidenav.toggle()" title="Show Or Hide Side Menu">
+                           <mat-icon svgIcon="menu-pin"></mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="onSidebarCollapseClick($event);" title="Expand Or Collapse Side Menu" [style.visibility]="sidenav.opened ? 'visible' : 'hidden'">
+                            <mat-icon svgIcon="menu-expand"  *ngIf="!isSideNavExpanded"></mat-icon>
+                            <mat-icon svgIcon="menu-collapse" *ngIf="isSideNavExpanded"></mat-icon>
+                        </button>
                     </div>
                     <div class="app-shell-header-search-div">
-                            <button type="button" class="btn btn-link app-search-button" (click)="onAppHeaderSearchClick($event)" title="Seach">
-                                    <i class="fa fa-search app-header-search-icon" ></i>
-                            </button>
-                            <p-autoComplete  styleClass="app-header-search-autocomplete-widget" [(ngModel)]="searchVeniceApplication" [suggestions]="searchVeniceApplicationsSuggestions" (completeMethod)="filterVeniceApplicationSearchSuggestions($event)"
-                                [minLength]="1" placeholder="Search" field="name" (onSelect)="onSearchVeniceApplicationSelect($event)" emptyMessage="{{noSearchSuggestion}}">
-                                <ng-template let-item pTemplate="item">
-                                    <div class="row ui-helper-clearfix app-search-autocomplete-suggestion-div" *ngIf="item.description">
-                                        <div class="col-md-6 app-create-appointment-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-name">{{item.name}}</div>
-                                        <div class="col-md-6 app-create-appointment-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-desc">{{item.description}}</div>
-                                    </div>            
-                                </ng-template>
-                            </p-autoComplete>
-                    </div>
-                    
-                    <span class="app-shell-spacer"></span>
-
-                    <button mat-button>Save</button>
-                    <button mat-icon-button (click)="onToolbarIconClick($event, 'notifications')" ><mat-icon>notifications </mat-icon></button>
-                    <button *ngIf="isLoggedIn"
-                            mat-icon-button
-                            [matMenuTriggerFor]="toolbarUserMenu">
-                        <mat-icon>person</mat-icon>
-                    </button>
-                    <mat-menu #toolbarUserMenu="matMenu">
-                        <button mat-menu-item (click)="onLogoutClick()">
-                        <mat-icon>power_settings_new</mat-icon>
-                        <span>Logout</span>
+                        <button type="button" class="btn btn-link app-search-button" (click)="onAppHeaderSearchClick($event)" title="Seach">
+                            <i class="fa fa-search app-header-search-icon"></i>
                         </button>
-                    </mat-menu>
-                    <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')"class="hidden-sm-down">
-                        <mat-icon>settings</mat-icon>
-                    </button>
+                        <p-autoComplete styleClass="app-header-search-autocomplete-widget" [(ngModel)]="searchVeniceApplication" [suggestions]="searchVeniceApplicationsSuggestions"
+                            (completeMethod)="filterVeniceApplicationSearchSuggestions($event)" [minLength]="1" placeholder="Search"
+                            field="name" (onSelect)="onSearchVeniceApplicationSelect($event)" emptyMessage="{{noSearchSuggestion}}">
+                            <ng-template let-item pTemplate="item">
+                                <div class="row ui-helper-clearfix app-search-autocomplete-suggestion-div" *ngIf="item.description">
+                                    <div class="col-md-6 app-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-name">{{item.name}}</div>
+                                    <div class="col-md-6 app-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-desc">{{item.description}}</div>
+                                </div>
+                            </ng-template>
+                        </p-autoComplete>
+                    </div>
+
+                    <span class="app-shell-spacer"></span>
+                    <div class="app-shell-toolbar-icon-div">
+                        <button mat-button>Save</button>
+                        <button mat-icon-button (click)="onToolbarIconClick($event, 'notifications')">
+                            <mat-icon>notifications </mat-icon>
+                            <span class="app-notification-number" *ngIf="alertNumbers>0">{{alertNumbers}}</span>
+                        </button>
+                        <button *ngIf="isLoggedIn" mat-icon-button [matMenuTriggerFor]="toolbarUserMenu">
+                            <mat-icon>person</mat-icon>
+                        </button>
+                        <mat-menu #toolbarUserMenu="matMenu">
+                            <button mat-menu-item (click)="onLogoutClick()">
+                                <mat-icon>power_settings_new</mat-icon>
+                                <span>Logout</span>
+                            </button>
+                        </mat-menu>
+                        <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')" class="hidden-sm-down">
+                            <mat-icon>settings</mat-icon>
+                        </button>
+                    </div>
                 </mat-toolbar-row>
+
             </mat-toolbar>
 
             <mat-sidenav-container #container class="app-shell-container" autosize>
                 <mat-sidenav #rightSideNav opened="false" mode="over" position="end" [ngSwitch]="whichRightSideNav()" class="app-shell-right-sidenav">
-                        <div *ngSwitchCase="'notifications'">
-                                <ng-container *ngTemplateOutlet="sideNavNotification; " ></ng-container>
-                        </div>
-                        <div *ngSwitchCase="'settings'">
-                            <ng-container *ngTemplateOutlet="sideNavSettings; " ></ng-container>
-                        </div>
+                    <div *ngSwitchCase="'notifications'">
+                        <ng-container *ngTemplateOutlet="sideNavNotification; "></ng-container>
+                    </div>
+                    <div *ngSwitchCase="'settings'">
+                        <ng-container *ngTemplateOutlet="sideNavSettings; "></ng-container>
+                    </div>
                 </mat-sidenav>
                 <mat-sidenav #sidenav class="app-shell-left-sidenav" mode="side" opened="true" id="app-sidebar">
-                    <!-- Sidenav content goes here! 
-                    <pw-recursivelist 
-                        [data]="sidenavmenu" 
-                        (onClick) ="onItemSelect($event)"
-                    ></pw-recursivelist>
-                    -->
+                    <!-- Side Nav Items -->
                     <ul class="list-unstyled components">
-                            <li>
-                                <a class="app-sidenav-item" id="_dashboard">
-                                    <i class="glyphicon glyphicon-link"></i>
-                                    Dashboard
-                                </a>
-                            </li>
-                            <li >
-                                <a href="#clusterSubmenu" data-toggle="collapse" aria-expanded="false">
-                                    <i class="glyphicon glyphicon-home"></i>
-                                    Cluster
-                                </a>
-                                <ul class="collapse list-unstyled" id="clusterSubmenu">
-                                    <li><a class="app-sidenav-item">Cluster Details</a></li>
-                                    <li><a class="app-sidenav-item">Tenants</a></li>
-                                    <li><a class="app-sidenav-item">Naples</a></li>
-                                </ul>
-                            </li>
-                            <li>
-                                <a class="app-sidenav-item" id="workload">
-                                    <i class="glyphicon glyphicon-link"></i>
-                                    Workload
-                                </a>
-                            </li>
-                            <li>                        
-                                <a href="#securitySubmenu" data-toggle="collapse" aria-expanded="false">
-                                    <i class="glyphicon glyphicon-duplicate"></i>
-                                    Security
-                                </a>
-                                <ul class="collapse list-unstyled" id="securitySubmenu">
-                                    <li><a class="app-sidenav-item">Security Group</a></li>
-                                    <li><a class="app-sidenav-item">Security Policy</a></li>
-                                    <li><a class="app-sidenav-item">Firewall Policy</a></li>
-                                    <li><a class="app-sidenav-item">ALG</a></li>
-                                    <li><a class="app-sidenav-item">App ID</a></li>
-                                    <li><a class="app-sidenav-item">App ID Group</a></li>
-                                    <li><a class="app-sidenav-item">App User ID</a></li>
-                                    <li><a class="app-sidenav-item">App User ID Group</a></li>
-                                </ul>
-                            </li>
-                            
-                            <li>
-                                <a href="#networkSubmenu" data-toggle="collapse" aria-expanded="false">
-                                    <i class="glyphicon glyphicon-paperclip"></i>
-                                    Network
-                                </a>
-                                <ul class="collapse list-unstyled" id="networkSubmenu">
-                                    <li><a class="app-sidenav-item">Network</a></li>
-                                    <li><a class="app-sidenav-item">Services</a></li>
-                                    <li><a class="app-sidenav-item">Loadbalance Policy</a></li>
-                                    <li><a class="app-sidenav-item">QoS Policy</a></li>
-                                    <li><a class="app-sidenav-item">Mirror Policy</a></li>
-                                </ul>                       
-                            </li>
-                            <li>
-                                <a href="#monitoringSubmenu" data-toggle="collapse" aria-expanded="false">
-                                    <i class="glyphicon glyphicon-send"></i>
-                                    Monitoring
-                                </a>
-                                <ul class="collapse list-unstyled" id="monitoringSubmenu">
-                                    <li><a class="app-sidenav-item">Metrics</a></li>
-                                    <li><a class="app-sidenav-item">Events</a></li>
-                                    <li><a class="app-sidenav-item">Troubleshooting</a></li>
-                                </ul> 
-                            </li>
-                        </ul>
-                </mat-sidenav>
+                        <li routerLink="/dashboard" routerLinkActive="app-sidenav-selected">
+                            <a class="app-sidenav-item" id="_dashboard">
+                                <i class="material-icons">dashboard</i>
+                                <span class="app-l-side-nav-item-label">Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#clusterSubmenu" data-toggle="collapse" aria-expanded="false">
+                                <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster"></i>
+                                <span class="app-l-side-nav-item-label">Cluster</span>
+                            </a>
+                            <ul class="collapse list-unstyled app-l-side-nav-ul-submenu" id="clusterSubmenu">
+                                <li class="app-l">
+                                    <a class="app-sidenav-item">Cluster Details</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">Tenants</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">Naples</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li routerLink="/workload" routerLinkActive="app-sidenav-selected">
+                            <a class="app-sidenav-item" id="workload">
+                                <i class="glyphicon app-l-side-nav-li app-l-side-nav-workload"></i>
+                                <span class="app-l-side-nav-item-label">Workload</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#securitySubmenu" data-toggle="collapse" aria-expanded="false">
+                                <i class="glyphicon app-l-side-nav-li app-l-side-nav-security"></i>
+                                <span class="app-l-side-nav-item-label">Security</span>
+                            </a>
+                            <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="securitySubmenu">
+                                <li>
+                                    <a class="app-sidenav-item">Security Group</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">Security Policy</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">Firewall Policy</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">ALG</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">App ID</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">App ID Group</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">App User ID</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">App User ID Group</a>
+                                </li>
+                            </ul>
+                        </li>
 
+                        <li>
+                            <a href="#networkSubmenu" data-toggle="collapse" aria-expanded="false">
+                                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-network"></i>
+                                    <span class="app-l-side-nav-item-label">Network</span>
+                            </a>
+                            <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="networkSubmenu">
+                                <li>
+                                    <a class="app-sidenav-item">Network</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">Services</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">Loadbalance Policy</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">QoS Policy</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">Mirror Policy</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#monitoringSubmenu" data-toggle="collapse" aria-expanded="false">
+                                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring"></i>
+                                    <span class="app-l-side-nav-item-label">Monitoring</span>
+                                
+                            </a>
+                            <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="monitoringSubmenu">
+                                <li>
+                                    <a class="app-sidenav-item">Metrics</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">Events</a>
+                                </li>
+                                <li>
+                                    <a class="app-sidenav-item">Troubleshooting</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </mat-sidenav>
                 <mat-sidenav-content>
-                    <router-outlet></router-outlet>
+                    <app-toolbar></app-toolbar>
+                    <div class="app-shell-router-outter-div">
+                       <router-outlet></router-outlet>
+                    </div>
+                    
                 </mat-sidenav-content>
             </mat-sidenav-container>
 
@@ -150,17 +189,26 @@
     </div>
 </div>
 
-<ng-template #sideNavNotification let-item="item" >
-        <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Notification">
-            Alert Widget Here
-        </div>
+<ng-template #sideNavNotification let-item="item">
+    <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Notification">
+        <app-alertlist *ngIf="alerts" [data]="alerts" (expandAllAlertsClick)="onExpandAllAlertsClick($event)"></app-alertlist>
+    </div>
 </ng-template>
 
-<ng-template #sideNavSettings let-item="item" >
-        <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">
-                <button mat-icon-button routerLink="settings" class="hidden-sm-down">
-                        <mat-icon>settings</mat-icon>
-                        Themes
-                </button>
-        </div>
+<ng-template #sideNavSettings let-item="item">
+    <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">
+        <button mat-icon-button routerLink="settings" class="hidden-sm-down">
+            <mat-icon>settings</mat-icon>
+            Themes and endpoints
+        </button>
+        <button mat-icon-button routerLink="settings" class="hidden-sm-down" (click)="pocBuildChart($event)">
+            <i class="material-icons">cake</i>
+            POC build chart with code.
+        </button>
+        <button mat-icon-button routerLink="settings" class="hidden-sm-down" (click)="pocGetAlerts($event)">
+                <i class="material-icons">system_update_alt</i>  
+                POC Get Alerts
+        </button>
+        
+    </div>
 </ng-template>

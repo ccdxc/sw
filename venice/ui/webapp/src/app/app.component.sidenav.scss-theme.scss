@@ -1,0 +1,46 @@
+@import '~@angular/material/theming';
+
+@mixin sidenav-theme($theme) {
+
+  @if map-has-key($theme, sidenav) {
+    $sidenav: map-get($theme, sidenav);
+    
+    #app-sidebar {
+      background-color: map-get($sidenav, background);
+    }
+
+    .app-sidenav-item {
+      color: map-get($sidenav, text);
+    }
+
+    .app-shell-header-logo-div {
+      background-color: map-get($sidenav, navheader);
+    }
+
+    #app-sidebar ul li a:hover {
+      background: map-get($sidenav, hover);
+    }
+
+    #app-sidebar ul li ul li a {
+      background: map-get($sidenav, nested);
+    }
+
+    #app-sidebar ul li ul li a:hover {
+      background: map-get($sidenav, nested_hover);
+    }
+
+    #app-sidebar a {
+      color: map-get($sidenav, text);
+    }
+
+    #app-sidebar .app-sidenav-selected {
+      color: map-get($sidenav, selected_text);
+      background: map-get($sidenav, selected);
+    }
+  }
+}
+
+
+
+
+

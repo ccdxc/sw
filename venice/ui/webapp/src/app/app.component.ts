@@ -1,37 +1,35 @@
-import { Component, OnDestroy, OnInit, ViewEncapsulation, ViewChild, ElementRef, Directive, HostBinding } from '@angular/core';
 import { OverlayContainer } from '@angular/cdk/overlay';
+import { Component, HostBinding, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { MatDialog } from '@angular/material';
+import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
+import { logout } from '@app/core';
+import { LogService } from '@app/services/logging/log.service';
+import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.component';
+import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 import { Store } from '@ngrx/store';
-import { Subject } from 'rxjs/Subject';
-import { takeUntil } from 'rxjs/operators/takeUntil';
 import { map } from 'rxjs/operators/map';
-import { filter } from 'rxjs/operators/filter';
+import { takeUntil } from 'rxjs/operators/takeUntil';
+import { Subject } from 'rxjs/Subject';
 
-import { login, logout } from '@app/core';
-import { environment as env } from '@env/environment';
-
+import { CommonComponent } from './common.component';
+import { MockDataUtil } from './common/MockDataUtil';
+import { Utility } from './common/Utility';
 import { selectorSettings } from './components/settings';
-
+import { Eventtypes } from './enum/eventtypes.enum';
 import { ControllerService } from './services/controller.service';
 import { DatafetchService } from './services/datafetch.service';
-import { CommonComponent } from './common.component';
-
-import { Eventtypes } from './enum/eventtypes.enum';
-import { Logintypes } from './enum/logintypes.enum';
-import { Utility } from './common/Utility';
-import { MockDataUtil } from './common/MockDataUtil';
-import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
-import { LogService } from '@app/services/logging/log.service';
+import { AlerttableService } from '@app/services/alerttable.service';
 
 
 /**
  * This is the entry point component of Pensando-Venice Web-Application
- *
  */
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss', './app.component.sidenav.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  providers: []
 })
 export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   protected os = '';
@@ -42,7 +40,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   private _currentComponent: any;
 
   // is Left-hand-side item click function registered?
-  private _boolLSNItemCLKRegistered = false;
+  private _boolIniApp = false;
 
   protected isSideNavExpanded = true;
 
@@ -51,6 +49,14 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   searchVeniceApplicationsSuggestions: any = [];
   searchVeniceApplicationString: '';
   noSearchSuggestion: String = ' ';
+
+  // alerts
+  alerts = [];
+  alertNumbers = 0;
+
+  // idling
+  showIdleWarning = false;
+  idleDialogRef: any;
 
   protected sidenavmenu: any = [
     {
@@ -76,11 +82,13 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     protected _controllerService: ControllerService,
     protected _datafetchService: DatafetchService,
     protected _logService: LogService,
+    protected _alerttableSerivce: AlerttableService,
     public overlayContainer: OverlayContainer,
     private store: Store<any>,
+    private idle: Idle,
+    public dialog: MatDialog,
   ) {
     super();
-
   }
   /**
    * Component life cycle event hook
@@ -103,7 +111,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     }
 
     this._bindtoStore();
-
   }
 
 
@@ -150,15 +157,13 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   }
 
   protected _registerSidenavMenuItemClick() {
-    if (this._boolLSNItemCLKRegistered === true) {
-      return;
-    }
+
     const jQ = Utility.getJQuery();
     const self = this;
     jQ('.app-sidenav-item').on('click', function (event) {
       self._sideNavMenuItemClickHandler(event);
     });
-    this._boolLSNItemCLKRegistered = true;
+
   }
 
   protected _sideNavMenuItemClickHandler(event) {
@@ -171,16 +176,81 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
+    /**
    * Is the user logged in?
    */
   get isLoggedIn() {
     return this._controllerService.isUserLogin();
   }
 
+  /***** Routing *****/
+
+  public navigate(path: string) {
+    this._controllerService.navigate(path);
+  }
+
+  /**
+   * handles case when user login is successful.
+   */
+  private onLogin(payload: any) {
+    this._controllerService.LoginUserInfo = payload['data'];
+    this._controllerService.directPageAsUserAlreadyLogin();
+  }
+
+  /**
+  * handles case when we find user not yet login.
+  * For example, before login, user can change browser URL to access page. But we want to block it.
+  */
+  private onNotYetLogin(payload: any) {
+    this.navigate('/login');
+  }
+
+  /**
+   * handles case when user logout event occurs
+   */
+  private onLogout(payload: any) {
+    this._controllerService.LoginUserInfo = null;
+    this.navigate('/login');
+  }
+
+
+  /**
+   * Routing the sidebar navigation
+   */
+  private onSidenavInvokation(payload) {
+    if (payload['id'] === 'workload') {
+      this.navigate('/workload');
+    } else if (payload['id'] === 'alerttable') {
+      this.navigate('/alerttable');
+    } else {
+      this.navigate('/dashboard');
+    }
+  }
+
   private _subscribeToEvents() {
+    // setting up route watching
     this.subscriptions[Eventtypes.LOGIN_FAILURE] = this._controllerService.subscribe(Eventtypes.LOGIN_FAILURE, (payload) => {
 
+    });
+
+    this.subscriptions[Eventtypes.IDLE_CHANGE] = this._controllerService.subscribe(Eventtypes.IDLE_CHANGE, (payload) => {
+      this.handleIdleChange(payload);
+    });
+
+    this.subscriptions[Eventtypes.LOGIN_SUCCESS] = this._controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
+      this.onLogin(payload);
+    });
+
+    this.subscriptions[Eventtypes.NOT_YET_LOGIN] = this._controllerService.subscribe(Eventtypes.NOT_YET_LOGIN, (payload) => {
+      this.onNotYetLogin(payload);
+    });
+
+    this.subscriptions[Eventtypes.LOGOUT] = this._controllerService.subscribe(Eventtypes.LOGOUT, (payload) => {
+      this.onLogout(payload);
+    });
+
+    this.subscriptions[Eventtypes.SIDENAV_INVOKATION_REQUEST] = this._controllerService.subscribe(Eventtypes.SIDENAV_INVOKATION_REQUEST, (payload) => {
+      this.onSidenavInvokation(payload);
     });
 
     this.subscriptions[Eventtypes.COMPONENT_INIT] = this._controllerService.subscribe(Eventtypes.COMPONENT_INIT, (payload) => {
@@ -194,7 +264,49 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   _handleComponentStateChangeInit(payload: any) {
     this._currentComponent = payload;
     if (this._currentComponent['component'] !== 'LoginComponent') {
+      this._initAppData();
+    }
+  }
+
+  _initAppData() {
+    if (this._boolIniApp === true) {
+      return;
+    } else {
       this._registerSidenavMenuItemClick();
+      this.getAlerts();
+    }
+    this._boolIniApp = true;
+    this._setupIdle();
+  }
+
+  _setupIdle() {
+    this.idle.setIdle(5);
+    this.idle.setTimeout(10);
+    this.idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
+    this.idle.onIdleEnd.subscribe(() => {this.showIdleWarning = false; });
+    this.idle.onTimeout.subscribe(() => {
+      this.idleDialogRef.close();
+      this.onLogoutClick();
+    });
+    this.idle.onTimeoutWarning.subscribe((countdown) => {
+      if (!this.showIdleWarning) {
+        this.showIdleWarning = true;
+        this.idleDialogRef = this.dialog.open(IdleWarningComponent, {
+          width: '400px',
+          hasBackdrop: true,
+          data: { countdown: countdown}
+        });
+      } else {
+        this.idleDialogRef.componentInstance.updateCountdown(countdown);
+      }
+    });
+  }
+
+  handleIdleChange(payload: any) {
+    if (payload.active) {
+      this.idle.watch();
+    } else {
+      this.idle.stop();
     }
   }
 
@@ -284,7 +396,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     }
   }
 
-
   onAppHeaderSearchClick(event) {
     this.log('APP onAppHeaderSearchClick()', );
   }
@@ -292,7 +403,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   onSearchVeniceApplicationSelect(event) {
     this.log('APP onSearchVeniceApplicationSelect()', );
   }
-
 
   // search related functions END
 
@@ -323,8 +433,80 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     }
     setTimeout(() => {
       // programmatically trigger window resize to tell sideNav container adjust widow size
-        window.dispatchEvent(new Event('resize'));
+      window.dispatchEvent(new Event('resize'));
     }, 500);
+
+  }
+
+  /**
+   * Call server to fetch all alerts to populate RHS alert-list
+   */
+  getAlerts() {
+    const payload = '';
+    this._alerttableSerivce.getAlertList(payload).subscribe(
+      data => {
+        this.alerts = data;
+        this.alertNumbers = this.alerts.length;
+      },
+      err => {
+        this.successMessage = '';
+        this.errorMessage = 'Failed to get items! ' + err;
+        this.error(err);
+      }
+    );
+  }
+
+  /**
+   * This API serves html template
+   * It response to user request of expanding all alerts (in RHS alert-list panel)
+   * @param  alertlist
+   */
+  onExpandAllAlertsClick(alertlist) {
+    console.log('AppComponet.onExpandAllAlertsClick()');
+    // this._controllerService.publish(Eventtypes.SIDENAV_INVOKATION_REQUEST, { 'id': 'alerttable' });
+    this.navigate('alerttable');
+    this._rightSideNav.close();
+
+  }
+
+  pocBuildChart($event) {
+    const baseComponent = this._controllerService.instantiateComponent('BaseComponent');
+    this._controllerService.appendComponentToDOMElement(baseComponent, document.body);
+
+    this._controllerService.buildComponentFromModule('@components/workload/workload.module#WorkloadModule', 'WorkloadwidgetComponent')
+      .then((component) => {
+        // change component properties and append component to UI view
+        this._componentSetup(component);
+        this._controllerService.appendComponentToDOMElement(component, document.body);
+      });
+  }
+
+  pocGetAlerts($event) {
+    this.getAlerts();
+    this._rightSivNavIndicator = 'notifications';
+  }
+
+  _componentSetup(component) {
+    component.instance.style_class = 'wlWidget-positive';
+    component.instance.color = '#7db1ea';
+    component.instance.id = 'test_id';
+    component.instance.title = 'Test';
+    component.instance.label = '10';
+    component.instance.styleType = 'positive';
+    component.icon = {
+      margin: {
+        top: '5px',
+        right: '5px',
+        url: 'test.com'
+      }
+    };
+    const dataset = {
+      x: [1, 2, 3, 4, 5],
+      y: [1, 3, 2, 3, 8]
+    };
+
+    component.instance.data = dataset;
+    component.instance.updateData();
 
   }
 

@@ -1,11 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
 import { RouterTestingModule } from '@angular/router/testing';
-import { HttpClient } from '@angular/common/http';
 import { HttpClientTestingModule} from '@angular/common/http/testing';
 
-
+import {MatIconRegistry} from '@angular/material';
 import { ControllerService } from '../../services/controller.service';
 import { BaseComponent } from './base.component';
 
@@ -22,6 +19,7 @@ describe('BaseComponent', () => {
         ],
       providers: [
         ControllerService,
+        MatIconRegistry
         ]
     })
     .compileComponents();

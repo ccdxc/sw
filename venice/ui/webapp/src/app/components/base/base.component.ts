@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { ControllerService } from '../../services/controller.service';
-import {Eventtypes} from '../../enum/eventtypes.enum';
-import {Logintypes} from '../../enum/logintypes.enum';
-import { Utility } from '../../common/Utility';
+
 import { CommonComponent } from '../../common.component';
+import { Utility } from '../../common/Utility';
+import { Eventtypes } from '../../enum/eventtypes.enum';
+import { ControllerService } from '../../services/controller.service';
 
 declare var google: any;
 
-
+/**
+ * Basic component that all components should extend from
+ */
 @Component({
   selector: 'app-base',
   templateUrl: './base.component.html',
@@ -19,11 +21,9 @@ export class BaseComponent extends CommonComponent implements OnInit {
 
   constructor(protected _controllerService: ControllerService) {
     super();
-
   }
 
   ngOnInit() {
-
   }
 
   /**
@@ -33,8 +33,6 @@ export class BaseComponent extends CommonComponent implements OnInit {
   getClassName(): string {
     return this.constructor.name;
   }
-
-
 
   protected loadGoogleChart() {
     if (!BaseComponent.googleLoaded) {
@@ -48,26 +46,23 @@ export class BaseComponent extends CommonComponent implements OnInit {
       }, 1000);
     }
     google.charts.setOnLoadCallback(() => {
-        window.clearInterval(this._interval);
-        this._googleChartLoaded();
+      window.clearInterval(this._interval);
+      this._googleChartLoaded();
     });
   }
 
   _googleChartLoaded() {
-      BaseComponent.googleLoaded = true;
-      this.drawGraph();
-      this._controllerService.publish(Eventtypes.GOOGLE_CHART_LOADED, {'googleChartLoaded': 'true'});
+    BaseComponent.googleLoaded = true;
+    this.drawGraph();
+    this._controllerService.publish(Eventtypes.GOOGLE_CHART_LOADED, {'googleChartLoaded': 'true'});
   }
-  // */
 
   drawGraph() {
-      this.log('GoogleChart loaded !!!! google.visualization ' + google.visualization);
+    this.log('GoogleChart loaded !!!! google.visualization ' + google.visualization);
   }
 
-
-
   createDataTable(array: any[]): any {
-      return google.visualization.arrayToDataTable(array);
+    return google.visualization.arrayToDataTable(array);
   }
 
   createChartWrapper(chartOptions, chartType, chartData, elementId): any {
@@ -85,7 +80,7 @@ export class BaseComponent extends CommonComponent implements OnInit {
   }
 
   formatDate(obj: any): Date {
-      return new Date(obj);
+    return new Date(obj);
   }
 
   protected _publishAJAXStart() {
@@ -114,86 +109,81 @@ export class BaseComponent extends CommonComponent implements OnInit {
     if ( typeof(obj) === 'string') {
       return false;
     }
-    /*if (obj!=null){
-      return false;
-    }*/
     for (const attr in obj) {
-        if (obj.hasOwnProperty(attr)) {
-            count += 1;
-        }
-
+      if (obj.hasOwnProperty(attr)) {
+        count += 1;
+      }
     }
     return (count === 0);
-}
+  }
 
-/**
- * This API traverse JSON object to trim any empty sub-treee
- */
-trimJSON(parentObj) {
-    if (typeof parentObj !== 'object') {return; }
-    if (!parentObj) {return; }
-    for (const prop in parentObj) {
-        if ( this.isObjectEmpty(parentObj[prop])) {
-            delete parentObj[prop];
-        }else {
-            this.trimJSON(parentObj[prop]);
-        }
-    }
-}
+  /**
+   * This API traverse JSON object to trim any empty sub-treee
+   */
+  trimJSON(parentObj) {
+      if (typeof parentObj !== 'object') {return; }
+      if (!parentObj) {return; }
+      for (const prop in parentObj) {
+          if ( this.isObjectEmpty(parentObj[prop])) {
+              delete parentObj[prop];
+          } else {
+              this.trimJSON(parentObj[prop]);
+          }
+      }
+  }
 
-/**
- * This API serves html template. It allows user to click off error message.
- */
-onErrorMessageClick() {
+  /**
+   * This API serves html template. It allows user to click off error message.
+   */
+  onErrorMessageClick() {
     if (this.errorMessage) {
-        this.errorMessage = null;
+      this.errorMessage = null;
     }
-}
+  }
 
-showHideSuccessMessage(message: string , milliSeconds: number = 1500) {
+  showHideSuccessMessage(message: string , milliSeconds: number = 1500) {
     this.successMessage = message;
     if (this.successMessage) {
-        setTimeout(() => {
-         this.successMessage = null;
-        }, milliSeconds);
+      setTimeout(() => {
+       this.successMessage = null;
+      }, milliSeconds);
     }
-}
+  }
 
-/**
- * This is a helper function
- */
-protected removeObjectByKeyFromList(value: string, list: any, oneOnly: boolean = true, key?: any): any {
+  /**
+   * This is a helper function
+   */
+  protected removeObjectByKeyFromList(value: string, list: any, oneOnly: boolean = true, key?: any): any {
     if (!key) {
-        key = 'value';
+      key = 'value';
     }
     const len = list.length;
     for (let i = len - 1; i >= 0; i--) {
-        const listObj = list[i];
-        if (listObj[key] === value) {
-            list.splice(i, 1);
-            if (oneOnly) {
-                break;
-            }
+      const listObj = list[i];
+      if (listObj[key] === value) {
+        list.splice(i, 1);
+        if (oneOnly) {
+          break;
         }
+      }
     }
     return list;
-}
+  }
 
- /**
- * This is a helper function
- */
+  /**
+   * This is a helper function
+   */
   protected getSelectedValueObject(value: string, list: any, key?: any): any {
     if (!key) {
         key = 'value';
     }
     for (let i = 0; list && i < list.length; i++) {
-        const listObj = list[i];
-        if (listObj[key] === value) {
-            return listObj;
-        }
+      const listObj = list[i];
+      if (listObj[key] === value) {
+          return listObj;
+      }
     }
     return null;
-}
-
+  }
 
 }

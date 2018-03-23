@@ -1,19 +1,14 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
-import { _throw } from 'rxjs/observable/throw';
 
 import { AbstractService } from './abstract.service';
-import { ControllerService } from './controller.service';
-
-import { environment } from '../../environments/environment';
-import { Logintypes } from '../enum/logintypes.enum';
 
 @Injectable()
 export class AuthService extends AbstractService {
-  private authUrl: string;
+  // private authUrl: string;
 
-  constructor(private _http: HttpClient, private _controllerService: ControllerService) {
+  constructor(private _http: HttpClient) {
     super();
   }
 
@@ -40,7 +35,7 @@ export class AuthService extends AbstractService {
    * Log the user in
    */
   login(payload: string): Observable<any> {
-    this.authUrl = this._generateLoginURL();
+    // this.authUrl = this._generateLoginURL();
     const url = this._generateLoginURL();
 
     return this.invokeAJAXGetCall(url,
