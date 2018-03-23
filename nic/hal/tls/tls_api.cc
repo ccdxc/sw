@@ -61,10 +61,10 @@ hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
 {
     HAL_TRACE_DEBUG("tls: tx data of len: {}", len);
 #ifdef TLS_TEST_BYPASS_MODEL
-    uint8_t buf[1024];
+    uint8_t buf[2048];
     send(tcpfd, data, len, 0);
-    size_t bytes = recv(tcpfd, buf, 1024, 0);
-    if(bytes <= 1024) {
+    size_t bytes = recv(tcpfd, buf, 2048, 0);
+    if(bytes <= 2048) {
         tls_api_data_receive(id, buf, bytes);
     }
     return HAL_RET_OK;
@@ -330,6 +330,7 @@ tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid)
 hal_ret_t
 tls_api_start_handshake(uint32_t enc_qid, uint32_t dec_qid, bool is_v4_flow)
 {
+    ssl_conn_args_t     conn_args = {0};
     // Start handskake towards decrypt
     // register this qid to send context
     hal::pd::pd_cpupkt_register_tx_queue_args_t args;
@@ -339,7 +340,12 @@ tls_api_start_handshake(uint32_t enc_qid, uint32_t dec_qid, bool is_v4_flow)
     hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, (void *)&args);
     // hal::pd::cpupkt_register_tx_queue(asesq_ctx, types::WRING_TYPE_ASESQ, dec_qid);
 
-    return g_ssl_helper.start_connection(dec_qid, enc_qid, is_v4_flow);
+    conn_args.id = dec_qid;
+    conn_args.oflow_id = enc_qid;
+    conn_args.is_v4_flow = is_v4_flow;
+    conn_args.cert_label = "client.crt";
+    conn_args.key_label = "client.key";
+    return g_ssl_helper.start_connection(conn_args);
 }
 
 hal_ret_t

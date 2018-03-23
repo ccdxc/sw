@@ -40,9 +40,10 @@ void dummy_ssl_msg_callback(
 
 int bytes_recv,bytes_sent;
 int port;
-char *cipher;
-char *certfile;
-char *keyfile;
+char *cipher = NULL;
+char *certfile = NULL;
+char *keyfile = NULL;
+char *clientCAfile = NULL;
 
 pthread_t server_thread;
 
@@ -50,8 +51,8 @@ void *main_server(void*);
 
 int main(int argv, char* argc[]) {
 
-  if (argv != 5) {
-    TLOG("usage: ./tls port cipher certfile keyfile\n");
+  if (argv < 5) {
+    TLOG("usage: ./tls port cipher certfile keyfile clientCAfile\n");
     exit(-1);
   }
 
@@ -62,12 +63,15 @@ int main(int argv, char* argc[]) {
   cipher = argc[2];
   certfile = argc[3];
   keyfile = argc[4];
+  if(argv == 6)
+      clientCAfile = argc[5];
 
   TLOG("Serving port %i\n", port);
   TLOG("cipher: %s,\n", cipher);
   TLOG("certfile: %s,\n", certfile);
   TLOG("keyfile: %s,\n", keyfile);
-
+  if(clientCAfile)
+    TLOG("clientCAfile: %s,\n", clientCAfile);
   SSL_library_init();
   OpenSSL_add_all_algorithms();
   ERR_load_BIO_strings();
@@ -132,6 +136,16 @@ SSL_CTX* InitServerCTX(void)
 
 void LoadCertificates(SSL_CTX* ctx, const char* CertFile, const char* KeyFile)
 {
+  if(clientCAfile) {
+    TLOG("adding CA file: %s\n", clientCAfile);
+    if(!SSL_CTX_load_verify_locations(ctx, clientCAfile, NULL)) {
+        ERR_print_errors_fp(stderr);
+        abort();
+    }
+
+    SSL_CTX_set_client_CA_list(ctx, SSL_load_client_CA_file(clientCAfile));
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, NULL);
+   }
   /* set the local certificate from CertFile */
   if ( SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0 )
     {

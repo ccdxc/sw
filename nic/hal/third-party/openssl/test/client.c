@@ -122,8 +122,51 @@ void init_pse_engine()
     printf("Successfully loaded OpenSSL Engine: %s init result: %d\n",
                             ENGINE_get_name(pse_engine), ret);
     ENGINE_set_default_EC(pse_engine);
+    ENGINE_set_default_RSA(pse_engine);
     return;
 }
+
+void LoadCertificates(SSL_CTX* ctx, SSL* ssl, char* CertFile, char* KeyFile)
+{
+
+    if(ctx) {
+        /* set the local certificate from CertFile */
+        printf("Loading certfile: %s\n", CertFile);
+        if ( SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0 ){
+            ERR_print_errors_fp(stderr);
+            abort();
+        }
+        printf("Loading Keyfile: %s\n", KeyFile);
+        /* set the private key from KeyFile (may be the same as CertFile) */
+        if ( SSL_CTX_use_PrivateKey_file(ctx, KeyFile, SSL_FILETYPE_PEM) <= 0 ){
+            ERR_print_errors_fp(stderr);
+            abort();
+        }
+        /* verify private key */
+        if ( !SSL_CTX_check_private_key(ctx) ) {
+            fprintf(stderr, "Private key does not match the public certificate\n");
+            abort();
+        }
+    } else {
+        printf("Loading certfile: %s\n", CertFile);
+        if ( SSL_use_certificate_file(ssl, CertFile, SSL_FILETYPE_PEM) <= 0 ){
+            ERR_print_errors_fp(stderr);
+            abort();
+        }
+        printf("Loading Keyfile: %s\n", KeyFile);
+        /* set the private key from KeyFile (may be the same as CertFile) */
+        if ( SSL_use_PrivateKey_file(ssl, KeyFile, SSL_FILETYPE_PEM) <= 0 ){
+            ERR_print_errors_fp(stderr);
+            abort();
+        }
+        /* verify private key */
+        if ( !SSL_check_private_key(ssl) ) {
+            fprintf(stderr, "Private key does not match the public certificate\n");
+            abort();
+        }
+    }
+}
+
 int main()
 {
     SSL_CTX *ctx;
@@ -159,18 +202,25 @@ int main()
     
     //ENGINE_set_default_EC(pse_engine);
 #endif
-    if ( (ctx = SSL_CTX_new(SSLv23_client_method())) == NULL)
-    //if ( (ctx = SSL_CTX_new(TLS_client_method())) == NULL)
+    //if ( (ctx = SSL_CTX_new(SSLv23_client_method())) == NULL)
+    if ( (ctx = SSL_CTX_new(TLS_client_method())) == NULL)
         printf("Unable to create a new SSL context structure.\n");
+
+    
+    SSL_CTX_set_verify(ctx, 0, NULL);
+    SSL_CTX_set_default_verify_file(ctx);
+    SSL_CTX_set_default_verify_dir(ctx);
 
     //SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2);
     
     // Force gcm(aes) mode
-    SSL_CTX_set_cipher_list(ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
+    //SSL_CTX_set_cipher_list(ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
     //SSL_CTX_set_cipher_list(ctx, "ECDHE-RSA-AES128-GCM-SHA256");
+    //SSL_CTX_set_cipher_list(ctx, "AES128-GCM-SHA256");
 
     ssl = SSL_new(ctx);
 
+    LoadCertificates(NULL, ssl, "certs/client.crt", "certs/client.key");
     SSL_CTX_set_info_callback(ctx, dummy_ssl_info_callback); 
     SSL_CTX_set_msg_callback(ctx, dummy_ssl_msg_callback);
     
@@ -206,9 +256,9 @@ int main()
         onevent(ssl, nbio, nbio);
         while(1) {
             // receive
-            size_t bytes = recv(transport_fd, buf, 1024, 0);
+            size_t bytes = recv(transport_fd, buf, 2048, 0);
             printf("Received from tcp: %d bytes\n", bytes);
-            if(bytes <= 1024) {
+            if(bytes <= 2048) {
                 BIO_write(nbio, buf, bytes);
                 break;
             }

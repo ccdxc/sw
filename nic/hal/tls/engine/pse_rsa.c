@@ -122,7 +122,10 @@ int pse_rsa_pub_enc(int flen, const unsigned char *from,
                                     be.data,
                                     buf,
                                     to);
+#else 
+    ret = RSA_meth_get_pub_enc(RSA_PKCS1_OpenSSL())(flen, from, to, rsa, padding);
 #endif
+
     INFO("to:");
     HEX_DUMP(to, rsa_len);
     ret = rsa_len;
@@ -146,11 +149,94 @@ int pse_rsa_pub_dec(int flen, const unsigned char *from,
     
 }
 
+/*
+ * Low level implementation of RSA sign
+ */
 int pse_rsa_priv_enc(int flen, const unsigned char *from,
                      unsigned char *to, RSA *rsa, int padding)
 {
     INFO("Inside");
-    return 1;
+    int ret = 0, rsa_len = 0;
+    unsigned char* buf = NULL;
+    pse_buffer_t bn, bd;
+    const BIGNUM *n = NULL, *e = NULL, *d = NULL;
+    BN_CTX *ctx = NULL;
+
+    if(!from || !to || !rsa) {
+        WARN("Invalid args");
+        goto cleanup;
+    }
+ 
+    rsa_len = RSA_size(rsa);
+    buf = PSE_MALLOC(rsa_len);
+    if(!buf) {
+        WARN("Failed to allocate input buffer");
+        goto cleanup;
+    }
+    INFO("flen %d, rsa_len = %d, padding %d", flen, rsa_len, padding);
+
+    switch (padding) {
+    case RSA_PKCS1_PADDING:
+        ret = RSA_padding_add_PKCS1_type_1(buf, rsa_len, from, flen);
+        break;
+    case RSA_X931_PADDING:
+        ret = RSA_padding_add_X931(buf, rsa_len, from, flen);
+        break;
+    case RSA_NO_PADDING:
+        ret = RSA_padding_add_none(buf, rsa_len, from, flen);
+        break;
+    case RSA_SSLV23_PADDING:
+    default:
+        RSAerr(RSA_F_RSA_OSSL_PUBLIC_ENCRYPT, RSA_R_UNKNOWN_PADDING_TYPE);
+        goto cleanup;
+    }
+    if(ret <= 0) {
+        WARN("Failed to add padding");
+        goto cleanup;
+    }
+
+    INFO("buf:");
+    HEX_DUMP(buf, rsa_len);
+
+    // Get n and d
+    if ((ctx = BN_CTX_new()) == NULL) {
+        WARN("Failed to allocate BN ctx");
+        goto cleanup;
+    }
+    
+    BN_CTX_start(ctx);
+    n = BN_CTX_get(ctx);
+    e = BN_CTX_get(ctx);
+    d = BN_CTX_get(ctx);
+     
+    RSA_get0_key(rsa, &n, &e, &d);
+    pse_BN_to_buffer_pad(n, &bn, rsa_len);
+    pse_BN_to_buffer_pad(d, &bd, rsa_len);
+
+    LOG_BUFFER("bn", bn);
+    LOG_BUFFER("bd", bd);
+ 
+#ifndef NO_PEN_HW_OFFLOAD
+    ret = pd_tls_asym_rsa2k_sig_gen(bn.data,
+                                    bd.data,
+                                    buf,
+                                    to);
+#else 
+    ret = RSA_meth_get_priv_enc(RSA_PKCS1_OpenSSL())(flen, from, to, rsa, padding);
+#endif
+
+    INFO("to:");
+    HEX_DUMP(to, rsa_len);
+    ret = rsa_len;
+
+cleanup:
+    if(ctx) {
+        BN_CTX_end(ctx);
+        BN_CTX_free(ctx);
+    }
+    pse_free_buffer(&bn);
+    pse_free_buffer(&bd);
+    return ret;
 }
 
 int pse_rsa_priv_dec(int flen, const unsigned char *from,

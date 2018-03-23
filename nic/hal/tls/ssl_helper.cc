@@ -67,8 +67,59 @@ std::string hex_dump(const uint8_t *buf, size_t sz)
  * SSL Connection
  ------------------------------*/
 hal_ret_t
-SSLConnection::init(SSLHelper* _helper, conn_id_t _id, SSL_CTX *_ctx)
+SSLConnection::load_certs(const char* cert_label, const char* key_label) const
 {
+    char        *cfg_path;
+    std::string dir_path;
+    std::string cert_path;
+    std::string key_path;
+
+    if(!cert_label && !key_label) {
+        return HAL_RET_OK;    
+    }
+
+    cfg_path = getenv("HAL_CONFIG_PATH");
+    if (!cfg_path) {
+        HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
+        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+    }
+    dir_path =  std::string(cfg_path) + "/openssl/certs/";
+    
+    if(cert_label) {
+        cert_path = dir_path + std::string(cert_label);
+        HAL_TRACE_DEBUG("Loading certfile {}", cert_path);
+        if ( SSL_use_certificate_file(ssl,
+                                      cert_path.c_str(),
+                                      SSL_FILETYPE_PEM) <= 0 ){
+            HAL_TRACE_ERR("Failed to add certfile to SSL");
+            return HAL_RET_SSL_CERT_KEY_ADD_ERR;
+        }
+    }
+
+    if(key_label) {
+        key_path = dir_path + std::string(key_label);
+        HAL_TRACE_DEBUG("Loading keyfile {}", key_path);
+        if ( SSL_use_PrivateKey_file(ssl,
+                                     key_path.c_str(),
+                                     SSL_FILETYPE_PEM) <= 0 ){
+            HAL_TRACE_ERR("Failed to add key to SSL");
+            return HAL_RET_SSL_CERT_KEY_ADD_ERR;
+        }
+
+        if (!SSL_check_private_key(ssl) ) {
+            HAL_TRACE_ERR("Private key does not match the public certificate");
+            return HAL_RET_SSL_CERT_KEY_ADD_ERR;
+        }
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+SSLConnection::init(SSLHelper* _helper, conn_id_t _id, SSL_CTX *_ctx,
+                    const char* cert_label, const char* key_label)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
     HAL_TRACE_DEBUG("SSL: Init connection for id: {} ", _id);
     helper = _helper;
     ctx = _ctx;
@@ -76,7 +127,12 @@ SSLConnection::init(SSLHelper* _helper, conn_id_t _id, SSL_CTX *_ctx)
     ssl = SSL_new(ctx);
     SSL_set_msg_callback(ssl, ssl_msg_callback);
     SSL_set_msg_callback_arg(ssl, this);
-
+    
+    ret = load_certs(cert_label, key_label);
+    if(ret != HAL_RET_OK) {
+        return ret;    
+    }
+    
     BIO_new_bio_pair(&ibio, 0, &nbio, 0);
     if(ibio == NULL || nbio == NULL) {
         HAL_TRACE_ERR("Failed to allocate bio");
@@ -149,7 +205,7 @@ SSLConnection::do_handshake()
 hal_ret_t
 SSLConnection::transmit_pending_data()
 {
-    uint8_t buf[1024]; // TODO: avoid this on every transmit
+    uint8_t buf[2048]; // TODO: avoid this on every transmit
     if(BIO_ctrl_pending(nbio) > 0) {
         int ret = BIO_read(nbio, buf, sizeof(buf));
         if(ret <= 0) {
@@ -385,19 +441,19 @@ SSLHelper::init_ssl_ctxt()
 }
 
 hal_ret_t
-SSLHelper::start_connection(conn_id_t id, conn_id_t oflow_id, bool type)
+SSLHelper::start_connection(const ssl_conn_args_t &args)
 {
     if(!client_ctx || !server_ctx) {
         HAL_TRACE_ERR("SSL client/server context not initialized");
         return HAL_RET_INVALID_ARG;
     }
-    HAL_TRACE_DEBUG("SSL: Starting SSL handshake for id: {}", id);
+    HAL_TRACE_DEBUG("SSL: Starting SSL handshake for id: {}", args.id);
 
     // Initialize connection
-    conn[id].init(this, id, client_ctx);
-    conn[id].set_oflowid(oflow_id);
-    conn[id].set_flow_type(type);
-    return conn[id].do_handshake();
+    conn[args.id].init(this, args.id, client_ctx, args.cert_label, args.key_label);
+    conn[args.id].set_oflowid(args.oflow_id);
+    conn[args.id].set_flow_type(args.is_v4_flow);
+    return conn[args.id].do_handshake();
 }
 
 hal_ret_t

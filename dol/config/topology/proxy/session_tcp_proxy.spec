@@ -90,6 +90,16 @@ entries:
             port : const/47802
 
     - entry:
+        label: tcp-proxy-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/83
+        initiator: 
+            port : const/47802
+
+    - entry:
         label: proxy-redir-e2e
         tracking: False
         timestamp: False

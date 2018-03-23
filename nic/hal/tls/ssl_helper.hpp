@@ -11,6 +11,7 @@
 #define MAX_KEY_SIZE        16
 #define MAX_IV_SIZE         4
 #define MAX_SEQ_NUM_SIZE    8
+
 namespace hal {
 namespace tls {
 
@@ -26,6 +27,14 @@ typedef struct hs_out_args_s {
     unsigned char   *write_seq_num;
 } hs_out_args_t;
 
+typedef struct ssl_conn_args_s {
+    conn_id_t       id;            // Identifier for the connection
+    conn_id_t       oflow_id;      // Identifier for the other flow 
+    bool            is_v4_flow;    // true if this is ipv4 flow
+    const char      *cert_label;    // Certificate
+    const char      *key_label;     // private key
+} ssl_conn_args_t;
+
 // Callbacks
 typedef hal_ret_t (*nw_send_cb)(conn_id_t id, uint8_t* data, size_t len);
 typedef hal_ret_t (*hs_done_cb)(conn_id_t id, conn_id_t oflowid, hal_ret_t ret, hs_out_args_t* args, bool is_v4_flow);
@@ -37,13 +46,14 @@ public:
     SSLConnection() {};
     ~SSLConnection() {};
 
-    hal_ret_t   init(SSLHelper *helper, conn_id_t id, SSL_CTX *_ctx);
+    hal_ret_t   init(SSLHelper *helper, conn_id_t id, SSL_CTX *_ctx,
+                     const char* cert_label, const char* key_label);
     hal_ret_t   terminate();
     hal_ret_t   do_handshake();
     hal_ret_t   process_nw_data(uint8_t* data, size_t len);
     
     conn_id_t   get_id() const {return id;};
-    conn_id_t get_oflowid() const {return oflowid;}
+    conn_id_t   get_oflowid() const {return oflowid;}
     void set_oflowid(conn_id_t oflowid_) {oflowid = oflowid_; }
     bool get_flow_type() const {return is_v4_flow;}
     void set_flow_type(bool type) {is_v4_flow = type;}
@@ -54,6 +64,7 @@ private:
     hal_ret_t       handle_ssl_ret(int ret);
     hal_ret_t       transmit_pending_data();
     void            get_hs_args(hs_out_args_t& args);
+    hal_ret_t       load_certs(const char* cert_label, const char* key_label) const;
     SSLHelper       *helper;
     SSL_CTX         *ctx;
     conn_id_t       id;
@@ -76,7 +87,7 @@ public:
     ~SSLHelper(){};
 
     hal_ret_t init(void);
-    hal_ret_t start_connection(conn_id_t id, conn_id_t oflowid, bool type);
+    hal_ret_t start_connection(const ssl_conn_args_t &args);
     hal_ret_t process_nw_data(conn_id_t id, uint8_t* data, size_t len);
 
     void set_send_cb(nw_send_cb cb) {send_cb = cb;};

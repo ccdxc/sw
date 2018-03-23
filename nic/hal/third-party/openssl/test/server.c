@@ -44,7 +44,12 @@ void dummy_ssl_msg_callback(
   printf("\tMessage callback with length: %zu\n", len);
 }
 
-
+int verify_callback(int ok, X509_STORE_CTX *ctx)
+{
+    int err = X509_STORE_CTX_get_error(ctx);
+    printf("ok: %d, err: %d", ok, err);
+    return ok;
+}
 int bytes_recv,bytes_sent;
 int port = 56789;
 
@@ -124,26 +129,38 @@ SSL_CTX* InitServerCTX(void)
   return ctx;
 }
 
-void LoadCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile)
+void LoadCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile, char* clientCA)
 {
-  /* set the local certificate from CertFile */
-  if ( SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0 )
+    if(clientCA) {
+        printf("adding CA file: %s\n", clientCA);
+        if(!SSL_CTX_load_verify_locations(ctx, clientCA, NULL)) {
+            printf("Failed to load verify locations");
+            abort();
+        }
+        
+        SSL_CTX_set_client_CA_list(ctx, SSL_load_client_CA_file(clientCA));
+        SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, NULL);
+    }
+
+    /* set the local certificate from CertFile */
+    if ( SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0 )
     {
       ERR_print_errors_fp(stderr);
       abort();
     }
-  /* set the private key from KeyFile (may be the same as CertFile) */
-  if ( SSL_CTX_use_PrivateKey_file(ctx, KeyFile, SSL_FILETYPE_PEM) <= 0 )
+    /* set the private key from KeyFile (may be the same as CertFile) */
+    if ( SSL_CTX_use_PrivateKey_file(ctx, KeyFile, SSL_FILETYPE_PEM) <= 0 )
     {
       ERR_print_errors_fp(stderr);
       abort();
     }
-  /* verify private key */
-  if ( !SSL_CTX_check_private_key(ctx) )
+    /* verify private key */
+    if ( !SSL_CTX_check_private_key(ctx) )
     {
       fprintf(stderr, "Private key does not match the public certificate\n");
       abort();
     }
+    
 }
 
 void test_tls(SSL *ssl)
@@ -201,14 +218,14 @@ void *main_server(void* unused)
 {
   SSL_CTX *ctx;
 
+  char* clientCA = "certs/ca.crt";
   ctx = InitServerCTX();/* initialize SSL */
   //LoadCertificates(ctx, "ca.crt", "ca.pem");/* load certs */
   //SSL_CTX_set_cipher_list(ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
-  LoadCertificates(ctx, "rsa.crt", "rsa.key");/* load certs */
+  LoadCertificates(ctx, "rsa.crt", "rsa.key", clientCA);/* load certs */
   //SSL_CTX_set_cipher_list(ctx, "ECDHE-RSA-AES128-SHA");
   //SSL_CTX_set_cipher_list(ctx, "ECDHE-RSA-AES128-GCM-SHA256");
-  SSL_CTX_set_cipher_list(ctx, "AES256-SHA256");
-
+  SSL_CTX_set_cipher_list(ctx, "AES128-GCM-SHA256");
   int server = OpenListener(port);/* create server socket */
   while (1)
     {

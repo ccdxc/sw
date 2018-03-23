@@ -246,6 +246,7 @@ do {                                                       \
     ENTRY(HAL_RET_ACL_NOT_FOUND,              64, "acl not found")                 \
     ENTRY(HAL_RET_COPP_NOT_FOUND,             65, "copp not found")                \
     ENTRY(HAL_RET_OPENSSL_ENGINE_NOT_FOUND,   66, "openssl engine not found")      \
+    ENTRY(HAL_RET_SSL_CERT_KEY_ADD_ERR,       67, "failed to add cert/key to SSL") \
                                                                                    \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

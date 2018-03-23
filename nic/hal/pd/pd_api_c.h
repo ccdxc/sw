@@ -11,6 +11,8 @@ int pd_tls_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
 
 int pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c);
 
+int pd_tls_asym_rsa2k_sig_gen(uint8_t *n, uint8_t *d, uint8_t *h, uint8_t *s);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
