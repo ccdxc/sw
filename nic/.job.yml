@@ -62,22 +62,3 @@ image:
 rebase: true
 logfiles:
   - /sw/nic/nic_sanity_logs.tar.gz
-  - /sw/dol/dol.log
-  - /sw/nic/hal.log
-  - /sw/nic/model.log
-  - /sw/nic/build.log
-  - /sw/nic/storage_dol.log
-  - /sw/nic/tcp_client.log
-  - /sw/nic/tcp_server.log
-  - /sw/nic/tls_server.log
-  - /sw/nic/hntap.log
-  - /sw/nic/tcp_client-v6.log
-  - /sw/nic/tcp_server-v6.log
-  - /sw/nic/tls_server-v6.log
-  - /sw/nic/hntap-v6.log
-  - /sw/nic/core.hal
-  - /sw/nic/core.cap_model
-  - /sw/nic/http_client.log
-  - /sw/nic/http_server.log
-  - /sw/nic/gen/capri_loader.conf
-  - /sw/nic/pse.log
