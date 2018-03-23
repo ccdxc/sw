@@ -3,11 +3,10 @@
 #include "rqcb.h"
 #include "types.h"
 #include "common_phv.h"
-#include "ingress.h"
 
 struct resp_tx_phv_t p;
 struct dcqcn_cb_t d;
-struct resp_tx_rqcb2_process_k_t k;
+struct resp_tx_s4_t0_k k;
 
 // Note: Below values are constants related to g.
 // TODO: Hardcoding it for now. Check if they have to be fed from HAL.
@@ -39,7 +38,7 @@ resp_tx_dcqcn_timer_process:
     
     // Timer T expired. Ring doorbell to run dcqcn algo. 
     tblmincri   d.timer_exp_cnt, 16, 1
-    DOORBELL_INC_PINDEX(k.global.lif,  k.global.qtype, k.global.qid, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
+    DOORBELL_INC_PINDEX(K_GLOBAL_LIF,  K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
     tblwr       d.num_alpha_exp_cnt, 0
 
 restart_timer: 
@@ -48,7 +47,7 @@ restart_timer:
     bbeq        d.max_rate_reached, 1, skip_timer_restart
     nop
     // Restart alpha timer. Alpha timer runs for 55us by default.
-    CAPRI_START_SLOW_TIMER(r1, r6, k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, ALPHA_TIMER_INTERVAL)
+    CAPRI_START_SLOW_TIMER(r1, r6, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, ALPHA_TIMER_INTERVAL)
 
 skip_timer_restart:
     CAPRI_SET_TABLE_0_VALID(0)

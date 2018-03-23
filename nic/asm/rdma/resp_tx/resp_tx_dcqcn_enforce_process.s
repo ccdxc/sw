@@ -5,7 +5,7 @@ struct resp_tx_phv_t p;
 struct dcqcn_cb_t d;
 
 // Note: This stage doesn't have any stage-to-stage info. k is used only to access to-stage info.
-struct resp_tx_rqcb0_write_back_process_k_t k;
+struct resp_tx_s4_t1_k k;
 
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
 // NOTE: Feeding timestamp from dcqcn_cb for now since model doesn't have timestamps.
@@ -15,8 +15,10 @@ struct resp_tx_rqcb0_write_back_process_k_t k;
 #define NUM_TOKENS_ACQUIRED  r4
 #define NUM_TOKENS_REQUIRED  r5
 
-#define RQCB0_WB_INFO_T struct resp_tx_rqcb0_write_back_info_t  
+#define RQCB0_WB_INFO_P t1_s2s_rqcb0_write_back_info
 
+#define IN_TO_S4_P  to_s4_dcqcn_info
+#define K_PKT_LEN CAPRI_KEY_RANGE(IN_TO_S4_P, packet_len_sbit0_ebit4, packet_len_sbit13_ebit13)
 %%
     .param rdma_num_clock_ticks_per_us
     .param resp_tx_rqcb0_write_back_process
@@ -30,7 +32,7 @@ resp_tx_dcqcn_enforce_process:
     bcf           [!c1], bubble_to_next_stage
     
     // Skip this stage if congestion_mgmt is disabled.
-    seq           c2, k.to_stage.s4.dcqcn.congestion_mgmt_enable, 0 //delay slot
+    seq           c2, CAPRI_KEY_FIELD(IN_TO_S4_P, congestion_mgmt_enable), 0 //delay slot
     bcf           [c2], load_write_back
     nop
 
@@ -67,7 +69,7 @@ token_replenish:
 
 rate_enforce:
     // Calculate num-tokens-required for current pkt and check with available tokens
-    add           NUM_TOKENS_REQUIRED, r0, k.to_stage.s4.dcqcn.packet_len, 3
+    add           NUM_TOKENS_REQUIRED, r0, K_PKT_LEN, 3
     slt           c3, d.cur_avail_tokens, NUM_TOKENS_REQUIRED
 
     bcf           [c3],  drop_phv
@@ -78,7 +80,7 @@ rate_enforce:
     tblwr         d.cur_avail_tokens, r2
 
     // Increment DCQCN byte-counter by pkt-len and trigger algorithm if byte-counter threshold is reached.
-    add           r2, k.to_stage.s4.dcqcn.packet_len, d.cur_byte_counter
+    add           r2, K_PKT_LEN, d.cur_byte_counter
     tblwr         d.cur_byte_counter, r2 
     slt           c2, d.cur_byte_counter, d.byte_counter_thr
     seq           c4, d.max_rate_reached, 1
@@ -89,7 +91,7 @@ ring_dcqcn_doorbell:
     // Reset cur-byte-counter, incr byte counter expiry count and ring dcqcn doorbell to update rate.
     tblwr         d.cur_byte_counter, 0
     tblmincri     d.byte_counter_exp_cnt, 0x10, 1 // byte_counter_exp_cnt is 16-bit value. 
-    DOORBELL_INC_PINDEX(k.global.lif,  k.global.qtype, k.global.qid, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
+    DOORBELL_INC_PINDEX(K_GLOBAL_LIF,  K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
     
 load_write_back:            
     // DCQCN rate-enforcement passed. Load stage 5 for write-back.
@@ -101,12 +103,16 @@ load_write_back:
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_3
-    seq           c2, k.to_stage.s3.dcqcn.congestion_mgmt_enable, 0
+    //seq           c2, k.to_stage.s3.dcqcn.congestion_mgmt_enable, 0
+    // even though it seems to be referring to "to_s4" data, actually it is 
+    // looking at "to_s3". Unfortunately, this confusion cannot be avoided
+    // unless we write separate asm programs for s3 and s4.
+    seq           c2, CAPRI_KEY_FIELD(IN_TO_S4_P, congestion_mgmt_enable), 0
     bcf           [!c1 | c2], exit
     nop           // Branch Delay Slot
 
     CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, k.to_stage.s3.dcqcn.dcqcn_cb_addr)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, CAPRI_KEY_RANGE(IN_TO_S4_P, dcqcn_cb_addr_sbit0_ebit31, dcqcn_cb_addr_sbit32_ebit33))
 
 exit:
     nop.e
@@ -117,8 +123,8 @@ drop_phv:
     // DCQCN rate-enforcement failed. Drop PHV and load rqcb1.
     phvwr         p.common.p4_intr_global_drop, 1 
 
-    CAPRI_GET_TABLE_1_ARG(resp_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, RQCB0_WB_INFO_T, rate_enforce_failed, 1)
+    CAPRI_RESET_TABLE_1_ARG()
+    CAPRI_SET_FIELD2(RQCB0_WB_INFO_P, rate_enforce_failed, 1)
 
     RQCB0_ADDR_GET(r2)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb0_write_back_process, r2)

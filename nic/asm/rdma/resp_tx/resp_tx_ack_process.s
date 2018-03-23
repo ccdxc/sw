@@ -3,11 +3,10 @@
 #include "rqcb.h"
 #include "types.h"
 #include "common_phv.h"
-#include "ingress.h"
 
 struct resp_tx_phv_t p;
 struct rqcb2_t d;
-struct resp_tx_ack_process_k_t k;
+struct resp_tx_s1_t0_k k;
 
 #define TO_STAGE_T struct resp_tx_to_stage_t
 

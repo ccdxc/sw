@@ -3,10 +3,9 @@
 #include "rqcb.h"
 #include "types.h"
 #include "common_phv.h"
-#include "ingress.h"
 
 struct resp_tx_phv_t p;
-struct resp_tx_rqcb0_write_back_process_k_t k;
+struct resp_tx_s5_t1_k k;
 struct rqcb0_t d;
 
 #define DB_ADDR             r2
@@ -14,11 +13,14 @@ struct rqcb0_t d;
 #define CURR_READ_RSP_PSN   r4
 #define DMA_CMD_BASE        r1
 
+#define IN_P t1_s2s_rqcb0_write_back_info
+#define IN_TO_S_P to_s5_rqcb1_wb_info
+
 %%
 
 resp_tx_rqcb0_write_back_process:
 
-    bbeq       k.args.rate_enforce_failed, 1, dcqcn_rl_failure
+    bbeq       CAPRI_KEY_FIELD(IN_P, rate_enforce_failed), 1, dcqcn_rl_failure
     CAPRI_SET_TABLE_1_VALID(0) // BD slot
 
 
@@ -36,28 +38,28 @@ add_headers_common:
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_TXDMA_INTRINSIC)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, common.p4_txdma_intr_qid, common.p4_txdma_intr_txdma_rsv)
-    phvwr          p.common.p4_txdma_intr_qid, k.global.qid
+    phvwr          p.common.p4_txdma_intr_qid, K_GLOBAL_QID
     RQCB0_ADDR_GET(r1)
-    phvwrpair       p.common.p4_txdma_intr_qstate_addr, r1, p.common.p4_txdma_intr_qtype, k.global.qtype
+    phvwrpair       p.common.p4_txdma_intr_qstate_addr, r1, p.common.p4_txdma_intr_qtype, K_GLOBAL_QTYPE
 
     // common-p4+
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_COMMON_P4PLUS)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, p4plus_to_p4, p4plus_to_p4);
     phvwrpair       P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
 
-    bbeq           k.to_stage.s5.rqcb0_wb.ack_nak_process, 1, add_ack_header
+    bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, ack_nak_process), 1, add_ack_header
     phvwr          P4PLUS_TO_P4_VLAN_TAG, 0 //BD-slot
 
 rsq_write_back:
-    tblwr       d.read_rsp_in_progress, k.args.read_rsp_in_progress
-    seq         c1, k.args.read_rsp_in_progress, 1
-    cmov        CURR_READ_RSP_PSN, c1, k.args.curr_read_rsp_psn, 0
+    tblwr       d.read_rsp_in_progress, CAPRI_KEY_FIELD(IN_P, read_rsp_in_progress)
+    seq         c1, CAPRI_KEY_FIELD(IN_P, read_rsp_in_progress), 1
+    cmov        CURR_READ_RSP_PSN, c1, CAPRI_KEY_FIELD(IN_P, curr_read_rsp_psn), 0
     mincr.c1    CURR_READ_RSP_PSN, 24, 1
     tblwr       d.curr_read_rsp_psn, CURR_READ_RSP_PSN
 
     // Update RSQ_C_INDEX to NEW_RSQ_C_INDEX only when read rsp NOT in progress (!c1)
     //TBD: do we need hx somewhere ?
-    tblwr.!c1   RSQ_C_INDEX, k.{to_stage.s5.rqcb0_wb.new_c_index}
+    tblwr.!c1   RSQ_C_INDEX, CAPRI_KEY_FIELD(IN_TO_S_P, new_c_index)
     tblwr       d.read_rsp_lock, 0
 
     nop.e
@@ -94,7 +96,7 @@ add_ack_header:
     nop
     
 dcqcn_rl_failure:
-    bbeq            k.to_stage.s5.rqcb0_wb.ack_nak_process, 1, exit
+    bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, ack_nak_process), 1, exit
     nop
     // release read_rsp_lock only in rsq path.
     tblwr           d.read_rsp_lock, 0   //TODO: For now avoid this, as moved this to RQCB0

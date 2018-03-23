@@ -3,14 +3,15 @@
 #include "rqcb.h"
 #include "types.h"
 #include "common_phv.h"
-#include "ingress.h"
 
 struct resp_tx_phv_t p;
 struct rqcb0_t d;
 struct rdma_stage0_table_k k;
 
-#define RQCB_TO_RQCB2_T struct resp_tx_rqcb_to_rqcb2_info_t
-#define TO_STAGE_T struct resp_tx_to_stage_t
+#define RQCB_TO_RQCB2_P t0_s2s_rqcb_to_rqcb2_info
+#define TO_S3_P to_s3_dcqcn_info
+#define TO_S4_P to_s4_dcqcn_info
+#define TO_S5_P to_s5_rqcb1_wb_info
 
 #define RSQWQE_P            r1
 #define RQCB2_P             r2
@@ -59,12 +60,10 @@ resp_tx_rqcb_process:
         add             DCQCNCB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
 
         // Pass congestion_mgmt_enable flag to stages 3 and 4.
-        CAPRI_GET_STAGE_3_ARG(resp_tx_phv_t, r7)
-        CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.dcqcn.congestion_mgmt_enable, d.congestion_mgmt_enable)
-        CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.dcqcn.dcqcn_cb_addr, DCQCNCB_ADDR)
+        CAPRI_SET_FIELD2(TO_S3_P, congestion_mgmt_enable, d.congestion_mgmt_enable)
+        CAPRI_SET_FIELD2(TO_S3_P, dcqcn_cb_addr, DCQCNCB_ADDR)
 
-        CAPRI_GET_STAGE_4_ARG(resp_tx_phv_t, r7)
-        CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.congestion_mgmt_enable, d.congestion_mgmt_enable)
+        CAPRI_SET_FIELD2(TO_S4_P, congestion_mgmt_enable, d.congestion_mgmt_enable)
 
         tblwr           d.read_rsp_lock, 1
         sll             RSQWQE_P, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
@@ -77,18 +76,17 @@ resp_tx_rqcb_process:
         phvwr           p.bth.dst_qp, d.dst_qp
 
         // send NEW_RSQ_C_INDEX to stage 5 (writeback)
-        CAPRI_GET_STAGE_5_ARG(resp_tx_phv_t, r7)
-        CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb0_wb.new_c_index, NEW_RSQ_C_INDEX)
+        CAPRI_SET_FIELD2(TO_S5_P, new_c_index, NEW_RSQ_C_INDEX)
 
         //TBD: we can avoid passing serv_type ?
-        CAPRI_GET_TABLE_0_ARG(resp_tx_phv_t, r4)
-        CAPRI_SET_FIELD(r4, RQCB_TO_RQCB2_T, curr_read_rsp_psn, d.curr_read_rsp_psn)
-        CAPRI_SET_FIELD(r4, RQCB_TO_RQCB2_T, rsqwqe_addr, RSQWQE_P)
-        CAPRI_SET_FIELD(r4, RQCB_TO_RQCB2_T, log_pmtu, d.log_pmtu)
-        CAPRI_SET_FIELD(r4, RQCB_TO_RQCB2_T, serv_type, d.serv_type)
-        CAPRI_SET_FIELD(r4, RQCB_TO_RQCB2_T, header_template_addr, d.header_template_addr)
-        CAPRI_SET_FIELD(r4, RQCB_TO_RQCB2_T, header_template_size, d.header_template_size)
-        CAPRI_SET_FIELD(r4, RQCB_TO_RQCB2_T, read_rsp_in_progress, d.read_rsp_in_progress)
+        CAPRI_RESET_TABLE_0_ARG()
+        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, curr_read_rsp_psn, d.curr_read_rsp_psn)
+        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, rsqwqe_addr, RSQWQE_P)
+        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, log_pmtu, d.log_pmtu)
+        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, serv_type, d.serv_type)
+        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, header_template_addr, d.header_template_addr)
+        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, header_template_size, d.header_template_size)
+        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, read_rsp_in_progress, d.read_rsp_in_progress)
         
 
         add             RQCB2_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
@@ -107,18 +105,15 @@ resp_tx_rqcb_process:
         add             DCQCNCB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
 
         // Pass congestion_mgmt_enable flag to stages 3 and 4.
-        CAPRI_GET_STAGE_3_ARG(resp_tx_phv_t, r7)
-        CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.dcqcn.congestion_mgmt_enable, d.congestion_mgmt_enable)
-        CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.dcqcn.dcqcn_cb_addr, DCQCNCB_ADDR)
+        CAPRI_SET_FIELD2(TO_S3_P, congestion_mgmt_enable, d.congestion_mgmt_enable)
+        CAPRI_SET_FIELD2(TO_S3_P, dcqcn_cb_addr, DCQCNCB_ADDR)
 
-        CAPRI_GET_STAGE_4_ARG(resp_tx_phv_t, r7)
-        CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.congestion_mgmt_enable, d.congestion_mgmt_enable)
+        CAPRI_SET_FIELD2(TO_S4_P, congestion_mgmt_enable, d.congestion_mgmt_enable)
 
         // send serv_type and ack processing flag to stage 5 (writeback)
         //TBD: can we move setting ack_nak_process bit to ack_process program ?
         //now that writeback loads RQCB0, we can avoid passing serv_type
-        CAPRI_GET_STAGE_5_ARG(resp_tx_phv_t, r7)
-        CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb0_wb.ack_nak_process, 1)
+        CAPRI_SET_FIELD2(TO_S5_P, ack_nak_process, 1)
 
         add             RQCB2_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_ack_process, RQCB2_P)
@@ -145,8 +140,7 @@ resp_tx_rqcb_process:
         // Increment timer-c-index and pass to stage 4. This is used to stop dcqcn-timer on reaching max-qp-rate.
         add             r3, r0, DCQCN_TIMER_C_INDEX
         mincr           r3, 16, 1 // c_index is 16 bit
-        CAPRI_GET_STAGE_4_ARG(resp_tx_phv_t, r7)
-        CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.new_timer_cindex, r3)
+        CAPRI_SET_FIELD2(TO_S4_P, new_timer_cindex, r3)
 
         add             DCQCNCB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_rate_process, DCQCNCB_ADDR)

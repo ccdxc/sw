@@ -4,6 +4,7 @@
 #include "types.h"
 #include "resp_tx_args.h"
 #include "INGRESS_p.h"
+#include "ingress.h"
 #include "common_phv.h"
 #include "defines.h"
 
@@ -76,6 +77,7 @@ struct resp_tx_phv_t {
     struct phv_ common;
 };
 
+#if 0
 struct resp_tx_phv_global_t {
     struct phv_global_common_t common;
 };
@@ -230,6 +232,7 @@ struct resp_tx_cnp_process_k_t {
     struct resp_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };  
+#endif
 
 
 #endif //__RESP_TX_H

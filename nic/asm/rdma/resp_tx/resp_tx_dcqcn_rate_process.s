@@ -3,11 +3,10 @@
 #include "rqcb.h"
 #include "types.h"
 #include "common_phv.h"
-#include "ingress.h"
 
 struct resp_tx_phv_t p;
 struct dcqcn_cb_t d;
-struct resp_tx_rqcb2_process_k_t k;
+struct resp_tx_s4_t0_k k;
 
 #define  RATE_ENFORCED  r3
 #define  TARGET_RATE    r4
@@ -25,6 +24,9 @@ struct resp_tx_rqcb2_process_k_t k;
 // Max-rate of QP in Mbps to shutdown DCQCN algorithm. DCQCN algo will be restarted again on receiving CNP.
 // TODO: This can be fed as a loader-param from HAL.
 #define QP_MAX_RATE             100000 
+
+#define IN_TO_S4_P to_s4_dcqcn_info
+#define K_NEW_TIMER_CINDEX CAPRI_KEY_RANGE(IN_TO_S4_P, new_timer_cindex_sbit0_ebit6, new_timer_cindex_sbit15_ebit15)
 
 %%
 resp_tx_dcqcn_rate_process:
@@ -78,7 +80,7 @@ additive_increase:
     bcf     [c1], exit
     nop   // BD-slot
     tblwr   d.max_rate_reached, 1
-    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, k.to_stage.s4.dcqcn.new_timer_cindex, r1, r2)
+    DOORBELL_WRITE_CINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, K_NEW_TIMER_CINDEX, r1, r2)
     nop.e
     nop
 
@@ -115,7 +117,7 @@ skip_target_rate_inc:
     bcf     [c1], exit
     nop   // BD-slot
     tblwr   d.max_rate_reached, 1
-    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, k.to_stage.s4.dcqcn.new_timer_cindex, r1, r2)
+    DOORBELL_WRITE_CINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, K_NEW_TIMER_CINDEX, r1, r2)
     nop.e
     nop
 
@@ -157,7 +159,7 @@ cnp_recv_process:
      * timer T runs as a multiplicative factor to alpha-timer. So not restarting alpha timer here 
      * should have minimal impact on timer T and subsequent dcqcn rate-increase.
      */
-    CAPRI_START_SLOW_TIMER(r1, r6, k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, ALPHA_TIMER_INTERVAL)
+    CAPRI_START_SLOW_TIMER(r1, r6, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, ALPHA_TIMER_INTERVAL)
     nop.e
     nop
 

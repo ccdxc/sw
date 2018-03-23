@@ -2,9 +2,14 @@
 /* rdma_resp_txdma.p4 */
 /***********************************************************************/
 
+#include "../common-p4+/common_txdma_dummy.p4"
+
+#define tx_table_s0_t0 rdma_stage0_table
+#define tx_table_s0_t0_action  rdma_stage0_table_action
+#define tx_table_s0_t0_action1 rdma_stage0_recirc_action
+
 /**** table declarations ****/
 
-#define tx_table_s0_t0 resp_tx_s0_t0
 #define tx_table_s0_t1 resp_tx_s0_t1
 #define tx_table_s0_t2 resp_tx_s0_t2
 #define tx_table_s0_t3 resp_tx_s0_t3
@@ -47,23 +52,24 @@
 
 #define tx_table_s0_t0_action resp_tx_rqcb_process
 
-#define tx_table_s1_t0_action resp_tx_rqcb2_process
-#define tx_table_s1_t0_action1 resp_tx_ack_process
-#define tx_table_s1_t0_action2 resp_tx_dcqcn_rate_process
-#define tx_table_s1_t0_action3 resp_tx_dcqcn_timer_process
-#define tx_table_s1_t0_action4 resp_tx_rsq_backtrack_adjust_process
+#define tx_table_s1_t0_action   resp_tx_rqcb2_process
+#define tx_table_s1_t0_action1  resp_tx_ack_process
+#define tx_table_s1_t0_action2  resp_tx_rsq_backtrack_adjust_process
 
 #define tx_table_s2_t0_action resp_tx_rsqwqe_process
 
-#define tx_table_s2_t1_action resp_tx_dcqcn_enforce_process
-
 #define tx_table_s3_t0_action resp_tx_rsqrkey_process
 
-#define tx_table_s3_t1_action resp_tx_rqcb0_write_back_process
+#define tx_table_s4_t0_action   resp_tx_rsqptseg_process
+#define tx_table_s4_t0_action1  resp_tx_dcqcn_rate_process
+#define tx_table_s4_t0_action2  resp_tx_dcqcn_timer_process
 
-#define tx_table_s4_t0_action resp_tx_rsqptseg_process
+#define tx_table_s4_t1_action   resp_tx_dcqcn_enforce_process
+
+#define tx_table_s5_t1_action   resp_tx_rqcb0_write_back_process
 
 #include "../common-p4+/common_txdma.p4"
+#include "./rdma_txdma_headers.p4"
 
 /**** Macros ****/
 
@@ -246,6 +252,15 @@ header_type resp_tx_s7_info_t {
 
 /**** header unions and scratch ****/
 
+@pragma pa_header_union ingress app_header rdma_recirc
+
+/* metadata common_global_phv_t common_phv; */
+metadata roce_recirc_header_t rdma_recirc;
+
+@pragma scratch_metadata
+/* metadata common_global_phv_t common_global_scratch; */
+metadata roce_recirc_header_t rdma_recirc_scr;
+
 /**** global header unions ****/
 
 @pragma pa_header_union ingress common_global
@@ -270,10 +285,15 @@ metadata resp_tx_to_stage_dcqcn_info_t to_s3_dcqcn_info;
 @pragma scratch_metadata
 metadata resp_tx_to_stage_dcqcn_info_t to_s3_dcqcn_info_scr;
 
-@pragma pa_header_union ingress to_stage_3
-metadata resp_tx_to_stage_rqcb1_wb_info_t to_s3_rqcb1_wb_info;
+@pragma pa_header_union ingress to_stage_4
+metadata resp_tx_to_stage_dcqcn_info_t to_s4_dcqcn_info;
 @pragma scratch_metadata
-metadata resp_tx_to_stage_rqcb1_wb_info_t to_s3_rqcb1_wb_info_scr;
+metadata resp_tx_to_stage_dcqcn_info_t to_s4_dcqcn_info_scr;
+
+@pragma pa_header_union ingress to_stage_5
+metadata resp_tx_to_stage_rqcb1_wb_info_t to_s5_rqcb1_wb_info;
+@pragma scratch_metadata
+metadata resp_tx_to_stage_rqcb1_wb_info_t to_s5_rqcb1_wb_info_scr;
 
 /**** stage to stage header unions ****/
 
@@ -312,6 +332,30 @@ metadata resp_tx_rqcb0_write_back_info_t t1_s2s_rqcb0_write_back_info;
 @pragma scratch_metadata
 metadata resp_tx_rqcb0_write_back_info_t t1_s2s_rqcb0_write_back_info_scr;
 
+/*
+ * Stage 0 table 0 action
+ */
+action rdma_stage0_table_action() {
+
+    // k + i for stage 0
+}
+
+/*
+ * Stage 0 table 0 recirc action
+ */
+action rdma_stage0_recirc_action () {
+    // k + i for stage 0
+
+    // from intrinsic
+    modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
+    modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
+    modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
+    modify_field(p4_txdma_intr_scratch.qtype, p4_txdma_intr.qtype);
+    modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
+
+    // recirc header bits
+    modify_field(rdma_recirc_scr.recirc_reason, rdma_recirc.recirc_reason);
+}
 
 action resp_tx_ack_process () {
     // from ki global
@@ -324,7 +368,8 @@ action resp_tx_ack_process () {
     modify_field(t0_s2s_rqcb_to_ack_info_scr.pad, t0_s2s_rqcb_to_ack_info.pad);
 
 }
-action resp_tx_dcqcn_enforce_process () {
+#if 0
+action resp_tx_dcqcn_enforce_process_s2 () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -342,16 +387,35 @@ action resp_tx_dcqcn_enforce_process () {
     modify_field(t1_s2s_rqcb0_write_back_info_scr.pad, t1_s2s_rqcb0_write_back_info.pad);
 
 }
+#endif
+action resp_tx_dcqcn_enforce_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s4_dcqcn_info_scr.dcqcn_cb_addr, to_s4_dcqcn_info.dcqcn_cb_addr);
+    modify_field(to_s4_dcqcn_info_scr.congestion_mgmt_enable, to_s4_dcqcn_info.congestion_mgmt_enable);
+    modify_field(to_s4_dcqcn_info_scr.packet_len, to_s4_dcqcn_info.packet_len);
+    modify_field(to_s4_dcqcn_info_scr.new_timer_cindex, to_s4_dcqcn_info.new_timer_cindex);
+    modify_field(to_s4_dcqcn_info_scr.rsvd, to_s4_dcqcn_info.rsvd);
+
+    // stage to stage
+    modify_field(t1_s2s_rqcb0_write_back_info_scr.curr_read_rsp_psn, t1_s2s_rqcb0_write_back_info.curr_read_rsp_psn);
+    modify_field(t1_s2s_rqcb0_write_back_info_scr.read_rsp_in_progress, t1_s2s_rqcb0_write_back_info.read_rsp_in_progress);
+    modify_field(t1_s2s_rqcb0_write_back_info_scr.rate_enforce_failed, t1_s2s_rqcb0_write_back_info.rate_enforce_failed);
+    modify_field(t1_s2s_rqcb0_write_back_info_scr.pad, t1_s2s_rqcb0_write_back_info.pad);
+
+}
 action resp_tx_dcqcn_rate_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s1_dcqcn_info_scr.dcqcn_cb_addr, to_s1_dcqcn_info.dcqcn_cb_addr);
-    modify_field(to_s1_dcqcn_info_scr.congestion_mgmt_enable, to_s1_dcqcn_info.congestion_mgmt_enable);
-    modify_field(to_s1_dcqcn_info_scr.packet_len, to_s1_dcqcn_info.packet_len);
-    modify_field(to_s1_dcqcn_info_scr.new_timer_cindex, to_s1_dcqcn_info.new_timer_cindex);
-    modify_field(to_s1_dcqcn_info_scr.rsvd, to_s1_dcqcn_info.rsvd);
+    modify_field(to_s4_dcqcn_info_scr.dcqcn_cb_addr, to_s4_dcqcn_info.dcqcn_cb_addr);
+    modify_field(to_s4_dcqcn_info_scr.congestion_mgmt_enable, to_s4_dcqcn_info.congestion_mgmt_enable);
+    modify_field(to_s4_dcqcn_info_scr.packet_len, to_s4_dcqcn_info.packet_len);
+    modify_field(to_s4_dcqcn_info_scr.new_timer_cindex, to_s4_dcqcn_info.new_timer_cindex);
+    modify_field(to_s4_dcqcn_info_scr.rsvd, to_s4_dcqcn_info.rsvd);
 
     // stage to stage
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.rsqwqe_addr, t0_s2s_rqcb_to_rqcb2_info.rsqwqe_addr);
@@ -369,6 +433,11 @@ action resp_tx_dcqcn_timer_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_dcqcn_info_scr.dcqcn_cb_addr, to_s4_dcqcn_info.dcqcn_cb_addr);
+    modify_field(to_s4_dcqcn_info_scr.congestion_mgmt_enable, to_s4_dcqcn_info.congestion_mgmt_enable);
+    modify_field(to_s4_dcqcn_info_scr.packet_len, to_s4_dcqcn_info.packet_len);
+    modify_field(to_s4_dcqcn_info_scr.new_timer_cindex, to_s4_dcqcn_info.new_timer_cindex);
+    modify_field(to_s4_dcqcn_info_scr.rsvd, to_s4_dcqcn_info.rsvd);
 
     // stage to stage
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.rsqwqe_addr, t0_s2s_rqcb_to_rqcb2_info.rsqwqe_addr);
@@ -386,9 +455,9 @@ action resp_tx_rqcb0_write_back_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s3_rqcb1_wb_info_scr.new_c_index, to_s3_rqcb1_wb_info.new_c_index);
-    modify_field(to_s3_rqcb1_wb_info_scr.ack_nak_process, to_s3_rqcb1_wb_info.ack_nak_process);
-    modify_field(to_s3_rqcb1_wb_info_scr.rsvd, to_s3_rqcb1_wb_info.rsvd);
+    modify_field(to_s5_rqcb1_wb_info_scr.new_c_index, to_s5_rqcb1_wb_info.new_c_index);
+    modify_field(to_s5_rqcb1_wb_info_scr.ack_nak_process, to_s5_rqcb1_wb_info.ack_nak_process);
+    modify_field(to_s5_rqcb1_wb_info_scr.rsvd, to_s5_rqcb1_wb_info.rsvd);
 
     // stage to stage
     modify_field(t1_s2s_rqcb0_write_back_info_scr.curr_read_rsp_psn, t1_s2s_rqcb0_write_back_info.curr_read_rsp_psn);

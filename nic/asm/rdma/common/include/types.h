@@ -60,7 +60,7 @@
 //256-320B RESP_RX_STATS
 //320-376B RESP_TX_STATS
 #define RQCB0_ADDR_GET(_r) \
-    sll     _r, k.global.cb_addr, RQCB_ADDR_SHIFT;
+    sll     _r, k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, RQCB_ADDR_SHIFT;
 
 #define RQCB1_ADDR_GET(_r) \
     add     _r, CB_UNIT_SIZE_BYTES, k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, RQCB_ADDR_SHIFT;

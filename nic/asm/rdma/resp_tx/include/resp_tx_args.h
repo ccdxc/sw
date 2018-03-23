@@ -1,6 +1,7 @@
 #ifndef __RESP_TX_ARGS_H
 #define __RESP_TX_ARGS_H
 
+#if 0
 #include "capri.h"
 #include "common_phv.h"
 
@@ -86,5 +87,6 @@ struct resp_tx_to_stage_t {
         struct resp_tx_s7_info_t s7;
     };
 };
+#endif
 
 #endif //__RESP_TX_ARGS_H
