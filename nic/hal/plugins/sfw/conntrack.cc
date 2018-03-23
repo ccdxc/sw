@@ -29,8 +29,48 @@ net_conntrack_extract_session_state_from_spec (fte::flow_state_t *flow_state,
     flow_state->last_pkt_ts = flow_state->create_ts;
     flow_state->packets = conn_track_info.flow_packets();
     flow_state->bytes = conn_track_info.flow_bytes();
-    flow_state->exception_bmap = conn_track_info.exception_bits();
-
+    if (conn_track_info.exceptions().tcp_syn_retransmit()) {
+        flow_state->exception_bmap |= TCP_SYN_REXMIT;
+    } 
+    if (conn_track_info.exceptions().tcp_win_zero_drop()) {
+        flow_state->exception_bmap |= TCP_WIN_ZERO_DROP;
+    } 
+    if (conn_track_info.exceptions().tcp_full_retransmit()) {
+        flow_state->exception_bmap |= TCP_FULL_REXMIT;
+    } 
+    if (conn_track_info.exceptions().tcp_partial_overlap()) {
+        flow_state->exception_bmap |= TCP_PARTIAL_OVERLAP;
+    } 
+    if (conn_track_info.exceptions().tcp_packet_reorder()) {
+        flow_state->exception_bmap |= TCP_PACKET_REORDER;
+    } 
+    if (conn_track_info.exceptions().tcp_out_of_window()) {
+        flow_state->exception_bmap |= TCP_OUT_OF_WINDOW;
+    } 
+    if (conn_track_info.exceptions().tcp_invalid_ack_num()) {
+        flow_state->exception_bmap |= TCP_ACK_ERR;
+    } 
+    if (conn_track_info.exceptions().tcp_normalization_drop()) {
+        flow_state->exception_bmap |= TCP_NORMALIZATION_DROP;
+    } 
+    if (conn_track_info.exceptions().tcp_split_handshake_detected()) {
+        flow_state->exception_bmap |= TCP_SPLIT_HANDSHAKE_DETECTED;
+    } 
+    if (conn_track_info.exceptions().tcp_data_after_fin()) {
+        flow_state->exception_bmap |= TCP_DATA_AFTER_FIN;
+    } 
+    if (conn_track_info.exceptions().tcp_non_rst_pkt_after_rst()) {
+        flow_state->exception_bmap |= TCP_NON_RST_PKT_AFTER_RST;
+    } 
+    if (conn_track_info.exceptions().tcp_invalid_first_pkt_from_responder()) {
+        flow_state->exception_bmap |= TCP_INVALID_RESPONDER_FIRST_PKT;
+    } 
+    if (conn_track_info.exceptions().tcp_unexpected_pkt()) {
+        flow_state->exception_bmap |= TCP_UNEXPECTED_PKT;
+    } 
+    if (conn_track_info.exceptions().tcp_rst_with_invalid_ack_num()) {
+        flow_state->exception_bmap |= TCP_RST_WITH_INVALID_ACK_NUM;
+    } 
     return HAL_RET_OK;
 }
 

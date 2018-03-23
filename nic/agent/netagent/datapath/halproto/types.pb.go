@@ -728,6 +728,7 @@
 		FlowKeyV6
 		FlowKey
 		FlowInfo
+		ConnTrackExceptions
 		ConnTrackInfo
 		FlowData
 		FlowSpec

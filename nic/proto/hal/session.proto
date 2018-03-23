@@ -134,12 +134,30 @@ message FlowInfo {
   repeated telemetry.MirrorSessionId egr_mirror_sessions  = 11;    // Mirror sessions to copy the flow to
 }
 
+
+message ConnTrackExceptions {
+  bool tcp_syn_retransmit                   = 1;
+  bool tcp_win_zero_drop                    = 2;
+  bool tcp_full_retransmit                  = 3;
+  bool tcp_partial_overlap                  = 4;
+  bool tcp_packet_reorder                   = 5;
+  bool tcp_out_of_window                    = 6;
+  bool tcp_invalid_ack_num                  = 7;
+  bool tcp_normalization_drop               = 8;
+  bool tcp_split_handshake_detected         = 9;
+  bool tcp_data_after_fin                   = 10;
+  bool tcp_non_rst_pkt_after_rst            = 11;
+  bool tcp_invalid_first_pkt_from_responder = 12;
+  bool tcp_unexpected_pkt                   = 13;
+  bool tcp_rst_with_invalid_ack_num         = 14;
+}
+
 // ConnTrackInfo contains dynamic information that was recorded due to connection tracking
 message ConnTrackInfo {
   fixed64              flow_create_ts = 1;    // flow creation timestamp
   fixed64              flow_bytes     = 2;    // number of bytes seen
   fixed32              flow_packets   = 3;    // number of packets seen
-  fixed32              exception_bits = 4;    // exceptions seen in the flow
+  ConnTrackExceptions  exceptions     = 4;    // exceptions seen in the flow
   fixed32              tcp_seq_num    = 5;    // TCP sequence number
   fixed32              tcp_ack_num    = 6;    // TCP ack number
   uint32               tcp_win_sz     = 7;    // TCP window size
