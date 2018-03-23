@@ -26,7 +26,7 @@ class EndpointManager(object):
         
         def Start(self):
             self._process_hdl = self.__start_endpoint()
-            self._connector = RPCClient('tcp://localhost:{}'.format(self._port), timeout=100000)
+            self._connector = RPCClient('tcp://localhost:{}'.format(self._port), timeout=600000)
         
         def Run(self, name, cmd, timeout=None, background=False):
             return self._connector.process_run(name, cmd, timeout, background)
