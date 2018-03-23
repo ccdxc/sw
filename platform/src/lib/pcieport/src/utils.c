@@ -182,3 +182,9 @@ pcieport_rx_credit_bfr(const int port, const int base, const int limit)
 
     pal_reg_wr32w(RX_CREDIT_BFR_ADDR, r.w, 6);
 }
+
+u_int16_t
+pcieport_get_phystatus(pcieport_t *p)
+{
+    return pal_reg_rd32(PXC_(STA_C_PORT_PHYSTATUS, p->port));
+}

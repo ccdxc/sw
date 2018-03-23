@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -82,6 +82,35 @@ pcieport_unreset(pcieport_t *p)
 }
 
 static void
+pcieport_mac_unreset(pcieport_t *p)
+{
+    u_int16_t phystatus;
+    const int maxloops = 1000;
+    int loops = 0;
+
+    do {
+        usleep(1000);
+        phystatus = pcieport_get_phystatus(p);
+    } while (phystatus && ++loops < maxloops);
+
+    p->phypolllast = loops;
+    if (loops > p->phypollmax) {
+        p->phypollmax = loops;
+    }
+
+    if (phystatus != 0) {
+        /*
+         * PHY didn't come out of reset as expected?
+         * Make some noise about it.
+         */
+        pciehsys_error("Warning: port%d phy reset phystatus 0x%x\n",
+                       p->port, phystatus);
+        /* pcieport_fault(p, "PHY reset failed"); */
+    }
+    pcieport_set_mac_reset(p, 0); /* mac unreset */
+}
+
+static void
 pcieport_hostconfig(pcieport_t *p)
 {
     /* toggle these resets */
@@ -96,8 +125,8 @@ pcieport_hostconfig(pcieport_t *p)
     pcieport_mac_k_rx_cred(p);
     pcieport_mac_k_pciconf(p);
     pcieport_mac_set_ids(p);
-
-    pcieport_set_mac_reset(p, 0); /* mac unreset */
+    /* now ready to unreset mac */
+    pcieport_mac_unreset(p);
 
     /* XXX !is_asic only XXX */
     pcieport_set_clock_freq(p, 8);

@@ -130,6 +130,8 @@ cmd_port(int argc, char *argv[])
     pciehsys_log("%-*s: %d\n", w, "state", p->state);
     pciehsys_log("%-*s: %d\n", w, "event", p->event);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "linkup", p->linkup);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "phypolllast", p->phypolllast);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "phypollmax", p->phypollmax);
 }
 
 typedef struct cmd_s {

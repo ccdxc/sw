@@ -45,6 +45,8 @@ struct pcieport_s {
     pcieportst_t state;
     pcieportev_t event;
     u_int64_t linkup;
+    u_int64_t phypolllast;
+    u_int64_t phypollmax;
 };
 typedef struct pcieport_s pcieport_t;
 
@@ -66,6 +68,7 @@ void pcieport_set_mac_reset(pcieport_t *p, const int on);
 void pcieport_set_ltssm_en(pcieport_t *p, const int on);
 void pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq);
 void pcieport_rx_credit_bfr(const int port, const int base, const int limit);
+u_int16_t pcieport_get_phystatus(pcieport_t *p);
 
 void pcieport_fsm_dbg(int argc, char *argv[]);
 
