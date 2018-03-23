@@ -10,50 +10,38 @@
 #include <infiniband/driver.h>
 #include <util/udma_barrier.h>
 
-#include "ionic_dbg.h"
 #include "ionic-abi.h"
+
+#include "ionic_dbg.h"
+#include "ionic_memory.h"
 #include "ionic_queue.h"
-#include "memory.h"
 #include "table.h"
 
 #define DEV			"ionic : "
 
-#define IONIC_UD_QP_HW_STALL	0x400000
-
-struct ionic_pd {
-	struct ibv_pd		ibpd;
-	uint32_t		pdid;
-};
-
 struct ionic_ctx {
 	struct verbs_context	vctx;
-	uint32_t		max_qp;
 
-	uint64_t		*dbpage;
+	uint32_t		version;
+	bool			fallback;
+
 	uint8_t			sq_qtype;
 	uint8_t			rq_qtype;
 	uint8_t			cq_qtype;
 
+	uint64_t		*dbpage;
+
 	pthread_mutex_t		mut;
 	struct tbl_root		qp_tbl;
-	struct list_head	cq_list;
 };
 
 struct ionic_cq {
 	struct ibv_cq		ibcq;
-	struct list_node	ctx_ent;
 
 	uint32_t		cqid;
 
 	pthread_spinlock_t	lock;
 	struct ionic_queue	q;
-
-	/* XXX cleanup */
-	uint8_t			qtype;
-};
-
-struct ionic_srq {
-	struct ibv_srq		ibsrq;
 };
 
 struct ionic_wrid {
@@ -84,13 +72,21 @@ struct ionic_rq_meta {
 };
 
 struct ionic_qp {
-	struct ibv_qp		ibqp;
+	union {
+		struct verbs_qp		vqp;
+		struct verbs_srq	vsrq;
+	};
+
+	bool			is_srq;
 
 	uint32_t		qpid;
 
 	pthread_spinlock_t	sq_lock;
 	struct ionic_queue	sq;
 	struct ionic_sq_meta	*sq_meta;
+
+	void			*sq_hbm_ptr;
+	uint16_t		sq_hbm_prod;
 
 	/* next sequence number to complete, 24bit, initialized to 1 */
 	uint32_t		sq_local;
@@ -99,15 +95,6 @@ struct ionic_qp {
 	pthread_spinlock_t	rq_lock;
 	struct ionic_queue	rq;
 	struct ionic_rq_meta	*rq_meta;
-
-	/* XXX cleanup */
-	struct ionic_qpcap	cap;
-	uint8_t			sq_qtype;
-	uint8_t			rq_qtype;
-};
-
-struct ionic_mr {
-	struct ibv_mr		ibmr;
 };
 
 struct ionic_ah {
@@ -134,11 +121,6 @@ static inline struct ionic_ctx *to_ionic_ctx(struct ibv_context *ibctx)
 	return container_of(ibctx, struct ionic_ctx, vctx.context);
 }
 
-static inline struct ionic_pd *to_ionic_pd(struct ibv_pd *ibpd)
-{
-	return container_of(ibpd, struct ionic_pd, ibpd);
-}
-
 static inline struct ionic_cq *to_ionic_cq(struct ibv_cq *ibcq)
 {
 	return container_of(ibcq, struct ionic_cq, ibcq);
@@ -146,7 +128,12 @@ static inline struct ionic_cq *to_ionic_cq(struct ibv_cq *ibcq)
 
 static inline struct ionic_qp *to_ionic_qp(struct ibv_qp *ibqp)
 {
-	return container_of(ibqp, struct ionic_qp, ibqp);
+	return container_of(ibqp, struct ionic_qp, vqp.qp);
+}
+
+static inline struct ionic_qp *to_ionic_srq(struct ibv_srq *ibsrq)
+{
+	return container_of(ibsrq, struct ionic_qp, vsrq.srq);
 }
 
 static inline struct ionic_ah *to_ionic_ah(struct ibv_ah *ibah)
@@ -154,14 +141,52 @@ static inline struct ionic_ah *to_ionic_ah(struct ibv_ah *ibah)
         return container_of(ibah, struct ionic_ah, ibah);
 }
 
-static inline uint32_t ionic_get_sqe_size(void)
+static inline uint16_t ionic_get_sqe_size(uint16_t max_sge,
+					  uint16_t max_inline)
 {
-	return sizeof(struct sqwqe_t);
+	if (max_sge < 2)
+		max_sge = 2;
+
+	max_sge *= 16;
+
+	if (max_sge < max_inline)
+		max_sge = max_inline;
+
+	return 32 + max_sge;
 }
 
-static inline uint32_t ionic_get_rqe_size(void)
+static inline uint32_t ionic_get_rqe_size(uint16_t max_sge)
 {
-	return sizeof(struct rqwqe_t);
+	if (max_sge < 2)
+		max_sge = 2;
+
+	max_sge *= 16;
+
+	return 32 + max_sge;
+}
+
+static inline bool ionic_qp_has_rq(struct ionic_qp *qp)
+{
+	if (qp->is_srq)
+		return true;
+
+	if (qp->vqp.qp.qp_type == IBV_QPT_RC ||
+	    qp->vqp.qp.qp_type == IBV_QPT_UC ||
+	    qp->vqp.qp.qp_type == IBV_QPT_UD)
+		return !qp->vqp.qp.srq;
+
+	return false;
+}
+
+static inline bool ionic_qp_has_sq(struct ionic_qp *qp)
+{
+	if (qp->is_srq)
+		return false;
+
+	return qp->vqp.qp.qp_type == IBV_QPT_RC ||
+		qp->vqp.qp.qp_type == IBV_QPT_UC ||
+		qp->vqp.qp.qp_type == IBV_QPT_UD ||
+		qp->vqp.qp.qp_type == IBV_QPT_XRC_SEND;
 }
 
 static inline uint8_t ibv_to_ionic_wr_opcd(uint8_t ibv_opcd)
@@ -384,36 +409,43 @@ static inline void ionic_change_cq_phase(struct ionic_cq *cq)
 }
 #endif
 
-static inline void ionic_lock_all_cqs(struct ionic_ctx *ctx)
+/** ionic_synchronize_cq - RCU-like barrier for cq polling access to qp table.
+ *
+ * Synchronize is to be used when modifying the qp table, after inserting, but
+ * particularly after removing a qp from the table.  The synchronization
+ * barrier will ensure that the qp is not referenced by a polling cq after the
+ * qp is removed from the table and freed.
+ *
+ * This is similarly required for xrc srq in the qp table.
+ *
+ * Used as shown in synopsis, this synchronization barrier ensures that any
+ * previous or concurrent round of polling has completed, and the next round of
+ * polling will not observe the qp in the table.
+ *
+ * Used for insertion, a barrier between creating the qp and posting the first
+ * work requests will guarantee that on the first work completion, some other
+ * polling thread will observe the qp in the table.
+ *
+ * Synopsis:
+ *
+ * tbl_insert(&ctx->qp_tbl, qpid);
+ *    ibv_poll_cq(cq, ...); // thread on other cpu, may observe qp
+ * ionic_synchroize_cq(to_ionic_cq(qp->vqp.qp.send_cq));
+ * ionic_synchroize_cq(to_ionic_cq(qp->vqp.qp.recv_cq));
+ * ibv_post_send(qp, ...);
+ *    ibv_poll_cq(cq, ...); // thread on other cpu, will observe qp
+ *
+ * tbl_delete(&ctx->qp_tbl, qpid);
+ *    ibv_poll_cq(cq, ...); // thread on other cpu, may observe qp
+ * ionic_synchroize_cq(to_ionic_cq(qp->vqp.qp.send_cq));
+ * ionic_synchroize_cq(to_ionic_cq(qp->vqp.qp.recv_cq));
+ *    ibv_poll_cq(cq, ...); // thread on other cpu, will not observe qp
+ * free(qp);
+ */
+static inline void ionic_synchronize_cq(struct ionic_cq *cq)
 {
-	struct ionic_cq *cq;
-
-	/* To avoid deadlock, this is the only place where a thread is allowed
-	 * to acquire the lock for more than one cq.  The order in the list is
-	 * the locking order.  All other cq lock holders may acquire at most
-	 * one cq lock at a time.
-	 *
-	 * All cq locks must be held when modifying the qp_tbl.  Any one cq
-	 * lock can be held to exclude modifying the table.  A cq polling
-	 * thread should only acquire the lock for that cq.  Other cq may be
-	 * polled by other threads in parallel.  Unlike a reader-writer lock,
-	 * any one cq may be polled by at most one thread at a time.
-	 *
-	 * In addition to cq locks, the context mutex must also be held when
-	 * modifying the qp table or accessing the cq list.  The mutex must
-	 * have already been acquired by the caller of this function.
-	 */
-	list_for_each(&ctx->cq_list, cq, ctx_ent)
-		pthread_spin_lock(&cq->lock);
-}
-
-static inline void ionic_unlock_all_cqs(struct ionic_ctx *ctx)
-{
-	struct ionic_cq *cq;
-
-	/* unlock in reverse order of acquire */
-	list_for_each_rev(&ctx->cq_list, cq, ctx_ent)
-		pthread_spin_unlock(&cq->lock);
+	pthread_spin_lock(&cq->lock);
+	pthread_spin_unlock(&cq->lock);
 }
 
 #endif /* IONIC_H */

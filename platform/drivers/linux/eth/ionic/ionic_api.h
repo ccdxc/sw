@@ -35,6 +35,38 @@ struct lif;
 struct lif *get_netdev_ionic_lif(struct net_device *netdev,
 				 const char *api_version);
 
+/** enum ionic_api_private - kinds of private data for the lif. */
+enum ionic_api_private {
+	IONIC_RDMA_PRIVATE,
+};
+
+/** ionic_api_get_private - Get private data associated with the lif.
+ * @lif:		Handle to lif.
+ * @kind:		Kind of private data.
+ *
+ * Get the private data of some kind.  The private data may be, for example, an
+ * instance of an rdma device for this lif.
+ *
+ * Return: private data or NULL.
+ */
+void *ionic_api_get_private(struct lif *lif,
+			    enum ionic_api_private kind);
+
+/** ionic_api_get_private - Set private data associated with the lif.
+ * @lif:		Handle to lif.
+ * @priv:		Private data or NULL.
+ * @kind:		Kind of private data.
+ *
+ * Set the private data of some kind.  The private data may be, for example, an
+ * instance of an rdma device for this lif.
+ *
+ * This will fail if private data is already set for that kind.
+ *
+ * Return: zero or negative error status.
+ */
+int ionic_api_set_private(struct lif *lif, void *priv,
+			  enum ionic_api_private kind);
+
 /** ionic_api_get_intr - Reserve a device iterrupt index.
  * @lif:		Handle to lif.
  * @irq:		OS interrupt number returned.
@@ -55,17 +87,15 @@ void ionic_api_put_intr(struct lif *lif, int intr);
 
 /** ionic_api_get_dbpages - Get doorbell page information for kernel space.
  * @lif:		Handle to lif.
+ * @dbid:		Doorbell id for use in kernel space.
  * @dbpage:		One ioremapped doorbell page for use in kernel space.
  * @phys_dbpage_base:	Phys base address of doorbell pages for the device.
  *
  * The doorbell id and dbpage are special.  Most doorbell ids and pages are for
  * use by user space.  The id and page returned here refer to the one reserved
  * for use in kernel space.
- *
- * Return: kernel doorbell id or negative error status.
  */
-int ionic_api_get_dbpages(struct lif *lif,
-			  u64 __iomem **dbpage,
+void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
 			  phys_addr_t *phys_dbpage_base);
 
 /** ionic_api_get_dbid - Reserve a doorbell id.

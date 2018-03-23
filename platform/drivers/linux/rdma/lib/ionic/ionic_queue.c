@@ -1,7 +1,7 @@
 #include <errno.h>
 
 #include "ionic_queue.h"
-#include "memory.h"
+#include "ionic_memory.h"
 
 int ionic_queue_init(struct ionic_queue *q, size_t pg_size,
 		     uint16_t depth, uint16_t stride)
@@ -14,8 +14,10 @@ int ionic_queue_init(struct ionic_queue *q, size_t pg_size,
 
 	q->size = ((uint32_t)depth + 1) * stride;
 
-	if (q->size < pg_size)
+	if (q->size < pg_size) {
+		depth = pg_size / stride - 1;
 		q->size = pg_size;
+	}
 
 	q->ptr = ionic_map_anon(q->size);
 	if (!q->ptr)

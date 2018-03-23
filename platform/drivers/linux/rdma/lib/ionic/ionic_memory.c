@@ -1,7 +1,7 @@
 #include <infiniband/driver.h>
 #include <sys/mman.h>
 
-#include "memory.h"
+#include "ionic_memory.h"
 
 #define IONIC_ANON_MFLAGS	(MAP_PRIVATE | MAP_ANONYMOUS)
 #define IONIC_ANON_MPROT	(PROT_READ | PROT_WRITE)

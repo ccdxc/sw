@@ -1116,7 +1116,7 @@ struct create_cq_cmd {
 	u64 cq_va;
 	u64 va_len;
 	u32 pt_size;
-	u32 rsvd2[5];
+	u32 rsvd2[3];
 };
 
 /**
@@ -1185,7 +1185,7 @@ struct create_qp_cmd {
 	u32 rq_pt_size;
 #endif
 	
-	u32 rsvd2[2];
+	u32 rsvd2[4];
 };
 
 /**

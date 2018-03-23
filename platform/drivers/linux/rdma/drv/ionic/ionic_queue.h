@@ -1,17 +1,13 @@
 #ifndef IONIC_QUEUE_H
 #define IONIC_QUEUE_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <util/mmio.h>
-#include <util/udma_barrier.h>
+#include <linux/io.h>
 
 #define IONIC_QID_MASK		((1ull << 24) - 1)
 #define IONIC_DBELL_QID_SHIFT	24
 #define IONIC_DBELL_RING_ARM	(1ull << 16)
 
-/** ionic_u16_mask - Round uint16_t up to power of two minus one.
+/** ionic_u16_mask - Round u16 up to power of two minus one.
  * @val:	Value to round up.
  *
  * This uses cumulative shift to get the next greater or equal power of two
@@ -20,7 +16,7 @@
  *
  * Return: power of two minus one.
  */
-static inline uint16_t ionic_u16_mask(uint16_t val)
+static inline u16 ionic_u16_mask(u16 val)
 {
 	val |= val >> 1;
 	val |= val >> 2;
@@ -30,7 +26,7 @@ static inline uint16_t ionic_u16_mask(uint16_t val)
 	return val;
 }
 
-/** ionic_u16_power - Round uint16_t up to power of two.
+/** ionic_u16_power - Round u16 up to power of two.
  * @val:	Value to round up.
  *
  * Get the next greater or equal power of two.  If val is already a power of
@@ -40,12 +36,14 @@ static inline uint16_t ionic_u16_mask(uint16_t val)
  *
  * Return: power of two.
  */
-static inline uint16_t ionic_u16_power(uint16_t val)
+static inline u16 ionic_u16_power(u16 val)
 {
 	return ionic_u16_mask(val - 1u) + 1u;
 }
 
 /** struct ionic_queue - Ring buffer used between device and driver.
+ * @size:	Size of the buffer, in bytes.
+ * @dma:	Dma address of the buffer.
  * @ptr:	Buffer virtual address.
  * @prod:	Driver position in the queue.
  * @cons:	Device position in the queue, for to-device queues.
@@ -58,31 +56,33 @@ static inline uint16_t ionic_u16_power(uint16_t val)
  */
 struct ionic_queue {
 	size_t size;
+	dma_addr_t dma;
 	void *ptr;
-	uint16_t prod;
-	uint16_t cons;
-	uint16_t mask;
-	uint16_t stride;
-	uint64_t dbell;
+	u16 prod;
+	u16 cons;
+	u16 mask;
+	u16 stride;
+	u64 dbell;
 };
 
 /** ionic_queue_init - Initialize user space queue.
  * @q:		Uninitialized queue structure.
- * @pg_size:	Page size for buffer size-alignment.
+ * @dma_dev:	DMA device for mapping.
  * @depth:	Power-of-two depth of the queue.  Zero means 2^16.
  * @stride:	Size of each element of the queue.
  *
  * Return: status code.
  */
-int ionic_queue_init(struct ionic_queue *q, size_t pg_size,
-		     uint16_t depth, uint16_t stride);
+int ionic_queue_init(struct ionic_queue *q, struct device *dma_dev,
+		     u16 depth, u16 stride);
 
 /** ionic_queue_destroy - Destroy user space queue.
  * @q:		Queue structure.
+ * @dma_dev:	DMA device for mapping.
  *
  * Return: status code.
  */
-void ionic_queue_destroy(struct ionic_queue *q);
+void ionic_queue_destroy(struct ionic_queue *q, struct device *dma_dev);
 
 /** ionic_queue_empty - Test if queue is empty.
  * @q:		Queue structure.
@@ -103,7 +103,7 @@ static inline bool ionic_queue_empty(struct ionic_queue *q)
  *
  * Return: length.
  */
-static inline uint16_t ionic_queue_length(struct ionic_queue *q)
+static inline u16 ionic_queue_length(struct ionic_queue *q)
 {
 	return (q->prod - q->cons) & q->mask;
 }
@@ -115,7 +115,7 @@ static inline uint16_t ionic_queue_length(struct ionic_queue *q)
  *
  * Return: length remaining.
  */
-static inline uint16_t ionic_queue_length_remaining(struct ionic_queue *q)
+static inline u16 ionic_queue_length_remaining(struct ionic_queue *q)
 {
 	return q->mask - ionic_queue_length(q);
 }
@@ -175,7 +175,7 @@ static inline void ionic_queue_color_wrap(struct ionic_queue *q)
  *
  * Return: pointer to element at index.
  */
-static inline void *ionic_queue_at(struct ionic_queue *q, uint16_t idx)
+static inline void *ionic_queue_at(struct ionic_queue *q, u16 idx)
 {
 	return q->ptr + idx * q->stride;
 }
@@ -227,15 +227,15 @@ static inline void ionic_queue_consume(struct ionic_queue *q)
  * @qid:	Queue identifying number.
  */
 static inline void ionic_queue_dbell_init(struct ionic_queue *q,
-					  uint32_t qid)
+					  u32 qid)
 {
-	q->dbell = ((uint64_t)qid & IONIC_QID_MASK) << IONIC_DBELL_QID_SHIFT;
+	q->dbell = ((u64)qid & IONIC_QID_MASK) << IONIC_DBELL_QID_SHIFT;
 }
 
 /** ionic_queue_dbell_val - Get current doorbell update value.
  * @q:		Queue structure.
  */
-static inline uint64_t ionic_queue_dbell_val(struct ionic_queue *q)
+static inline u64 ionic_queue_dbell_val(struct ionic_queue *q)
 {
 	return q->dbell | q->prod;
 }
@@ -243,7 +243,7 @@ static inline uint64_t ionic_queue_dbell_val(struct ionic_queue *q)
 /** ionic_queue_dbell_val_arm - Get current doorbell update-and-arm value.
  * @q:		Queue structure.
  */
-static inline uint64_t ionic_queue_dbell_val_arm(struct ionic_queue *q)
+static inline u64 ionic_queue_dbell_val_arm(struct ionic_queue *q)
 {
 	return q->dbell | q->prod | IONIC_DBELL_RING_ARM;
 }
@@ -252,9 +252,9 @@ static inline uint64_t ionic_queue_dbell_val_arm(struct ionic_queue *q)
  * @dbreg:	Doorbell register.
  * @val:	Doorbell value from queue.
  */
-static inline void ionic_dbell_ring(uint64_t *dbreg, uint64_t val)
+static inline void ionic_dbell_ring(u64 __iomem *dbreg, u64 val)
 {
-	mmio_write64_le(dbreg, htole64(val));
+	iowrite64(val, dbreg);
 }
 
 #endif /* IONIC_QUEUE_H */

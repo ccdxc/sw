@@ -1,5 +1,7 @@
 rdma_provider(ionic
 	ionic.c
-	memory.c
+	ionic_verbs.c
+	ionic_fallback.c
+	ionic_memory.c
 	ionic_queue.c
 )

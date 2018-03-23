@@ -23,6 +23,30 @@ struct lif *get_netdev_ionic_lif(struct net_device *netdev,
 }
 EXPORT_SYMBOL_GPL(get_netdev_ionic_lif);
 
+void *ionic_api_get_private(struct lif *lif, enum ionic_api_private kind)
+{
+	if (kind != IONIC_RDMA_PRIVATE)
+		return NULL;
+
+	return lif->api_private;
+}
+EXPORT_SYMBOL_GPL(ionic_api_get_private);
+
+int ionic_api_set_private(struct lif *lif, void *priv,
+			  enum ionic_api_private kind)
+{
+	if (kind != IONIC_RDMA_PRIVATE)
+		return -EINVAL;
+
+	if (lif->api_private && priv)
+		return -EBUSY;
+
+	lif->api_private = priv;
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(ionic_api_set_private);
+
 int ionic_api_get_intr(struct lif *lif, int *irq)
 {
 	/* XXX second intr for rdma driver, eth will use intr zero.
@@ -37,18 +61,15 @@ void ionic_api_put_intr(struct lif *lif, int intr)
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_intr);
 
-int ionic_api_get_dbpages(struct lif *lif,
-			  u64 __iomem **dbpage,
+void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
 			  phys_addr_t *phys_dbpage_base)
 {
 	/* XXX dbpage of the eth driver, first page for now */
 	/* XXX kernel should only ioremap one dbpage, not the whole BAR */
+	*dbid = 0;
 	*dbpage = (void *)lif->ionic->idev.db_pages;
 
 	*phys_dbpage_base = lif->ionic->idev.phy_db_pages;
-
-	/* XXX dbid of the eth driver, zero for now */
-	return 0;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_dbpages);
 
@@ -128,6 +149,10 @@ static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 
 	memcpy(&ctx->comp, comp, sizeof(*comp));
 
+	dev_dbg(&lif->netdev->dev, "comp admin queue command:\n");
+	dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
+			 &ctx->comp, sizeof(ctx->comp), true);
+
 	complete_all(&ctx->work);
 }
 #endif
@@ -148,6 +173,10 @@ int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 
 	memcpy(adminq->head->desc, &ctx->cmd, sizeof(ctx->cmd));
 
+	dev_dbg(&lif->netdev->dev, "post admin queue command:\n");
+	dynamic_hex_dump("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+			 &ctx->cmd, sizeof(ctx->cmd), true);
+
 	ionic_q_post(adminq, true, ionic_api_adminq_cb, ctx);
 
 err_out:
@@ -161,6 +190,10 @@ err_out:
 	WARN_ON(in_interrupt());
 
 	spin_lock(&lif->adminq_lock);
+
+	dev_dbg(&lif->netdev->dev, "post admin dev command:\n");
+	dynamic_hex_dump("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+			 &ctx->cmd, sizeof(ctx->cmd), true);
 
 	if (ctx->side_data) {
 		err = SBD_put(idev, ctx->side_data, ctx->side_data_len);
@@ -182,6 +215,10 @@ err_out:
 		if (err)
 			goto err_out;
 	}
+
+	dev_dbg(&lif->netdev->dev, "comp admin dev command:\n");
+	dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
+			 &ctx->comp, sizeof(ctx->comp), true);
 
 err_out:
 	spin_unlock(&lif->adminq_lock);

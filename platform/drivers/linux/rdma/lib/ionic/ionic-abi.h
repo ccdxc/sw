@@ -5,6 +5,54 @@
 
 #define IONIC_ABI_VERSION 1
 
+struct ionic_ctx_req {
+	struct ibv_get_context req;
+	__u32 version;
+	__u32 fallback;
+};
+
+struct ionic_ctx_resp {
+	struct ib_uverbs_get_context_resp resp;
+	__u32 version;
+	__u32 fallback;
+	__u64 dbell_offset;
+	__u8 sq_qtype;
+	__u8 rq_qtype;
+	__u8 cq_qtype;
+};
+
+struct ionic_qdesc {
+	__u64 addr;
+	__u32 size;
+	__u16 mask;
+	__u16 stride;
+};
+
+struct ionic_cq_req {
+	struct ibv_create_cq req;
+	struct ionic_qdesc cq;
+};
+
+struct ionic_cq_resp {
+	struct ib_uverbs_create_cq_resp resp;
+	__u32 cqid;
+};
+
+struct ionic_qp_req {
+	struct ibv_create_qp_ex req;
+	struct ionic_qdesc sq;
+	struct ionic_qdesc rq;
+};
+
+struct ionic_qp_resp {
+	struct ib_uverbs_ex_create_qp_resp resp;
+	__u32 qpid;
+	__u32 rsvd;
+	__u64 sq_hbm_offset;
+};
+
+/* XXX cleanup: move to fw abi file, this file is for user/kernel abi */
+
 #define IONIC_FULL_FLAG_DELTA        0x80
 
 #define IONIC_WR_OPCODE_MASK        0xF
@@ -141,37 +189,6 @@ enum ionic_shpg_offt {
 
 #define IONIC_MAX_INLINE_SIZE		0x100
 
-struct ionic_ctx_resp {
-	struct ib_uverbs_get_context_resp resp;
-	__u32 dev_id;
-	__u32 max_qp; /* To allocate qp-table */
-	__u32 pg_size;
-	__u32 cqe_size;
-	__u32 max_cqd;
-	__u32 rsvd;
-};
-
-struct ionic_pd_resp {
-	struct ib_uverbs_alloc_pd_resp resp;
-	__u32 pdid;
-};
-
-struct ionic_mr_resp {
-	struct ib_uverbs_reg_mr_resp resp;
-};
-
-struct ionic_cq_req {
-	struct ibv_create_cq cmd;
-	__u64 cq_va;
-	__u64 cq_bytes;
-};
-
-struct ionic_cq_resp {
-	struct ib_uverbs_create_cq_resp resp;
-	__u32 cqid;
-	__u8  qtype;
-};
-
 #define COLOR_SHIFT 5
 
 #define IMM_DATA_VLD_MASK 0x40
@@ -219,24 +236,6 @@ struct cqwqe_t {
     } id;
 
 }__attribute__ ((__packed__));
-
-struct ionic_qp_req {
-	struct ibv_create_qp cmd;
-	__u64 qpsva;
-	__u64 qprva;
-    __u32 sq_bytes;
-    __u32 rq_bytes;
-    __u32 sq_wqe_size;
-    __u32 rq_wqe_size;
-};
-
-struct ionic_qp_resp {
-	struct ib_uverbs_create_qp_resp resp;
-	__u32 qpid;
-    __u8  sq_qtype;
-    __u8  rq_qtype;
-	__u16 rsvd;
-};
 
 /*
  * Send WR entry

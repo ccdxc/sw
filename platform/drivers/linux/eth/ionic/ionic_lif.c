@@ -1188,6 +1188,8 @@ static int ionic_lif_init(struct lif *lif)
 
 	ionic_set_rx_mode(lif->netdev);
 
+	lif->api_private = NULL;
+
 	return 0;
 
 err_out_rxqs_deinit:

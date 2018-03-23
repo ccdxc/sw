@@ -1,5 +1,5 @@
-#ifndef __MEMORY_H__
-#define __MEMORY_H__
+#ifndef IONIC_MEMORY_H
+#define IONIC_MEMORY_H
 
 #include <stdlib.h>
 
@@ -27,4 +27,4 @@ void *ionic_map_device(size_t size, int fd, size_t offset);
  */
 void ionic_unmap(void *ptr, size_t size);
 
-#endif
+#endif /* IONIC_MEMORY_H */

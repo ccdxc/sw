@@ -225,12 +225,14 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(struct debug_q_dump_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct create_mr_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct create_mr_comp) != 16);
-	//BUILD_BUG_ON(sizeof(struct create_cq_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct create_cq_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct create_cq_comp) != 16);
-	//BUILD_BUG_ON(sizeof(struct create_qp_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct create_qp_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct create_qp_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct modify_qp_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct modify_qp_comp) != 16);
+	BUILD_BUG_ON(sizeof(union adminq_cmd) != 64);
+	BUILD_BUG_ON(sizeof(union adminq_comp) != 16);
 }
 
 struct ionic_dev {
