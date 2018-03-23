@@ -4,6 +4,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <vector>
 #include "string.h"
@@ -14,6 +15,12 @@
 
 using namespace std;
 class LogMsg {
+
+    public:
+        uint32_t m_max_fsize;
+        bool m_enb_flog;
+        ofstream * m_fptr;
+        string m_fname;
 
     private:
         uint32_t m_cur_error_count;
@@ -42,12 +49,16 @@ class LogMsg {
         virtual bool checkMsgLevel(string scope);
         virtual string convertLevelToStr(msgLevelEnum level);
         //virtual stringstream & getLocalStringStream();
+        virtual void closeFlog();
+        virtual void startFlog( const string & fName, const uint32_t size);
+        virtual void stopFlog();
         static std::shared_ptr<LogMsg> Instance()
         {
             static std::shared_ptr<LogMsg> s{new LogMsg};
             return s;
         }
         virtual uint32_t getErrCount() { return (m_cur_error_count); } 
+        virtual void setErrCount(uint32_t val) { m_cur_error_count = val; } 
         virtual void setMaxErrCount( uint32_t val ) { m_max_error_count = val; }
 
 };
@@ -69,7 +80,8 @@ class LogMsg {
 #define PLOG_CPU(X)    { PLOG_MSG_GLB(X, LogMsg::CPU) }
 #define PLOG_DEBUG(X)  { PLOG_MSG_GLB(X, LogMsg::DEBUG) }
 #define PLOG_GET_ERR_CNT()  LogMsg::Instance().get()->getErrCount()
-#define PLOG_SET_MAX_ERR_CNT(X)  LogMsg::Instance().get()->setErrCount(X)
+#define PLOG_SET_MAX_ERR_CNT(X)  LogMsg::Instance().get()->setMaxErrCount(X)
+#define PLOG_SET_ERR_CNT(X)  LogMsg::Instance().get()->setErrCount(X)
 
 #define PLOG(SCOPE,X) { PLOG_MSG_GLB(X, SCOPE) }
 
