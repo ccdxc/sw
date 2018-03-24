@@ -29,10 +29,10 @@ int seq_compress_output_through_sequencer();
 int verify_integrity_for_gt64K();
 int max_data_rate();
 int seq_max_data_rate();
-int compress_dualq_flat_64K_buf();
-int seq_compress_dualq_flat_64K_buf();
-int compress_dualq_flat_64K_buf_in_hbm();
-int seq_compress_dualq_flat_64K_buf_in_hbm();
+int compress_dualq_flat_4K_buf();
+int seq_compress_dualq_flat_4K_buf();
+int compress_dualq_flat_4K_buf_in_hbm();
+int seq_compress_dualq_flat_4K_buf_in_hbm();
 
 }  // namespace tests
 
