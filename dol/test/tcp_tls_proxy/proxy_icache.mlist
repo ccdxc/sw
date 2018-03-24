@@ -17,6 +17,7 @@ modules:
         module  : proxy_e2e
         rtl     : True
         modscale: 1000
+        perf    : True
         args    :
             maxflows    : 1
 
