@@ -5,7 +5,7 @@ feature:
     package  : test.e2e.ftp
     module   : ftp
     runorder : 0
-    enable   : True
+    enable   : False
     ignore   : False
     rtl      : False
     args     :

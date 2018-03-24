@@ -136,6 +136,10 @@ pip3 install click click_repl
 # install all python2.7 packages
 pip install --upgrade ply==3.9 cmd2 tftpy
 
+#install pipenv
+pip install setuptools
+pip install pipenv
+
 yum install -y kernel-devel kernel-headers dkms iproute2 net-tools zip zlib1g-dev
 yum install -y gdb
 

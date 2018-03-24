@@ -1,0 +1,105 @@
+{
+    "modules": {
+        "hal": {
+            "dirs": [
+                "hal",
+                "fte",
+                "gen",
+                "utils",
+                "proto",
+                "agents"
+            ],
+            "exclude_dirs" : [
+               "hal/test",
+               "fte/test",
+               "hal/pd/iris/test/rw_tbl_lib",
+               "hal/pd/utils/acl_tcam/test",
+               "hal/pd/utils/directmap/test",
+               "hal/pd/utils/hash/test",
+               "hal/pd/utils/met/test",
+               "hal/pd/utils/tcam/test",
+               "hal/pd/utils/p4pd_mock",
+               "hal/test",
+               "hal/test/gtests",
+               "model_sim/include",
+               "utils/shm/test",
+               "utils/slab/test",
+               "utils/twheel/test",
+               "utils/pt/test",
+               "utils/list/test",
+               "utils/indexer/test",
+               "utils/host_mem/test",
+               "gen/test_results",
+               "gen/protobuf",
+               "gen/svc",
+               "gen/common_rxdma_actions",
+               "gen/common_txdma_actions",
+               "gen/coverage"
+            ],
+            "file_patterns": [
+                ".c",
+                ".cc"
+            ],
+            "build_cmd": "bazel build && /home/asic/tools/eda/bullseye/bin/cov01 -1 && make c=1 && /home/asic/tools/eda/bullseye/bin/cov01 -0",
+            "clean_cmd": "make clean && (find ../bazel-out/local-fastbuild/bin -name '*.gcda'  -type f -delete || :)",
+            "remove_files": [
+               "/usr/include/*",
+                "/usr/local/*",
+                "third-party/*",
+                "model_sim/include/*",
+                "gen/protobuf/*",
+                "asic/capri/model/capsim-master/lib/libmpuobj/include/*",
+                "asic/capri/model/utils/*",
+                "gen/common_rxdma_actions/include/*",
+                "gen/common_txdma_actions/include/*",
+                "/external/*",
+                "/bazel-out/*"
+            ],
+            "obj_dir" : "../bazel-out/local-fastbuild/bin",
+            "obj_dir_type" : "bazel",
+            "cov_type" : "lcov"
+        },
+        "asm": {
+            "dirs": [
+                "asm"
+            ],
+            "file_patterns": [
+                ".asm",
+                ".h",
+                ".s"
+            ],
+            "obj_dir" : "obj/cano",
+            "obj_dir_type" : "flat",
+            "cov_type" : "capcov"
+        }
+    },
+    "run": [{
+        "gtests": {
+            "cmd": "make run-gtests c=1",
+            "modules": [
+                "hal"
+            ]
+        },
+        "dol": {
+            "cmd_cfg": "./coverage/dol_cov_runs.json",
+            "modules": [
+                "hal", "asm"
+            ]
+        },
+        "mbt": {
+            "cmd": "./run.py --mbt && ./run.py --topo=up2up --feature=networking --mbt",
+            "modules": [
+                "hal"
+            ]
+        }
+    },
+    {
+        "gft": {
+            "cmd": "/home/asic/tools/eda/bullseye/bin/cov01 -1 && make c=1 gft &&  /home/asic/tools/eda/bullseye/bin/cov01 -0  && ./run.py --gft_gtest --coverage",
+            "modules": [
+                "asm"
+            ]
+        }
+    }
+    ]
+}

@@ -89,6 +89,7 @@ if [ $keep_data -eq 0 ];then
     rm -rf $COVERAGE_OUTPUT
     rm -f $MPU_COV_DUMP_FILE
 fi
+mkdir -p $COVERAGE_OUTPUT
 
 if [ $ignore_errors -eq 1 ];then
     export IGNORE_ERRORS=--ignore-errors
@@ -121,6 +122,7 @@ else
     $NIC_DIR/tools/gen_dol_cov_run.py --skip-targets ${skip_targets[@]}
 fi
 
+
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Dol coverage run generation failed!"
@@ -137,8 +139,8 @@ pip3 install --user pipenv
 export PATH=$PATH:~/.local/bin/
 #Install Pandas 
 pip3 freeze > /tmp/requirements.txt                             
-pipenv install -r /tmp/requirements.txt      
-pipenv install pandas
+pipenv install --skip-lock -r /tmp/requirements.txt      
+pipenv install --skip-lock pandas
 
 pipenv run python3 $NIC_DIR/tools/gcov/run.py $SKIP_ASM_INS_STATS $IGNORE_ERRORS --config $config_file --max-job-run-time  $max_job_run_time $RUN_ONLY 2>&1 | tee $NIC_DIR/coverage.log
 OUT=$?

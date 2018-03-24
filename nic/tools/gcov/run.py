@@ -452,9 +452,10 @@ def run_and_generate_coverage(data):
             try:
                 module_infos[module_name].append(cov_instance.generate_coverage(
                     module, module_name, cov_output_dir))
-            except:
+            except Exception as ex:
+                print(ex)
                 print("Coverage generation failed for run :", run_name)
-                continue
+                #continue
             os.chdir(env.nic_dir)
             obj_dir = module.get("obj_dir")
             os.chdir(obj_dir)

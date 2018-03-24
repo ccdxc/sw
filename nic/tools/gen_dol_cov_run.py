@@ -41,8 +41,6 @@ except:
     print "Error loading .job.yml"
     sys.exit(1)
 
-subprocess.call(["mkdir", "-p", coverage_output_path])
-
 try:
     file = coverage_output_path + "/" + OUTPUT_FILE
     output_file = open(file, "w+")

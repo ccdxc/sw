@@ -37,6 +37,8 @@ PIP3_PACKAGES = %w[
   pysendfile
   pyftpdlib
   jsonrpc2_zeromq
+  setuptools
+  pipenv
 ]
 
 PACKAGES = %w[
@@ -219,8 +221,8 @@ inside "#{BASE_BUILD_DIR}/bind9" do
   run "make install"
 end
 
-run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"
 run "pip install --upgrade #{PIP2_PACKAGES.join(" ")}"
+run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"
 
 run "yum install -y dkms iproute2 net-tools zip zlib1g-dev"
 inside BASE_BUILD_DIR do
@@ -263,13 +265,15 @@ run "mkdir -p /var/log/snort && \
      mkdir -p /etc/snort/etc
      cp -r #{BASE_BUILD_DIR}/odp /etc/snort/odp"
 
+run "yum install -y lcov"
+
 run "mkdir -p #{ROOT}"
 workdir "/sw/nic"
 
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.18"
+tag "pensando/nic:1.19"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
