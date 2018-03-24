@@ -8,7 +8,9 @@ class DOLTestCase(TestCase):
         self.trigger_engine = DolTriggerEngine
         self.verif_engine = DolVerifEngine
         self.drop = False
-        self.SetRetryEnabled(root.IsRetryEnabled())
+
+        if root:
+           self.SetRetryEnabled(root.IsRetryEnabled())
         self.pendol = module.IsPendolHeaderEnabled()
         self._setup_config(root)
 
@@ -58,6 +60,9 @@ class DOLTestCase(TestCase):
         return
 
     def _generate_objects(self):
+        if self.testspec is None:
+            return
+
         self.__generate_packets()
         memfactory.GenerateBuffers(self)
         memfactory.GenerateDescriptors(self)

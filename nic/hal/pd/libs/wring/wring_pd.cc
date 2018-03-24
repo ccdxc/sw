@@ -339,10 +339,14 @@ hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *sl
                         sizeof(wring->slot_info.gcm_desc.explicit_iv))) {
         HAL_TRACE_ERR("Failed to read the explicit IV information from HBM");    
     }
-    if(!p4plus_hbm_read(gcm_desc->status_address, 
-                        (uint8_t*)&wring->slot_info.gcm_desc.barco_status, 
-                        sizeof(wring->slot_info.gcm_desc.barco_status))) {
-        HAL_TRACE_ERR("Failed to read the Barco Status information from HBM");    
+    if (gcm_desc->status_address) {
+        if(!p4plus_hbm_read(gcm_desc->status_address, 
+                            (uint8_t*)&wring->slot_info.gcm_desc.barco_status, 
+                            sizeof(wring->slot_info.gcm_desc.barco_status))) {
+            HAL_TRACE_ERR("Failed to read the Barco Status information from HBM");    
+        }
+    } else {
+        wring->slot_info.gcm_desc.barco_status = 0;   
     }
 
     return HAL_RET_OK;

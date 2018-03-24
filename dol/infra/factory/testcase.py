@@ -151,7 +151,8 @@ class TestCase(objects.FrameworkObject):
         
     def _setup_config(self, root):
         self.__root = root
-        root.SetupTestcaseConfig(self.config)
+        if root:
+            root.SetupTestcaseConfig(self.config)
         return
     
     def IsIgnore(self):
@@ -161,8 +162,9 @@ class TestCase(objects.FrameworkObject):
         logger.info("%s Starting TestCase. %s" % ('=' * 20, '=' * 20))
         self.__show_config_objects()
         self.__setup_callback()
-        self._generate_objects()
-        self.__setup_session()
+        if self.testspec:
+            self._generate_objects()
+            self.__setup_session()
         return defs.status.SUCCESS
     
     def IsRetryEnabled(self):
@@ -190,7 +192,8 @@ class TestCase(objects.FrameworkObject):
         return
 
     def __show_config_objects(self):
-        self.__root.ShowTestcaseConfig(self.config)
+        if self.__root:
+            self.__root.ShowTestcaseConfig(self.config)
         return
 
     def __setup_session(self):
@@ -226,7 +229,8 @@ class TestCase(objects.FrameworkObject):
     def TeardownCallback(self):
         logger.info("Invoking TestCaseTeardown.")
         self.module.RunModuleCallback('TestCaseTeardown', self)
-        self.GetRoot().TearDownTestcaseConfig(self.config)
+        if self.__root:
+            self.__root.TearDownTestcaseConfig(self.config)
         return
     
     def VerifyCallback(self):
@@ -262,8 +266,4 @@ class TestCase(objects.FrameworkObject):
         self.module.RunModuleCallback('TestCaseStepTeardown', self, step)
         return
 
-def GetTestCase(tcid, root, module, loopid):
-    test_spec = module.testspec.type.Get(FactoryStore)
-    module_hdl = loader.ImportModule(test_spec.meta.package, test_spec.meta.module)
-    return getattr(module_hdl, test_spec.meta.cls)(tcid, root, module, loopid)
-    
+   

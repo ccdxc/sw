@@ -1,0 +1,69 @@
+# Feature Test Modules List
+#
+feature:
+    id          : proxy_asym
+    sub         : proxy
+    package     : test.tcp_tls_proxy
+    module      : None
+    spec        : None
+    enable      : True
+    rtl         : True
+    ignore      : False
+    runorder    : 10
+
+modules:
+    - module:
+        name    : CRYPTO_API_ASYM_ECC_POINT_MUL_P256
+        package : test.tcp_tls_proxy
+        module  : crypto_apis
+        args    :
+            api:    CRYPTO_API_ASYM_ECC_POINT_MUL_P256
+
+    - module:
+        name    : CRYPTO_API_ASYM_ECDSA_P256_SIG_GEN
+        package : test.tcp_tls_proxy
+        module  : crypto_apis
+        args    :
+            api:    CRYPTO_API_ASYM_ECDSA_P256_SIG_GEN
+
+    - module:
+        name    : CRYPTO_API_ASYM_ECDSA_P256_SIG_VERIFY
+        package : test.tcp_tls_proxy
+        module  : crypto_apis
+        args    :
+            api:    CRYPTO_API_ASYM_ECDSA_P256_SIG_VERIFY
+
+    - module:
+        name    : CRYPTO_API_ASYM_RSA2K_ENCRYPT
+        package : test.tcp_tls_proxy
+        module  : crypto_apis
+        args    :
+            api:    CRYPTO_API_ASYM_RSA2K_ENCRYPT
+
+    - module:
+        name    : CRYPTO_API_ASYM_RSA2K_DECRYPT
+        package : test.tcp_tls_proxy
+        module  : crypto_apis
+        args    :
+            api:    CRYPTO_API_ASYM_RSA2K_DECRYPT
+
+    - module:
+        name    : CRYPTO_API_ASYM_RSA2K_CRT_DECRYPT
+        package : test.tcp_tls_proxy
+        module  : crypto_apis
+        args    :
+            api:    CRYPTO_API_ASYM_RSA2K_CRT_DECRYPT
+
+    - module:
+        name    : CRYPTO_API_ASYM_RSA2K_SIG_GEN
+        package : test.tcp_tls_proxy
+        module  : crypto_apis
+        args    :
+            api:    CRYPTO_API_ASYM_RSA2K_SIG_GEN
+
+    - module:
+        name    : CRYPTO_API_ASYM_RSA2K_SIG_VERIFY
+        package : test.tcp_tls_proxy
+        module  : crypto_apis
+        args    :
+            api:    CRYPTO_API_ASYM_RSA2K_SIG_VERIFY

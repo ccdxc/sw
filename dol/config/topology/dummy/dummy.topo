@@ -1,0 +1,11 @@
+# Topology Specification
+meta:
+    id: TOPO_DUMMY
+
+uplink: None
+uplinkpc: None
+acls: None
+qos : None
+security_profiles: None
+tenants: None
+cpu: None

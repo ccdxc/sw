@@ -15,7 +15,11 @@ from infra.factory.store import FactoryStore as FactoryStore
 class TestSpecConfigSelectors(objects.FrameworkObject):
     def __init__(self, spec):
         super().__init__()
-        self.Clone(spec)
+        self.dummy = False
+        if spec:
+           self.Clone(spec)
+        else:
+           self.dummy = True
         self.spec = spec
         return
 

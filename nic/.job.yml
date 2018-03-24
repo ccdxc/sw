@@ -15,7 +15,7 @@ targets:
   norm: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo norm --feature norm && make sanity_logs" ]
   eth:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo eth --feature eth && make sanity_logs" ]
   acl:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo acl --feature acl && make sanity_logs" ]
-  proxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy,proxy_fte && make sanity_logs" ]
+  proxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy,proxy_fte,proxy_asym && make sanity_logs" ]
   e2etlsproxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --e2e-tls-dol && make sanity_logs" ]
   v6e2etlsproxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --v6-e2e-tls-dol && make sanity_logs" ]
   e2enetworking:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo e2e --feature e2e --sub e2e --e2e-mode auto --cfgjson conf/dol.conf && make sanity_logs" ]

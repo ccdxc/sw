@@ -46,6 +46,7 @@ class TriggerEngineObject:
 
     def _trigger(self, tc):
         status = defs.status.SUCCESS
+        vfstatus = defs.status.SUCCESS
         for step in tc.session.steps:
             tc.StepSetupCallback(step)
             tc.StepTriggerCallback(step)

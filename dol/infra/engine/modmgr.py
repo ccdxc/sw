@@ -15,6 +15,7 @@ import infra.common.objects     as objects
 import infra.common.loader      as loader
 import infra.factory.testspec   as testspec
 import infra.factory.testcase   as testcase
+import infra.factory.factory    as factory
 
 from infra.factory.store import FactoryStore as FactoryStore
 from config.objects.session import SessionHelper
@@ -120,10 +121,13 @@ class Module(objects.FrameworkObject):
     def __load_spec(self):
         logger.LogFunctionBegin()
         coverage.Init(self)
-        logger.info("- Loading TEST SPEC = %s" % self.spec)
-        self.testspec = testspec.TestSpecObject(self.path, self.spec, logger)
-        self.testspec.MergeSelectors(self.selectors)
-        self.testspec.DeriveLimits()
+        if self.spec:
+            logger.info("- Loading TEST SPEC = %s" % self.spec)
+            self.testspec = testspec.TestSpecObject(self.path, self.spec, logger)
+            self.testspec.MergeSelectors(self.selectors)
+            self.testspec.DeriveLimits()
+        else:
+            self.testspec = None
         logger.LogFunctionEnd()
         return defs.status.SUCCESS
 
@@ -274,7 +278,7 @@ class Module(objects.FrameworkObject):
 
         for tcid,root in matching_tcsets:
             for loopid in range(nloops):
-                looptc = testcase.GetTestCase(tcid, root, self, loopid)
+                looptc = factory.GetTestCase(tcid, root, self, loopid)
                 self._execute_testcase(looptc)
                 self.CompletedTestCases.append(looptc)
                 if self.tracker and looptc.status == defs.status.ERROR:
@@ -313,11 +317,11 @@ class Module(objects.FrameworkObject):
             self.__load_spec()
             self.__setup_callback()
             #This should be cleaned up.
-            test_spec = self.testspec.type.Get(FactoryStore)
-            if test_spec.meta.id == "E2E_TESTCASE":
-                runner = E2EModuleRunner(self)
-            else:
-                runner = DolModuleRunner(self)
+            runner = DolModuleRunner(self)
+            if self.testspec:
+                test_spec = self.testspec.type.Get(FactoryStore)
+                if test_spec.meta.id == "E2E_TESTCASE":
+                    runner = E2EModuleRunner(self)
             runner.Run()
             self.__teardown_callback()
             self.iterator.Next()
@@ -341,6 +345,10 @@ class DolModuleRunner(ModuleRunner):
         
     def __select_config(self):
         logger.LogFunctionBegin()
+
+        if not self.module.testspec:
+            return
+
         if hasattr(self.module.testspec.selectors, "root"):
             obj = self.module.testspec.selectors.root.Get(ConfigStore)
             module_hdl = loader.ImportModule(obj.meta.package, obj.meta.module)
@@ -362,7 +370,10 @@ class DolModuleRunner(ModuleRunner):
 
     def __execute(self):
         matching_tcsets = []
-        for root in self.module.testspec.selectors.roots:
+        roots = [ None ]
+        if self.module.testspec:
+            roots = self.module.testspec.selectors.roots
+        for root in roots:
             tcid = TestCaseIdAllocator.get()
             if not self.module._is_tcid_filter_match(tcid): continue
             matching_tcsets.append((tcid,root))
@@ -375,7 +386,7 @@ class DolModuleRunner(ModuleRunner):
 
         for tcid,root in matching_tcsets:
             for loopid in range(nloops):
-                looptc = testcase.GetTestCase(tcid, root, self.module, loopid)
+                looptc = factory.GetTestCase(tcid, root, self.module, loopid)
                 self.module._execute_testcase(looptc)
                 self.module.CompletedTestCases.append(looptc)
                 if self.module.tracker and looptc.status == defs.status.ERROR:
@@ -393,7 +404,7 @@ class E2EModuleRunner(ModuleRunner):
     
     def Run(self):
         tcid = TestCaseIdAllocator.get()
-        tc = testcase.GetTestCase(tcid, None, self.module, 0)
+        tc = factory.GetTestCase(tcid, None, self.module, 0)
         tc.SetUp()
         self.module._execute_testcase(tc)
         self.module.CompletedTestCases.append(tc)
