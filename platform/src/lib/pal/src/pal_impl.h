@@ -5,6 +5,9 @@
 #ifndef __PAL_IMPL_H__
 #define __PAL_IMPL_H__
 
+#include "cap_top_csr_defines.h"
+#include "cap_ms_c_hdr.h"
+
 struct pal_region_s;
 typedef struct pal_region_s pal_region_t;
 

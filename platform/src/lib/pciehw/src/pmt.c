@@ -21,7 +21,7 @@
 #include "pciehw_impl.h"
 #include "pmt.h"
 
-static int npmt = PMT_COUNT_FPGA; /* XXX runtime */
+static int npmt;
 
 static int
 pmt_size(void)
@@ -604,6 +604,7 @@ pciehw_pmt_enable_bar(pciehwbar_t *phwbar, const int on)
 void
 pciehw_pmt_init(pciehw_t *phw)
 {
+    npmt = pal_is_asic() ? PMT_COUNT_ASIC : PMT_COUNT_HAPS;
     pmt_reset(phw);
     pciehw_prt_init(phw);
 }

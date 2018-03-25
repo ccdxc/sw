@@ -106,7 +106,7 @@ cmd_port(int argc, char *argv[])
 {
     pcieport_info_t *pi = &pcieport_info;
     pcieport_t *p;
-    const int w = 16;
+    const int w = 20;
     int port;
 
     if (argc <= 1) {
@@ -129,9 +129,17 @@ cmd_port(int argc, char *argv[])
     pciehsys_log("%-*s: %d\n", w, "crs", p->crs);
     pciehsys_log("%-*s: %d\n", w, "state", p->state);
     pciehsys_log("%-*s: %d\n", w, "event", p->event);
+    pciehsys_log("%-*s: %s\n", w, "fault_reason", p->fault_reason);
+    pciehsys_log("%-*s: %s\n", w, "last_fault_reason", p->last_fault_reason);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "linkup", p->linkup);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "phypolllast", p->phypolllast);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "phypollmax", p->phypollmax);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "gatepolllast", p->gatepolllast);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "gatepollmax", p->gatepollmax);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "markerpolllast", p->markerpolllast);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "markerpollmax", p->markerpollmax);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "axipendpolllast",p->axipendpolllast);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "axipendpollmax", p->axipendpollmax);
 }
 
 typedef struct cmd_s {

@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
@@ -52,10 +53,90 @@ evname(const pcieportev_t ev)
     return evnames[ev];
 }
 
+/*
+ * Link has a fault.  Record fault reason and put the link
+ * in FAULT state.  FAULT state can be cleared by mac down.
+ */
+void
+pcieport_fault(pcieport_t *p, const char *fmt, ...)
+{
+    p->faults++;
+    if (p->state != PCIEPORTST_FAULT) {
+        const size_t reasonsz = sizeof(p->fault_reason);
+        va_list ap;
+
+        va_start(ap, fmt);
+        vsnprintf(p->fault_reason, reasonsz, fmt, ap);
+        va_end(ap);
+
+        p->state = PCIEPORTST_FAULT;
+        pciehsys_error("port %d fault: %s\n", p->port, p->fault_reason);
+    }
+}
+
+/*
+ * Clear any fault reason, save the last fault reason for debug.
+ */
+static void
+pcieport_clear_fault(pcieport_t *p)
+{
+    if (p->fault_reason) {
+        const size_t bufsz = sizeof(p->last_fault_reason);
+        strncpy(p->last_fault_reason, p->fault_reason, bufsz);
+        p->fault_reason[0] = '\0';
+    }
+}
+
 static void
 pcieport_poweron(pcieport_t *p)
 {
     pcieport_config(p);
+}
+
+static void
+pcieport_linkup(pcieport_t *p)
+{
+    p->linkup++;
+}
+
+static void
+pcieport_linkdn(pcieport_t *p)
+{
+    /* XXX need link down event */
+}
+
+static int
+pcieport_drain(pcieport_t *p)
+{
+    if (pcieport_tgt_marker_rx_wait(p) < 0) {
+        pcieport_fault(p, "port tgt_marker_rx failed");
+        return -1;
+    }
+    if (pcieport_tgt_axi_pending_wait(p) < 0) {
+        pcieport_fault(p, "port tgt_axi_pending failed");
+        return -1;
+    }
+    return 0;
+}
+
+static int
+pcieport_macup(pcieport_t *p)
+{
+    if (pcieport_gate_open(p) < 0) {
+        pcieport_fault(p, "portgate open failed");
+        return -1;
+    }
+    return 0;
+}
+
+static int
+pcieport_macdn(pcieport_t *p)
+{
+    pcieport_clear_fault(p);
+    if (pcieport_drain(p) < 0) {
+        return -1;
+    }
+    return 0;
 }
 
 static void
@@ -66,6 +147,7 @@ fsm_nop(pcieport_t *p)
 static void
 fsm_inv(pcieport_t *p)
 {
+    pcieport_fault(p, "fsm_inv: %s + %s", stname(p->state), evname(p->event));
 }
 
 static void
@@ -89,13 +171,18 @@ fsm_macup_poweron(pcieport_t *p)
 static void
 fsm_macup(pcieport_t *p)
 {
-    pcieport_gate_open(p);
+    if (pcieport_macup(p) < 0) {
+        return;
+    }
     p->state = PCIEPORTST_MACUP;
 }
 
 static void
 fsm_macdn(pcieport_t *p)
 {
+    if (pcieport_macdn(p) < 0) {
+        return;
+    }
     p->state = PCIEPORTST_DOWN;
 }
 
@@ -113,9 +200,16 @@ fsm_linkdn(pcieport_t *p)
 }
 
 static void
+fsm_up_linkdn(pcieport_t *p)
+{
+    pcieport_linkdn(p);
+    p->state = PCIEPORTST_MACUP;
+}
+
+static void
 fsm_up(pcieport_t *p)
 {
-    p->linkup++;
+    pcieport_linkup(p);
     p->state = PCIEPORTST_UP;
 }
 
@@ -132,6 +226,7 @@ fsm_buschg(pcieport_t *p)
 #define MDN fsm_macdn
 #define LUP fsm_linkup
 #define LDN fsm_linkdn
+#define UDN fsm_up_linkdn
 #define UP_ fsm_up
 #define BUS fsm_buschg
 
@@ -147,12 +242,23 @@ fsm_table[PCIEPORTST_MAX][PCIEPORTEV_MAX] = {
      *                      |    |    |    |    LINKUP
      *                      |    |    |    |    |    BUSCHG
      *                      |    |    |    |    |    |   */
-    [PCIEPORTST_OFF]    = { PON, NOP, MUP, NOP, INV, INV },
-    [PCIEPORTST_DOWN]   = { PON, NOP, MUP, INV, INV, INV },
-    [PCIEPORTST_MACUP]  = { MON, MDN, INV, INV, LUP, INV },
+    [PCIEPORTST_OFF]    = { PON, NOP, MUP, NOP, INV, NOP },
+    [PCIEPORTST_DOWN]   = { PON, NOP, MUP, NOP, INV, NOP },
+    [PCIEPORTST_MACUP]  = { MON, MDN, INV, NOP, LUP, NOP },
     [PCIEPORTST_LINKUP] = { INV, INV, INV, LDN, INV, UP_ },
-    [PCIEPORTST_UP]     = { INV, INV, INV, LDN, INV, BUS },
+    [PCIEPORTST_UP]     = { INV, INV, INV, UDN, INV, BUS },
     [PCIEPORTST_FAULT]  = { PON, MDN, NOP, NOP, NOP, NOP },
+
+    /*
+     * NOTES:
+     *
+     * BUSCHG event     BUSCHG can arrive anytime, when bus resets to 0.
+     *                  So NOP for BUSCHG before LINKUP.
+     * DOWN + LINKDN    Could happen if link goes up/down quickly,
+     *                  before we saw LINKUP, intr() will always send LINKDN.
+     * MACUP + LINKDN   Could happen if link goes up/down quickly.
+     *                  before we saw LINKUP, intr() will always send LINKDN.
+     */
 };
 
 void

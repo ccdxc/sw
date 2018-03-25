@@ -264,6 +264,10 @@ intr_fwcfg_mode(const int intr, const int legacy, const int fmask)
     intr_fwcfg_function_mask(intr, fmask);
 }
 
+/*
+ * Default hw config for INTX message needs adjustment
+ * for correct operation.
+ */
 static void
 intr_cfg_legacy_intx(void)
 {
@@ -276,6 +280,15 @@ intr_cfg_legacy_intx(void)
     pal_reg_wr32w(pa, w, NWORDS(w));
 }
 
+static void
+intr_cfg_coalesce_resolution(const int res)
+{
+    const u_int64_t pa =
+        (INTR_BASE + CAP_INTR_CSR_CFG_INTR_COALESCE_BYTE_ADDRESS);
+
+    pal_reg_wr32(pa, res);
+}
+
 /*
  * One-time hardware initialization.
  */
@@ -283,4 +296,7 @@ void
 intr_hwinit(void)
 {
     intr_cfg_legacy_intx();
+    if (!pal_is_asic()) {
+        intr_cfg_coalesce_resolution(83);
+    }
 }

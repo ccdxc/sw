@@ -207,10 +207,10 @@ notify_init(pciehw_t *phw)
         if ((ring_size << 1) > maxents) break;
     }
     /*
-     * Limit default notify ring size on fpga to 256 to software
-     * doesn't get to far behind the ring causing pcie bus timeouts.
+     * Limit default notify ring size on fpga to 256 so software
+     * doesn't get too far behind the ring causing pcie bus timeouts.
      */
-    if (ring_size > 0x100) {
+    if (!pal_is_asic() && ring_size > 0x100) {
         ring_size = 0x100;
     }
     if (ring_size) {

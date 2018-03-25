@@ -229,7 +229,6 @@ pciehw_open(pciehw_params_t *hwparams)
         phw->clients++;
         return 0;
     }
-    phw->is_asic = 0; /* XXX runtime? */
     phw->nports = PCIEHW_NPORTS;
     if (hwparams) {
         phw->hwparams = *hwparams;

@@ -161,7 +161,6 @@ typedef struct pciehw_mem_s {
 
 typedef struct pciehw_s {
     u_int32_t open:1;                   /* hw is in use */
-    u_int32_t is_asic:1;                /* running on asic platform */
     u_int16_t clients;                  /* number of clients using us */
     u_int32_t nports;                   /* number of ports available */
     pciehw_params_t hwparams;

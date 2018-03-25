@@ -15,29 +15,133 @@
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
-void
+/*
+ * Get the marker state for the port.
+ */
+static int
+pcieport_get_tgt_marker_rx(pcieport_t *p)
+{
+    const u_int64_t tgt_marker_rx =
+        (CAP_ADDR_BASE_PXB_PXB_OFFSET +
+         CAP_PXB_CSR_STA_TGT_MARKER_RX_BYTE_ADDRESS);
+    const u_int32_t portbit = 1 << p->port;
+
+    return (pal_reg_rd32(tgt_marker_rx) & portbit) != 0;
+}
+
+/*
+ * When the port link goes down the barrier closes and then
+ * the port logic inserts a marker into the port transaction
+ * pipeline.  When the marker is received at the end of the pipe
+ * we know the pipeline has been flushed and all pending transactions
+ * have been process.  The hardware logic sets the tgt_marker_rx bit
+ * for the port when the marker is received at the end of the pipeline.
+ * We wait here for the indication that the tgt marker has been received.
+ * If we busy wait and block the cpu (as we currently do) we must be
+ * sure that no transactions in the pipeline require the cpu to complete
+ * them, such as indirect transactions, or we will deadlock and wait
+ * here forever (or until timeout).  We might need to be more
+ * sophisticated here eventually.
+ */
+int
+pcieport_tgt_marker_rx_wait(pcieport_t *p)
+{
+    const int maxpolls = 100; /* 100 ms */
+    int polls = 0;
+    int marker;
+
+    marker = pcieport_get_tgt_marker_rx(p);
+    if (!marker) {
+        do {
+            usleep(1000);
+            marker = pcieport_get_tgt_marker_rx(p);
+        } while (!marker && ++polls < maxpolls);
+    }
+
+    p->markerpolllast = polls;
+    if (polls > p->markerpollmax) {
+        p->markerpollmax = polls;
+    }
+
+    if (!marker) {
+        return -1;
+    }
+    return 0;
+}
+
+/*
+ * Get the number of axi pending transaction count for this port.
+ */
+static int
+pcieport_get_tgt_axi_pending(pcieport_t *p)
+{
+    const u_int64_t tgt_axi_pending =
+        (CAP_ADDR_BASE_PXB_PXB_OFFSET +
+         CAP_PXB_CSR_STA_TGT_AXI_PENDING_BYTE_ADDRESS);
+    const u_int32_t portshift = p->port * 8;
+    const int pending = (pal_reg_rd32(tgt_axi_pending) >> portshift) & 0xff;
+
+    return pending;
+}
+
+/*
+ * As part of draining a port when the link goes down we want
+ * to wait for all outstanding pending transactions to drain.
+ */
+int
+pcieport_tgt_axi_pending_wait(pcieport_t *p)
+{
+    const int maxpolls = 100; /* 100 ms */
+    int polls = 0;
+    int pending;
+
+    pending = pcieport_get_tgt_axi_pending(p);
+    if (pending) {
+        do {
+            usleep(1000);
+            pending = pcieport_get_tgt_axi_pending(p);
+        } while (pending && ++polls < maxpolls);
+    }
+
+    p->axipendpolllast = polls;
+    if (polls > p->axipendpollmax) {
+        p->axipendpollmax = polls;
+    }
+
+    if (pending) {
+        return -1;
+    }
+    return 0;
+}
+
+int
 pcieport_gate_open(pcieport_t *p)
 {
-    const int pn = p->port;
-    u_int32_t reg;
-    unsigned int tries = 20; /* 2 secs */
+    const u_int64_t portgate_open = PXC_(CFG_C_PORTGATE_OPEN, p->port);
+    u_int32_t is_open;
+    const int maxpolls = 2000; /* 2 secs */
+    int polls = 0;
 
-#define PORTGATE_OPEN CAP_PXC_CSR_STA_C_PORT_MAC_PORTGATE_OPEN_FIELD_MASK
     do {
-        pal_reg_wr32(PXC_(CFG_C_PORTGATE_OPEN, pn), 1);
-        usleep(100000);
-        reg = pal_reg_rd32(PXC_(STA_C_PORT_MAC, pn));
+        pal_reg_wr32(portgate_open, 1);
+        (void)pal_reg_rd32(portgate_open); /* flush */
+        usleep(1000);
+        is_open = pal_reg_rd32(portgate_open);
 #ifndef __aarch64__
         /* simulate gate open immediately */
-        reg |= PORTGATE_OPEN;
+        is_open = 1;
 #endif
-    } while ((reg & PORTGATE_OPEN) == 0 && --tries > 0);
-    if ((reg & PORTGATE_OPEN) == 0) {
-        pciehsys_error("port%d gate_open: PORTGATE_OPEN not set in mac\n",
-                       p->port);
-        //XXX pcieport_fault(p, "portgate open failed");
-        return;
+    } while (!is_open && ++polls < maxpolls);
+
+    p->gatepolllast = polls;
+    if (polls > p->gatepollmax) {
+        p->gatepollmax = polls;
     }
+
+    if (!is_open) {
+        return -1;
+    }
+    return 0;
 }
 
 void

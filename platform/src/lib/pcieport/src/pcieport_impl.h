@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #ifndef __PCIEPORT_IMPL_H__
@@ -44,9 +44,18 @@ struct pcieport_s {
     u_int32_t crs:1;
     pcieportst_t state;
     pcieportev_t event;
+    char fault_reason[80];
+    char last_fault_reason[80];
     u_int64_t linkup;
     u_int64_t phypolllast;
     u_int64_t phypollmax;
+    u_int64_t gatepolllast;
+    u_int64_t gatepollmax;
+    u_int64_t markerpolllast;
+    u_int64_t markerpollmax;
+    u_int64_t axipendpolllast;
+    u_int64_t axipendpollmax;
+    u_int64_t faults;
 };
 typedef struct pcieport_s pcieport_t;
 
@@ -60,7 +69,9 @@ extern pcieport_info_t pcieport_info;
 
 void pcieport_config(pcieport_t *p);
 void pcieport_fsm(pcieport_t *p, pcieportev_t ev);
-void pcieport_gate_open(pcieport_t *p);
+int pcieport_tgt_marker_rx_wait(pcieport_t *p);
+int pcieport_tgt_axi_pending_wait(pcieport_t *p);
+int pcieport_gate_open(pcieport_t *p);
 void pcieport_set_crs(pcieport_t *p, const int on);
 void pcieport_set_serdes_reset(pcieport_t *p, const int on);
 void pcieport_set_pcs_reset(pcieport_t *p, const int on);
@@ -69,6 +80,9 @@ void pcieport_set_ltssm_en(pcieport_t *p, const int on);
 void pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq);
 void pcieport_rx_credit_bfr(const int port, const int base, const int limit);
 u_int16_t pcieport_get_phystatus(pcieport_t *p);
+
+void pcieport_fault(pcieport_t *p, const char *fmt, ...)
+    __attribute__((format (printf, 2, 3)));
 
 void pcieport_fsm_dbg(int argc, char *argv[]);
 

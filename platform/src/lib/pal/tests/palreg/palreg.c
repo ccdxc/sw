@@ -128,7 +128,7 @@ main(int argc, char *argv[])
     req.dir = DIRRD;
     req.size = 4;
 
-    while ((opt = getopt(argc, argv, "48ld")) != -1) {
+    while ((opt = getopt(argc, argv, "48lde")) != -1) {
         switch (opt) {
         case '4':
         case 'l':
@@ -138,6 +138,9 @@ main(int argc, char *argv[])
         case 'd':
             req.size = 8;
             break;
+        case 'e':
+            printf("env %d is_asic %d\n", pal_get_env(), pal_is_asic());
+            exit(0);
         default:
             usage();
             exit(1);

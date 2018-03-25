@@ -85,17 +85,17 @@ static void
 pcieport_mac_unreset(pcieport_t *p)
 {
     u_int16_t phystatus;
-    const int maxloops = 1000;
-    int loops = 0;
+    const int maxpolls = 2000; /* 2 seconds */
+    int polls = 0;
 
     do {
         usleep(1000);
         phystatus = pcieport_get_phystatus(p);
-    } while (phystatus && ++loops < maxloops);
+    } while (phystatus && ++polls < maxpolls);
 
-    p->phypolllast = loops;
-    if (loops > p->phypollmax) {
-        p->phypollmax = loops;
+    p->phypolllast = polls;
+    if (polls > p->phypollmax) {
+        p->phypollmax = polls;
     }
 
     if (phystatus != 0) {
@@ -105,7 +105,7 @@ pcieport_mac_unreset(pcieport_t *p)
          */
         pciehsys_error("Warning: port%d phy reset phystatus 0x%x\n",
                        p->port, phystatus);
-        /* pcieport_fault(p, "PHY reset failed"); */
+        pcieport_fault(p, "PHY reset failed");
     }
     pcieport_set_mac_reset(p, 0); /* mac unreset */
 }
@@ -128,8 +128,10 @@ pcieport_hostconfig(pcieport_t *p)
     /* now ready to unreset mac */
     pcieport_mac_unreset(p);
 
-    /* XXX !is_asic only XXX */
-    pcieport_set_clock_freq(p, 8);
+    if (!pal_is_asic()) {
+        /* reduce clock frequency for fpga */
+        pcieport_set_clock_freq(p, 8);
+    }
 
     pcieport_set_ltssm_en(p, 1);  /* ready for ltssm */
 }

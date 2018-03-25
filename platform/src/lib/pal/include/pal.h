@@ -12,6 +12,15 @@ extern "C" {
 #endif
 #endif
 
+enum {
+    PAL_ENV_ASIC = 0,
+    PAL_ENV_HAPS = 1,
+    PAL_ENV_ZEBU = 2
+};
+
+int pal_get_env(void);
+int pal_is_asic(void);
+
 /*
  * PAL register read/write APIs.
  */
