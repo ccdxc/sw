@@ -6,6 +6,7 @@ import json
 import sys
 import subprocess
 import argparse
+import re
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--skip-targets', dest='skip_targets',
@@ -55,7 +56,7 @@ for target in job["targets"]:
     job_info = job["targets"][target]
     for cmd in job_info:
     	if DOL_JOB_PREFIX in cmd:
-            run_args = cmd.split(DOL_JOB_PREFIX, 1)[1].split("&&")[0]
+            run_args = re.split("&& | ; ", cmd.split(DOL_JOB_PREFIX, 1)[1])[0]
 	    options = [DOL_JOB_PREFIX, DOL_COVERAGE_OPTION, run_args]
             if model_logging_enabled:
 	        options.append(MODEL_LOG_OPTION)
