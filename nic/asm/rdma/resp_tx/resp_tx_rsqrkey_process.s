@@ -119,9 +119,9 @@ invoke_pt:
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD2(PTSEG_INFO_P, pt_seg_offset, PT_OFFSET)
     CAPRI_SET_FIELD2(PTSEG_INFO_P, pt_seg_bytes, K_XFER_BYTES)
+
     CAPRI_SET_FIELD2(PTSEG_INFO_P, dma_cmd_start_index, RESP_TX_DMA_CMD_PYLD_BASE)
     CAPRI_SET_FIELD2(PTSEG_INFO_P, log_page_size, d.log_page_size)
-    //CAPRI_SET_FIELD(r7, PTSEG_INFO_T, tbl_id, TABLE_0)
 
 add_headers:
 
@@ -148,10 +148,12 @@ add_headers:
 invoke_dcqcn:
     // Note: Next stage(DCQCN) does not use stage-to-stage keys. So this will be passed to write-back stage untouched!
     CAPRI_RESET_TABLE_1_ARG()
-    CAPRI_SET_FIELD2(RQCB0_WB_INFO_P, curr_read_rsp_psn, CAPRI_KEY_FIELD(IN_P, curr_read_rsp_psn))
     seq         c1, CAPRI_KEY_FIELD(IN_P, last_or_only), 1
     cmov        IN_PROGRESS, c1, 0, 1
-    CAPRI_SET_FIELD2(RQCB0_WB_INFO_P, read_rsp_in_progress, IN_PROGRESS)
+    phvwrpair   CAPRI_PHV_FIELD(RQCB0_WB_INFO_P, curr_read_rsp_psn), \
+                CAPRI_KEY_FIELD(IN_P, curr_read_rsp_psn), \
+                CAPRI_PHV_FIELD(RQCB0_WB_INFO_P, read_rsp_in_progress), \
+                IN_PROGRESS
 
     bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable), 1, dcqcn
     add            r3,  r0, K_DCQCN_CB_ADDR // BD slot

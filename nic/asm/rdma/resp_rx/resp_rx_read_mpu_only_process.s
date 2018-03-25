@@ -24,10 +24,10 @@ resp_rx_read_mpu_only_process:
 
     CAPRI_RESET_TABLE_1_ARG();
 
-    CAPRI_SET_FIELD_RANGE2(OUT_P, va, len, \
-                           CAPRI_KEY_RANGE(IN_P, va, len))
+    phvwrpair   CAPRI_PHV_FIELD(OUT_P, va), CAPRI_KEY_FIELD(IN_P, va), \
+                CAPRI_PHV_FIELD(OUT_P, len), CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit23, len_sbit24_ebit31)
 
-    add     R_KEY, r0, CAPRI_KEY_RANGE(IN_P, r_key_sbit0_ebit23, r_key_sbit24_ebit31)
+    add     R_KEY, r0, CAPRI_KEY_FIELD(IN_P, r_key)
 
     KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, R_KEY)

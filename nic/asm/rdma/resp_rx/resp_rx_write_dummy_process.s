@@ -17,6 +17,8 @@ struct resp_rx_s1_t1_k k;
 
 #define IN_P t1_s2s_rqcb_to_write_rkey_info
 
+#define K_REM_PYLD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
+
 %%
     .param  resp_rx_rqlkey_process
 
@@ -31,15 +33,15 @@ resp_rx_write_dummy_process:
 
     cmov    r1, c1, d.va, CAPRI_KEY_FIELD(IN_P, va)
     CAPRI_SET_FIELD2(RKEY_INFO_P, va, r1)
-    add     r1, r1, CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
+    add     r1, r1, K_REM_PYLD_BYTES
     tblwr   d.va, r1
 
-    cmov    r1, c1, d.len, CAPRI_KEY_FIELD(IN_P, len)
-    CAPRI_SET_FIELD2(RKEY_INFO_P, len, CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15))
-    sub     r1, r1, CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
+    cmov    r1, c1, d.len, CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit23, len_sbit24_ebit31)
+    CAPRI_SET_FIELD2(RKEY_INFO_P, len, K_REM_PYLD_BYTES)
+    sub     r1, r1, K_REM_PYLD_BYTES
     tblwr   d.len, r1
 
-    cmov    R_KEY, c1, d.r_key, CAPRI_KEY_RANGE(IN_P, r_key_sbit0_ebit23, r_key_sbit24_ebit31)
+    cmov    R_KEY, c1, d.r_key, CAPRI_KEY_FIELD(IN_P, r_key)
     tblwr   d.r_key, R_KEY
 
     KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
@@ -51,9 +53,9 @@ resp_rx_write_dummy_process:
     CAPRI_SET_FIELD_RANGE2(RKEY_INFO_P, tbl_id, nak_code, ((TABLE_1 << 17) | (ACC_CTRL_REMOTE_WRITE << 9) | (1 << 8) | (AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR))))
 
     // set write back related params
-    CAPRI_SET_FIELD2(RKEY_INFO_P, incr_nxt_to_go_token_id, 1)
+    phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, incr_nxt_to_go_token_id), 1, \
+                CAPRI_PHV_FIELD(RKEY_INFO_P, invoke_writeback), 1
     CAPRI_SET_FIELD2(RKEY_INFO_P, incr_c_index, CAPRI_KEY_FIELD(IN_P, incr_c_index))
-    CAPRI_SET_FIELD2(RKEY_INFO_P, invoke_writeback, 1)
 
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)

@@ -30,8 +30,10 @@ resp_rx_rqcb1_in_progress_process:
     
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_WQE_P, in_progress, current_sge_id, CAPRI_KEY_RANGE(IN_P, in_progress, current_sge_id))
-    CAPRI_SET_FIELD2(RQCB_TO_WQE_P, num_valid_sges, NUM_VALID_SGES)
-    CAPRI_SET_FIELD2(RQCB_TO_WQE_P, dma_cmd_index, RESP_RX_DMA_CMD_PYLD_BASE)
+    phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_WQE_P, num_valid_sges), \
+                NUM_VALID_SGES, \
+                CAPRI_PHV_FIELD(RQCB_TO_WQE_P, dma_cmd_index), \
+                RESP_RX_DMA_CMD_PYLD_BASE
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
 

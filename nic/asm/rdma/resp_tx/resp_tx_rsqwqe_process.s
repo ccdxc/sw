@@ -108,40 +108,32 @@ process_read:
     // transfer_bytes > pmtu &&  curr_psn != rsqwqe_p->psn
     .brcase 0
     or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_MID
-    CAPRI_SET_FIELD2(RKEY_INFO_P, transfer_bytes, PMTU)
-    //CAPRI_SET_FIELD(r4, RKEY_INFO_T, last_or_only, 0)
     b           next
-    nop
+    CAPRI_SET_FIELD2(RKEY_INFO_P, transfer_bytes, PMTU) //BD Slot
 
     // 01
     // transfer_bytes > pmtu &&  curr_psn == rsqwqe_p->psn
     .brcase 1
     or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_FIRST
-    CAPRI_SET_FIELD2(RKEY_INFO_P, send_aeth, 1)
-    CAPRI_SET_FIELD2(RKEY_INFO_P, transfer_bytes, PMTU)
-    //CAPRI_SET_FIELD(r4, RKEY_INFO_T, last_or_only, 0)
     b           next
-    nop
+    phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, send_aeth), 1, \
+                CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_bytes), PMTU //BD Slot
 
     // 10
     // transfer_bytes <= pmtu &&  curr_psn != rsqwqe_p->psn
     .brcase 2
     or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_LAST
-    CAPRI_SET_FIELD2(RKEY_INFO_P, send_aeth, 1)
-    CAPRI_SET_FIELD2(RKEY_INFO_P, transfer_bytes, XFER_BYTES)
-    CAPRI_SET_FIELD2(RKEY_INFO_P, last_or_only, 1)
     b           next
-    nop
+    phvwrpair   CAPRI_PHV_RANGE(RKEY_INFO_P, send_aeth, last_or_only), (1<<1)|1, \
+                CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_bytes), XFER_BYTES //BD Slot
 
     // 11
     // transfer_bytes <= pmtu &&  curr_psn == rsqwqe_p->psn
     .brcase 3
     or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_ONLY
-    CAPRI_SET_FIELD2(RKEY_INFO_P, send_aeth, 1)
-    CAPRI_SET_FIELD2(RKEY_INFO_P, transfer_bytes, XFER_BYTES)
-    CAPRI_SET_FIELD2(RKEY_INFO_P, last_or_only, 1)
     b           next
-    nop
+    phvwrpair   CAPRI_PHV_RANGE(RKEY_INFO_P, send_aeth, last_or_only), (1<<1)|1, \
+                CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_bytes), XFER_BYTES //BD Slot
     
     .csend
 
@@ -153,11 +145,15 @@ next:
     phvwrpair   p.bth.opcode, BTH_OPCODE, p.bth.psn, CURR_PSN
 
     add         XFER_VA, d.read.va, BYTES_SENT
-    CAPRI_SET_FIELD2(RKEY_INFO_P, transfer_va, XFER_VA)
-    CAPRI_SET_FIELD2(RKEY_INFO_P, log_pmtu, CAPRI_KEY_FIELD(IN_P, log_pmtu))
-    CAPRI_SET_FIELD2(RKEY_INFO_P, header_template_addr, CAPRI_KEY_FIELD(IN_P, header_template_addr))
+    phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_va), \
+                XFER_VA, \
+                CAPRI_PHV_FIELD(RKEY_INFO_P, header_template_addr), \
+                CAPRI_KEY_FIELD(IN_P, header_template_addr) 
+
+    phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, curr_read_rsp_psn), CURR_PSN, \
+                CAPRI_PHV_FIELD(RKEY_INFO_P, log_pmtu), CAPRI_KEY_FIELD(IN_P, log_pmtu)
+
     CAPRI_SET_FIELD2(RKEY_INFO_P, header_template_size, CAPRI_KEY_FIELD(IN_P, header_template_size))
-    CAPRI_SET_FIELD2(RKEY_INFO_P, curr_read_rsp_psn, CURR_PSN)
 
     KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
     

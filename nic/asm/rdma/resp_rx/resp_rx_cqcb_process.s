@@ -91,15 +91,17 @@ fire_cqpt:
     
     CAPRI_RESET_TABLE_2_ARG()
     #copy fields cq_id, eq_id, and arm
-    CAPRI_SET_FIELD_RANGE2(CQ_PT_INFO_P, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
-    CAPRI_SET_FIELD2(CQ_PT_INFO_P, page_seg_offset, PAGE_SEG_OFFSET)
-    CAPRI_SET_FIELD2(CQ_PT_INFO_P, page_offset, PAGE_OFFSET)
-    CAPRI_SET_FIELD2(CQ_PT_INFO_P, no_translate, 0)
+    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_offset), PAGE_OFFSET, \
+                CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_seg_offset), PAGE_SEG_OFFSET
+    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_translate), 0, \
+                CAPRI_PHV_FIELD(CQ_PT_INFO_P, pa_next_index), PA_NEXT_INDEX
     CAPRI_SET_FIELD2_C(CQ_PT_INFO_P, no_dma, 1, c3)    
-    CAPRI_SET_FIELD2(CQ_PT_INFO_P, pa_next_index, PA_NEXT_INDEX)  
     
-    mfspr          CQCB_ADDR, spr_tbladdr
-    CAPRI_SET_FIELD2(CQ_PT_INFO_P, cqcb_addr, CQCB_ADDR)
+    mfspr       CQCB_ADDR, spr_tbladdr
+    phvwrpair   CAPRI_PHV_RANGE(CQ_PT_INFO_P, cq_id, wakeup_dpath), \
+                d.{cq_id...wakeup_dpath}, \
+                CAPRI_PHV_FIELD(CQ_PT_INFO_P, cqcb_addr), \
+                CQCB_ADDR
     
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqpt_process, PAGE_INDEX)
 
@@ -112,8 +114,10 @@ no_translate_dma:
     
     CAPRI_RESET_TABLE_2_ARG()
     #copy fields cq_id, eq_id, and arm
-    CAPRI_SET_FIELD_RANGE2(CQ_PT_INFO_P, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
-    CAPRI_SET_FIELD_RANGE2(CQ_PT_INFO_P, no_translate, no_dma, 0x3)
+    phvwrpair   CAPRI_PHV_RANGE(CQ_PT_INFO_P, cq_id, wakeup_dpath), \
+                d.{cq_id...wakeup_dpath}, \
+                CAPRI_PHV_RANGE(CQ_PT_INFO_P, no_translate, no_dma), \
+                3
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_cqpt_process, r0)
     
 do_dma:

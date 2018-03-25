@@ -60,8 +60,10 @@ resp_tx_rqcb_process:
         add             DCQCNCB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
 
         // Pass congestion_mgmt_enable flag to stages 3 and 4.
-        CAPRI_SET_FIELD2(TO_S3_P, congestion_mgmt_enable, d.congestion_mgmt_enable)
-        CAPRI_SET_FIELD2(TO_S3_P, dcqcn_cb_addr, DCQCNCB_ADDR)
+        phvwrpair   CAPRI_PHV_FIELD(TO_S3_P, dcqcn_cb_addr), \
+                    DCQCNCB_ADDR, \
+                    CAPRI_PHV_FIELD(TO_S3_P, congestion_mgmt_enable), \
+                    d.congestion_mgmt_enable
 
         CAPRI_SET_FIELD2(TO_S4_P, congestion_mgmt_enable, d.congestion_mgmt_enable)
 
@@ -80,12 +82,15 @@ resp_tx_rqcb_process:
 
         //TBD: we can avoid passing serv_type ?
         CAPRI_RESET_TABLE_0_ARG()
-        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, curr_read_rsp_psn, d.curr_read_rsp_psn)
-        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, rsqwqe_addr, RSQWQE_P)
-        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, log_pmtu, d.log_pmtu)
-        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, serv_type, d.serv_type)
-        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, header_template_addr, d.header_template_addr)
-        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, header_template_size, d.header_template_size)
+        phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, rsqwqe_addr), RSQWQE_P, \
+                    CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, curr_read_rsp_psn), d.curr_read_rsp_psn
+
+        phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, log_pmtu), d.log_pmtu, \
+                    CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, serv_type), d.serv_type
+
+        phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, header_template_addr), d.header_template_addr, \
+                    CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, header_template_size), d.header_template_size
+
         CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, read_rsp_in_progress, d.read_rsp_in_progress)
         
 
@@ -105,8 +110,8 @@ resp_tx_rqcb_process:
         add             DCQCNCB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
 
         // Pass congestion_mgmt_enable flag to stages 3 and 4.
-        CAPRI_SET_FIELD2(TO_S3_P, congestion_mgmt_enable, d.congestion_mgmt_enable)
-        CAPRI_SET_FIELD2(TO_S3_P, dcqcn_cb_addr, DCQCNCB_ADDR)
+        phvwrpair       CAPRI_PHV_FIELD(TO_S3_P, dcqcn_cb_addr), DCQCNCB_ADDR, \
+                        CAPRI_PHV_FIELD(TO_S3_P, congestion_mgmt_enable), d.congestion_mgmt_enable
 
         CAPRI_SET_FIELD2(TO_S4_P, congestion_mgmt_enable, d.congestion_mgmt_enable)
 

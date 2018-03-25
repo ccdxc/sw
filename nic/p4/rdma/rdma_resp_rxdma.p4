@@ -283,8 +283,8 @@ header_type resp_rx_cqcb_to_pt_info_t {
 header_type resp_rx_rqcb_to_write_rkey_info_t {
     fields {
         va                               :   64;
-        len                              :   32;
         r_key                            :   32;
+        len                              :   32;
         remaining_payload_bytes          :   16;
         load_reth                        :    1;
         incr_c_index                     :    1;
@@ -397,8 +397,8 @@ header_type resp_rx_to_stage_wb1_info_t {
 header_type resp_rx_rqcb_to_read_atomic_rkey_info_t {
     fields {
         va                               :   64;
-        len                              :   32;
         r_key                            :   32;
+        len                              :   32;
         rsq_p_index                      :   16;
         skip_rsq_dbell                   :    1;
         read_or_atomic                   :    1;

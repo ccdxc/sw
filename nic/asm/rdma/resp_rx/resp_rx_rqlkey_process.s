@@ -114,12 +114,8 @@ invoke_pt:
     CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_ptseg_process, PT_SEG_P)
     CAPRI_GET_TABLE_0_OR_1_ARG(resp_rx_phv_t, r7, c2)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_offset, PT_OFFSET)
-    //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_bytes, k.args.len)
-    //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
-    //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, sge_index, k.args.tbl_id)
     CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, pt_bytes, sge_index, CAPRI_KEY_RANGE(IN_P, len, tbl_id))
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, d.log_page_size)
-    //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 0)
     CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, override_lif_vld, override_lif, d.{override_lif_vld...override_lif})
 
 skip_pt:
@@ -139,8 +135,11 @@ check_write_back:
     RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
 
     CAPRI_RESET_TABLE_2_ARG()
-    CAPRI_SET_FIELD2(INFO_WBCB1_P, incr_nxt_to_go_token_id, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id))
-    CAPRI_SET_FIELD2(INFO_WBCB1_P, incr_c_index, CAPRI_KEY_FIELD(IN_P, incr_c_index))
+    phvwrpair   CAPRI_PHV_FIELD(INFO_WBCB1_P, incr_nxt_to_go_token_id), \
+                CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), \
+                CAPRI_PHV_FIELD(INFO_WBCB1_P, incr_c_index), \
+                CAPRI_KEY_FIELD(IN_P, incr_c_index)
+
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, RQCB1_ADDR)
 
 exit:

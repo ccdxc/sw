@@ -15,7 +15,6 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define RQCB_TO_RQCB1_P t0_s2s_rqcb_to_rqcb1_info
 #define TO_S_WB1_P to_s3_wb1_info
 //#define TO_S_STATS_INFO_T struct resp_rx_to_stage_stats_info_t
-#define ECN_INFO_P  t3_s2s_ecn_info
 #define RQCB_TO_RD_ATOMIC_P t1_s2s_rqcb_to_read_atomic_rkey_info
 #define TO_S_ATOMIC_INFO_P to_s1_atomic_info
 #define WQE_INFO_P t0_s2s_rqcb_to_wqe_info
@@ -102,7 +101,6 @@ start_recirc_packet:
 
     //Process sending CNP packet to the requester.
     CAPRI_RESET_TABLE_3_ARG() 
-    CAPRI_SET_FIELD2(ECN_INFO_P, p_key, CAPRI_APP_DATA_BTH_P_KEY)
     add     r5, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_ecn_process, r5) 
 
@@ -197,9 +195,7 @@ process_write:
 
     bcf [!c1], write_non_first_pkt
     CAPRI_SET_FIELD2_C(RQCB_TO_WRITE_P, load_reth, 1, !c1)  //BD Slot
-    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, va, CAPRI_RXDMA_RETH_VA)
-    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, len, CAPRI_RXDMA_RETH_DMA_LEN)
-    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, r_key, CAPRI_RXDMA_RETH_R_KEY)
+    CAPRI_SET_FIELD_RANGE2(RQCB_TO_WRITE_P, va, len, CAPRI_RXDMA_RETH_VA_R_KEY_LEN)
 
 write_non_first_pkt:
     bcf             [!c6], exit
@@ -288,9 +284,9 @@ send_in_progress:
 
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_RQCB1_P, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
-    CAPRI_SET_FIELD2(RQCB_TO_RQCB1_P, in_progress, d.in_progress)
     b           exit
-    CAPRI_SET_FIELD2(RQCB_TO_RQCB1_P, remaining_payload_bytes, REM_PYLD_BYTES)   //BD Slot
+    phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RQCB1_P, in_progress), d.in_progress, \
+                CAPRI_PHV_FIELD(RQCB_TO_RQCB1_P, remaining_payload_bytes), REM_PYLD_BYTES //BD Slot
 
 
 /******  Common logic for ONLY packets (send/write) ******/
@@ -389,9 +385,7 @@ process_write_only:
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_write_dummy_process, r5)
 
     CAPRI_RESET_TABLE_1_ARG()
-    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, va, CAPRI_RXDMA_RETH_VA)
-    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, len, CAPRI_RXDMA_RETH_DMA_LEN)
-    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, r_key, CAPRI_RXDMA_RETH_R_KEY)
+    CAPRI_SET_FIELD_RANGE2(RQCB_TO_WRITE_P, va, len, CAPRI_RXDMA_RETH_VA_R_KEY_LEN)
 
     bcf             [!c6], exit
     CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, remaining_payload_bytes, REM_PYLD_BYTES) //BD Slot
@@ -455,10 +449,10 @@ process_read_atomic:
     // common params for both read/atomic
     CAPRI_RESET_TABLE_1_ARG()
     phvwrpair   p.rsqwqe.read.r_key, CAPRI_RXDMA_RETH_R_KEY, p.rsqwqe.read.va, CAPRI_RXDMA_RETH_VA
-    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, va, CAPRI_RXDMA_RETH_VA)
-    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, r_key, CAPRI_RXDMA_RETH_R_KEY)
-    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, rsq_p_index, NEW_RSQ_P_INDEX)
-    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, skip_rsq_dbell, d.rsq_quiesce)
+    CAPRI_SET_FIELD_RANGE2(RQCB_TO_RD_ATOMIC_P, va, r_key, CAPRI_RXDMA_RETH_VA_R_KEY)
+    phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RD_ATOMIC_P, rsq_p_index), NEW_RSQ_P_INDEX, \
+                CAPRI_PHV_FIELD(RQCB_TO_RD_ATOMIC_P, skip_rsq_dbell), d.rsq_quiesce
+    
 
     bcf         [c6 | c5], process_atomic
     phvwr       p.rsqwqe.psn, d.e_psn   //BD Slot
@@ -681,8 +675,8 @@ rc_checkout:
     add         r2, r2, d.hbm_rq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
 
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD2(WQE_INFO_P, remaining_payload_bytes, REM_PYLD_BYTES)
-    CAPRI_SET_FIELD2(WQE_INFO_P, curr_wqe_ptr, r2)
+    phvwrpair   CAPRI_PHV_FIELD(WQE_INFO_P, remaining_payload_bytes), REM_PYLD_BYTES, \
+                CAPRI_PHV_FIELD(WQE_INFO_P, curr_wqe_ptr), r2
     CAPRI_SET_FIELD2(WQE_INFO_P, dma_cmd_index, RESP_RX_DMA_CMD_PYLD_BASE)
 
     //MPU only
@@ -717,8 +711,8 @@ pt_process:
     // now r3 has page_p to load
     
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD2(INFO_OUT1_P, page_seg_offset, r5)
-    CAPRI_SET_FIELD2(INFO_OUT1_P, page_offset, r1)
+    phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, page_seg_offset), r5, \
+                CAPRI_PHV_FIELD(INFO_OUT1_P, page_offset), r1
     CAPRI_SET_FIELD2(INFO_OUT1_P, remaining_payload_bytes, REM_PYLD_BYTES)
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqpt_process, r3)

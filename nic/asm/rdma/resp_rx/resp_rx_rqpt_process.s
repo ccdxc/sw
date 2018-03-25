@@ -37,8 +37,10 @@ resp_rx_rqpt_process:
     CAPRI_RESET_TABLE_0_ARG()
 
     CAPRI_SET_FIELD2(INFO_OUT1_P, curr_wqe_ptr, r3)
-    CAPRI_SET_FIELD2(INFO_OUT1_P, remaining_payload_bytes, CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15))
-    CAPRI_SET_FIELD2(INFO_OUT1_P, dma_cmd_index, RESP_RX_DMA_CMD_PYLD_BASE)
+    phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, remaining_payload_bytes), \
+                CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15), \
+                CAPRI_PHV_FIELD(INFO_OUT1_P, dma_cmd_index), \
+                RESP_RX_DMA_CMD_PYLD_BASE
 
     // we don't need to handle write_with_imm as we don't need to get
     // wrid for completion purpose (driver would take care of it).

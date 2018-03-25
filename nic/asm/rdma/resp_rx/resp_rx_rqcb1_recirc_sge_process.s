@@ -45,17 +45,25 @@ resp_rx_rqcb1_recirc_sge_process:
     sub     NUM_VALID_SGES, NUM_VALID_SGES, CAPRI_KEY_FIELD(IN_TO_S_P, current_sge_id)
     
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD2(RQCB_TO_WQE_P, recirc_path, 1)
-    CAPRI_SET_FIELD2(RQCB_TO_WQE_P, in_progress, 1)
-    CAPRI_SET_FIELD2(RQCB_TO_WQE_P, remaining_payload_bytes, CAPRI_KEY_FIELD(IN_TO_S_P, remaining_payload_bytes))
-    CAPRI_SET_FIELD2(RQCB_TO_WQE_P, current_sge_id, CAPRI_KEY_FIELD(IN_TO_S_P, current_sge_id))
-    CAPRI_SET_FIELD2(RQCB_TO_WQE_P, current_sge_offset, CAPRI_KEY_RANGE(IN_TO_S_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit16_ebit31))
-    CAPRI_SET_FIELD2(RQCB_TO_WQE_P, num_valid_sges, NUM_VALID_SGES)
-    CAPRI_SET_FIELD2(RQCB_TO_WQE_P, curr_wqe_ptr, WQE_PTR)
+    CAPRI_SET_FIELD_RANGE2_IMM(RQCB_TO_WQE_P, recirc_path, in_progress, (1 << 1)|1)
+    phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_WQE_P, remaining_payload_bytes), \
+                CAPRI_KEY_FIELD(IN_TO_S_P, remaining_payload_bytes), \
+                CAPRI_PHV_FIELD(RQCB_TO_WQE_P, current_sge_id), \
+                CAPRI_KEY_FIELD(IN_TO_S_P, current_sge_id)
+
+    phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_WQE_P, current_sge_offset), \
+                CAPRI_KEY_RANGE(IN_TO_S_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit16_ebit31), \
+                CAPRI_PHV_FIELD(RQCB_TO_WQE_P, num_valid_sges), \
+                NUM_VALID_SGES
+
     // currently our DMA commands exhaust upon one recirculation, hence 
     // below static formula to compute dma_cmd_index works.
     // for a generic case, we need to make this multiple of recirc_count
-    CAPRI_SET_FIELD2(RQCB_TO_WQE_P, dma_cmd_index, (RESP_RX_DMA_CMD_PYLD_BASE + (MAX_PYLD_DMA_CMDS_PER_SGE * 2)))
+
+    phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_WQE_P, curr_wqe_ptr), \
+                WQE_PTR, \
+                CAPRI_PHV_FIELD(RQCB_TO_WQE_P, dma_cmd_index), \
+                (RESP_RX_DMA_CMD_PYLD_BASE + (MAX_PYLD_DMA_CMDS_PER_SGE * 2))
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
 
