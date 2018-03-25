@@ -166,8 +166,6 @@ public:
     static bool is_dleft(uint32_t hash_idx);
     static uint32_t get_dleft_id_from_hash_idx_(uint32_t hash_idx);
     static uint32_t get_otcam_id_from_hash_idx_(uint32_t hash_idx);
-    sdk_ret_t fetch_stats(const uint64_t **stats);
-
 };
 
 }    // namespace table

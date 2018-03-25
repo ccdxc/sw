@@ -1,7 +1,10 @@
 //------------------------------------------------------------------------------
-// protobuf specification for network policy objects
-// Network object defined here is for policy purposes alone and is not tied
-// to routes etc.
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for network related policy objects
+//
+// Network object defined here is used to enforce policies (like firewall/NAT
+// etc.) whereas Route object is used for forwarding
 //------------------------------------------------------------------------------
 
 syntax = "proto3";
@@ -54,21 +57,20 @@ message NetworkResponseMsg {
 
 // NetworkDeleteRequest is used to delete a network policy object
 message NetworkDeleteRequest {
-  types.ObjectMeta              meta               = 1;    // object meta
+  types.ObjectMeta       meta           = 1;    // object meta
   // key_or_handle is the network being deleted
-  kh.NetworkKeyHandle  key_or_handle      = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.VrfKeyHandle      vrf_key_handle     = 3 [(gogoproto.moretags) = "venice:ref"];
-}
-
-// NetworkDeleteResponse is response to NetworkDeleteRequest
-message NetworkDeleteResponse {
-  types.ApiStatus          		api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  kh.NetworkKeyHandle  key_or_handle  = 2;
+  kh.NetworkKeyHandle    key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.VrfKeyHandle        vrf_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];
 }
 
 // NetworkDeleteRequestMsg is used to delete a batch of network policy objects
 message NetworkDeleteRequestMsg {
   repeated NetworkDeleteRequest    request = 1;   // batched delete request
+}
+
+// NetworkDeleteResponse is response to NetworkDeleteRequest
+message NetworkDeleteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
 }
 
 // NetworkDeleteResponseMsg is batched response to NetworkDeleteRequestMsg
@@ -82,10 +84,10 @@ message NetworkStats {
 
 // NetworkGetRequest is used to get information about a network
 message NetworkGetRequest {
-  types.ObjectMeta                meta              = 1;    // object meta
+  types.ObjectMeta       meta           = 1;    // object meta
   // key_or_handle is the key or handle of the network object being retrieved
-  kh.NetworkKeyHandle    key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.VrfKeyHandle        vrf_key_handle    = 3 [(gogoproto.moretags) = "venice:ref"];
+  kh.NetworkKeyHandle    key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.VrfKeyHandle        vrf_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];
 }
 
 // NetworkGetRequestMsg is batched GET request for networks
@@ -103,5 +105,164 @@ message NetworkGetResponse {
 
 // NetworkGetResponseMsg is response to NetworkGetRequestMsg
 message NetworkGetResponseMsg {
-  repeated NetworkGetResponse    response   = 2;    // batched get response
+  repeated NetworkGetResponse    response = 2;    // batched get response
+}
+
+// RouteSpec is used to add or modify a route object
+message RouteSpec {
+  types.ObjectMeta       meta             = 1; // common object meta
+  kh.RouteKeyHandle      key_or_handle    = 2  [(gogoproto.moretags) = "venice:\"key\""];
+  kh.NexthopKeyHandle    nh_key_or_handle = 3  [(gogoproto.moretags) = "venice:ref"];
+}
+
+// RouteRequestMsg is batched request message used to create/update
+// route objects
+message RouteRequestMsg {
+  repeated RouteSpec    request = 1;    // batch of requests
+}
+
+// RouteStatus represents the current status of the route object
+message RouteStatus {
+  fixed64    route_handle = 1;    // id of the route object returned by HAL
+}
+
+// RouteResponse is response to one RouteSpec
+message RouteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  RouteStatus        status     = 2;    // operational status
+}
+
+// RouteResponseMsg is response to RouteRequestMsg
+message RouteResponseMsg {
+  repeated RouteResponse    response = 1;    // batch of responses
+}
+
+// RouteDeleteRequest is used to delete a route object
+message RouteDeleteRequest {
+  types.ObjectMeta     meta          = 1;    // object meta
+  kh.RouteKeyHandle    key_or_handle = 2  [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// RouteDeleteRequestMsg is used to delete a batch of route objects
+message RouteDeleteRequestMsg {
+  repeated RouteDeleteRequest    request = 1;   // batched delete request
+}
+
+// RouteDeleteResponse is response to RouteDeleteRequest
+message RouteDeleteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+// RouteDeleteResponseMsg is batched response to RouteDeleteRequestMsg
+message RouteDeleteResponseMsg {
+  repeated RouteDeleteResponse    response = 1;    // batched response
+}
+
+// RouteStats captures all the statistics of given route
+message RouteStats {
+}
+
+// RouteGetRequest is used to get information about a route
+message RouteGetRequest {
+  types.ObjectMeta     meta          = 1;    // object meta
+  kh.RouteKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// RouteGetRequestMsg is batched GET request for routes
+message RouteGetRequestMsg {
+  repeated RouteGetRequest    request = 1;    // batched get request
+}
+
+// RouteGetResponse captures all the information about a route
+message RouteGetResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  RouteSpec        spec       = 2;    // route specification/configuration
+  RouteStatus      status     = 3;    // route status
+  RouteStats       stats      = 4;    // route statistics
+}
+
+// RouteGetResponseMsg is response to RouteGetRequestMsg
+message RouteGetResponseMsg {
+  repeated RouteGetResponse    response = 2;    // batched get response
+}
+
+// NexthopSpec is used to add or modify a nexthop object
+message NexthopSpec {
+  types.ObjectMeta             meta             = 1; // common object meta
+  kh.NexthopKeyHandle          key_or_handle    = 2  [(gogoproto.moretags) = "venice:\"key\""];
+  oneof if_or_ep {
+      kh.InterfaceKeyHandle    if_key_or_handle = 3  [(gogoproto.moretags) = "venice:ref"];
+      kh.EndpointKeyHandle     ep_key_or_handle = 4  [(gogoproto.moretags) = "venice:ref"];
+  }
+}
+
+// NexthopRequestMsg is batched request message used to create/update
+// nexthop objects
+message NexthopRequestMsg {
+  repeated NexthopSpec    request = 1;    // batch of requests
+}
+
+// NexthopStatus represents the current status of the nexthop object
+message NexthopStatus {
+  fixed64    nexthop_handle = 1;    // id of the nexthop object returned by HAL
+}
+
+// NexthopResponse is response to one NexthopSpec
+message NexthopResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  NexthopStatus        status   = 2;    // operational status
+}
+
+// NexthopResponseMsg is response to NexthopRequestMsg
+message NexthopResponseMsg {
+  repeated NexthopResponse    response = 1;    // batch of responses
+}
+
+// NexthopDeleteRequest is used to delete a nexthop object
+message NexthopDeleteRequest {
+  types.ObjectMeta       meta          = 1;    // object meta
+  kh.NexthopKeyHandle    key_or_handle = 2  [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// NexthopDeleteRequestMsg is used to delete a batch of nexthop objects
+message NexthopDeleteRequestMsg {
+  repeated NexthopDeleteRequest    request = 1;   // batched delete request
+}
+
+// NexthopDeleteResponse is response to NexthopDeleteRequest
+message NexthopDeleteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+// NexthopDeleteResponseMsg is batched response to NexthopDeleteRequestMsg
+message NexthopDeleteResponseMsg {
+  repeated NexthopDeleteResponse    response = 1;    // batched response
+}
+
+// NexthopStats captures all the statistics of given nexthop
+message NexthopStats {
+}
+
+// NexthopGetRequest is used to get information about a nexthop
+message NexthopGetRequest {
+  types.ObjectMeta       meta          = 1;    // object meta
+  kh.NexthopKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// NexthopGetRequestMsg is batched GET request for nexthops
+message NexthopGetRequestMsg {
+  repeated NexthopGetRequest    request = 1;    // batched get request
+}
+
+// NexthopGetResponse captures all the information about a nexthop
+message NexthopGetResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  NexthopSpec        spec       = 2;    // nexthop specification/configuration
+  NexthopStatus      status     = 3;    // nexthop status
+  NexthopStats       stats      = 4;    // nexthop statistics
+}
+
+// NexthopGetResponseMsg is response to NexthopGetRequestMsg
+message NexthopGetResponseMsg {
+  repeated NexthopGetResponse    response = 2;    // batched get response
 }

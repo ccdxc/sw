@@ -190,31 +190,6 @@ func (m *NetworkDeleteRequest) GetVrfKeyHandle() *VrfKeyHandle {
 	return nil
 }
 
-// NetworkDeleteResponse is response to NetworkDeleteRequest
-type NetworkDeleteResponse struct {
-	ApiStatus   ApiStatus         `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
-	KeyOrHandle *NetworkKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
-}
-
-func (m *NetworkDeleteResponse) Reset()                    { *m = NetworkDeleteResponse{} }
-func (m *NetworkDeleteResponse) String() string            { return proto.CompactTextString(m) }
-func (*NetworkDeleteResponse) ProtoMessage()               {}
-func (*NetworkDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{6} }
-
-func (m *NetworkDeleteResponse) GetApiStatus() ApiStatus {
-	if m != nil {
-		return m.ApiStatus
-	}
-	return ApiStatus_API_STATUS_OK
-}
-
-func (m *NetworkDeleteResponse) GetKeyOrHandle() *NetworkKeyHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
 // NetworkDeleteRequestMsg is used to delete a batch of network policy objects
 type NetworkDeleteRequestMsg struct {
 	Request []*NetworkDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
@@ -223,13 +198,30 @@ type NetworkDeleteRequestMsg struct {
 func (m *NetworkDeleteRequestMsg) Reset()                    { *m = NetworkDeleteRequestMsg{} }
 func (m *NetworkDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NetworkDeleteRequestMsg) ProtoMessage()               {}
-func (*NetworkDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{7} }
+func (*NetworkDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{6} }
 
 func (m *NetworkDeleteRequestMsg) GetRequest() []*NetworkDeleteRequest {
 	if m != nil {
 		return m.Request
 	}
 	return nil
+}
+
+// NetworkDeleteResponse is response to NetworkDeleteRequest
+type NetworkDeleteResponse struct {
+	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+}
+
+func (m *NetworkDeleteResponse) Reset()                    { *m = NetworkDeleteResponse{} }
+func (m *NetworkDeleteResponse) String() string            { return proto.CompactTextString(m) }
+func (*NetworkDeleteResponse) ProtoMessage()               {}
+func (*NetworkDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{7} }
+
+func (m *NetworkDeleteResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
 }
 
 // NetworkDeleteResponseMsg is batched response to NetworkDeleteRequestMsg
@@ -367,6 +359,703 @@ func (m *NetworkGetResponseMsg) GetResponse() []*NetworkGetResponse {
 	return nil
 }
 
+// RouteSpec is used to add or modify a route object
+type RouteSpec struct {
+	Meta          *ObjectMeta       `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle   *RouteKeyHandle   `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	NhKeyOrHandle *NexthopKeyHandle `protobuf:"bytes,3,opt,name=nh_key_or_handle,json=nhKeyOrHandle" json:"nh_key_or_handle,omitempty" venice:ref`
+}
+
+func (m *RouteSpec) Reset()                    { *m = RouteSpec{} }
+func (m *RouteSpec) String() string            { return proto.CompactTextString(m) }
+func (*RouteSpec) ProtoMessage()               {}
+func (*RouteSpec) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{14} }
+
+func (m *RouteSpec) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *RouteSpec) GetKeyOrHandle() *RouteKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *RouteSpec) GetNhKeyOrHandle() *NexthopKeyHandle {
+	if m != nil {
+		return m.NhKeyOrHandle
+	}
+	return nil
+}
+
+// RouteRequestMsg is batched request message used to create/update
+// route objects
+type RouteRequestMsg struct {
+	Request []*RouteSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *RouteRequestMsg) Reset()                    { *m = RouteRequestMsg{} }
+func (m *RouteRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*RouteRequestMsg) ProtoMessage()               {}
+func (*RouteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{15} }
+
+func (m *RouteRequestMsg) GetRequest() []*RouteSpec {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// RouteStatus represents the current status of the route object
+type RouteStatus struct {
+	RouteHandle uint64 `protobuf:"fixed64,1,opt,name=route_handle,json=routeHandle,proto3" json:"route_handle,omitempty"`
+}
+
+func (m *RouteStatus) Reset()                    { *m = RouteStatus{} }
+func (m *RouteStatus) String() string            { return proto.CompactTextString(m) }
+func (*RouteStatus) ProtoMessage()               {}
+func (*RouteStatus) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{16} }
+
+func (m *RouteStatus) GetRouteHandle() uint64 {
+	if m != nil {
+		return m.RouteHandle
+	}
+	return 0
+}
+
+// RouteResponse is response to one RouteSpec
+type RouteResponse struct {
+	ApiStatus ApiStatus    `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Status    *RouteStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
+}
+
+func (m *RouteResponse) Reset()                    { *m = RouteResponse{} }
+func (m *RouteResponse) String() string            { return proto.CompactTextString(m) }
+func (*RouteResponse) ProtoMessage()               {}
+func (*RouteResponse) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{17} }
+
+func (m *RouteResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *RouteResponse) GetStatus() *RouteStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+// RouteResponseMsg is response to RouteRequestMsg
+type RouteResponseMsg struct {
+	Response []*RouteResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *RouteResponseMsg) Reset()                    { *m = RouteResponseMsg{} }
+func (m *RouteResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*RouteResponseMsg) ProtoMessage()               {}
+func (*RouteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{18} }
+
+func (m *RouteResponseMsg) GetResponse() []*RouteResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// RouteDeleteRequest is used to delete a route object
+type RouteDeleteRequest struct {
+	Meta        *ObjectMeta     `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *RouteKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *RouteDeleteRequest) Reset()                    { *m = RouteDeleteRequest{} }
+func (m *RouteDeleteRequest) String() string            { return proto.CompactTextString(m) }
+func (*RouteDeleteRequest) ProtoMessage()               {}
+func (*RouteDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{19} }
+
+func (m *RouteDeleteRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *RouteDeleteRequest) GetKeyOrHandle() *RouteKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// RouteDeleteRequestMsg is used to delete a batch of route objects
+type RouteDeleteRequestMsg struct {
+	Request []*RouteDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *RouteDeleteRequestMsg) Reset()                    { *m = RouteDeleteRequestMsg{} }
+func (m *RouteDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*RouteDeleteRequestMsg) ProtoMessage()               {}
+func (*RouteDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{20} }
+
+func (m *RouteDeleteRequestMsg) GetRequest() []*RouteDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// RouteDeleteResponse is response to RouteDeleteRequest
+type RouteDeleteResponse struct {
+	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+}
+
+func (m *RouteDeleteResponse) Reset()                    { *m = RouteDeleteResponse{} }
+func (m *RouteDeleteResponse) String() string            { return proto.CompactTextString(m) }
+func (*RouteDeleteResponse) ProtoMessage()               {}
+func (*RouteDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{21} }
+
+func (m *RouteDeleteResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+// RouteDeleteResponseMsg is batched response to RouteDeleteRequestMsg
+type RouteDeleteResponseMsg struct {
+	Response []*RouteDeleteResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *RouteDeleteResponseMsg) Reset()                    { *m = RouteDeleteResponseMsg{} }
+func (m *RouteDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*RouteDeleteResponseMsg) ProtoMessage()               {}
+func (*RouteDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{22} }
+
+func (m *RouteDeleteResponseMsg) GetResponse() []*RouteDeleteResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// RouteStats captures all the statistics of given route
+type RouteStats struct {
+}
+
+func (m *RouteStats) Reset()                    { *m = RouteStats{} }
+func (m *RouteStats) String() string            { return proto.CompactTextString(m) }
+func (*RouteStats) ProtoMessage()               {}
+func (*RouteStats) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{23} }
+
+// RouteGetRequest is used to get information about a route
+type RouteGetRequest struct {
+	Meta        *ObjectMeta     `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *RouteKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *RouteGetRequest) Reset()                    { *m = RouteGetRequest{} }
+func (m *RouteGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*RouteGetRequest) ProtoMessage()               {}
+func (*RouteGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{24} }
+
+func (m *RouteGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *RouteGetRequest) GetKeyOrHandle() *RouteKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// RouteGetRequestMsg is batched GET request for routes
+type RouteGetRequestMsg struct {
+	Request []*RouteGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *RouteGetRequestMsg) Reset()                    { *m = RouteGetRequestMsg{} }
+func (m *RouteGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*RouteGetRequestMsg) ProtoMessage()               {}
+func (*RouteGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{25} }
+
+func (m *RouteGetRequestMsg) GetRequest() []*RouteGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// RouteGetResponse captures all the information about a route
+type RouteGetResponse struct {
+	ApiStatus ApiStatus    `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Spec      *RouteSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Status    *RouteStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+	Stats     *RouteStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *RouteGetResponse) Reset()                    { *m = RouteGetResponse{} }
+func (m *RouteGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*RouteGetResponse) ProtoMessage()               {}
+func (*RouteGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{26} }
+
+func (m *RouteGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *RouteGetResponse) GetSpec() *RouteSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *RouteGetResponse) GetStatus() *RouteStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+func (m *RouteGetResponse) GetStats() *RouteStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// RouteGetResponseMsg is response to RouteGetRequestMsg
+type RouteGetResponseMsg struct {
+	Response []*RouteGetResponse `protobuf:"bytes,2,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *RouteGetResponseMsg) Reset()                    { *m = RouteGetResponseMsg{} }
+func (m *RouteGetResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*RouteGetResponseMsg) ProtoMessage()               {}
+func (*RouteGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{27} }
+
+func (m *RouteGetResponseMsg) GetResponse() []*RouteGetResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// NexthopSpec is used to add or modify a nexthop object
+type NexthopSpec struct {
+	Meta        *ObjectMeta       `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *NexthopKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	// Types that are valid to be assigned to IfOrEp:
+	//	*NexthopSpec_IfKeyOrHandle
+	//	*NexthopSpec_EpKeyOrHandle
+	IfOrEp isNexthopSpec_IfOrEp `protobuf_oneof:"if_or_ep"`
+}
+
+func (m *NexthopSpec) Reset()                    { *m = NexthopSpec{} }
+func (m *NexthopSpec) String() string            { return proto.CompactTextString(m) }
+func (*NexthopSpec) ProtoMessage()               {}
+func (*NexthopSpec) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{28} }
+
+type isNexthopSpec_IfOrEp interface {
+	isNexthopSpec_IfOrEp()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type NexthopSpec_IfKeyOrHandle struct {
+	IfKeyOrHandle *InterfaceKeyHandle `protobuf:"bytes,3,opt,name=if_key_or_handle,json=ifKeyOrHandle,oneof"`
+}
+type NexthopSpec_EpKeyOrHandle struct {
+	EpKeyOrHandle *EndpointKeyHandle `protobuf:"bytes,4,opt,name=ep_key_or_handle,json=epKeyOrHandle,oneof"`
+}
+
+func (*NexthopSpec_IfKeyOrHandle) isNexthopSpec_IfOrEp() {}
+func (*NexthopSpec_EpKeyOrHandle) isNexthopSpec_IfOrEp() {}
+
+func (m *NexthopSpec) GetIfOrEp() isNexthopSpec_IfOrEp {
+	if m != nil {
+		return m.IfOrEp
+	}
+	return nil
+}
+
+func (m *NexthopSpec) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *NexthopSpec) GetKeyOrHandle() *NexthopKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *NexthopSpec) GetIfKeyOrHandle() *InterfaceKeyHandle {
+	if x, ok := m.GetIfOrEp().(*NexthopSpec_IfKeyOrHandle); ok {
+		return x.IfKeyOrHandle
+	}
+	return nil
+}
+
+func (m *NexthopSpec) GetEpKeyOrHandle() *EndpointKeyHandle {
+	if x, ok := m.GetIfOrEp().(*NexthopSpec_EpKeyOrHandle); ok {
+		return x.EpKeyOrHandle
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*NexthopSpec) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _NexthopSpec_OneofMarshaler, _NexthopSpec_OneofUnmarshaler, _NexthopSpec_OneofSizer, []interface{}{
+		(*NexthopSpec_IfKeyOrHandle)(nil),
+		(*NexthopSpec_EpKeyOrHandle)(nil),
+	}
+}
+
+func _NexthopSpec_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*NexthopSpec)
+	// if_or_ep
+	switch x := m.IfOrEp.(type) {
+	case *NexthopSpec_IfKeyOrHandle:
+		_ = b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.IfKeyOrHandle); err != nil {
+			return err
+		}
+	case *NexthopSpec_EpKeyOrHandle:
+		_ = b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.EpKeyOrHandle); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("NexthopSpec.IfOrEp has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _NexthopSpec_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*NexthopSpec)
+	switch tag {
+	case 3: // if_or_ep.if_key_or_handle
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(InterfaceKeyHandle)
+		err := b.DecodeMessage(msg)
+		m.IfOrEp = &NexthopSpec_IfKeyOrHandle{msg}
+		return true, err
+	case 4: // if_or_ep.ep_key_or_handle
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(EndpointKeyHandle)
+		err := b.DecodeMessage(msg)
+		m.IfOrEp = &NexthopSpec_EpKeyOrHandle{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _NexthopSpec_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*NexthopSpec)
+	// if_or_ep
+	switch x := m.IfOrEp.(type) {
+	case *NexthopSpec_IfKeyOrHandle:
+		s := proto.Size(x.IfKeyOrHandle)
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *NexthopSpec_EpKeyOrHandle:
+		s := proto.Size(x.EpKeyOrHandle)
+		n += proto.SizeVarint(4<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// NexthopRequestMsg is batched request message used to create/update
+// nexthop objects
+type NexthopRequestMsg struct {
+	Request []*NexthopSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *NexthopRequestMsg) Reset()                    { *m = NexthopRequestMsg{} }
+func (m *NexthopRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*NexthopRequestMsg) ProtoMessage()               {}
+func (*NexthopRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{29} }
+
+func (m *NexthopRequestMsg) GetRequest() []*NexthopSpec {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// NexthopStatus represents the current status of the nexthop object
+type NexthopStatus struct {
+	NexthopHandle uint64 `protobuf:"fixed64,1,opt,name=nexthop_handle,json=nexthopHandle,proto3" json:"nexthop_handle,omitempty"`
+}
+
+func (m *NexthopStatus) Reset()                    { *m = NexthopStatus{} }
+func (m *NexthopStatus) String() string            { return proto.CompactTextString(m) }
+func (*NexthopStatus) ProtoMessage()               {}
+func (*NexthopStatus) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{30} }
+
+func (m *NexthopStatus) GetNexthopHandle() uint64 {
+	if m != nil {
+		return m.NexthopHandle
+	}
+	return 0
+}
+
+// NexthopResponse is response to one NexthopSpec
+type NexthopResponse struct {
+	ApiStatus ApiStatus      `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Status    *NexthopStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
+}
+
+func (m *NexthopResponse) Reset()                    { *m = NexthopResponse{} }
+func (m *NexthopResponse) String() string            { return proto.CompactTextString(m) }
+func (*NexthopResponse) ProtoMessage()               {}
+func (*NexthopResponse) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{31} }
+
+func (m *NexthopResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *NexthopResponse) GetStatus() *NexthopStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+// NexthopResponseMsg is response to NexthopRequestMsg
+type NexthopResponseMsg struct {
+	Response []*NexthopResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *NexthopResponseMsg) Reset()                    { *m = NexthopResponseMsg{} }
+func (m *NexthopResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*NexthopResponseMsg) ProtoMessage()               {}
+func (*NexthopResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{32} }
+
+func (m *NexthopResponseMsg) GetResponse() []*NexthopResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// NexthopDeleteRequest is used to delete a nexthop object
+type NexthopDeleteRequest struct {
+	Meta        *ObjectMeta       `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *NexthopKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *NexthopDeleteRequest) Reset()                    { *m = NexthopDeleteRequest{} }
+func (m *NexthopDeleteRequest) String() string            { return proto.CompactTextString(m) }
+func (*NexthopDeleteRequest) ProtoMessage()               {}
+func (*NexthopDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{33} }
+
+func (m *NexthopDeleteRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *NexthopDeleteRequest) GetKeyOrHandle() *NexthopKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// NexthopDeleteRequestMsg is used to delete a batch of nexthop objects
+type NexthopDeleteRequestMsg struct {
+	Request []*NexthopDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *NexthopDeleteRequestMsg) Reset()                    { *m = NexthopDeleteRequestMsg{} }
+func (m *NexthopDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*NexthopDeleteRequestMsg) ProtoMessage()               {}
+func (*NexthopDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{34} }
+
+func (m *NexthopDeleteRequestMsg) GetRequest() []*NexthopDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// NexthopDeleteResponse is response to NexthopDeleteRequest
+type NexthopDeleteResponse struct {
+	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+}
+
+func (m *NexthopDeleteResponse) Reset()                    { *m = NexthopDeleteResponse{} }
+func (m *NexthopDeleteResponse) String() string            { return proto.CompactTextString(m) }
+func (*NexthopDeleteResponse) ProtoMessage()               {}
+func (*NexthopDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{35} }
+
+func (m *NexthopDeleteResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+// NexthopDeleteResponseMsg is batched response to NexthopDeleteRequestMsg
+type NexthopDeleteResponseMsg struct {
+	Response []*NexthopDeleteResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *NexthopDeleteResponseMsg) Reset()                    { *m = NexthopDeleteResponseMsg{} }
+func (m *NexthopDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*NexthopDeleteResponseMsg) ProtoMessage()               {}
+func (*NexthopDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{36} }
+
+func (m *NexthopDeleteResponseMsg) GetResponse() []*NexthopDeleteResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// NexthopStats captures all the statistics of given nexthop
+type NexthopStats struct {
+}
+
+func (m *NexthopStats) Reset()                    { *m = NexthopStats{} }
+func (m *NexthopStats) String() string            { return proto.CompactTextString(m) }
+func (*NexthopStats) ProtoMessage()               {}
+func (*NexthopStats) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{37} }
+
+// NexthopGetRequest is used to get information about a nexthop
+type NexthopGetRequest struct {
+	Meta        *ObjectMeta       `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *NexthopKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *NexthopGetRequest) Reset()                    { *m = NexthopGetRequest{} }
+func (m *NexthopGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*NexthopGetRequest) ProtoMessage()               {}
+func (*NexthopGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{38} }
+
+func (m *NexthopGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *NexthopGetRequest) GetKeyOrHandle() *NexthopKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// NexthopGetRequestMsg is batched GET request for nexthops
+type NexthopGetRequestMsg struct {
+	Request []*NexthopGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *NexthopGetRequestMsg) Reset()                    { *m = NexthopGetRequestMsg{} }
+func (m *NexthopGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*NexthopGetRequestMsg) ProtoMessage()               {}
+func (*NexthopGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{39} }
+
+func (m *NexthopGetRequestMsg) GetRequest() []*NexthopGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// NexthopGetResponse captures all the information about a nexthop
+type NexthopGetResponse struct {
+	ApiStatus ApiStatus      `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Spec      *NexthopSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Status    *NexthopStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+	Stats     *NexthopStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *NexthopGetResponse) Reset()                    { *m = NexthopGetResponse{} }
+func (m *NexthopGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*NexthopGetResponse) ProtoMessage()               {}
+func (*NexthopGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{40} }
+
+func (m *NexthopGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *NexthopGetResponse) GetSpec() *NexthopSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *NexthopGetResponse) GetStatus() *NexthopStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+func (m *NexthopGetResponse) GetStats() *NexthopStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// NexthopGetResponseMsg is response to NexthopGetRequestMsg
+type NexthopGetResponseMsg struct {
+	Response []*NexthopGetResponse `protobuf:"bytes,2,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *NexthopGetResponseMsg) Reset()                    { *m = NexthopGetResponseMsg{} }
+func (m *NexthopGetResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*NexthopGetResponseMsg) ProtoMessage()               {}
+func (*NexthopGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNw, []int{41} }
+
+func (m *NexthopGetResponseMsg) GetResponse() []*NexthopGetResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*NetworkSpec)(nil), "nw.NetworkSpec")
 	proto.RegisterType((*NetworkRequestMsg)(nil), "nw.NetworkRequestMsg")
@@ -374,14 +1063,42 @@ func init() {
 	proto.RegisterType((*NetworkResponse)(nil), "nw.NetworkResponse")
 	proto.RegisterType((*NetworkResponseMsg)(nil), "nw.NetworkResponseMsg")
 	proto.RegisterType((*NetworkDeleteRequest)(nil), "nw.NetworkDeleteRequest")
-	proto.RegisterType((*NetworkDeleteResponse)(nil), "nw.NetworkDeleteResponse")
 	proto.RegisterType((*NetworkDeleteRequestMsg)(nil), "nw.NetworkDeleteRequestMsg")
+	proto.RegisterType((*NetworkDeleteResponse)(nil), "nw.NetworkDeleteResponse")
 	proto.RegisterType((*NetworkDeleteResponseMsg)(nil), "nw.NetworkDeleteResponseMsg")
 	proto.RegisterType((*NetworkStats)(nil), "nw.NetworkStats")
 	proto.RegisterType((*NetworkGetRequest)(nil), "nw.NetworkGetRequest")
 	proto.RegisterType((*NetworkGetRequestMsg)(nil), "nw.NetworkGetRequestMsg")
 	proto.RegisterType((*NetworkGetResponse)(nil), "nw.NetworkGetResponse")
 	proto.RegisterType((*NetworkGetResponseMsg)(nil), "nw.NetworkGetResponseMsg")
+	proto.RegisterType((*RouteSpec)(nil), "nw.RouteSpec")
+	proto.RegisterType((*RouteRequestMsg)(nil), "nw.RouteRequestMsg")
+	proto.RegisterType((*RouteStatus)(nil), "nw.RouteStatus")
+	proto.RegisterType((*RouteResponse)(nil), "nw.RouteResponse")
+	proto.RegisterType((*RouteResponseMsg)(nil), "nw.RouteResponseMsg")
+	proto.RegisterType((*RouteDeleteRequest)(nil), "nw.RouteDeleteRequest")
+	proto.RegisterType((*RouteDeleteRequestMsg)(nil), "nw.RouteDeleteRequestMsg")
+	proto.RegisterType((*RouteDeleteResponse)(nil), "nw.RouteDeleteResponse")
+	proto.RegisterType((*RouteDeleteResponseMsg)(nil), "nw.RouteDeleteResponseMsg")
+	proto.RegisterType((*RouteStats)(nil), "nw.RouteStats")
+	proto.RegisterType((*RouteGetRequest)(nil), "nw.RouteGetRequest")
+	proto.RegisterType((*RouteGetRequestMsg)(nil), "nw.RouteGetRequestMsg")
+	proto.RegisterType((*RouteGetResponse)(nil), "nw.RouteGetResponse")
+	proto.RegisterType((*RouteGetResponseMsg)(nil), "nw.RouteGetResponseMsg")
+	proto.RegisterType((*NexthopSpec)(nil), "nw.NexthopSpec")
+	proto.RegisterType((*NexthopRequestMsg)(nil), "nw.NexthopRequestMsg")
+	proto.RegisterType((*NexthopStatus)(nil), "nw.NexthopStatus")
+	proto.RegisterType((*NexthopResponse)(nil), "nw.NexthopResponse")
+	proto.RegisterType((*NexthopResponseMsg)(nil), "nw.NexthopResponseMsg")
+	proto.RegisterType((*NexthopDeleteRequest)(nil), "nw.NexthopDeleteRequest")
+	proto.RegisterType((*NexthopDeleteRequestMsg)(nil), "nw.NexthopDeleteRequestMsg")
+	proto.RegisterType((*NexthopDeleteResponse)(nil), "nw.NexthopDeleteResponse")
+	proto.RegisterType((*NexthopDeleteResponseMsg)(nil), "nw.NexthopDeleteResponseMsg")
+	proto.RegisterType((*NexthopStats)(nil), "nw.NexthopStats")
+	proto.RegisterType((*NexthopGetRequest)(nil), "nw.NexthopGetRequest")
+	proto.RegisterType((*NexthopGetRequestMsg)(nil), "nw.NexthopGetRequestMsg")
+	proto.RegisterType((*NexthopGetResponse)(nil), "nw.NexthopGetResponse")
+	proto.RegisterType((*NexthopGetResponseMsg)(nil), "nw.NexthopGetResponseMsg")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -791,39 +1508,6 @@ func (m *NetworkDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *NetworkDeleteResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *NetworkDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintNw(dAtA, i, uint64(m.ApiStatus))
-	}
-	if m.KeyOrHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintNw(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n8, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n8
-	}
-	return i, nil
-}
-
 func (m *NetworkDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -850,6 +1534,29 @@ func (m *NetworkDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 			}
 			i += n
 		}
+	}
+	return i, nil
+}
+
+func (m *NetworkDeleteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NetworkDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.ApiStatus))
 	}
 	return i, nil
 }
@@ -921,31 +1628,31 @@ func (m *NetworkGetRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintNw(dAtA, i, uint64(m.Meta.Size()))
-		n9, err := m.Meta.MarshalTo(dAtA[i:])
+		n8, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n8
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNw(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n10, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n9, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n9
 	}
 	if m.VrfKeyHandle != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintNw(dAtA, i, uint64(m.VrfKeyHandle.Size()))
-		n11, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
+		n10, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n10
 	}
 	return i, nil
 }
@@ -1004,31 +1711,31 @@ func (m *NetworkGetResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNw(dAtA, i, uint64(m.Spec.Size()))
-		n12, err := m.Spec.MarshalTo(dAtA[i:])
+		n11, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n11
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintNw(dAtA, i, uint64(m.Status.Size()))
-		n13, err := m.Status.MarshalTo(dAtA[i:])
+		n12, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n12
 	}
 	if m.Stats != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintNw(dAtA, i, uint64(m.Stats.Size()))
-		n14, err := m.Stats.MarshalTo(dAtA[i:])
+		n13, err := m.Stats.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n13
 	}
 	return i, nil
 }
@@ -1044,6 +1751,941 @@ func (m *NetworkGetResponseMsg) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *NetworkGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *RouteSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Meta.Size()))
+		n14, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n14
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n15, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n15
+	}
+	if m.NhKeyOrHandle != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.NhKeyOrHandle.Size()))
+		n16, err := m.NhKeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n16
+	}
+	return i, nil
+}
+
+func (m *RouteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *RouteStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.RouteHandle != 0 {
+		dAtA[i] = 0x9
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.RouteHandle))
+		i += 8
+	}
+	return i, nil
+}
+
+func (m *RouteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Status.Size()))
+		n17, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n17
+	}
+	return i, nil
+}
+
+func (m *RouteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *RouteDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Meta.Size()))
+		n18, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n18
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n19, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n19
+	}
+	return i, nil
+}
+
+func (m *RouteDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *RouteDeleteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.ApiStatus))
+	}
+	return i, nil
+}
+
+func (m *RouteDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *RouteStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *RouteGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Meta.Size()))
+		n20, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n20
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n21, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n21
+	}
+	return i, nil
+}
+
+func (m *RouteGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *RouteGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Spec.Size()))
+		n22, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n22
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Status.Size()))
+		n23, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n23
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Stats.Size()))
+		n24, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n24
+	}
+	return i, nil
+}
+
+func (m *RouteGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RouteGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NexthopSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Meta.Size()))
+		n25, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n25
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n26, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n26
+	}
+	if m.IfOrEp != nil {
+		nn27, err := m.IfOrEp.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn27
+	}
+	return i, nil
+}
+
+func (m *NexthopSpec_IfKeyOrHandle) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.IfKeyOrHandle != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.IfKeyOrHandle.Size()))
+		n28, err := m.IfKeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n28
+	}
+	return i, nil
+}
+func (m *NexthopSpec_EpKeyOrHandle) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.EpKeyOrHandle != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.EpKeyOrHandle.Size()))
+		n29, err := m.EpKeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n29
+	}
+	return i, nil
+}
+func (m *NexthopRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NexthopStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.NexthopHandle != 0 {
+		dAtA[i] = 0x9
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.NexthopHandle))
+		i += 8
+	}
+	return i, nil
+}
+
+func (m *NexthopResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Status.Size()))
+		n30, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n30
+	}
+	return i, nil
+}
+
+func (m *NexthopResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NexthopDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Meta.Size()))
+		n31, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n31
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n32, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n32
+	}
+	return i, nil
+}
+
+func (m *NexthopDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NexthopDeleteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.ApiStatus))
+	}
+	return i, nil
+}
+
+func (m *NexthopDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NexthopStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *NexthopGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Meta.Size()))
+		n33, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n33
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n34, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n34
+	}
+	return i, nil
+}
+
+func (m *NexthopGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNw(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NexthopGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Spec.Size()))
+		n35, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n35
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Status.Size()))
+		n36, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n36
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintNw(dAtA, i, uint64(m.Stats.Size()))
+		n37, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n37
+	}
+	return i, nil
+}
+
+func (m *NexthopGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NexthopGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1166,19 +2808,6 @@ func (m *NetworkDeleteRequest) Size() (n int) {
 	return n
 }
 
-func (m *NetworkDeleteResponse) Size() (n int) {
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		n += 1 + sovNw(uint64(m.ApiStatus))
-	}
-	if m.KeyOrHandle != nil {
-		l = m.KeyOrHandle.Size()
-		n += 1 + l + sovNw(uint64(l))
-	}
-	return n
-}
-
 func (m *NetworkDeleteRequestMsg) Size() (n int) {
 	var l int
 	_ = l
@@ -1187,6 +2816,15 @@ func (m *NetworkDeleteRequestMsg) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovNw(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *NetworkDeleteResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNw(uint64(m.ApiStatus))
 	}
 	return n
 }
@@ -1261,6 +2899,375 @@ func (m *NetworkGetResponse) Size() (n int) {
 }
 
 func (m *NetworkGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *RouteSpec) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.NhKeyOrHandle != nil {
+		l = m.NhKeyOrHandle.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	return n
+}
+
+func (m *RouteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *RouteStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.RouteHandle != 0 {
+		n += 9
+	}
+	return n
+}
+
+func (m *RouteResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNw(uint64(m.ApiStatus))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	return n
+}
+
+func (m *RouteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *RouteDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	return n
+}
+
+func (m *RouteDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *RouteDeleteResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNw(uint64(m.ApiStatus))
+	}
+	return n
+}
+
+func (m *RouteDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *RouteStats) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *RouteGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	return n
+}
+
+func (m *RouteGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *RouteGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNw(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	return n
+}
+
+func (m *RouteGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NexthopSpec) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.IfOrEp != nil {
+		n += m.IfOrEp.Size()
+	}
+	return n
+}
+
+func (m *NexthopSpec_IfKeyOrHandle) Size() (n int) {
+	var l int
+	_ = l
+	if m.IfKeyOrHandle != nil {
+		l = m.IfKeyOrHandle.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	return n
+}
+func (m *NexthopSpec_EpKeyOrHandle) Size() (n int) {
+	var l int
+	_ = l
+	if m.EpKeyOrHandle != nil {
+		l = m.EpKeyOrHandle.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	return n
+}
+func (m *NexthopRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NexthopStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.NexthopHandle != 0 {
+		n += 9
+	}
+	return n
+}
+
+func (m *NexthopResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNw(uint64(m.ApiStatus))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	return n
+}
+
+func (m *NexthopResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NexthopDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	return n
+}
+
+func (m *NexthopDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NexthopDeleteResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNw(uint64(m.ApiStatus))
+	}
+	return n
+}
+
+func (m *NexthopDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NexthopStats) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *NexthopGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	return n
+}
+
+func (m *NexthopGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovNw(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NexthopGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNw(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovNw(uint64(l))
+	}
+	return n
+}
+
+func (m *NexthopGetResponseMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Response) > 0 {
@@ -1967,108 +3974,6 @@ func (m *NetworkDeleteRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *NetworkDeleteResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowNw
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: NetworkDeleteResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: NetworkDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
-			}
-			m.ApiStatus = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNw
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNw
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthNw
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &NetworkKeyHandle{}
-			}
-			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipNw(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthNw
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *NetworkDeleteRequestMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2129,6 +4034,75 @@ func (m *NetworkDeleteRequestMsg) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NetworkDeleteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NetworkDeleteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NetworkDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNw(dAtA[iNdEx:])
@@ -2760,6 +4734,2669 @@ func (m *NetworkGetResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *RouteSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &RouteKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NhKeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.NhKeyOrHandle == nil {
+				m.NhKeyOrHandle = &NexthopKeyHandle{}
+			}
+			if err := m.NhKeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &RouteSpec{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RouteHandle", wireType)
+			}
+			m.RouteHandle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RouteHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &RouteStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &RouteResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &RouteKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &RouteDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteDeleteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteDeleteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &RouteDeleteResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &RouteKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &RouteGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &RouteSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &RouteStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &RouteStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RouteGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RouteGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RouteGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &RouteGetResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &NexthopKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IfKeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &InterfaceKeyHandle{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.IfOrEp = &NexthopSpec_IfKeyOrHandle{v}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpKeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &EndpointKeyHandle{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.IfOrEp = &NexthopSpec_EpKeyOrHandle{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &NexthopSpec{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NexthopHandle", wireType)
+			}
+			m.NexthopHandle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NexthopHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &NexthopStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &NexthopResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &NexthopKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &NexthopDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopDeleteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopDeleteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &NexthopDeleteResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &NexthopKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &NexthopGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &NexthopSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &NexthopStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &NexthopStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NexthopGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNw
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NexthopGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NexthopGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNw
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNw
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &NexthopGetResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNw(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNw
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipNw(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2868,49 +7505,78 @@ var (
 func init() { proto.RegisterFile("nw.proto", fileDescriptorNw) }
 
 var fileDescriptorNw = []byte{
-	// 698 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x56, 0xcf, 0x4e, 0x13, 0x5f,
-	0x14, 0xe6, 0x96, 0x52, 0xca, 0x29, 0x14, 0x7a, 0x7f, 0x94, 0xdf, 0x50, 0x4c, 0x69, 0xc6, 0x68,
-	0x8a, 0x31, 0x35, 0xa9, 0x31, 0x31, 0x2e, 0x8c, 0x82, 0x88, 0x11, 0x0b, 0x71, 0x88, 0x2e, 0xdc,
-	0x34, 0x43, 0x39, 0xb4, 0xb5, 0x30, 0x1d, 0xef, 0xbd, 0x65, 0x32, 0x7b, 0x1f, 0x42, 0x77, 0x3e,
-	0x8e, 0x2b, 0xa3, 0x89, 0x0b, 0x57, 0xc4, 0xe0, 0x1b, 0xf0, 0x04, 0x66, 0xee, 0xdc, 0xf9, 0xd3,
-	0x32, 0x8d, 0xd1, 0xb0, 0xd1, 0x55, 0xef, 0xcc, 0x39, 0xf7, 0x9b, 0xf3, 0x7d, 0xe7, 0x3b, 0x27,
-	0x85, 0xac, 0xe5, 0xd4, 0x6c, 0xd6, 0x17, 0x7d, 0x9a, 0xb2, 0x9c, 0x52, 0x4e, 0xb8, 0x36, 0x72,
-	0xff, 0x45, 0x29, 0xdb, 0xeb, 0xf8, 0x27, 0xfd, 0x5b, 0x0a, 0x72, 0x3b, 0x28, 0x9c, 0x3e, 0xeb,
-	0xed, 0xd9, 0xd8, 0xa2, 0xd7, 0x20, 0x7d, 0x8c, 0xc2, 0xd4, 0x48, 0x85, 0x54, 0x73, 0xf5, 0x42,
-	0xcd, 0xbf, 0xb5, 0xbb, 0xff, 0x1a, 0x5b, 0xa2, 0x81, 0xc2, 0x34, 0x64, 0x98, 0x3e, 0x85, 0xb9,
-	0x1e, 0xba, 0xcd, 0x3e, 0x6b, 0x76, 0x4c, 0xeb, 0xe0, 0x08, 0xb5, 0x94, 0xcc, 0x5f, 0xac, 0xf5,
-	0x3a, 0x35, 0x05, 0xb7, 0x8d, 0xee, 0x13, 0x19, 0x5b, 0x5f, 0x38, 0x3f, 0x5d, 0x9d, 0x3d, 0x41,
-	0xab, 0xdb, 0xc2, 0x7b, 0x7a, 0x0f, 0x5d, 0xdd, 0xc8, 0xf5, 0xd0, 0xdd, 0x65, 0x7e, 0x98, 0x3e,
-	0x86, 0xfc, 0x09, 0x3b, 0x6c, 0x7a, 0x78, 0x0a, 0x6c, 0x52, 0x82, 0x2d, 0x78, 0x60, 0x2f, 0xd9,
-	0x61, 0x04, 0x94, 0x3f, 0x3f, 0x5d, 0x05, 0x05, 0xc4, 0xf0, 0xd0, 0x98, 0x3d, 0x89, 0x45, 0x29,
-	0x85, 0x34, 0x3b, 0x36, 0x5b, 0x5a, 0xba, 0x42, 0xaa, 0x69, 0x43, 0x9e, 0xe9, 0x0d, 0x28, 0xb4,
-	0x4d, 0x81, 0x8e, 0xe9, 0x36, 0xd1, 0x0e, 0xe0, 0xa7, 0x2a, 0xa4, 0x9a, 0x31, 0xe6, 0x55, 0x60,
-	0xd3, 0x56, 0xf7, 0x77, 0x60, 0x8e, 0xb7, 0xe3, 0x65, 0x64, 0x2a, 0x93, 0xd5, 0x5c, 0xbd, 0xe4,
-	0x95, 0xb1, 0x87, 0xad, 0x01, 0xeb, 0x0a, 0x77, 0x8b, 0xf5, 0x07, 0xf6, 0xf8, 0x82, 0x72, 0xbc,
-	0x1d, 0x06, 0xf5, 0xfb, 0x50, 0x50, 0x52, 0x18, 0xf8, 0x66, 0x80, 0x5c, 0x34, 0x78, 0x9b, 0xae,
-	0xc1, 0x34, 0xf3, 0x9f, 0x34, 0x22, 0xe1, 0xe7, 0x6b, 0x96, 0x53, 0x8b, 0x75, 0xc0, 0x08, 0xe2,
-	0xfa, 0x4d, 0x98, 0x0b, 0xde, 0x0b, 0x53, 0x0c, 0x38, 0x5d, 0x81, 0x19, 0xcb, 0x09, 0x8a, 0x23,
-	0x92, 0x44, 0xd6, 0x72, 0xd4, 0xd7, 0xde, 0x12, 0x98, 0x0f, 0x3f, 0xc7, 0xed, 0xbe, 0xc5, 0x3d,
-	0x65, 0xc1, 0xb4, 0xbb, 0x4d, 0x2e, 0xaf, 0xcb, 0x1b, 0xf9, 0xfa, 0x82, 0x6a, 0xe9, 0x43, 0xbb,
-	0xeb, 0xc3, 0xae, 0x17, 0xcf, 0x4f, 0x57, 0x0b, 0x8a, 0x44, 0x94, 0x6e, 0xcc, 0x98, 0x41, 0x06,
-	0x5d, 0x83, 0x8c, 0xc2, 0x48, 0x29, 0x5b, 0xc4, 0x6a, 0xf6, 0xb3, 0x55, 0x82, 0xbe, 0x09, 0x74,
-	0xa4, 0x0a, 0x8f, 0xf5, 0x2d, 0xc8, 0x32, 0xf5, 0xa8, 0x68, 0xff, 0x17, 0x83, 0x08, 0x32, 0x8d,
-	0x30, 0x49, 0xff, 0x42, 0x60, 0x51, 0x45, 0x1f, 0xe1, 0x11, 0x0a, 0x54, 0x12, 0xfe, 0xc5, 0xfe,
-	0xd4, 0xdf, 0x13, 0x28, 0x8e, 0x70, 0xba, 0xe4, 0x3e, 0xdd, 0xfd, 0x0d, 0xd6, 0x43, 0x1c, 0xf5,
-	0x06, 0xfc, 0x9f, 0x24, 0xb7, 0xd7, 0xbb, 0xfa, 0xa8, 0x63, 0xb5, 0x58, 0xeb, 0x86, 0xb2, 0x23,
-	0xeb, 0x3e, 0x07, 0x2d, 0x91, 0xa9, 0x87, 0x77, 0xe7, 0x82, 0x17, 0x96, 0x13, 0x00, 0x2f, 0x38,
-	0x22, 0x0f, 0xb3, 0x31, 0xc7, 0x71, 0xfd, 0x13, 0x09, 0xc7, 0x6b, 0x0b, 0xc5, 0x3f, 0x60, 0x8f,
-	0xad, 0xd0, 0xf1, 0x11, 0x1f, 0x7f, 0x76, 0x46, 0xf4, 0x2f, 0xc6, 0xe4, 0x8a, 0x52, 0x23, 0xf1,
-	0xbf, 0x92, 0x70, 0x06, 0x65, 0xf8, 0x92, 0x4d, 0x76, 0x15, 0xd2, 0xdc, 0xc6, 0x96, 0x92, 0xec,
-	0xc2, 0xfa, 0x92, 0xc1, 0xd8, 0xc6, 0x98, 0xfc, 0xc5, 0xc6, 0xa0, 0xd7, 0x61, 0xca, 0x3b, 0x71,
-	0xb9, 0xb7, 0x3d, 0xd9, 0x86, 0x33, 0xb9, 0xe1, 0x87, 0xf5, 0xed, 0x70, 0x7a, 0x62, 0xac, 0x7c,
-	0x83, 0x46, 0x86, 0x4a, 0x49, 0x85, 0x96, 0x46, 0x15, 0x1a, 0x75, 0x53, 0xfd, 0x43, 0x0a, 0xa6,
-	0x55, 0x02, 0x7d, 0x10, 0xee, 0xd9, 0x0d, 0x86, 0xa6, 0x40, 0x5a, 0x1c, 0xda, 0x4d, 0x41, 0x23,
-	0x4a, 0x4b, 0x09, 0x2b, 0xab, 0xc1, 0xdb, 0xfa, 0x44, 0x0c, 0xe1, 0x85, 0x7d, 0xf0, 0x47, 0x08,
-	0xcf, 0x42, 0x04, 0x7f, 0x00, 0xe8, 0xca, 0xb8, 0x21, 0xf3, 0x70, 0xae, 0x8c, 0x1d, 0x18, 0x1f,
-	0x6d, 0x03, 0x20, 0x62, 0x4f, 0xb5, 0x44, 0xbf, 0x78, 0x38, 0xcb, 0xc9, 0x3a, 0x49, 0x90, 0xf5,
-	0xd2, 0xc7, 0xb3, 0x32, 0xf9, 0x7c, 0x56, 0x26, 0xdf, 0xcf, 0xca, 0xe4, 0xdd, 0x8f, 0xf2, 0xc4,
-	0xab, 0x6c, 0xc7, 0x3c, 0x92, 0xff, 0x1a, 0xf6, 0x33, 0xf2, 0xe7, 0xf6, 0xcf, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0x14, 0x3c, 0xc9, 0xeb, 0x63, 0x08, 0x00, 0x00,
+	// 1164 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x58, 0xdd, 0x6e, 0x1b, 0xc5,
+	0x17, 0xcf, 0x38, 0x69, 0xea, 0x1c, 0xc7, 0x5f, 0x93, 0xd8, 0x75, 0xdd, 0xbf, 0x92, 0x74, 0xff,
+	0x94, 0xa4, 0x88, 0x9a, 0xc8, 0x15, 0x5c, 0xf4, 0x02, 0xd1, 0x84, 0xe0, 0x94, 0xe0, 0x96, 0x6e,
+	0x05, 0x17, 0x48, 0xc8, 0xda, 0x3a, 0xe3, 0x0f, 0x9c, 0xae, 0x97, 0xdd, 0x75, 0x8c, 0xef, 0x10,
+	0x02, 0x24, 0xde, 0x80, 0x4b, 0x5e, 0x81, 0xb7, 0x40, 0x02, 0x21, 0x90, 0xb8, 0xe0, 0x2a, 0x42,
+	0xe1, 0x0d, 0xf2, 0x04, 0x68, 0x3e, 0x3c, 0xbb, 0x33, 0xbb, 0x76, 0x93, 0xca, 0xa9, 0x04, 0x57,
+	0xde, 0x9d, 0x73, 0xf6, 0x37, 0xe7, 0xe3, 0x37, 0x67, 0xce, 0x31, 0x24, 0xed, 0x61, 0xc5, 0x71,
+	0xfb, 0x7e, 0x1f, 0x27, 0xec, 0x61, 0x39, 0xe5, 0x8f, 0x1c, 0xe2, 0xf1, 0x85, 0x72, 0xb2, 0xd7,
+	0xe1, 0x4f, 0xc6, 0x9f, 0x09, 0x48, 0x3d, 0x24, 0xfe, 0xb0, 0xef, 0xf6, 0x9e, 0x38, 0xa4, 0x89,
+	0x6f, 0xc1, 0xc2, 0x33, 0xe2, 0x5b, 0x25, 0xb4, 0x81, 0xb6, 0x52, 0xd5, 0x7c, 0x85, 0x7f, 0xf5,
+	0xe8, 0xe9, 0x67, 0xa4, 0xe9, 0xd7, 0x89, 0x6f, 0x99, 0x4c, 0x8c, 0xdf, 0x87, 0x74, 0x8f, 0x8c,
+	0x1a, 0x7d, 0xb7, 0xd1, 0xb1, 0xec, 0xc3, 0x23, 0x52, 0x4a, 0x30, 0xfd, 0xd5, 0x4a, 0xaf, 0x53,
+	0x11, 0x70, 0x07, 0x64, 0xb4, 0xcf, 0x64, 0x3b, 0xb9, 0xb3, 0x93, 0xf5, 0xe5, 0x63, 0x62, 0x77,
+	0x9b, 0xe4, 0x9e, 0xd1, 0x23, 0x23, 0xc3, 0x4c, 0xf5, 0xc8, 0xe8, 0x91, 0xcb, 0xc5, 0xf8, 0x3d,
+	0xc8, 0x1c, 0xbb, 0xad, 0x06, 0xc5, 0x13, 0x60, 0xf3, 0x0c, 0x2c, 0x47, 0xc1, 0x3e, 0x76, 0x5b,
+	0x01, 0x50, 0xe6, 0xec, 0x64, 0x1d, 0x04, 0x90, 0x4b, 0x5a, 0xe6, 0xf2, 0x71, 0x48, 0x8a, 0x31,
+	0x2c, 0xb8, 0xcf, 0xac, 0x66, 0x69, 0x61, 0x03, 0x6d, 0x2d, 0x98, 0xec, 0x19, 0xbf, 0x06, 0xf9,
+	0xb6, 0xe5, 0x93, 0xa1, 0x35, 0x6a, 0x10, 0x67, 0x0c, 0x7f, 0x65, 0x03, 0x6d, 0x2d, 0x9a, 0x59,
+	0x21, 0xd8, 0x73, 0xc4, 0xf7, 0x0f, 0x21, 0xed, 0xb5, 0xc3, 0x66, 0x2c, 0x6e, 0xcc, 0x6f, 0xa5,
+	0xaa, 0x65, 0x6a, 0xc6, 0x13, 0xd2, 0x1c, 0xb8, 0x5d, 0x7f, 0x54, 0x73, 0xfb, 0x03, 0x67, 0xb2,
+	0x41, 0x29, 0xaf, 0x2d, 0x85, 0xc6, 0xdb, 0x90, 0x17, 0xa1, 0x30, 0xc9, 0xe7, 0x03, 0xe2, 0xf9,
+	0x75, 0xaf, 0x8d, 0x6f, 0xc3, 0x55, 0x97, 0xbf, 0x95, 0x10, 0x83, 0xcf, 0x56, 0xec, 0x61, 0x25,
+	0x94, 0x01, 0x73, 0x2c, 0x37, 0x5e, 0x87, 0xf4, 0x78, 0xdd, 0xb7, 0xfc, 0x81, 0x87, 0x6f, 0xc0,
+	0x92, 0x3d, 0x1c, 0x1b, 0x87, 0x98, 0x13, 0x49, 0x7b, 0x28, 0x76, 0xfb, 0x1a, 0x41, 0x56, 0x6e,
+	0xe7, 0x39, 0x7d, 0xdb, 0xa3, 0x91, 0x05, 0xcb, 0xe9, 0x36, 0x3c, 0xf6, 0x39, 0xfb, 0x22, 0x53,
+	0xcd, 0x89, 0x94, 0xde, 0x77, 0xba, 0x1c, 0x76, 0xa7, 0x70, 0x76, 0xb2, 0x9e, 0x17, 0x4e, 0x04,
+	0xea, 0xe6, 0x92, 0x35, 0xd6, 0xc0, 0xb7, 0x61, 0x51, 0x60, 0x24, 0x04, 0x2d, 0x42, 0x36, 0x73,
+	0x6d, 0xa1, 0x60, 0xec, 0x01, 0xd6, 0xac, 0xa0, 0x5e, 0xbf, 0x01, 0x49, 0x57, 0xbc, 0x0a, 0xb7,
+	0x57, 0x42, 0x10, 0x63, 0x4d, 0x53, 0x2a, 0x19, 0xbf, 0x23, 0x58, 0x15, 0xd2, 0x77, 0xc9, 0x11,
+	0xf1, 0x89, 0x08, 0xe1, 0xbf, 0x98, 0x9f, 0x46, 0x1d, 0xae, 0xc5, 0xb9, 0x44, 0xe3, 0x53, 0xd5,
+	0x59, 0x51, 0x0a, 0x85, 0x47, 0xd1, 0x0e, 0xe8, 0xd1, 0x80, 0x82, 0xa6, 0x30, 0xdb, 0xac, 0x1b,
+	0x8f, 0xa1, 0x14, 0xbb, 0x01, 0x35, 0xf8, 0xcd, 0x48, 0x42, 0xaf, 0xc7, 0x58, 0x1c, 0x49, 0x6b,
+	0x06, 0x96, 0x43, 0xb4, 0xf1, 0x8c, 0x5f, 0x91, 0x3c, 0x23, 0x35, 0xe2, 0xff, 0x07, 0x72, 0x5c,
+	0x93, 0xb4, 0x0d, 0xfc, 0xe1, 0x07, 0x40, 0x4b, 0x70, 0x21, 0x14, 0xae, 0x40, 0x35, 0xc8, 0xee,
+	0x1f, 0x48, 0x1e, 0x24, 0x26, 0x9e, 0xf1, 0x89, 0xfe, 0x3f, 0x2c, 0x78, 0x0e, 0x69, 0x8a, 0x90,
+	0x45, 0x6a, 0x10, 0x13, 0x86, 0x8e, 0xfd, 0xfc, 0x73, 0x8e, 0x3d, 0x7e, 0x15, 0xae, 0xd0, 0x27,
+	0x8f, 0x15, 0x5f, 0x1a, 0x36, 0x55, 0xd3, 0x33, 0xb9, 0xd8, 0x38, 0x90, 0xa4, 0x0d, 0x79, 0xc5,
+	0x4f, 0x40, 0x40, 0xa8, 0x04, 0x8b, 0x50, 0x51, 0x8f, 0x50, 0x84, 0x4d, 0x3f, 0x23, 0x58, 0x32,
+	0xfb, 0x03, 0x9f, 0x5c, 0xe4, 0xe6, 0xda, 0x8f, 0x67, 0x0d, 0xa6, 0x89, 0x66, 0x60, 0xe7, 0xe6,
+	0x4c, 0x1d, 0x72, 0x76, 0xa7, 0xa1, 0x82, 0xcd, 0x87, 0x29, 0xf8, 0x85, 0xdf, 0xe9, 0x4f, 0xb9,
+	0x2c, 0xd2, 0x76, 0xe7, 0x20, 0x80, 0x33, 0xee, 0x41, 0x96, 0xed, 0x1f, 0x62, 0xcd, 0xa6, 0xce,
+	0x9a, 0x34, 0x8d, 0x89, 0x74, 0x39, 0x60, 0xcb, 0x36, 0xa4, 0xf8, 0x2a, 0xcf, 0xc6, 0x4d, 0x58,
+	0x76, 0xe9, 0xab, 0x7a, 0x57, 0xa4, 0xd8, 0x9a, 0xd8, 0xed, 0x4b, 0x04, 0x69, 0xb1, 0xdd, 0x8c,
+	0xa9, 0xb5, 0xa9, 0x5d, 0x16, 0xd9, 0xc0, 0x66, 0xf5, 0xaa, 0xb8, 0x0f, 0x39, 0xc5, 0x02, 0xea,
+	0xf1, 0x9d, 0x48, 0x5d, 0xc9, 0xcb, 0xcf, 0x63, 0x18, 0xf0, 0x0d, 0x02, 0xcc, 0x64, 0x2f, 0x74,
+	0x49, 0xcc, 0x8c, 0x0a, 0xc6, 0x03, 0x28, 0x44, 0xcd, 0xa0, 0xfe, 0x6c, 0xeb, 0x19, 0x2c, 0x4a,
+	0x77, 0x26, 0x94, 0xf5, 0x4f, 0x61, 0x45, 0x11, 0xcf, 0xb8, 0xa8, 0xd7, 0xa1, 0x18, 0x03, 0x4f,
+	0x4d, 0xbd, 0x1b, 0x09, 0xfd, 0xb5, 0x88, 0xad, 0x91, 0x04, 0x2c, 0x03, 0xc8, 0xd4, 0x7a, 0xc6,
+	0x57, 0x48, 0x70, 0xf8, 0xe2, 0xc5, 0x7c, 0x76, 0xb9, 0xd8, 0x15, 0x94, 0x50, 0x0b, 0xf0, 0x1d,
+	0x3d, 0x11, 0x2b, 0xd2, 0xb9, 0xb8, 0xf2, 0xfb, 0x0b, 0x12, 0xe4, 0xbc, 0x8c, 0xe2, 0x7b, 0x53,
+	0x29, 0xbe, 0xda, 0x99, 0xe6, 0xa5, 0x77, 0x53, 0x2b, 0xbd, 0x93, 0x0e, 0x11, 0x7e, 0x45, 0x2d,
+	0xbc, 0x19, 0x45, 0x4f, 0x96, 0xdd, 0x9a, 0x20, 0x95, 0x56, 0x74, 0xb7, 0x23, 0x45, 0x77, 0x55,
+	0x8d, 0x4a, 0x24, 0xdf, 0x3f, 0xb2, 0x71, 0x81, 0x15, 0xb6, 0xd9, 0x8d, 0x0b, 0x5a, 0x9d, 0x7c,
+	0x4e, 0xd9, 0x7d, 0x0c, 0xb9, 0x6e, 0x2b, 0xb6, 0xec, 0x16, 0x29, 0xdc, 0x03, 0xdb, 0x27, 0x6e,
+	0xcb, 0x6a, 0x92, 0x89, 0x85, 0x77, 0x7f, 0xce, 0x4c, 0x77, 0x5b, 0xa1, 0xd2, 0x8b, 0x3f, 0x84,
+	0x1c, 0x71, 0x34, 0x48, 0x1e, 0xcf, 0x02, 0x85, 0xdc, 0xb3, 0x0f, 0x9d, 0x7e, 0xd7, 0xf6, 0xa7,
+	0x22, 0x12, 0x27, 0x84, 0xb8, 0x03, 0x90, 0xec, 0xb6, 0x28, 0x1a, 0x71, 0xf8, 0x1c, 0xc0, 0x7c,
+	0x3c, 0xc7, 0x1c, 0x20, 0x43, 0x1b, 0x70, 0xf1, 0x2d, 0x3a, 0x07, 0xf0, 0x75, 0x9e, 0xf3, 0x5b,
+	0x90, 0xb1, 0xf9, 0x82, 0x5a, 0xe0, 0xd3, 0x62, 0x55, 0x99, 0x08, 0xc4, 0xc6, 0x2f, 0x67, 0x22,
+	0x08, 0x59, 0xa9, 0x4e, 0x04, 0x8a, 0x15, 0x53, 0x27, 0x02, 0x45, 0x33, 0xc4, 0xbc, 0xef, 0xd8,
+	0x44, 0xc0, 0xa4, 0x97, 0x30, 0x11, 0x5c, 0x88, 0x82, 0xbc, 0x93, 0x8f, 0x9a, 0x32, 0xad, 0x93,
+	0x8f, 0x6a, 0x6b, 0x9d, 0xbc, 0xa2, 0x70, 0x19, 0x9d, 0x7c, 0xcc, 0x06, 0x53, 0x3b, 0xf9, 0x18,
+	0x7d, 0xbd, 0x93, 0x97, 0xe9, 0xf6, 0x8c, 0x6f, 0x91, 0x64, 0xf9, 0xac, 0x3b, 0xf9, 0x8b, 0xe5,
+	0xa6, 0x26, 0x69, 0x72, 0xbe, 0x0e, 0x5c, 0x53, 0xd5, 0x3b, 0xf0, 0x40, 0xfc, 0x32, 0x3a, 0xf0,
+	0xe0, 0xf4, 0x4f, 0xed, 0xc0, 0x63, 0x8e, 0xd9, 0x84, 0x0e, 0x3c, 0xc8, 0x90, 0xd2, 0x81, 0xeb,
+	0x5e, 0x4d, 0xed, 0xc0, 0x75, 0xe5, 0x80, 0x05, 0xd5, 0x1f, 0x12, 0x70, 0x55, 0xb4, 0xe8, 0xf8,
+	0x1d, 0xf9, 0x77, 0xc5, 0xae, 0x4b, 0x2c, 0x9f, 0xe0, 0x82, 0x32, 0xe2, 0x8f, 0x13, 0x51, 0x2e,
+	0xc6, 0x4c, 0xfe, 0x75, 0xaf, 0x6d, 0xcc, 0x85, 0x10, 0x3e, 0x72, 0x0e, 0x5f, 0x08, 0xe1, 0x03,
+	0x89, 0xc0, 0x89, 0x8b, 0x6f, 0x4c, 0x9a, 0xa3, 0x29, 0xce, 0xff, 0x26, 0x8e, 0xac, 0x1c, 0x6d,
+	0x17, 0x20, 0x98, 0x3f, 0x70, 0x29, 0x76, 0x62, 0xa3, 0x38, 0xd7, 0xe3, 0x27, 0x15, 0x06, 0xb2,
+	0x53, 0xfe, 0xe9, 0x74, 0x0d, 0xfd, 0x76, 0xba, 0x86, 0xfe, 0x3a, 0x5d, 0x43, 0xdf, 0xff, 0xbd,
+	0x36, 0xf7, 0x49, 0xb2, 0x63, 0x1d, 0xb1, 0x3f, 0xdf, 0x9e, 0x2e, 0xb2, 0x9f, 0xbb, 0xff, 0x04,
+	0x00, 0x00, 0xff, 0xff, 0x0b, 0x9f, 0x5b, 0xb8, 0xaa, 0x13, 0x00, 0x00,
 }

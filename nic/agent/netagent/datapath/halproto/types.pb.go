@@ -356,6 +356,9 @@
 		SecurityProfileKeyHandle
 		VrfKeyHandle
 		NetworkKeyHandle
+		NexthopKeyHandle
+		RouteKey
+		RouteKeyHandle
 		L2SegmentKeyHandle
 		SecurityRuleKeyHandle
 		SecurityPolicyKey
@@ -473,14 +476,42 @@
 		NetworkResponse
 		NetworkResponseMsg
 		NetworkDeleteRequest
-		NetworkDeleteResponse
 		NetworkDeleteRequestMsg
+		NetworkDeleteResponse
 		NetworkDeleteResponseMsg
 		NetworkStats
 		NetworkGetRequest
 		NetworkGetRequestMsg
 		NetworkGetResponse
 		NetworkGetResponseMsg
+		RouteSpec
+		RouteRequestMsg
+		RouteStatus
+		RouteResponse
+		RouteResponseMsg
+		RouteDeleteRequest
+		RouteDeleteRequestMsg
+		RouteDeleteResponse
+		RouteDeleteResponseMsg
+		RouteStats
+		RouteGetRequest
+		RouteGetRequestMsg
+		RouteGetResponse
+		RouteGetResponseMsg
+		NexthopSpec
+		NexthopRequestMsg
+		NexthopStatus
+		NexthopResponse
+		NexthopResponseMsg
+		NexthopDeleteRequest
+		NexthopDeleteRequestMsg
+		NexthopDeleteResponse
+		NexthopDeleteResponseMsg
+		NexthopStats
+		NexthopGetRequest
+		NexthopGetRequestMsg
+		NexthopGetResponse
+		NexthopGetResponseMsg
 		SecurityProfileSpec
 		SecurityProfileRequestMsg
 		SecurityProfileStatus
