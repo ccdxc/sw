@@ -81,8 +81,11 @@ check_uw_uh:
     add.c1      r1, r1, 8       //BD Slot
     
 next:
-    add         r1, r1, 64
-    beqi        r1, 512, nak_rnr
+    // did we reach end ? 
+    // since we are comparing r1 before incrementing by 64, check with 448
+    beqi        r1, 448, nak_rnr
+    add         r1, r1, 64  //BD Slot
+    b           loop
     nop         //BD Slot
     
 loop_exit:
@@ -91,7 +94,7 @@ loop_exit:
     seq    c2, CAPRI_KEY_FIELD(IN_P, skip_rsq_dbell), 1
 
     //r1 has the offset where byte value is 0, claim the resource
-    tblwrp      r1, 0, 8, FILL_PATTERN_B
+    tblwrp.f    r1, 0, 8, FILL_PATTERN_B
     
     //calculate the DMA address for this byte
     // base_addr + 63 - (r1 >> 3)
@@ -174,6 +177,5 @@ exit:
     nop
 
 nak_rnr:
-    //TBD
-    nop.e
-    nop
+    phvwr.e     p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_1_VALID(0)  //Exit Slot
