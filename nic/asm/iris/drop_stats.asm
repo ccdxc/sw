@@ -15,7 +15,7 @@ drop_stats:
   DBG_WR(0xa8, k.control_metadata_drop_reason)
   seq         c1, d.drop_stats_d.mirror_en, 1
   phvwr.c1    p.capri_intrinsic_tm_span_session, d.drop_stats_d.mirror_session_id
-  nop.e
+  phvwr.e     p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   nop
 
 /*****************************************************************************/

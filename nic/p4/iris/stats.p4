@@ -29,6 +29,9 @@ action drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
         modify_field(capri_intrinsic.tm_span_session, mirror_session_id);
     }
 
+    // force tm_oport to EGRESS when packet is being dropped
+    modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
+
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.drop_stats_packets, drop_pkts);
     modify_field(scratch_metadata.drop_stats_pad, pad);
