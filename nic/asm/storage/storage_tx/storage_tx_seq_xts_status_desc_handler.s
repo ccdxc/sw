@@ -23,8 +23,8 @@ storage_tx_seq_xts_status_desc_handler_start:
 
    // Check if next doorbell is to be enabled and branch
    bbeq		d.next_db_en, 0, check_intr
-   phvwr	p.{storage_kivec5_status_dma_en...storage_kivec5_exit_chain_on_error}, \
-   	        d.{status_dma_en...exit_chain_on_error} // delay slot
+   phvwr	p.{storage_kivec5_status_dma_en...storage_kivec5_stop_chain_on_error}, \
+   	        d.{status_dma_en...stop_chain_on_error} // delay slot
 
    // Ring the sequencer doorbell based on addr/data provided in the descriptor
    SEQUENCER_DOORBELL_RING(dma_p2m_11)

@@ -5,8 +5,6 @@
 
 namespace tests {
 
-static constexpr uint16_t kCPVersion = 0x1234;
-
 typedef struct ccmd {
   uint16_t comp_decomp_en:1, // 1-engine enable, 0-only SHA/integrity
            header_present:1, // must be 1 for decompression

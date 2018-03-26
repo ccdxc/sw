@@ -33,6 +33,7 @@ const static uint32_t	kPvmNumR2nCQs		 = 0; // 2^0 => 1 queue
 const static uint32_t	kPvmNumNvmeBeCQs	 = 4;
 
 const static uint32_t	kDefaultEntrySize	 = 6; // Default is 64 bytes
+const static uint32_t	kPvmCompStatusSQEntrySize = 7; // Seq compression status SQ is 128 bytes
 const static uint32_t	kPvmNvmeSQEntrySize	 = 7; // PVM SQ is 128 bytes (NVME command + PVM header)
 const static uint32_t	kNvmeCQEntrySize	 = 4; // NVME CQ is 16 bytes
 const static uint32_t	kNvmeNumEntries		 = 6;
@@ -51,7 +52,8 @@ const static char	*kSeqXtsStatusSqHandler = "storage_tx_seq_xts_status_desc_hand
 const static char	*kPvmRoceSqHandler	 = "storage_tx_pvm_roce_sq_wqe_process.bin";
 const static char	*kPvmRoceCqHandler	 = "storage_tx_roce_cq_handler.bin";
 const static char	*kSeqCompSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
-const static char	*kSeqCompStatusSqHandler = "storage_tx_seq_comp_status_desc_handler.bin";
+const static char	*kSeqCompStatusDesc0SqHandler = "storage_tx_seq_comp_status_desc0_handler.bin";
+const static char	*kSeqCompStatusDesc1SqHandler = "storage_tx_seq_comp_status_desc1_handler.bin";
 
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
@@ -604,9 +606,21 @@ int queues_setup() {
   // Initialize PVM SQs for processing Sequencer commands for post compression
   pvm_seq_comp_status_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqCompStatusSQs); j++, i++) {
-    if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqCompStatusSqHandler,
-                        kDefaultTotalRings, kDefaultHostRings) < 0) {
-      printf("Failed to setup PVM Seq Compression Status queue %d \n", i);
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumSeqEntries),
+                   NUM_TO_VAL(kPvmCompStatusSQEntrySize)) < 0) {
+      printf("Unable to allocate host memory for PVM Comp Status SQ %d\n", i);
+      return -1;
+    }
+
+    // Setup the queue state in Capri:
+    if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, i, (char *) kSeqCompStatusDesc0SqHandler,
+                                 kDefaultTotalRings, kDefaultHostRings, 
+                                 kPvmNumSeqEntries, pvm_sqs[i].mem->pa(),
+                                 kPvmCompStatusSQEntrySize, false, 0, 0,
+                                 0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0,
+                                 (char *) kSeqCompStatusDesc1SqHandler) < 0) {
+      printf("Failed to setup Comp Status SQ %d state \n", i);
       return -1;
     }
     printf("Setup PVM Seq Compression Status queue %d \n", i);

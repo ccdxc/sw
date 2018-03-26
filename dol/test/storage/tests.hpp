@@ -18,18 +18,22 @@ using namespace dp_mem;
 namespace tests {
 
 const static uint32_t  kDefaultBufSize       = 4096;
-const static uint32_t  kSeqDescSize          = 64;
 
 typedef struct cp_seq_entry {
   uint64_t next_doorbell_addr;	// Next capri doorbell address (if chaining)
   uint64_t next_doorbell_data;	// Next capri doorbell data (if chaining)
   uint64_t status_hbm_pa;	// Status address in HBM. Provide this even if data_len is provided in desc.
-  uint64_t src_hbm_pa;		// Address of compression buffer in HBM (source of PDMA)
-  union {
-      uint64_t sgl_pa;		// Address of the SGL in host (destination of PDMA)
-      uint64_t aol_pa;      // Address of chain input AOL entry
-  };
-  uint64_t intr_pa;		// MSI-X Interrupt address
+  uint64_t status_host_pa;	// Destination for the PDMA of status.
+  uint64_t src_hbm_pa;		// Address of compression source buffer (needed if copy_src_dst_on_error is set)
+  uint64_t dst_hbm_pa;		// Address of compression destination buffer (see above)
+
+  // post compression, options available are:
+  // - copy compressed data to sgl_out_aol_pa (sgl_xfer_en), or
+  // - chain to next accelerator service which uses input/output AOL (aol_len_pad_en),
+  //   where P4+ will modify length fields in the AOL based on compression result
+  uint64_t sgl_in_aol_pa;	// Address of the input SGL or AOL
+  uint64_t sgl_out_aol_pa;	// Address of the output SGL or AOL
+  uint64_t intr_pa;		    // MSI-X Interrupt address
   uint32_t intr_data;		// MSI-X Interrupt data
   uint16_t status_len;		// Length of the status header
   uint16_t data_len;		// Remaining data length of compression buffer
@@ -37,25 +41,25 @@ typedef struct cp_seq_entry {
   // TODO: These bitfields are interpretted in big endian 
   //       fashion by P4+. For DOL it won't matter as we set bitfields.
   //       For driver, need to define the order properly.
-  uint8_t  use_data_len         :1,	// use desc data_len rather than output_data_len
+  uint8_t  data_len_from_desc   :1,	// use desc data_len rather than output_data_len
            status_dma_en        :1,	// enable DMA of status to status_hbm_pa
-  // NOTE: Don't enable intr_en and next_doorbell_en together
-  //       as only one will be serviced
-  // Order of evaluation: 1. next_doorbell_en 2. intr_en
+  // NOTE: intr_en and next_doorbell_en can be enabled together.
+  // When comp/decomp succeeds, Order of evaluation: 1. next_doorbell_en 2. intr_en.
+  // When comp/decomp fails and stop_chain_on_error is set, intr_en will be honored
            next_doorbell_en     :1,	// enable chain doorbell
            intr_en              :1,	// enable intr_data write to intr_pa
-           exit_chain_on_error  :1, // skip chain doorbell on error
+           stop_chain_on_error  :1, // stop chaining on error
+           copy_src_dst_on_error:1,
   // NOTE: sgl_xfer_en and aol_len_pad_en are mutually exclusive.
   // Order of evaluation: 1. aol_len_pad_en 2. sgl_xfer_en
-           aol_len_pad_en       :1, // enable length padding in AOL
+           aol_pad_xfer_en      :1, // enable length pad AOL transfer
            sgl_xfer_en          :1; // enable data transfer from src_hbm_pa to sgl_pa
 } cp_seq_entry_t;
 
 typedef struct cq_sq_ent_sgl {
-  uint64_t status_host_pa;	// Status address in host. Destination for the PDMA of status.
   uint64_t addr[4];		// Destination Address in the SGL for compression data PDMA
   uint16_t len[4];		// Length of the SGL element for compression data PDMA
-  uint64_t pad[2];
+  uint64_t pad[3];
 } cp_sq_ent_sgl_t;
 
 typedef struct cp_seq_params {

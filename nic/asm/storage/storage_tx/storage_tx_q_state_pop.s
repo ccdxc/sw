@@ -30,9 +30,8 @@ storage_tx_q_state_pop_start:
    QUEUE_POP(d.w_ndx, d.num_entries)
 
    // Store fields needed in the K+I vector into the PHV
-   phvwr	p.storage_kivec0_w_ndx, d.w_ndx
-   
-   phvwr	p.{storage_kivec0_dst_lif...storage_kivec0_dst_qaddr}, \
+   phvwr        p.storage_kivec0_w_ndx, d.w_ndx
+   phvwr        p.{storage_kivec0_dst_lif...storage_kivec0_dst_qaddr}, \
                 d.{dst_lif...dst_qaddr}
                 
    phvwrpair	p.storage_kivec1_src_lif, STAGE0_KIVEC_LIF, \
@@ -53,9 +52,15 @@ storage_tx_q_state_pop_start:
    
    // Set the table and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).
-   LOAD_TABLE_FOR_INDEX(d.base_addr, r6, d.entry_size, d.entry_size[2:0],
-                        d.next_pc)
+   TABLE_ADDR_FOR_INDEX(d.base_addr, r6, d.entry_size)
+   bbeq         d.desc1_next_pc_valid, 0, load_table_default
+   add          r1, r7, STORAGE_DEFAULT_TBL_LOAD_SIZE_BYTES // delay slot
+   LOAD_TABLE1_FOR_ADDR64(r1, STORAGE_DEFAULT_TBL_LOAD_SIZE, d.desc1_next_pc)
+   LOAD_TABLE0_FOR_ADDR64(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE, d.next_pc)
 
+load_table_default:   
+   LOAD_TABLE0_FOR_ADDR64(r7, d.entry_size[2:0], d.next_pc)
+   
 clear_doorbell:
    QUEUE_EMPTY(d.c_ndx, d.w_ndx, drop_n_exit)
 

@@ -204,7 +204,7 @@ action seq_barco_ring_push(p_ndx) {
 }
 
 /*****************************************************************************
- *  seq_comp_status_desc_handler: Handle the compression status descriptor entry in the 
+ *  seq_comp_status_desc0_handler: Handle the compression status descriptor entry in the 
  *                         sequencer. This involves:
  *                          1. processing status to see if operation succeeded
  *                          2. breaking up the compressed data into the 
@@ -213,56 +213,39 @@ action seq_barco_ring_push(p_ndx) {
  *                         and save the other fields into I vector.
  *****************************************************************************/
 
-//@pragma little_endian next_db_addr next_db_data status_addr data_addr sgl_aol_addr intr_addr intr_data status_len data_len
-action seq_comp_status_desc_handler(next_db_addr, next_db_data, status_addr, data_addr, 
-                                    sgl_aol_addr, intr_addr, intr_data, status_len, data_len,
-                                    pad_len_shift, data_len_from_desc, status_dma_en, next_db_en, intr_en,
-				    exit_chain_on_error, aol_len_pad_en, sgl_xfer_en) {
+//@pragma little_endian next_db_addr next_db_data status_hbm_addr status_host_addr intr_addr intr_data status_len
+@pragma little_endian next_db_data intr_data
+action seq_comp_status_desc0_handler(next_db_addr, next_db_data, status_hbm_addr, status_host_addr, 
+                                     intr_addr, intr_data, status_len, status_dma_en,
+                                     next_db_en, intr_en) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
-  STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  modify_field(seq_comp_status_desc_scratch.next_db_addr, next_db_addr);
-  modify_field(seq_comp_status_desc_scratch.next_db_data, next_db_data);
-  modify_field(seq_comp_status_desc_scratch.status_addr, status_addr);
-  modify_field(seq_comp_status_desc_scratch.data_addr, data_addr);
-  modify_field(seq_comp_status_desc_scratch.sgl_aol_addr, sgl_aol_addr);
-  modify_field(seq_comp_status_desc_scratch.intr_addr, intr_addr);
-  modify_field(seq_comp_status_desc_scratch.intr_data, intr_data);
-  modify_field(seq_comp_status_desc_scratch.status_len, status_len);
-  modify_field(seq_comp_status_desc_scratch.data_len, data_len);
-  modify_field(seq_comp_status_desc_scratch.pad_len_shift, pad_len_shift);
-  modify_field(seq_comp_status_desc_scratch.data_len_from_desc, data_len_from_desc);
-  modify_field(seq_comp_status_desc_scratch.status_dma_en, status_dma_en);
-  modify_field(seq_comp_status_desc_scratch.next_db_en, next_db_en);
-  modify_field(seq_comp_status_desc_scratch.intr_en, intr_en);
-  modify_field(seq_comp_status_desc_scratch.exit_chain_on_error, exit_chain_on_error);
-  modify_field(seq_comp_status_desc_scratch.aol_len_pad_en, aol_len_pad_en);
-  modify_field(seq_comp_status_desc_scratch.sgl_xfer_en, sgl_xfer_en);
+  modify_field(seq_comp_status_desc0_scratch.next_db_addr, next_db_addr);
+  modify_field(seq_comp_status_desc0_scratch.next_db_data, next_db_data);
+  modify_field(seq_comp_status_desc0_scratch.status_hbm_addr, status_hbm_addr);
+  modify_field(seq_comp_status_desc0_scratch.status_host_addr, status_host_addr);
+  modify_field(seq_comp_status_desc0_scratch.intr_addr, intr_addr);
+  modify_field(seq_comp_status_desc0_scratch.intr_data, intr_data);
+  modify_field(seq_comp_status_desc0_scratch.status_len, status_len);
+  modify_field(seq_comp_status_desc0_scratch.status_dma_en, status_dma_en);
+  modify_field(seq_comp_status_desc0_scratch.next_db_en, next_db_en);
+  modify_field(seq_comp_status_desc0_scratch.intr_en, intr_en);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
-  modify_field(storage_kivec4.sgl_aol_addr, seq_comp_status_desc_scratch.sgl_aol_addr);
-  modify_field(storage_kivec4.data_addr, seq_comp_status_desc_scratch.data_addr);
-  modify_field(storage_kivec4.data_len, seq_comp_status_desc_scratch.data_len);
-  modify_field(storage_kivec5.status_addr, seq_comp_status_desc_scratch.status_addr);
-  modify_field(storage_kivec5.status_len, seq_comp_status_desc_scratch.status_len);
-  modify_field(storage_kivec5.pad_len_shift, seq_comp_status_desc_scratch.pad_len_shift);
-  modify_field(storage_kivec5.data_len_from_desc, seq_comp_status_desc_scratch.data_len_from_desc);
-  modify_field(storage_kivec5.status_dma_en, seq_comp_status_desc_scratch.status_dma_en);
-  modify_field(storage_kivec5.next_db_en, seq_comp_status_desc_scratch.next_db_en);
-  modify_field(storage_kivec5.intr_en, seq_comp_status_desc_scratch.intr_en);
-  modify_field(storage_kivec5.exit_chain_on_error, seq_comp_status_desc_scratch.exit_chain_on_error);
-  modify_field(storage_kivec5.aol_len_pad_en, seq_comp_status_desc_scratch.aol_len_pad_en);
-  modify_field(storage_kivec5.sgl_xfer_en, seq_comp_status_desc_scratch.sgl_xfer_en);
+  modify_field(storage_kivec5.intr_addr, seq_comp_status_desc0_scratch.intr_addr);
+  modify_field(storage_kivec5.status_dma_en, seq_comp_status_desc0_scratch.status_dma_en);
+  modify_field(storage_kivec5.next_db_en, seq_comp_status_desc0_scratch.next_db_en);
+  modify_field(storage_kivec5.intr_en, seq_comp_status_desc0_scratch.intr_en);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
   // Fence with the SGL mem2mem DMA for ordering.
-  if (seq_comp_status_desc_scratch.next_db_en == 1) {
+  if (seq_comp_status_desc0_scratch.next_db_en == 1) {
     // Copy the doorbell addr and data
-    modify_field(doorbell_addr_scratch.addr, seq_comp_status_desc_scratch.next_db_addr);
-    modify_field(seq_doorbell_data.data, seq_comp_status_desc_scratch.next_db_addr);
+    modify_field(doorbell_addr_scratch.addr, seq_comp_status_desc0_scratch.next_db_addr);
+    modify_field(seq_doorbell_data.data, seq_comp_status_desc0_scratch.next_db_addr);
     DMA_COMMAND_PHV2MEM_FILL(dma_p2m_11, 
                              0,
                              PHV_FIELD_OFFSET(seq_doorbell_data.data),
@@ -273,11 +256,11 @@ action seq_comp_status_desc_handler(next_db_addr, next_db_data, status_addr, dat
   // Fire the interrupt if there is no doorbell to be rung and if the
   // interrupt enabled bit is set. Fence with the SGL mem2mem DMA
   // for ordering.
-  if ((seq_comp_status_desc_scratch.next_db_en ==  0) and 
-      (seq_comp_status_desc_scratch.intr_en == 1)) {
+  if ((seq_comp_status_desc0_scratch.next_db_en ==  0) and 
+      (seq_comp_status_desc0_scratch.intr_en == 1)) {
     // Copy the doorbell addr and data
-    modify_field(pci_intr_addr_scratch.addr, seq_comp_status_desc_scratch.intr_addr);
-    modify_field(pci_intr_data.data, seq_comp_status_desc_scratch.intr_data);
+    modify_field(pci_intr_addr_scratch.addr, seq_comp_status_desc0_scratch.intr_addr);
+    modify_field(pci_intr_data.data, seq_comp_status_desc0_scratch.intr_data);
     DMA_COMMAND_PHV2MEM_FILL(dma_p2m_11, 
                              0,
                              PHV_FIELD_OFFSET(pci_intr_data.data),
@@ -292,9 +275,44 @@ action seq_comp_status_desc_handler(next_db_addr, next_db_data, status_addr, dat
   // Load the address where compression status is stored for processing 
   // in the next stage
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
-                        seq_comp_status_desc_scratch.status_addr,
+                        seq_comp_status_desc0_scratch.status_hbm_addr,
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, 
                         seq_comp_status_handler_start)
+}
+
+/*****************************************************************************
+ *  seq_comp_status_desc1_handler: Part 2 of the comp status decriptor
+ *****************************************************************************/
+
+//@pragma little_endian src_hbm_pa dst_hbm_pa sgl_in_aol_pa sgl_out_aol_pa data_len
+action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_in_aol_pa, sgl_out_aol_pa, 
+                                     data_len, pad_len_shift, data_len_from_desc, aol_pad_xfer_en,
+				     sgl_xfer_en, copy_src_dst_on_error, stop_chain_on_error) {
+ 
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  modify_field(seq_comp_status_desc1_scratch.src_hbm_pa, src_hbm_pa);
+  modify_field(seq_comp_status_desc1_scratch.dst_hbm_pa, dst_hbm_pa);
+  modify_field(seq_comp_status_desc1_scratch.sgl_in_aol_pa, sgl_in_aol_pa);
+  modify_field(seq_comp_status_desc1_scratch.sgl_out_aol_pa, sgl_out_aol_pa);
+  modify_field(seq_comp_status_desc1_scratch.data_len, data_len);
+  modify_field(seq_comp_status_desc1_scratch.pad_len_shift, pad_len_shift);
+  modify_field(seq_comp_status_desc1_scratch.data_len_from_desc, data_len_from_desc);
+  modify_field(seq_comp_status_desc1_scratch.aol_pad_xfer_en, aol_pad_xfer_en);
+  modify_field(seq_comp_status_desc1_scratch.sgl_xfer_en, sgl_xfer_en);
+  modify_field(seq_comp_status_desc1_scratch.copy_src_dst_on_error, copy_src_dst_on_error);
+  modify_field(seq_comp_status_desc1_scratch.stop_chain_on_error, stop_chain_on_error);
+
+  // Store the various parts of the descriptor in the K+I vectors for later use
+  modify_field(storage_kivec5.data_len, seq_comp_status_desc1_scratch.data_len);
+  modify_field(storage_kivec5.pad_len_shift, seq_comp_status_desc1_scratch.pad_len_shift);
+  modify_field(storage_kivec5.data_len_from_desc, seq_comp_status_desc1_scratch.data_len_from_desc);
+  modify_field(storage_kivec5.aol_pad_xfer_en, seq_comp_status_desc1_scratch.aol_pad_xfer_en);
+  modify_field(storage_kivec5.sgl_xfer_en, seq_comp_status_desc1_scratch.sgl_xfer_en);
+  modify_field(storage_kivec5.copy_src_dst_on_error, seq_comp_status_desc1_scratch.copy_src_dst_on_error);
+  modify_field(storage_kivec5.stop_chain_on_error, seq_comp_status_desc1_scratch.stop_chain_on_error);
 }
 
 /*****************************************************************************
@@ -302,32 +320,29 @@ action seq_comp_status_desc_handler(next_db_addr, next_db_data, status_addr, dat
  *                           SGL address for next stage to do the PDMA.
  *****************************************************************************/
 
-@pragma little_endian data_len rsvd3
-action seq_comp_status_handler(valid_bit, err, rsvd1, data_len, rsvd3) {
+@pragma little_endian status output_data_len rsvd
+action seq_comp_status_handler(status, output_data_len, rsvd) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
+  STORAGE_KIVEC2_USE(storage_kivec2_scratch, storage_kivec2)
   STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  modify_field(seq_comp_status_scratch.valid_bit, valid_bit);
-  modify_field(seq_comp_status_scratch.err, err);
-  modify_field(seq_comp_status_scratch.rsvd1, rsvd1);
-  modify_field(seq_comp_status_scratch.data_len, data_len);
-  modify_field(seq_comp_status_scratch.rsvd3, rsvd3);
+  modify_field(seq_comp_status_scratch.status, status);
+  modify_field(seq_comp_status_scratch.output_data_len, output_data_len);
+  modify_field(seq_comp_status_scratch.rsvd, rsvd);
 
   // Store the data length in the K+I vector for later use if the descriptor
   // has not provided this information
   if (storage_kivec5.data_len_from_desc == 0) {
-    modify_field(storage_kivec4.data_len, seq_comp_status_scratch.data_len);
+    modify_field(storage_kivec5.data_len, seq_comp_status_scratch.output_data_len);
   }
-  // Store the error status in the K+I vector for later use
-  modify_field(storage_kivec5.status_err, seq_comp_status_scratch.err);
 
   // Load the address where compression destination SGL is stored for 
   // processing in the next stage
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
-                        storage_kivec4.sgl_aol_addr,
+                        storage_kivec2.sgl_out_aol_addr,
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, 
                         seq_comp_sgl_handler_start)
 }
@@ -337,16 +352,15 @@ action seq_comp_status_handler(valid_bit, err, rsvd1, data_len, rsvd3) {
  *                        data (if status was success) and set the interrupt.
  *****************************************************************************/
 
-@pragma little_endian status_addr addr0 addr1 addr2 addr3 len0 len1 len2 len3 
-action seq_comp_sgl_handler(status_addr, addr0, addr1, addr2, addr3, 
+@pragma little_endian addr0 addr1 addr2 addr3 len0 len1 len2 len3 
+action seq_comp_sgl_handler(addr0, addr1, addr2, addr3, 
                             len0, len1, len2, len3) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
-  STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
+  STORAGE_KIVEC3_USE(storage_kivec3_scratch, storage_kivec3)
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  modify_field(seq_comp_sgl_scratch.status_addr, status_addr);
   modify_field(seq_comp_sgl_scratch.addr0, addr0);
   modify_field(seq_comp_sgl_scratch.addr1, addr1);
   modify_field(seq_comp_sgl_scratch.addr2, addr2);
@@ -356,90 +370,76 @@ action seq_comp_sgl_handler(status_addr, addr0, addr1, addr2, addr3,
   modify_field(seq_comp_sgl_scratch.len2, len2);
   modify_field(seq_comp_sgl_scratch.len3, len3);
 
-  // DMA of status (only if enabled)
-  if (storage_kivec5.status_dma_en != 0) {
-    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, 
-                             storage_kivec5.status_addr, 0,
-                             seq_comp_sgl_scratch.status_addr, 0,
-                             storage_kivec5.status_len,
-                             0, 0, 0)
-  }
-
-  // DMA the data only if compression was successful
-  if (seq_comp_status_scratch.err != 0) {
-    exit();
-  }
-
   // DMA to SGL 0
-  if (storage_kivec4.data_len <= seq_comp_sgl_scratch.len0) {
+  if (storage_kivec5.data_len <= seq_comp_sgl_scratch.len0) {
     DMA_COMMAND_MEM2MEM_FILL(dma_m2m_3, dma_m2m_4, 
-                             storage_kivec4.data_addr, 0,
+                             storage_kivec3.data_addr, 0,
                              seq_comp_sgl_scratch.addr0, 0,
-                             storage_kivec4.data_len,
+                             storage_kivec5.data_len,
                              0, 0, 0)
     exit();
   } else {
     DMA_COMMAND_MEM2MEM_FILL(dma_m2m_3, dma_m2m_4, 
-                             storage_kivec4.data_addr, 0,
+                             storage_kivec3.data_addr, 0,
                              seq_comp_sgl_scratch.addr0, 0,
                              seq_comp_sgl_scratch.len0,
                              0, 0, 0)
-    modify_field(storage_kivec4.data_len, 
-                 (storage_kivec4.data_len - seq_comp_sgl_scratch.len0));
+    modify_field(storage_kivec5.data_len, 
+                 (storage_kivec5.data_len - seq_comp_sgl_scratch.len0));
   }
 
   // DMA to SGL 1
-  if (storage_kivec4.data_len <= seq_comp_sgl_scratch.len1) {
+  if (storage_kivec5.data_len <= seq_comp_sgl_scratch.len1) {
     DMA_COMMAND_MEM2MEM_FILL(dma_m2m_5, dma_m2m_6, 
-                             storage_kivec4.data_addr, 0,
+                             storage_kivec3.data_addr, 0,
                              seq_comp_sgl_scratch.addr1, 0,
-                             storage_kivec4.data_len,
+                             storage_kivec5.data_len,
                              0, 0, 0)
     exit();
   } else {
     DMA_COMMAND_MEM2MEM_FILL(dma_m2m_5, dma_m2m_6, 
-                             storage_kivec4.data_addr, 0,
+                             storage_kivec3.data_addr, 0,
                              seq_comp_sgl_scratch.addr1, 0,
                              seq_comp_sgl_scratch.len1,
                              0, 0, 0)
-    modify_field(storage_kivec4.data_len, 
-                 (storage_kivec4.data_len - seq_comp_sgl_scratch.len1));
+    modify_field(storage_kivec5.data_len, 
+                 (storage_kivec5.data_len - seq_comp_sgl_scratch.len1));
   }
 
   // DMA to SGL 2
-  if (storage_kivec4.data_len <= seq_comp_sgl_scratch.len2) {
+  if (storage_kivec5.data_len <= seq_comp_sgl_scratch.len2) {
     DMA_COMMAND_MEM2MEM_FILL(dma_m2m_7, dma_m2m_8, 
-                             storage_kivec4.data_addr, 0,
+                             storage_kivec3.data_addr, 0,
                              seq_comp_sgl_scratch.addr2, 0,
-                             storage_kivec4.data_len,
+                             storage_kivec5.data_len,
                              0, 0, 0)
     exit();
   } else {
     DMA_COMMAND_MEM2MEM_FILL(dma_m2m_7, dma_m2m_8, 
-                             storage_kivec4.data_addr, 0,
+                             storage_kivec3.data_addr, 0,
                              seq_comp_sgl_scratch.addr2, 0,
                              seq_comp_sgl_scratch.len2,
                              0, 0, 0)
-    modify_field(storage_kivec4.data_len, 
-                 (storage_kivec4.data_len - seq_comp_sgl_scratch.len2));
+    modify_field(storage_kivec5.data_len, 
+                 (storage_kivec5.data_len - seq_comp_sgl_scratch.len2));
   }
 
   // DMA to SGL 3
-  if (storage_kivec4.data_len <= seq_comp_sgl_scratch.len3) {
+  if (storage_kivec5.data_len <= seq_comp_sgl_scratch.len3) {
     DMA_COMMAND_MEM2MEM_FILL(dma_m2m_9, dma_m2m_10, 
-                             storage_kivec4.data_addr, 0,
+                             storage_kivec3.data_addr, 0,
                              seq_comp_sgl_scratch.addr3, 0,
-                             storage_kivec4.data_len,
+                             storage_kivec5.data_len,
                              0, 0, 0)
     exit();
   } else {
     DMA_COMMAND_MEM2MEM_FILL(dma_m2m_9, dma_m2m_10, 
-                             storage_kivec4.data_addr, 0,
+                             storage_kivec3.data_addr, 0,
                              seq_comp_sgl_scratch.addr3, 0,
                              seq_comp_sgl_scratch.len3,
                              0, 0, 0)
-    modify_field(storage_kivec4.data_len, 
-                 (storage_kivec4.data_len - seq_comp_sgl_scratch.len3));
+    modify_field(storage_kivec5.data_len, 
+                 (storage_kivec5.data_len - seq_comp_sgl_scratch.len3));
   }
 
   // Exit the pipeline here
@@ -452,9 +452,10 @@ action seq_comp_sgl_handler(status_addr, addr0, addr1, addr2, addr3,
  *****************************************************************************/
 
 //@pragma little_endian next_db_addr next_db_data status_hbm_addr status_host_addr intr_addr intr_data status_len
+@pragma little_endian next_db_data intr_data
 action seq_xts_status_desc_handler(next_db_addr, next_db_data, status_hbm_addr, status_host_addr, 
                                    intr_addr, intr_data, status_len,
-                                   status_dma_en, next_db_en, intr_en, exit_chain_on_error) {
+                                   status_dma_en, next_db_en, intr_en, stop_chain_on_error) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
@@ -470,13 +471,13 @@ action seq_xts_status_desc_handler(next_db_addr, next_db_data, status_hbm_addr, 
   modify_field(seq_xts_status_desc_scratch.status_dma_en, status_dma_en);
   modify_field(seq_xts_status_desc_scratch.next_db_en, next_db_en);
   modify_field(seq_xts_status_desc_scratch.intr_en, intr_en);
-  modify_field(seq_xts_status_desc_scratch.exit_chain_on_error, exit_chain_on_error);
+  modify_field(seq_xts_status_desc_scratch.stop_chain_on_error, stop_chain_on_error);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(storage_kivec5.status_dma_en, seq_xts_status_desc_scratch.status_dma_en);
   modify_field(storage_kivec5.next_db_en, seq_xts_status_desc_scratch.next_db_en);
   modify_field(storage_kivec5.intr_en, seq_xts_status_desc_scratch.intr_en);
-  modify_field(storage_kivec5.exit_chain_on_error, seq_xts_status_desc_scratch.exit_chain_on_error);
+  modify_field(storage_kivec5.stop_chain_on_error, seq_xts_status_desc_scratch.stop_chain_on_error);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
   // Fence with the SGL mem2mem DMA for ordering.

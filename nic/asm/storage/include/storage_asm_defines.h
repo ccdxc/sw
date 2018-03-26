@@ -12,6 +12,12 @@
 
 #include "storage_common_defines.h"
 
+#ifndef BITS_PER_BYTE
+#define BITS_PER_BYTE                   8
+#define SIZE_IN_BITS(bytes)             ((bytes) * BITS_PER_BYTE)
+#define SIZE_IN_BYTES(bits)             ((bits) / BITS_PER_BYTE)
+#endif
+
 // Macros for accessing fields in the storage K+I vector
 #define STORAGE_KIVEC0_W_NDX                    \
     k.storage_kivec0_w_ndx
@@ -22,7 +28,7 @@
 #define STORAGE_KIVEC0_DST_QID                  \
     k.{storage_kivec0_dst_qid_sbit0_ebit1...storage_kivec0_dst_qid_sbit18_ebit23}
 #define STORAGE_KIVEC0_DST_QADDR                \
-    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit26_ebit33}
+    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit2_ebit33}
 #define STORAGE_KIVEC0_PRP_ASSIST               \
     k.storage_kivec0_prp_assist
 #define STORAGE_KIVEC0_IS_Q0                    \
@@ -61,37 +67,35 @@
     k.storage_kivec2_ssd_q_num
 #define STORAGE_KIVEC2_SSD_Q_SIZE               \
     k.storage_kivec2_ssd_q_size
+#define STORAGE_KIVEC2_SGL_OUT_AOL_ADDR         \
+    k.storage_kivec2_sgl_out_aol_addr
 
 #define STORAGE_KIVEC3_ROCE_MSN                 \
     k.storage_kivec3_roce_msn
+#define STORAGE_KIVEC3_DATA_ADDR                \
+    k.storage_kivec3_data_addr
 
 #define STORAGE_KIVEC4_W_NDX                    \
     k.storage_kivec4_w_ndx
-#define STORAGE_KIVEC4_SGL_AOL_ADDR             \
-    k.{storage_kivec4_sgl_aol_addr_sbit0_ebit7...storage_kivec4_sgl_aol_addr_sbit40_ebit63}
-#define STORAGE_KIVEC4_DATA_ADDR                \
-    k.{storage_kivec4_data_addr_sbit0_ebit7...storage_kivec4_data_addr_sbit56_ebit63}
-#define STORAGE_KIVEC4_DATA_LEN                 \
-    k.{storage_kivec4_data_len_sbit0_ebit7...storage_kivec4_data_len_sbit8_ebit15}
 
-#define STORAGE_KIVEC5_STATUS_ADDR              \
-    k.{storage_kivec5_status_addr_sbit0_ebit7...storage_kivec5_status_addr_sbit40_ebit63}
-#define STORAGE_KIVEC5_STATUS_LEN               \
-    k.{storage_kivec5_status_len_sbit0_ebit7...storage_kivec5_status_len_sbit8_ebit15}
+#define STORAGE_KIVEC5_INTR_ADDR              \
+    k.{storage_kivec5_intr_addr_sbit0_ebit7...storage_kivec5_intr_addr_sbit40_ebit63}
+#define STORAGE_KIVEC5_DATA_LEN                 \
+    k.{storage_kivec5_data_len_sbit0_ebit7...storage_kivec5_data_len_sbit8_ebit15}
 #define STORAGE_KIVEC5_PAD_LEN_SHIFT            \
     k.storage_kivec5_pad_len_shift
-#define STORAGE_KIVEC5_STATUS_ERR               \
-    k.storage_kivec5_status_err
 #define STORAGE_KIVEC5_STATUS_DMA_EN            \
     k.storage_kivec5_status_dma_en
 #define STORAGE_KIVEC5_DATA_LEN_FROM_DESC       \
     k.storage_kivec5_data_len_from_desc
-#define STORAGE_KIVEC5_EXIT_CHAIN_ON_ERROR      \
-    k.storage_kivec5_exit_chain_on_error
+#define STORAGE_KIVEC5_STOP_CHAIN_ON_ERROR      \
+    k.storage_kivec5_stop_chain_on_error
+#define STORAGE_KIVEC5_COPY_SRC_DST_ON_ERROR    \
+    k.storage_kivec5_copy_src_desc_on_error
 #define STORAGE_KIVEC5_NEXT_DB_EN               \
     k.storage_kivec5_next_db_en
-#define STORAGE_KIVEC5_AOL_LEN_PAD_EN           \
-    k.storage_kivec5_aol_len_pad_en
+#define STORAGE_KIVEC5_AOL_PAD_XFER_EN          \
+    k.storage_kivec5_aol_pad_xfer_en
 #define STORAGE_KIVEC5_SGL_XFER_EN              \
     k.storage_kivec5_sgl_xfer_en
 #define STORAGE_KIVEC5_INTR_EN                  \
@@ -204,10 +208,15 @@
 
 
 // TODO: Fix these to use the values defined in hardware
+#define CAPRI_DMA_NOP               0
 #define CAPRI_DMA_PHV2MEM           3
 #define CAPRI_DMA_MEM2MEM           6
 #define CAPRI_DMA_M2M_TYPE_SRC      0
 #define CAPRI_DMA_M2M_TYPE_DST      1
+
+#define CLEAR_TABLE_VALID_e(_num)                                       \
+        phvwri.e  p.app_header_table##_num##_valid, 0;                  \
+        nop;                                                            \
 
 // Load table 0 based on absolute address
 // table 0 is always the last, so it should be ok to use .e modifiers
@@ -405,6 +414,9 @@
                                         sizeof(p._start) - 1))/16);     \
    phvwri   p._dma_cmd_eop, 1;                                          \
 
+// Cancel a previously set DMA descriptor
+#define DMA_CMD_CANCEL(_dma_cmd_X)                                      \
+   phvwri   p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_NOP;                 \
 
 // Setup the doorbell data. Write back the data in little endian format
 #define DOORBELL_DATA_SETUP(_db_data, _index, _ring, _qid, _pid)        \
@@ -557,13 +569,19 @@
 // Raise an interrupt across the PCI layer by using the address and data 
 // specified in the d-vector. Fence the interrupt with previous 
 // DMA writes.
-#define PCI_RAISE_INTERRUPT(_dma_cmd_ptr)                               \
+#define PCI_SET_INTERRUPT_DATA()                                        \
    phvwr    p.pci_intr_data_data, d.{intr_data}.wx;                     \
-   add      r7, r0, d.intr_addr;                                        \
+   
+#define PCI_SET_INTERRUPT_ADDR_DMA(_intr_addr, _dma_cmd_ptr)            \
+   add      r7, r0, _intr_addr;                                         \
    DMA_PHV2MEM_SETUP(pci_intr_data_data, pci_intr_data_data,            \
                      r7, _dma_cmd_ptr)                                  \
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)                                      \
 
+#define PCI_RAISE_INTERRUPT(_dma_cmd_ptr)                               \
+   PCI_SET_INTERRUPT_DATA()                                             \
+   PCI_SET_INTERRUPT_ADDR_DMA(d.intr_addr, _dma_cmd_ptr)                \
+   
 // Queue full check based on an increment value
 #define _QUEUE_FULL(_p_ndx, _c_ndx, _num_entries, _incr, _branch_instr) \
    add      r1, r0, _p_ndx;                                             \

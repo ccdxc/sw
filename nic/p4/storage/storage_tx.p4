@@ -14,6 +14,8 @@
 #define tx_table_s4_t0		s4_tbl
 #define tx_table_s5_t0		s5_tbl
 
+#define tx_table_s1_t1		s1_tbl1
+
 #define tx_table_s0_t0_action	q_state_pop
 #define tx_table_s0_t0_action1	pri_q_state_pop
 #define tx_table_s0_t0_action2	roce_cq_cb_pop
@@ -29,8 +31,10 @@
 #define tx_table_s1_t0_action7	seq_barco_entry_handler
 #define tx_table_s1_t0_action8	roce_cq_handler
 #define tx_table_s1_t0_action9	pvm_roce_sq_wqe_process
-#define tx_table_s1_t0_action10	seq_comp_status_desc_handler
+#define tx_table_s1_t0_action10	seq_comp_status_desc0_handler
 #define tx_table_s1_t0_action11	seq_xts_status_desc_handler
+
+#define tx_table_s1_t1_action	seq_comp_status_desc1_handler
 
 #define tx_table_s2_t0_action	q_state_push
 #define tx_table_s2_t0_action1	seq_q_state_push
@@ -142,6 +146,8 @@ metadata storage_capri_addr_t r2n_data_buff_addr;
 metadata barco_aol_len_t data_len;
 @pragma dont_trim
 metadata barco_aol_len_t pad_len;
+@pragma dont_trim
+metadata barco_aol_len_t total_len;
 
 
 // DMA commands metadata
@@ -304,7 +310,10 @@ metadata roce_rq_wqe_t roce_rq_wqe_scratch;
 metadata roce_sq_xlate_entry_t roce_sq_xlate_entry_scratch;
 
 @pragma scratch_metadata
-metadata seq_comp_status_desc_t seq_comp_status_desc_scratch;
+metadata seq_comp_status_desc0_t seq_comp_status_desc0_scratch;
+
+@pragma scratch_metadata
+metadata seq_comp_status_desc1_t seq_comp_status_desc1_scratch;
 
 @pragma scratch_metadata
 metadata seq_comp_status_t seq_comp_status_scratch;

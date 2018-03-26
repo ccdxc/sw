@@ -14,51 +14,59 @@
 
 
 struct s1_tbl_k k;
-struct s1_tbl_seq_comp_status_desc_handler_d d;
+struct s1_tbl_seq_comp_status_desc0_handler_d d;
 struct phv_ p;
 
 %%
    .param storage_tx_seq_comp_status_handler_start
 
-storage_tx_seq_comp_status_desc_handler_start:
+storage_tx_seq_comp_status_desc0_handler_start:
 
-   // Store the various parts of the descriptor in the K+I vectors for later use
-   phvwrpair	p.storage_kivec4_sgl_aol_addr, d.sgl_aol_addr, \
-   	        p.storage_kivec4_data_addr, d.data_addr
-   phvwr	p.storage_kivec4_data_len, d.data_len
-  
-   phvwrpair	p.storage_kivec5_status_addr, d.status_addr, \
-   	        p.storage_kivec5_status_len, d.status_len
-   
    // Order of evaluation of next doorbell and interrupts
    // 1. If next_db_en is set => ring the next doorbell and don't raise interrupt
    // 2. If next_db_en is not set and intr_en is set => raise interrupt
-   // 2. If next_db_en is not set and intr_en is not set => do nothing more
+   //
+   // Note: if a compression error arises and status_dma_en is set,
+   // interrupts (if set) will also be raised
+   PCI_SET_INTERRUPT_DATA()
 
+   // Store the various parts of the descriptor in the K+I vectors for later use
    // Check if next doorbell is to be enabled and branch
    bbeq		d.next_db_en, 0, check_intr
-   phvwrpair	p.storage_kivec5_pad_len_shift, d.pad_len_shift, \
-                p.{storage_kivec5_data_len_from_desc...storage_kivec5_sgl_xfer_en}, \
-   	        d.{data_len_from_desc...sgl_xfer_en}    // delay slot
+   phvwrpair	p.storage_kivec5_intr_addr, d.intr_addr, \
+                p.{storage_kivec5_status_dma_en...storage_kivec5_intr_en}, \
+   	        d.{status_dma_en...intr_en}    // delay slot
 
    // Ring the sequencer doorbell based on addr/data provided in the descriptor
    SEQUENCER_DOORBELL_RING(dma_p2m_11)
 
    // Done ringing doorbell, don't fire the interrupt in this path
-   b		tbl_load
+   b		status_dma_setup
    nop
 
 check_intr:
    // Check if interrupt is enabled and branch
-   bbeq		d.intr_en, 0, tbl_load
+   bbeq		d.intr_en, 0, status_dma_setup
    nop
 
    // Raise interrupt based on addr/data provided in descriptor
-   PCI_RAISE_INTERRUPT(dma_p2m_11)
+   PCI_SET_INTERRUPT_ADDR_DMA(d.intr_addr, dma_p2m_11)
 
+status_dma_setup:
+
+   // Set up status xfer if applicable
+   bbeq         d.status_dma_en, 0, tbl_load
+   nop
+   
+   // Set up the status DMA:
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.status_hbm_addr, 
+                     d.status_len[13:0], 0, 0, dma_m2m_1)
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.status_host_addr, 
+                     d.status_len[13:0], 0, 0, dma_m2m_2)
+   DMA_MEM2MEM_FENCE(dma_m2m_2)
+   
 tbl_load:
    // Setup the start and end DMA pointers
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PC_IMM(d.status_addr, STORAGE_DEFAULT_TBL_LOAD_SIZE,
+   LOAD_TABLE_FOR_ADDR_PC_IMM(d.status_hbm_addr, STORAGE_DEFAULT_TBL_LOAD_SIZE,
                               storage_tx_seq_comp_status_handler_start)
-

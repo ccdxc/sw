@@ -110,6 +110,8 @@ static comp_queue_t dc_queue;
 static comp_queue_t cp_hotq;
 static comp_queue_t dc_hotq;
 
+static uint16_t kCPVersion = 0x1234;
+
 // Sample data generated during test.
 static const uint8_t all_zeros[65536] = {0};
 static constexpr uint32_t kUncompressedDataSize = 65536;
@@ -333,9 +335,11 @@ compression_buf_init()
                                     DP_MEM_ALIGN_PAGE);
     uncompressed_host_buf = new dp_mem_t(1, kUncompressedDataSize,
                                          DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
-    compressed_buf = new dp_mem_t(1, kUncompressedDataSize,
+    // size of compressed buffers accounts any for compression failure,
+    // i.e., must be as large as uncompressed buffer plus cp_hdr_t
+    compressed_buf = new dp_mem_t(1, kUncompressedDataSize + sizeof(cp_hdr_t),
                                   DP_MEM_ALIGN_PAGE);
-    compressed_host_buf = new dp_mem_t(1, kUncompressedDataSize,
+    compressed_host_buf = new dp_mem_t(1, kUncompressedDataSize + sizeof(cp_hdr_t),
                                        DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
     status_buf = new dp_mem_t(1, sizeof(cp_status_sha512_t));
     status_buf2 = new dp_mem_t(1, sizeof(cp_status_sha512_t));
@@ -356,9 +360,9 @@ compression_buf_init()
     seq_sgl = new dp_mem_t(1, sizeof(cp_sq_ent_sgl_t));
 
     // XTS AOL must be 512 byte aligned
-    xts_encrypt_host_buf = new dp_mem_t(1, kUncompressedDataSize,
+    xts_encrypt_host_buf = new dp_mem_t(1, kUncompressedDataSize + sizeof(cp_hdr_t),
                                         DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
-    xts_decrypt_buf = new dp_mem_t(1, kUncompressedDataSize,
+    xts_decrypt_buf = new dp_mem_t(1, kUncompressedDataSize + sizeof(cp_hdr_t),
                                    DP_MEM_ALIGN_PAGE);
     xts_in_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM, 512);
@@ -375,7 +379,7 @@ compression_buf_init()
                                        DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     xts_opaque_host_buf = new dp_mem_t(1, sizeof(uint32_t),
                                        DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-    pad_buf = new dp_mem_t(1, 8192, DP_MEM_ALIGN_PAGE);
+    pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
 
     // Pre-fill input buffers.
     uint64_t *p64 = (uint64_t *)uncompressed_data;
@@ -399,10 +403,15 @@ compression_init()
   compression_buf_init();
 
   uint32_t lo_reg, hi_reg;
-  if (!comp_inited_by_hal) {
+  read_reg(cp_cfg_glob, lo_reg);
+
+  if (comp_inited_by_hal) {
+      kCPVersion = lo_reg & 0xffff;
+      printf("Comp version is 0x%x\n", kCPVersion);
+
+  } else {
 
       // Write cp queue base.
-      read_reg(cp_cfg_glob, lo_reg);
       write_reg(cp_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
       write_reg(cp_cfg_q_base, cp_queue.q_base_mem_pa & 0xFFFFFFFFu);
       write_reg(cp_cfg_q_base + 4, (cp_queue.q_base_mem_pa >> 32) & 0xFFFFFFFFu);
@@ -964,8 +973,6 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
   seq_sgl->clear();
   cp_sq_ent_sgl_t *ssgl = (cp_sq_ent_sgl_t *)seq_sgl->read();
 
-  status_host_buf->clear_thru();
-  ssgl->status_host_pa = status_host_buf->pa();
   ssgl->addr[0] = compressed_host_buf->pa();
   ssgl->len[0] = 199;
   ssgl->addr[1] = compressed_host_buf->pa() + 199;
@@ -978,9 +985,12 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
 
   cp_seq_params_t seq_params;
   bzero(&seq_params, sizeof(seq_params));
+  status_host_buf->clear_thru();
   seq_params.seq_ent.status_hbm_pa = status_buf->pa();
-  seq_params.seq_ent.src_hbm_pa = compressed_buf->pa();
-  seq_params.seq_ent.sgl_pa = seq_sgl->pa();
+  seq_params.seq_ent.status_host_pa = status_host_buf->pa();
+  seq_params.seq_ent.src_hbm_pa = d.src;
+  seq_params.seq_ent.dst_hbm_pa = d.dst;
+  seq_params.seq_ent.sgl_out_aol_pa = seq_sgl->pa();
   seq_params.seq_ent.sgl_xfer_en = 1;
   seq_params.seq_ent.intr_pa = opaque_host_buf->pa();
   seq_params.seq_ent.intr_data = kSeqIntrData;
@@ -1035,12 +1045,14 @@ int seq_compress_output_through_sequencer() {
                                               queues::get_pvm_seq_comp_sq(0));
 }
 
-void compress_xts_encrypt_setup(XtsCtx& xts_ctx,
+void compress_xts_encrypt_setup(cp_desc_t& d,
+                                XtsCtx& xts_ctx,
                                 cp_seq_params_t& seq_params,
                                 dp_mem_t *src_buf,
                                 dp_mem_t *dst_buf) {
   xts::xts_cmd_t cmd;
   xts::xts_desc_t *xts_desc_addr;
+  uint32_t datain_len;
 
   xts_ctx.op = xts::AES_ENCR_ONLY;
   xts_ctx.seq_xts_q = seq_params.seq_xts_q;
@@ -1054,8 +1066,9 @@ void compress_xts_encrypt_setup(XtsCtx& xts_ctx,
 
   // Note: p4+ will modify L0 and L1 below based on compression
   // output_data_len and any required padding
+  datain_len = d.datain_len == 0 ? 65536 :  d.datain_len;
   xts_in->a0 = src_buf->pa();
-  xts_in->l0 = src_buf->line_size_get();
+  xts_in->l0 = datain_len;
   xts_in->a1 = pad_buf->pa();
   xts_in->l1 = pad_buf->line_size_get();
   xts_in_aol->write_thru();
@@ -1063,25 +1076,13 @@ void compress_xts_encrypt_setup(XtsCtx& xts_ctx,
   xts_out_aol->clear();
   xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read();
   xts_out->a0 = dst_buf->pa();
-  xts_out->l0 = dst_buf->line_size_get();
+  xts_out->l0 = datain_len + sizeof(cp_hdr_t);
   xts_out_aol->write_thru();
-
-  xts_ctx.cmd_eval_seq_xts(cmd);
-  xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
-  xts_desc_addr->in_aol = xts_in_aol->pa();
-  xts_desc_addr->out_aol = xts_out_aol->pa();
-  xts_desc_addr->cmd = cmd;
-  xts_desc_addr->status = xts_status_buf->pa();
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE,
-                             seq_params.seq_xts_status_q, 0, xts_ctx.seq_xts_status_index, 
-                             &xts_desc_addr->db_addr, &xts_desc_addr->db_data);
-  xts_desc_buf->write_thru();
-  xts_ctx.desc_write_seq_xts(xts_desc_buf);
 
   // Set up XTS status chaining;
   // Note: XTS status chaining is not strictly necessary since encryption is the last
   // in the chain. It is used here to validate XTS completion status and interrupt.
-
+  //
   // Clear the area where interrupt from sequencer is going to come.
   xts_opaque_host_buf->clear_thru();
   memset(xts_status_host_buf->read(), 0xff, xts_status_host_buf->line_size_get());
@@ -1095,9 +1096,22 @@ void compress_xts_encrypt_setup(XtsCtx& xts_ctx,
   xts_status_desc_buf->write_bit_fields(352, 16, xts_status_host_buf->line_size_get());
   xts_status_desc_buf->write_bit_fields(368, 1, 1); // status_dma_en
   xts_status_desc_buf->write_bit_fields(370, 1, 1); // intr_en
-  xts_status_desc_buf->write_bit_fields(371, 1, 1); // exit_chain_on_error
+  xts_status_desc_buf->write_bit_fields(371, 1, 1); // stop_chain_on_error
   xts_status_desc_buf->write_thru();
   xts_ctx.desc_write_seq_xts_status(xts_status_desc_buf);
+
+  // Set up XTS encrypt descriptor
+  xts_ctx.cmd_eval_seq_xts(cmd);
+  xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
+  xts_desc_addr->in_aol = xts_in_aol->pa();
+  xts_desc_addr->out_aol = xts_out_aol->pa();
+  xts_desc_addr->cmd = cmd;
+  xts_desc_addr->status = xts_status_buf->pa();
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE,
+                             xts_ctx.seq_xts_status_q, 0, xts_ctx.seq_xts_status_index, 
+                             &xts_desc_addr->db_addr, &xts_desc_addr->db_data);
+  xts_desc_buf->write_thru();
+  xts_ctx.desc_write_seq_xts(xts_desc_buf);
 }
 
 int _compress_output_encrypt(comp_queue_push_t push_type,
@@ -1124,31 +1138,39 @@ int _compress_output_encrypt(comp_queue_push_t push_type,
   cp_seq_params_t seq_params;
   bzero(&seq_params, sizeof(seq_params));
   seq_params.seq_comp_status_q = queues::get_pvm_seq_comp_status_sq(0);
-  seq_params.seq_xts_q = queues::get_pvm_seq_xts_status_sq(0);
+  seq_params.seq_xts_q = queues::get_pvm_seq_xts_sq(0);
   seq_params.seq_xts_status_q = queues::get_pvm_seq_xts_status_sq(0);
 
   // Set up encryption
-  compress_xts_encrypt_setup(xts_ctx, seq_params, compressed_buf,
+  compress_xts_encrypt_setup(d, xts_ctx, seq_params, compressed_buf,
                              xts_encrypt_host_buf);
 
   queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, xts_ctx.seq_xts_q,
                              0, xts_ctx.seq_xts_index, 
                              &seq_params.seq_ent.next_doorbell_addr,
                              &seq_params.seq_ent.next_doorbell_data);
+  status_buf->clear_thru();
   seq_params.seq_ent.status_hbm_pa = status_buf->pa();
+  seq_params.seq_ent.status_host_pa = status_host_buf->pa();
   seq_params.seq_ent.status_len = status_buf->line_size_get();
 
   // Note that encryption data transfer is handled by compress_xts_encrypt_setup()
-  // above. The compression status sequencer will use the aol given below
+  // above. The compression status sequencer will use the AOLs given below
   // only to update the length fields with the correct output data length and pad length.
-  seq_params.seq_ent.aol_pa = xts_in_aol->pa();
+  seq_params.seq_ent.sgl_in_aol_pa = xts_in_aol->pa();
+  seq_params.seq_ent.sgl_out_aol_pa = xts_out_aol->pa();
   seq_params.seq_ent.status_dma_en = 1;
-  seq_params.seq_ent.intr_en = 1;
   seq_params.seq_ent.next_doorbell_en = 1;
-  seq_params.seq_ent.exit_chain_on_error = 1;
-  seq_params.seq_ent.aol_len_pad_en = 1;
-  seq_params.seq_ent.pad_len_shift = (uint8_t)log2(4096);
-  
+  seq_params.seq_ent.stop_chain_on_error = 1;
+  seq_params.seq_ent.aol_pad_xfer_en = 1;
+  seq_params.seq_ent.pad_len_shift = (uint8_t)log2(pad_buf->line_size_get());
+
+  // Enable interrupt in case compression fails
+  opaque_host_buf->clear_thru();
+  seq_params.seq_ent.intr_pa = opaque_host_buf->pa();
+  seq_params.seq_ent.intr_data = kSeqIntrData;
+  seq_params.seq_ent.intr_en = 1;
+
   if (test_setup_cp_seq_status_ent(&seq_params) != 0) {
     printf("cp_seq_ent failed\n");
     return -1;
@@ -1163,16 +1185,16 @@ int _compress_output_encrypt(comp_queue_push_t push_type,
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
-  // Now poll for sequencer interrupt.
+  // Now poll for XTS status sequencer interrupt.
   auto seq_intr_poll_func = [] () -> int {
-    uint32_t *p = (uint32_t *)opaque_host_buf->read_thru();
+    uint32_t *p = (uint32_t *)xts_opaque_host_buf->read_thru();
     if (*p == kSeqIntrData)
       return 0;
     return 1;
   };
   tests::Poller intr_poll;
   if (intr_poll(seq_intr_poll_func) != 0) {
-    printf("ERROR: Interrupt from sequencer never came.\n");
+    printf("ERROR: Interrupt from XTS status sequencer never came.\n");
   }
 
   // Validate XTS status

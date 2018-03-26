@@ -134,7 +134,7 @@ typedef struct xts_status_desc_ {
   uint8_t      status_dma_en:1,
                next_doorbell_en:1,
                intr_en:1,
-               exit_chain_on_error:1;
+               stop_chain_on_error:1;
   uint8_t      pad[17];
 } __attribute__((packed)) xts_status_desc_t;
 
