@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
@@ -101,7 +102,8 @@ func (client *CmdClient) initUpdatesRPC() error {
 	// initialize rpcClient
 	var err error
 	log.Infof("Initializing NIC updates RPC client ")
-	client.updatesRPCClient, err = rpckit.NewRPCClient("nmd-nic-upd", client.cmdUpdatesURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
+	client.updatesRPCClient, err = rpckit.NewRPCClient("nmd-nic-upd", client.cmdUpdatesURL,
+		rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Cmd))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server for NIC updates, URL: %v Err: %v", client.cmdUpdatesURL, err)
 	}

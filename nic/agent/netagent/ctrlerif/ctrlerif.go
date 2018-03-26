@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
@@ -125,7 +126,8 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
 
@@ -192,7 +194,8 @@ func (client *NpmClient) runEndpointWatcher(ctx context.Context) {
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
 
@@ -282,7 +285,8 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
 
@@ -387,7 +391,8 @@ func (client *NpmClient) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto
 	client.Unlock()
 
 	// create a grpc client
-	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
+	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+		rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server. Err: %v", err)
 		return nil, err
@@ -424,7 +429,8 @@ func (client *NpmClient) EndpointDeleteReq(epinfo *netproto.Endpoint) (*netproto
 	client.Unlock()
 
 	// create a grpc client
-	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
+	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+		rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server. Err: %v", err)
 		return nil, err
