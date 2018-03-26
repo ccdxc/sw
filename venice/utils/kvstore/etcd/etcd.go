@@ -25,7 +25,8 @@ import (
 )
 
 const (
-	timeout = time.Second * 5
+	timeout            = time.Second * 5
+	maxCallSendMsgSize = 10 * 1024 * 1024
 )
 
 // etcdStore implements a KVStore using etcd as storage.
@@ -39,9 +40,10 @@ type etcdStore struct {
 // NewEtcdStore creates a new etcdStore.
 func NewEtcdStore(servers []string, codec runtime.Codec, grpcOpts ...grpc.DialOption) (kvstore.Interface, error) {
 	config := clientv3.Config{
-		Endpoints:   servers,
-		DialTimeout: timeout,
-		DialOptions: grpcOpts,
+		Endpoints:          servers,
+		DialTimeout:        timeout,
+		DialOptions:        grpcOpts,
+		MaxCallSendMsgSize: maxCallSendMsgSize,
 	}
 
 	client, err := clientv3.New(config)
