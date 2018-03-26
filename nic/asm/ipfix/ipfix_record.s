@@ -11,9 +11,15 @@ struct phv_                  p;
 %%
 
 ipfix_create_record:
+    // setup dma cmd ptr
+    phvwr       p.p4_txdma_intr_dma_cmd_ptr, \
+                    CAPRI_PHV_START_OFFSET(phv2mem_cmd1_dma_cmd_pad) / 16
+
+    bbeq        k.ipfix_metadata_scan_complete, TRUE, ipfix_header_fixups
+
     // setup record start address
     add         r1, d.u.ipfix_create_record_d.pktaddr, \
-                    d.{u.ipfix_create_record_d.rnext}.hx
+                    d.{u.ipfix_create_record_d.next_record_offset}.hx
 
     seq         c1, k.ipfix_metadata_flow_type, FLOW_KEY_LOOKUP_TYPE_IPV4
     bcf         [c1], ipfix_create_ipv4_record
@@ -23,9 +29,6 @@ ipfix_create_record:
 ipfix_create_non_ip_record:
     phvwr.!c1   p.ipfix_record_nonip_set_id, IPFIX_NON_IP_RECORD_ID
     phvwr       p.ipfix_record_nonip_len, IPFIX_NON_IP_RECORD_SIZE
-
-    phvwr       p.p4_txdma_intr_dma_cmd_ptr, \
-                    CAPRI_PHV_START_OFFSET(phv2mem_cmd1_dma_cmd_pad) / 16
 
     phvwr       p.phv2mem_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.phv2mem_cmd1_dma_cmd_phv_start_addr, \
@@ -44,14 +47,12 @@ ipfix_create_non_ip_record:
     phvwr       p.phv2mem_cmd2_dma_cmd_addr, r1
 
     b           ipfix_header_fixups
-    tbladd      d.{u.ipfix_create_record_d.rnext}.hx, IPFIX_NON_IP_RECORD_SIZE
+    tbladd      d.{u.ipfix_create_record_d.next_record_offset}.hx, \
+                    IPFIX_NON_IP_RECORD_SIZE
 
 ipfix_create_ipv4_record:
     phvwr       p.ipfix_record_ipv4_set_id, IPFIX_IPv4_RECORD_ID
     phvwr       p.ipfix_record_ipv4_len, IPFIX_IPv4_RECORD_SIZE
-
-    phvwr       p.p4_txdma_intr_dma_cmd_ptr, \
-                    CAPRI_PHV_START_OFFSET(phv2mem_cmd1_dma_cmd_pad) / 16
 
     phvwr       p.phv2mem_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.phv2mem_cmd1_dma_cmd_phv_start_addr, \
@@ -70,14 +71,12 @@ ipfix_create_ipv4_record:
     phvwr       p.phv2mem_cmd2_dma_cmd_addr, r1
 
     b           ipfix_header_fixups
-    tbladd      d.{u.ipfix_create_record_d.rnext}.hx, IPFIX_IPv4_RECORD_SIZE
+    tbladd      d.{u.ipfix_create_record_d.next_record_offset}.hx, \
+                    IPFIX_IPv4_RECORD_SIZE
 
 ipfix_create_ipv6_record:
     phvwr       p.ipfix_record_ipv6_set_id, IPFIX_IPv6_RECORD_ID
     phvwr       p.ipfix_record_ipv6_len, IPFIX_IPv6_RECORD_SIZE
-
-    phvwr       p.p4_txdma_intr_dma_cmd_ptr, \
-                    CAPRI_PHV_START_OFFSET(phv2mem_cmd1_dma_cmd_pad) / 16
 
     phvwr       p.phv2mem_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.phv2mem_cmd1_dma_cmd_phv_start_addr, \
@@ -95,10 +94,11 @@ ipfix_create_ipv6_record:
                     CAPRI_PHV_END_OFFSET(ipfix_record_common_drop_vector)
     phvwr       p.phv2mem_cmd2_dma_cmd_addr, r1
 
-    tbladd      d.{u.ipfix_create_record_d.rnext}.hx, IPFIX_IPv6_RECORD_SIZE
+    tbladd      d.{u.ipfix_create_record_d.next_record_offset}.hx, \
+                    IPFIX_IPv6_RECORD_SIZE
 
 ipfix_header_fixups:
-    seq         c1, k.ipfix_metadata_do_export, FALSE
+    seq         c1, k.ipfix_metadata_scan_complete, FALSE
     bcf         [c1], ipfix_record_done
     phvwr.c1    p.phv2mem_cmd2_dma_cmd_eop, 1
 
@@ -116,7 +116,7 @@ ipfix_header_fixups:
     phvwr       p.phv2mem_cmd3_dma_cmd_phv_end_addr, \
                     CAPRI_PHV_END_OFFSET(ipfix_record_header_domain_id)
     add         r1, d.u.ipfix_create_record_d.pktaddr, \
-                    d.u.ipfix_create_record_d.rstart
+                    d.u.ipfix_create_record_d.ipfix_hdr_offset
     phvwr       p.phv2mem_cmd3_dma_cmd_addr, r1
 
     // setup doorbell address in r1
@@ -125,7 +125,8 @@ ipfix_header_fixups:
     or          r1, r1, 1005, DB_LIF_SHFT
 
     // setup doorbell data in r2
-    add         r2, r0, 1, 24
+    add         r2, k.ipfix_metadata_export_id, IPFIX_EXPORT_ID_MAX
+    add         r2, r0, r2, 24
     phvwr       p.ipfix_t0_metadata_doorbell_data, r2.dx
 
     // ring doorbell via phv2mem DMA command

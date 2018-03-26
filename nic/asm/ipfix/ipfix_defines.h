@@ -1,7 +1,12 @@
-#define IPFIX_VERSION           10
-#define IPFIX_IPv4_RECORD_ID    257
-#define IPFIX_IPv6_RECORD_ID    258
-#define IPFIX_NON_IP_RECORD_ID  259
+#define IPFIX_VERSION                   10
+#define IPFIX_IPv4_RECORD_ID            257
+#define IPFIX_IPv6_RECORD_ID            258
+#define IPFIX_NON_IP_RECORD_ID          259
+
+#define IPFIX_EXPORT_ID_MAX             16
+
+#define IPFIX_FLOW_HASH_TABLE           0
+#define IPFIX_FLOW_HASH_OVERFLOW_TABLE  1
 
 #define IPFIX_HEADER_SIZE \
     ((CAPRI_PHV_END_OFFSET(ipfix_record_header_domain_id) - \

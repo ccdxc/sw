@@ -1,8 +1,7 @@
 TOPDIR = ../..
 GEN_DIR = $(TOPDIR)/gen
 CUSTOM = $(GEN_DIR)/.ipfix_asm
-CUSTOM_CLEAN = clean
-
+CUSTOM_CLEAN = asm_clean
 
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
@@ -60,6 +59,6 @@ $(TMP_FILES): %.x: %.ctl
 
 gtest:
 
-clean:
+asm_clean:
 	@rm -f $(OBJ_DIR)/ipfix*.bin
 	@rm -fR $(GEN_DIR)/.ipfix_asm

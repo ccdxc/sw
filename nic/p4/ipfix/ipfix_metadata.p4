@@ -2,9 +2,11 @@ header_type ipfix_metadata_t {
     fields {
         flow_index : 32;
         session_index : 32;
-        flow_role : 1;
         flow_type : 4;
-        do_export : 1;
+        export_id : 4;
+        flow_role : 1;
+        scan_complete : 1;
+        export_en : 4;
         pad : 2;
         qstate_addr : 34;
     }
@@ -110,12 +112,13 @@ header_type ipfix_pad_t {
 
 header_type ipfix_scratch_metadata_t {
     fields {
-        do_export : 1;
+        scan_complete : 1;
         flow_role : 1;
         flow_type : 4;
+        export_id : 4;
         flow_index : 32;
         session_index : 32;
-        qstate_addr : 32;
+        qstate_addr : 34;
         counter64 : 64;
     }
 }
@@ -133,11 +136,17 @@ header_type ipfix_qstate_metadata_t {
         pid : 16;
         pindex : 16;
         cindex : 16;
-        sindex : 32;
-        eindex : 32;
+
         pktaddr : 64;
         pktsize : 16;
-        rstart : 16;
-        rnext : 16;
+        seq_no : 32;
+        domain_id : 32;
+        ipfix_hdr_offset : 16;
+        next_record_offset : 16;
+
+        flow_hash_table_type : 8;
+        flow_hash_index_next : 32;
+        flow_hash_index_max : 32;
+        flow_hash_overflow_index_max : 32;
     }
 }

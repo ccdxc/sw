@@ -32,8 +32,6 @@ ipfix_flow_stats:
     phvwr       p.common_te0_phv_table_raw_table_size, 6
     phvwr       p.common_te0_phv_table_lock_en, 1
 
-    phvwr       p.app_header_table0_valid, 1
-    phvwr       p.app_header_table1_valid, 0
-    phvwr       p.app_header_table2_valid, 0
-    phvwr.e     p.app_header_table3_valid, 0
+    // enable table 0 in next stage
+    phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0x8
     nop

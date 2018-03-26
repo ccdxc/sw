@@ -67,8 +67,10 @@ metadata dma_cmd_phv2pkt_t phv2pkt_cmd1;
 metadata dma_cmd_mem2pkt_t mem2pkt_cmd;
 
 action ipfix_start(rsvd, cos_a, cos_b, cos_sel, eval_last, host_rings,
-                   total_rings, pid, pindex, cindex, sindex, eindex,
-                   pktaddr, pktsize, rstart, rnext) {
+                   total_rings, pid, pindex, cindex, pktaddr, pktsize,
+                   seq_no, domain_id, ipfix_hdr_offset, next_record_offset,
+                   flow_hash_table_type, flow_hash_index_next,
+                   flow_hash_index_max, flow_hash_overflow_index_max) {
     modify_field(qstate_metadata.rsvd, rsvd);
     modify_field(qstate_metadata.cos_a, cos_a);
     modify_field(qstate_metadata.cos_b, cos_b);
@@ -79,34 +81,45 @@ action ipfix_start(rsvd, cos_a, cos_b, cos_sel, eval_last, host_rings,
     modify_field(qstate_metadata.pid, pid);
     modify_field(qstate_metadata.pindex, pindex);
     modify_field(qstate_metadata.cindex, cindex);
-    modify_field(qstate_metadata.eindex, sindex);
-    modify_field(qstate_metadata.eindex, eindex);
     modify_field(qstate_metadata.pktaddr, pktaddr);
     modify_field(qstate_metadata.pktsize, pktsize);
-    modify_field(qstate_metadata.rstart, rstart);
-    modify_field(qstate_metadata.rnext, rnext);
+    modify_field(qstate_metadata.seq_no, seq_no);
+    modify_field(qstate_metadata.domain_id, domain_id);
+    modify_field(qstate_metadata.ipfix_hdr_offset, ipfix_hdr_offset);
+    modify_field(qstate_metadata.next_record_offset, next_record_offset);
+    modify_field(qstate_metadata.flow_hash_table_type, flow_hash_table_type);
+    modify_field(qstate_metadata.flow_hash_index_next, flow_hash_index_next);
+    modify_field(qstate_metadata.flow_hash_index_max, flow_hash_index_max);
+    modify_field(qstate_metadata.flow_hash_overflow_index_max,
+                 flow_hash_overflow_index_max);
 
     modify_field(ipfix_metadata.qstate_addr, p4_txdma_intr.qstate_addr);
+    modify_field(ipfix_metadata.export_id, p4_txdma_intr.qid);
 }
 
 action ipfix_flow_hash() {
+    modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
 }
 
 action ipfix_flow_info() {
+    modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
 }
 
 action ipfix_session_state() {
+    modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
     modify_field(scratch_metadata.flow_index, ipfix_metadata.flow_index);
     modify_field(scratch_metadata.session_index, ipfix_metadata.session_index);
     modify_field(scratch_metadata.flow_role, ipfix_metadata.flow_role);
 }
 
 action ipfix_flow_stats() {
+    modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
     modify_field(scratch_metadata.qstate_addr, ipfix_metadata.qstate_addr);
 }
 
 action ipfix_flow_atomic_stats(permit_bytes, permit_packets,
                                drop_bytes, drop_packets) {
+    modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
     modify_field(scratch_metadata.counter64, permit_bytes);
     modify_field(scratch_metadata.counter64, permit_packets);
     modify_field(scratch_metadata.counter64, drop_bytes);
@@ -115,7 +128,10 @@ action ipfix_flow_atomic_stats(permit_bytes, permit_packets,
 
 action ipfix_create_record(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
                            host_rings, total_rings, pid, pindex, cindex,
-                           sindex, eindex, pktaddr, pktsize, rstart, rnext) {
+                           pktaddr, pktsize, seq_no, domain_id,
+                           ipfix_hdr_offset, next_record_offset,
+                           flow_hash_table_type, flow_hash_index_next,
+                           flow_hash_index_max, flow_hash_overflow_index_max) {
     modify_field(qstate_metadata.pc, pc);
     modify_field(qstate_metadata.rsvd, rsvd);
     modify_field(qstate_metadata.cos_a, cos_a);
@@ -127,19 +143,29 @@ action ipfix_create_record(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
     modify_field(qstate_metadata.pid, pid);
     modify_field(qstate_metadata.pindex, pindex);
     modify_field(qstate_metadata.cindex, cindex);
-    modify_field(qstate_metadata.sindex, sindex);
-    modify_field(qstate_metadata.eindex, eindex);
     modify_field(qstate_metadata.pktaddr, pktaddr);
     modify_field(qstate_metadata.pktsize, pktsize);
-    modify_field(qstate_metadata.rstart, rstart);
-    modify_field(qstate_metadata.rnext, rnext);
+    modify_field(qstate_metadata.seq_no, seq_no);
+    modify_field(qstate_metadata.domain_id, domain_id);
+    modify_field(qstate_metadata.ipfix_hdr_offset, ipfix_hdr_offset);
+    modify_field(qstate_metadata.next_record_offset, next_record_offset);
+    modify_field(qstate_metadata.flow_hash_table_type, flow_hash_table_type);
+    modify_field(qstate_metadata.flow_hash_index_next, flow_hash_index_next);
+    modify_field(qstate_metadata.flow_hash_index_max, flow_hash_index_max);
+    modify_field(qstate_metadata.flow_hash_overflow_index_max,
+                 flow_hash_overflow_index_max);
+
     modify_field(scratch_metadata.flow_type, ipfix_metadata.flow_type);
-    modify_field(scratch_metadata.do_export, ipfix_metadata.do_export);
+    modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
+    modify_field(scratch_metadata.export_id, ipfix_metadata.export_id);
 }
 
 action ipfix_export_packet(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
                            host_rings, total_rings, pid, pindex, cindex,
-                           sindex, eindex, pktaddr, pktsize, rstart, rnext) {
+                           pktaddr, pktsize, seq_no, domain_id,
+                           ipfix_hdr_offset, next_record_offset,
+                           flow_hash_table_type, flow_hash_index_next,
+                           flow_hash_index_max, flow_hash_overflow_index_max) {
     modify_field(qstate_metadata.pc, pc);
     modify_field(qstate_metadata.rsvd, rsvd);
     modify_field(qstate_metadata.cos_a, cos_a);
@@ -151,10 +177,15 @@ action ipfix_export_packet(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
     modify_field(qstate_metadata.pid, pid);
     modify_field(qstate_metadata.pindex, pindex);
     modify_field(qstate_metadata.cindex, cindex);
-    modify_field(qstate_metadata.sindex, sindex);
-    modify_field(qstate_metadata.eindex, eindex);
     modify_field(qstate_metadata.pktaddr, pktaddr);
     modify_field(qstate_metadata.pktsize, pktsize);
-    modify_field(qstate_metadata.rstart, rstart);
-    modify_field(qstate_metadata.rnext, rnext);
+    modify_field(qstate_metadata.seq_no, seq_no);
+    modify_field(qstate_metadata.domain_id, domain_id);
+    modify_field(qstate_metadata.ipfix_hdr_offset, ipfix_hdr_offset);
+    modify_field(qstate_metadata.next_record_offset, next_record_offset);
+    modify_field(qstate_metadata.flow_hash_table_type, flow_hash_table_type);
+    modify_field(qstate_metadata.flow_hash_index_next, flow_hash_index_next);
+    modify_field(qstate_metadata.flow_hash_index_max, flow_hash_index_max);
+    modify_field(qstate_metadata.flow_hash_overflow_index_max,
+                 flow_hash_overflow_index_max);
 }

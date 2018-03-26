@@ -1,9 +1,11 @@
 #include "ipfix/asm_out/INGRESS_p.h"
+#include "ipfix/asm_out/ingress.h"
 #include "iris/asm_out/ingress.h"
 #include "../../p4/iris/include/defines.h"
 
-struct flow_hash_d d;
-struct phv_        p;
+struct ipfix_flow_hash_k k;
+struct flow_hash_d       d;
+struct phv_              p;
 
 %%
 
@@ -11,6 +13,8 @@ struct phv_        p;
     .param      ipfix_flow_info
 
 ipfix_flow_hash:
+    bbeq        k.ipfix_metadata_scan_complete, TRUE, ipfix_flow_hash_complete
+
     seq         c1, d.flow_hash_info_d.entry_valid, TRUE
     seq         c2, d.flow_hash_info_d.export_en, TRUE
     bcf         [!c1|!c2], ipfix_flow_hash_skip_entry
@@ -49,6 +53,7 @@ ipfix_flow_hash_ipv6_entry:
 ipfix_flow_hash_common:
     phvwr       p.ipfix_record_common_flow_id, d.flow_hash_info_d.flow_index
 
+ipfix_flow_hash_complete:
     // table 0 : lookup flow_info
     addi        r1, r0, loword(p4_flow_info_base)
     addui       r1, r1, hiword(p4_flow_info_base)
@@ -58,15 +63,10 @@ ipfix_flow_hash_common:
     phvwr       p.common_te0_phv_table_raw_table_size, 6
     phvwr       p.common_te0_phv_table_lock_en, 0
 
-    phvwr       p.app_header_table0_valid, 1
-    phvwr       p.app_header_table1_valid, 0
-    phvwr       p.app_header_table2_valid, 0
-    phvwr.e     p.app_header_table3_valid, 0
+    // enable table 0 in next stage
+    phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0x8
     nop
 
 ipfix_flow_hash_skip_entry:
-    phvwr       p.app_header_table0_valid, 0
-    phvwr       p.app_header_table1_valid, 0
-    phvwr       p.app_header_table2_valid, 0
-    phvwr.e     p.app_header_table3_valid, 0
-    nop
+    phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0
+    phvwr       p.p4_intr_global_drop, 1

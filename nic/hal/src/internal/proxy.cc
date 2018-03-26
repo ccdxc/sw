@@ -53,7 +53,7 @@ proxy_meta_init() {
                         types::PROXY_TYPE_NONE, false};
 
     g_meta[types::PROXY_TYPE_IPFIX] =
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 1}}, types::PROXY_TYPE_NONE, false};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 5}}, types::PROXY_TYPE_NONE, false};
 
     g_meta[types::PROXY_TYPE_APP_REDIR] =
         (proxy_meta_t) {false, 1, {SERVICE_LIF_APP_REDIR, APP_REDIR_NUM_QTYPES_MAX,

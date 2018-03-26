@@ -15,8 +15,10 @@ struct phv_                  p;
     .param      ipfix_flow_atomic_stats
 
 ipfix_session_state:
-    seq         c1, k.ipfix_metadata_session_index, 0
+    seq         c1, k.ipfix_metadata_scan_complete, TRUE
+    seq.!c1     c1, k.ipfix_metadata_session_index, 0
     bcf         [c1], ipfix_session_state_common
+
     seq         c1, k.ipfix_metadata_flow_role, TCP_FLOW_INITIATOR
     bcf         [c1], ipfix_session_state_initiator
     phvwr       p.ipfix_record_ip_tcp_seq_num, d.u.tcp_session_state_info_d.rflow_tcp_seq_num
@@ -58,8 +60,6 @@ ipfix_session_state_common:
     phvwr       p.common_te1_phv_table_raw_table_size, 5
     phvwr       p.common_te1_phv_table_lock_en, 0
 
-    phvwr       p.app_header_table0_valid, 1
-    phvwr       p.app_header_table1_valid, 1
-    phvwr       p.app_header_table2_valid, 0
-    phvwr.e     p.app_header_table3_valid, 0
+    // enable tables 0 and 1 in next stage
+    phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0xC
     nop

@@ -37,7 +37,8 @@ ipfix_export_packet:
     // memory to packet
     phvwr       p.mem2pkt_cmd_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     phvwr       p.mem2pkt_cmd_dma_cmd_addr, d.u.ipfix_export_packet_d.pktaddr
-    phvwr       p.mem2pkt_cmd_dma_cmd_size, d.{u.ipfix_export_packet_d.rnext}.hx
+    phvwr       p.mem2pkt_cmd_dma_cmd_size, \
+                    d.{u.ipfix_export_packet_d.next_record_offset}.hx
     phvwr       p.mem2pkt_cmd_dma_cmd_eop, 1
     phvwr       p.mem2pkt_cmd_dma_pkt_eop, 1
 

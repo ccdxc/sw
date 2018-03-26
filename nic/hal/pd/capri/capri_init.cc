@@ -20,7 +20,7 @@
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 87
+#define P4PLUS_SYMBOLS_MAX  128
 
 class capri_state_pd *g_capri_state_pd;
 uint64_t capri_hbm_base;
@@ -125,7 +125,7 @@ capri_timer_hbm_init (void)
     timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
     HAL_TRACE_DEBUG("HBM timer key base addr {:#x}", timer_key_hbm_base_addr);
     timer_key_hbm_addr = timer_key_hbm_base_addr;
-    while (timer_key_hbm_addr < timer_key_hbm_base_addr + 
+    while (timer_key_hbm_addr < timer_key_hbm_base_addr +
                                 CAPRI_TIMER_HBM_KEY_SPACE) {
         capri_hbm_write_mem(timer_key_hbm_addr, (uint8_t *)zero_data, sizeof(zero_data));
         timer_key_hbm_addr += sizeof(zero_data);
@@ -215,25 +215,25 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     }
 
     symbols = (capri_prog_param_info_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_PD,
-                        CAPRI_P4PLUS_NUM_SYMBOLS * sizeof(capri_prog_param_info_t));
+                        P4PLUS_SYMBOLS_MAX * sizeof(capri_prog_param_info_t));
     symbols[i].name = "tcp-read-rnmdr-alloc-idx.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
     i++;
-    
+
     symbols[i].name = "tcp-read-rnmpr-alloc-idx.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMPR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
     i++;
-    
+
     symbols[i].name = "tls-enc-read-tnmdr-alloc-idx.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = TNMDR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
     i++;
-    
+
     symbols[i].name = "tls-enc-read-tnmpr-alloc-idx.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = TNMPR_TABLE_BASE;
@@ -257,7 +257,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
     i++;
-    
+
     symbols[i].name = "tls-enc-read-rnmpr-free-idx.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMPR_TABLE_BASE;
@@ -307,19 +307,19 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
     i++;
-    
+
     symbols[i].name = "esp_ipv4_tunnel_h2n_allocate_input_page_semaphore.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMPR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
     i++;
-    
+
     symbols[i].name = "esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = TNMDR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
     i++;
-    
+
     symbols[i].name = "esp_ipv4_tunnel_h2n_allocate_output_page_semaphore.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = TNMPR_TABLE_BASE;
@@ -331,19 +331,19 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
     i++;
-    
+
     symbols[i].name = "esp_ipv4_tunnel_n2h_allocate_input_page_semaphore.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMPR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
     i++;
-    
+
     symbols[i].name = "esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = TNMDR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
     i++;
-    
+
     symbols[i].name = "esp_ipv4_tunnel_n2h_allocate_output_page_semaphore.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = TNMPR_TABLE_BASE;
@@ -355,31 +355,31 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].name = BRQ_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
     i++;
-    
+
     symbols[i].name = "esp_ipv4_tunnel_n2h_allocate_barco_req_pindex.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = BRQ_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
     i++;
-    
+
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = BRQ_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
     i++;
-    
+
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = BRQ_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
     i++;
-    
+
     symbols[i].name = "cpu_read_desc_pindex.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
     i++;
-    
+
     symbols[i].name = "cpu_read_page_pindex.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMPR_TABLE_BASE;
@@ -438,9 +438,15 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
 
     if ((offset = get_start_offset("flow_hash")) != CAPRI_INVALID_OFFSET) {
         symbols[i].name = "ipfix.bin";
-        symbols[i].num_params = 1;
         symbols[i].params[0].name = P4_FLOW_HASH_BASE;
         symbols[i].params[0].val = offset;
+        if ((offset = get_start_offset("flow_hash_overflow")) != CAPRI_INVALID_OFFSET) {
+            symbols[i].num_params = 2;
+            symbols[i].params[1].name = P4_FLOW_HASH_OVERFLOW_BASE;
+            symbols[i].params[1].val = offset;
+        } else {
+            symbols[i].num_params = 1;
+        }
         i++;
     }
 
@@ -511,7 +517,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].name = "resp_rx_dcqcn_ecn_process.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = NUM_CLOCK_TICKS_PER_CNP;
-    symbols[i].params[0].val = 50000; 
+    symbols[i].params[0].val = 50000;
     i++;
 
     // TODO: This is a placeholder. Replace this with appropriate value based on
@@ -694,7 +700,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
     i++;
 
-    // Replace this with appropriate value based on 
+    // Replace this with appropriate value based on
     // clock frequency.
     symbols[i].name = "req_tx_dcqcn_enforce_process.bin";
     symbols[i].num_params = 1;
@@ -702,20 +708,20 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = 1000;
     i++;
 
-    // Replace this with appropriate value based on 
+    // Replace this with appropriate value based on
     // clock frequency.
     symbols[i].name = "resp_tx_dcqcn_enforce_process.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = NUM_CLOCK_TICKS_PER_US;
     symbols[i].params[0].val = 1000;
     i++;
-    
+
     symbols[i].name = "cpu_hash_calc_id.bin";
     symbols[i].num_params = 2;
     symbols[i].params[0].name = CAPRI_CPU_HASH_MASK;
     symbols[i].params[0].val = 0x1;
     symbols[i].params[1].name = CAPRI_CPU_MAX_ARQID;
-    symbols[i].params[1].val = 0x0; 
+    symbols[i].params[1].val = 0x0;
     i++;
 
     symbols[i].name = "tls-mac-queue-brq.bin";
@@ -765,7 +771,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].name = CAPRI_CPU_HASH_MASK;
     symbols[i].params[0].val = 0x1;
     symbols[i].params[1].name = CAPRI_CPU_MAX_ARQID;
-    symbols[i].params[1].val = 0x0; 
+    symbols[i].params[1].val = 0x0;
     i++;
 
     symbols[i].name = "tls-enc-serq-consume.bin";
@@ -777,8 +783,8 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
      * which CAPRI_MAX_TLS_PAD_SIZE is used for Pad bytes. We'll use the remaining
      * HBM memory from this region to store other TLS global resources.
      */
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
-                                 CAPRI_MAX_TLS_PAD_SIZE; 
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                 CAPRI_MAX_TLS_PAD_SIZE;
     i++;
 
     symbols[i].name = "tls-dec-read-header.bin";
@@ -790,16 +796,15 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
      * which CAPRI_MAX_TLS_PAD_SIZE is used for Pad bytes. We'll use the remaining
      * HBM memory from this region to store other TLS global resources.
      */
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
-                                 CAPRI_MAX_TLS_PAD_SIZE; 
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                 CAPRI_MAX_TLS_PAD_SIZE;
     i++;
 
-    // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
-
+    HAL_ASSERT(i <= P4PLUS_SYMBOLS_MAX);
     p4plus_prm_base_addr = (uint64_t)get_start_offset((char *)JP4PLUS_PRGM);
     HAL_TRACE_DEBUG("base addr {:#x}", p4plus_prm_base_addr);
     capri_load_mpu_programs("p4plus", (char *)full_path.c_str(),
-                            p4plus_prm_base_addr, symbols, CAPRI_P4PLUS_NUM_SYMBOLS);
+                            p4plus_prm_base_addr, symbols, i);
 
     HAL_FREE(hal::HAL_MEM_ALLOC_PD, symbols);
 
@@ -838,7 +843,7 @@ static hal_ret_t
 capri_cache_init ()
 {
     hal_ret_t   ret = HAL_RET_OK;
-    
+
     // Program Global parameters of the cache.
     ret = capri_hbm_cache_init();
     if (ret != HAL_RET_OK) {
@@ -876,7 +881,7 @@ hal_ret_t
 capri_init (capri_cfg_t *cfg = NULL)
 {
     hal_ret_t ret = HAL_RET_OK;
-    
+
     HAL_TRACE_DEBUG("Capri Init ");
 
     hal::hal_cfg_t *hal_cfg =
@@ -893,7 +898,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     if (ret == HAL_RET_OK) {
         ret = capri_hbm_regions_init(cfg);
     }
-    
+
     if (capri_table_rw_init()) {
         return HAL_RET_ERR;
     }
@@ -921,7 +926,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     if (ret == HAL_RET_OK) {
         ret = capri_txs_scheduler_init(cfg->admin_cos);
     }
- 
+
     // Call PXB/PCIE init only in MODEL and RTL simulation
     // This will be done by PCIe manager for the actual chip
     if (ret == HAL_RET_OK &&
@@ -951,6 +956,6 @@ capri_init (capri_cfg_t *cfg = NULL)
             ret = hal::pd::capri_barco_crypto_init();
         }
     }
-    
+
     return ret;
 }

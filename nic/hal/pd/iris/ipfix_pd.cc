@@ -25,13 +25,20 @@ typedef struct __attribute__((__packed__)) ipfix_qstate_  {
     uint64_t pid : 16;
     uint64_t pindex : 16;
     uint64_t cindex : 16;
-    uint64_t sindex : 32;
-    uint64_t eindex : 32;
+
     uint64_t pktaddr : 64;
     uint64_t pktsize : 16;
-    uint64_t rstart : 16;
-    uint64_t rnext : 16;
-    uint8_t  pad[(512-272)/8];
+    uint64_t seq_no : 32;
+    uint64_t domain_id : 32;
+    uint64_t ipfix_hdr_offset : 16;
+    uint64_t next_record_offset : 16;
+
+    uint64_t flow_hash_table_type : 8;
+    uint64_t flow_hash_index_next : 32;
+    uint64_t flow_hash_index_max : 32;
+    uint64_t flow_hash_overflow_index_max : 32;
+
+    uint8_t  pad[(512-376)/8];
 } ipfix_qstate_t;
 
 static void
@@ -60,7 +67,7 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex) {
 
     flow_hash_swkey_t key;
     flow_hash_actiondata hash_data;
-    for(; sindex <= eindex; sindex++) {
+    for(; sindex < eindex; sindex++) {
         memset(&key, 0, sizeof(key));
         memset(&hash_data, 0, sizeof(hash_data));
 
@@ -139,17 +146,17 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
     // first records start 16B after ipfix header
     qstate.pktaddr = htobe64(pktaddr);
     qstate.pktsize = payload_size;
-    qstate.rstart = payload_start;
-    qstate.rnext = qstate.rstart + 16;
-    qstate.sindex = 100;
-    qstate.eindex = 110;
+    qstate.ipfix_hdr_offset = payload_start;
+    qstate.next_record_offset = qstate.ipfix_hdr_offset + 16;
+    qstate.flow_hash_index_next = 100;
+    qstate.flow_hash_index_max = 111;
 
     // install entries for testing (to be removed)
-    ipfix_test_init(qstate.sindex, qstate.eindex);
+    ipfix_test_init(qstate.flow_hash_index_next, qstate.flow_hash_index_max);
 
     g_lif_manager->WriteQState(lif_id, 0, qid,
                                (uint8_t *)&qstate, sizeof(qstate));
-    g_lif_manager->WriteQState(lif_id, 0, qid + 1,
+    g_lif_manager->WriteQState(lif_id, 0, qid + 16,
                                (uint8_t *)&qstate, sizeof(qstate));
     return HAL_RET_OK;
 }
