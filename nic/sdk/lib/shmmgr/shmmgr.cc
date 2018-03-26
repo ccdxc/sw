@@ -19,6 +19,7 @@ shmmgr::init(const char *name, const std::size_t size,
              shm_mode_e mode, void *baseaddr)
 {
     fixed_managed_shared_memory    *fixed_mgr_shm;
+
     if (mode == SHM_CREATE_ONLY) {
         fixed_mgr_shm = new fixed_managed_shared_memory(create_only, name,
                                                         size, baseaddr);
