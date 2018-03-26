@@ -2,7 +2,7 @@
 #include "cqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_cqcb_process_k_t k;
+struct req_rx_s1_t2_k k;
 struct cqcb_t d;
 
 #define NUM_LOG_WQE         r2
@@ -13,7 +13,13 @@ struct cqcb_t d;
 #define CQCB_ADDR           r4
 #define ARG_P               r5
     
-#define CQ_PT_INFO_T    struct req_rx_cqcb_to_pt_info_t
+#define IN_P t2_s2s_rrqwqe_to_cq_info
+#define IN_TO_S_P to_s1_to_stage
+
+#define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
+
+#define K_CQCB_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, cqcb_base_addr_page_id_sbit0_ebit15, cqcb_base_addr_page_id_sbit16_ebit21)
+#define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit15, cq_id_sbit16_ebit23)
     
 %%
     .param  req_rx_cqpt_process
@@ -79,17 +85,17 @@ fire_cqpt:
     add     r3, r3, d.pt_base_addr, PT_BASE_ADDR_SHIFT
     // now r3 has page_p to load
     
-    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, ARG_P)
+    CAPRI_RESET_TABLE_2_ARG()
     
-    CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_seg_offset, r4)
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_offset, r1)
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, no_translate, 0)
-    CAPRI_SET_FIELD_C(ARG_P, CQ_PT_INFO_T, no_dma, 1, c3)    
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, pa_next_index, r2)  
+    CAPRI_SET_FIELD_RANGE2(CQ_PT_INFO_P, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
+    CAPRI_SET_FIELD2(CQ_PT_INFO_P, page_seg_offset, r4)
+    CAPRI_SET_FIELD2(CQ_PT_INFO_P, page_offset, r1)
+    CAPRI_SET_FIELD2(CQ_PT_INFO_P, no_translate, 0)
+    CAPRI_SET_FIELD2_C(CQ_PT_INFO_P, no_dma, 1, c3)    
+    CAPRI_SET_FIELD2(CQ_PT_INFO_P, pa_next_index, r2)  
     
     mfspr          CQCB_ADDR, spr_tbladdr
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, cqcb_addr, CQCB_ADDR)
+    CAPRI_SET_FIELD2(CQ_PT_INFO_P, cqcb_addr, CQCB_ADDR)
     
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_cqpt_process, r3)
 
@@ -100,9 +106,10 @@ fire_cqpt:
     
 no_translate_dma:
 
-    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, ARG_P)
-    CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
-    CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, no_translate, no_dma, 0x3)
+    CAPRI_RESET_TABLE_2_ARG()
+    //cq_id, eq_id, arm, wakeup_dpath
+    CAPRI_SET_FIELD_RANGE2(CQ_PT_INFO_P, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
+    CAPRI_SET_FIELD_RANGE2(CQ_PT_INFO_P, no_translate, no_dma, 0x3)
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqpt_process, r0)
     
 do_dma:
@@ -141,7 +148,7 @@ bubble_to_next_stage:
 
     //invoke the same routine, but with valid d[]
     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
-    REQ_RX_CQCB_ADDR_GET(r1, k.args.cq_id)
+    REQ_RX_CQCB_ADDR_GET(r1, K_CQ_ID, K_CQCB_BASE_ADDR_PAGE_ID)
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
 
 skip_wakeup:

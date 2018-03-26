@@ -5,7 +5,7 @@
 
 struct req_rx_phv_t p;
 struct dcqcn_cb_t d;
-struct req_rx_ecn_process_k_t k;
+struct req_rx_s1_t2_k k;
 
 #define DMA_CMD_BASE r1
 #define DB_ADDR r5
@@ -28,7 +28,7 @@ req_rx_dcqcn_ecn_process:
     // Store cur-timestamp in cb
     tblwr  d.last_cnp_timestamp, CUR_TIMESTAMP
     // Trigger local doorbell to TXDMA CNP ring.
-    DOORBELL_INC_PINDEX(k.global.lif, k.global.qtype, k.global.qid, CNP_RING_ID, DB_ADDR, DB_DATA)
+    DOORBELL_INC_PINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, CNP_RING_ID, DB_ADDR, DB_DATA)
 
 exit:
     CAPRI_SET_TABLE_3_VALID(0)

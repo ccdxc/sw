@@ -10,7 +10,7 @@ include $(TOPDIR)/make/Make.inc
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
 NCC_OPTIONS = --p4-plus --asm-out --no-ohi
-INC_DIR = -I ../common/include -I ../../../p4/iris/include -I ./include -I ../../common-p4+/include -I$(TOPDIR)/include -I $(GEN_DIR)/rdma_rxdma/asm_out
+INC_DIR = -I ../common/include -I ../../../p4/iris/include -I ./include -I ../../common-p4+/include -I$(TOPDIR)/include -I $(GEN_DIR)/rdma_req_rxdma/asm_out
 
 src = $(wildcard *.s)
 bin = $(src:.s=.bin)
@@ -21,11 +21,11 @@ CFLAGS = -g
 #deps
 all: asm
 
-#deps: $(GEN_DIR)/rdma_trdma/asm_out/ingress.h
+#deps: $(GEN_DIR)/rdma_req_rxdma/asm_out/ingress.h
 
-#$(P4_DIR)/rdma_rxdma.p4
+#$(P4_DIR)/rdma_req_rxdma.p4
 %.h: $(COMMON_P4_DIR)/common_headers.p4 $(COMMON_P4_DIR)/common_rxdma_actions.p4
-	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/rdma_rxdma.p4 --gen-dir $(GEN_DIR)
+	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/rdma_req_rxdma.p4 --gen-dir $(GEN_DIR)
 	
 
 asm: $(bin)

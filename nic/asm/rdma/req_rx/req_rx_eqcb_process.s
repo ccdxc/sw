@@ -5,7 +5,7 @@
 #include "capri-macros.h"
 
 struct req_rx_phv_t p;
-struct req_rx_eqcb_process_k_t k;
+struct req_rx_s3_t2_k k;
 struct eqcb_t d;
 
 
@@ -16,6 +16,9 @@ struct eqcb_t d;
 #define TMP r5
 #define EQ_INT_ADDR r6
 
+#define IN_P t2_s2s_cqcb_to_eq_info
+
+#define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit15, cq_id_sbit16_ebit23)
 
 #define PHV_EQWQE_START eqwqe.cq_id
 #define PHV_EQWQE_END   eqwqe.rsvd
@@ -36,7 +39,7 @@ req_rx_eqcb_process:
     // flip the color if cq is wrap around
     tblmincri.c1    EQ_COLOR, 1, 1     
 
-    phvwrpair       p.eqwqe.cq_id, k.args.cq_id, p.eqwqe.color, EQ_COLOR 
+    phvwrpair       p.eqwqe.cq_id, K_CQ_ID, p.eqwqe.color, EQ_COLOR 
 
     sll             r1, EQ_P_INDEX, d.log_wqe_size
     add             EQWQE_P, d.eqe_base_addr, r1

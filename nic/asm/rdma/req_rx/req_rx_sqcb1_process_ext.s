@@ -4,7 +4,8 @@
 struct req_rx_phv_t p;
 struct sqcb1_t d;
 struct common_p4plus_stage0_app_header_table_k k;
-#define SQCB1_TO_STAGE_T struct req_rx_to_stage_t
+
+#define TO_S1_P to_s1_to_stage
 
 %%
 
@@ -23,10 +24,9 @@ req_rx_sqcb1_process_ext:
     // set DMA CMD ptr
     RXDMA_DMA_CMD_PTR_SET(REQ_RX_DMA_CMD_START_FLIT_ID)
 
-    CAPRI_GET_STAGE_1_ARG(req_rx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, SQCB1_TO_STAGE_T, msn, CAPRI_APP_DATA_AETH_MSN)
-    CAPRI_SET_FIELD(r7, SQCB1_TO_STAGE_T, bth_psn, CAPRI_APP_DATA_BTH_PSN)
-    CAPRI_SET_FIELD(r7, SQCB1_TO_STAGE_T, syndrome, CAPRI_APP_DATA_AETH_SYNDROME)
+    CAPRI_SET_FIELD2(TO_S1_P, msn, CAPRI_APP_DATA_AETH_MSN)
+    CAPRI_SET_FIELD2(TO_S1_P, bth_psn, CAPRI_APP_DATA_BTH_PSN)
+    CAPRI_SET_FIELD2(TO_S1_P, syndrome, CAPRI_APP_DATA_AETH_SYNDROME)
 
     nop.e
     nop
