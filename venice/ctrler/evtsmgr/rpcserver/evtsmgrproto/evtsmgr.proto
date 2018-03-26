@@ -2,7 +2,7 @@
 
 syntax = "proto3";
 
-package eventsproto;
+package evtsmgrproto;
 
 // Mandatory imports
 import "google/api/annotations.proto";

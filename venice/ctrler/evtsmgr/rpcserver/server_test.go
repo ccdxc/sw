@@ -12,7 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/events"
-	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/eventsproto"
+	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
 	mock "github.com/pensando/sw/venice/utils/elastic/mock/server"
@@ -50,7 +50,8 @@ func setup(t *testing.T) (*mock.ElasticServer, *RPCServer, *rpckit.RPCClient) {
 	return ms, rpcServer, rpcClient
 }
 
-func TestEventsRPCServer(t *testing.T) {
+// TestEvtsMgrRPCServer tests events manager server
+func TestEvtsMgrRPCServer(t *testing.T) {
 	mockElasticServer, rpcServer, rpcClient := setup(t)
 	defer rpcServer.Stop()
 	defer rpcClient.ClientConn.Close()
@@ -114,8 +115,8 @@ func TestEventsRPCServer(t *testing.T) {
 	rpcServer.Stop()
 }
 
-// TestEventsRPCServerShutdown tests the graceful shutdown
-func TestEventsRPCServerShutdown(t *testing.T) {
+// TestEvtsMgrRPCServerShutdown tests the graceful shutdown
+func TestEvtsMgrRPCServerShutdown(t *testing.T) {
 	mockElasticServer, rpcServer, rpcClient := setup(t)
 
 	go func() {
@@ -132,8 +133,8 @@ func TestEventsRPCServerShutdown(t *testing.T) {
 	return
 }
 
-// TestEventsRPCServerInstantiation tests the RPC server instantiation cases
-func TestEventsRPCServerInstantiation(t *testing.T) {
+// TestEvtsMgrRPCServerInstantiation tests the RPC server instantiation cases
+func TestEvtsMgrRPCServerInstantiation(t *testing.T) {
 	esClient := &elastic.Client{}
 
 	// no listenURL name

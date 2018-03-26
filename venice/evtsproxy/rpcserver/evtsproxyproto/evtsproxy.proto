@@ -1,0 +1,36 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+
+package evtsproxyproto;
+
+// mandatory imports
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/protos/events.proto";
+import "github.com/pensando/sw/api/common.proto";
+import "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto/evtsmgr.proto";
+
+// Workflow from venice controllers
+// Recorder -> Proxy -> Dispatcher (dedup) -> Writers
+// Recorder talks only to the proxy; It does not know anything beyond the proxy.
+// Proxy maintains the dispatcher and writers.
+
+// events proxy gRPC API
+service EventsProxyAPI {
+    // recorder will forward the event to proxy which will be channeled to the
+    // dispatcher where the event gets deduped and distributed to the writers
+    // (events manager, events exporter, etc.). event recorder connects only
+    // with proxy; proxy handles rest of the workflow.
+    rpc ForwardEvent (events.Event) returns (api.Empty) {};
+
+    // recorder can buffer events when the proxy is unavailable and send
+    // all of them at once when the proxy comes back online.
+    rpc ForwardEvents (evtsmgrproto.EventList) returns (api.Empty) {};
+
+    // event sources can call flush using the recorder to flush the pending/deduped
+    // events from dispatcher to all the writers. This flushes only the events
+    // belonging to the given source.
+    rpc Flush (events.EventSource) returns (api.Empty){}
+}

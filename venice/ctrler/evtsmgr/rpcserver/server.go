@@ -5,7 +5,7 @@ package rpcserver
 import (
 	"github.com/pkg/errors"
 
-	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/eventsproto"
+	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -13,7 +13,7 @@ import (
 
 // RPCServer is the RPC server object with all event APIs
 type RPCServer struct {
-	handler *EventsRPCHandler
+	handler *EvtsMgrRPCHandler
 	server  *rpckit.RPCServer // rpckit server instance
 }
 
@@ -45,7 +45,7 @@ func NewRPCServer(serverName, listenURL string, esclient elastic.ESClient) (*RPC
 	}
 
 	// instantiate events handlers which carries the implementation of the service
-	eh, err := NewEventsRPCHandler(esclient)
+	eh, err := NewEvtsMgrRPCHandler(esclient)
 	if err != nil {
 		return nil, errors.Wrap(err, "error certificates rpc server")
 	}

@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/eventsproto"
+	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -23,8 +23,8 @@ var (
 	last string
 )
 
-// EventsRPCHandler handles all event RPC calls
-type EventsRPCHandler struct {
+// EvtsMgrRPCHandler handles all event RPC calls
+type EvtsMgrRPCHandler struct {
 	esClient    elastic.ESClient
 	lastCreated lastCreatedIndex
 }
@@ -35,20 +35,20 @@ type lastCreatedIndex struct {
 	index      string
 }
 
-// NewEventsRPCHandler returns a events RPC handler
-func NewEventsRPCHandler(client elastic.ESClient) (*EventsRPCHandler, error) {
-	eventsRPCHandler := &EventsRPCHandler{
+// NewEvtsMgrRPCHandler returns a events RPC handler
+func NewEvtsMgrRPCHandler(client elastic.ESClient) (*EvtsMgrRPCHandler, error) {
+	evtsMgrRPCHandler := &EvtsMgrRPCHandler{
 		esClient: client,
 	}
 
-	return eventsRPCHandler, nil
+	return evtsMgrRPCHandler, nil
 }
 
 // SendEvents sends the events to elastic by performing index or bulk operation.
 // Once indexed, the same list of events is passed to the channel for further
 // notification to all the watchers.
 // Events library will gather events across tenants.
-func (e *EventsRPCHandler) SendEvents(ctx context.Context, eventList *emgrpc.EventList) (*emgrpc.Empty, error) {
+func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *emgrpc.EventList) (*emgrpc.Empty, error) {
 	events := eventList.Events
 	if len(events) == 0 {
 		return &emgrpc.Empty{}, nil
@@ -109,7 +109,7 @@ func (e *EventsRPCHandler) SendEvents(ctx context.Context, eventList *emgrpc.Eve
 }
 
 // getIndex returns the date string (YYYY-MM-DD) prefixed with venice.events
-func (e *EventsRPCHandler) getIndex() string {
+func (e *EvtsMgrRPCHandler) getIndex() string {
 	currentTime := time.Now().Local()
 	return fmt.Sprintf("%s.%s.%s", "venice", "events", currentTime.Format("2006-01-02"))
 }
