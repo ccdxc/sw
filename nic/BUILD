@@ -308,7 +308,6 @@ cc_library(
                 "gen/proxyc_txdma/include/proxyc_txdma_p4plus_ingress.h",
                 "gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h",
                 "gen/esp_v4_tunnel_n2h_rxdma/include/esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h",
-	        "gen/tcp_proxy_txdma/include/ingress_phv.h",
                 ],
         deps = ["//nic/include:base_includes"],
 )
@@ -321,6 +320,10 @@ cc_library(
                 "gen/iris/include/p4plus_egress.h",
                 "gen/iris/include/p4plus_ingress.h",
                 "gen/iris/include/p4pd_table.h",
+	        "gen/tcp_proxy_txdma/include/ingress_phv.h",
+	        "gen/tcp_proxy_rxdma/include/ingress_phv.h",
+		"gen/iris/include/ingress_phv.h",
+		"gen/iris/include/egress_phv.h",
                 ],
         deps = ["//nic/include:base_includes"],
 )

@@ -7,12 +7,17 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
-#include "nic/hal/pd/iris/swphv_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/gen/tcp_proxy_txdma/include/ingress_phv.h"
+#undef __INGRESS_PHV__
+#include "nic/gen/tcp_proxy_rxdma/include/ingress_phv.h"
+#undef __INGRESS_PHV__
+#include "nic/gen/iris/include/ingress_phv.h"
+// FIXME: Need to fix an issue with generated egress_phv.h
+// #include "nic/gen/iris/include/egress_phv.h"
 
 namespace hal {
 namespace pd {
@@ -27,53 +32,78 @@ pd_swphv_inject (pd_swphv_inject_args_t *args)
     uint8_t data[PD_IRIS_PHV_SIZE];
     hal_ret_t ret = HAL_RET_OK;
     bzero(data, PD_IRIS_PHV_SIZE);
-    uint32_t   lif_id = 0;
+    uint32_t   lif_id = -1;
+    int        phv_size = 0;
 
     // switch based on pipeline type
     switch(args->type) {
     case PD_SWPHV_TYPE_RXDMA:
+    {
+        tcp_proxy_rxdma_ingress_phv_t *phv = (tcp_proxy_rxdma_ingress_phv_t *)data;
+        phv_size = sizeof(tcp_proxy_rxdma_ingress_phv_t);
         lif_id = SERVICE_LIF_TCP_PROXY;
-	break;
-    case PD_SWPHV_TYPE_TXDMA:
-        lif_id = SERVICE_LIF_TCP_PROXY;
-	break;
-    case PD_SWPHV_TYPE_INGRESS:
-    case PD_SWPHV_TYPE_EGRESS:
+
+        // initialize PHV intrinsic fields
+        phv->p4_intr_global_drop = 1;
+        phv->p4_intr_global_bypass = 1;
+        phv->p4_intr_no_data = 1;
+        phv->p4_intr_global_lif = lif_id;
+        phv->p4_rxdma_intr_qid = 0;
+        phv->p4_rxdma_intr_qtype = 0;
+
 	break;
     }
+    case PD_SWPHV_TYPE_TXDMA:
+    {
+        lif_id = SERVICE_LIF_TCP_PROXY;
+        tcp_proxy_txdma_ingress_phv_t *phv = (tcp_proxy_txdma_ingress_phv_t *)data;
+        phv_size = sizeof(tcp_proxy_txdma_ingress_phv_t);
 
-// define PHV_GEN_HDR when NCC generated header files are ready
-#ifndef PHV_GEN_HDR
-    sw_phv_intr_t *phv = (sw_phv_intr_t *)data;
+        // initialize PHV intrinsic fields
+        phv->p4_intr_global_drop = 1;
+        phv->p4_intr_global_bypass = 1;
+        phv->p4_intr_no_data = 1;
+        phv->p4_intr_global_lif = lif_id;
+        phv->p4_txdma_intr_qid = 0;
+        phv->p4_txdma_intr_qtype = 0;
 
-    // initialize PHV intrinsic fields
-    phv->p4_intr_global.drop = 1;
-    phv->p4_intr_global.bypass = 1;
-    phv->p4_intr.no_data = 1;
-    phv->p4_intr_global.lif = lif_id;
-    phv->dma.p4_intr_txdma.intr_qid = 0;
-    phv->dma.p4_intr_txdma.intr_qtype = 0;
+	break;
+    }
+    case PD_SWPHV_TYPE_INGRESS:
+    {
+        iris_ingress_phv_t *phv = (iris_ingress_phv_t *)data;
+        phv_size = sizeof(iris_ingress_phv_t);
 
-    HAL_TRACE_DEBUG("pd_swphv_inject: Injecting Software PHV type {}. size: {}", args->type, sizeof(sw_phv_intr_t));
+        // initialize PHV intrinsic fields
+        phv->capri_intrinsic_drop = 1;
+        phv->capri_intrinsic_bypass = 1;
+        phv->capri_p4_intrinsic_no_data = 1;
+        phv->capri_intrinsic_lif = lif_id;
+        phv->control_metadata_qid = 0;
+        phv->control_metadata_qtype = 0;
+
+	break;
+    }
+    case PD_SWPHV_TYPE_EGRESS:
+    {
+        iris_ingress_phv_t *phv = (iris_ingress_phv_t *)data;
+        phv_size = sizeof(iris_ingress_phv_t);
+
+        // initialize PHV intrinsic fields
+        phv->capri_intrinsic_drop = 1;
+        phv->capri_intrinsic_bypass = 1;
+        phv->control_metadata_ingress_bypass = 1;
+        phv->capri_p4_intrinsic_no_data = 1;
+        phv->capri_intrinsic_lif = lif_id;
+
+	break;
+    }
+    }
+
+    HAL_TRACE_DEBUG("pd_swphv_inject: Injecting Software PHV type {} on lif {}. size of phv: {}", args->type, lif_id, phv_size);
 
     // Inject the phv
     ret = asicpd_sw_phv_inject((asicpd_swphv_type_t)args->type, 0, 0, 1, data);
-#else
-    ingress_phv_t *phv = (ingress_phv_t *)data;
-
-    // initialize PHV intrinsic fields
-    phv->p4_intr_global_drop = 1;
-    phv->p4_intr_global_bypass = 0;
-    phv->p4_intr_no_data = 1;
-    phv->p4_intr_global_lif = lif_id;
-    phv->p4_txdma_intr_qid = 0;
-    phv->p4_txdma_intr_qtype = 0;
-
-    HAL_TRACE_DEBUG("pd_swphv_inject: Injecting Software PHV type {}. size of phv: {}", args->type, sizeof(ingress_phv_t));
-
-    // Inject the phv
-    ret = asicpd_sw_phv_inject((asicpd_swphv_type_t)args->type, 0, 0, 1, data);
-#endif
     return ret;
 }
 

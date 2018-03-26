@@ -48,7 +48,7 @@ def TestCaseTrigger(tc):
     return
 
 def TestCaseVerify(tc):
-    print("Verifying sw phv test")
+    print("Verifying egress sw phv test")
 
     # get the state
     resp = swphv_get_state()

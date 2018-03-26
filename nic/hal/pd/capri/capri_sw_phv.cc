@@ -202,6 +202,19 @@ capri_pr_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
 
     // write flit data
     for (index = 0; index < num_flits; index++) {
+	capri_pd_flit_t rdata;
+	// swap the bytes in data
+	int i;
+        for (i = 0; i < CAPRI_FLIT_SIZE; i++) {
+	    printf("%02x ", curr_flit_ptr->flit_data[i]);
+	    rdata.flit_data[CAPRI_FLIT_SIZE-1-i] = curr_flit_ptr->flit_data[i];
+        }
+	printf("\n");
+        for (i = 0; i < CAPRI_FLIT_SIZE; i++) {
+	    printf("%02x ", rdata.flit_data[i]);
+	}
+	printf("\n");
+
         cap_psp_csr_dhs_sw_phv_mem_entry_t &phv_mem_entry = pr_psp_csr.dhs_sw_phv_mem.entry[index];
 	pr_psp_csr.hlp.s_cpp_int_from_array(flit_data, 0, (CAPRI_FLIT_SIZE-1), (uint8_t *)curr_flit_ptr);
         phv_mem_entry.data(flit_data);
