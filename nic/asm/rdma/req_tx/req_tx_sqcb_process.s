@@ -7,10 +7,10 @@ struct req_tx_phv_t p;
 struct sqcb0_t d;
 struct req_tx_s0_t0_k k;
 
-#define SQCB_TO_PT_T t0_s2s_sqcb_to_pt_info
-#define SQCB_TO_WQE_T t0_s2s_sqcb_to_wqe_info
-#define WQE_TO_SGE_T t2_s2s_wqe_to_sge_info
-#define SQCB0_TO_SQCB2_T t0_s2s_sqcb0_to_sqcb2_info
+#define SQCB_TO_PT_P t0_s2s_sqcb_to_pt_info
+#define SQCB_TO_WQE_P t0_s2s_sqcb_to_wqe_info
+#define WQE_TO_SGE_P t2_s2s_wqe_to_sge_info
+#define SQCB0_TO_SQCB2_P t0_s2s_sqcb0_to_sqcb2_info
 
 #define SPEC_LEN 32
 #define LOG_SPEC_LEN 5
@@ -127,10 +127,10 @@ poll_for_work:
         
         // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
         CAPRI_RESET_TABLE_0_ARG()
-        CAPRI_SET_FIELD2(SQCB_TO_WQE_T, log_pmtu, d.log_pmtu)
-        CAPRI_SET_FIELD2(SQCB_TO_WQE_T, poll_in_progress, d.poll_in_progress)
-        CAPRI_SET_FIELD2(SQCB_TO_WQE_T, color, d.color)
-        CAPRI_SET_FIELD2(SQCB_TO_WQE_T, remaining_payload_bytes, r4)
+        CAPRI_SET_FIELD2(SQCB_TO_WQE_P, log_pmtu, d.log_pmtu)
+        CAPRI_SET_FIELD2(SQCB_TO_WQE_P, poll_in_progress, d.poll_in_progress)
+        CAPRI_SET_FIELD2(SQCB_TO_WQE_P, color, d.color)
+        CAPRI_SET_FIELD2(SQCB_TO_WQE_P, remaining_payload_bytes, r4)
 
         CAPRI_SET_FIELD2(TO_S4_P, spec_cindex, SPEC_SQ_C_INDEX)
         
@@ -174,15 +174,15 @@ pt_process:
         
         // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
         CAPRI_RESET_TABLE_0_ARG()
-        CAPRI_SET_FIELD2(SQCB_TO_PT_T, page_offset, r1)
-        CAPRI_SET_FIELD2(SQCB_TO_PT_T, remaining_payload_bytes, r4)
+        CAPRI_SET_FIELD2(SQCB_TO_PT_P, page_offset, r1)
+        CAPRI_SET_FIELD2(SQCB_TO_PT_P, remaining_payload_bytes, r4)
         // TODO Need to check for room in RRQ ring for Read/Atomic before
         // proceeding further. Otherwise recirc until there is room
-        CAPRI_SET_FIELD2(SQCB_TO_PT_T, page_seg_offset, r2)
+        CAPRI_SET_FIELD2(SQCB_TO_PT_P, page_seg_offset, r2)
         //write pd, log_pmtu together
-        CAPRI_SET_FIELD_RANGE2(SQCB_TO_PT_T, pd, log_pmtu, d.{pd...log_pmtu})
-        CAPRI_SET_FIELD2(SQCB_TO_PT_T, poll_in_progress, d.poll_in_progress)
-        CAPRI_SET_FIELD2(SQCB_TO_PT_T, color, d.color)
+        CAPRI_SET_FIELD_RANGE2(SQCB_TO_PT_P, pd, log_pmtu, d.{pd...log_pmtu})
+        CAPRI_SET_FIELD2(SQCB_TO_PT_P, poll_in_progress, d.poll_in_progress)
+        CAPRI_SET_FIELD2(SQCB_TO_PT_P, color, d.color)
         
         // populate t0 PC and table address
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqpt_process, r3)
@@ -219,16 +219,16 @@ in_progress:
         // Use table 2 for sqsge_iterate_process in a consistent way, which will
         // then invoke sqsge_process in stage 3 using table 0
         CAPRI_RESET_TABLE_2_ARG()
-        CAPRI_SET_FIELD2(WQE_TO_SGE_T, in_progress, d.in_progress)
-        CAPRI_SET_FIELD2(WQE_TO_SGE_T, current_sge_id, d.current_sge_id)
-        CAPRI_SET_FIELD2(WQE_TO_SGE_T, current_sge_offset, d.current_sge_offset)
+        CAPRI_SET_FIELD2(WQE_TO_SGE_P, in_progress, d.in_progress)
+        CAPRI_SET_FIELD2(WQE_TO_SGE_P, current_sge_id, d.current_sge_id)
+        CAPRI_SET_FIELD2(WQE_TO_SGE_P, current_sge_offset, d.current_sge_offset)
         // num_valid_sges = sqcb0_p->num_sges = sqcb0_p->current_sge_id
         sub            r3, d.num_sges, d.current_sge_id 
-        CAPRI_SET_FIELD2(WQE_TO_SGE_T, num_valid_sges, r3)
+        CAPRI_SET_FIELD2(WQE_TO_SGE_P, num_valid_sges, r3)
         // remaining_payload_bytes = (1 >> sqcb0_p->log_pmtu)
         sll            r4, 1, d.log_pmtu
-        CAPRI_SET_FIELD2(WQE_TO_SGE_T, remaining_payload_bytes, r4)
-        CAPRI_SET_FIELD2(WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_DMA_CMD_PYLD_BASE)
+        CAPRI_SET_FIELD2(WQE_TO_SGE_P, remaining_payload_bytes, r4)
+        CAPRI_SET_FIELD2(WQE_TO_SGE_P, dma_cmd_start_index, REQ_TX_DMA_CMD_PYLD_BASE)
         
         CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r2)
         
@@ -289,15 +289,15 @@ end1:
 sq_bktrack1:
         CAPRI_RESET_TABLE_0_ARG()
         
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, sq_c_index, r1)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, sq_p_index, SQ_P_INDEX)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, in_progress, d.in_progress)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, bktrack_in_progress, d.bktrack_in_progress)
-        CAPRI_SET_FIELD_RANGE2(SQCB0_TO_SQCB2_T, current_sge_offset, num_sges, d.{current_sge_offset...num_sges})
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, update_credits, 0)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, bktrack, 1)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, pt_base_addr, d.pt_base_addr)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, sq_in_hbm, d.sq_in_hbm)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, sq_c_index, r1)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, sq_p_index, SQ_P_INDEX)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, in_progress, d.in_progress)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, bktrack_in_progress, d.bktrack_in_progress)
+        CAPRI_SET_FIELD_RANGE2(SQCB0_TO_SQCB2_P, current_sge_offset, num_sges, d.{current_sge_offset...num_sges})
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, update_credits, 0)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, bktrack, 1)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, pt_base_addr, d.pt_base_addr)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, sq_in_hbm, d.sq_in_hbm)
         
         add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES*2)
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_process, r1)
@@ -350,15 +350,15 @@ sq_bktrack1:
 sq_bktrack2:
         CAPRI_RESET_TABLE_0_ARG()
         
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, sq_c_index, r1)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, sq_p_index, SQ_P_INDEX)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, in_progress, d.in_progress)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, bktrack_in_progress, d.bktrack_in_progress)
-        CAPRI_SET_FIELD_RANGE2(SQCB0_TO_SQCB2_T, current_sge_offset, num_sges, d.{current_sge_offset...num_sges})
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, update_credits, 0)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, bktrack, 1)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, pt_base_addr, d.pt_base_addr)
-        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_T, sq_in_hbm, d.sq_in_hbm)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, sq_c_index, r1)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, sq_p_index, SQ_P_INDEX)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, in_progress, d.in_progress)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, bktrack_in_progress, d.bktrack_in_progress)
+        CAPRI_SET_FIELD_RANGE2(SQCB0_TO_SQCB2_P, current_sge_offset, num_sges, d.{current_sge_offset...num_sges})
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, update_credits, 0)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, bktrack, 1)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, pt_base_addr, d.pt_base_addr)
+        CAPRI_SET_FIELD2(SQCB0_TO_SQCB2_P, sq_in_hbm, d.sq_in_hbm)
         
         add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES*2)
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_process, r1)
@@ -440,14 +440,14 @@ process_sge_recirc:
 
 fence:
     CAPRI_RESET_TABLE_0_ARG()
-    //CAPRI_SET_FIELD2(SQCB_TO_WQE_T, in_progress, 0)
-    //CAPRI_SET_FIELD2(SQCB_TO_WQE_T, current_sge_id, 0)
-    //CAPRI_SET_FIELD2(SQCB_TO_WQE_T, current_sge_offset, 0)
-    //CAPRI_SET_FIELD2(SQCB_TO_WQE_T, num_valid_sges, 0)
-    //CAPRI_SET_FIELD2(SQCB_TO_WQE_T, remaining_payload_bytes, 0)
-    //CAPRI_SET_FIELD2(SQCB_TO_WQE_T, wqe_ptr, d.curr_wqe_ptr)
-    CAPRI_SET_FIELD2(SQCB_TO_WQE_T, log_pmtu, d.log_pmtu)
-    //CAPRI_SET_FIELD2(SQCB_TO_WQE_T, li_fence_cleared, 0)
+    //CAPRI_SET_FIELD2(SQCB_TO_WQE_P, in_progress, 0)
+    //CAPRI_SET_FIELD2(SQCB_TO_WQE_P, current_sge_id, 0)
+    //CAPRI_SET_FIELD2(SQCB_TO_WQE_P, current_sge_offset, 0)
+    //CAPRI_SET_FIELD2(SQCB_TO_WQE_P, num_valid_sges, 0)
+    //CAPRI_SET_FIELD2(SQCB_TO_WQE_P, remaining_payload_bytes, 0)
+    //CAPRI_SET_FIELD2(SQCB_TO_WQE_P, wqe_ptr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD2(SQCB_TO_WQE_P, log_pmtu, d.log_pmtu)
+    //CAPRI_SET_FIELD2(SQCB_TO_WQE_P, li_fence_cleared, 0)
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqpt_process, d.curr_wqe_ptr)
 

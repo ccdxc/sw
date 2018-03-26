@@ -4,7 +4,7 @@
 struct req_tx_phv_t p;
 struct req_tx_s2_t0_k k;
 
-#define SQ_BKTRACK_T t0_s2s_sq_bktrack_info
+#define SQ_BKTRACK_P t0_s2s_sq_bktrack_info
 
 #define TO_S3_P to_s3_bktrack_to_stage
 #define TO_S4_P to_s4_bktrack_to_stage
@@ -55,13 +55,13 @@ req_tx_bktrack_sqpt_process:
     // populate t0 stage to stage data req_tx_sqpt_to_bktrack_wqe_info_t for next stage
     CAPRI_RESET_TABLE_0_ARG()
 
-    CAPRI_SET_FIELD2(SQ_BKTRACK_T, tx_psn, K_TX_PSN)
-    CAPRI_SET_FIELD2(SQ_BKTRACK_T, ssn, K_SSN)
-    CAPRI_SET_FIELD2(SQ_BKTRACK_T, sq_c_index, K_SQ_C_INDEX)
-    CAPRI_SET_FIELD2(SQ_BKTRACK_T, sq_p_index_or_imm_data1_or_inv_key1, K_SQ_P_INDEX)
-    CAPRI_SET_FIELD2(SQ_BKTRACK_T, in_progress, CAPRI_KEY_FIELD(IN_P, in_progress))
-    //CAPRI_SET_FIELD2(SQ_BKTRACK_T, bktrack_in_progress, CAPRI_KEY_FIELD(IN_P, bktrack_in_progress))
-    CAPRI_SET_FIELD_RANGE2(SQ_BKTRACK_T, current_sge_offset, num_sges, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit6, num_sges_sbit7_ebit7))
+    CAPRI_SET_FIELD2(SQ_BKTRACK_P, tx_psn, K_TX_PSN)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_P, ssn, K_SSN)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_P, sq_c_index, K_SQ_C_INDEX)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1, K_SQ_P_INDEX)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_P, in_progress, CAPRI_KEY_FIELD(IN_P, in_progress))
+    //CAPRI_SET_FIELD2(SQ_BKTRACK_P, bktrack_in_progress, CAPRI_KEY_FIELD(IN_P, bktrack_in_progress))
+    CAPRI_SET_FIELD_RANGE2(SQ_BKTRACK_P, current_sge_offset, num_sges, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit6, num_sges_sbit7_ebit7))
 
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
