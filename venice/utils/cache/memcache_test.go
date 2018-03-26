@@ -99,44 +99,44 @@ func TestCache(t *testing.T) {
 func TestCacheExpiry(t *testing.T) {
 	var found bool
 
-	// items are expired after 3s and the expired items are cleaned up every 30ms
-	mc := New(3*time.Second, 30*time.Millisecond, nil)
+	// items are expired after 50ms and the expired items are cleaned up every 10ms
+	mc := New(50*time.Millisecond, 10*time.Millisecond, nil)
 
-	// gets the default expiry of 3s
+	// gets the default expiry of 50ms
 	mc.Add("a", 1)
 
 	// add an item with no expiry
 	mc.AddWithExpiration("b", 2, NoExpiration)
 
 	// expire below items at different sec
-	mc.AddWithExpiration("c", 3, 2*time.Second)
-	mc.AddWithExpiration("d", 4, 4*time.Second)
+	mc.AddWithExpiration("c", 3, 20*time.Millisecond)
+	mc.AddWithExpiration("d", 4, 60*time.Millisecond)
 
-	<-time.After((2 * time.Second) + (100 * time.Millisecond))
-	_, found = mc.Get("c") // 2s expiry
+	<-time.After(40 * time.Millisecond)
+	_, found = mc.Get("c") // 20ms expiry
 	tu.Assert(t, !found, fmt.Sprintf("key %s should have been expired", "c"))
 
-	<-time.After(1 * time.Second)
-	_, found = mc.Get("a") // 3s expiry
+	<-time.After(60 * time.Millisecond)
+	_, found = mc.Get("a") // 50ms expiry
 	tu.Assert(t, !found, fmt.Sprintf("key %v should have been expired", "a"))
 
 	_, found = mc.Get("b") // never expires
 	tu.Assert(t, found,
 		fmt.Sprintf("Couldn't find key %v that should have been never expired", "b"))
 
-	<-time.After(1 * time.Second)
+	<-time.After(20 * time.Millisecond)
 	_, found = mc.Get("d")
 	tu.Assert(t, !found,
 		fmt.Sprintf("key %v should have been expired", "d"))
 
 	// test extending the life of the item by adding the same key multiple times
 	// with higher expiration
-	mc.AddWithExpiration("foo", "bar", 2*time.Second)
-	<-time.After(1 * time.Second)
+	mc.AddWithExpiration("foo", "bar", 40*time.Millisecond)
+	<-time.After(20 * time.Millisecond)
 	// extend the lifetime of the item
-	mc.AddWithExpiration("foo", "bar", 4*time.Second)
-	// item should have been expired after 2s (it's initial expiry)
-	<-time.After(2 * time.Second)
+	mc.AddWithExpiration("foo", "bar", 200*time.Millisecond)
+	// item should have been expired after 40ms (it's initial expiry)
+	<-time.After(60 * time.Millisecond)
 	_, found = mc.Get("foo")
 	tu.Assert(t, found, "key `foo` should have not been expired")
 
@@ -144,8 +144,8 @@ func TestCacheExpiry(t *testing.T) {
 	_, found = mc.Get("foo")
 	tu.Assert(t, found, "key `foo` should have not been expired")
 
-	// item should have been expired after ~4s
-	<-time.After(2 * time.Second)
+	// item should have been expired after ~240ms
+	<-time.After(250 * time.Millisecond)
 	_, found = mc.Get("foo")
 	tu.Assert(t, !found, "key `foo` should have been expired")
 }
@@ -162,28 +162,28 @@ func TestCacheWithEvict(t *testing.T) {
 		mutex.Unlock()
 	}
 
-	mc := New(3*time.Second, 30*time.Millisecond, onEvicted)
+	mc := New(50*time.Millisecond, 10*time.Millisecond, onEvicted)
 
-	// gets the default expiry of 3s
+	// gets the default expiry of 50ms
 	mc.Add("a", 1)
 
 	// add an item with no expiry
 	mc.AddWithExpiration("b", 2, NoExpiration)
 
 	// expire below items at different secs
-	mc.AddWithExpiration("c", 3, 2*time.Second)
-	mc.AddWithExpiration("d", 4, 4*time.Second)
+	mc.AddWithExpiration("c", 3, 20*time.Millisecond)
+	mc.AddWithExpiration("d", 4, 60*time.Millisecond)
 
-	<-time.After((2 * time.Second) + (100 * time.Millisecond))
-	_, found := mc.Get("c") // 2s expiry
+	<-time.After(40 * time.Millisecond)
+	_, found := mc.Get("c") // 20ms expiry
 	tu.Assert(t, !found, fmt.Sprintf("key %v should have been expired", "c"))
 	mutex.RLock()
 	tu.Assert(t, evictCounter >= 1,
 		fmt.Sprintf("invalid eviction counter, expected: >=%v, got: %v", 1, evictCounter))
 	mutex.RUnlock()
 
-	<-time.After(1 * time.Second)
-	_, found = mc.Get("a") // 3s expiry
+	<-time.After(60 * time.Millisecond)
+	_, found = mc.Get("a") // 50ms expiry
 	tu.Assert(t, !found, fmt.Sprintf("key %v should have been expired", "a"))
 	mutex.RLock()
 	tu.Assert(t, evictCounter >= 2,
@@ -198,8 +198,8 @@ func TestCacheWithEvict(t *testing.T) {
 		fmt.Sprintf("invalid eviction counter, expected: >=%v, got: %v", 2, evictCounter))
 	mutex.RUnlock()
 
-	<-time.After(2 * time.Second)
-	_, found = mc.Get("d")
+	<-time.After(20 * time.Millisecond)
+	_, found = mc.Get("d") // 60ms expiry
 	tu.Assert(t, !found,
 		fmt.Sprintf("key %v should have been expired", "d"))
 	mutex.RLock()
@@ -270,32 +270,32 @@ func TestCacheFlush(t *testing.T) {
 
 // TestCacheSize ensures the cache updates are reflected on the Size(..) call
 func TestCacheSize(t *testing.T) {
-	mc := New(3*time.Second, 30*time.Millisecond, nil)
+	mc := New(50*time.Millisecond, 10*time.Millisecond, nil)
 
-	// gets the default expiry of 3s
+	// gets the default expiry of 50ms
 	mc.Add("a", 1)
 
 	// add an item with no expiry
 	mc.AddWithExpiration("b", 2, NoExpiration)
 
 	// expire below items at different secs
-	mc.AddWithExpiration("c", 3, 2*time.Second)
-	mc.AddWithExpiration("d", 4, 4*time.Second)
+	mc.AddWithExpiration("c", 3, 20*time.Millisecond)
+	mc.AddWithExpiration("d", 4, 60*time.Millisecond)
 
 	// ensure size is correct
 	size := mc.Size()
 	tu.Assert(t, size == 4, fmt.Sprintf("invalid size, expected: %v, got: %v", 4, size))
 
-	<-time.After((2 * time.Second) + (100 * time.Millisecond))
-	_, found := mc.Get("c") // 2s expiry
+	<-time.After(40 * time.Millisecond)
+	_, found := mc.Get("c") // 40ms expiry
 	tu.Assert(t, !found, fmt.Sprintf("key %v should have been expired", "c"))
 
 	// ensure len after expiry of an item
 	size = mc.Size()
 	tu.Assert(t, size <= 3, fmt.Sprintf("invalid size, expected: <=%v, got: %v", 3, size))
 
-	<-time.After(1 * time.Second)
-	_, found = mc.Get("a") // 3s expiry
+	<-time.After(60 * time.Millisecond)
+	_, found = mc.Get("a") // 50ms expiry
 	tu.Assert(t, !found, fmt.Sprintf("key %v should have been expired", "a"))
 	// ensure size after expiry of an item
 	size = mc.Size()
@@ -306,8 +306,8 @@ func TestCacheSize(t *testing.T) {
 	tu.Assert(t, found,
 		fmt.Sprintf("Couldn't find key %v that should have been never expired", "b"))
 
-	<-time.After(1 * time.Second)
-	_, found = mc.Get("d")
+	<-time.After(20 * time.Millisecond)
+	_, found = mc.Get("d") // 60ms expiry
 	tu.Assert(t, !found,
 		fmt.Sprintf("key %v should have been expired", "d"))
 	// ensure size after expiry of an item
