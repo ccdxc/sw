@@ -1,9 +1,24 @@
 #ifndef __REQ_TX_ARGS_H
 #define __REQ_TX_ARGS_H
 
-#include "capri.h"
-#include "common_phv.h"
+struct req_tx_sge_to_lkey_info_t {
+    sge_va                        : 64;
+    sge_bytes                     : 16;
+    dma_cmd_start_index           : 8;
+    sge_index                     : 8;
+    pad                           : 64; 
+};
 
+struct req_tx_lkey_to_ptseg_info_t {
+    pt_offset                    : 32;
+    log_page_size                : 5;
+    pt_bytes                     : 16;
+    dma_cmd_start_index          : 8;
+    sge_index                    : 8;
+    pad                          : 91;
+};
+
+#if 0
 struct req_tx_sqcb_to_pt_info_t {
     page_offset                    : 16;
     page_seg_offset                : 3;
@@ -52,15 +67,6 @@ struct req_tx_wqe_to_sge_info_t {
         ah_handle                      : 32;
     };
 };
-
-struct req_tx_sge_to_lkey_info_t {
-    sge_va                        : 64;
-    sge_bytes                     : 16;
-    dma_cmd_start_index           : 8;
-    sge_index                     : 8;
-    pad                           : 64; 
-};
-
 struct req_tx_lkey_to_ptseg_info_t {
     pt_offset                    : 32;
     log_page_size                : 5;
@@ -250,5 +256,8 @@ union args_union_t {
     //struct req_tx_sqcb_to_wqe_info_t sqcb_to_wqe;
     dummy: 32;
 };
+
+#endif
+
 
 #endif //__REQ_TX_ARGS_H

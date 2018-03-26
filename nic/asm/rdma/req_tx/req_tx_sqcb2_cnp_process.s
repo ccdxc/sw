@@ -3,7 +3,6 @@
 #include "sqcb.h"
 #include "types.h"
 #include "common_phv.h"
-#include "ingress.h"
 #include "defines.h"
 
 struct req_tx_phv_t p;

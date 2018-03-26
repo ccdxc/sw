@@ -2,17 +2,10 @@
 #include "req_tx.h"
 #include "sqcb.h"
 #include "common_phv.h"
-#include "ingress.h"
 
 struct req_tx_phv_t p;
 struct sqcb0_t d;
-struct rdma_stage0_table_k k;
-
-#define SQCB_TO_PT_T struct req_tx_sqcb_to_pt_info_t
-#define SQCB_TO_WQE_T struct req_tx_sqcb_to_wqe_info_t
-#define WQE_TO_SGE_T struct req_tx_wqe_to_sge_info_t
-#define TO_STAGE_T struct req_tx_to_stage_t
-#define SQCB0_TO_SQCB1_T struct req_tx_sqcb0_to_sqcb1_info_t
+struct req_tx_s0_t0_k k;
 
 %%
 

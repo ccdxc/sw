@@ -3,9 +3,15 @@
 #include "sqcb.h"
 
 struct req_tx_phv_t p;
-struct req_tx_sqsge_process_k_t k;
+struct req_tx_s1_t2_k k;
 
-#define WQE_TO_SGE_T struct req_tx_wqe_to_sge_info_t
+#define IN_P t2_s2s_wqe_to_sge_info
+#define IN_TO_S_P to_s1_sq_to_stage
+
+#define WQE_TO_SGE_P t0_s3s_wqe_to_sge_info
+
+#define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit5, current_sge_id_sbit6_ebit7)
+#define K_WQE_ADDR       CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
 
 %%
     .param    req_tx_sqsge_process
@@ -27,21 +33,21 @@ req_tx_sqsge_iterate_process:
     //sub              r1, r1, 1
 
     //beqi             r1, 0, trigger_sqsge_process
-    //CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, bubble_count, r1) // Branch Delay Slot
+    //CAPRI_SET_FIELD(r7, WQE_TO_SGE_P, bubble_count, r1) // Branch Delay Slot
 
     nop.e
     nop
 
 trigger_stg3_sqsge_process:
-    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, in_progress, inv_key, k.{args.in_progress...args.inv_key})
+    CAPRI_RESET_TABLE_0_ARG()
+    CAPRI_SET_FIELD_RANGE2(WQE_TO_SGE_P, in_progress, inv_key_or_ah_handle, CAPRI_KEY_RANGE(IN_P, in_progress, inv_key_or_ah_handle_sbit8_ebit31))
 
     //mfspr          r1, spr_tbladdr
 
     // sge_offset = TXWQE_SGE_OFFSET + sqcb0_p->current_sge_id * sizeof(sge_t);
-    add            r1, TXWQE_SGE_OFFSET, k.args.current_sge_id, LOG_SIZEOF_SGE_T
+    add            r1, TXWQE_SGE_OFFSET, K_CURRENT_SGE_ID, LOG_SIZEOF_SGE_T
     // sge_p = sqcb0_p->curr_wqe_ptr + sge_offset
-    add            r1, r1, k.to_stage.sq.wqe_addr
+    add            r1, r1, K_WQE_ADDR
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r1)
     CAPRI_SET_TABLE_2_VALID(0)

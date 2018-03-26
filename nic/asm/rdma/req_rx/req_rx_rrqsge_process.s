@@ -156,7 +156,7 @@ set_arg:
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, last, 1, c5)
 
-    SQCB1_ADDR_GET(r5)
+    _SQCB1_ADDR_GET(r5)
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
  
     nop.e

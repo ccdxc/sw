@@ -1,10 +1,12 @@
+#include "capri.h"
 #include "req_tx.h"
 #include "sqcb.h"
 
 struct req_tx_phv_t p;
-struct req_tx_credits_process_k_t k;
+struct req_tx_s2_t0_k k;
 struct sqcb2_t d;
 
+#define IN_P t0_s2s_sqcb1_to_credits_info
 %%
 
 .align

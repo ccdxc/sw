@@ -4,7 +4,7 @@
 
 struct req_tx_phv_t p;
 struct dcqcn_cb_t d;
-struct req_tx_write_back_process_k_t k;
+struct req_tx_s3_t2_k k;
 
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
 // NOTE: Non-RTL - feeding timestamp from dcqcn_cb since model doesn't have timestamps.
@@ -15,7 +15,15 @@ struct req_tx_write_back_process_k_t k;
 #define CUR_TIMESTAMP d.cur_timestamp
 #endif
 
-#define TO_STAGE_T struct req_tx_to_stage_t
+#define TO_S5_P to_s5_sq_to_stage
+
+#define IN_P t2_s2s_sqcb_write_back_info
+#define IN_TO_S_P to_s3_sq_to_stage
+
+#define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
+#define K_PKT_LEN     CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
+#define K_S2S_DATA    k.{common_t2_s2s_s2s_data_sbit0_ebit7...common_t2_s2s_s2s_data_sbit136_ebit159}
+#define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 
 #define SECS_IN_KSEC         1000
 #define NUM_TOKENS_ACQUIRED  r6
@@ -36,18 +44,18 @@ req_tx_dcqcn_enforce_process:
     bcf           [!c1], bubble_to_next_stage
     
     // Skip this stage if congestion_mgmt is disabled.
-    seq           c2, k.to_stage.sq.congestion_mgmt_enable, 0 //delay slot
+    seq           c2, CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable), 0 //delay slot
     bcf           [c2], load_write_back
 
     // if speculative cindex matches cindex, then this wqe is being
     // processed in the right order and state update is allowed. Otherwise
     // discard and continue with speculation until speculative cindex
     // matches current cindex. 
-    seq            c1, k.to_stage.sq.spec_cindex, d.sq_cindex // BD-slot
+    seq            c1, K_SPEC_CINDEX, d.sq_cindex // BD-slot
     bcf            [!c1], spec_fail
     nop
 
-    bbeq          k.args.poll_failed, 1, poll_fail 
+    bbeq          CAPRI_KEY_FIELD(IN_P, poll_failed), 1, poll_fail 
 
     /* Rate enforcement logic.
      * This is done in 2 steps.
@@ -83,7 +91,7 @@ token_replenish:
 
 rate_enforce:
     // Calculate num-tokens-required for current pkt and check with available tokens
-    add           NUM_TOKENS_REQUIRED, r0, k.to_stage.sq.packet_len, 3
+    add           NUM_TOKENS_REQUIRED, r0, K_PKT_LEN, 3
     slt           c3, d.cur_avail_tokens, NUM_TOKENS_REQUIRED
 
     bcf           [c3],  drop_phv
@@ -94,7 +102,7 @@ rate_enforce:
     tblwr         d.cur_avail_tokens, r2
 
     // Increment DCQCN byte-counter by pkt-len and trigger algorithm if byte-counter threshold is reached.
-    add           r2, k.to_stage.sq.packet_len, d.cur_byte_counter
+    add           r2, K_PKT_LEN, d.cur_byte_counter
     tblwr         d.cur_byte_counter, r2
     slt           c2, d.cur_byte_counter, d.byte_counter_thr
     seq           c4, d.max_rate_reached, 1
@@ -103,11 +111,11 @@ rate_enforce:
     // Reset cur-byte-counter, incr byte counter expiry count and ring dcqcn doorbell to update rate.
     tblwr         d.cur_byte_counter, 0
     tblmincri     d.byte_counter_exp_cnt, 0x10, 1 // byte_counter_exp_cnt is 16-bit value. 
-    DOORBELL_INC_PINDEX(k.global.lif,  Q_TYPE_RDMA_RQ, k.global.qid, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
+    DOORBELL_INC_PINDEX(K_GLOBAL_LIF, Q_TYPE_RDMA_RQ, K_GLOBAL_QID, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
 
 skip_dcqcn_doorbell:            
     // Increment sq_cindex after successful rate-enforcement/speculative-check.
-    seq             c1, k.args.last, 1  
+    seq             c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1  
     tblmincri.c1    d.sq_cindex, 12, 1  // TODO: Hardcoding log_sq_size to 12 for now. This has to come from HAL.
 
 load_write_back:
@@ -118,12 +126,12 @@ load_write_back:
 
     SQCB2_ADDR_GET(r2)
     // Same k info as write_back is passed to add_headers as well
-    phvwr          p.common.common_t3_s2s_s2s_data, k.args
+    phvwr          p.common.common_t3_s2s_s2s_data, K_S2S_DATA
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
 
 
-    bbne          k.args.hdr_template_inline, 1, skip_hdr_template_inline
-    sll           r2, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT //BD slot
+    bbne          CAPRI_KEY_FIELD(IN_P, hdr_template_inline), 1, skip_hdr_template_inline
+    sll           r2, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT //BD slot
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_load_hdr_template_process, r2)
 
 skip_hdr_template_inline:
@@ -135,7 +143,7 @@ bubble_to_next_stage:
     bcf           [!c1 | c2], exit
     nop           // Branch Delay Slot
 
-    add           r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT 
+    add           r2, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT 
     //invoke the same routine, but with valid header_template_addr as d[] vector
     CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r2)
@@ -147,14 +155,13 @@ poll_fail:
 spec_fail:
 drop_phv:
     // DCQCN rate-enforcement failed. Drop PHV. Loading writeback to adjust spec_cindex
-    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.rate_enforce_failed, 1)
+    CAPRI_SET_FIELD2(TO_S5_P, rate_enforce_failed, 1)
 
     SQCB0_ADDR_GET(r2)
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)
 
     SQCB2_ADDR_GET(r2)
-    phvwr          p.common.common_t3_s2s_s2s_data, k.args
+    phvwr          p.common.common_t3_s2s_s2s_data, K_S2S_DATA 
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
 
 #ifdef RTL

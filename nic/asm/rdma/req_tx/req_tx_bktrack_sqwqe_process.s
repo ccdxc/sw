@@ -4,12 +4,33 @@
 
 struct req_tx_phv_t p;
 struct sqwqe_t d;
-struct req_tx_bktrack_sqwqe_process_k_t k;
+struct req_tx_s2_t0_k k;
 
-#define SQ_BKTRACK_T struct req_tx_sq_bktrack_info_t
-#define SQCB0_WRITE_BACK_T struct req_tx_sqcb_write_back_info_t
-#define SQCB2_WRITE_BACK_T struct req_tx_bktrack_sqcb2_write_back_info_t
-#define TO_STAGE_T struct req_tx_to_stage_t
+#define SQ_BKTRACK_T t0_s2s_sq_bktrack_info
+#define SQCB0_WRITE_BACK_T t0_s2s_sqcb_write_back_info
+#define SQCB2_WRITE_BACK_T t1_s2s_bktrack_sqcb2_write_back_info
+
+#define TO_S1_P to_s1_bktrack_to_stage
+#define TO_S2_P to_s2_bktrack_to_stage
+#define TO_S3_P to_s3_bktrack_to_stage
+#define TO_S4_P to_s4_bktrack_to_stage
+#define TO_S5_P to_s5_bktrack_to_stage
+#define TO_S6_P to_s6_bktrack_to_stage
+#define TO_S7_P to_s7_bktrack_to_stage
+
+#define IN_P      t0_s2s_sq_bktrack_info
+#define IN_TO_S_P to_s2_bktrack_to_stage
+
+#define K_SSN        CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit6, ssn_sbit23_ebit23)
+#define K_TX_PSN     CAPRI_KEY_RANGE(IN_P, tx_psn_sbit0_ebit6, tx_psn_sbit23_ebit23)
+#define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_TO_S_P, rexmit_psn_sbit0_ebit3, rexmit_psn_sbit20_ebit23)
+#define K_LOG_SQ_PAGE_SIZE CAPRI_KEY_RANGE(IN_TO_S_P, log_sq_page_size_sbit0_ebit2, log_sq_page_size_sbit3_ebit4)
+#define K_LOG_NUM_WQES CAPRI_KEY_RANGE(IN_TO_S_P, log_num_wqes_sbit0_ebit0, log_num_wqes_sbit1_ebit4)
+#define K_SQ_C_INDEX CAPRI_KEY_RANGE(IN_P, sq_c_index_sbit0_ebit7, sq_c_index_sbit8_ebit15)
+#define K_SQ_P_INDEX CAPRI_KEY_RANGE(IN_P, sq_p_index_or_imm_data1_or_inv_key1_sbit0_ebit1, sq_p_index_or_imm_data1_or_inv_key1_sbit10_ebit15)
+#define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit6, current_sge_id_sbit7_ebit7)
+#define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit6, current_sge_offset_sbit31_ebit31)
+#define K_NUM_SGES   CAPRI_KEY_RANGE(IN_P, num_sges_sbit0_ebit6, num_sges_sbit7_ebit7)
 
 #define WQE_OP_TO_NUM_PKTS(_num_pkts_r, _wqe, _log_pmtu, _cf1, _cf2)   \
     seq            _cf1,  _wqe.base.op_type, OP_TYPE_FETCH_N_ADD;        \
@@ -34,21 +55,21 @@ req_tx_bktrack_sqwqe_process:
     //     tx_psn = k.args.tx_psn
     // else
     //     tx_psn = k.args.tx_psn - wqe_op_to_num_pkts()
-    add            r6, k.args.ssn, r0
-    seq            c1, k.args.in_progress, 1 
+    add            r6, K_SSN, r0
+    seq            c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1 
     bcf            [c1], wqe_bktrack
-    add            r1, k.args.tx_psn, r0 // Branch Delay Slot
-    WQE_OP_TO_NUM_PKTS(r2, d, k.to_stage.bktrack.log_pmtu, c1, c2)
-    sub            r1, k.args.tx_psn, r2
+    add            r1, K_TX_PSN, r0 // Branch Delay Slot
+    WQE_OP_TO_NUM_PKTS(r2, d, CAPRI_KEY_FIELD(IN_TO_S_P, log_pmtu), c1, c2)
+    sub            r1, K_TX_PSN, r2
     mincr          r1, 24, r0 
-    sub            r6, k.args.ssn, 1
+    sub            r6, K_SSN, 1
     mincr          r6, 24, r0
 
 wqe_bktrack:
     // set bktrack_in_progress to true to start with
     setcf          c6, [c0]
     //if (rexmit_psn < tx_psn)
-    slt            c2, k.to_stage.bktrack.rexmit_psn, r1
+    slt            c2, K_REXMIT_PSN, r1
     bcf            [!c2], wqe_match
     // set empty_rrq to false as bktracking is in progress
     setcf          c7, [!c0] // Branch Delay Slot
@@ -60,14 +81,14 @@ wqe_bktrack:
     // page using pt entry
 
     // log_num_wqe_per_page = log_sq_page_size - log_wqe_size
-    sub            r2, k.to_stage.bktrack.log_sq_page_size, k.to_stage.bktrack.log_wqe_size
+    sub            r2, K_LOG_SQ_PAGE_SIZE, CAPRI_KEY_FIELD(IN_TO_S_P, log_wqe_size)
 
     // prev_page_index = sq_c_index >> log_num_wqe_per_page
-    srlv           r3, k.args.sq_c_index, r2
+    srlv           r3, K_SQ_C_INDEX, r2
     // c_index = (c_index - 1) % num_wqes
-    add            r4, k.args.sq_c_index, r0
-    mincr          r4, k.to_stage.bktrack.log_num_wqes, -1
-    seq            c2, r4, k.args.sq_p_index
+    add            r4, K_SQ_C_INDEX, r0
+    mincr          r4, K_LOG_NUM_WQES, -1
+    seq            c2, r4, K_SQ_P_INDEX
     bcf            [c2], invalid_rexmit_psn
     // page_index = (c_index >> log_num_wqe_per_page)
     srlv           r5, r4, r2  // Branch Delay Slot
@@ -78,41 +99,36 @@ wqe_bktrack:
     // set r5 - wqe_addr to zero to fetch wqe in a different page
     add            r5, r0, r0 // Branch Delay Slot 
     // wqe_addr = wqe_addr - (1 << log_wqe_size) 
-    add            r5, k.to_stage.bktrack.log_wqe_size, r0
+    add            r5, CAPRI_KEY_FIELD(IN_TO_S_P, log_wqe_size), r0
     sllv           r5, 1, r5
     // check for c_index wrap around upon backtracking and based on that
     // add or subtract c_index*wqe_size to the previous wqe address
-    slt            c1, k.args.sq_c_index, r4
-    sub.!c1        r5, k.to_stage.bktrack.wqe_addr, r5
-    sll.c1         r5, r4, k.to_stage.bktrack.log_wqe_size
-    add.c1         r5, k.to_stage.bktrack.wqe_addr, r5
+    slt            c1, K_SQ_C_INDEX, r4
+    sub.!c1        r5, CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr), r5
+    sll.c1         r5, r4, CAPRI_KEY_FIELD(IN_TO_S_P, log_wqe_size)
+    add.c1         r5, CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr), r5
 
     mfspr          r7, spr_mpuid
     seq            c1, r7[4:2], CAPRI_STAGE_LAST-1
     bcf            [c1], sqcb_writeback
     
     // Upate wqe addr to the previos wqe
-    CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+    CAPRI_SET_FIELD2(TO_S3_P, wqe_addr, r5)
 
-    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+    CAPRI_SET_FIELD2(TO_S4_P, wqe_addr, r5)
 
-    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+    CAPRI_SET_FIELD2(TO_S5_P, wqe_addr, r5)
 
-    CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+    CAPRI_SET_FIELD2(TO_S6_P, wqe_addr, r5)
 
-    CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+    CAPRI_SET_FIELD2(TO_S7_P, wqe_addr, r5)
 
-    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, tx_psn, r1)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, ssn, r6)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_c_index, r4)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_p_index, k.args.sq_p_index)
+    CAPRI_RESET_TABLE_0_ARG()
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, tx_psn, r1)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, ssn, r6)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, sq_c_index, r4)
+    //set sq_p_index
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, sq_p_index_or_imm_data1_or_inv_key1, K_SQ_P_INDEX)
   
     // label and pc cannot be same, so calculate cur pc using bal 
     // and compute start pc deducting the current instruction position
@@ -134,10 +150,10 @@ read_or_sge_bktrack:
     nop            // Branch Delay Slot
     
     // num_pkts = rexmit_psn - wqe_start_psn
-    sub           r2, k.to_stage.bktrack.rexmit_psn, r1
+    sub           r2, K_REXMIT_PSN, r1
     // wqe_p->read.va += (num_pkts << log_pmtu)
     // wqe_p->read.len -= (num_pkts << log_pmtu)
-    add           r3, k.to_stage.bktrack.log_pmtu, r0
+    add           r3, CAPRI_KEY_FIELD(IN_TO_S_P, log_pmtu), r0
     sllv          r2, r2, r3
     tbladd        d.read.va, r2
     tblsub        d.read.length, r2
@@ -145,7 +161,7 @@ read_or_sge_bktrack:
     // wqe_start_psn and tx_psn set to rexmit_psn as wqe's va
     // is modified to start from the rexmit_psn. if there's retransmission
     // again, then it should use this rexmit_psn as the wqe_start_psn
-    add           r1, k.to_stage.bktrack.rexmit_psn, r0 
+    add           r1, K_REXMIT_PSN, r0 
     // set bktrack_in_progress to false
     setcf         c6, [!c0]
 
@@ -158,27 +174,27 @@ sge_bktrack:
     seq          c1, r7[4:2], CAPRI_STAGE_LAST-1
     bcf          [c1], sqcb_writeback
     
-    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7) // Branch Delay Slot
+    CAPRI_RESET_TABLE_0_ARG() // Branch Delay Slot
 
     // sge_addr = wqe_addr + TXWQE_SGE_OFFSET + (sizeof(sge_t) * current_sge_id)
-    add          r3,  k.to_stage.bktrack.wqe_addr, k.args.current_sge_id, LOG_SIZEOF_SGE_T
+    add          r3,  CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr), K_CURRENT_SGE_ID, LOG_SIZEOF_SGE_T
     add          r3, r3, TXWQE_SGE_OFFSET
 
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, tx_psn, r1)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, ssn, r6)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_c_index, k.args.sq_c_index)
-    //CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_p_index, k.args.sq_p_index)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, in_progress, k.args.in_progress)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, current_sge_id, 0)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, current_sge_offset, 0)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, num_sges, d.base.num_sges)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, op_type, d.base.op_type)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, tx_psn, r1)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, ssn, r6)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, sq_c_index, K_SQ_C_INDEX)
+    //CAPRI_SET_FIELD2(SQ_BKTRACK_T, sq_p_index_or_imm_data1_or_inv_key1, K_SQ_P_INDEX)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, in_progress, CAPRI_KEY_FIELD(IN_P, in_progress))
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, current_sge_id, 0)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, current_sge_offset, 0)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, num_sges, d.base.num_sges)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, op_type, d.base.op_type)
     // Always copy imm_data assuming op_type to be send. imm_data is ignored
     // if op_type is not send
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, imm_data, d.send.imm_data)
+    CAPRI_SET_FIELD_RANGE2(SQ_BKTRACK_T, sq_p_index_or_imm_data1_or_inv_key1, imm_data2_or_inv_key2, d.send.imm_data)
     // Set inv_key only if op_type is send_inv as imm_data & inv_key are unions
     seq            c1, d.base.op_type, OP_TYPE_SEND_INV
-    CAPRI_SET_FIELD_C(r7, SQ_BKTRACK_T, inv_key, d.send.inv_key, c1)
+    CAPRI_SET_FIELD_RANGE2_C(SQ_BKTRACK_T, sq_p_index_or_imm_data1_or_inv_key1, imm_data2_or_inv_key2, d.send.inv_key, c1)
      
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqsge_process, r3)
 
@@ -189,10 +205,10 @@ wqe_match:
     // rexmit psn is in the current wqe's psn range. It can either match
     // start psn or somewhere in between, which requires forward sge
     // walk to setup current_sge_id, current_sge_offset in the sqcb
-    seq            c2, k.to_stage.bktrack.rexmit_psn, r1
+    seq            c2, K_REXMIT_PSN, r1
     bcf            [c1 | !c2], read_or_sge_bktrack
     // first wqe itself matches, no change to c_index
-    add            r4, r0, k.args.sq_c_index // Branch Delay Slot
+    add            r4, r0, K_SQ_C_INDEX // Branch Delay Slot
 
     // set empty_rrq to true as bktrack is completed
     setcf          c7, [c0]
@@ -208,39 +224,35 @@ wqe_page_bktrack:
 sqcb_writeback:
     phvwr          p.common.p4_intr_global_drop, 1
 
-    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+    CAPRI_SET_FIELD2(TO_S4_P, wqe_addr, r5)
 
-    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+    CAPRI_SET_FIELD2(TO_S5_P, wqe_addr, r5)
 
-    CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+    CAPRI_SET_FIELD2(TO_S6_P, wqe_addr, r5)
 
-    CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+    CAPRI_SET_FIELD2(TO_S7_P, wqe_addr, r5)
 
-    CAPRI_GET_TABLE_1_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, wqe_start_psn, r1)
-    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, tx_psn, r1)
-    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, ssn, r6)
-    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, tbl_id, 1)
+    CAPRI_RESET_TABLE_1_ARG()
+    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_T, wqe_start_psn, r1)
+    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_T, tx_psn, r1)
+    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_T, ssn, r6)
+    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_T, tbl_id, 1)
     // Assume send and copy imm_data, inv_key. These fields are looked into
     // only if op_type is send/write
-    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, imm_data, d.send.imm_data)
-    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, inv_key, d.send.inv_key)
-    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, op_type, d.base.op_type)
+    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_T, imm_data, d.send.imm_data)
+    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_T, inv_key, d.send.inv_key)
+    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_T, op_type, d.base.op_type)
 
     SQCB2_ADDR_GET(r5)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_write_back_process, r5)
 
-    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD_C(r7, SQCB0_WRITE_BACK_T, bktrack_in_progress, 1, c6)
-    CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, current_sge_offset, k.args.current_sge_offset)
-    CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, current_sge_id, k.args.current_sge_id)
-    CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, num_sges, k.args.num_sges)
-    CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, sq_c_index, r4)
-    CAPRI_SET_FIELD_C(r7, SQCB0_WRITE_BACK_T, empty_rrq_bktrack, 1, c7)
+    CAPRI_RESET_TABLE_0_ARG()
+    CAPRI_SET_FIELD2_C(SQCB0_WRITE_BACK_T, bktrack_in_progress, 1, c6)
+    CAPRI_SET_FIELD2(SQCB0_WRITE_BACK_T, current_sge_offset, K_CURRENT_SGE_OFFSET)
+    CAPRI_SET_FIELD2(SQCB0_WRITE_BACK_T, current_sge_id, K_CURRENT_SGE_ID)
+    CAPRI_SET_FIELD2(SQCB0_WRITE_BACK_T, num_sges, K_NUM_SGES)
+    CAPRI_SET_FIELD2(SQCB0_WRITE_BACK_T, sq_c_index, r4)
+    CAPRI_SET_FIELD2_C(SQCB0_WRITE_BACK_T, empty_rrq_bktrack, 1, c7)
 
     SQCB0_ADDR_GET(r5)
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r5)

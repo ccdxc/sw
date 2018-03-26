@@ -12,10 +12,25 @@
     #c7 - incr_rrq_pindex
 
 struct req_tx_phv_t p;
-struct req_tx_write_back_process_k_t k;
+struct req_tx_s5_t3_k k;
 struct sqcb2_t d;
 
-#define ADD_HDR_T struct req_tx_add_hdr_info_t
+#define IN_P t3_s2s_sqcb_write_back_info_rd
+#define IN_RD_P t3_s2s_sqcb_write_back_info_rd
+#define IN_SEND_WR_P t3_s2s_sqcb_write_back_info_send_wr
+#define IN_TO_S_P to_s5_sq_to_stage
+
+#define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
+#define K_OP_TYPE     CAPRI_KEY_RANGE(IN_P, op_type_sbit0_ebit3, op_type_sbit4_ebit7)
+#define K_INV_KEY     CAPRI_KEY_RANGE(IN_SEND_WR_P, op_send_wr_inv_key_or_ah_handle_sbit0_ebit7, op_send_wr_inv_key_or_ah_handle_sbit8_ebit31)
+#define K_AH_HANDLE   K_INV_KEY
+#define K_AH_SIZE     CAPRI_KEY_RANGE(IN_P, ah_size_sbit0_ebit6, ah_size_sbit7_ebit7)
+#define K_IMM_DATA    CAPRI_KEY_FIELD(IN_SEND_WR_P, op_send_wr_imm_data)
+#define K_RD_READ_LEN CAPRI_KEY_FIELD(IN_RD_P, op_rd_read_len)
+#define K_RD_LOG_PMTU CAPRI_KEY_FIELD(IN_RD_P, op_rd_log_pmtu)
+
+#define ADD_HDR_T t3_s2s_add_hdr_info
+
 #define RDMA_PKT_MIDDLE      0
 #define RDMA_PKT_LAST        1
 #define RDMA_PKT_FIRST       2
@@ -30,16 +45,16 @@ req_tx_add_headers_process:
     // discard and continue with speculation until speculative cindex
     // matches current cindex. Similarly, drop if dcqcn rate enforcement
     // doesn't allow this packet
-    seq            c1, k.to_stage.sq.spec_cindex, d.sq_cindex
+    seq            c1, K_SPEC_CINDEX, d.sq_cindex
     bcf            [!c1], spec_fail
     // initialize  cf to 0
-    crestore        [c7-c1], r0, 0xfe // Branch Delay Slot
+    crestore       [c7-c1], r0, 0xfe // Branch Delay Slot
 
-    bbeq           k.args.poll_failed, 1, poll_fail
-    seq             c1, k.args.last, 1 // Branch Delay Slot
+    bbeq           CAPRI_KEY_FIELD(IN_P, poll_failed), 1, poll_fail
+    seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1 // Branch Delay Slot
 
-    bbeq           k.to_stage.sq.rate_enforce_failed, 1, rate_enforce_fail
-    seq            c2, k.args.first, 1 // Branch Delay Slot
+    bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, rate_enforce_failed), 1, rate_enforce_fail
+    seq            c2, CAPRI_KEY_FIELD(IN_P, first), 1 // Branch Delay Slot
 
     // sqcb0 maintains copy of sq_cindex to enable speculation check. Increment
     //the copy on completion of wqe and write it into sqcb0
@@ -49,10 +64,10 @@ req_tx_add_headers_process:
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_HEADERS)
     // To start with, num_addr is 1 (bth)
     DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, bth, bth, 1) // Branch Delay Slot
-    cmov           r2, c2, k.args.op_type, d.curr_op_type
+    cmov           r2, c2, K_OP_TYPE, d.curr_op_type
     .brbegin
     br             r2[2:0]    
-    tblwr.c2       d.curr_op_type, k.args.op_type // Branch Delay Slot
+    tblwr.c2       d.curr_op_type, K_OP_TYPE // Branch Delay Slot
 
     .brcase OP_TYPE_SEND
         .csbegin
@@ -91,7 +106,7 @@ req_tx_add_headers_process:
     .brcase OP_TYPE_SEND_INV
         .csbegin
         cswitch [c2, c1]
-        tblwr.c2       d.inv_key, k.args.op.send_wr.inv_key // Branch Delay Slot
+        tblwr.c2       d.inv_key, K_INV_KEY // Branch Delay Slot
         .brcase RDMA_PKT_MIDDLE
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
@@ -119,7 +134,7 @@ req_tx_add_headers_process:
             // dma_cmd[2] - IETH hdr; num addrs 2 (bth, ieth)
             DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, ieth, ieth, 1)
-            phvwr          IETH_R_KEY, k.args.op.send_wr.inv_key
+            phvwr          IETH_R_KEY, K_INV_KEY
 
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_INV, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
@@ -128,7 +143,7 @@ req_tx_add_headers_process:
     .brcase OP_TYPE_SEND_IMM
         .csbegin
         cswitch [c2, c1]
-        tblwr.c2       d.imm_data, k.args.op.send_wr.imm_data  // Branch Delay Slot
+        tblwr.c2       d.imm_data, K_IMM_DATA  // Branch Delay Slot
         
         .brcase RDMA_PKT_MIDDLE
             b              op_type_end
@@ -163,7 +178,7 @@ req_tx_add_headers_process:
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N_C(r6, immeth, immeth, 1, !c3)
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N_C(r6, immeth, immeth, 2, c3)
 
-            phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data
+            phvwr          IMMDT_DATA, K_IMM_DATA
 
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT
@@ -231,7 +246,7 @@ req_tx_add_headers_process:
     .brcase OP_TYPE_WRITE_IMM
         .csbegin
         cswitch [c2, c1]
-        tblwr.c2       d.imm_data, k.args.op.send_wr.imm_data  // Branch Delay Slot
+        tblwr.c2       d.imm_data, K_IMM_DATA  // Branch Delay Slot
         .brcase RDMA_PKT_MIDDLE
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
@@ -267,7 +282,7 @@ req_tx_add_headers_process:
 
             // dma_cmd[2] : addr2 - IMMETH hdr
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, immeth, immeth, 2)
-            phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data
+            phvwr          IMMDT_DATA, K_IMM_DATA
 
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
@@ -285,7 +300,7 @@ req_tx_add_headers_process:
         sll            r3, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
         add            r3, r3, d.rrq_pindex, LOG_RRQ_WQE_SIZE
         
-        phvwr          RRQWQE_ATOMIC_OP_TYPE, k.args.op_type
+        phvwr          RRQWQE_ATOMIC_OP_TYPE, K_OP_TYPE
         phvwr          p.{rrqwqe.psn...rrqwqe.msn}, d.{tx_psn...ssn}
         
         // dma_cmd[3] 
@@ -307,7 +322,7 @@ req_tx_add_headers_process:
         sll            r3, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
         add            r3, r3, d.rrq_pindex, LOG_RRQ_WQE_SIZE
         
-        phvwr          RRQWQE_ATOMIC_OP_TYPE, k.args.op_type
+        phvwr          RRQWQE_ATOMIC_OP_TYPE, K_OP_TYPE
         phvwr          p.{rrqwqe.psn...rrqwqe.msn}, d.{tx_psn...ssn}
         
         // dma_cmd[3] - rrqwqe
@@ -328,12 +343,12 @@ op_type_end:
 
     // if (adjust_psn)
     // tx_psn = read_len >> log_pmtu
-    srl            r3, k.args.op.rd.read_len, k.args.op.rd.log_pmtu
+    srl            r3, K_RD_READ_LEN, K_RD_LOG_PMTU
     tblmincr       d.tx_psn, 24, r3
 
     // tx_psn += (read_len & ((1 << log_pmtu) -1)) ? 1 : 0
-    add            r3, k.args.op.rd.read_len, r0
-    mincr          r3, k.args.op.rd.log_pmtu, r0
+    add            r3, K_RD_READ_LEN, r0
+    mincr          r3, K_RD_LOG_PMTU, r0
     sle            c6, r3, r0
 
 inc_psn:
@@ -366,7 +381,7 @@ inc_psn:
     phvwr          BTH_ACK_REQ, 1
     // Disable TX scheduler for this QP until ack is received with credits to
     // send subsequent packets
-    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(k.global.lif, k.global.qtype, k.global.qid, SQ_RING_ID, r3, r4)
+    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r3, r4)
 
 rrq_p_index_chk:
     // do we need to increment rrq_pindex ?
@@ -386,17 +401,17 @@ rrq_p_index_chk:
 cb1_byte_update:
     // on top of it, set need_credits flag is conditionally
     add.c5         r5, r5, SQCB0_NEED_CREDITS_FLAG
-    or             r5, r5, k.args.in_progress, SQCB0_IN_PROGRESS_BIT_OFFSET
+    or             r5, r5, CAPRI_KEY_FIELD(IN_P, in_progress), SQCB0_IN_PROGRESS_BIT_OFFSET
     add            r3, r2, FIELD_OFFSET(sqcb0_t, cb1_byte)
     memwr.b        r3, r5
 
-    tblwr          d.in_progress, k.args.in_progress
+    tblwr          d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
     tblwr.c5       d.need_credits, 1          
 
     //For UD, ah_handle comes in send req
     seq            c3, d.service, RDMA_SERV_TYPE_UD
-    cmov           r1, c3, k.args.op.send_wr.ah_handle, d.header_template_addr
-    cmov           r2, c3, k.args.ah_size, d.header_template_size
+    cmov           r1, c3, K_AH_HANDLE, d.header_template_addr
+    cmov           r2, c3, K_AH_SIZE, d.header_template_size
 
     // phv_p->bth.dst_qp = sqcb1_p->dst_qp if it is not UD service
     phvwr.!c3      BTH_DST_QP, d.dst_qp
@@ -411,12 +426,12 @@ cb1_byte_update:
 #endif
     phvwrpair      p.roce_options.MSS_value, d.mss, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
 
-    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, ADD_HDR_T, service, d.service) 
-    CAPRI_SET_FIELD(r7, ADD_HDR_T, hdr_template_inline, k.args.hdr_template_inline) 
-    CAPRI_SET_FIELD(r7, ADD_HDR_T, header_template_addr, r1)
-    CAPRI_SET_FIELD(r7, ADD_HDR_T, header_template_size, r2)
-    CAPRI_SET_FIELD_RANGE(r7, ADD_HDR_T, roce_opt_ts_enable, roce_opt_mss_enable,
+    CAPRI_RESET_TABLE_3_ARG()
+    CAPRI_SET_FIELD2(ADD_HDR_T, service, d.service) 
+    CAPRI_SET_FIELD2(ADD_HDR_T, hdr_template_inline, CAPRI_KEY_FIELD(IN_P, hdr_template_inline))
+    CAPRI_SET_FIELD2(ADD_HDR_T, header_template_addr, r1)
+    CAPRI_SET_FIELD2(ADD_HDR_T, header_template_size, r2)
+    CAPRI_SET_FIELD_RANGE2(ADD_HDR_T, roce_opt_ts_enable, roce_opt_mss_enable,
                           d.{roce_opt_ts_enable...roce_opt_mss_enable})
 
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_add_headers_2_process, r0)

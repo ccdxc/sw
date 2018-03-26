@@ -27,7 +27,7 @@ req_rx_rrqwqe_process:
     ARE_ALL_FLAGS_SET(c4, r5, REQ_RX_FLAG_COMPLETION)  // Branch Delay Slot
 ack:
     // Hardcode table 2 for write_back process
-    SQCB1_ADDR_GET(r5)
+    _SQCB1_ADDR_GET(r5)
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
 
     CAPRI_GET_TABLE_3_ARG(req_rx_phv_t, r7)
@@ -212,7 +212,7 @@ atomic:
     //add            r6, r1, RRQ_C_INDEX_OFFSET
     //memwr.hx       r6, k.args.rrq_cindex
 
-    SQCB1_ADDR_GET(r1)
+    _SQCB1_ADDR_GET(r1)
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r1)
 
 set_cqcb_arg:

@@ -3,11 +3,19 @@
 #include "sqcb.h"
 
 struct req_tx_phv_t p;
-struct req_tx_write_back_process_k_t k;
+struct req_tx_s5_t2_k k;
 struct sqcb0_t d;
 
+#define IN_P t2_s2s_sqcb_write_back_info
+#define IN_TO_S_P to_s5_sq_to_stage
+
+#define K_SPEC_CINDEX        CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
+#define K_NUM_SGES           CAPRI_KEY_RANGE(IN_P, num_sges_sbit0_ebit6, num_sges_sbit7_ebit7)
+#define K_CURRENT_SGE_ID     CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit6, current_sge_id_sbit7_ebit7)
+#define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit6, current_sge_offset_sbit31_ebit31)
+#define K_WQE_ADDR           CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
+
 %%
-    .param    req_tx_add_headers_process
 
 .align
 req_tx_write_back_process:
@@ -18,30 +26,30 @@ req_tx_write_back_process:
     // matches current cindex. If sepculative cindex doesn't match cindex, then
     // revert speculative cindex to cindex , which would allow next speculation
     // to continue from yet to be processed wqe
-    seq           c1, k.to_stage.sq.spec_cindex, SQ_C_INDEX 
+    seq           c1, K_SPEC_CINDEX, SQ_C_INDEX 
     bcf           [!c1], spec_fail
     nop           // Branch Delay Slot    
 
-    bbeq          k.to_stage.sq.rate_enforce_failed, 1, rate_enforce_fail
+    bbeq          CAPRI_KEY_FIELD(IN_TO_S_P, rate_enforce_failed), 1, rate_enforce_fail
     nop           // Branch Delay Slot
     
-    bbeq          k.args.poll_failed, 1, poll_fail
+    bbeq          CAPRI_KEY_FIELD(IN_P, poll_failed), 1, poll_fail
     nop           // Branch Delay Slot
 
 write_back:
-    tblwr         d.busy, k.args.busy
+    tblwr         d.busy, CAPRI_KEY_FIELD(IN_P, busy)
     //seq           c1, k.args.release_cb1_busy, 1
     //tblwr.c1      d.cb1_busy, 0
-    tblwr         d.num_sges, k.args.num_sges
-    tblwr         d.in_progress, k.args.in_progress
-    tblwr         d.current_sge_id, k.args.current_sge_id
-    tblwr         d.current_sge_offset, k.args.current_sge_offset
-    tblwr         d.curr_wqe_ptr, k.to_stage.sq.wqe_addr
-    bbeq          k.args.poll_in_progress, 0, skip_poll_success
-    seq           c1, k.args.last, 1 // Branch Delay Slot
+    tblwr         d.num_sges, K_NUM_SGES
+    tblwr         d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
+    tblwr         d.current_sge_id, K_CURRENT_SGE_ID
+    tblwr         d.current_sge_offset, K_CURRENT_SGE_OFFSET
+    tblwr         d.curr_wqe_ptr, K_WQE_ADDR
+    bbeq          CAPRI_KEY_FIELD(IN_P, poll_in_progress), 0, skip_poll_success
+    seq           c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1 // Branch Delay Slot
     tblwr         d.poll_in_progress, 0
     tblmincri.c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1
-    DOORBELL_NO_UPDATE(k.global.lif, k.global.qtype, k.global.qid, r2, r3)
+    DOORBELL_NO_UPDATE(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, r2, r3)
 #ifdef CAPRI_IGNORE_TIMESTAMP
 #else
     #on non-RTL
@@ -82,7 +90,7 @@ exit:
     nop
 
 poll_fail:
-    DOORBELL_NO_UPDATE(k.global.lif, k.global.qtype, k.global.qid, r1, r2)
+    DOORBELL_NO_UPDATE(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, r1, r2)
     tblwr        d.poll_in_progress, 0 
     phvwr.e      p.common.p4_intr_global_drop, 1
     CAPRI_SET_TABLE_2_VALID(0)

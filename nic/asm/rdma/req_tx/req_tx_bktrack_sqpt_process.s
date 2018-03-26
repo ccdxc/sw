@@ -2,10 +2,25 @@
 #include "sqcb.h"
 
 struct req_tx_phv_t p;
-struct req_tx_bktrack_sqpt_process_k_t k;
+struct req_tx_s2_t0_k k;
 
-#define SQ_BKTRACK_T struct req_tx_sq_bktrack_info_t
-#define TO_STAGE_T struct req_tx_to_stage_t
+#define SQ_BKTRACK_T t0_s2s_sq_bktrack_info
+
+#define TO_S3_P to_s3_bktrack_to_stage
+#define TO_S4_P to_s4_bktrack_to_stage
+#define TO_S5_P to_s5_bktrack_to_stage
+#define TO_S6_P to_s6_bktrack_to_stage
+#define TO_S7_P to_s7_bktrack_to_stage
+
+#define IN_P t0_s2s_sq_bktrack_info
+#define IN_TO_S_P to_s2_bktrack_to_stage
+
+#define K_SQ_C_INDEX CAPRI_KEY_RANGE(IN_P, sq_c_index_sbit0_ebit7, sq_c_index_sbit8_ebit15)
+#define K_SQ_P_INDEX CAPRI_KEY_RANGE(IN_P, sq_p_index_or_imm_data1_or_inv_key1_sbit0_ebit1, sq_p_index_or_imm_data1_or_inv_key1_sbit10_ebit15)
+#define K_LOG_SQ_PAGE_SIZE CAPRI_KEY_RANGE(IN_TO_S_P, log_sq_page_size_sbit0_ebit2, log_sq_page_size_sbit3_ebit4)
+#define K_LOG_WQE_SIZE CAPRI_KEY_FIELD(IN_TO_S_P, log_wqe_size)
+#define K_TX_PSN CAPRI_KEY_RANGE(IN_P, tx_psn_sbit0_ebit6, tx_psn_sbit23_ebit23)
+#define K_SSN CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit6, ssn_sbit23_ebit23)
 
 %%
     .param    req_tx_bktrack_sqwqe_process
@@ -15,13 +30,13 @@ req_tx_bktrack_sqpt_process:
 
      // log_num_wqe_per_page = (log_sq_page_size - log_wqe_size)
     // page_index = (info_p->sq_c_index >> log_num_wqe_per_page)
-    add            r1, r0, k.args.sq_c_index
-    sub            r2, k.to_stage.bktrack.log_sq_page_size, k.to_stage.bktrack.log_wqe_size
+    add            r1, r0, K_SQ_C_INDEX
+    sub            r2, K_LOG_SQ_PAGE_SIZE, K_LOG_WQE_SIZE
     srlv           r3, r1, r2
 
     // page_offset = (info_p->sq_c_index & ((1 << log_num_wqe_per_page) - 1)) << info_p->log_wqe_size
     mincr          r1, r2, r0
-    sll            r1, r1, k.to_stage.bktrack.log_wqe_size
+    sll            r1, r1, K_LOG_WQE_SIZE
     
     // page_seg_offset = page_index & 0x7
     and            r2, r3, CAPRI_SEG_PAGE_MASK
@@ -38,32 +53,27 @@ req_tx_bktrack_sqpt_process:
     add            r1, r2, r1
 
     // populate t0 stage to stage data req_tx_sqpt_to_bktrack_wqe_info_t for next stage
-    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
+    CAPRI_RESET_TABLE_0_ARG()
 
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, tx_psn, k.args.tx_psn)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, ssn, k.args.ssn)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_c_index, k.args.sq_c_index)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_p_index, k.args.sq_p_index)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, in_progress, k.args.in_progress)
-    //CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, bktrack_in_progress, k.args.bktrack_in_progress)
-    CAPRI_SET_FIELD_RANGE(r7, SQ_BKTRACK_T, current_sge_offset, num_sges, k.{args.current_sge_offset...args.num_sges})
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, tx_psn, K_TX_PSN)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, ssn, K_SSN)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, sq_c_index, K_SQ_C_INDEX)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, sq_p_index_or_imm_data1_or_inv_key1, K_SQ_P_INDEX)
+    CAPRI_SET_FIELD2(SQ_BKTRACK_T, in_progress, CAPRI_KEY_FIELD(IN_P, in_progress))
+    //CAPRI_SET_FIELD2(SQ_BKTRACK_T, bktrack_in_progress, CAPRI_KEY_FIELD(IN_P, bktrack_in_progress))
+    CAPRI_SET_FIELD_RANGE2(SQ_BKTRACK_T, current_sge_offset, num_sges, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit6, num_sges_sbit7_ebit7))
 
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
-    CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
+    CAPRI_SET_FIELD2(TO_S3_P, wqe_addr, r1)
 
-    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
+    CAPRI_SET_FIELD2(TO_S4_P, wqe_addr, r1)
 
-    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
+    CAPRI_SET_FIELD2(TO_S5_P, wqe_addr, r1)
 
-    CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
+    CAPRI_SET_FIELD2(TO_S6_P, wqe_addr, r1)
 
-    CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
+    CAPRI_SET_FIELD2(TO_S7_P, wqe_addr, r1)
 
     // populate t0 PC and table address
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqwqe_process, r1)

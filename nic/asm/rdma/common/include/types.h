@@ -34,26 +34,32 @@
 
 #define LOG_SIZEOF_EQCB_T   5   // 2^5 = 32 Bytes
 
+#define _SQCB0_ADDR_GET(_r) \
+    sll     _r, k.global.cb_addr, SQCB_ADDR_SHIFT
+
+#define _SQCB1_ADDR_GET(_r) \
+    add    _r, CB_UNIT_SIZE_BYTES, k.global.cb_addr, SQCB_ADDR_SHIFT;
+
 #define SQCB0_ADDR_GET(_r) \
-    sll     _r, k.global.cb_addr, SQCB_ADDR_SHIFT;
+    sll     _r, k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;
 
 #define SQCB1_ADDR_GET(_r) \
-     add    _r, CB_UNIT_SIZE_BYTES, k.global.cb_addr, SQCB_ADDR_SHIFT;
+    add     _r, CB_UNIT_SIZE_BYTES, k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;
 
 #define SQCB2_ADDR_GET(_r) \
-     add    _r, (2 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, SQCB_ADDR_SHIFT;
+    add     _r, (2 * CB_UNIT_SIZE_BYTES), k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;
 
 #define SQCB3_ADDR_GET(_r) \
-     add    _r, (3 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, SQCB_ADDR_SHIFT;
+    add     _r, (3 * CB_UNIT_SIZE_BYTES), k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;
 
 #define SQCB4_ADDR_GET(_r) \
-     add    _r, (4 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, SQCB_ADDR_SHIFT;
+    add     _r, (4 * CB_UNIT_SIZE_BYTES), k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;
 
 #define SQCB5_ADDR_GET(_r) \
-     add    _r, (4 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, SQCB_ADDR_SHIFT;
+    add     _r, (5 * CB_UNIT_SIZE_BYTES), k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;
 
 #define SQCB0_FIELD_ADDR_GET(_r, _field_offset) \
-     add    _r, _field_offset, k.global.cb_addr, SQCB_ADDR_SHIFT;
+     add    _r, _field_offset, k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;
   
 //RQCB organization
 //0-256B RQCB0..RQCB3
@@ -371,12 +377,10 @@ struct resp_rx_flags_t {
 
 struct req_tx_flags_t {
     error_disable_qp: 1;
-    incr_lsn: 1;
-    immeth_vld: 1;
+    ud_service: 1;
 };
 
 #define REQ_TX_FLAG_ERR_DIS_QP          0x0001
-//#define REQ_TX_FLAG_INCR_LSN            0x0002
 #define REQ_TX_FLAG_UD_SERVICE          0x0002
 
 struct resp_tx_flags_t {

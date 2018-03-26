@@ -4,9 +4,14 @@
 #include "defines.h"
 
 struct req_tx_phv_t p;
-struct req_tx_add_headers_process_k_t k;
+struct req_tx_s6_t3_k k;
 struct sqcb1_t d;
 
+#define IN_P            t3_s2s_add_hdr_info
+#define IN_TO_S_P       to_s6_sq_to_stage
+
+#define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_P, header_template_addr_sbit0_ebit2, header_template_addr_sbit27_ebit31)
+#define K_HEADER_TEMPLATE_SIZE CAPRI_KEY_RANGE(IN_P, header_template_size_sbit0_ebit2, header_template_size_sbit3_ebit7)
 %%
 
 .align
@@ -31,18 +36,18 @@ req_tx_add_headers_2_process:
   
     #for inline data, to save on latency, hdr_template is streamed thru PHV rather than
     #from HBM. 
-    bbeq           k.args.hdr_template_inline, 1, hdr_template_inline
+    bbeq           CAPRI_KEY_FIELD(IN_P, hdr_template_inline), 1, hdr_template_inline
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_HEADER_TEMPLATE) //BD slot
 
     //transfer hdr_template from HBM(memory)
-    sll            r3, k.args.header_template_addr, HDR_TEMP_ADDR_SHIFT
-    DMA_HBM_MEM2PKT_SETUP(r6, k.args.header_template_size, r3)
+    sll            r3, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
+    DMA_HBM_MEM2PKT_SETUP(r6, K_HEADER_TEMPLATE_SIZE, r3)
     b              hdr_template_done
-    seq            c3, k.args.service, RDMA_SERV_TYPE_UD //BD Slot
+    seq            c3, CAPRI_KEY_FIELD(IN_P, service), RDMA_SERV_TYPE_UD //BD Slot
 
 hdr_template_inline:
-    DMA_PHV2PKT_START_LEN_SETUP(r6, r3, pad1, k.args.header_template_size);
-    seq            c3, k.args.service, RDMA_SERV_TYPE_UD
+    DMA_PHV2PKT_START_LEN_SETUP(r6, r3, pad1, K_HEADER_TEMPLATE_SIZE)
+    seq            c3, CAPRI_KEY_FIELD(IN_P, service), RDMA_SERV_TYPE_UD
 
 #ifdef GFT
     // For GFT cases, optimize P4 Parser time by hinting the L2/L3/RDMA headers info
@@ -77,7 +82,7 @@ hdr_template_done:
     // For ICRC, can point to any 4 bytes of PHV so point to immeth to create 4B hdr
     //  space for ICRC Deparser in P4 calculate and fills ICRC here
 
-    crestore       [c6, c5], k.{args.roce_opt_ts_enable...args.roce_opt_mss_enable}, 0x3
+    crestore       [c6, c5], CAPRI_KEY_RANGE(IN_P, roce_opt_ts_enable, roce_opt_mss_enable), 0x3
     #c5 - mss_enable
     #c6 - ts_enable
     bcf            [!c5 & !c6],  skip_roce_udp_options
@@ -134,13 +139,13 @@ skip_roce_udp_options:
     DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, p4_intr_global, p4_to_p4plus, 2)
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, rdma_feedback, rdma_feedback, 1)
 
-    phvwrpair      p.p4_intr_global.tm_iport, TM_PORT_INGRESS, p.p4_intr_global.tm_oport, TM_PORT_DMA
-    phvwrpair      p.p4_intr_global.tm_iq, 0, p.p4_intr_global.lif, k.global.lif
+    phvwrpair      p.common.p4_intr_global_tm_iport, TM_PORT_INGRESS, p.common.p4_intr_global_tm_oport, TM_PORT_DMA
+    phvwrpair      p.common.p4_intr_global_tm_iq, 0, p.common.p4_intr_global_lif, K_GLOBAL_LIF
     SQCB0_ADDR_GET(r1)
-    phvwrpair      p.p4_intr_rxdma.intr_qid, k.global.qid, p.p4_intr_rxdma.intr_qstate_addr, r1
+    phvwrpair      p.p4_intr_rxdma.intr_qid, K_GLOBAL_QID, p.p4_intr_rxdma.intr_qstate_addr, r1
     phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET 
 
-    phvwrpair      p.p4_intr_rxdma.intr_qtype, k.global.qtype, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
+    phvwrpair      p.p4_intr_rxdma.intr_qtype, K_GLOBAL_QTYPE, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
 
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
