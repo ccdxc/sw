@@ -18,7 +18,7 @@ import _ "google.golang.org/genproto/googleapis/api/annotations"
 import _ "github.com/pensando/sw/venice/utils/apigen/annotations"
 import _ "github.com/gogo/protobuf/gogoproto"
 import events "github.com/pensando/sw/api/generated/events"
-import api1 "github.com/pensando/sw/api"
+import api2 "github.com/pensando/sw/api"
 import evtsmgrproto "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
 
 import (
@@ -52,14 +52,14 @@ type EventsProxyAPIClient interface {
 	// dispatcher where the event gets deduped and distributed to the writers
 	// (events manager, events exporter, etc.). event recorder connects only
 	// with proxy; proxy handles rest of the workflow.
-	ForwardEvent(ctx context.Context, in *events.Event, opts ...grpc.CallOption) (*api1.Empty, error)
+	ForwardEvent(ctx context.Context, in *events.Event, opts ...grpc.CallOption) (*api2.Empty, error)
 	// recorder can buffer events when the proxy is unavailable and send
 	// all of them at once when the proxy comes back online.
-	ForwardEvents(ctx context.Context, in *evtsmgrproto.EventList, opts ...grpc.CallOption) (*api1.Empty, error)
+	ForwardEvents(ctx context.Context, in *evtsmgrproto.EventList, opts ...grpc.CallOption) (*api2.Empty, error)
 	// event sources can call flush using the recorder to flush the pending/deduped
 	// events from dispatcher to all the writers. This flushes only the events
 	// belonging to the given source.
-	Flush(ctx context.Context, in *events.EventSource, opts ...grpc.CallOption) (*api1.Empty, error)
+	Flush(ctx context.Context, in *events.EventSource, opts ...grpc.CallOption) (*api2.Empty, error)
 }
 
 type eventsProxyAPIClient struct {
@@ -70,8 +70,8 @@ func NewEventsProxyAPIClient(cc *grpc.ClientConn) EventsProxyAPIClient {
 	return &eventsProxyAPIClient{cc}
 }
 
-func (c *eventsProxyAPIClient) ForwardEvent(ctx context.Context, in *events.Event, opts ...grpc.CallOption) (*api1.Empty, error) {
-	out := new(api1.Empty)
+func (c *eventsProxyAPIClient) ForwardEvent(ctx context.Context, in *events.Event, opts ...grpc.CallOption) (*api2.Empty, error) {
+	out := new(api2.Empty)
 	err := grpc.Invoke(ctx, "/evtsproxyproto.EventsProxyAPI/ForwardEvent", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -79,8 +79,8 @@ func (c *eventsProxyAPIClient) ForwardEvent(ctx context.Context, in *events.Even
 	return out, nil
 }
 
-func (c *eventsProxyAPIClient) ForwardEvents(ctx context.Context, in *evtsmgrproto.EventList, opts ...grpc.CallOption) (*api1.Empty, error) {
-	out := new(api1.Empty)
+func (c *eventsProxyAPIClient) ForwardEvents(ctx context.Context, in *evtsmgrproto.EventList, opts ...grpc.CallOption) (*api2.Empty, error) {
+	out := new(api2.Empty)
 	err := grpc.Invoke(ctx, "/evtsproxyproto.EventsProxyAPI/ForwardEvents", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -88,8 +88,8 @@ func (c *eventsProxyAPIClient) ForwardEvents(ctx context.Context, in *evtsmgrpro
 	return out, nil
 }
 
-func (c *eventsProxyAPIClient) Flush(ctx context.Context, in *events.EventSource, opts ...grpc.CallOption) (*api1.Empty, error) {
-	out := new(api1.Empty)
+func (c *eventsProxyAPIClient) Flush(ctx context.Context, in *events.EventSource, opts ...grpc.CallOption) (*api2.Empty, error) {
+	out := new(api2.Empty)
 	err := grpc.Invoke(ctx, "/evtsproxyproto.EventsProxyAPI/Flush", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -104,14 +104,14 @@ type EventsProxyAPIServer interface {
 	// dispatcher where the event gets deduped and distributed to the writers
 	// (events manager, events exporter, etc.). event recorder connects only
 	// with proxy; proxy handles rest of the workflow.
-	ForwardEvent(context.Context, *events.Event) (*api1.Empty, error)
+	ForwardEvent(context.Context, *events.Event) (*api2.Empty, error)
 	// recorder can buffer events when the proxy is unavailable and send
 	// all of them at once when the proxy comes back online.
-	ForwardEvents(context.Context, *evtsmgrproto.EventList) (*api1.Empty, error)
+	ForwardEvents(context.Context, *evtsmgrproto.EventList) (*api2.Empty, error)
 	// event sources can call flush using the recorder to flush the pending/deduped
 	// events from dispatcher to all the writers. This flushes only the events
 	// belonging to the given source.
-	Flush(context.Context, *events.EventSource) (*api1.Empty, error)
+	Flush(context.Context, *events.EventSource) (*api2.Empty, error)
 }
 
 func RegisterEventsProxyAPIServer(s *grpc.Server, srv EventsProxyAPIServer) {
