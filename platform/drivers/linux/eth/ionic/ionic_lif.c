@@ -29,8 +29,8 @@
 #include "ionic_txrx.h"
 #include "ionic_debugfs.h"
 
-static int ntxq_descs = 16;
-static int nrxq_descs = 16;
+static int ntxq_descs = 1024;
+static int nrxq_descs = 1024;
 module_param(ntxq_descs, uint, 0);
 module_param(nrxq_descs, uint, 0);
 MODULE_PARM_DESC(ntxq_descs, "Descriptors per Tx queue, must be power of 2");
