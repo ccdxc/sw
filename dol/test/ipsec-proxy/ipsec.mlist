@@ -19,6 +19,26 @@ modules:
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
+        name    : PKT1400_TCP
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : pkt1400_tcp
+        spec    : pkt1400_tcp.testspec
+        ignore  : False
+        rtl     : False 
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
+    - module:
+        name    : PKT9000_TCP
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : pkt9000_tcp
+        spec    : pkt9000_tcp.testspec
+        ignore  : False
+        rtl     : False 
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
+    - module:
         name    : PKT70_TO_IPSECCBQ
         enable  : True 
         package : test.ipsec-proxy

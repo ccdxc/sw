@@ -56,13 +56,13 @@ wring_pd_meta_init() {
 
     g_meta[types::WRING_TYPE_NMPR_BIG_TX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_TX, CAPRI_TNMPR_RING_SIZE,
-                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_TX, 9216,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_TX, 9600,
                            CAPRI_SEM_TNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_FREE_RAW_ADDR,
                            NULL, NULL, false};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_RX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_RX, CAPRI_RNMPR_RING_SIZE,
-                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_RX, 9216,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_RX, 9600,
                            CAPRI_SEM_RNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_FREE_RAW_ADDR,
                            NULL, NULL, false};
 
