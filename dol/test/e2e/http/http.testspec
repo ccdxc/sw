@@ -15,7 +15,7 @@ trigger:
     commands:
         - command:
             endpoint    : ref://testcase/config/src_endpoints/0
-            cmd         : python
+            cmd         : python2
             background  : True
             args        :
                 - arg   : "-m SimpleHTTPServer 8000"

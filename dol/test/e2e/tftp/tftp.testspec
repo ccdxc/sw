@@ -15,13 +15,13 @@ trigger:
     commands:
         - command:
             endpoint    : ref://testcase/config/src_endpoints/0
-            cmd         : python
+            cmd         : python2
             background  : True
             args        :
                 - arg   : callback://e2e/tftp/GetSrcPythonArgs
         - command:
             endpoint    : ref://testcase/config/dst_endpoints/0
-            cmd         : python
+            cmd         : python2
             timeout     : 3600000
             args        :
                 - arg   : callback://e2e/tftp/GetDstPythonArgs

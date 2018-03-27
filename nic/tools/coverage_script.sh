@@ -3,7 +3,8 @@ mkdir -p $ASIC_TOOLS_DIR
 mount -o bind /asictools $ASIC_TOOLS_DIR
 
 make pull-assets
-tools/run-coverage --run-time 120 -s gft/gtest -s gft -c hal_coverage.json
+#Skipping asm instruction stats as GFT will not generate instruction data.
+tools/run-coverage --run-time 120 -s gft/gtest -s gft -s gft_rdma -c hal_coverage.json --skip-asm-ins-stats
 run_status=$?
 if [ $run_status -ne 0 ];then
     echo "Coverage run failed...."
