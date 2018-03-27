@@ -9,7 +9,6 @@ struct phv_        p;
 k = {
  l4_metadata_tcp_data_len = 100;
  l4_metadata_tcp_rcvr_win_sz = 4096;
- l4_metadata_tcp_mss = 1480;
  tcp_option_timestamp_valid = 0;
  flow_info_metadata_flow_role = 0; // Initator
  tcp_seqNo_sbit0_ebit15 = 0x1234;

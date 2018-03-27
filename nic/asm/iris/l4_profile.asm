@@ -71,6 +71,8 @@ l4_profile:
                    l4_metadata_tcp_non_syn_first_pkt_drop}, \
                 d.{u.l4_profile_d.tcp_invalid_flags_drop, \
                    u.l4_profile_d.tcp_non_syn_first_pkt_drop}
+  phvwr       p.l4_metadata_tcp_normalize_mss, \
+                d.u.l4_profile_d.tcp_normalize_mss
   b           f_p4plus_to_p4_1
   phvwrpair   p.l4_metadata_tcp_split_handshake_drop, \
                 d.u.l4_profile_d.tcp_split_handshake_drop, \
