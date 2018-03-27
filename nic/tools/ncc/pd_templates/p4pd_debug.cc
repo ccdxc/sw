@@ -193,6 +193,10 @@ ${api_prefix}_entry_read(uint32_t  tableid,
 
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
+            debug_spec->set_swkey(
+                        std::string ((char*)(${table}_swkey_t*)swkey,
+                                     sizeof(${table}_swkey_t)));
+
             debug_spec->set_actiondata(
                         std::string ((char*)(${table}_actiondata*)actiondata,
                                      sizeof(${table}_actiondata)));
@@ -200,6 +204,14 @@ ${api_prefix}_entry_read(uint32_t  tableid,
 
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Ternary':
+            debug_spec->set_swkey(
+                        std::string ((char*)(${table}_swkey_t*)swkey,
+                                     sizeof(${table}_swkey_t)));
+
+            debug_spec->set_swkey_mask(
+                        std::string ((char*)(${table}_swkey_mask_t*)swkey_mask,
+                                     sizeof(${table}_swkey_mask_t)));
+
             debug_spec->set_actiondata(
                         std::string ((char*)(${table}_actiondata*)actiondata,
                                      sizeof(${table}_actiondata)));
