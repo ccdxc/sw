@@ -5,10 +5,9 @@ package veniceinteg
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
-	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -18,6 +17,7 @@ import (
 	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -29,72 +29,91 @@ const (
 	elasticImage = "elasticsearch/elasticsearch:6.2.2"
 )
 
+// sub-objects (e.g. ObjectMeta) needs to be nested only if they are slices. If not, it need
+// not be nested, as a result all the fields will be flattened thus, searching becomes easy.
+// e.g. `ObjectMeta.Namespace` can be queried directly without having to go through nested query.
+
 var (
-	numEvents = 5000
 	indexName = "events"
 	indexType = "event"
 
+	infraNamespace = "infra"
+
 	// create an index and map the fields
 	eventsIndex = `{
-		"settings": {
-			"number_of_shards":1,
-			"number_of_replicas":0
-		},
-		"mappings": {
-			"event": {
-				"properties": {
-					"Kind": {"type": "keyword"},
-					"Severity": {"type": "keyword"},
-					"Component": {"type": "keyword"},
-					"EventType": {"type": "keyword"},
-					"Message": {"type": "text"},
-					"Count": {"type": "integer"},
-					"Meta": {
-						"type" : "nested",
-						"properties": {
-							"name": {"type": "text"},
-							"uuid": {"type": "text"},
-							"tenant": {"type": "text"},
-							"namespace": {"type": "text"},
-							"creation-time": {"type": "date"},
-							"mod-time": {"type": "date"},
-							"resource-version": {"type": "short"}
+	"settings": {
+		"number_of_shards": 1,
+		"number_of_replicas": 0
+	},
+	"mappings": {
+		"event": {
+			"properties": {
+				"Kind": {
+					"type": "keyword"
+				},
+				"meta": {
+					"properties": {
+						"name": {
+							"type": "text"
+						},
+						"uuid": {
+							"type": "text"
+						},
+						"tenant": {
+							"type": "keyword"
+						},
+						"namespace": {
+							"type": "text"
+						},
+						"creation-time": {
+							"type": "date"
+						},
+						"mod-time": {
+							"type": "date"
+						},
+						"resource-version": {
+							"type": "short"
+						}
+					}
+				},
+				"severity": {
+					"type": "keyword"
+				},
+				"type": {
+					"type": "keyword"
+				},
+				"message": {
+					"type": "text"
+				},
+				"count": {
+					"type": "integer"
+				},
+				"source": {
+					"properties": {
+						"component": {
+							"type": "keyword"
+						},
+						"node-name": {
+							"type": "text"
 						}
 					}
 				}
 			}
 		}
-	}`
+	}
+}`
+
+	// test command line args
+	preserveEvents = flag.Bool("preserve-events", false, "Preserve events?")
+	skipESSetup    = flag.Bool("skip-es-setup", false, "Skip elasticsearc setup?")
+	numEvents      = flag.Int("num-events", 5000, "Number of events to be indexed")
+	eventType      = flag.String("event-type", "NodeJoined", "Event type of the events")
+	severity       = flag.String("severity", "INFO", "Severity of the events")
 
 	cTime           = time.Now()
 	creationTime, _ = types.TimestampProto(cTime)
-	event           = DEvent{
-		Kind: "Node",
-		Meta: api.ObjectMeta{
-			Tenant:          "default",
-			Namespace:       "default",
-			ResourceVersion: "2",
-			UUID:            "adfadf-sadfasdf-adfsdf-sadf",
-		},
-		Component: "CMD",
-		Severity:  "INFO",
-		EventType: "NodeJoined",
-		Message:   "Node[node2] joined cluster[default]",
-		Count:     1,
-	}
+	event           = events.Event{}
 )
-
-// dummy event object
-// TODO: change this to actual event object once the event protos are done
-type DEvent struct {
-	Kind      string
-	Severity  string
-	Component string
-	Meta      api.ObjectMeta
-	EventType string
-	Message   string
-	Count     int
-}
 
 func TestElastic(t *testing.T) {
 	var esClient elastic.ESClient
@@ -150,12 +169,10 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	Assert(t, client.FlushIndex(ctx, indexName) == nil,
 		"Flush operation failed, cannot perform search")
 
-	// Query 1: date range; search for events with events.Meta.ModTime falls in last 30 seconds
-	// this is a query on the nested object events.Meta.ModTime
+	// Query 1: date range; search for events with events.ObjectMeta.ModTime falls in last 60 seconds
+	// this is a query on the nested object events.ObjectMeta.ModTime
 	now := time.Now()
-
-	query1 := es.NewNestedQuery("Meta", es.NewRangeQuery("Meta.mod-time").
-		Gte(now.Add(-30*time.Second)).Lte(now))
+	query1 := es.NewRangeQuery("meta.mod-time").Gte(now.Add(-30 * time.Second)).Lte(now)
 	result, err := client.Search(ctx, indexName, indexType, query1)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query1, err)
@@ -166,10 +183,10 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	Assert(t, result.TotalHits() > 0,
 		fmt.Sprintf("Something wrong, atleast few events should match the query: %s", jsonQuery))
 
-	// Query 2: term query; look for events with Severity == event.Severity
+	// Query 2: term query; look for events with severity == event.Severity
 	// term queries are used for keyword searches (exact values)
 	// whereas, match queries are full_text searches
-	query2 := es.NewTermQuery("Severity", event.Severity)
+	query2 := es.NewTermQuery("severity", event.Severity)
 	result, err = client.Search(ctx, indexName, indexType, query2)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query2, err)
@@ -182,7 +199,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 
 	// Query 3: match all the events;
 	// creationTime is the same for all the events indexed during this run.
-	query3 := es.NewNestedQuery("Meta", es.NewMatchQuery("Meta.creation-time", cTime))
+	query3 := es.NewMatchQuery("meta.creation-time", cTime)
 	result, err = client.Search(ctx, indexName, indexType, query3)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query3, err)
@@ -190,11 +207,11 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 
 	src, _ = query3.Source()
 	jsonQuery, _ = json.Marshal(src)
-	Assert(t, result.TotalHits() == int64(2*numEvents), // sequential + bulk indexing (2*numEvents)
+	Assert(t, result.TotalHits() == int64(2*(*numEvents)), // sequential + bulk indexing (2*numEvents)
 		fmt.Sprintf("Something wrong, all the events should match the query: %s", jsonQuery))
 
 	// Query 4: combine queries 1 & 2;
-	// look for Severity == event.Severity events within the given 30 seconds
+	// look for severity == event.Severity events within the given 30 seconds
 	query4 := es.NewBoolQuery().Must(query1, query2)
 	result, err = client.Search(ctx, indexName, indexType, query4)
 	if err != nil {
@@ -207,7 +224,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 		fmt.Sprintf("Something wrong, atleast few events should match the query: %s", jsonQuery))
 
 	// query 5: combine 2 & 3;
-	// search for events with Severity == event.Severity with the creation time of this run
+	// search for events with severity == event.Severity with the creation time of this run
 	query5 := es.NewBoolQuery().Must(query2, query3)
 	result, err = client.Search(ctx, indexName, indexType, query5)
 	if err != nil {
@@ -216,28 +233,70 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 
 	src, _ = query5.Source()
 	jsonQuery, _ = json.Marshal(src)
-	Assert(t, result.TotalHits() == int64(2*numEvents),
+	Assert(t, result.TotalHits() == int64(2*(*numEvents)),
 		fmt.Sprintf("Something wrong, all the events should match the query: %s", jsonQuery))
 
+	// full-text search queries
+
+	// query 6: find all the event that has string defined in `infraNamespace`;
+	// atleast half the total events should match this query which is `numEvents`
+	query6 := es.NewQueryStringQuery(infraNamespace)
+	result, err = client.Search(ctx, indexName, indexType, query6)
+	if err != nil {
+		t.Fatalf("failed to search events for query: %v, err:%v", query6, err)
+	}
+
+	src, _ = query6.Source()
+	jsonQuery, _ = json.Marshal(src)
+	Assert(t, result.TotalHits() >= int64(*numEvents),
+		fmt.Sprintf("Something wrong, half the total events indexed should match the query: %s", jsonQuery))
+
+	// query 7: find events by `ObjectMeta.Namespace: string`
+	// atleast half the total events should match this query which is `numEvents`
+	query7 := es.NewQueryStringQuery(fmt.Sprintf("%s:%s", "meta.namespace", infraNamespace))
+	result, err = client.Search(ctx, indexName, indexType, query7)
+	if err != nil {
+		t.Fatalf("failed to search events for query: %v, err:%v", query7, err)
+	}
+
+	src, _ = query7.Source()
+	jsonQuery, _ = json.Marshal(src)
+	Assert(t, result.TotalHits() >= int64(*numEvents),
+		fmt.Sprintf("Something wrong, half the total events indexed should match the query: %s", jsonQuery))
+
+	// query 8: find all the event that has string "honda"
+	query8 := es.NewQueryStringQuery(string("honda"))
+	result, err = client.Search(ctx, indexName, indexType, query8)
+	if err != nil {
+		t.Fatalf("failed to search events for query: %v, err:%v", query8, err)
+	}
+
+	src, _ = query8.Source()
+	jsonQuery, _ = json.Marshal(src)
+	Assert(t, result.TotalHits() == 0,
+		fmt.Sprintf("Something wrong, none of the event should match the query: %s", jsonQuery))
 }
 
 // indexEventsBulk performs the bulk indexing
 func indexEventsBulk(ctx context.Context, client elastic.ESClient, t *testing.T) {
-	requests := make([]*elastic.BulkRequest, numEvents)
+	requests := make([]*elastic.BulkRequest, *numEvents)
 	// add requests for the bulk operation
-	for i := 0; i < numEvents; i++ {
-		event.Meta.UUID = uuid.NewV4().String()
-		event.Meta.Name = event.Meta.UUID
+	for i := 0; i < *numEvents; i++ {
+		event.ObjectMeta.UUID = uuid.NewV4().String()
+		event.ObjectMeta.Name = event.ObjectMeta.UUID
 
-		event.Meta.CreationTime.Timestamp = *creationTime
+		// change the namespace from `default` to infraNamespace
+		event.ObjectMeta.Namespace = infraNamespace
+
+		event.ObjectMeta.CreationTime.Timestamp = *creationTime
 		ts, _ := types.TimestampProto(time.Now())
-		event.Meta.ModTime.Timestamp = *ts
+		event.ObjectMeta.ModTime.Timestamp = *ts
 
 		requests[i] = &elastic.BulkRequest{
 			RequestType: "index",
 			Index:       indexName,
 			IndexType:   indexType,
-			ID:          event.Meta.UUID,
+			ID:          event.ObjectMeta.UUID,
 			Obj:         event,
 		}
 	}
@@ -251,8 +310,8 @@ func indexEventsBulk(ctx context.Context, client elastic.ESClient, t *testing.T)
 	}
 
 	// check the number of succeeded operation
-	AssertEquals(t, numEvents, len(bulkResp.Succeeded()),
-		fmt.Sprintf("requests succeeded - expected: %v, got: %v", numEvents, len(bulkResp.Succeeded())))
+	AssertEquals(t, *numEvents, len(bulkResp.Succeeded()),
+		fmt.Sprintf("requests succeeded - expected: %v, got: %v", *numEvents, len(bulkResp.Succeeded())))
 
 	// make sure there are 0 failed operation
 	AssertEquals(t, 0, len(bulkResp.Failed()),
@@ -266,18 +325,18 @@ func indexEventsSequential(ctx context.Context, client elastic.ESClient, t *test
 	start := time.Now()
 
 	// index events one by one
-	for i := 1; i <= numEvents; i++ {
-		event.Meta.UUID = uuid.NewV4().String()
-		event.Meta.Name = event.Meta.UUID
+	for i := 1; i <= *numEvents; i++ {
+		event.ObjectMeta.UUID = uuid.NewV4().String()
+		event.ObjectMeta.Name = event.ObjectMeta.UUID
 
-		event.Meta.CreationTime.Timestamp = *creationTime
+		event.ObjectMeta.CreationTime.Timestamp = *creationTime
 		transStart := time.Now()
 		ts, _ := types.TimestampProto(transStart)
-		event.Meta.ModTime.Timestamp = *ts
+		event.ObjectMeta.ModTime.Timestamp = *ts
 
 		// log failure and continue
-		if err := client.Index(ctx, indexName, indexType, event.Meta.UUID, event); err != nil {
-			t.Logf("failed to index event %s", event.Meta.Name)
+		if err := client.Index(ctx, indexName, indexType, event.ObjectMeta.UUID, event); err != nil {
+			t.Logf("failed to index event %s err:%v", event.ObjectMeta.Name, err)
 			continue
 		}
 	}
@@ -300,8 +359,8 @@ func ping(ctx context.Context, client elastic.ESClient, t *testing.T) {
 
 // teardown elasticsearch cluster
 func teardown(ctx context.Context, client elastic.ESClient, t *testing.T) {
-	// PRESERVE_EVENTS will prevent deleting elasticsearch container
-	if len(strings.TrimSpace(os.Getenv("PRESERVE_EVENTS"))) != 0 {
+	// arg -preserve-events will prevent deleting elasticsearch container
+	if *preserveEvents {
 		return
 	}
 
@@ -316,14 +375,15 @@ func teardown(ctx context.Context, client elastic.ESClient, t *testing.T) {
 
 // setup spins a elasticsearch cluster if requested
 func setup(t *testing.T) {
-	// construct event object based on ENV if there are any
+	// construct event object to be indexed
 	constructEvent()
 
-	// spin up a new 1 node elastic cluster
-	if len(strings.TrimSpace(os.Getenv("SKIP_ELASTIC_SETUP"))) != 0 {
+	// skip the setup
+	if *skipESSetup {
 		return
 	}
 
+	// spin up a single node elasticsearch
 	err := setupElasticsearch(t, "start")
 	Assert(t, err == nil, fmt.Sprintf("failed to start elasticsearch container, err: %v", err))
 }
@@ -359,29 +419,31 @@ func setupElasticsearch(t *testing.T, action string) error {
 		return fmt.Errorf("%s, err: %v", out, err)
 	}
 
+	// buffer to let the container go way or start completely
+	time.Sleep(2 * time.Second)
+
 	return nil
 }
 
-// constructEvent helper function to easily index multiple kinds without changing the code.
-// this is a dummy event
+// constructEvent helper function to create event object
 func constructEvent() {
-	nEvents := os.Getenv("NUM_EVENTS")
-	if len(strings.TrimSpace(nEvents)) != 0 {
-		temp, _ := strconv.Atoi(nEvents)
-		if temp > 0 {
-			numEvents = temp
-		}
+	event.TypeMeta = api.TypeMeta{
+		Kind: "Event",
 	}
-
-	kind := os.Getenv("KIND")
-	if len(strings.TrimSpace(kind)) != 0 {
-		event.Kind = kind
-		event.EventType = fmt.Sprintf("%sXXX", kind)
-		event.Message = fmt.Sprintf("%s[default] XXXed tenant[default]", kind)
+	event.ObjectMeta = api.ObjectMeta{
+		Tenant:          "default",
+		Namespace:       "default",
+		ResourceVersion: "2",
+		UUID:            "adfadf-sadfasdf-adfsdf-sadf",
 	}
-
-	severity := os.Getenv("SEVERITY")
-	if len(strings.TrimSpace(severity)) != 0 {
-		event.Severity = severity
+	event.EventAttributes = events.EventAttributes{
+		Severity: *severity,
+		Type:     *eventType,
+		Message:  fmt.Sprintf("%s - tenant[default]", *eventType),
+		Count:    1,
+		Source: &events.EventSource{
+			Component: "CMD",
+			NodeName:  "test",
+		},
 	}
 }
