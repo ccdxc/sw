@@ -830,7 +830,12 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   WriteBackBufKeysIncr();
 
   // Get userspace R2N buffer for read command and data.
-  dp_mem_t *r2n_buf_va = new dp_mem_t(1, kR2NBufSize, DP_MEM_ALIGN_PAGE);
+  dp_mem_t *r2n_buf_va;
+  if (pdma_dst_lif_override != 0) {
+    r2n_buf_va = new dp_mem_t(1, kR2NBufSize, DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
+  } else {
+    r2n_buf_va = new dp_mem_t(1, kR2NBufSize, DP_MEM_ALIGN_PAGE);
+  }
 
   // Initialize and form the read command
   r2n::r2n_nvme_be_cmd_buf_init(r2n_buf_va, NULL, 0, ssd_handle, 0, 1, 0, nvme_cmd_ptr);
@@ -846,7 +851,6 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   rd_buf->clear_thru();
   *read_buf_ptr = rd_buf;
 
-#ifdef RDMA_LIF_OVERRIDE_TEST_SUPPORTED
   // per VP, we need to find a different way to test LIF override since
   // all the RDMA buffers are now in HBM memory.
 
@@ -860,7 +864,6 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
     printf("Registering address %lx \n", match_addr);
     register_mem_addr(match_addr);
   }
-#endif
 
   // Get the HBM buffer for the write back data for the read command
   dp_mem_t *r2n_hbm_buf_pa = new dp_mem_t(1, kR2NBufSize, DP_MEM_ALIGN_PAGE);
