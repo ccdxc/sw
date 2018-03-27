@@ -3,10 +3,10 @@
 package rpckit
 
 import (
+	"context"
 	"errors"
 
-	"golang.org/x/net/context"
-
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -26,6 +26,23 @@ func (tst *TestRPCHandler) TestRPC(ctx context.Context, req *TestReq) (*TestResp
 	// response message
 	testResp := &TestResp{
 		RespMsg: tst.RespMsg,
+	}
+
+	return testResp, nil
+}
+
+// TestRPCWithContext is the function that handles the TestRPCCtx method calls
+func (tst *TestRPCHandler) TestRPCWithContext(ctx context.Context, req *TestReq) (*TestResp, error) {
+	log.Infof("TestRPCCtx handler got request: %+v", req)
+
+	// save the request
+	tst.ReqMsg = req.ReqMsg
+
+	// response message
+	testResp := &TestResp{
+		RespMsg:       tst.RespMsg,
+		CallerID:      ctxutils.GetPeerID(ctx),
+		CallerAddress: ctxutils.GetPeerAddress(ctx),
 	}
 
 	return testResp, nil

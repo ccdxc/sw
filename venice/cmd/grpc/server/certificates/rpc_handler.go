@@ -5,15 +5,14 @@ package certificates
 import (
 	"crypto/x509"
 	"fmt"
-	"net"
 
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc/peer"
 
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/utils/certmgr"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -22,17 +21,9 @@ type RPCHandler struct {
 	CertMgr *certmgr.CertificateMgr
 }
 
-func getPeerID(ctx context.Context) string {
-	peer, ok := peer.FromContext(ctx)
-	if !ok || peer.Addr == net.Addr(nil) {
-		return "N/A"
-	}
-	return peer.Addr.String()
-}
-
 // SignCertificateRequest checks a CSR submitted by a client, signs it and returns a certificate
 func (h *RPCHandler) SignCertificateRequest(ctx context.Context, req *certapi.CertificateSignReq) (*certapi.CertificateSignResp, error) {
-	peerID := getPeerID(ctx)
+	peerID := ctxutils.GetPeerID(ctx)
 	if !h.CertMgr.IsReady() {
 		log.Errorf("Received invalid certificate request, peerID %v, error: CertMgr not ready", peerID)
 		return nil, fmt.Errorf("CertMgr not ready")

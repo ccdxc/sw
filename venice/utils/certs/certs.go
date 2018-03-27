@@ -230,6 +230,7 @@ func SelfSign(days int, hostname string, privatekey crypto.PrivateKey) (*x509.Ce
 		NotAfter:    time.Now().AddDate(0, 0, days),
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		DNSNames:    []string{hostname},
 	}
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	template.SerialNumber, err = rand.Int(rand.Reader, serialNumberLimit)

@@ -405,10 +405,12 @@ func TestRPCTlsConnections(t *testing.T) {
 	// make an RPC call
 	_, err = testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	AssertOk(t, err, "RPC error")
-	resp, err := tlsTestClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test TLS request"})
+	resp, err := tlsTestClient.TestRPCWithContext(context.Background(), &TestReq{ReqMsg: "test TLS request"})
 	AssertOk(t, err, "RPC error")
 	Assert(t, (tlsTestHandler.ReqMsg == "test TLS request"), "Unexpected req msg", tlsTestHandler)
 	Assert(t, (resp.RespMsg == "test TLS response"), "Unexpected resp msg", resp)
+	Assert(t, resp.CallerID == "testServer", fmt.Sprintf("Unexpected Caller ID, have: %v, want: %v", resp.CallerID, "testServer"))
+	Assert(t, resp.CallerAddress != "", "Caller address should not be empty")
 
 	// verify reconnect with TLS succeeds
 	// TODO: Timing issue - fails

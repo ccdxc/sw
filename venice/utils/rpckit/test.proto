@@ -11,6 +11,7 @@ service Test {
 	// test rpc call
 	rpc TestRPC (TestReq) returns (TestResp) {};
 	rpc TestRPCErr (TestReq) returns (TestResp) {};
+	rpc TestRPCWithContext (TestReq) returns (TestResp) {};
 }
 
 // RPC request
@@ -21,6 +22,8 @@ message TestReq {
 // RPC response
 message TestResp {
 	string respMsg = 1;
+	string callerID = 2;
+	string callerAddress = 3;
 }
 
 // Second RPC handler definition

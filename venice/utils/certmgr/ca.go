@@ -76,7 +76,7 @@ func (l *CertificateAuthority) init(bootstrap bool) error {
 		if err != nil {
 			return errors.Wrap(err, "Error generating signing key")
 		}
-		selfSignedCert, err := certs.SelfSign(caSelfSignedCertDurationDays, "CMD ROOT CA", caKey)
+		selfSignedCert, err := certs.SelfSign(caSelfSignedCertDurationDays, "CMDRootCA", caKey)
 		if err != nil {
 			return errors.Wrap(err, "Error generating self-signed certificate")
 		}
