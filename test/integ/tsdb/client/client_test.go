@@ -86,13 +86,15 @@ func TestRegression(t *testing.T) {
 		epm.RxPacketSize.AddSample(intSamples[i%4])
 		epm.RxBandwidth.AddSample(rand.Float64())
 	}
-
-	time.Sleep(50 * testSendInterval)
-	numSeries, err := getCount(ts, dbName, measName)
-	AssertOk(t, err, "error getting count from db")
-	if numSeries < nIters {
-		t.Fatalf("measured #series (%d) < nIters (%d)", numSeries, nIters)
-	}
+	var numSeries int
+	AssertEventually(t, func() (bool, interface{}) {
+		numSeries, err = getCount(ts, dbName, measName)
+		AssertOk(t, err, "error getting count from db")
+		if numSeries == nIters {
+			return true, nil
+		}
+		return false, nil
+	}, fmt.Sprintf("Records retrieved from the DB did not match the number of records written. Expected: %d, Got: %d", nIters, numSeries), []string{"30ms", maxTimeOut}...)
 }
 
 type endpoint struct {

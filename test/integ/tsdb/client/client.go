@@ -15,6 +15,7 @@ const (
 	testSendInterval            = 10 * time.Millisecond
 	testConnectionRetryInterval = 10 * time.Millisecond
 	testTenant                  = "test-tenant"
+	maxTimeOut                  = "30s"
 )
 
 // Suite keeps per test suite context for teardown, etc.
