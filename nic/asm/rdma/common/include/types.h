@@ -71,6 +71,9 @@
 #define RQCB3_ADDR_GET(_r) \
     add     _r, (3 * CB_UNIT_SIZE_BYTES), k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, RQCB_ADDR_SHIFT;
 
+#define RQCB3_WRID_ADDR_GET(_r) \
+    add     _r, ((3 * CB_UNIT_SIZE_BYTES) + FIELD_OFFSET(rqcb3_t, wrid)), k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, RQCB_ADDR_SHIFT;
+
 #define RQCB4_ADDR_GET(_r) \
     add     _r, (4 * CB_UNIT_SIZE_BYTES), k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, RQCB_ADDR_SHIFT;
     
@@ -629,8 +632,6 @@ struct rqwqe_base_t {
 
 struct cqwqe_t {
     union {
-        // resp_rx doesn't populate wrid anymore. 
-        // expecting that driver would take care of it  
         wrid: 64;
         msn: 32;
     } id;

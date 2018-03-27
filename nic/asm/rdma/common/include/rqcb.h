@@ -177,6 +177,7 @@ struct rqcb2_t {
 
 // Multi-packet write fields used in resp_rx
 struct rqcb3_t {
+    wrid: 64;
     va: 64;         
     len: 32;
     r_key: 32;
@@ -187,7 +188,7 @@ struct rqcb3_t {
     roce_opt_mss:      16;
     rsvd1:             16;
 
-    pad: 288; //36B
+    pad: 224; //28B
 };
 
 //resp_tx stats

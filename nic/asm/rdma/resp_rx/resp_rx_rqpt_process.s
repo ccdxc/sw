@@ -16,6 +16,7 @@ struct resp_rx_s1_t0_k k;
 
 %%
     .param  resp_rx_rqwqe_process
+    .param  resp_rx_rqwqe_wrid_process
 
 .align
 resp_rx_rqpt_process:
@@ -42,9 +43,7 @@ resp_rx_rqpt_process:
                 CAPRI_PHV_FIELD(INFO_OUT1_P, dma_cmd_index), \
                 RESP_RX_DMA_CMD_PYLD_BASE
 
-    // we don't need to handle write_with_imm as we don't need to get
-    // wrid for completion purpose (driver would take care of it).
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, r3)
+    ARE_ALL_FLAGS_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
 
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE0_READ_PC_CE(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, \
+                                 resp_rx_rqwqe_wrid_process, resp_rx_rqwqe_process, r3, c1)

@@ -225,12 +225,9 @@ write_non_first_pkt:
 
 wr_skip_immdt_as_dbell:
     CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, incr_c_index, 1)
-    // increment the spec_cindex, but we don't need to access the
-    // actual wqe to get the WRID as driver is now taking care of 
-    // wrid population when application reads cqwqe.
-    tblmincri   SPEC_RQ_C_INDEX, d.log_num_wqes, 1
-    phvwrpair.e p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
-    phvwr       p.cqwqe.imm_data, IMM_DATA //Exit Slot
+    phvwrpair   p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
+    b           rc_checkout
+    phvwr       p.cqwqe.imm_data, IMM_DATA //BD Slot
 
 /****** Slow path: SEND FIRST/MIDDLE/LAST ******/
 process_send:
@@ -279,8 +276,9 @@ send_skip_immdt_as_dbell:
     phvwr       p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA //BD Slot
 
 send_in_progress:
-    //invoke an MPU only program to continue the activity
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_in_progress_process, r0)
+    // load rqcb3 to get wrid
+    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_in_progress_process, r5)
 
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_RQCB1_P, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
@@ -414,12 +412,9 @@ process_write_only:
     
 wr_only_skip_immdt_as_dbell:
     CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, incr_c_index, 1)
-    // increment the spec_cindex, but we don't need to access the
-    // actual wqe to get the WRID as driver is now taking care of 
-    // wrid population when application reads cqwqe.
-    tblmincri   SPEC_RQ_C_INDEX, d.log_num_wqes, 1
-    phvwrpair.e p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
-    phvwr       p.cqwqe.imm_data, IMM_DATA //Exit Slot
+    phvwrpair   p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
+    b           rc_checkout
+    phvwr       p.cqwqe.imm_data, IMM_DATA //BD Slot
 
 /****** Logic for READ/ATOMIC packets ******/
 process_read_atomic:

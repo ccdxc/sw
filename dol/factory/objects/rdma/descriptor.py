@@ -577,19 +577,15 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
         logger.info('other(actual):')
         other.Show()
 
-        # don't compare wrid anymore as asm is no longer populating it.
-        self.desc.wrid = other.desc.wrid
-
         if self.desc.status == 0: #CQ_STATUS_SUCCESS
             return self.desc == other.desc
 
         logger.info('status is not 0\n')
 
-        # don't compare wrid anymore as asm is no longer populating it.
-        #if self.desc.wrid != other.desc.wrid:
-        #    return False
+        if self.desc.wrid != other.desc.wrid:
+            return False
 
-        #logger.info('wrid matched\n')
+        logger.info('wrid matched\n')
 
         if self.desc.op_type != other.desc.op_type:
             return False

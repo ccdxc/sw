@@ -74,7 +74,7 @@
 
 #define rx_table_s0_t0_action resp_rx_rqcb_process
 
-#define rx_table_s1_t0_action resp_rx_rqcb1_in_progress_process
+#define rx_table_s1_t0_action resp_rx_rqcb3_in_progress_process
 #define rx_table_s1_t0_action1 resp_rx_rsq_backtrack_process
 #define rx_table_s1_t0_action2 resp_rx_dummy_rqpt_process
 #define rx_table_s1_t0_action3 resp_rx_rqpt_process
@@ -91,6 +91,7 @@
 
 #define rx_table_s2_t0_action resp_rx_rqwqe_process
 #define rx_table_s2_t0_action1 resp_rx_rsq_backtrack_adjust_process
+#define rx_table_s2_t0_action2 resp_rx_rqwqe_wrid_process
 
 #define rx_table_s2_t1_action resp_rx_rqlkey_process
 
@@ -1298,7 +1299,7 @@ action resp_rx_read_mpu_only_process () {
     modify_field(t1_s2s_rqcb_to_read_atomic_rkey_info_scr.pad, t1_s2s_rqcb_to_read_atomic_rkey_info.pad);
 
 }
-action resp_rx_rqcb1_in_progress_process () {
+action resp_rx_rqcb3_in_progress_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -1514,6 +1515,10 @@ action resp_rx_rqwqe_process () {
     modify_field(t0_s2s_rqcb_to_wqe_info_scr.dma_cmd_index, t0_s2s_rqcb_to_wqe_info.dma_cmd_index);
     modify_field(t0_s2s_rqcb_to_wqe_info_scr.pad, t0_s2s_rqcb_to_wqe_info.pad);
 
+}
+action resp_rx_rqwqe_wrid_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
 }
 action resp_rx_rqcb1_write_back_process () {
     // from ki global

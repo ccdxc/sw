@@ -57,10 +57,10 @@ resp_rx_rqwqe_process:
                 (HBM_CACHE_LINE_SIZE_BITS - (1 << LOG_SIZEOF_SGE_T_BITS)),  \
                 (RQWQE_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
 
-    // temporarily adding this code back, because not populating wrid is breaking
-    // storage testcases. For now, see if populating wrid for send only packets
-    // is good enough.
     phvwr.!c1   p.cqwqe.id.wrid, d.wrid
+    // store wrid into rqcb3
+    RQCB3_WRID_ADDR_GET(r6)
+    memwr.d.!c1 r6, d.wrid
 
     cmov        r7, c1, offsetof(struct rqwqe_base_t, rsvd2), offsetof(struct rqwqe_base_t, rsvd)
 

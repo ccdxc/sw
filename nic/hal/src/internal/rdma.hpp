@@ -1167,7 +1167,7 @@ typedef struct rqcb2_s {
 
 //rqcb3_t is the 4th 64B of rqcb
 typedef struct rqcb3_s {
-    uint8_t     pad[36];
+    uint8_t     pad[28];
     uint16_t    rsvd1;
     uint16_t    roce_opt_mss;
     uint32_t    roce_opt_ts_echo;
@@ -1176,6 +1176,7 @@ typedef struct rqcb3_s {
     uint32_t    r_key;
     uint32_t    len;
     uint64_t    va;
+    uint64_t    wrid;    
 } PACKED rqcb3_t;
 
 typedef struct rqcb4_s {

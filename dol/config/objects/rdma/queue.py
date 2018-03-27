@@ -150,6 +150,7 @@ class RdmaRQstate(Packet):
         BitField("rqcb2_pad", 0, 448),
 
         # RQCB3
+        LongField("wrid", 0),
         LongField("va", 0),
         IntField("len", 0),
         IntField("r_key", 0),
@@ -160,7 +161,7 @@ class RdmaRQstate(Packet):
         ShortField("roce_opt_mss", 0),
         BitField("rqcb3_rsvd1", 0, 16),
 
-        BitField("rqcb3_pad", 0, 288),
+        BitField("rqcb3_pad", 0, 224),
 
         #RQCB4 - RESP_TX stats
         BitField("rqcb4", 0, 512),

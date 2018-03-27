@@ -4,7 +4,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-// this is an mpu only program, hence there is no d-vector
+struct rqcb3_t d;
 struct resp_rx_s1_t0_k k;
 
 #define WQE_OFFSET      r1
@@ -27,6 +27,11 @@ resp_rx_rqcb1_in_progress_process:
     add     WQE_OFFSET, RQWQE_SGE_OFFSET, CAPRI_KEY_FIELD(IN_P, current_sge_id), LOG_SIZEOF_SGE_T 
     add     ADDR_TO_LOAD, CAPRI_KEY_RANGE(IN_P, curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63), WQE_OFFSET
     sub     NUM_VALID_SGES, CAPRI_KEY_FIELD(IN_P, num_sges), CAPRI_KEY_FIELD(IN_P, current_sge_id)
+
+    // we come here only in case of SEND MID/LAST packets. sometimes for MID packets also completion may be 
+    // required (in case of lkey access permission failures). Hence copying wrid field always into phv's cqwqe
+    // structure. It may or may not be used depending on whether completion is happening or not.
+    phvwr   p.cqwqe.id.wrid, d.wrid
     
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_WQE_P, in_progress, current_sge_id, CAPRI_KEY_RANGE(IN_P, in_progress, current_sge_id))
