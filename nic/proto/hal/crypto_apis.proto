@@ -49,6 +49,13 @@ enum CryptoApiType {
   SYMMAPI_HASH_VERIFY                   = 7;
   ASYMAPI_RSA_SIG_GEN                   = 8;
   ASYMAPI_RSA_SIG_VERIFY                = 9;
+  ASYMAPI_SETUP_PRIV_KEY                = 10;
+  ASYMAPI_SETUP_CERT                    = 11;
+}
+
+enum UpdateType {
+    ADD_UPDATE = 0;
+    DELETE     = 1;
 }
 
 message ECCPoint {
@@ -138,12 +145,34 @@ message CryptoAsymApiRespRSACRTDecrypt {
   bytes                             plain_text         = 1;
 }
 
+// RSA Private Key Setup
+// Temp API as a workaround until secure mon is ready
+message CryptoAsymApiReqSetupPrivateKey {
+    string                          key                 = 1;
+}
+
+message CryptoAsymApiRespSetupPrivateKey {
+    int32                           key_idx             = 1;
+}
+
+// Certificate Setup
+message CryptoAsymApiReqSetupCert {
+    UpdateType                      update_type         = 1;    // Add/Update delete
+    int32                           cert_id             = 2;    // Cert id
+    string                          body                = 3;    // Body
+    int32                           next_cert_id        = 5;    // Next Cert in the chain
+}
+
+message CryptoAsymApiRespSetupCert {
+}
+
 // RSA Signature Generation
 message CryptoAsymApiReqRSASignatureGen {
   uint32                            KeySize             = 1;
   bytes                             mod_n               = 2;
   bytes                             d                   = 3;
   bytes                             h                   = 4;
+  int32                             key_idx             = 5;                       
 }
 
 message CryptoAsymApiRespRSASignatureGen {
@@ -202,7 +231,9 @@ message CryptoApiRequest {
     CryptoSymmApiReqHashGenerate    hash_generate       = 8;
     CryptoSymmApiReqHashVerify      hash_verify         = 9;
     CryptoAsymApiReqRSASignatureGen rsa_sig_gen         = 10;
-    CryptoAsymApiReqRSASignatureVerify  rsa_sig_verify  = 11;   
+    CryptoAsymApiReqRSASignatureVerify  rsa_sig_verify  = 11;
+    CryptoAsymApiReqSetupPrivateKey setup_priv_key      = 12;
+    CryptoAsymApiReqSetupCert       setup_cert          = 13;
   }
 }
 
@@ -216,6 +247,8 @@ message CryptoApiResponse {
     CryptoAsymApiRespRSACRTDecrypt  rsa_crt_decrypt     = 6;
     CryptoSymmApiRespHashGenerate   hash_generate       = 7;
     CryptoAsymApiRespRSASignatureGen    rsa_sig_gen     = 8;
+    CryptoAsymApiRespSetupPrivateKey setup_priv_key     = 9;
+    CryptoAsymApiRespSetupCert       setup_cert         = 10;
   }
 }
 

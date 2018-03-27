@@ -691,6 +691,43 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
 }
 
 hal_ret_t
+proxy_flow_handle_tls_config(types::ProxyType proxy_type, 
+                             const flow_key_t &flow_key,
+                             const proxy::TlsProxyFlowConfig &tls_flow_config,
+                             proxy::ProxyResponse *rsp)
+{
+    proxy_flow_info_t   *pfi = NULL;
+    proxy_t*            proxy = NULL;
+
+    proxy = find_proxy_by_type(proxy_type);
+    if(proxy == NULL) {
+        if(rsp)
+            rsp->set_api_status(types::API_STATUS_PROXY_NOT_ENABLED);
+        HAL_TRACE_ERR("{}: proxy {} not found", __func__, proxy_type);
+        return HAL_RET_PROXY_NOT_FOUND;
+    }
+
+    pfi = find_proxy_flow_info(proxy, &flow_key);
+    if(!pfi) {
+        HAL_TRACE_DEBUG("Failed to find the proxy flow info for the  flow");
+        if(rsp)
+            rsp->set_api_status(types::API_STATUS_FLOW_INFO_INVALID);
+        return HAL_RET_FLOW_NOT_FOUND;
+    }
+    
+    pfi->u.tlsproxy.cert_id = tls_flow_config.cert_id();
+    pfi->u.tlsproxy.key_id = tls_flow_config.key_id();
+    pfi->u.tlsproxy.is_valid = true;
+
+    HAL_TRACE_DEBUG("TLS proxy config for qid: {}, cert: {}, key: {}", 
+                    pfi->qid1,
+                    pfi->u.tlsproxy.cert_id,
+                    pfi->u.tlsproxy.key_id);
+ 
+    return HAL_RET_OK;    
+}
+
+hal_ret_t
 proxy_flow_enable(types::ProxyType proxy_type,
                   const flow_key_t &flow_key,
                   bool alloc_qid,
@@ -768,11 +805,10 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
                   proxy::ProxyResponse *rsp)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    vrf_id_t         tid = 0;
+    vrf_id_t            tid = 0;
     flow_key_t          flow_key = {0};
     proxy_flow_info_t*  pfi = NULL;
     proxy_t*            proxy = NULL;
-
 
     ret = validate_proxy_flow_config_request(req, rsp);
     if(ret != HAL_RET_OK) {
@@ -793,8 +829,20 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
                                 rsp,
                                 &(req.ipsec_config()));
         if(ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("Failed to enable proxy service for a flow");
+            HAL_TRACE_ERR("Failed to enable proxy service for the flow");
             return ret;
+        }
+
+        if(req.has_tls_proxy_config()) {
+            HAL_TRACE_DEBUG("Found TLS proxy config");
+            ret = proxy_flow_handle_tls_config(req.spec().proxy_type(),
+                                               flow_key,
+                                               req.tls_proxy_config(),
+                                               rsp);
+            if(ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to update tls config for the flow");
+                return ret;
+            }
         }
     } else {
         HAL_TRACE_DEBUG("proxy: disable proxy for the flow");

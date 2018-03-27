@@ -124,6 +124,10 @@
 		CryptoAsymApiRespRSADecrypt
 		CryptoAsymApiReqRSACRTDecrypt
 		CryptoAsymApiRespRSACRTDecrypt
+		CryptoAsymApiReqSetupPrivateKey
+		CryptoAsymApiRespSetupPrivateKey
+		CryptoAsymApiReqSetupCert
+		CryptoAsymApiRespSetupCert
 		CryptoAsymApiReqRSASignatureGen
 		CryptoAsymApiRespRSASignatureGen
 		CryptoAsymApiReqRSASignatureVerify
@@ -641,6 +645,7 @@
 		ProxyGetResponse
 		ProxyGetResponseMsg
 		IpsecFlowConfig
+		TlsProxyFlowConfig
 		ProxyFlowConfigRequest
 		ProxyFlowConfigRequestMsg
 		ProxyGetFlowInfoRequest

@@ -117,6 +117,12 @@ typedef struct ipsec_flow_info_s {
     } u;
 } ipsec_flow_info_t;
 
+typedef struct tls_proxy_flow_info_s {
+    bool                    is_valid;
+    uint32_t                cert_id;
+    uint32_t                key_id;
+} tls_proxy_flow_info_t;
+
 typedef struct proxy_flow_info_s {
     hal_spinlock_t      slock;                   // lock to protect this structure
     flow_key_t          flow_key;                // Flow 
@@ -124,7 +130,8 @@ typedef struct proxy_flow_info_s {
     qid_t               qid2;                    // qid instance 2 (e.g. nflow)
   
     union {
-        ipsec_flow_info_t    ipsec;
+        ipsec_flow_info_t           ipsec;
+        tls_proxy_flow_info_t       tlsproxy;
     } u;
 
     proxy_t*            proxy;                   // proxy service
@@ -175,8 +182,13 @@ hal_ret_t proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
 hal_ret_t proxy_flow_enable(types::ProxyType proxy_type,
                             const flow_key_t &flow_key,
                             bool alloc_qid,
-                            proxy::ProxyResponse *rsp = NULL,
-                            const proxy::IpsecFlowConfig *ipsec_flow_config = NULL);
+                            proxy::ProxyResponse *rsp,
+                            const proxy::IpsecFlowConfig *req);
+hal_ret_t
+proxy_flow_handle_tls_config(types::ProxyType proxy_type, 
+                             const flow_key_t &flow_key,
+                             const proxy::TlsProxyFlowConfig &tls_flow_config,
+                             proxy::ProxyResponse *rsp);
 
 proxy_flow_info_t* proxy_get_flow_info(types::ProxyType proxy_type,
                                        const flow_key_t* flow_key);

@@ -1,13 +1,43 @@
+
+
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/internal/crypto_apis.hpp"
+#include "nic/hal/src/internal/crypto_cert_store.hpp"
 // #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 // #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
+#include <openssl/pem.h>
 
 namespace hal {
 
+
+/* Crypto Cert Store related APIs */
+
+void *
+crypto_cert_store_get_key_func(void *entry)
+{
+    HAL_ASSERT(entry != NULL);
+    return (void *)&(((crypto_cert_t *)entry)->cert_id);
+}
+
+uint32_t
+crypto_cert_store_compute_hash_func(void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(crypto_cert_id_t)) % ht_size;
+}
+
+bool
+crypto_cert_store_compare_key_func(void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if(*(crypto_cert_id_t *) key1 == *(crypto_cert_id_t *)key2) {
+        return true;
+    }
+    return false;
+}
 
 /* Asym APIs */
 hal_ret_t crypto_asym_api_ecc_point_mul(cryptoapis::CryptoApiRequest &req,
@@ -251,6 +281,83 @@ hal_ret_t crypto_asym_api_rsa_crt_decrypt(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
+hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
+					 cryptoapis::CryptoApiResponse *resp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    BIO                 *bio = NULL;
+    EVP_PKEY            *pkey = NULL;
+    uint32_t            key_type = 0;
+    uint32_t            key_size = 0;
+    int                 key_idx = -1;
+    RSA                 *rsa = NULL; 
+    BIGNUM              *n = NULL, *e = NULL, *d = NULL;
+    uint8_t             buf_n[256] = {0}, buf_d[256] = {0};
+    pd::pd_capri_barco_asym_rsa2k_setup_private_key_args_t args;
+
+    // decode the key 
+    bio = BIO_new_mem_buf(req.setup_priv_key().key().c_str(), -1);
+    if(!bio) {
+        HAL_TRACE_ERR("Failed to allocate bio");
+        ret = HAL_RET_ERR;
+        goto end;
+    }
+
+    // decode the key
+    pkey = PEM_read_bio_PrivateKey(bio, NULL, 0, NULL);
+    if(!pkey) {
+        HAL_TRACE_ERR("Failed to decode the key");
+        ret = HAL_RET_ERR;
+        goto end;
+    }
+    
+    // Extract parameters
+    key_type = EVP_PKEY_base_id(pkey);
+
+    HAL_TRACE_DEBUG("Received privkey type {}", key_type);
+    switch (key_type) {
+    case EVP_PKEY_RSA:
+        rsa = EVP_PKEY_get0_RSA(pkey);
+        if(!rsa) {
+            HAL_TRACE_ERR("Failed to extract RSA from key");
+            ret = HAL_RET_ERR;
+            goto end;
+        }
+        key_size = RSA_size(rsa);
+        if(key_size != 256) {
+            HAL_TRACE_ERR("Invalid key size: {}", key_size);
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
+        
+        RSA_get0_key(rsa, 
+                     (const BIGNUM**)&n, 
+                     (const BIGNUM**)&e, 
+                     (const BIGNUM**)&d);
+        BN_bn2bin(n, buf_n);
+        BN_bn2bin(d, buf_d);
+        args.n = (uint8_t *)buf_n;
+        args.d = (uint8_t *)buf_d;
+        args.key_idx = &key_idx;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY,
+                              (void *)&args);
+        break;
+    default:
+        HAL_TRACE_ERR("Unsupported key type: {}", key_type);
+        ret = HAL_RET_INVALID_ARG;
+        break;
+    }
+end:
+    if (ret == HAL_RET_OK) {
+        resp->mutable_setup_priv_key()->set_key_idx(key_idx);
+        resp->set_api_status(types::API_STATUS_OK);
+    }
+    else {
+        resp->set_api_status(types::API_STATUS_ERR);
+    }
+    return ret;
+}
+
 hal_ret_t crypto_asym_api_rsa_sig_gen(cryptoapis::CryptoApiRequest &req,
         cryptoapis::CryptoApiResponse *resp)
 {
@@ -263,6 +370,7 @@ hal_ret_t crypto_asym_api_rsa_sig_gen(cryptoapis::CryptoApiRequest &req,
 
     switch (key_size) {
         case 256:
+            args.key_idx = req.rsa_sig_gen().key_idx();
             args.n = (uint8_t *)req.rsa_sig_gen().mod_n().data();
             args.d = (uint8_t *)req.rsa_sig_gen().d().data();
             args.h = (uint8_t *)req.rsa_sig_gen().h().data();
@@ -317,6 +425,147 @@ hal_ret_t crypto_asym_api_rsa_sig_verify(cryptoapis::CryptoApiRequest &req,
 
     return ret;
 }
+
+static hal_ret_t
+crypto_asym_extract_cert_pubkey_params(crypto_cert_t *cert) 
+{
+    hal_ret_t     ret = HAL_RET_OK;
+    EVP_PKEY      *pkey = NULL;
+    RSA           *rsa = NULL;
+    BIGNUM        *n = NULL, *e = NULL, *d = NULL;
+
+    if(!cert || !cert->x509_cert)
+        return HAL_RET_INVALID_ARG;
+    
+    pkey = X509_get0_pubkey(cert->x509_cert);
+    cert->pub_key.key_type = EVP_PKEY_base_id(pkey);
+    HAL_TRACE_DEBUG("Received pubkey type {}", cert->pub_key.key_type);
+
+    switch(cert->pub_key.key_type) {
+    case EVP_PKEY_RSA:
+        rsa = EVP_PKEY_get0_RSA(pkey);
+        if(!rsa) {
+            HAL_TRACE_ERR("Failed to extra rsa from the cert");
+            ret = HAL_RET_ERR;
+            goto end;
+        }
+        cert->pub_key.key_len = RSA_size(rsa);
+        RSA_get0_key(rsa, (const BIGNUM**)&n, (const BIGNUM**)&e, (const BIGNUM **)&d);
+        cert->pub_key.u.rsa_params.mod_n_len = BN_num_bytes(n);
+        BN_bn2bin(n, cert->pub_key.u.rsa_params.mod_n);
+
+        cert->pub_key.u.rsa_params.e_len = BN_num_bytes(e);
+        BN_bn2bin(e, cert->pub_key.u.rsa_params.e);
+
+        HAL_TRACE_DEBUG("n: {}", cert->pub_key.u.rsa_params.mod_n_len);
+        HAL_TRACE_DEBUG("e: {}", cert->pub_key.u.rsa_params.e_len);
+        break;
+    default:
+        HAL_TRACE_ERR("Invalid Key type {}", cert->pub_key.key_type);
+        break;
+    }
+ end:
+
+    return ret;
+}
+hal_ret_t crypto_asym_api_setup_cert(cryptoapis::CryptoApiRequest &req,
+                                     cryptoapis::CryptoApiResponse *resp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    crypto_cert_t       *cert = NULL;
+    sdk_ret_t           sdk_ret;
+    BIO                 *bio = NULL;
+    if(req.setup_cert().cert_id() <= 0) {
+        HAL_TRACE_ERR("Invalid cert-id: {}", 
+                      req.setup_cert().cert_id());
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+    
+    //find cert with the id
+    cert = find_cert_by_id(req.setup_cert().cert_id());
+
+    if(req.setup_cert().update_type() == cryptoapis::ADD_UPDATE) {
+        if(!cert) {
+            // Allocate a new cert
+            cert = crypto_cert_alloc_init();
+            if(!cert) {
+                HAL_TRACE_ERR("Failed to allocate cert");
+                ret = HAL_RET_OOM;
+                goto end;
+            }
+            
+            cert->cert_id = req.setup_cert().cert_id();
+            
+            // Add the cert to the hashtable 
+            sdk_ret = g_hal_state->crypto_cert_store_id_ht()->
+                    insert(cert, &cert->ht_ctxt);
+            if(sdk_ret != sdk::SDK_RET_OK) {
+                HAL_TRACE_ERR("Failed to add cert to the hashtable");
+                ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+                goto end;
+            } // add hashtable
+        } // Add new cert case
+        // update body
+        cert = find_cert_by_id(req.setup_cert().cert_id());
+        if(!cert) {
+            HAL_TRACE_ERR("cert cannot be found {}",
+                          req.setup_cert().cert_id());
+            HAL_ASSERT(0);
+        }
+        bio = BIO_new_mem_buf(req.setup_cert().body().c_str(), -1);
+        if(!bio) {
+            HAL_TRACE_ERR("Failed to allocate bio");
+            ret = HAL_RET_ERR;
+            goto end;
+        }
+
+        // Decode the cert
+        cert->x509_cert = PEM_read_bio_X509(bio, NULL, 0, NULL);
+        if(!cert->x509_cert) {
+            HAL_TRACE_ERR("Failed to decode the certificate");
+            ret = HAL_RET_ERR;
+            goto end;
+        }
+
+        // Extract public key params
+        ret = crypto_asym_extract_cert_pubkey_params(cert);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to extract pubkey params");
+            goto end;
+        }
+
+        cert->next_cert_id = req.setup_cert().next_cert_id();
+        HAL_TRACE_DEBUG("Updated cert with idx: {}", cert->cert_id);
+    } else {
+        // Delete case
+        if(!cert) {
+            HAL_TRACE_DEBUG("Cert already deleted");
+            ret = HAL_RET_OK;
+            goto end;
+        }
+        // delete is from the hashtable
+        g_hal_state->crypto_cert_store_id_ht()->remove(&cert->cert_id);
+
+        // free memory
+        crypto_cert_free(cert);
+    }
+
+end:
+    if(ret == HAL_RET_OK) {
+        resp->set_api_status(types::API_STATUS_OK);
+    } else {
+        resp->set_api_status(types::API_STATUS_ERR);
+        if(cert) {
+            crypto_cert_free(cert);
+        }
+    }
+    if(bio) {
+        BIO_free(bio);    
+    }
+    return ret;
+}
+
 
 hal_ret_t crypto_symm_api_hash_request(cryptoapis::CryptoApiRequest &req,
 				       cryptoapis::CryptoApiResponse *resp,
@@ -430,6 +679,12 @@ hal_ret_t cryptoapi_invoke(cryptoapis::CryptoApiRequest &req,
             break;
         case cryptoapis::ASYMAPI_RSA_SIG_VERIFY:
             ret = crypto_asym_api_rsa_sig_verify(req, resp);
+            break;
+        case cryptoapis::ASYMAPI_SETUP_PRIV_KEY:
+            ret = crypto_asym_api_setup_priv_key(req, resp);
+            break;
+        case cryptoapis::ASYMAPI_SETUP_CERT:
+            ret = crypto_asym_api_setup_cert(req, resp);
             break;
         default:
             HAL_TRACE_ERR("Invalid API: {}", req.api_type());

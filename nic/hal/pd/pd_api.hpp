@@ -2186,8 +2186,15 @@ typedef struct pd_capri_barco_asym_rsa2k_crt_decrypt_args_s {
     uint8_t *m;
 } __PACK__ pd_capri_barco_asym_rsa2k_crt_decrypt_args_t;
 
+typedef struct pd_capri_barco_asym_rsa2k_setup_private_key_args_s {
+    uint8_t *n; 
+    uint8_t *d;
+    int32_t *key_idx;
+} __PACK__ pd_capri_barco_asym_rsa2k_setup_private_key_args_t;
+
 typedef struct pd_capri_barco_asym_rsa2k_sig_gen_args_s {
-    uint8_t *n;
+    int32_t key_idx;
+    uint8_t *n; 
     uint8_t *d;
     uint8_t *h;
     uint8_t *s;
@@ -2519,7 +2526,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_DROP_MONITOR_RULE_GET,    216, "PD_FUNC_ID_DROP_MONITOR_RULE_GET")\
     ENTRY(PD_FUNC_ID_VRF_RESTORE,              217, "PD_FUNC_ID_VRF_RESTORE") \
     ENTRY(PD_FUNC_ID_TABLE_PROPERTIES_GET,     218, "PD_FUNC_ID_TABLE_PROPERTIES_GET") \
-    ENTRY(PD_FUNC_ID_MAX,                      219, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY, 219, "PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY")\
+    ENTRY(PD_FUNC_ID_MAX,                      220, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2837,6 +2845,7 @@ PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_sig_verify);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_encrypt);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_decrypt);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_crt_decrypt);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_setup_private_key);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_gen);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_verify);
 PD_FUNCP_TYPEDEF(pd_capri_barco_sym_hash_process_request);
@@ -3175,6 +3184,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_capri_barco_asym_rsa2k_encrypt);
         PD_UNION_FIELD(pd_capri_barco_asym_rsa2k_decrypt);
         PD_UNION_FIELD(pd_capri_barco_asym_rsa2k_crt_decrypt);
+        PD_UNION_FIELD(pd_capri_barco_asym_rsa2k_setup_private_key);
         PD_UNION_FIELD(pd_capri_barco_asym_rsa2k_sig_gen);
         PD_UNION_FIELD(pd_capri_barco_asym_rsa2k_sig_verify);
         PD_UNION_FIELD(pd_capri_barco_sym_hash_process_request);

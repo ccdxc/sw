@@ -107,6 +107,11 @@ message IpsecFlowConfig {
     session.FlowKey     esp_flow_key    = 2;    
 }
 
+message TlsProxyFlowConfig {
+    uint32              cert_id         = 1;    // Certificate info
+    uint32              key_id          = 2;    // Key associated with the cert    
+}
+
 message ProxyFlowConfigRequest {
     types.ObjectMeta    meta            = 1; // object meta
     ProxySpec           spec            = 2; // Specify the type of proxy service 
@@ -115,6 +120,7 @@ message ProxyFlowConfigRequest {
     session.FlowData    flow_data       = 5; // flow data
     bool                alloc_qid       = 6; // false: disable Qid allocation
     IpsecFlowConfig     ipsec_config    = 7; // IPSEC specific configuration
+    TlsProxyFlowConfig  tls_proxy_config = 8; // TLS Proxy specific configuration
 }
 
 message ProxyFlowConfigRequestMsg {

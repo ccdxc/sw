@@ -3,6 +3,7 @@
 #include <openssl/rsa.h>
 
 static RSA_METHOD *pse_rsa_method = NULL;
+static int pse_rsa_ex_data_index = -1;
 
 // Methods
 static int pse_rsa_pub_enc(int flen, const unsigned char *from,
@@ -16,6 +17,7 @@ static int pse_rsa_priv_dec(int flen, const unsigned char *from,
 static int pse_rsa_mod_exp(BIGNUM *r0, const BIGNUM *I, RSA *rsa, BN_CTX *ctx);
 static int pse_rsa_bn_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
                               const BIGNUM *m, BN_CTX *ctx, BN_MONT_CTX *m_ctx);
+static int pse_rsa_free(RSA *rsa);
 
 RSA_METHOD *pse_get_RSA_methods(void) 
 {
@@ -36,9 +38,16 @@ RSA_METHOD *pse_get_RSA_methods(void)
     res &= RSA_meth_set_priv_dec(pse_rsa_method, pse_rsa_priv_dec);
     res &= RSA_meth_set_mod_exp(pse_rsa_method, pse_rsa_mod_exp);
     res &= RSA_meth_set_bn_mod_exp(pse_rsa_method, pse_rsa_bn_mod_exp);
+    res &= RSA_meth_set_finish(pse_rsa_method, pse_rsa_free);
     if(res ==  0)  {
         WARN("Failed to set RSA methods");
         return NULL;
+    }
+    if(pse_rsa_ex_data_index == -1) {
+        pse_rsa_ex_data_index = RSA_get_ex_new_index(0,
+                                                     "Pen SSL Hw Key Index",
+                                                     NULL, NULL, NULL);
+        INFO("Received RSA ex data index: %d", pse_rsa_ex_data_index);
     }
     return pse_rsa_method;
 }
@@ -48,7 +57,41 @@ void pse_free_RSA_methods(void)
     if(NULL != pse_rsa_method) {
         RSA_meth_free(pse_rsa_method);
         pse_rsa_method = NULL;
+        if(pse_rsa_ex_data_index != -1) {
+            CRYPTO_free_ex_index(CRYPTO_EX_INDEX_RSA, pse_rsa_ex_data_index);
+            pse_rsa_ex_data_index = -1;
+        }
     }    
+}
+
+PSE_RSA_EX_DATA* pse_rsa_get_ex_data(RSA *rsa)
+{
+    return (PSE_RSA_EX_DATA *)RSA_get_ex_data(rsa, pse_rsa_ex_data_index);    
+}
+
+static int 
+pse_rsa_set_ex_data(RSA *rsa, uint32_t hw_key_index)
+{
+    PSE_RSA_EX_DATA *ex_data = PSE_MALLOC(sizeof(PSE_RSA_EX_DATA));
+    if(!ex_data) {
+        WARN("Failed to allocate rsa ex data");
+        return -1;
+    }
+
+    ex_data->hw_key_index = hw_key_index;
+    RSA_set_ex_data(rsa, pse_rsa_ex_data_index, ex_data);
+    return 1;
+}
+
+static int pse_rsa_free(RSA *rsa)
+{
+    // Free ex data 
+    PSE_RSA_EX_DATA *ex_data = pse_rsa_get_ex_data(rsa);
+    if(ex_data) {
+        PSE_FREE(ex_data);
+        RSA_set_ex_data(rsa, pse_rsa_ex_data_index, NULL);
+    }
+    return 1;
 }
 
 int pse_rsa_pub_enc(int flen, const unsigned char *from,
@@ -158,7 +201,7 @@ int pse_rsa_priv_enc(int flen, const unsigned char *from,
     INFO("Inside");
     int ret = 0, rsa_len = 0;
     unsigned char* buf = NULL;
-    pse_buffer_t bn, bd;
+    pse_buffer_t bn;
     const BIGNUM *n = NULL, *e = NULL, *d = NULL;
     BN_CTX *ctx = NULL;
 
@@ -166,14 +209,21 @@ int pse_rsa_priv_enc(int flen, const unsigned char *from,
         WARN("Invalid args");
         goto cleanup;
     }
- 
+    // Get Hw Key index
+    PSE_RSA_EX_DATA *ex_data = pse_rsa_get_ex_data(rsa);
+    if(!ex_data) {
+        WARN("Failed to get rsa ex data");
+        goto cleanup;
+    }
+
     rsa_len = RSA_size(rsa);
     buf = PSE_MALLOC(rsa_len);
     if(!buf) {
         WARN("Failed to allocate input buffer");
         goto cleanup;
     }
-    INFO("flen %d, rsa_len = %d, padding %d", flen, rsa_len, padding);
+    INFO("flen %d, rsa_len = %d, padding %d, key_idx: %d", 
+                    flen, rsa_len, padding, ex_data->hw_key_index);
 
     switch (padding) {
     case RSA_PKCS1_PADDING:
@@ -211,14 +261,12 @@ int pse_rsa_priv_enc(int flen, const unsigned char *from,
      
     RSA_get0_key(rsa, &n, &e, &d);
     pse_BN_to_buffer_pad(n, &bn, rsa_len);
-    pse_BN_to_buffer_pad(d, &bd, rsa_len);
-
     LOG_BUFFER("bn", bn);
-    LOG_BUFFER("bd", bd);
  
 #ifndef NO_PEN_HW_OFFLOAD
-    ret = pd_tls_asym_rsa2k_sig_gen(bn.data,
-                                    bd.data,
+    ret = pd_tls_asym_rsa2k_sig_gen(ex_data->hw_key_index,
+                                    bn.data,
+                                    NULL,
                                     buf,
                                     to);
 #else 
@@ -235,7 +283,6 @@ cleanup:
         BN_CTX_free(ctx);
     }
     pse_free_buffer(&bn);
-    pse_free_buffer(&bd);
     return ret;
 }
 
@@ -259,4 +306,90 @@ int pse_rsa_bn_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
     INFO("Inside");
     return RSA_meth_get_bn_mod_exp(RSA_PKCS1_OpenSSL())(r, a, p, m, ctx, m_ctx);
 }
+
+
+static RSA* pse_get_rsa(PSE_KEY* key) 
+{
+    BIGNUM *rsa_n = NULL, *rsa_e = NULL;
+    RSA *rsa = NULL;
+    PSE_RSA_KEY *rsa_key = NULL;
+
+    if(!key) {
+        WARN("Invalid args");
+        goto err;
+    }
+    
+    rsa_key = &(key->u.rsa_key);
+    INFO("n: %d", rsa_key->rsa_n.len);
+    rsa_n = pse_buffer_to_BN(&(rsa_key->rsa_n));
+    if(!rsa_n) {
+        WARN("Failed to get the value of n");
+        goto err;
+    }
+    
+    rsa_e = pse_buffer_to_BN(&(rsa_key->rsa_e));
+    if(!rsa_e || BN_is_zero(rsa_e)) {
+        // use the most common default value
+        rsa_e = BN_new();
+        if(!rsa_e) {
+            WARN("Failed to allocate rsa_e");
+            goto err;
+        }
+        BN_set_word(rsa_e, RSA_F4);
+    }
+
+    rsa = RSA_new();
+    if(rsa == NULL) {
+        WARN("Failed to allocate RSA");
+        goto err;
+    }
+    
+    RSA_set0_key(rsa, rsa_n, rsa_e, NULL);
+    
+    RSA_set_method(rsa, pse_get_RSA_methods()); 
+
+    return rsa;
+
+err:
+    if(rsa_n)
+        BN_clear_free(rsa_n);
+    if(rsa_e)
+        BN_clear_free(rsa_e);
+    return NULL;
+}
+
+/* 
+ * BUILD EVP PKey
+ */
+EVP_PKEY* 
+pse_rsa_get_evp_key(ENGINE* engine, const char* key_id, 
+                    UI_METHOD *ui_method, PSE_KEY* key)
+{
+    EVP_PKEY    *pkey = NULL;
+    RSA         *rsa = NULL;
+
+    INFO("Inside");    
+    
+    rsa = pse_get_rsa(key);
+    if(!rsa) {
+        return NULL;    
+    }
+
+    pkey = EVP_PKEY_new();
+    if(!pkey) {
+        WARN("Failed to allocate pkey");
+        goto err;
+    }
+    
+    EVP_PKEY_set1_RSA(pkey, rsa);
+    pse_rsa_set_ex_data(rsa, key->index);
+
+    return pkey;
+
+err:
+    if(rsa)
+        RSA_free(rsa);
+    return NULL;
+}
+
 

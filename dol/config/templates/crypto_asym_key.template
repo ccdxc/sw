@@ -1,0 +1,8 @@
+# Crypto Asym Key Object Template File.
+meta:
+    id: CRYPTO_ASYM_KEY
+    feature_set:
+        - iris
+id                    : -1
+key                   : 0
+key_idx               : -1

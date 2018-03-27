@@ -212,9 +212,19 @@ pd_capri_barco_asym_rsa2k_crt_decrypt (pd_capri_barco_asym_rsa2k_crt_decrypt_arg
 }
 
 hal_ret_t
+pd_capri_barco_asym_rsa2k_setup_private_key (pd_capri_barco_asym_rsa2k_setup_private_key_args_t *args)
+{
+    return capri_barco_asym_rsa2k_setup_private_key(
+                                          args->n, 
+                                          args->d,
+                                          args->key_idx);
+}
+
+hal_ret_t
 pd_capri_barco_asym_rsa2k_sig_gen (pd_capri_barco_asym_rsa2k_sig_gen_args_t *args)
 {
-    return capri_barco_asym_rsa2k_sig_gen(args->n, 
+    return capri_barco_asym_rsa2k_sig_gen(args->key_idx,
+                                          args->n, 
                                           args->d,
                                           args->h,
                                           args->s);

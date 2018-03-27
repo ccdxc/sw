@@ -94,6 +94,7 @@ entries:
         tracking: False
         timestamp: False
         fte: True
+        tls_sess_profile: ref://factory/templates/id=TLS_PROXY_SESS_PROFILE_RSA
         responder: 
             port : const/83
         initiator: 

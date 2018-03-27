@@ -44,3 +44,9 @@ void pse_free_buffer(pse_buffer_t *buf)
         buf->data = NULL;
     }     
 }
+
+BIGNUM *pse_buffer_to_BN(const pse_buffer_t *buf)
+{
+    BIGNUM  *ret = NULL;
+    return BN_bin2bn(buf->data, buf->len, ret);
+}

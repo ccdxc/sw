@@ -12,6 +12,7 @@ import config.hal.api           as halapi
 from config.store               import Store
 from infra.common.logging       import logger
 from config.objects.tcp_proxy_cb        import TcpCbHelper
+from config.objects.tls_proxy_sess_profile import TlsProxySessProfileHelper
 
 class ProxyCbServiceObject(base.ConfigObjectBase):
     def __init__(self, session):
@@ -34,6 +35,12 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
                 req_spec.proxy_en = True
                 req_spec.alloc_qid = True
+                if hasattr(self, 'tls_sess_profile'):
+                    req_spec.tls_proxy_config.cert_id = self.tls_sess_profile.cert.id
+                    req_spec.tls_proxy_config.key_id = self.tls_sess_profile.key.key_idx
+                    logger.info("proxy cert id %d" % self.tls_sess_profile.cert.id)
+                    logger.info("proxy key id %d" % self.tls_sess_profile.key.key_idx)
+
             self.session.iflow.PrepareHALRequestSpec(req_spec)
         elif self.session.iflow.label == 'RAW-REDIR' or self.session.iflow.label == 'RAW-REDIR-FLOW-MISS' or \
              self.session.iflow.label == 'RAW-REDIR-KNOWN-APPID':
@@ -107,6 +114,13 @@ class ProxyCbServiceObjectHelper:
 
     def Configure(self):
         for proxycb in self.proxy_service_list:
+            if proxycb.session.iflow.label == 'TCP-PROXY-E2E':
+                tls_sess_profile_template = \
+                        getattr(proxycb.session.spec, 'tls_sess_profile', None)
+                if tls_sess_profile_template:
+                    proxycb.tls_sess_profile = tls_sess_profile_template.Get(Store)
+                    TlsProxySessProfileHelper.main(proxycb.tls_sess_profile)
+
             if proxycb.session.iflow.label == 'TCP-PROXY' or proxycb.session.iflow.label == 'ESP-PROXY' or proxycb.session.iflow.label == 'IPSEC-PROXY' or \
                 proxycb.session.iflow.label == 'RAW-REDIR' or proxycb.session.iflow.label == 'RAW-REDIR-FLOW-MISS' or \
                 proxycb.session.iflow.label == 'RAW-REDIR-SPAN' or proxycb.session.iflow.label == 'RAW-REDIR-KNOWN-APPID' or \

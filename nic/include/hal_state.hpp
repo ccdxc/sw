@@ -111,6 +111,7 @@ public:
     slab *l4lb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_L4LB]); }
     slab *flow_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_FLOW]); }
     slab *session_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_SESSION]); }
+    slab *crypto_cert_store_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_CRYPTO_CERT_STORE]); }
     slab *tlscb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_TLSCB]); }
     slab *tcpcb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_TCPCB]); }
     slab *qos_class_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_QOS_CLASS]); }
@@ -181,6 +182,7 @@ public:
     ht *qos_class_ht(void) const { return qos_class_ht_; }
     bitmap *qos_cmap_pcp_bmp(void) const { return qos_cmap_pcp_bmp_; }
     bitmap *qos_cmap_dscp_bmp(void) const { return qos_cmap_dscp_bmp_; }
+    ht *crypto_cert_store_id_ht(void) const { return crypto_cert_store_id_ht_; }
     ht *tlscb_id_ht(void) const { return tlscb_id_ht_; }
     ht *tcpcb_id_ht(void) const { return tcpcb_id_ht_; }
     ht *copp_ht(void) const { return copp_ht_; }
@@ -251,6 +253,7 @@ private:
     ht    *gft_exact_match_profile_id_ht_;
     ht    *gft_hdr_transposition_profile_id_ht_;
     ht    *gft_exact_match_flow_entry_id_ht_;
+    ht    *crypto_cert_store_id_ht_;
     bitmap                  *qos_cmap_pcp_bmp_;
     bitmap                  *qos_cmap_dscp_bmp_;
 
@@ -366,6 +369,10 @@ public:
     ht *session_hal_handle_ht(void) const { return oper_db_->session_hal_handle_ht(); }
     ht *session_hal_iflow_ht(void) const { return oper_db_->session_hal_iflow_ht(); }
     ht *session_hal_rflow_ht(void) const { return oper_db_->session_hal_rflow_ht(); }
+
+    // get APIs for Crypto Cert Store State
+    slab *crypto_cert_store_slab(void) const { return cfg_db_->crypto_cert_store_slab(); }
+    ht *crypto_cert_store_id_ht(void) const { return oper_db_->crypto_cert_store_id_ht(); }
 
     // get APIs for TLS CB state
     slab *tlscb_slab(void) const { return cfg_db_->tlscb_slab(); }

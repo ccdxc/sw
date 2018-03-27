@@ -623,7 +623,8 @@ tcp_exec_trigger_connection(fte::ctx_t& ctx)
                                                               ctx.direction(),
                                                               pfi->qid1, pfi->qid2,
                                                               ctx.cpu_rxhdr(),
-                                                              dhw_vlan_id));
+                                                              dhw_vlan_id,
+                                                              pfi));
         }
     }
 

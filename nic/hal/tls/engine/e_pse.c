@@ -11,6 +11,30 @@ static const char *engine_pse_id = "pse";
 static const char *engine_pse_name = 
     "Pensando TLS/SSL offload engine";
 
+static EVP_PKEY* pse_load_privkey(ENGINE* engine, const char *key_id,
+                                  UI_METHOD *ui_method, void *callback_data)
+{
+   
+    EVP_PKEY* pkey = NULL;
+
+    PSE_KEY *key = (PSE_KEY*)key_id;
+    if(!key) {
+        WARN("No key found");
+        return NULL;
+    }
+    INFO("key: index: %d, label: %s\n", key->index, key->label);
+   
+    switch(key->type) {
+    case EVP_PKEY_RSA:
+        pkey = pse_rsa_get_evp_key(engine, key_id, ui_method, key);
+        break;
+    default:
+        WARN("Invalid Key type %d", key->type);
+    }
+
+    return pkey;
+}
+
 /*
  * Description:
  *  Connect PSE engine to OpenSSL engine library
@@ -46,6 +70,10 @@ static int pse_bind_helper(ENGINE* eng, const char *id)
         goto cleanup;
     }
     
+    if(!ENGINE_set_load_privkey_function(eng, pse_load_privkey)) {
+        WARN("ENGINE_set_load_privkey failed");
+        goto cleanup;
+    }
     ret = 1;
 cleanup:
     INFO("pse bind completed. ret: %d", ret);

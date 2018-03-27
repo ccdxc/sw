@@ -1,0 +1,12 @@
+# Crypto Cert Object Template File.
+meta:
+    id: CRYPTO_CERT
+    feature_set:
+        - iris
+
+api_type              : 0
+id                    : None
+update_type           : 0 
+body                  : 0
+cert_len              : 0
+next_cert_id          : None

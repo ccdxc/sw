@@ -365,6 +365,8 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, pd_capri_barco_asym_rsa2k_encrypt);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_DECRYPT, pd_capri_barco_asym_rsa2k_decrypt);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, pd_capri_barco_asym_rsa2k_crt_decrypt);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY,
+                        pd_capri_barco_asym_rsa2k_setup_private_key);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, pd_capri_barco_asym_rsa2k_sig_gen);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
@@ -714,6 +716,8 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, pd_capri_barco_asym_rsa2k_encrypt);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_DECRYPT, pd_capri_barco_asym_rsa2k_decrypt);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, pd_capri_barco_asym_rsa2k_crt_decrypt);
+    PD_SYMBOL_CALL(PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY,
+                         pd_capri_barco_asym_rsa2k_setup_private_key);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, pd_capri_barco_asym_rsa2k_sig_gen);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
@@ -920,11 +924,13 @@ pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c)
     return 1;
 }
 
-extern "C" int
-pd_tls_asym_rsa2k_sig_gen(uint8_t *n, uint8_t *d, uint8_t *h,  uint8_t *s)
+extern "C" int 
+pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
+                          uint8_t *h,  uint8_t *s)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_capri_barco_asym_rsa2k_sig_gen_args_t args = {0};
+    args.key_idx = key_idx;
     args.n = n;
     args.d = d;
     args.h = h;

@@ -322,10 +322,10 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
      */
     if (!hal::tls::proxy_tls_bypass_mode) {
         if(flow->itor_dir == hal::FLOW_DIR_FROM_ENIC){
-	    hal::tls::tls_api_start_handshake(flow->iqid, flow->rqid, true);
-	} else {
-            hal::tls::tls_api_start_handshake(flow->rqid, flow->iqid, true);
-	}
+            hal::tls::tls_api_start_handshake(flow->iqid, flow->rqid, true, flow->pfi);
+        } else {
+            hal::tls::tls_api_start_handshake(flow->rqid, flow->iqid, true, flow->pfi);
+        }
     } else {
 
         HAL_TRACE_DEBUG("lklshim: TLS proxy bypass mode: release client syn for daddr={}, saddr={}, "
@@ -431,7 +431,8 @@ bool
 lklshim_process_flow_miss_rx_packet (void *pkt_skb,
                                      hal::flow_direction_t dir,
                                      uint32_t iqid, uint32_t rqid, 
-				     uint16_t src_lif, uint16_t hw_vlan_id)
+                                     uint16_t src_lif, uint16_t hw_vlan_id,
+                                     proxy_flow_info_t *pfi)
 {
     lklshim_flow_t      *flow;
     lklshim_flow_key_t  flow_key;
@@ -459,6 +460,7 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
     flow->rqid = rqid;
     lklshim_flow_by_qid[rqid] = flow;
     flow->src_lif = src_lif;
+    flow->pfi = pfi;
 
     proxy::tcp_create_cb(flow->iqid, flow->src_lif, eth, vlan, ip, tcp, true, hw_vlan_id, 
                          proxyccb_tcpcb_l7_proxy_type_eval(flow->iqid));

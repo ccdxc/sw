@@ -324,6 +324,7 @@ PD_FUNC_STUB(pd_capri_barco_asym_ecdsa_p256_sig_verify);
 PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_encrypt);
 PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_decrypt);
 PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_crt_decrypt);
+PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_setup_private_key);
 PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_sig_gen);
 PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_sig_verify);
 PD_FUNC_STUB(pd_capri_barco_sym_hash_process_request);

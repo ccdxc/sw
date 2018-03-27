@@ -8,6 +8,7 @@
 #include "sdk/ht.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/hal/src/nw/session.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 
 #include <netinet/in.h>
 #include <memory>
@@ -63,6 +64,7 @@ typedef struct lklshim_flow_t_ {
     uint32_t                iqid;
     uint32_t                rqid;
     uint16_t                hw_vlan_id;
+    proxy_flow_info_t       *pfi;
 } lklshim_flow_t;
 
 typedef struct lklshim_listen_sockets_t_ {
@@ -104,8 +106,8 @@ lklshim_make_flow_v6key (lklshim_flow_key_t *key,
     key->type = hal::FLOW_TYPE_V6;
 }
 
-bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id);
-bool lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id);
+bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id, proxy_flow_info_t *pfi);
+bool lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id, proxy_flow_info_t *pfi);
 bool lklshim_process_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
 bool lklshim_process_flow_hit_rx_header (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
 bool lklshim_process_v6_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);

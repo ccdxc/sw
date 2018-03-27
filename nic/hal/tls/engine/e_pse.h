@@ -3,6 +3,7 @@
 
 #include "pse_utils.h"
 #include "pse_mem.h"
+#include "pse_intf.h"
 #include <stdio.h>
 #include <string.h>
 #include <openssl/engine.h>

@@ -48,6 +48,8 @@ RawcIdAllocator         = objects.TemplateFieldObject("range/1/32768")
 ProxyrIdAllocator       = objects.TemplateFieldObject("range/0/32768")
 ProxycIdAllocator       = objects.TemplateFieldObject("range/0/32768")
 CryptoKeyIdAllocator    = objects.TemplateFieldObject("range/1/32768")
+CryptoCertIdAllocator   = objects.TemplateFieldObject("range/1/32768")
+CryptoAsymKeyIdAllocator   = objects.TemplateFieldObject("range/1/32768")
 IpsecCbIdAllocator      = objects.TemplateFieldObject("range/0/32768")
 SecProfIdAllocator      = objects.TemplateFieldObject("range/1/256")
 

@@ -297,7 +297,7 @@ tls_api_init(void)
     g_ssl_helper.set_key_prog_cb(&tls_api_key_prog_cb);
 #ifdef  TLS_TEST_BYPASS_MODEL
     tcpfd = create_socket();
-    tls_api_start_handshake(100, 101, true);
+    tls_api_start_handshake(100, 101, true, NULL);
 #endif
 
     return ret;
@@ -328,7 +328,10 @@ tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid)
 }
 
 hal_ret_t
-tls_api_start_handshake(uint32_t enc_qid, uint32_t dec_qid, bool is_v4_flow)
+tls_api_start_handshake(uint32_t enc_qid,
+                        uint32_t dec_qid,
+                        bool is_v4_flow,
+                        proxy_flow_info_t *pfi)
 {
     ssl_conn_args_t     conn_args = {0};
     // Start handskake towards decrypt
@@ -343,8 +346,10 @@ tls_api_start_handshake(uint32_t enc_qid, uint32_t dec_qid, bool is_v4_flow)
     conn_args.id = dec_qid;
     conn_args.oflow_id = enc_qid;
     conn_args.is_v4_flow = is_v4_flow;
-    conn_args.cert_label = "client.crt";
-    conn_args.key_label = "client.key";
+    if(pfi && pfi->u.tlsproxy.is_valid) {
+        conn_args.tls_flow_cfg = 
+            &pfi->u.tlsproxy;
+    }
     return g_ssl_helper.start_connection(conn_args);
 }
 

@@ -4,6 +4,7 @@
 #include <ostream>
 #include <iomanip>
 #include "nic/hal/tls/ssl_helper.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 #include <openssl/engine.h>
 
 #define WHERE_INFO(ssl, w, flag, msg) { \
@@ -38,11 +39,11 @@ void ssl_info_callback(const SSL* ssl, int where, int ret)
 void ssl_msg_callback(int writep, int version, int contentType,
                 const void* buf, size_t len, SSL* ssl, void *arg)
 {
-    HAL_TRACE_DEBUG("SSL: Message callback: writep: {}, type: {} len: {}",
-                        writep, contentType, len);
+    //HAL_TRACE_DEBUG("SSL: Message callback: writep: {}, type: {} len: {}",
+    //                    writep, contentType, len);
     if(arg) {
         hal::tls::SSLConnection* conn = (hal::tls::SSLConnection *)arg;
-        HAL_TRACE_DEBUG("SSL: id: {}", conn->get_id());
+        //HAL_TRACE_DEBUG("SSL: id: {}", conn->get_id());
         conn->ssl_msg_cb(writep, version, contentType, buf, len, ssl, arg); 
     }
 }
@@ -67,56 +68,135 @@ std::string hex_dump(const uint8_t *buf, size_t sz)
  * SSL Connection
  ------------------------------*/
 hal_ret_t
-SSLConnection::load_certs(const char* cert_label, const char* key_label) const
+SSLConnection::get_pse_key_rsa(PSE_KEY &pse_key,
+                               const hal::tls_proxy_flow_info_t &tls_flow_cfg,
+                               const hal::crypto_cert_t &cert) const
 {
-    char        *cfg_path;
-    std::string dir_path;
-    std::string cert_path;
-    std::string key_path;
-
-    if(!cert_label && !key_label) {
-        return HAL_RET_OK;    
-    }
-
-    cfg_path = getenv("HAL_CONFIG_PATH");
-    if (!cfg_path) {
-        HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
-    }
-    dir_path =  std::string(cfg_path) + "/openssl/certs/";
+    pse_key.type = EVP_PKEY_RSA;
     
-    if(cert_label) {
-        cert_path = dir_path + std::string(cert_label);
-        HAL_TRACE_DEBUG("Loading certfile {}", cert_path);
-        if ( SSL_use_certificate_file(ssl,
-                                      cert_path.c_str(),
-                                      SSL_FILETYPE_PEM) <= 0 ){
-            HAL_TRACE_ERR("Failed to add certfile to SSL");
-            return HAL_RET_SSL_CERT_KEY_ADD_ERR;
-        }
-    }
+    // n
+    pse_key.u.rsa_key.rsa_n.len = cert.pub_key.u.rsa_params.mod_n_len;
+    pse_key.u.rsa_key.rsa_n.data = (uint8_t *)cert.pub_key.u.rsa_params.mod_n;
 
-    if(key_label) {
-        key_path = dir_path + std::string(key_label);
-        HAL_TRACE_DEBUG("Loading keyfile {}", key_path);
-        if ( SSL_use_PrivateKey_file(ssl,
-                                     key_path.c_str(),
-                                     SSL_FILETYPE_PEM) <= 0 ){
-            HAL_TRACE_ERR("Failed to add key to SSL");
-            return HAL_RET_SSL_CERT_KEY_ADD_ERR;
-        }
+    // e
+    pse_key.u.rsa_key.rsa_e.len = cert.pub_key.u.rsa_params.e_len;
+    pse_key.u.rsa_key.rsa_e.data = (uint8_t *)cert.pub_key.u.rsa_params.e;
 
-        if (!SSL_check_private_key(ssl) ) {
-            HAL_TRACE_ERR("Private key does not match the public certificate");
-            return HAL_RET_SSL_CERT_KEY_ADD_ERR;
-        }
-    }
+    // Key idx
+    pse_key.index = tls_flow_cfg.key_id;
+
+    HAL_TRACE_DEBUG("Received key index: {}, n {}, e: {}", 
+                    pse_key.index,
+                    pse_key.u.rsa_key.rsa_n.len,
+                    pse_key.u.rsa_key.rsa_e.len);
+
     return HAL_RET_OK;
 }
 
 hal_ret_t
+SSLConnection::get_pse_key(PSE_KEY &pse_key,
+                           const hal::tls_proxy_flow_info_t *tls_flow_cfg,
+                           const hal::crypto_cert_t *cert) const
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    if(!tls_flow_cfg || !cert) {
+        return HAL_RET_OK;
+    }
+    
+    switch(cert->pub_key.key_type) {
+    case EVP_PKEY_RSA:
+        ret = get_pse_key_rsa(pse_key, *tls_flow_cfg, *cert);
+        break;
+    default:
+        break;
+    }
+    return ret;
+}
+
+hal_ret_t
+SSLConnection::load_certs_key(const tls_proxy_flow_info_t *tls_flow_cfg) const
+{
+    hal_ret_t          ret = HAL_RET_OK;
+    PSE_KEY            pse_key = {0};
+    hal::crypto_cert_t *cert = NULL, *add_cert = NULL;
+    uint32_t           add_cert_id = 0;
+    EVP_PKEY           *pkey = NULL;
+
+    if(!tls_flow_cfg) {
+        return HAL_RET_OK;    
+    }
+
+    if(tls_flow_cfg->cert_id <= 0) {
+        HAL_TRACE_ERR("Invalid cert_id: {}", tls_flow_cfg->cert_id);
+        return HAL_RET_OK;
+    }
+     
+    // Read the cert
+    cert = find_cert_by_id(tls_flow_cfg->cert_id);
+    if(!cert) {
+        HAL_TRACE_ERR("Failed to find the cert with id: {}",
+                      tls_flow_cfg->cert_id);
+        return HAL_RET_OK;
+    }
+    
+    if(!cert->x509_cert) {
+        HAL_TRACE_ERR("X509 cert is null for cert with id: {}",
+                      tls_flow_cfg->cert_id);
+        return HAL_RET_OK;
+    }
+    
+    if(SSL_use_certificate(ssl, cert->x509_cert) <= 0) {
+        HAL_TRACE_ERR("Failed to add cert with idx: {}", cert->cert_id);
+        return HAL_RET_SSL_CERT_KEY_ADD_ERR;
+    }
+            
+    //additional certs 
+    add_cert_id = cert->next_cert_id;
+    while(add_cert_id > 0) {
+        add_cert = find_cert_by_id(add_cert_id);
+        if(!add_cert || !add_cert->x509_cert) {
+            break;
+        }
+        if(SSL_add0_chain_cert(ssl, add_cert->x509_cert) <= 0) {
+            HAL_TRACE_ERR("Failed to add chained cert: {}",
+                          add_cert_id);
+            return HAL_RET_SSL_CERT_KEY_ADD_ERR;
+        }
+        add_cert_id = add_cert->next_cert_id;
+    }
+    
+    // Load private Key
+    ret = get_pse_key(pse_key, tls_flow_cfg, cert);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get pse_key: {}", ret);
+        return ret;
+    }        
+        
+    pkey = ENGINE_load_private_key(helper->get_engine(),
+                                   (const char *)&pse_key,
+                                   NULL, NULL);
+    if(pkey == NULL) {
+        HAL_TRACE_ERR("Failed to load engine key");
+        return HAL_RET_ERR;
+    } 
+                                
+    if ( SSL_use_PrivateKey(ssl, pkey) <= 0 ){
+        HAL_TRACE_ERR("Failed to add key to SSL");
+        ERR_print_errors_fp(stderr);
+        return HAL_RET_SSL_CERT_KEY_ADD_ERR;
+    }
+
+    if (!SSL_check_private_key(ssl) ) {
+        HAL_TRACE_ERR("Private key does not match the public certificate");
+        return HAL_RET_SSL_CERT_KEY_ADD_ERR;
+    }
+    return ret;
+}
+
+hal_ret_t
 SSLConnection::init(SSLHelper* _helper, conn_id_t _id, SSL_CTX *_ctx,
-                    const char* cert_label, const char* key_label)
+                    const tls_proxy_flow_info_t *tls_flow_cfg)
 {
     hal_ret_t ret = HAL_RET_OK;
 
@@ -128,7 +208,7 @@ SSLConnection::init(SSLHelper* _helper, conn_id_t _id, SSL_CTX *_ctx,
     SSL_set_msg_callback(ssl, ssl_msg_callback);
     SSL_set_msg_callback_arg(ssl, this);
     
-    ret = load_certs(cert_label, key_label);
+    ret = load_certs_key(tls_flow_cfg);
     if(ret != HAL_RET_OK) {
         return ret;    
     }
@@ -329,7 +409,7 @@ SSLConnection::ssl_msg_cb(int writep, int version, int contentType,
             break;
 
         default:
-            HAL_TRACE_ERR("Invalid content type: {}", contentType);
+            //HAL_TRACE_ERR("Invalid content type: {}", contentType);
             break;
     }
 }
@@ -377,12 +457,15 @@ SSLHelper::init_pse_engine()
     char        *cfg_path;
     std::string eng_path;
 
+    if(engine != NULL) {
+        return HAL_RET_OK;    
+    }
     ENGINE_load_dynamic();
     ENGINE_load_builtin_engines();
     ENGINE_register_all_complete();
 
-    ENGINE* pse_engine = ENGINE_by_id("dynamic");
-    if(pse_engine == NULL) {
+    engine = ENGINE_by_id("dynamic");
+    if(engine == NULL) {
         HAL_TRACE_ERR("Failed to load dynamic engine");
         return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
     }
@@ -396,27 +479,27 @@ SSLHelper::init_pse_engine()
     eng_path =  std::string(cfg_path) + "/openssl/engine/libpse.so";
     HAL_TRACE_DEBUG("Loading pensando engine from path: {}", eng_path);
 
-    if(!ENGINE_ctrl_cmd_string(pse_engine, "SO_PATH", eng_path.c_str(), 0)) {
+    if(!ENGINE_ctrl_cmd_string(engine, "SO_PATH", eng_path.c_str(), 0)) {
         HAL_TRACE_ERR("SO_PATH failed!!");
         return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
     }
 
-    if(!ENGINE_ctrl_cmd_string(pse_engine, "ID", "pse", 0)) {
+    if(!ENGINE_ctrl_cmd_string(engine, "ID", "pse", 0)) {
         HAL_TRACE_ERR("ID failed!!");
         return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
     }
 
-    if(!ENGINE_ctrl_cmd_string(pse_engine, "LOAD", NULL, 0)) {
+    if(!ENGINE_ctrl_cmd_string(engine, "LOAD", NULL, 0)) {
         HAL_TRACE_ERR("ENGINE LOAD_ADD failed, err: {}",
             ERR_error_string(ERR_get_error(), NULL));
         return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
     }
-    int ret = ENGINE_init(pse_engine);
+    int ret = ENGINE_init(engine);
     HAL_TRACE_DEBUG("Successfully loaded OpenSSL Engine: {} init result: {}",
-                            ENGINE_get_name(pse_engine), ret);
+                            ENGINE_get_name(engine), ret);
 
-    ENGINE_set_default_EC(pse_engine);
-    ENGINE_set_default_RSA(pse_engine);
+    ENGINE_set_default_EC(engine);
+    ENGINE_set_default_RSA(engine);
     
     return HAL_RET_OK;
 }
@@ -450,7 +533,7 @@ SSLHelper::start_connection(const ssl_conn_args_t &args)
     HAL_TRACE_DEBUG("SSL: Starting SSL handshake for id: {}", args.id);
 
     // Initialize connection
-    conn[args.id].init(this, args.id, client_ctx, args.cert_label, args.key_label);
+    conn[args.id].init(this, args.id, client_ctx, args.tls_flow_cfg);
     conn[args.id].set_oflowid(args.oflow_id);
     conn[args.id].set_flow_type(args.is_v4_flow);
     return conn[args.id].do_handshake();

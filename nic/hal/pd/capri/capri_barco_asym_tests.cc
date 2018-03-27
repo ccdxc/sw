@@ -480,7 +480,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen_test(void)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
-    ret = capri_barco_asym_rsa2k_sig_gen(modulo_n, rsa_d,
+    ret = capri_barco_asym_rsa2k_sig_gen(-1, modulo_n, rsa_d,
             m /* h */, out_s);
 
     return ret;

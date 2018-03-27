@@ -29,6 +29,7 @@
 #include "nic/hal/src/internal/rawccb.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/src/internal/proxyccb.hpp"
+#include "nic/hal/src/internal/crypto_cert_store.hpp"
 #include "nic/hal/src/gft/gft.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "sdk/twheel.hpp"
@@ -323,6 +324,14 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 bool
 hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
 {
+    // initialize Crypto Cert Store related data structures
+    slabs_[HAL_SLAB_CRYPTO_CERT_STORE] = slab::factory("crypto_cert_store",
+                                                       HAL_SLAB_CRYPTO_CERT_STORE,
+                                                       sizeof(hal::crypto_cert_t),
+                                                       16,
+                                                       false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_CRYPTO_CERT_STORE] != NULL), false);
+
     // initialize TLS CB related data structures
     slabs_[HAL_SLAB_TLSCB] = slab::factory("tlscb", HAL_SLAB_TLSCB,
                                 sizeof(hal::tlscb_t), 16,
@@ -797,6 +806,13 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
     event_mgr_ = eventmgr::factory(HAL_MAX_EVENTS);
     HAL_ASSERT_RETURN((event_mgr_ != NULL), false);
 
+    // initialize Crypto Cert store related data structures
+    crypto_cert_store_id_ht_ = ht::factory(HAL_MAX_CRYPTO_CERT_STORE_ELEMS,
+                                           hal::crypto_cert_store_get_key_func,
+                                           hal::crypto_cert_store_compute_hash_func,
+                                           hal::crypto_cert_store_compare_key_func);
+    HAL_ASSERT_RETURN((crypto_cert_store_id_ht_ != NULL), false);
+
     // initialize TLS CB related data structures
     tlscb_id_ht_ = ht::factory(HAL_MAX_TLSCB,
                                hal::tlscb_get_key_func,
@@ -938,6 +954,7 @@ hal_oper_db::hal_oper_db()
     qos_cmap_dscp_bmp_ = NULL;
     copp_ht_ = NULL;
     acl_ht_ = NULL;
+    crypto_cert_store_id_ht_ = NULL;
     tlscb_id_ht_ = NULL;
     tcpcb_id_ht_ = NULL;
     wring_id_ht_ = NULL;
@@ -979,6 +996,7 @@ hal_oper_db::~hal_oper_db()
     session_hal_iflow_ht_ ? ht::destroy(session_hal_iflow_ht_) : HAL_NOP;
     session_hal_rflow_ht_ ? ht::destroy(session_hal_rflow_ht_) : HAL_NOP;
     l4lb_ht_ ? ht::destroy(l4lb_ht_, mmgr_) : HAL_NOP;
+    crypto_cert_store_id_ht_ ? ht::destroy(crypto_cert_store_id_ht_) : HAL_NOP;
     tlscb_id_ht_ ? ht::destroy(tlscb_id_ht_) : HAL_NOP;
     tcpcb_id_ht_ ? ht::destroy(tcpcb_id_ht_) : HAL_NOP;
     qos_class_ht_ ? ht::destroy(qos_class_ht_, mmgr_) : HAL_NOP;
@@ -1496,6 +1514,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->nwsec_policy_svc_slab()->free(elem);
         break;
 
+    case HAL_SLAB_CRYPTO_CERT_STORE:
+        g_hal_state->crypto_cert_store_slab()->free(elem);
+        break;
+    
     case HAL_SLAB_TLSCB:
         g_hal_state->tlscb_slab()->free(elem);
         break;

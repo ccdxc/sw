@@ -801,12 +801,13 @@ def rsa2k_crt_decrypt_test():
             return True
 
 # RSA 2K Signature Generation
-def rsa2k_sig_gen(mod_n, d, h):
+def rsa2k_sig_gen(key_idx, mod_n, d, h):
     stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
     req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
     req_spec.api_type = crypto_apis_pb2.ASYMAPI_RSA_SIG_GEN
+    req_spec.rsa_sig_gen.key_idx = -1
     req_spec.rsa_sig_gen.KeySize = 256
     req_spec.rsa_sig_gen.mod_n = mod_n
     req_spec.rsa_sig_gen.d = d
@@ -833,7 +834,7 @@ def rsa2k_sig_gen_test():
     global rsa_d
     global plain_text
 
-    ret, computed_sig = rsa2k_sig_gen(mod_n, rsa_d, plain_text)
+    ret, computed_sig = rsa2k_sig_gen(-1, mod_n, rsa_d, plain_text)
     if (ret != types_pb2.API_STATUS_OK):
         print("API rsa2k_sig_gen failed with error")
         return False

@@ -31,6 +31,7 @@ import proxy_pb2            as proxy_pb2
 import ipseccb_pb2          as ipseccb_pb2
 import l4lb_pb2             as l4lb_pb2
 import crypto_keys_pb2      as crypto_keys_pb2
+import crypto_apis_pb2      as crypto_apis_pb2
 import rdma_pb2             as rdma_pb2
 import cpucb_pb2            as cpucb_pb2
 import rawrcb_pb2           as rawrcb_pb2
@@ -615,6 +616,26 @@ def ConfigureL4LbServices(objlist):
     __config(objlist, l4lb_pb2.L4LbServiceRequestMsg,
              stub.L4LbServiceCreate)
     return
+
+def GetCryptoAsymKey(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = crypto_apis_pb2.CryptoApisStub(HalChannel)
+    __config(objlist, crypto_apis_pb2.CryptoApiRequestMsg,
+             stub.CryptoApiInvoke)
+    return
+
+def GetCryptoCert(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = crypto_apis_pb2.CryptoApisStub(HalChannel)
+    __config(objlist, crypto_apis_pb2.CryptoApiRequestMsg,
+             stub.CryptoApiInvoke)
+    return
+
+def UpdateCryptoCerts(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = crypto_apis_pb2.CryptoApisStub(HalChannel)
+    __config(objlist, crypto_apis_pb2.CryptoApiRequestMsg,
+             stub.CryptoApiInvoke)
 
 def GetCryptoKey(objlist):
     if not IsConfigAllowed(objlist): return
