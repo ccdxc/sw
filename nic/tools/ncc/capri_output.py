@@ -492,8 +492,8 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
                 if bottom_pad > 0:
                     cstr = cstruct_data_type_get(asm_output, bottom_pad, indent3)
                     width_str = phv_width_string_get(asm_output, bottom_pad)
-                    cstr += '%s_bottom_pad_%s; // FLE[%d:%d]\n' % \
-                        (_get_output_name(strm), width_str,
+                    cstr += '%s_bottom_pad_%d_%s; // FLE[%d:%d]\n' % \
+                        (_get_output_name(strm), phv_bit, width_str,
                         _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(self.end_phv-1))
                     pstr += cstr
                     cfields.append(cstr)
@@ -668,9 +668,8 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
         cfields = []
 
     if not asm_output:
-        fname = '__%s_phv__' % gress_pa.d.name
+        fname = '__%s_%s_phv__' % (gress_pa.pa.be.prog_name, gress_pa.d.name)
         hfile.write("#ifndef " +  fname.upper() + '\n\n')
-        fname = '__%s_phv__' % gress_pa.d.name
         hfile.write("#define " + fname.upper() + '\n\n\n')
         pstr = 'typedef struct __attribute__ ((__packed__)) ' + gress_pa.pa.be.prog_name + '_' + gress_pa.d.name.lower() + '_phv_ {\n'
         hfile.write(pstr)
