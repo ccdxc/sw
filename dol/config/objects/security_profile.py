@@ -113,7 +113,6 @@ class SecurityProfileObject(base.ConfigObjectBase):
         req_spec.tcp_ts_not_present_drop = self.fields.tcp_ts_not_present_drop
         req_spec.tcp_invalid_flags_drop = self.fields.tcp_invalid_flags_drop
         req_spec.tcp_nonsyn_noack_drop = self.fields.tcp_nonsyn_noack_drop
-        req_spec.tcp_normalize_mss = self.fields.tcp_normalize_mss
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -166,7 +165,6 @@ class SecurityProfileObject(base.ConfigObjectBase):
             self.fields.tcp_ts_not_present_drop = get_resp.spec.tcp_ts_not_present_drop
             self.fields.tcp_invalid_flags_drop = get_resp.spec.tcp_invalid_flags_drop
             self.fields.tcp_nonsyn_noack_drop = get_resp.spec.tcp_nonsyn_noack_drop
-            self.fields.tcp_normalize_mss = get_resp.spec.tcp_normalize_mss
 
         return
 

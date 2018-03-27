@@ -256,9 +256,3 @@ modules:
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT_WIN_SCALE_ONLY
               flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_NORMALIZE_MSS_WITH_MSS_OPTION
-              flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_NORMALIZE_MSS_WITHOUT_MSS_OPTION
-              flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION
-              flow: filter://type=IPV4,proto=TCP

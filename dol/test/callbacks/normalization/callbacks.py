@@ -302,12 +302,6 @@ def GetInputTcpFlags(testcase, packet):
         return 'syn'
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
         return 'syn'
-    elif 'SEC_PROF_TCP_NORMALIZE_MSS_WITH_MSS_OPTION' in profile_name:
-        return 'syn'
-    elif 'SEC_PROF_TCP_NORMALIZE_MSS_WITHOUT_MSS_OPTION' in profile_name:
-        return 'syn'
-    elif 'SEC_PROF_TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION' in profile_name:
-        return 'syn'
     return 'ack'
 
 def GetInputTcpOptions(testcase, packet):
@@ -351,8 +345,6 @@ def GetInputTcpOptions(testcase, packet):
     mss_ws_only = []
     mss_ws_only.append(TcpOptions('MSS', '0x1'))
     mss_ws_only.append(TcpOptions('WScale', '0x2'))
-    normalize_mss_ws_only = []
-    normalize_mss_ws_only.append(TcpOptions('WScale', '0x2'))
 
     if 'SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_SACK_4' in profile_name:
         return ws_sack_4
@@ -422,12 +414,6 @@ def GetInputTcpOptions(testcase, packet):
         return []
     elif 'TCP_TS_NOT_PRESENT_DROP_DISABLE' in profile_name:
         return []
-    elif 'TCP_NORMALIZE_MSS_WITH_MSS_OPTION' in profile_name:
-        return [TcpOptions('MSS', '1000')]
-    elif 'TCP_NORMALIZE_MSS_WITHOUT_MSS_OPTION' in profile_name:
-        return []
-    elif 'TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION' in profile_name:
-        return normalize_mss_ws_only
     return []
 
 def GetInputTcpUrgPtr(testcase, packet):
@@ -510,12 +496,6 @@ def GetExpectedTcpFlags(testcase, packet):
         return 'syn'
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
         return 'syn'
-    elif 'SEC_PROF_TCP_NORMALIZE_MSS_WITH_MSS_OPTION' in profile_name:
-        return 'syn'
-    elif 'SEC_PROF_TCP_NORMALIZE_MSS_WITHOUT_MSS_OPTION' in profile_name:
-        return 'syn'
-    elif 'SEC_PROF_TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION' in profile_name:
-        return 'syn'
     return 'ack'
 
 def GetExpectedTcpOptions(testcase, packet):
@@ -570,9 +550,6 @@ def GetExpectedTcpOptions(testcase, packet):
     mss_ws_sack_perm.append(TcpOptions('NOP', None))
     mss_ws_only = []
     mss_ws_only.append(TcpOptions('WScale', '0x2'))
-    normalize_mss_ws_only = []
-    normalize_mss_ws_only.append(TcpOptions('MSS', '1460'))
-    normalize_mss_ws_only.append(TcpOptions('WScale', '0x2'))
 
     if 'SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_MSS_SACK_PERM' in profile_name:
         return ws_mss_sack_perm
@@ -642,12 +619,6 @@ def GetExpectedTcpOptions(testcase, packet):
         return []
     elif 'TCP_TS_NOT_PRESENT_DROP_DISABLE' in profile_name:
         return []
-    elif 'TCP_NORMALIZE_MSS_WITH_MSS_OPTION' in profile_name:
-        return [TcpOptions('MSS', '1460')]
-    elif 'TCP_NORMALIZE_MSS_WITHOUT_MSS_OPTION' in profile_name:
-        return [TcpOptions('MSS', '1460')]
-    elif 'TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION' in profile_name:
-        return normalize_mss_ws_only
     return []
 
 def GetExpectedTcpUrgPtr(testcase, packet):
@@ -682,17 +653,6 @@ def GetInputPaddingSize(testcase, packet):
         return 200
     elif 'INVALID_LEN_ACTION_EDIT' in profile_name:
         return 200
-    # Adding padding for this case because for native packets the packet length
-    # for syn packets with no options and data will be 54/58 bytes and the padding
-    # will be done in model automatically but now when that packet comes out with
-    # mss option and the packet lenght becomes greater than 60 then the DOL doesn't
-    # add pad but the packet comes out with the padding that was sent. So to avoid
-    # confusiion in checking always sending the packet greater than 60 in all cases
-    # where we insert mss option.
-    elif 'TCP_NORMALIZE_MSS_WITHOUT_MSS_OPTION' in profile_name:
-        return 10
-    elif 'TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION' in profile_name:
-        return 10
     return 0
 
 def GetExpectedPaddingSize(testcase, packet):
@@ -704,10 +664,6 @@ def GetExpectedPaddingSize(testcase, packet):
         return 200
     elif 'INVALID_LEN_ACTION_EDIT' in profile_name:
         return 0
-    elif 'TCP_NORMALIZE_MSS_WITHOUT_MSS_OPTION' in profile_name:
-        return 10
-    elif 'TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION' in profile_name:
-        return 10
     return 0
 
 def GetInputPayloadSize(testcase, packet):
@@ -734,12 +690,6 @@ def GetInputPayloadSize(testcase, packet):
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
         return 0
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
-        return 0
-    elif 'TCP_NORMALIZE_MSS_WITH_MSS_OPTION' in profile_name:
-        return 0
-    elif 'TCP_NORMALIZE_MSS_WITHOUT_MSS_OPTION' in profile_name:
-        return 0
-    elif 'TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION' in profile_name:
         return 0
     return 150
 
@@ -769,12 +719,6 @@ def GetExpectedPayloadSize(testcase, packet):
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
         return 0
     elif 'TCP_RST_WITH_DATA_ACTION_EDIT' in profile_name:
-        return 0
-    elif 'TCP_NORMALIZE_MSS_WITH_MSS_OPTION' in profile_name:
-        return 0
-    elif 'TCP_NORMALIZE_MSS_WITHOUT_MSS_OPTION' in profile_name:
-        return 0
-    elif 'TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION' in profile_name:
         return 0
     return 150
 

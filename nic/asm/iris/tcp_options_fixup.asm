@@ -4,12 +4,8 @@ tcp_options_fixup:
   seq         c1, k.tcp_options_blob_valid, TRUE
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
   phvwr.c1.e  p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
-  // We have the case where we can add a TCP MSS option for all SYN
-  // Packets even if there were no options present in the incoming
-  // packet. So the case where we don't have to go through below code
-  // if the tcp dataoffset was 5 is not valid anymore.
-  //sle         c1, k.tcp_dataOffset, 5
-  //nop.c1.e    
+  sle         c1, k.tcp_dataOffset, 5
+  nop.c1.e    
   add         r1, r0, r0
   seq         c2, k.tcp_option_timestamp_valid, TRUE
   add.c2      r1, r0, 10

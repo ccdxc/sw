@@ -100,7 +100,6 @@ enum NormalizationAction {
 //         tcp_ts_not_present_drop         = true  (if conntrack is enabled)
 //         tcp_invalid_flags_drop          = true
 //         tcp_nonsyn_noack_drop           = true
-//         tcp_normalize_mss               = 0 (no tcp_mss normalization)
 //     }
 // }
 //------------------------------------------------------------------------------
@@ -208,8 +207,7 @@ message SecurityProfileSpec {
   bool                         tcp_conn_track_bypass_window_err   = 93 [(gogoproto.moretags) = "venice:default=false"];
   bool                         tcp_conn_track_fin_rst_disable     = 94 [(gogoproto.moretags) = "venice:default=false"];
   bool                         tcp_urg_flag_ptr_clear             = 95 [(gogoproto.moretags) = "venice:default=false"];
-  // Can we have zero as default but when configured the range is between 576 - 9216 ?
-  uint32                       tcp_normalize_mss                  = 96 [(gogoproto.moretags) = "range:0-9216, venice:default=0"];
+  uint32                       tcp_mss                            = 96 [(gogoproto.moretags) = "venice:default=0"];
   bool                         multicast_src_drop                 = 101 [(gogoproto.moretags) = "venice:default=true"];
 }
 

@@ -45,4 +45,3 @@ fields:
     tcp_ts_not_present_drop: 0
     tcp_invalid_flags_drop: 0
     tcp_nonsyn_noack_drop: 0
-    tcp_normalize_mss: 0

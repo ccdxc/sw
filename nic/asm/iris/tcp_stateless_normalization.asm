@@ -61,7 +61,7 @@ tcp_stateless_normalization:
   seq.c2      c2, k.tcp_option_timestamp_valid, TRUE // ACK not set and timestamp valid
   sne.c2      c2, k.tcp_option_timestamp_prev_echo_ts, r0 // ACK not set and timestamp valid and echo_ts non-zero
 
-  setcf.!c1   c1, [c2 | !c6] // !c6 is for SYN packets to do tcp_mss normalizaiton
+  setcf.!c1   c1, [c2]
 
   nop.!c1.e
   b.c1        lb_tcp_rsvd_flags    // We hit a bad packet.
@@ -113,13 +113,14 @@ tcp_stateless_normalization:
 #endif /* 0 */
 
 lb_tcp_rsvd_flags:
-  seq         c2, k.l4_metadata_tcp_rsvd_flags_action, NORMALIZATION_ACTION_ALLOW
+  or          r1, r0, k.l4_metadata_tcp_rsvd_flags_action
+  seq         c2, r1, NORMALIZATION_ACTION_ALLOW
   b.c2        lb_tcp_unexpected_mss
   seq         c2, k.l4_metadata_tcp_unexpected_mss_action, \
                      NORMALIZATION_ACTION_ALLOW
   sne         c3, k.tcp_res, r0
   b.!c3       lb_tcp_unexpected_mss
-  seq         c4, k.l4_metadata_tcp_rsvd_flags_action, NORMALIZATION_ACTION_DROP
+  seq         c4, r1, NORMALIZATION_ACTION_DROP
   phvwr.c4.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
@@ -129,10 +130,10 @@ lb_tcp_rsvd_flags:
 
 // C2 has lb_tcp_unexpected_mss_action == ALLOW
 lb_tcp_unexpected_mss:
-  or          r1, k.l4_metadata_tcp_unexpected_win_scale_action_sbit1_ebit1, \
-                  k.l4_metadata_tcp_unexpected_win_scale_action_sbit0_ebit0, 1
   b.c2        lb_tcp_unexpected_win_scale
-  seq         c2, r1, NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.{l4_metadata_tcp_unexpected_win_scale_action_sbit0_ebit0, \
+                     l4_metadata_tcp_unexpected_win_scale_action_sbit1_ebit1}, \
+                     NORMALIZATION_ACTION_ALLOW
   smneb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq         c4, k.tcp_option_mss_valid, TRUE
   bcf         ![c3 & c4], lb_tcp_unexpected_win_scale
@@ -152,8 +153,9 @@ lb_tcp_unexpected_win_scale:
   smneb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq         c4, k.tcp_option_ws_valid, TRUE
   bcf         ![c3 & c4], lb_tcp_unexpected_sack_perm
-  // r1 is updated in lb_tcp_unexpected_mss
-  seq         c3, r1, NORMALIZATION_ACTION_DROP
+  seq         c3, k.{l4_metadata_tcp_unexpected_win_scale_action_sbit0_ebit0, \
+                     l4_metadata_tcp_unexpected_win_scale_action_sbit1_ebit1}, \
+                     NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
   // Edit option: Remove the mss option
@@ -277,11 +279,12 @@ lb_tcp_invalid_flags:
 
 
 lb_tcp_flags_nonsyn_noack:
-  b.c2        lb_tcp_normalize_mss
-  seq         c2, k.l4_metadata_tcp_normalize_mss, r0
+  b.c2        lb_tcp_unexpected_echo_ts
+  seq         c2, k.l4_metadata_tcp_unexpected_echo_ts_action, \
+                    NORMALIZATION_ACTION_ALLOW
   smeqb       c3, k.tcp_flags, TCP_FLAG_SYN, 0x0
   smeqb       c4, k.tcp_flags, TCP_FLAG_ACK, 0x0
-  bcf         ![c3 & c4], lb_tcp_normalize_mss
+  bcf         ![c3 & c4], lb_tcp_unexpected_echo_ts
   seq         c3, k.l4_metadata_tcp_flags_nonsyn_noack_drop, ACT_DROP
   // Trying to be symmetric with rest of the blocks of code. Ideally
   // The above line can be a nop and we can unconditionally drop the packet
@@ -289,22 +292,6 @@ lb_tcp_flags_nonsyn_noack:
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
 
-lb_tcp_normalize_mss:
-  b.c2        lb_tcp_unexpected_echo_ts
-  seq         c2, k.l4_metadata_tcp_unexpected_echo_ts_action, \
-                    NORMALIZATION_ACTION_ALLOW
-  smeqb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
-  b.!c3       lb_tcp_unexpected_echo_ts
-  seq         c4, k.tcp_option_mss_valid, TRUE
-  phvwr.c4    p.tcp_option_mss_value, k.l4_metadata_tcp_normalize_mss
-  // If mss option was not present then we need to add the option 
-  // with the tcp_normalize_mss value
-  phvwr.!c4   p.tcp_option_mss_valid, TRUE
-  phvwr.!c4   p.tcp_option_mss_optType, 0x2
-  phvwr.!c4   p.tcp_option_mss_optLength, 4
-  phvwr.!c4   p.tcp_option_mss_value, k.l4_metadata_tcp_normalize_mss
-  phvwr       p.tcp_options_blob_valid, FALSE
-  
 
 lb_tcp_unexpected_echo_ts:
   nop.c2.e

@@ -71,7 +71,6 @@ header_type l4_metadata_t {
         tcp_non_syn_first_pkt_drop               : 1;
         tcp_split_handshake_detect_en            : 1;
         tcp_split_handshake_drop                 : 1;
-        tcp_normalize_mss                        : 16;
 
         // Flow Knobs:
         // ip_ttl_change_detect_en: TRUE if IP TTL change detection is on and mark the exception seen bits.
@@ -87,6 +86,7 @@ header_type l4_metadata_t {
         // Saving in metadata, in case session state related normalization
         // checks are done outside the session state action handling.
         tcp_rcvr_win_sz                          : 32;
+        tcp_mss                                  : 16;
         tcp_ts_option_negotiated                 : 1;
         tcp_sack_perm_option_negotiated          : 1;
 
@@ -132,8 +132,7 @@ action l4_profile(icmp_normalization_en,
                   tcp_invalid_flags_drop,
                   tcp_non_syn_first_pkt_drop,
                   tcp_split_handshake_detect_en,
-                  tcp_split_handshake_drop,
-                  tcp_normalize_mss) {
+                  tcp_split_handshake_drop) {
 
     modify_field(l4_metadata.ip_normalization_en, ip_normalization_en);
     modify_field(l4_metadata.ip_rsvd_flags_action, ip_rsvd_flags_action);
@@ -165,7 +164,6 @@ action l4_profile(icmp_normalization_en,
     modify_field(l4_metadata.tcp_split_handshake_detect_en, tcp_split_handshake_detect_en);
     modify_field(l4_metadata.tcp_split_handshake_drop, tcp_split_handshake_drop);
     modify_field(l4_metadata.ip_ttl_change_detect_en, ip_ttl_change_detect_en);
-    modify_field(l4_metadata.tcp_normalize_mss, tcp_normalize_mss);
 
     if (icmp.valid == TRUE) {
         modify_field(l4_metadata.icmp_normalization_en, icmp_normalization_en);
@@ -274,7 +272,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
         // PACKET FROM INITATOR
         // Commenting the below line to get the correct size for scale and win_sz
         // modify_field(l4_metadata.tcp_rcvr_win_sz, (rflow_tcp_win_sz << rflow_tcp_win_scale));
-        modify_field(scratch_metadata.tcp_mss, rflow_tcp_mss);
+        modify_field(l4_metadata.tcp_mss, rflow_tcp_mss);
 
        if (l4_metadata.tcp_normalization_en == P4_FEATURE_ENABLED) {
            tcp_session_normalization();
@@ -597,7 +595,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
         // PACKET FROM RESPONDER
         // Commenting the below line to get the correct size for scale and win_sz
         // modify_field(l4_metadata.tcp_rcvr_win_sz, (iflow_tcp_win_sz << iflow_tcp_win_scale));
-        modify_field(scratch_metadata.tcp_mss, iflow_tcp_mss);
+        modify_field(l4_metadata.tcp_mss, iflow_tcp_mss);
 
        if (l4_metadata.tcp_normalization_en == P4_FEATURE_ENABLED) {
            tcp_session_normalization();
@@ -1550,23 +1548,6 @@ action tcp_stateless_normalization() {
         (l4_metadata.tcp_unexpected_echo_ts_action == NORMALIZATION_ACTION_EDIT)) {
         modify_field(tcp_option_timestamp.prev_echo_ts, 0);
     }
-
-    // Normalize tcp_mss
-    if ((tcp.flags & TCP_FLAG_SYN == TCP_FLAG_SYN) and
-        (l4_metadata.tcp_normalize_mss != 0)) {
-        // There are two cases here
-        // 1. tcp_mss option is present - Modify the tcp_mss value to tcp_normalize_mss
-        // 2. tcp_mss option is not present - Addd the tcp_mss option header with value tcp_normalize_mss
-        if (tcp_option_mss.valid == TRUE) {
-            modify_field(tcp_option_mss.value, l4_metadata.tcp_normalize_mss);
-        }
-        if (tcp_option_mss.valid == FALSE) {
-            modify_field(tcp_option_mss.value, l4_metadata.tcp_normalize_mss);
-            add_header(tcp_option_ws);
-            modify_field(tcp_option_mss.value, l4_metadata.tcp_normalize_mss);
-            //remove_header(tcp_options_blob); NCC error so commented
-        }
-    }
 }
 
 action tcp_session_normalization() {
@@ -1582,32 +1563,32 @@ action tcp_session_normalization() {
 
    // tcp segment length more than negotiated MSS
     // Need to move this after flow table lookup
-    if ((l4_metadata.tcp_data_len > scratch_metadata.tcp_mss) and
+    if ((l4_metadata.tcp_data_len > l4_metadata.tcp_mss) and
         (l4_metadata.tcp_data_len_gt_mss_action == NORMALIZATION_ACTION_DROP)) {
         modify_field(control_metadata.drop_reason, DROP_TCP_NORMALIZATION);
         drop_packet();
     }
-    if ((l4_metadata.tcp_data_len > scratch_metadata.tcp_mss) and
+    if ((l4_metadata.tcp_data_len > l4_metadata.tcp_mss) and
         (l4_metadata.tcp_data_len_gt_mss_action == NORMALIZATION_ACTION_EDIT)) {
         // Update the tcp_data_len and reduce the frame size
-        modify_field(l4_metadata.tcp_data_len, scratch_metadata.tcp_mss);
+        modify_field(l4_metadata.tcp_data_len, l4_metadata.tcp_mss);
         // dummy ops to keep compiler happy
         modify_field(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len);
         subtract_from_field(capri_p4_intrinsic.packet_len,
-                           (l4_metadata.tcp_data_len - scratch_metadata.tcp_mss));
+                           (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
         // dummy ops to keep compiler happy
         modify_field(ipv4.totalLen, ipv4.totalLen);
         subtract_from_field(ipv4.totalLen,
-                           (l4_metadata.tcp_data_len - scratch_metadata.tcp_mss));
+                           (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
         if (tunnel_metadata.tunnel_terminate == TRUE) {
             // dummy ops to keep compiler happy
             modify_field(udp.len, udp.len);
             subtract_from_field(udp.len,
-                               (l4_metadata.tcp_data_len - scratch_metadata.tcp_mss));
+                               (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
             // dummy ops to keep compiler happy
             modify_field(inner_ipv4.totalLen, inner_ipv4.totalLen);
             subtract_from_field(inner_ipv4.totalLen,
-                               (l4_metadata.tcp_data_len - scratch_metadata.tcp_mss));
+                               (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
         }
     }
 
@@ -1701,10 +1682,7 @@ action tcp_session_normalization() {
 
 // In this action routine we will fixup the tcp options which includes
 // 1. Logic in this action routine should only be invoked if the
-//    tcp data offset is > 5. This is not true anymore with the
-//    tcp_normalize_mss feature where we can insert a mss option
-//    for all SYN Packets even if there were no tcp options in
-//    the incoming packet.
+//    tcp data offset is > 5.
 // 2. If there were no modificaitons to options in the pipeline then
 //    reset all the tcp option header valid bits and only leave the
 //    tcp_option_blob valid bit to be set.
@@ -1743,7 +1721,8 @@ action tcp_options_fixup() {
     modify_field(tcp.dataOffset, tcp.dataOffset);
     modify_field(tunnel_metadata.tunnel_terminate, tunnel_metadata.tunnel_terminate);
 
-    if (tcp_options_blob.valid == FALSE) {
+    if (tcp.dataOffset > 5 and
+        tcp_options_blob.valid == FALSE) {
         if (tcp_option_unknown.valid == TRUE) {
             // dummy ops to keep compiler happy
 	    //modify_field(tcp_option_unknown.optLength, tcp_option_unknown.optLength);
