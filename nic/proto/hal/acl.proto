@@ -22,12 +22,12 @@ service Acl {
 
 // EthSelector has match criteria for non-IP packets
 message EthSelector {
-  uint32 eth_type       = 1;
-  uint32 eth_type_mask  = 2;
-  uint64 src_mac        = 3;
-  uint64 src_mac_mask   = 4;
-  uint64 dst_mac        = 5;
-  uint64 dst_mac_mask   = 6;
+  uint32 eth_type       = 1 [(gogoproto.moretags) = "venice:constraints={range:0-65535}"];
+  uint32 eth_type_mask  = 2 [(gogoproto.moretags) = "venice:constraints={range:0-65535}"];
+  uint64 src_mac        = 3 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];
+  uint64 src_mac_mask   = 4 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];
+  uint64 dst_mac        = 5 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];
+  uint64 dst_mac_mask   = 6 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];
 }
 
 // UDPSelector is used to specify match criteria for UDP traffic
@@ -64,10 +64,10 @@ message TCPSelector {
 
 // ICMPSelector has match criteria for ICMP packets
 message ICMPSelector {
-  uint32 icmp_code      = 1;    // ICMP code
-  uint32 icmp_code_mask = 2;    // Mask for ICMP code
-  uint32 icmp_type      = 3;    // ICMP type
-  uint32 icmp_type_mask = 4;    // Mask for ICMP type
+  uint32 icmp_code      = 1 [(gogoproto.moretags) = "venice:constraints={range:0-0xff}"];    // ICMP code
+  uint32 icmp_code_mask = 2 [(gogoproto.moretags) = "venice:constraints={range:0-0xff}"];    // Mask for ICMP code
+  uint32 icmp_type      = 3 [(gogoproto.moretags) = "venice:constraints={range:0-0xff}"];    // ICMP type
+  uint32 icmp_type_mask = 4 [(gogoproto.moretags) = "venice:constraints={range:0-0xff}"];    // Mask for ICMP type
 }
 
 // IPSelector has match criteria for selecting IP packets
@@ -125,7 +125,7 @@ enum DropReason {
 // TODO: REMOVE
 message AclInternalSelector {
   bool                flow_miss        = 1;    // Flow miss
-  uint64              outer_dst_mac    = 2;    // Outer MAC DA
+  uint64              outer_dst_mac    = 2 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];    // Outer MAC DA
   bool                ip_options       = 3;    // Match on IP options
   bool                ip_frag          = 4;    // IP fragmentation
   repeated DropReason drop_reason      = 5;    // Drop reason
@@ -140,9 +140,9 @@ message AclInternalSelector {
 // TODO: REMOVE
 message AclInternalActionInfo {
   bool            mac_sa_rewrite_en = 1;    // MAC SA rewrite
-  uint64          mac_sa            = 2;    // MAC SA to rewrite with
+  uint64          mac_sa            = 2 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];    // MAC SA to rewrite with
   bool            mac_da_rewrite_en = 3;    // MAC DA rewrite
-  uint64          mac_da            = 4;    // MAC DA to rewrite with
+  uint64          mac_da            = 4 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];    // MAC DA to rewrite with
   bool            ttl_dec_en        = 5;    // Perform a ttl decrement
   types.EncapInfo encap_info        = 6;    // encap info
   types.CpucbId   qid               = 7;    // qid
@@ -177,13 +177,13 @@ enum AclAction {
 }
 
 message AclActionInfo {
-  AclAction                          action                 = 1;    // forwarding action
+  AclAction                          action                 = 1 [(gogoproto.moretags) = "venice:mandatory"];    // forwarding action
   repeated telemetry.MirrorSessionId ing_mirror_sessions    = 2;    // ingress mirror sessions
   repeated telemetry.MirrorSessionId egr_mirror_sessions    = 3;    // egress mirror sessions 
   kh.CoppKeyHandle                   copp_key_handle        = 4 [(gogoproto.moretags) = "venice:ref"];    // copp policer
-  kh.InterfaceKeyHandle              redirect_if_key_handle = 5 [(gogoproto.moretags) = "venice:ref"];    // redirect interface
+  kh.InterfaceKeyHandle              redirect_if_key_handle = 5 [(gogoproto.moretags) = "venice:ref,venice:constraints={acl.AclActionInfo.action==acl_pb2.ACL_ACTION_REDIRECT}"];    // redirect interface
                                                                     // TODO: REMOVE
-  AclInternalActionInfo              internal_actions       = 6;    // Internal action fields
+  AclInternalActionInfo              internal_actions       = 6 [(gogoproto.moretags) = "venice:constraints={acl.AclActionInfo.action!=acl_pb2.ACL_ACTION_DENY}"];    // Internal action fields
 }
 
 // ACL entry configuration
@@ -194,7 +194,7 @@ message AclSpec {
   uint32           priority      = 3 [(gogoproto.moretags) = "venice:immutable"];    // priority of the rule (0 being highest)
                                          // TBD: is this per-vrf priority ? or global ?
   AclSelector      match         = 4;    // match conditions
-  AclActionInfo    action        = 5;    // action(s)
+  AclActionInfo    action        = 5 [(gogoproto.moretags) = "venice:mandatory"];    // action(s)
 }
 
 // Batched requests to create/update acls

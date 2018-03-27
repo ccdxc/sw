@@ -62,12 +62,12 @@ class QosClassObject(base.ConfigObjectBase):
         halapi.ConfigureQosClass([self])
         return
 
-    def __getGroupEnum(self, group):
-        return haldefs.kh.QosGroup.Value(group)
+    def GroupEnum(self):
+        return haldefs.kh.QosGroup.Value(self.spec.group)
 
     def PrepareHALRequestSpec(self, req_spec):
 
-        req_spec.key_or_handle.qos_group = self.__getGroupEnum(self.spec.group)
+        req_spec.key_or_handle.qos_group = self.GroupEnum()
         # Mandatory parameters
         req_spec.mtu = 2000
         req_spec.sched.dwrr.bw_percentage = 10

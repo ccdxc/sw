@@ -174,9 +174,9 @@ class LifObject(base.ConfigObjectBase):
         req_spec.vlan_strip_en = self.vlan_strip_en
         req_spec.vlan_insert_en = self.vlan_insert_en
         if self.tx_qos_class:
-            req_spec.tx_qos_class.qos_class_handle = self.tx_qos_class.hal_handle
+            req_spec.tx_qos_class.qos_group = self.tx_qos_class.GroupEnum()
         if self.rx_qos_class:
-            req_spec.rx_qos_class.qos_class_handle = self.rx_qos_class.hal_handle
+            req_spec.rx_qos_class.qos_group = self.rx_qos_class.GroupEnum()
 
         if GlobalOptions.classic:
             req_spec.packet_filter.receive_broadcast = True
