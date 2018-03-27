@@ -11,7 +11,7 @@ struct tx_table_s0_t0_k k;
 struct tx_table_s0_t0_d d;
 %%
 
-	.param esp_ipv4_tunnel_n2h_txdma1_initial_table
+	.param esp_ipv4_tunnel_n2h_txdma_initial_table
    	.param esp_ipv4_tunnel_n2h_txdma2_initial_table
 	
 esp_ipv4_tunnel_n2h_txdma_stage0:
@@ -20,7 +20,7 @@ esp_ipv4_tunnel_n2h_txdma_stage0:
 	    brpri		r7[1:0], [0,1]
 	    nop
 	        .brcase 0
-	            j esp_ipv4_tunnel_n2h_txdma1_initial_table
+	            j esp_ipv4_tunnel_n2h_txdma_initial_table
 	            nop
 	        .brcase 1
 	            j esp_ipv4_tunnel_n2h_txdma2_initial_table

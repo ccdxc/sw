@@ -7,12 +7,13 @@ struct tx_table_s0_t0_esp_v4_tunnel_n2h_txdma1_initial_table_d d;
 struct phv_ p;
 
 %%
-        .param esp_v4_tunnel_n2h_txdma1_allocate_barco_req_pindex 
+        .param esp_ipv4_tunnel_n2h_allocate_barco_req_pindex 
         .param esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex
         .param esp_v4_tunnel_n2h_load_part2
         .param IPSEC_CB_BASE
+        .param  TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
         .align
-esp_ipv4_tunnel_n2h_txdma1_initial_table:
+esp_ipv4_tunnel_n2h_txdma_initial_table:
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
     b.c1 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing
     phvwri.c1 p.p4_intr_global_drop, 1
@@ -35,20 +36,16 @@ esp_ipv4_tunnel_n2h_txdma1_initial_table:
     memwr.dx  r4, r3
     tbladd d.cb_cindex, 1
  
-    phvwri p.common_te1_phv_table_pc, esp_v4_tunnel_n2h_txdma1_allocate_barco_req_pindex[33:6] 
-    phvwri p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, 10 
-    phvwri p.common_te1_phv_table_addr, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX 
+    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_allocate_barco_req_pindex, r5, TABLE_SIZE_16_BITS)
 
     phvwri p.common_te2_phv_table_pc, esp_v4_tunnel_n2h_load_part2[33:6] 
     phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, 11 
     add r4, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}, 64
     phvwr p.common_te2_phv_table_addr, r4 
 
-    seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
-    b.!c1 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing
-    //addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 1, LIF_IPSEC_ESP) 
-    //phvwr p.barco_req_doorbell_address, r4.dx 
-    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, 0)
+    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, d.barco_pindex)
     phvwr p.barco_req_doorbell_data, r3.dx
 
 

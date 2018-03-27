@@ -9,6 +9,8 @@ struct phv_ p;
 %%
         .param esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex 
         .param esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex 
+        .param esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2 
+        .param      TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
@@ -17,7 +19,8 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     
     // Fill the barco command and key-index
     phvwr p.barco_req_command, d.barco_enc_cmd
-    phvwr p.barco_req_key_desc_index, d.key_index
+    add r6, r0, d.{key_index}
+    phvwr p.barco_req_key_desc_index, r6.wx 
     phvwr p.t0_s2s_iv_size, d.iv_size
     phvwri p.{app_header_table0_valid...app_header_table1_valid}, 3 
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 11 
@@ -29,14 +32,18 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     and r7, r7, IPSEC_CB_RING_INDEX_MASK 
     tblwr d.cb_cindex, r7
     phvwr p.common_te0_phv_table_addr, r2
-    phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex[33:6] 
-    phvwri p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, 10 
-    phvwri p.common_te1_phv_table_addr, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX 
-    phvwr.f p.txdma1_global_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+
+    phvwr p.txdma1_global_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
     tbladd d.{rxdma_ring_cindex}.hx, 1
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 0, d.{rxdma_ring_cindex}.hx)
     memwr.dx  r4, r3
+
+    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2, r5, TABLE_SIZE_16_BITS)
+
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing:
     nop.e

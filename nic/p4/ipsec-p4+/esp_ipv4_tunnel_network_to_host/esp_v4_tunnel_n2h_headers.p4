@@ -22,7 +22,6 @@ header_type ipsec_cb_metadata_t {
         iv_size   : 8;
         icv_size  : 8;
         expected_seq_no   : 32;
-        //last_replay_seq_no : 32;
         replay_seq_no_bmp : 64;
         barco_enc_cmd  : 32;
         ipsec_cb_index : 16;
@@ -33,7 +32,6 @@ header_type ipsec_cb_metadata_t {
         barco_cindex   : 8;
         cb_ring_base_addr : 64;
         barco_ring_base_addr : 64;
-        //iv_salt        : 32;
         vrf_vlan       : 16;
         is_v6          : 8;
     }

@@ -92,6 +92,12 @@ header_type barco_dbell_t {
     }
 }
 
+header_type barco_pi {
+    fields {
+        barco_pi : 16;
+    }
+}
+
 @pragma pa_header_union ingress app_header
 metadata p4plus_to_p4_header_t p4plus2p4_hdr;
 
@@ -181,6 +187,9 @@ metadata ipsec_int_header_t ipsec_int_hdr_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_decrypt_part2_t ipsec_decrypt_part2_scratch;
+
+@pragma scratch_metadata
+metadata barco_pi barco_pi_scratch;
 
 #define IPSEC_TXDMA1_S2S0_SCRATCH_INIT \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
@@ -293,14 +302,13 @@ action esp_v4_tunnel_n2h_load_part2(spi, new_spi)
 }
 
 //stage 1 - table1
-action esp_v4_tunnel_n2h_allocate_barco_req_pindex (pi)
+action esp_v4_tunnel_n2h_allocate_barco_req_pindex (barco_pi)
 {
     modify_field(p4plus2p4_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 6);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(barco_dbell.pi, pi);
-    //modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR + (BRQ_REQ_RING_ENTRY_SIZE * pi));
+    modify_field(barco_pi_scratch.barco_pi, barco_pi);
     modify_field(p4plus2p4_hdr.table2_valid, 0);
 }
 

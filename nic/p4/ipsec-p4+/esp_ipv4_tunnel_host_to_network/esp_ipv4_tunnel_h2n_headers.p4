@@ -72,7 +72,7 @@ header_type ipsec_cb_metadata_t {
         barco_ring_pindex : RING_INDEX_WIDTH;
         barco_ring_cindex : RING_INDEX_WIDTH;
 
-        key_index : 32;
+        key_index : 16;
         iv_size   : 8;
         icv_size  : 8;
         spi       : 32;
@@ -83,8 +83,8 @@ header_type ipsec_cb_metadata_t {
         block_size     : 8;
         cb_pindex : 8;
         cb_cindex : 8;
-        barco_pindex : 8;
-        barco_cindex : 8;
+        barco_pindex : 16;
+        barco_cindex : 16;
         cb_ring_base_addr_hi : 8;
         cb_ring_base_addr : 32;
         barco_ring_base_addr_hi : 8;

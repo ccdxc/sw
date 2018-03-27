@@ -20,7 +20,7 @@
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
-#define P4PLUS_SYMBOLS_MAX  128
+#define P4PLUS_SYMBOLS_MAX  130
 
 class capri_state_pd *g_capri_state_pd;
 uint64_t capri_hbm_base;
@@ -291,9 +291,12 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_txdma_initial_table.bin";
-    symbols[i].num_params = 1;
+    symbols[i].num_params = 2;
     symbols[i].params[0].name = IPSEC_CB_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+    symbols[i].params[1].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
+                                 CAPRI_MAX_TLS_PAD_SIZE; 
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_update_input_desc_aol.bin";
@@ -374,6 +377,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
     i++;
 
+    
     symbols[i].name = "cpu_read_desc_pindex.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
@@ -800,7 +804,23 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
                                  CAPRI_MAX_TLS_PAD_SIZE;
     i++;
 
+    symbols[i].name = "esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
+                                 CAPRI_MAX_TLS_PAD_SIZE; 
+    i++;
+
+    symbols[i].name = "esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = BRQ_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+    i++;
+    
+
     HAL_ASSERT(i <= P4PLUS_SYMBOLS_MAX);
+    // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
+
     p4plus_prm_base_addr = (uint64_t)get_start_offset((char *)JP4PLUS_PRGM);
     HAL_TRACE_DEBUG("base addr {:#x}", p4plus_prm_base_addr);
     capri_load_mpu_programs("p4plus", (char *)full_path.c_str(),

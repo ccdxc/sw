@@ -71,6 +71,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
     uint64_t                                    ipsec_cb_ring_addr;
     uint32_t                                    ipsec_barco_ring_base;
     uint32_t                                    ipsec_barco_ring_addr;
+    uint16_t                                    key_index;
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
@@ -98,7 +99,8 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         data.u.ipsec_encap_rxdma_initial_table_d.barco_enc_cmd = ipseccb_pd->ipseccb->barco_enc_cmd;
         data.u.ipsec_encap_rxdma_initial_table_d.esn_lo = htonl(ipseccb_pd->ipseccb->esn_lo);
         data.u.ipsec_encap_rxdma_initial_table_d.spi = htonl(ipseccb_pd->ipseccb->spi);
-        data.u.ipsec_encap_rxdma_initial_table_d.key_index = ipseccb_pd->ipseccb->key_index;
+        key_index = ipseccb_pd->ipseccb->key_index;
+        data.u.ipsec_encap_rxdma_initial_table_d.key_index = htons(key_index);
         HAL_TRACE_DEBUG("key_index = {}\n", ipseccb_pd->ipseccb->key_index);
    
         ipsec_cb_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB);
@@ -282,7 +284,7 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
     ipseccb_pd->ipseccb->barco_enc_cmd = data.u.ipsec_encap_rxdma_initial_table_d.barco_enc_cmd;
     ipseccb_pd->ipseccb->esn_lo = ntohl(data.u.ipsec_encap_rxdma_initial_table_d.esn_lo);
     ipseccb_pd->ipseccb->spi = ntohl(data.u.ipsec_encap_rxdma_initial_table_d.spi);
-    ipseccb_pd->ipseccb->key_index = data.u.ipsec_encap_rxdma_initial_table_d.key_index;
+    ipseccb_pd->ipseccb->key_index = ntohs(data.u.ipsec_encap_rxdma_initial_table_d.key_index);
 
     ipsec_cb_ring_addr_hi = data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr_hi;
     ipsec_cb_ring_addr = (ipsec_cb_ring_addr_hi << 32) & 0xff00000000; 

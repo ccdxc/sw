@@ -35,7 +35,9 @@ esp_ipv4_tunnel_h2n_post_to_cb_ring:
     phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_end_addr, IPSEC_CB_RING_IN_DESC_END 
 
 esp_ipv4_tunnel_h2n_rxdma_dma_cmd_ring_doorbell:
-    CAPRI_DMA_CMD_RING_DOORBELL2(doorbell_cmd_dma_cmd, LIF_IPSEC_ESP, 0, k.ipsec_global_ipsec_cb_index, 0, d.{rxdma_ring_cindex}.hx, db_data_pid, db_data_index) 
+    add r1, d.{rxdma_ring_pindex}.hx, 1
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(doorbell_cmd_dma_cmd, LIF_IPSEC_ESP, 0, k.ipsec_global_ipsec_cb_index, 0, r1, db_data_pid, db_data_index)
+    tblwr d.rxdma_ring_pindex, r1.hx
     phvwri          p.doorbell_cmd_dma_cmd_eop, 1
     phvwri.f          p.doorbell_cmd_dma_cmd_wr_fence, 1
     nop.e

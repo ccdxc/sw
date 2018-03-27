@@ -332,7 +332,7 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
 
     modify_field(barco_req.command, barco_enc_cmd);
     //modify_field(barco_req.brq_iv_addr, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index) + IPSEC_CB_IV_OFFSET);
-    modify_field(barco_req.key_desc_index, key_index);
+    //modify_field(barco_req.key_desc_index, key_index);
     modify_field(t0_s2s.iv_size, iv_size);
  
     modify_field(p4plus2p4_hdr.table1_valid, 1);
