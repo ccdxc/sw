@@ -114,13 +114,13 @@ pd_mc_entry_depgm_registered_mac (pd_mc_entry_t *mc_entry_pd)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     sdk_ret_t                   sdk_ret;
-    sdk_hash                    *inp_prop_tbl = NULL;
+    sdk_hash                    *reg_mac_tbl = NULL;
     mc_entry_t                  *mc_entry = (mc_entry_t*) mc_entry_pd->mc_entry;
 
-    inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
+    reg_mac_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
-    sdk_ret = inp_prop_tbl->remove(mc_entry_pd->reg_mac_tbl_idx);
+    sdk_ret = reg_mac_tbl->remove(mc_entry_pd->reg_mac_tbl_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-mc_entry::{}:unable to deprogram from cpu entry "
@@ -205,6 +205,32 @@ end:
     if (ret != HAL_RET_OK) {
         mc_entry_pd_cleanup(mc_entry_pd);
     }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// PD mc_entry Update
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_mc_entry_update (pd_mc_entry_update_args_t *args)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    pd_mc_entry_t           *mc_entry_pd = NULL;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->mc_entry != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->upd_entry != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->mc_entry->pd != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("pd-mc_entry:{}:updating pd state for mc_entry {}",
+                    __FUNCTION__, mc_key_to_string(&args->mc_entry->key));
+
+    mc_entry_pd = (pd_mc_entry_t *)args->mc_entry->pd;
+
+    // link PI<->PD
+    mc_entry_link_pi_pd(mc_entry_pd, args->upd_entry);
+
+    // Nothing to update in the hardware
 
     return ret;
 }

@@ -234,7 +234,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     // mc entry
     PD_SYMBOL_LOAD(PD_FUNC_ID_MC_ENTRY_CREATE, pd_mc_entry_create);
     PD_SYMBOL_LOAD(PD_FUNC_ID_MC_ENTRY_DELETE, pd_mc_entry_delete);
-    // PD_SYMBOL_LOAD(PD_FUNC_ID_MC_ENTRY_UPDATE, pd_mc_entry_update);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_MC_ENTRY_UPDATE, pd_mc_entry_update);
 
     // flow get
     PD_SYMBOL_LOAD(PD_FUNC_ID_FLOW_GET, pd_flow_get);
@@ -569,7 +569,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     // mc entry
     PD_SYMBOL_CALL(PD_FUNC_ID_MC_ENTRY_CREATE, pd_mc_entry_create);
     PD_SYMBOL_CALL(PD_FUNC_ID_MC_ENTRY_DELETE, pd_mc_entry_delete);
-    // PD_SYMBOL_CALL(PD_FUNC_ID_MC_ENTRY_UPDATE, pd_mc_entry_update);
+    PD_SYMBOL_CALL(PD_FUNC_ID_MC_ENTRY_UPDATE, pd_mc_entry_update);
 
     // flow get
     PD_SYMBOL_CALL(PD_FUNC_ID_FLOW_GET, pd_flow_get);

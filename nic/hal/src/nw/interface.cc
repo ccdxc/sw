@@ -511,6 +511,7 @@ enicif_classic_update_oif_lists(if_t *hal_if, l2seg_t *l2seg,
 hal_ret_t
 if_update_oif_lists(if_t *hal_if, bool add)
 {
+    oif_t oif = {};
     hal_ret_t  ret = HAL_RET_OK;
     l2seg_t    *l2seg = NULL, *nat_l2seg = NULL;
 
@@ -525,13 +526,9 @@ if_update_oif_lists(if_t *hal_if, bool add)
             l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
             // Add classic nic/RxQ to bcast list only when RDMA is not enabled for this LIF
             if (l2seg && !lif->enable_rdma) {
-                oif_t oif = {};
-
                 oif.intf = hal_if;
                 oif.l2seg = l2seg;
 
-                // TODO: Clean this as l2seg should not have list of oifs.
-                // It should be handles.
                 // Add the new interface to the broadcast list of the associated
                 // l2seg.
                 if (add) {

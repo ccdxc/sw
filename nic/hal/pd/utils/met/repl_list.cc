@@ -169,7 +169,7 @@ hal_ret_t
 ReplList::process_del_repl_tbl_entry(ReplTableEntry *rte)
 {
     hal_ret_t       ret = HAL_RET_OK;
-    uint32_t        tmp_rte_idx = 0, free_rte_idx = 0;
+    uint32_t        free_rte_idx = 0;
     ReplTableEntry  *next_rte = NULL;
 
     // Check if repl. table entry has to be removed.
@@ -179,7 +179,7 @@ ReplList::process_del_repl_tbl_entry(ReplTableEntry *rte)
             if (rte->get_next()) {
                 next_rte = rte->get_next();
                 // Save next rte's index
-                tmp_rte_idx = next_rte->get_repl_table_index();
+                free_rte_idx = next_rte->get_repl_table_index();
 
                 // Change next rte's index to first rte's index
                 next_rte->set_repl_table_index(rte->get_repl_table_index());
@@ -193,19 +193,13 @@ ReplList::process_del_repl_tbl_entry(ReplTableEntry *rte)
                 // Program first rte
                 first_repl_tbl_entry_->program_table();
 
-                // De-program saved rte's index in first step
-                free_rte_idx = tmp_rte_idx;
-                de_program_repl_table_entry(free_rte_idx);
-
                 // This will be freed in del_replication
                 rte->set_repl_table_index(free_rte_idx);
+                // De-program saved rte's index in first step
+                rte->program_table();
             } else {
                 // De-program at rte's index.
-                free_rte_idx = rte->get_repl_table_index();
-                de_program_repl_table_entry(free_rte_idx);
-
-                // This will be freed in del_replication
-                rte->set_repl_table_index(free_rte_idx);
+                rte->program_table();
 
                 // Update first and last as the only RTE is going away
                 first_repl_tbl_entry_ = NULL;
@@ -222,11 +216,7 @@ ReplList::process_del_repl_tbl_entry(ReplTableEntry *rte)
             // Program previous RTE
             rte->get_prev()->program_table();
             // De-program RTE
-            free_rte_idx = rte->get_repl_table_index();
-            de_program_repl_table_entry(free_rte_idx);
-
-            // This will be freed in del_replication
-            rte->set_repl_table_index(free_rte_idx);
+            rte->program_table();
 
             // If rte is last, update last as rte will eventually be removed
             if (rte->get_next() == NULL) {
@@ -289,15 +279,6 @@ ReplList::get_repl_table_entry(ReplTableEntry **rte)
 end:
     return rs;
 
-}
-
-hal_ret_t 
-ReplList::de_program_repl_table_entry (uint32_t index)
-{
-    hal_ret_t rs = HAL_RET_OK;
-
-    // TODO: zerout the entry at index
-    return rs;
 }
 
 hal_ret_t

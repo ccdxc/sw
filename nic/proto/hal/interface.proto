@@ -114,7 +114,7 @@ message LifQStateMapEntry {
 message PktFilter {
     bool    receive_broadcast     = 1;    // Receive Broadcast
     bool    receive_all_multicast = 2;    // Receive all Multicast
-    bool    receive_promiscuous   = 3;    // Receive Unknown Unicast, Broadcast, Multicast. Not Known Unicast
+    bool    receive_promiscuous   = 3;    // Receive Unknown Unicast
 }
 
 // LIF object

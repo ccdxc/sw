@@ -1544,12 +1544,14 @@ pd_mc_entry_delete_args_init (pd_mc_entry_delete_args_t *args)
 
 typedef struct pd_mc_entry_update_args_s {
     mc_entry_t      *mc_entry;
+    mc_entry_t      *upd_entry;
 } __PACK__ pd_mc_entry_update_args_t;
 
 static inline void
 pd_mc_entry_update_args_init (pd_mc_entry_update_args_t *args)
 {
     args->mc_entry = NULL;
+    args->upd_entry = NULL;
     return;
 }
 
