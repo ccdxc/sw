@@ -68,6 +68,8 @@ namespace xts {
 #define INTER_SUB_AOL_GAP SECTOR_SIZE
 #define STATUS_DEF_VALUE 0
 
+static constexpr uint32_t kXtsPISize = sizeof(uint32_t);
+
 typedef struct xts_aol_ {
   uint64_t a0;
   uint32_t o0;
@@ -134,6 +136,7 @@ typedef struct xts_status_desc_ {
   uint8_t      status_dma_en:1,
                next_doorbell_en:1,
                intr_en:1,
+               is_next_db_barco_push:1,
                stop_chain_on_error:1;
   uint8_t      pad[17];
 } __attribute__((packed)) xts_status_desc_t;
@@ -192,9 +195,9 @@ public:
   int queue_req_n_ring_db_from_host();
 
   void* src_buf = (void*)write_buf->va();
-  bool is_src_hbm_buf = false;
+  bool is_src_hbm_buf = write_buf->is_mem_type_hbm();
   void* dst_buf = (void*)read_buf->va();
-  bool is_dst_hbm_buf = false;
+  bool is_dst_hbm_buf = read_buf->is_mem_type_hbm();
   void* src_buf_phy = NULL;
   void* dst_buf_phy = NULL;
 

@@ -215,16 +215,25 @@ action seq_barco_ring_push(p_ndx) {
 
 //@pragma little_endian next_db_addr next_db_data status_hbm_addr status_host_addr intr_addr intr_data status_len
 @pragma little_endian next_db_data intr_data
-action seq_comp_status_desc0_handler(next_db_addr, next_db_data, status_hbm_addr, status_host_addr, 
+action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
+                                     barco_desc_addr, barco_pndx_addr,
+				     barco_desc_size, barco_pndx_size, filler,
+                                     status_hbm_addr, status_host_addr, 
                                      intr_addr, intr_data, status_len, status_dma_en,
-                                     next_db_en, intr_en) {
+                                     next_db_en, intr_en, is_next_db_barco_push) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
+  STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_comp_status_desc0_scratch.next_db_addr, next_db_addr);
   modify_field(seq_comp_status_desc0_scratch.next_db_data, next_db_data);
+  modify_field(seq_comp_status_desc0_scratch.barco_desc_addr, barco_desc_addr);
+  modify_field(seq_comp_status_desc0_scratch.barco_pndx_addr, barco_pndx_addr);
+  modify_field(seq_comp_status_desc0_scratch.barco_desc_size, barco_desc_size);
+  modify_field(seq_comp_status_desc0_scratch.barco_pndx_size, barco_pndx_size);
+  modify_field(seq_comp_status_desc0_scratch.filler, filler);
   modify_field(seq_comp_status_desc0_scratch.status_hbm_addr, status_hbm_addr);
   modify_field(seq_comp_status_desc0_scratch.status_host_addr, status_host_addr);
   modify_field(seq_comp_status_desc0_scratch.intr_addr, intr_addr);
@@ -233,12 +242,18 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data, status_hbm_addr
   modify_field(seq_comp_status_desc0_scratch.status_dma_en, status_dma_en);
   modify_field(seq_comp_status_desc0_scratch.next_db_en, next_db_en);
   modify_field(seq_comp_status_desc0_scratch.intr_en, intr_en);
+  modify_field(seq_comp_status_desc0_scratch.is_next_db_barco_push, is_next_db_barco_push);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
+  modify_field(storage_kivec4.barco_ring_addr, seq_comp_status_desc0_scratch.next_db_addr);
+  modify_field(storage_kivec4.barco_pndx_addr, seq_comp_status_desc0_scratch.barco_pndx_addr);
+  modify_field(storage_kivec4.barco_desc_size, seq_comp_status_desc0_scratch.barco_desc_size);
+  modify_field(storage_kivec4.barco_pndx_size, seq_comp_status_desc0_scratch.barco_pndx_size);
   modify_field(storage_kivec5.intr_addr, seq_comp_status_desc0_scratch.intr_addr);
   modify_field(storage_kivec5.status_dma_en, seq_comp_status_desc0_scratch.status_dma_en);
   modify_field(storage_kivec5.next_db_en, seq_comp_status_desc0_scratch.next_db_en);
   modify_field(storage_kivec5.intr_en, seq_comp_status_desc0_scratch.intr_en);
+  modify_field(storage_kivec5.is_next_db_barco_push, seq_comp_status_desc0_scratch.is_next_db_barco_push);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
   // Fence with the SGL mem2mem DMA for ordering.
@@ -341,10 +356,45 @@ action seq_comp_status_handler(status, output_data_len, rsvd) {
 
   // Load the address where compression destination SGL is stored for 
   // processing in the next stage
-  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
+  CAPRI_LOAD_TABLE_ADDR(common_te1_phv, 
                         storage_kivec2.sgl_out_aol_addr,
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, 
                         seq_comp_sgl_handler_start)
+}
+
+/*****************************************************************************
+ *  seq_barco_ring_push: Push to Barco ring by issuing the mem2mem DMA 
+ *                       commands and incrementing the p_ndx via ringing the 
+ *                       doorbell. Assumes that data to be pushed has its 
+ *                       source in DMA cmd 1 and destination in DMA cmd 2.
+ *****************************************************************************/
+
+@pragma little_endian p_ndx
+action seq_barco_chain_action(p_ndx) {
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  modify_field(barco_ring_scratch.p_ndx, p_ndx);
+
+  // Copy the doorbell data to PHV
+  modify_field(qpush_doorbell_data.data, barco_ring_scratch.p_ndx);
+
+  // Modify the DMA command 2 to fill the destination address based on p_ndx 
+  // NOTE: This API in P4 land will not work, but in ASM we can selectively
+  // overwrite the fields
+  DMA_COMMAND_PHV2MEM_FILL(dma_m2m_10, 
+                           storage_kivec4.barco_ring_addr +
+                           (barco_ring_scratch.p_ndx * 
+                            storage_kivec4.barco_desc_size),
+                           0, 0,
+                           0, 0, 0, 0)
+
+
+  // Doorbell has already been setup
+
+  // Exit the pipeline here 
 }
 
 /*****************************************************************************
@@ -455,7 +505,8 @@ action seq_comp_sgl_handler(addr0, addr1, addr2, addr3,
 @pragma little_endian next_db_data intr_data
 action seq_xts_status_desc_handler(next_db_addr, next_db_data, status_hbm_addr, status_host_addr, 
                                    intr_addr, intr_data, status_len,
-                                   status_dma_en, next_db_en, intr_en, stop_chain_on_error) {
+                                   status_dma_en, next_db_en, intr_en,
+				   is_next_db_barco_push, stop_chain_on_error) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
@@ -471,12 +522,14 @@ action seq_xts_status_desc_handler(next_db_addr, next_db_data, status_hbm_addr, 
   modify_field(seq_xts_status_desc_scratch.status_dma_en, status_dma_en);
   modify_field(seq_xts_status_desc_scratch.next_db_en, next_db_en);
   modify_field(seq_xts_status_desc_scratch.intr_en, intr_en);
+  modify_field(seq_xts_status_desc_scratch.is_next_db_barco_push, is_next_db_barco_push);
   modify_field(seq_xts_status_desc_scratch.stop_chain_on_error, stop_chain_on_error);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(storage_kivec5.status_dma_en, seq_xts_status_desc_scratch.status_dma_en);
   modify_field(storage_kivec5.next_db_en, seq_xts_status_desc_scratch.next_db_en);
   modify_field(storage_kivec5.intr_en, seq_xts_status_desc_scratch.intr_en);
+  modify_field(storage_kivec5.is_next_db_barco_push, seq_xts_status_desc_scratch.is_next_db_barco_push);
   modify_field(storage_kivec5.stop_chain_on_error, seq_xts_status_desc_scratch.stop_chain_on_error);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.

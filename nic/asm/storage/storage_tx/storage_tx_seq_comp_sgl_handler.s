@@ -8,8 +8,8 @@
 #include "INGRESS_p.h"
 
 
-struct s3_tbl_k k;
-struct s3_tbl_seq_comp_sgl_handler_d d;
+struct s3_tbl1_k k;
+struct s3_tbl1_seq_comp_sgl_handler_d d;
 struct phv_ p;
 
 %%

@@ -2616,16 +2616,25 @@ int test_setup_cp_seq_status_ent(cp_seq_params_t *params) {
   seq_comp_status_desc->clear();
 
   // desc bytes 0-63
-  seq_comp_status_desc->write_bit_fields(0, 64, params->seq_ent.next_doorbell_addr);
-  seq_comp_status_desc->write_bit_fields(64, 64, params->seq_ent.next_doorbell_data);
-  seq_comp_status_desc->write_bit_fields(128, 64, params->seq_ent.status_hbm_pa);
-  seq_comp_status_desc->write_bit_fields(192, 64, params->seq_ent.status_host_pa);
-  seq_comp_status_desc->write_bit_fields(256, 64, params->seq_ent.intr_pa);
-  seq_comp_status_desc->write_bit_fields(320, 32, params->seq_ent.intr_data);
-  seq_comp_status_desc->write_bit_fields(352, 16, params->seq_ent.status_len);
-  seq_comp_status_desc->write_bit_fields(368, 1, params->seq_ent.status_dma_en);
-  seq_comp_status_desc->write_bit_fields(369, 1, params->seq_ent.next_doorbell_en);
-  seq_comp_status_desc->write_bit_fields(370, 1, params->seq_ent.intr_en);
+  if (params->seq_ent.is_next_db_barco_push) {
+    seq_comp_status_desc->write_bit_fields(0, 64, params->seq_ent.push_entry.barco_ring_addr);
+    seq_comp_status_desc->write_bit_fields(128, 64, params->seq_ent.push_entry.barco_desc_addr);
+    seq_comp_status_desc->write_bit_fields(192, 34, params->seq_ent.push_entry.barco_pndx_addr);
+    seq_comp_status_desc->write_bit_fields(226, 4, params->seq_ent.push_entry.barco_desc_size);
+    seq_comp_status_desc->write_bit_fields(230, 3, params->seq_ent.push_entry.barco_pndx_size);
+  } else {
+    seq_comp_status_desc->write_bit_fields(0, 64, params->seq_ent.db_entry.next_doorbell_addr);
+    seq_comp_status_desc->write_bit_fields(64, 64, params->seq_ent.db_entry.next_doorbell_data);
+  }
+  seq_comp_status_desc->write_bit_fields(234, 64, params->seq_ent.status_hbm_pa);
+  seq_comp_status_desc->write_bit_fields(298, 64, params->seq_ent.status_host_pa);
+  seq_comp_status_desc->write_bit_fields(362, 64, params->seq_ent.intr_pa);
+  seq_comp_status_desc->write_bit_fields(426, 32, params->seq_ent.intr_data);
+  seq_comp_status_desc->write_bit_fields(458, 16, params->seq_ent.status_len);
+  seq_comp_status_desc->write_bit_fields(474, 1, params->seq_ent.status_dma_en);
+  seq_comp_status_desc->write_bit_fields(475, 1, params->seq_ent.next_doorbell_en);
+  seq_comp_status_desc->write_bit_fields(476, 1, params->seq_ent.intr_en);
+  seq_comp_status_desc->write_bit_fields(477, 1, params->seq_ent.is_next_db_barco_push);
 
   // desc bytes 64-127
   seq_comp_status_desc->write_bit_fields(512 + 0, 64, params->seq_ent.src_hbm_pa);

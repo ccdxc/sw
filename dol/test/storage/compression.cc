@@ -1057,7 +1057,7 @@ void compress_xts_encrypt_setup(cp_desc_t& d,
   uint32_t datain_len;
 
   xts_ctx.op = xts::AES_ENCR_ONLY;
-  xts_ctx.seq_xts_q = seq_params.seq_xts_q;
+  xts_ctx.use_seq = false;
   xts_ctx.seq_xts_status_q = seq_params.seq_xts_status_q;
   xts_ctx.num_sectors = 1;
   xts_ctx.copy_desc = false;
@@ -1098,7 +1098,7 @@ void compress_xts_encrypt_setup(cp_desc_t& d,
   xts_status_desc_buf->write_bit_fields(352, 16, xts_status_host_buf->line_size_get());
   xts_status_desc_buf->write_bit_fields(368, 1, 1); // status_dma_en
   xts_status_desc_buf->write_bit_fields(370, 1, 1); // intr_en
-  xts_status_desc_buf->write_bit_fields(371, 1, 1); // stop_chain_on_error
+  xts_status_desc_buf->write_bit_fields(372, 1, 1); // stop_chain_on_error
   xts_status_desc_buf->write_thru();
   xts_ctx.desc_write_seq_xts_status(xts_status_desc_buf);
 
@@ -1151,10 +1151,15 @@ int _compress_output_encrypt(comp_queue_push_t push_type,
   compress_xts_encrypt_setup(d, xts_ctx, seq_params, compressed_buf,
                              xts_encrypt_host_buf);
 
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, xts_ctx.seq_xts_q,
-                             0, xts_ctx.seq_xts_index, 
-                             &seq_params.seq_ent.next_doorbell_addr,
-                             &seq_params.seq_ent.next_doorbell_data);
+  // encryption will use direct barco push action
+  seq_params.seq_ent.next_doorbell_en = 1;
+  seq_params.seq_ent.is_next_db_barco_push = 1;
+  seq_params.seq_ent.push_entry.barco_ring_addr = xts_ctx.xts_ring_base_addr;
+  seq_params.seq_ent.push_entry.barco_pndx_addr = xts_ctx.xts_ring_pi_addr;
+  seq_params.seq_ent.push_entry.barco_desc_addr = xts_desc_buf->pa();
+  seq_params.seq_ent.push_entry.barco_desc_size = (uint8_t)log2(xts_desc_buf->line_size_get());
+  seq_params.seq_ent.push_entry.barco_pndx_size = (uint8_t)log2(xts::kXtsPISize);
+  
   status_buf->clear_thru();
   seq_params.seq_ent.status_hbm_pa = status_buf->pa();
   seq_params.seq_ent.status_host_pa = status_host_buf->pa();
@@ -1166,7 +1171,6 @@ int _compress_output_encrypt(comp_queue_push_t push_type,
   seq_params.seq_ent.sgl_in_aol_pa = xts_in_aol->pa();
   seq_params.seq_ent.sgl_out_aol_pa = xts_out_aol->pa();
   seq_params.seq_ent.status_dma_en = 1;
-  seq_params.seq_ent.next_doorbell_en = 1;
   seq_params.seq_ent.stop_chain_on_error = 1;
   seq_params.seq_ent.aol_pad_xfer_en = 1;
   seq_params.seq_ent.pad_len_shift = (uint8_t)log2(pad_buf->line_size_get());

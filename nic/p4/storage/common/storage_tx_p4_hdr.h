@@ -428,6 +428,11 @@ header_type seq_comp_status_desc0_t {
   fields {
     next_db_addr	: 64;	// 64 bit address of the next doorbell to ring
     next_db_data	: 64;	// 64 bit data of the next doorbell to ring
+    barco_desc_addr	: 64;
+    barco_pndx_addr	: 34;	// producer index address
+    barco_desc_size	:  4;	// descriptor size (power of 2 exponent)
+    barco_pndx_size	:  3;	// producer index size (power of 2 exponent)
+    filler		    :  1;
     status_hbm_addr	: 64;	// Address where compression status will be placed
     status_host_addr    : 64;	// Address where compression status will be placed
     intr_addr		: 64;	// Address where interrupt needs to be written
@@ -439,6 +444,7 @@ header_type seq_comp_status_desc0_t {
 				// NOTE: Don't enable intr_en and next_db_en together
 				//       as only one will be serviced
 				// Order of evaluation: 1. next_db_en 2. intr_en
+    is_next_db_barco_push: 1;   // next_db is actually Barco push info
   }
 }
 
@@ -498,6 +504,7 @@ header_type seq_xts_status_desc_t {
 				// NOTE: Don't enable intr_en and next_db_en together
 				//       as only one will be serviced
 				// Order of evaluation: 1. next_db_en 2. intr_en
+    is_next_db_barco_push: 1;   // next_db is actually Barco push info
     stop_chain_on_error :  1;   // 1: don't ring next DB on error
   }
 }
@@ -588,7 +595,11 @@ header_type storage_kivec3_t {
 // kivec4: header union with stage_2_stage for table 0
 header_type storage_kivec4_t {
   fields {
-    w_ndx		: 16;	// Working consumer index
+    barco_ring_addr : 64;
+    barco_pndx_addr	: 34;
+    barco_desc_size	: 4;
+    barco_pndx_size	: 3;
+    w_ndx		    : 16;	// Working consumer index
   }
 }
 
@@ -602,6 +613,7 @@ header_type storage_kivec5_t {
     status_dma_en	:  1;	// 1 => DMA status, 0 => don't DMA status
     next_db_en          :  1;
     intr_en	        :  1;
+    is_next_db_barco_push: 1;   // next_db is actually Barco push info
     data_len_from_desc	:  1;	// 1 => Use the data length in the descriptor, 
                                 // 0 => Use the data lenghth in the status
     aol_pad_xfer_en     :  1;
@@ -833,6 +845,10 @@ header_type storage_kivec5_t {
   modify_field(scratch.data_addr, kivec.data_addr);			\
 
 #define STORAGE_KIVEC4_USE(scratch, kivec)				\
+  modify_field(scratch.barco_ring_addr, kivec.barco_ring_addr);			\
+  modify_field(scratch.barco_pndx_addr, kivec.barco_pndx_addr);			\
+  modify_field(scratch.barco_desc_size, kivec.barco_desc_size);			\
+  modify_field(scratch.barco_pndx_size, kivec.barco_pndx_size);			\
   modify_field(scratch.w_ndx, kivec.w_ndx);				\
 
 #define STORAGE_KIVEC5_USE(scratch, kivec)				\
@@ -842,6 +858,7 @@ header_type storage_kivec5_t {
   modify_field(scratch.status_dma_en, kivec.status_dma_en);	        \
   modify_field(scratch.next_db_en, kivec.next_db_en);	                \
   modify_field(scratch.intr_en, kivec.intr_en);	                        \
+  modify_field(scratch.is_next_db_barco_push, kivec.is_next_db_barco_push);\
   modify_field(scratch.data_len_from_desc, kivec.data_len_from_desc);	\
   modify_field(scratch.aol_pad_xfer_en, kivec.aol_pad_xfer_en);	        \
   modify_field(scratch.sgl_xfer_en, kivec.sgl_xfer_en);                 \

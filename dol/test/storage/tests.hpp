@@ -19,9 +19,24 @@ namespace tests {
 
 const static uint32_t  kDefaultBufSize       = 4096;
 
-typedef struct cp_seq_entry {
+typedef struct {
   uint64_t next_doorbell_addr;	// Next capri doorbell address (if chaining)
   uint64_t next_doorbell_data;	// Next capri doorbell data (if chaining)
+} cp_seq_next_db_entry_t;
+
+typedef struct {
+  uint64_t barco_ring_addr;     // ring address
+  uint64_t barco_pndx_addr;     // producer index address
+  uint64_t barco_desc_addr;     // descriptor to push
+  uint8_t  barco_desc_size;     // descriptor size (power of 2 exponent)
+  uint8_t  barco_pndx_size;     // producer index size (power of 2 exponent)
+} cp_seq_barco_push_entry_t;
+
+typedef struct cp_seq_entry {
+  union {
+      cp_seq_next_db_entry_t    db_entry;
+      cp_seq_barco_push_entry_t push_entry;
+  };
   uint64_t status_hbm_pa;	// Status address in HBM. Provide this even if data_len is provided in desc.
   uint64_t status_host_pa;	// Destination for the PDMA of status.
   uint64_t src_hbm_pa;		// Address of compression source buffer (needed if copy_src_dst_on_error is set)
@@ -48,6 +63,7 @@ typedef struct cp_seq_entry {
   // When comp/decomp fails and stop_chain_on_error is set, intr_en will be honored
            next_doorbell_en     :1,	// enable chain doorbell
            intr_en              :1,	// enable intr_data write to intr_pa
+           is_next_db_barco_push:1,	// next_db is actually a Barco push
            stop_chain_on_error  :1, // stop chaining on error
            copy_src_dst_on_error:1,
   // NOTE: sgl_xfer_en and aol_len_pad_en are mutually exclusive.

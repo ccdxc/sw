@@ -15,6 +15,7 @@
 #define tx_table_s5_t0		s5_tbl
 
 #define tx_table_s1_t1		s1_tbl1
+#define tx_table_s3_t1		s3_tbl1
 
 #define tx_table_s0_t0_action	q_state_pop
 #define tx_table_s0_t0_action1	pri_q_state_pop
@@ -54,7 +55,9 @@
 #define tx_table_s3_t0_action2	pri_q_state_decr
 #define tx_table_s3_t0_action3	roce_r2n_wqe_prep
 #define tx_table_s3_t0_action4	pvm_roce_sq_cb_update
-#define tx_table_s3_t0_action5	seq_comp_sgl_handler
+#define tx_table_s3_t0_action5	seq_barco_chain_action
+
+#define tx_table_s3_t1_action	seq_comp_sgl_handler
 
 #define tx_table_s4_t0_action	nvme_be_wqe_save
 #define tx_table_s4_t0_action1	nvme_be_wqe_release

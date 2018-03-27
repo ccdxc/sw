@@ -21,8 +21,8 @@ storage_tx_seq_xts_status_desc_handler_start:
    // 1. If next_db_en is set => ring the next doorbell and don't raise interrupt
    // 2. If next_db_en is not set and intr_en is set => raise interrupt
 
-   // Check if next doorbell is to be enabled and branch
-   bbeq		d.next_db_en, 0, check_intr
+   // Check if next doorbell is to be enabled
+   bbeq		d.next_db_en, 0, intr_check
    phvwr	p.{storage_kivec5_status_dma_en...storage_kivec5_stop_chain_on_error}, \
    	        d.{status_dma_en...stop_chain_on_error} // delay slot
 
@@ -33,8 +33,8 @@ storage_tx_seq_xts_status_desc_handler_start:
    b		status_dma_setup
    nop
 
-check_intr:
-   // Check if interrupt is enabled and branch
+intr_check:
+   // Check if interrupt is enabled
    bbeq		d.intr_en, 0, status_dma_setup
    nop
 

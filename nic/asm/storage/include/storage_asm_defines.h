@@ -28,7 +28,7 @@
 #define STORAGE_KIVEC0_DST_QID                  \
     k.{storage_kivec0_dst_qid_sbit0_ebit1...storage_kivec0_dst_qid_sbit18_ebit23}
 #define STORAGE_KIVEC0_DST_QADDR                \
-    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit2_ebit33}
+    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit10_ebit33}
 #define STORAGE_KIVEC0_PRP_ASSIST               \
     k.storage_kivec0_prp_assist
 #define STORAGE_KIVEC0_IS_Q0                    \
@@ -75,8 +75,16 @@
 #define STORAGE_KIVEC3_DATA_ADDR                \
     k.storage_kivec3_data_addr
 
+#define STORAGE_KIVEC4_BARCO_RING_ADDR          \
+    k.{storage_kivec4_barco_ring_addr_sbit0_ebit15...storage_kivec4_barco_ring_addr_sbit56_ebit63}
+#define STORAGE_KIVEC4_BARCO_DESC_SIZE          \
+    k.storage_kivec4_barco_desc_size
+#define STORAGE_KIVEC4_BARCO_PNDX_ADDR          \
+    k.{storage_kivec4_barco_pndx_addr_sbit0_ebit23...storage_kivec4_barco_pndx_addr_sbit32_ebit33}
+#define STORAGE_KIVEC4_BARCO_PNDX_SIZE          \
+    k.{storage_kivec4_barco_pndx_size_sbit0_ebit1...storage_kivec4_barco_pndx_size_sbit2_ebit2}
 #define STORAGE_KIVEC4_W_NDX                    \
-    k.storage_kivec4_w_ndx
+    k.{storage_kivec4_w_ndx_sbit0_ebit6...storage_kivec4_w_ndx_sbit15_ebit15}
 
 #define STORAGE_KIVEC5_INTR_ADDR              \
     k.{storage_kivec5_intr_addr_sbit0_ebit7...storage_kivec5_intr_addr_sbit40_ebit63}
@@ -100,6 +108,8 @@
     k.storage_kivec5_sgl_xfer_en
 #define STORAGE_KIVEC5_INTR_EN                  \
     k.storage_kivec5_intr_en
+#define STORAGE_KIVEC5_NEXT_DB_BARCO_PUSH       \
+    k.storage_kivec5_is_next_db_barco_push
 
 #define STAGE0_KIVEC_LIF                        \
     k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
@@ -250,6 +260,13 @@
   phvwrpair p.common_te1_phv_table_pc, _pc,                             \
         p.common_te1_phv_table_addr, _table_addr;                       \
 
+#define LOAD_TABLE1_FOR_ADDR64_e(_table_addr, _load_size, _pc)          \
+  phvwri    p.app_header_table1_valid, 1;                               \
+  phvwrpair.e p.common_te1_phv_table_lock_en, 1,                        \
+        p.common_te1_phv_table_raw_table_size, _load_size;              \
+  phvwrpair p.common_te1_phv_table_pc, _pc,                             \
+        p.common_te1_phv_table_addr, _table_addr;                       \
+
 // _table_addr is 34 bits
 #define LOAD_TABLE1_FOR_ADDR34(_table_addr, _load_size, _pc)            \
   phvwri    p.app_header_table0_valid, 1;                               \
@@ -266,6 +283,14 @@
 #define LOAD_TABLE_FOR_ADDR_PC_IMM(_table_addr, _load_size, _pc)        \
   addi      r1, r0, _pc[33:6];                                          \
   LOAD_TABLE0_FOR_ADDR64(_table_addr, _load_size, r1)                   \
+
+#define LOAD_TABLE1_FOR_ADDR_PC_IMM(_table_addr, _load_size, _pc)       \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE1_FOR_ADDR64(_table_addr, _load_size, r1)                   \
+
+#define LOAD_TABLE1_FOR_ADDR_PC_IMM_e(_table_addr, _load_size, _pc)     \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE1_FOR_ADDR64_e(_table_addr, _load_size, r1)                 \
 
 #define LOAD_TABLE_FOR_ADDR34_PC_IMM(_table_addr, _load_size, _pc)      \
   addi      r1, r0, _pc[33:6];                                          \

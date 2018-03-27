@@ -16,11 +16,11 @@ struct phv_ p;
 storage_tx_seq_xts_status_handler_start:
 
    seq          c1, d.err, r0
-   bcf          [c1], complete_all_dma
+   bcf          [c1], all_dma_complete
    
    // XTS error case, if next_db_en and !stop_chain_on_error then ring_db
    seq          c1, STORAGE_KIVEC5_NEXT_DB_EN, 1        // delay slot
-   bbeq.c1      STORAGE_KIVEC5_STOP_CHAIN_ON_ERROR, 0, complete_all_dma
+   bbeq.c1      STORAGE_KIVEC5_STOP_CHAIN_ON_ERROR, 0, all_dma_complete
    nop
 
    // else if intr_en then complete any status DMA and 
@@ -29,7 +29,7 @@ storage_tx_seq_xts_status_handler_start:
    nop
    PCI_SET_INTERRUPT_ADDR_DMA(STORAGE_KIVEC5_INTR_ADDR, dma_p2m_11)
 
-complete_all_dma:
+all_dma_complete:
 
    // Setup the start and end DMA pointers
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_11_dma_cmd_eop,
