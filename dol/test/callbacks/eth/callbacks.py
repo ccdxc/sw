@@ -4,10 +4,11 @@ from socket import inet_aton
 from scapy.layers.inet import ICMP
 from scapy.utils import checksum
 import config.hal.defs as haldefs
-from bitstring import BitArray
+from factory.objects.eth.descriptor import EthTxSgElement
 from scapy.layers.inet6 import in6_chksum
 from scapy.layers.l2 import Ether, Dot1Q
-from ctypes import c_uint16
+from infra.common.logging       import logger
+
 
 from .toeplitz import *
 
@@ -168,3 +169,53 @@ def GetIsUDP(tc, obj, args=None):
 
 def GetIsTCPUDP(tc, obj, args=None):
     return 1 if GetIsTCP(tc, obj, args) or GetIsUDP(tc, obj, args=None) else 0
+
+
+def InitEthTxSgDescriptor(tc, obj, args=None):
+    desc = tc.descriptors.db[obj.desc]
+    buf = tc.buffers.db[obj.buf]
+    pkt = tc.packets.db[obj.pkt].spktobj.spkt
+    nfrags = int(obj.nfrags)
+
+    if nfrags == 0:
+        return
+
+    if pkt.haslayer(UDP):
+        hdr_len = len(pkt) - len(pkt[UDP].payload)
+    elif pkt.haslayer(TCP):
+        hdr_len = len(pkt) - len(pkt[TCP].payload)
+    else:
+        desc.addr = buf.addr
+        desc.len = len(pkt)
+        return
+
+    # Init Descriptor
+    desc.fields = dict()
+    desc.fields['addr'] = buf.addr
+    desc.fields['len'] = hdr_len
+    desc.fields['num_sg_elems'] = nfrags
+    desc._sgelems = [None] * nfrags
+
+    # Init SG elements
+    addr = buf.addr + hdr_len
+    bytes_rem = len(pkt) - hdr_len
+    frag_sz = bytes_rem // nfrags
+
+    for i in range(nfrags - 1):
+        desc._sgelems[i] = EthTxSgElement(addr=addr, len=frag_sz)
+        addr += frag_sz
+        bytes_rem -= frag_sz
+
+    # last frag will contain remainder bytes
+    desc._sgelems[nfrags-1] = EthTxSgElement(addr=addr, len=bytes_rem)
+    addr += bytes_rem
+
+    logger.info("Init %s" % desc)
+
+
+def GetPayload(tc, obj, args=None):
+    return [0] * args.size
+
+
+def Debug(tc, obj=None, args=None):
+    pass

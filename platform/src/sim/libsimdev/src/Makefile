@@ -14,5 +14,9 @@ SOURCES = \
 	dev_utils.c \
 	$(NULL)
 
+LCFLAGS += \
+	-I $(TOPDIR)/../nic/include \
+	$(NULL)
+
 TOPDIR = ../../../..
 include $(TOPDIR)/make/Makefile.inc

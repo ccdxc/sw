@@ -8,6 +8,7 @@
 #define TX_SG_MAX_READ_SIZE         (64)    // 4 sg elements
 #define TX_SG_MAX_READ_ELEM         (4)
 #define LG2_TX_SG_DESC_SIZE         (8)
+#define LG2_TX_QSTATE_SIZE          (6)
 
 // TX limits
 #define MAX_DESC_PER_PHV            (4)
@@ -25,31 +26,52 @@
 
 // DMA Macros
 #define ETH_DMA_CMD_START_OFFSET    (CAPRI_PHV_START_OFFSET(dma_dma_cmd_type) / 16)
-#define ETH_DMA_CMD_START_FLIT      8  // Second DMA commands flit
+#define ETH_DMA_CMD_START_FLIT      8  // DMA commands flit
+#define ETH_DMA_CMD_START_INDEX     0
 
-#define DMA_INTRINSIC(_r, n, _r_tmp) \
-    DMA_PHV2PKT_3(_r, CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport), CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type), CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid), CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv), CAPRI_PHV_START_OFFSET(eth_tx_app_hdr##n##_p4plus_app_id), CAPRI_PHV_END_OFFSET(eth_tx_app_hdr##n##_vlan_tag), _r_tmp);
-
-#define COMPUTE_BUF_ADDR(_r, n) \
+#define GET_BUF_ADDR(n, _r) \
     or          _r, k.eth_tx_to_s2_addr_lo##n, k.eth_tx_to_s2_addr_hi##n, sizeof(k.eth_tx_to_s2_addr_lo##n); \
     add         _r, r0, _r.dx; \
     or          _r, _r[63:16], _r[11:8], sizeof(k.eth_tx_to_s2_addr_lo##n);
 
-#define COMPUTE_FRAG_ADDR(_r, n) \
+#define GET_FRAG_ADDR(n, _r) \
     or          _r, d.addr_lo##n, d.addr_hi##n, sizeof(d.addr_lo##n); \
     add         _r, r0, _r.dx; \
     or          _r, _r[63:16], _r[11:8], sizeof(d.addr_lo##n);
 
-#define DMA_PKT(n, _c, _r_addr, _r_ptr) \
-    COMPUTE_BUF_ADDR(_r_addr, n); \
-    DMA_HOST_MEM2PKT(_r_ptr, _c, _r_addr, k.{eth_tx_to_s2_len##n}.hx);
+#define GET_CSUM_START(n, _r) \
+    or          _r, k.eth_tx_to_s2_hdr_len_lo##n, k.eth_tx_to_s2_hdr_len_hi##n, sizeof(k.eth_tx_to_s2_hdr_len_lo##n); \
+    add         _r, r0, _r.dx; \
+    or          _r, _r[63:56], _r[49:48];
 
-#define DMA_HDR(n, _c, _r_addr, _r_ptr) \
-    COMPUTE_BUF_ADDR(_r_addr, n); \
-    DMA_HOST_MEM2PKT(_r_ptr, _c, _r_addr, k.{eth_tx_to_s2_len##n}.hx);
+#define GET_CSUM_OFF(n, _r) \
+    or          _r, k.eth_tx_to_s2_mss_or_csumoff_lo##n, k.eth_tx_to_s2_mss_or_csumoff_hi##n, sizeof(k.eth_tx_to_s2_mss_or_csumoff_lo##n); \
+    add         _r, r0, _r.dx; \
+    or          _r, _r[63:56], _r[53:48], sizeof(k.eth_tx_to_s2_mss_or_csumoff_lo##n);
+
+#define GET_MSS(n, _r) \
+    or          _r, k.eth_tx_to_s2_mss_or_csumoff_lo##n, k.eth_tx_to_s2_mss_or_csumoff_hi##n, sizeof(k.eth_tx_to_s2_mss_or_csumoff_lo##n); \
+    add         _r, r0, _r.dx; \
+    or          _r, _r[63:56], _r[53:48], sizeof(k.eth_tx_to_s2_mss_or_csumoff_lo##n);
+
+#define GET_HDR_LEN(n, _r) \
+    or          _r, k.eth_tx_to_s2_hdr_len_lo##n, k.eth_tx_to_s2_hdr_len_hi##n, sizeof(k.eth_tx_to_s2_hdr_len_lo##n); \
+    add         _r, r0, _r.dx; \
+    or          _r, _r[63:56], _r[49:48]; \
+
+#define DMA_INTRINSIC(n, _r) \
+    DMA_PHV2PKT_3(_r, CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport), CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type), CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid), CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv), CAPRI_PHV_START_OFFSET(eth_tx_app_hdr##n##_p4plus_app_id), CAPRI_PHV_END_OFFSET(eth_tx_app_hdr##n##_vlan_tag), r7);
+
+#define DMA_PKT(n, _r_addr, _r_ptr) \
+    GET_BUF_ADDR(n, _r_addr); \
+    DMA_HOST_MEM2PKT(_r_ptr, c0, _r_addr, k.{eth_tx_to_s2_len##n}.hx);
+
+#define DMA_HDR(n, _r_addr, _r_ptr) \
+    GET_BUF_ADDR(n, _r_addr); \
+    DMA_HOST_MEM2PKT(_r_ptr, !c0, _r_addr, k.{eth_tx_to_s2_len##n}.hx);
 
 #define DMA_FRAG(n, _c, _r_addr, _r_ptr) \
-    COMPUTE_FRAG_ADDR(_r_addr, n); \
+    GET_FRAG_ADDR(n, _r_addr); \
     DMA_HOST_MEM2PKT(_r_ptr, _c, _r_addr, d.{len##n}.hx);
 
 #define BUILD_APP_HEADER(n) \
@@ -57,9 +79,9 @@
     phvwr       p.eth_tx_app_hdr##n##_insert_vlan_tag, k.eth_tx_to_s2_vlan_insert##n##;\
     phvwr       p.eth_tx_app_hdr##n##_vlan_tag, k.{eth_tx_to_s2_vlan_tci##n}.hx; \
 eth_tx_opcode_start:; \
-    add         r1, r0, k.eth_tx_to_s2_opcode##n##; \
+    add         r7, r0, k.eth_tx_to_s2_opcode##n##; \
 .brbegin; \
-    br          r1[1:0]; \
+    br          r7[1:0]; \
     nop; \
     .brcase     TXQ_DESC_OPCODE_CALC_NO_CSUM; \
         b       eth_tx_opcode_done; \
@@ -75,20 +97,14 @@ eth_tx_opcode_start:; \
         nop; \
 .brend; \
 eth_tx_calc_csum:; \
-    phvwr       p.eth_tx_app_hdr##n##_gso_valid, 1; \
-    or          r2, k.eth_tx_to_s2_hdr_len_lo##n, k.eth_tx_to_s2_hdr_len_hi##n, sizeof(k.eth_tx_to_s2_hdr_len_lo##n); \
-    add         r2, r0, r2.dx; \
-    or          r2, r2[63:56], r2[49:48]; \
+    GET_CSUM_START(n, r2); \
     addi        r2, r2, 44;\
-    or          r3, k.eth_tx_to_s2_mss_or_csumoff_lo##n, k.eth_tx_to_s2_mss_or_csumoff_hi##n, sizeof(k.eth_tx_to_s2_mss_or_csumoff_lo##n); \
-    add         r3, r0, r3.dx; \
-    or          r3, r3[63:56], r3[53:48], sizeof(k.eth_tx_to_s2_mss_or_csumoff_lo##n); \
+    GET_CSUM_OFF(n, r3); \
     add         r3, r3, r2;\
+    phvwr       p.eth_tx_app_hdr##n##_gso_valid, 1; \
     phvwrpair   p.eth_tx_app_hdr##n##_gso_start, r2, p.eth_tx_app_hdr##n##_gso_offset, r3; \
 eth_tx_calc_csum_tcpudp:; \
     seq         c1, k.eth_tx_to_s2_encap##n, 1; \
-    seq         c2, k.eth_tx_to_s2_csum_l4##n, 1; \
-    seq         c3, k.eth_tx_to_s2_csum_l3##n, 1; \
     bcf         [!c1], eth_tx_calc_csum_tcpudp_noencap; \
     nop; \
     phvwrpair   p.eth_tx_app_hdr##n##_compute_l4_csum, 1, p.eth_tx_app_hdr##n##_compute_ip_csum, 1; \

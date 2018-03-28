@@ -73,6 +73,8 @@ action eth_rx_app_header(
 
     // --- For D-struct generation
     MODIFY_QSTATE_INTRINSIC(eth_rx_qstate)
+    modify_field(eth_rx_qstate.p_index1, p_index1);
+    modify_field(eth_rx_qstate.c_index1, c_index1);
     modify_field(eth_rx_qstate.enable, enable);
     modify_field(eth_rx_qstate.color, color);
     modify_field(eth_rx_qstate.rsvd1, rsvd1);
@@ -107,6 +109,8 @@ action eth_rx_fetch_desc(
     // --- For D-struct generation
     modify_field(eth_rx_qstate.pc, pc);
     MODIFY_QSTATE_INTRINSIC(eth_rx_qstate)
+    modify_field(eth_rx_qstate.p_index1, p_index1);
+    modify_field(eth_rx_qstate.c_index1, c_index1);
     modify_field(eth_rx_qstate.enable, enable);
     modify_field(eth_rx_qstate.color, color);
     modify_field(eth_rx_qstate.rsvd1, rsvd1);

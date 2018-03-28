@@ -53,7 +53,7 @@ header_type eth_tx_cq_desc_p {
 
 header_type eth_tx_qstate_d {
     fields {
-        //pc : 8;
+        pc : 8;
         rsvd : 8;
         cosA : 4;
         cosB : 4;
@@ -63,10 +63,10 @@ header_type eth_tx_qstate_d {
         total : 4;
         pid : 16;
 
-        p_index0 : 16;
-        c_index0 : 16;
-        p_index1 : 16;
-        c_index1 : 16;
+        p_index0   : 16;
+        c_index0   : 16;
+        comp_index : 16;
+        spec_index : 16;
 
         enable : 1;
         color : 1;
@@ -132,9 +132,7 @@ header_type eth_tx_sg_desc_d {
 
 header_type eth_tx_global_k {
     fields {
-        lif     : 11;
-        qtype   : 3;
-        qid     : 24;
+        num_desc : 4;
         dma_cur_flit : 4;
         dma_cur_index : 2;
     }
@@ -142,14 +140,29 @@ header_type eth_tx_global_k {
 
 header_type eth_tx_t0_s2s_k {
     fields {
-        num_desc : 4;
-        num_sg_elems : 4;
+        lif : 11;
+        qtype : 3;
+        qid : 24;
+        c_index0 : 16;
+    }
+}
+
+header_type eth_tx_to_s1_k {
+    fields {
+        qstate_addr : 64;
         sg_desc_addr : 64;
-        sg_in_progress : 1;
     }
 }
 
 header_type eth_tx_t1_s2s_k {
+    fields {
+        sg_desc_addr : 64;
+        sg_in_progress : 1;
+        num_sg_elems : 4;
+    }
+}
+
+header_type eth_tx_t3_s2s_k {
     fields {
         cq_desc_addr : 64;
         intr_assert_addr : 32;
@@ -207,12 +220,12 @@ metadata eth_tx_global_k eth_tx_global;
 metadata eth_tx_global_k eth_tx_global_scratch;
 
 // To Stage N PHV headers (Available in STAGE=N, MPUS=ALL)
-/*
+
 @pragma pa_header_union ingress to_stage_1
 metadata eth_tx_to_s1_k eth_tx_to_s1;
 @pragma scratch_metadata
 metadata eth_tx_to_s1_k eth_tx_to_s1_scratch;
-*/
+
 @pragma pa_header_union ingress to_stage_2
 metadata eth_tx_to_s2_k eth_tx_to_s2;
 @pragma scratch_metadata
@@ -259,12 +272,12 @@ metadata eth_tx_t1_s2s_k eth_tx_t1_s2s_scratch;
 metadata eth_tx_t2_s2s_k eth_tx_t2_s2s;
 @pragma scratch_metadata
 metadata eth_tx_t2_s2s_k eth_tx_t2_s2s_scratch;
-
+*/
 @pragma pa_header_union ingress common_t3_s2s
 metadata eth_tx_t3_s2s_k eth_tx_t3_s2s;
 @pragma scratch_metadata
 metadata eth_tx_t3_s2s_k eth_tx_t3_s2s_scratch;
-*/
+
 
 /*****************************************************************************
  * P-vector
@@ -302,4 +315,3 @@ metadata dma_cmd_mem2mem_t mem2mem;
 @pragma dont_trim
 @pragma pa_header_union ingress mem2pkt phv2pkt phv2mem pkt2mem mem2mem
 metadata dma_cmd_generic_t dma;
-

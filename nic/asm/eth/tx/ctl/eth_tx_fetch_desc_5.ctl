@@ -4,21 +4,22 @@
 
 /*
  * TESTCASE:
- *      single descriptor send (ci0 - pi0 == 1)
+ *      max descriptor send (ci0 - pi0 > MAX_DESC_PER_PHV)
+ *      eg. MAX_DESC_PER_PHV = 4
  *
  * ASSERTIONS:
  *      (Table)
  *      ci0 == ci0 + 1
  *      pi1 == pi1 + 1
- *      eval_db_cnt == eval_db_cnt + 1
+ *      eval_db_cnt == eval_db_cnt
  *
  *      (PHV)
  *      table0_valid == 1
  *      table0_lock_en == 0
  *      table0_pc == 0x3ffffff
  *      table0_addr == d.ring_base
- *      table0_size == 4
- *      num_desc == 1
+ *      table0_size == 6
+ *      num_desc == MAX_DESC_PER_PHV
  *      cq_desc_addr == d.cq_ring_base
  *      intr_assert_addr == d.intr_assert_addr
  *      intr_assert_data == INTR_ASSERT_CMD     (0x1000000)
@@ -48,7 +49,7 @@ k = {
 
 d = {
     enable = 0x1;
-    p_index0 = 0x0100;
+    p_index0 = 0x0500;
     c_index0 = 0x0;
     p_index1 = 0x0;
     ring_size = 0x0a00;

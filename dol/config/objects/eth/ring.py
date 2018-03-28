@@ -5,12 +5,10 @@ import config.resmgr            as resmgr
 import config.objects.ring      as ring
 from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
-from factory.objects.eth.descriptor import IONIC_TX_MAX_SG_ELEMS
+from factory.objects.eth.descriptor import IONIC_TX_MAX_SG_ELEMS, ctypes_pformat
 
 
 class EthRingObject(ring.RingObject):
-
-    MAX_SG_ELEMS = 16
 
     def __init__(self):
         super().__init__()
@@ -30,16 +28,19 @@ class EthRingObject(ring.RingObject):
             self.sg_desc_size = self.descriptor_template.meta.size
             assert isinstance(self.desc_size, int) and (self.sg_desc_size != 0) and ((self.desc_size & (self.desc_size - 1)) == 0)
 
-    def Configure(self):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
 
         # Make sure ring_size is a power of 2
         self._mem = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
         resmgr.HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)
-        logger.info("Creating Ring %s" % self)
         if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
             self._sgmem = resmgr.HostMemoryAllocator.get(IONIC_TX_MAX_SG_ELEMS * self.size * self.sg_desc_size)
+
+        logger.info("Creating Ring %s" % self)
+
+    def Configure(self):
+        pass
 
     def Post(self, descriptor):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
@@ -53,9 +54,19 @@ class EthRingObject(ring.RingObject):
 
         # Bind the descriptor to the ring
         descriptor.Bind(self._mem + (self.desc_size * self.pi))
-        # Remember descriptor for completion processing
-        self.queue.descriptors[self.pi] = descriptor
         descriptor.Write()
+        if 'num_sg_elems'in descriptor.fields:
+            for i in range(descriptor.fields['num_sg_elems']):
+                index = (self.pi * IONIC_TX_MAX_SG_ELEMS) + i
+                byte_off = self.sg_desc_size * index
+                memhandle = resmgr.MemHandle(va=self._sgmem.va + byte_off, pa=self._sgmem.pa + byte_off)
+                sg_elem = descriptor._sgelems[i]
+                logger.info("Writing EthTxSGElem @ %s mem %s" % (index, memhandle))
+                resmgr.HostMemoryAllocator.write(memhandle, bytes(sg_elem))
+                logger.info(ctypes_pformat(sg_elem))
+
+        if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
+            self.queue.descriptors[self.pi] = descriptor
 
         # Increment posted index
         self.pi = (self.pi + 1) % self.size
@@ -74,25 +85,28 @@ class EthRingObject(ring.RingObject):
 
         # Bind the descriptor to the ring
         descriptor.Bind(self._mem + (self.desc_size * self.ci))
-        # Retreive descriptor for completion processing
-        d = self.queue.descriptors[self.ci]
-        if d is None:
-            logger.error("Consume(): Descriptor not found in map.")
-            return status.RETRY
-        if descriptor.GetBuffer() is not None and d.GetBuffer() is not None:
-            descriptor.GetBuffer().Bind(d.GetBuffer()._mem)
         descriptor.Read()
 
         # Have we received a completion?
         if descriptor.GetColor() != self.exp_color:
             return status.RETRY
 
-        # If we have reached the end of the ring then, toggle the expected color
-        if descriptor.GetCompletionIndex() < self.ci:
-            self.exp_color = 0 if self.exp_color else 1
+        # For RX queues, match completion descriptor with the posted descriptor.
+        # We need this to verify buffer contents.
+        if self.queue.queue_type.purpose ==\
+                "LIF_QUEUE_PURPOSE_RX":
+            d = self.queue.descriptors[self.ci]
+            if d is None:
+                logger.error("Consume: Descriptor not found in map.")
+                return status.ERROR
+            descriptor.GetBuffer().Bind(d.GetBuffer()._mem)
 
         # Increment consumer index
         self.ci = (self.ci + 1) % self.size
+
+        # If we have reached the end of the ring then, toggle the expected color
+        if self.ci == 0:
+            self.exp_color = 0 if self.exp_color else 1
 
         return status.SUCCESS
 

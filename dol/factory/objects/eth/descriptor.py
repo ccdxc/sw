@@ -139,13 +139,17 @@ class EthDescriptorObject(base.FactoryObjectBase):
         self._mem = None    # Set when self.Bind method is called
         self._data = None   # Set when self.Read/self.Write method is called
         self._buf = None    # Set when Init method is called
-        self._more = 0      # Set when Init methods is called
+        self._more = None   # Set when Init method is called
 
     def Init(self, spec):
         super().Init(spec)
 
         # Make sure fields are specified
         assert(hasattr(spec, 'fields'))
+        if spec.fields is None:
+            logger.info("Uninitialized Descriptor %s" % self)
+            return
+
         # Make sure none of the fields are None
         assert(not any(field is None for field in spec.fields.keys()))
         # Make sure all field names are valid
@@ -186,8 +190,8 @@ class EthDescriptorObject(base.FactoryObjectBase):
         logger.info(ctypes_pformat(self._data))
 
     def __str__(self):
-        return "%s GID:%s/Id:0x%x/Memory:%s" % (
-                self.__class__.__name__, self.GID(), id(self), self._mem)
+        return "%s GID:%s/Memory:%s" % (
+                self.__class__.__name__, self.GID(), self._mem)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):

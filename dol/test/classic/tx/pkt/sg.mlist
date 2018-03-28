@@ -1,44 +1,45 @@
 # Feature Test Modules List
 feature:
     id          : classic
-    sub         : tx_pkt
+    sub         : tx_sg
     package     : test.classic
     module      : classic
     enable      : True
     ignore      : False
 
 modules:
+
     - module:
-        name    : PKT_1
-        spec    : pkt_1.testspec
+        name    : SG_1
+        spec    : sg_1.testspec
         iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment : filter://native=False
 
     - module:
-        name    : PKT_2
-        spec    : pkt_2.testspec
+        name    : SG_5
+        spec    : sg_5.testspec
         iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment : filter://native=False
 
     - module:
-        name    : PKT_3
-        spec    : pkt_3.testspec
+        name    : SG_9
+        spec    : sg_9.testspec
         iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment : filter://native=False
 
     - module:
-        name    : PKT_4
-        spec    : pkt_4.testspec
+        name    : SG_13
+        spec    : sg_13.testspec
         iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment : filter://native=False
 
     - module:
-        name    : PKT_5
-        spec    : pkt_5.testspec
+        name    : SG_16
+        spec    : sg_16.testspec
         iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment : filter://native=False

@@ -7,31 +7,12 @@ cc_library(
 )
 
 cc_binary(
-    name = "nic_proxy-e2etest_ethqstate",
-    srcs = [
-        "test/eth_qstate.cc",
-    ],
-    deps = [
-        "//nic/model_sim/include:modelsim_includes",
-        # PI
-        "//nic/e2etests:driver",
-        "//nic/e2etests/proxy:common_includes",
-        "//nic/utils/host_mem:host_mem_src",
-        "//nic/utils/bm_allocator:bm_allocator",
-
-        # PD
-        "//nic:capricsr_int",
-        "//nic/model_sim:model_client",
-        "//nic:spdlog",
-    ],
-)
-
-cc_binary(
     name = "nic_proxy-e2etest_ethtx",
     srcs = [
         "test/eth_tx.cc",
     ],
     deps = [
+        "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
         # PI
         "//nic/e2etests:driver",
@@ -53,6 +34,7 @@ cc_binary(
         "test/eth_rx.cc",
     ],
     deps = [
+        "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
         # PI
         "//nic/e2etests:driver",

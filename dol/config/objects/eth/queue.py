@@ -52,8 +52,8 @@ class EthTxQstate(Packet):
 
         LEShortField("p_index0", 0),
         LEShortField("c_index0", 0),
-        LEShortField("p_index1", 0),
-        LEShortField("c_index1", 0),
+        LEShortField("comp_index", 0),
+        LEShortField("spec_index", 0),
 
         BitField("enable", 0, 1),
         BitField("color", 0, 1),
@@ -293,12 +293,15 @@ class EthQueueObject(QueueObject):
                 assert ret == status.SUCCESS
             self.qstate.set_pindex(ring_id, ring.pi)
 
-    def ConfigureRings(self):
+    def Configure(self):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
 
         self.obj_helper_ring.Configure()
-        self.descriptors = [None] * self.size
+
+        if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
+            self.descriptors = [None] * self.size
+
         for ring in self.obj_helper_ring.rings:
             if ring.id == 'R0':
                 self.qstate.set_ring_base(ring._mem.pa)
@@ -309,13 +312,16 @@ class EthQueueObject(QueueObject):
                 self.qstate.set_cq_base(ring._mem.pa)
             else:
                 raise NotImplementedError
+
         self.Fill()
 
-        if not ( GlobalOptions.dryrun or GlobalOptions.cfgonly):
-            # Ignore spurious_db_cnt
-            model_wrap.eos_ignore_addr(self.qstate.addr + 39, 1)
+        if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
             # Ignore completion ring posted index
             model_wrap.eos_ignore_addr(self.qstate.addr + 12, 2)
+            # Ignore speculative index
+            model_wrap.eos_ignore_addr(self.qstate.addr + 14, 2)
+            # Ignore spurious_db_cnt
+            model_wrap.eos_ignore_addr(self.qstate.addr + 39, 1)
 
         self.qstate.Read()
 
@@ -349,4 +355,4 @@ class EthQueueObjectHelper:
 
     def Configure(self):
         for queue in self.queues:
-            queue.ConfigureRings()
+            queue.Configure()

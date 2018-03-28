@@ -4,20 +4,19 @@
 
 /*
  * TESTCASE:
- *      single descriptor send (ci0 - pi0 == 1)
+ *      ring wrap (pi0 < ci0)
  *
  * ASSERTIONS:
  *      (Table)
  *      ci0 == ci0 + 1
- *      pi1 == pi1 + 1
- *      eval_db_cnt == eval_db_cnt + 1
+ *      eval_db_cnt == eval_db_cnt
  *
  *      (PHV)
  *      table0_valid == 1
  *      table0_lock_en == 0
  *      table0_pc == 0x3ffffff
  *      table0_addr == d.ring_base
- *      table0_size == 4
+ *      table0_size == 1
  *      num_desc == 1
  *      cq_desc_addr == d.cq_ring_base
  *      intr_assert_addr == d.intr_assert_addr
@@ -48,10 +47,11 @@ k = {
 
 d = {
     enable = 0x1;
-    p_index0 = 0x0100;
-    c_index0 = 0x0;
-    p_index1 = 0x0;
-    ring_size = 0x0a00;
+    color = 0x1;
+    p_index0 = 0x0f00;
+    c_index0 = 0x0000;
+    p_index1 = 0x0000;
+    ring_size = 0x0400;
     ring_base = 0x8000000000010000;
     cq_ring_base = 0x8000000000020000;
     sg_ring_base = 0x8000000000030000;

@@ -3,7 +3,7 @@
 #include "ingress.h"
 #include "INGRESS_common_p4plus_stage0_app_header_table_k.h"
 
-#include "../../asm/eth/rx/defines.h"
+#include "defines.h"
 
 struct phv_ p;
 struct common_p4plus_stage0_app_header_table_k k;
@@ -77,20 +77,21 @@ eth_rx_rss_input:
     phvwri        p.{app_header_table0_valid...app_header_table3_valid}, 0
 
   .brcase 7
-    illegal
+    phvwri.e      p.p4_intr_global_drop, 1
+    phvwri.f      p.{app_header_table0_valid...app_header_table3_valid}, 0
 
 .brend
 
 eth_rx_rss_none:
   phvwri.e            p.common_te0_phv_table_pc, eth_rx_rss_skip[38:6]
-  phvwri              p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri.f            p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
 eth_rx_rss_ipv4_l4:
   phvwr               p.toeplitz_input0_data[63:32], k.{p4_to_p4plus_l4_sport, p4_to_p4plus_l4_dport}
 eth_rx_rss_ipv4:
   phvwr               p.toeplitz_input0_data[127:88], k.p4_to_p4plus_ip_sa_sbit0_ebit71[39:0]
   phvwr.e             p.toeplitz_input0_data[87:64], k.p4_to_p4plus_ip_sa_sbit72_ebit127[55:32]
-  phvwr               p.toeplitz_key2_data[33:0], k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1, p4_rxdma_intr_qstate_addr_sbit2_ebit33}
+  phvwr.f             p.toeplitz_key2_data[33:0], k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1, p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 
 eth_rx_rss_ipv6_l4:
   phvwr               p.toeplitz_input2_data, k.{p4_to_p4plus_l4_sport, p4_to_p4plus_l4_dport}
@@ -98,4 +99,4 @@ eth_rx_rss_ipv6:
   phvwr               p.toeplitz_input0_data[127:56], k.p4_to_p4plus_ip_sa_sbit0_ebit71
   phvwr               p.toeplitz_input0_data[55:0], k.p4_to_p4plus_ip_sa_sbit72_ebit127
   phvwr.e             p.toeplitz_input1_data, k.{p4_to_p4plus_ip_da_sbit0_ebit87, p4_to_p4plus_ip_da_sbit88_ebit127}
-  phvwr               p.toeplitz_key2_data[33:0], k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1, p4_rxdma_intr_qstate_addr_sbit2_ebit33}
+  phvwr.f             p.toeplitz_key2_data[33:0], k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1, p4_rxdma_intr_qstate_addr_sbit2_ebit33}

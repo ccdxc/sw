@@ -229,7 +229,6 @@ class LifObject(base.ConfigObjectBase):
 
     def Update(self):
         halapi.ConfigureLifs([self], update=True)
-        self.ConfigureQueueTypes()
 
     def SetPromiscous(self):
         logger.info("Setting PROMISCUOUS mode for LIF:%s" % self.GID())

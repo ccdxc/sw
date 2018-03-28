@@ -22,6 +22,7 @@
 #include "src/sim/libsimlib/include/simserver.h"
 #include "src/sim/libsimdev/src/dev_utils.h"
 #include "src/sim/libsimdev/src/simdev_impl.h"
+#include "eth_common.h"
 
 /* Supply these for ionic_if.h */
 typedef u_int8_t u8;
@@ -48,41 +49,6 @@ typedef struct ethparams_s {
     int qstate_size[8];
     mac_t mac;
 } ethparams_t;
-
-typedef struct {
-    uint16_t    p_index0;
-    uint16_t    c_index0;
-    uint16_t    p_index1;
-    uint16_t    c_index1;
-
-    uint8_t     enable:1;
-    uint8_t     color:1;
-    uint8_t     rsvd1:6;
-
-    uint64_t    ring_base;
-    uint16_t    ring_size;
-    uint64_t    cq_ring_base;
-    uint32_t    intr_assert_addr;
-    uint8_t     spurious_db_cnt;
-    uint64_t    sg_ring_base;
-} __attribute__((packed)) qstate_app_ethtx_t;
-
-typedef struct {
-    uint16_t    p_index0;
-    uint16_t    c_index0;
-    uint16_t    p_index1;
-    uint16_t    c_index1;
-
-    uint8_t     enable:1;
-    uint8_t     color:1;
-    uint8_t     rsvd1:6;
-
-    uint64_t    ring_base;
-    uint16_t    ring_size;
-    uint64_t    cq_ring_base;
-    uint32_t    intr_assert_addr;
-    uint16_t    rss_type;
-} __attribute__((packed)) qstate_app_ethrx_t;
 
 static simdev_t *current_sd;
 
@@ -294,7 +260,7 @@ devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     simdev_t *sd = current_sd;
     ethparams_t *ep = sd->priv;
     qstate_t qs;
-    qstate_app_ethtx_t *qsethtx;
+    struct eth_tx_qstate *qsethtx;
 
     simdev_log("devcmd_txq_init: type %d index %d "
                "ring_base 0x%"PRIx64" ring_size %d %c%c\n",
@@ -325,19 +291,19 @@ devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qs.host = 1;
     qs.total = 1;
     qs.pid = cmd->pid;
-    qsethtx = (qstate_app_ethtx_t *)qs.app_data;
+    qsethtx = (struct eth_tx_qstate*)&qs;
     qsethtx->p_index0 = 0;
     qsethtx->c_index0 = 0;
-    qsethtx->p_index1 = 0;
-    qsethtx->c_index1 = 0;
+    qsethtx->comp_index = 0;
+    qsethtx->spec_index = 0;
     qsethtx->enable = cmd->E;
     qsethtx->color = 1;
     qsethtx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethtx->ring_size = cmd->ring_size;
-    qsethtx->cq_ring_base = roundup(qsethtx->ring_base + (1 << cmd->ring_size), 4096);
+    qsethtx->cq_ring_base = roundup(qsethtx->ring_base + (16 << cmd->ring_size), 4096);
     qsethtx->intr_assert_addr = intr_assert_addr(ep->intr_base + cmd->intr_index);
     qsethtx->spurious_db_cnt = 0;
-    qsethtx->sg_ring_base = roundup(qsethtx->cq_ring_base + (1 << cmd->ring_size), 4096);
+    qsethtx->sg_ring_base = roundup(qsethtx->cq_ring_base + (16 << cmd->ring_size), 4096);
 
     if (eth_write_txqstate(sd, cmd->index, &qs) < 0) {
         simdev_error("devcmd_txq_init: write_txqstate %d failed\n",
@@ -359,7 +325,7 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     simdev_t *sd = current_sd;
     ethparams_t *ep = sd->priv;
     qstate_t qs;
-    qstate_app_ethrx_t *qsethrx;
+    struct eth_rx_qstate *qsethrx;
 
     simdev_log("devcmd_rxq_init: type %d index %d "
                "ring_base 0x%"PRIx64" ring_size %d %c%c\n",
@@ -390,7 +356,7 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qs.host = 1;
     qs.total = 1;
     qs.pid = cmd->pid;
-    qsethrx = (qstate_app_ethrx_t *)qs.app_data;
+    qsethrx = (struct eth_rx_qstate *)&qs;
     qsethrx->p_index0 = 0;
     qsethrx->c_index0 = 0;
     qsethrx->p_index1 = 0;
@@ -399,7 +365,7 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qsethrx->color = 1;
     qsethrx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethrx->ring_size = cmd->ring_size;
-    qsethrx->cq_ring_base = roundup(qsethrx->ring_base + (1 << cmd->ring_size), 4096);
+    qsethrx->cq_ring_base = roundup(qsethrx->ring_base + (16 << cmd->ring_size), 4096);
     qsethrx->intr_assert_addr = intr_assert_addr(ep->intr_base + cmd->intr_index);
 
     if (eth_write_rxqstate(sd, cmd->index, &qs) < 0) {
@@ -441,7 +407,7 @@ devcmd_q_enable(struct admin_cmd *acmd, struct admin_comp *acomp)
     const int type = cmd->qtype;
     const int qid = cmd->qid;
     qstate_t qs;
-    qstate_app_ethtx_t *qsethtx;
+    struct eth_qstate *qseth;
 
     simdev_log("devcmd_q_enable: type %d qid %d\n", type, qid);
 
@@ -451,11 +417,8 @@ devcmd_q_enable(struct admin_cmd *acmd, struct admin_comp *acomp)
         return;
     }
 
-    qsethtx = (qstate_app_ethtx_t *)qs.app_data;
-    qsethtx->enable = 1;
-
-    //assert(offsetof(qstate_app_ethtx_t, enable) == 
-    //       offsetof(qstate_app_ethrx_t, enable));
+    qseth = (struct eth_qstate *)&qs;
+    qseth->enable = 1;
 
     if (eth_write_qstate(sd, type, qid, &qs) < 0) {
         simdev_error("devcmd_q_enable: write_qstate %d failed\n", qid);
@@ -473,7 +436,7 @@ devcmd_q_disable(struct admin_cmd *acmd, struct admin_comp *acomp)
     const int type = cmd->qtype;
     const int qid = cmd->qid;
     qstate_t qs;
-    qstate_app_ethtx_t *qsethtx;
+    struct eth_qstate *qseth;
 
     simdev_log("devcmd_q_disable: type %d qid %d\n", type, qid);
 
@@ -483,11 +446,8 @@ devcmd_q_disable(struct admin_cmd *acmd, struct admin_comp *acomp)
         return;
     }
 
-    qsethtx = (qstate_app_ethtx_t *)qs.app_data;
-    qsethtx->enable = 0;
-
-    //assert(offsetof(qstate_app_ethtx_t, enable) == 
-    //       offsetof(qstate_app_ethrx_t, enable));
+    qseth = (struct eth_qstate *)&qs;
+    qseth->enable = 0;
 
     if (eth_write_qstate(sd, type, qid, &qs) < 0) {
         simdev_error("devcmd_q_enable: write_qstate %d failed\n", qid);

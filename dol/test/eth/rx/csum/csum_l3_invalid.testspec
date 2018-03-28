@@ -101,6 +101,7 @@ descriptors:
         id      : DESC2 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
+            _buf  : ref://testcase/buffers/id=BUF2
             status  : 0x0
             csum    : callback://eth/callbacks/GetL2Checksum
             csum_ip_ok : 0

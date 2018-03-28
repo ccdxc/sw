@@ -1,10 +1,12 @@
 
 #include "INGRESS_p.h"
 #include "ingress.h"
+#include "INGRESS_rx_table_s3_t0_k.h"
+
 #include "defines.h"
 
 struct phv_ p;
-struct rx_table_s3_t0_k k;
+struct rx_table_s3_t0_k_ k;
 struct rx_table_s3_t0_eth_rx_packet_d d;
 
 #define ETH_DMA_CMD_PTR    (CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16)
@@ -32,6 +34,9 @@ eth_rx_packet:
     DEBUG_DESCR()
 #endif
 
+    bcf         [c2 | c3 | c7], eth_rx_packet_error
+    nop
+
     // Setup DMA CMD PTR
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, ETH_DMA_CMD_PTR
 
@@ -43,8 +48,7 @@ eth_rx_packet:
     add         r2, r0, d.{len}.hx
     // TODO: We have already claimed a completion entry. Should we return it
     // or create an error completion?
-    blt         r2, r1, eth_rx_drop_oversize_pkt
-    // TODO: we already claimed the completion entry. undo that!
+    blt         r2, r1, eth_rx_packet_error
     nop
 
     // DMA packet
@@ -59,9 +63,8 @@ eth_rx_packet:
     // DMA Completion descriptor
     phvwri      p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri      p.dma_cmd1_dma_cmd_host_addr, 1
-    phvwr       p.dma_cmd1_dma_cmd_addr, k.{eth_rx_t0_s2s_cq_desc_addr_sbit0_ebit47...eth_rx_t0_s2s_cq_desc_addr_sbit48_ebit51}
-    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_rx_cq_desc_status)
-    phvwri      p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_rx_cq_desc_csum_tcp_ok)
+    phvwr       p.dma_cmd1_dma_cmd_addr, k.{eth_rx_t0_s2s_cq_desc_addr}
+    phvwrpair   p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_rx_cq_desc_csum_tcp_ok), p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_rx_cq_desc_status)
 
     seq         c1, r0, k.eth_rx_t0_s2s_intr_assert_addr
     phvwri.e.c1 p.dma_cmd1_dma_cmd_eop, 1
@@ -70,10 +73,10 @@ eth_rx_packet:
     // DMA Interrupt
     phvwri      p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.dma_cmd2_dma_cmd_addr, k.eth_rx_t0_s2s_intr_assert_addr
-    phvwri      p.dma_cmd2_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_rx_t0_s2s_intr_assert_data)
-    phvwri.e    p.dma_cmd2_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_rx_t0_s2s_intr_assert_data)
-    phvwri      p.dma_cmd2_dma_cmd_eop, 1
+    phvwrpair.e p.dma_cmd2_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_rx_t0_s2s_intr_assert_data), p.dma_cmd2_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_rx_t0_s2s_intr_assert_data) 
+    phvwri.f    p.dma_cmd2_dma_cmd_eop, 1
 
-eth_rx_drop_oversize_pkt:
-  phvwr.e       p.p4_intr_global_drop, 1
-  nop
+eth_rx_packet_error:
+    phvwri.e    p.p4_intr_global_drop, 1
+    phvwri.f    p.{app_header_table0_valid...app_header_table3_valid}, 0
+ 

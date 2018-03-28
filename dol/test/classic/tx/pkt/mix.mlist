@@ -1,44 +1,38 @@
 # Feature Test Modules List
 feature:
     id          : classic
-    sub         : tx_pkt
+    sub         : tx_mix
     package     : test.classic
     module      : classic
     enable      : True
     ignore      : False
 
 modules:
+
     - module:
-        name    : PKT_1
-        spec    : pkt_1.testspec
+        name    : MIX_1
+        spec    : mix_1.testspec
         iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment : filter://native=False
 
     - module:
-        name    : PKT_2
-        spec    : pkt_2.testspec
+        name    : MIX_2
+        spec    : mix_2.testspec
         iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment : filter://native=False
 
     - module:
-        name    : PKT_3
-        spec    : pkt_3.testspec
+        name    : MIX_3
+        spec    : mix_3.testspec
         iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment : filter://native=False
 
     - module:
-        name    : PKT_4
-        spec    : pkt_4.testspec
-        iterate:
-            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
-              segment : filter://native=False
-
-    - module:
-        name    : PKT_5
-        spec    : pkt_5.testspec
+        name    : MIX_4
+        spec    : mix_4.testspec
         iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment : filter://native=False

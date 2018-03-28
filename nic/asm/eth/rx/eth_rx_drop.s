@@ -1,6 +1,8 @@
 
 #include "INGRESS_p.h"
 #include "ingress.h"
+#include "INGRESS_common_p4plus_stage0_app_header_table_k.h"
+
 #include "defines.h"
 
 struct phv_ p;

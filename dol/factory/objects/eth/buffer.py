@@ -14,7 +14,7 @@ class EthBufferObject(base.FactoryObjectBase):
 
     def Init(self, spec):
         super().Init(spec)
-        self.size = getattr(spec.fields, 'size', None)
+        self.size = getattr(spec.fields, 'size', 0)
         self.data = getattr(spec.fields, 'data', None)
         bind = getattr(spec.fields, 'bind', False)
 
@@ -66,8 +66,8 @@ class EthBufferObject(base.FactoryObjectBase):
         self.addr = mem.pa
 
     def __str__(self):
-        return "%s GID:%s/Id:0x%x/Memory:%s/Size:0x%x" % (
-                self.__class__.__name__, self.GID(), id(self), self._mem, self.size)
+        return "%s GID:%s/Memory:%s/Size:0x%x" % (
+                self.__class__.__name__, self.GID(), self._mem, self.size)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):

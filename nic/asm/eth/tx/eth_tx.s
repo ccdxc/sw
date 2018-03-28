@@ -1,14 +1,19 @@
 
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "INGRESS_tx_table_s2_t0_k.h"
+#include "INGRESS_tx_table_s2_t1_k.h"
 
 #include "../../asm/eth/tx/defines.h"
 #include "../../p4/iris/include/defines.h"
 
 struct phv_ p;
-struct tx_table_s2_t0_k_ k;
-struct tx_table_s2_t0_eth_tx_d d;
+struct tx_table_s2_t1_k_ k;
+struct tx_table_s2_t1_eth_tx_d d;
+
+#define   _r_num_desc   r2        // Remaining number of descriptors
+#define   _r_ptr        r4        // Current DMA byte offset in PHV
+#define   _r_flit       r5        // Current DMA flit offset in PHV
+#define   _r_index      r6        // Current DMA command offset in PHV flit
 
 %%
 
@@ -17,116 +22,56 @@ struct tx_table_s2_t0_eth_tx_d d;
 .align
 eth_tx_start:
 
-  add             r5, r0, k.eth_tx_global_dma_cur_flit
-  add             r6, r0, k.eth_tx_global_dma_cur_index
+  bcf             [c2 | c3 | c7], eth_tx_error
+  nop
 
-  // Are we in the middle of SG?
-  seq             c1, k.eth_tx_t0_s2s_sg_in_progress, 1
-  bcf             [c1], eth_tx_sg_continue
-  add             r2, r0, k.eth_tx_t0_s2s_num_sg_elems
+  // Load DMA command pointer
+  add             _r_flit, r0, k.eth_tx_global_dma_cur_flit
+  add             _r_index, r0, k.eth_tx_global_dma_cur_index
 
-  // Start new packet
+  // Do we need to process any more descriptors ?
+  seq             c1, r0, k.eth_tx_global_num_desc
+  bcf             [c1], eth_tx_done
+  nop
+
+  // TODO: r2, r3, c1 are overwitten!!
   BUILD_APP_HEADER(0)
 
-  DMA_CMD_PTR(r4, r5, r6, r7)
-  DMA_INTRINSIC(r4, 0, r7)
-  DMA_CMD_NEXT(r5, r6, c7)
+  add             _r_num_desc, r0, k.eth_tx_global_num_desc
 
-  // Is there an SG list provided with this descriptor?
-  sne             c1, k.eth_tx_to_s2_num_sg_elems0, 0
-  bcf             [c1], eth_tx_sg_start
-  // Indicate SG in progress
-  phvwri.c1       p.eth_tx_t0_s2s_sg_in_progress, 1
+  DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
+  DMA_INTRINSIC(0, _r_ptr)
+  DMA_CMD_NEXT(_r_flit, _r_index, c7)
 
-eth_tx_packet:
+  DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
+  DMA_PKT(0, r3, _r_ptr)
+  DMA_CMD_NEXT(_r_flit, _r_index, c7)
 
-  DMA_CMD_PTR(r4, r5, r6, r7)
-  DMA_PKT(0, c0, r3, r4)
-  DMA_CMD_NEXT(r5, r6, c7)
+  subi            _r_num_desc, _r_num_desc, 1
+  beq             _r_num_desc, r0, eth_tx_done
+
+  // Save DMA command pointers
+  phvwrpair       p.eth_tx_global_dma_cur_flit, _r_flit, p.eth_tx_global_dma_cur_index, _r_index
 
 eth_tx_continue:
 
-  // Do we need to process any more descriptors ?
-  sub             r2, k.eth_tx_t0_s2s_num_desc, 1
-  beq             r2, r0, eth_tx_done
-  phvwr           p.eth_tx_t0_s2s_num_desc, r2
+  // Update the remaining number of descriptors
+  phvwr           p.eth_tx_global_num_desc, _r_num_desc
 
-  // Save DMA command pointers
-  phvwrpair       p.eth_tx_global_dma_cur_flit, r5, p.eth_tx_global_dma_cur_index, r6
   // Launch eth_tx stage
-  phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
-  phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri.e        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, (1 << 2)
 
 eth_tx_done:
 
-  // Save DMA command pointer
-  phvwrpair       p.eth_tx_global_dma_cur_flit, r5, p.eth_tx_global_dma_cur_index, r6
+  // Update the remaining number of descriptors
+  phvwr           p.eth_tx_global_num_desc, _r_num_desc
+
   // Launch eth_completion stage
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 2)
-  phvwri.e        p.common_te1_phv_table_pc, eth_tx_completion[38:6]
-  phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri          p.common_te3_phv_table_pc, eth_tx_completion[38:6]
+  phvwri.e        p.common_te3_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, 1
 
-eth_tx_sg_start:
-
-  DMA_CMD_PTR(r4, r5, r6, r7)
-  DMA_HDR(0, !c0, r3, r4)
-  DMA_CMD_NEXT(r5, r6, c7)
-
-  add             r2, r0, k.eth_tx_to_s2_num_sg_elems0
-
-eth_tx_sg_continue:
-
-  // C2 = No more frags .. Packet EOP
-
-  subi            r2, r2, 1
-  seq             c1, r2, 0
-
-  DMA_CMD_PTR(r4, r5, r6, r7)
-  DMA_FRAG(0, c1, r3, r4)
-  DMA_CMD_NEXT(r5, r6, c7)
-
-  bcf             [c1], eth_tx_sg_done
-
-  subi            r2, r2, 1
-  seq             c1, r2, 0
-
-  DMA_CMD_PTR(r4, r5, r6, r7)
-  DMA_FRAG(1, c1, r3, r4)
-  DMA_CMD_NEXT(r5, r6, c7)
-
-  bcf             [c1], eth_tx_sg_done
-
-  subi            r2, r2, 1
-  seq             c1, r2, 0
-
-  DMA_CMD_PTR(r4, r5, r6, r7)
-  DMA_FRAG(2, c1, r3, r4)
-  DMA_CMD_NEXT(r5, r6, c7)
-
-  bcf             [c1], eth_tx_sg_done
-
-  subi            r2, r2, 1
-  seq             c1, r2, 0
-
-  DMA_CMD_PTR(r4, r5, r6, r7)
-  DMA_FRAG(3, c1, r3, r4)
-  DMA_CMD_NEXT(r5, r6, c7)
-
-eth_tx_sg_done:
-  bcf             [c1], eth_tx_continue
-  phvwri.c1       p.eth_tx_t0_s2s_sg_in_progress, 0     // We are done with SG
-
-  // Fetch & process more SG elements in subsequent stages
-
-  // Update the remaining number of SG elements
-  phvwr           p.eth_tx_t0_s2s_num_sg_elems, r2
-  // Set the next SG descriptor address
-  add             r2, k.eth_tx_t0_s2s_sg_desc_addr, 1, LG2_TX_SG_MAX_READ_SIZE
-  phvwr           p.eth_tx_t0_s2s_sg_desc_addr, r2
-
-  // Save DMA command pointer
-  phvwrpair       p.eth_tx_global_dma_cur_flit, r5, p.eth_tx_global_dma_cur_index, r6
-  // Launch eth_tx stage
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
-  phvwr.e         p.common_te0_phv_table_addr, r2
-  phvwri.f        p.common_te0_phv_table_raw_table_size, LG2_TX_SG_MAX_READ_SIZE
+eth_tx_error:
+  phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0
+  phvwri.f        p.p4_intr_global_drop, 1

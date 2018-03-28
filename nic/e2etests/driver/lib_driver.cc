@@ -6,12 +6,11 @@
 #include <zmq.h>
 
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
-
 #include "nic/model_sim/include/buf_hdr.h"
-#include "./lib_driver.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/utils/host_mem/host_mem.hpp"
-
+#include "nic/include/eth_common.h"
+#include "./lib_driver.hpp"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -33,12 +32,10 @@ typedef struct {
 
 typedef struct {
     uint64_t qstate_addr;
-    struct qstate *qstate;
+    struct eth_qstate *qstate;
     uint64_t queue_addr;
     void *queue;
 
-    uint64_t cq_qstate_addr;
-    struct qstate *cq_qstate;
     uint64_t cq_queue_addr;
     void *cq_queue;
     uint32_t cur_cq_index;
@@ -127,14 +124,14 @@ void
 read_queue(uint64_t lif, queue_type qtype, uint32_t qid) {
   queue_info_t qi = get_queue_info(lif, qtype, qid);
 
-  read_mem(qi.qstate_addr, (uint8_t *) qi.qstate, sizeof(struct qstate));
+  read_mem(qi.qstate_addr, (uint8_t *) qi.qstate, sizeof(struct eth_qstate));
 }
 
 void
 write_queue(uint64_t lif, queue_type qtype, uint32_t qid) {
   queue_info_t qi = get_queue_info(lif, qtype, qid);
 
-  write_mem(qi.qstate_addr, (uint8_t *) qi.qstate, sizeof(struct qstate));
+  write_mem(qi.qstate_addr, (uint8_t *) qi.qstate, sizeof(struct eth_qstate));
 }
 
 void
@@ -203,7 +200,7 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
   if (qi.qstate_addr == 0) {
     assert(0);
   }
-  qi.qstate = (struct qstate *) calloc(1, sizeof(struct qstate));
+  qi.qstate = (struct eth_qstate *) calloc(1, sizeof(struct eth_qstate));
   qi.cur_cq_index = 0;
   set_queue_info(lif, qtype, qid, qi);
 
@@ -336,7 +333,7 @@ poll_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint32_t max_count, uin
 void
 print_queue(uint64_t lif, queue_type qtype, uint32_t qid) {
   queue_info_t qi = get_queue_info(lif, qtype, qid);
-  struct qstate *qstate = qi.qstate;
+  struct eth_qstate *qstate = qi.qstate;
   struct rx_desc *rxq;
   struct tx_desc *txq;
 
