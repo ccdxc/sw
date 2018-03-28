@@ -656,17 +656,16 @@ validate_mc_entry_delete(MulticastEntryDeleteRequest& req,
                 return HAL_RET_INVALID_ARG;
             }
         }
-    } else if (!req.key_or_handle().multicast_handle()) {
+        // must provide valid l2segment
+        if (!req.key_or_handle().key().has_l2segment_key_handle()) {
+            HAL_TRACE_ERR("{}: l2segment not valid in request", __FUNCTION__);
+            rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
+            return HAL_RET_INVALID_ARG;
+        }
+    } else if (req.key_or_handle().multicast_handle() == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("{}: Handle not valid in request", __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         return HAL_RET_HANDLE_INVALID;
-    }
-
-    // must provide valid l2segment
-    if (!req.key_or_handle().key().has_l2segment_key_handle()) {
-        HAL_TRACE_ERR("{}: l2segment not valid in request", __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
     }
 
     return HAL_RET_OK;
@@ -950,17 +949,16 @@ validate_mc_entry_update(MulticastEntrySpec& req,
                 return HAL_RET_INVALID_ARG;
             }
         }
-    } else if (!req.key_or_handle().multicast_handle()) {
+        // must provide valid l2segment
+        if (!req.key_or_handle().key().has_l2segment_key_handle()) {
+            HAL_TRACE_ERR("{}: l2segment not valid in request", __FUNCTION__);
+            rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
+            return HAL_RET_INVALID_ARG;
+        }
+    } else if (req.key_or_handle().multicast_handle() == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("{}: Handle not valid in request", __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         return HAL_RET_HANDLE_INVALID;
-    }
-
-    // must provide valid l2segment
-    if (!req.key_or_handle().key().has_l2segment_key_handle()) {
-        HAL_TRACE_ERR("{}: l2segment not valid in request", __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
     }
 
     return HAL_RET_OK;
