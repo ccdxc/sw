@@ -209,7 +209,7 @@ message SlabGetResponseMsg {
 
 enum TraceLevel {
   TRACE_LEVEL_NONE  = 0;    // no tracing at all
-  TRACE_LEVEL_ERR   = 1;    // enable tracing only for error messages
+  TRACE_LEVEL_ERROR = 1;    // enable tracing only for error messages
   TRACE_LEVEL_DEBUG = 2;    // enable tracing only for debug messages
 }
 

@@ -211,6 +211,17 @@ mpu_trace_enable (debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
 hal_ret_t
 trace_update (TraceSpec& spec, TraceResponse *rsp)
 {
+    if (spec.trace_level() == debug::TRACE_LEVEL_ERROR) {
+        hal::utils::g_trace_logger->set_trace_level(hal::utils::trace_err);
+        rsp->set_trace_level(debug::TRACE_LEVEL_ERROR);
+    } else if (spec.trace_level() == debug::TRACE_LEVEL_DEBUG) {
+        hal::utils::g_trace_logger->set_trace_level(hal::utils::trace_debug);
+        rsp->set_trace_level(debug::TRACE_LEVEL_DEBUG);
+    } else {
+        hal::utils::g_trace_logger->set_trace_level(hal::utils::trace_none);
+        rsp->set_trace_level(debug::TRACE_LEVEL_NONE);
+    }
+    rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
 
@@ -220,15 +231,25 @@ trace_update (TraceSpec& spec, TraceResponse *rsp)
 hal_ret_t
 trace_get (TraceResponseMsg *rsp)
 {
-#if 0
     auto response = rsp->add_response();
-    if (!hal_if) {
-        response->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_INVALID_ARG;
-    } else {
-        if_process_get(hal_if, response);
+
+    if (!response) {
+        return HAL_RET_OOM;
     }
-#endif
+    if (hal::utils::g_trace_logger) {
+        response->set_api_status(types::API_STATUS_OK);
+        if (hal::utils::g_trace_logger->trace_level() == hal::utils::trace_err) {
+            response->set_trace_level(debug::TRACE_LEVEL_ERROR);
+        } else if (hal::utils::g_trace_logger->trace_level() == hal::utils::trace_debug) {
+            response->set_trace_level(debug::TRACE_LEVEL_DEBUG);
+        } else {
+            response->set_trace_level(debug::TRACE_LEVEL_NONE);
+        }
+    } else {
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
+        response->set_trace_level(debug::TRACE_LEVEL_NONE);
+    }
+
     return HAL_RET_OK;
 }
 
