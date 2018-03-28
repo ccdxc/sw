@@ -789,6 +789,21 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
 {
     hal_ret_t ret;
 
+    HAL_TRACE_DEBUG("fte: rxpkt cpu_rxhdr={}",
+                    hex_str((uint8_t*)cpu_rxhdr, sizeof(*cpu_rxhdr)));
+
+    HAL_TRACE_DEBUG("fte: rxpkt len={} pkt={}", pkt_len, hex_str(pkt, pkt_len));
+
+    HAL_TRACE_DEBUG("fte: rxpkt slif={} lif={} qtype={} qid={} vrf={} "
+                    "pad={} lkp_dir={} lkp_inst={} lkp_type={} flags={} "
+                    "l2={} l3={} l4={} payload={}",
+                    cpu_rxhdr->src_lif, cpu_rxhdr->lif, cpu_rxhdr->qtype,
+                    cpu_rxhdr->qid, cpu_rxhdr->lkp_vrf, cpu_rxhdr->pad,
+                    cpu_rxhdr->lkp_dir, cpu_rxhdr->lkp_inst, cpu_rxhdr->lkp_type,
+                    cpu_rxhdr->flags, cpu_rxhdr->l2_offset, cpu_rxhdr->l3_offset,
+                    cpu_rxhdr->l4_offset, cpu_rxhdr->payload_offset);
+
+
     lifqid_t lifq =  {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
     ret = init(lifq, feature_state, num_features);

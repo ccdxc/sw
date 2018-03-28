@@ -37,8 +37,17 @@ cc_library(
 
 cc_test(
     name = "fte_test",
-    srcs = glob(["test/*.cc"]),
-    linkopts = gl_linkopts_list,
+    srcs = glob(["test/*.cc", "test/*.hpp"]),
+    linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
     deps = gl_deps_list + test_deps_list,
     copts = sdk_copts,
+)
+
+cc_library(
+    name = "fte_base_test",
+    srcs = [ "test/fte_base_test.cc" ],
+    hdrs = [ "test/fte_base_test.hpp" ],
+    deps =  gl_deps_list + test_deps_list,
+    copts = sdk_copts,
+    alwayslink = 1,
 )

@@ -1103,8 +1103,10 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRuleSpec spec, nwsec_rule_t *rule)
     hal_ret_t              ret = HAL_RET_OK;
     uint32_t               hv = 2166136261;
 
+    rule->rule_id = spec.rule_id();
+
     // Action
-    rule->action = nwsec::SECURITY_RULE_ACTION_ALLOW;;
+    rule->action = nwsec::SECURITY_RULE_ACTION_ALLOW;
     rule->log_action =  nwsec::LOG_NONE;
     if (spec.has_action()) {
         rule->action =  spec.action().sec_action();
@@ -1141,8 +1143,13 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRuleSpec spec, nwsec_rule_t *rule)
             if (spec.src_address(i).address().has_prefix()) {
                 rule->src_address.addr[i].ip_lo.v4_addr =  spec.src_address(i).address().prefix().ipv4_subnet().address().v4_addr();
                 rule->src_address.addr[i].af = IP_AF_IPV4;
+
+                rule->src_address.addr[i].ip_hi.v4_addr =  spec.src_address(i).address().prefix().ipv4_subnet().address().v4_addr();
+
+
                 //rule->src_address[index].ip_hi.v4_addr = <Derive from mask length>
                 hv = calculate_hash_value(&rule->src_address.addr[i].ip_lo.v4_addr, sizeof(rule->src_address.addr[i].ip_lo.v4_addr), hv);
+                hv = calculate_hash_value(&rule->src_address.addr[i].ip_hi.v4_addr, sizeof(rule->src_address.addr[i].ip_hi.v4_addr), hv);
             }
         }
     }
@@ -1309,8 +1316,9 @@ nwsec_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle = dhl_entry->handle;
 
     if (!policy->acl_ctx) {
-        policy->acl_ctx = lib_acl_create(nwsec_acl_ctx_name(policy->key.vrf_id_or_handle),
-                                         &ip_acl_config);
+        const char *ctx_name = nwsec_acl_ctx_name(policy->key.vrf_id);
+        HAL_TRACE_DEBUG("Creating acl ctx {}", ctx_name);
+        policy->acl_ctx = lib_acl_create(ctx_name, &ip_acl_config);
     }
 
     HAL_TRACE_DEBUG("policy handle {}", hal_handle);
@@ -1377,6 +1385,7 @@ extract_policy_from_spec(nwsec::SecurityPolicySpec&     spec,
     nwsec_rule_t     *nwsec_rule;
     hal_ret_t        ret = HAL_RET_OK;
 
+
     int rule_sz = spec.rule_size();
     HAL_TRACE_DEBUG("Policy_rules:: Firewall Size {}", rule_sz);
     policy->rule_len = rule_sz;
@@ -1397,6 +1406,7 @@ extract_policy_from_spec(nwsec::SecurityPolicySpec&     spec,
             ret = HAL_RET_HANDLE_INVALID;
             return ret;
         }
+        nwsec_rule->priority = i;
         ret = add_nwsec_rule_to_db(policy, nwsec_rule, i);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(" unable to add to rule to policy db");
@@ -1432,10 +1442,24 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
         HAL_TRACE_ERR("{}: unable to"
                       " allocate handle/memory"
                       " ret: {}", __FUNCTION__, ret);
-        return HAL_RET_OOM;
+        ret = HAL_RET_OOM;
+        goto end;
     }
 
     nwsec_policy->key.policy_id = spec.policy_key_or_handle().security_policy_key().security_policy_id();
+    if (spec.policy_key_or_handle().security_policy_key().vrf_id_or_handle().key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
+        nwsec_policy->key.vrf_id = spec.policy_key_or_handle().security_policy_key().vrf_id_or_handle().vrf_id();
+    } else {
+        vrf_t *vrf = vrf_lookup_by_handle(spec.policy_key_or_handle().security_policy_key().vrf_id_or_handle().vrf_handle());
+        if (!vrf) {
+            HAL_TRACE_ERR("Invalid vrf handle {}", spec.policy_key_or_handle().security_policy_key().vrf_id_or_handle().vrf_handle());
+            nwsec_policy_free(nwsec_policy);
+            ret = HAL_RET_HANDLE_INVALID;
+            goto end;
+        }
+        nwsec_policy->key.vrf_id = vrf->vrf_id;
+    }
+
     nwsec_policy->hal_handle = hal_handle_alloc(HAL_OBJ_ID_SECURITY_POLICY);
     if (nwsec_policy->hal_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("{}: failed to alloc handle for policy_id: {}",
@@ -1562,18 +1586,21 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
 
     if (kh.policy_key_or_handle_case() == kh::SecurityPolicyKeyHandle::kSecurityPolicyKey) {
         uint64_t        vrf_id;
-        hal_handle_t    vrf_handle;
         auto policy_key = kh.security_policy_key();
         if (policy_key.vrf_id_or_handle().key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
             vrf_id = policy_key.vrf_id_or_handle().vrf_id();
-            vrf_t *vrf = vrf_lookup_by_id(vrf_id);
-            vrf_handle = vrf->hal_handle;
         } else {
-            vrf_handle = policy_key.vrf_id_or_handle().vrf_handle();
+            vrf_t *vrf = vrf_lookup_by_handle(policy_key.vrf_id_or_handle().vrf_handle());
+            if (!vrf) {
+                HAL_TRACE_ERR("invalid vrf handle {}", policy_key.vrf_id_or_handle().vrf_handle());
+                ret = HAL_RET_HANDLE_INVALID;
+                goto end;
+            }
+            vrf_id = vrf->vrf_id;
         }
 
         // find_nwsec_policy_by_key()
-        policy = find_nwsec_policy_by_key(policy_key.security_policy_id(), vrf_handle);
+        policy = find_nwsec_policy_by_key(policy_key.security_policy_id(), vrf_id);
         if (policy == NULL) {
             HAL_TRACE_ERR("Policy with id: {} not found",
                             policy_key.security_policy_id());

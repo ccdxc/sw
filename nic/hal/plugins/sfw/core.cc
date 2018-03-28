@@ -143,9 +143,10 @@ net_sfw_check_security_policy(fte::ctx_t &ctx, net_sfw_match_result_t *match_rsl
 
     HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy acl rule lookup for key={}", ctx.key());
 
-    acl_ctx = acl::acl_get(nwsec_acl_ctx_name(ctx.key().vrf_id));
+    const char *ctx_name = nwsec_acl_ctx_name(ctx.key().vrf_id);
+    acl_ctx = acl::acl_get(ctx_name);
     if (acl_ctx == NULL) {
-        HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy failed to lookup acl_ctx");
+        HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy failed to lookup acl_ctx {}", ctx_name);
         return HAL_RET_FTE_RULE_NO_MATCH;
     }
 
@@ -192,7 +193,8 @@ net_sfw_check_security_policy(fte::ctx_t &ctx, net_sfw_match_result_t *match_rsl
 
     nwsec_rule = (const hal::nwsec_rule_t *)rule->data.userdata;
 
-    HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy matched acl rule {}", nwsec_rule->rule_id);
+    HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy matched acl rule {} action={} alg={}",
+                    nwsec_rule->rule_id, nwsec_rule->action, nwsec_rule->alg);
 
     match_rslt->valid = 1;
     if (nwsec_rule->action == nwsec::SECURITY_RULE_ACTION_ALLOW) {

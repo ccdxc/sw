@@ -12,6 +12,11 @@ LD_PATH = $(LD_LIBRARY_PATH):$(TOPDIR_ABS)/../bazel-bin/nic/model_sim/:$(SNORT_E
 CMD_OPTS = cd ../bazel-bin && LD_LIBRARY_PATH=$(LD_PATH) CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(CONFIG_PATH) COVFILE=$(COVFILE)
 PD_CMD_OPTS = cd ../bazel-bin && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TOPDIR_ABS)/../bazel-bin/nic/model_sim/ CAPRI_MOCK_MODE=1 LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf
 
+# make target to run a specific gtest
+# usage: make gtest target=./nic/hal/plugins/sfw/sfw_test
+run-gtest: $(GEN_TEST_RESULTS_DIR)/.dir
+	$(CMD_OPTS) $(target)
+
 run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	# PI gtests
 	$(CMD_OPTS) ./nic/linkmgr/test/gtests/port_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/port_test.xml"

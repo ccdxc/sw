@@ -577,9 +577,10 @@ typedef struct nwsec_rule_s {
 } nwsec_rule_t;
 
 typedef struct policy_key_s {
-    uint32_t        policy_id;
-    uint32_t        vrf_id_or_handle;
-}policy_key_t;
+    uint32_t         policy_id;
+    vrf_id_t         vrf_id;
+} policy_key_t;
+
 #define         MAX_RULES       1024
 typedef struct nwsec_policy_s {
     policy_key_t    key;
@@ -632,6 +633,7 @@ nwsec_policy_init (nwsec_policy_t *policy)
         HAL_ASSERT_RETURN((policy->rules_ht != NULL), NULL);
     }
     policy->ht_ctxt.reset();
+    policy->acl_ctx = NULL;
 
     return policy;
 }
@@ -708,14 +710,14 @@ del_nwsec_policy_from_db (nwsec_policy_t *policy)
 
 // find a security policy by sg
 static inline nwsec_policy_t *
-find_nwsec_policy_by_key(uint32_t policy_id, uint32_t vrf_id_or_handle)
+find_nwsec_policy_by_key(uint32_t policy_id, uint32_t vrf_id)
 {
     hal_handle_id_ht_entry_t    *entry;
     policy_key_t                 policy_key = { 0 };
     nwsec_policy_t              *policy;
 
     policy_key.policy_id = policy_id;
-    policy_key.vrf_id_or_handle = vrf_id_or_handle;
+    policy_key.vrf_id = vrf_id;
     entry = (hal_handle_id_ht_entry_t *) g_hal_state->
             nwsec_policy_ht()->lookup(&policy_key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {

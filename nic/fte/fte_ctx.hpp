@@ -343,6 +343,8 @@ inline bool operator==(const lifqid_t& lifq1, const lifqid_t& lifq2)
             (lifq1.qid == lifq2.qid)));
 }
 
+std::string hex_str(const uint8_t *buf, size_t sz);
+
 #define MAX_FEATURE_NAME 64
 typedef char feature_name_t[MAX_FEATURE_NAME];
 
