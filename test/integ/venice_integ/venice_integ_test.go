@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/hal"
+	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -69,8 +69,8 @@ type veniceIntegSuite struct {
 	certSrv        *certsrv.CertSrv
 	ctrler         *npm.Netctrler
 	agents         []*netagent.Agent
-	datapaths      []*hal.Datapath
-	datapathKind   hal.Kind
+	datapaths      []*datapath.Datapath
+	datapathKind   datapath.Kind
 	numAgents      int
 	restClient     apiclient.Services
 	apisrvClient   apiclient.Services
@@ -95,7 +95,7 @@ func TestVeniceInteg(t *testing.T) {
 func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	// test parameters
 	it.numAgents = *numAgents
-	it.datapathKind = hal.Kind(*datapathKind)
+	it.datapathKind = datapath.Kind(*datapathKind)
 
 	logger := log.GetNewLogger(log.GetDefaultConfig("venice_integ"))
 	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
@@ -195,7 +195,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
 		// mock datapath
-		dp, aerr := hal.NewHalDatapath(it.datapathKind)
+		dp, aerr := datapath.NewHalDatapath(it.datapathKind)
 		c.Assert(aerr, IsNil)
 		it.datapaths = append(it.datapaths, dp)
 
@@ -249,7 +249,7 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 		ag.Stop()
 	}
 	it.agents = []*netagent.Agent{}
-	it.datapaths = []*hal.Datapath{}
+	it.datapaths = []*datapath.Datapath{}
 
 	// stop server and client
 	it.ctrler.Stop()

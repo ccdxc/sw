@@ -18,7 +18,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "gopkg.in/check.v1"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/hal"
+	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
@@ -48,7 +48,7 @@ type integTestSuite struct {
 	ctrler       *npm.Netctrler
 	agents       []*Dpagent
 	certSrv      *certsrv.CertSrv
-	datapathKind hal.Kind
+	datapathKind datapath.Kind
 	numAgents    int
 	resolverSrv  *rpckit.RPCServer
 	resolverCli  resolver.Interface
@@ -70,7 +70,7 @@ func TestNpmInteg(t *testing.T) {
 func (it *integTestSuite) SetUpSuite(c *C) {
 	// test parameters
 	it.numAgents = *numAgents
-	it.datapathKind = hal.Kind(*datapathKind)
+	it.datapathKind = datapath.Kind(*datapathKind)
 
 	// start certificate server
 	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)

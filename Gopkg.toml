@@ -93,10 +93,6 @@ required = ["github.com/GeertJohan/go.rice",
   name = "github.com/grandcat/zeroconf"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/mdlayher/ethernet"
-
-[[constraint]]
   name = "github.com/minio/minio-go"
   version = "4.0.0"
 
@@ -216,11 +212,6 @@ required = ["github.com/GeertJohan/go.rice",
 [[override]]
   name = "github.com/vmware/govmomi"
   revision = "35ddbd457a017bd933712fbbab56f4d6cacb32b5"
-
-# Need override to enable raw.ListenPacket(). ToDo Move to a released version
-[[override]]
-  name = "github.com/mdlayher/raw"
-  revision = "477f685db8a98f311907a6f91c6c7803f5213a3c"
 
 # Overrride needed for supporting mux.RunOnAddr() call. ToDo Move to gorilla mux
 [[override]]

@@ -840,17 +840,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/mdlayher/ethernet"
-  packages = ["."]
-  revision = "e72cf8343052938936194daba1914fd1bb33d2fe"
-
-[[projects]]
-  name = "github.com/mdlayher/raw"
-  packages = ["."]
-  revision = "477f685db8a98f311907a6f91c6c7803f5213a3c"
-
-[[projects]]
   name = "github.com/miekg/dns"
   packages = ["."]
   revision = "787fb05a250f045a0c3e676c8c499ed412633f45"
@@ -1654,6 +1643,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "55c0edeaa8daaf74d1c2f15b45f9575785a0df38d17a01741bfe6cece18e88d2"
+  inputs-digest = "ee88e201ae0f0554764d739faa52640b6d00e9802a5cd80a844950e91e941fff"
   solver-name = "gps-cdcl"
   solver-version = 1

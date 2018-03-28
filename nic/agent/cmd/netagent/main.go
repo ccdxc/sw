@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/hal"
+	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -76,7 +76,7 @@ func main() {
 	}
 
 	// Create a HAL Datapath // ToDo Make this hal
-	dp, err := hal.NewHalDatapath("mock")
+	dp, err := datapath.NewHalDatapath("mock")
 	if err != nil {
 		log.Fatal("Error initializing HAL Datapath")
 	}

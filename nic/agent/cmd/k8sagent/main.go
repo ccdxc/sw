@@ -73,7 +73,7 @@ func main() {
 	}
 
 	// create a network datapath
-	dp, err := datapath.NewFakeDatapath(*uplinkIf)
+	dp, err := datapath.NewHalDatapath("mock")
 	if err != nil {
 		log.Fatalf("Error creating fake datapath. Err: %v", err)
 	}
