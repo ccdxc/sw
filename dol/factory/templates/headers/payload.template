@@ -2,7 +2,7 @@ meta:
     id      : PAYLOAD
     scapy   : PAYLOAD
     size    : 0
-    pattern : pattincr/1/255/1
+    pattern : pattern-increment://1/255/1
 
 fields:
     data: None

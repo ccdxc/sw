@@ -2,7 +2,7 @@ meta:
     id      : PADDING
     scapy   : PADDING
     size    : 0
-    pattern : pattfixed/0
+    pattern : pattern-fixed://0
 
 fields:
     data: 0

@@ -380,6 +380,10 @@ class Packet(objects.FrameworkObject):
         elif isinstance(self.headers.payload.fields.data, str):
             self.headers.payload.fields.data =\
                     utils.ParseIntegerList(self.headers.payload.fields.data)
+        elif objects.IsFrameworkFieldObject(self.headers.payload.fields.data):
+            self.headers.payload.fields.data =\
+                    self.headers.payload.fields.data.get(self.payloadsize)
+            self.__fixup_payload(tc)
         else:
             self.__fixup_payload(tc)
         logger.info("- Added Payload of Size = %d" % self.payloadsize)

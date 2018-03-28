@@ -381,7 +381,6 @@ class PatternFixed(FrameworkFieldObject):
         super().__init__()
         self.val = int(valobj.params[0])
         return
-        return
 
     def get(self, size):
         return [self.val] * size
@@ -396,9 +395,11 @@ class PatternIncrement(FrameworkFieldObject):
         return
 
     def get(self, size):
-        # TODO
-        return [self.start] * size
-
+        assert(self.start < self.end)
+        patt = list(range(self.start, self.end, self.step))
+        repeat = int(size / len(patt) + 1)
+        patt = patt * repeat
+        return patt[:size]
 
 class PatternDecrement(FrameworkFieldObject):
     def __init__(self, valobj):
@@ -409,9 +410,11 @@ class PatternDecrement(FrameworkFieldObject):
         return
 
     def get(self, size):
-        # TODO
-        return [str(self.start)] * size
-
+        assert(self.start > self.end)
+        patt = list(range(self.start, self.end, -1 * self.step))
+        repeat = int(size / len(patt) + 1)
+        patt = patt * repeat
+        return patt[:size]
 
 class PatternRandom(FrameworkFieldObject):
     def __init__(self, valobj):
@@ -422,9 +425,10 @@ class PatternRandom(FrameworkFieldObject):
         return
 
     def get(self, size):
-        # TODO
-        return [self.start] * size
-
+        patt = []
+        for x in range(size):
+            patt.append(random.randint(self.start, self.end))
+        return patt
 
 class Timestamp(FrameworkFieldObject):
     def __init__(self, valobj):
@@ -725,7 +729,7 @@ class ScaledReferenceField(ReferenceField):
 #   IPV6_ADDRESS_STEP   :   ipv6step/<hhhh::hhhh>/<step as ssss::ssss>/<count>
 #   AUTO_FIELD          :   auto/<source>
 #   IP_PROTOCOL         :   ipproto/<value>
-#   PATTERN_FIXED       :   pattfixed/<value>
+#   PATTERN_FIXED       :   pattern-fixed/<value>
 #   PATTERN_INCREMENT   :   pattincr/<start>/<end>/<step>
 #   PATTERN_DECREMENT   :   pattdecr/<start>/<end>/<step>
 #   PATTERN_RANDOM      :   pattrand/<start>/<end>/<count>
@@ -801,24 +805,28 @@ TemplateFieldValueToObject = {
         'pcount': 1,
     },
 
-    'pattfixed': {
-        'object': PatternFixed,
-        'pcount': 1,
+    'pattern-fixed://': {
+        'object'    : PatternFixed,
+        'pcount'    : 1,
+        'opcount'   : 128,
     },
 
-    'pattincr': {
-        'object': PatternIncrement,
-        'pcount': 3,
+    'pattern-increment://': {
+        'object'    : PatternIncrement,
+        'pcount'    : 1,
+        'opcount'   : 128,
     },
 
-    'pattdecr': {
-        'object': PatternDecrement,
-        'pcount': 3,
+    'pattern-decrement://': {
+        'object'    : PatternDecrement,
+        'pcount'    : 1,
+        'opcount'   : 128,
     },
 
-    'pattrandom': {
-        'object': PatternRandom,
-        'pcount': 3,
+    'pattern-random://': {
+        'object'    : PatternRandom,
+        'pcount'    : 1,
+        'opcount'   : 128,
     },
 
     'timestamp': {
@@ -1002,6 +1010,9 @@ def IsAutoField(field):
 
     return True
 
+
+def IsTemplateFieldValueObject(obj):
+    return isinstance(obj, TemplateFieldValue)
 
 def IsReference(field):
     return isinstance(field, ReferenceField)

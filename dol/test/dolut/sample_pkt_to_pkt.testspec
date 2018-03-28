@@ -44,6 +44,70 @@ packets:
             crc:
                 crc: 1
                     
+    - packet:
+        id          : PKT2
+        payloadsize : 32
+        paddingsize : 32
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : callback://networking/packets/GetTtl
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : callback://networking/packets/GetTtl
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                options:
+                    - kind: MSS
+                      data: 1024
+            payload:
+                data    : pattern-random://0/255/1
+            crc:
+                crc: 1
+
+    - packet:
+        id          : PKT3
+        payloadsize : 32
+        paddingsize : 32
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : callback://networking/packets/GetTtl
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : callback://networking/packets/GetTtl
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                options:
+                    - kind: MSS
+                      data: 1024
+            payload:
+                data    : pattern-decrement://255/0/1
+            crc:
+                crc: 1
+
 
 trigger:
     packets:
@@ -54,5 +118,9 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT1
+            object  : ref://testcase/packets/id=PKT2
+            port    : 1
+
+        - packet:
+            object  : ref://testcase/packets/id=PKT3
             port    : 1
