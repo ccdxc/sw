@@ -253,10 +253,12 @@ comp_queue_push(const cp_desc_t *src_desc,
                                                      &comp_queue.curr_seq_comp_pd_idx);
         seq_comp_desc->clear();
         seq_comp_desc->write_bit_fields(0, 64, host_mem_v2p(dst_desc));
-        seq_comp_desc->write_bit_fields(64, 32, (uint64_t)log2(sizeof(*dst_desc)));
-        seq_comp_desc->write_bit_fields(96, 16, (uint64_t)log2(sizeof(uint32_t)));
-        seq_comp_desc->write_bit_fields(112, 34, comp_queue.cfg_q_pd_idx);
-        seq_comp_desc->write_bit_fields(146, 34, comp_queue.q_base_mem_pa);
+        seq_comp_desc->write_bit_fields(64, 34, comp_queue.cfg_q_pd_idx);
+        seq_comp_desc->write_bit_fields(98, 4, (uint8_t)log2(sizeof(*dst_desc)));
+        seq_comp_desc->write_bit_fields(102, 3, (uint8_t)log2(sizeof(uint32_t)));
+
+        // skip 1 filler bit
+        seq_comp_desc->write_bit_fields(106, 34, comp_queue.q_base_mem_pa);
 
         // Sequencer queue depth is limited and should be taken into
         // considerations when using batch mode.
@@ -269,10 +271,10 @@ comp_queue_push(const cp_desc_t *src_desc,
             break;
         }
 
-        seq_comp_desc->write_bit_fields(180, 16, curr_pd_idx);
-        seq_comp_desc->write_bit_fields(196, 1, 1); /* set barco_batch_mode */
+        seq_comp_desc->write_bit_fields(140, 16, curr_pd_idx);
+        seq_comp_desc->write_bit_fields(156, 1, 1); /* set barco_batch_mode */
         if (push_type == COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST) {
-            seq_comp_desc->write_bit_fields(197, 1, 1); /* set barco_batch_last */
+            seq_comp_desc->write_bit_fields(157, 1, 1); /* set barco_batch_last */
         }
 
         // defer until caller calls comp_queue_post_push()

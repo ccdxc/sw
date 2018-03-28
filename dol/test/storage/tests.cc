@@ -2626,6 +2626,8 @@ int test_setup_cp_seq_status_ent(cp_seq_params_t *params) {
     seq_comp_status_desc->write_bit_fields(0, 64, params->seq_ent.db_entry.next_doorbell_addr);
     seq_comp_status_desc->write_bit_fields(64, 64, params->seq_ent.db_entry.next_doorbell_data);
   }
+
+  // skip 1 filler bit
   seq_comp_status_desc->write_bit_fields(234, 64, params->seq_ent.status_hbm_pa);
   seq_comp_status_desc->write_bit_fields(298, 64, params->seq_ent.status_host_pa);
   seq_comp_status_desc->write_bit_fields(362, 64, params->seq_ent.intr_pa);

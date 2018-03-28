@@ -59,7 +59,7 @@ storage_tx_seq_comp_status_desc0_handler_start:
    b            status_dma_setup
    
    // Note that d.next_db_addr in this case is really d.barco_ring_addr
-   phvwrpair	p.storage_kivec4_barco_ring_addr, d.next_db_addr, \
+   phvwrpair	p.storage_kivec4_barco_ring_addr, d.next_db_addr[33:0], \
                 p.{storage_kivec4_barco_pndx_addr...storage_kivec4_barco_pndx_size}, \
                 d.{barco_pndx_addr...barco_pndx_size}   // delay slot
 

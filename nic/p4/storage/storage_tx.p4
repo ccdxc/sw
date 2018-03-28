@@ -40,7 +40,6 @@
 #define tx_table_s2_t0_action	q_state_push
 #define tx_table_s2_t0_action1	seq_q_state_push
 #define tx_table_s2_t0_action2	pci_q_state_push
-#define tx_table_s2_t0_action3	seq_barco_ring_push
 #define tx_table_s2_t0_action4	nvme_be_wqe_prep
 #define tx_table_s2_t0_action5	nvme_be_cmd_handler
 #define tx_table_s2_t0_action6	nvme_be_wqe_handler
@@ -49,13 +48,15 @@
 #define tx_table_s2_t0_action9	seq_pvm_roce_sq_cb_push
 #define tx_table_s2_t0_action10	seq_comp_status_handler
 #define tx_table_s2_t0_action11	seq_xts_status_handler
+#define tx_table_s2_t0_action12	seq_barco_ring_pndx_read
 
 #define tx_table_s3_t0_action	pri_q_state_push
 #define tx_table_s3_t0_action1	pri_q_state_incr
 #define tx_table_s3_t0_action2	pri_q_state_decr
 #define tx_table_s3_t0_action3	roce_r2n_wqe_prep
 #define tx_table_s3_t0_action4	pvm_roce_sq_cb_update
-#define tx_table_s3_t0_action5	seq_barco_chain_action
+#define tx_table_s3_t0_action5	seq_barco_ring_push
+#define tx_table_s3_t0_action6	seq_barco_chain_action
 
 #define tx_table_s3_t1_action	seq_comp_sgl_handler
 

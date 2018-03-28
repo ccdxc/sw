@@ -28,7 +28,7 @@
 #define STORAGE_KIVEC0_DST_QID                  \
     k.{storage_kivec0_dst_qid_sbit0_ebit1...storage_kivec0_dst_qid_sbit18_ebit23}
 #define STORAGE_KIVEC0_DST_QADDR                \
-    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit10_ebit33}
+    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit26_ebit33}
 #define STORAGE_KIVEC0_PRP_ASSIST               \
     k.storage_kivec0_prp_assist
 #define STORAGE_KIVEC0_IS_Q0                    \
@@ -56,8 +56,6 @@
     k.{storage_kivec1_src_qid_sbit0_ebit1...storage_kivec1_src_qid_sbit18_ebit23}
 #define STORAGE_KIVEC1_SRC_QADDR                \
     k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit26_ebit33}
-#define STORAGE_KIVEC1_BARCO_DESC_SIZE          \
-    k.{storage_kivec1_barco_desc_size_sbit0_ebit7...storage_kivec1_barco_desc_size_sbit8_ebit15}
 #define STORAGE_KIVEC1_DEVICE_ADDR              \
     k.{storage_kivec1_device_addr_sbit0_ebit7...storage_kivec1_device_addr_sbit32_ebit33}
 #define STORAGE_KIVEC1_ROCE_CQ_NEW_CMD          \
@@ -76,15 +74,15 @@
     k.storage_kivec3_data_addr
 
 #define STORAGE_KIVEC4_BARCO_RING_ADDR          \
-    k.{storage_kivec4_barco_ring_addr_sbit0_ebit15...storage_kivec4_barco_ring_addr_sbit56_ebit63}
+    k.{storage_kivec4_barco_ring_addr_sbit0_ebit15...storage_kivec4_barco_ring_addr_sbit32_ebit33}
 #define STORAGE_KIVEC4_BARCO_DESC_SIZE          \
     k.storage_kivec4_barco_desc_size
 #define STORAGE_KIVEC4_BARCO_PNDX_ADDR          \
-    k.{storage_kivec4_barco_pndx_addr_sbit0_ebit23...storage_kivec4_barco_pndx_addr_sbit32_ebit33}
+    k.{storage_kivec4_barco_pndx_addr_sbit0_ebit5...storage_kivec4_barco_pndx_addr_sbit30_ebit33}
 #define STORAGE_KIVEC4_BARCO_PNDX_SIZE          \
-    k.{storage_kivec4_barco_pndx_size_sbit0_ebit1...storage_kivec4_barco_pndx_size_sbit2_ebit2}
+    k.storage_kivec4_barco_pndx_size
 #define STORAGE_KIVEC4_W_NDX                    \
-    k.{storage_kivec4_w_ndx_sbit0_ebit6...storage_kivec4_w_ndx_sbit15_ebit15}
+    k.{storage_kivec4_w_ndx_sbit0_ebit4...storage_kivec4_w_ndx_sbit13_ebit15}
 
 #define STORAGE_KIVEC5_INTR_ADDR              \
     k.{storage_kivec5_intr_addr_sbit0_ebit7...storage_kivec5_intr_addr_sbit40_ebit63}
@@ -225,9 +223,18 @@
 #define CAPRI_DMA_M2M_TYPE_DST      1
 
 #define CLEAR_TABLE_VALID_e(_num)                                       \
-        phvwri.e  p.app_header_table##_num##_valid, 0;                  \
-        nop;                                                            \
+  phvwri.e  p.app_header_table##_num##_valid, 0;                        \
+  nop;                                                                  \
 
+#define LOAD_TABLE_NO_LKUP_PC_IMM_e(_num, _pc)                          \
+  addi      r1, r0, _pc[33:6];                                          \
+  phvwri    p.app_header_table##_num##_valid, 1;                        \
+  phvwri.e  p.{common_te##_num##_phv_table_lock_en...                   \
+               common_te##_num##_phv_table_raw_table_size},             \
+              (0 << 3 | STORAGE_TBL_LOAD_SIZE_0_BITS);                  \
+  phvwrpair p.common_te##_num##_phv_table_pc, r1,                       \
+            p.common_te##_num##_phv_table_addr, r0;                     \
+        
 // Load table 0 based on absolute address
 // table 0 is always the last, so it should be ok to use .e modifiers
 // _pc is in register or in a dvec, AND

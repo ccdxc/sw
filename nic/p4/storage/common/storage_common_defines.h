@@ -17,6 +17,7 @@
 #define STORAGE_TBL_LOAD_SIZE_64_BITS       3
 #define STORAGE_TBL_LOAD_SIZE_128_BITS      4
 #define STORAGE_TBL_LOAD_SIZE_256_BITS      5
+#define STORAGE_TBL_LOAD_SIZE_0_BITS        7
 
 // Offset in bytes of the start of actual NVME command in the NVME backend command
 #define NVME_BE_NVME_CMD_OFFSET		64

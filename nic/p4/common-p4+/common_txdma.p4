@@ -930,6 +930,7 @@ table tx_table_s3_t0 {
         tx_table_s3_t0_action3;
         tx_table_s3_t0_action4;
         tx_table_s3_t0_action5;
+        tx_table_s3_t0_action6;
     }
 }
 
@@ -1005,6 +1006,7 @@ table tx_table_s2_t0 {
         tx_table_s2_t0_action9;
         tx_table_s2_t0_action10;
         tx_table_s2_t0_action11;
+        tx_table_s2_t0_action12;
     }
 }
 

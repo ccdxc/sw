@@ -10,8 +10,8 @@
 #include "INGRESS_p.h"
 
 
-struct s2_tbl_k k;
-struct s2_tbl_seq_barco_ring_push_d d;
+struct s3_tbl_k k;
+struct s3_tbl_seq_barco_ring_push_d d;
 struct phv_ p;
 
 %%
@@ -20,7 +20,7 @@ storage_tx_seq_barco_ring_push_start:
 
    // Calculate the address to which the entry to be pushed has to be 
    // written to in the destination queue. Output will be stored in GPR r7.
-   QUEUE_PUSH_ADDR(STORAGE_KIVEC1_DEVICE_ADDR,  d.p_ndx, STORAGE_KIVEC1_BARCO_DESC_SIZE)
+   QUEUE_PUSH_ADDR(STORAGE_KIVEC4_BARCO_RING_ADDR, d.p_ndx, STORAGE_KIVEC4_BARCO_DESC_SIZE)
    add      r6, d.p_ndx, 1
    // Need to word swap before writing back as the p_ndx is little endian
    phvwr	p.barco_doorbell_data_p_ndx, r6.wx

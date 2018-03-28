@@ -411,9 +411,10 @@ header_type seq_pdma_entry_t {
 header_type seq_barco_entry_t {
   fields {
     barco_desc_addr	: 64;	// Address of the descriptor to push
-    barco_desc_size	: 32;	// Size of the descriptor to push
-    barco_pndx_size	: 16;	// Size of the ring state to be loaded
     barco_pndx_addr	: 34;	// 64 bit address of the doorbell to ring
+    barco_desc_size	:  4;	// Size of the descriptor to push
+    barco_pndx_size	:  3;	// Size of the ring state to be loaded
+    filler		    :  1;
     barco_ring_addr	: 34;	// Address of the ring
 
     // special test batch mode: pndx value is given in entry
@@ -568,7 +569,6 @@ header_type storage_kivec1_t {
     src_qtype		: 3;	// Source LIF type (within the LIF)
     src_qid		: 24;	// Source queue number (within the LIF)
     src_qaddr		: 34;	// Source queue state address
-    barco_desc_size	: 16;	// Barco descriptor size
     device_addr		: 34;	// Address of the consumer index in the SSD qstate (OR)
 				// Barco ring address
     roce_cq_new_cmd	: 1;	// If ROCE CQ entry is a new commmand
@@ -595,7 +595,7 @@ header_type storage_kivec3_t {
 // kivec4: header union with stage_2_stage for table 0
 header_type storage_kivec4_t {
   fields {
-    barco_ring_addr : 64;
+    barco_ring_addr : 34;
     barco_pndx_addr	: 34;
     barco_desc_size	: 4;
     barco_pndx_size	: 3;
@@ -832,7 +832,6 @@ header_type storage_kivec5_t {
   modify_field(scratch.src_qtype, kivec.src_qtype);			\
   modify_field(scratch.src_qid, kivec.src_qid);				\
   modify_field(scratch.src_qaddr, kivec.src_qaddr);			\
-  modify_field(scratch.barco_desc_size, kivec.barco_desc_size);		\
   modify_field(scratch.device_addr, kivec.device_addr);			\
 
 #define STORAGE_KIVEC2_USE(scratch, kivec)				\
@@ -845,10 +844,10 @@ header_type storage_kivec5_t {
   modify_field(scratch.data_addr, kivec.data_addr);			\
 
 #define STORAGE_KIVEC4_USE(scratch, kivec)				\
-  modify_field(scratch.barco_ring_addr, kivec.barco_ring_addr);			\
   modify_field(scratch.barco_pndx_addr, kivec.barco_pndx_addr);			\
   modify_field(scratch.barco_desc_size, kivec.barco_desc_size);			\
   modify_field(scratch.barco_pndx_size, kivec.barco_pndx_size);			\
+  modify_field(scratch.barco_ring_addr, kivec.barco_ring_addr);			\
   modify_field(scratch.w_ndx, kivec.w_ndx);				\
 
 #define STORAGE_KIVEC5_USE(scratch, kivec)				\
@@ -888,6 +887,7 @@ header_type storage_kivec5_t {
 #define seq_comp_status_handler_start	0x80030000
 #define seq_comp_sgl_handler_start	0x80040000
 #define seq_xts_status_handler_start	0x80050000
+#define seq_barco_ring_pndx_read_start	0x80060000
 
 
 #endif     // STORAGE_TX_P4_HDR_H

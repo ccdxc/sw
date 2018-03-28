@@ -110,26 +110,26 @@ action seq_r2n_entry_handler(r2n_wqe_addr, r2n_wqe_size, dst_lif, dst_qtype,
   }
 }
 
-
 /*****************************************************************************
  *  seq_barco_entry_handler: Handle the Barco entry in sequencer. Form the
  *                           DMA command to copy the Barco descriptor as 
  *                           part of the push operation in the next stage.
  *****************************************************************************/
 
-action seq_barco_entry_handler(barco_desc_addr, barco_desc_size, barco_pndx_size,
-                               barco_pndx_addr, barco_ring_addr,
+action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_desc_size,
+                               barco_pndx_size, filler, barco_ring_addr,
 			       barco_batch_pndx, barco_batch_mode, barco_batch_last) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
-  STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
   STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
+  STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_barco_entry_scratch.barco_desc_addr, barco_desc_addr);
+  modify_field(seq_barco_entry_scratch.barco_pndx_addr, barco_pndx_addr);
   modify_field(seq_barco_entry_scratch.barco_desc_size, barco_desc_size);
   modify_field(seq_barco_entry_scratch.barco_pndx_size, barco_pndx_size);
-  modify_field(seq_barco_entry_scratch.barco_pndx_addr, barco_pndx_addr);
+  modify_field(seq_barco_entry_scratch.filler, filler);
   modify_field(seq_barco_entry_scratch.barco_ring_addr, barco_ring_addr);
   modify_field(seq_barco_entry_scratch.barco_batch_pndx, barco_batch_pndx);
   modify_field(seq_barco_entry_scratch.barco_batch_mode, barco_batch_mode);
@@ -137,7 +137,7 @@ action seq_barco_entry_handler(barco_desc_addr, barco_desc_size, barco_pndx_size
 
   // Update the K+I vector with the barco descriptor size to be used 
   // when calculating the offset for the push operation 
-  modify_field(storage_kivec1.barco_desc_size, seq_barco_entry_scratch.barco_desc_size);
+  modify_field(storage_kivec4.barco_desc_size, seq_barco_entry_scratch.barco_desc_size);
   modify_field(storage_kivec1.device_addr, seq_barco_entry_scratch.barco_ring_addr);
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
@@ -160,10 +160,24 @@ action seq_barco_entry_handler(barco_desc_addr, barco_desc_size, barco_pndx_size
                            PHV_FIELD_OFFSET(qpush_doorbell_data.data),
                            0, 0, 0, 0)
 
+  // Advance to common stage for launching Barco ring pindex read.
+  CAPRI_LOAD_TABLE_NO_LKUP(common_te0_phv, seq_barco_ring_pndx_read_start)
+}
+
+/*****************************************************************************
+ *  seq_barco_ring_pndx_read: Common stage for launching
+ *                            table lock read to get the Barco ring pindex.
+ *****************************************************************************/
+
+action seq_barco_ring_pndx_read() {
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
+  
   // Load the Barco ring for the next stage to push the Barco descriptor
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
-                        seq_barco_entry_scratch.barco_pndx_addr,
-                        seq_barco_entry_scratch.barco_pndx_size, 
+                        storage_kivec4.barco_pndx_addr,
+                        storage_kivec4.barco_pndx_size, 
                         seq_barco_ring_push_start)
 }
 
@@ -178,8 +192,8 @@ action seq_barco_entry_handler(barco_desc_addr, barco_desc_size, barco_pndx_size
 action seq_barco_ring_push(p_ndx) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
-  STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
   STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
+  STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(barco_ring_scratch.p_ndx, p_ndx);
@@ -193,7 +207,7 @@ action seq_barco_ring_push(p_ndx) {
   DMA_COMMAND_PHV2MEM_FILL(dma_m2m_2, 
                            storage_kivec1.device_addr +
                            (barco_ring_scratch.p_ndx * 
-                            storage_kivec1.barco_desc_size),
+                            storage_kivec4.barco_desc_size),
                            0, 0,
                            0, 0, 0, 0)
 

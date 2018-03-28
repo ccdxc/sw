@@ -14,14 +14,15 @@ struct s1_tbl_seq_barco_entry_handler_d d;
 struct phv_ p;
 
 %%
-   .param storage_tx_seq_barco_ring_push_start
+   .param storage_tx_seq_barco_ring_pndx_read_start
 
 storage_tx_seq_barco_entry_handler_start:
 
    // Update the K+I vector with the barco descriptor size to be used
    // when calculating the offset for the push operation
-   phvwrpair	p.storage_kivec1_barco_desc_size, d.barco_desc_size[15:0], \
-                p.storage_kivec1_device_addr, d.barco_ring_addr
+   phvwrpair	p.storage_kivec4_barco_ring_addr, d.barco_ring_addr, \
+                p.{storage_kivec4_barco_pndx_addr...storage_kivec4_barco_pndx_size}, \
+                d.{barco_pndx_addr...barco_pndx_size}   // delay slot
   
    // Save the descriptor size in bytes in r7
    sll      r7, 1, d.barco_desc_size
@@ -48,9 +49,10 @@ storage_tx_seq_barco_entry_handler_start:
    // Set the fence bit for the doorbell 
    DMA_PHV2MEM_FENCE(dma_p2m_3)
 
-   // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR34_PC_IMM(d.barco_pndx_addr, d.barco_pndx_size[2:0],
-                                storage_tx_seq_barco_ring_push_start)
+
+   // Advance to a common stage for executing table lock read to get the
+   // Barco ring pindex.
+   LOAD_TABLE_NO_LKUP_PC_IMM_e(0, storage_tx_seq_barco_ring_pndx_read_start)
 
 barco_batch_mode:
 

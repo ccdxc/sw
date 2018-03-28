@@ -362,10 +362,12 @@ XtsCtx::desc_write_seq_xts(dp_mem_t *xts_desc) {
       seq_xts_desc = queues::pvm_sq_consume_entry(seq_xts_q, &seq_xts_index);
       seq_xts_desc->clear();
       seq_xts_desc->write_bit_fields(0, 64, xts_desc->pa());
-      seq_xts_desc->write_bit_fields(64, 32, (uint64_t) log2(xts_desc->line_size_get()));  //2^7 which will be 128 - xts desc size
-      seq_xts_desc->write_bit_fields(96, 16, (uint64_t) log2(xts::kXtsPISize));  //2^2 which will be 4 - prod index size
-      seq_xts_desc->write_bit_fields(146, 34, xts_ring_base_addr);
-      seq_xts_desc->write_bit_fields(112, 34, xts_ring_pi_addr);
+      seq_xts_desc->write_bit_fields(64, 34, xts_ring_pi_addr);
+      seq_xts_desc->write_bit_fields(98, 4, (uint8_t)log2(xts_desc->line_size_get()));
+      seq_xts_desc->write_bit_fields(102, 3, (uint8_t)log2(xts::kXtsPISize));
+
+      // skip 1 filler bit
+      seq_xts_desc->write_bit_fields(106, 34, xts_ring_base_addr);
       seq_xts_desc->write_thru();
   }
 
