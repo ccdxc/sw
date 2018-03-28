@@ -92,7 +92,7 @@ TEST_F(vrf_test, test1)
     pre = hal_test_utils_collect_slab_stats();
 
     // Create vrf
-    ten_spec.mutable_key_or_handle()->set_vrf_id(1);
+    ten_spec.mutable_key_or_handle()->set_vrf_id(20);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
@@ -108,10 +108,11 @@ TEST_F(vrf_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     vrf = (hal::vrf_t *)obj;
+    printf("vrf->vrf_id = %lu\n", vrf->vrf_id);
     ASSERT_TRUE(vrf->vrf_id == 1);
 
     // Get vrf
-    get_req.mutable_key_or_handle()->set_vrf_id(1);
+    get_req.mutable_key_or_handle()->set_vrf_id(20);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_get(get_req, &get_rsp_msg);
     hal::hal_cfg_db_close();
@@ -123,7 +124,7 @@ TEST_F(vrf_test, test1)
     ASSERT_TRUE(get_rsp_msg.response(0).stats().num_endpoints() == 0);
 
     // Delete vrf
-    del_req.mutable_key_or_handle()->set_vrf_id(1);
+    del_req.mutable_key_or_handle()->set_vrf_id(20);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -135,7 +136,7 @@ TEST_F(vrf_test, test1)
     ASSERT_TRUE(is_leak == false);
 
     // Create  2 vrfs
-    ten_spec.mutable_key_or_handle()->set_vrf_id(1);
+    ten_spec.mutable_key_or_handle()->set_vrf_id(20);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
@@ -143,7 +144,7 @@ TEST_F(vrf_test, test1)
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    ten_spec.mutable_key_or_handle()->set_vrf_id(2);
+    ten_spec.mutable_key_or_handle()->set_vrf_id(21);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
@@ -160,24 +161,27 @@ TEST_F(vrf_test, test1)
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    for (uint32_t i = 0; i < uint32_t(get_rsp_msg.response_size()); i++) {
-        ASSERT_TRUE(get_rsp_msg.response(i).spec().key_or_handle().vrf_id() == (i+1));
+    // Default VRF created at HAL init has id 1
+    ASSERT_TRUE(get_rsp_msg.response(0).spec().key_or_handle().vrf_id() == 1);
+
+    for (uint32_t i = 1; i < uint32_t(get_rsp_msg.response_size()); i++) {
+        ASSERT_TRUE(get_rsp_msg.response(i).spec().key_or_handle().vrf_id() == (i+19));
         ASSERT_TRUE(get_rsp_msg.response(i).stats().num_l2_segments() == 0);
         ASSERT_TRUE(get_rsp_msg.response(i).stats().num_security_groups() == 0);
         ASSERT_TRUE(get_rsp_msg.response(i).stats().num_l4lb_services() == 0);
         ASSERT_TRUE(get_rsp_msg.response(i).stats().num_endpoints() == 0);
     }
 
-    // Delete vrf 1 
-    del_req.mutable_key_or_handle()->set_vrf_id(1);
+    // Delete vrf 20 
+    del_req.mutable_key_or_handle()->set_vrf_id(20);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    // Delete vrf 2
-    del_req.mutable_key_or_handle()->set_vrf_id(2);
+    // Delete vrf 21
+    del_req.mutable_key_or_handle()->set_vrf_id(21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -237,8 +241,8 @@ TEST_F(vrf_test, test2)
 
 #if 0
     // Delete vrf
-    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
-    del_req.mutable_key_or_handle()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(2);
+    del_req.mutable_key_or_handle()->set_vrf_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -285,7 +289,7 @@ TEST_F(vrf_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     l2seg = (hal::l2seg_t *)obj;
-    ASSERT_TRUE(l2seg->seg_id == 21);
+    ASSERT_TRUE(l2seg->seg_id == 1);
 
     // Create enicif
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
@@ -359,8 +363,8 @@ TEST_F(vrf_test, test3)
 
 #if 0
     // Delete vrf
-    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
-    del_req.mutable_key_or_handle()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(2);
+    del_req.mutable_key_or_handle()->set_vrf_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -470,8 +474,8 @@ TEST_F(vrf_test, test4)
 
 #if 0
     // Delete vrf
-    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
-    del_req.mutable_key_or_handle()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(2);
+    del_req.mutable_key_or_handle()->set_vrf_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -582,8 +586,8 @@ TEST_F(vrf_test, test5)
 
 #if 0
     // Delete vrf
-    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
-    del_req.mutable_key_or_handle()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(2);
+    del_req.mutable_key_or_handle()->set_vrf_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -794,8 +798,8 @@ TEST_F(vrf_test, test8)
 
 #if 0
     // Delete vrf
-    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
-    del_req.mutable_key_or_handle()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(2);
+    del_req.mutable_key_or_handle()->set_vrf_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -935,8 +939,8 @@ TEST_F(vrf_test, test9)
 
 #if 0
     // Delete vrf
-    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
-    del_req.mutable_key_or_handle()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(2);
+    del_req.mutable_key_or_handle()->set_vrf_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -1433,7 +1437,7 @@ TEST_F(vrf_test, test11)
 
     // Delete vrf with no key or handle
     del_req.mutable_key_or_handle()->set_vrf_id(111);
-    // del_req.mutable_key_or_handle()->set_vrf_id(1);
+    // del_req.mutable_key_or_handle()->set_vrf_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();

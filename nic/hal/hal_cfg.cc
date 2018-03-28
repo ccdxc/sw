@@ -377,6 +377,39 @@ end:
 }
 
 hal_ret_t
+hal_default_vrf_create()
+{
+    VrfSpec                 ten_spec;
+    VrfResponse             ten_rsp;
+    hal_ret_t               ret;
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+
+    return ret;
+}
+
+hal_ret_t
+hal_default_l2segment_create()
+{
+    L2SegmentSpec           l2seg_spec;
+    L2SegmentResponse       l2seg_rsp;
+    hal_ret_t               ret;
+
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_NONE);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close();
+
+    return ret;
+}
+
+hal_ret_t
 hal_default_cfg_init (hal_cfg_t *hal_cfg)
 {
     hal_ret_t    ret;
@@ -389,6 +422,14 @@ hal_default_cfg_init (hal_cfg_t *hal_cfg)
     ret = hal_qos_config_init(hal_cfg);
     HAL_ABORT(ret == HAL_RET_OK);
 
+    // Create default vrf
+    ret = hal_default_vrf_create();
+    HAL_ABORT(ret == HAL_RET_OK);
+
+    // Create default L2 Segment
+    ret = hal_default_l2segment_create();
+    HAL_ABORT(ret == HAL_RET_OK);
+ 
     // TODO acls need cpu interface. Right now, in GFT mode, the
     // hal_cpu_if_create() fails, so cpu interface is not created
     // So skipping installation of acls

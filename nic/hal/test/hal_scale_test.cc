@@ -1407,7 +1407,7 @@ main (int argc, char** argv)
 {
     uint64_t     vrf_handle, l2seg_handle, sg_handle;
     uint64_t     nw1_handle, nw2_handle, uplink_if_handle;
-    uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
+    uint64_t     vrf_id = 100, l2seg_id = 100, sg_id = 1, if_id = 1, nw_id = 1;
     uint32_t     src_ip[15], dst_ip[15];
     EncapInfo    l2seg_encap;
     bool         system_get = false, random = true, send = false;
