@@ -45,6 +45,7 @@ public:
 
     // Getters & Setters
     uint32_t get_num_repl_entries() { return num_repl_entries_; }
+    ReplList *get_repl_list() {return repl_list_;}
     ReplEntry *get_first_repl_entry() { return first_repl_entry_; }
     uint32_t get_repl_table_index() { return repl_table_index_; }
     ReplTableEntry *get_prev() { return prev_; }
@@ -52,7 +53,7 @@ public:
     void set_prev(ReplTableEntry *prev) { prev_ = prev; }
     void set_next(ReplTableEntry *next) { next_ = next; }
     void set_repl_table_index(uint32_t rte_idx) { repl_table_index_ = rte_idx; }
-    
+
 
 
     // Methods

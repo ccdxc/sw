@@ -46,14 +46,28 @@ hal_ret_t pd_oif_list_delete_block(pd_oif_list_delete_block_args_t *args)
 {
     oif_list_id_t list = args->list;
     uint32_t size = args->size;
-    for (uint32_t i = 0; i < size; i++) {
-        pd_oif_list_delete_args_t args;
-        args.list = list + i;
-        // oif_list_delete(list + i);
-        pd_oif_list_delete(&args);
-    }
+    return g_hal_state_pd->met_table()->delete_repl_list_block(list, size);
+}
 
-    return HAL_RET_OK;
+// ----------------------------------------------------------------------------
+// Attach an existing Replication List to another existing Replication List
+// This is useful for jumping to (*, G) entries at the end of (S, G) entries
+// Also helpful in jumping to all-multicast list at the end of specific lists
+// ----------------------------------------------------------------------------
+hal_ret_t pd_oif_list_attach(pd_oif_list_attach_args_t *args)
+{
+    oif_list_id_t frm = args->frm;
+    oif_list_id_t to = args->to;
+    return g_hal_state_pd->met_table()->attach_repl_lists(frm, to);
+}
+
+// ----------------------------------------------------------------------------
+// Detach an existing Replication List from another existing Replication List
+// ----------------------------------------------------------------------------
+hal_ret_t pd_oif_list_detach(pd_oif_list_detach_args_t *args)
+{
+    oif_list_id_t frm = args->frm;
+    return g_hal_state_pd->met_table()->detach_repl_lists(frm);
 }
 
 // Adds an oif to list

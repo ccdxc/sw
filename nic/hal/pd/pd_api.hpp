@@ -1828,6 +1828,15 @@ typedef struct pd_oif_list_delete_block_args_s {
     uint32_t size;
 } __PACK__ pd_oif_list_delete_block_args_t;
 
+typedef struct pd_oif_list_attach_args_s {
+    oif_list_id_t frm;
+    oif_list_id_t to;
+} __PACK__ pd_oif_list_attach_args_t;
+
+typedef struct pd_oif_list_detach_args_s {
+    oif_list_id_t frm;
+} __PACK__ pd_oif_list_detach_args_t;
+
 typedef struct pd_oif_list_add_oif_args_s {
     oif_list_id_t list;
     oif_t *oif;
@@ -2463,7 +2472,9 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_SWPHV_GET_STATE,       206, "PD_FUNC_ID_SWPHV_GET_STATE")\
     ENTRY(PD_FUNC_ID_CLR_HONOR_ING,         207, "PD_FUNC_ID_CLR_HONOR_ING")\
     ENTRY(PD_FUNC_ID_IF_GET,                208, "PD_FUNC_ID_IF_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                   209, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_OIFL_ATTACH,           209, "PD_FUNC_ID_OIFL_ATTACH")\
+    ENTRY(PD_FUNC_ID_OIFL_DETACH,           210, "PD_FUNC_ID_OIFL_DETACH")\
+    ENTRY(PD_FUNC_ID_MAX,                   211, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2709,6 +2720,8 @@ PD_FUNCP_TYPEDEF(pd_oif_list_create);
 PD_FUNCP_TYPEDEF(pd_oif_list_create_block);
 PD_FUNCP_TYPEDEF(pd_oif_list_delete);
 PD_FUNCP_TYPEDEF(pd_oif_list_delete_block);
+PD_FUNCP_TYPEDEF(pd_oif_list_attach);
+PD_FUNCP_TYPEDEF(pd_oif_list_detach);
 PD_FUNCP_TYPEDEF(pd_oif_list_add_oif);
 PD_FUNCP_TYPEDEF(pd_oif_list_add_qp_oif);
 PD_FUNCP_TYPEDEF(pd_oif_list_remove_oif);
@@ -3039,6 +3052,8 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_oif_list_create_block);
         PD_UNION_FIELD(pd_oif_list_delete);
         PD_UNION_FIELD(pd_oif_list_delete_block);
+        PD_UNION_FIELD(pd_oif_list_attach);
+        PD_UNION_FIELD(pd_oif_list_detach);
         PD_UNION_FIELD(pd_oif_list_add_oif);
         PD_UNION_FIELD(pd_oif_list_add_qp_oif);
         PD_UNION_FIELD(pd_oif_list_remove_oif);

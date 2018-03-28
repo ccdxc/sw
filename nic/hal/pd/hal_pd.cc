@@ -288,6 +288,8 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_OIFL_CREATE_BLOCK, pd_oif_list_create_block);
     PD_SYMBOL_LOAD(PD_FUNC_ID_OIFL_DELETE, pd_oif_list_delete);
     PD_SYMBOL_LOAD(PD_FUNC_ID_OIFL_DELETE_BLOCK, pd_oif_list_delete_block);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_OIFL_ATTACH, pd_oif_list_attach);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_OIFL_DETACH, pd_oif_list_detach);
     PD_SYMBOL_LOAD(PD_FUNC_ID_OIFL_ADD_OIF, pd_oif_list_add_oif);
     PD_SYMBOL_LOAD(PD_FUNC_ID_OIFL_ADD_QP_OIF, pd_oif_list_add_qp_oif);
     PD_SYMBOL_LOAD(PD_FUNC_ID_OIFL_REM_OIF, pd_oif_list_remove_oif);
@@ -623,6 +625,8 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_OIFL_CREATE_BLOCK, pd_oif_list_create_block);
     PD_SYMBOL_CALL(PD_FUNC_ID_OIFL_DELETE, pd_oif_list_delete);
     PD_SYMBOL_CALL(PD_FUNC_ID_OIFL_DELETE_BLOCK, pd_oif_list_delete_block);
+    PD_SYMBOL_CALL(PD_FUNC_ID_OIFL_ATTACH, pd_oif_list_attach);
+    PD_SYMBOL_CALL(PD_FUNC_ID_OIFL_DETACH, pd_oif_list_detach);
     PD_SYMBOL_CALL(PD_FUNC_ID_OIFL_ADD_OIF, pd_oif_list_add_oif);
     PD_SYMBOL_CALL(PD_FUNC_ID_OIFL_ADD_QP_OIF, pd_oif_list_add_qp_oif);
     PD_SYMBOL_CALL(PD_FUNC_ID_OIFL_REM_OIF, pd_oif_list_remove_oif);

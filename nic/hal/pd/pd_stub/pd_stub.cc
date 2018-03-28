@@ -247,6 +247,8 @@ PD_FUNC_STUB(pd_oif_list_create);
 PD_FUNC_STUB(pd_oif_list_create_block);
 PD_FUNC_STUB(pd_oif_list_delete);
 PD_FUNC_STUB(pd_oif_list_delete_block);
+PD_FUNC_STUB(pd_oif_list_attach);
+PD_FUNC_STUB(pd_oif_list_detach);
 PD_FUNC_STUB(pd_oif_list_add_oif);
 PD_FUNC_STUB(pd_oif_list_add_qp_oif);
 PD_FUNC_STUB(pd_oif_list_remove_oif);

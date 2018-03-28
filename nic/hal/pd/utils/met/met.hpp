@@ -109,6 +109,9 @@ public:
     hal_ret_t add_replication(uint32_t repl_list_idx, void *data);
     hal_ret_t del_replication(uint32_t repl_list_idx, void *data);
     hal_ret_t delete_repl_list(uint32_t repl_list_idx);
+    hal_ret_t delete_repl_list_block(uint32_t repl_list_idx, uint32_t size);
+    hal_ret_t attach_repl_lists(uint32_t frm_list_idx, uint32_t to_list_idx);
+    hal_ret_t detach_repl_lists(uint32_t frm_list_idx);
 
     hal_ret_t alloc_repl_table_index(uint32_t *idx);
     hal_ret_t free_repl_table_index(uint32_t idx);

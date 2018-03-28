@@ -157,17 +157,19 @@ ReplTableEntry::program_table()
 
     memset(&p4pd_entry, 0, sizeof(p4pd_repl_table_entry));
 
-    p4pd_entry.set_num_tokens(0);
-    p4pd_entry.set_last_entry(1);
-
     for (repl_entry = get_first_repl_entry(); repl_entry;
          repl_entry = repl_entry->get_next()) {
-
         p4pd_entry.set_token(repl_entry->get_data(), i++, repl_entry->get_data_len());
-        p4pd_entry.set_num_tokens(get_num_repl_entries());
+    }
 
-        if (get_next()) {
-            p4pd_entry.set_next_ptr(get_next()->get_repl_table_index());
+    p4pd_entry.set_num_tokens(get_num_repl_entries());
+
+    if (get_next()) {
+        p4pd_entry.set_next_ptr(get_next()->get_repl_table_index());
+        p4pd_entry.set_last_entry(0);
+    } else {
+        if (get_repl_list()->get_attached_list_index() != 0) {
+            p4pd_entry.set_next_ptr(get_repl_list()->get_attached_list_index());
             p4pd_entry.set_last_entry(0);
         } else {
             p4pd_entry.set_next_ptr(0);

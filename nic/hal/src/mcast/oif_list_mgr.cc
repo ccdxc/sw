@@ -40,6 +40,29 @@ hal_ret_t oif_list_delete_block(oif_list_id_t list, uint32_t size)
     return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_DELETE_BLOCK, (void *)&args);
 }
 
+// ----------------------------------------------------------------------------
+// Attach an existing Replication List to another existing Replication List
+// This is useful for jumping to (*, G) entries at the end of (S, G) entries
+// Also helpful in jumping to all-multicast list at the end of specific lists
+// ----------------------------------------------------------------------------
+hal_ret_t oif_list_attach(oif_list_id_t frm, oif_list_id_t to)
+{
+    pd::pd_oif_list_attach_args_t args;
+    args.frm = frm;
+    args.to = to;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_ATTACH, (void *)&args);
+}
+
+// ----------------------------------------------------------------------------
+// Detach an existing Replication List from another existing Replication List
+// ----------------------------------------------------------------------------
+hal_ret_t oif_list_detach(oif_list_id_t frm)
+{
+    pd::pd_oif_list_detach_args_t args;
+    args.frm = frm;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_DETACH, (void *)&args);
+}
+
 // Adds an oif to list
 hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif)
 {

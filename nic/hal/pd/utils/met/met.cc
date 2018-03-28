@@ -183,7 +183,8 @@ hal_ret_t
 Met::delete_repl_list(uint32_t repl_list_idx)
 {
     hal_ret_t               rs = HAL_RET_OK;
-    ReplListMap::iterator   itr; 
+    ReplList                *rep_list = NULL;
+    ReplListMap::iterator   itr;
 
     // Get Repl. List
     itr = repl_list_map_.find(repl_list_idx);
@@ -192,8 +193,12 @@ Met::delete_repl_list(uint32_t repl_list_idx)
         goto end;
     }
 
-    // delete itr->second;
-    ReplList::destroy(itr->second);
+    rep_list = itr->second;
+    if (rep_list) {
+        rep_list->cleanup_last_repl_table_entry();
+        ReplList::destroy(itr->second);
+    }
+
     repl_list_map_.erase(repl_list_idx);
     rs = free_repl_table_index(repl_list_idx);
 
@@ -203,6 +208,134 @@ end:
     stats_update(REMOVE, rs);
     return rs;
 
+}
+
+// ----------------------------------------------------------------------------
+// Delete a block of Replication Lists
+// ----------------------------------------------------------------------------
+hal_ret_t
+Met::delete_repl_list_block(uint32_t repl_list_idx, uint32_t size)
+{
+    hal_ret_t rs = HAL_RET_OK;
+
+    for (uint32_t i = 0; i < size; i++) {
+        rs = delete_repl_list(repl_list_idx + i);
+        if (rs != HAL_RET_OK) {
+            HAL_TRACE_ERR("Met: {}: failed to delete rep list {}!", __FUNCTION__,
+                          repl_list_idx + i);
+            goto end;
+        }
+    }
+
+end:
+    return rs;
+}
+// ----------------------------------------------------------------------------
+// Attach an existing Replication List to another existing Replication List
+// This is useful for jumping to (*, G) entries at the end of (S, G) entries
+// Also helpful in jumping to all-multicast list at the end of specific lists
+// ----------------------------------------------------------------------------
+hal_ret_t
+Met::attach_repl_lists(uint32_t frm_list_idx, uint32_t to_list_idx)
+{
+    ReplListMap::iterator   itr, temp_itr;
+    hal_ret_t               rs = HAL_RET_OK;
+    ReplList                *frm_list = NULL, *temp_list = NULL;
+
+    HAL_TRACE_DEBUG("Met:{}: from {} to {}", __FUNCTION__,
+                    frm_list_idx, to_list_idx);
+
+    // Get Repl. List
+    itr = repl_list_map_.find(frm_list_idx);
+    if (itr == repl_list_map_.end()) {
+        HAL_TRACE_ERR("Met: {}: from list not found!", __FUNCTION__);
+        rs = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+
+    frm_list = itr->second;
+    if (!frm_list) {
+        HAL_TRACE_ERR("Met: {}: from list null!", __FUNCTION__);
+        rs = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+
+    // Get Repl. List
+    itr = repl_list_map_.find(to_list_idx);
+    if (itr == repl_list_map_.end()) {
+        HAL_TRACE_ERR("Met: {}: to list not found!", __FUNCTION__);
+        rs = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+
+    temp_list = itr->second;
+    while (temp_list->get_attached_list_index()) {
+        // The next list is attached to another list
+        if (temp_list->get_attached_list_index() == frm_list->get_repl_tbl_index()) {
+            HAL_TRACE_ERR("{}: circular attachment not allowed!",
+                          __FUNCTION__);
+            rs = HAL_RET_INVALID_ARG;
+            goto end;
+        }
+
+        temp_itr = repl_list_map_.find(temp_list->get_attached_list_index());
+        if (temp_itr == repl_list_map_.end()) {
+            HAL_TRACE_ERR("Met: {}: list not found in attached chain!",
+                          __FUNCTION__);
+            rs = HAL_RET_ENTRY_NOT_FOUND;
+            goto end;
+        }
+
+        temp_list = temp_itr->second;
+    }
+
+    rs = frm_list->attach_to_repl_list(itr->second);
+
+    if (rs != HAL_RET_OK){
+        HAL_TRACE_ERR("Met: {}: Failed with ret {}", __FUNCTION__, rs);
+        goto end;
+    }
+
+end:
+    return rs;
+}
+
+// ----------------------------------------------------------------------------
+// This is the detach function See Comments for attach_repl_lists()
+// ----------------------------------------------------------------------------
+hal_ret_t
+Met::detach_repl_lists(uint32_t frm_list_idx)
+{
+    hal_ret_t               rs = HAL_RET_OK;
+    ReplList                *frm_list = NULL;
+    ReplListMap::iterator   itr;
+
+    HAL_TRACE_DEBUG("Met:{}: from {}", __FUNCTION__, frm_list_idx);
+
+    // Get Repl. List
+    itr = repl_list_map_.find(frm_list_idx);
+    if (itr == repl_list_map_.end()) {
+        HAL_TRACE_ERR("Met: {}: from list not found!", __FUNCTION__);
+        rs = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+
+    frm_list = itr->second;
+    if (!frm_list) {
+        HAL_TRACE_ERR("Met: {}: from list null!", __FUNCTION__);
+        rs = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+
+    rs = frm_list->detach_frm_repl_list();
+
+    if (rs != HAL_RET_OK){
+        HAL_TRACE_ERR("Met: {}: Failed with ret {}", __FUNCTION__, rs);
+        goto end;
+    }
+
+end:
+    return rs;
 }
 
 // ----------------------------------------------------------------------------
@@ -260,7 +393,6 @@ Met::del_replication(uint32_t repl_list_idx, void *data)
 end:
     return rs;
 }
-
 
 // ----------------------------------------------------------------------------
 // Allocate an index in replication table

@@ -48,9 +48,7 @@ ReplList::ReplList(uint32_t repl_tbl_index, Met *met)
     first_repl_tbl_entry_   = NULL;
     last_repl_tbl_entry_    = NULL;
     num_repl_tbl_entries_   = 0;
-
-    // first_repl_tbl_entry_   = new ReplTableEntry(repl_tbl_index_, this);
-    // last_repl_tbl_entry_    = first_repl_tbl_entry_;
+    attached_list_idx_      = 0;
 }
 
 // ----------------------------------------------------------------------------
@@ -61,6 +59,62 @@ ReplList::~ReplList()
     // delete first_repl_tbl_entry_;
 }
 
+hal_ret_t
+ReplList::attach_to_repl_list(ReplList *list)
+{
+    hal_ret_t rs = HAL_RET_OK;
+
+    if (!list) {
+        HAL_TRACE_ERR("{}: from list null!", __FUNCTION__);
+        rs = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+
+    if (get_attached_list_index()) {
+        HAL_TRACE_ERR("{}: List is already attached to {}!", __FUNCTION__,
+                      get_attached_list_index());
+        rs = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("{}: attaching repl_list: {} -> {}", \
+                    __FUNCTION__, get_repl_tbl_index(),
+                    list->get_repl_tbl_index());
+
+    set_attached_list_index(list->get_repl_tbl_index());
+
+    if (last_repl_tbl_entry_) {
+        rs = last_repl_tbl_entry_->program_table();
+    }
+
+end:
+    return rs;
+}
+
+hal_ret_t
+ReplList::detach_frm_repl_list()
+{
+    hal_ret_t rs = HAL_RET_OK;
+
+    if (get_attached_list_index() == 0) {
+        HAL_TRACE_ERR("{}: List is not attached!", __FUNCTION__);
+        rs = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("{}: Detaching repl_list: {} ->x {}", \
+                    __FUNCTION__, get_repl_tbl_index(),
+                    get_attached_list_index());
+
+    set_attached_list_index(0);
+
+    if (last_repl_tbl_entry_) {
+        rs = last_repl_tbl_entry_->program_table();
+    }
+
+end:
+    return rs;
+}
 
 // ----------------------------------------------------------------------------
 // Adding Replication Entry
@@ -125,11 +179,10 @@ ReplList::del_replication(void *data)
                     rs = met_->free_repl_table_index(
                             repl_te->get_repl_table_index());
                     HAL_ASSERT(rs == HAL_RET_OK);
+                    // delete repl_te;
+                    ReplTableEntry::destroy(repl_te);
+                    num_repl_tbl_entries_--;
                 }
-
-                // delete repl_te;
-                ReplTableEntry::destroy(repl_te);
-                num_repl_tbl_entries_--;
             }
             goto end;
         }
@@ -293,6 +346,29 @@ ReplList::initialize_first_repl_table_entry()
         goto end;
     }
     repl_te->program_table();
+
+end:
+    return rs;
+}
+
+hal_ret_t
+ReplList::cleanup_last_repl_table_entry()
+{
+    hal_ret_t       rs       = HAL_RET_OK;
+    ReplTableEntry  *repl_te = last_repl_tbl_entry_;
+
+    if (get_attached_list_index()) {
+        rs = detach_frm_repl_list();
+    }
+
+    if (rs != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: Failed to detach list!", __FUNCTION__);
+        goto end;
+    }
+
+    // delete repl_te;
+    ReplTableEntry::destroy(repl_te);
+    num_repl_tbl_entries_--;
 
 end:
     return rs;
