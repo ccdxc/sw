@@ -27,6 +27,7 @@ req_rx_sqcb1_process_ext:
     CAPRI_SET_FIELD2(TO_S1_P, aeth_msn, CAPRI_APP_DATA_AETH_MSN)
     CAPRI_SET_FIELD2(TO_S1_P, bth_psn, CAPRI_APP_DATA_BTH_PSN)
     CAPRI_SET_FIELD2(TO_S1_P, aeth_syndrome, CAPRI_APP_DATA_AETH_SYNDROME)
+    CAPRI_SET_FIELD2(TO_S1_P, remaining_payload_bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
     nop.e
     nop

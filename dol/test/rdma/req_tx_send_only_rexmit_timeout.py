@@ -89,7 +89,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that retry_time_on is set
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'retry_timer_on', 1):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'timer_on', 1):
             return False
         
     elif step.step_id == 1:
@@ -126,7 +126,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that retry_time_on is set
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'retry_timer_on', 1):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'timer_on', 1):
             return False
         
     elif step.step_id == 2:

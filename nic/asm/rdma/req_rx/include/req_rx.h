@@ -36,12 +36,14 @@ struct req_rx_phv_t {
     //
     //flit 7
     wakeup_dpath_data       : 64;
-    rsvd7                   : (512 - 64);
+    rexmit_psn              : 24;
+    ack_timestamp           : 48;
+    rsvd3                   : (512 - 136);
 
     //flit 6
-    rexmit_psn              : 24;
+    rsvd2                   : 24;
     msn                     : 24;
-    rsvd                    : 3;
+    rsvd1                   : 3;
     credits                 : 5;
     db_data2                : 64;
     db_data1                : 64;

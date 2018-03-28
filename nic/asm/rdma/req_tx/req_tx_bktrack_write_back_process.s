@@ -29,18 +29,15 @@ req_tx_bktrack_write_back_process:
      tblwr         d.current_sge_id, K_CURRENT_SGE_ID
      tblwr         d.current_sge_offset, K_CURRENT_SGE_OFFSET
      tblwr         d.curr_wqe_ptr, K_WQE_ADDR
-     //tblwr         d.curr_op_type, k.args.op_type
 
      seq           c2, CAPRI_KEY_FIELD(IN_P, bktrack_in_progress), 1
      bcf           [c2], update_spec_cindex
      // set SQ c_index to the backtracked value
      tblwr         SQ_C_INDEX, K_SQ_C_INDEX // Branch Delay Slot
 
-     // backtrack RRQ ring TODO with cb_reorg this needs to be done in sqcb1
-     //tblwr         RRQ_P_INDEX, RRQ_C_INDEX
      // Empty backtrack and retransmit timer rings
      tblwr         SQ_BKTRACK_C_INDEX, SQ_BKTRACK_P_INDEX
-     //tblwr         SQ_TIMER_C_INDEX, SQ_TIMER_P_INDEX
+     tblwr         SQ_TIMER_C_INDEX, SQ_TIMER_P_INDEX
 
 update_spec_cindex:
  

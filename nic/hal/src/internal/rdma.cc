@@ -910,6 +910,11 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     //sqcb_p->sqcb1.p4plus_to_p4_flags = (P4PLUS_TO_P4_UPDATE_UDP_LEN |
     //                                    P4PLUS_TO_P4_UPDATE_IP_LEN);
     sqcb_p->sqcb0.pd = spec.pd();
+    // 4.096 * (2 ^ local_ack_timeout) usec or 2 ^ (12 + local_ack_timeout) nsec
+    // Program local_ack_timeout including the multiplication factor of 4096
+    // to avoid MPU from doing the computation
+    sqcb_p->sqcb2.local_ack_timeout = 12 + 2;
+    sqcb_p->sqcb2.exp_rsp_psn = (sqcb_p->sqcb2.tx_psn - 1);
 
     stage0_req_rx_prog_addr(&offset);
     sqcb_p->sqcb0.ring_header.pc = offset >> 6;
@@ -1223,6 +1228,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
         
         case rdma::RDMA_UPDATE_QP_OPER_SET_TX_PSN:
             sqcb_p->sqcb2.tx_psn = spec.tx_psn();
+            sqcb_p->sqcb2.exp_rsp_psn = (sqcb_p->sqcb2.tx_psn - 1);
             sqcb_p->sqcb1.tx_psn = sqcb_p->sqcb2.tx_psn;
             sqcb_p->sqcb1.rexmit_psn = spec.tx_psn();
             HAL_TRACE_DEBUG("{}: Update: Setting tx_psn to: {}", __FUNCTION__,

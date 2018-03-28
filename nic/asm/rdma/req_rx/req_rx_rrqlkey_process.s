@@ -8,7 +8,7 @@ struct key_entry_aligned_t d;
 
 #define IN_P t0_s2s_rrqsge_to_lkey_info
 
-#define K_SGE_VA CAPRI_KEY_RANGE(IN_P, sge_va_sbit0_ebit31, sge_va_sbit56_ebit63)
+#define K_SGE_VA CAPRI_KEY_RANGE(IN_P, sge_va_sbit0_ebit15, sge_va_sbit56_ebit63)
 #define K_SGE_BYTES CAPRI_KEY_RANGE(IN_P, sge_bytes_sbit0_ebit7, sge_bytes_sbit8_ebit15)
 #define K_LOG_PAGE_SIZE CAPRI_KEY_FIELD(IN_P, log_page_size)
 #define K_SGE_INDEX CAPRI_KEY_RANGE(IN_P, sge_index_sbit0_ebit0, sge_index_sbit1_ebit7)

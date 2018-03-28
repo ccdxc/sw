@@ -153,7 +153,6 @@ header_type req_rx_rrqwqe_to_cq_info_t {
 header_type req_rx_sqcb1_to_rrqwqe_info_t {
     fields {
         cur_sge_offset                   :   32;
-        remaining_payload_bytes          :   32;
         cq_id                            :   24;
         cur_sge_id                       :    8;
         e_rsp_psn                        :   24;
@@ -163,6 +162,7 @@ header_type req_rx_sqcb1_to_rrqwqe_info_t {
         timer_active                     :    1;
         dma_cmd_start_index              :    4;
         rrq_cindex                       :    8;
+        rexmit_psn                       :   24;
     }
 }
 
@@ -201,13 +201,14 @@ header_type req_rx_to_stage_t {
         aeth_syndrome                    :    8;
         cqcb_base_addr_page_id           :   22;
         log_num_cq_entries               :    4;
-        pad                              :   46;
+        remaining_payload_bytes          :   16;
+        pad                              :   30;
     }
 }
 
 header_type req_rx_rrqwqe_to_sge_info_t {
     fields {
-        remaining_payload_bytes          :   32;
+        remaining_payload_bytes          :   16;
         cur_sge_offset                   :   32;
         cq_id                            :   24;
         cur_sge_id                       :    8;
@@ -218,7 +219,7 @@ header_type req_rx_rrqwqe_to_sge_info_t {
         dma_cmd_eop                      :    1;
         dma_cmd_start_index              :    4;
         rrq_cindex                       :    8;
-        pad                              :   17;
+        rexmit_psn                       :   24;
     }
 }
 
@@ -231,14 +232,14 @@ header_type req_rx_ecn_info_t {
 
 header_type req_rx_sqcb0_to_sqcb1_info_t {
     fields {
-        remaining_payload_bytes          :   32;
+        remaining_payload_bytes          :   16;
         rrq_cindex                       :    8;
         rrq_empty                        :    1;
         need_credits                     :    1;
         dma_cmd_start_index              :    4;
         ecn_set                          :    1;
         p_key                            :   16;
-        pad                              :   97;
+        pad                              :   103;
     }
 }
 
@@ -274,7 +275,8 @@ header_type req_rx_sqcb1_write_back_info_t {
         last_pkt                         :    1;
         num_sges                         :    8;
         tbl_id                           :    8;
-        pad                              :   65;
+        rexmit_psn                       :   24;
+        pad                              :   41;
     }
 }
 
@@ -1158,7 +1160,7 @@ action req_rx_rrqsge_process () {
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.dma_cmd_eop, t0_s2s_rrqwqe_to_sge_info.dma_cmd_eop);
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.dma_cmd_start_index, t0_s2s_rrqwqe_to_sge_info.dma_cmd_start_index);
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.rrq_cindex, t0_s2s_rrqwqe_to_sge_info.rrq_cindex);
-    modify_field(t0_s2s_rrqwqe_to_sge_info_scr.pad, t0_s2s_rrqwqe_to_sge_info.pad);
+    modify_field(t0_s2s_rrqwqe_to_sge_info_scr.rexmit_psn, t0_s2s_rrqwqe_to_sge_info.rexmit_psn);
 
 }
 action req_rx_rrqwqe_process () {
@@ -1171,11 +1173,11 @@ action req_rx_rrqwqe_process () {
     modify_field(to_s1_to_stage_scr.aeth_syndrome, to_s1_to_stage.aeth_syndrome);
     modify_field(to_s1_to_stage_scr.cqcb_base_addr_page_id, to_s1_to_stage.cqcb_base_addr_page_id);
     modify_field(to_s1_to_stage_scr.log_num_cq_entries, to_s1_to_stage.log_num_cq_entries);
+    modify_field(to_s1_to_stage_scr.remaining_payload_bytes, to_s1_to_stage.remaining_payload_bytes);
     modify_field(to_s1_to_stage_scr.pad, to_s1_to_stage.pad);
 
     // stage to stage
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cur_sge_offset, t0_s2s_sqcb1_to_rrqwqe_info.cur_sge_offset);
-    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.remaining_payload_bytes, t0_s2s_sqcb1_to_rrqwqe_info.remaining_payload_bytes);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cq_id, t0_s2s_sqcb1_to_rrqwqe_info.cq_id);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cur_sge_id, t0_s2s_sqcb1_to_rrqwqe_info.cur_sge_id);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.e_rsp_psn, t0_s2s_sqcb1_to_rrqwqe_info.e_rsp_psn);
@@ -1185,6 +1187,7 @@ action req_rx_rrqwqe_process () {
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.timer_active, t0_s2s_sqcb1_to_rrqwqe_info.timer_active);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.dma_cmd_start_index, t0_s2s_sqcb1_to_rrqwqe_info.dma_cmd_start_index);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.rrq_cindex, t0_s2s_sqcb1_to_rrqwqe_info.rrq_cindex);
+    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.rexmit_psn, t0_s2s_sqcb1_to_rrqwqe_info.rexmit_psn);
 
 }
 action req_rx_sqcb1_process () {
@@ -1213,6 +1216,7 @@ action req_rx_sqcb1_write_back_process () {
     modify_field(t3_s2s_sqcb1_write_back_info_scr.last_pkt, t3_s2s_sqcb1_write_back_info.last_pkt);
     modify_field(t3_s2s_sqcb1_write_back_info_scr.num_sges, t3_s2s_sqcb1_write_back_info.num_sges);
     modify_field(t3_s2s_sqcb1_write_back_info_scr.tbl_id, t3_s2s_sqcb1_write_back_info.tbl_id);
+    modify_field(t3_s2s_sqcb1_write_back_info_scr.rexmit_psn, t3_s2s_sqcb1_write_back_info.rexmit_psn);
     modify_field(t3_s2s_sqcb1_write_back_info_scr.pad, t3_s2s_sqcb1_write_back_info.pad);
 
 }

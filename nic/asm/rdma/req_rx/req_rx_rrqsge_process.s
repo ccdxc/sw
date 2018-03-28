@@ -10,13 +10,14 @@ struct req_rx_s2_t0_k k;
 #define IN_P t0_s2s_rrqwqe_to_sge_info
 
 #define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_sbit0_ebit7, e_rsp_psn_sbit16_ebit23)
-#define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit15, cur_sge_offset_sbit24_ebit31)
+#define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit15, cur_sge_offset_sbit16_ebit31)
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
 #define K_RRQ_CINDEX CAPRI_KEY_RANGE(IN_P, rrq_cindex_sbit0_ebit0, rrq_cindex_sbit1_ebit7)
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
 #define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit16_ebit23)
 #define K_NUM_VALID_SGES CAPRI_KEY_FIELD(IN_P, num_valid_sges)
+#define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit0, rexmit_psn_sbit17_ebit23)
 
 
 #define LOG_PAGE_SIZE  10
@@ -167,6 +168,7 @@ set_arg:
     CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, e_rsp_psn, K_E_RSP_PSN)
     CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD2_C(SQCB1_WRITE_BACK_P, last_pkt, 1, c5)
+    CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, rexmit_psn, K_REXMIT_PSN)
 
     SQCB1_ADDR_GET(r5)
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)

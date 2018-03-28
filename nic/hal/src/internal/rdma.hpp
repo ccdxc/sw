@@ -982,20 +982,21 @@ typedef struct sqcb1_s {
     uint32_t log_pmtu: 5;
     uint32_t congestion_mgmt_enable:1 ;
     uint32_t service:4;
-    uint32_t cq_id:24;       //rx
     uint8_t  log_rrq_size;
     uint32_t rrq_base_addr;  //common
     // RRQ RING for rxdma
     qpcb_ring_t           ring5;
+    uint32_t cq_id:24;       //rx
     uint8_t   pc;
 } PACKED sqcb1_t;
 
 typedef struct sqcb2_s {
-    uint8_t pad[10];
+    uint8_t pad[1];
     uint16_t mss;
     uint16_t timestamp_echo;
     uint16_t timestamp;
 
+    uint32_t exp_rsp_psn:24;
     uint8_t p4plus_to_p4_flags;
 
     uint16_t rrq_pindex;
@@ -1010,9 +1011,12 @@ typedef struct sqcb2_s {
     uint32_t ssn:24;
     uint32_t tx_psn:24;      //tx
 
-    uint8_t  rsvd_flags:6;
+    uint8_t local_ack_timeout:5;
+    uint8_t timer_on:1;
     uint8_t  need_credits:1;
     uint8_t  in_progress:1;
+
+    uint64_t last_ack_or_req_ts:48;
 
     uint32_t rexmit_psn:24;
     uint8_t credits;

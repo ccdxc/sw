@@ -17,6 +17,10 @@ struct common_p4plus_stage0_app_header_table_k k;
 .align
 req_rx_sqcb1_process:
 
+    // copy cur_timestamp loaded in r4 into phv to DMA ack_timestamp
+    // into sqcb2 for valid aeth packet
+    phvwr          p.ack_timestamp, r4
+
     // Check pending_recirc_pkts_max
     sub            r1, d.token_id, d.nxt_to_go_token_id
     mincr          r1, 8, r0
@@ -46,7 +50,7 @@ process_rx_pkt:
     add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS
     beqi           r1, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
     // Get SQCB2 base address 
-    add            r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES*2) // Branch Delay Slot
+    add            r7, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES*2) // Branch Delay Slot
 
     // initialize cqwqe 
     // Initialize cqwqe to success initially
@@ -117,16 +121,16 @@ check_psn:
     // bth.psn >= sqcb1_p->rexmit_psn, valid response
     scwlt24        c1, CAPRI_APP_DATA_BTH_PSN, d.rexmit_psn
 
-    ARE_ALL_FLAGS_SET(c2, r1, REQ_RX_FLAG_AETH)
-    bcf            [!c2 & c1], duplicate_read_resp_mid
+    ARE_ALL_FLAGS_SET(c6, r1, REQ_RX_FLAG_AETH)
+    bcf            [!c6 & c1], duplicate_read_resp_mid
     // rexmit_psn is resp psn + 1
-    add            r1, CAPRI_APP_DATA_BTH_PSN, 1 // Branch Delay Slot
-    mincr          r1, 24, 0
+    add            r5, CAPRI_APP_DATA_BTH_PSN, 1 // Branch Delay Slot
 
     // skip ack sanity checks if there is no aeth hdr
-    bcf            [!c2], post_rexmit_psn
+    bcf            [!c6], post_rexmit_psn
     //phvwr        p.rexmit_psn, r1 // Branch Delay Slot
-    tblwr.!c2      d.rexmit_psn, r1 // Branch Delay Slot
+    //tblwr.!c2      d.rexmit_psn, r1 // Branch Delay Slot
+    mincr          r5, 24, 0
  
 check_ack_sanity:
     // if (msn >= sqcb1_p->ssn) invalid_pkt_msn
@@ -155,9 +159,10 @@ process_aeth:
 
     bcf            [!c5], post_rexmit_psn
     //phvwr.!c5      p.rexmit_psn, CAPRI_APP_DATA_BTH_PSN // Branch Delay Slot
-    tblwr          d.rexmit_psn, CAPRI_APP_DATA_BTH_PSN // Branch Delay Slot
+    //tblwr          d.rexmit_psn, CAPRI_APP_DATA_BTH_PSN // Branch Delay Slot
+    add.!c5        r5, r0, CAPRI_APP_DATA_BTH_PSN // Branch Delay Slot
 
-    tblmincri      d.rexmit_psn, 24, 1
+    //tblmincri      d.rexmit_psn, 24, 1
     // pass last completed msn to avoid posting completion again
     add            r3, d.msn, 0 
     tblwr          d.msn, CAPRI_APP_DATA_AETH_MSN
@@ -171,7 +176,7 @@ process_aeth:
 
 post_credits:
     // dma_cmd - msn and credits
-    add            r4, r5, SQCB2_MSN_OFFSET
+    add            r4, r7, SQCB2_MSN_OFFSET
     DMA_HBM_PHV2MEM_SETUP(r6, msn, credits, r4)
     bcf            [!c1], post_rexmit_psn
     phvwrpair      p.msn, CAPRI_APP_DATA_AETH_MSN, p.credits, CAPRI_APP_DATA_AETH_SYNDROME[4:0]
@@ -188,21 +193,29 @@ post_credits:
 
 post_rexmit_psn:
     bcf            [c3], unsolicited_ack
-    phvwr          p.rexmit_psn, d.rexmit_psn // Branch Delay Slot
+    phvwr          p.rexmit_psn, r5 // Branch Delay Slot
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_REXMIT_PSN)
-    add            r4, r5, SQCB2_REXMIT_PSN_OFFSET
+    bcf            [!c6], dma_rexmit_psn_only
+    add            r4, r7, SQCB2_REXMIT_PSN_OFFSET
+    // if valid ack, update rexmit_psn as well as ack timestamp in sqcb2
+    DMA_HBM_PHV2MEM_SETUP(r6, rexmit_psn, ack_timestamp, r4)
+    b              set_arg
+    nop            // Branch Delay Slot
+
+dma_rexmit_psn_only:
+    // if read_resp_mid, update only rexmit_psn and not ack timestamp
     DMA_HBM_PHV2MEM_SETUP(r6, rexmit_psn, rexmit_psn, r4)
 
 set_arg:
 
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, remaining_payload_bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
     CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, cur_sge_offset, d.rrqwqe_cur_sge_offset)
     CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, cur_sge_id, d.rrqwqe_cur_sge_id)
     CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, rrq_in_progress, d.rrq_in_progress)
     CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, cq_id, d.cq_id)
     CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, e_rsp_psn, d.e_rsp_psn)
     CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, msn, r3)
+    CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, rexmit_psn, r5)
     CAPRI_SET_FIELD2_C(SQCB1_TO_RRQWQE_P, rrq_empty, 1, c4)
     //CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, timer_active, d.timer_active)
     CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, dma_cmd_start_index, REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START)

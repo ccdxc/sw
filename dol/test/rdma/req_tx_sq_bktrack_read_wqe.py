@@ -76,8 +76,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
             return False
         
-        # verify that in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
+        # verify that rrq_in_progress is 0
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
             return False
 
         # verify that p_index of rrq is incremented by 1
@@ -89,12 +89,12 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'msn', 3):
             return False
 
-        # verify that p_index of rrq is not modified
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index5', tc.pvtdata.sq_post_qstate, 'p_index5'):
+        # verify that p_index of rrq is bktracked
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'p_index5', 1):
             return False
 
-        # verify that c_index of rrq is not modified
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index5', tc.pvtdata.sq_post_qstate, 'c_index5'):
+        # verify that c_index of rrq is bktracked
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'c_index5', 0):
             return False
 
         # verify rexmit_psn incremented to 2 
@@ -105,8 +105,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
             return False
 
-        # verify that in_progress is 1
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 1):
+        # verify that rrq_in_progress is 1
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 1):
             return False
 
         # verify that tx_psn is not incremented
@@ -154,8 +154,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
             return False
 
-        # verify that in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
+        # verify that rrq_in_progress is 0
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
             return False
 
         # verify that token_id is incremented by 1
@@ -203,8 +203,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
             return False
 
-        # verify that in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
+        # verify that rrq_in_progress is 0
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
             return False
 
         # verify that token_id is incremented by 1

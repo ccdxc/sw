@@ -85,12 +85,12 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'msn', tc.pvtdata.sq_post_qstate, 'msn'):
             return False
 
-        # verify that p_index of rrq is not modified
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index5', tc.pvtdata.sq_post_qstate, 'p_index5'):
+        # verify that p_index of rrq is bktracked
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'p_index5', 1):
             return False
 
         # verify that c_index of rrq is not modified
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index5', tc.pvtdata.sq_post_qstate, 'c_index5'):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'c_index5', 0):
             return False
 
         # verify rexmit_psn incremented is  increment by 2

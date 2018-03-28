@@ -126,11 +126,11 @@ struct sqcb0_t {
 
 struct sqcb1_t {
     pc                             : 8;
+    cq_id                          : 24; // RO S0
     struct capri_intrinsic_ring_t  ring5; // RRQ Ring
 
     rrq_base_addr                  : 32; // RO S0
     log_rrq_size                   : 8;  // RO S0
-    cq_id                          : 24; // RO S0
     service                        : 4;  // RO S0
     congestion_mgmt_enable         : 1;  // RO S0
     log_pmtu                       : 5;  // RO S0 
@@ -182,9 +182,12 @@ struct sqcb2_t {
     credits                        : 8;  // RO S1 (WO RXDMA)
     rexmit_psn                     : 24; // RO S1 (WO RXDMA)
 
+    last_ack_or_req_ts             : 48; // RW S5 (WO RXDMA)
+
     in_progress                    : 1; // RW S5
     need_credits                   : 1; // RW S5
-    rsvd_flags                     : 6;
+    timer_on                       : 1; // RW S5
+    local_ack_timeout              : 5; // RO S5
 
     tx_psn                         : 24; // RW S5
     ssn                            : 24; // RW S5
@@ -199,13 +202,14 @@ struct sqcb2_t {
     rrq_pindex                     : 16; // RW S5
 
     p4plus_to_p4_flags             : 8; // Not needed ???
+    exp_rsp_psn                    : 24; // RW S5
 
     //Temporary use for DOL - ROCE UDP options
     timestamp                      : 16;
     timestamp_echo                 : 16;
     mss                            : 16;
    
-    pad                            : 80;
+    pad                            : 8;
 };
 
 struct sqcb_t {

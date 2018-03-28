@@ -217,12 +217,11 @@ sqcb_writeback:
     phvwrpair CAPRI_PHV_FIELD(TO_S6_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S7_P, wqe_addr), r5
 
     CAPRI_RESET_TABLE_1_ARG()
-    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, wqe_start_psn), r1, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, tx_psn), r1
-    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, ssn), r6, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, tbl_id), 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, tx_psn), r1, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, ssn), r6
     // Assume send and copy imm_data, inv_key. These fields are looked into
     // only if op_type is send/write
     phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, imm_data), d.send.imm_data, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, inv_key), d.send.inv_key
-    phvwr CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, op_type), d.base.op_type
+    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, op_type), d.base.op_type, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, sq_cindex), r4
 
     SQCB2_ADDR_GET(r5)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_write_back_process, r5)

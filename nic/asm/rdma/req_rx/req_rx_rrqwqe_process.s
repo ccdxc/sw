@@ -15,16 +15,17 @@ struct req_rx_s1_t0_k k;
 
 #define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_sbit0_ebit7, e_rsp_psn_sbit16_ebit23)
 #define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit7, msn_sbit16_ebit23)
-#define K_CUR_SGE_OFFSET CAPRI_KEY_FIELD(IN_P, cur_sge_offset)
+#define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit15, cur_sge_offset_sbit16_ebit31)
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
-#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit15, remaining_payload_bytes_sbit24_ebit31)
 #define K_RRQ_CINDEX CAPRI_KEY_RANGE(IN_P, rrq_cindex_sbit0_ebit0, rrq_cindex_sbit1_ebit7)
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
-#define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit16_ebit23)
+#define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit15, cq_id_sbit16_ebit23)
+#define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit0, rexmit_psn_sbit17_ebit23)
 
 #define K_AETH_SYNDROME CAPRI_KEY_FIELD(IN_TO_S_P, aeth_syndrome)
 #define K_AETH_MSN      CAPRI_KEY_FIELD(IN_TO_S_P, aeth_msn)
 #define K_BTH_PSN  CAPRI_KEY_FIELD(IN_TO_S_P, bth_psn)
+#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit5, remaining_payload_bytes_sbit14_ebit15)
 
 %%
     .param    req_rx_rrqsge_process
@@ -38,6 +39,7 @@ req_rx_rrqwqe_process:
     // TODO ack processing
     add            r5, r0, K_GLOBAL_FLAGS
     ARE_ALL_FLAGS_SET(c1, r5, REQ_RX_FLAG_ACK)
+    add            r6, K_REXMIT_PSN, r0
 
     bcf            [!c1], read_or_atomic
     ARE_ALL_FLAGS_SET(c4, r5, REQ_RX_FLAG_COMPLETION)  // Branch Delay Slot
@@ -52,6 +54,7 @@ ack:
     CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, cur_sge_offset, K_CUR_SGE_OFFSET)
     CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, rrq_in_progress, CAPRI_KEY_FIELD(IN_P, rrq_in_progress))
     CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, tbl_id, 3)
+    CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, rexmit_psn, r6)
     
     CAPRI_SET_TABLE_0_VALID(0);
 
@@ -80,10 +83,13 @@ p_ack:
     // implicit nak, ring bktrack ring setting rexmit_psn to rrqwqe_p->psn
     scwle24        c1, d.psn, K_BTH_PSN // Branch Delay Slot
     seq            c2, CAPRI_KEY_FIELD(IN_P, rrq_in_progress), 1
-    phvwr.!c2      p.rexmit_psn, d.psn 
-    phvwr.c2       p.rexmit_psn, K_E_RSP_PSN
+    cmov           r6, c2, K_E_RSP_PSN, d.psn
+    phvwr          p.rexmit_psn, r6
+    //phvwr.!c2      p.rexmit_psn, d.psn 
+    //phvwr.c2       p.rexmit_psn, K_E_RSP_PSN
     CAPRI_SET_FIELD2_C(SQCB1_WRITE_BACK_P, post_bktrack, 1, c1)
     CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, dma_cmd_eop, 1)
+    CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, rexmit_psn, r6)
 
     // If ack msn in implicit nak is already acked' do not post CQ
     scwle24        c1, r2, K_MSN
@@ -178,6 +184,7 @@ read:
     cmov           r3, c1, K_E_RSP_PSN, d.psn
     add            r3, r3, 1
     CAPRI_SET_FIELD2(RRQWQE_TO_SGE_P, e_rsp_psn, r3)
+    CAPRI_SET_FIELD2(RRQWQE_TO_SGE_P, rexmit_psn, r6)
 
     // if read_resp first contains already ack'ed msn, do not post CQ
     scwle24        c1, r1, K_MSN
@@ -222,6 +229,7 @@ atomic:
     CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, last_pkt, 1)
     CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, tbl_id, 3)
+    CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, rexmit_psn, r6)
 
     //SQCB0_ADDR_GET(r1)
     //add            r6, r1, RRQ_C_INDEX_OFFSET

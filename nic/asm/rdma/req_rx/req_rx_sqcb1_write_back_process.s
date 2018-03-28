@@ -10,6 +10,7 @@ struct sqcb1_t d;
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit15, cur_sge_offset_sbit16_ebit31)
 #define K_E_RSP_PSN CAPRI_KEY_FIELD(IN_P, e_rsp_psn)
+#define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit2, rexmit_psn_sbit19_ebit23)
 
 %%
 
@@ -24,6 +25,7 @@ req_rx_sqcb1_write_back_process:
     tblwr          d.rrqwqe_cur_sge_id, K_CUR_SGE_ID
     tblwr          d.rrqwqe_cur_sge_offset, K_CUR_SGE_OFFSET
     tblwr          d.e_rsp_psn, K_E_RSP_PSN
+    tblwr          d.rexmit_psn, K_REXMIT_PSN
     seq            c1, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), 1
     tblmincri.c1   d.nxt_to_go_token_id, SIZEOF_TOKEN_ID_BITS, 1
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1

@@ -334,8 +334,11 @@ req_tx_add_headers_process:
     .brend
 
 op_type_end:
-   // phv_p->bth.pkey = 0xffff
-   phvwr          BTH_PKEY, 0xffff  
+    // phv_p->bth.pkey = 0xffff
+    phvwr          BTH_PKEY, 0xffff  
+
+    // Store cur tx_psn as exp_rsp_psn, if rsp is expected for this psn
+    add            r7, d.tx_psn, r0
 
     b.!c6          inc_psn
     // phv_p->bth.psn = sqcb1_p->tx_psn
@@ -381,7 +384,7 @@ inc_psn:
     phvwr          BTH_ACK_REQ, 1
     // Disable TX scheduler for this QP until ack is received with credits to
     // send subsequent packets
-    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r3, r4)
+    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r3, r5)
 
 rrq_p_index_chk:
     // do we need to increment rrq_pindex ?
@@ -406,7 +409,28 @@ cb1_byte_update:
     memwr.b        r3, r5
 
     tblwr          d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
-    tblwr.c5       d.need_credits, 1          
+
+    // Skip timer logic if not last/only or read/atomic requests
+    bcf            [!c1 & !c7], load_hdr_template
+    tblwr.c5       d.need_credits, 1 // Branch Delay Slot
+
+    // if retransmit timer is disabled (local_ack_timeout = 0), do not track
+    // timer expiry.
+    // If response is already pending then do not modify lask_ack_or_req_ts.
+    // If (rexmit_psn > previous exp_rsp_psn) update last_ack_or_req_ts
+    // to current request timestamp and start timer if not runing already. In
+    // either case, update exp_rsp_psn to indicate that more responses are
+    // expected
+    seq            c1, d.local_ack_timeout, 0
+    scwle24        c2, d.rexmit_psn, d.exp_rsp_psn
+    bcf            [c1 | c2], load_hdr_template
+    tblwr          d.exp_rsp_psn, r7 // Branch Delay Slot
+    tblwr          d.last_ack_or_req_ts, r4
+    bbeq           d.timer_on, 1, load_hdr_template
+    CAPRI_START_SLOW_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 10)
+    tblwr          d.timer_on, 1
+
+load_hdr_template:
 
     //For UD, ah_handle comes in send req
     seq            c3, d.service, RDMA_SERV_TYPE_UD

@@ -254,12 +254,12 @@ class RdmaSQstate(Packet):
 
         # SQCB1 
         ByteField("pc_offset", 0),
+        X3BytesField("cq_id", 0),
         ShortField("sqcb1_p_index5", 0),
         ShortField("c_index5", 0),
 
         IntField("sqcb1_rrq_base_addr", 0),
         ByteField("sqcb1_log_rrq_size", 0),
-        X3BytesField("cq_id", 0),
         BitField("service", 0, 4),
         BitField("congestion_mgmt_enable", 0, 1),
         BitField("sqcb1_log_pmtu", 0xa, 5),
@@ -307,10 +307,13 @@ class RdmaSQstate(Packet):
         X3BytesField("sqcb2_msn", 0),
         ByteField("sqcb2_credits", 0),
         X3BytesField("sqcb2_rexmit_psn", 0),
+     
+        BitField("last_ack_or_req_ts", 0, 48),
 
         BitField("sqcb2_in_progress", 0, 1),
         BitField("sqcb2_need_credits", 0, 1),
-        BitField("rsvd_flags", 0, 6),
+        BitField("timer_on", 0, 1),
+        BitField("local_ack_timeout", 0, 5),
 
         X3BytesField("tx_psn", 0),
         X3BytesField("ssn", 0),
@@ -324,12 +327,13 @@ class RdmaSQstate(Packet):
         ShortField("p_index5", 0),
 
         ByteField("p4plus_to_p4_flags", 0),
+        X3BytesField("exp_rsp_psn", 0),
 
         ShortField("timestamp", 0),
         ShortField("timestamp_echo", 0),
         ShortField("mss", 0),
 
-        BitField("pad2", 0, 80),
+        BitField("pad2", 0, 8),
     ]
 
 class RdmaCQstate(Packet):

@@ -36,6 +36,7 @@ struct req_tx_s0_t0_k k;
     .param    req_tx_credits_process
     .param    req_tx_bktrack_sqcb2_process
     .param    req_tx_sqcb2_cnp_process
+    .param    req_tx_timer_process
 
 .align
 req_tx_sqcb_process:
@@ -328,7 +329,7 @@ sq_bktrack2:
         phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, pt_base_addr), d.pt_base_addr, CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, sq_in_hbm), d.sq_in_hbm
         
         add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES*2)
-        CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_process, r1)
+        CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_timer_process, r1)
         
         // if (sqcb0_p->in_progress || sqcb0_p->bktracking)
         //     sqcb0_to_sqcb1_info_p->cur_wqe_addr = sqcb0_p->curr_wqe_ptr
