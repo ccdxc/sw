@@ -150,8 +150,8 @@ header_type req_tx_bktrack_sqcb2_write_back_info_t {
         tbl_id                           :    3;
         imm_data                         :   32;
         inv_key                          :   32;
-        op_type                          :    8;
-        pad                              :   12;
+        op_type                          :    4;
+        pad                              :   16;
     }
 }
 
@@ -197,7 +197,7 @@ header_type req_tx_bktrack_to_stage_t {
 header_type req_tx_wqe_to_sge_info_t {
     fields {
         in_progress                      : 1;
-        op_type                          : 8;
+        op_type                          : 4;
         first                            : 1;
         current_sge_id                   : 8;
         num_valid_sges                   : 8;
@@ -206,7 +206,7 @@ header_type req_tx_wqe_to_sge_info_t {
         ah_size                          : 8;
         poll_in_progress                 : 1;
         color                            : 1;
-        rsvd                             : 6;
+        rsvd                             : 10;
         dma_cmd_start_index              : 6;
         imm_data                         : 32;
         inv_key_or_ah_handle             : 32;
@@ -222,10 +222,10 @@ header_type req_tx_sq_bktrack_info_t {
         num_sges                            : 8;
         tx_psn                              : 24;
         ssn                                 : 24;
-        op_type                             : 5;
+        op_type                             : 4;
         sq_p_index_or_imm_data1_or_inv_key1 : 16;
         imm_data2_or_inv_key2               : 16;
-        pad                                 : 10;
+        pad                                 : 11;
     }
 }
 
@@ -241,9 +241,9 @@ header_type req_tx_sqcb0_to_sqcb2_info_t {
         update_credits                   :    1;
         bktrack                          :    1;
         pt_base_addr                     :   32;
-        op_type                          :    5;
+        op_type                          :    4;
         sq_in_hbm                        :    1;
-        pad                              :   38;
+        pad                              :   39;
     }
 }
 
@@ -259,7 +259,7 @@ header_type req_tx_sqcb_write_back_info_t {
         busy                             :    1;
         in_progress                      :    1;
         bktrack_in_progress              :    1;
-        op_type                          :    8;
+        op_type                          :    4;
         first                            :    1;
         last_pkt                         :    1;
         set_fence                        :    1;
@@ -273,7 +273,7 @@ header_type req_tx_sqcb_write_back_info_t {
         poll_in_progress                 :    1;
         color                            :    1;
         poll_failed                      :    1;
-        rsvd                             :    4;
+        rsvd                             :    6;
         op_info                          :   64;
     }
 }
@@ -284,7 +284,7 @@ header_type req_tx_sqcb_write_back_info_rd_t {
         busy                             :    1;
         in_progress                      :    1;
         bktrack_in_progress              :    1;
-        op_type                          :    8;
+        op_type                          :    4;
         first                            :    1;
         last_pkt                         :    1;
         set_fence                        :    1;
@@ -298,7 +298,7 @@ header_type req_tx_sqcb_write_back_info_rd_t {
         poll_in_progress                 :    1;
         color                            :    1;
         poll_failed                      :    1;
-        rsvd                             :    4;
+        rsvd                             :    8;
         op_rd_read_len                   :   32;
         op_rd_log_pmtu                   :    5;
         op_rd_pad                        :   27;
@@ -311,7 +311,7 @@ header_type req_tx_sqcb_write_back_info_send_wr_t {
         busy                             :    1;
         in_progress                      :    1;
         bktrack_in_progress              :    1;
-        op_type                          :    8;
+        op_type                          :    4;
         first                            :    1;
         last_pkt                         :    1;
         set_fence                        :    1;
@@ -325,7 +325,7 @@ header_type req_tx_sqcb_write_back_info_send_wr_t {
         poll_in_progress                 :    1;
         color                            :    1;
         poll_failed                      :    1;
-        rsvd                             :    4;
+        rsvd                             :    8;
         op_send_wr_imm_data              :   32;
         op_send_wr_inv_key_or_ah_handle  :   32;
     }

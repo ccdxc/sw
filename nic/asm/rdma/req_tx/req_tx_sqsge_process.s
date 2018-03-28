@@ -8,7 +8,6 @@ struct req_tx_s3_t0_k k;
 #define SGE_TO_LKEY_T struct req_tx_sge_to_lkey_info_t
 #define SGE_TO_LKEY_P t0_s2s_sge_to_lkey_info
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
-#define SQCB_WRITE_BACK_RD_P t2_s2s_sqcb_write_back_info_rd
 #define SQCB_WRITE_BACK_SEND_WR_P t2_s2s_sqcb_write_back_info_send_wr
 #define WQE_TO_SGE_P t2_s2s_wqe_to_sge_info
 
@@ -17,12 +16,12 @@ struct req_tx_s3_t0_k k;
 #define IN_P t0_s2s_wqe_to_sge_info
 #define IN_TO_S_P to_s3_sq_to_stage
 
-#define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit5, current_sge_id_sbit6_ebit7)
-#define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit5, current_sge_offset_sbit30_ebit31)
-#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit5, remaining_payload_bytes_sbit14_ebit15)
+#define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit1, current_sge_id_sbit2_ebit7)
+#define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit1, current_sge_offset_sbit26_ebit31)
+#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit1, remaining_payload_bytes_sbit10_ebit15)
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
-#define K_NUM_VALID_SGES CAPRI_KEY_RANGE(IN_P, num_valid_sges_sbit0_ebit5, num_valid_sges_sbit6_ebit7)
-#define K_AH_SIZE CAPRI_KEY_RANGE(IN_P, ah_size_sbit0_ebit5, ah_size_sbit6_ebit7)
+#define K_NUM_VALID_SGES CAPRI_KEY_RANGE(IN_P, num_valid_sges_sbit0_ebit1, num_valid_sges_sbit2_ebit7)
+#define K_AH_SIZE CAPRI_KEY_RANGE(IN_P, ah_size_sbit0_ebit1, ah_size_sbit2_ebit7)
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 
 %%
@@ -157,14 +156,10 @@ sge_loop:
     cmov           r3, c1, 1, 0
 
     CAPRI_RESET_TABLE_2_ARG()
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, in_progress, r4)
-    CAPRI_SET_FIELD_RANGE2(SQCB_WRITE_BACK_P, op_type, first, CAPRI_KEY_RANGE(IN_P, op_type_sbit0_ebit6, first))
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, last_pkt, r3)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, num_sges, r5)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, current_sge_id, r1)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, current_sge_offset, r2)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, ah_size, K_AH_SIZE)
-    CAPRI_SET_FIELD_RANGE2(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data, op_send_wr_inv_key_or_ah_handle, CAPRI_KEY_RANGE(IN_P, imm_data_sbit0_ebit7, inv_key_or_ah_handle_sbit24_ebit31))
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, in_progress), r4, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, op_type, first), CAPRI_KEY_RANGE(IN_P, op_type, first)
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, last_pkt), r3, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, num_sges), r5
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), r2, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_id), r1
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, ah_size), K_AH_SIZE, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data, op_send_wr_inv_key_or_ah_handle), CAPRI_KEY_RANGE(IN_P, imm_data_sbit0_ebit7, inv_key_or_ah_handle_sbit24_ebit31)
     // rest of the fields are initialized to default
 
     mfspr          r1, spr_mpuid
@@ -193,13 +188,11 @@ iterate_sges:
     beqi           r4, REQ_TX_DMA_CMD_PYLD_BASE_END, err_no_dma_cmds
     CAPRI_RESET_TABLE_2_ARG() // Branch Delay Slot
     
-    CAPRI_SET_FIELD_RANGE2(WQE_TO_SGE_P, in_progress, inv_key_or_ah_handle, CAPRI_KEY_RANGE(IN_P, in_progress, inv_key_or_ah_handle_sbit24_ebit31))
-    CAPRI_SET_FIELD2(WQE_TO_SGE_P, current_sge_id, r1)
-    CAPRI_SET_FIELD2(WQE_TO_SGE_P, current_sge_offset, r2)
-    CAPRI_SET_FIELD2(WQE_TO_SGE_P, remaining_payload_bytes, r3)
-    CAPRI_SET_FIELD2(WQE_TO_SGE_P, dma_cmd_start_index, r4)
+    phvwr CAPRI_PHV_RANGE(WQE_TO_SGE_P, in_progress, inv_key_or_ah_handle), CAPRI_KEY_RANGE(IN_P, in_progress, inv_key_or_ah_handle_sbit24_ebit31)
+    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_id), r1, CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_offset), r2
+    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, remaining_payload_bytes), r3, CAPRI_PHV_FIELD(WQE_TO_SGE_P, dma_cmd_start_index), r4
     sub            r5, K_NUM_VALID_SGES, 2 
-    CAPRI_SET_FIELD2(WQE_TO_SGE_P, num_valid_sges, r5)
+    phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r5
 
     mfspr          r1, spr_tbladdr
     add            r1, r1, 2, LOG_SIZEOF_SGE_T

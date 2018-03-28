@@ -10,7 +10,7 @@ struct req_tx_s1_t2_k k;
 
 #define WQE_TO_SGE_P t0_s2s_wqe_to_sge_info
 
-#define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit5, current_sge_id_sbit6_ebit7)
+#define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit1, current_sge_id_sbit2_ebit7)
 #define K_WQE_ADDR       CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
 
 %%
@@ -40,7 +40,7 @@ req_tx_sqsge_iterate_process:
 
 trigger_stg3_sqsge_process:
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD_RANGE2(WQE_TO_SGE_P, in_progress, inv_key_or_ah_handle, CAPRI_KEY_RANGE(IN_P, in_progress, inv_key_or_ah_handle_sbit8_ebit31))
+    CAPRI_SET_FIELD_RANGE2(WQE_TO_SGE_P, in_progress, inv_key_or_ah_handle, CAPRI_KEY_RANGE(IN_P, in_progress, inv_key_or_ah_handle_sbit24_ebit31))
 
     //mfspr          r1, spr_tbladdr
 

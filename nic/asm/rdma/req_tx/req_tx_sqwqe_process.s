@@ -106,17 +106,12 @@ set_sge_arg:
 
     // populate stage-2-stage data req_tx_wqe_to_sge_info_t for next stage
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD2(WQE_TO_SGE_P, in_progress, CAPRI_KEY_FIELD(IN_P, in_progress))
-    CAPRI_SET_FIELD2(WQE_TO_SGE_P, first, 1)
-    CAPRI_SET_FIELD2(WQE_TO_SGE_P, num_valid_sges, d.base.num_sges)
-    CAPRI_SET_FIELD2(WQE_TO_SGE_P, remaining_payload_bytes, K_REMAINING_PAYLOAD_BYTES)
-    CAPRI_SET_FIELD2(WQE_TO_SGE_P, dma_cmd_start_index, REQ_TX_DMA_CMD_PYLD_BASE)
-    CAPRI_SET_FIELD2(WQE_TO_SGE_P, op_type, d.base.op_type)
-    CAPRI_SET_FIELD_RANGE2(WQE_TO_SGE_P, imm_data, inv_key_or_ah_handle, d.{send.imm_data...send.inv_key})
+    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, in_progress), CAPRI_KEY_FIELD(IN_P, in_progress), CAPRI_PHV_FIELD(WQE_TO_SGE_P, first), 1
+    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), d.base.num_sges, CAPRI_PHV_FIELD(WQE_TO_SGE_P, remaining_payload_bytes), K_REMAINING_PAYLOAD_BYTES
+    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, op_type), d.base.op_type, CAPRI_PHV_FIELD(WQE_TO_SGE_P, dma_cmd_start_index), REQ_TX_DMA_CMD_PYLD_BASE
+    phvwrpair CAPRI_PHV_RANGE(WQE_TO_SGE_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color), CAPRI_PHV_RANGE(WQE_TO_SGE_P, imm_data, inv_key_or_ah_handle), d.{send.imm_data...send.inv_key}
     // if UD copy ah_handle
-    CAPRI_SET_FIELD2_C(WQE_TO_SGE_P, ah_size, d.ud_send.ah_size, c1)
-    CAPRI_SET_FIELD2_C(WQE_TO_SGE_P, inv_key_or_ah_handle, d.ud_send.ah_handle, c1)
-    CAPRI_SET_FIELD_RANGE2(WQE_TO_SGE_P, poll_in_progress, color, CAPRI_KEY_RANGE(IN_P, poll_in_progress, color))
+    phvwrpair.c1 CAPRI_PHV_FIELD(WQE_TO_SGE_P, ah_size), d.ud_send.ah_size, CAPRI_PHV_FIELD(WQE_TO_SGE_P, inv_key_or_ah_handle), d.ud_send.ah_handle
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r3)
 
@@ -136,11 +131,9 @@ read:
     phvwrpair      RRQWQE_READ_LEN, d.read.length, RRQWQE_READ_WQE_SGE_LIST_ADDR, r2
 
     CAPRI_RESET_TABLE_2_ARG()
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, first, 1)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, last_pkt, 1)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, op_type, r1)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_RD_P, op_rd_read_len, d.read.length)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_RD_P, op_rd_log_pmtu, K_LOG_PMTU)
+    //set first = 1, last_pkt = 1
+    phvwrpair CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_RD_P, op_rd_log_pmtu), K_LOG_PMTU
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_RD_P, op_rd_read_len), d.read.length
     // leave rest of variables to FALSE
 
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
@@ -160,9 +153,8 @@ atomic:
     phvwr          p.{rrqwqe.atomic.sge.va...rrqwqe.atomic.sge.l_key}, d.{atomic.sge.va...atomic.sge.l_key}
  
     CAPRI_RESET_TABLE_2_ARG()
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, first, 1)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, last_pkt, 1)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, op_type, r1)
+    //set first = 1, last_pkt = 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3
     // leave rest of variables to FALSE
 
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
@@ -183,17 +175,15 @@ inline_data:
     // at same offset. So, though argument passing code is passing read.length, 
     // it should work for inline data as well.
 
-    CAPRI_SET_FIELD2(TO_S4_P, packet_len, d.send.length)
+    phvwr CAPRI_PHV_FIELD(TO_S4_P, packet_len), d.send.length
 
     CAPRI_RESET_TABLE_2_ARG()
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, first, 1)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, last_pkt, 1)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, op_type, r1)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, hdr_template_inline, 1)
+    //set first = 1, last_pkt = 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3
     // should work for both send/write as imm_data is located at same offset in wqe for both operations
-    CAPRI_SET_FIELD_RANGE2(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data, op_send_wr_inv_key_or_ah_handle, d.{send.imm_data...send.inv_key})
-    CAPRI_SET_FIELD2_C(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_inv_key_or_ah_handle, r2, c1)
-    CAPRI_SET_FIELD_RANGE2(SQCB_WRITE_BACK_P, poll_in_progress, color, CAPRI_KEY_RANGE(IN_P, poll_in_progress, color))
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, hdr_template_inline), 1, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data, op_send_wr_inv_key_or_ah_handle), d.{send.imm_data...send.inv_key}
+    phvwr.c1 CAPRI_PHV_FIELD(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_inv_key_or_ah_handle), r2
+    phvwr CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color)
     // leave rest of variables to FALSE
 
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
@@ -211,7 +201,7 @@ ud_error:
 
 clear_poll_in_progress:
     CAPRI_RESET_TABLE_2_ARG()
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, poll_failed, 1)
+    phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, poll_failed), 1
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0)

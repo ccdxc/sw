@@ -25,9 +25,9 @@ struct req_tx_s3_t0_k k;
 #define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_TO_S_P, rexmit_psn_sbit0_ebit3, rexmit_psn_sbit20_ebit23)
 #define K_LOG_PMTU   CAPRI_KEY_FIELD(IN_TO_S_P, log_pmtu)
 #define K_SQ_C_INDEX CAPRI_KEY_RANGE(IN_P, sq_c_index_sbit0_ebit7, sq_c_index_sbit8_ebit15)
-#define K_SQ_P_INDEX CAPRI_KEY_RANGE(IN_P, sq_p_index_or_imm_data1_or_inv_key1_sbit0_ebit1, sq_p_index_or_imm_data1_or_inv_key1_sbit10_ebit15)
+#define K_SQ_P_INDEX CAPRI_KEY_RANGE(IN_P, sq_p_index_or_imm_data1_or_inv_key1_sbit0_ebit2, sq_p_index_or_imm_data1_or_inv_key1_sbit11_ebit15)
 #define K_SSN        CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit6, ssn_sbit23_ebit23)
-#define K_IMM_DATA   CAPRI_KEY_RANGE(IN_P, sq_p_index_or_imm_data1_or_inv_key1_sbit0_ebit1, imm_data2_or_inv_key2_sbit10_ebit15)
+#define K_IMM_DATA   CAPRI_KEY_RANGE(IN_P, sq_p_index_or_imm_data1_or_inv_key1_sbit0_ebit2, imm_data2_or_inv_key2_sbit11_ebit15)
 #define K_INV_KEY    K_IMM_DATA
 #define K_NUM_SGES   CAPRI_KEY_RANGE(IN_P, num_sges_sbit0_ebit6, num_sges_sbit7_ebit7)
 #define K_WQE_ADDR   CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
@@ -114,21 +114,15 @@ next_sge_start:
 
     CAPRI_RESET_TABLE_0_ARG()
 
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, tx_psn, r3)
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, ssn, K_SSN)
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, sq_c_index, K_SQ_C_INDEX)
-    //set sq_p_index
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1, K_SQ_P_INDEX)
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, in_progress, 1)
+    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), r3, CAPRI_PHV_FIELD(SQ_BKTRACK_P, ssn), K_SSN
+    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_c_index), K_SQ_C_INDEX, CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1), K_SQ_P_INDEX
     srl            r1, r1, LOG_SIZEOF_SGE_T_BITS
     sub            r1, (HBM_NUM_SGES_PER_CACHELINE - 1), r1
     add            r1, K_CURRENT_SGE_ID, r1
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, current_sge_id, r1)
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, current_sge_offset, r2)
+    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, current_sge_offset), r2, CAPRI_PHV_FIELD(SQ_BKTRACK_P, current_sge_id), r1
     add            r2, K_NUM_SGES, r1
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, num_sges, r2)
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, op_type, CAPRI_KEY_FIELD(IN_P, op_type))
-    CAPRI_SET_FIELD_RANGE2(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1, imm_data2_or_inv_key2, K_IMM_DATA)
+    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, in_progress), 1, CAPRI_PHV_FIELD(SQ_BKTRACK_P, num_sges), r2
+    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, op_type), CAPRI_KEY_FIELD(IN_P, op_type), CAPRI_PHV_RANGE(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1, imm_data2_or_inv_key2), K_IMM_DATA
 
     // sge_addr = wqe_addr + TXWQE_SGE_OFFSET + (sizeof(sge_t) * current_sge_id)
     add          r5,  K_WQE_ADDR, r1, LOG_SIZEOF_SGE_T
@@ -153,30 +147,25 @@ sqcb_writeback:
 
     CAPRI_RESET_TABLE_0_ARG()
 
-    CAPRI_SET_FIELD2(SQCB0_WRITE_BACK_P, in_progress, 1)
-    CAPRI_SET_FIELD2_C(SQCB0_WRITE_BACK_P, bktrack_in_progress, 1, c6)
+    phvwr CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, in_progress), 1
+    phvwr.c6 CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, bktrack_in_progress), 1
 
     srl            r1, r1, LOG_SIZEOF_SGE_T_BITS
     sub            r1, (HBM_NUM_SGES_PER_CACHELINE - 1), r1
     add            r1, K_CURRENT_SGE_ID, r1
-    CAPRI_SET_FIELD2(SQCB0_WRITE_BACK_P, current_sge_offset, r2)
-    CAPRI_SET_FIELD2(SQCB0_WRITE_BACK_P, current_sge_id, r1)
+    phvwrpair CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_offset), r2, CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_id), r1
     //sub            r2, K_NUM_SGES, r1
-    CAPRI_SET_FIELD2(SQCB0_WRITE_BACK_P, num_sges, K_NUM_SGES)
-    CAPRI_SET_FIELD2(SQCB0_WRITE_BACK_P, op_type, CAPRI_KEY_FIELD(IN_P, op_type))
-    CAPRI_SET_FIELD2(SQCB0_WRITE_BACK_P, sq_c_index, K_SQ_C_INDEX)
-    CAPRI_SET_FIELD2_C(SQCB0_WRITE_BACK_P, empty_rrq_bktrack, 1, c7)
+    phvwrpair CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, op_type), CAPRI_KEY_FIELD(IN_P, op_type), CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, num_sges), K_NUM_SGES
+    phvwr CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, sq_c_index), K_SQ_C_INDEX
+    phvwr.c7 CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, empty_rrq_bktrack), 1
 
     SQCB0_ADDR_GET(r5)
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r5)
 
     CAPRI_RESET_TABLE_1_ARG()
-    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_P, skip_wqe_start_psn, 1)
-    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_P, tx_psn, r3)
-    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_P, ssn, K_SSN)
-    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_P, tbl_id, 1)
-    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_P, imm_data, K_IMM_DATA)
-    CAPRI_SET_FIELD2(SQCB2_WRITE_BACK_P, inv_key, K_INV_KEY)
+    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, tx_psn), r3, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, skip_wqe_start_psn), 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, ssn), K_SSN, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, tbl_id), 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, imm_data), K_IMM_DATA, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, inv_key), K_INV_KEY
 
     SQCB2_ADDR_GET(r5)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_write_back_process, r5)

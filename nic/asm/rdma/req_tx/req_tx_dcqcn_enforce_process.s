@@ -22,7 +22,7 @@ struct req_tx_s3_t2_k k;
 
 #define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_PKT_LEN     CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
-#define K_S2S_DATA    k.{common_t2_s2s_s2s_data_sbit0_ebit7...common_t2_s2s_s2s_data_sbit136_ebit159}
+#define K_S2S_DATA    k.{common_t2_s2s_s2s_data_sbit0_ebit7...common_t2_s2s_s2s_data_sbit152_ebit159}
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 
 #define SECS_IN_KSEC         1000
@@ -155,7 +155,7 @@ poll_fail:
 spec_fail:
 drop_phv:
     // DCQCN rate-enforcement failed. Drop PHV. Loading writeback to adjust spec_cindex
-    CAPRI_SET_FIELD2(TO_S5_P, rate_enforce_failed, 1)
+    phvwr CAPRI_PHV_FIELD(TO_S5_P, rate_enforce_failed), 1
 
     SQCB0_ADDR_GET(r2)
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)

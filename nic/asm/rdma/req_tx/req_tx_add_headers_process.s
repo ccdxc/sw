@@ -21,10 +21,10 @@ struct sqcb2_t d;
 #define IN_TO_S_P to_s5_sq_to_stage
 
 #define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
-#define K_OP_TYPE     CAPRI_KEY_RANGE(IN_P, op_type_sbit0_ebit3, op_type_sbit4_ebit7)
+#define K_OP_TYPE     CAPRI_KEY_FIELD(IN_P, op_type)
 #define K_INV_KEY     CAPRI_KEY_RANGE(IN_SEND_WR_P, op_send_wr_inv_key_or_ah_handle_sbit0_ebit7, op_send_wr_inv_key_or_ah_handle_sbit8_ebit31)
 #define K_AH_HANDLE   K_INV_KEY
-#define K_AH_SIZE     CAPRI_KEY_RANGE(IN_P, ah_size_sbit0_ebit6, ah_size_sbit7_ebit7)
+#define K_AH_SIZE     CAPRI_KEY_RANGE(IN_P, ah_size_sbit0_ebit2, ah_size_sbit3_ebit7)
 #define K_IMM_DATA    CAPRI_KEY_FIELD(IN_SEND_WR_P, op_send_wr_imm_data)
 #define K_RD_READ_LEN CAPRI_KEY_FIELD(IN_RD_P, op_rd_read_len)
 #define K_RD_LOG_PMTU CAPRI_KEY_FIELD(IN_RD_P, op_rd_log_pmtu)
@@ -427,12 +427,9 @@ cb1_byte_update:
     phvwrpair      p.roce_options.MSS_value, d.mss, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
 
     CAPRI_RESET_TABLE_3_ARG()
-    CAPRI_SET_FIELD2(ADD_HDR_T, service, d.service) 
-    CAPRI_SET_FIELD2(ADD_HDR_T, hdr_template_inline, CAPRI_KEY_FIELD(IN_P, hdr_template_inline))
-    CAPRI_SET_FIELD2(ADD_HDR_T, header_template_addr, r1)
-    CAPRI_SET_FIELD2(ADD_HDR_T, header_template_size, r2)
-    CAPRI_SET_FIELD_RANGE2(ADD_HDR_T, roce_opt_ts_enable, roce_opt_mss_enable,
-                          d.{roce_opt_ts_enable...roce_opt_mss_enable})
+    phvwrpair CAPRI_PHV_FIELD(ADD_HDR_T, hdr_template_inline), CAPRI_KEY_FIELD(IN_P, hdr_template_inline), CAPRI_PHV_FIELD(ADD_HDR_T, service), d.service
+    phvwrpair CAPRI_PHV_FIELD(ADD_HDR_T, header_template_addr), r1, CAPRI_PHV_FIELD(ADD_HDR_T, header_template_size), r2
+    phvwr CAPRI_PHV_RANGE(ADD_HDR_T, roce_opt_ts_enable, roce_opt_mss_enable), d.{roce_opt_ts_enable...roce_opt_mss_enable}
 
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_add_headers_2_process, r0)
 
