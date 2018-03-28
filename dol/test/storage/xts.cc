@@ -23,7 +23,6 @@ uint32_t gcm_exp_opaque_tag_decr = 0;
 
 const static uint32_t  kAolSize              = 64;
 const static uint32_t  kXtsDescSize          = 128;
-const static uint32_t  kXtsPISize            = 4;
 const static uint32_t  kXtsQueueSize         = 1024;
 
 using namespace dp_mem;
@@ -207,7 +206,7 @@ XtsCtx::~XtsCtx() {
     //if(xts_db) free_host_mem(xts_db);
     return;
   }
-  if(xts_desc_addr) free_host_mem(xts_desc_addr);
+  if(xts_desc) delete xts_desc;
   if(status) free_host_mem(status);
   // TODO: This seems to be crashing - needs investigation
   // if(xts_db) free_host_mem(xts_db);
@@ -224,16 +223,10 @@ unsigned char key[64] = {0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0
   0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e};
 unsigned char iv_src[IV_SIZE] = {0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e};
 
-int XtsCtx::test_seq_xts() {
-  dp_mem_t *seq_xts_desc;
+// Evaluate cmd codes for an upcoming submission
+int
+XtsCtx::cmd_eval_seq_xts(xts::xts_cmd_t& cmd) {
 
-  // Sequencer #1: XTS descriptor
-  seq_xts_desc = queues::pvm_sq_consume_entry(seq_xts_q, &seq_xts_index);
-  seq_xts_desc->clear();
-
-  iv = (unsigned char*)alloc_host_mem(IV_SIZE);
-  memcpy(iv, iv_src, IV_SIZE);
-  xts::xts_cmd_t cmd;
   memset(&cmd, 0, sizeof(cmd));
   cmd.token3 = 0x0;     // xts
   if(!is_gcm) cmd.token4 = 0x4;     // xts
@@ -276,11 +269,138 @@ int XtsCtx::test_seq_xts() {
   break;
   }
 
+  return 0;
+}
+
+// Prefill an XTS descriptor as much as possible.
+// Unfilled that are left for the caller are: 
+//    in_aol, out_aol, db_addr, db_data, cmd, and status
+xts::xts_desc_t * 
+XtsCtx::desc_prefill_seq_xts(dp_mem_t *xts_desc) {
+
+  xts::xts_desc_t *xts_desc_addr = (xts::xts_desc_t *)xts_desc->read();
+
+  iv = (unsigned char*)alloc_host_mem(IV_SIZE);
+  memcpy(iv, iv_src, IV_SIZE);
+
+  // Fill the XTS ring descriptor
+  xts_desc->clear();
+  xts_desc_addr->iv_addr = host_mem_v2p(iv);
+  if(is_gcm) {
+    if(!decr_en) {
+      assert(NULL == auth_tag_addr);
+      auth_tag_addr = alloc_host_mem(64);
+      memset(auth_tag_addr, 0, 64);
+      xts_desc_addr->auth_tag = host_mem_v2p(auth_tag_addr);
+    } else {
+      assert(NULL != auth_tag_addr);
+      xts_desc_addr->auth_tag = host_mem_v2p(auth_tag_addr);
+    }
+  }
+  xts_desc_addr->opaque_tag_en = opa_tag_en;
+  if(!opaque_tag) {
+    if(!is_gcm)
+      xts_desc_addr->opaque_tag = decr_en? ++exp_opaque_tag_decr : ++exp_opaque_tag_encr;
+    else
+      xts_desc_addr->opaque_tag = decr_en? ++gcm_exp_opaque_tag_decr : ++gcm_exp_opaque_tag_encr;
+  } else {
+    xts_desc_addr->opaque_tag = opaque_tag;
+  }
+
+  if(t10_en) {
+    xts_desc_addr->sector_num = start_sec_num;
+    xts_desc_addr->sector_size = sector_size;
+    xts_desc_addr->app_tag = app_tag;
+  } else {
+    xts_desc_addr->sector_num = 0;
+    xts_desc_addr->sector_size = 0;
+    xts_desc_addr->app_tag = 0;
+  }
+  // Ideally below key initialization lines need to be commented out if operation is T10 only
+  // but barco is not fixing this bug - https://github.com/pensando/asic/issues/669
+  if(!key_desc_inited) {
+    if(hal_if::get_key_index((char*)key, types::CRYPTO_KEY_TYPE_AES128, AES256_KEY_SIZE*2, &key128_desc_idx)) {
+      printf("can't create or update xts 128bit key index \n");
+      return nullptr;
+    }
+    if(hal_if::get_key_index((char*)key, types::CRYPTO_KEY_TYPE_AES256, AES256_KEY_SIZE*2, &key256_desc_idx)) {
+      printf("can't create or update xts 256 key index \n");
+      return nullptr;
+    }
+    key_desc_inited = true;
+  }
+  if(key_size == AES128_KEY_SIZE)
+    xts_desc_addr->key_desc_idx = key128_desc_idx;
+  else
+    xts_desc_addr->key_desc_idx = key256_desc_idx;
+
+  return xts_desc_addr;
+}
+
+// Calculate xts producer index addr globals;
+// then fill the next available seq_xts_desc with calculated info
+int
+XtsCtx::desc_write_seq_xts(dp_mem_t *xts_desc) {
+
+  dp_mem_t *seq_xts_desc;
+
+  // Fill xts producer index addr globals
+  if(decr_en)
+    if(!is_gcm) xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX;
+    else xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX;
+  else
+    if(!is_gcm) xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX;
+    else xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX;
+
+  if(hal_if::get_xts_ring_base_address(decr_en, &xts_ring_base_addr, is_gcm) < 0) {
+    printf("can't get xts ring base address \n");
+    return -1;
+  }
+
+  // Fill the XTS Seq descriptor
+  if (use_seq) {
+      seq_xts_desc = queues::pvm_sq_consume_entry(seq_xts_q, &seq_xts_index);
+      seq_xts_desc->clear();
+      seq_xts_desc->write_bit_fields(0, 64, xts_desc->pa());
+      seq_xts_desc->write_bit_fields(64, 34, xts_ring_pi_addr);
+      seq_xts_desc->write_bit_fields(98, 4, (uint8_t)log2(xts_desc->line_size_get()));
+      seq_xts_desc->write_bit_fields(102, 3, (uint8_t)log2(xts::kXtsPISize));
+
+      // skip 1 filler bit
+      seq_xts_desc->write_bit_fields(106, 34, xts_ring_base_addr);
+      seq_xts_desc->write_thru();
+  }
+
+  return 0;
+}
+
+// Calculate xts status producer index addr globals;
+// then fill the next available seq_xts_status_desc with argument info
+int
+XtsCtx::desc_write_seq_xts_status(dp_mem_t *xts_status_desc) {
+
+  dp_mem_t *curr_status_desc;
+
+  // Fill the XTS status Seq descriptor
+  curr_status_desc = queues::pvm_sq_consume_entry(seq_xts_status_q, &seq_xts_status_index);
+  memcpy(curr_status_desc->read(), xts_status_desc->read(),
+         curr_status_desc->line_size_get());
+  curr_status_desc->write_thru();
+
+  return 0;
+}
+
+int XtsCtx::test_seq_xts() {
+  xts::xts_desc_t *xts_desc_addr;
+  xts::xts_cmd_t cmd;
+
+  cmd_eval_seq_xts(cmd);
+
   assert(num_aols <= MAX_AOLS); // Currently we only support upto 2 - min required to validate aol chaining
   assert(num_sub_aols <= MAX_SUB_AOLS); // Currently we only support upto 4 - min required to validate aol chaining
   assert(sizeof(xts::xts_desc_t) == kXtsDescSize);
-  xts_desc_addr = (xts::xts_desc_t*)alloc_host_mem(sizeof(xts::xts_desc_t));
-  memset(xts_desc_addr, 0, sizeof(xts::xts_desc_t));
+  xts_desc = new dp_mem_t(1, kXtsDescSize,
+                          DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
 
   assert(sizeof(xts::xts_aol_t) == kAolSize);
   memset(in_aol, 0x0, sizeof(in_aol));
@@ -347,85 +467,16 @@ int XtsCtx::test_seq_xts() {
     xts_db_addr = host_mem_v2p(xts_db);
 
   // Fill the XTS ring descriptor
+  xts_desc_addr = desc_prefill_seq_xts(xts_desc);
   xts_desc_addr->in_aol = host_mem_v2p(in_aol[0]);
   xts_desc_addr->out_aol = host_mem_v2p(out_aol[0]);
-  xts_desc_addr->iv_addr = host_mem_v2p(iv);
-  if(is_gcm) {
-    if(!decr_en) {
-      assert(NULL == auth_tag_addr);
-      auth_tag_addr = alloc_host_mem(64);
-      memset(auth_tag_addr, 0, 64);
-      xts_desc_addr->auth_tag = host_mem_v2p(auth_tag_addr);
-    } else {
-      assert(NULL != auth_tag_addr);
-      xts_desc_addr->auth_tag = host_mem_v2p(auth_tag_addr);
-    }
-  }
   xts_desc_addr->db_addr = xts_db_addr;
   xts_desc_addr->db_data = exp_db_data;
-  if(opa_tag_en) xts_desc_addr->opaque_tag_en = 1;
-  else xts_desc_addr->opaque_tag_en = 0;
-  if(!opaque_tag) {
-    if(!is_gcm)
-      xts_desc_addr->opaque_tag = decr_en? ++exp_opaque_tag_decr : ++exp_opaque_tag_encr;
-    else
-      xts_desc_addr->opaque_tag = decr_en? ++gcm_exp_opaque_tag_decr : ++gcm_exp_opaque_tag_encr;
-  } else {
-    xts_desc_addr->opaque_tag = opaque_tag;
-  }
-
-  if(t10_en) {
-    xts_desc_addr->sector_num = start_sec_num;
-    xts_desc_addr->sector_size = sector_size;
-    xts_desc_addr->app_tag = app_tag;
-  } else {
-    xts_desc_addr->sector_num = 0;
-    xts_desc_addr->sector_size = 0;
-    xts_desc_addr->app_tag = 0;
-  }
   xts_desc_addr->cmd = cmd;
   xts_desc_addr->status = host_mem_v2p(status);
+  xts_desc->write_thru();
 
-  // Ideally below key initialization lines need to be commented out if operation is T10 only
-  // but barco is not fixing this bug - https://github.com/pensando/asic/issues/669
-  if(!key_desc_inited) {
-    if(hal_if::get_key_index((char*)key, types::CRYPTO_KEY_TYPE_AES128, AES256_KEY_SIZE*2, &key128_desc_idx)) {
-      printf("can't create or update xts 128bit key index \n");
-      return -1;
-    }
-    if(hal_if::get_key_index((char*)key, types::CRYPTO_KEY_TYPE_AES256, AES256_KEY_SIZE*2, &key256_desc_idx)) {
-      printf("can't create or update xts 256 key index \n");
-      return -1;
-    }
-    key_desc_inited = true;
-  }
-  if(key_size == AES128_KEY_SIZE)
-    xts_desc_addr->key_desc_idx = key128_desc_idx;
-  else
-    xts_desc_addr->key_desc_idx = key256_desc_idx;
-
-  // Fill xts producer index addr
-  if(decr_en)
-    if(!is_gcm) xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX;
-    else xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX;
-  else
-    if(!is_gcm) xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX;
-    else xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX;
-
-  if(hal_if::get_xts_ring_base_address(decr_en, &xts_ring_base_addr, is_gcm) < 0) {
-    printf("can't get xts ring base address \n");
-    return -1;
-  }
-
-  if(use_seq) {
-    // Fill the XTS Seq descriptor
-    seq_xts_desc->write_bit_fields(0, 64, host_mem_v2p(xts_desc_addr));
-    seq_xts_desc->write_bit_fields(64, 32, (uint64_t) log2(kXtsDescSize));  //2^7 which will be 128 - xts desc size
-    seq_xts_desc->write_bit_fields(96, 16, (uint64_t) log2(kXtsPISize));  //2^2 which will be 4 - prod index size
-    seq_xts_desc->write_bit_fields(146, 34, xts_ring_base_addr);
-    seq_xts_desc->write_bit_fields(112, 34, xts_ring_pi_addr);
-    seq_xts_desc->write_thru();
-  }
+  desc_write_seq_xts(xts_desc);
 
   int rv = 0;
   if(copy_desc || ring_db) {
@@ -450,7 +501,7 @@ int XtsCtx::ring_doorbell() {
     }
 
     uint64_t ring_addr = xts_ring_base_addr + kXtsDescSize * pi;
-    write_mem(ring_addr, (uint8_t*)xts_desc_addr, kXtsDescSize);
+    write_mem(ring_addr, (uint8_t*)xts_desc->read(), kXtsDescSize);
     pi += 1;
     if(pi == kXtsQueueSize) pi = 0; // roll-over case
     if(ring_db) {
@@ -776,7 +827,7 @@ int xts_multi_blk() {
   }
 
 done:
-  delete ctx;
+  delete[] ctx;
   free_host_mem(in_buffer);
   free_host_mem(stg_buffer);
   free_host_mem(out_buffer);

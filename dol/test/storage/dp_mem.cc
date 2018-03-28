@@ -252,8 +252,33 @@ dp_mem_t::read(void)
 uint8_t *
 dp_mem_t::read_thru(void)
 {
+    uint8_t     *curr_cache_addr;
+    uint64_t    curr_read_addr;
+    uint32_t    curr_read_size;
+    uint32_t    total_read_size;
+
     if (is_mem_type_hbm()) {
-        read_mem(hbm_line_addr(), cache_line_addr(), line_size);
+
+        /*
+         * read_mem has an upper size limit so break up into multiple 
+         * reads as necessary
+         */
+        if (line_size <= DP_HBM_WRITE_READ_UPPER_LIMIT) {
+            read_mem(hbm_line_addr(), cache_line_addr(), line_size);
+            return read();
+        }
+
+        curr_cache_addr = cache_line_addr();
+        curr_read_addr = hbm_line_addr();
+        total_read_size = line_size;
+        while (total_read_size) {
+            curr_read_size = total_read_size > DP_HBM_WRITE_READ_UPPER_LIMIT ?
+                             DP_HBM_WRITE_READ_UPPER_LIMIT : total_read_size;
+            read_mem(curr_read_addr, curr_cache_addr, curr_read_size);
+            curr_cache_addr += curr_read_size;
+            curr_read_addr += curr_read_size;
+            total_read_size -= curr_read_size;
+        }
     }
     return read();
 }
@@ -289,8 +314,33 @@ dp_mem_t::write_bit_fields(uint32_t start_bit_offset,
 void
 dp_mem_t::write_thru(void)
 {
+    uint8_t     *curr_cache_addr;
+    uint64_t    curr_write_addr;
+    uint32_t    curr_write_size;
+    uint32_t    total_write_size;
+
     if (is_mem_type_hbm()) {
-        write_mem(hbm_line_addr(), cache_line_addr(), line_size);
+
+        /*
+         * write_mem has an upper size limit so break up into multiple 
+         * writes as necessary
+         */
+        if (line_size <= DP_HBM_WRITE_READ_UPPER_LIMIT) {
+            write_mem(hbm_line_addr(), cache_line_addr(), line_size);
+            return;
+        }
+
+        curr_cache_addr = cache_line_addr();
+        curr_write_addr = hbm_line_addr();
+        total_write_size = line_size;
+        while (total_write_size) {
+            curr_write_size = total_write_size > DP_HBM_WRITE_READ_UPPER_LIMIT ? 
+                              DP_HBM_WRITE_READ_UPPER_LIMIT : total_write_size;
+            write_mem(curr_write_addr, curr_cache_addr, curr_write_size);
+            curr_cache_addr += curr_write_size;
+            curr_write_addr += curr_write_size;
+            total_write_size -= curr_write_size;
+        }
     }
 }
 

@@ -14,6 +14,9 @@
 #define tx_table_s4_t0		s4_tbl
 #define tx_table_s5_t0		s5_tbl
 
+#define tx_table_s1_t1		s1_tbl1
+#define tx_table_s3_t1		s3_tbl1
+
 #define tx_table_s0_t0_action	q_state_pop
 #define tx_table_s0_t0_action1	pri_q_state_pop
 #define tx_table_s0_t0_action2	roce_cq_cb_pop
@@ -29,12 +32,14 @@
 #define tx_table_s1_t0_action7	seq_barco_entry_handler
 #define tx_table_s1_t0_action8	roce_cq_handler
 #define tx_table_s1_t0_action9	pvm_roce_sq_wqe_process
-#define tx_table_s1_t0_action10	seq_comp_status_desc_handler
+#define tx_table_s1_t0_action10	seq_comp_status_desc0_handler
+#define tx_table_s1_t0_action11	seq_xts_status_desc_handler
+
+#define tx_table_s1_t1_action	seq_comp_status_desc1_handler
 
 #define tx_table_s2_t0_action	q_state_push
 #define tx_table_s2_t0_action1	seq_q_state_push
 #define tx_table_s2_t0_action2	pci_q_state_push
-#define tx_table_s2_t0_action3	seq_barco_ring_push
 #define tx_table_s2_t0_action4	nvme_be_wqe_prep
 #define tx_table_s2_t0_action5	nvme_be_cmd_handler
 #define tx_table_s2_t0_action6	nvme_be_wqe_handler
@@ -42,13 +47,18 @@
 #define tx_table_s2_t0_action8	roce_rq_push
 #define tx_table_s2_t0_action9	seq_pvm_roce_sq_cb_push
 #define tx_table_s2_t0_action10	seq_comp_status_handler
+#define tx_table_s2_t0_action11	seq_xts_status_handler
+#define tx_table_s2_t0_action12	seq_barco_ring_pndx_read
 
 #define tx_table_s3_t0_action	pri_q_state_push
 #define tx_table_s3_t0_action1	pri_q_state_incr
 #define tx_table_s3_t0_action2	pri_q_state_decr
 #define tx_table_s3_t0_action3	roce_r2n_wqe_prep
 #define tx_table_s3_t0_action4	pvm_roce_sq_cb_update
-#define tx_table_s3_t0_action5	seq_comp_sgl_handler
+#define tx_table_s3_t0_action5	seq_barco_ring_push
+#define tx_table_s3_t0_action6	seq_barco_chain_action
+
+#define tx_table_s3_t1_action	seq_comp_sgl_handler
 
 #define tx_table_s4_t0_action	nvme_be_wqe_save
 #define tx_table_s4_t0_action1	nvme_be_wqe_release
@@ -134,6 +144,15 @@ metadata barco_ring_t barco_doorbell_data;
 // for RDMA Write command
 @pragma dont_trim
 metadata storage_capri_addr_t r2n_data_buff_addr;
+
+// Compression output data length and computed pad length
+@pragma dont_trim
+metadata barco_aol_len_t data_len;
+@pragma dont_trim
+metadata barco_aol_len_t pad_len;
+@pragma dont_trim
+metadata barco_aol_len_t total_len;
+
 
 // DMA commands metadata
 @pragma dont_trim
@@ -295,13 +314,22 @@ metadata roce_rq_wqe_t roce_rq_wqe_scratch;
 metadata roce_sq_xlate_entry_t roce_sq_xlate_entry_scratch;
 
 @pragma scratch_metadata
-metadata seq_comp_status_desc_t seq_comp_status_desc_scratch;
+metadata seq_comp_status_desc0_t seq_comp_status_desc0_scratch;
+
+@pragma scratch_metadata
+metadata seq_comp_status_desc1_t seq_comp_status_desc1_scratch;
 
 @pragma scratch_metadata
 metadata seq_comp_status_t seq_comp_status_scratch;
 
 @pragma scratch_metadata
 metadata seq_comp_sgl_t seq_comp_sgl_scratch;
+
+@pragma scratch_metadata
+metadata seq_xts_status_desc_t seq_xts_status_desc_scratch;
+
+@pragma scratch_metadata
+metadata seq_xts_status_t seq_xts_status_scratch;
 
 /*****************************************************************************
  * Storage Tx PVM initiator BEGIN

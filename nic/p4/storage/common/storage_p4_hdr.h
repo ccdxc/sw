@@ -206,6 +206,13 @@ header_type storage_pci_data_t  {
 
 // Load a table based on fixed base, index and fixed size
 // Size * index is used to determine offset beyond table base
+#define CAPRI_LOAD_TABLE_NO_LKUP(i, _pc)				\
+  modify_field(i.table_pc, _pc);					\
+  modify_field(i.table_addr, 0);	                                \
+  modify_field(i.table_raw_table_size, STORAGE_TBL_LOAD_SIZE_0_BITS);   \
+  
+// Load a table based on fixed base, index and fixed size
+// Size * index is used to determine offset beyond table base
 #define CAPRI_LOAD_TABLE_IDX(i, _table_base, _idx, _entry_size, 	\
                              _load_size, _pc)				\
   modify_field(i.table_pc, _pc);					\

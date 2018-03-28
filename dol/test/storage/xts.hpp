@@ -68,6 +68,8 @@ namespace xts {
 #define INTER_SUB_AOL_GAP SECTOR_SIZE
 #define STATUS_DEF_VALUE 0
 
+static constexpr uint32_t kXtsPISize = sizeof(uint32_t);
+
 typedef struct xts_aol_ {
   uint64_t a0;
   uint32_t o0;
@@ -123,6 +125,22 @@ typedef struct xts_prot_info_ {
   uint32_t sector_num;
 } __attribute__((packed)) xts_prot_info_t;
 
+typedef struct xts_status_desc_ {
+  uint64_t     db_addr;
+  uint64_t     db_data;
+  uint64_t     status_hbm_pa;
+  uint64_t     status_host_pa;
+  uint64_t     intr_pa;		// MSI-X Interrupt address
+  uint32_t     intr_data;	// MSI-X Interrupt data
+  uint16_t     status_len;
+  uint8_t      status_dma_en:1,
+               next_doorbell_en:1,
+               intr_en:1,
+               is_next_db_barco_push:1,
+               stop_chain_on_error:1;
+  uint8_t      pad[17];
+} __attribute__((packed)) xts_status_desc_t;
+
 inline uint32_t get_output_size(uint32_t ip_size, uint32_t sector_size) {
 	return (ip_size + (ip_size/sector_size) * PROT_INFO_SIZE);
 }
@@ -167,19 +185,24 @@ public:
   std::string get_name(bool chain = false);
   XtsCtx();
   ~XtsCtx();
+  int cmd_eval_seq_xts(xts::xts_cmd_t& cmd);
+  xts::xts_desc_t *desc_prefill_seq_xts(dp_mem_t *xts_desc);
+  int desc_write_seq_xts(dp_mem_t *xts_desc);
+  int desc_write_seq_xts_status(dp_mem_t *xts_status_desc);
   int test_seq_xts();
   int ring_doorbell();
   int verify_doorbell();
   int queue_req_n_ring_db_from_host();
 
   void* src_buf = (void*)write_buf->va();
-  bool is_src_hbm_buf = false;
+  bool is_src_hbm_buf = write_buf->is_mem_type_hbm();
   void* dst_buf = (void*)read_buf->va();
-  bool is_dst_hbm_buf = false;
+  bool is_dst_hbm_buf = read_buf->is_mem_type_hbm();
   void* src_buf_phy = NULL;
   void* dst_buf_phy = NULL;
 
   uint16_t seq_xts_q;
+  uint16_t seq_xts_status_q;
   uint32_t num_sectors = 1;
   xts::Op op;
   uint32_t key_size = AES128_KEY_SIZE;
@@ -194,7 +217,8 @@ public:
   bool ring_db = true;
   bool verify_db = true;
   uint16_t seq_xts_index = 0;
-  xts::xts_desc_t* xts_desc_addr = NULL;
+  uint16_t seq_xts_status_index = 0;
+  dp_mem_t* xts_desc = NULL;
   unsigned char* iv = NULL;
 
   // ctx data needed for verification of op completion
