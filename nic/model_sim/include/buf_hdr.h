@@ -2,10 +2,8 @@
 #define BUF_HDR_H_
 #include <stdint.h>
 
-#include <stdint.h>
-
-#define MODEL_ZMQ_BUFF_SIZE     12288
-#define MODEL_ZMQ_MEM_BUFF_SIZE 12288
+#define MODEL_ZMQ_BUFF_SIZE         12288
+#define MODEL_ZMQ_MEM_BUFF_SIZE     12288
 
 typedef enum buff_type_e_ {
     BUFF_TYPE_STEP_PKT = 0,

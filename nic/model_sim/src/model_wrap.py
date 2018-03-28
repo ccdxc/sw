@@ -52,7 +52,6 @@ def step_network_pkt (pkt, port):
     return
 
 def get_next_pkt ():
-    buffsize = 4096
     socket = zmq_connect()
     buff = pack('iiiiiiiQ', 1, 0, 0, 0, 0, 0, 0, 0)
     try:
@@ -68,7 +67,6 @@ def get_next_pkt ():
     return (pkt, port+1, cos)
 
 def get_next_cpu_pkt ():
-    buffsize = 4096
     socket = zmq_connect()
     buff = pack('iiiiiiiQ', 10, 0, 0, 0, 0, 0, 0, 0)
     try:

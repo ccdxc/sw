@@ -135,7 +135,7 @@ void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
 
     if (__lmodel_env)
         return;
-    if (pkt.size() > 4000)
+    if (buff->size > MODEL_ZMQ_BUFF_SIZE)
         assert(0);
     memcpy(buff->data, pkt.data(), buff->size);
     rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
@@ -159,7 +159,7 @@ void step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
 
     if (__lmodel_env)
         return;
-    if (buff->size > 4000)
+    if (buff->size > MODEL_ZMQ_BUFF_SIZE)
         assert(0);
     memcpy(buff->data, pkt, buff->size);
     rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
