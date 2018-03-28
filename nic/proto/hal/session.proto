@@ -290,11 +290,11 @@ message SessionGetRequestMsg {
 }
 
 // FlowStats contains all the stats collected per flow
-// TODO - Srini please add all that we have in P4 for now
 message FlowStats {
-  fixed32    flow_packets      = 1;
-  fixed64    flow_bytes        = 2;
-  fixed32    rexmit_packets    = 3;
+  fixed64    flow_permitted_packets      = 1;
+  fixed64    flow_permitted_bytes        = 2;
+  fixed64    flow_dropped_packets        = 3;
+  fixed64    flow_dropped_bytes          = 4;
 }
 
 // SessionStats captures statistics of all its constituent flows

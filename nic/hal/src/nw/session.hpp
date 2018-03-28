@@ -244,6 +244,8 @@ typedef struct flow_state_s {
     uint32_t        last_pkt_ts;         // last packet timestamp
     uint64_t        packets;             // packet count on this flow
     uint64_t        bytes;               // byte count on this flow
+    uint64_t        drop_packets;        // packets dropped for this flow
+    uint64_t        drop_bytes;          // bytes dropped for this flow
     uint32_t        exception_bmap;      // exceptions seen on this flow
     FlowTCPState    state;               // flow state
 

@@ -1049,6 +1049,8 @@ pd_flow_get (pd_flow_get_args_t *args)
         args->flow_state->last_pkt_ts = d.flow_stats_action_u.flow_stats_flow_stats.last_seen_timestamp;
         args->flow_state->packets = d.flow_stats_action_u.flow_stats_flow_stats.permit_packets;
         args->flow_state->bytes = d.flow_stats_action_u.flow_stats_flow_stats.permit_bytes;
+        args->flow_state->drop_packets = d.flow_stats_action_u.flow_stats_flow_stats.drop_packets;
+        args->flow_state->drop_bytes = d.flow_stats_action_u.flow_stats_flow_stats.drop_bytes;
     }
     
     return ret;
