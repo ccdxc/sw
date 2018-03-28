@@ -30,6 +30,9 @@ const (
 	halGRPCDefaultPort    = "50054"
 )
 
+// ErrHALNotOK is returned by HAL gRPC Server on failed requests
+var ErrHALNotOK = errors.New("hal returned non zero error code")
+
 // Kind holds the HAL Datapath kind. It could either be mock HAL or real HAL.
 type Kind string
 
@@ -719,11 +722,23 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) err
 		Request: []*halproto.L2SegmentSpec{&seg},
 	}
 
-	// create the l2 segment
-	_, err := hd.Hal.Netclient.L2SegmentCreate(context.Background(), &segReq)
-	if err != nil {
-		log.Errorf("Error creating network. Err: %v", err)
-		return err
+	// create the tenant. Enforce HAL Status == OK for HAL datapath
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Netclient.L2SegmentCreate(context.Background(), &segReq)
+		if err != nil {
+			log.Errorf("Error creating network. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Netclient.L2SegmentCreate(context.Background(), &segReq)
+		if err != nil {
+			log.Errorf("Error creating tenant. Err: %v", err)
+			return err
+		}
 	}
 
 	return nil
@@ -942,16 +957,30 @@ func (hd *Datapath) CreateTenant(tn *netproto.Tenant) error {
 				VrfId: tn.Status.TenantID,
 			},
 		},
+		// All tenant creates are currently customer type as we don't intend to expose infra vrf creates to the user.
+		VrfType: halproto.VrfType_VRF_TYPE_CUSTOMER,
 	}
 	vrfReqMsg := halproto.VrfRequestMsg{
 		Request: []*halproto.VrfSpec{&vrfSpec},
 	}
 
-	// create the tenant
-	_, err := hd.Hal.Tnclient.VrfCreate(context.Background(), &vrfReqMsg)
-	if err != nil {
-		log.Errorf("Error creating tenant. Err: %v", err)
-		return err
+	// create the tenant. Enforce HAL Status == OK for HAL datapath
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Tnclient.VrfCreate(context.Background(), &vrfReqMsg)
+		if err != nil {
+			log.Errorf("Error creating tenant. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Tnclient.VrfCreate(context.Background(), &vrfReqMsg)
+		if err != nil {
+			log.Errorf("Error creating tenant. Err: %v", err)
+			return err
+		}
 	}
 
 	// save tenant create request message.
