@@ -14,6 +14,14 @@ struct phv_              p;
 ipfix_flow_info:
     bbeq        k.ipfix_metadata_scan_complete, 1, ipfix_flow_info_complete
 
+    // check if the flow has to be exported by this exporter
+    crestore    [c5-c1], k.ipfix_metadata_export_en, 0x1F
+    seq.c1      c5, k.ipfix_metadata_export_id, d.u.flow_info_d.export_id1
+    seq.c2      c5, k.ipfix_metadata_export_id, d.u.flow_info_d.export_id2
+    seq.c3      c5, k.ipfix_metadata_export_id, d.u.flow_info_d.export_id3
+    seq.c4      c5, k.ipfix_metadata_export_id, d.u.flow_info_d.export_id4
+    bcf         [!c5], ipfix_flow_info_exit
+
     phvwr       p.ipfix_metadata_session_index, d.u.flow_info_d.session_state_index
     phvwr       p.ipfix_metadata_flow_role, d.u.flow_info_d.flow_role
 
@@ -36,3 +44,7 @@ ipfix_flow_info_complete:
     // enable table 0 in next stage
     phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0x8
     nop
+
+ipfix_flow_info_exit:
+    phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0
+    phvwr       p.p4_intr_global_drop, 1

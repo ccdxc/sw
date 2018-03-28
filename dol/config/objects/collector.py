@@ -26,7 +26,7 @@ class CollectorObject(base.ConfigObjectBase):
 
     def Init(self, tenant, spec):
         self.tenant = tenant
-        self.id = resmgr.ColelctorIdAllocator.get()
+        self.id = resmgr.CollectorIdAllocator.get()
         self.GID("Collector%04d" % self.id)
         self.spec = spec
         self.vlan = 0

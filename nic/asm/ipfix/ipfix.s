@@ -17,6 +17,7 @@ struct phv_          p;
 ipfix_start:
     slt         c1, k.p4_txdma_intr_qid, IPFIX_EXPORT_ID_MAX
     bcf         [!c1], ipfix_export_start
+    phvwr.c1    p.ipfix_metadata_export_id, k.p4_txdma_intr_qid
 
     seq         c1, d.{u.ipfix_start_d.flow_hash_table_type}, \
                     IPFIX_FLOW_HASH_TABLE
@@ -60,7 +61,8 @@ ipfix_flow_hash_overflow_scan_complete:
     addi        r1, r0, DB_ADDR_BASE
     or          r1, r1, 0x2, DB_UPD_SHFT
     or          r1, r1, 1005, DB_LIF_SHFT
-    memwr.dx    r1, r0
+    add         r2, r0, k.p4_txdma_intr_qid, 24
+    memwr.dx    r1, r2
     // set table address in r1 for this scan
     addi        r1, r0, loword(p4_flow_hash_base)
     addui       r1, r1, hiword(p4_flow_hash_base)

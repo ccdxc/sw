@@ -42,7 +42,7 @@ typedef struct __attribute__((__packed__)) ipfix_qstate_  {
 } ipfix_qstate_t;
 
 static void
-ipfix_test_init(uint32_t sindex, uint32_t eindex) {
+ipfix_test_init(uint32_t sindex, uint32_t eindex, uint16_t export_id) {
     uint32_t sip   = 0x0A010201;
     uint32_t dip   = 0x0B010201;
     uint8_t  proto = IP_PROTO_TCP;
@@ -67,7 +67,7 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex) {
 
     flow_hash_swkey_t key;
     flow_hash_actiondata hash_data;
-    for(; sindex < eindex; sindex++) {
+    for(uint32_t i = sindex; i < eindex; i++) {
         memset(&key, 0, sizeof(key));
         memset(&hash_data, 0, sizeof(hash_data));
 
@@ -82,58 +82,60 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex) {
         key.flow_lkp_metadata_lkp_dport = dport;
 
         hash_data.actionid = FLOW_HASH_FLOW_HASH_INFO_ID;
-        hash_data.flow_hash_action_u.flow_hash_flow_hash_info.entry_valid = TRUE;
-        hash_data.flow_hash_action_u.flow_hash_flow_hash_info.export_en = TRUE;
+        hash_data.flow_hash_action_u.flow_hash_flow_hash_info.entry_valid = true;
+        hash_data.flow_hash_action_u.flow_hash_flow_hash_info.export_en = 0x1;
         hash_data.flow_hash_action_u.flow_hash_flow_hash_info.flow_index =
-            flow_index;
+            flow_index + i;
 
         memset(hwkey, 0, hwkey_len);
         p4pd_hwkey_hwmask_build(P4TBL_ID_FLOW_HASH, &key, NULL, hwkey, NULL);
-        p4pd_entry_write(P4TBL_ID_FLOW_HASH, sindex, hwkey, NULL, &hash_data);
+        p4pd_entry_write(P4TBL_ID_FLOW_HASH, i, hwkey, NULL, &hash_data);
 
         sip++; dip++; sport++; dport++;
+
+        // flow info
+        flow_info_actiondata flow_data;
+        memset(&flow_data, 0, sizeof(flow_data));
+        flow_data.actionid = FLOW_INFO_FLOW_INFO_ID;
+        flow_data.flow_info_action_u.flow_info_flow_info.dst_lport = dst_lport;
+        flow_data.flow_info_action_u.flow_info_flow_info.session_state_index =
+            session_index;
+        flow_data.flow_info_action_u.flow_info_flow_info.export_id1 = export_id;
+        p4pd_entry_write(P4TBL_ID_FLOW_INFO, flow_index+i, NULL, NULL,
+                         &flow_data);
+
+        // session state
+        session_state_actiondata session_data;
+        memset(&session_data, 0, sizeof(session_data));
+        p4pd_entry_write(P4TBL_ID_SESSION_STATE, session_index, NULL, NULL,
+                         &session_data);
+
+        // flow stats
+        flow_stats_actiondata stats_data;
+        memset(&stats_data, 0, sizeof(stats_data));
+        p4pd_entry_write(P4TBL_ID_FLOW_STATS, flow_index+i, NULL, NULL,
+                         &stats_data);
+
+        // atomic add region
+        uint64_t base_addr = get_start_offset(JP4_ATOMIC_STATS) +
+            ((flow_index+i) * 32);
+        p4plus_hbm_write(base_addr, (uint8_t *)&permit_bytes,
+                         sizeof(permit_bytes), P4PLUS_CACHE_ACTION_NONE);
+        p4plus_hbm_write(base_addr + 8 , (uint8_t *)&permit_packets,
+                         sizeof(permit_packets), P4PLUS_CACHE_ACTION_NONE);
+        p4plus_hbm_write(base_addr + 16, (uint8_t *)&deny_bytes,
+                         sizeof(deny_bytes), P4PLUS_CACHE_ACTION_NONE);
+        p4plus_hbm_write(base_addr + 24 , (uint8_t *)&deny_packets,
+                         sizeof(deny_packets), P4PLUS_CACHE_ACTION_NONE);
     }
     delete [] hwkey;
-
-    // flow info
-    flow_info_actiondata flow_data;
-    memset(&flow_data, 0, sizeof(flow_data));
-    flow_data.actionid = FLOW_INFO_FLOW_INFO_ID;
-    flow_data.flow_info_action_u.flow_info_flow_info.dst_lport = dst_lport;
-    flow_data.flow_info_action_u.flow_info_flow_info.session_state_index =
-        session_index;
-    p4pd_entry_write(P4TBL_ID_FLOW_INFO, flow_index, NULL, NULL, &flow_data);
-
-    // session state
-    session_state_actiondata session_data;
-    memset(&session_data, 0, sizeof(session_data));
-    p4pd_entry_write(P4TBL_ID_SESSION_STATE, session_index, NULL, NULL,
-                     &session_data);
-    // flow stats
-    flow_stats_actiondata stats_data;
-    memset(&stats_data, 0, sizeof(stats_data));
-    p4pd_entry_write(P4TBL_ID_FLOW_STATS, flow_index, NULL, NULL, &stats_data);
-
-    // atomic add region
-    uint64_t base_addr = get_start_offset(JP4_ATOMIC_STATS) + (flow_index * 32);
-    p4plus_hbm_write(base_addr, (uint8_t *)&permit_bytes, sizeof(permit_bytes),
-            P4PLUS_CACHE_ACTION_NONE);
-    p4plus_hbm_write(base_addr + 8 , (uint8_t *)&permit_packets,
-                     sizeof(permit_packets),
-                     P4PLUS_CACHE_ACTION_NONE);
-    p4plus_hbm_write(base_addr + 16, (uint8_t *)&deny_bytes,
-                     sizeof(deny_bytes),
-                     P4PLUS_CACHE_ACTION_NONE);
-    p4plus_hbm_write(base_addr + 24 , (uint8_t *)&deny_packets,
-                     sizeof(deny_packets),
-                     P4PLUS_CACHE_ACTION_NONE);
 }
 
 hal_ret_t
 ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
            uint16_t payload_size) {
     lif_id_t lif_id = SERVICE_LIF_IPFIX;
-    uint32_t qid = export_id * 2;
+    uint32_t qid = export_id;
 
     ipfix_qstate_t qstate = { 0 };
     uint8_t pgm_offset = 0;
@@ -148,11 +150,12 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
     qstate.pktsize = payload_size;
     qstate.ipfix_hdr_offset = payload_start;
     qstate.next_record_offset = qstate.ipfix_hdr_offset + 16;
-    qstate.flow_hash_index_next = 100;
-    qstate.flow_hash_index_max = 111;
+    qstate.flow_hash_index_next = (100 * qid) + 100;
+    qstate.flow_hash_index_max = (100 * qid) + 111;
 
     // install entries for testing (to be removed)
-    ipfix_test_init(qstate.flow_hash_index_next, qstate.flow_hash_index_max);
+    ipfix_test_init(qstate.flow_hash_index_next, qstate.flow_hash_index_max,
+                    export_id);
 
     g_lif_manager->WriteQState(lif_id, 0, qid,
                                (uint8_t *)&qstate, sizeof(qstate));

@@ -103,6 +103,8 @@ action ipfix_flow_hash() {
 
 action ipfix_flow_info() {
     modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
+    modify_field(scratch_metadata.export_id, ipfix_metadata.export_id);
+    modify_field(scratch_metadata.export_en, ipfix_metadata.export_en);
 }
 
 action ipfix_session_state() {

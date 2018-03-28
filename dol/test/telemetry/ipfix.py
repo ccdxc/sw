@@ -21,10 +21,15 @@ def TestCaseTrigger(tc):
     lif_id = 1005
     queue_type = 0
     pid = 0
-    queue_id = 0
     ring_id = 0
     p_index = 0
 
+    queue_id = 2
+    address = 0x800000 + (upd << 17) + (lif_id << 6) + (queue_type << 3)
+    data = (pid << 48) | (queue_id << 24) | (ring_id << 16) | p_index
+    model_wrap.step_doorbell(address, data)
+
+    queue_id = 3
     address = 0x800000 + (upd << 17) + (lif_id << 6) + (queue_type << 3)
     data = (pid << 48) | (queue_id << 24) | (ring_id << 16) | p_index
     model_wrap.step_doorbell(address, data)

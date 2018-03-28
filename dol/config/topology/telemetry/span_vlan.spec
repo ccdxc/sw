@@ -29,6 +29,10 @@ nfveps: 4
 
 collectors:
     - spec  : ref://store/specs/id=COLLECTOR_IPFIX
+    - spec  : ref://store/specs/id=COLLECTOR_IPFIX
+    - spec  : ref://store/specs/id=COLLECTOR_IPFIX
+    - spec  : ref://store/specs/id=COLLECTOR_IPFIX
+    - spec  : ref://store/specs/id=COLLECTOR_IPFIX
 
 span_sessions:
     - spec  : ref://store/specs/id=SPAN_TYPE_LOCAL

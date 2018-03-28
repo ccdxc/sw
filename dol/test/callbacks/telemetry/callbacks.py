@@ -295,35 +295,35 @@ def GetExpectRing1(testcase, args):
         return ep.intf.lif.queue_types.db["RX"]
     return None
 
-def GetCollectorSrcMac(testcase, args):
+def GetCollectorSrcMac(testcase, pkt, args):
     cs = Store.objects.GetAllByClass(collector.CollectorObject)
-    if len(cs) < 1:
+    if (len(cs) < 1) or (args.sessionid > (len(cs) - 1)):
         return None
-    return cs[0].src_ep.segment.macaddr.get()
+    return cs[args.sessionid].src_ep.segment.macaddr.get()
 
-def GetCollectorDstMac(testcase, args):
+def GetCollectorDstMac(testcase, pkt, args):
     cs = Store.objects.GetAllByClass(collector.CollectorObject)
-    if len(cs) < 1:
+    if (len(cs) < 1) or (args.sessionid > (len(cs) - 1)):
         return None
-    return cs[0].dst_ep.macaddr.get()
+    return cs[args.sessionid].dst_ep.macaddr.get()
 
-def GetCollectorSrcIp(testcase, args):
+def GetCollectorSrcIp(testcase, pkt, args):
     cs = Store.objects.GetAllByClass(collector.CollectorObject)
-    if len(cs) < 1:
+    if (len(cs) < 1) or (args.sessionid > (len(cs) - 1)):
         return None
-    return cs[0].source_ip.get()
+    return cs[args.sessionid].source_ip.get()
 
-def GetCollectorDstIp(testcase, args):
+def GetCollectorDstIp(testcase, pkt, args):
     cs = Store.objects.GetAllByClass(collector.CollectorObject)
-    if len(cs) < 1:
+    if (len(cs) < 1) or (args.sessionid > (len(cs) - 1)):
         return None
-    return cs[0].dest_ip.get()
+    return cs[args.sessionid].dest_ip.get()
 
-def GetCollectorVlan(testcase, args):
+def GetCollectorVlan(testcase, pkt, args):
     cs = Store.objects.GetAllByClass(collector.CollectorObject)
-    if len(cs) < 1:
+    if (len(cs) < 1) or (args.sessionid > (len(cs) - 1)):
         return None
-    return cs[0].vlan
+    return cs[args.sessionid].vlan
 
 def GetErspanPayload(testcase, inpkt, args):
     basepkt = testcase.packets.Get(args.basepkt)
@@ -382,3 +382,6 @@ def GetErspanPayloadSize(testcase, inpkt, args):
         return basepkt.size
     logger.info("GetErspanPktSize returning ", plen)
     return plen
+
+def GetIPFIXRecordFlowId(testcase, inpkt, args):
+    return (0xdeaf + (args.sessionid * 100) + 100 + args.id)

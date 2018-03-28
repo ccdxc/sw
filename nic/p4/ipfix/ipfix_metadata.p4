@@ -116,6 +116,7 @@ header_type ipfix_scratch_metadata_t {
         flow_role : 1;
         flow_type : 4;
         export_id : 4;
+        export_en : 4;
         flow_index : 32;
         session_index : 32;
         qstate_addr : 34;

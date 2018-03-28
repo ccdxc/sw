@@ -10,6 +10,11 @@ struct phv_                  p;
 %%
 
 ipfix_export_packet:
+    // exit if there are no records to be exported
+    add         r1, d.{u.ipfix_export_packet_d.ipfix_hdr_offset}.hx, 16
+    seq         c1, r1, d.{u.ipfix_export_packet_d.next_record_offset}.hx
+    bcf         [c1], ipfix_export_packet_exit
+
     phvwr       p.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwr       p.p4_intr_global_tm_oport, TM_PORT_INGRESS
     phvwr       p.p4_intr_global_lif, 1003
@@ -42,8 +47,9 @@ ipfix_export_packet:
     phvwr       p.mem2pkt_cmd_dma_cmd_eop, 1
     phvwr       p.mem2pkt_cmd_dma_pkt_eop, 1
 
-    phvwr       p.app_header_table0_valid, 0
-    phvwr       p.app_header_table1_valid, 0
-    phvwr       p.app_header_table2_valid, 0
-    phvwr.e     p.app_header_table3_valid, 0
+    phvwr.e     p.{app_header_table0_valid...app_header_table2_valid}, 0
     nop
+
+ipfix_export_packet_exit:
+    phvwr.e     p.{app_header_table0_valid...app_header_table2_valid}, 0
+    phvwr       p.p4_intr_global_drop, 1

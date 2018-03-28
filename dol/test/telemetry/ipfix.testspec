@@ -15,7 +15,7 @@ selectors:
 
 packets:
     - packet:
-        id          : IPV4_REC1
+        id          : IPV4_REC2_1
         template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
         headers     :
             data    :
@@ -39,7 +39,7 @@ packets:
                 tcp_exceptions          : 0
                 flit_pad1               : 0
                 tcp_rtt                 : 0
-                flow_id                 : 0xdeaf
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=2,id=0
                 egress_interface        : 0x789
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
@@ -56,7 +56,7 @@ packets:
                 drop_vector             : 0
 
     - packet:
-        id          : IPV4_REC2
+        id          : IPV4_REC2_2
         template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
         headers     :
             data    :
@@ -80,7 +80,7 @@ packets:
                 tcp_exceptions          : 0
                 flit_pad1               : 0
                 tcp_rtt                 : 0
-                flow_id                 : 0xdeaf
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=2,id=1
                 egress_interface        : 0x789
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
@@ -97,7 +97,7 @@ packets:
                 drop_vector             : 0
 
     - packet:
-        id          : IPV4_REC3
+        id          : IPV4_REC2_3
         template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
         headers     :
             data    :
@@ -121,7 +121,7 @@ packets:
                 tcp_exceptions          : 0
                 flit_pad1               : 0
                 tcp_rtt                 : 0
-                flow_id                 : 0xdeaf
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=2,id=2
                 egress_interface        : 0x789
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
@@ -138,7 +138,7 @@ packets:
                 drop_vector             : 0
 
     - packet:
-        id          : IPV4_REC4
+        id          : IPV4_REC2_4
         template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
         headers     :
             data    :
@@ -162,7 +162,7 @@ packets:
                 tcp_exceptions          : 0
                 flit_pad1               : 0
                 tcp_rtt                 : 0
-                flow_id                 : 0xdeaf
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=2,id=3
                 egress_interface        : 0x789
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
@@ -179,7 +179,7 @@ packets:
                 drop_vector             : 0
 
     - packet:
-        id          : IPV4_REC5
+        id          : IPV4_REC2_5
         template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
         headers     :
             data    :
@@ -203,7 +203,7 @@ packets:
                 tcp_exceptions          : 0
                 flit_pad1               : 0
                 tcp_rtt                 : 0
-                flow_id                 : 0xdeaf
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=2,id=4
                 egress_interface        : 0x789
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
@@ -220,7 +220,7 @@ packets:
                 drop_vector             : 0
 
     - packet:
-        id          : IPV4_REC6
+        id          : IPV4_REC2_6
         template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
         headers     :
             data    :
@@ -244,7 +244,7 @@ packets:
                 tcp_exceptions          : 0
                 flit_pad1               : 0
                 tcp_rtt                 : 0
-                flow_id                 : 0xdeaf
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=2,id=5
                 egress_interface        : 0x789
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
@@ -261,7 +261,7 @@ packets:
                 drop_vector             : 0
 
     - packet:
-        id          : IPV4_REC7
+        id          : IPV4_REC2_7
         template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
         headers     :
             data    :
@@ -285,7 +285,7 @@ packets:
                 tcp_exceptions          : 0
                 flit_pad1               : 0
                 tcp_rtt                 : 0
-                flow_id                 : 0xdeaf
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=2,id=6
                 egress_interface        : 0x789
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
@@ -302,7 +302,7 @@ packets:
                 drop_vector             : 0
 
     - packet:
-        id          : IPV4_REC8
+        id          : IPV4_REC2_8
         template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
         headers     :
             data    :
@@ -326,7 +326,7 @@ packets:
                 tcp_exceptions          : 0
                 flit_pad1               : 0
                 tcp_rtt                 : 0
-                flow_id                 : 0xdeaf
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=2,id=7
                 egress_interface        : 0x789
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
@@ -343,7 +343,7 @@ packets:
                 drop_vector             : 0
 
     - packet:
-        id          : IPV4_REC9
+        id          : IPV4_REC2_9
         template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
         headers     :
             data    :
@@ -367,7 +367,7 @@ packets:
                 tcp_exceptions          : 0
                 flit_pad1               : 0
                 tcp_rtt                 : 0
-                flow_id                 : 0xdeaf
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=2,id=8
                 egress_interface        : 0x789
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
@@ -384,7 +384,7 @@ packets:
                 drop_vector             : 0
 
     - packet:
-        id          : IPV4_REC10
+        id          : IPV4_REC2_10
         template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
         headers     :
             data    :
@@ -408,7 +408,7 @@ packets:
                 tcp_exceptions          : 0
                 flit_pad1               : 0
                 tcp_rtt                 : 0
-                flow_id                 : 0xdeaf
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=2,id=9
                 egress_interface        : 0x789
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
@@ -425,7 +425,7 @@ packets:
                 drop_vector             : 0
 
     - packet:
-        id          : IPV4_REC11
+        id          : IPV4_REC2_11
         template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
         headers     :
             data    :
@@ -449,7 +449,7 @@ packets:
                 tcp_exceptions          : 0
                 flit_pad1               : 0
                 tcp_rtt                 : 0
-                flow_id                 : 0xdeaf
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=2,id=10
                 egress_interface        : 0x789
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
@@ -466,20 +466,470 @@ packets:
                 drop_vector             : 0
 
     - packet:
-        id          : EPKT
+        id          : IPV4_REC3_1
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data    :
+                len                     : 136
+                vrf                     : 0
+                ip_sa                   : 10.1.2.1
+                ip_da                   : 11.1.2.1
+                proto                   : 6
+                sport                   : 0xabba
+                dport                   : 0xbeef
+                flow_state_index        : 0
+                role                    : 0
+                ttl                     : 0
+                icmp_type_code          : 0
+                tcp_seq_num             : 0
+                tcp_ack_num             : 0
+                tcp_win_sz              : 0
+                tcp_win_scale           : 0
+                tcp_state               : 0
+                tcp_win_mss             : 0
+                tcp_exceptions          : 0
+                flit_pad1               : 0
+                tcp_rtt                 : 0
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=3,id=0
+                egress_interface        : 0x789
+                egress_interface_type   : 0
+                permit_packets          : 0x7060504030201010
+                permit_bytes            : 0x40302010a0b0c0d0
+                delta_permit_packets    : 0
+                delta_permit_bytes      : 0
+                drop_packets            : 0x0102030405060708
+                drop_bytes              : 0x0f0e0d0c0b0a0908
+                delta_drop_packets      : 0
+                delta_drop_bytes        : 0
+                flit_pad2               : 0
+                start_timestamp         : 0
+                last_seen_timestamp     : 0
+                drop_vector             : 0
+
+    - packet:
+        id          : IPV4_REC3_2
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data    :
+                len                     : 136
+                vrf                     : 0
+                ip_sa                   : 10.1.2.2
+                ip_da                   : 11.1.2.2
+                proto                   : 6
+                sport                   : 0xabbb
+                dport                   : 0xbef0
+                flow_state_index        : 0
+                role                    : 0
+                ttl                     : 0
+                icmp_type_code          : 0
+                tcp_seq_num             : 0
+                tcp_ack_num             : 0
+                tcp_win_sz              : 0
+                tcp_win_scale           : 0
+                tcp_state               : 0
+                tcp_win_mss             : 0
+                tcp_exceptions          : 0
+                flit_pad1               : 0
+                tcp_rtt                 : 0
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=3,id=1
+                egress_interface        : 0x789
+                egress_interface_type   : 0
+                permit_packets          : 0x7060504030201010
+                permit_bytes            : 0x40302010a0b0c0d0
+                delta_permit_packets    : 0
+                delta_permit_bytes      : 0
+                drop_packets            : 0x0102030405060708
+                drop_bytes              : 0x0f0e0d0c0b0a0908
+                delta_drop_packets      : 0
+                delta_drop_bytes        : 0
+                flit_pad2               : 0
+                start_timestamp         : 0
+                last_seen_timestamp     : 0
+                drop_vector             : 0
+
+    - packet:
+        id          : IPV4_REC3_3
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data    :
+                len                     : 136
+                vrf                     : 0
+                ip_sa                   : 10.1.2.3
+                ip_da                   : 11.1.2.3
+                proto                   : 6
+                sport                   : 0xabbc
+                dport                   : 0xbef1
+                flow_state_index        : 0
+                role                    : 0
+                ttl                     : 0
+                icmp_type_code          : 0
+                tcp_seq_num             : 0
+                tcp_ack_num             : 0
+                tcp_win_sz              : 0
+                tcp_win_scale           : 0
+                tcp_state               : 0
+                tcp_win_mss             : 0
+                tcp_exceptions          : 0
+                flit_pad1               : 0
+                tcp_rtt                 : 0
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=3,id=2
+                egress_interface        : 0x789
+                egress_interface_type   : 0
+                permit_packets          : 0x7060504030201010
+                permit_bytes            : 0x40302010a0b0c0d0
+                delta_permit_packets    : 0
+                delta_permit_bytes      : 0
+                drop_packets            : 0x0102030405060708
+                drop_bytes              : 0x0f0e0d0c0b0a0908
+                delta_drop_packets      : 0
+                delta_drop_bytes        : 0
+                flit_pad2               : 0
+                start_timestamp         : 0
+                last_seen_timestamp     : 0
+                drop_vector             : 0
+
+    - packet:
+        id          : IPV4_REC3_4
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data    :
+                len                     : 136
+                vrf                     : 0
+                ip_sa                   : 10.1.2.4
+                ip_da                   : 11.1.2.4
+                proto                   : 6
+                sport                   : 0xabbd
+                dport                   : 0xbef2
+                flow_state_index        : 0
+                role                    : 0
+                ttl                     : 0
+                icmp_type_code          : 0
+                tcp_seq_num             : 0
+                tcp_ack_num             : 0
+                tcp_win_sz              : 0
+                tcp_win_scale           : 0
+                tcp_state               : 0
+                tcp_win_mss             : 0
+                tcp_exceptions          : 0
+                flit_pad1               : 0
+                tcp_rtt                 : 0
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=3,id=3
+                egress_interface        : 0x789
+                egress_interface_type   : 0
+                permit_packets          : 0x7060504030201010
+                permit_bytes            : 0x40302010a0b0c0d0
+                delta_permit_packets    : 0
+                delta_permit_bytes      : 0
+                drop_packets            : 0x0102030405060708
+                drop_bytes              : 0x0f0e0d0c0b0a0908
+                delta_drop_packets      : 0
+                delta_drop_bytes        : 0
+                flit_pad2               : 0
+                start_timestamp         : 0
+                last_seen_timestamp     : 0
+                drop_vector             : 0
+
+    - packet:
+        id          : IPV4_REC3_5
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data    :
+                len                     : 136
+                vrf                     : 0
+                ip_sa                   : 10.1.2.5
+                ip_da                   : 11.1.2.5
+                proto                   : 6
+                sport                   : 0xabbe
+                dport                   : 0xbef3
+                flow_state_index        : 0
+                role                    : 0
+                ttl                     : 0
+                icmp_type_code          : 0
+                tcp_seq_num             : 0
+                tcp_ack_num             : 0
+                tcp_win_sz              : 0
+                tcp_win_scale           : 0
+                tcp_state               : 0
+                tcp_win_mss             : 0
+                tcp_exceptions          : 0
+                flit_pad1               : 0
+                tcp_rtt                 : 0
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=3,id=4
+                egress_interface        : 0x789
+                egress_interface_type   : 0
+                permit_packets          : 0x7060504030201010
+                permit_bytes            : 0x40302010a0b0c0d0
+                delta_permit_packets    : 0
+                delta_permit_bytes      : 0
+                drop_packets            : 0x0102030405060708
+                drop_bytes              : 0x0f0e0d0c0b0a0908
+                delta_drop_packets      : 0
+                delta_drop_bytes        : 0
+                flit_pad2               : 0
+                start_timestamp         : 0
+                last_seen_timestamp     : 0
+                drop_vector             : 0
+
+    - packet:
+        id          : IPV4_REC3_6
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data    :
+                len                     : 136
+                vrf                     : 0
+                ip_sa                   : 10.1.2.6
+                ip_da                   : 11.1.2.6
+                proto                   : 6
+                sport                   : 0xabbf
+                dport                   : 0xbef4
+                flow_state_index        : 0
+                role                    : 0
+                ttl                     : 0
+                icmp_type_code          : 0
+                tcp_seq_num             : 0
+                tcp_ack_num             : 0
+                tcp_win_sz              : 0
+                tcp_win_scale           : 0
+                tcp_state               : 0
+                tcp_win_mss             : 0
+                tcp_exceptions          : 0
+                flit_pad1               : 0
+                tcp_rtt                 : 0
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=3,id=5
+                egress_interface        : 0x789
+                egress_interface_type   : 0
+                permit_packets          : 0x7060504030201010
+                permit_bytes            : 0x40302010a0b0c0d0
+                delta_permit_packets    : 0
+                delta_permit_bytes      : 0
+                drop_packets            : 0x0102030405060708
+                drop_bytes              : 0x0f0e0d0c0b0a0908
+                delta_drop_packets      : 0
+                delta_drop_bytes        : 0
+                flit_pad2               : 0
+                start_timestamp         : 0
+                last_seen_timestamp     : 0
+                drop_vector             : 0
+
+    - packet:
+        id          : IPV4_REC3_7
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data    :
+                len                     : 136
+                vrf                     : 0
+                ip_sa                   : 10.1.2.7
+                ip_da                   : 11.1.2.7
+                proto                   : 6
+                sport                   : 0xabc0
+                dport                   : 0xbef5
+                flow_state_index        : 0
+                role                    : 0
+                ttl                     : 0
+                icmp_type_code          : 0
+                tcp_seq_num             : 0
+                tcp_ack_num             : 0
+                tcp_win_sz              : 0
+                tcp_win_scale           : 0
+                tcp_state               : 0
+                tcp_win_mss             : 0
+                tcp_exceptions          : 0
+                flit_pad1               : 0
+                tcp_rtt                 : 0
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=3,id=6
+                egress_interface        : 0x789
+                egress_interface_type   : 0
+                permit_packets          : 0x7060504030201010
+                permit_bytes            : 0x40302010a0b0c0d0
+                delta_permit_packets    : 0
+                delta_permit_bytes      : 0
+                drop_packets            : 0x0102030405060708
+                drop_bytes              : 0x0f0e0d0c0b0a0908
+                delta_drop_packets      : 0
+                delta_drop_bytes        : 0
+                flit_pad2               : 0
+                start_timestamp         : 0
+                last_seen_timestamp     : 0
+                drop_vector             : 0
+
+    - packet:
+        id          : IPV4_REC3_8
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data    :
+                len                     : 136
+                vrf                     : 0
+                ip_sa                   : 10.1.2.8
+                ip_da                   : 11.1.2.8
+                proto                   : 6
+                sport                   : 0xabc1
+                dport                   : 0xbef6
+                flow_state_index        : 0
+                role                    : 0
+                ttl                     : 0
+                icmp_type_code          : 0
+                tcp_seq_num             : 0
+                tcp_ack_num             : 0
+                tcp_win_sz              : 0
+                tcp_win_scale           : 0
+                tcp_state               : 0
+                tcp_win_mss             : 0
+                tcp_exceptions          : 0
+                flit_pad1               : 0
+                tcp_rtt                 : 0
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=3,id=7
+                egress_interface        : 0x789
+                egress_interface_type   : 0
+                permit_packets          : 0x7060504030201010
+                permit_bytes            : 0x40302010a0b0c0d0
+                delta_permit_packets    : 0
+                delta_permit_bytes      : 0
+                drop_packets            : 0x0102030405060708
+                drop_bytes              : 0x0f0e0d0c0b0a0908
+                delta_drop_packets      : 0
+                delta_drop_bytes        : 0
+                flit_pad2               : 0
+                start_timestamp         : 0
+                last_seen_timestamp     : 0
+                drop_vector             : 0
+
+    - packet:
+        id          : IPV4_REC3_9
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data    :
+                len                     : 136
+                vrf                     : 0
+                ip_sa                   : 10.1.2.9
+                ip_da                   : 11.1.2.9
+                proto                   : 6
+                sport                   : 0xabc2
+                dport                   : 0xbef7
+                flow_state_index        : 0
+                role                    : 0
+                ttl                     : 0
+                icmp_type_code          : 0
+                tcp_seq_num             : 0
+                tcp_ack_num             : 0
+                tcp_win_sz              : 0
+                tcp_win_scale           : 0
+                tcp_state               : 0
+                tcp_win_mss             : 0
+                tcp_exceptions          : 0
+                flit_pad1               : 0
+                tcp_rtt                 : 0
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=3,id=8
+                egress_interface        : 0x789
+                egress_interface_type   : 0
+                permit_packets          : 0x7060504030201010
+                permit_bytes            : 0x40302010a0b0c0d0
+                delta_permit_packets    : 0
+                delta_permit_bytes      : 0
+                drop_packets            : 0x0102030405060708
+                drop_bytes              : 0x0f0e0d0c0b0a0908
+                delta_drop_packets      : 0
+                delta_drop_bytes        : 0
+                flit_pad2               : 0
+                start_timestamp         : 0
+                last_seen_timestamp     : 0
+                drop_vector             : 0
+
+    - packet:
+        id          : IPV4_REC3_10
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data    :
+                len                     : 136
+                vrf                     : 0
+                ip_sa                   : 10.1.2.10
+                ip_da                   : 11.1.2.10
+                proto                   : 6
+                sport                   : 0xabc3
+                dport                   : 0xbef8
+                flow_state_index        : 0
+                role                    : 0
+                ttl                     : 0
+                icmp_type_code          : 0
+                tcp_seq_num             : 0
+                tcp_ack_num             : 0
+                tcp_win_sz              : 0
+                tcp_win_scale           : 0
+                tcp_state               : 0
+                tcp_win_mss             : 0
+                tcp_exceptions          : 0
+                flit_pad1               : 0
+                tcp_rtt                 : 0
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=3,id=9
+                egress_interface        : 0x789
+                egress_interface_type   : 0
+                permit_packets          : 0x7060504030201010
+                permit_bytes            : 0x40302010a0b0c0d0
+                delta_permit_packets    : 0
+                delta_permit_bytes      : 0
+                drop_packets            : 0x0102030405060708
+                drop_bytes              : 0x0f0e0d0c0b0a0908
+                delta_drop_packets      : 0
+                delta_drop_bytes        : 0
+                flit_pad2               : 0
+                start_timestamp         : 0
+                last_seen_timestamp     : 0
+                drop_vector             : 0
+
+    - packet:
+        id          : IPV4_REC3_11
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data    :
+                len                     : 136
+                vrf                     : 0
+                ip_sa                   : 10.1.2.11
+                ip_da                   : 11.1.2.11
+                proto                   : 6
+                sport                   : 0xabc4
+                dport                   : 0xbef9
+                flow_state_index        : 0
+                role                    : 0
+                ttl                     : 0
+                icmp_type_code          : 0
+                tcp_seq_num             : 0
+                tcp_ack_num             : 0
+                tcp_win_sz              : 0
+                tcp_win_scale           : 0
+                tcp_state               : 0
+                tcp_win_mss             : 0
+                tcp_exceptions          : 0
+                flit_pad1               : 0
+                tcp_rtt                 : 0
+                flow_id                 : callback://telemetry/callbacks/GetIPFIXRecordFlowId/sessionid=3,id=10
+                egress_interface        : 0x789
+                egress_interface_type   : 0
+                permit_packets          : 0x7060504030201010
+                permit_bytes            : 0x40302010a0b0c0d0
+                delta_permit_packets    : 0
+                delta_permit_bytes      : 0
+                drop_packets            : 0x0102030405060708
+                drop_bytes              : 0x0f0e0d0c0b0a0908
+                delta_drop_packets      : 0
+                delta_drop_bytes        : 0
+                flit_pad2               : 0
+                start_timestamp         : 0
+                last_seen_timestamp     : 0
+                drop_vector             : 0
+    - packet:
+        id          : EPKT2
         template    : ref://factory/packets/id=IPFIX
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth     :
-                src             : callback://telemetry/callbacks/GetCollectorSrcMac
-                dst             : callback://telemetry/callbacks/GetCollectorDstMac
+                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=2
+                dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=2
             qtag    :
                 prio            : 0
-                vlan            : callback://telemetry/callbacks/GetCollectorVlan
+                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=2
             ipv4    :
-                src             : callback://telemetry/callbacks/GetCollectorSrcIp
-                dst             : callback://telemetry/callbacks/GetCollectorDstIp
+                src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=2
+                dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=2
                 tos             : 0
                 id  : 0
             udp     :
@@ -492,34 +942,73 @@ packets:
                 seq_num         : 0
                 domain_id       : 0
                 records         :
-                    - record: ref://testcase/packets/id=IPV4_REC1/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC2/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC3/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC4/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC5/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC6/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC7/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC8/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC9/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC10/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC11/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_1/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_2/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_3/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_4/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_5/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_6/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_7/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_8/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_9/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_10/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_11/rawbytes
 
     - packet:
-        id          : ECPUPKT
+        id          : EPKT3
         template    : ref://factory/packets/id=IPFIX
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth     :
-                src             : callback://telemetry/callbacks/GetCollectorSrcMac
-                dst             : callback://telemetry/callbacks/GetCollectorDstMac
+                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=3
+                dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=3
+            qtag    :
+                prio            : 0
+                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=3
+            ipv4    :
+                src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=3
+                dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=3
+                tos             : 0
+                id  : 0
+            udp     :
+                sport           : 32007
+                dport           : 4739
+            ipfix   :
+                version         : 0
+                len             : 0
+                export_time     : 0
+                seq_num         : 0
+                domain_id       : 0
+                records         :
+                    - record: ref://testcase/packets/id=IPV4_REC3_1/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_2/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_3/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_4/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_5/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_6/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_7/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_8/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_9/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_10/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_11/rawbytes
+
+    - packet:
+        id          : ECPUPKT2
+        template    : ref://factory/packets/id=IPFIX
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth     :
+                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=2
+                dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=2
             qtag    :
                 #prio            : callback://networking/packets/GetExpectedPacketCos
                 prio            : 0
                 vlan            : 6
             ipv4    :
-                src             : callback://telemetry/callbacks/GetCollectorSrcIp
-                dst             : callback://telemetry/callbacks/GetCollectorDstIp
+                src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=2
+                dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=2
                 id              : 0
                 tos             : 0
             udp     :
@@ -532,17 +1021,57 @@ packets:
                 seq_num         : 0
                 domain_id       : 0
                 records         :
-                    - record: ref://testcase/packets/id=IPV4_REC1/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC2/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC3/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC4/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC5/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC6/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC7/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC8/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC9/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC10/rawbytes
-                    - record: ref://testcase/packets/id=IPV4_REC11/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_1/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_2/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_3/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_4/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_5/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_6/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_7/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_8/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_9/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_10/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC2_11/rawbytes
+
+    - packet:
+        id          : ECPUPKT3
+        template    : ref://factory/packets/id=IPFIX
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth     :
+                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=3
+                dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=3
+            qtag    :
+                #prio            : callback://networking/packets/GetExpectedPacketCos
+                prio            : 0
+                vlan            : 6
+            ipv4    :
+                src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=3
+                dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=3
+                id              : 0
+                tos             : 0
+            udp     :
+                sport           : 32007
+                dport           : 4739
+            ipfix   :
+                version         : 0
+                len             : 0
+                export_time     : 0
+                seq_num         : 0
+                domain_id       : 0
+                records         :
+                    - record: ref://testcase/packets/id=IPV4_REC3_1/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_2/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_3/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_4/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_5/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_6/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_7/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_8/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_9/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_10/rawbytes
+                    - record: ref://testcase/packets/id=IPV4_REC3_11/rawbytes
 
 trigger:
 
@@ -550,9 +1079,14 @@ expect:
     delay           : callback://networking/packets/GetExpectDelay
     packets:
         - packet:
-            object  : ref://testcase/packets/id=EPKT
-            port    : 1
+            object  : ref://testcase/packets/id=EPKT2
+            port    : 3
         - packet:
-            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT
+            object  : ref://testcase/packets/id=EPKT3
+            port    : 4
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT2
             port    : 128
-
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT3
+            port    : 128
