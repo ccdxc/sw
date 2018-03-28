@@ -74,12 +74,14 @@ inline std::ostream& operator<<(std::ostream& os, const qos_class_key_t& s)
    return os << fmt::format("{{qos_group={}}}", s.qos_group);
 }
 
-typedef struct qos_buf_s {
+typedef struct qos_pfc_s {
+    uint32_t cos;                 // PFC cos the class
+                                  // participates in
     uint32_t xon_threshold;       // Relative threshold from the
                                   // max occupancy at which xoff will be cleared
     uint32_t xoff_clear_limit;    // When the pool occupancy goes
                                   // below this limit, xoff will be cleared
-} __PACK__ qos_buf_t;
+} __PACK__   qos_pfc_t;
 
 #define QOS_SCHED_TYPES(ENTRY)                       \
     ENTRY(QOS_SCHED_TYPE_DWRR,          0, "dwrr")   \
@@ -118,10 +120,8 @@ typedef struct qos_class_s {
     qos_class_key_t      key;            // QOS group information
 
     uint32_t             mtu;            // MTU of the packets in bytes
-    qos_buf_t            buffer;         // buffer configuration
+    qos_pfc_t            pfc;         // buffer configuration
     bool                 no_drop;        // No drop class
-    uint32_t             pfc_cos;        // PFC cos the class
-                                         // participates in
     qos_sched_t          sched;          // scheduler configuration
     qos_uplink_cmap_t    uplink_cmap;    // Uplink class map
     qos_marking_action_t marking;

@@ -678,7 +678,6 @@
 		ProxyrCbGetResponseMsg
 		PolicerSpec
 		PolicerStats
-		QosBuffer
 		QosPFC
 		QosSched
 		QosUplinkClassMap

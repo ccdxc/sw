@@ -246,9 +246,9 @@ qos_class_get_fill_rsp (qos::QosClassGetResponse *rsp,
     spec = rsp->mutable_spec();
     spec->mutable_key_or_handle()->set_qos_class_handle(qos_class->hal_handle);
     spec->set_mtu(qos_class->mtu);
-    spec->mutable_buffer()->set_xon_threshold(qos_class->buffer.xon_threshold);
-    spec->mutable_buffer()->set_xoff_clear_limit(qos_class->buffer.xoff_clear_limit);
-    spec->mutable_pfc()->set_pfc_cos(qos_class->pfc_cos);
+    spec->mutable_pfc()->set_xon_threshold(qos_class->pfc.xon_threshold);
+    spec->mutable_pfc()->set_xoff_clear_limit(qos_class->pfc.xoff_clear_limit);
+    spec->mutable_pfc()->set_cos(qos_class->pfc.cos);
     if (qos_class->sched.type == QOS_SCHED_TYPE_DWRR) {
         spec->mutable_sched()->mutable_dwrr()->set_bw_percentage(qos_class->sched.dwrr.bw);
     } else {
@@ -357,15 +357,13 @@ qos_class_spec_print (QosClassSpec& spec)
     }
 
     buf.write("MTU:{}, ", spec.mtu());
-    if (spec.has_buffer()) {
-        buf.write("xon_threshold: {}, xoff_clear_limit: {}, ",
-                  spec.buffer().xon_threshold(),
-                  spec.buffer().xoff_clear_limit());
-    }
 
     if (spec.has_pfc()) {
-        buf.write("pfc_cos: {}, ",
-                  spec.pfc().pfc_cos());
+        buf.write("pfc cos: {}, ",
+                  spec.pfc().cos());
+        buf.write("xon_threshold: {}, xoff_clear_limit: {}, ",
+                  spec.pfc().xon_threshold(),
+                  spec.pfc().xoff_clear_limit());
     }
 
     if (spec.has_sched()) {
@@ -404,8 +402,6 @@ qos_class_spec_print (QosClassSpec& spec)
 static hal_ret_t
 validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
 {
-    bool        no_drop = false;
-
     // mtu should be set
     if (!spec.mtu()) {
         HAL_TRACE_ERR("mtu not set in request");
@@ -413,22 +409,9 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
     }
 
     if (spec.has_pfc()) {
-        no_drop = true;
-    }
-
-    // Validate buffering configuration
-    if (!no_drop) {
-        if (spec.has_buffer() ||
-            spec.buffer().xon_threshold() ||
-            spec.buffer().xoff_clear_limit()) {
-            HAL_TRACE_ERR("No-drop class buffer params set in request for drop class");
-            return HAL_RET_INVALID_ARG;
-        }
-    } else {
-        if (!spec.has_buffer() ||
-            !spec.buffer().xon_threshold() ||
-            !spec.buffer().xoff_clear_limit()) {
-            HAL_TRACE_ERR("No-drop class buffer params not set in request");
+        if (!spec.pfc().xon_threshold() ||
+            !spec.pfc().xoff_clear_limit()) {
+            HAL_TRACE_ERR("No-drop class xon/xoff params not set in request");
             return HAL_RET_INVALID_ARG;
         }
     }
@@ -680,31 +663,21 @@ qos_class_prepare_rsp (QosClassResponse *rsp, hal_ret_t ret,
 }
 
 static hal_ret_t
-update_buffer_params (QosClassSpec& spec, qos_class_t *qos_class)
+update_pfc_params (QosClassSpec& spec, qos_class_t *qos_class)
 {
-    qos_buf_t   *buffer = &qos_class->buffer;
-    bool        no_drop = false;
-
     if (spec.has_pfc()) {
-        no_drop = true;
-        qos_class->pfc_cos = spec.pfc().pfc_cos();
-        if (qos_class->pfc_cos >= HAL_MAX_PFC_COS_VALS) {
+        qos_class->pfc.cos = spec.pfc().cos();
+        if (qos_class->pfc.cos >= HAL_MAX_PFC_COS_VALS) {
             HAL_TRACE_ERR("Invalid pfc cos value {}",
-                          qos_class->pfc_cos);
-            return HAL_RET_INVALID_ARG;
-        }
-    }
-
-    if (no_drop) {
-        if (!spec.has_buffer()) {
+                          qos_class->pfc.cos);
             return HAL_RET_INVALID_ARG;
         }
 
-        buffer->xon_threshold =  spec.buffer().xon_threshold();
-        buffer->xoff_clear_limit =  spec.buffer().xoff_clear_limit();
+        qos_class->pfc.xon_threshold =  spec.pfc().xon_threshold();
+        qos_class->pfc.xoff_clear_limit =  spec.pfc().xoff_clear_limit();
+        qos_class->no_drop = true;
     }
 
-    qos_class->no_drop = no_drop;
     return HAL_RET_OK;
 }
 
@@ -780,7 +753,7 @@ qos_class_populate_from_spec (qos_class_t *qos_class, QosClassSpec& spec)
 
     qos_class->mtu = spec.mtu();
 
-    ret = update_buffer_params(spec, qos_class);
+    ret = update_pfc_params(spec, qos_class);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -1211,11 +1184,12 @@ qosclass_update (QosClassSpec& spec, QosClassResponse *rsp)
         app_ctxt.mtu_changed = true;
     }
 
-    if (memcmp(&qos_class_clone->buffer, &qos_class->buffer, sizeof(qos_class->buffer))) {
+    if ((qos_class_clone->pfc.xon_threshold != qos_class->pfc.xon_threshold) ||
+        (qos_class_clone->pfc.xoff_clear_limit != qos_class->pfc.xoff_clear_limit)) {
         app_ctxt.threshold_changed = true;
     }
 
-    if (qos_class_clone->pfc_cos != qos_class->pfc_cos) {
+    if (qos_class_clone->pfc.cos != qos_class->pfc.cos) {
         app_ctxt.pfc_changed = true;
     }
 

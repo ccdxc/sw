@@ -33,7 +33,7 @@ def PreCreateCb(data, req_spec, resp_spec):
     ip_dscp_choice = random.choice(ip_dscp)
     ip_dscp.remove(ip_dscp_choice)
 
-    req_spec.request[0].pfc.pfc_cos = random.randint(1,7)
+    req_spec.request[0].pfc.cos = random.randint(1,7)
 
     req_spec.request[0].key_or_handle.qos_group = key_choice
     req_spec.request[0].uplink_class_map.dot1q_pcp = dot1q_pcp_choice
@@ -58,7 +58,6 @@ def PreCreateCb(data, req_spec, resp_spec):
     if pfc_class_counter > max_pfc_class_counter:
         print("Cleared PFC")
         req_spec.request[0].ClearField("pfc")
-        req_spec.request[0].ClearField("buffer")
 
     # Create a dict with the key and pcp/dscp values, so that they can be reclaimed
     # whenever they're modified as part of update
@@ -126,13 +125,12 @@ def PreUpdateCb(data, req_spec, resp_spec):
     config_object = config_mgr.GetConfigObjectFromKey(req_spec.request[0].key_or_handle)
     cache_create_msg = config_object._msg_cache[config_mgr.ConfigObjectMeta.CREATE]
 
-    if (cache_create_msg.request[0].pfc.pfc_cos == 0):
+    if (cache_create_msg.request[0].pfc.cos == 0):
         req_spec.request[0].ClearField("pfc")
-        req_spec.request[0].ClearField("buffer")
     else:
-        req_spec.request[0].pfc.pfc_cos = random.randint(1,7)
-        req_spec.request[0].buffer.xon_threshold = random.randint(64,20480)
-        req_spec.request[0].buffer.xoff_clear_limit = random.randint(64,20480)
+        req_spec.request[0].pfc.cos = random.randint(1,7)
+        req_spec.request[0].pfc.xon_threshold = random.randint(64,20480)
+        req_spec.request[0].pfc.xoff_clear_limit = random.randint(64,20480)
 
     req_spec.request[0].uplink_class_map.dot1q_pcp = dot1q_pcp_choice
     req_spec.request[0].uplink_class_map.ip_dscp[0] = ip_dscp_choice
@@ -159,7 +157,6 @@ def PreUpdateCb(data, req_spec, resp_spec):
 
     # if pfc_class_counter > max_pfc_class_counter:
     #     req_spec.request[0].ClearField("pfc")
-    #     req_spec.request[0].ClearField("buffer")
 
     # Add back the pcp/dscp stored earlier to the pool of choices.
     try:

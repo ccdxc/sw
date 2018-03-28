@@ -211,9 +211,11 @@ copp_pd_cleanup (pd_copp_t *pd_copp)
     if (pd_copp->hw_policer_id != INVALID_INDEXER_INDEX) {
         // TODO: deprogram hw
         ret = copp_pd_deprogram_hw(pd_copp);
-        HAL_TRACE_ERR("unable to deprogram hw for copp: {}",
-                      pd_copp->pi_copp->key);
-        goto end;
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to deprogram hw for copp: {}",
+                          pd_copp->pi_copp->key);
+            goto end;
+        }
     }
 
     // Releasing resources

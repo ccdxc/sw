@@ -602,9 +602,11 @@ acl_pd_cleanup (pd_acl_t *pd_acl)
 
     if (pd_acl->handle != ACL_TCAM_ENTRY_INVALID_HANDLE) {
         ret = acl_pd_deprogram_hw(pd_acl);
-        HAL_TRACE_ERR("unable to deprogram hw for acl: {}",
-                      pd_acl->pi_acl->key);
-        goto end;
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to deprogram hw for acl: {}",
+                          pd_acl->pi_acl->key);
+            goto end;
+        }
     }
 
     // Releasing resources

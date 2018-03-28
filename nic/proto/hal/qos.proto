@@ -38,24 +38,20 @@ message PolicerStats {
   uint64 dropped_bytes     = 4;    // Count of dropped bytes by the policer
 }
 
-// QosBuffer specifies the buffer parameters
-message QosBuffer {
-  uint32 xon_threshold    = 1;    // Relative threshold from the
-                                  // max occupancy at which to clear the xoff
-  uint32 xoff_clear_limit = 2;    // When the buffer occupancy goes
-                                  // below this limit, xoff will be cleared
-}
-
 // QosPFC specifies the pfc cos to respond to
 message QosPFC {
-  uint32 pfc_cos = 1;    // PFC cos value for no-drop classes
+  uint32 cos              = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:0-7}"];    // PFC cos value for no-drop classes
+  uint32 xon_threshold    = 2 [(gogoproto.moretags) = "venice:mandatory"];    // Relative threshold from the
+                                  // max occupancy at which to clear the xoff
+  uint32 xoff_clear_limit = 3 [(gogoproto.moretags) = "venice:mandatory"];    // When the buffer occupancy goes
+                                  // below this limit, xoff will be cleared
 }
 
 // QosSched specifies the QosClass scheduling configuration
 message QosSched {
   // DWRR specific information
   message DWRRInfo {
-    uint32             bw_percentage = 1;    // Bandwidth allocated
+    uint32             bw_percentage = 1 [(gogoproto.moretags) = "venice:constraints={range:0-100}"];    // Bandwidth allocated
   }
 
   // Strict Priority specific information for the class
@@ -72,16 +68,16 @@ message QosSched {
 // QosUplinkClassMap specifies the policy with which traffic from network
 // is classified
 message QosUplinkClassMap {
-  uint32          dot1q_pcp = 1;    // Classify based on this outer qtag pcp value
-  repeated uint32 ip_dscp   = 2;    // Classify based on these ipv4/v6 dscp values
+  uint32          dot1q_pcp = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:0-7}"];    // Classify based on this outer qtag pcp value
+  repeated uint32 ip_dscp   = 2 [(gogoproto.moretags) = "venice:constraints={range:0-63}"];    // Classify based on these ipv4/v6 dscp values
 }
 
 // QosMarking specifies the policy to mark the host-to-network traffic
 message QosMarking {
   bool   dot1q_pcp_rewrite_en = 1;    // Enable 802.1q PCP rewrite
-  uint32 dot1q_pcp            = 2;    // Value of PCP to rewrite with
+  uint32 dot1q_pcp            = 2 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];    // Value of PCP to rewrite with
   bool   ip_dscp_rewrite_en   = 3;    // Enable ip dscp rewrite
-  uint32 ip_dscp              = 4;    // Value of dscp to rewrite with
+  uint32 ip_dscp              = 4 [(gogoproto.moretags) = "venice:constraints={range:0-63}"];    // Value of dscp to rewrite with
 }
 
 // QosClass specification
@@ -89,12 +85,11 @@ message QosClassSpec {
   types.ObjectMeta     meta             = 1;    // object meta
   // key_or_handle is QosClass's key or handle
   kh.QosClassKeyHandle key_or_handle    = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  uint32               mtu              = 3;    // MTU
-  QosBuffer            buffer           = 4;    // Buffering configuration
-  QosPFC               pfc              = 5;    // PFC configuration
-  QosSched             sched            = 6;    // Scheduling configuration
-  QosUplinkClassMap    uplink_class_map = 7;    // Class map for class derivation on uplinks
-  QosMarking           marking          = 8;    // Marking policy for host-to-network traffic
+  uint32               mtu              = 3 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:1500-9200}"];    // MTU
+  QosPFC               pfc              = 4;    // PFC configuration
+  QosSched             sched            = 5 [(gogoproto.moretags) = "venice:mandatory"];    // Scheduling configuration
+  QosUplinkClassMap    uplink_class_map = 6;    // Class map for class derivation on uplinks
+  QosMarking           marking          = 7;    // Marking policy for host-to-network traffic
 }
 
 // QosClassRequestMsg is batched request to create/update the QosClasss
@@ -174,7 +169,7 @@ message CoppSpec {
   types.ObjectMeta meta          = 1;    // object meta
   // key_or_handle is Copp's unique identifier
   kh.CoppKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  PolicerSpec      policer       = 3;    // Policer specification
+  PolicerSpec      policer       = 3 [(gogoproto.moretags) = "venice:mandatory"];    // Policer specification
 }
 
 // Batched requests to create/update Copps

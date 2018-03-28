@@ -332,8 +332,8 @@ qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
     memset(&iq_params, 0, sizeof(iq_params));
 
     iq_params.mtu = qos_class->mtu;
-    iq_params.xoff_threshold = qos_class->buffer.xoff_clear_limit;
-    iq_params.xon_threshold = qos_class->buffer.xon_threshold;
+    iq_params.xoff_threshold = qos_class->pfc.xoff_clear_limit;
+    iq_params.xon_threshold = qos_class->pfc.xon_threshold;
     HAL_ASSERT(capri_tm_q_valid(pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX]));
     iq_params.p4_q = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];
 
@@ -453,7 +453,7 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         ret = capri_tm_uplink_oq_update(port, pd_qos_class->dest_oq, 
-                                        qos_class->no_drop, qos_class->pfc_cos);
+                                        qos_class->no_drop, qos_class->pfc.cos);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the xoff params for "
                           "Qos-class {} on port {} ret {}",

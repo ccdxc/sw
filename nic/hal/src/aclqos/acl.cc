@@ -791,6 +791,8 @@ populate_ip_common (acl_ip_match_spec_t *ip_key,
                 ip_sel->mutable_tcp_selector()->mutable_dst_port_range()->set_port_high(port_end);
             }
 
+            tcp_flags_mask = ip_mask->u.tcp.tcp_flags;
+            tcp_flags = ip_key->u.tcp.tcp_flags;
             if (tcp_flags_mask & TCP_FLAG_SYN) {
                 if (tcp_flags & TCP_FLAG_SYN) {
                     ip_sel->mutable_tcp_selector()->set_tcp_syn_set(true);
