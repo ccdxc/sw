@@ -150,6 +150,10 @@
 		CryptoKeyDeleteRequestMsg
 		CryptoKeyDeleteResponse
 		CryptoKeyDeleteResponseMsg
+		RegisterRequest
+		RegisterRequestMsg
+		MemoryRequest
+		MemoryRequestMsg
 		DebugKeyHandle
 		DebugSpec
 		DebugRequestMsg
@@ -170,6 +174,10 @@
 		SlabGetRequestMsg
 		SlabGetResponse
 		SlabGetResponseMsg
+		TraceSpec
+		TraceRequestMsg
+		TraceResponse
+		TraceResponseMsg
 		MpuTraceRequest
 		MpuTraceRequestMsg
 		MpuTraceResponse

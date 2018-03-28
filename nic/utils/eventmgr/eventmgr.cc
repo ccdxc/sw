@@ -238,11 +238,11 @@ eventmgr::add_eventmap_entry_(event_state_t *event_state)
 
     sdk_ret = event_map_->insert_with_key(&event_state->event_id, event_state,
                                           &event_state->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add event map entry for event {}, err {}",
                       event_state->event_id, ret);
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     return ret;
 }
 
@@ -253,11 +253,11 @@ eventmgr::del_eventmap_entry_(event_state_t *event_state)
     sdk_ret_t    sdk_ret;
 
     sdk_ret = event_map_->remove_entry(event_state, &event_state->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to del event map entry for event {}, err {}",
                       event_state->event_id, ret);
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     return ret;
 }
 
@@ -269,10 +269,10 @@ eventmgr::add_listener_map_entry_(listener_state_t *lstate)
 
     sdk_ret = listener_map_->insert_with_key(&lstate->lctxt, lstate,
                                              &lstate->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add listener map entry, err {}", ret);
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     return ret;
 }
 

@@ -36,8 +36,8 @@ extern "C" void __gcov_flush(void);
 namespace hal {
 
 // process globals
-thread   *g_hal_threads[HAL_THREAD_ID_MAX];
-bool     gl_super_user = false;
+thread    *g_hal_threads[HAL_THREAD_ID_MAX];
+bool      gl_super_user = false;
 
 // TODO_CLEANUP: THIS DOESN'T BELONG HERE !!
 LIFManager *g_lif_manager = nullptr;
@@ -104,6 +104,7 @@ static void
 hal_sig_handler (int sig, siginfo_t *info, void *ptr)
 {
     HAL_TRACE_DEBUG("HAL received signal {}", sig);
+
     if (utils::hal_logger()) {
         utils::hal_logger()->flush();
     }
@@ -112,18 +113,12 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGINT:
     case SIGTERM:
         HAL_GCOV_FLUSH();
-        if (utils::hal_logger()) {
-            utils::hal_logger()->flush();
-        }
         exit(0);
         break;
 
     case SIGUSR1:
     case SIGUSR2:
         HAL_GCOV_FLUSH();
-        if (utils::hal_logger()) {
-            utils::hal_logger()->flush();
-        }
         break;
 
     case SIGHUP:
@@ -131,9 +126,6 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGCHLD:
     case SIGURG:
     default:
-        if (utils::hal_logger()) {
-            utils::hal_logger()->flush();
-        }
         break;
     }
 }
@@ -168,19 +160,20 @@ hal_sig_init (void)
 static hal_ret_t
 hal_thread_init (hal_cfg_t *hal_cfg)
 {
-    uint32_t            tid;
+    uint32_t            i, tid;
     int                 rv, thread_prio;
     char                thread_name[16];
     struct sched_param  sched_param = { 0 };
     pthread_attr_t      attr;
     uint64_t            data_cores_mask = hal_cfg->data_cores_mask;
     uint64_t            cores_mask = 0x0;
+    cpu_set_t           cpus;
 
     // spawn data core threads and pin them to their cores
     thread_prio = sched_get_priority_max(SCHED_FIFO);
     assert(thread_prio >= 0);
 
-    for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
+    for (i = 0; i < hal_cfg->num_data_threads; i++) {
 
         // pin each data thread to a specific core
         cores_mask = 1 << (ffsl(data_cores_mask) - 1);
@@ -229,12 +222,11 @@ hal_thread_init (hal_cfg_t *hal_cfg)
     }
 
     // set core affinity
-    cpu_set_t cpus;
     CPU_ZERO(&cpus);
-    uint64_t mask = sdk::lib::thread::control_cores_mask();
-    while (mask != 0) {
-        CPU_SET(ffsl(mask) - 1, &cpus);
-        mask = mask & (mask - 1);
+    cores_mask = hal_cfg->control_cores_mask;
+    while (cores_mask != 0) {
+        CPU_SET(ffsl(cores_mask) - 1, &cpus);
+        cores_mask = cores_mask & (cores_mask - 1);
     }
 
     rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
@@ -369,13 +361,13 @@ hal_parse_thread_cfg (ptree &pt, hal_cfg_t *hal_cfg)
     std::string str = "";
 
     str = pt.get<std::string>("sw.control_cores_mask");
-    hal_cfg->control_cores_mask = std::stoul (str, nullptr, 16);
+    hal_cfg->control_cores_mask = std::stoul(str, nullptr, 16);
     sdk::lib::thread::control_cores_mask_set(hal_cfg->control_cores_mask);
     hal_cfg->num_control_threads =
                     sdk::lib::set_bits_count(hal_cfg->control_cores_mask);
 
     str = pt.get<std::string>("sw.data_cores_mask");
-    hal_cfg->data_cores_mask = std::stoul (str, nullptr, 16);
+    hal_cfg->data_cores_mask = std::stoul(str, nullptr, 16);
     sdk::lib::thread::data_cores_mask_set(hal_cfg->data_cores_mask);
     hal_cfg->num_data_threads =
                     sdk::lib::set_bits_count(hal_cfg->data_cores_mask);
@@ -460,7 +452,6 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
 
         // parse threads config
         hal_parse_thread_cfg(pt, hal_cfg);
-
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
         return HAL_RET_INVALID_ARG;
@@ -569,8 +560,9 @@ hal_logger_init (hal_cfg_t *hal_cfg)
 
     // initialize the logger
     hal_cfg->sync_mode_logging = true;
-    hal::utils::logger_init(ffsl(sdk::lib::thread::control_cores_mask()) - 1,
-                            hal_cfg->sync_mode_logging, logfile);
+    hal::utils::trace_init("hal", hal_cfg->control_cores_mask,
+                           hal_cfg->sync_mode_logging, logfile.c_str(),
+                           hal::utils::trace_debug);
 
     return HAL_RET_OK;
 }
@@ -585,22 +577,16 @@ hal_init (hal_cfg_t *hal_cfg)
     char                 *user = NULL;
     sdk::lib::catalog    *catalog;
 
-    // initialize the logger
-    if (hal_logger_init(hal_cfg) != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
-    }
-    HAL_TRACE_DEBUG("Initializing HAL ...");
-    srand(time(NULL));
-
-    // do SDK initialization, if any
-    hal_sdk_init();
-
     // check to see if HAL is running with root permissions
     user = getenv("USER");
     if (user && !strcmp(user, "root")) {
         gl_super_user = true;
     }
 
+    // do SDK initialization, if any
+    hal_sdk_init();
+
+    // parse and initialize the catalog
     catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
     HAL_ASSERT(catalog != NULL);
     hal_cfg->catalog = catalog;
@@ -609,6 +595,15 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal_cores_validate(catalog->cores_mask(),
                                  hal_cfg->control_cores_mask,
                                  hal_cfg->data_cores_mask) == HAL_RET_OK);
+
+    // initialize random number generator
+    srand(time(NULL));
+
+    // initialize the logger
+    HAL_TRACE_DEBUG("Initializing HAL ...");
+    if (hal_logger_init(hal_cfg) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
+    }
 
     // init fte and hal plugins
     hal::init_plugins(hal_cfg);

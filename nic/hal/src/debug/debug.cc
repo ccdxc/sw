@@ -12,20 +12,21 @@ using sdk::lib::slab;
 
 namespace hal {
 
-static sdk::lib::catalog*
-catalog(void)
+static sdk::lib::catalog *
+catalog (void)
 {
     return g_hal_state->catalog();
 }
 
 static uint32_t
-max_mpu_per_stage(void)
+max_mpu_per_stage (void)
 {
     return catalog()->max_mpu_per_stage();
 }
 
+// TODO: This doesn't look right !!
 static uint32_t
-mpu_trace_size(void)
+mpu_trace_size (void)
 {
     return catalog()->mpu_trace_size();
 }
@@ -140,7 +141,7 @@ slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
 }
 
 hal_ret_t
-mpu_trace_enable(debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
+mpu_trace_enable (debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
 {
     hal::pd::pd_mpu_trace_enable_args_t args;
 
@@ -202,6 +203,33 @@ mpu_trace_enable(debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
 
     return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_MPU_TRACE_ENABLE,
                                 (void *)&args);
+}
+
+//------------------------------------------------------------------------------
+// process a trace update request
+//------------------------------------------------------------------------------
+hal_ret_t
+trace_update (TraceSpec& spec, TraceResponse *rsp)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// process a trace get request
+//------------------------------------------------------------------------------
+hal_ret_t
+trace_get (TraceResponseMsg *rsp)
+{
+#if 0
+    auto response = rsp->add_response();
+    if (!hal_if) {
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_INVALID_ARG;
+    } else {
+        if_process_get(hal_if, response);
+    }
+#endif
+    return HAL_RET_OK;
 }
 
 }    // namespace hal

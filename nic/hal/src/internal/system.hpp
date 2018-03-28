@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __SYSTEM_HPP__
 #define __SYSTEM_HPP__
 

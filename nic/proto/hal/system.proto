@@ -122,7 +122,7 @@ message ApiStatsEntry {
 
 // API Stats object
 message ApiStatsResponse {
-  repeated ApiStatsEntry api_entries  = 1;               // list of API statistics
+  repeated ApiStatsEntry api_entries  = 1;                      // list of API statistics
 }
 
 message DropStatsEntry {

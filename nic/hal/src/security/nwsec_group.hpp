@@ -410,12 +410,12 @@ add_nwsec_group_to_db (nwsec_group_t *nwsec_grp)
 
     sdk_ret = g_hal_state->nwsec_group_ht()->insert_with_key(&nwsec_grp->sg_id, entry,
                                                              &entry->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);;
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add security group {} to handle mapping, "
                       "err : {}", nwsec_grp->sg_id, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);;
     //nwsec_grp->hal_handle = handle_id;
     return ret;
 }
@@ -663,7 +663,8 @@ nwsec_policy_free(nwsec_policy_t *policy)
 static inline hal_ret_t
 add_nwsec_policy_to_db (nwsec_policy_t *policy)
 {
-    sdk_ret_t                  sdk_ret;
+    hal_ret_t                 ret;
+    sdk_ret_t                 sdk_ret;
     hal_handle_id_ht_entry_t  *entry;
 
     HAL_TRACE_DEBUG("adding policy to hash table");
@@ -679,12 +680,13 @@ add_nwsec_policy_to_db (nwsec_policy_t *policy)
     sdk_ret = g_hal_state->nwsec_policy_ht()->insert_with_key(&policy->key,
                                                               entry,
                                                               &policy->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to security policy  {} to policy db,"
-                      "err : {}", policy->key.policy_id);
+                      "err : {}", policy->key.policy_id, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
-    return hal_sdk_ret_to_hal_ret(sdk_ret);
+    return ret;
 
 }
 

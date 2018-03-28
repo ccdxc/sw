@@ -239,12 +239,12 @@ ep_add_to_l2_db (ep_t *ep, hal_handle_t handle)
     entry->handle_id = handle;
     sdk_ret = g_hal_state->ep_l2_ht()->insert_with_key(&ep->l2_key,
                                                        entry, &entry->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("{}:failed to add l2 key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     // TODO: Check if this is the right place
     ep->hal_handle = handle;
@@ -299,12 +299,12 @@ ep_add_to_l3_db (ep_l3_key_t *l3_key, ep_ip_entry_t *ep_ip,
     entry->ht_ctxt.reset();
     sdk_ret = g_hal_state->ep_l3_entry_ht()->insert_with_key(l3_key,
                                                          entry, &entry->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("{}:failed to add l2 key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         hal::delay_delete_to_slab(HAL_SLAB_EP_L3_ENTRY, entry);
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     return ret;
 }

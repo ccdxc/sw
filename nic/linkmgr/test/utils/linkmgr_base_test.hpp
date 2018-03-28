@@ -52,8 +52,8 @@ linkmgr_initialize (const char c_file[])
     sdk::lib::thread::control_cores_mask_set(0x1);
 
     // Initialize the logger
-    hal::utils::logger_init(ffsl(sdk::lib::thread::control_cores_mask()) - 1,
-                            true, "linkmgr.log");
+    hal::utils::trace_init("linkmgr", sdk::lib::thread::control_cores_mask(),
+                           true, "linkmgr.log", hal::utils::trace_debug);
 
     sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
 

@@ -27,7 +27,6 @@ cc_binary(
             "//nic:grpc_includes",
             "//nic:libprotobuf",
             "//nic:grpc",
-            "//nic/utils/trace",
             "//nic/utils/mtrack",
 
             # PD
@@ -91,6 +90,7 @@ cc_library(
         "//nic:asic_includes",
         "//nic:gen_proto_includes",
         "//nic:hal_gen_includes",
+        "//nic/utils/trace",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_slab",

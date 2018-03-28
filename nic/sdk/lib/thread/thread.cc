@@ -35,7 +35,6 @@ thread::init(const char *name, uint32_t thread_id,
     can_yield_ = can_yield;
     cores_mask_ = cores_mask;
     thread_role_ = thread_role;
-
     pthread_id_ = 0;
     running_ = false;
 
@@ -52,8 +51,8 @@ thread::cores_mask_validate(thread_role_t thread_role,
         if (mask != 0 &&
             (mask & control_cores_mask_) == 0) {
             SDK_TRACE_ERR("Invalid control core mask 0x%lx."
-                        " Expected: 0x%lx\n",
-                        mask, control_cores_mask_);
+                          " Expected: 0x%lx\n",
+                          mask, control_cores_mask_);
             return SDK_RET_ERR;
         }
         break;
@@ -62,16 +61,16 @@ thread::cores_mask_validate(thread_role_t thread_role,
         // check if the mask bit is present in data cores mask
         if ((mask & data_cores_free_) == 0) {
             SDK_TRACE_ERR("Invalid data core mask 0x%lx."
-                        " Expected, one of: 0x%lx\n",
-                        mask, data_cores_free_);
+                          " Expected, one of: 0x%lx\n",
+                          mask, data_cores_free_);
             return SDK_RET_ERR;
         }
 
         // check if only one bit is set in mask
         if ((mask & (mask - 1)) != 0) {
             SDK_TRACE_ERR("Invalid data core mask 0x%lx."
-                        " Expected, one of: 0x%lx\n",
-                        mask, data_cores_free_);
+                          " Expected, one of: 0x%lx\n",
+                          mask, data_cores_free_);
             return SDK_RET_ERR;
         }
 

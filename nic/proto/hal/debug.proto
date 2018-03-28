@@ -13,73 +13,111 @@ option go_package="halproto";
 
 // HAL debug service
 service Debug {
-    rpc DebugInvoke (DebugRequestMsg) returns (DebugResponseMsg) {}
-    rpc MemTrackGet (MemTrackGetRequestMsg) returns (MemTrackGetResponseMsg) {}
-    rpc SlabGet (SlabGetRequestMsg) returns (SlabGetResponseMsg){}
-    rpc MpuTraceOpn (MpuTraceRequestMsg) returns (MpuTraceResponseMsg){}
+  //rpc RegisterGet (RegisterRequestMsg) returns (RegisterResponseMsg) {}
+  //rpc RegisterUpdate (RegisterRequestMsg) returns (RegisterResponseMsg) {}
+  //rpc MemoryGet (MemoryRequestMsg) returns (MemoryResponseMsg) {}
+  //rpc MemoryUpdate (MemoryRequestMsg) returns (MemoryResponseMsg) {}
+  //rpc MpuTraceUpdate (MpuTraceRequestMsg) returns (MpuTraceResponseMsg) {}
+
+  rpc DebugInvoke(DebugRequestMsg) returns (DebugResponseMsg) {}
+  rpc MpuTraceOpn(MpuTraceRequestMsg) returns (MpuTraceResponseMsg){}
+  rpc MemTrackGet(MemTrackGetRequestMsg) returns (MemTrackGetResponseMsg) {}
+  rpc SlabGet(SlabGetRequestMsg) returns (SlabGetResponseMsg){}
+  rpc TraceUpdate(TraceRequestMsg) returns (TraceResponseMsg){}
+  rpc TraceGet(types.Empty) returns (TraceResponseMsg) {}
+}
+
+message RegisterRequest {
+  oneof id_or_name {
+    fixed32    reg_id     = 1;    // register ID being accessed
+    string     reg_name   = 2;    // register name being accessed
+  }
+  string       block_name = 3;    // block name being accessed
+  uint64       addr       = 4;    // address to be read/write
+  uint32       reg_data   = 5;    // data to write
+}
+
+message RegisterRequestMsg {
+  repeated RegisterRequest    request = 1;    // batched request
+}
+
+message MemoryRequest {
+  oneof id_or_name {
+    fixed32    table_id      = 1;    // table ID being accessed
+    string     table_name    = 2;    // table name being accessed
+  }
+
+  uint32     index           = 3;      // index for tables
+  bytes      swkey           = 4;      // structure typecast to char* and wrapped with string
+  bytes      swkey_mask      = 5;      // structure typecast to char* and wrapped with string
+  bytes      actiondata      = 6;      // structure typecast to char* and wrapped with string
+}
+
+message MemoryRequestMsg {
+  repeated MemoryRequest    request = 1;    // batched request
 }
 
 // DebugKeyHandle uniquely identfies the table/register to access
 message DebugKeyHandle {
-    oneof key_or_handle {
-        fixed32    table_id   = 1;    // table ID being accessed
-        string     table_name = 2;    // table name being accessed
-        fixed32    reg_id     = 3;    // register ID being accessed
-        string     reg_name   = 4;    // register name being accessed
-        string     block_name = 5;    // block name being accessed
-    }
+  oneof key_or_handle {
+    fixed32    table_id   = 1;    // table ID being accessed
+    string     table_name = 2;    // table name being accessed
+    fixed32    reg_id     = 3;    // register ID being accessed
+    string     reg_name   = 4;    // register name being accessed
+    string     block_name = 5;    // block name being accessed
+  }
 }
 
 // Debug table and register Read/Write operation
 enum DebugOperationType {
-    DEBUG_OP_TYPE_NONE  = 0;    // operation type not specified in request
-    DEBUG_OP_TYPE_READ  = 1;    // read the given table/register
-    DEBUG_OP_TYPE_WRITE = 2;    // write to the given table/register
+  DEBUG_OP_TYPE_NONE  = 0;    // operation type not specified in request
+  DEBUG_OP_TYPE_READ  = 1;    // read the given table/register
+  DEBUG_OP_TYPE_WRITE = 2;    // write to the given table/register
 }
 
 // Debug table or register
 enum DebugMemoryType {
-    DEBUG_MEM_TYPE_NONE  = 0;   // Invalid memory
-    DEBUG_MEM_TYPE_TABLE = 1;  // access Table
-    DEBUG_MEM_TYPE_REG   = 2;  // Register
+  DEBUG_MEM_TYPE_NONE  = 0;   // Invalid memory
+  DEBUG_MEM_TYPE_TABLE = 1;  // access Table
+  DEBUG_MEM_TYPE_REG   = 2;  // Register
 }
 
 // DebugSpec msg is used to pass parameters for the Debug
 message DebugSpec {
-    DebugKeyHandle      key_or_handle   =   1;      // table/register ID to be accessed
-    DebugOperationType  opn_type        =   2;      // read/write operation
-    DebugMemoryType     mem_type        =   3;      // mem type - table or register
-    uint64              addr            =   4;      // address to be read/write
-    uint32              reg_data        =   5;      // data to write
+  DebugKeyHandle      key_or_handle   =   1;      // table/register ID to be accessed
+  DebugOperationType  opn_type        =   2;      // read/write operation
+  DebugMemoryType     mem_type        =   3;      // mem type - table or register
+  uint64              addr            =   4;      // address to be read/write
+  uint32              reg_data        =   5;      // data to write
 
-    uint32              index           =   6;      // index for tables
-    bytes               swkey           =   7;      // structure typecast to char* and wrapped with string
-    bytes               swkey_mask      =   8;      // structure typecast to char* and wrapped with string
-    bytes               actiondata      =   9;      // structure typecast to char* and wrapped with string
+  uint32              index           =   6;      // index for tables
+  bytes               swkey           =   7;      // structure typecast to char* and wrapped with string
+  bytes               swkey_mask      =   8;      // structure typecast to char* and wrapped with string
+  bytes               actiondata      =   9;      // structure typecast to char* and wrapped with string
 }
 
 // Batched DEBUG request message
 message DebugRequestMsg {
-    repeated DebugSpec  request = 1;
+  repeated DebugSpec  request = 1;
 }
 
 // Captures the return data for registers
 message RegisterData {
-    string reg_name   = 1;   // Register name 
-    string address    = 2;   // Register address
-    string value      = 3;   // Register value
+  string reg_name   = 1;   // Register name 
+  string address    = 2;   // Register address
+  string value      = 3;   // Register value
 }
 
 // DEBUG response - captures keys and data of table as well as registers
 message DebugResponse {
-    types.ApiStatus             api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-    DebugSpec                   spec       = 2; // incoming spec
-    repeated RegisterData       data       = 3; // return data for register read operations
+  types.ApiStatus             api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  DebugSpec                   spec       = 2; // incoming spec
+  repeated RegisterData       data       = 3; // return data for register read operations
 }
 
 // Batched DEBUG response msg
 message DebugResponseMsg {
-    repeated DebugResponse    response = 1;
+  repeated DebugResponse    response = 1;
 }
 
 message MemTrackSpec {
@@ -169,43 +207,67 @@ message SlabGetResponseMsg {
   repeated SlabGetResponse     response = 1;    // batched get response
 }
 
+enum TraceLevel {
+  TRACE_LEVEL_NONE  = 0;    // no tracing at all
+  TRACE_LEVEL_ERR   = 1;    // enable tracing only for error messages
+  TRACE_LEVEL_DEBUG = 2;    // enable tracing only for debug messages
+}
+
+message TraceSpec {
+  types.ObjectMeta    meta        = 1;    // common object meta
+  TraceLevel          trace_level = 2;    // trace level to set to
+}
+
+message TraceRequestMsg {
+  repeated TraceSpec    request = 1;    // batched request
+}
+
+message TraceResponse {
+  types.ApiStatus   api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  TraceLevel        trace_level = 2;    // current trace level
+}
+
+message TraceResponseMsg {
+  repeated TraceResponse    response = 1;    // batched response
+}
+
 // pipeline type for MPU trace
 enum MpuTracePipelineType {
-    MPU_TRACE_PIPELINE_NONE       = 0;   // pipeline type not set
-    MPU_TRACE_PIPELINE_P4_INGRESS = 1;   // P4 ingress pipeline
-    MPU_TRACE_PIPELINE_P4_EGRESS  = 2;   // P4 egress pipeline
+  MPU_TRACE_PIPELINE_NONE       = 0;   // pipeline type not set
+  MPU_TRACE_PIPELINE_P4_INGRESS = 1;   // P4 ingress pipeline
+  MPU_TRACE_PIPELINE_P4_EGRESS  = 2;   // P4 egress pipeline
 }
 
 // parameters to enable/disable MPU tracing
 message MpuTraceRequest {
-    MpuTracePipelineType  pipeline_type    =  1;    // pipeline type
-    uint32                stage_id         =  2;    // stage id
-    uint32                mpu              =  3;    // MPU number
-    bool                  enable           =  4;    // enable/disable trace for every table result
-    bool                  trace_enable     =  5;    // trace is enable only if TRACE instruction is executed
-    bool                  phv_debug        =  6;    // trace if PHV has phv_debug set
-    bool                  phv_error        =  7;    // trace if PHV has table error set
-    uint64                watch_pc         =  8;    // start trace when PC == watch_pc
-    uint64                base_addr        =  9;    // base addr where trace is present
-    bool                  table_key        =  10;   // set table and key trace
-    bool                  instructions     =  11;   // set instructions trace
-    bool                  wrap             =  12;   // wrap the trace
-    bool                  reset            =  13;   // reset trace buffer index to 0. Clear wrap.
+  MpuTracePipelineType    pipeline_type =  1;    // pipeline type
+  uint32                  stage_id      =  2;    // stage id
+  uint32                  mpu           =  3;    // MPU number
+  bool                    enable        =  4;    // enable/disable trace for every table result
+  bool                    trace_enable  =  5;    // trace is enable only if TRACE instruction is executed
+  bool                    phv_debug     =  6;    // trace if PHV has phv_debug set
+  bool                    phv_error     =  7;    // trace if PHV has table error set
+  uint64                  watch_pc      =  8;    // start trace when PC == watch_pc
+  uint64                  base_addr     =  9;    // base addr where trace is present
+  bool                    table_key     =  10;   // set table and key trace
+  bool                    instructions  =  11;   // set instructions trace
+  bool                    wrap          =  12;   // wrap the trace
+  bool                    reset         =  13;   // reset trace buffer index to 0. Clear wrap.
 }
 
 // Batched MPU trace enable/disable request msg
 message MpuTraceRequestMsg {
-    repeated MpuTraceRequest request = 1;
+  repeated MpuTraceRequest request = 1;
 }
 
 // MPU trace enable/disable status
 message MpuTraceResponse {
-    types.ApiStatus   api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-    uint32            debug_index = 2;    // current index in trace buffer
+  types.ApiStatus   api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  uint32            debug_index = 2;    // current index in trace buffer
 }
 
 // Batched MPU trace response
 message MpuTraceResponseMsg {
-    repeated MpuTraceResponse response = 1;
+  repeated MpuTraceResponse    response = 1;
 }
 

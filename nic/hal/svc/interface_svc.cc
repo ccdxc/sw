@@ -173,7 +173,7 @@ InterfaceServiceImpl::InterfaceDelete(ServerContext *context,
                                       const InterfaceDeleteRequestMsg *req,
                                       InterfaceDeleteResponseMsg *rsp)
 {
-    uint32_t     i, nreqs = req->request_size();
+    uint32_t                    i, nreqs = req->request_size();
     InterfaceDeleteResponse     *response;
 
     HAL_TRACE_DEBUG("Received if delete");
@@ -196,7 +196,7 @@ InterfaceServiceImpl::InterfaceGet(ServerContext *context,
                                    const InterfaceGetRequestMsg *req,
                                    InterfaceGetResponseMsg *rsp)
 {
-    uint32_t                i, nreqs = req->request_size();
+    uint32_t    i, nreqs = req->request_size();
 
     HAL_TRACE_DEBUG("Received if get ");
     if (nreqs == 0) {

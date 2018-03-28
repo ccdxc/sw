@@ -158,6 +158,7 @@ mc_entry_add_to_db (mc_entry_t *mc_entry, hal_handle_t handle)
     entry->handle_id = handle;
     sdk_ret = g_hal_state->mc_key_ht()->insert_with_key(&mc_entry->key, entry,
                                                         &entry->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("{}:failed to add mc key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);

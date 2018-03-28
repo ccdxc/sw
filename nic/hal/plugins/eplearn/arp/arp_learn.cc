@@ -28,15 +28,15 @@ static hal_ret_t arp_process_req_entry(uint16_t opcode, uint8_t *hw_address,
 
     arp_trans_t::init_arp_trans_key(hw_address,
                                     ctx.sep(), ARP_TRANS_IPV4, &trans_key);
-    trans = arp_trans_t::find_arptrans_by_id(trans_key);
-    if (trans == NULL) {
-        HAL_TRACE_INFO("Creating new ARP transaction {}", event);
-        trans = new arp_trans_t(hw_address, ARP_TRANS_IPV4, ctx);
-    }
     if (opcode == ARPOP_REVREQUEST) {
         event = RARP_REQ;
     } else {
         event = ARP_ADD;
+    }
+    trans = arp_trans_t::find_arptrans_by_id(trans_key);
+    if (trans == NULL) {
+        HAL_TRACE_INFO("Creating new ARP transaction {}", event);
+        trans = new arp_trans_t(hw_address, ARP_TRANS_IPV4, ctx);
     }
     memcpy(&(ip_addr.addr.v4_addr), protocol_address,
             sizeof(ip_addr.addr.v4_addr));

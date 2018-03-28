@@ -23,11 +23,11 @@ public:
                        const Empty *request,
                        ApiStatsResponse *rsp) override;
     Status SystemGet(ServerContext *context,
-                    const Empty *request,
+                     const Empty *request,
                      SystemResponse *rsp) override;
     Status SystemConfig(ServerContext *context,
-                             const  SystemConfigMsg *request,
-                             SystemConfigResponseMsg *rsp) override;
+                        const  SystemConfigMsg *request,
+                        SystemConfigResponseMsg *rsp) override;
 };
 #endif    // __SYSTEM_SVC_HPP__
 

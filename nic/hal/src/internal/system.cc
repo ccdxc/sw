@@ -11,7 +11,7 @@
 namespace hal {
 
 void
-api_stats_fill_entry(ApiStatsEntry *entry, ApiCounter type)
+api_stats_fill_entry (ApiStatsEntry *entry, ApiCounter type)
 {
     entry->set_api_type(type);
     switch (type) {
@@ -442,7 +442,7 @@ api_stats_fill_entry(ApiStatsEntry *entry, ApiCounter type)
 // process a API stats get request
 //------------------------------------------------------------------------------
 hal_ret_t
-api_stats_get(ApiStatsResponse *rsp)
+api_stats_get (ApiStatsResponse *rsp)
 {
     ApiStatsEntry    *stats_entry;
 
@@ -458,7 +458,7 @@ api_stats_get(ApiStatsResponse *rsp)
 // process a vrf get request
 //------------------------------------------------------------------------------
 hal_ret_t
-system_get(SystemResponse *rsp)
+system_get (SystemResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     pd::pd_system_args_t    pd_system_args = { 0 };
@@ -492,11 +492,12 @@ system_get(SystemResponse *rsp)
     rsp->set_api_status(types::API_STATUS_OK);
 
 end:
+
     return HAL_RET_OK;
 }
 
 hal_ret_t
-system_set(const SystemConfigMsg *req)
+system_set (const SystemConfigMsg *req)
 {
     hal::pd::pd_system_drop_action_args_t args;
     uint32_t nreqs = req->request_size();

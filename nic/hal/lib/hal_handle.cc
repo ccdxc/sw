@@ -268,7 +268,7 @@ hal_handle_alloc (hal_obj_id_t obj_id)
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
-    HAL_TRACE_DEBUG("Assigned hal_handle:{} for an object of obj_id:{}, ret:{}", 
+    HAL_TRACE_DEBUG("Assigned hal_handle:{} for an object of obj_id:{}, ret:{}",
                     handle_id, obj_id, ret);
     return handle_id;
 }

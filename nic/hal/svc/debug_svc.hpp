@@ -11,6 +11,7 @@
 using grpc::ServerContext;
 using grpc::Status;
 
+using types::Empty;
 using debug::Debug;
 using debug::DebugSpec;
 using debug::DebugRequestMsg;
@@ -26,6 +27,10 @@ using debug::MpuTraceRequestMsg;
 using debug::MpuTraceRequest;
 using debug::MpuTraceResponseMsg;
 using debug::MpuTraceResponse;
+using debug::TraceSpec;
+using debug::TraceRequestMsg;
+using debug::TraceResponse;
+using debug::TraceResponseMsg;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -38,10 +43,15 @@ public:
     Status SlabGet(ServerContext *context,
                    const SlabGetRequestMsg *req,
                    SlabGetResponseMsg *rsp) override;
-
     Status MpuTraceOpn(ServerContext *context,
                        const MpuTraceRequestMsg *req,
-                       MpuTraceResponseMsg *rsp);
+                       MpuTraceResponseMsg *rsp) override;
+    Status TraceUpdate(ServerContext *context,
+                       const TraceRequestMsg *req,
+                       TraceResponseMsg *rsp) override;
+    Status TraceGet(ServerContext *context,
+                    const Empty *req,
+                    TraceResponseMsg *rsp) override;
 };
 
 #endif  // __DEBUG_SVC_HPP__

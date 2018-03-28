@@ -1,6 +1,6 @@
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
-
 //------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
 // HAL DEBUG service implementation
 //------------------------------------------------------------------------------
 
@@ -10,6 +10,8 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 #include "nic/include/asic_pd.hpp"
+
+// TODO: we don't seem to be using these ??
 #include <vector>
 #include <tuple>
 using std::vector;
@@ -24,6 +26,7 @@ struct _reg_info {
     char *value;
 };
 typedef struct _reg_info reg_info;
+
 Status
 DebugServiceImpl::DebugInvoke(ServerContext *context,
                               const DebugRequestMsg *req,
@@ -182,9 +185,10 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
     return Status::OK;
 }
 
-Status DebugServiceImpl::MemTrackGet(ServerContext *context,
-                                     const MemTrackGetRequestMsg *req,
-                                     MemTrackGetResponseMsg *rsp)
+Status
+DebugServiceImpl::MemTrackGet(ServerContext *context,
+                              const MemTrackGetRequestMsg *req,
+                              MemTrackGetResponseMsg *rsp)
 {
     uint32_t               i, nreqs = req->request_size();
 
@@ -199,9 +203,10 @@ Status DebugServiceImpl::MemTrackGet(ServerContext *context,
     return Status::OK;
 }
 
-Status DebugServiceImpl::SlabGet(ServerContext *context,
-                                 const SlabGetRequestMsg *req,
-                                 SlabGetResponseMsg *rsp)
+Status
+DebugServiceImpl::SlabGet(ServerContext *context,
+                          const SlabGetRequestMsg *req,
+                          SlabGetResponseMsg *rsp)
 {
     uint32_t    i, nreqs = req->request_size();
 
@@ -219,9 +224,10 @@ Status DebugServiceImpl::SlabGet(ServerContext *context,
     return Status::OK;
 }
 
-Status DebugServiceImpl::MpuTraceOpn(ServerContext *context,
-                                     const MpuTraceRequestMsg *req,
-                                     MpuTraceResponseMsg *rsp)
+Status
+DebugServiceImpl::MpuTraceOpn(ServerContext *context,
+                              const MpuTraceRequestMsg *req,
+                              MpuTraceResponseMsg *rsp)
 {
     uint32_t  i     = 0;
     uint32_t  nreqs = req->request_size();
@@ -240,3 +246,32 @@ Status DebugServiceImpl::MpuTraceOpn(ServerContext *context,
     return Status::OK;
 }
 
+Status
+DebugServiceImpl::TraceUpdate(ServerContext *context,
+                              const TraceRequestMsg *req,
+                              TraceResponseMsg *rsp)
+{
+    uint32_t         i, nreqs = req->request_size();
+    TraceResponse    *response;
+
+    HAL_TRACE_DEBUG("Received trace update");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::trace_update(spec, response);
+    }
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::TraceGet(ServerContext *context,
+                           const Empty *req,
+                           TraceResponseMsg *rsp)
+{
+    HAL_TRACE_DEBUG("Received trace get");
+    hal::trace_get(rsp);
+    return Status::OK;
+}

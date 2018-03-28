@@ -413,8 +413,6 @@ dospolicy_create (nwsec::DoSPolicySpec& spec,
     // instantiate the dos policy
     dosp = dos_policy_alloc_init();
     if (dosp == NULL) {
-        HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
-                      __FUNCTION__, ret);
         ret = HAL_RET_OOM;
         goto end;
     }

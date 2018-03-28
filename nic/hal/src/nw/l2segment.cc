@@ -205,12 +205,12 @@ l2seg_add_to_db (l2seg_t *l2seg, hal_handle_t handle)
     entry->handle_id = handle;
     sdk_ret = g_hal_state->l2seg_id_ht()->insert_with_key(&l2seg->seg_id,
                                                           entry, &entry->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("failed to add seg id to handle mapping, "
                       "err : {}",ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     return ret;
 }

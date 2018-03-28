@@ -60,11 +60,8 @@ namespace hal {
 namespace utils {
 
 using logger = spdlog::logger;
-
-void logger_init(uint32_t cpu_id, bool sync_mode, std::string logfile);
 logger *hal_logger(void);
 logger *hal_syslogger(void);
-
 enum log_mode_e {
     log_mode_sync     = 0,     // write logs in the context of the caller thread
     log_mode_async    = 1,    // write logs/traces in the context of a backend thread
@@ -88,126 +85,160 @@ enum syslog_level_e {
     log_debug     = 8,
 };
 
+// logger class with support for log rotation
 class log {
 public:
-    static log *factory(uint32_t cpu_id, log_mode_e log_mode, bool syslogger,
-                        trace_level_e trace_level, syslog_level_e syslog_level);
+    // cpu_mask is the CPU to which the logger backend threads will be pinned to
+    static log *factory(const char *name, uint64_t cpu_mask,
+                        log_mode_e log_mode, bool syslogger,
+                        const char *trace_file_name,
+                        trace_level_e trace_level = trace_err,
+                        syslog_level_e syslog_level = log_notice);
     static void destroy(log *logger_obj);
     void set_trace_level(trace_level_e level);
-    trace_level_e trace_level(void) const;
+    trace_level_e trace_level(void) const { return trace_level_; }
     void set_syslog_level(syslog_level_e level);
-    syslog_level_e syslog_level(void) const;
+    syslog_level_e syslog_level(void) const { return log_level_; }
     void flush(void);
+    spdlog::logger *logger(void);
 
 private:
-    uint32_t                           cpu_id_;              // CPU this logger is tied to
-    bool                               syslogger_;           // true, if this is for syslogs
-    trace_level_e                      trace_level_;         // trace level, if this is for traces
-    syslog_level_e                     log_level_;           // syslog level, if this is for syslogs
-    spdlog::logger                     *logger_;             // logger instance
-    const size_t                       k_async_qsize_;       // async queue size
-    const std::chrono::milliseconds    k_flush_intvl_ms_;    // flush interval
-    const size_t                       k_max_file_size_;     // max. trace file size
-    const size_t                       k_max_files_;         // max. number of trace files before rotating
+    uint64_t                                      cpu_mask_;                   // CPU this logger is tied to
+    bool                                          syslogger_;                  // true, if this is for syslogs
+    trace_level_e                                 trace_level_;                // trace level, if this is for traces
+    syslog_level_e                                log_level_;                  // syslog level, if this is for syslogs
+    spdlog::logger                                *logger_;                    // logger instance
+    static const size_t                           k_async_qsize_;              // async queue size
+    static const spdlog::async_overflow_policy    k_async_overflow_policy_;    // overflow policy
+    static const std::chrono::milliseconds        k_flush_intvl_ms_;           // flush interval
+    static const size_t                           k_max_file_size_;            // max. trace file size
+    static const size_t                           k_max_files_;                // max. number of trace files before rotating
 
 private:
-    log() : k_async_qsize_(64 * 1024),
-            k_flush_intvl_ms_(std::chrono::milliseconds(10)),
-            k_max_file_size_(10*1024*1024),
-            k_max_files_(10) {};
+    log(){}
     ~log();
-    bool init(uint32_t cpu_id, log_mode_e log_mode, bool syslogger,
+    bool init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
+              bool syslogger, const char *trace_file_name,
               trace_level_e trace_level, syslog_level_e syslog_level);
     static void set_cpu_affinity(void);
     spdlog::level::level_enum trace_level_to_spdlog_level(trace_level_e level);
     spdlog::level::level_enum syslog_level_to_spdlog_level(syslog_level_e level);
 };
 
-extern log *trace_logger;
-extern log *syslog_logger;
+void trace_init(const char *name, uint64_t cpu_mask,
+                bool sync_mode, const char *trace_file,
+                trace_level_e trace_level);
+
+extern log *g_trace_logger;
+extern log *g_syslog_logger;
 
 }    // namespace utils
 }    // namespace hal
 
+//------------------------------------------------------------------------------
 // HAL syslog macros
-#define HAL_SYSLOG_ERR(args...)     hal::utils::hal_syslogger()->error(args)
-#define HAL_SYSLOG_WARN(args...)    hal::utils::hal_syslogger()->warn(args)
-#define HAL_SYSLOG_INFO(args...)    hal::utils::hal_syslogger()->info(args)
+//------------------------------------------------------------------------------
+#define HAL_SYSLOG_ERR(args...)                                                \
+do {                                                                           \
+    if (hal::utils::hal_syslogger()) {                                         \
+        hal::utils::hal_syslogger()->error(args);                              \
+    }                                                                          \
+} while (0)
 
-#define HAL_TRACE_ERR(args, ...)                                               \
+#define HAL_SYSLOG_WARN(args...)                                               \
+do {                                                                           \
+    if (hal::utils::hal_syslogger()) {                                         \
+        hal::utils::hal_syslogger()->warn(args);                               \
+    }                                                                          \
+} while (0)
+
+#define HAL_SYSLOG_INFO(args...)                                               \
+do {                                                                           \
+    if (hal::utils::hal_syslogger()) {                                         \
+        hal::utils::hal_syslogger()->info(args);                               \
+    }                                                                          \
+} while (0)
+
+//------------------------------------------------------------------------------
+// HAL trace macros
+// NOTE: we can't use printf() here if g_trace_logger is NULL, because printf()
+// won't understand spdlog friendly formatters
+//------------------------------------------------------------------------------
+#define HAL_TRACE_ERR(fmt, ...)                                                \
 do {                                                                           \
     if (hal::utils::hal_logger()) {                                            \
-        hal::utils::hal_logger()->error("[{}:{}] " args, __func__, __LINE__,   \
+        hal::utils::hal_logger()->error("[{}:{}] " fmt, __func__, __LINE__,    \
                                         ##__VA_ARGS__);                        \
     }                                                                          \
 } while (0)
 
-#define HAL_TRACE_ERR_NO_META(args...)                                         \
+#define HAL_TRACE_ERR_NO_META(fmt...)                                          \
 do {                                                                           \
     if (hal::utils::hal_logger()) {                                            \
-        hal::utils::hal_logger()->error(args);                                 \
+        hal::utils::hal_logger()->error(fmt);                                  \
     }                                                                          \
 } while (0)
 
-#define HAL_TRACE_WARN(args, ...)                                              \
+#define HAL_TRACE_WARN(fmt, ...)                                               \
 do {                                                                           \
     if (hal::utils::hal_logger()) {                                            \
-        hal::utils::hal_logger()->warn("[{}:{}] " args, __func__, __LINE__,    \
+        hal::utils::hal_logger()->warn("[{}:{}] " fmt, __func__, __LINE__,     \
                                        ##__VA_ARGS__);                         \
     }                                                                          \
 } while (0)
 
-#define HAL_TRACE_INFO(args, ...)                                              \
+#define HAL_TRACE_INFO(fmt, ...)                                               \
 do {                                                                           \
     if (hal::utils::hal_logger()) {                                            \
-        hal::utils::hal_logger()->info("[{}:{}] " args, __func__, __LINE__,    \
+        hal::utils::hal_logger()->info("[{}:{}] " fmt, __func__, __LINE__,     \
                                        ##__VA_ARGS__);                         \
     }                                                                          \
 } while (0)
 
-#define HAL_TRACE_DEBUG(args, ...)                                             \
+#define HAL_TRACE_DEBUG(fmt, ...)                                              \
 do {                                                                           \
     if (hal::utils::hal_logger()) {                                            \
-        hal::utils::hal_logger()->debug("[{}:{}] " args, __func__, __LINE__,   \
+        hal::utils::hal_logger()->debug("[{}:{}] " fmt, __func__, __LINE__,    \
                                         ##__VA_ARGS__);                        \
     }                                                                          \
 } while (0)
 
-#define HAL_TRACE_DEBUG_NO_META(args...)                                       \
+#define HAL_TRACE_DEBUG_NO_META(fmt...)                                        \
 do {                                                                           \
     if (hal::utils::hal_logger()) {                                            \
-        hal::utils::hal_logger()->debug(args);                                 \
+        hal::utils::hal_logger()->debug(fmt);                                  \
     }                                                                          \
 } while (0)
 
-#define HAL_ERR_IF(cond, args, ...)                                            \
+#define HAL_ERR_IF(cond, fmt, ...)                                             \
 do {                                                                           \
-    if (hal::utils::hal_logger()) {                                            \
-        hal::utils::hal_logger()->error_if("[{}:{}] "  args,                   \
-                                           __func__, __LINE__, ##__VA_ARGS__); \
-    }                                                                          \
-} while (0)
-#define HAL_WARN_IF(cond, args, ...)                                           \
-do {                                                                           \
-    if (hal::utils::hal_logger()) {                                            \
-        hal::utils::hal_logger()->warn_if("[{}:{}] "  args,                    \
-                                           __func__, __LINE__, ##__VA_ARGS__); \
+    if (hal::utils::hal_logger() && (cond)) {                                  \
+        hal::utils::hal_logger()->error("[{}:{}] "  fmt,  __func__, __LINE__,  \
+                                        ##__VA_ARGS__);                        \
     }                                                                          \
 } while (0)
 
-#define HAL_INFO_IF(cond, args, ...)                                           \
+#define HAL_WARN_IF(cond, fmt, ...)                                            \
 do {                                                                           \
-    if (hal::utils::hal_logger()) {                                            \
-        hal::utils::hal_logger()->info_if("[{}:{}] "  args,                    \
-                                           __func__, __LINE__, ##__VA_ARGS__); \
+    if (hal::utils::hal_logger() && (cond)) {                                  \
+        hal::utils::hal_logger()->warn("[{}:{}] "  fmt, __func__, __LINE__,    \
+                                       ##__VA_ARGS__);                         \
     }                                                                          \
 } while (0)
 
-#define HAL_DEBUG_IF(cond, args, ...)                                          \
+#define HAL_INFO_IF(cond, fmt, ...)                                            \
 do {                                                                           \
-    if (hal::utils::hal_logger()) {                                            \
-        hal::utils::hal_logger()->debug_if("[{}:{}] "  args,                   \
-                                           __func__, __LINE__, ##__VA_ARGS__); \
+    if (hal::utils::hal_logger() && (cond)) {                                  \
+        hal::utils::hal_logger()->info("[{}:{}] "  fmt, __func__, __LINE__,    \
+                                       ##__VA_ARGS__);                         \
+    }                                                                          \
+} while (0)
+
+#define HAL_DEBUG_IF(cond, fmt, ...)                                           \
+do {                                                                           \
+    if (hal::utils::hal_logger() && (cond)) {                                  \
+        hal::utils::hal_logger()->debug("[{}:{}] "  fmt, __func__, __LINE__,   \
+                                        ##__VA_ARGS__);                        \
     }                                                                          \
 } while (0)
 

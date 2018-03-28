@@ -178,12 +178,12 @@ gft_emp_add_to_db (gft_exact_match_profile_t *profile, hal_handle_t handle)
     entry->handle_id = handle;
     sdk_ret = g_hal_state->gft_exact_match_profile_id_ht()->
                   insert_with_key(&profile->profile_id, entry, &entry->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add GFT exact match profile {} to db, "
                       "err : {}", profile->profile_id, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     return ret;
 }
@@ -559,12 +559,12 @@ gft_htp_add_to_db (gft_hdr_xposition_profile_t *profile, hal_handle_t handle)
     entry->handle_id = handle;
     sdk_ret = g_hal_state->gft_hdr_transposition_profile_id_ht()->
                   insert_with_key(&profile->profile_id, entry, &entry->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add GFT header transposition profile {} to db, "
                       "err : {}", profile->profile_id, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     return ret;
 }
@@ -826,12 +826,12 @@ gft_emfe_add_to_db (gft_exact_match_flow_entry_t *flow_entry,
     sdk_ret = g_hal_state->gft_exact_match_flow_entry_id_ht()->
                   insert_with_key(&flow_entry->flow_entry_id,
                                   entry, &entry->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add GFT exact flow entry {} to db, "
                       "err : {}", flow_entry->flow_entry_id, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     return ret;
 }

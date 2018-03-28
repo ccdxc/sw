@@ -18,9 +18,7 @@ SystemServiceImpl::ApiStatsGet(ServerContext *context,
                                ApiStatsResponse *rsp)
 {
     HAL_TRACE_DEBUG("Rcvd API Stats Get Request");
-
     hal::api_stats_get(rsp);
-
     return Status::OK;
 }
 
@@ -33,8 +31,8 @@ SystemServiceImpl::SystemGet(ServerContext *context,
 
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     hal::system_get(rsp);
-
     hal::hal_cfg_db_close();
+
     return Status::OK;
 }
 
@@ -44,8 +42,9 @@ SystemServiceImpl::SystemConfig(ServerContext *context,
                              const  SystemConfigMsg *request,
                              SystemConfigResponseMsg *rsp)
 {
+    hal_ret_t    ret;
+
     HAL_TRACE_DEBUG("Rcvd System Config Request");
-    hal_ret_t ret;
     ret = hal::system_set(request);
     rsp->add_response();
     if (ret != HAL_RET_OK) {
