@@ -93,31 +93,31 @@ TEST_F(session_test, test1)
 
 
     // Create vrf
-    ten_spec.mutable_key_or_handle()->set_vrf_id(11);
+    ten_spec.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_vrf_key_handle()->set_vrf_id(11);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
-    nw_spec.mutable_vrf_key_handle()->set_vrf_id(11);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(11);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
-    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(11);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -125,10 +125,10 @@ TEST_F(session_test, test1)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(11);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nkh = l2seg_spec.add_network_key_handle();
     nkh->set_nw_handle(nw_hdl);
-    l2seg_spec.mutable_key_or_handle()->set_segment_id(11);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(11);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -137,7 +137,7 @@ TEST_F(session_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(11);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nkh = l2seg_spec.add_network_key_handle();
     nkh->set_nw_handle(nw_hdl1);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(2);
@@ -169,7 +169,7 @@ TEST_F(session_test, test1)
     ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_vrf_key_handle()->set_vrf_id(11);
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
     ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
     ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -181,7 +181,7 @@ TEST_F(session_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(11);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(1);
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001234);
@@ -195,7 +195,7 @@ TEST_F(session_test, test1)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_vrf_id(11);
+    sess_spec.mutable_meta()->set_vrf_id(1);
     sess_spec.set_session_id(1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);

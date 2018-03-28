@@ -588,11 +588,9 @@ def setup_span(infra, module, case):
             count = count + 1
         dintf = None
         if intf == "AnyLocalEP":
-            eps = []
-            for ten in Store.objects.GetAllByClass(tenant.TenantObject):
-                eps = ten.GetLocalEps()
-                if len(eps) > 0:
-                    break
+            ten = infra.ConfigStore.objects.Get("Ten0002")
+            #for ten in Store.objects.GetAllByClass(tenant.TenantObject):
+            eps = ten.GetLocalEps()
             if spantype == "ERSPAN":
                 dintf = lobj.rtep
                 data.setLocalSession(lspancount, id, direc, spantype, pkt, pktlen, lobj)
