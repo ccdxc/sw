@@ -5,7 +5,7 @@
 #include "capri-macros.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s3_t2_k k;
+struct req_rx_s6_t2_k k;
 struct eqcb_t d;
 
 

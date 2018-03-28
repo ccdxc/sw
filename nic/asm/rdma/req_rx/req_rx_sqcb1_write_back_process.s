@@ -2,7 +2,7 @@
 #include "sqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s2_t3_k k;
+struct req_rx_s3_t3_k k;
 struct sqcb1_t d;
 
 #define IN_P t3_s2s_sqcb1_write_back_info
@@ -15,6 +15,11 @@ struct sqcb1_t d;
 
 .align
 req_rx_sqcb1_write_back_process:
+    mfspr          r1, spr_mpuid
+    seq            c1, r1[4:2], STAGE_3
+    bcf            [!c1], bubble_to_next_stage
+    nop            // Branch Delay Slot
+
     tblwr          d.rrq_in_progress, CAPRI_KEY_FIELD(IN_P, rrq_in_progress)
     tblwr          d.rrqwqe_cur_sge_id, K_CUR_SGE_ID
     tblwr          d.rrqwqe_cur_sge_offset, K_CUR_SGE_OFFSET
@@ -43,6 +48,17 @@ post_bktrack_ring:
 end:
      CAPRI_SET_TABLE_3_VALID(0)
 
+     nop.e
+     nop
+
+bubble_to_next_stage:
+     seq           c1, r1[4:2], STAGE_2
+     bcf           [!c1], exit
+     SQCB1_ADDR_GET(r1)
+     CAPRI_GET_TABLE_3_K(req_rx_phv_t, r7)
+     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
+
+exit:
      nop.e
      nop
 

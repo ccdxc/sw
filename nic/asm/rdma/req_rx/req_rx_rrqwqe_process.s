@@ -14,6 +14,7 @@ struct req_rx_s1_t0_k k;
 #define IN_TO_S_P to_s1_to_stage
 
 #define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_sbit0_ebit7, e_rsp_psn_sbit16_ebit23)
+#define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit7, msn_sbit16_ebit23)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_FIELD(IN_P, cur_sge_offset)
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit15, remaining_payload_bytes_sbit24_ebit31)
@@ -21,8 +22,8 @@ struct req_rx_s1_t0_k k;
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
 #define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit16_ebit23)
 
-#define K_SYNDROME CAPRI_KEY_FIELD(IN_TO_S_P, syndrome)
-#define K_MSN      CAPRI_KEY_FIELD(IN_TO_S_P, msn)
+#define K_AETH_SYNDROME CAPRI_KEY_FIELD(IN_TO_S_P, aeth_syndrome)
+#define K_AETH_MSN      CAPRI_KEY_FIELD(IN_TO_S_P, aeth_msn)
 #define K_BTH_PSN  CAPRI_KEY_FIELD(IN_TO_S_P, bth_psn)
 
 %%
@@ -41,8 +42,8 @@ req_rx_rrqwqe_process:
     bcf            [!c1], read_or_atomic
     ARE_ALL_FLAGS_SET(c4, r5, REQ_RX_FLAG_COMPLETION)  // Branch Delay Slot
 ack:
-    SQCB1_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
+    //SQCB1_ADDR_GET(r5)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
     CAPRI_RESET_TABLE_3_ARG()
     CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, e_rsp_psn, K_E_RSP_PSN)
@@ -55,17 +56,17 @@ ack:
     CAPRI_SET_TABLE_0_VALID(0);
 
     // r1 = aeth_syndrome
-    add            r1, K_SYNDROME, r0
+    add            r1, K_AETH_SYNDROME, r0
 
     //phv_p->cqwqe.id.msn = pkt_msn
     //if (sqcb1_to_rrqwqe_info_p->rrq_empty == FALSE)
     //    phv_p->cqwqe.id.msn = min((rrqwqe_p->msn - 1), phv_p->aeth.msn)
     bbeq           CAPRI_KEY_FIELD(IN_P, rrq_empty), 1, p_ack
-    add            r2, K_MSN, r0 // Branch Delay Slot
+    add            r2, K_AETH_MSN, r0 // Branch Delay Slot
     add            r2, d.msn, 0
     mincr          r2, 24, -1
-    scwle24        c3, r2, K_MSN
-    cmov           r2, c3, r2, K_MSN
+    scwle24        c3, r2, K_AETH_MSN
+    cmov           r2, c3, r2, K_AETH_MSN
 
 p_ack:
     IS_MASKED_VAL_EQUAL(c3, r1, SYNDROME_MASK, ACK_SYNDROME)
@@ -142,7 +143,7 @@ read_or_atomic:
     // atomic or read requires explicit response so msn in atomic or
     // read_resp_last or read_resp_only should be >= the corresponding message's
     // sequence number
-    scwlt24.c4     c2, K_MSN, d.msn
+    scwlt24.c4     c2, K_AETH_MSN, d.msn
     bcf            [!c3 & c2], invalid_rsp_msn
 
     // if (first)
@@ -151,8 +152,8 @@ read_or_atomic:
     //     min(rrqwqe_p->msn, sqcb1_to_rrqwqe_info_p->msn)
     add            r1, d.msn, 0 // Branch Delay Slot
     mincr.c3       r1, 24, -1
-    scwle24        c2, r1, K_MSN
-    cmov           r1, c2, r1, K_MSN
+    scwle24        c2, r1, K_AETH_MSN
+    cmov           r1, c2, r1, K_AETH_MSN
     phvwr          p.cqwqe.id.msn, r1
     
     seq            c2, d.read_rsp_or_atomic, RRQ_OP_TYPE_READ
@@ -226,8 +227,8 @@ atomic:
     //add            r6, r1, RRQ_C_INDEX_OFFSET
     //memwr.hx       r6, K_RRQ_CINDEX
 
-    SQCB1_ADDR_GET(r1)
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r1)
+    //SQCB1_ADDR_GET(r1)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
 set_cqcb_arg:
     // if(!completion) goto end

@@ -6,7 +6,7 @@ struct req_tx_phv_t p;
 struct sqwqe_t d;
 struct req_tx_s2_t0_k k;
 
-#define WQE_TO_SGE_P t0_s3s_wqe_to_sge_info
+#define WQE_TO_SGE_P t0_s2s_wqe_to_sge_info
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
 #define SQCB_WRITE_BACK_RD_P t2_s2s_sqcb_write_back_info_rd
 #define SQCB_WRITE_BACK_SEND_WR_P t2_s2s_sqcb_write_back_info_send_wr

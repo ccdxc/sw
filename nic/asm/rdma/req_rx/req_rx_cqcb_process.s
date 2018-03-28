@@ -2,7 +2,7 @@
 #include "cqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s1_t2_k k;
+struct req_rx_s4_t2_k k;
 struct cqcb_t d;
 
 #define NUM_LOG_WQE         r2
@@ -14,7 +14,7 @@ struct cqcb_t d;
 #define ARG_P               r5
     
 #define IN_P t2_s2s_rrqwqe_to_cq_info
-#define IN_TO_S_P to_s1_to_stage
+#define IN_TO_S_P to_s4_to_stage
 
 #define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
 

@@ -10,11 +10,11 @@ struct req_tx_s3_t0_k k;
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
 #define SQCB_WRITE_BACK_RD_P t2_s2s_sqcb_write_back_info_rd
 #define SQCB_WRITE_BACK_SEND_WR_P t2_s2s_sqcb_write_back_info_send_wr
-#define WQE_TO_SGE_P t0_s3s_wqe_to_sge_info
+#define WQE_TO_SGE_P t2_s2s_wqe_to_sge_info
 
 #define LOG_PAGE_SIZE  10
 
-#define IN_P t0_s3s_wqe_to_sge_info
+#define IN_P t0_s2s_wqe_to_sge_info
 #define IN_TO_S_P to_s3_sq_to_stage
 
 #define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit5, current_sge_id_sbit6_ebit7)

@@ -7,7 +7,7 @@ targets:
   storage:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --storage ; ret=$? ; make sanity_logs ; exit $ret" ]
   # config:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --configtest ; ret=$? ; make sanity_logs ; exit $ret" ]
   rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo rdma --feature rdma ; ret=$? ; make sanity_logs ; exit $ret" ]
-  # rdma_ext:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo rdma --feature rdma_ext,rdma_perf ; ret=$? ; make sanity_logs ; exit $ret" ]
+  rdma_ext:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo rdma --feature rdma_ext,rdma_perf ; ret=$? ; make sanity_logs ; exit $ret" ]
   fte:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo fte --feature fte --lite ; ret=$? ; make sanity_logs ; exit $ret" ]
   fte2:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo fte --feature fte2 --lite ; ret=$? ; make sanity_logs ; exit $ret" ]
   ftevxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo fte --feature ftevxlan --lite ; ret=$? ; make sanity_logs ; exit $ret" ]

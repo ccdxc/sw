@@ -829,6 +829,7 @@ table rx_table_s3_t0 {
     }
     actions {
         rx_table_s3_t0_action;
+        rx_table_s3_t0_action1;
         rx_table_s3_t0_cfg_action;
     }
 }

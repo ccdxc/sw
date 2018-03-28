@@ -2,7 +2,7 @@
 #include "cqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s2_t2_k k;
+struct req_rx_s5_t2_k k;
 
 #define CQCB_PA_ADDR    r2
 #define CQCB_PA_INDEX   r2
@@ -13,7 +13,7 @@ struct req_rx_s2_t2_k k;
 //#define PHV_CQWQE_END   cqwqe.r_key
 
 #define IN_P t2_s2s_cqcb_to_pt_info
-#define IN_TO_S_P to_s2_to_stage
+#define IN_TO_S_P to_s5_to_stage
 
 #define EQ_INFO_P t2_s2s_cqcb_to_eq_info
 #define TMP r3

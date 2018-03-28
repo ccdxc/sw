@@ -5,7 +5,7 @@
 
 struct req_rx_phv_t p;
 struct dcqcn_cb_t d;
-struct req_rx_s1_t2_k k;
+struct req_rx_s1_t3_k k;
 
 #define DMA_CMD_BASE r1
 #define DB_ADDR r5

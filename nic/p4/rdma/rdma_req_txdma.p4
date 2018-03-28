@@ -524,7 +524,7 @@ metadata req_tx_bktrack_to_stage_t to_s7_bktrack_to_stage_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_sqcb_to_pt_info t0_s2s_sqcb0_to_sqcb2_info t0_s3s_wqe_to_sge_info t0_s2s_sqcb1_to_credits_info t0_s2s_sq_bktrack_info t0_s2s_sqcb_write_back_info t0_s2s_sge_to_lkey_info t0_s2s_lkey_to_ptseg_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_sqcb_to_pt_info t0_s2s_sqcb0_to_sqcb2_info t0_s2s_wqe_to_sge_info t0_s2s_sqcb1_to_credits_info t0_s2s_sq_bktrack_info t0_s2s_sqcb_write_back_info t0_s2s_sge_to_lkey_info t0_s2s_lkey_to_ptseg_info
 
 metadata req_tx_sqcb_to_wqe_info_t t0_s2s_sqcb_to_wqe_info;
 @pragma scratch_metadata
@@ -538,9 +538,9 @@ metadata req_tx_sqcb0_to_sqcb2_info_t t0_s2s_sqcb0_to_sqcb2_info;
 @pragma scratch_metadata
 metadata req_tx_sqcb0_to_sqcb2_info_t t0_s2s_sqcb0_to_sqcb2_info_scr;
 
-metadata req_tx_wqe_to_sge_info_t t0_s3s_wqe_to_sge_info;
+metadata req_tx_wqe_to_sge_info_t t0_s2s_wqe_to_sge_info;
 @pragma scratch_metadata
-metadata req_tx_wqe_to_sge_info_t t0_s3s_wqe_to_sge_info_scr;
+metadata req_tx_wqe_to_sge_info_t t0_s2s_wqe_to_sge_info_scr;
 
 metadata req_tx_sqcb1_to_credits_info_t t0_s2s_sqcb1_to_credits_info;
 @pragma scratch_metadata
@@ -1312,20 +1312,20 @@ action req_tx_sqsge_process () {
     modify_field(to_s3_sq_to_stage_scr.rate_enforce_failed, to_s3_sq_to_stage.rate_enforce_failed);
 
     // stage to stage
-    modify_field(t0_s3s_wqe_to_sge_info_scr.in_progress, t0_s3s_wqe_to_sge_info.in_progress);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.op_type, t0_s3s_wqe_to_sge_info.op_type);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.first, t0_s3s_wqe_to_sge_info.first);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.current_sge_id, t0_s3s_wqe_to_sge_info.current_sge_id);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.num_valid_sges, t0_s3s_wqe_to_sge_info.num_valid_sges);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.current_sge_offset, t0_s3s_wqe_to_sge_info.current_sge_offset);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.remaining_payload_bytes, t0_s3s_wqe_to_sge_info.remaining_payload_bytes);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.ah_size, t0_s3s_wqe_to_sge_info.ah_size);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.poll_in_progress, t0_s3s_wqe_to_sge_info.poll_in_progress);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.color, t0_s3s_wqe_to_sge_info.color);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.rsvd, t0_s3s_wqe_to_sge_info.rsvd);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.dma_cmd_start_index, t0_s3s_wqe_to_sge_info.dma_cmd_start_index);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.imm_data, t0_s3s_wqe_to_sge_info.imm_data);
-    modify_field(t0_s3s_wqe_to_sge_info_scr.inv_key_or_ah_handle, t0_s3s_wqe_to_sge_info.inv_key_or_ah_handle);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.in_progress, t0_s2s_wqe_to_sge_info.in_progress);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.op_type, t0_s2s_wqe_to_sge_info.op_type);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.first, t0_s2s_wqe_to_sge_info.first);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.current_sge_id, t0_s2s_wqe_to_sge_info.current_sge_id);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.num_valid_sges, t0_s2s_wqe_to_sge_info.num_valid_sges);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.current_sge_offset, t0_s2s_wqe_to_sge_info.current_sge_offset);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.remaining_payload_bytes, t0_s2s_wqe_to_sge_info.remaining_payload_bytes);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.ah_size, t0_s2s_wqe_to_sge_info.ah_size);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.poll_in_progress, t0_s2s_wqe_to_sge_info.poll_in_progress);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.color, t0_s2s_wqe_to_sge_info.color);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.rsvd, t0_s2s_wqe_to_sge_info.rsvd);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.dma_cmd_start_index, t0_s2s_wqe_to_sge_info.dma_cmd_start_index);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.imm_data, t0_s2s_wqe_to_sge_info.imm_data);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.inv_key_or_ah_handle, t0_s2s_wqe_to_sge_info.inv_key_or_ah_handle);
 
 }
 

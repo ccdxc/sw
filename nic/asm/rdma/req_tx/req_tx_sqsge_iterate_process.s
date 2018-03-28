@@ -8,7 +8,7 @@ struct req_tx_s1_t2_k k;
 #define IN_P t2_s2s_wqe_to_sge_info
 #define IN_TO_S_P to_s1_sq_to_stage
 
-#define WQE_TO_SGE_P t0_s3s_wqe_to_sge_info
+#define WQE_TO_SGE_P t0_s2s_wqe_to_sge_info
 
 #define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit5, current_sge_id_sbit6_ebit7)
 #define K_WQE_ADDR       CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
