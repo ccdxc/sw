@@ -12,8 +12,8 @@ feature:
 
 modules:
     - module:
-        name    : HOST_TO_UL_BYPASS_BARCO
-        spec    : host_to_uplink_multi_flow.testspec
+        name    : UL_TO_UL_BYPASS_BARCO
+        spec    : uplink_to_uplink_multi_flow.testspec
         module  : proxy_e2e
         rtl     : True
         modscale: 1000
