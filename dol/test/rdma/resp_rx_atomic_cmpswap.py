@@ -14,6 +14,9 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
+
+    tc.pvtdata.slab_1 = rs.lqp.pd.ep.GetNewSlab()
+    tc.pvtdata.mr_slab_1 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_1.GID())
     return
 
 def TestCaseTrigger(tc):

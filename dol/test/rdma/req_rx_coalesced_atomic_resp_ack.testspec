@@ -191,7 +191,7 @@ buffers:
         id      : BUF1
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=BASE_PKT1/size
@@ -201,7 +201,7 @@ buffers:
         id      : BUF2
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           slab    : ref://testcase/pvtdata/slab_2
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=BASE_PKT2/size
@@ -211,7 +211,7 @@ buffers:
         id      : BUF3
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           slab    : ref://testcase/pvtdata/slab_2
            offset  : 64
            segments:
                - size    : 8
@@ -241,7 +241,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=BUF1/address
                   len : ref://testcase/buffers/id=BUF1/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: ref://testcase/pvtdata/mr_slab_1/lkey
 
     - descriptor:
         id      : SQ_DESC2
@@ -256,7 +256,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=BUF2/address
                   len : ref://testcase/buffers/id=BUF2/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: ref://testcase/pvtdata/mr_slab_2/lkey
 
     - descriptor:
         id      : SQ_DESC3
@@ -275,7 +275,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=BUF3/address
                   len : ref://testcase/buffers/id=BUF3/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: ref://testcase/pvtdata/mr_slab_2/lkey
 
     - descriptor:
         id      : EXP_SQ_DESC

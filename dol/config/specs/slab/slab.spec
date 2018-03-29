@@ -2,6 +2,6 @@
 meta:
     id: SLAB_RDMA
 
-count   : 2
+count   : 100
 size    : 10144
 

@@ -27,6 +27,9 @@ def TestCaseSetup(tc):
     tc.pvtdata.begin_psn = tc.pvtdata.sq_pre_qstate.tx_psn
     tc.pvtdata.num_resp_pkts = 1
 
+    tc.pvtdata.slab_1 = rs.lqp.pd.ep.GetNewSlab()  
+    tc.pvtdata.mr_slab_1 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_1.GID())                           
+
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data

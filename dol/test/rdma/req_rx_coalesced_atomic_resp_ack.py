@@ -24,6 +24,12 @@ def TestCaseSetup(tc):
     tc.pvtdata.orig_data_list = [0x55, 0x66, 0x77, 0x88, 0x11, 0x22, 0x33, 0x44]
     tc.pvtdata.swap_data = 0x5 #add data
 
+    tc.pvtdata.slab_1 = rs.lqp.pd.ep.GetNewSlab()
+    tc.pvtdata.mr_slab_1 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_1.GID())
+
+    tc.pvtdata.slab_2 = rs.lqp.pd.ep.GetNewSlab()
+    tc.pvtdata.mr_slab_2 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_2.GID())
+
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data

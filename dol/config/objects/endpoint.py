@@ -45,6 +45,7 @@ class EndpointObject(base.ConfigObjectBase):
         self.is_l4lb_backend = backend
         self.is_l4lb_service = False
         self.l4lb_backend = None
+        self.last_slab_id = 1 # Slabs 0 and 1 are already in-use by existing DOL testcases
 
         self.sgs = []
 
@@ -296,6 +297,11 @@ class EndpointObject(base.ConfigObjectBase):
 
     def GetSlabid(self):
         return self.slab_allocator.get()
+    
+    def GetNewSlab(self):
+        self.last_slab_id += 1
+        logger.info("- # New slab on EP %s assigned: %s" % (self.GID(), 'SLAB%04d' % self.last_slab_id))
+        return self.slabs.Get('SLAB%04d' % self.last_slab_id);
 
 # Helper Class to Generate/Configure/Manage Endpoint Objects.
 class EndpointObjectHelper:

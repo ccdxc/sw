@@ -64,6 +64,14 @@ def GetVAfromSLAB (tc, pkt, args):
     if (GlobalOptions.dryrun): return 0
     return (tc.config.rdmasession.lqp.pd.ep.slabs.Get(args.slab_id).address + args.offset)
 
+def GetVAfromTcSLAB1 (tc, pkt, args):
+    if (GlobalOptions.dryrun): return 0
+    return (tc.pvtdata.slab_1.address + args.offset)
+
+def GetVAfromTcSLAB2 (tc, pkt, args):
+    if (GlobalOptions.dryrun): return 0
+    return (tc.pvtdata.slab_2.address + args.offset)
+
 def GetCQExpColor (tc, desc, args = None):
     if args is None:
         entries = 1

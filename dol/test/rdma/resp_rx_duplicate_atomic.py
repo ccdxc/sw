@@ -22,6 +22,12 @@ def TestCaseSetup(tc):
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
 
+    tc.pvtdata.slab_1 = rs.lqp.pd.ep.GetNewSlab()  
+    tc.pvtdata.mr_slab_1 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_1.GID())                           
+
+    tc.pvtdata.slab_2 = rs.lqp.pd.ep.GetNewSlab()
+    tc.pvtdata.mr_slab_2 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_2.GID())
+
     return
 
 def TestCaseTrigger(tc):

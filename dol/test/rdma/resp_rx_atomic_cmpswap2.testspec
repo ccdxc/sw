@@ -90,8 +90,8 @@ packets:
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
                 a       : 1
             atomiceth: 
-                va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=0
-                r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
+                va      : callback://rdma/rdma/GetVAfromTcSLAB1/offset=0
+                r_key   : ref://testcase/pvtdata/mr_slab_1/rkey
                 swapdt  : callback://rdma/rdma/GetAtomicData/pktid=SWAP_DATA
                 cmpdt   : callback://rdma/rdma/GetAtomicData/pktid=CMP_DATA
 
@@ -137,7 +137,7 @@ buffers:
         id      : ORIG_BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=ORIG_DATA_LITTLE/size
@@ -147,7 +147,7 @@ buffers:
         id      : XFER_BUF
         template: ref://factory/templates/id=RDMA_XFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 0
            size    : ref://testcase/packets/id=ORIG_DATA_LITTLE/size
 

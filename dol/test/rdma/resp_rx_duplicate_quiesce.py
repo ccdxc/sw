@@ -18,6 +18,12 @@ def TestCaseSetup(tc):
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
 
+    tc.pvtdata.slab_1 = rs.lqp.pd.ep.GetNewSlab()
+    tc.pvtdata.mr_slab_1 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_1.GID())
+
+    tc.pvtdata.slab_2 = rs.lqp.pd.ep.GetNewSlab()
+    tc.pvtdata.mr_slab_2 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_2.GID())
+
     # Read CQ pre state
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data

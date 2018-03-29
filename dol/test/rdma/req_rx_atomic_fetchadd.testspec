@@ -108,7 +108,7 @@ buffers:
         id      : HOST_MEM
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 0
            segments:
                - size    : 8
@@ -141,7 +141,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=HOST_MEM/address
                   len : ref://testcase/buffers/id=HOST_MEM/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: ref://testcase/pvtdata/mr_slab_1/lkey
 
 
     - descriptor:

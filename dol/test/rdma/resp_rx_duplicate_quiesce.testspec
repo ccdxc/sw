@@ -193,8 +193,8 @@ packets:
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=1
                 a       : 1
             atomiceth: 
-                va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=128
-                r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
+                va      : callback://rdma/rdma/GetVAfromTcSLAB1/offset=128
+                r_key   : ref://testcase/pvtdata/mr_slab_1/rkey
                 swapdt  : callback://rdma/rdma/GetAtomicData/pktid=ADD_DATA_AT2
                 #ref://testcase/packets/id=ADD_DATA/rawbytes
                 cmpdt   : 0
@@ -271,8 +271,8 @@ packets:
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=2
                 a       : 1
             atomiceth: 
-                va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=256
-                r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
+                va      : callback://rdma/rdma/GetVAfromTcSLAB1/offset=256
+                r_key   : ref://testcase/pvtdata/mr_slab_1/rkey
                 swapdt  : callback://rdma/rdma/GetAtomicData/pktid=ADD_DATA_AT3
                 #ref://testcase/packets/id=ADD_DATA/rawbytes
                 cmpdt   : 0
@@ -390,8 +390,8 @@ packets:
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=4
                 a       : 1
             atomiceth: 
-                va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=384
-                r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
+                va      : callback://rdma/rdma/GetVAfromTcSLAB1/offset=384
+                r_key   : ref://testcase/pvtdata/mr_slab_1/rkey
                 swapdt  : callback://rdma/rdma/GetAtomicData/pktid=ADD_DATA_AT4
                 #ref://testcase/packets/id=ADD_DATA/rawbytes
                 cmpdt   : 0
@@ -687,7 +687,7 @@ buffers:
         id      : ORIG_BUF_AT1
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=ORIG_DATA_AT1_LITTLE/size
@@ -697,7 +697,7 @@ buffers:
         id      : XFER_BUF_AT1
         template: ref://factory/templates/id=RDMA_XFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 0
            size    : ref://testcase/packets/id=ORIG_DATA_AT1_LITTLE/size
 
@@ -715,7 +715,7 @@ buffers:
         id      : ORIG_BUF_AT2
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 128
            segments:
                - size    : ref://testcase/packets/id=ORIG_DATA_AT2_LITTLE/size
@@ -725,7 +725,7 @@ buffers:
         id      : XFER_BUF_AT2
         template: ref://factory/templates/id=RDMA_XFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 128
            size    : ref://testcase/packets/id=ORIG_DATA_AT2_LITTLE/size
 
@@ -743,7 +743,7 @@ buffers:
         id      : ORIG_BUF_AT3
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 256
            segments:
                - size    : ref://testcase/packets/id=ORIG_DATA_AT3_LITTLE/size
@@ -753,7 +753,7 @@ buffers:
         id      : XFER_BUF_AT3
         template: ref://factory/templates/id=RDMA_XFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 256
            size    : ref://testcase/packets/id=ORIG_DATA_AT3_LITTLE/size
 
@@ -771,7 +771,7 @@ buffers:
         id      : ORIG_BUF_AT4
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 384
            segments:
                - size    : ref://testcase/packets/id=ORIG_DATA_AT4_LITTLE/size
@@ -781,7 +781,7 @@ buffers:
         id      : XFER_BUF_AT4
         template: ref://factory/templates/id=RDMA_XFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 384
            size    : ref://testcase/packets/id=ORIG_DATA_AT4_LITTLE/size
 
@@ -799,7 +799,7 @@ buffers:
         id      : RQ_BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           slab    : ref://testcase/pvtdata/slab_1
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=BASE_PKT/size
@@ -827,7 +827,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=RQ_BUF/address
                   len : ref://testcase/buffers/id=RQ_BUF/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: ref://testcase/pvtdata/mr_slab_1/lkey
 
     - descriptor:
         id      : EXP_RQ_DESC
@@ -840,7 +840,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=RQ_BUF/address
                   len : ref://testcase/buffers/id=RQ_BUF/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: ref://testcase/pvtdata/mr_slab_1/lkey
 
     - descriptor:
         id      : EXP_CQ_DESC
