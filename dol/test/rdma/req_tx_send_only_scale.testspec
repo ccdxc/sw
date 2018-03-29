@@ -27,6 +27,61 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
+    - packet:
+        id          : EXP_PKT_BASE # Base packet
+        scale       : True
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 4 # RDMA SEND Only
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetRqPktPsn
+                a       : 1
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
+
+    - packet:
+        id          : EXP_PKT
+        scale       : True
+        encaps      : callback://rdma/rdma/GetPacketEncaps 
+        clone       : scale-ref://testcase/packets/id=EXP_PKT_BASE
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            outereth    :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/macaddr
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rmacaddr
+            outeripv4   :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/ltep
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rtep
+                tos     : 0
+                id      : 0
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/rdmasession/rqp/pd/ep/segment/vxlan_id
+            qtag:
+                vlan    : callback://rdma/rdma/GetPacketQtag
+                
 buffers:
     - buffer:
         id      : BUF
@@ -69,3 +124,8 @@ trigger:
 
 expect:
     #This test is skip verify so nothing to validate
+    packets:
+        - packet:
+            scale   : True
+            object  : scale-ref://testcase/packets/id=EXP_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports

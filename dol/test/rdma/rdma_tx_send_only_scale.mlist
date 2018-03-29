@@ -16,7 +16,7 @@ modules:
         name    : RDMA_TX_SEND_ONLY
         enable  : True
         package : test.rdma
-        module  : req_tx_send_only
+        module  : req_tx_send_only_scale
         spec    : req_tx_send_only_scale.testspec
         ignore  : False
         perf    : True
