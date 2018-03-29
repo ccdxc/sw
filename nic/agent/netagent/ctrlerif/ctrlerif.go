@@ -329,7 +329,7 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 				break
 			}
 
-			log.Infof("Ctrlerif: agent %s got Security group watch event: {%+v}", client.getAgentName(), evt)
+			log.Infof("Ctrlerif: agent %s got Security group watch event: Type: {%+v} sg:{%+v}", client.getAgentName(), evt.EventType, evt.SecurityGroup.ObjectMeta)
 
 			go func() {
 				switch evt.EventType {
@@ -337,19 +337,19 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 					// create the security group
 					err = client.agent.CreateSecurityGroup(&evt.SecurityGroup)
 					if err != nil {
-						log.Errorf("Error creating the sg {%+v}. Err: %v", evt, err)
+						log.Errorf("Error creating the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
 					}
 				case api.EventType_UpdateEvent:
 					// update the sg
 					err = client.agent.UpdateSecurityGroup(&evt.SecurityGroup)
 					if err != nil {
-						log.Errorf("Error updating the sg {%+v}. Err: %v", evt, err)
+						log.Errorf("Error updating the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
 					}
 				case api.EventType_DeleteEvent:
 					// delete the sg
 					err = client.agent.DeleteSecurityGroup(&evt.SecurityGroup)
 					if err != nil {
-						log.Errorf("Error deleting the sg {%+v}. Err: %v", evt, err)
+						log.Errorf("Error deleting the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
 					}
 				}
 			}()

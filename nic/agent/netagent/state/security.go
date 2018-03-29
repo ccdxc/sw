@@ -78,7 +78,7 @@ func (na *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// create it in datapath
 	err = na.datapath.CreateSecurityGroup(sg)
 	if err != nil {
-		log.Errorf("Error creating security group in datapath. Sg {%+v}. Err: %v", sg, err)
+		log.Errorf("Error creating security group in datapath. Sg {%+v}. Err: %v", sg.ObjectMeta, err)
 		return err
 	}
 
@@ -148,7 +148,7 @@ func (na *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// update sg in datapath
 	err = na.datapath.UpdateSecurityGroup(sg)
 	if err != nil {
-		log.Errorf("Error updating security group in datapath. Sg{%+v} Err: %v", sg, err)
+		log.Errorf("Error updating security group in datapath. Sg{%+v} Err: %v", sg.ObjectMeta, err)
 		return err
 	}
 

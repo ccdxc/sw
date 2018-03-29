@@ -87,7 +87,7 @@ func (client *CmdClient) initRegistrationRPC() error {
 	// initialize rpcClient
 	var err error
 	log.Infof("Initializing NIC registration RPC client ")
-	client.registrationRPCClient, err = rpckit.NewRPCClient("nmd-nic-reg", client.cmdRegistrationURL, rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithTLSProvider(nil))
+	client.registrationRPCClient, err = rpckit.NewRPCClient("nmd-nic-reg", client.cmdRegistrationURL, rpckit.WithTLSProvider(nil))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server for NIC registration, URL: %v Err: %v", client.cmdRegistrationURL, err)
 	}
