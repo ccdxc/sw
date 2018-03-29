@@ -1755,7 +1755,6 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     dhl_entry_t             dhl_entry     = { 0 };
     ep_update_app_ctxt_t    app_ctxt      = { 0 };
 
-    hal_api_trace(" API Begin: EP update");
     ret = validate_endpoint_update_spec(req, rsp);
     if (ret != HAL_RET_OK) {
         goto end;
@@ -1854,6 +1853,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
                              endpoint_update_cleanup_cb);
 
 end:
+
     if (add_iplist) {
         HAL_FREE(HAL_MEM_ALLOC_DLLIST, add_iplist);
     }
@@ -1867,7 +1867,6 @@ end:
         HAL_API_STATS_INC(HAL_API_ENDPOINT_UPDATE_FAIL);
     }
     ep_prepare_rsp(rsp, ret, ep ? ep->hal_handle : HAL_HANDLE_INVALID);
-    hal_api_trace(" API End: EP update ");
     return ret;
 }
 

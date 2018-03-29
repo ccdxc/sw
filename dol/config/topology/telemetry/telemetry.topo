@@ -66,8 +66,3 @@ tenants:
     -   spec    : ref://store/specs/id=TENANT_TELEMETRY_VXLAN
         count   : 1
         lifns   : range/300/305
-
-cpu:
-    - entry:
-        id      : Cpu1
-        lif_id  : 1003

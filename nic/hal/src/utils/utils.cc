@@ -365,8 +365,7 @@ hal_add_to_handle_block_list (block_list *bl, hal_handle_t handle)
     hal_ret_t       ret = HAL_RET_OK;
 
     if (!bl || handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}:invalid args. bl:{:#x}, handle:{}",
-                      (uint64_t)bl, handle);
+        HAL_TRACE_ERR("invalid args bl:{:#x}, handle:{}", (uint64_t)bl, handle);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -390,7 +389,7 @@ hal_free_handles_list (dllist_ctxt_t *list)
 
     dllist_for_each_safe(curr, next, list) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        HAL_TRACE_DEBUG("{}: freeing list handle: {}", __FUNCTION__, entry->handle_id);
+        HAL_TRACE_DEBUG("freeing list handle: {}", entry->handle_id);
         sdk::lib::dllist_del(&entry->dllist_ctxt);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
     }
@@ -405,8 +404,7 @@ hal_remove_all_handles_block_list (block_list *bl)
     hal_ret_t   ret = HAL_RET_OK;
 
     if (!bl) {
-        HAL_TRACE_ERR("{}:invalid args. bl:{:#x}",
-                      (uint64_t)bl);
+        HAL_TRACE_ERR("invalid args bl:{:#x}", (uint64_t)bl);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -446,8 +444,7 @@ hal_cleanup_handle_block_list (block_list **bl)
     hal_ret_t   ret = HAL_RET_OK;
 
     if (*bl == NULL) {
-        HAL_TRACE_ERR("{}:invalid args. bl:{:#x}",
-                      (uint64_t)bl);
+        HAL_TRACE_ERR("invalid args. bl:{:#x}", (uint64_t)bl);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }

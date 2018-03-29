@@ -25,11 +25,6 @@ tenants:
         count   : 1
         lifns   : range/101/110
 
-cpu:
-    - entry:
-        id      : Cpu1
-        lif_id  : 1003
-
 app_redir_if:
     - entry:
         id      : appredir1

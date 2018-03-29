@@ -102,14 +102,15 @@ pd_ep_update (pd_ep_update_args_t *pd_ep_upd_args)
 hal_ret_t
 pd_ep_delete (pd_ep_delete_args_t *args)
 {
-    hal_ret_t      ret = HAL_RET_OK;
-    pd_ep_t    *ep_pd;
+    hal_ret_t    ret = HAL_RET_OK;
+    pd_ep_t      *ep_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->ep != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->ep->pd != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("{}:deleting pd state for ep {}",
                     __FUNCTION__, ep_l2_key_to_str(args->ep));
+
     ep_pd = (pd_ep_t *)args->ep->pd;
 
     // deprogram hw
@@ -120,10 +121,12 @@ pd_ep_delete (pd_ep_delete_args_t *args)
         goto end;
     }
 
-    ret = ep_pd_depgm_registered_mac(ep_pd);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-EP: Failed to depgm registered_mac, ret:{}", ret);
-        goto end;
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        ret = ep_pd_depgm_registered_mac(ep_pd);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("PD-EP: Failed to depgm registered_mac, ret:{}", ret);
+            goto end;
+        }
     }
 
     // free up the resource and memory

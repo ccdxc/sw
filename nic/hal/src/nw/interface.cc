@@ -158,13 +158,11 @@ find_if_by_handle (hal_handle_t handle)
 
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
-        HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",
-                        __FUNCTION__, handle);
+        HAL_TRACE_DEBUG("Failed to find object with handle : {}", handle);
         return NULL;
     }
     if (hal_handle->obj_id() != HAL_OBJ_ID_INTERFACE) {
-        HAL_TRACE_DEBUG("{}:failed to find if with handle:{}",
-                        __FUNCTION__, handle);
+        HAL_TRACE_DEBUG("Failed to find if with handle : {}", handle);
         return NULL;
     }
 
@@ -223,7 +221,7 @@ if_add_to_db (if_t *hal_if, hal_handle_t handle)
                                                        entry, &entry->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("failed to add if id to handle mapping, "
+        HAL_TRACE_ERR("Failed to add if id to handle mapping, "
                       "err : {}", ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -328,7 +326,7 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     if (if_type == intf::IF_TYPE_ENIC) {
         // make sure ENIC info is provided
         if (!spec.has_if_enic_info()) {
-            HAL_TRACE_ERR("no enic info. err:{} ",
+            HAL_TRACE_ERR("no enic info. err : {} ",
                           HAL_RET_INVALID_ARG);
             rsp->set_api_status(types::API_STATUS_IF_ENIC_INFO_INVALID);
             return HAL_RET_INVALID_ARG;
@@ -336,7 +334,7 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 
         // check if lif is provided
         if (!spec.if_enic_info().has_lif_key_or_handle()) {
-            HAL_TRACE_ERR("no lif for enic. err:{} ",
+            HAL_TRACE_ERR("no lif for enic. err : {} ",
                           HAL_RET_INVALID_ARG);
             rsp->set_api_status(types::API_STATUS_IF_ENIC_INFO_INVALID);
             return HAL_RET_INVALID_ARG;
@@ -350,7 +348,7 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
                     intf::IfEnicInfo::kClassicEnicInfo) {
                 // info is set but its not valid
                 HAL_TRACE_ERR(" wrong enic info being passed for "
-                              "classic enic err:{}",
+                              "classic enic err : {}",
                               HAL_RET_INVALID_ARG);
                 ret = HAL_RET_INVALID_ARG;
                 goto end;
@@ -363,7 +361,7 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
                     intf::IfEnicInfo::kEnicInfo) {
                 // info is set but its not valid
                 HAL_TRACE_ERR("wrong enic info being passed "
-                              "for non-classic enic err:{}",
+                              "for non-classic enic err : {}",
                               HAL_RET_INVALID_ARG);
                 ret = HAL_RET_INVALID_ARG;
                 goto end;
@@ -372,7 +370,7 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     } else if (if_type == intf::IF_TYPE_UPLINK) {
         // uplink specific validation
         if (!spec.has_if_uplink_info()) {
-            HAL_TRACE_ERR("no uplink info. err:{} ",
+            HAL_TRACE_ERR("no uplink info. err : {} ",
                           HAL_RET_INVALID_ARG);
             rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
             return HAL_RET_INVALID_ARG;
@@ -383,7 +381,7 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 #if 0
         // uplink PC specific validation
         if (!spec.has_if_uplink_pc_info()) {
-            HAL_TRACE_ERR("no uplinkpc info. err:{} ",
+            HAL_TRACE_ERR("no uplinkpc info. err : {} ",
                           HAL_RET_INVALID_ARG);
             rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
             return HAL_RET_INVALID_ARG;
@@ -392,7 +390,7 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     } else if (if_type == intf::IF_TYPE_TUNNEL) {
         // tunnel specification validation
         if (!spec.has_if_tunnel_info()) {
-            HAL_TRACE_ERR("pi-tunnelif: no tunnel info. err:{} ",
+            HAL_TRACE_ERR("no tunnel info. err : {} ",
                           HAL_RET_INVALID_ARG);
             rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
             return HAL_RET_INVALID_ARG;
@@ -400,7 +398,7 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     } else if (if_type == intf::IF_TYPE_CPU) {
         // CPU specific validation
         if (!spec.has_if_cpu_info()) {
-            HAL_TRACE_ERR("pi-cpuif: no cpu if info. err:{} ",
+            HAL_TRACE_ERR("no cpu if info. err : {} ",
                           HAL_RET_INVALID_ARG);
             rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
             return HAL_RET_INVALID_ARG;
@@ -409,13 +407,13 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         // App Redirect specific validation
         if (!spec.has_if_app_redir_info() ||
             !spec.if_app_redir_info().has_lif_key_or_handle()) {
-            HAL_TRACE_ERR("no app redir if info. err:{} ",
+            HAL_TRACE_ERR("no app redir if info. err : {} ",
                           HAL_RET_INVALID_ARG);
             rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
             return HAL_RET_INVALID_ARG;
         }
     } else {
-        HAL_TRACE_ERR("invalid type err:{} ",
+        HAL_TRACE_ERR("invalid type err : {} ",
                 HAL_RET_INVALID_ARG);
         rsp->set_api_status(types::API_STATUS_IF_TYPE_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -450,7 +448,7 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     hal_if = (if_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("if_id:{}:create add CB", hal_if->if_id);
+    HAL_TRACE_DEBUG("if_id : {}:create add CB", hal_if->if_id);
 
     // PD Call to allocate PD resources and HW programming
     pd::pd_if_create_args_init(&pd_if_args);
@@ -458,7 +456,7 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_if_args.lif = app_ctxt->lif;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_CREATE, (void *)&pd_if_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to create if pd, err : {}", ret);
+        HAL_TRACE_ERR("Failed to create if pd, err : {}", ret);
     }
 
 end:
@@ -516,7 +514,7 @@ if_update_oif_lists(if_t *hal_if, bool add)
     l2seg_t    *l2seg = NULL, *nat_l2seg = NULL;
 
     HAL_ASSERT(hal_if);
-    HAL_TRACE_DEBUG("Add intf to OIFs : if_id:{}", hal_if->if_id);
+    HAL_TRACE_DEBUG("Add intf to OIFs : if_id : {}", hal_if->if_id);
 
     // If its enic, add to l2seg and lif
     if (hal_if->if_type == intf::IF_TYPE_ENIC) {
@@ -595,12 +593,12 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_if = (if_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("if_id:{}:create commit CB", hal_if->if_id);
+    HAL_TRACE_DEBUG("if_id : {}:create commit CB", hal_if->if_id);
 
     // Add to if id hash table
     ret = if_add_to_db(hal_if, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to add if {} to db, err : {}", 
+        HAL_TRACE_ERR("Failed to add if {} to db, err : {}", 
                       hal_if->if_id, ret);
         goto end;
     }
@@ -630,7 +628,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             if (hal_if->pinned_uplink != HAL_HANDLE_INVALID) {
                 uplink = find_if_by_handle(hal_if->pinned_uplink);
                 if (uplink == NULL) {
-                    HAL_TRACE_ERR("unable to find uplink_hdl:{}",
+                    HAL_TRACE_ERR("unable to find uplink_hdl : {}",
                                   hal_if->pinned_uplink);
                     ret = HAL_RET_INVALID_ARG;
                     goto end;
@@ -642,7 +640,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
                 nat_l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
                 if (nat_l2seg == NULL) {
-                    HAL_TRACE_ERR("unable to find native_l2seg_hdl:{}",
+                    HAL_TRACE_ERR("unable to find native_l2seg_hdl : {}",
                                   hal_if->native_l2seg_clsc);
                     ret = HAL_RET_INVALID_ARG;
                     goto end;
@@ -655,8 +653,8 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             ret = enicif_update_l2segs_relation(&hal_if->l2seg_list_clsc_head,
                                                 hal_if, true);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("failed to add l2seg -> enicif "
-                              "relation ret:{}", ret);
+                HAL_TRACE_ERR("Failed to add l2seg -> enicif "
+                              "relation ret : {}", ret);
                 ret = HAL_RET_INVALID_ARG;
                 goto end;
             }
@@ -668,8 +666,8 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         ret = uplinkpc_update_mbrs_relation(&hal_if->mbr_if_list_head,
                                             hal_if, true);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to add uplinkif -> uplinkpc "
-                          "relation ret:{}", ret);
+            HAL_TRACE_ERR("Failed to add uplinkif -> uplinkpc "
+                          "relation ret : {}", ret);
             goto end;
         }
 
@@ -724,7 +722,7 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_if = (if_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("if_id:{}:create abort CB",
+    HAL_TRACE_DEBUG("if_id : {}:create abort CB",
                     hal_if->if_id);
 
     // delete call to PD
@@ -733,7 +731,7 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_if_args.intf = hal_if;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_DELETE, (void *)&pd_if_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to delete if pd, err : {}", ret);
+            HAL_TRACE_ERR("Failed to delete if pd, err : {}", ret);
         }
     }
 
@@ -828,8 +826,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: interface create ");
-    HAL_TRACE_DEBUG("if create for id {} type: {} enictype: {}",
+    HAL_TRACE_DEBUG("if create for id {} type : {} enictype : {}",
                     spec.key_or_handle().interface_id(),
                     IfType_Name(spec.type()), 
                     IfEnicType_Name(spec.if_enic_info().enic_type()));
@@ -837,7 +834,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     // do basic validations on interface
     ret = validate_interface_create(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("validation failed. err: {} apistatus: {}",
+        HAL_TRACE_ERR("validation failed. err : {} apistatus : {}",
                       ret, rsp->api_status());
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return ret;
@@ -846,7 +843,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     // check if intf exists already, and reject if one is found
     hal_if = find_if_by_id(spec.key_or_handle().interface_id());
     if (hal_if) {
-        HAL_TRACE_ERR("failed to create an if, "
+        HAL_TRACE_ERR("Failed to create an if, "
                       "if {} exists already",
                       spec.key_or_handle().interface_id());
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
@@ -857,7 +854,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     // allocate and initialize interface instance
     hal_if = if_alloc_init();
     if (hal_if == NULL) {
-        HAL_TRACE_ERR("unable to allocate handle/memory ret: {}",
+        HAL_TRACE_ERR("unable to allocate handle/memory ret : {}",
                       ret);
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         return HAL_RET_OOM;
@@ -930,7 +927,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     // allocate hal handle id
     hal_if->hal_handle = hal_handle_alloc(HAL_OBJ_ID_INTERFACE);
     if (hal_if->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("failed to alloc handle {}", 
+        HAL_TRACE_ERR("Failed to alloc handle {}", 
                       hal_if->if_id);
         if_free(hal_if);
         hal_if = NULL;
@@ -949,19 +946,19 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
                 ep = find_ep_by_v6_key(hal_if->tid, &hal_if->gre_dest);
                 break;
             default:
-                HAL_TRACE_ERR("pi-tunnelif:GRE tunnelif {} create Invalid AF {}",
+                HAL_TRACE_ERR("GRE tunnelif {} create Invalid AF {}",
                     spec.key_or_handle().interface_id(), hal_if->gre_dest.af);
                 ret = HAL_RET_IF_INFO_INVALID;
                 goto end;
         }
         if (ep == NULL) {
-            HAL_TRACE_ERR("pi-tunnelif:GRE tunnelif create did not find EP {}",
+            HAL_TRACE_ERR("GRE tunnelif create did not find EP {}",
                 spec.key_or_handle().interface_id());
             ret = HAL_RET_IF_INFO_INVALID;
             goto end;
         }
         ep->gre_if_handle = hal_if->hal_handle;
-        HAL_TRACE_DEBUG("pi-tunnelif:GRE tunnelif {} added to EP vrfId {}",
+        HAL_TRACE_DEBUG("GRE tunnelif {} added to EP vrfId {}",
                 spec.key_or_handle().interface_id(), hal_if->tid);
     }
     // form ctxt and call infra add
@@ -981,13 +978,13 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
                              if_create_cleanup_cb);
 
 end:
+
     if (ret != HAL_RET_OK && hal_if != NULL) {
         // if there is an error, if will be freed in abort CB
         if_free(hal_if);
         hal_if = NULL;
     }
     if_prepare_rsp(rsp, ret, hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID);
-    hal_api_trace(" API End: interface create ");
     return ret;
 }
 
@@ -1046,7 +1043,7 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
 
     auto if_enic_info = spec.if_enic_info();
 
-    HAL_TRACE_DEBUG("update for if_id:{}",
+    HAL_TRACE_DEBUG("update for if_id : {}",
                     spec.key_or_handle().interface_id());
 
     HAL_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
@@ -1069,7 +1066,7 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                 if (l2seg_lookup_by_handle(app_ctxt->new_native_l2seg_clsc) 
                         == NULL) {
                     HAL_TRACE_ERR("unable to find new "
-                            "l2seg_handle:{}",
+                            "l2seg_handle : {}",
                             app_ctxt->new_native_l2seg_clsc);
                     ret = HAL_RET_L2SEG_NOT_FOUND;
                     goto end;
@@ -1090,7 +1087,7 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                             app_ctxt->new_pinned_uplink);
 
             if (find_if_by_handle(app_ctxt->new_pinned_uplink) == NULL) {
-                HAL_TRACE_ERR("unable to find new uplinkif_hdl:{}",
+                HAL_TRACE_ERR("unable to find new uplinkif_hdl : {}",
                               app_ctxt->new_pinned_uplink);
                 ret = HAL_RET_IF_NOT_FOUND;
                 goto end;
@@ -1106,8 +1103,8 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                                             &app_ctxt->add_l2segclsclist,
                                             &app_ctxt->del_l2segclsclist);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to check classic l2seg "
-                          "list change. ret:{}",
+            HAL_TRACE_ERR("Failed to check classic l2seg "
+                          "list change. ret : {}",
                           ret);
             goto end;
         }
@@ -1171,7 +1168,7 @@ uplink_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     hal_ret_t           ret = HAL_RET_OK;
     l2seg_id_t          new_seg_id = 0;
 
-    HAL_TRACE_DEBUG("update for if_id:{}", 
+    HAL_TRACE_DEBUG("update for if_id : {}", 
                     spec.key_or_handle().interface_id());
 
     HAL_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
@@ -1185,7 +1182,7 @@ uplink_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
         if (new_seg_id != HAL_L2SEGMENT_ID_INVALID) {
             app_ctxt->native_l2seg = find_l2seg_by_id(new_seg_id);
             if (!app_ctxt->native_l2seg) {
-                HAL_TRACE_ERR("unable to find new l2seg:{}",
+                HAL_TRACE_ERR("unable to find new l2seg : {}",
                               new_seg_id);
                 ret = HAL_RET_L2SEG_NOT_FOUND;
                 goto end;
@@ -1214,7 +1211,7 @@ uplink_pc_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     // uint64_t    l2seg_id = 0;
     // l2seg_t     *l2seg = NULL;
 
-    HAL_TRACE_DEBUG("update for if_id:{}",
+    HAL_TRACE_DEBUG("update for if_id : {}",
                     spec.key_or_handle().interface_id());
 
     HAL_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
@@ -1228,7 +1225,7 @@ uplink_pc_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
         if (new_seg_id != HAL_L2SEGMENT_ID_INVALID) {
             app_ctxt->native_l2seg = find_l2seg_by_id(new_seg_id);
             if (!app_ctxt->native_l2seg) {
-                HAL_TRACE_ERR("unable to find new l2seg:{}",
+                HAL_TRACE_ERR("unable to find new l2seg : {}",
                               new_seg_id);
                 ret = HAL_RET_L2SEG_NOT_FOUND;
                 goto end;
@@ -1245,7 +1242,7 @@ uplink_pc_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                                    &app_ctxt->del_mbrlist,
                                    &app_ctxt->aggr_mbrlist);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to check mbr list change. ret:{}",
+        HAL_TRACE_ERR("Failed to check mbr list change. ret : {}",
                       ret);
         goto end;
     }
@@ -1314,7 +1311,7 @@ if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
         break;
 
     default:
-        HAL_TRACE_ERR("invalid if type: {}", 
+        HAL_TRACE_ERR("invalid if type : {}", 
                       hal_if->if_type);
         ret = HAL_RET_INVALID_ARG;
     }
@@ -1384,14 +1381,14 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     case intf::IF_TYPE_APP_REDIR:
         break;
     default:
-        HAL_TRACE_ERR("invalid if type: {}", hal_if->if_type);
+        HAL_TRACE_ERR("invalid if type : {}", hal_if->if_type);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_UPDATE, (void *)&pd_if_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to update if pd, err : {}", ret);
+        HAL_TRACE_ERR("Failed to update if pd, err  : {}", ret);
     }
 
 end:
@@ -1416,7 +1413,7 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
         entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
         l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
         if (!l2seg) {
-            HAL_TRACE_ERR("unable to find l2seg with handle:{}",
+            HAL_TRACE_ERR("unable to find l2seg with handle : {}",
                           entry->l2seg_handle);
             ret = HAL_RET_L2SEG_NOT_FOUND;
             goto end;
@@ -1495,16 +1492,16 @@ if_update_pi_with_mbr_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
     ret = uplinkpc_update_mbrs_relation(app_ctxt->add_mbrlist,
                                         hal_if, true);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to add uplinkif -> uplinkpc "
-                "relation ret:{}", ret);
+        HAL_TRACE_ERR("Failed to add uplinkif -> uplinkpc "
+                "relation ret : {}", ret);
         goto end;
     }
 
     ret = uplinkpc_update_mbrs_relation(app_ctxt->del_mbrlist,
                                         hal_if, false);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to del uplinkif -/-> uplinkpc "
-                "relation ret:{}", ret);
+        HAL_TRACE_ERR("Failed to del uplinkif -/-> uplinkpc "
+                "relation ret : {}", ret);
         goto end;
     }
 
@@ -1568,14 +1565,14 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             // Update clone with attrs
             if (app_ctxt->native_l2seg_clsc_change) {
                 HAL_TRACE_DEBUG("Setting the classic enicif clone to new "
-                                "native l2seg_hdl: {}", 
+                                "native l2seg_hdl : {}", 
                                 app_ctxt->new_native_l2seg_clsc);
                 intf_clone->native_l2seg_clsc = app_ctxt->new_native_l2seg_clsc;
             }
 
             if (app_ctxt->pinned_uplink_change) {
                 HAL_TRACE_DEBUG("Setting the classic enicif clone to new "
-                                "pinned uplink_hdl: {}", 
+                                "pinned uplink_hdl : {}", 
                                 app_ctxt->new_pinned_uplink);
                 intf_clone->pinned_uplink = app_ctxt->new_pinned_uplink;
                 // Update uplink's relation
@@ -1630,7 +1627,7 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 if (app_ctxt->native_l2seg) {
                     seg_id = app_ctxt->native_l2seg->seg_id;
                 }
-                HAL_TRACE_DEBUG("Setting the clone to new native l2seg: {}", 
+                HAL_TRACE_DEBUG("Setting the clone to new native l2seg : {}", 
                                 seg_id);
                 intf_clone->native_l2seg = seg_id;
             }
@@ -1648,7 +1645,7 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         case intf::IF_TYPE_APP_REDIR:
             break;
         default:
-            HAL_TRACE_ERR("invalid if type: {}", 
+            HAL_TRACE_ERR("invalid if type : {}", 
                           intf->if_type);
             ret = HAL_RET_INVALID_ARG;
     }
@@ -1658,7 +1655,7 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_if_args.intf = intf;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_MEM_FREE, (void *)&pd_if_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to free original if pd, err : {}", ret);
+        HAL_TRACE_ERR("Failed to free original if pd, err : {}", ret);
     }
 
     // Free PI
@@ -1720,7 +1717,7 @@ if_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_if_args.intf = intf;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_MEM_FREE, (void *)&pd_if_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to delete if pd, err : {}",
+        HAL_TRACE_ERR("Failed to delete if pd, err : {}",
                       ret);
     }
 
@@ -1737,8 +1734,8 @@ if_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         enicif_cleanup_l2seg_entry_list(&app_ctxt->del_l2segclsclist);
     }
 
-    // Free PI
     if_free(intf);
+
 end:
 
     return ret;
@@ -1765,34 +1762,37 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
     if_update_app_ctxt_t        app_ctxt = { 0 };
     bool                        has_changed = false;
 
-    hal_api_trace(" API Begin: interface update ");
-
     // validate the request message
     ret = validate_if_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("if update validation failed, ret : {}", 
-                      ret);
+        HAL_TRACE_ERR("if update validation failed, ret : {}", ret);
         goto end;
     }
 
     hal_if = if_lookup_key_or_handle(kh);
     if (!hal_if) {
-        HAL_TRACE_ERR("failed to find if, id {}, handle {}",
+        HAL_TRACE_ERR("Failed to find if, id {}, handle {}",
                       kh.interface_id(), kh.if_handle());
         ret = HAL_RET_IF_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("if update for id {} type:{} enictype:{}",
-                    hal_if->if_id, 
-                    IfType_Name(hal_if->if_type), 
+    // check if this is a CPU type interface
+    if (hal_if->if_type == intf::IF_TYPE_CPU) {
+        // updates not allowed on CPU interface as this is internal
+        ret = HAL_RET_INVALID_OP;
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("if update for id {} type : {} enictype : {}",
+                    hal_if->if_id, IfType_Name(hal_if->if_type), 
                     (hal_if->if_type == intf::IF_TYPE_ENIC) ?
                     IfEnicType_Name(hal_if->enic_type) : "IF_ENIC_TYPE_NONE");
 
     // Check for changes
     ret = if_update_check_for_change(spec, hal_if, &app_ctxt, &has_changed);
     if (ret != HAL_RET_OK || !has_changed) {
-        HAL_TRACE_ERR("no change in if update: noop");
+        HAL_TRACE_ERR("no change/error in if update");
         goto end;
     }
 
@@ -1877,7 +1877,7 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
             entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
             up_if = find_if_by_handle(entry->handle_id);
             if (!up_if) {
-                HAL_TRACE_ERR("unable to find uplinkif with handle:{}",
+                HAL_TRACE_ERR("unable to find uplinkif with handle  : {}",
                               entry->handle_id);
                 continue;
             }
@@ -1922,7 +1922,7 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
     args.rsp = rsp;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_GET, (void *)&args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to do PD get for If id: {}. ret:{}",
+        HAL_TRACE_ERR("Unable to do PD get for If id : {}. ret : {}",
                       hal_if->if_id, ret);
     }
     
@@ -2022,14 +2022,14 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     if (spec.l2segment_key_or_handle().key_or_handle_case() == 
             kh::L2SegmentKeyHandle::kSegmentId &&
             !find_l2seg_by_id(spec.l2segment_key_or_handle().segment_id())) {
-        HAL_TRACE_ERR("failed to find l2seg with id:{}", 
+        HAL_TRACE_ERR("Failed to find l2seg with id : {}", 
                       spec.l2segment_key_or_handle().segment_id());
         return HAL_RET_L2SEG_NOT_FOUND;
     }
     if (spec.l2segment_key_or_handle().key_or_handle_case() == 
             kh::L2SegmentKeyHandle::kL2SegmentHandle &&
             !l2seg_lookup_by_handle(spec.l2segment_key_or_handle().l2segment_handle())) {
-        HAL_TRACE_ERR("failed to find l2seg with handle:{}", 
+        HAL_TRACE_ERR("Failed to find l2seg with handle : {}", 
                       spec.l2segment_key_or_handle().l2segment_handle());
         return HAL_RET_L2SEG_NOT_FOUND;
     }
@@ -2044,14 +2044,14 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     if (spec.if_key_handle().key_or_handle_case() == 
             kh::InterfaceKeyHandle::kInterfaceId && 
             !find_if_by_id(spec.if_key_handle().interface_id())) {
-        HAL_TRACE_ERR("failed to find interface with id:{}", 
+        HAL_TRACE_ERR("Failed to find interface with id : {}", 
                       spec.if_key_handle().interface_id());
         return HAL_RET_IF_NOT_FOUND;
     }
     if (spec.if_key_handle().key_or_handle_case() == 
             kh::InterfaceKeyHandle::kIfHandle &&
             !find_if_by_handle(spec.if_key_handle().if_handle())) {
-        HAL_TRACE_ERR("failed to find interface with handle:{}", 
+        HAL_TRACE_ERR("Failed to find interface with handle : {}", 
                       spec.if_key_handle().if_handle());
         return HAL_RET_IF_NOT_FOUND;
     }
@@ -2074,7 +2074,6 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     oif_t                           oif = {};
     pd::pd_add_l2seg_uplink_args_t  pd_l2seg_uplink_args;
 
-    hal_api_trace(" API Begin: addl2seguplink ");
     // Validate if l2seg and uplink exists
     ret = validate_l2seg_on_uplink(spec, rsp);
     if (ret != HAL_RET_OK) {
@@ -2086,7 +2085,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     l2seg = fetch_l2seg_ifl2seg(spec);
     HAL_ASSERT((hal_if != NULL) && (l2seg != NULL));
 
-    HAL_TRACE_DEBUG("pi-l2segup<->link: if_id:{} <=> l2seg_id:{}", 
+    HAL_TRACE_DEBUG(" if_id : {} <=> l2seg_id : {}", 
                     hal_if->if_id, l2seg->seg_id);
 
     // PD Call
@@ -2095,7 +2094,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     pd_l2seg_uplink_args.intf   = hal_if;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ADD_L2SEG_UPLINK, (void *)&pd_l2seg_uplink_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2segup<->link:{}: failed in pd, ret:{}", ret);
+        HAL_TRACE_ERR("{}: Failed in pd, ret : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
         goto end;
     }
@@ -2103,8 +2102,8 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     // Add Uplink in l2seg
     ret = l2seg_add_if(l2seg, hal_if);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2segup<->link:failed to add if to "
-                      "l2seg's if list. ret:{}", 
+        HAL_TRACE_ERR("Failed to add if to "
+                      "l2seg's if list. ret : {}", 
                       ret);
         goto end;
     }
@@ -2112,8 +2111,8 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     // Add l2seg in uplink
     ret = if_add_l2seg(hal_if, l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2segup<->link:failed to add l2seg to "
-                      "if's seg list. ret:{}", 
+        HAL_TRACE_ERR("Failed to add l2seg to "
+                      "if's seg list. ret : {}", 
                       ret);
         goto end;
     }
@@ -2125,7 +2124,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
 
         ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-l2segup<->link:bcast oiflist failed. ret:{}",
+            HAL_TRACE_ERR("bcast oiflist Failed. ret : {}",
                           ret);
             rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
             goto end;
@@ -2134,7 +2133,6 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
 
 end:
     rsp->set_api_status(hal_prepare_rsp(ret));
-    hal_api_trace(" API End: add l2seg on uplink ");
     return ret;
 }
 
@@ -2151,12 +2149,10 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     oif_t                           oif = {};
     pd::pd_del_l2seg_uplink_args_t  pd_l2seg_uplink_args;
 
-    hal_api_trace(" API Begin: delete l2seg on uplink ");
-
-    // Validate if l2seg and uplink exists
+    // validate if l2seg and uplink exists
     ret = validate_l2seg_on_uplink(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("validation failed");
+        HAL_TRACE_ERR("validation Failed");
         return ret;
     }
 
@@ -2165,7 +2161,7 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     l2seg = fetch_l2seg_ifl2seg(spec);
     HAL_ASSERT((hal_if != NULL) && (l2seg != NULL));
 
-    HAL_TRACE_DEBUG("pi-dell2seguplink: if_id:{} <=> l2seg_id:{}",
+    HAL_TRACE_DEBUG("pi-dell2seguplink: if_id : {} <=> l2seg_id : {}",
             hal_if->if_id, l2seg->seg_id);
 
     // PD Call
@@ -2175,7 +2171,7 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_DEL_L2SEG_UPLINK, 
                           (void *)&pd_l2seg_uplink_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2segup<->link:{}: failed in pd, ret:{}", ret);
+        HAL_TRACE_ERR("{}: Failed in pd, ret : {}", ret);
         goto end;
     }
 
@@ -2187,7 +2183,7 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-dell2seguplink<->link:bcast oiflist"
-                                  " failed. ret:{}", ret);
+                                  " Failed. ret : {}", ret);
             goto end;
         }
     }
@@ -2195,8 +2191,8 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     // Del Uplink in l2seg
     ret = l2seg_del_if(l2seg, hal_if);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2segup<->link:failed to del if to "
-                      "l2seg's if list. ret:{}", 
+        HAL_TRACE_ERR("Failed to del if to "
+                      "l2seg's if list. ret : {}", 
                       ret);
         goto end;
     } 
@@ -2204,15 +2200,13 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     // Del l2seg in uplink
     ret = if_del_l2seg(hal_if, l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2segup<->link:failed to del l2seg to "
-                      "if's seg list. ret:{}", 
-                      ret);
+        HAL_TRACE_ERR("Failed to del l2seg to if's seg list. ret : {}", ret);
         goto end;
     }
 
 end:
+
     rsp->set_api_status(hal_prepare_rsp(ret));
-    hal_api_trace(" API End: delete l2seg on uplink ");
     return ret;
 }
 
@@ -2231,13 +2225,13 @@ cpu_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     ret = get_lif_handle_for_cpu_if(spec, rsp, hal_if);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PI-CPUif: Unable to find the lif handle Err: {}",
+        HAL_TRACE_ERR("PI-CPUif: Unable to find the lif handle Err : {}",
                       ret);
         return ret;
     }
 
     lif = find_lif_by_handle(hal_if->lif_handle);
-    HAL_TRACE_DEBUG("PI-CPUif: if_id:{} lif_id:{}", 
+    HAL_TRACE_DEBUG("PI-CPUif: if_id : {} lif_id : {}", 
             hal_if->if_id, lif->lif_id);
 
     return ret;
@@ -2259,13 +2253,13 @@ app_redir_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     ret = get_lif_handle_for_app_redir_if(spec, rsp, hal_if);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to find the lif handle Err: {}",
+        HAL_TRACE_ERR("Unable to find the lif handle Err : {}",
                       ret);
         return ret;
     }
 
     lif = find_lif_by_handle(hal_if->lif_handle);
-    HAL_TRACE_DEBUG("if_id:{} lif_id:{}", 
+    HAL_TRACE_DEBUG("if_id : {} lif_id : {}", 
                     hal_if->if_id, lif->lif_id);
 
     return ret;
@@ -2333,7 +2327,7 @@ enicif_print_l2seg_entry_list(dllist_ctxt_t  *list)
 
     dllist_for_each(lnode, list) {
         entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
-        HAL_TRACE_DEBUG("l2seg_handle: {}", entry->l2seg_handle);
+        HAL_TRACE_DEBUG("l2seg_handle : {}", entry->l2seg_handle);
     }
 }
 
@@ -2373,7 +2367,7 @@ enicif_free_l2seg_entry_list(dllist_ctxt_t *list)
 
     dllist_for_each_safe(curr, next, list) {
         entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
-        HAL_TRACE_DEBUG("freeing l2seg handle: {}", 
+        HAL_TRACE_DEBUG("freeing l2seg handle : {}", 
                         entry->l2seg_handle);
         // Remove from list
         sdk::lib::dllist_del(&entry->lentry);
@@ -2409,14 +2403,14 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
     vrf_t               *vrf = NULL;
     L2SegmentKeyHandle  l2seg_clsc_key_handle;
 
-    HAL_TRACE_DEBUG("enicif create for id {} type:{}",
+    HAL_TRACE_DEBUG("enicif create for id {} type : {}",
                     spec.key_or_handle().interface_id(),
                     spec.if_enic_info().enic_type());
 
     // lif for enic_if ... rsp is updated within the call
     ret = get_lif_handle_for_enic_if(spec, rsp, hal_if);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to find the lif handle Err: {}",
+        HAL_TRACE_ERR("unable to find the lif handle Err : {}",
                       ret);
         return ret;
     }
@@ -2431,7 +2425,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
             hal_if->enic_type == intf::IF_ENIC_TYPE_DIRECT) {
         l2seg = l2seg_lookup_key_or_handle(if_enic_info.mutable_enic_info()->l2segment_key_handle());
         if (l2seg == NULL) {
-            HAL_TRACE_ERR("failed to find l2seg_id:{}/{}",
+            HAL_TRACE_ERR("Failed to find l2seg_id : {}/{}",
                           if_enic_info.enic_info().l2segment_key_handle().segment_id(),
                           if_enic_info.enic_info().l2segment_key_handle().l2segment_handle());
             ret = HAL_RET_L2SEG_NOT_FOUND;
@@ -2443,7 +2437,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
         // Fetch the vrf information from l2seg
         vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
         if(vrf == NULL ) {
-            HAL_TRACE_ERR("failed to find vrf using handle:{}",
+            HAL_TRACE_ERR("Failed to find vrf using handle : {}",
                            l2seg->hal_handle);
             ret = HAL_RET_VRF_NOT_FOUND;
             goto end;
@@ -2454,7 +2448,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
                 if_enic_info.mutable_enic_info()->mac_address());
         hal_if->encap_vlan = if_enic_info.mutable_enic_info()->encap_vlan_id();
 
-        HAL_TRACE_DEBUG("l2_seg_id:{}, encap:{}, mac:{}, lif_id:{}", 
+        HAL_TRACE_DEBUG("l2_seg_id : {}, encap : {}, mac : {}, lif_id : {}", 
                         l2seg->seg_id,
                         hal_if->encap_vlan, macaddr2str(hal_if->mac_addr),
                         lif->lif_id);
@@ -2467,13 +2461,13 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
             l2seg = l2seg_lookup_by_handle(if_enic_info.
                     mutable_classic_enic_info()->native_l2segment_handle());
             if (l2seg == NULL) {
-                HAL_TRACE_ERR("failed to find l2seg_handle:{}",
+                HAL_TRACE_ERR("Failed to find l2seg_handle : {}",
                               if_enic_info.mutable_classic_enic_info()->
                               native_l2segment_handle());
                 ret = HAL_RET_L2SEG_NOT_FOUND;
                 goto end;
             }
-            HAL_TRACE_DEBUG("Adding l2seg_id:{} as native",
+            HAL_TRACE_DEBUG("Adding l2seg_id : {} as native",
                             l2seg->seg_id);
             hal_if->native_l2seg_clsc = l2seg->hal_handle;
         }
@@ -2486,7 +2480,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
             l2seg_clsc_key_handle = clsc_enic_info->l2segment_key_handle(i);
             l2seg = l2seg_lookup_key_or_handle(l2seg_clsc_key_handle);
             if (l2seg == NULL) {
-                HAL_TRACE_ERR("failed to find l2seg_handle:{}",
+                HAL_TRACE_ERR("Failed to find l2seg_handle : {}",
                               l2seg_clsc_key_handle.l2segment_handle());
                 ret = HAL_RET_L2SEG_NOT_FOUND;
                 goto end;
@@ -2497,11 +2491,11 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
 
         MAC_UINT64_TO_ADDR(hal_if->mac_addr,
                 if_enic_info.mutable_enic_info()->mac_address());
-        HAL_TRACE_DEBUG("mac:{}, lif_id:{}", macaddr2str(hal_if->mac_addr),
+        HAL_TRACE_DEBUG("mac : {}, lif_id : {}", macaddr2str(hal_if->mac_addr),
                         lif->lif_id);
                         
     } else {
-        HAL_TRACE_ERR("invalid enic type: {}", 
+        HAL_TRACE_ERR("invalid enic type : {}", 
                       hal_if->enic_type);
         // rsp->set_api_status(types::API_STATUS_IF_ENIC_TYPE_INVALID);
         ret = HAL_RET_IF_ENIC_TYPE_INVALID;
@@ -2568,7 +2562,7 @@ uplinkpc_add_l2segment (if_t *uppc, l2seg_t *seg)
     if_unlock(uppc);      // unlock
 
 end:
-    HAL_TRACE_DEBUG("add Segment ID :{} to uplinkpc_id:{}, ret:{}",
+    HAL_TRACE_DEBUG("add Segment ID  : {} to uplinkpc_id : {}, ret : {}",
                     seg->seg_id, uppc->if_id, ret);
     return ret;
 }
@@ -2711,7 +2705,7 @@ tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
         hal_if->gre_ttl = if_tunnel_info.gre_info().ttl();
     } else {
         ret = HAL_RET_IF_INFO_INVALID;
-        HAL_TRACE_ERR("pi-tunnelif:unsupported encap type:{}",
+        HAL_TRACE_ERR("pi-tunnelif:unsupported encap type : {}",
                       hal_if->encap_type);
         goto end;
     }
@@ -2720,8 +2714,8 @@ tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     rtep_ep = tunnel_if_get_remote_tep_ep(hal_if);
     if (!rtep_ep) {
         ret = HAL_RET_IF_INFO_INVALID;
-        HAL_TRACE_ERR("pi-tunnelif: unable to find rtep ep for IP: {}."
-                      "ret:{}",
+        HAL_TRACE_ERR("pi-tunnelif: unable to find rtep ep for IP : {}."
+                      "ret : {}",
                       hal_if->encap_type == 
                       TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_VXLAN ? 
                       ipaddr2str(&hal_if->vxlan_rtep) : 
@@ -2769,7 +2763,7 @@ validate_uplinkif_delete (if_t *hal_if)
     // check if the uplink is not a member of PC
     if (hal_if->is_pc_mbr) {
         ret = HAL_RET_OBJECT_IN_USE;
-        HAL_TRACE_ERR("PC is still referring. PC's handle:{}", 
+        HAL_TRACE_ERR("PC is still referring. PC's handle : {}", 
                       hal_if->uplinkpc_handle);
     }
 
@@ -2815,6 +2809,7 @@ validate_if_delete (if_t *hal_if)
     case intf::IF_TYPE_TUNNEL:
         break;
     case intf::IF_TYPE_CPU:
+        ret = HAL_RET_INVALID_OP; 
         break;
     case intf::IF_TYPE_APP_REDIR:
         break;
@@ -2825,8 +2820,6 @@ validate_if_delete (if_t *hal_if)
 
     return ret;
 }
-
-
 
 //------------------------------------------------------------------------------
 // 1. PD Call to delete PD and free up resources and deprogram HW
@@ -2870,7 +2863,7 @@ if_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_if_args.intf = intf;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_DELETE, (void *)&pd_if_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to delete if pd, err : {}", 
+        HAL_TRACE_ERR("Failed to delete if pd, err : {}", 
                       ret);
     }
 
@@ -2940,7 +2933,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             if (intf->pinned_uplink != HAL_HANDLE_INVALID) {
                 uplink = find_if_by_handle(intf->pinned_uplink);
                 if (uplink == NULL) {
-                    HAL_TRACE_ERR("unable to find uplink_hdl:{}",
+                    HAL_TRACE_ERR("unable to find uplink_hdl : {}",
                                   intf->pinned_uplink);
                     goto end;
                 }
@@ -2951,7 +2944,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             if (intf->native_l2seg_clsc != HAL_HANDLE_INVALID) {
                 nat_l2seg = l2seg_lookup_by_handle(intf->native_l2seg_clsc);
                 if (nat_l2seg == NULL) {
-                    HAL_TRACE_ERR("unable to find native_l2seg_hdl:{}",
+                    HAL_TRACE_ERR("unable to find native_l2seg_hdl : {}",
                                   intf->native_l2seg_clsc);
                     goto end;
                 }
@@ -2965,8 +2958,8 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                                                 intf, false);
             HAL_ASSERT(ret == HAL_RET_OK);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("failed to del l2seg -/-> enicif "
-                              "relation ret:{}", 
+                HAL_TRACE_ERR("Failed to del l2seg -/-> enicif "
+                              "relation ret : {}", 
                               ret);
                 goto end;
             }
@@ -2982,8 +2975,8 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         ret = uplinkpc_update_mbrs_relation(&intf->mbr_if_list_head,
                                             intf, false);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to del uplinkif -/-> uplinkpc "
-                          "relation ret:{}", 
+            HAL_TRACE_ERR("Failed to del uplinkif -/-> uplinkpc "
+                          "relation ret : {}", 
                           ret);
             goto end;
         }
@@ -2998,8 +2991,8 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         ret = enicif_update_l2segs_relation(&intf->l2seg_list_clsc_head, 
                                             intf, false);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to del l2seg -/-> enicif "
-                          "relation ret:{}", 
+            HAL_TRACE_ERR("Failed to del l2seg -/-> enicif "
+                          "relation ret : {}", 
                           ret);
             goto end;
         }
@@ -3009,7 +3002,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // a. Remove from if id hash table
     ret = if_del_from_db(intf);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to del if {} from db, err : {}", 
+        HAL_TRACE_ERR("Failed to del if {} from db, err : {}", 
                       intf->if_id, ret);
         goto end;
     }
@@ -3057,24 +3050,21 @@ interface_delete (InterfaceDeleteRequest& req, InterfaceDeleteResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     const InterfaceKeyHandle    &kh = req.key_or_handle();
 
-    hal_api_trace(" API Begin: interface delete ");
-
     // validate the request message
     ret = validate_if_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("if delete request validation failed, ret : {}",
-                      ret);
+        HAL_TRACE_ERR("if delete request validation Failed, ret : {}", ret);
         goto end;
     }
 
     hal_if = if_lookup_key_or_handle(kh);
     if (hal_if == NULL) {
-        HAL_TRACE_ERR("failed to find if, id {}, handle {}",
-                      kh.interface_id(), kh.if_handle());
+        HAL_TRACE_ERR("Failed to find if, id {}, handle {}", kh.interface_id(),
+                      kh.if_handle());
         ret = HAL_RET_IF_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("if delete for id {} type:{} enictype:{}",
+    HAL_TRACE_DEBUG("if delete for id {} type : {} enictype : {}",
                     hal_if->if_id, 
                     IfType_Name(hal_if->if_type), 
                     (hal_if->if_type == intf::IF_TYPE_ENIC) ?
@@ -3082,8 +3072,7 @@ interface_delete (InterfaceDeleteRequest& req, InterfaceDeleteResponse *rsp)
 
     ret = validate_if_delete(hal_if);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("if delete validation failed, ret : {}",
-                      ret);
+        HAL_TRACE_ERR("if delete validation Failed, ret : {}", ret);
         goto end;
     }
 
@@ -3101,8 +3090,8 @@ interface_delete (InterfaceDeleteRequest& req, InterfaceDeleteResponse *rsp)
                              if_delete_cleanup_cb);
 
 end:
+
     rsp->set_api_status(hal_prepare_rsp(ret));
-    hal_api_trace(" API End: interface delete ");
     return ret;
 }
 
@@ -3129,7 +3118,7 @@ get_lif_handle_for_enic_if (InterfaceSpec& spec, InterfaceResponse *rsp,
     }
 
     if (lif == NULL) {
-        HAL_TRACE_ERR("lif handle not found for id:{} hdl:{}",
+        HAL_TRACE_ERR("lif handle not found for id : {} hdl : {}",
                       lif_id, lif_handle);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         ret = HAL_RET_LIF_NOT_FOUND;
@@ -3166,7 +3155,7 @@ get_lif_handle_for_cpu_if (InterfaceSpec& spec, InterfaceResponse *rsp,
     }
 
     if (lif == NULL) {
-        HAL_TRACE_ERR("PI-CPUif:LIF handle not found for ID:{} HDL:{}",
+        HAL_TRACE_ERR("PI-CPUif:LIF handle not found for ID : {} HDL : {}",
                       lif_id, lif_handle);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
          ret = HAL_RET_LIF_NOT_FOUND;
@@ -3203,7 +3192,7 @@ get_lif_handle_for_app_redir_if (InterfaceSpec& spec, InterfaceResponse *rsp,
     }
 
     if (lif == NULL) {
-        HAL_TRACE_ERR("LIF handle not found for ID:{} HDL:{}",
+        HAL_TRACE_ERR("LIF handle not found for ID : {} HDL : {}",
                       lif_id, lif_handle);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
          ret = HAL_RET_LIF_NOT_FOUND;
@@ -3223,7 +3212,7 @@ if_handle_nwsec_update (l2seg_t *l2seg, if_t *hal_if, nwsec_profile_t *nwsec_pro
     hal_ret_t               ret = HAL_RET_OK;
     pd::pd_if_nwsec_update_args_t  args;
 
-    HAL_TRACE_DEBUG("if_id: {}", hal_if->if_id);
+    HAL_TRACE_DEBUG("if_id : {}", hal_if->if_id);
     pd::pd_if_nwsec_update_args_init(&args);
     args.l2seg = l2seg;
     args.intf = hal_if;
@@ -3231,12 +3220,12 @@ if_handle_nwsec_update (l2seg_t *l2seg, if_t *hal_if, nwsec_profile_t *nwsec_pro
 
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_NWSEC_UPDATE, (void *)&args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD call for nwsec update on if failed. ret: {}", 
-                ret);
+        HAL_TRACE_ERR("PD call for nwsec update on if Failed. ret : {}", ret);
         goto end;
     }
 
 end:
+
     return ret;
 }
 
@@ -3250,16 +3239,17 @@ if_handle_lif_update (pd::pd_if_lif_update_args_t *args)
         return HAL_RET_INVALID_ARG;
     }
 
-    HAL_TRACE_DEBUG("if_id: {}",args->intf->if_id);
+    HAL_TRACE_DEBUG("if_id : {}",args->intf->if_id);
 
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_LIF_UPDATE, (void *)args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD call for lif update on if failed. ret: {}", 
+        HAL_TRACE_ERR("PD call for lif update on if Failed. ret : {}", 
                 ret);
         goto end;
     }
 
 end:
+
     return ret;
 }
 
@@ -3316,7 +3306,7 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
     sdk::lib::dllist_reset(*del_l2seglist);
 
     num_l2segs = clsc_enic_info->l2segment_key_handle_size();
-    HAL_TRACE_DEBUG("number of l2segs:{}", 
+    HAL_TRACE_DEBUG("number of l2segs  : {}", 
                     num_l2segs);
     for (i = 0; i < num_l2segs; i++) {
         l2seg_key_handle = clsc_enic_info->l2segment_key_handle(i);
@@ -3332,7 +3322,7 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
             // Add to added list
             enicif_add_to_l2seg_entry_list(*add_l2seglist, l2seg->hal_handle);
             *l2seglist_change = true;
-            HAL_TRACE_DEBUG("added to add list hdl: {}", 
+            HAL_TRACE_DEBUG("added to add list hdl : {}", 
                     l2seg->hal_handle);
         }
     }
@@ -3344,11 +3334,11 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
 
     dllist_for_each(lnode, &(hal_if->l2seg_list_clsc_head)) {
         entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
-        HAL_TRACE_DEBUG("Checking for l2seg: {}", 
+        HAL_TRACE_DEBUG("Checking for l2seg : {}", 
                 entry->l2seg_handle);
         for (i = 0; i < num_l2segs; i++) {
             l2seg_key_handle = clsc_enic_info->l2segment_key_handle(i);
-            HAL_TRACE_DEBUG("grpc l2seg handle: {}", l2seg->hal_handle);
+            HAL_TRACE_DEBUG("grpc l2seg handle : {}", l2seg->hal_handle);
             if (entry->l2seg_handle == l2seg_key_handle.l2segment_handle()) {
                 l2seg_exists = true;
                 break;
@@ -3370,7 +3360,7 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
             // Insert into the list
             sdk::lib::dllist_add(*del_l2seglist, &lentry->lentry);
             *l2seglist_change = true;
-            HAL_TRACE_DEBUG("added to delete list hdl: {}", 
+            HAL_TRACE_DEBUG("added to delete list hdl : {}", 
                     lentry->l2seg_handle);
         }
         l2seg_exists = false;
@@ -3424,7 +3414,7 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
     sdk::lib::dllist_reset(*aggr_mbrlist);
 
     num_mbrs = spec.if_uplink_pc_info().member_if_key_handle_size();
-    HAL_TRACE_DEBUG("pc mbrs:{}", 
+    HAL_TRACE_DEBUG("pc mbrs  : {}", 
                     num_mbrs);
     for (i = 0; i < num_mbrs; i++) {
         mbr_if_key_handle = spec.if_uplink_pc_info().member_if_key_handle(i);
@@ -3439,7 +3429,7 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
 
         if (mbr_if->if_type != intf::IF_TYPE_UPLINK) {
             HAL_TRACE_ERR("unable to add non-uplinkif. "
-                          "Skipping if id: {}", mbr_if->if_id);
+                          "Skipping if id : {}", mbr_if->if_id);
             continue;
         }
         if (mbrif_in_pc(hal_if, mbr_if->hal_handle, NULL)) {
@@ -3448,7 +3438,7 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
             // Add to added list
             hal_add_to_handle_list(*add_mbrlist, mbr_if->hal_handle);
             *mbrlist_change = true;
-            HAL_TRACE_DEBUG("added to add list hdl: {}", 
+            HAL_TRACE_DEBUG("added to add list hdl : {}", 
                     mbr_if->hal_handle);
         }
     }
@@ -3462,12 +3452,12 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
 
     dllist_for_each(lnode, &(hal_if->mbr_if_list_head)) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        HAL_TRACE_DEBUG("Checking for mbr: {}", 
+        HAL_TRACE_DEBUG("Checking for mbr : {}", 
                 entry->handle_id);
         for (i = 0; i < num_mbrs; i++) {
             mbr_if_key_handle = spec.if_uplink_pc_info().member_if_key_handle(i);
             mbr_if = if_lookup_key_or_handle(mbr_if_key_handle);
-            HAL_TRACE_DEBUG("grpc mbr handle: {}", mbr_if->hal_handle);
+            HAL_TRACE_DEBUG("grpc mbr handle : {}", mbr_if->hal_handle);
             if (entry->handle_id == mbr_if->hal_handle) {
                 mbr_exists = true;
                 break;
@@ -3488,7 +3478,7 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
             // Insert into the list
             sdk::lib::dllist_add(*del_mbrlist, &lentry->dllist_ctxt);
             *mbrlist_change = true;
-            HAL_TRACE_DEBUG("added to delete list hdl: {}", 
+            HAL_TRACE_DEBUG("added to delete list hdl : {}", 
                     lentry->handle_id);
         }
         mbr_exists = false;
@@ -3546,7 +3536,7 @@ enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list, if_t *hal_if, bool ad
         entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
         l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
         if (!l2seg) {
-            HAL_TRACE_ERR("unable to find l2seg with handle:{}",
+            HAL_TRACE_ERR("unable to find l2seg with handle : {}",
                           entry->l2seg_handle);
             ret = HAL_RET_L2SEG_NOT_FOUND;
             goto end;
@@ -3577,7 +3567,7 @@ uplinkpc_update_mbrs_relation (dllist_ctxt_t *mbr_list, if_t *uppc, bool add)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         up_if = find_if_by_handle(entry->handle_id);
         if (!up_if) {
-            HAL_TRACE_ERR("unable to find uplinkif with handle:{}",
+            HAL_TRACE_ERR("unable to find uplinkif with handle : {}",
                           entry->handle_id);
             ret = HAL_RET_IF_NOT_FOUND;
             goto end;
@@ -3679,7 +3669,7 @@ uplinkpc_add_uplinkif (if_t *uppc, if_t *upif)
     if_unlock(uppc, __FILENAME__, __LINE__, __func__);      // unlock
 
 end:
-    HAL_TRACE_DEBUG("add uplinkpc => uplinkif, {} => {}, ret:{}",
+    HAL_TRACE_DEBUG("add uplinkpc => uplinkif, {} => {}, ret : {}",
                     uppc->if_id, upif->if_id, ret);
     return ret;
 }
@@ -3707,7 +3697,7 @@ uplinkpc_del_uplinkif (if_t *uppc, if_t *upif)
     }
     if_unlock(uppc, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("del uplinkpc =/=> uplinkif, {} =/=> {}, ret:{}",
+    HAL_TRACE_DEBUG("del uplinkpc =/=> uplinkif, {} =/=> {}, ret : {}",
                     uppc->if_id, upif->if_id, ret);
     return ret;
 }
@@ -3741,7 +3731,7 @@ if_add_l2seg (if_t *hal_if, l2seg_t *l2seg)
     if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG(" add if => l2seg, {} => {}, ret:{}",
+    HAL_TRACE_DEBUG(" add if => l2seg, {} => {}, ret : {}",
                     hal_if->if_id, l2seg->seg_id, ret);
     return ret;
 }
@@ -3770,7 +3760,7 @@ if_del_l2seg (if_t *hal_if, l2seg_t *l2seg)
     }
     if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG(" del if =/=> l2seg, {} =/=> {}, ret:{}",
+    HAL_TRACE_DEBUG(" del if =/=> l2seg, {} =/=> {}, ret : {}",
                     hal_if->if_id, l2seg->seg_id, ret);
     return ret;
 }
@@ -3804,7 +3794,8 @@ uplink_add_enicif (if_t *uplink, if_t *enic_if)
     if_unlock(enic_if, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("add uplink => enic_if, {} => {}, ret:{}",
+
+    HAL_TRACE_DEBUG("add uplink => enic_if, {} => {}, ret : {}",
                     uplink->if_id, enic_if->if_id, ret);
     return ret;
 }
@@ -3832,8 +3823,7 @@ uplink_del_enicif (if_t *uplink, if_t *enic_if)
     }
     if_unlock(uplink, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("del uplink =/=> enic_if, {} =/=> {}, ret:{}",
-                    uplink->if_id, enic_if->if_id, ret);
+    HAL_TRACE_DEBUG("{} {}, ret : {}", uplink->if_id, enic_if->if_id, ret);
     return ret;
 }
 

@@ -1397,8 +1397,6 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     const L2SegmentKeyHandle    &kh = spec.key_or_handle();
     l2seg_update_app_ctxt_t     app_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: l2segment update ");
-
     // validate the request message
     ret = validate_l2seg_update(spec, rsp);
     if (ret != HAL_RET_OK) {
@@ -1470,13 +1468,13 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                              l2seg_update_cleanup_cb);
 
 end:
+
     if (ret == HAL_RET_OK) {
         HAL_API_STATS_INC(HAL_API_L2SEGMENT_UPDATE_SUCCESS);
     } else {
         HAL_API_STATS_INC(HAL_API_L2SEGMENT_UPDATE_FAIL);
     }
     l2seg_prepare_rsp(rsp, ret, (ret == HAL_RET_OK) ? l2seg_clone : l2seg);
-    hal_api_trace(" API End: l2segment update ");
     return ret;
 }
 
@@ -1718,8 +1716,6 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse* rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     const L2SegmentKeyHandle    &kh = req.key_or_handle();
 
-    hal_api_trace(" API Begin: l2segment delete ");
-
     // validate the request message
     ret = validate_l2seg_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
@@ -1758,13 +1754,13 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse* rsp)
                              l2seg_delete_cleanup_cb);
 
 end:
+
     if (ret == HAL_RET_OK) {
         HAL_API_STATS_INC(HAL_API_L2SEGMENT_DELETE_SUCCESS);
     } else {
         HAL_API_STATS_INC(HAL_API_L2SEGMENT_DELETE_FAIL);
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
-    hal_api_trace(" API End: l2segment delete ");
     return ret;
 }
 

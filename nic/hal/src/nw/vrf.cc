@@ -502,7 +502,6 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt  = { 0 };
 
-    hal_api_trace(" API Begin: vrf create ");
     HAL_TRACE_DEBUG("creating vrf with id {}",
                     spec.key_or_handle().vrf_id());
 
@@ -610,7 +609,6 @@ end:
 
     vrf_prepare_rsp(rsp, ret, 
                       vrf ? vrf->hal_handle : HAL_HANDLE_INVALID);
-    hal_api_trace(" API End: vrf create ");
     return ret;
 }
 
@@ -971,8 +969,6 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     const VrfKeyHandle       &kh       = spec.key_or_handle();
     vrf_update_app_ctxt_t    app_ctxt  = { 0 };
 
-    hal_api_trace(" API Begin: vrf update");
-
     // dump spec
     vrf_spec_print(spec);
 
@@ -1040,6 +1036,7 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
                              vrf_update_cleanup_cb);
 
 end:
+
     if (ret == HAL_RET_OK) {
         HAL_API_STATS_INC(HAL_API_VRF_UPDATE_SUCCESS);
     } else {
@@ -1048,7 +1045,6 @@ end:
 
     vrf_prepare_rsp(rsp, ret, 
                        vrf ? vrf->hal_handle : HAL_HANDLE_INVALID);
-    hal_api_trace(" API End: vrf update ");
     return ret;
 }
 
@@ -1316,8 +1312,6 @@ vrf_delete (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     const VrfKeyHandle       &kh = req.key_or_handle();
 
-    hal_api_trace(" API Begin: vrf delete ");
-
     // validate the request message
     ret = validate_vrf_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
@@ -1362,7 +1356,6 @@ end:
         HAL_API_STATS_INC (HAL_API_VRF_DELETE_FAIL);
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
-    hal_api_trace(" API End: vrf delete ");
     return ret;
 }
 

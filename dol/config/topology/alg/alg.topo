@@ -26,8 +26,3 @@ tenants:
     -   spec    : ref://store/specs/id=TENANT_ALG
         count   : 1
         lifns   : range/101/101
-
-cpu:
-    - entry:
-        id      : Cpu1 
-        lif_id  : 1003

@@ -57,8 +57,3 @@ tenants:
     -   spec    : ref://store/specs/id=TENANT_RECIRC
         count   : 1
         lifns   : range/101/105
-
-cpu:
-    - entry:
-        id      : Cpu1 
-        lif_id  : 1003

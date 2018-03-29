@@ -64,8 +64,3 @@ tenants:
     -   spec    : ref://store/specs/id=TENANT_FTE
         count   : 1
         lifns   : range/121/136
-
-cpu:
-    - entry:
-        id      : Cpu1 
-        lif_id  : 1003

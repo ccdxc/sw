@@ -58,9 +58,3 @@ tenants:
         count   : 1
         lifns   : range/400/403
         uplink  : ref://store/objects/id=Uplink4
-
-
-cpu:
-    - entry:
-        id      : Cpu1 
-        lif_id  : 1003

@@ -72,9 +72,3 @@ tenants:
     -   spec    : ref://store/specs/id=TENANT_DOS_SRC_DST_V6
         count   : 1
         lifns   : range/152/152
-
-
-cpu:
-    - entry:
-        id      : Cpu1 
-        lif_id  : 1003
