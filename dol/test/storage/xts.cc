@@ -198,7 +198,7 @@ XtsCtx::XtsCtx() {
     in_aol[i] = NULL;
     out_aol[i] = NULL;
   }
-  seq_xts_q = queues::get_pvm_seq_xts_sq(0);
+  seq_xts_q = queues::get_seq_xts_sq(0);
 }
 
 XtsCtx::~XtsCtx() {
@@ -365,7 +365,7 @@ XtsCtx::desc_write_seq_xts(dp_mem_t *xts_desc) {
 
   // Fill the XTS Seq descriptor
   if (use_seq) {
-      seq_xts_desc = queues::pvm_sq_consume_entry(seq_xts_q, &seq_xts_index);
+      seq_xts_desc = queues::seq_sq_consume_entry(seq_xts_q, &seq_xts_index);
       seq_xts_desc->clear();
       seq_xts_desc->write_bit_fields(0, 64, xts_desc->pa());
       seq_xts_desc->write_bit_fields(64, 34, xts_ring_pi_addr);
@@ -388,7 +388,7 @@ XtsCtx::desc_write_seq_xts_status(dp_mem_t *xts_status_desc) {
   dp_mem_t *curr_status_desc;
 
   // Fill the XTS status Seq descriptor
-  curr_status_desc = queues::pvm_sq_consume_entry(seq_xts_status_q, &seq_xts_status_index);
+  curr_status_desc = queues::seq_sq_consume_entry(seq_xts_status_q, &seq_xts_status_index);
   memcpy(curr_status_desc->read(), xts_status_desc->read(),
          curr_status_desc->line_size_get());
   curr_status_desc->write_thru();
@@ -495,7 +495,7 @@ bool pi_inited = false;
 int XtsCtx::ring_doorbell() {
   if(use_seq) {
     // Kickstart the sequencer
-    test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_xts_q, 0, seq_xts_index);
+    test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_xts_q, 0, seq_xts_index);
   } else {
     if(!pi_inited) {
       read_reg(xts_ring_pi_addr, pi);

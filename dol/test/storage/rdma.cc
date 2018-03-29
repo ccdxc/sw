@@ -760,8 +760,8 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
   initiator_sq_va->line_advance();
 
   // Now kickstart the sequencer
-  tests::test_seq_write_roce(queues::get_pvm_seq_pdma_sq(0),
-                             queues::get_pvm_seq_roce_sq(0), 
+  tests::test_seq_write_roce(queues::get_seq_pdma_sq(0),
+                             queues::get_seq_roce_sq(0), 
                              g_rdma_pvm_roce_init_sq, r2n_buf_va->pa(), 
                              r2n_hbm_buf_pa->pa(), data_len, 
                              sqwqe->pa(), kSQWQESize);
@@ -906,12 +906,12 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
 
   // RDMA will ring the next doorbell with pndx increment,
   // print out this info to make it easy to locate in model.log
-  queues::get_capri_doorbell_with_pndx_inc(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
+  queues::get_capri_doorbell_with_pndx_inc(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0,
                                            &db_addr, &db_data);
   printf("write_wqe next doorbell db_addr %lx db_data %lx\n", db_addr, db_data);
 
   // Write WQE: remote side buffer with immediate data as doorbell
-  write_wqe->write_bit_fields(96, 11, queues::get_pvm_lif());
+  write_wqe->write_bit_fields(96, 11, queues::get_seq_lif());
   write_wqe->write_bit_fields(107, 3, SQ_TYPE);
   write_wqe->write_bit_fields(110, 18, seq_pdma_q);
   write_wqe->write_bit_fields(128, 64, r2n_hbm_buf_pa->va()); // va == pa
