@@ -6,8 +6,6 @@ current_infra_types = 0
 
 def PreCreateCb(data, req_spec, resp_spec):
     global current_infra_types
-    if req_spec.request[0].segment_type == types_pb2.L2_SEGMENT_TYPE_INFRA:
-        req_spec.request[0].segment_type = types_pb2.L2_SEGMENT_TYPE_TENANT
 
 def PostCreateCb(data, req_spec, resp_spec):
     data.exp_data.spec = req_spec.request[0]

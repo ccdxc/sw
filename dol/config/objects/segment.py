@@ -318,12 +318,6 @@ class SegmentObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.segment_id = self.id
         req_spec.vrf_key_handle.vrf_id = self.tenant.id
-        if self.IsTenantSegment() or self.IsSpanSegment():
-            req_spec.segment_type = haldefs.common.L2_SEGMENT_TYPE_TENANT
-        elif self.IsInfraSegment():
-            req_spec.segment_type = haldefs.common.L2_SEGMENT_TYPE_INFRA
-        else:
-            assert(0)
         #req_spec.access_encap.encap_type    = haldefs.common.ENCAP_TYPE_DOT1Q
         #req_spec.access_encap.encap_value   = self.vlan_id
         if self.IsFabEncapVxlan():
@@ -371,13 +365,6 @@ class SegmentObject(base.ConfigObjectBase):
     def ProcessHALGetResponse(self, get_req_spec, get_resp_spec):
         if get_resp_spec.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
             self.id = get_resp_spec.spec.key_or_handle.segment_id
-            if get_resp_spec.spec.segment_type == haldefs.common.L2_SEGMENT_TYPE_TENANT:
-                self.type = 'TENANT'
-            elif get_resp_spec.spec.segment_type == haldefs.common.L2_SEGMENT_TYPE_INFRA:
-                self.type = 'INFRA'
-            else:
-                self.type = None
-
             #self.vlan_id = get_resp_spec.spec.access_encap.encap_value
             if get_resp_spec.spec.wire_encap.encap_type ==  haldefs.common.ENCAP_TYPE_VXLAN:
                 self.fabencap = 'VXLAN'

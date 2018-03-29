@@ -22,7 +22,7 @@ typedef struct pd_l2seg_s {
     l2seg_hw_id_t       l2seg_hw_id;         // hw id for this segment
 
     uint32_t            l2seg_fl_lkup_id;     // used in data plane as vrf   
-    uint32_t            l2seg_fromcpu_id;    // traffic from CPU
+    uint32_t            cpu_l2seg_id;    // traffic from CPU
 
     // meta data maintained for l2seg pd
     // ht_ctxt_t           hw_ht_ctxt;          // h/w id based hash table ctxt
@@ -61,9 +61,8 @@ l2seg_pd_init (pd_l2seg_t *l2seg_pd)
     l2seg_pd->l2seg = NULL;
 
     l2seg_pd->l2seg_hw_id      = INVALID_INDEXER_INDEX;
-    l2seg_pd->l2seg_fl_lkup_id  = INVALID_INDEXER_INDEX;
-    l2seg_pd->l2seg_fromcpu_id = INVALID_INDEXER_INDEX;
-
+    l2seg_pd->l2seg_fl_lkup_id = INVALID_INDEXER_INDEX;
+    l2seg_pd->cpu_l2seg_id     = INVALID_INDEXER_INDEX;
 
     // initialize meta information
     // l2seg_pd->hw_ht_ctxt.reset();

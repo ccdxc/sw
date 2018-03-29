@@ -101,14 +101,10 @@ enum VrfType {
 }
 
 // Types of L2 segments
-// TODO: L2segment should not have tenant, mgmt and infra. They are ideally be for vrf
 enum L2SegmentType {
-  L2_SEGMENT_TYPE_NONE          = 0;
-  L2_SEGMENT_TYPE_TENANT        = 1;    // tenant/user VLAN
-  L2_SEGMENT_TYPE_MGMT          = 2;    // mgmt VLAN
-  L2_SEGMENT_TYPE_INFRA         = 3;    // infra VLAN
-  L2_SEGMENT_PRIMARY            = 4;    // primary VLAN of PVLAN
-  L2_SEGMENT_ISOLATED           = 5;    // isolated VLAN of PVLAN
+  L2_SEGMENT_TYPE_NONE   = 0;
+  L2_SEGMENT_PRIMARY     = 1;    // primary VLAN of PVLAN
+  L2_SEGMENT_ISOLATED    = 2;    // isolated VLAN of PVLAN
 }
 
 // Supported wire encaps for the L2 segments

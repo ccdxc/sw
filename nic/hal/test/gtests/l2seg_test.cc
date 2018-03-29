@@ -769,7 +769,6 @@ TEST_F(l2seg_test, test5)
     // Create Infra l2seg with non-infra vrf
     infra_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     infra_spec.clear_network_key_handle();
-    infra_spec.set_segment_type(types::L2_SEGMENT_TYPE_INFRA);
     nkh = infra_spec.add_network_key_handle();
     nkh->set_nw_handle(nw_hdl);
     infra_spec.mutable_key_or_handle()->set_segment_id(85);
@@ -794,7 +793,6 @@ TEST_F(l2seg_test, test5)
     // Create Infra l2seg with Infra vrf
     infra_spec.mutable_vrf_key_handle()->set_vrf_id(85);
     infra_spec.clear_network_key_handle();
-    infra_spec.set_segment_type(types::L2_SEGMENT_TYPE_INFRA);
     nkh = infra_spec.add_network_key_handle();
     nkh->set_nw_handle(nw_hdl);
     infra_spec.mutable_key_or_handle()->set_segment_id(85);
@@ -809,7 +807,6 @@ TEST_F(l2seg_test, test5)
     // Create a second Infra L2Seg
     infra_spec.mutable_vrf_key_handle()->set_vrf_id(85);
     infra_spec.clear_network_key_handle();
-    infra_spec.set_segment_type(types::L2_SEGMENT_TYPE_INFRA);
     nkh = infra_spec.add_network_key_handle();
     nkh->set_nw_handle(nw_hdl);
     infra_spec.mutable_key_or_handle()->set_segment_id(86);

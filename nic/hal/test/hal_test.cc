@@ -935,7 +935,6 @@ public:
     uint64_t l2segment_create(uint64_t vrf_id,
                               uint64_t l2segment_id,
                               uint64_t nw_handle,
-                              ::types::L2SegmentType l2seg_type,
                               ::l2segment::BroadcastFwdPolicy bcast_policy,
                               ::l2segment::MulticastFwdPolicy mcast_policy,
                               EncapInfo   l2seg_encap) {
@@ -952,7 +951,6 @@ public:
         nw_kh = spec->add_network_key_handle();
         nw_kh->set_nw_handle(nw_handle);
         spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
-        spec->set_segment_type(l2seg_type);
         spec->set_mcast_fwd_policy(mcast_policy);
         spec->set_bcast_fwd_policy(bcast_policy);
         spec->mutable_wire_encap()->set_encap_type(l2seg_encap.encap_type());
@@ -1328,7 +1326,6 @@ create_l2segments(uint64_t   l2seg_id_start,
             hclient.l2segment_create(vrf_id,
                                      l2seg_id,
                                      nw_handle,
-                                     ::types::L2_SEGMENT_TYPE_TENANT,
                                      ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
                                      ::l2segment::MULTICAST_FWD_POLICY_FLOOD,
                                      l2seg_encap);
@@ -1670,7 +1667,6 @@ main (int argc, char** argv)
         hclient.l2segment_create(vrf_id,
                                  dest_l2seg_id,
                                  nw2_handle,
-                                 ::types::L2_SEGMENT_TYPE_TENANT,
                                  ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
                                  ::l2segment::MULTICAST_FWD_POLICY_FLOOD,
                                  l2seg_encap);

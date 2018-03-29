@@ -705,7 +705,6 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) err
 				SegmentId: nw.Status.NetworkID,
 			},
 		},
-		SegmentType:    halproto.L2SegmentType_L2_SEGMENT_TYPE_TENANT,
 		McastFwdPolicy: halproto.MulticastFwdPolicy_MULTICAST_FWD_POLICY_FLOOD,
 		BcastFwdPolicy: halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD,
 		WireEncap: &halproto.EncapInfo{
@@ -754,7 +753,6 @@ func (hd *Datapath) UpdateNetwork(nw *netproto.Network) error {
 				SegmentId: nw.Status.NetworkID,
 			},
 		},
-		SegmentType:    halproto.L2SegmentType_L2_SEGMENT_TYPE_TENANT,
 		McastFwdPolicy: halproto.MulticastFwdPolicy_MULTICAST_FWD_POLICY_FLOOD,
 		BcastFwdPolicy: halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD,
 		WireEncap: &halproto.EncapInfo{
