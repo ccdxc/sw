@@ -16,8 +16,8 @@ function createVCHubContainer() {
     docker build --rm --no-cache -t pen-vchub:latest -f tools/docker-files/vchub/Dockerfile tools/docker-files/vchub
 }
 
-function createN4sContainer() {
-    docker build --rm --no-cache -t pen-n4sagent:latest -f tools/docker-files/n4sagent/Dockerfile tools/docker-files/n4sagent
+function createNetagentContainer() {
+    docker build --rm --no-cache -t pen-netagent:latest -f tools/docker-files/netagent/Dockerfile tools/docker-files/netagent
 }
 
 function createNmdContainer() {
@@ -56,7 +56,7 @@ function createBinContainerTarBall() {
     done
     mkdir -p bin/tars
     dynamicimages="pen-cmd:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest \
-        pen-vcsim:latest pen-n4sagent:latest pen-nmd:latest pen-collector:latest pen-tpm:latest"
+        pen-vcsim:latest pen-netagent:latest pen-nmd:latest pen-collector:latest pen-tpm:latest"
     for i in $staticimages $dynamicimages
     do
         # i is registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
@@ -80,7 +80,7 @@ case $1 in
     vchub) createVCHubContainer;;
     npm) createNPMContainer;;
     vcsim) createVCSimContainer;;
-    n4sagent) createN4sContainer;;
+    netagent) createNetagentContainer;;
     nmd) createNmdContainer;;
     collector) createCollectorContainer;;
     tpm) createTpmContainer;;

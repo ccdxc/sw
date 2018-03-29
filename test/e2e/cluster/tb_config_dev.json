@@ -6,5 +6,6 @@
     "SSHUser":        "root",
     "SSHPasswd":      "vagrant",
     "SSHAuthMethod":  "password",
-    "FirstVeniceIP":  "192.168.30.11"
+    "FirstVeniceIP":  "192.168.30.11",
+    "E2EMode":        "MOCK"
 }

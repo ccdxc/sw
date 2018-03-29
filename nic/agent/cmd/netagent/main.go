@@ -8,8 +8,11 @@ import (
 	"flag"
 	"strings"
 
+	"github.com/golang/mock/gomock"
+
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -28,6 +31,8 @@ func main() {
 		debugflag    = flag.Bool("debug", false, "Enable debug mode")
 		logToFile    = flag.String("logtofile", "/var/log/pensando/naples-netagent.log", "Redirect logs to file")
 		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
+		// ToDo Remove this flag prior to FCS the datapath should be defaulted to HAL
+		datapath = flag.String("datapath", "mock", "specify the agent datapath type either mock or hal")
 	)
 	flag.Parse()
 
@@ -75,10 +80,27 @@ func main() {
 		log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
 	}
 
-	// Create a HAL Datapath // ToDo Make this hal
-	dp, err := datapath.NewHalDatapath("mock")
-	if err != nil {
-		log.Fatal("Error initializing HAL Datapath")
+	var dp state.NetDatapathAPI
+	// ToDo Remove mock hal datapath prior to FCS
+	if *datapath == "hal" {
+		dp, err = hal.NewHalDatapath("hal")
+		if err != nil {
+			log.Fatalf("Error creating hal datapath. Err: %v", err)
+		}
+	} else {
+		// Set expectations to allow mock testing
+		mockDp, err := hal.NewHalDatapath("mock")
+		mockDp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+		mockDp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+		mockDp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+		mockDp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+		mockDp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+		mockDp.Hal.MockClients.MockIfclient.EXPECT().InterfaceCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+		mockDp.Hal.MockClients.MockEpclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+		if err != nil {
+			log.Fatalf("Error creating mock datapath. Err: %v", err)
+		}
+		dp = mockDp
 	}
 
 	// create the new NetAgent

@@ -28,7 +28,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./asset-build/... \
 
 # Lists the binaries to be containerized
-TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector nmd tpm
+TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd collector tpm nmd netagent
 # Install gopkgs
 INSTALL := $(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
 # Lists all go packages. Auto ignores vendor
@@ -113,7 +113,7 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/n4sagent/nmd
+	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd
 	@for c in $(TO_DOCKERIZE); do cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
@@ -142,7 +142,7 @@ helper-containers:
 	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.2 .
 	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.2 .
 	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/pens-bld:v0.9 .
-	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/pens-dind:v0.1 .
+	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/pens-dind:v0.2 .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/pens-e2e:v0.2 .
 	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:6.2.2 .
 
@@ -241,10 +241,22 @@ toolchain:
 pull-assets:
 	bash scripts/pull-assets.sh
 
+# Target to run venice e2e on mac using a dind environment. Uses Agent with its datapath mocked
 e2e:
 	$(MAKE) container-compile
 	$(MAKE) install
-	./test/e2e/dind/do.py -configFile test/e2e/cluster/tb_config.json
-	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/test/e2e/cluster/tb_config.json '
+	./test/e2e/dind/do.py -configFile test/e2e/cluster/tb_config_dev.json
+	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/test/e2e/cluster/tb_config_dev.json '
+	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
+	#./test/e2e/dind/do.py -delete
+
+# Target to run venice e2e a dind environment. Uses real HAL as Agent Datapath and starts HAL with model
+e2e-sanities:
+	$(MAKE) container-compile
+	$(MAKE) install
+	$(MAKE) -C nic e2e-sanity-build
+	./test/e2e/dind/do.py -configFile test/e2e/cluster/tb_config_sanities.json
+	@stty sane
+	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/test/e2e/cluster/tb_config_sanities.json '
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete

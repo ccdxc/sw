@@ -13,7 +13,7 @@ rm -f /lib/systemd/system/basic.target.wants/*;\
 rm -f /lib/systemd/system/anaconda.target.wants/*;
 
 RUN curl -sSL https://get.docker.com | CHANNEL=stable bash
-RUN yum install -y softhsm libtool-ltdl-devel iproute openssh-server openssh-clients
+RUN yum install -y softhsm libtool-ltdl-devel iproute openssh-server openssh-clients make
 RUN ln -s /usr/lib/systemd/system/docker.service /etc/systemd/system/multi-user.target.wants/docker.service
 RUN cp /bin/true /sbin/agetty
 
