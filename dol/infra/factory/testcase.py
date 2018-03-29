@@ -239,6 +239,10 @@ class TestCase(objects.FrameworkObject):
         ret = self.module.RunModuleCallback('TestCaseVerify', self)
         return self.__process_verify_callback_retval(ret)
 
+    def PreTriggerCallback(self):
+        logger.info("Invoking TestCasePreTrigger.")
+        self.module.RunModuleCallback('TestCasePreTrigger', self)
+        return
 
     def TriggerCallback(self):
         logger.info("Invoking TestCaseTrigger.")
@@ -248,6 +252,11 @@ class TestCase(objects.FrameworkObject):
     def StepSetupCallback(self, step):
         logger.info("Invoking TestCaseStepSetup.")
         self.module.RunModuleCallback('TestCaseStepSetup', self, step)
+        return
+
+    def StepPreTriggerCallback(self, step):
+        logger.info("Invoking TestCaseStepPreTrigger.")
+        self.module.RunModuleCallback('TestCaseStepPreTrigger', self, step)
         return
 
     def StepTriggerCallback(self, step):

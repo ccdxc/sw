@@ -9,6 +9,7 @@ module  : None  # Module
 step_id : None
 pvtdata : None  # Private data
 coverage : None  # Coverage helper
+stats   : None
 
 config:
     root: None

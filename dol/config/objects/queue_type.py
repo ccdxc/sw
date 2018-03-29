@@ -95,6 +95,9 @@ class QueueTypeObject(base.ConfigObjectBase):
 
         return True
 
+    def GetLif(self):
+        return self.lif
+
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.type_num   = self.type
         req_spec.size       = int(math.log(self.size, 2)) - 5

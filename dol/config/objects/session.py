@@ -68,6 +68,7 @@ class SessionObject(base.ConfigObjectBase):
                                          getattr(self.rspec, 'span', None))
             self.rflow.SetMulticast(self.multicast)
         self.Show()
+        self.__get_resp = None
         return defs.status.SUCCESS
 
     def __pre_process_spec(self, spec):
@@ -143,6 +144,12 @@ class SessionObject(base.ConfigObjectBase):
 
     def Get(self):
         halapi.GetSessions([self])
+
+    def GetStats(self):
+        self.Get()
+        if self.__get_resp:
+            return self.__get_resp.stats
+        return None
 
     def GetIflow(self):
         return self.iflow
@@ -222,6 +229,7 @@ class SessionObject(base.ConfigObjectBase):
 
         self.iflow.ProcessHALGetResponse(get_req_spec, get_resp.spec.initiator_flow)
         self.rflow.ProcessHALGetResponse(get_req_spec, get_resp.spec.responder_flow)
+        self.__get_resp = copy.deepcopy(get_resp)
         return
 
     def IsFilterMatch(self, selectors):

@@ -2,6 +2,32 @@ from infra.factory.testcase import *
 from infra.engine.trigger2  import DolTriggerEngine
 from infra.engine.verif import DolVerifEngine
 
+class DOLTestCaseTxRxStatsEntry:
+    def __init__(self):
+        self.obj = None
+        self.npkts = 0
+        self.nbytes = 0
+        return
+
+class DOLTestCaseTxRxStats:
+    def __init__(self):
+        self.entries = []
+        return
+
+    def AddStatsEntry(self, obj, npkts, nbytes):
+        entry = DOLTestCaseTxRxStatsEntry()
+        entry.obj = obj
+        entry.npkts = npkts
+        entry.nbytes = nbytes
+        self.entries.append(entry)
+        return
+
+class DOLTestCaseStats:
+    def __init__(self):
+        self.tx = DOLTestCaseTxRxStats()
+        self.rx = DOLTestCaseTxRxStats()
+        return
+
 class DOLTestCase(TestCase):
     def __init__(self, tcid, root, module, loopid = 0):
         super().__init__(tcid, root, module, loopid)
@@ -21,6 +47,7 @@ class DOLTestCase(TestCase):
 
         self.tracker        = module.GetTracker()
         self.coverage       = TestCaseCoverageHelper(self)
+        self.stats          = DOLTestCaseStats()
         super()._generate()
         return
 
@@ -96,7 +123,7 @@ class DOLTestCase(TestCase):
             tpkt.ports = [ spkt.packet.port ]
         return
 
-    def __setup_packets(self, step_id, tcsn, spsn):
+    def __setup_packets(self, step_id, tcsn, spsn, stats):
         if spsn.packets == None: return
         for spkt in spsn.packets:
             logger.info("- Setting up  Packet: %s:" % spkt)
@@ -109,9 +136,11 @@ class DOLTestCase(TestCase):
                       tpkt.packet.GID(), tpkt.ports)
             tpkt.packet.Show()
             tcsn.packets.append(tpkt)
+            stats.AddStatsEntry(tpkt.ports[0], 1,
+                                len(tpkt.packet.rawbytes))
         return
 
-    def __setup_descriptors(self, tcsn, spsn):
+    def __setup_descriptors(self, tcsn, spsn, stats):
         if spsn.descriptors == None: return
         for spec_desc_entry in spsn.descriptors:
             if spec_desc_entry.descriptor.object == None: continue
@@ -135,6 +164,8 @@ class DOLTestCase(TestCase):
                     logger.info("  - Expected Packet: %s" %\
                               tc_desc_spec.descriptor.packet.GID())
             tcsn.descriptors.append(tc_desc_spec)
+            npkts,nbytes = tc_desc_spec.descriptor.object.GetTxPktByteStats()
+            stats.AddStatsEntry(tc_desc_spec.descriptor.ring.GetLif(), npkts, nbytes)
         return
  
     def __setup_doorbell(self, tcsn, spsn):
@@ -180,8 +211,9 @@ class DOLTestCase(TestCase):
         logger.info("- Setting up Trigger.")
         if spstep.trigger == None: return
         self.__setup_delay(tcstep.trigger, spstep.trigger)
-        self.__setup_packets(tcstep.step_id, tcstep.trigger, spstep.trigger)
-        self.__setup_descriptors(tcstep.trigger, spstep.trigger)
+        self.__setup_packets(tcstep.step_id, tcstep.trigger,
+                             spstep.trigger, self.stats.tx)
+        self.__setup_descriptors(tcstep.trigger, spstep.trigger, self.stats.tx)
         self.__setup_config_objects(tcstep.trigger, spstep.trigger)
         self.__setup_doorbell(tcstep.trigger, spstep.trigger)
         return defs.status.SUCCESS
@@ -191,8 +223,9 @@ class DOLTestCase(TestCase):
         if spstep.expect == None: return
         self.__setup_delay(tcstep.expect, spstep.expect)
         #self.__setup_ignore_excess_packets(tcstep.expect, spstep.expect)
-        self.__setup_packets(tcstep.step_id, tcstep.expect, spstep.expect)
-        self.__setup_descriptors(tcstep.expect, spstep.expect)
+        self.__setup_packets(tcstep.step_id, tcstep.expect,
+                             spstep.expect, self.stats.rx)
+        self.__setup_descriptors(tcstep.expect, spstep.expect, self.stats.rx)
         self.__setup_config_objects(tcstep.expect, spstep.expect)
         if hasattr(spstep.expect, "callback"):
             assert(objects.IsCallback(spstep.expect.callback))

@@ -213,8 +213,25 @@ class LifObject(base.ConfigObjectBase):
            logger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x)" %
                           (self.GID(), self.hw_lif_id, self.rdma_pt_base_addr, self.rdma_kt_base_addr))
 
+    def PrepareHALGetRequestSpec(self, req_spec):
+        req_spec.key_or_handle.lif_id = self.id
+        return
+
+    def ProcessHALGetResponse(self, req_spec, resp_spec):
+        logger.info("- GET LIF %s = %s" % (self.GID(), 
+                    haldefs.common.ApiStatus.Name(resp_spec.api_status)))
+        self.get_resp = copy.deepcopy(resp_spec)
+        return
+
     def Get(self):
         halapi.GetLifs([self])
+        return
+
+    def GetStats(self):
+        if GlobalOptions.dryrun:
+            return None
+        self.Get()
+        return self.get_resp.stats
 
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)

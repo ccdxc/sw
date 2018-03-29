@@ -2,6 +2,7 @@
 
 import infra.common.objects as objects
 
+from infra.common.logging import logger as logger
 
 class FactoryObjectBase(objects.FrameworkObject):
     def __init__(self):
@@ -29,3 +30,11 @@ class FactoryObjectBase(objects.FrameworkObject):
 
     def Write(self):
         raise NotImplementedError
+
+    def GetTxPktByteStats(self):
+        # Base class implementation.
+        logger.warn("GetTxPktByteStats(): Base class implmentation called !!!")
+        return (None,None)
+
+    def GetLif(self):
+        return None

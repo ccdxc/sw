@@ -1,0 +1,18 @@
+# Feature Test Modules List
+feature:
+    id          : stats
+    sub         : flow
+    package     : test.stats
+    module      : stats
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : session
+        spec    : tx.testspec
+        perf    : True
+        iterate:
+            - flow          : filter://type=IPV4,proto=TCP
+              lif_stats     : False
+              session_stats : True

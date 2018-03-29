@@ -372,6 +372,9 @@ class FlowObject(base.ConfigObjectBase):
     def GetSession(self):
         return self.__session
 
+    def GetStats(self):
+        return self.__session.GetStats()
+
     def GetOpposingFlow(self):
         if self.IsIflow():
             return self.__session.GetRflow()

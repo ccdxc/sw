@@ -20,6 +20,9 @@ class RingObject(objects.FrameworkObject):
         self.descriptor_template = spec.desc.Get(FactoryStore)
         return
 
+    def GetLif(self):
+        return self.queue.GetLif()
+
     def Configure(self):
         # 1) Call the backend API to allocate an address for this ring.
         # 2) Initialize all the elements of the ring to default value.

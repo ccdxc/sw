@@ -32,6 +32,9 @@ class QueueObject(objects.FrameworkObject):
 
         self.Show()
 
+    def GetLif(self):
+        return self.queue_type.GetLif()
+
     def GetQstateBaseAddr(self):
         return self.queue_type.GetQstateAddr() + (self.id * self.queue_type.size)
 

@@ -1,0 +1,33 @@
+# Topology Specification
+meta:
+    id: TOPO_STATS
+
+uplink:
+    - entry:
+        id      : Uplink1
+        port    : 1
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+    - entry:
+        id      : Uplink2
+        port    : 2
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+acls: None
+qos : True
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_STATS
+security_policy: None
+
+tenants:
+    -   spec    : ref://store/specs/id=TENANT_STATS
+        count   : 1
+        lifns   : range/101/102
+
+cpu:
+    - entry:
+        id      : Cpu1 
+        lif_id  : 1003

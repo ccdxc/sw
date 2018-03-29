@@ -20,6 +20,7 @@ using session::FlowKeyTcpUdpInfo;
 using session::FlowKeyICMPInfo;
 using session::FlowData;
 using session::ConnTrackInfo;
+using session::FlowStats;
 
 namespace hal {
 
@@ -546,11 +547,35 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
     flow_to_flow_spec(session->rflow, response->mutable_spec()->mutable_responder_flow());
 }
 
+static void
+flow_state_to_flow_stats_response (flow_state_t *flow_state,
+                                   FlowStats *stats)
+{
+    stats->set_flow_permitted_packets(flow_state->packets);
+    stats->set_flow_permitted_bytes(flow_state->bytes);
+    stats->set_flow_dropped_packets(flow_state->drop_packets);
+    stats->set_flow_dropped_bytes(flow_state->drop_bytes);
+    return;
+}
 
+static void
+session_state_to_session_get_response (session_state_t *session_state,
+                                       SessionGetResponse *response)
+{
+    flow_state_to_flow_stats_response(&session_state->iflow_state,
+         response->mutable_stats()->mutable_initiator_flow_stats());
+    flow_state_to_flow_stats_response(&session_state->rflow_state,
+         response->mutable_stats()->mutable_responder_flow_stats());
+    return;
+}
+    
 hal_ret_t
 session_get (SessionGetRequest& req, SessionGetResponse *response)
 {
-    session_t              *session;
+    session_t                   *session;
+    pd::pd_session_get_args_t   args;
+    session_state_t             session_state;
+    hal_ret_t                   ret = HAL_RET_OK;
 
     if (!req.has_meta() ||
         req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
@@ -565,7 +590,17 @@ session_get (SessionGetRequest& req, SessionGetResponse *response)
         return HAL_RET_SESSION_NOT_FOUND;
     }
 
+    args.session = session;
+    args.session_state = &session_state;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to fetch session state for session {}",
+                       session->config.session_id);
+        return HAL_RET_ERR;
+    }
+
     session_to_session_get_response(session, response);
+    session_state_to_session_get_response(&session_state, response);
     response->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }

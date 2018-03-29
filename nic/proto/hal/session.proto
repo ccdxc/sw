@@ -299,7 +299,8 @@ message FlowStats {
 
 // SessionStats captures statistics of all its constituent flows
 message SessionStats {
-  repeated FlowStats    flow_stats = 1;     // stats of all flows in session
+  FlowStats    initiator_flow_stats = 1;     // stats of initiator flow
+  FlowStats    responder_flow_stats = 2;     // stats of responder flow
 }
 
 // SessionGetResponse is response to one SessionGetRequest

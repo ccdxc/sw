@@ -18,9 +18,6 @@ class TriggerEngineObject:
     def _trigger_step(self, tc, step):
         return
         
-    def _trigger(self, tc):
-        return defs.status.SUCCESS
-
     def Trigger(self, tc):
         assert(tc != None)
         tc.status = self._trigger(tc)
@@ -45,6 +42,7 @@ class TriggerEngineObject:
         return step.status
 
     def _trigger(self, tc):
+        tc.PreTriggerCallback()
         status = defs.status.SUCCESS
         vfstatus = defs.status.SUCCESS
         for step in tc.session.steps:
@@ -76,7 +74,7 @@ class DolTriggerEngineObject(TriggerEngineObject):
         assert(0)
         return
 
-    def __trigger_descriptors(self, step):
+    def __trigger_descriptors(self, tc, step):
         if GlobalOptions.dryrun:
             return
 
@@ -143,7 +141,7 @@ class DolTriggerEngineObject(TriggerEngineObject):
     def _trigger_step(self, tc, step):
         super()._trigger_step(tc, step)
         self.__trigger_delay(step)
-        self.__trigger_descriptors(step)
+        self.__trigger_descriptors(tc, step)
         self.__ring_doorbell(step)
         self.__trigger_packets(step)
         tc.TriggerCallback()

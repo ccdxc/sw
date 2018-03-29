@@ -255,6 +255,14 @@ class EthTxDescriptorObject(EthDescriptorObject):
         # This is a write-only descriptor type
         return
 
+    def GetTxPktByteStats(self):
+        flds = getattr(self.spec, 'fields', None)
+        if flds is None:
+            return (None, None)
+        nbytes = getattr(flds, 'len', None)
+        if nbytes is None:
+            return (None, None)
+        return (1, nbytes)
 
 class EthTxSgDescriptorObject(EthDescriptorObject):
     __data_class__ = EthTxSgDescriptor
