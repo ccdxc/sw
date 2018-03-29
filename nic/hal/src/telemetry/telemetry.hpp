@@ -62,8 +62,8 @@ typedef struct flow_monitor_rule_s {
             ip_prefix_t sip;
             ip_prefix_t dip;
             uint8_t proto;
-            uint16_t sport;
-            uint16_t dport;
+            uint32_t sport;
+            uint32_t dport;
             bool sip_valid;
             bool dip_valid;
             bool proto_valid;

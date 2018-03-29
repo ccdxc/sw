@@ -11,11 +11,6 @@ message L4Port {
     uint32 port = 1;
 }
 
-// MacAddress is a represenation of the MAC address defined as a nested type for nullability
-message MacAddress {
-    uint64 address = 1; // 48 bit MAC address
-}
-
 // CollectorSpec is the configuration specification for a telemetry collector
 message CollectorSpec {
   types.ObjectMeta  meta              = 1; // Common object meta
@@ -144,16 +139,17 @@ message MonitorAction {
 message FlowMonitorRuleSpec {
   types.ObjectMeta  meta              = 1; // Common object meta
   ExportControlId   export_configId   = 2; // Export control traffic the rule is attached to
-  MacAddress        source_mac        = 3; // Source MAC of the tuple to match
-  MacAddress        dest_mac          = 4; // Destination MAC to match
-  types.IPProtocol  protocol          = 5; // IP Protocol to match
-  types.IPPrefix    source_ip         = 6; // Source IP prefix to match
-  types.IPPrefix    dest_ip           = 7; // Destination IP prefix to match
-  L4Port            source_l4_port    = 8; // Souce L4 port 
-  L4Port            dest_l4_port      = 9; // Destination L4 port
-  uint64            source_groupid    = 10; // Source Workload GroupID to match
-  uint64            dest_groupid      = 11; // Destination Workload GroupID to match
-  MonitorAction     action            = 12; // Action for flows that meet the match criteria
+  uint64            source_mac        = 3; // Source MAC of the tuple to match
+  uint64            dest_mac          = 4; // Destination MAC to match
+  uint32            ethertype         = 5; // EtherType to match
+  types.IPProtocol  protocol          = 6; // IP Protocol to match
+  types.IPPrefix    source_ip         = 7; // Source IP prefix to match
+  types.IPPrefix    dest_ip           = 8; // Destination IP prefix to match
+  L4Port            source_l4_port    = 9; // Souce L4 port 
+  L4Port            dest_l4_port      = 10; // Destination L4 port
+  uint64            source_groupid    = 11; // Source Workload GroupID to match
+  uint64            dest_groupid      = 12; // Destination Workload GroupID to match
+  MonitorAction     action            = 13; // Action for flows that meet the match criteria
 }
 
 // FlowMonitorRuleStatus is the operational status of the rule

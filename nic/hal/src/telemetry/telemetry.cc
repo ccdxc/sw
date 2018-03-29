@@ -4,9 +4,9 @@
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/telemetry/telemetry.hpp"
 #include "nic/gen/proto/hal/telemetry.pb.h"
 #include "nic/gen/proto/hal/types.pb.h"
+#include "nic/hal/src/telemetry/telemetry.hpp"
 
 using hal::pd::pd_mirror_session_create_args_t;
 using hal::pd::pd_mirror_session_delete_args_t;
@@ -47,7 +47,6 @@ mirror_session_create (MirrorSessionSpec *spec, MirrorSession *rsp)
     hal_ret_t ret;
     if_t *id;
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-MirrorSession:{}: Mirror session ID {}/{}", __FUNCTION__,
             spec->id().session_id(), spec->snaplen());
     // Eventually the CREATE API will differ from the Update API in the way it is
@@ -160,7 +159,6 @@ mirror_session_create (MirrorSessionSpec *spec, MirrorSession *rsp)
                 session.id);
     }
     rsp->mutable_spec()->CopyFrom(*spec);
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
 
@@ -171,7 +169,6 @@ mirror_session_get (MirrorSessionId *id, MirrorSession *rsp)
     mirror_session_t session;
     hal_ret_t ret;
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-MirrorSession:{}: Mirror Session ID {}", __FUNCTION__,
             id->session_id());
     memset(&session, 0, sizeof(session));
@@ -204,7 +201,6 @@ mirror_session_get (MirrorSessionId *id, MirrorSession *rsp)
        break
        } */
 
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return HAL_RET_OK;
 }
 
@@ -215,7 +211,6 @@ mirror_session_delete (MirrorSessionId *id, MirrorSession *rsp)
     mirror_session_t session;
     hal_ret_t ret;
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-MirrorSession:{}: Delete Mirror Session ID {}", __FUNCTION__,
             id->session_id());
     memset(&session, 0, sizeof(session));
@@ -227,7 +222,6 @@ mirror_session_delete (MirrorSessionId *id, MirrorSession *rsp)
         rsp->mutable_status()->set_code(MirrorSessionStatus::PERM_FAILURE);
         rsp->mutable_status()->set_status("pd action failed");
     }
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
 
@@ -238,7 +232,6 @@ collector_create (CollectorSpec *spec, Collector *resp)
     pd::pd_collector_create_args_t args;
     hal_ret_t ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-ExportControl:{}: ExportID {}", __FUNCTION__,
             spec->export_controlid().id());
     
@@ -291,7 +284,6 @@ collector_create (CollectorSpec *spec, Collector *resp)
     }
     HAL_TRACE_DEBUG("PI-ExportControl:{}: SUCCESS: ExportID {}, dest {}, source {},  port {}", __FUNCTION__,
     spec->export_controlid().id(), ipaddr2str(&cfg.dst_ip), ipaddr2str(&cfg.src_ip), cfg.dport);
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
 
@@ -315,45 +307,106 @@ collector_delete (ExportControlId *id, Collector *resp)
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+populate_flow_monitor_rule (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp,
+                            flow_monitor_rule_t *rule)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    if (spec->source_mac() != 0) {
+        MAC_UINT64_TO_ADDR(rule->src_mac, spec->source_mac());
+        rule->src_mac_valid = TRUE;
+    }
+    if (spec->dest_mac() != 0) {
+        MAC_UINT64_TO_ADDR(rule->dst_mac, spec->dest_mac());
+        rule->dst_mac_valid = TRUE;
+    }
+    if (spec->ethertype() != 0) {
+        rule->ethertype = spec->ethertype();
+        rule->ethertype_valid = TRUE;
+    }
+    if (spec->protocol() != 0) {
+        rule->proto = spec->protocol();
+        rule->proto_valid = TRUE;
+    }
+    if (spec->has_source_ip()) {
+        ip_pfx_spec_to_pfx_spec(&rule->sip, spec->source_ip());
+        rule->sip_valid = TRUE;
+    }
+    if (spec->has_dest_ip()) {
+        ip_pfx_spec_to_pfx_spec(&rule->dip, spec->dest_ip());
+        rule->dip_valid = TRUE;
+    }
+    if (spec->has_source_l4_port()) {
+        rule->sport = spec->source_l4_port().port();
+        rule->sport_valid = TRUE;
+    }
+    if (spec->has_dest_l4_port()) {
+        rule->dport = spec->dest_l4_port().port();
+        rule->dport_valid = TRUE;
+    }
+    if (spec->source_groupid() != 0) {
+        rule->src_groupid = spec->source_groupid();
+        rule->src_groupid_valid = TRUE;
+    }
+    if (spec->dest_groupid() != 0) {
+        rule->dst_groupid = spec->dest_groupid();
+        rule->dst_groupid_valid = TRUE;
+    }
+    if (spec->has_action()) {
+        int n = spec->action().mirror_destinations_size();
+        for (int i = 0; i < n; i++) {
+            rule->mirror_destinations[i] = spec->action().mirror_destinations(i);
+        }
+    }
+
+    return ret;
+}
+
 hal_ret_t
 flow_monitor_rule_create (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
 {
-    //pd_flow_monitor_rule_create_args_t args;
-    //flow_monitor_rule_t rule;
+    flow_monitor_rule_t rule = {0};
     hal_ret_t ret = HAL_RET_OK;
-
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-FlowMonitorRule:{}", __FUNCTION__);
+    
+    HAL_TRACE_DEBUG("PI-FlowMonitorRule create");
     if (spec->meta().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         HAL_TRACE_ERR("vrf {}", spec->meta().vrf_id());
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-
+    rule.vrf_id = spec->meta().vrf_id();
+    ret = populate_flow_monitor_rule (spec, rsp, &rule);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+    // TODO: Add PD hooks
+    
 end:
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
 
 hal_ret_t
 flow_monitor_rule_delete (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
 {
-    //pd_flow_monitor_rule_delete_args_t args;
-    //flow_monitor_rule_t rule;
+    flow_monitor_rule_t rule = {0};
     hal_ret_t ret;
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-FlowMonitorRule:{}", __FUNCTION__);
     if (spec->meta().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         HAL_TRACE_ERR("vrf {}", spec->meta().vrf_id());
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
+    rule.vrf_id = spec->meta().vrf_id();
+    ret = populate_flow_monitor_rule (spec, rsp, &rule);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+    // TODO: Add PD hooks
 
 end:
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
 
@@ -363,10 +416,7 @@ flow_monitor_rule_get (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
     hal_ret_t ret = HAL_RET_OK;
     
     // TODO
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-FlowMonitorRule:{}", __FUNCTION__);
 
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
 

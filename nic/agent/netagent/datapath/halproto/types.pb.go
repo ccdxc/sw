@@ -817,7 +817,6 @@
 		TcpCbGetResponse
 		TcpCbGetResponseMsg
 		L4Port
-		MacAddress
 		CollectorSpec
 		CollectorStatus
 		Collector
