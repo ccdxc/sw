@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -155,13 +156,13 @@ func (f *fakeKvStore) reset() {
 }
 
 type fakeStore struct {
-	sets, gets, deletes uint64
-	lists, flushes      uint64
-	marks, sweeps       uint64
-	setfn               func(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) error
-	getfn               func(key string) (runtime.Object, error)
-	deletefn            func(key string, rev uint64, cb SuccessCbFunc) (runtime.Object, error)
-	listfn              func(key string, opts api.ListWatchOptions) []runtime.Object
+	sets, gets, deletes       uint64
+	lists, flushes            uint64
+	marks, sweeps, delDeleted uint64
+	setfn                     func(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) error
+	getfn                     func(key string) (runtime.Object, error)
+	deletefn                  func(key string, rev uint64, cb SuccessCbFunc) (runtime.Object, error)
+	listfn                    func(key string, opts api.ListWatchOptions) []runtime.Object
 }
 
 func (f *fakeStore) Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) error {
@@ -203,6 +204,9 @@ func (f *fakeStore) Sweep(key string, cb SuccessCbFunc) {
 	f.sweeps++
 }
 
+func (f *fakeStore) PurgeDeleted(past time.Duration) {
+	f.delDeleted++
+}
 func (f *fakeStore) Clear() {
 	f.flushes++
 }
@@ -218,6 +222,7 @@ func (f *fakeStore) reset() {
 }
 
 type fakeWatchPrefixes struct {
+	qmap                     map[string]*fakeWatchEventQ
 	adds, dels, gets, getexs uint64
 	addfn                    func(path string) WatchEventQ
 	delfn                    func(path string) WatchEventQ
@@ -686,6 +691,64 @@ func TestPrefixWatcher(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		return !pw.running, nil
 	}, "did not prefix watcher exit on close")
+}
+
+func TestCacheDelayedDelete(t *testing.T) {
+	kstr := &fakeKvStore{}
+	str := NewStore()
+	fakeqs := &fakeWatchPrefixes{}
+	c := cache{
+		store:  str,
+		pool:   &connPool{},
+		queues: fakeqs,
+		logger: log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
+		active: true,
+	}
+	c.pool.AddToPool(kstr)
+	ctx, cancel := context.WithCancel(context.TODO())
+	b1 := &testObj{}
+	b1.ResourceVersion = "10"
+	b1.Name = "book1"
+	key := "/test/book1"
+	fakeq := fakeWatchEventQ{
+		dqCh: make(chan error),
+	}
+	addfn := func(path string) WatchEventQ {
+		return &fakeq
+	}
+	fakeqs.addfn = addfn
+
+	getfn := func(path string) []WatchEventQ {
+		return []WatchEventQ{&fakeq}
+	}
+	fakeqs.getfn = getfn
+	_, err := c.Watch(ctx, "/test/", "0")
+	if err != nil {
+		t.Fatalf("Watch  on cache failed (%s)", err)
+	}
+
+	err = c.Create(ctx, key, b1)
+	if err != nil {
+		t.Errorf("expecting to succeed")
+	}
+	AssertEventually(t, func() (bool, interface{}) {
+		return fakeq.enqueues == 1, nil
+	}, "did not receive create watch event")
+
+	err = c.Delete(ctx, key, nil)
+	if err != nil {
+		t.Errorf("expecting to succeed")
+	}
+	AssertEventually(t, func() (bool, interface{}) {
+		return fakeq.enqueues == 2, nil
+	}, "did not receive delete watch event")
+
+	// purge delete Q and ensure there is no new events raised.
+	str.PurgeDeleted(0)
+	AssertConsistently(t, func() (bool, interface{}) {
+		return fakeq.enqueues == 2, nil
+	}, "received new watch event", "10ms", "200ms")
+	cancel()
 }
 
 func TestBackendWatcher(t *testing.T) {

@@ -108,18 +108,20 @@ func TestWatchEventQ(t *testing.T) {
 	ctx := context.Background()
 	rcvdEvents := 0
 	rcvdErrors := 0
-	cbfunc := func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
-		t.Logf("received object %+v", obj)
-		if evType == kvstore.WatcherError {
-			rcvdErrors++
-		} else {
-			rcvdEvents++
+	cbfunc := func(id string) func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
+		return func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
+			t.Logf("Q [%s] received object %+v", id, obj)
+			if evType == kvstore.WatcherError {
+				rcvdErrors++
+			} else {
+				rcvdEvents++
+			}
 		}
 	}
 	t.Logf(" --> Dequeue on an empty EventQ")
 	d := time.Now().Add(50 * time.Millisecond)
 	nctx, cancel := context.WithDeadline(ctx, d)
-	q.Dequeue(nctx, 0, cbfunc, nil)
+	q.Dequeue(nctx, 0, cbfunc("q1-0"), nil)
 	cancel()
 	if q.watcherList.Len() != 0 {
 		t.Errorf("expecting number of active watchers to be 0 found %d", q.watcherList.Len())
@@ -142,11 +144,11 @@ func TestWatchEventQ(t *testing.T) {
 
 	t.Logf(" --> dequeue instance without fromVer")
 	nctx, cancel = context.WithCancel(ctx)
-	go q.Dequeue(nctx, 0, cbfunc, nil)
+	go q.Dequeue(nctx, 0, cbfunc("q2-0"), nil)
 	time.Sleep(100 * time.Millisecond)
 	q.Enqueue(kvstore.Created, &b2, nil)
 	AssertEventually(t, func() (bool, interface{}) {
-		return rcvdEvents == 1, nil
+		return rcvdEvents == 2, nil
 	}, "expecting 1 events", "10ms", "10000ms")
 
 	cancel()
@@ -162,44 +164,44 @@ func TestWatchEventQ(t *testing.T) {
 	// watch for old version.
 	rcvdEvents = 0
 	watchersCount := q.watcherList.Len()
-	go q.Dequeue(nctx, 109, cbfunc, nil)
+	go q.Dequeue(nctx, 109, cbfunc("q3-109"), nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		return q.watcherList.Len() == watchersCount, nil
 	}, "expecting new watcher", "10ms", "100ms")
-	AssertEventually(t, func() (bool, interface{}) {
-		t.Logf("erors is%d", rcvdErrors)
+	AssertConsistently(t, func() (bool, interface{}) {
+		t.Logf("erorrs is %d", rcvdErrors)
 		return rcvdErrors == 1, nil
 	}, "expecting 1 error", "10ms", "100ms")
 
 	rcvdEvents = 0
 	watchersCount = q.watcherList.Len()
-	go q.Dequeue(nctx, 0, cbfunc, nil)
+	go q.Dequeue(nctx, 0, cbfunc("q4-0"), nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		return q.watcherList.Len() == watchersCount+1, nil
 	}, "expecting new watcher", "10ms", "100ms")
 	AssertEventually(t, func() (bool, interface{}) {
-		t.Logf("events is%d", rcvdEvents)
-		return rcvdEvents == 0, nil
-	}, "expecting 1 event", "10ms", "100ms")
+		t.Logf("events is %d", rcvdEvents)
+		return rcvdEvents == 3, nil
+	}, "expecting 3 event", "10ms", "100ms")
 
 	rcvdEvents = 0
 	watchersCount = q.watcherList.Len()
-	go q.Dequeue(nctx, 112, cbfunc, nil)
+	go q.Dequeue(nctx, 112, cbfunc("q5-112"), nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		return q.watcherList.Len() == watchersCount+1, nil
 	}, "expecting new watcher", "10ms", "100ms")
 	AssertEventually(t, func() (bool, interface{}) {
-		t.Logf("events is%d", rcvdEvents)
+		t.Logf("events is %d", rcvdEvents)
 		return rcvdEvents == 2, nil
 	}, "expecting 1 events", "10ms", "100ms")
 
 	rcvdEvents = 0
 	watchersCount = q.watcherList.Len()
-	go q.Dequeue(nctx, 113, cbfunc, nil)
+	go q.Dequeue(nctx, 113, cbfunc("q6-113"), nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		return q.watcherList.Len() == watchersCount+1, nil
 	}, "expecting new watcher", "10ms", "100ms")
-	AssertEventually(t, func() (bool, interface{}) {
+	AssertConsistently(t, func() (bool, interface{}) {
 		t.Logf("events is%d", rcvdEvents)
 		return rcvdEvents == 1, nil
 	}, "expecting 1 events", "10ms", "100ms")
@@ -211,10 +213,10 @@ func TestWatchEventQ(t *testing.T) {
 	rcvdEvents = 0
 	q.Enqueue(kvstore.Created, &b4, nil)
 	q.Enqueue(kvstore.Created, &b5, nil)
-	AssertEventually(t, func() (bool, interface{}) {
+	AssertConsistently(t, func() (bool, interface{}) {
 		t.Logf("events is %d", rcvdEvents)
 		return rcvdEvents == 6, nil
-	}, "expecting 1 events", "10ms", "100ms")
+	}, "expecting 6 events", "10ms", "100ms")
 
 	if q.eventList.Len() != 5 {
 		t.Errorf("incorrect number of events")
@@ -229,20 +231,22 @@ func TestWatchEventQ(t *testing.T) {
 	t.Logf(" --> janitor slow watchers")
 	slowrcvd := 0
 	slowBlockCount := 3
-	slowcb := func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
-		slowrcvd++
-		t.Logf("slowCb called")
-		if slowrcvd < slowBlockCount {
-			return
-		}
-		t.Logf("slowCb blocking")
-		select {
-		case <-nctx.Done():
+	slowcb := func(id string) func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
+		return func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
+			slowrcvd++
+			t.Logf("q[%s] slowCb called", id)
+			if slowrcvd < slowBlockCount {
+				return
+			}
+			t.Logf("q[%s] slowCb blocking", id)
+			select {
+			case <-nctx.Done():
+			}
 		}
 	}
 	rcvdEvents = 0
 	watchersCount = q.watcherList.Len()
-	go q.Dequeue(nctx, 0, slowcb, nil)
+	go q.Dequeue(nctx, 116, slowcb("q1"), nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		return q.watcherList.Len() == watchersCount+1, nil
 	}, "expecting new watcher", "10ms", "100ms")
@@ -259,9 +263,9 @@ func TestWatchEventQ(t *testing.T) {
 		t.Errorf("incorrect number of watchers")
 	}
 	AssertEventually(t, func() (bool, interface{}) {
-		t.Logf("events is %d", rcvdEvents)
+		t.Logf("events is %d slowRcvd is %d", rcvdEvents, slowrcvd)
 		return rcvdEvents == 12 && slowrcvd == 3, nil
-	}, "expecting 1 events", "10ms", "100ms")
+	}, "expecting 12 and slowrcvd 3 events", "10ms", "100ms")
 	if q.eventList.Len() != 5 {
 		t.Errorf("incorrect number of events %d", q.eventList.Len())
 	}
@@ -286,7 +290,7 @@ func TestWatchEventQ(t *testing.T) {
 	slowrcvd = 0
 	slowBlockCount = 2
 	watchersCount = q3.watcherList.Len()
-	go q3.Dequeue(nctx, 0, slowcb, nil)
+	go q3.Dequeue(nctx, 0, slowcb("q3-0"), nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		return q3.watcherList.Len() == watchersCount+1, nil
 	}, "expecting new watcher", "10ms", "100ms")
@@ -323,7 +327,7 @@ func TestWatchEventQ(t *testing.T) {
 	cleanfunc := func() {
 		cleanupCalled++
 	}
-	go q4.Dequeue(nctx, 0, cbfunc, cleanfunc)
+	go q4.Dequeue(nctx, 0, cbfunc("slow-q4-0"), cleanfunc)
 	AssertEventually(t, func() (bool, interface{}) {
 		return q4.watcherList.Len() == 1, nil
 	}, "expecting to hit 1 watcher", "10ms", "1000ms")

@@ -77,7 +77,7 @@ func sendEvent(w *watcher, key string, v *memKvRec, deleted bool) {
 	evType := kvstore.Updated
 	if deleted {
 		evType = kvstore.Deleted
-	} else if v.revision == 1 {
+	} else if v.revision == v.createRev {
 		evType = kvstore.Created
 	}
 	w.sendEvent(evType, key, []byte(v.value), v.revision)

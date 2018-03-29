@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"
@@ -114,7 +115,7 @@ func TestCrudOps(t *testing.T) {
 		for active {
 			select {
 			case ev, ok := <-watcher.EventChan():
-				t.Logf("received event [%v]", ok)
+				t.Logf("ts[%s] received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
 					pRcvWatchEvents = append(pRcvWatchEvents, *ev)
@@ -123,7 +124,7 @@ func TestCrudOps(t *testing.T) {
 					active = false
 				}
 			case ev, ok := <-orderWatcher.EventChan():
-				t.Logf("received event [%v]", ok)
+				t.Logf("ts[%s] received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
 					oRcvWatchEvents = append(oRcvWatchEvents, *ev)
@@ -132,7 +133,7 @@ func TestCrudOps(t *testing.T) {
 					active = false
 				}
 			case ev, ok := <-storeWatcher.EventChan():
-				t.Logf("received event [%v]", ok)
+				t.Logf("ts[%s] received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
 					sRcvWatchEvents = append(sRcvWatchEvents, *ev)
@@ -520,7 +521,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("gRPC List of singleton failed")
 		}
 		if len(ret) != 0 {
-			t.Fatalf("Singleton object list got more than one item [%v] ", ret)
+			t.Fatalf("Singleton object list got more than zero item [%v] ", ret)
 		}
 	}
 

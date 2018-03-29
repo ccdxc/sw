@@ -26,6 +26,7 @@ var (
 	defRetentionDuration = (30 * time.Second)
 	defRetentionDepthMax = 1024 * 1024
 	defEvictInterval     = (10 * time.Second)
+	defPurgeInterval     = (10 * time.Second)
 )
 
 type eventHandlerFn func(evType kvstore.WatchEventType, item, prev runtime.Object)
@@ -44,6 +45,9 @@ type WatchEventQConfig struct {
 	//  if a watcher falls behind more than this duration the watcher is
 	//  evicted.
 	EvictInterval time.Duration
+	// PurgeInterval is the time for which deleted objects are kept around before
+	//  purging them.
+	PurgeInterval time.Duration
 }
 
 // WatchEventQ is a interface for a Watch Q which is used to mux events to watchers.
@@ -253,10 +257,10 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.O
 	objmeta := objm.GetObjectMeta()
 	v, err := strconv.ParseUint(objmeta.ResourceVersion, 10, 64)
 	if err != nil {
-		w.log.ErrorLog("oper", "EventQueueEnqueue", "type", evType, "msg", "parse version failed", "error", err)
+		w.log.ErrorLog("oper", "WatchEventQEnqueue", "type", evType, "msg", "parse version failed", "error", err)
 		return err
 	}
-	w.log.DebugLog("oper", "EventQueueEnqueue", "type", evType)
+	w.log.InfoLog("oper", "WatchEventQEnqueue", "type", evType, "path", w.path, "version", v)
 	// XXXX-TODO(sanjayt): Use a pool here to reduce garbage collection work.
 	i := &watchEvent{
 		version: v,
@@ -284,14 +288,20 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 	}
 	defer w.watcherList.Remove(tel)
 	var wg sync.WaitGroup
+	var startVer uint64
 
 	sendevent := func(e *list.Element) {
 		sendCh := make(chan error)
 		obj := e.Value.(*watchEvent)
+		if obj.version < startVer {
+			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "SendDrop", "type", obj.evType, "path", w.path, "startVer", startVer, "ver", obj.version)
+			return
+		}
 		defer tracker.Unlock()
 		tracker.Lock()
 		hdr.Record("watch.DequeueLatency", time.Since(obj.enqts))
 		go func() {
+			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path)
 			cb(obj.evType, obj.item, obj.prev)
 			close(sendCh)
 		}()
@@ -308,45 +318,72 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 	w.janitorVerMu.Lock()
 	tracker.version = w.janitorVer
 	w.janitorVerMu.Unlock()
-
+	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Start", "path", w.path, "fromVer", fromver)
 	var opts api.ListWatchOptions
 	opts.ResourceVersion = fmt.Sprintf("%d", fromver)
+	maxver := uint64(0)
 
+	// List from store if fromver is not specified
+	if fromver == 0 {
+		// List all objects
+		objs, err := w.store.List(w.path, opts)
+		if err == nil {
+			for _, obj := range objs {
+				w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "reason", "list", "type", kvstore.Created, "path", w.path)
+				_, ver := mustGetObjectMetaVersion(obj)
+				if ver > maxver {
+					maxver = ver
+				}
+				cb(kvstore.Created, obj, nil)
+			}
+		}
+		startVer = maxver + 1
+	} else {
+		startVer = fromver
+	}
+
+	// Scan the current eventList
+	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Catchup", "path", w.path, "fromVer", fromver)
 	var prev, item *list.Element
-	if fromver != 0 {
-		item := w.eventList.Front()
-		if item != nil {
-			obj := item.Value.(*watchEvent)
-			if obj.version > fromver {
-				// We do not have enough history, error out.
-				errmsg := api.Status{
-					Result:  &api.StatusResultExpired,
-					Message: fmt.Sprintf("version too old"),
-					Code:    http.StatusGone,
-				}
-				cb(kvstore.WatcherError, &errmsg, nil)
-				return
+	item = w.eventList.Front()
+	prev = item
+	if item != nil {
+		obj := item.Value.(*watchEvent)
+		if fromver != 0 && obj.version > fromver {
+			// fromver was specified and we do not have enough history, error out.
+			errmsg := api.Status{
+				Result:  &api.StatusResultExpired,
+				Message: fmt.Sprintf("version too old"),
+				Code:    http.StatusGone,
 			}
-			for item != nil && obj != nil && obj.version < fromver {
-				item = item.Next()
+			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up")
+			cb(kvstore.WatcherError, &errmsg, nil)
+			return
+		}
+		// ignore events older than startVer
+		for item != nil && obj != nil && obj.version < startVer {
+			item = item.Next()
+			if item != nil {
 				obj = item.Value.(*watchEvent)
+				prev = item
 			}
-			for item != nil {
-				select {
-				case <-tracker.ctx.Done():
-					// bail out here instead of iterating through items and then exiting.
-					return
-				default:
-					sendevent(item)
-					item = item.Next()
-				}
+		}
+		for item != nil {
+			select {
+			case <-tracker.ctx.Done():
+				// bail out here instead of iterating through items and then exiting.
+				return
+			default:
+				sendevent(item)
+				prev = item
+				item = item.Next()
 			}
 		}
 	}
 
 	condCh := make(chan error)
 	stopCh := make(chan error)
-	w.log.DebugLog("oper", "WatchEventQDequeue", "prefix", w.path, "msg", "starting dequeue instance")
+	w.log.InfoLog("oper", "WatchEventQDequeue", "prefix", w.path, "msg", "starting dequeue monitor")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -362,16 +399,6 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 			}
 		}
 	}()
-	// Now we are ready to start dequeueing every event enqueued henceforth
-	//  to the eventList. The Cond variable wakes this go-routine via the
-	//  condCh when there are events enqueued.
-	prev = w.eventList.Back()
-	objs, err := w.store.List(w.path, opts)
-	if err == nil {
-		for _, obj := range objs {
-			cb(kvstore.Created, obj, nil)
-		}
-	}
 	for {
 		select {
 		case <-condCh:
@@ -445,6 +472,8 @@ func (w *watchEventQ) janitorFn() {
 		return false
 	}
 	w.eventList.RemoveTill(cleanfn)
+	// Run purge of delete pending items in store
+	w.store.PurgeDeleted(w.config.PurgeInterval)
 }
 
 // janitor function maintains and garbage collects stale objects

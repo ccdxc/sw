@@ -27,11 +27,22 @@ const (
 )
 
 type memKvRec struct {
-	value    string
-	ttl      int64
-	revision int64
-	watchers []*watcher
+	value     string
+	ttl       int64
+	revision  int64
+	createRev int64
+	watchers  []*watcher
 }
+
+// RevisionMode defines the way revision numbers are generated for objects
+type RevisionMode string
+
+const (
+	// ClusterRevision mode is when there is a cluster wide revision akin to etcd
+	ClusterRevision RevisionMode = "clusterRevision"
+	// ObjectRevision generates revisions that are specific to the object
+	ObjectRevision RevisionMode = "objectRevision"
+)
 
 // MemKv is state store interface to a memkv client
 type MemKv struct {
@@ -42,16 +53,19 @@ type MemKv struct {
 	objVersioner  runtime.Versioner
 	listVersioner runtime.Versioner
 	returnErr     bool // when set, all interface methods will return an error
+	revMode       RevisionMode
 }
 
 // Cluster memkv cluster (equivalent to an etcd backend cluster)
 type Cluster struct {
 	sync.Mutex
-	elections map[string]*memkvElection // current elections
-	clientID  int                       // current id of the store
-	clients   map[string]*MemKv         // all client stores
-	kvs       map[string]*memKvRec
-	watchers  map[string][]*watcher
+	elections       map[string]*memkvElection // current elections
+	clientID        int                       // current id of the store
+	clusterRevMutex sync.Mutex
+	clusterRevision int64
+	clients         map[string]*MemKv // all client stores
+	kvs             map[string]*memKvRec
+	watchers        map[string][]*watcher
 }
 
 // db of clusters
@@ -146,6 +160,13 @@ func (cluster *Cluster) deleteAll() {
 	}
 }
 
+func (cluster *Cluster) getNextRevision() int64 {
+	defer cluster.clusterRevMutex.Unlock()
+	cluster.clusterRevMutex.Lock()
+	cluster.clusterRevision++
+	return cluster.clusterRevision
+}
+
 // encode implements the serialization of an object to be stored in memkv.
 // TBD: this function is common among all state stores
 func (f *MemKv) encode(obj runtime.Object) ([]byte, error) {
@@ -196,8 +217,12 @@ func (f *MemKv) Create(ctx context.Context, key string, obj runtime.Object) erro
 	if err != nil {
 		return err
 	}
-
-	v := &memKvRec{value: string(value), ttl: 0, revision: 1}
+	var rev int64 = 1
+	if f.revMode == ClusterRevision {
+		rev = f.cluster.getNextRevision()
+	}
+	v := &memKvRec{value: string(value), ttl: 0, revision: rev}
+	v.createRev = v.revision
 	f.cluster.kvs[key] = v
 	f.setupWatchers(key, v)
 
@@ -258,7 +283,10 @@ func (f *MemKv) Delete(ctx context.Context, key string, into runtime.Object, cs 
 	if err != nil {
 		return err
 	}
-
+	if f.revMode == ClusterRevision {
+		// Increment the cluster revision
+		v.revision = f.cluster.getNextRevision()
+	}
 	defer delete(f.cluster.kvs, key)
 	f.sendWatchEvents(key, v, true)
 
@@ -321,7 +349,11 @@ func (f *MemKv) Update(ctx context.Context, key string, obj runtime.Object, cs .
 
 	v.value = string(value)
 	v.ttl = 0
-	v.revision++
+	if f.revMode == ClusterRevision {
+		v.revision = f.cluster.getNextRevision()
+	} else {
+		v.revision++
+	}
 
 	f.sendWatchEvents(key, v, false)
 
@@ -378,7 +410,12 @@ func (f *MemKv) ConsistentUpdate(ctx context.Context, key string, into runtime.O
 
 			v.value = string(value)
 			v.ttl = 0
-			v.revision++
+			if f.revMode == ClusterRevision {
+				v.revision = f.cluster.getNextRevision()
+			} else {
+				v.revision++
+			}
+
 			f.sendWatchEvents(key, v, false)
 
 			if into != nil {
@@ -541,7 +578,12 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 	for _, o := range t.ops {
 		switch o.t {
 		case tCreate:
-			v := &memKvRec{value: o.val, revision: 1}
+			var rev int64 = 1
+			if f.revMode == ClusterRevision {
+				rev = f.cluster.getNextRevision()
+			}
+			v := &memKvRec{value: o.val, revision: rev}
+			v.createRev = v.revision
 			f.cluster.kvs[o.key] = v
 			f.setupWatchers(o.key, v)
 			f.objVersioner.SetVersion(o.obj, uint64(v.revision))
@@ -617,6 +659,11 @@ func (f *MemKv) CloseWatch(prefix string) {
 // SetErrorState sets the returnErr flag
 func (f *MemKv) SetErrorState(state bool) {
 	f.returnErr = state
+}
+
+// SetRevMode sets the revision mode
+func (f *MemKv) SetRevMode(val RevisionMode) {
+	f.revMode = val
 }
 
 // Lease takes a lease on a key and renews in background

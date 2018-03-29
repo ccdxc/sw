@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"container/heap"
 	"expvar"
 	"fmt"
 	"sync"
@@ -16,10 +17,13 @@ import (
 
 // StoreStats contains stats for the store
 type StoreStats struct {
-	sets    *expvar.Int
-	deletes *expvar.Int
-	gets    *expvar.Int
-	lists   *expvar.Int
+	sets      *expvar.Int
+	deletes   *expvar.Int
+	gets      *expvar.Int
+	lists     *expvar.Int
+	purges    *expvar.Int
+	purgeRuns *expvar.Int
+	errors    *expvar.Int
 }
 
 var storeID uint32
@@ -36,33 +40,89 @@ type Store interface {
 	List(key string, opts api.ListWatchOptions) ([]runtime.Object, error)
 	Mark(key string)
 	Sweep(key string, cb SuccessCbFunc)
+	PurgeDeleted(past time.Duration)
 	Clear()
 }
 
 // cacheObj is a wrapper around each object stored in the cache.
 type cacheObj struct {
 	revision uint64
+	key      string
 	obj      runtime.Object
+	lastUpd  time.Time
 	deleted  bool
+	inDelQ   bool
+	delQId   int
+}
+
+type delPendingHeap struct {
+	l []*cacheObj
 }
 
 // store is an implementation of the Store interface
 type store struct {
 	sync.RWMutex
-	objs  *patricia.Trie
-	stats StoreStats
-	id    uint32
+	objs       *patricia.Trie
+	stats      StoreStats
+	delPending *delPendingHeap
+	id         uint32
 }
 
 // NewStore creates a new Local Object Store.
 func NewStore() Store {
 
 	ret := &store{
-		objs: patricia.NewTrie(),
-		id:   atomic.AddUint32(&storeID, 1),
+		objs:       patricia.NewTrie(),
+		id:         atomic.AddUint32(&storeID, 1),
+		delPending: &delPendingHeap{},
 	}
+	heap.Init(ret.delPending)
 	ret.registerStats()
 	return ret
+}
+
+// Len returns the len of the pendingDelete heap
+func (h *delPendingHeap) Len() int {
+	return len(h.l)
+}
+
+// Less implements the sort.Interface
+func (h *delPendingHeap) Less(i, j int) bool {
+	return h.l[j].lastUpd.Before(h.l[i].lastUpd)
+}
+
+// Swap implements the sort.Interface
+func (h *delPendingHeap) Swap(i, j int) {
+	cobj1 := h.l[i]
+	cobj2 := h.l[j]
+	cobj1.delQId = j
+	cobj2.delQId = i
+	h.l[i], h.l[j] = cobj2, cobj1
+}
+
+// Push pushes an item to the heap in accordance with the heap.Interface
+func (h *delPendingHeap) Push(i interface{}) {
+	cobj := i.(*cacheObj)
+	cobj.delQId = len(h.l)
+	h.l = append(h.l, i.(*cacheObj))
+}
+
+// Pop pops item from the heap in accordance with the heap.Interface
+func (h *delPendingHeap) Pop() interface{} {
+	old := h.l
+	l := len(h.l)
+	ret := old[l-1]
+	h.l = old[0 : l-1]
+	return ret
+}
+
+// Peek peeks at the top of the heap without popping it
+func (h *delPendingHeap) Peek() *cacheObj {
+	l := len(h.l)
+	if l == 0 {
+		return nil
+	}
+	return h.l[l-1]
 }
 
 // Set updates the cache for the key with obj while making sure revision moves
@@ -94,6 +154,12 @@ func (s *store) Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc
 			cobj.obj = obj
 			cobj.revision = rev
 			cobj.deleted = false
+			cobj.lastUpd = time.Now()
+			if cobj.inDelQ {
+				heap.Remove(s.delPending, cobj.delQId)
+				cobj.delQId = 0
+				cobj.inDelQ = false
+			}
 			return nil
 		}
 		success = false
@@ -101,8 +167,11 @@ func (s *store) Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc
 	}
 	cobj := &cacheObj{
 		revision: rev,
+		key:      key,
 		obj:      obj,
 		deleted:  false,
+		inDelQ:   false,
+		lastUpd:  time.Now(),
 	}
 	s.objs.Set(prefix, cobj)
 	s.stats.sets.Add(1)
@@ -123,6 +192,9 @@ func (s *store) Get(key string) (runtime.Object, error) {
 		return nil, errorNotFound
 	}
 	c := v.(*cacheObj)
+	if c.deleted {
+		return nil, errorNotFound
+	}
 	s.stats.gets.Add(1)
 	return c.obj, nil
 }
@@ -152,13 +224,21 @@ func (s *store) Delete(key string, rev uint64, cb SuccessCbFunc) (obj runtime.Ob
 	cobj := v.(*cacheObj)
 	obj = cobj.obj
 	if rev != 0 {
-		if cobj.revision != rev {
+		if rev <= cobj.revision {
 			return nil, errorNotCorrectRev
 		}
 	}
-	ok := s.objs.Delete(prefix)
-	if !ok {
+
+	if cobj.deleted {
 		return nil, errorNotFound
+	}
+	cobj.lastUpd = time.Now()
+	cobj.deleted = true
+	if !cobj.inDelQ {
+		cobj.inDelQ = true
+		heap.Push(s.delPending, cobj)
+	} else {
+		heap.Fix(s.delPending, cobj.delQId)
 	}
 	s.stats.deletes.Add(1)
 	return
@@ -179,6 +259,9 @@ func (s *store) List(key string, opts api.ListWatchOptions) ([]runtime.Object, e
 	}
 	visitfunc := func(prefix patricia.Prefix, item patricia.Item) error {
 		v := item.(*cacheObj)
+		if v.deleted {
+			return nil
+		}
 		for _, fn := range filters {
 			if !fn(v.obj, nil) {
 				return nil
@@ -232,6 +315,29 @@ func (s *store) Sweep(key string, cb SuccessCbFunc) {
 	s.objs.VisitSubtree(prefx, visitfunc)
 }
 
+// PurgeDeleted permenently deletes objects in the delete queue
+func (s *store) PurgeDeleted(past time.Duration) {
+	s.stats.purgeRuns.Add(1)
+	defer s.Unlock()
+	s.Lock()
+	deletes := 0
+	for {
+		cobj := s.delPending.Peek()
+		if cobj == nil || time.Since(cobj.lastUpd) < past || deletes > delayedDelPurgeQuanta {
+			return
+		}
+		deletes++
+		heap.Pop(s.delPending)
+		ok := s.objs.Delete(patricia.Prefix(cobj.key))
+		if !ok {
+			s.stats.errors.Add(1)
+		} else {
+			s.stats.purges.Add(1)
+		}
+		cobj = s.delPending.Peek()
+	}
+}
+
 // Clear cleans up all objects in the store.
 func (s *store) Clear() {
 	s.objs.DeleteSubtree(patricia.Prefix("/"))
@@ -243,4 +349,7 @@ func (s *store) registerStats() {
 	s.stats.deletes = expvar.NewInt(fmt.Sprintf("api.cache.store[%d].ops.delete", s.id))
 	s.stats.gets = expvar.NewInt(fmt.Sprintf("api.cache.store[%d].ops.get", s.id))
 	s.stats.lists = expvar.NewInt(fmt.Sprintf("api.cache.store[%d].ops.list", s.id))
+	s.stats.purges = expvar.NewInt(fmt.Sprintf("api.cache.store[%d].ops.purges", s.id))
+	s.stats.purgeRuns = expvar.NewInt(fmt.Sprintf("api.cache.store[%d].ops.purgeRuns", s.id))
+	s.stats.errors = expvar.NewInt(fmt.Sprintf("api.cache.store[%d].ops.errors", s.id))
 }

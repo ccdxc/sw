@@ -16,6 +16,7 @@ import (
 	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/helper"
+	"github.com/pensando/sw/venice/utils/kvstore/memkv"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -33,6 +34,7 @@ var (
 	deleteOps, listOps                 expvar.Int
 	markSweepInterval                  = time.Second * 10
 	kvWatcherRetryInterval             = time.Millisecond * 500
+	delayedDelPurgeQuanta              = 100
 )
 
 // Interface is the cache interface exposed by the cache implementation. It provides a few additional operations
@@ -203,7 +205,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup) {
 				watchErrors.Add(1)
 				establishWatcher()
 			} else {
-				p.parent.logger.InfoLog("func", "kvwatcher", "path", p.path, "msg", "received event", "key", ev.Key)
+				p.parent.logger.InfoLog("func", "kvwatcher", "path", p.path, "msg", "received event", "key", ev.Key, "oper", ev.Type)
 				if evtype == kvstore.WatcherError {
 					p.parent.logger.ErrorLog("func", "kvwatcher", "path", p.path, "msg", "watch error")
 					watchErrors.Add(1)
@@ -333,6 +335,7 @@ func CreateNewCache(config Config) (Interface, error) {
 		RetentionDuration: defRetentionDuration,
 		RetentionDepthMax: defRetentionDepthMax,
 		EvictInterval:     defEvictInterval,
+		PurgeInterval:     defPurgeInterval,
 	}
 	ret.queues = NewWatchedPrefixes(config.Logger, ret.store, wconfig)
 	argus := &backendWatcher{
@@ -360,6 +363,11 @@ func (c *cache) Start() error {
 				k.Close()
 				c.pool.DelFromPool(k)
 			}
+		}
+		if c.config.Config.Type == kvs.KVStoreTypeMemkv {
+			// We have to set the revision mode to cluster mode.
+			mkv := k.(*memkv.MemKv)
+			mkv.SetRevMode(memkv.ClusterRevision)
 		}
 		c.pool.AddToPool(k)
 	}

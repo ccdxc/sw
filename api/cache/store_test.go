@@ -3,6 +3,9 @@ package cache
 import (
 	"reflect"
 	"testing"
+	"time"
+
+	"github.com/tchap/go-patricia/patricia"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -206,16 +209,16 @@ func TestStoreOper(t *testing.T) {
 
 	t.Logf("  ->Delete an valid object (conditional)")
 	cbCalled = 0
-	_, err = s.Delete("/venice/books/book/Example2", 11, cbfunc)
+	_, err = s.Delete("/venice/books/book/Example2", 9, cbfunc)
 	if err == nil {
 		t.Errorf("expecting error on delete")
 	}
 	if cbCalled != 0 {
 		t.Errorf("callback called in failer case")
 	}
-	o, err := s.Delete("/venice/books/book/Example2", 10, cbfunc)
+	o, err := s.Delete("/venice/books/book/Example2", 12, cbfunc)
 	if err != nil {
-		t.Errorf("not expecting error on delete")
+		t.Errorf("not expecting error on delete (%s)", err)
 	}
 	if !reflect.DeepEqual(o, &b5) {
 		t.Errorf("returned object in delete does not match")
@@ -234,4 +237,109 @@ func TestStoreOper(t *testing.T) {
 	if err == nil {
 		t.Errorf("not expecting object to be found after flush")
 	}
+}
+
+func TestDelayedDelete(t *testing.T) {
+	s := NewStore().(*store)
+
+	t.Logf("  ->Insert an object")
+	key1 := "/venice/books/book/Example1"
+	key2 := "/venice/books/book/Example2"
+	prefix1 := patricia.Prefix(key1)
+	prefix2 := patricia.Prefix(key2)
+	b1 := testObj{}
+	b1.ResourceVersion = "10"
+	b1.Name = "Example1"
+	s.Set(key1, 10, &b1, nil)
+	b2 := testObj{}
+	b2.ResourceVersion = "10"
+	b2.Name = "Example2"
+	s.Set(key2, 11, &b2, nil)
+
+	t.Logf("  ->Delete one object and verify it is in delQ")
+	s.Delete(key1, 0, nil)
+	_, err := s.Get(key1)
+	if err == nil {
+		t.Fatalf("able to retreive deleted object")
+	}
+	if s.delPending.Len() != 1 {
+		t.Fatalf("expecting 1 element in del pending queue got %d", s.delPending.Len())
+	}
+	if !reflect.DeepEqual(s.delPending.Peek(), s.objs.Get(prefix1)) {
+		t.Fatalf("objects in delqueue and trie do not match")
+	}
+
+	t.Logf("  ->Delete second object and verify it is in delQ behind (1)")
+	s.Delete(key2, 0, nil)
+	_, err = s.Get(key2)
+	if err == nil {
+		t.Fatalf("able to retreive deleted object")
+	}
+	if s.delPending.Len() != 2 {
+		t.Fatalf("expecting 2 element in del pending queue got %d", s.delPending.Len())
+	}
+	if !reflect.DeepEqual(s.delPending.Peek(), s.objs.Get(prefix1)) {
+		t.Fatalf("objects in delqueue and trie do not match [%v]/[%v]\n objects", s.delPending.Peek(), s.objs.Get(prefix1))
+	}
+
+	t.Logf("  ->Re-add first object and verify it is no longer in the delQ")
+	b1.ResourceVersion = "12"
+	s.Set(key1, 12, &b1, nil)
+	if s.delPending.Len() != 1 {
+		t.Fatalf("expecting 1 element in del pending queue got %d", s.delPending.Len())
+	}
+	cobj := s.objs.Get(prefix2).(*cacheObj)
+	if !reflect.DeepEqual(s.delPending.Peek(), cobj) {
+		t.Fatalf("objects in delqueue and trie do not match[%v]/[%v]", s.delPending.Peek(), s.objs.Get(prefix2))
+	}
+
+	if !cobj.deleted || !cobj.inDelQ || cobj.delQId != 0 {
+		t.Fatalf("flags not set for deleted object [%v/%v/%d]", cobj.deleted, cobj.inDelQ, cobj.delQId)
+	}
+
+	_, err = s.Get(key1)
+	if err != nil {
+		t.Fatalf("retreive of re-added object returned error (%s)", err)
+	}
+
+	t.Logf("  ->delete first object and verify it is still not at head of delq")
+	s.Delete(key1, 0, nil)
+	if s.delPending.Len() != 2 {
+		t.Fatalf("expecting 2 element in del pending queue got %d [%+v]", s.delPending.Len(), s.delPending.l)
+	}
+	cobj = s.objs.Get(prefix2).(*cacheObj)
+	if !reflect.DeepEqual(s.delPending.Peek(), cobj) {
+		t.Fatalf("objects in delqueue and trie do not match[%v]/[%v]", s.delPending.Peek(), s.objs.Get(prefix2))
+	}
+
+	// Validate Ids
+	for i := range s.delPending.l {
+		if i != s.delPending.l[i].delQId {
+			t.Fatalf("Ids dont match for [%d]:%d", i, s.delPending.l[i].delQId)
+		}
+	}
+
+	t.Logf("  ->Run purge with duration outside deleted items")
+	s.PurgeDeleted(time.Hour)
+	if s.delPending.Len() != 2 {
+		t.Fatalf("expecting 2 element in del pending queue got %d [%+v]", s.delPending.Len(), s.delPending.l)
+	}
+	cobj = s.objs.Get(prefix2).(*cacheObj)
+	if !reflect.DeepEqual(s.delPending.Peek(), cobj) {
+		t.Fatalf("objects in delqueue and trie do not match[%v]/[%v]", s.delPending.Peek(), s.objs.Get(prefix2))
+	}
+
+	// Validate Ids
+	for i := range s.delPending.l {
+		if i != s.delPending.l[i].delQId {
+			t.Fatalf("Ids dont match for [%d]:%d", i, s.delPending.l[i].delQId)
+		}
+	}
+
+	t.Logf("  ->Run purge with duration encompassing items in the delpending items")
+	s.PurgeDeleted(0)
+	if s.delPending.Len() != 0 {
+		t.Fatalf("expecting 2 element in del pending queue got %d [%+v]", s.delPending.Len(), s.delPending.l)
+	}
+
 }
