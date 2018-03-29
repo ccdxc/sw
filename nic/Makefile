@@ -210,7 +210,11 @@ third-party:
 	chmod +w "$(TOPDIR_ABS)/hal/obj/libisc-dhcp.so"
 
 plugins:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/...
+    ifeq ($(ARCH),aarch64)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) --build_tag_filters=-gtests hal/plugins/...
+    else
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/...
+    endif
 
 utils:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
