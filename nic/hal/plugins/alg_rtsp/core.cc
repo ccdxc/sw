@@ -59,7 +59,7 @@ add_expected_flows(alg_utils::app_session_t *app_sess, rtsp_transport_t *spec)
     // TODO (goli) - revisit - may be we need to preserve the flow direction
     key.dir = 0;
     key.vrf_id = rtsp_sess->sess_key.vrf_id;
-    key.flow_type = spec->client_ip.af = IP_AF_IPV6 ?
+    key.flow_type = spec->client_ip.af == IP_AF_IPV6 ?
         hal::FLOW_TYPE_V6 : hal::FLOW_TYPE_V4;
     key.sip = spec->server_ip.addr;
     key.dip = spec->client_ip.addr;
@@ -68,8 +68,12 @@ add_expected_flows(alg_utils::app_session_t *app_sess, rtsp_transport_t *spec)
     for (key.dport = spec->client_port_start, key.sport = spec->server_port_start;
          key.dport <= spec->client_port_end && key.sport <= spec->server_port_end;
          key.dport++, key.sport++) {
+        INFO("adding rtsp expected flow {}", key);
         ret = g_rtsp_state->alloc_and_insert_exp_flow(app_sess, key, &exp_flow);
-        HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+        if (ret != HAL_RET_OK) {
+            ERR("failed to insert expected flow ret=", ret);
+            return ret;
+        }
 
         exp_flow->entry.handler = expected_flow_handler;
         exp_flow->isCtrl = FALSE;
@@ -130,13 +134,14 @@ process_resp_message(fte::ctx_t& ctx, alg_utils::app_session_t *app_sess,
     hal_ret_t ret = HAL_RET_OK;
     rtsp_session_t *rtsp_sess = (rtsp_session_t *)app_sess->oper;
 
-    if (msg->rsp.status_code == RTSP_STATUS_OK) {
+    if (msg->rsp.status_code != RTSP_STATUS_OK) {
+        DEBUG("error resp status={}", msg->rsp.status_code);
         return HAL_RET_OK;
     }
 
 
     if (!msg->hdrs.valid.transport) {
-        // no trnaport header
+        DEBUG("no transport header");
         return HAL_RET_OK;
     }
 
@@ -164,6 +169,7 @@ process_resp_message(fte::ctx_t& ctx, alg_utils::app_session_t *app_sess,
 
         ret = add_expected_flows(app_sess, spec);
         if (ret != HAL_RET_OK) {
+            ERR("failed to add expected flow ret={}", ret);
             return ret;
         }
     }
@@ -188,6 +194,8 @@ process_control_message(fte::ctx_t& ctx, const rtsp_session_t *ctrl_sess)
             return HAL_RET_ERR;
         }
 
+        DEBUG("rtsp control msg {}", msg);
+
         // noop if session id is not known
         if (!msg.hdrs.valid.session) {
             return HAL_RET_OK;
@@ -200,9 +208,9 @@ process_control_message(fte::ctx_t& ctx, const rtsp_session_t *ctrl_sess)
 
         // create expected flows if it is a rtsp resp with transport header
         switch (msg.type) {
-        case RTSP_MSG_RESPONSE:
-            return process_req_message(ctx, app_sess, &msg);
         case RTSP_MSG_REQUEST:
+            return process_req_message(ctx, app_sess, &msg);
+        case RTSP_MSG_RESPONSE:
             return process_resp_message(ctx, app_sess, &msg);
         }
     }
@@ -279,7 +287,7 @@ rtsp_new_control_session(fte::ctx_t &ctx)
  */
 fte::pipeline_action_t alg_rtsp_exec(fte::ctx_t &ctx)
 {
-    hal_ret_t ret;
+    hal_ret_t ret = HAL_RET_OK;
 
     sfw::sfw_info_t *sfw_info;
 
@@ -294,7 +302,7 @@ fte::pipeline_action_t alg_rtsp_exec(fte::ctx_t &ctx)
     } else if (ctx.feature_session_state()) {
         // parse the packet in the completion handler
         ret = ctx.register_completion_handler(rtsp_completion_hdlr);
-    }
+    } 
 
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);

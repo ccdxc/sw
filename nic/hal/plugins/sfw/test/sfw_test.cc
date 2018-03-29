@@ -70,56 +70,16 @@ hal_handle_t sfw_test::vrfh_, sfw_test::nwh_, sfw_test::l2segh_,
     sfw_test::eph1_, sfw_test::eph2_,  sfw_test::intfh1_,
     sfw_test::intfh2_, sfw_test::nwsech_;
 
-#define ALLOW_RULE(dep, sep, dport, sport, msg) {                       \
-        hal_ret_t ret;                                                  \
-        bool drop;                                                      \
-        hal::session_t *session;                                        \
-                                                                        \
-        Tins::TCP tcp = Tins::TCP(dport, sport);                        \
-        tcp.flags(Tins::TCP::SYN);                                      \
-                                                                        \
-        ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, dep, sep,            \
-                              tcp,  &drop, &session);                   \
-                                                                        \
-        EXPECT_EQ(ret, HAL_RET_OK)<< msg;                               \
-        EXPECT_FALSE(drop)<< msg;                                       \
-        EXPECT_NE(session, nullptr)<< msg;                              \
-        EXPECT_NE(session->iflow, nullptr)<< msg;                       \
-        EXPECT_NE(session->rflow, nullptr)<< msg;                       \
-        EXPECT_FALSE(session->iflow->pgm_attrs.drop)<< msg;             \
-        EXPECT_FALSE(session->iflow->pgm_attrs.drop)<< msg;             \
-    }
-
-#define DENY_RULE(dep, sep, dport, sport, msg) {                        \
-        hal_ret_t ret;                                                  \
-        bool drop;                                                      \
-        hal::session_t *session;                                        \
-                                                                        \
-        Tins::TCP tcp = Tins::TCP(dport, sport);                        \
-        tcp.flags(Tins::TCP::SYN);                                      \
-                                                                        \
-        ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, dep, sep,            \
-                              tcp,  &drop, &session);                   \
-                                                                        \
-        EXPECT_EQ(ret, HAL_RET_OK) << msg;                              \
-        EXPECT_TRUE(drop) << msg;                                       \
-        EXPECT_NE(session, nullptr) << msg;                             \
-        EXPECT_NE(session->iflow, nullptr) << msg;                      \
-        EXPECT_NE(session->rflow, nullptr) << msg;                      \
-        EXPECT_TRUE(session->iflow->pgm_attrs.drop) << msg;             \
-        EXPECT_TRUE(session->rflow->pgm_attrs.drop) << msg;             \
-    }
-
 TEST_F(sfw_test, allow_rule)
 {
-    ALLOW_RULE(eph2_, eph1_, 22, 1000, "ep1->ep2 22");
-    ALLOW_RULE(eph2_, eph1_, 80, 1000, "ep1->ep2 80");
-    ALLOW_RULE(eph1_, eph2_, 80, 1000, "ep2->ep1 80");
+    CHECK_ALLOW_TCP(eph2_, eph1_, 22, 1000, "ep1->ep2 22");
+    CHECK_ALLOW_TCP(eph2_, eph1_, 80, 1000, "ep1->ep2 80");
+    CHECK_ALLOW_TCP(eph1_, eph2_, 80, 1000, "ep2->ep1 80");
 }
 
 TEST_F(sfw_test, deny_rule)
 {
-    DENY_RULE(eph1_, eph2_, 22, 1000, "ep2->ep1 22");
-    DENY_RULE(eph2_, eph1_, 100, 1000, "ep1->ep2 100");
-    DENY_RULE(eph1_, eph2_, 100, 1000, "ep2->ep1 100");
+    CHECK_DENY_TCP(eph1_, eph2_, 22, 1000, "ep2->ep1 22");
+    CHECK_DENY_TCP(eph2_, eph1_, 100, 1000, "ep1->ep2 100");
+    CHECK_DENY_TCP(eph1_, eph2_, 100, 1000, "ep2->ep1 100");
 }

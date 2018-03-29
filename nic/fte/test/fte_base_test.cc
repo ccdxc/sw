@@ -192,8 +192,7 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<v4_r
 }
 
 hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
-                                    uint8_t *pkt, size_t pkt_len,
-                                    bool *drop, hal::session_t **session)
+                                    uint8_t *pkt, size_t pkt_len)
 {
     hal_ret_t ret;
     fte::flow_t iflow_[fte::ctx_t::MAX_STAGES], rflow_[fte::ctx_t::MAX_STAGES];
@@ -213,14 +212,6 @@ hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
         return ret;
     }
 
-    if (drop) {
-        *drop = ctx_.drop();
-    }
-
-    if (*session) {
-        *session = ctx_.session();
-    }
-
     return HAL_RET_OK;
 }
 
@@ -231,7 +222,7 @@ static inline ip_addr_t ep_ip(hal::ep_t *ep) {
 hal_ret_t
 fte_base_test::inject_ipv4_pkt(const fte::lifqid_t &lifq,
                                hal_handle_t deph, hal_handle_t seph,
-                               Tins::PDU &l4pdu, bool *drop, hal::session_t **session)
+                               Tins::PDU &l4pdu)
 {
     hal::ep_t *sep = hal::find_ep_by_handle(seph);
     EXPECT_NE(sep, nullptr);
@@ -277,5 +268,5 @@ fte_base_test::inject_ipv4_pkt(const fte::lifqid_t &lifq,
 
     std::vector<uint8_t> buffer = eth.serialize();
 
-    return inject_pkt(&cpu_rxhdr, &buffer[0], buffer.size(), drop, session);
+    return inject_pkt(&cpu_rxhdr, &buffer[0], buffer.size());
 }

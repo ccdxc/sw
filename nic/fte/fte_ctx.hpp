@@ -367,10 +367,12 @@ typedef void (*completion_handler_t) (ctx_t &ctx, bool fail);
 // Used for storing as an array inside fte::ctx_t for faster lookups using featutre id
 //------------------------------------------------------------------------------
 struct feature_state_t {
+    const char                   *name;  // name of the feature
     void                         *ctx_state;
     feature_session_state_t      *session_state;
     completion_handler_t          completion_handler;
 };
+
 uint16_t feature_id(const std::string &name);
 size_t feature_state_size(uint16_t *num_features);
 void feature_state_init(feature_state_t *feature_state, uint16_t num_features);

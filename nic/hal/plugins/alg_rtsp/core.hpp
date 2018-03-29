@@ -18,6 +18,8 @@ namespace hal {
 namespace plugins {
 namespace alg_rtsp {
 
+#define RTSP_PORT 554
+
 /*
  * Externs
  */

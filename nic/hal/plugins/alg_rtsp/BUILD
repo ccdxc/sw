@@ -30,7 +30,7 @@ cc_test(
     name = "alg_rtsp_test",
     srcs = glob(["test/*.cc"]),
     copts = sdk_copts,
-    linkopts = gl_linkopts_list,
+    linkopts =  ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
     tags = ["gtests"],
-    deps = [":alg_rtsp"] + gl_deps_list + test_deps_list, 
+    deps =  ["//nic/fte:fte_base_test"] + [":alg_rtsp"] + gl_deps_list + test_deps_list, 
 )

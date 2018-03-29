@@ -88,6 +88,7 @@ void feature_state_init(feature_state_t *feature_state, uint16_t num_features)
         feature_state[id].completion_handler = nullptr;
 
         feature = g_feature_list_[id];
+        feature_state[id].name = feature->name.c_str();
         if (feature && feature->registered && feature->state_size > 0) {
             feature_state[id].ctx_state = (void *)(ctx_state_start + feature->state_offset);
             if (feature->state_init_fn) {

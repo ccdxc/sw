@@ -94,6 +94,9 @@ struct rtsp_msg_t {
     rtsp_hdrs_t hdrs;
 };
 
+// spdlog formatter for flow_key_t
+std::ostream& operator<<(std::ostream& os, const rtsp_msg_t& msg);
+
 bool rtsp_parse_msg(const char *buf, uint32_t len, uint32_t *offset, rtsp_msg_t*msg);
 
 } // alg_rtsp

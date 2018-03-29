@@ -2,6 +2,7 @@ gen/*
 obj/*
 coverage/*
 core*
+!conf/plugins/*/*.so
 !core.cc
 !core.hpp
 model_sim/build

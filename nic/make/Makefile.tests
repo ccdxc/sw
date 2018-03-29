@@ -15,7 +15,7 @@ PD_CMD_OPTS = cd ../bazel-bin && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TOPDIR_ABS
 # make target to run a specific gtest
 # usage: make gtest target=./nic/hal/plugins/sfw/sfw_test
 run-gtest: $(GEN_TEST_RESULTS_DIR)/.dir
-	$(CMD_OPTS) $(target)
+	$(CMD_OPTS) $(GDB) $(target)
 
 run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	# PI gtests

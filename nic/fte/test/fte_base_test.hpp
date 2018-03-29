@@ -35,12 +35,10 @@ public:
     static hal_handle_t add_nwsec_policy(hal_handle_t vrfh, std::vector<v4_rule_t> &rules);
 
 
-    static hal_ret_t inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
-                                bool *drop, hal::session_t **session);
+    static hal_ret_t inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len);
 
     static hal_ret_t inject_ipv4_pkt(const fte::lifqid_t &lifq,
-                                     hal_handle_t dep, hal_handle_t sep,
-                                     Tins::PDU &l4pdu, bool *drop, hal::session_t **session);
+                                     hal_handle_t dep, hal_handle_t sep, Tins::PDU &l4pdu);
 
 protected:
     fte_base_test() {}
@@ -62,9 +60,66 @@ protected:
         feature_state_ = (fte::feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
 
     }
+    static fte::ctx_t ctx_;
+
 private:
     static uint32_t vrf_id_, l2seg_id_, intf_id_, nwsec_id_;
-    static fte::ctx_t ctx_;
     static uint16_t num_features_;
     static fte::feature_state_t *feature_state_;
 };
+
+#define CHECK_ALLOW_TCP(dep, sep, dport, sport, msg) {                  \
+        hal_ret_t ret;                                                  \
+        Tins::TCP tcp = Tins::TCP(dport, sport);                        \
+        tcp.flags(Tins::TCP::SYN);                                      \
+        ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, dep, sep, tcp);      \
+        EXPECT_EQ(ret, HAL_RET_OK)<< msg;                               \
+        EXPECT_FALSE(ctx_.drop())<< msg;                                \
+        EXPECT_NE(ctx_.session(), nullptr)<< msg;                       \
+        EXPECT_NE(ctx_.session()->iflow, nullptr)<< msg;                \
+        EXPECT_NE(ctx_.session()->rflow, nullptr)<< msg;                \
+        EXPECT_FALSE(ctx_.session()->iflow->pgm_attrs.drop)<< msg;      \
+        EXPECT_FALSE(ctx_.session()->iflow->pgm_attrs.drop)<< msg;      \
+    }
+
+#define CHECK_DENY_TCP(dep, sep, dport, sport, msg) {                   \
+        hal_ret_t ret;                                                  \
+        Tins::TCP tcp = Tins::TCP(dport, sport);                        \
+        tcp.flags(Tins::TCP::SYN);                                      \
+        ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, dep, sep,tcp);       \
+        EXPECT_EQ(ret, HAL_RET_OK) << msg;                              \
+        EXPECT_TRUE(ctx_.drop()) << msg;                                \
+        EXPECT_NE(ctx_.session(), nullptr) << msg;                      \
+        EXPECT_NE(ctx_.session()->iflow, nullptr) << msg;               \
+        EXPECT_NE(ctx_.session()->rflow, nullptr) << msg;               \
+        EXPECT_TRUE(ctx_.session()->iflow->pgm_attrs.drop) << msg;      \
+        EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.drop) << msg;      \
+    }
+
+#define CHECK_ALLOW_UDP(dep, sep, dport, sport, msg)                \
+    {                                                               \
+        hal_ret_t ret;                                              \
+        Tins::UDP pdu = Tins::UDP(dport, sport);                    \
+        ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, dep, sep, pdu);  \
+        EXPECT_EQ(ret, HAL_RET_OK) << msg;                          \
+        EXPECT_FALSE(ctx_.drop()) << msg;                           \
+        EXPECT_NE(ctx_.session(), nullptr) << msg;                  \
+        EXPECT_NE(ctx_.session()->iflow, nullptr)<< msg;            \
+        EXPECT_NE(ctx_.session()->rflow, nullptr)<< msg;            \
+        EXPECT_FALSE(ctx_.session()->iflow->pgm_attrs.drop)<< msg;  \
+        EXPECT_FALSE(ctx_.session()->iflow->pgm_attrs.drop)<< msg;  \
+    }
+
+#define CHECK_DENY_UDP(dep, sep, dport, sport, msg)                 \
+    {                                                               \
+        hal_ret_t ret;                                              \
+        Tins::UDP pdu = Tins::UDP(dport, sport);                    \
+        ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, dep, sep, pdu);  \
+        EXPECT_EQ(ret, HAL_RET_OK) << msg;                          \
+        EXPECT_TRUE(ctx_.drop()) << msg;                            \
+        EXPECT_NE(ctx_.session(), nullptr) << msg;                  \
+        EXPECT_NE(ctx_.session()->iflow, nullptr) << msg;           \
+        EXPECT_NE(ctx_.session()->rflow, nullptr) << msg;           \
+        EXPECT_TRUE(ctx_.session()->iflow->pgm_attrs.drop) << msg;  \
+        EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.drop) << msg;  \
+    }

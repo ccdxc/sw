@@ -552,6 +552,50 @@ rtsp_parse_msg(const char *buf, uint32_t len, uint32_t *poff, rtsp_msg_t*msg)
     return valid_msg;
 }
 
+std::ostream& operator<<(std::ostream& os, const rtsp_msg_t& msg)
+{
+    char buf[400];
+    fmt::ArrayWriter out(buf, sizeof(buf));
+
+    out.write("{{type:{}, ver:{}", msg.type, msg.ver);
+    if (msg.type == RTSP_MSG_REQUEST) {
+        out.write(" method={}", msg.req.method);
+    } else {
+        out.write(", status:{}", msg.rsp.status_code);
+    }
+
+    if (msg.hdrs.valid.cseq) {
+        out.write(", cseq:{}", msg.hdrs.cseq);
+    }
+    if (msg.hdrs.valid.transport) {
+        out.write(", transport:[");
+        for(int i =0 ; i < msg.hdrs.transport.nspecs; i++) {
+            out.write("{{proto:{}, client:{}:{}-{}, server:{}:{}-{}}}",
+                      msg.hdrs.transport.specs[i].ip_proto,
+                      msg.hdrs.transport.specs[i].client_ip,
+                      msg.hdrs.transport.specs[i].client_port_start,
+                      msg.hdrs.transport.specs[i].client_port_end,
+                      msg.hdrs.transport.specs[i].server_ip,
+                      msg.hdrs.transport.specs[i].server_port_start,
+                      msg.hdrs.transport.specs[i].server_port_end);
+        }
+        out.write("]");
+    }
+    if (msg.hdrs.valid.session) {
+        out.write(", session:{{id:{}, timeout:{}}}", msg.hdrs.session.id, msg.hdrs.session.timeout);
+    }
+    if (msg.hdrs.valid.content_length) {
+        out.write(", content-length:{}", msg.hdrs.content_length);
+    }
+    
+    out.write("}}");
+
+
+    buf[out.size()] = '\0';
+
+    return os << buf;
+}
+
 } // alg_rtsp
 } // plugins
 } // hal
