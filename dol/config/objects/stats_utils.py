@@ -174,6 +174,8 @@ class StatsVerifHelper:
         return
 
     def VerifyLifStats(self, tc):
+        if GlobalOptions.dryrun:
+            return True
         self.__fetch_hw_lif_stats(pre = False)
         return self.__compare_lif_stats()
 
@@ -201,19 +203,25 @@ class StatsVerifHelper:
             self.__copy_session_stats_from_spec(self.post_session_stats, stats)
         return
 
-    def __update_flow_stats(self, flow_stats, entry):
-        flow_stats.npkts += entry.npkts
-        flow_stats.nbytes += entry.nbytes
+    def __update_flow_stats(self, flow_stats, entry, drop):
+        if drop:
+            flow_stats.drop_npkts += entry.npkts
+            flow_stats.drop_nbytes += entry.nbytes
+        else:
+            flow_stats.npkts += entry.npkts
+            flow_stats.nbytes += entry.nbytes
         return
 
     def __prepare_expected_session_stats(self, tc):
         self.exp_session_stats = copy.deepcopy(self.pre_session_stats)
         
-        for e in self.tx_entries:
+        for entry in self.tx_entries:
             if tc.config.flow.IsIflow():
-                self.__update_flow_stats(self.exp_session_stats.iflow_stats, e)
+                self.__update_flow_stats(self.exp_session_stats.iflow_stats, 
+                                         entry, tc.IsDrop())
             else:
-                self.__update_flow_stats(self.exp_session_stats.rflow_stats, e)
+                self.__update_flow_stats(self.exp_session_stats.rflow_stats,
+                                         entry, tc.IsDrop())
         return
 
     def __compare_flow_stats(self, exp, post):
@@ -226,6 +234,15 @@ class StatsVerifHelper:
             logger.error("- BYTES Mismatch: Expected:%d Actual:%d" %\
                          (exp.nbytes, post.nbytes))
             err = True
+        if exp.drop_npkts != post.drop_npkts:
+            logger.error("- DROP PKTS Mismatch: Expected:%d Actual:%d" %\
+                         (exp.drop_npkts, post.drop_npkts))
+            err = True
+        if exp.drop_nbytes != post.drop_nbytes:
+            logger.error("- DROP BYTES Mismatch: Expected:%d Actual:%d" %\
+                         (exp.drop_nbytes, post.drop_nbytes))
+            err = True
+
         if err: return False
         return True
 
@@ -244,6 +261,8 @@ class StatsVerifHelper:
         return
 
     def VerifySessionStats(self, tc):
+        if GlobalOptions.dryrun:
+            return True
         self.__prepare_expected_session_stats(tc)
         self.__fetch_hw_session_stats(tc, pre = False)
         return self.__compare_session_stats()

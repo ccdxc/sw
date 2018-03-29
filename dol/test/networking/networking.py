@@ -17,6 +17,9 @@ def TestCaseTeardown(tc):
     modcbs.TestCaseTeardown(tc)
     return
 
+def TestCasePreTrigger(tc):
+    return modcbs.TestCasePreTrigger(tc)
+
 def TestCaseStepSetup(tc, step):
     return modcbs.TestCaseStepSetup(tc, step)
 
@@ -28,3 +31,6 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseStepTeardown(tc, step):
     return modcbs.TestCaseStepTeardown(tc, step)
+
+def TestCaseVerify(tc):
+    return modcbs.TestCaseVerify(tc)

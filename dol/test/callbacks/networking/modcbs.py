@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import config.objects.stats_utils as stats_utils
 
 from infra.common.logging import logger as logger
 
@@ -65,7 +66,7 @@ def Setup(infra, module):
     if module.args == None:
         return
 
-    if 'maxflows' in module.args.__dict__:
+    if getattr(module.args, 'maxflows', None):
         module.testspec.selectors.SetMaxFlows(module.args.maxflows)
         logger.info("- maxflows: %s" % module.testspec.selectors.maxflows)
 
@@ -84,14 +85,23 @@ def TestCaseSetup(tc):
     tc.pvtdata.priotag = getattr(iterelem, 'priotag', False)
     tc.pvtdata.scenario = getattr(iterelem, 'scenario', None)
     tc.pvtdata.ipopts = getattr(iterelem, 'ipopts', None)
+    tc.pvtdata.verify_lif_stats = getattr(iterelem, "lif_stats", False)
+    tc.pvtdata.verify_session_stats = getattr(iterelem, "session_stats", False)
+    
     if getattr(iterelem, 'drop', False):
         tc.SetDrop()
     if tc.pvtdata.ipopts is not None:
         tc.pvtdata.ipopts = tc.pvtdata.ipopts.split(',')
     return
 
-def TestCaseVerify(tc):
-    return True
+def TestCasePreTrigger(tc):
+    tc.pvtdata.svh = stats_utils.StatsVerifHelper()
+    tc.pvtdata.svh.Init(tc)
+    if tc.pvtdata.verify_lif_stats:
+        tc.pvtdata.svh.InitLifStats(tc)
+    if tc.pvtdata.verify_session_stats:
+        tc.pvtdata.svh.InitSessionStats(tc)
+    return
 
 def TestCaseTeardown(tc):
     root = getattr(tc.config, 'flow', None)
@@ -128,3 +138,13 @@ def TestCaseStepTeardown(tc, step):
     assert(tc is not None)
     assert(step is not None)
     return
+
+def TestCaseVerify(tc):
+    ret = True
+    if tc.pvtdata.verify_lif_stats and\
+       tc.pvtdata.svh.VerifyLifStats(tc) is False:
+        ret = False
+    if tc.pvtdata.verify_session_stats and\
+       tc.pvtdata.svh.VerifySessionStats(tc) is False:
+        ret = False
+    return ret
