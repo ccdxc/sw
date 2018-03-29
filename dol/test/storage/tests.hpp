@@ -19,10 +19,12 @@ namespace tests {
 
 const static uint32_t  kDefaultBufSize       = 4096;
 
+// Accelerator chaining
+
 typedef struct {
   uint64_t next_doorbell_addr;	// Next capri doorbell address (if chaining)
   uint64_t next_doorbell_data;	// Next capri doorbell data (if chaining)
-} cp_seq_next_db_entry_t;
+} acc_chain_next_db_entry_t;
 
 typedef struct {
   uint64_t barco_ring_addr;     // ring address
@@ -30,12 +32,12 @@ typedef struct {
   uint64_t barco_desc_addr;     // descriptor to push
   uint8_t  barco_desc_size;     // descriptor size (power of 2 exponent)
   uint8_t  barco_pndx_size;     // producer index size (power of 2 exponent)
-} cp_seq_barco_push_entry_t;
+} acc_chain_barco_push_entry_t;
 
-typedef struct cp_seq_entry {
+typedef struct acc_chain_entry {
   union {
-      cp_seq_next_db_entry_t    db_entry;
-      cp_seq_barco_push_entry_t push_entry;
+      acc_chain_next_db_entry_t    db_entry;
+      acc_chain_barco_push_entry_t push_entry;
   };
   uint64_t status_hbm_pa;	// Status address in HBM. Provide this even if data_len is provided in desc.
   uint64_t status_host_pa;	// Destination for the PDMA of status.
@@ -70,7 +72,7 @@ typedef struct cp_seq_entry {
   // Order of evaluation: 1. aol_len_pad_en 2. sgl_xfer_en
            aol_pad_xfer_en      :1, // enable length pad AOL transfer
            sgl_xfer_en          :1; // enable data transfer from src_hbm_pa to sgl_pa
-} cp_seq_entry_t;
+} acc_chain_entry_t;
 
 typedef struct cq_sq_ent_sgl {
   uint64_t addr[4];		// Destination Address in the SGL for compression data PDMA
@@ -78,14 +80,20 @@ typedef struct cq_sq_ent_sgl {
   uint64_t pad[3];
 } cp_sq_ent_sgl_t;
 
-typedef struct cp_seq_params {
-  cp_seq_entry_t seq_ent;	    // Compression sequencer descriptor
-  uint32_t seq_comp_status_q;	// Compression status sequencer queue
-  uint32_t seq_xts_q;   	    // XTS sequencer queue
-  uint32_t seq_xts_status_q;	// XTS status sequencer queue
-  uint64_t ret_doorbell_addr;	// Doorbell address that is formed for the compression sequencer (filled by API)
-  uint64_t ret_doorbell_data;	// Doorbell data that is formed for the compression sequencer (filled by API)
-} cp_seq_params_t;
+typedef int (*acc_chain_desc_format_fn_t)(acc_chain_entry_t &chain_ent,
+                                          dp_mem_t *seq_status_desc);
+
+typedef struct acc_chain_params {
+  acc_chain_entry_t chain_ent;	// Accelerator chaining sequencer descriptor
+  acc_chain_desc_format_fn_t desc_format_fn;
+  uint32_t seq_q;	            // Sequencer queue
+  uint32_t seq_status_q;	    // Status sequencer queue
+  uint32_t seq_next_q;   	    // Next sequencer queue in chain
+  uint32_t seq_next_status_q;	// Next status sequencer queue in chain
+  uint64_t ret_doorbell_addr;	// Doorbell address that is formed for the Status sequencer (filled by API)
+  uint64_t ret_doorbell_data;	// Doorbell data that is formed for the Status sequencer (filled by API)
+  uint16_t ret_seq_status_index;
+} acc_chain_params_t;
 
 class Poller {
 public:
@@ -98,7 +106,11 @@ private:
 };
 
 // API return values: 0 => successs; < 0 => failure
-int test_setup_cp_seq_status_ent(cp_seq_params_t *params);
+int test_setup_seq_acc_chain_entry(acc_chain_params_t& params);
+int test_setup_post_comp_seq_status_entry(acc_chain_entry_t &chain_ent,
+                                          dp_mem_t *seq_status_desc);
+int test_setup_post_xts_seq_status_entry(acc_chain_entry_t &chain_ent,
+                                         dp_mem_t *seq_status_desc);
 
 int test_setup();
 

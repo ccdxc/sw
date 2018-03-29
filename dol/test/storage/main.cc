@@ -128,6 +128,7 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::seq_compress_dualq_flat_4K_buf, "Sequencer Compress Host-Host flat 4K buf on hot and cold queues", false},
   {&tests::seq_compress_dualq_flat_4K_buf_in_hbm, "Sequencer Compress HBM-HBM flat 4K buf on hot and cold queues", false},
   {&tests::seq_compress_output_encrypt, "Sequencer Compress->XTS encrypt chaining", false},
+  {&tests::seq_decrypt_output_decompress, "Sequencer XTS decrypt->Decompress chaining", false},
 };
 
 std::vector<tests::TestEntry> comp_perf_tests = {

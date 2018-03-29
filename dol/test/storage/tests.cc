@@ -2604,59 +2604,97 @@ int test_run_rdma_e2e_xts_read1(void)
                                       xts_ctx);
 }
 
-int test_setup_cp_seq_status_ent(cp_seq_params_t *params) {
-  if (!params) return -1;
- 
-  uint16_t seq_comp_status_index;
-  dp_mem_t *seq_comp_status_desc;
+// Set up post compression accelerator chain entry
+int test_setup_post_comp_seq_status_entry(acc_chain_entry_t &chain_ent,
+                                          dp_mem_t *seq_status_desc) {
 
-  // Sequencer #1: Compression descriptor
-  seq_comp_status_desc = queues::pvm_sq_consume_entry(params->seq_comp_status_q,
-                                                      &seq_comp_status_index);
-  seq_comp_status_desc->clear();
+  seq_status_desc->clear();
 
   // desc bytes 0-63
-  if (params->seq_ent.is_next_db_barco_push) {
-    seq_comp_status_desc->write_bit_fields(0, 64, params->seq_ent.push_entry.barco_ring_addr);
-    seq_comp_status_desc->write_bit_fields(128, 64, params->seq_ent.push_entry.barco_desc_addr);
-    seq_comp_status_desc->write_bit_fields(192, 34, params->seq_ent.push_entry.barco_pndx_addr);
-    seq_comp_status_desc->write_bit_fields(226, 4, params->seq_ent.push_entry.barco_desc_size);
-    seq_comp_status_desc->write_bit_fields(230, 3, params->seq_ent.push_entry.barco_pndx_size);
+  if (chain_ent.is_next_db_barco_push) {
+    seq_status_desc->write_bit_fields(0, 64, chain_ent.push_entry.barco_ring_addr);
+    seq_status_desc->write_bit_fields(128, 64, chain_ent.push_entry.barco_desc_addr);
+    seq_status_desc->write_bit_fields(192, 34, chain_ent.push_entry.barco_pndx_addr);
+    seq_status_desc->write_bit_fields(226, 4, chain_ent.push_entry.barco_desc_size);
+    seq_status_desc->write_bit_fields(230, 3, chain_ent.push_entry.barco_pndx_size);
   } else {
-    seq_comp_status_desc->write_bit_fields(0, 64, params->seq_ent.db_entry.next_doorbell_addr);
-    seq_comp_status_desc->write_bit_fields(64, 64, params->seq_ent.db_entry.next_doorbell_data);
+    seq_status_desc->write_bit_fields(0, 64, chain_ent.db_entry.next_doorbell_addr);
+    seq_status_desc->write_bit_fields(64, 64, chain_ent.db_entry.next_doorbell_data);
   }
 
   // skip 1 filler bit
-  seq_comp_status_desc->write_bit_fields(234, 64, params->seq_ent.status_hbm_pa);
-  seq_comp_status_desc->write_bit_fields(298, 64, params->seq_ent.status_host_pa);
-  seq_comp_status_desc->write_bit_fields(362, 64, params->seq_ent.intr_pa);
-  seq_comp_status_desc->write_bit_fields(426, 32, params->seq_ent.intr_data);
-  seq_comp_status_desc->write_bit_fields(458, 16, params->seq_ent.status_len);
-  seq_comp_status_desc->write_bit_fields(474, 1, params->seq_ent.status_dma_en);
-  seq_comp_status_desc->write_bit_fields(475, 1, params->seq_ent.next_doorbell_en);
-  seq_comp_status_desc->write_bit_fields(476, 1, params->seq_ent.intr_en);
-  seq_comp_status_desc->write_bit_fields(477, 1, params->seq_ent.is_next_db_barco_push);
+  seq_status_desc->write_bit_fields(234, 64, chain_ent.status_hbm_pa);
+  seq_status_desc->write_bit_fields(298, 64, chain_ent.status_host_pa);
+  seq_status_desc->write_bit_fields(362, 64, chain_ent.intr_pa);
+  seq_status_desc->write_bit_fields(426, 32, chain_ent.intr_data);
+  seq_status_desc->write_bit_fields(458, 16, chain_ent.status_len);
+  seq_status_desc->write_bit_fields(474, 1, chain_ent.status_dma_en);
+  seq_status_desc->write_bit_fields(475, 1, chain_ent.next_doorbell_en);
+  seq_status_desc->write_bit_fields(476, 1, chain_ent.intr_en);
+  seq_status_desc->write_bit_fields(477, 1, chain_ent.is_next_db_barco_push);
 
   // desc bytes 64-127
-  seq_comp_status_desc->write_bit_fields(512 + 0, 64, params->seq_ent.src_hbm_pa);
-  seq_comp_status_desc->write_bit_fields(512 + 64, 64, params->seq_ent.dst_hbm_pa);
-  seq_comp_status_desc->write_bit_fields(512 + 128, 64, params->seq_ent.sgl_in_aol_pa);
-  seq_comp_status_desc->write_bit_fields(512 + 192, 64, params->seq_ent.sgl_out_aol_pa);
-  seq_comp_status_desc->write_bit_fields(512 + 256, 16, params->seq_ent.data_len);
-  seq_comp_status_desc->write_bit_fields(512 + 272, 5, params->seq_ent.pad_len_shift);
-  seq_comp_status_desc->write_bit_fields(512 + 277, 1, params->seq_ent.data_len_from_desc);
-  seq_comp_status_desc->write_bit_fields(512 + 278, 1, params->seq_ent.aol_pad_xfer_en);
-  seq_comp_status_desc->write_bit_fields(512 + 279, 1, params->seq_ent.sgl_xfer_en);
-  seq_comp_status_desc->write_bit_fields(512 + 280, 1, params->seq_ent.copy_src_dst_on_error);
-  seq_comp_status_desc->write_bit_fields(512 + 281, 1, params->seq_ent.stop_chain_on_error);
-  seq_comp_status_desc->write_thru();
+  seq_status_desc->write_bit_fields(512 + 0, 64, chain_ent.src_hbm_pa);
+  seq_status_desc->write_bit_fields(512 + 64, 64, chain_ent.dst_hbm_pa);
+  seq_status_desc->write_bit_fields(512 + 128, 64, chain_ent.sgl_in_aol_pa);
+  seq_status_desc->write_bit_fields(512 + 192, 64, chain_ent.sgl_out_aol_pa);
+  seq_status_desc->write_bit_fields(512 + 256, 16, chain_ent.data_len);
+  seq_status_desc->write_bit_fields(512 + 272, 5, chain_ent.pad_len_shift);
+  seq_status_desc->write_bit_fields(512 + 277, 1, chain_ent.stop_chain_on_error);
+  seq_status_desc->write_bit_fields(512 + 278, 1, chain_ent.data_len_from_desc);
+  seq_status_desc->write_bit_fields(512 + 279, 1, chain_ent.aol_pad_xfer_en);
+  seq_status_desc->write_bit_fields(512 + 280, 1, chain_ent.sgl_xfer_en);
+  seq_status_desc->write_bit_fields(512 + 281, 1, chain_ent.copy_src_dst_on_error);
+  seq_status_desc->write_thru();
 
+  return 0;
+}
+
+// Set up post XTS accelerator chain entry
+int test_setup_post_xts_seq_status_entry(acc_chain_entry_t &chain_ent,
+                                         dp_mem_t *seq_status_desc) {
+
+  seq_status_desc->clear();
+
+  if (chain_ent.is_next_db_barco_push) {
+    seq_status_desc->write_bit_fields(0, 64, chain_ent.push_entry.barco_ring_addr);
+    seq_status_desc->write_bit_fields(128, 64, chain_ent.push_entry.barco_desc_addr);
+    seq_status_desc->write_bit_fields(192, 34, chain_ent.push_entry.barco_pndx_addr);
+    seq_status_desc->write_bit_fields(226, 4, chain_ent.push_entry.barco_desc_size);
+    seq_status_desc->write_bit_fields(230, 3, chain_ent.push_entry.barco_pndx_size);
+  } else {
+    seq_status_desc->write_bit_fields(0, 64, chain_ent.db_entry.next_doorbell_addr);
+    seq_status_desc->write_bit_fields(64, 64, chain_ent.db_entry.next_doorbell_data);
+  }
+
+  // skip 1 filler bit
+  seq_status_desc->write_bit_fields(234, 64, chain_ent.status_hbm_pa);
+  seq_status_desc->write_bit_fields(298, 64, chain_ent.status_host_pa);
+  seq_status_desc->write_bit_fields(362, 64, chain_ent.intr_pa);
+  seq_status_desc->write_bit_fields(426, 32, chain_ent.intr_data);
+  seq_status_desc->write_bit_fields(458, 16, chain_ent.status_len);
+  seq_status_desc->write_bit_fields(474, 1, chain_ent.status_dma_en);
+  seq_status_desc->write_bit_fields(475, 1, chain_ent.next_doorbell_en);
+  seq_status_desc->write_bit_fields(476, 1, chain_ent.intr_en);
+  seq_status_desc->write_bit_fields(477, 1, chain_ent.is_next_db_barco_push);
+  seq_status_desc->write_bit_fields(478, 1, chain_ent.stop_chain_on_error);
+  seq_status_desc->write_thru();
+
+  return 0;
+}
+
+// Set up sequencer accelerator chain entry
+int test_setup_seq_acc_chain_entry(acc_chain_params_t& params) {
+ 
+  dp_mem_t *seq_status_desc;
+
+  seq_status_desc = queues::pvm_sq_consume_entry(params.seq_status_q,
+                                                 &params.ret_seq_status_index);
   // Form the doorbell to be returned by the API
   queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE,
-                             params->seq_comp_status_q, 0, seq_comp_status_index, 
-                             &params->ret_doorbell_addr, &params->ret_doorbell_data);
+                             params.seq_status_q, 0, params.ret_seq_status_index, 
+                             &params.ret_doorbell_addr, &params.ret_doorbell_data);
   
-  return 0;
+  return (*params.desc_format_fn)(params.chain_ent, seq_status_desc);
 }
 }  // namespace tests

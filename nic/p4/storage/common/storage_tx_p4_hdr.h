@@ -457,12 +457,12 @@ header_type seq_comp_status_desc1_t {
     sgl_out_aol_pa	: 64;
     data_len		: 16;	// Length of the compression data
     pad_len_shift	:  5;	// Padding length (power of 2)
+    stop_chain_on_error	:  1; // 1: don't ring next DB on error
     data_len_from_desc	:  1;	// 1 => Use the data length in the descriptor, 
 				// 0 => Use the data lenghth in the status
     aol_pad_xfer_en     :  1;
     sgl_xfer_en         :  1;
     copy_src_dst_on_error: 1;
-    stop_chain_on_error	:  1; // 1: don't ring next DB on error
   }
 }
 
@@ -494,6 +494,11 @@ header_type seq_xts_status_desc_t {
   fields {
     next_db_addr	: 64;	// 64 bit address of the next doorbell to ring
     next_db_data	: 64;	// 64 bit data of the next doorbell to ring
+    barco_desc_addr	: 64;
+    barco_pndx_addr	: 34;	// producer index address
+    barco_desc_size	:  4;	// descriptor size (power of 2 exponent)
+    barco_pndx_size	:  3;	// producer index size (power of 2 exponent)
+    filler		    :  1;
     status_hbm_addr	: 64;	// Address where HW compression status was placed
     status_host_addr    : 64;	// Address where a copy of above status can be made
     intr_addr		: 64;	// Address where interrupt needs to be written
@@ -614,12 +619,12 @@ header_type storage_kivec5_t {
     next_db_en          :  1;
     intr_en	        :  1;
     is_next_db_barco_push: 1;   // next_db is actually Barco push info
+    stop_chain_on_error :  1;
     data_len_from_desc	:  1;	// 1 => Use the data length in the descriptor, 
                                 // 0 => Use the data lenghth in the status
     aol_pad_xfer_en     :  1;
     sgl_xfer_en         :  1;
     copy_src_dst_on_error: 1;
-    stop_chain_on_error :  1;
   }
 }
 
@@ -858,11 +863,11 @@ header_type storage_kivec5_t {
   modify_field(scratch.next_db_en, kivec.next_db_en);	                \
   modify_field(scratch.intr_en, kivec.intr_en);	                        \
   modify_field(scratch.is_next_db_barco_push, kivec.is_next_db_barco_push);\
+  modify_field(scratch.stop_chain_on_error, kivec.stop_chain_on_error); \
   modify_field(scratch.data_len_from_desc, kivec.data_len_from_desc);	\
   modify_field(scratch.aol_pad_xfer_en, kivec.aol_pad_xfer_en);	        \
   modify_field(scratch.sgl_xfer_en, kivec.sgl_xfer_en);                 \
   modify_field(scratch.copy_src_dst_on_error, kivec.copy_src_dst_on_error);\
-  modify_field(scratch.stop_chain_on_error, kivec.stop_chain_on_error); \
 
 
 // Macros for ASM param addresses (hardcoded in P4)

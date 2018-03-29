@@ -40,8 +40,8 @@ storage_tx_seq_comp_status_desc1_handler_start:
 
    phvwrpair	p.{storage_kivec5_data_len...storage_kivec5_pad_len_shift}, \
    	        d.{data_len...pad_len_shift}, \
-                p.{storage_kivec5_data_len_from_desc...storage_kivec5_stop_chain_on_error}, \
-   	        d.{data_len_from_desc...stop_chain_on_error}
+                p.{storage_kivec5_stop_chain_on_error...storage_kivec5_copy_src_dst_on_error}, \
+   	        d.{stop_chain_on_error...copy_src_dst_on_error}
    phvwr	p.storage_kivec3_data_addr, d.dst_hbm_pa
 
    bbeq		d.aol_pad_xfer_en, 0, exit
