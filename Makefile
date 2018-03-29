@@ -28,7 +28,8 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./asset-build/... \
 
 # Lists the binaries to be containerized
-TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd collector tpm nmd netagent
+TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd collector nmd tpm netagent spyglass
+
 # Install gopkgs
 INSTALL := $(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
 # Lists all go packages. Auto ignores vendor
@@ -184,7 +185,15 @@ test-debug-ui: install_box
 
 # Target to run on Mac to start kibana docker, this connects to the Elastic running on vagrant cluster
 start-kibana:
-	docker run --name kibana -e ELASTICSEARCH_URL=http://192.168.30.10:9200 -e XPACK_SECURITY_ENABLED=false -p 127.0.0.1:5601:5601 -d kibana:5.4.1
+	docker run --name kibana \
+	-e ELASTICSEARCH_URL=http://192.168.30.10:9200 \
+	-e xpack.security.enabled=false \
+	-e xpack.logstash.enabled=false \
+	-e xpack.graph.enable=false \
+	-e xpack.watcher.enabled=false \
+	-e xpack.ml.enabled=false \
+	-e xpack.monitoring.enabled=false \
+	-p 127.0.0.1:5601:5601 -d docker.elastic.co/kibana/kibana:6.2.2
 
 # Target to run on Mac to stop kibana docker
 stop-kibana:

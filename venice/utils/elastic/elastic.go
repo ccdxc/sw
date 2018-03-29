@@ -5,10 +5,17 @@ package elastic
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/venice/utils/log"
+)
+
+const (
+	defaultStartOffset = int(0)
+	defaultMaxResults  = int(10)
 )
 
 // Client holds the elastic config and client;
@@ -24,6 +31,7 @@ func NewClient(elasticURL string, logger log.Logger) (ESClient, error) {
 	// TODO: support for credentials
 	client, err := es.NewClient(es.SetURL(elasticURL), es.SetSniff(false))
 	if err != nil {
+		log.Debugf("Failed to create elastic client url: %s err: %+v", elasticURL, err)
 		return nil, err
 	}
 
@@ -176,33 +184,117 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 	return bulkResp, nil
 }
 
+// Delete deletes the given object in the index and docType provided
+func (e *Client) Delete(ctx context.Context, index, docType, ID string) error {
+
+	// Delete the given document(obj)
+	_, err := e.client.Delete().
+		Index(index).  // index name
+		Type(docType). // doc type
+		Id(ID).        // doc id
+		Do(ctx)
+
+	return err
+}
+
 // Search executes the given query and returns the result.
 // Elasticsearch by default refreshes each shard every 1s,
 // so the document will be available to search 1s after indexing it.
 // This behavior can be changed by adjusting `index.refresh_interval` in indices settings.
-func (e *Client) Search(ctx context.Context, index, iType string, query interface{}) (*es.SearchResult, error) {
-	esQuery, ok := query.(es.Query)
-	if !ok {
-		return nil, NewError(ErrInvalidSearchQuery, "")
+func (e *Client) Search(ctx context.Context, index, iType string, query interface{}, aggregation interface{}, from, size int32) (*es.SearchResult, error) {
+
+	var esQuery es.Query
+	var esAgg es.Aggregation
+	var ok bool
+
+	// validate index
+	if len(strings.TrimSpace(index)) == 0 {
+		return nil, NewError(ErrInvalidIndex, "")
 	}
 
-	// make sure the query is in correct format; Source() returns the json of the query
-	if src, err := esQuery.Source(); err != nil {
-		return nil, NewError(ErrInvalidSearchQuery, err.Error())
-	} else if _, err := json.Marshal(src); err != nil {
-		return nil, NewError(ErrInvalidSearchQuery, err.Error())
+	// validate query
+	esQuery = nil
+	if query != nil {
+		// assert elastic query type
+		esQuery, ok = query.(es.Query)
+		if !ok {
+			return nil, NewError(ErrInvalidSearchQuery, "")
+		}
+
+		// make sure the query is in correct format; Source() returns the json of the query
+		if src, err := esQuery.Source(); err != nil {
+			return nil, NewError(ErrInvalidSearchQuery, err.Error())
+		} else if _, err := json.Marshal(src); err != nil {
+			return nil, NewError(ErrInvalidSearchQuery, err.Error())
+		}
 	}
 
-	searchResult, err := e.client.Search().
-		Index(index).     // search in the given index
-		Type(iType).      // search in the given type
-		Query(esQuery).   // specify the query
-		From(0).Size(10). // take documents 0-9
-		Pretty(true).     // pretty print request and response JSON
-		Do(ctx)           // execute
+	// validate aggregation
+	esAgg = nil
+	if aggregation != nil {
+		// assert elastic aggregation type
+		esAgg, ok = aggregation.(es.Aggregation)
+		if !ok {
+			return nil, NewError(ErrInvalidSearchAggregation, "")
+		}
+
+		// make sure the aggregation is in correct format; Source() returns the json of the aggregation
+		if src, err := esAgg.Source(); err != nil {
+			return nil, NewError(ErrInvalidSearchAggregation, err.Error())
+		} else if _, err := json.Marshal(src); err != nil {
+			return nil, NewError(ErrInvalidSearchAggregation, err.Error())
+		}
+	}
+
+	// Construct the search request on a given index
+	request := e.client.Search().Index(index)
+
+	// Add doc type if valid
+	if len(iType) != 0 {
+		request = request.Type(iType)
+	}
+
+	// Add query if valid
+	if esQuery != nil {
+		request = request.Query(esQuery)
+	}
+
+	// Add aggregation if valid
+	if esAgg != nil {
+		request = request.Aggregation(TenantAggKey, esAgg)
+	}
+
+	// Set from or start offset for the results
+	if from > 0 {
+		request = request.From(int(from))
+	} else {
+		request = request.From(int(defaultStartOffset))
+	}
+
+	// Set size or maxResults desired
+	if size > 0 {
+		request = request.Size(int(size))
+	} else {
+		request = request.Size(int(defaultMaxResults))
+	}
+
+	log.Debugf("Search request (spew)")
+	spew.Dump(request)
+
+	// Execute the search request with desired size
+	searchResult, err := request.Do(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	log.Debugf("Search result (spew)")
+	spew.Dump(searchResult)
+
 	return searchResult, nil
+}
+
+// Close the elastic client
+func (e *Client) Close() error {
+	e.client.Stop()
+	return nil
 }

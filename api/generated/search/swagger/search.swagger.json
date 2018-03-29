@@ -1,0 +1,297 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Service name",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/query": {
+      "get": {
+        "summary": "In the example below a query like\n   http://\u003c...\u003e/venice/v1/search/query?QueryString=XXXXX\u0026MaxResults=100\n generates a RPC call Query with the parameter as\n SearchRequest{ QueryString: \"XXXXX\", MaxResults:100}",
+        "operationId": "Query",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/searchSearchResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "QueryString",
+            "description": "TotalHits indicates total number of hits matched.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "From",
+            "description": "ActualHits indicates the actual hits returned in this response.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "MaxResults",
+            "description": "TimeTakenMsecs is the time taken for search response in millisecs.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "SearchV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "UUID": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+        },
+        "CreationTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "CreationTime is the creation time of Object"
+        },
+        "ModTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "ModTime is the Last Modification time of Object"
+        },
+        "SelfLink": {
+          "type": "string",
+          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiTimestamp": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "APIVersion": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "searchAggregation": {
+      "type": "object",
+      "properties": {
+        "Entries": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/searchEntryList"
+          },
+          "description": "KeyOrText contains the following.\n-  \"Key\" followed by operator and list of values \n                (OR)\n-  \"Text\" - single-word or Phrase text search and\n   in such cases Operator and Values are empty and \n   not-applicable.\n\nExamples of Text search:\n    \"Prod\", \"Link Down\"\nExamples of Structured query: \n    (Note these are illustrative examples and exact values will be per our object model)\n    Key=Kind Operator=Equals Values=[Network]\n    Key=Meta.Tenant Operator=In Values=[tesla,ford]\n    Key=Status.RxErrCount Operator:Gt Values=[100]"
+        }
+      },
+      "title": "Requirement defines a single matching criteria for search\nTODO: Switch to unified requirement defintion once it is ready"
+    },
+    "searchEntry": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "description": "Requirements is a list of match critertia for the\nSearch request. It could be combination of Keyword,\nPhrase or Fields matching certain values. The\nrequirements are ANDed by default. In cases where\nUser specifies a QueryString as URI parameter, \nthe query parser would parse it and translate \ninto Requirements.\nFor contextual search, these requirements will be used\nas well to specify the scope to narrow down the search."
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        }
+      },
+      "description": "SearchCriteria contains the following : \n- Requirements is list of match critertia parsed by the Query Parser\n- User-info and optionally RbacFilters will be added by RBAC-plugin \n  running in API-GW and will be passed to backend. The details are TBD."
+    },
+    "searchEntryList": {
+      "type": "object",
+      "properties": {
+        "Entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/searchEntry"
+          },
+          "title": "Type of error"
+        }
+      },
+      "title": "Error contains the error code, description and\nassociated details"
+    },
+    "searchError": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "title": "For Policy \u0026 config objects, the result will have\nhave all the metadata and a self-link to get the\nentire object next if needed"
+        },
+        "Reason": {
+          "type": "string"
+        }
+      },
+      "title": "Entry represent a single search result entry"
+    },
+    "searchNestedAggregation": {
+      "type": "object",
+      "properties": {
+        "Entries": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/searchAggregation"
+          }
+        }
+      },
+      "title": "EntryList is list of search result entries"
+    },
+    "searchRequirement": {
+      "type": "object",
+      "properties": {
+        "KeyOrText": {
+          "type": "string"
+        },
+        "Operator": {
+          "type": "string"
+        },
+        "Values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Aggregation contains map of search results entries\ngrouped by a Key.\nFor eg: search result entries grouped by Kind as key"
+    },
+    "searchSearchCriteria": {
+      "type": "object",
+      "properties": {
+        "Requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/searchRequirement"
+          }
+        }
+      },
+      "description": "NestedAggregation contains map of search results\ngrouped by two levels of Aggregation\nFor eg: search result entries grouped first by Tenant\n        name and subsequently grouped by Kind."
+    },
+    "searchSearchRequest": {
+      "type": "object",
+      "properties": {
+        "QueryString": {
+          "type": "string",
+          "title": "TotalHits indicates total number of hits matched"
+        },
+        "From": {
+          "type": "integer",
+          "format": "int32",
+          "title": "ActualHits indicates the actual hits returned in this response"
+        },
+        "MaxResults": {
+          "type": "integer",
+          "format": "int32",
+          "title": "TimeTakenMsecs is the time taken for search response in millisecs"
+        },
+        "Criteria": {
+          "$ref": "#/definitions/searchSearchCriteria",
+          "title": "Error status for failures"
+        }
+      },
+      "description": "SearchResult contains the search result.\nBased on the search request, search results would be part\nof one of the entities : Entries, Aggregation or NestedAggregation.\nIn case of failures, Error would indicate the error status and\ndescription."
+    },
+    "searchSearchResponse": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "description": "Query string as presented by User."
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta",
+          "description": "From represents the start offset (zero based), used in paginated search requests\nThe results returned would be in the range [From ... From+MaxResults-1]\nTODO: Add venice option to set default to 0."
+        },
+        "Result": {
+          "$ref": "#/definitions/searchSearchResult",
+          "title": "MaxResults is the max-count of search results\nTODO: Add venice option to set some default value (TBD)"
+        }
+      },
+      "title": "SearchRequest is the input to the Query method"
+    },
+    "searchSearchResult": {
+      "type": "object",
+      "properties": {
+        "TotalHits": {
+          "type": "string",
+          "format": "int64"
+        },
+        "ActualHits": {
+          "type": "string",
+          "format": "int64"
+        },
+        "TimeTakenMsecs": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Error": {
+          "$ref": "#/definitions/searchError"
+        },
+        "Entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/searchEntry"
+          }
+        },
+        "AggregatedEntries": {
+          "$ref": "#/definitions/searchNestedAggregation"
+        }
+      },
+      "title": "SearchResponse is the output provided by the Query method"
+    }
+  }
+}

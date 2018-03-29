@@ -1,6 +1,8 @@
 package integration
 
 import (
+	"context"
+	"fmt"
 	"net"
 	"os"
 	"testing"
@@ -11,6 +13,8 @@ import (
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/spyglass/finder"
+	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -27,10 +31,36 @@ type tInfo struct {
 	l             log.Logger
 	apiserverport string
 	apigwport     string
+	esServer      *esmock.ElasticServer
 }
 
 var tinfo tInfo
 
+func startSpyglass() finder.Interface {
+
+	// start mock elastic server
+	tinfo.esServer = esmock.NewElasticServer()
+	tinfo.esServer.Start()
+
+	fdr, err := finder.NewFinder(context.Background(),
+		tinfo.esServer.GetElasticURL(),
+		"localhost:0",
+		tinfo.l)
+	if err != nil {
+		log.Errorf("Error creating finder: %+v", err)
+		os.Exit(-1)
+	}
+
+	// start the gRPC server for search backend
+	err = fdr.Start()
+	if err != nil {
+		log.Errorf("Failed to get start spyglass-finder: %+v", err)
+		os.Exit(-1)
+	}
+	fmt.Printf("Spyglass-Finder gRPC endpoint: %s", fdr.GetListenURL())
+	return fdr
+
+}
 func TestMain(m *testing.M) {
 	// Start the API server
 	apiserverAddress := ":0"
@@ -60,6 +90,13 @@ func TestMain(m *testing.M) {
 		KVPoolSize:     1,
 	}
 	grpclog.SetLogger(l)
+
+	// Start spyglass server
+	fdr := startSpyglass()
+	defer fdr.Stop()
+	defer tinfo.esServer.Stop()
+
+	// Start ApiServer
 	trace.Init("ApiServer")
 	srv := apiserverpkg.MustGetAPIServer()
 	go srv.Run(srvconfig)
@@ -76,10 +113,13 @@ func TestMain(m *testing.M) {
 	tinfo.apiserverport = port
 	// Start the API Gateway
 	gwconfig := apigw.Config{
-		HTTPAddr:        ":0",
-		DebugMode:       true,
-		Logger:          l,
-		BackendOverride: map[string]string{"pen-apiserver": "localhost:" + port},
+		HTTPAddr:  ":0",
+		DebugMode: true,
+		Logger:    l,
+		BackendOverride: map[string]string{
+			"pen-apiserver": "localhost:" + port,
+			"pen-spyglass":  fdr.GetListenURL(),
+		},
 	}
 	gw := apigwpkg.MustGetAPIGateway()
 	go gw.Run(gwconfig)

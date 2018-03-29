@@ -34,6 +34,15 @@ type ESClient interface {
 	// in bulk operation can be heterogeneous.
 	Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkResponse, error)
 
-	// Search performs the given query on `index` and type `iType`.
-	Search(ctx context.Context, index, iType string, query interface{}) (*es.SearchResult, error)
+	// Delete removes a single document (obj) from the given `index` and
+	// type `iType` with the given ID.
+	Delete(ctx context.Context, index, iType, ID string) error
+
+	// Search performs the given query on `index` and type `iType` and limits
+	// the number of search results to desired 'size' with start offset specified
+	// by `from`.
+	Search(ctx context.Context, index, iType string, query interface{}, aggregation interface{}, from, size int32) (*es.SearchResult, error)
+
+	// Close the elastic client
+	Close() error
 }

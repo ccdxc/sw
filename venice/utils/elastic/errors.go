@@ -12,16 +12,20 @@ const (
 	ErrEmptyDocument
 	ErrBulkRequestFailed
 	ErrInvalidSearchQuery
+	ErrInvalidSearchAggregation
+	ErrInvalidIndex
 )
 
 // error code map with the description
 var errors = map[int]string{
-	ErrIndexExists:         "Index exists already",
-	ErrRespNotAcknowledged: "Request not acknowledged",
-	ErrIndexNotExist:       "Index does not exist",
-	ErrEmptyDocument:       "Empty document",
-	ErrBulkRequestFailed:   "Bulk request failed",
-	ErrInvalidSearchQuery:  "Invalid search query",
+	ErrIndexExists:              "Index exists already",
+	ErrRespNotAcknowledged:      "Request not acknowledged",
+	ErrIndexNotExist:            "Index does not exist",
+	ErrEmptyDocument:            "Empty document",
+	ErrBulkRequestFailed:        "Bulk request failed",
+	ErrInvalidSearchQuery:       "Invalid search query",
+	ErrInvalidSearchAggregation: "Invalid search aggregation",
+	ErrInvalidIndex:             "Invalid search index",
 }
 
 // Error represents the elastic error.

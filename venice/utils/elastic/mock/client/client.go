@@ -21,6 +21,10 @@ type mockQuery struct {
 	name string
 }
 
+// mockAggregation
+type mockAggregation struct {
+}
+
 // MockClient for elastic
 type mockClient struct {
 	indexes map[string]bool // map of indexes available
@@ -111,8 +115,18 @@ func (e *mockClient) Bulk(ctx context.Context, objs []*elastic.BulkRequest) (*es
 	return &response, nil
 }
 
+//Delete removes the given mockObj using mockClient
+func (e *mockClient) Delete(ctx context.Context, index, iType, ID string) error {
+	if _, ok := e.indexes[index]; !ok {
+		return elastic.NewError(elastic.ErrIndexNotExist, "")
+	}
+
+	delete(e.docs[index], ID)
+	return nil
+}
+
 // Search - mock implementation of search operation
-func (e *mockClient) Search(ctx context.Context, index, iType string, query interface{}) (*es.SearchResult, error) {
+func (e *mockClient) Search(ctx context.Context, index, iType string, query interface{}, aggregation interface{}, from, size int32) (*es.SearchResult, error) {
 	var totalHits int64
 
 	if _, ok := e.indexes[index]; !ok {
@@ -133,4 +147,11 @@ func (e *mockClient) Search(ctx context.Context, index, iType string, query inte
 	}
 
 	return &es.SearchResult{Hits: &es.SearchHits{TotalHits: totalHits}}, nil
+}
+
+// Close the mock client
+func (e *mockClient) Close() error {
+	e.indexes = nil
+	e.docs = nil
+	return nil
 }

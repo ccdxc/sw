@@ -1,0 +1,201 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package search;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// Operator represents a key/field's relationship to value(s).
+enum Operator {
+    Empty        = 0;
+    Equals       = 1;
+    In           = 2;
+    NotEquals    = 3;
+    NotIn        = 4;
+    Gt           = 5;
+    Lt           = 6;
+}
+
+// Requirement defines a single matching criteria for search
+// TODO: Switch to unified requirement defintion once it is ready
+message Requirement {
+
+    // KeyOrText contains the following.
+    // -  "Key" followed by operator and list of values 
+    //                 (OR)
+    // -  "Text" - single-word or Phrase text search and
+    //    in such cases Operator and Values are empty and 
+    //    not-applicable.
+    //
+    // Examples of Text search:
+    //     "Prod", "Link Down"
+    // Examples of Structured query: 
+    //     (Note these are illustrative examples and exact values will be per our object model)
+    //     Key=Kind Operator=Equals Values=[Network]
+    //     Key=Meta.Tenant Operator=In Values=[tesla,ford]
+    //     Key=Status.RxErrCount Operator:Gt Values=[100]
+    string KeyOrText        = 1 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "key-or-text,omitempty"];
+    string Operator         = 2 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "operator,omitempty"];
+    repeated string Values  = 3 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "values,omitempty"];
+}
+
+// SearchCriteria contains the following : 
+// - Requirements is list of match critertia parsed by the Query Parser
+// - User-info and optionally RbacFilters will be added by RBAC-plugin 
+//   running in API-GW and will be passed to backend. The details are TBD.
+message SearchCriteria {
+
+    // Requirements is a list of match critertia for the
+    // Search request. It could be combination of Keyword,
+    // Phrase or Fields matching certain values. The
+    // requirements are ANDed by default. In cases where
+    // User specifies a QueryString as URI parameter, 
+    // the query parser would parse it and translate 
+    // into Requirements.
+    // For contextual search, these requirements will be used
+    // as well to specify the scope to narrow down the search.
+    repeated Requirement Requirements   = 1 [(gogoproto.nullable) = false,
+                                            (gogoproto.jsontag) = "requirements,omitempty"];
+}
+
+// Error contains the error code, description and
+// associated details
+message Error {
+
+    // Type of error
+    string Type     = 1 [(gogoproto.jsontag) = "type,omitempty"];
+    // Reason or description of the failure
+    string Reason   = 2 [(gogoproto.jsontag) = "reason,omitempty"];
+}
+
+// Entry represent a single search result entry
+message Entry {
+
+    // For Policy & config objects, the result will have
+    // have all the metadata and a self-link to get the
+    // entire object next if needed
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+}
+
+// EntryList is list of search result entries
+message EntryList {
+    repeated Entry Entries  = 1 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "entries,omitempty"];
+}
+
+// Aggregation contains map of search results entries
+// grouped by a Key.
+// For eg: search result entries grouped by Kind as key
+message Aggregation {
+    map <string, EntryList> Entries = 1 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "entries,omitempty"];
+}
+
+// NestedAggregation contains map of search results
+// grouped by two levels of Aggregation
+// For eg: search result entries grouped first by Tenant
+//         name and subsequently grouped by Kind.
+message NestedAggregation {
+    map <string, Aggregation> Entries = 1 [(gogoproto.nullable) = true,
+                                           (gogoproto.jsontag) = "entries,omitempty"];
+}
+
+// SearchResult contains the search result.
+// Based on the search request, search results would be part
+// of one of the entities : Entries, Aggregation or NestedAggregation.
+// In case of failures, Error would indicate the error status and
+// description.
+message SearchResult {
+
+    // TotalHits indicates total number of hits matched
+    int64 TotalHits                     = 1 [(gogoproto.jsontag) = "total-hits,omitempty"];
+
+    // ActualHits indicates the actual hits returned in this response
+    int64 ActualHits                    = 2 [(gogoproto.jsontag) = "actual-hits,omitempty"];
+
+    // TimeTakenMsecs is the time taken for search response in millisecs
+    int64 TimeTakenMsecs                = 3 [(gogoproto.jsontag) = "time-taken-msecs,omitempty"];
+
+    // Error status for failures
+    Error Error                         = 4 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "error,omitempty"];
+
+    // EntryList is list of all search results with no grouping.
+    repeated Entry Entries              = 5 [(gogoproto.nullable) = true,
+                                             (gogoproto.jsontag) = "entries,omitempty"];
+
+    // AggregatedEntries is a two level grouping of all search results,
+    // Grouped by tenant and kind in that order.
+    NestedAggregation AggregatedEntries = 6 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "aggregated-entries,omitempty"];
+}
+
+// SearchRequest is the input to the Query method
+message SearchRequest {
+
+    // Query string as presented by User.
+    string QueryString          = 1 [(gogoproto.jsontag) = "query-string,omitempty"];
+
+    // From represents the start offset (zero based), used in paginated search requests
+    // The results returned would be in the range [From ... From+MaxResults-1]
+    // TODO: Add venice option to set default to 0.
+    int32 From                  = 2 [(gogoproto.jsontag) = "from,omitempty"];
+
+    // MaxResults is the max-count of search results
+    // TODO: Add venice option to set some default value (TBD)
+    int32 MaxResults            = 3 [(gogoproto.jsontag) = "max-results,omitempty"];
+
+    // Search criteria is list of search requirements to be met
+    SearchCriteria Criteria     = 4 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "criteria,omitempty"];
+}
+
+// SearchResponse is the output provided by the Query method
+message SearchResponse {
+
+    api.TypeMeta T          = 1 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O        = 2 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "meta,omitempty"];
+    SearchResult Result     = 3 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "result,omitempty"];
+}
+
+// fileGrpcDest is the gRPC destination for this service
+option (venice.fileGrpcDest) = "pen-spyglass";
+// fileApiServerBacked should be set to false to indicate that the set of services defined in this
+// file are not backed by the API server.
+option (venice.fileApiServerBacked) = false;
+
+// Search service API
+service SearchV1 {
+    option (venice.apiPrefix) = "search";
+
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    // In the example below a query like
+    //    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
+    //  generates a RPC call Query with the parameter as
+    //  SearchRequest{ QueryString: "XXXXX", MaxResults:100}
+    rpc Query (SearchRequest) returns (SearchResponse) {
+        option (google.api.http) = {
+		    get: "/query"
+		};
+    }
+}

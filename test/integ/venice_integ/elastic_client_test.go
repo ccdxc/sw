@@ -18,7 +18,9 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
+	mapper "github.com/pensando/sw/venice/utils/elastic/mapper"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -34,74 +36,12 @@ const (
 // e.g. `ObjectMeta.Namespace` can be queried directly without having to go through nested query.
 
 var (
-	indexName = "events"
-	indexType = "event"
-
+	tenantName     = "ford"
+	indexName      = elastic.GetIndex(globals.Events, tenantName)
+	indexType      = elastic.GetDocType(globals.Events)
+	from           = int32(0)
+	maxResults     = int32(10)
 	infraNamespace = "infra"
-
-	// create an index and map the fields
-	eventsIndex = `{
-	"settings": {
-		"number_of_shards": 1,
-		"number_of_replicas": 0
-	},
-	"mappings": {
-		"event": {
-			"properties": {
-				"Kind": {
-					"type": "keyword"
-				},
-				"meta": {
-					"properties": {
-						"name": {
-							"type": "text"
-						},
-						"uuid": {
-							"type": "text"
-						},
-						"tenant": {
-							"type": "keyword"
-						},
-						"namespace": {
-							"type": "text"
-						},
-						"creation-time": {
-							"type": "date"
-						},
-						"mod-time": {
-							"type": "date"
-						},
-						"resource-version": {
-							"type": "short"
-						}
-					}
-				},
-				"severity": {
-					"type": "keyword"
-				},
-				"type": {
-					"type": "keyword"
-				},
-				"message": {
-					"type": "text"
-				},
-				"count": {
-					"type": "integer"
-				},
-				"source": {
-					"properties": {
-						"component": {
-							"type": "keyword"
-						},
-						"node-name": {
-							"type": "text"
-						}
-					}
-				}
-			}
-		}
-	}
-}`
 
 	// test command line args
 	preserveEvents = flag.Bool("preserve-events", false, "Preserve events?")
@@ -143,10 +83,26 @@ func TestElastic(t *testing.T) {
 	if err != nil {
 		t.Fatal("failed to get elasticsearch version")
 	}
-
 	t.Logf("Elasticsearch version %s", esversion)
 
-	if err := esClient.CreateIndex(ctx, indexName, eventsIndex); err != nil && !elastic.IsIndexExists(err) {
+	// Generate Elastic mapping and settings for event
+	eventObj := events.Event{
+		EventAttributes: events.EventAttributes{
+			// Need to make sure pointer fields are valid to
+			// generate right mappings using reflect
+			ObjectRef: &api.ObjectRef{},
+			Source:    &events.EventSource{},
+		},
+	}
+	mapping, err := mapper.ElasticMapper(eventObj, indexType, 1, 0)
+	AssertOk(t, err, "Failed to generate elastic mapping for events")
+
+	// Generate JSON string for the mapping
+	configs, err := mapping.JSONString()
+	AssertOk(t, err, "Failed to get JSONString from elastic mapper")
+
+	// Create elastic index with event mapping and settings
+	if err := esClient.CreateIndex(ctx, indexName, configs); err != nil && !elastic.IsIndexExists(err) {
 		t.Fatalf("failed to create index: %v, %v", err, elastic.IsIndexExists(err))
 	}
 
@@ -173,7 +129,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	// this is a query on the nested object events.ObjectMeta.ModTime
 	now := time.Now()
 	query1 := es.NewRangeQuery("meta.mod-time").Gte(now.Add(-30 * time.Second)).Lte(now)
-	result, err := client.Search(ctx, indexName, indexType, query1)
+	result, err := client.Search(ctx, indexName, indexType, query1, nil, from, maxResults)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query1, err)
 	}
@@ -187,7 +143,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	// term queries are used for keyword searches (exact values)
 	// whereas, match queries are full_text searches
 	query2 := es.NewTermQuery("severity", event.Severity)
-	result, err = client.Search(ctx, indexName, indexType, query2)
+	result, err = client.Search(ctx, indexName, indexType, query2, nil, from, maxResults)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query2, err)
 	}
@@ -200,7 +156,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	// Query 3: match all the events;
 	// creationTime is the same for all the events indexed during this run.
 	query3 := es.NewMatchQuery("meta.creation-time", cTime)
-	result, err = client.Search(ctx, indexName, indexType, query3)
+	result, err = client.Search(ctx, indexName, indexType, query3, nil, from, maxResults)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query3, err)
 	}
@@ -213,7 +169,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	// Query 4: combine queries 1 & 2;
 	// look for severity == event.Severity events within the given 30 seconds
 	query4 := es.NewBoolQuery().Must(query1, query2)
-	result, err = client.Search(ctx, indexName, indexType, query4)
+	result, err = client.Search(ctx, indexName, indexType, query4, nil, from, maxResults)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query4, err)
 	}
@@ -226,7 +182,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	// query 5: combine 2 & 3;
 	// search for events with severity == event.Severity with the creation time of this run
 	query5 := es.NewBoolQuery().Must(query2, query3)
-	result, err = client.Search(ctx, indexName, indexType, query5)
+	result, err = client.Search(ctx, indexName, indexType, query5, nil, from, maxResults)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query5, err)
 	}
@@ -241,7 +197,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	// query 6: find all the event that has string defined in `infraNamespace`;
 	// atleast half the total events should match this query which is `numEvents`
 	query6 := es.NewQueryStringQuery(infraNamespace)
-	result, err = client.Search(ctx, indexName, indexType, query6)
+	result, err = client.Search(ctx, indexName, indexType, query6, nil, from, maxResults)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query6, err)
 	}
@@ -254,7 +210,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	// query 7: find events by `ObjectMeta.Namespace: string`
 	// atleast half the total events should match this query which is `numEvents`
 	query7 := es.NewQueryStringQuery(fmt.Sprintf("%s:%s", "meta.namespace", infraNamespace))
-	result, err = client.Search(ctx, indexName, indexType, query7)
+	result, err = client.Search(ctx, indexName, indexType, query7, nil, from, maxResults)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query7, err)
 	}
@@ -266,7 +222,7 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 
 	// query 8: find all the event that has string "honda"
 	query8 := es.NewQueryStringQuery(string("honda"))
-	result, err = client.Search(ctx, indexName, indexType, query8)
+	result, err = client.Search(ctx, indexName, indexType, query8, nil, from, maxResults)
 	if err != nil {
 		t.Fatalf("failed to search events for query: %v, err:%v", query8, err)
 	}

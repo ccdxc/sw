@@ -8,6 +8,10 @@ function createApiSrvContainer() {
     docker build --rm --no-cache -t pen-apiserver:latest -f tools/docker-files/apiserver/Dockerfile tools/docker-files/apiserver
 }
 
+function createSpyglassContainer() {
+    docker build --rm --no-cache -t pen-spyglass:latest -f tools/docker-files/spyglass/Dockerfile tools/docker-files/spyglass
+}
+
 function createApiGwContainer() {
     docker build --rm --no-cache -t pen-apigw:latest -f tools/docker-files/apigw/Dockerfile tools/docker-files/apigw
 }
@@ -55,8 +59,9 @@ function createBinContainerTarBall() {
         fi
     done
     mkdir -p bin/tars
-    dynamicimages="pen-cmd:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest \
-        pen-vcsim:latest pen-netagent:latest pen-nmd:latest pen-collector:latest pen-tpm:latest"
+    dynamicimages="pen-cmd:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest \
+        pen-npm:latest pen-vcsim:latest pen-netagent:latest pen-nmd:latest pen-collector:latest \
+        pen-tpm:latest pen-spyglass:latest"
     for i in $staticimages $dynamicimages
     do
         # i is registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
@@ -84,6 +89,7 @@ case $1 in
     nmd) createNmdContainer;;
     collector) createCollectorContainer;;
     tpm) createTpmContainer;;
+    spyglass) createSpyglassContainer;;
     createBinContainerTarBall) createBinContainerTarBall;;
     startCluster) startCluster;;
     stopCluster) stopCluster ;;

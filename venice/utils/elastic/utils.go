@@ -18,6 +18,15 @@ const (
 	// InternalIndexPrefix is the elastic index prefix
 	// for internal data
 	InternalIndexPrefix = "venice.internal"
+
+	// TenantAggKey is the Aggregation key to group by Tenant
+	TenantAggKey = "tenant_agg"
+
+	// KindAggKey is the Aggregation key to group by Kind
+	KindAggKey = "kind_agg"
+
+	// TopHitsKey is the Aggregation key for top search hits
+	TopHitsKey = "top_agg"
 )
 
 // GetIndex returns the Elastic Index based on the data type & tenant name
@@ -43,7 +52,7 @@ func GetIndex(dtype globals.DataType, tenant string) string {
 		return fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay)
 	case globals.AuditLogs:
 		return fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay)
-	case globals.SystemLogs:
+	case globals.DebugLogs:
 		return fmt.Sprintf("%s.%s.%s.%s", InternalIndexPrefix, tenant, GetDocType(dtype), currentDay)
 	case globals.Stats:
 		return "N/A"
@@ -66,8 +75,8 @@ func GetDocType(dtype globals.DataType) string {
 		return "events"
 	case globals.AuditLogs:
 		return "auditlogs"
-	case globals.SystemLogs:
-		return "systemlogs"
+	case globals.DebugLogs:
+		return "debuglogs"
 	case globals.Stats:
 		return "N/A"
 	}

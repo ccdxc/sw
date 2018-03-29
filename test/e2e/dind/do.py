@@ -41,7 +41,9 @@ class TestMgmtNode:
     def runCmd(self,command, ignore_error=False):
         return runCommand("""docker exec -it {} """.format(self.name) + command, ignore_error)
     def startNode(self):
-        runCommand("""docker run -td -p {}:9200 -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.2 /bin/sh """.format(exposedPortBase + self.containerIndex, self.ipaddress, src_dir, self.name, self.name))
+        # expose ApiGw(9000) instances on 10001, 10002, 10003 ...
+        # expose Elasticsearch(9200) instances on 10201, 10202, 10203 ...
+        runCommand("""docker run -td -p {}:9000 -p {}:9200 -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.2 /bin/sh """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex, self.ipaddress, src_dir, self.name, self.name))
         self.runCmd("""apk add openssh""")
         self.runCmd("""sh -c 'if ! test -f /root/.ssh/id_rsa ; then ssh-keygen -f /root/.ssh/id_rsa -t rsa -N "";fi ' """)
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys""")
@@ -53,6 +55,8 @@ class TestMgmtNode:
         self.runCmd("""mkdir -p /etc/bash_completion.d""")
         self.runCmd("""go install ./venice/exe/venice""")
         self.runCmd("""/usr/local/go/bin/venice auto-completion""")
+        # expose ApiGw(9000) instances on 10001, 10002, 10003 ...
+        # expose Elasticsearch(9200) instances on 10201, 10202, 10203 ...
         self.runCmd("""sh -c 'echo export PENSERVER=http://{}:9000 >> ~/.bashrc' """.format(self.clustervip))
         self.runCmd("""sh -c 'echo source /etc/bash_completion.d/venice >> ~/.bashrc' """)
 class Node:
@@ -66,7 +70,7 @@ class Node:
     def startNode(self):
         while debug or runCommand("""docker inspect {} >/dev/null 2>&1""".format(self.name), ignore_error=True) == 0:
             time.sleep(2)
-        runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro -p {}:9200 -l pens -l pens-dind --network pen-dind-net --ip {} -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.2""".format(exposedPortBase + self.containerIndex, self.ipaddress, src_dir, self.name, self.name))
+        runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro -p {}:9000 -p {}:9200 -l pens -l pens-dind --network pen-dind-net --ip {} -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex, self.ipaddress, src_dir, self.name, self.name))
         # hitting https://github.com/kubernetes/kubernetes/issues/50770 on docker-ce on mac but not on linux
         while self.runCmd("""docker ps >/dev/null 2>&1""".format(self.name), ignore_error=True) != 0:
             time.sleep(2)

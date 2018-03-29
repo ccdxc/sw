@@ -372,6 +372,34 @@ var k8sModules = map[string]protos.Module{
 			},
 		},
 	},
+	globals.Spyglass: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Spyglass,
+		},
+		Spec: &protos.ModuleSpec{
+			Type:      protos.ModuleSpec_Deployment,
+			NumCopies: 1,
+			Submodules: []*protos.ModuleSpec_Submodule{
+				{
+					Name:  globals.Spyglass,
+					Image: globals.Spyglass,
+					Services: []*protos.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.Spyglass,
+							Port: runtime.MustUint32(globals.SpyglassRPCPort),
+						},
+					},
+				},
+			},
+			Volumes: []*protos.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	},
 }
 
 // NewK8sService creates a new kubernetes service.

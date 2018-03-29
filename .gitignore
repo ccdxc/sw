@@ -22,6 +22,7 @@ cscope.*
 *.rej
 *.so*
 *.a
+*.vscode
 bazel-bin*
 bazel-genfiles*
 bazel-out*

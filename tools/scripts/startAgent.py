@@ -117,6 +117,14 @@ class Node:
         # npThread.setDaemon(True)
         self.npThread.start()
 
+    # Start spyglass process on vagrant node
+    def startSpyglass(self, args=""):
+        ssh_object = self.sshConnect(self.username, self.password)
+        command = self.gopath + "/bin/spyglass " + args + "> /tmp/pensando-spyglass.log 2>&1"
+        self.npThread = threading.Thread(target=ssh_exec_thread, args=(ssh_object, command))
+        # npThread.setDaemon(True)
+        self.npThread.start()
+
     # Start hostsim process on vagrant node
     def startHostsim(self, simif):
         ssh_object = self.sshConnect(self.username, self.password)
@@ -172,6 +180,7 @@ for addr in addrList:
     node.runCmd("sudo pkill npm")
     node.runCmd("sudo pkill apigw")
     node.runCmd("sudo pkill apiserver")
+    node.runCmd("sudo pkill spyglass")
     node.runCmd("sudo pkill hostsim")
     node.runCmd("/usr/sbin/ifconfig -a | grep -e vport | awk '{print $1}' | xargs -r -n1 -I{} sudo ip link delete {} type veth")
     node.runCmd("docker rm -f `docker ps -aq`")
@@ -197,6 +206,10 @@ time.sleep(2)
 nodes[0].startApiserver()
 time.sleep(2)
 nodes[0].startApigw()
+
+# start spyglass on master node
+time.sleep(2)
+nodes[0].startSpyglass()
 
 # start netctrler on master node
 nodes[0].startNetctrler()

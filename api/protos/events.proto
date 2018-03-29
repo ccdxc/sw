@@ -102,18 +102,18 @@ message Event {
 
     api.TypeMeta T              = 1 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,
-                                    (gogoproto.jsontag) = ", inline"];
+                                    (gogoproto.jsontag) = ",inline"];
 
     // ObjectMeta.Name will be the UUID for an event object.
     // TODO: Should there be a predefined list of labels or keep it free form ?
     api.ObjectMeta O            = 2 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,
-                                    (gogoproto.jsontag) = "meta, omitempty"];
+                                    (gogoproto.jsontag) = "meta,omitempty"];
 
     // Attributes contains the attributes of an event.
     EventAttributes Attributes  = 3 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,
-                                    (gogoproto.jsontag) = ", inline"];
+                                    (gogoproto.jsontag) = ",inline"];
 }
 
 // EventAttributes contains all the event attributes
@@ -121,28 +121,28 @@ message EventAttributes {
 
     // Severity represents the criticality level of an event
     string Severity         = 1 [(venice.check) = "StrEnum(SeverityLevel)",
-                                (gogoproto.jsontag) = "severity, omitempty"];
+                                (gogoproto.jsontag) = "severity,omitempty"];
 
     // Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined
-    string Type             = 2 [(gogoproto.jsontag) = "type, omitempty"];
+    string Type             = 2 [(gogoproto.jsontag) = "type,omitempty"];
 
     // Message represents the human readable description of an event
-    string Message          = 3  [(gogoproto.jsontag) = "message, omitempty"];
+    string Message          = 3  [(gogoproto.jsontag) = "message,omitempty"];
 
     // ObjectRef is the reference to the object associated with an event
-    api.ObjectRef ObjectRef = 4 [(gogoproto.jsontag) = "object-ref, omitempty"];
+    api.ObjectRef ObjectRef = 4 [(gogoproto.jsontag) = "object-ref,omitempty"];
 
     // Source is the component and host/node which generated an event
-    EventSource Source      = 5 [(gogoproto.jsontag) = "source, omitempty"];
+    EventSource Source      = 5 [(gogoproto.jsontag) = "source,omitempty"];
 
     // Number of occurrence of this event in the active interval
-    uint32 Count            = 6 [(gogoproto.jsontag) = "count, omitempty"];
+    uint32 Count            = 6 [(gogoproto.jsontag) = "count,omitempty"];
 
     // Timestamp of the first occurrence of this event in the active interval
-    string FirstTimestamp   = 7 [(gogoproto.jsontag) = "first-timestamp, omitempty"];
+    string FirstTimestamp   = 7 [(gogoproto.jsontag) = "first-timestamp,omitempty"];
 
     // Timestamp of the last occurrence of this event in the active interval
-    string LastTimestamp    = 8 [(gogoproto.jsontag) = "last-timestamp, omitempty"];
+    string LastTimestamp    = 8 [(gogoproto.jsontag) = "last-timestamp,omitempty"];
 }
 
 

@@ -54,6 +54,7 @@ func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *emgrpc.Ev
 		return &emgrpc.Empty{}, nil
 	}
 
+	// TODO: Use globals.GetIndex() with tenant name
 	index := e.getIndex()
 
 	e.lastCreated.Lock()

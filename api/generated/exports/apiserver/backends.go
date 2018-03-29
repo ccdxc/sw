@@ -22,6 +22,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/network/grpc/server"
 	// blank import to pull in networkencryption service into api server
 	_ "github.com/pensando/sw/api/generated/networkencryption/grpc/server"
+	// blank import to pull in search service into api server
+	_ "github.com/pensando/sw/api/generated/search/grpc/server"
 	// blank import to pull in telemetry service into api server
 	_ "github.com/pensando/sw/api/generated/telemetry/grpc/server"
 	// blank import to pull in x509 service into api server

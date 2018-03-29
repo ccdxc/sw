@@ -43,15 +43,14 @@ filebeat.prospectors:
   symlinks: true
   json.message_key: event
   json.keys_under_root: true
-
 #================================ General =====================================
 fields:
-    customer: "infra"
     category: "venice"
-    location: "us-west"
-
+#================================ Processors ===================================
+processors:
+ - add_locale:
+     format: offset
 #================================ Outputs =====================================
-
 #-------------------------- Elasticsearch output ------------------------------
 output.elasticsearch:
   # Array of hosts to connect to.
@@ -68,7 +67,6 @@ output.elasticsearch:
 
 setup.template.name: "{{.ElasticIndex}}"
 setup.template.pattern: "{{.ElasticIndex}}.*"
-
 #================================ Logging =====================================
 #output.console:
 #    pretty: true

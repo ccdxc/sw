@@ -12,6 +12,7 @@ const (
 	Influx                = "pen-influx"
 	Collector             = "pen-collector"
 	EvtsMgr               = "pen-evtsmgr"
+	Spyglass              = "pen-spyglass"
 	ElasticSearch         = "pen-elasticsearch"
 	KubeAPIServer         = "pen-kube-apiserver"
 	KubeScheduler         = "pen-kube-scheduler"

@@ -7,5 +7,6 @@ events.proto events true
 example.proto bookstore true
 network.proto network true
 networkencryption.proto networkencryption true
+search.proto search false
 telemetry.proto telemetry true
 x509.proto x509 true

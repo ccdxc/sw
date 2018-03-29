@@ -19,8 +19,8 @@ const (
 	// AuditLogs type
 	AuditLogs
 
-	// SystemLogs type
-	SystemLogs
+	// DebugLogs type
+	DebugLogs
 
 	// Stats type
 	Stats
