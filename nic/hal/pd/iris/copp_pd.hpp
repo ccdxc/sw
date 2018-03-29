@@ -56,21 +56,22 @@ copp_pd_alloc_init(void)
     return copp_pd_init(copp_pd_alloc());
 }
 
-// freeing Copp PD
-static inline hal_ret_t
-copp_pd_free (pd_copp_t *copp)
-{
-    hal::pd::delay_delete_to_slab(HAL_SLAB_COPP_PD, copp);
-    return HAL_RET_OK;
-}
-
 
 // freeing Copp PD memory
 static inline hal_ret_t
-copp_pd_mem_free (pd_copp_t *copp)
+copp_pd_mem_free (pd_copp_t *pd_copp)
 {
-    hal::pd::delay_delete_to_slab(HAL_SLAB_COPP_PD, copp);
+    if (pd_copp) {
+        hal::pd::delay_delete_to_slab(HAL_SLAB_COPP_PD, pd_copp);
+    }
     return HAL_RET_OK;
+}
+
+// freeing Copp PD
+static inline hal_ret_t
+copp_pd_free (pd_copp_t *pd_copp)
+{
+    return copp_pd_mem_free(pd_copp);
 }
 
 }   // namespace pd

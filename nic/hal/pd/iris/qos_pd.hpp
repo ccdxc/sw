@@ -111,22 +111,23 @@ qos_class_pd_alloc_init(void)
     return qos_class_pd_init(qos_class_pd_alloc());
 }
 
-// freeing Qos-class PD
-static inline hal_ret_t
-qos_class_pd_free (pd_qos_class_t *qos_class)
-{
-    hal::pd::delay_delete_to_slab(HAL_SLAB_QOS_CLASS_PD, qos_class);
-    return HAL_RET_OK;
-}
-
-
 // freeing Qos-class PD memory
 static inline hal_ret_t
-qos_class_pd_mem_free (pd_qos_class_t *qos_class)
+qos_class_pd_mem_free (pd_qos_class_t *pd_qos_class)
 {
-    hal::pd::delay_delete_to_slab(HAL_SLAB_QOS_CLASS_PD, qos_class);
+    if (pd_qos_class) {
+        hal::pd::delay_delete_to_slab(HAL_SLAB_QOS_CLASS_PD, pd_qos_class);
+    }
     return HAL_RET_OK;
 }
+
+// freeing Qos-class PD
+static inline hal_ret_t
+qos_class_pd_free (pd_qos_class_t *pd_qos_class)
+{
+    return qos_class_pd_mem_free(pd_qos_class);
+}
+
 
 static hal_ret_t
 policer_rate_per_sec_to_token_rate (uint64_t rate_per_sec, uint64_t refresh_interval_us, 

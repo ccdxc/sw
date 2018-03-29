@@ -1529,6 +1529,9 @@ end:
 
     if (ret != HAL_RET_OK) {
         if (acl) {
+            // PD wouldn't have been allocated if we're coming here
+            // PD gets allocated in create_add_cb and if it failed,
+            // create_abort_cb would free everything
             acl_free(acl, true);
             acl = NULL;
         }

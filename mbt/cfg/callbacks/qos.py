@@ -35,10 +35,11 @@ def PreCreateCb(data, req_spec, resp_spec):
 
     req_spec.request[0].pfc.cos = random.randint(1,7)
 
+    mtu = random.randint(1500, 9217)
     req_spec.request[0].key_or_handle.qos_group = key_choice
     req_spec.request[0].uplink_class_map.dot1q_pcp = dot1q_pcp_choice
     req_spec.request[0].uplink_class_map.ip_dscp[0] = ip_dscp_choice
-    req_spec.request[0].mtu = random.randint(64,9216)
+    req_spec.request[0].mtu = mtu
 
     # Create a dict with the key and pcp/dscp values, so that they can be reclaimed
     # whenever they're modified as part of update
@@ -58,6 +59,9 @@ def PreCreateCb(data, req_spec, resp_spec):
     if pfc_class_counter > max_pfc_class_counter:
         print("Cleared PFC")
         req_spec.request[0].ClearField("pfc")
+    else:
+        req_spec.request[0].pfc.xon_threshold = int(random.uniform(2,4) * mtu)
+        req_spec.request[0].pfc.xoff_threshold = int(random.uniform(2,8) * mtu)
 
     # Create a dict with the key and pcp/dscp values, so that they can be reclaimed
     # whenever they're modified as part of update
@@ -125,16 +129,18 @@ def PreUpdateCb(data, req_spec, resp_spec):
     config_object = config_mgr.GetConfigObjectFromKey(req_spec.request[0].key_or_handle)
     cache_create_msg = config_object._msg_cache[config_mgr.ConfigObjectMeta.CREATE]
 
+    mtu = random.randint(1500, 9217)
+
     if (cache_create_msg.request[0].pfc.cos == 0):
         req_spec.request[0].ClearField("pfc")
     else:
         req_spec.request[0].pfc.cos = random.randint(1,7)
-        req_spec.request[0].pfc.xon_threshold = random.randint(3000,36865)
-        req_spec.request[0].pfc.xoff_threshold = random.randint(3000,73729)
+        req_spec.request[0].pfc.xon_threshold = int(random.uniform(2,4) * mtu)
+        req_spec.request[0].pfc.xoff_threshold = int(random.uniform(2,8) * mtu)
 
     req_spec.request[0].uplink_class_map.dot1q_pcp = dot1q_pcp_choice
     req_spec.request[0].uplink_class_map.ip_dscp[0] = ip_dscp_choice
-    req_spec.request[0].mtu = random.randint(1500,9217)
+    req_spec.request[0].mtu = mtu
 
     # Add back the pcp/dscp stored earlier to the pool of choices.
     try:

@@ -570,8 +570,11 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                     // So subtract it from the payload occupancy threshold
 
                     xoff_threshold = iq_params->xoff_threshold;
-                    HAL_ASSERT(xoff_threshold <= payload_occupancy_bytes);
-                    xoff_threshold = payload_occupancy_bytes - xoff_threshold;
+                    if (payload_occupancy_bytes > xoff_threshold) {
+                        xoff_threshold = payload_occupancy_bytes - xoff_threshold;
+                    } else {
+                        xoff_threshold = 0;
+                    }
 
                     // xoff and xon thresholds are in 512B units in register.
                     // So right shift by 9 (using ceil value for xon and floor

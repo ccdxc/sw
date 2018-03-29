@@ -922,7 +922,10 @@ qosclass_create (QosClassSpec& spec, QosClassResponse *rsp)
 end:
     if (ret != HAL_RET_OK) {
         if (qos_class) {
-            qos_class_free(qos_class, true);
+            // PD wouldn't have been allocated if we're coming here
+            // PD gets allocated in create_add_cb and if it failed,
+            // create_abort_cb would free everything
+            qos_class_free(qos_class, false);
             qos_class = NULL;
         }
         HAL_API_STATS_INC(HAL_API_QOSCLASS_CREATE_FAIL);
@@ -2055,7 +2058,10 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
 end:
     if (ret != HAL_RET_OK) {
         if (copp) {
-            copp_free(copp, true);
+            // PD wouldn't have been allocated if we're coming here
+            // PD gets allocated in create_add_cb and if it failed,
+            // create_abort_cb would free everything
+            copp_free(copp, false);
             copp = NULL;
         }
     }
