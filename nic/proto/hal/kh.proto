@@ -190,8 +190,8 @@ message MulticastEntryKey {
 // MulticastEntryKeyHandle
 message MulticastEntryKeyHandle {
   oneof key_or_handle {
-    MulticastEntryKey key    = 1;
-    fixed64 multicast_handle = 2;
+    MulticastEntryKey key    = 1 [(gogoproto.moretags) = "venice:\"key\""];
+    fixed64 multicast_handle = 2 [(gogoproto.moretags) = "venice:ref"];
   }
 }
 

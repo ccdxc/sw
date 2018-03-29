@@ -225,8 +225,27 @@ mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
         if_key_handle = spec.oif_key_handles(i);
         pi_if = if_lookup_key_or_handle(if_key_handle);
         if (pi_if == NULL) {
+            HAL_TRACE_ERR("{}: pi_if in OIF[{}] not found", __FUNCTION__, i);
             ret = HAL_RET_IF_NOT_FOUND;
             goto end;
+        }
+
+        if (!is_forwarding_mode_smart_nic()) {
+            if (pi_if->if_type != intf::IF_TYPE_ENIC) {
+                HAL_TRACE_ERR("{}: Only Enics allowed for OIFs when not "
+                              "in smart nic mode", __FUNCTION__);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
+        } else {
+            if (pi_if->if_type != intf::IF_TYPE_ENIC &&
+                pi_if->if_type != intf::IF_TYPE_UPLINK &&
+                pi_if->if_type != intf::IF_TYPE_UPLINK_PC) {
+                HAL_TRACE_ERR("{}: Only Enics/Uplink/UplinkPC allowed for OIFs",
+                               __FUNCTION__);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
         }
 
         HAL_TRACE_DEBUG("{}:adding if_id:{} type:{} handle:{} to oif.",
@@ -239,7 +258,7 @@ mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
     HAL_TRACE_DEBUG("{}:oifs added:", __FUNCTION__);
     hal_print_handles_list(&mc_entry->if_list_head);
 
-    end:
+end:
     return ret;
 }
 
@@ -346,7 +365,7 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL && pi_if->if_type == intf::IF_TYPE_ENIC);
+        HAL_ASSERT(pi_if != NULL);
         oif.intf = pi_if;
         oif.l2seg = l2seg;
         ret = oif_list_add_oif(mc_entry->oif_list, &oif);
@@ -580,7 +599,11 @@ hal_ret_t multicastentry_create(MulticastEntrySpec& spec,
     }
 
     // read OIFs from spec
-    mc_entry_read_oifs(mc_entry, spec);
+    ret = mc_entry_read_oifs(mc_entry, spec);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: Reading OIFs failed!", __FUNCTION__);
+        goto end;
+    }
 
     // form ctxt and call infra add
     dhl_entry.handle = mc_entry->hal_handle;
@@ -722,7 +745,7 @@ mc_entry_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL && pi_if->if_type == intf::IF_TYPE_ENIC);
+        HAL_ASSERT(pi_if != NULL);
         oif.intf = pi_if;
         oif.l2seg = l2seg;
         ret = oif_list_remove_oif(mc_entry->oif_list, &oif);
@@ -1016,7 +1039,7 @@ mc_entry_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL && pi_if->if_type == intf::IF_TYPE_ENIC);
+        HAL_ASSERT(pi_if != NULL);
         oif.intf = pi_if;
         oif.l2seg = l2seg;
         ret = oif_list_remove_oif(mc_entry->oif_list, &oif);
@@ -1027,7 +1050,7 @@ mc_entry_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_for_each(lnode, &upd_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL && pi_if->if_type == intf::IF_TYPE_ENIC);
+        HAL_ASSERT(pi_if != NULL);
         oif.intf = pi_if;
         oif.l2seg = l2seg;
         ret = oif_list_add_oif(upd_entry->oif_list, &oif);
@@ -1173,7 +1196,11 @@ hal_ret_t multicastentry_update(MulticastEntrySpec& req,
     memcpy(upd_entry, mc_entry, sizeof(mc_entry_t));
 
     // Read the new OIFs into upd_entry from spec
-    mc_entry_read_oifs(upd_entry, req);
+    ret = mc_entry_read_oifs(upd_entry, req);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: Reading OIFs failed!", __FUNCTION__);
+        goto end;
+    }
 
     // form ctxt and call infra add
     dhl_entry.handle = mc_entry->hal_handle;
