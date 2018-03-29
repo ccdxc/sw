@@ -172,6 +172,9 @@ func (a *apiGw) Run(config apigw.Config) {
 	// Http Connection
 	m := http.NewServeMux()
 
+	// Register UI
+	m.Handle("/", http.FileServer(http.Dir("/dist")))
+
 	// Create the GRPC connection for the server.
 	s := grpc.NewServer()
 

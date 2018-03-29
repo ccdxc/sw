@@ -29,7 +29,7 @@ function createNmdContainer() {
 }
 
 function createNPMContainer() {
-    docker build --rm --no-cache -t pen-npm:latest -f tools/docker-files/npm/Dockerfile tools/docker-files/npm
+    docker build --rm --no-cache -t pen-npm:latest -f tools/docker-files/pen-npm/Dockerfile tools/docker-files/pen-npm
 }
 
 function createVCSimContainer() {
@@ -83,7 +83,7 @@ case $1 in
     apigw) createApiGwContainer ;;
     apiserver) createApiSrvContainer;;
     vchub) createVCHubContainer;;
-    npm) createNPMContainer;;
+    pen-npm) createNPMContainer;;
     vcsim) createVCSimContainer;;
     netagent) createNetagentContainer;;
     nmd) createNmdContainer;;
