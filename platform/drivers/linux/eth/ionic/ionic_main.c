@@ -31,6 +31,13 @@ MODULE_AUTHOR("Scott Feldman <sfeldma@gmail.com>");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION);
 
+int ntxq_descs = 1024;
+int nrxq_descs = 1024;
+module_param(ntxq_descs, uint, 0);
+module_param(nrxq_descs, uint, 0);
+MODULE_PARM_DESC(ntxq_descs, "Descriptors per Tx queue, must be power of 2");
+MODULE_PARM_DESC(nrxq_descs, "Descriptors per Rx queue, must be power of 2");
+
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	       void *cb_arg)
 {

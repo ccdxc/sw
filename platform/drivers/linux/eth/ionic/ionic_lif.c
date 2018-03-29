@@ -16,25 +16,17 @@
  *
  */
 
-#include <linux/module.h>
-#include <linux/interrupt.h>
-#include <linux/rtnetlink.h>
+#include <linux/netdevice.h>
 #include <linux/etherdevice.h>
-#include <linux/workqueue.h>
+#include <linux/interrupt.h>
 
 #include "ionic.h"
 #include "ionic_bus.h"
 #include "ionic_api.h"
 #include "ionic_lif.h"
 #include "ionic_txrx.h"
+#include "ionic_ethtool.h"
 #include "ionic_debugfs.h"
-
-static int ntxq_descs = 1024;
-static int nrxq_descs = 1024;
-module_param(ntxq_descs, uint, 0);
-module_param(nrxq_descs, uint, 0);
-MODULE_PARM_DESC(ntxq_descs, "Descriptors per Tx queue, must be power of 2");
-MODULE_PARM_DESC(nrxq_descs, "Descriptors per Rx queue, must be power of 2");
 
 static int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
@@ -72,35 +64,6 @@ static int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 
 	return 0;
 }
-
-static void ionic_get_drvinfo(struct net_device *netdev,
-			      struct ethtool_drvinfo *drvinfo)
-{
-	struct lif *lif = netdev_priv(netdev);
-	struct ionic *ionic = lif->ionic;
-
-	strlcpy(drvinfo->driver, DRV_NAME, sizeof(drvinfo->driver));
-	strlcpy(drvinfo->version, DRV_VERSION, sizeof(drvinfo->version));
-	strlcpy(drvinfo->fw_version, ionic->ident->dev.fw_version,
-		sizeof(drvinfo->fw_version));
-	strlcpy(drvinfo->bus_info, ionic_bus_info(ionic),
-		sizeof(drvinfo->bus_info));
-}
-
-static void ionic_get_ringparam(struct net_device *netdev,
-				struct ethtool_ringparam *ring)
-{
-	ring->tx_max_pending = 1 << 16;
-	ring->tx_pending = ntxq_descs;
-	ring->rx_max_pending = 1 << 16;
-	ring->rx_pending = nrxq_descs;
-}
-
-static const struct ethtool_ops ionic_ethtool_ops = {
-	.get_drvinfo		= ionic_get_drvinfo,
-	.get_link		= ethtool_op_get_link,
-	.get_ringparam		= ionic_get_ringparam,
-};
 
 static int ionic_qcq_enable(struct qcq *qcq)
 {
@@ -788,7 +751,7 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	lif->adminq_wq = create_workqueue(lif->name);
 
 	netdev->netdev_ops = &ionic_netdev_ops;
-	netdev->ethtool_ops = &ionic_ethtool_ops;
+	ionic_ethtool_set_ops(netdev);
 	netdev->watchdog_timeo = 2 * HZ;
 
 	netdev->min_mtu = IONIC_MIN_MTU;
