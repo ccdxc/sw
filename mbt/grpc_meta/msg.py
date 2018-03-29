@@ -223,11 +223,10 @@ class GrpcReqRspMsg:
                 else:
                     if grpc_meta_types.is_range_field(field[0]) or \
                        grpc_meta_types.is_immutable_field(field[0]):
-                        orig_val = getattr(message, field[0].name)[0]
                         GrpcReqRspMsg.generate_scalar_field(message, field[0], negative_test=True)
                         yield top_message
                         val = getattr(message, field[0].name)
-                        setattr(val[0], field[0].name, orig_val)
+                        val.pop()
             elif field[0].cpp_type == descriptor.FieldDescriptor.CPPTYPE_MESSAGE:
                 if grpc_meta_types.is_ext_ref_field(field[0]):
                     # We want to generate invalid values for this field. Store the original message, 

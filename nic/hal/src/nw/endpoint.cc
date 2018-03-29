@@ -2078,7 +2078,7 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     auto interface = find_if_by_handle(ep->if_handle);
 
     response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf ? vrf->vrf_id : HAL_HANDLE_INVALID);
-    response->mutable_spec()->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(ep->l2seg_handle);
+    response->mutable_spec()->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(ep->l2_key.l2_segid);
     response->mutable_spec()->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(MAC_TO_UINT64(ep->l2_key.mac_addr));
     response->mutable_spec()->mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(interface->if_id);
     response->mutable_spec()->mutable_endpoint_attrs()->set_useg_vlan(ep->useg_vlan);

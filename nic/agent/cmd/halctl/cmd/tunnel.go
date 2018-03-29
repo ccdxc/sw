@@ -99,12 +99,12 @@ func tunnelShowOneResp(resp *halproto.InterfaceGetResponse) {
 		tnnlEncTypeToStr(encType))
 	if encType == halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_VXLAN {
 		fmt.Printf("%-10s%-10s",
-			ipAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetLocalTep()),
-			ipAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetRemoteTep()))
+			IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetLocalTep()),
+			IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetRemoteTep()))
 	} else {
 		fmt.Printf("%-10s%-10s",
-			ipAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetSource()),
-			ipAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetDestination()))
+			IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetSource()),
+			IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetDestination()))
 	}
 
 	imnIndices := resp.GetStatus().GetTunnelInfo().GetInpMapNatIdx()
@@ -115,7 +115,8 @@ func tunnelShowOneResp(resp *halproto.InterfaceGetResponse) {
 		resp.GetStatus().GetTunnelInfo().GetTunnelRwIdx())
 }
 
-func ipAddrToStr(ipAddr *halproto.IPAddress) string {
+// IPAddrToStr converts HAL proto IP address to string
+func IPAddrToStr(ipAddr *halproto.IPAddress) string {
 	if ipAddr.GetIpAf() == halproto.IPAddressFamily_IP_AF_INET {
 		v4Addr := ipAddr.GetV4Addr()
 		ip := make(net.IP, 4)
