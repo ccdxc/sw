@@ -332,7 +332,7 @@ qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
     memset(&iq_params, 0, sizeof(iq_params));
 
     iq_params.mtu = qos_class->mtu;
-    iq_params.xoff_threshold = qos_class->pfc.xoff_clear_limit;
+    iq_params.xoff_threshold = qos_class->pfc.xoff_threshold;
     iq_params.xon_threshold = qos_class->pfc.xon_threshold;
     HAL_ASSERT(capri_tm_q_valid(pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX]));
     iq_params.p4_q = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];

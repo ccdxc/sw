@@ -40,11 +40,9 @@ message PolicerStats {
 
 // QosPFC specifies the pfc cos to respond to
 message QosPFC {
-  uint32 cos              = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:0-7}"];    // PFC cos value for no-drop classes
-  uint32 xon_threshold    = 2 [(gogoproto.moretags) = "venice:mandatory"];    // Relative threshold from the
-                                  // max occupancy at which to clear the xoff
-  uint32 xoff_clear_limit = 3 [(gogoproto.moretags) = "venice:mandatory"];    // When the buffer occupancy goes
-                                  // below this limit, xoff will be cleared
+  uint32 cos            = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:0-7}"];           // PFC cos value for no-drop classes
+  uint32 xon_threshold  = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:3000-36864}"];    // Threshold at which to send xon (2-4 MTUs)
+  uint32 xoff_threshold = 3 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:3000-73728}"];    // Free buffer threshold at which to send xoff (2-8MTUs)
 }
 
 // QosSched specifies the QosClass scheduling configuration
@@ -85,7 +83,7 @@ message QosClassSpec {
   types.ObjectMeta     meta             = 1;    // object meta
   // key_or_handle is QosClass's key or handle
   kh.QosClassKeyHandle key_or_handle    = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  uint32               mtu              = 3 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:1500-9200}"];    // MTU
+  uint32               mtu              = 3 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:1500-9216}"];    // MTU
   QosPFC               pfc              = 4;    // PFC configuration
   QosSched             sched            = 5 [(gogoproto.moretags) = "venice:mandatory"];    // Scheduling configuration
   QosUplinkClassMap    uplink_class_map = 6;    // Class map for class derivation on uplinks

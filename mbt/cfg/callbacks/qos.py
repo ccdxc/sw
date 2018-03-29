@@ -129,12 +129,12 @@ def PreUpdateCb(data, req_spec, resp_spec):
         req_spec.request[0].ClearField("pfc")
     else:
         req_spec.request[0].pfc.cos = random.randint(1,7)
-        req_spec.request[0].pfc.xon_threshold = random.randint(64,20480)
-        req_spec.request[0].pfc.xoff_clear_limit = random.randint(64,20480)
+        req_spec.request[0].pfc.xon_threshold = random.randint(3000,36865)
+        req_spec.request[0].pfc.xoff_threshold = random.randint(3000,73729)
 
     req_spec.request[0].uplink_class_map.dot1q_pcp = dot1q_pcp_choice
     req_spec.request[0].uplink_class_map.ip_dscp[0] = ip_dscp_choice
-    req_spec.request[0].mtu = random.randint(64,9217)
+    req_spec.request[0].mtu = random.randint(1500,9217)
 
     # Add back the pcp/dscp stored earlier to the pool of choices.
     try:

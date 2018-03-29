@@ -247,7 +247,7 @@ qos_class_get_fill_rsp (qos::QosClassGetResponse *rsp,
     spec->mutable_key_or_handle()->set_qos_class_handle(qos_class->hal_handle);
     spec->set_mtu(qos_class->mtu);
     spec->mutable_pfc()->set_xon_threshold(qos_class->pfc.xon_threshold);
-    spec->mutable_pfc()->set_xoff_clear_limit(qos_class->pfc.xoff_clear_limit);
+    spec->mutable_pfc()->set_xoff_threshold(qos_class->pfc.xoff_threshold);
     spec->mutable_pfc()->set_cos(qos_class->pfc.cos);
     if (qos_class->sched.type == QOS_SCHED_TYPE_DWRR) {
         spec->mutable_sched()->mutable_dwrr()->set_bw_percentage(qos_class->sched.dwrr.bw);
@@ -361,9 +361,9 @@ qos_class_spec_print (QosClassSpec& spec)
     if (spec.has_pfc()) {
         buf.write("pfc cos: {}, ",
                   spec.pfc().cos());
-        buf.write("xon_threshold: {}, xoff_clear_limit: {}, ",
+        buf.write("xon_threshold: {}, xoff_threshold: {}, ",
                   spec.pfc().xon_threshold(),
-                  spec.pfc().xoff_clear_limit());
+                  spec.pfc().xoff_threshold());
     }
 
     if (spec.has_sched()) {
@@ -402,16 +402,49 @@ qos_class_spec_print (QosClassSpec& spec)
 static hal_ret_t
 validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
 {
+    uint32_t mtu = spec.mtu();
+    uint32_t xon_threshold;
+    uint32_t min_xon_threshold;
+    uint32_t max_xon_threshold;
+    uint32_t xoff_threshold;
+    uint32_t min_xoff_threshold;
+    uint32_t max_xoff_threshold;
+    uint32_t ip_dscp;
+
     // mtu should be set
-    if (!spec.mtu()) {
-        HAL_TRACE_ERR("mtu not set in request");
+    if ((mtu < HAL_MIN_MTU) || (mtu > HAL_JUMBO_MTU)) {
+        HAL_TRACE_ERR("mtu {} not within {}-{} bytes", 
+                      mtu, HAL_MIN_MTU, HAL_JUMBO_MTU);
         return HAL_RET_INVALID_ARG;
     }
 
     if (spec.has_pfc()) {
-        if (!spec.pfc().xon_threshold() ||
-            !spec.pfc().xoff_clear_limit()) {
-            HAL_TRACE_ERR("No-drop class xon/xoff params not set in request");
+
+        if (spec.pfc().cos() >= HAL_MAX_DOT1Q_PCP_VALS) {
+            HAL_TRACE_ERR("Invalid pfc cos {}", spec.pfc().cos());
+            return HAL_RET_INVALID_ARG;
+        }
+
+        xon_threshold = spec.pfc().xon_threshold();
+        xoff_threshold = spec.pfc().xoff_threshold();
+
+        min_xon_threshold = 2*mtu;
+        max_xon_threshold = 4*mtu;
+
+        min_xoff_threshold = 2*mtu;
+        max_xoff_threshold = 8*mtu;
+
+        if ((xon_threshold < min_xon_threshold) || 
+            (xon_threshold > max_xon_threshold)) {
+            HAL_TRACE_ERR("xon_threshold {} should be in the range {}-{} bytes",
+                          xon_threshold, min_xon_threshold, max_xon_threshold);
+            return HAL_RET_INVALID_ARG;
+        }
+
+        if ((xoff_threshold < min_xoff_threshold) || 
+            (xoff_threshold > max_xoff_threshold)) {
+            HAL_TRACE_ERR("xoff_threshold {} should be in the range {}-{} bytes",
+                          xoff_threshold, min_xoff_threshold, max_xoff_threshold);
             return HAL_RET_INVALID_ARG;
         }
     }
@@ -419,6 +452,13 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
     // Scheduler configuration should be set
     if (!spec.has_sched()) {
         HAL_TRACE_ERR("scheduler not set in request");
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (spec.sched().has_dwrr() &&
+        (spec.sched().dwrr().bw_percentage() >= 100)) {
+        HAL_TRACE_ERR("bw_percentage {} cannot be more than 100!",
+                      spec.sched().dwrr().bw_percentage());
         return HAL_RET_INVALID_ARG;
     }
 
@@ -436,6 +476,39 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
     } else if (spec.has_uplink_class_map()) {
         HAL_TRACE_ERR("uplink class map set for internal class");
         return HAL_RET_INVALID_ARG;
+    }
+
+    if (spec.has_uplink_class_map()) {
+        if (spec.uplink_class_map().dot1q_pcp() >= HAL_MAX_DOT1Q_PCP_VALS) {
+            HAL_TRACE_ERR("Invalid dot1q_pcp {} in the uplink class map",
+                          spec.uplink_class_map().dot1q_pcp());
+            return HAL_RET_INVALID_ARG;
+        }
+
+        
+        for (int i = 0; i < spec.uplink_class_map().ip_dscp_size(); i++) {
+            ip_dscp = spec.uplink_class_map().ip_dscp(i);
+            if (ip_dscp >= HAL_MAX_IP_DSCP_VALS) {
+                HAL_TRACE_ERR("Invalid ip_dscp {} in the uplink class map",
+                              ip_dscp);
+                return HAL_RET_INVALID_ARG;
+            }
+        }
+    }
+
+    if (spec.has_marking()) {
+        if (spec.marking().dot1q_pcp_rewrite_en() &&
+            (spec.marking().dot1q_pcp() >= HAL_MAX_DOT1Q_PCP_VALS)) {
+            HAL_TRACE_ERR("Invalid dot1q_pcp {} in marking",
+                          spec.marking().dot1q_pcp());
+            return HAL_RET_INVALID_ARG;
+        }
+        if (spec.marking().ip_dscp_rewrite_en() &&
+            (spec.marking().ip_dscp() >= HAL_MAX_IP_DSCP_VALS)) {
+            HAL_TRACE_ERR("Invalid ip_dscp {} in marking",
+                          spec.marking().ip_dscp());
+            return HAL_RET_INVALID_ARG;
+        }
     }
     return HAL_RET_OK;
 }
@@ -674,7 +747,7 @@ update_pfc_params (QosClassSpec& spec, qos_class_t *qos_class)
         }
 
         qos_class->pfc.xon_threshold =  spec.pfc().xon_threshold();
-        qos_class->pfc.xoff_clear_limit =  spec.pfc().xoff_clear_limit();
+        qos_class->pfc.xoff_threshold =  spec.pfc().xoff_threshold();
         qos_class->no_drop = true;
     }
 
@@ -1185,7 +1258,7 @@ qosclass_update (QosClassSpec& spec, QosClassResponse *rsp)
     }
 
     if ((qos_class_clone->pfc.xon_threshold != qos_class->pfc.xon_threshold) ||
-        (qos_class_clone->pfc.xoff_clear_limit != qos_class->pfc.xoff_clear_limit)) {
+        (qos_class_clone->pfc.xoff_threshold != qos_class->pfc.xoff_threshold)) {
         app_ctxt.threshold_changed = true;
     }
 

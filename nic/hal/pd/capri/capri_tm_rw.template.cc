@@ -491,6 +491,9 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
     cpp_int xoff_val;
     cpp_int xon_val;
     cpp_int oq_map_val;
+    cpp_int port_payload_occupancy_val;
+    uint32_t payload_occupancy;
+    uint32_t payload_occupancy_bytes;
     uint32_t xoff_threshold;
     uint32_t xon_threshold;
     uint32_t hbm_context;
@@ -547,14 +550,35 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                 if (port_supports_hbm_contexts(port)) {
                     // HBM Thresholds
                     hbm_csr.cfg_hbm_threshold.read();
+                    hbm_csr.hbm_port_${p}.cfg_hbm_eth_payload_occupancy.read();
+
+                    port_payload_occupancy_val = hbm_csr.hbm_port_${p}.cfg_hbm_eth_payload_occupancy.threshold();
 
                     xoff_val = hbm_csr.cfg_hbm_threshold.xoff();
                     xon_val = hbm_csr.cfg_hbm_threshold.xon();
                     hbm_context = iq + (num_hbm_contexts_per_port * ${pinfo["enum"]});
+
+                    payload_occupancy = pbc_csr.hlp.get_slc(
+                        port_payload_occupancy_val, 
+                        iq*19, ((iq + 1) * 19) - 1).convert_to<uint32_t>();
+
+                    payload_occupancy_bytes = payload_occupancy << 10;
+
+                    // xoff threshold is the value from the payload occupancy
+                    // threshold.
+                    // But in the csr we need to write the value from the base.
+                    // So subtract it from the payload occupancy threshold
+
+                    xoff_threshold = iq_params->xoff_threshold;
+                    HAL_ASSERT(xoff_threshold <= payload_occupancy_bytes);
+                    xoff_threshold = payload_occupancy_bytes - xoff_threshold;
+
                     // xoff and xon thresholds are in 512B units in register.
-                    // So right shift by 9 (using ceil value)
-                    xoff_threshold = (iq_params->xoff_threshold + (1<<9) - 1) >> 9;
+                    // So right shift by 9 (using ceil value for xon and floor
+                    // for xoff)
+                    xoff_threshold >>= 9;
                     xon_threshold = (iq_params->xon_threshold + (1<<9) - 1) >> 9;
+
                     // 20 bits per hbm_context
                     pbc_csr.hlp.set_slc(xoff_val, xoff_threshold,
                                         hbm_context * 20, ((hbm_context + 1) * 20) - 1);
