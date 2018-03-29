@@ -12,7 +12,7 @@ struct req_rx_s2_t0_k k;
 #define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_sbit0_ebit7, e_rsp_psn_sbit16_ebit23)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit15, cur_sge_offset_sbit16_ebit31)
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
-#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
+#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit13)
 #define K_RRQ_CINDEX CAPRI_KEY_RANGE(IN_P, rrq_cindex_sbit0_ebit0, rrq_cindex_sbit1_ebit7)
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
 #define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit16_ebit23)
@@ -162,13 +162,13 @@ set_arg:
 
     CAPRI_RESET_TABLE_3_ARG()
 
-    CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, rrq_in_progress, r4)
-    CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, cur_sge_id, r1)
-    CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, cur_sge_offset, r2)
-    CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, e_rsp_psn, K_E_RSP_PSN)
-    CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id, 1)
-    CAPRI_SET_FIELD2_C(SQCB1_WRITE_BACK_P, last_pkt, 1, c5)
-    CAPRI_SET_FIELD2(SQCB1_WRITE_BACK_P, rexmit_psn, K_REXMIT_PSN)
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_id), r1, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rrq_in_progress), r4
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_offset), r2, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, e_rsp_psn), K_E_RSP_PSN
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), K_REXMIT_PSN
+    phvwr.c5  CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, last_pkt), 1
 
     SQCB1_ADDR_GET(r5)
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)

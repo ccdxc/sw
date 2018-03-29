@@ -19,22 +19,22 @@ struct req_rx_rrqsge_to_lkey_info_t {
     log_page_size           : 5;
     is_atomic               : 1;
     dma_cmd_eop             : 1;
-    dma_cmd_start_index     : 8;
+    dma_cmd_start_index     : 4;
     sge_index               : 8;
     cq_dma_cmd_index        : 8;
     cq_id                   : 24;
-    pad                     : 25;
+    pad                     : 29;
 };
 
 struct req_rx_rrqlkey_to_ptseg_info_t {
     pt_offset               : 32;
     pt_bytes                : 16;
     log_page_size           : 5;
-    dma_cmd_start_index     : 8;
+    dma_cmd_start_index     : 4;
     is_atomic               : 1;
     dma_cmd_eop             : 1;
     sge_index               : 8;
-    pad                     : 89;
+    pad                     : 93;
 };
 
 

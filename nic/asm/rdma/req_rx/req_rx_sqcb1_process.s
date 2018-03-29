@@ -40,10 +40,10 @@ req_rx_sqcb1_process:
     bcf            [c5 | c6], process_rx_pkt
 
     // Load dcqcn_cb to store timestamps and trigger Doorbell to generate CNP.
+    add     r1, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr //BD Slot
     CAPRI_RESET_TABLE_3_ARG()
-    CAPRI_SET_FIELD2(ECN_INFO_P, p_key, CAPRI_APP_DATA_BTH_P_KEY)
+    phvwr   CAPRI_PHV_FIELD(ECN_INFO_P, p_key), CAPRI_APP_DATA_BTH_P_KEY
 
-    add     r1, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_dcqcn_ecn_process, r1)
 
 process_rx_pkt:
@@ -209,19 +209,19 @@ dma_rexmit_psn_only:
 set_arg:
 
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, cur_sge_offset, d.rrqwqe_cur_sge_offset)
-    CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, cur_sge_id, d.rrqwqe_cur_sge_id)
-    CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, rrq_in_progress, d.rrq_in_progress)
-    CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, cq_id, d.cq_id)
-    CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, e_rsp_psn, d.e_rsp_psn)
-    CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, msn, r3)
-    CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, rexmit_psn, r5)
-    CAPRI_SET_FIELD2_C(SQCB1_TO_RRQWQE_P, rrq_empty, 1, c4)
-    //CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, timer_active, d.timer_active)
-    CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, dma_cmd_start_index, REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START)
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cur_sge_offset), d.rrqwqe_cur_sge_offset, \
+              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rexmit_psn), r5
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cur_sge_id), d.rrqwqe_cur_sge_id, \
+              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_in_progress), d.rrq_in_progress
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cq_id), d.cq_id, \
+              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, e_rsp_psn), d.e_rsp_psn
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, msn), r3, \
+              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, dma_cmd_start_index), REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START
+    phvwr.c4  CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_empty), 1
+    //phvwr CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, timer_active), d.timer_active
     add            r2, RRQ_C_INDEX, r0
     mincr          r2, d.log_rrq_size, 1
-    CAPRI_SET_FIELD2(SQCB1_TO_RRQWQE_P, rrq_cindex, r2)
+    phvwr      CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_cindex), r2
 
     sll            r5, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
     add            r5, r5, RRQ_C_INDEX, LOG_RRQ_WQE_SIZE

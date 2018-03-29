@@ -9,11 +9,11 @@ struct req_rx_s3_t0_k k;
 
 #define ATOMICAETH_ORIG_DATA common.rdma_bth_aeth_atomicaeth_atomicaeth_orig_data
 
-#define K_PT_OFFESET CAPRI_KEY_RANGE(IN_P, pt_offset_sbit0_ebit15, pt_offset_sbit16_ebit31)
+#define K_PT_OFFESET CAPRI_KEY_RANGE(IN_P, pt_offset_sbit0_ebit7, pt_offset_sbit16_ebit31)
 #define K_LOG_PAGE_SIZE CAPRI_KEY_FIELD(IN_P, log_page_size)
-#define K_DMA_CMD_START_INDEX CAPRI_KEY_RANGE(IN_P, dma_cmd_start_index_sbit0_ebit2, dma_cmd_start_index_sbit3_ebit7)
+#define K_DMA_CMD_START_INDEX CAPRI_KEY_RANGE(IN_P, dma_cmd_start_index_sbit0_ebit2, dma_cmd_start_index_sbit3_ebit3)
 #define K_PT_BYTES CAPRI_KEY_FIELD(IN_P, pt_bytes)
-#define K_SGE_INDEX CAPRI_KEY_RANGE(IN_P, sge_index_sbit0_ebit0, sge_index_sbit1_ebit7)
+#define K_SGE_INDEX CAPRI_KEY_RANGE(IN_P, sge_index_sbit0_ebit4, sge_index_sbit5_ebit7)
 
 %%
 

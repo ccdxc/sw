@@ -71,7 +71,7 @@ fire_eqcb:
 
     CAPRI_RESET_TABLE_2_ARG()
 
-    CAPRI_SET_FIELD2(EQ_INFO_P, cq_id, K_CQ_ID)
+    phvwr CAPRI_PHV_FIELD(EQ_INFO_P, cq_id), K_CQ_ID
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5)
     nop.e
     nop

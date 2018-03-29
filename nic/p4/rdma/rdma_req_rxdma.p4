@@ -201,14 +201,15 @@ header_type req_rx_to_stage_t {
         aeth_syndrome                    :    8;
         cqcb_base_addr_page_id           :   22;
         log_num_cq_entries               :    4;
-        remaining_payload_bytes          :   16;
-        pad                              :   30;
+        remaining_payload_bytes          :   14;
+        pad                              :   32;
     }
 }
 
 header_type req_rx_rrqwqe_to_sge_info_t {
     fields {
-        remaining_payload_bytes          :   16;
+        remaining_payload_bytes          :   14;
+        pad1                             :    2;
         cur_sge_offset                   :   32;
         cq_id                            :   24;
         cur_sge_id                       :    8;
@@ -232,7 +233,8 @@ header_type req_rx_ecn_info_t {
 
 header_type req_rx_sqcb0_to_sqcb1_info_t {
     fields {
-        remaining_payload_bytes          :   16;
+        remaining_payload_bytes          :   14;
+        pad1                             :    2;
         rrq_cindex                       :    8;
         rrq_empty                        :    1;
         need_credits                     :    1;
@@ -248,11 +250,11 @@ header_type req_rx_rrqlkey_to_ptseg_info_t {
         pt_offset                        :   32;
         pt_bytes                         :   16;
         log_page_size                    :    5;
-        dma_cmd_start_index              :    8;
+        dma_cmd_start_index              :    4;
         is_atomic                        :    1;
         dma_cmd_eop                      :    1;
         sge_index                        :    8;
-        pad                              :   89;
+        pad                              :   93;
     }
 }
 
@@ -287,11 +289,11 @@ header_type req_rx_rrqsge_to_lkey_info_t {
         log_page_size                    :    5;
         is_atomic                        :    1;
         dma_cmd_eop                      :    1;
-        dma_cmd_start_index              :    8;
+        dma_cmd_start_index              :    4;
         sge_index                        :    8;
         cq_dma_cmd_index                 :    8;
         cq_id                            :   24;
-        pad                              :   25;
+        pad                              :   29;
     }
 }
 
