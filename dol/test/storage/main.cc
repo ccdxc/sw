@@ -35,10 +35,14 @@ DEFINE_validator(num_pdma_queues, &queues::seq_queue_pdma_num_validate);
 bool run_unit_tests = false;
 bool run_nvme_tests = false;
 bool run_nvme_be_tests = false;
+bool run_nvme_wrr_tests = false;
 bool run_local_e2e_tests = false;
 bool run_comp_tests = false;
+bool run_comp_seq_tests = false;
 bool run_xts_tests = false;
 bool run_rdma_tests = false;
+bool run_rdma_lif_override_tests = false;
+bool run_rdma_xts_tests = false;
 bool run_pdma_tests = false;
 bool run_xts_perf_tests = false;
 bool run_comp_perf_tests = false;
@@ -68,18 +72,21 @@ std::vector<tests::TestEntry> nvme_be_tests = {
   {&tests::test_run_r2n_ssd_pri2, "R2N -> SSD Pri Cmd 2", false},
   {&tests::test_run_r2n_ssd_pri3, "R2N -> SSD Pri Cmd 3", false},
   {&tests::test_run_r2n_ssd_pri4, "R2N -> SSD Pri Cmd 4", false},
-  {&tests::test_run_nvme_be_wrr1, "NVME Backend WRR 1", false},
-  {&tests::test_run_nvme_be_wrr2, "NVME Backend WRR 2", false},
-  {&tests::test_run_nvme_be_wrr3, "NVME Backend WRR 3", false},
-  {&tests::test_run_nvme_be_wrr4, "NVME Backend WRR 4", false},
-  {&tests::test_run_nvme_be_wrr5, "NVME Backend WRR 5", false},
-  {&tests::test_run_nvme_be_wrr6, "NVME Backend WRR 6", false},
   {&tests::test_run_nvme_read_comp1, "PVM Local Read Comp 1", false},
   {&tests::test_run_nvme_write_comp1, "PVM Local Write Comp 1", false},
   {&tests::test_run_nvme_read_comp2, "PVM Local Read Comp 2", false},
   {&tests::test_run_nvme_write_comp2, "PVM Local Write Comp 2", false},
   {&tests::test_run_nvme_read_comp3, "PVM Local Read Comp 3", false},
   {&tests::test_run_nvme_write_comp3, "PVM Local Write Comp 3", false},
+};
+
+std::vector<tests::TestEntry> nvme_wrr_tests = {
+  {&tests::test_run_nvme_be_wrr1, "NVME Backend WRR 1", false},
+  {&tests::test_run_nvme_be_wrr2, "NVME Backend WRR 2", false},
+  {&tests::test_run_nvme_be_wrr3, "NVME Backend WRR 3", false},
+  {&tests::test_run_nvme_be_wrr4, "NVME Backend WRR 4", false},
+  {&tests::test_run_nvme_be_wrr5, "NVME Backend WRR 5", false},
+  {&tests::test_run_nvme_be_wrr6, "NVME Backend WRR 6", false},
 };
 
 std::vector<tests::TestEntry> local_e2e_tests = {
@@ -119,6 +126,9 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::compress_output_encrypt_app_max_size, "Compress->XTS encrypt chaining: app max block size", false},
   // Enable when model is fixed.
   //{&tests::verify_integrity_for_gt64K, "Verify integrity calc for data size > 64K", false},
+};
+
+std::vector<tests::TestEntry> comp_seq_tests = {
   {&tests::seq_compress_flat_64K_buf, "Sequencer Compress Host->Host flat 64K buf", false},
   {&tests::seq_compress_same_src_and_dst, "Sequencer Compress with same src and dst", false},
   {&tests::seq_decompress_to_flat_64K_buf, "Sequencer Decompress Host->Host to flat 64K buf", false},
@@ -147,7 +157,13 @@ std::vector<tests::TestEntry> comp_perf_tests = {
 std::vector<tests::TestEntry> rdma_tests = {
   {&tests::test_run_rdma_e2e_write, "E2E write over RDMA", false},
   {&tests::test_run_rdma_e2e_read, "E2E read over RDMA", false},
+};
+
+std::vector<tests::TestEntry> rdma_lif_override_tests = {
   {&tests::test_run_rdma_lif_override, "E2E read LIF override", false},
+};
+
+std::vector<tests::TestEntry> rdma_xts_tests = {
   {&tests::test_run_rdma_e2e_xts_write1, "E2E write over RDMA with XTS", false},
   {&tests::test_run_rdma_e2e_xts_read1, "E2E read over RDMA with XTS", false},
 };
@@ -197,27 +213,50 @@ int main(int argc, char**argv) {
       run_unit_tests = true;
       run_nvme_tests = true;
       run_nvme_be_tests = true;
+      run_nvme_wrr_tests = true;
       run_local_e2e_tests = true;
       run_comp_tests = true;
+      run_comp_seq_tests = true;
       run_xts_tests = true;
       run_rdma_tests = true;
+      run_rdma_lif_override_tests = true;
+      run_rdma_xts_tests = true;
       run_xts_perf_tests = false;
       run_comp_perf_tests = false;
       run_pdma_tests = true;
+  } else if (FLAGS_test_group == "rtl_sanity") {
+      run_unit_tests = true;
+      run_nvme_tests = true;
+      run_nvme_be_tests = true;
+      run_nvme_wrr_tests = false;		// Never enable this for RTL sanity
+      run_local_e2e_tests = true;
+      run_comp_tests = true;
+      run_comp_seq_tests = false;		// Enable after s/w debugging
+      run_xts_tests = true;
+      run_rdma_tests = true;
+      run_rdma_lif_override_tests = false;	// Enable after h/w model changes
+      run_rdma_xts_tests = false;		// Enable after s/w debugging
+      run_xts_perf_tests = false;		// Never enable this for RTL sanity
+      run_comp_perf_tests = false;		// Never enable this for RTL sanity
+      run_pdma_tests = false;			// Never enable this for RTL sanity
   } else if (FLAGS_test_group == "unit") {
       run_unit_tests = true;
   } else if (FLAGS_test_group == "nvme") {
       run_nvme_tests = true;
   } else if (FLAGS_test_group == "nvme_be") {
       run_nvme_be_tests = true;
+      run_nvme_wrr_tests = true;
   } else if (FLAGS_test_group == "local_e2e") {
       run_local_e2e_tests = true;
   } else if (FLAGS_test_group == "comp") {
       run_comp_tests = true;
+      run_comp_seq_tests = true;
   } else if (FLAGS_test_group == "xts") {
       run_xts_tests = true;
   } else if (FLAGS_test_group == "rdma") {
       run_rdma_tests = true;
+      run_rdma_lif_override_tests = true;
+      run_rdma_xts_tests = true;
   } else if (FLAGS_test_group == "xts_perf") {
       run_xts_perf_tests = true;
   } else if (FLAGS_test_group == "comp_perf") {
@@ -229,7 +268,7 @@ int main(int argc, char**argv) {
   } else if (FLAGS_test_group == "rdma_perf") {
       run_rdma_perf_tests = true;
   } else {
-    printf("Usage: ./storage_test [--hal_port <xxx>] [--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma] "
+    printf("Usage: ./storage_test [--hal_port <xxx>] [--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma|rtl_sanity] "
            " [--poll_interval <yyy>] \n");
     return -1;
   }
@@ -279,6 +318,14 @@ int main(int argc, char**argv) {
     printf("Added nvme_be tests \n");
   }
 
+  // Add nvme_wrr tests
+  if (run_nvme_wrr_tests) {
+    for (size_t i = 0; i < nvme_wrr_tests.size(); i++) {
+      test_suite.push_back(nvme_wrr_tests[i]);
+    }
+    printf("Added nvme_wrr tests \n");
+  }
+
   // Add local_e2e tests
   if (run_local_e2e_tests) {
     for (size_t i = 0; i < local_e2e_tests.size(); i++) {
@@ -293,6 +340,14 @@ int main(int argc, char**argv) {
       test_suite.push_back(comp_tests[i]);
     }
     printf("Added comp tests \n");
+  }
+ 
+  // Add comp_seq tests
+  if (run_comp_seq_tests) {
+    for (size_t i = 0; i < comp_seq_tests.size(); i++) {
+      test_suite.push_back(comp_seq_tests[i]);
+    }
+    printf("Added comp_seq tests \n");
   }
  
   // Add comp_perf tests
@@ -321,6 +376,25 @@ int main(int argc, char**argv) {
       test_suite.push_back(rdma_tests[i]);
     }
     printf("Added RDMA tests \n");
+  }
+
+  // NOTE: DO NOT ADD any tests between rdma_tests & rdma_lif_override_tests.
+  //       There is an ORDERING dependency.
+ 
+  // Add rdma lif override tests
+  if (run_rdma_lif_override_tests) {
+    for (size_t i = 0; i < rdma_lif_override_tests.size(); i++) {
+      test_suite.push_back(rdma_lif_override_tests[i]);
+    }
+    printf("Added RDMA LIF override tests \n");
+  }
+
+  // Add rdma xts tests
+  if (run_rdma_xts_tests) {
+    for (size_t i = 0; i < rdma_xts_tests.size(); i++) {
+      test_suite.push_back(rdma_xts_tests[i]);
+    }
+    printf("Added RDMA XTS tests \n");
   }
 
   // Add pdma tests
