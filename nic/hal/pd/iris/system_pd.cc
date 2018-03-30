@@ -204,18 +204,10 @@ pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
             drop_reason & (1 << DROP_FLOW_MISS));
     stats_entry->set_drop_ipsg(
             drop_reason & (1 << DROP_IPSG));
-    stats_entry->set_drop_ingress_policer(
-            drop_reason & (1 << DROP_INGRESS_POLICER));
-    stats_entry->set_drop_egress_policer(
-            drop_reason & (1 << DROP_RX_POLICER));
     stats_entry->set_drop_nacl(
             drop_reason & (1 << DROP_NACL));
     stats_entry->set_drop_malformed_pkt(
             drop_reason & (1 << DROP_MALFORMED_PKT));
-    stats_entry->set_drop_ping_of_death(
-            drop_reason & (1 << DROP_PING_OF_DEATH));
-    stats_entry->set_drop_fragment_too_small(
-            drop_reason & (1 << DROP_FRAGMENT_TOO_SMALL));
     stats_entry->set_drop_ip_normalization(
             drop_reason & (1 << DROP_IP_NORMALIZATION));
     stats_entry->set_drop_tcp_normalization(
@@ -224,18 +216,6 @@ pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
             drop_reason & (1 << DROP_TCP_NON_SYN_FIRST_PKT));
     stats_entry->set_drop_icmp_normalization(
             drop_reason & (1 << DROP_ICMP_NORMALIZATION));
-    stats_entry->set_drop_icmp_src_quench_msg(
-            drop_reason & (1 << DROP_ICMP_SRC_QUENCH_MSG));
-    stats_entry->set_drop_icmp_redirect_msg(
-            drop_reason & (1 << DROP_ICMP_REDIRECT_MSG));
-    stats_entry->set_drop_icmp_info_req_msg(
-            drop_reason & (1 << DROP_ICMP_INFO_REQ_MSG));
-    stats_entry->set_drop_icmp_addr_req_msg(
-            drop_reason & (1 << DROP_ICMP_ADDR_REQ_MSG));
-    stats_entry->set_drop_icmp_traceroute_msg(
-            drop_reason & (1 << DROP_ICMP_TRACEROUTE_MSG));
-    stats_entry->set_drop_icmp_rsvd_type_msg(
-            drop_reason & (1 << DROP_ICMP_RSVD_TYPE_MSG));
     stats_entry->set_drop_input_properties_miss(
             drop_reason & (1 << DROP_INPUT_PROPERTIES_MISS));
     stats_entry->set_drop_tcp_out_of_window(
@@ -244,16 +224,22 @@ pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
             drop_reason & (1 << DROP_TCP_SPLIT_HANDSHAKE));
     stats_entry->set_drop_tcp_win_zero_drop(
             drop_reason & (1 << DROP_TCP_WIN_ZERO_DROP));
-    stats_entry->set_drop_tcp_ack_err(
-            drop_reason & (1 << DROP_TCP_ACK_ERR));
     stats_entry->set_drop_tcp_data_after_fin(
             drop_reason & (1 << DROP_TCP_DATA_AFTER_FIN));
     stats_entry->set_drop_tcp_non_rst_pkt_after_rst(
             drop_reason & (1 << DROP_TCP_NON_RST_PKT_AFTER_RST));
     stats_entry->set_drop_tcp_invalid_responder_first_pkt(
             drop_reason & (1 << DROP_TCP_INVALID_RESPONDER_FIRST_PKT));
-    stats_entry->set_drop_tcp_unexpected_syn(
+    stats_entry->set_drop_tcp_unexpected_pkt(
             drop_reason & (1 << DROP_TCP_UNEXPECTED_PKT));
+    stats_entry->set_drop_src_lif_mismatch(
+            drop_reason & (1 << DROP_SRC_LIF_MISMATCH));
+    stats_entry->set_drop_parser_icrc_error(
+            drop_reason & (1 << DROP_PARSER_ICRC_ERR));
+    stats_entry->set_drop_parse_len_error(
+            drop_reason & (1 << DROP_PARSER_LEN_ERR));
+    stats_entry->set_drop_hardware_error(
+            drop_reason & (1 << DROP_HARDWARE_ERR));
 
     uint64_t drop_stats_pkts = 0;
     memcpy(&drop_stats_pkts,

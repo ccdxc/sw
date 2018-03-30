@@ -138,18 +138,10 @@ drop_reason_to_define (const acl::DropReason drop_reason)
             return DROP_FLOW_MISS;
         case acl::IPSG__DROP:
             return DROP_IPSG;
-        case acl::INGRESS_POLICER__DROP:
-            return DROP_INGRESS_POLICER;
-        case acl::RX_POLICER__DROP:
-            return DROP_RX_POLICER;
         case acl::NACL__DROP:
             return DROP_NACL;
         case acl::MALFORMED_PKT__DROP:
             return DROP_MALFORMED_PKT;
-        case acl::PING_OF_DEATH__DROP:
-            return DROP_PING_OF_DEATH;
-        case acl::FRAGMENT_TOO_SMALL__DROP:
-            return DROP_FRAGMENT_TOO_SMALL;
         case acl::IP_NORMALIZATION__DROP:
             return DROP_IP_NORMALIZATION;
         case acl::TCP_NORMALIZATION__DROP:
@@ -158,18 +150,6 @@ drop_reason_to_define (const acl::DropReason drop_reason)
             return DROP_TCP_NON_SYN_FIRST_PKT;
         case acl::ICMP_NORMALIZATION__DROP:
             return DROP_ICMP_NORMALIZATION;
-        case acl::ICMP_SRC_QUENCH_MSG__DROP:
-            return DROP_ICMP_SRC_QUENCH_MSG;
-        case acl::ICMP_REDIRECT_MSG__DROP:
-            return DROP_ICMP_REDIRECT_MSG;
-        case acl::ICMP_INFO_REQ_MSG__DROP:
-            return DROP_ICMP_INFO_REQ_MSG;
-        case acl::ICMP_ADDR_REQ_MSG__DROP:
-            return DROP_ICMP_ADDR_REQ_MSG;
-        case acl::ICMP_TRACEROUTE_MSG__DROP:
-            return DROP_ICMP_TRACEROUTE_MSG;
-        case acl::ICMP_RSVD_TYPE_MSG__DROP:
-            return DROP_ICMP_RSVD_TYPE_MSG;
         case acl::INPUT_PROPERTIES_MISS__DROP:
             return DROP_INPUT_PROPERTIES_MISS;
         case acl::TCP_OUT_OF_WINDOW__DROP:
@@ -178,8 +158,6 @@ drop_reason_to_define (const acl::DropReason drop_reason)
             return DROP_TCP_SPLIT_HANDSHAKE;
         case acl::TCP_WIN_ZERO_DROP__DROP:
             return DROP_TCP_WIN_ZERO_DROP;
-        case acl::TCP_ACK_ERR__DROP:
-            return DROP_TCP_ACK_ERR;
         case acl::TCP_DATA_AFTER_FIN__DROP:
             return DROP_TCP_DATA_AFTER_FIN;
         case acl::TCP_NON_RST_PKT_AFTER_RST__DROP:
