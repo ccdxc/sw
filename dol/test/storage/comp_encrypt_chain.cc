@@ -153,7 +153,6 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf,
                      comp_status_buf1, comp_buf, app_blk_size);
 
-
     // XTS chaining will use direct Barco push action from
     // comp status queue handler. Hence, no XTS seq queue needed.
     chain_params.desc_format_fn = test_setup_post_comp_seq_status_entry;

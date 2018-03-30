@@ -275,6 +275,8 @@ private:
     bool            destructor_free_buffers;
     bool            suppress_info_log;
     bool            success;
+    bool            success;
+    bool            destructor_free_buffers;
 };
 
 
