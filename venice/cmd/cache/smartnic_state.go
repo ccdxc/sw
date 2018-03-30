@@ -121,7 +121,7 @@ func (sm *Statemgr) UpdateSmartNIC(sn *cmd.SmartNIC) error {
 		return err
 	}
 
-	log.Infof("Created SmartNIC state {%+v}", sns)
+	log.Debugf("Updated SmartNIC state {%+v}", sns)
 	return nil
 }
 
@@ -141,6 +141,10 @@ func (sm *Statemgr) DeleteSmartNIC(tenant, name string) error {
 		return err
 	}
 
+	meta := sn.GetObjectMeta()
+	if meta != nil {
+		log.Infof("Deleting SmartNIC state {%+v}", meta)
+	}
 	// delete it from the DB
 	return sm.memDB.DeleteObject(sn)
 }

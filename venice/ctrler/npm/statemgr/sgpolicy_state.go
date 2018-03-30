@@ -141,7 +141,7 @@ func (sm *Statemgr) CreateSgpolicy(sgp *network.Sgpolicy) error {
 		return err
 	}
 
-	log.Infof("Created Sgpolicy state {%+v}", sgps)
+	log.Infof("Created Sgpolicy state {%+v}", sgps.ObjectMeta)
 
 	return nil
 }
@@ -164,7 +164,7 @@ func (sm *Statemgr) DeleteSgpolicy(tenant, sgname string) error {
 	// cleanup sg state
 	err = sg.Delete()
 	if err != nil {
-		log.Errorf("Error deleting the sg policy {%+v}. Err: %v", sg, err)
+		log.Errorf("Error deleting the sg policy {%+v}. Err: %v", sg.ObjectMeta, err)
 		return err
 	}
 

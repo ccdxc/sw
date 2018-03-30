@@ -47,7 +47,7 @@ func (w *Watcher) handleNetworkEvent(et kvstore.WatchEventType, nw *network.Netw
 		// ask statemgr to create the network
 		err := w.statemgr.CreateNetwork(nw)
 		if err != nil {
-			log.Errorf("Error creating network {%+v}. Err: %v", nw, err)
+			log.Errorf("Error creating network {%+v}. Err: %v", nw.ObjectMeta, err)
 			w.debugStats.Increment("CreateNetworkFails")
 			return
 		}
@@ -60,7 +60,7 @@ func (w *Watcher) handleNetworkEvent(et kvstore.WatchEventType, nw *network.Netw
 		// ask statemgr to delete the network
 		err := w.statemgr.DeleteNetwork(nw.Tenant, nw.Name)
 		if err != nil {
-			log.Errorf("Error deleting network {%+v}. Err: %v", nw, err)
+			log.Errorf("Error deleting network {%+v}. Err: %v", nw.ObjectMeta, err)
 			w.debugStats.Increment("DeleteNetworkFails")
 			return
 		}
@@ -85,14 +85,14 @@ func (w *Watcher) handleEndpointEvent(et kvstore.WatchEventType, ep *network.End
 		// ask statemgr to create the endpoint
 		_, err = nw.CreateEndpoint(ep)
 		if err != nil {
-			log.Errorf("Error creating endpoint {%+v}. Err: %v", ep, err)
+			log.Errorf("Error creating endpoint {%+v}. Err: %v", ep.ObjectMeta, err)
 			return
 		}
 	case kvstore.Deleted:
 		// ask statemgr to delete the endpoint
 		_, err := nw.DeleteEndpoint(&ep.ObjectMeta)
 		if err != nil {
-			log.Errorf("Error deleting endpoint {%+v}. Err: %v", ep, err)
+			log.Errorf("Error deleting endpoint {%+v}. Err: %v", ep.ObjectMeta, err)
 			return
 		}
 	}
@@ -105,7 +105,7 @@ func (w *Watcher) handleSgEvent(et kvstore.WatchEventType, sg *network.SecurityG
 		// ask statemgr to create the network
 		err := w.statemgr.CreateSecurityGroup(sg)
 		if err != nil {
-			log.Errorf("Error creating sg {%+v}. Err: %v", sg, err)
+			log.Errorf("Error creating sg {%+v}. Err: %v", sg.ObjectMeta, err)
 			return
 		}
 	case kvstore.Updated:
@@ -114,7 +114,7 @@ func (w *Watcher) handleSgEvent(et kvstore.WatchEventType, sg *network.SecurityG
 		// ask statemgr to delete the network
 		err := w.statemgr.DeleteSecurityGroup(sg.Tenant, sg.Name)
 		if err != nil {
-			log.Errorf("Error deleting sg {%+v}. Err: %v", sg, err)
+			log.Errorf("Error deleting sg {%+v}. Err: %v", sg.ObjectMeta, err)
 			return
 		}
 	}
@@ -127,7 +127,7 @@ func (w *Watcher) handleSgPolicyEvent(et kvstore.WatchEventType, sgp *network.Sg
 		// ask statemgr to create the network
 		err := w.statemgr.CreateSgpolicy(sgp)
 		if err != nil {
-			log.Errorf("Error creating sg policy {%+v}. Err: %v", sgp, err)
+			log.Errorf("Error creating sg policy {%+v}. Err: %v", sgp.ObjectMeta, err)
 			return
 		}
 	case kvstore.Updated:
@@ -136,7 +136,7 @@ func (w *Watcher) handleSgPolicyEvent(et kvstore.WatchEventType, sgp *network.Sg
 		// ask statemgr to delete the network
 		err := w.statemgr.DeleteSgpolicy(sgp.Tenant, sgp.Name)
 		if err != nil {
-			log.Errorf("Error deleting sg policy {%+v}. Err: %v", sgp, err)
+			log.Errorf("Error deleting sg policy {%+v}. Err: %v", sgp.ObjectMeta, err)
 			return
 		}
 	}
@@ -150,7 +150,7 @@ func (w *Watcher) handleTenantEvent(et kvstore.WatchEventType, tn *network.Tenan
 		// ask statemgr to create the tenant
 		err := w.statemgr.CreateTenant(tn)
 		if err != nil {
-			log.Errorf("Error creating tenant {%+v}. Err: %v", tn, err)
+			log.Errorf("Error creating tenant {%+v}. Err: %v", tn.ObjectMeta, err)
 			w.debugStats.Increment("CreateTenantFails")
 			return
 		}
@@ -163,7 +163,7 @@ func (w *Watcher) handleTenantEvent(et kvstore.WatchEventType, tn *network.Tenan
 		// ask statemgr to delete the tenant
 		err := w.statemgr.DeleteTenant(tn.Tenant)
 		if err != nil {
-			log.Errorf("Error deleting tenant {%+v}. Err: %v", tn, err)
+			log.Errorf("Error deleting tenant {%+v}. Err: %v", tn.ObjectMeta, err)
 			w.debugStats.Increment("DeleteTenantFails")
 			return
 		}
@@ -204,7 +204,7 @@ func (w *Watcher) runNetwatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got network watch event(%s): {%+v}", evt.Type, nw)
+			log.Infof("Watcher: Got network watch event(%s): {%+v}", evt.Type, nw.ObjectMeta)
 
 			// TODO make sure we honor the order of events when handling events in parallel
 			go w.handleNetworkEvent(evt.Type, nw)
@@ -245,7 +245,7 @@ func (w *Watcher) runVmmEpwatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got vmm endpoint watch event(%s): {%+v}", evt.Type, ep)
+			log.Infof("Watcher: Got vmm endpoint watch event(%s): {%+v}", evt.Type, ep.ObjectMeta)
 
 			// TODO process each event in its own go routine
 			w.handleEndpointEvent(evt.Type, ep)
@@ -286,7 +286,7 @@ func (w *Watcher) runSgwatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got SecurityGroup watch event(%s): {%+v}", evt.Type, ep)
+			log.Infof("Watcher: Got SecurityGroup watch event(%s): {%+v}", evt.Type, ep.ObjectMeta)
 
 			// TODO process each event in its own go routine
 			w.handleSgEvent(evt.Type, ep)
@@ -326,7 +326,7 @@ func (w *Watcher) runSgPolicyWatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got SgPolicy watch event(%s): {%+v}", evt.Type, sgp)
+			log.Infof("Watcher: Got SgPolicy watch event(%s): {%+v}", evt.Type, sgp.ObjectMeta)
 
 			// TODO process each event in its own go routine
 			w.handleSgPolicyEvent(evt.Type, sgp)
@@ -368,7 +368,7 @@ func (w *Watcher) runTenantwatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got tenant watch event(%s): {%+v}", evt.Type, tn)
+			log.Infof("Watcher: Got tenant watch event(%s): {%+v}", evt.Type, tn.ObjectMeta)
 
 			// TODO process each event in its own go routine
 			w.handleTenantEvent(evt.Type, tn)
@@ -554,7 +554,7 @@ func (w *Watcher) DeleteEndpoint(tenant, net, epName, vmName, macAddr, hostName,
 	// inject the object into the network watcher
 	w.vmmEpWatcher <- evt
 
-	log.Infof("Injected endpoint Event %s. Ep: {%+v}", evt.Type, epInfo)
+	log.Infof("Injected endpoint Event %s. Ep: {%+v}", evt.Type, epInfo.ObjectMeta)
 
 	return nil
 }

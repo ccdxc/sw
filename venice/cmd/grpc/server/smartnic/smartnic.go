@@ -296,7 +296,7 @@ func (s *RPCServer) UpdateSmartNIC(obj *cmd.SmartNIC) (*cmd.SmartNIC, error) {
 		nicObj, err = cl.SmartNIC().Update(context.Background(), refObj)
 	}
 
-	log.Info("++++ UpdateSmartNIC nic: %+v", nicObj)
+	log.Debugf("++++ UpdateSmartNIC nic: %+v", nicObj)
 	return nicObj, err
 }
 

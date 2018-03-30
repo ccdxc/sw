@@ -12,6 +12,7 @@ import (
 
 	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // middleware callback roles
@@ -96,11 +97,20 @@ func newLogMiddleware() *logMiddleware {
 
 // ReqInterceptor implements request interception
 func (l *logMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, method string, req interface{}) context.Context {
+	var reqStr string
+
+	meta, err := runtime.GetObjectMeta(req)
+	if err != nil {
+		reqStr = fmt.Sprintf("{%+v}", meta)
+	} else {
+		reqStr = ""
+	}
+
 	switch role {
 	case RoleClient:
-		log.Infof("Client %s Making RPC request: %s() Req: {%+v}", mysvcName, method, req)
+		log.Debugf("Client %s Making RPC request: %s() Req: %s", mysvcName, method, reqStr)
 	case RoleServer:
-		log.Infof("Server %s received RPC: %s() Req: {%+v}", mysvcName, method, req)
+		log.Debugf("Server %s received RPC: %s() Req: %s", mysvcName, method, reqStr)
 	}
 
 	return ctx
@@ -108,11 +118,28 @@ func (l *logMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, met
 
 // RespInterceptor implements response interception
 func (l *logMiddleware) RespInterceptor(ctx context.Context, role, mysvcName, method string, req, reply interface{}, err error) context.Context {
+	var replyStr string
+
+	meta, err2 := runtime.GetObjectMeta(reply)
+	if err2 != nil {
+		replyStr = fmt.Sprintf("{%+v}", meta)
+	} else {
+		replyStr = ""
+	}
+
 	switch role {
 	case RoleClient:
-		log.Infof("Client %s received RPC response: %s() Resp: {%+v}, error: %v", mysvcName, method, reply, err)
+		if err != nil {
+			log.Errorf("Client %s received RPC response: %s() Resp: %s, error: %v", mysvcName, method, replyStr, err)
+		} else {
+			log.Debugf("Client %s received RPC response: %s() Resp: %s, error: %v", mysvcName, method, replyStr, err)
+		}
 	case RoleServer:
-		log.Infof("Server %s returning RPC response: %s() Resp: {%+v}, error: %v", mysvcName, method, reply, err)
+		if err != nil {
+			log.Errorf("Server %s returning RPC response: %s() Resp: %s, error: %v", mysvcName, method, replyStr, err)
+		} else {
+			log.Debugf("Server %s returning RPC response: %s() Resp: %s, error: %v", mysvcName, method, replyStr, err)
+		}
 	}
 
 	return ctx

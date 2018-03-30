@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/pensando/sw/api"
 )
@@ -13,8 +14,14 @@ var (
 
 // GetObjectMeta returns the ObjectMeta if its an API object, error otherwise
 func GetObjectMeta(obj interface{}) (*api.ObjectMeta, error) {
+	if obj == nil {
+		return nil, errNotAPIObject
+	}
 	switch t := obj.(type) {
 	case ObjectMetaAccessor:
+		if reflect.ValueOf(t) == reflect.Zero(reflect.TypeOf(t)) {
+			return nil, errNotAPIObject
+		}
 		if meta := t.GetObjectMeta(); meta != nil {
 			return meta, nil
 		}
