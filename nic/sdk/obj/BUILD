@@ -177,3 +177,14 @@ cc_library(
         "//:sdk_headers",
     ],
 )
+
+# csr_lite library
+cc_library(
+    name = "sdk_csr_lite",
+    srcs = [
+        "libcsr_lite.so",
+    ],
+    deps = [
+        "//:sdk_headers",
+    ],
+)

@@ -48,11 +48,13 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 #################################################
 
 BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
-hal-rtl: p4 platform capsim-master sdk
+hal-rtl: p4 platform capsim-master
 	$(MAKE) AS_DEFINES="-DCAPRI_IGNORE_TIMESTAMP -DRTL" asm
-	$(MAKE) gen-proto 
+	$(MAKE) gen-proto
 	$(MAKE) build-proto
 	$(MAKE) third-party
+	$(MAKE) csr-lite
+	$(MAKE) sdk
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal:hal
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
@@ -68,12 +70,14 @@ hal-rtl: p4 platform capsim-master sdk
 swig-cli-gft: swig-cli-clean
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli gft
 	
-gft: platform capsim-master sdk go-proto
+gft: platform capsim-master go-proto
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C p4 msft_gft
 	$(MAKE) -C asm msft_gft AS_DEFINES="-DGFT -DCAPRI_IGNORE_TIMESTAMP"
 	$(MAKE) gen-proto
 	$(MAKE) -j4 build-proto
+	$(MAKE) csr-lite
+	$(MAKE) sdk
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
 	#bazel build --copt=-DGFT $(SDK_OPTS) hal:hal
 	$(MAKE) pd_gft
@@ -184,6 +188,7 @@ gen-clean:
 	rm -rf gen/hal
 	rm -rf gen/x86_64
 	rm -rf gen/aarch64
+	$(MAKE) clean-csr-lite
 
 gen-proto:
 	$(MAKE) -C proto
@@ -191,6 +196,19 @@ gen-proto:
 
 build-proto:
 	$(PATH_OPTS) $(MAKE) -j8 $(BUILD_OPTS) -C gen/proto/hal
+
+clean-csr-lite:
+	rm -rf gen/csr_lite
+
+gen-csr-lite:
+	cd tools && python gen_cap_csr_lite.py
+
+build-csr-lite:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/capri/csr_lite:libcsr_lite.so
+
+csr-lite:
+	$(MAKE) gen-csr-lite
+	$(MAKE) build-csr-lite
 
 # make target to run bazel build with appropriate build OPTS
 # usage: make bazel-build target=fte:fte_test
@@ -235,10 +253,10 @@ halctl:
 pd: pd_iris pd_stub
 
 # code generation stage
-stage0: p4 gen-proto go-proto sdk utils capsim-master
+stage0: p4 gen-proto csr-lite go-proto utils capsim-master
 
 # lib building stage
-stage1: asm capmodel build-proto third-party
+stage1: asm capmodel build-proto sdk third-party
 
 # app building stage
 stage2: plugins linkmgr platform pd hal

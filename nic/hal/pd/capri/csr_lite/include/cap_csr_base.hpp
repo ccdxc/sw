@@ -1,8 +1,7 @@
 #ifndef CAP_CSR_BASE_H
 #define CAP_CSR_BASE_H
 
-#include "nic/include/base.h"
-#include "nic/asic/ip/verif/pcpp/cpu.h"
+#include <stdint.h>
 
 class cap_sw_csr_base {
     public:

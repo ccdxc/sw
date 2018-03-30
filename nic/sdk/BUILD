@@ -14,5 +14,5 @@ cc_library(
     name = "sdk_headers",
     includes = ["include"],
     srcs = [],
-    hdrs = glob(["include/sdk/*.hpp", "include/sdk/*.h"]),
+    hdrs = glob(["include/sdk/*.hpp", "include/sdk/*.h", "include/sdk/csr_lite/*.hpp"]),
 )

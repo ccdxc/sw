@@ -663,10 +663,10 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
 #ifndef {0}_HPP
 #define {0}_HPP
 
-#include "nic/hal/pd/capri/csr_lite/include/cap_csr_base.hpp"
+#include "cap_csr_base.hpp"
 """.format(block_name.upper())
         for i in include_map:
-            cur_str = cur_str + """#include "nic/gen/csr_lite/include/{0}.hpp" 
+            cur_str = cur_str + """#include "{0}.hpp"
 """.format(i)
         cur_str = cur_str + """
 using namespace std;""".format(block_name.upper())
@@ -678,7 +678,7 @@ using namespace std;""".format(block_name.upper())
     def gen_c_source(self):
         cur_str = """
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
-#include "nic/gen/csr_lite/include/{0}.hpp"
+#include "{0}.hpp"
 
 using namespace std;
         """.format(block_name)
@@ -704,10 +704,10 @@ using namespace std;
 #ifndef {0}_HELPER_HPP
 #define {0}_HELPER_HPP
 
-#include "nic/gen/csr_lite/include/{1}.hpp"
+#include "{1}.hpp"
 """.format(block_name.upper(), block_name)
         for i in include_map:
-            cur_str = cur_str + """#include "nic/gen/csr_lite/include/{0}_helper.hpp" 
+            cur_str = cur_str + """#include "{0}_helper.hpp" 
 """.format(i)
         cur_str = cur_str + """
 using namespace std;
@@ -719,7 +719,7 @@ using namespace std;
         return cur_str
     def gen_c_helper_source(self):
         cur_str = """
-#include "nic/gen/csr_lite/include/{0}_helper.hpp"
+#include "{0}_helper.hpp"
 """.format(block_name)
         cur_str = cur_str + """
 using namespace std;

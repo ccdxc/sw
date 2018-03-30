@@ -69,6 +69,7 @@ lib:
 	@echo Copying over libs ...
 	@find bazel-bin/lib -name "*.so" ! -name '*_*' -exec cp {} obj \;
 	@find bazel-bin/linkmgr -name "*.so" ! -name '*_*' -exec cp {} obj \;
+	cp ../../bazel-bin/nic/hal/pd/capri/csr_lite/libcsr_lite.so obj/
 	@chmod 755 obj/*.so
 
 test: lib build-test

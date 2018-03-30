@@ -4,22 +4,32 @@ licenses(["notice"])  # MIT license
 
 cc_library(
     name = "csr_lite_asic_includes",
-    srcs = [
-           ],
     hdrs = [
-            "asic/capri/model/utils/LogMsg.h",
-            "asic/ip/verif/pcpp/cpu.h",
-            "asic/ip/verif/pcpp/cpu_bus_base.h",
-            "asic/ip/verif/pcpp/cpu_bus_stub.h",
-            "asic/capri/model/cap_top/cap_top_csr_defines.h",
-           ],
+        "asic/capri/model/cap_top/cap_top_csr_defines.h",
+    ],
     includes = [
-                "asic/capri/model/utils",
-                "asic/ip/verif/pcpp",
-                "asic/capri/model/cap_top",
-               ],
+        "asic/capri/model/cap_top",
+    ],
+)
+
+cc_library(
+    name = "csr_lite_gen_includes",
+    hdrs = glob(["gen/csr_lite/include/*.hpp"]),
+    includes = [
+        "gen/csr_lite/include"
+    ],
+)
+
+cc_library(
+    name = "csr_lite_gen",
+    srcs = glob(["gen/csr_lite/*.cc"]),
     deps = [
-           ],
+       ":csr_lite_gen_includes",
+       ":csr_lite_asic_includes",
+       "//nic/hal/pd/capri/csr_lite:csr_lite_base_includes",
+       "//nic/utils/pack_bytes:pack_bytes",
+   ],
+   alwayslink = 1
 )
 
 cc_library(

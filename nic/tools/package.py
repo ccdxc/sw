@@ -59,7 +59,11 @@ cmd = 'rm -rf fake_root_target/nic/conf/plugins/dol'
 call(cmd, shell=True)
 
 # remove *.a from platform libs
-cmd = 'rm -rf fake_root_target/platform/lib/*.a'
+cmd = 'rm -f fake_root_target/platform/lib/*.a'
+call(cmd, shell=True)
+
+# remove csr_lite until main csr lib is not removed
+cmd = 'rm -f fake_root_target/nic/lib/libcsr_lite.so'
 call(cmd, shell=True)
 
 # remove *.log from nic/conf/init_bins libs

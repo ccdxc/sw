@@ -8,6 +8,7 @@
 #include "port.hpp"
 #include "port_mac.hpp"
 #include "linkmgr_rw.hpp"
+#include "sdk/csr_lite/cap_mx_csr_helper.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -465,6 +466,11 @@ port::port_mac_fn_init(linkmgr_cfg_t *cfg)
 {
     mac_fn_t           *mac_fn = &port::mac_fn;
     platform_type_t    platform_type = cfg->platform_type;
+
+    // TODO test code
+    cap_mx_csr_helper_t *mx_csr = new cap_mx_csr_helper_t();
+    SDK_TRACE_DEBUG("%p", mx_csr);
+    mx_csr->int_ecc.init(0x0);
 
     mac_fn->mac_cfg         = &mac_cfg_default;
     mac_fn->mac_enable      = &mac_enable_default;

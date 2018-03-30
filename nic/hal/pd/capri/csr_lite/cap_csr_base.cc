@@ -1,5 +1,6 @@
 #include "nic/hal/pd/capri/csr_lite/include/cap_csr_base.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
+#include "sdk/pal.hpp"
 
 cap_sw_csr_base::cap_sw_csr_base()=default;
 cap_sw_csr_base::~cap_sw_csr_base()=default;
@@ -41,11 +42,11 @@ void cap_sw_csr_base::init(uint32_t _chip_id, uint32_t _addr_base) {
 }
 
 void cap_sw_csr_base::pack(uint8_t *bytes, uint32_t start) {
-    HAL_TRACE_ERR("cap_sw_csr_base::pack() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_csr_base::pack() should not be used\n");
 }
 
 void cap_sw_csr_base::unpack(uint8_t *bytes, uint32_t start) {
-    HAL_TRACE_ERR("cap_sw_csr_base::unpack() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_csr_base::unpack() should not be used\n");
 }
 
 uint32_t cap_sw_csr_base::get_byte_size() const {
@@ -66,23 +67,23 @@ uint32_t cap_sw_csr_base::get_byte_size() const {
 }
 
 void cap_sw_csr_base::write() {
-    HAL_TRACE_ERR("cap_sw_csr_base::write() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_csr_base::write() should not be used\n");
 }
 
 void cap_sw_csr_base::read() {
-    HAL_TRACE_ERR("cap_sw_csr_base::read() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_csr_base::read() should not be used\n");
 }
 
 void cap_sw_csr_base::write_hw(uint8_t *bytes, int block_write) {
-    HAL_TRACE_ERR("cap_sw_csr_base::write_hw() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_csr_base::write_hw() should not be used\n");
 }
 
 void cap_sw_csr_base::read_hw(uint8_t *bytes, int block_read) {
-    HAL_TRACE_ERR("cap_sw_csr_base::read_hw() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_csr_base::read_hw() should not be used\n");
 }
 
 void cap_sw_csr_base::read_compare(int block_read) {
-    HAL_TRACE_ERR("cap_sw_csr_base::read_compare() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_csr_base::read_compare() should not be used\n");
 }
 
 
@@ -116,29 +117,31 @@ void cap_sw_register_base::write_hw(uint8_t *write_bytes, int block_write) {
     uint32_t words = (get_width()+31)/32;
     uint64_t offset = get_offset();
     
-    HAL_ASSERT(block_write == 0);
+    SDK_ASSERT(block_write == 0);
 
     for(uint32_t ii = 0; ii < words; ii++) {
         uint32_t data = *((uint32_t *)&(write_bytes[ii*4]));
-        HAL_TRACE_DEBUG("cap_sw_register_base::write_hw(): Addr: {}; Data: {}\n",
+        SDK_TRACE_DEBUG("cap_sw_register_base::write_hw(): Addr: {}; Data: {}\n",
                          offset + (ii*4), data);
-        cpu::access()->write(get_chip_id(), offset + (ii*4), data, false,
-                       secure_acc_e);
+        sdk::lib::pal_reg_write(offset + (ii*4), &data);
+        // cpu::access()->write(get_chip_id(), offset + (ii*4), data, false,
+        //               secure_acc_e);
     }
 }
 
 void cap_sw_register_base::read_hw(uint8_t *read_bytes, int block_read) {
-    uint32_t chip_id = get_chip_id();
     uint64_t offset = get_offset();
     uint32_t width = get_width();
     uint32_t words = (width+31)/32;
 
-    HAL_ASSERT(block_read == 0);
+    SDK_ASSERT(block_read == 0);
 
     for(uint32_t ii = 0; ii < words; ii++) {
-        uint32_t data = cpu::access()->read(chip_id, offset + (ii*4), false, secure_acc_e);
+        // uint32_t data = cpu::access()->read(chip_id, offset + (ii*4), false, secure_acc_e);
+        uint32_t data = 0;
+        sdk::lib::pal_reg_read(offset + (ii*4), &data);
         *((uint32_t *)&(read_bytes[ii*4])) = data;
-        HAL_TRACE_DEBUG("cap_sw_register_base::read_hw(): Addr: {}; Data: {}\n",
+        SDK_TRACE_DEBUG("cap_sw_register_base::read_hw(): Addr: {}; Data: {}\n",
                          offset + (ii*4), data);
     }
 }
@@ -157,7 +160,7 @@ void cap_sw_register_base::read_compare(int block_read) {
 
     for (uint32_t ii=0; ii<num_bytes; ii++) {
         if (bytes1[ii] != bytes2[ii]) {
-            HAL_TRACE_ERR("cap_sw_register_base::read_compare(): Actual: {}, Read: {}\n", bytes1[ii], bytes2[ii]);
+            SDK_TRACE_ERR("cap_sw_register_base::read_compare(): Actual: {}, Read: {}\n", bytes1[ii], bytes2[ii]);
         }
     }
 
@@ -173,11 +176,11 @@ cap_sw_memory_base::cap_sw_memory_base():
 cap_sw_memory_base::~cap_sw_memory_base()=default;
 
 void cap_sw_memory_base::write() {
-    HAL_TRACE_ERR("cap_sw_memory_base::write() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_memory_base::write() should not be used\n");
 }
 
 void cap_sw_memory_base::read() {
-    HAL_TRACE_ERR("cap_sw_memory_base::read() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_memory_base::read() should not be used\n");
 }
 
 
@@ -189,11 +192,11 @@ cap_sw_decoder_base::cap_sw_decoder_base():
 cap_sw_decoder_base::~cap_sw_decoder_base()=default;
 
 void cap_sw_decoder_base::write() {
-    HAL_TRACE_ERR("cap_sw_decoder_base::write() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_decoder_base::write() should not be used\n");
 }
 
 void cap_sw_decoder_base::read() {
-    HAL_TRACE_ERR("cap_sw_decoder_base::read() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_decoder_base::read() should not be used\n");
 }
 
 
@@ -205,11 +208,11 @@ cap_sw_block_base::cap_sw_block_base():
 cap_sw_block_base::~cap_sw_block_base()=default;
 
 void cap_sw_block_base::write() {
-    HAL_TRACE_ERR("cap_sw_block_base::write() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_block_base::write() should not be used\n");
 }
 
 void cap_sw_block_base::read() {
-    HAL_TRACE_ERR("cap_sw_block_base::read() should not be used\n");
+    SDK_TRACE_ERR("cap_sw_block_base::read() should not be used\n");
 }
 
 void cap_sw_block_base::set_byte_size(uint32_t _byte_size) {
