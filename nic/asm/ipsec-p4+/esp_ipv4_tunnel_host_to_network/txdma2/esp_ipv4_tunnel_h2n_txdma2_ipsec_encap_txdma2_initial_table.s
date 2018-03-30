@@ -36,12 +36,12 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     and r7, r7, IPSEC_BARCO_RING_INDEX_MASK  
     tblwr d.barco_cindex, r7 
     nop
-    tbladd d.{barco_ring_cindex}.hx, 1
-    nop 
-    //seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 
-    //b.!c1 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
-    addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)
-    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, d.{barco_ring_cindex}.hx)
+    tblmincri.f  d.{barco_ring_cindex}.hx, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    nop
+    seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 
+    b.!c1 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
+    addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)
+    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, 0)
     memwr.dx  r4, r3
 
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing:

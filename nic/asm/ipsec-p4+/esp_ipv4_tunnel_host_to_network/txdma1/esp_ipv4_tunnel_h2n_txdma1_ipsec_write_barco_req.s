@@ -26,13 +26,13 @@ esp_ipv4_tunnel_h2n_post_to_barco_ring:
 esp_ipv4_tunnel_h2n_dma_cmd_incr_barco_pindex:
     add r7, d.barco_pindex, 1
     and r7, r7, IPSEC_BARCO_RING_INDEX_MASK 
-    tblwr d.barco_pindex, r7 
+    tblwr.f d.barco_pindex, r7 
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_ring_barco_doorbell:
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 0, LIF_IPSEC_ESP)
     phvwr p.barco_req_doorbell_address, r4.dx
-    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, d.barco_pindex)
+    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, r7)
     phvwr p.barco_req_doorbell_data, r3.dx
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd_incr_pindex_dma_cmd, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX, barco_dbell_pi, barco_dbell_pi)
