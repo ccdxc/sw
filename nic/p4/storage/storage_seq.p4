@@ -234,7 +234,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
 				     barco_desc_size, barco_pndx_size, filler,
                                      status_hbm_addr, status_host_addr, 
                                      intr_addr, intr_data, status_len, status_dma_en,
-                                     next_db_en, intr_en, is_next_db_barco_push) {
+                                     next_db_en, intr_en, next_db_action_barco_push) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
@@ -256,7 +256,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_comp_status_desc0_scratch.status_dma_en, status_dma_en);
   modify_field(seq_comp_status_desc0_scratch.next_db_en, next_db_en);
   modify_field(seq_comp_status_desc0_scratch.intr_en, intr_en);
-  modify_field(seq_comp_status_desc0_scratch.is_next_db_barco_push, is_next_db_barco_push);
+  modify_field(seq_comp_status_desc0_scratch.next_db_action_barco_push, next_db_action_barco_push);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(storage_kivec4.barco_ring_addr, seq_comp_status_desc0_scratch.next_db_addr);
@@ -267,7 +267,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(storage_kivec5.status_dma_en, seq_comp_status_desc0_scratch.status_dma_en);
   modify_field(storage_kivec5.next_db_en, seq_comp_status_desc0_scratch.next_db_en);
   modify_field(storage_kivec5.intr_en, seq_comp_status_desc0_scratch.intr_en);
-  modify_field(storage_kivec5.is_next_db_barco_push, seq_comp_status_desc0_scratch.is_next_db_barco_push);
+  modify_field(storage_kivec5.next_db_action_barco_push, seq_comp_status_desc0_scratch.next_db_action_barco_push);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
   // Fence with the SGL mem2mem DMA for ordering.
@@ -523,7 +523,7 @@ action seq_xts_status_desc_handler(next_db_addr, next_db_data,
 				   barco_desc_size, barco_pndx_size, filler,
                                    status_hbm_addr, status_host_addr, 
                                    intr_addr, intr_data, status_len, status_dma_en,
-                                   next_db_en, intr_en, is_next_db_barco_push,
+                                   next_db_en, intr_en, next_db_action_barco_push,
 				   stop_chain_on_error) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -546,7 +546,7 @@ action seq_xts_status_desc_handler(next_db_addr, next_db_data,
   modify_field(seq_xts_status_desc_scratch.status_dma_en, status_dma_en);
   modify_field(seq_xts_status_desc_scratch.next_db_en, next_db_en);
   modify_field(seq_xts_status_desc_scratch.intr_en, intr_en);
-  modify_field(seq_xts_status_desc_scratch.is_next_db_barco_push, is_next_db_barco_push);
+  modify_field(seq_xts_status_desc_scratch.next_db_action_barco_push, next_db_action_barco_push);
   modify_field(seq_xts_status_desc_scratch.stop_chain_on_error, stop_chain_on_error);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
@@ -558,7 +558,7 @@ action seq_xts_status_desc_handler(next_db_addr, next_db_data,
   modify_field(storage_kivec5.status_dma_en, seq_xts_status_desc_scratch.status_dma_en);
   modify_field(storage_kivec5.next_db_en, seq_xts_status_desc_scratch.next_db_en);
   modify_field(storage_kivec5.intr_en, seq_xts_status_desc_scratch.intr_en);
-  modify_field(storage_kivec5.is_next_db_barco_push, seq_xts_status_desc_scratch.is_next_db_barco_push);
+  modify_field(storage_kivec5.next_db_action_barco_push, seq_xts_status_desc_scratch.next_db_action_barco_push);
   modify_field(storage_kivec5.stop_chain_on_error, seq_xts_status_desc_scratch.stop_chain_on_error);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.

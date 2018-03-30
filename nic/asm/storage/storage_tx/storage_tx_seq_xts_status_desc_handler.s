@@ -31,7 +31,7 @@ storage_tx_seq_xts_status_desc_handler_start:
    	        d.{status_dma_en...stop_chain_on_error} // delay slot
 
    // if doorbell is actually a Barco push action, handle accordingly
-   bbeq		d.is_next_db_barco_push, 0, next_db_ring
+   bbeq		d.next_db_action_barco_push, 0, next_db_ring
    sll          r7, 1, d.barco_desc_size        // delay slot
                 
    // Setup the source of the mem2mem DMA into DMA cmd 1.

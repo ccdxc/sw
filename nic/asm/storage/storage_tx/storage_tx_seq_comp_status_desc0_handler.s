@@ -34,11 +34,11 @@ storage_tx_seq_comp_status_desc0_handler_start:
    // Check if next doorbell is to be enabled
    bbeq		d.next_db_en, 0, intr_check
    phvwrpair	p.storage_kivec5_intr_addr, d.intr_addr, \
-                p.{storage_kivec5_status_dma_en...storage_kivec5_is_next_db_barco_push}, \
-   	        d.{status_dma_en...is_next_db_barco_push}       // delay slot
+                p.{storage_kivec5_status_dma_en...storage_kivec5_next_db_action_barco_push}, \
+   	        d.{status_dma_en...next_db_action_barco_push}   // delay slot
 
    // if doorbell is actually a Barco push action, handle accordingly
-   bbeq		d.is_next_db_barco_push, 0, next_db_ring
+   bbeq		d.next_db_action_barco_push, 0, next_db_ring
    sll          r7, 1, d.barco_desc_size        // delay slot
                 
    // Setup the source of the mem2mem DMA into DMA cmd 1.

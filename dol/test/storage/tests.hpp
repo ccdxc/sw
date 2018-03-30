@@ -65,7 +65,7 @@ typedef struct acc_chain_entry {
   // When comp/decomp fails and stop_chain_on_error is set, intr_en will be honored
            next_doorbell_en     :1,	// enable chain doorbell
            intr_en              :1,	// enable intr_data write to intr_pa
-           is_next_db_barco_push:1,	// next_db is actually a Barco push
+           next_db_action_barco_push:1,	// next_db action is actually a Barco push
            stop_chain_on_error  :1, // stop chaining on error
            copy_src_dst_on_error:1,
   // NOTE: sgl_xfer_en and aol_len_pad_en are mutually exclusive.

@@ -64,7 +64,7 @@ barco_push_check:
    // to get the current ring pindex. Note that this must be done
    // in the same stage as storage_tx_seq_barco_entry_handler_start()
    // which is stage 2.
-   bbeq		STORAGE_KIVEC5_NEXT_DB_BARCO_PUSH, 0, all_dma_complete
+   bbeq		STORAGE_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH, 0, all_dma_complete
    nop
 
    // Set the table and program address 

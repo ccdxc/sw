@@ -33,9 +33,15 @@ int compress_dualq_flat_4K_buf();
 int seq_compress_dualq_flat_4K_buf();
 int compress_dualq_flat_4K_buf_in_hbm();
 int seq_compress_dualq_flat_4K_buf_in_hbm();
-int compress_output_encrypt();
-int seq_compress_output_encrypt();
-int seq_decrypt_output_decompress();
+int compress_output_encrypt_app_min_size();
+int compress_output_encrypt_app_max_size();
+int compress_output_encrypt_app_nominal_size();
+int seq_compress_output_encrypt_app_min_size();
+int seq_compress_output_encrypt_app_max_size();
+int seq_compress_output_encrypt_app_nominal_size();
+int seq_decrypt_output_decompress_app_min_size();
+int seq_decrypt_output_decompress_app_max_size();
+int seq_decrypt_output_decompress_app_nominal_size();
 
 }  // namespace tests
 

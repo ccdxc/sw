@@ -2611,7 +2611,7 @@ int test_setup_post_comp_seq_status_entry(acc_chain_entry_t &chain_ent,
   seq_status_desc->clear();
 
   // desc bytes 0-63
-  if (chain_ent.is_next_db_barco_push) {
+  if (chain_ent.next_db_action_barco_push) {
     seq_status_desc->write_bit_fields(0, 64, chain_ent.push_entry.barco_ring_addr);
     seq_status_desc->write_bit_fields(128, 64, chain_ent.push_entry.barco_desc_addr);
     seq_status_desc->write_bit_fields(192, 34, chain_ent.push_entry.barco_pndx_addr);
@@ -2631,7 +2631,7 @@ int test_setup_post_comp_seq_status_entry(acc_chain_entry_t &chain_ent,
   seq_status_desc->write_bit_fields(474, 1, chain_ent.status_dma_en);
   seq_status_desc->write_bit_fields(475, 1, chain_ent.next_doorbell_en);
   seq_status_desc->write_bit_fields(476, 1, chain_ent.intr_en);
-  seq_status_desc->write_bit_fields(477, 1, chain_ent.is_next_db_barco_push);
+  seq_status_desc->write_bit_fields(477, 1, chain_ent.next_db_action_barco_push);
 
   // desc bytes 64-127
   seq_status_desc->write_bit_fields(512 + 0, 64, chain_ent.src_hbm_pa);
@@ -2656,7 +2656,7 @@ int test_setup_post_xts_seq_status_entry(acc_chain_entry_t &chain_ent,
 
   seq_status_desc->clear();
 
-  if (chain_ent.is_next_db_barco_push) {
+  if (chain_ent.next_db_action_barco_push) {
     seq_status_desc->write_bit_fields(0, 64, chain_ent.push_entry.barco_ring_addr);
     seq_status_desc->write_bit_fields(128, 64, chain_ent.push_entry.barco_desc_addr);
     seq_status_desc->write_bit_fields(192, 34, chain_ent.push_entry.barco_pndx_addr);
@@ -2676,7 +2676,7 @@ int test_setup_post_xts_seq_status_entry(acc_chain_entry_t &chain_ent,
   seq_status_desc->write_bit_fields(474, 1, chain_ent.status_dma_en);
   seq_status_desc->write_bit_fields(475, 1, chain_ent.next_doorbell_en);
   seq_status_desc->write_bit_fields(476, 1, chain_ent.intr_en);
-  seq_status_desc->write_bit_fields(477, 1, chain_ent.is_next_db_barco_push);
+  seq_status_desc->write_bit_fields(477, 1, chain_ent.next_db_action_barco_push);
   seq_status_desc->write_bit_fields(478, 1, chain_ent.stop_chain_on_error);
   seq_status_desc->write_thru();
 
