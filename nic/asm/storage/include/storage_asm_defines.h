@@ -106,8 +106,8 @@
     k.storage_kivec5_sgl_xfer_en
 #define STORAGE_KIVEC5_INTR_EN                  \
     k.storage_kivec5_intr_en
-#define STORAGE_KIVEC5_NEXT_DB_BARCO_PUSH       \
-    k.storage_kivec5_is_next_db_barco_push
+#define STORAGE_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH\
+    k.storage_kivec5_next_db_action_barco_push
 
 #define STAGE0_KIVEC_LIF                        \
     k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}

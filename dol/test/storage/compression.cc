@@ -110,18 +110,31 @@ static comp_queue_t dc_queue;
 static comp_queue_t cp_hotq;
 static comp_queue_t dc_hotq;
 
-static uint16_t kCPVersion = 0x1234;
+// These constants equate to the number of 
+// hardware compression/decompression engines.
+#define MAX_CP_REQ	16
+#define MAX_DC_REQ	2
+
+// Max block size supported by hardware engine
+static constexpr uint32_t kCompEngineMaxSize = 65536;
+
+// Typical sizes used by customer application
+static constexpr uint32_t kCompAppMinSize = 4096;
+static constexpr uint32_t kCompAppMaxSize = 32768;
+static constexpr uint32_t kCompAppNominalSize = 8192;
 
 // Sample data generated during test.
-static const uint8_t all_zeros[65536] = {0};
-static constexpr uint32_t kUncompressedDataSize = 65536;
+static const uint8_t all_zeros[kCompEngineMaxSize] = {0};
+static constexpr uint32_t kUncompressedDataSize = kCompEngineMaxSize;
 static uint8_t uncompressed_data[kUncompressedDataSize];
-static constexpr uint32_t kCompressedBufSize = 65536 - 4096;
+static constexpr uint32_t kCompressedBufSize = kCompEngineMaxSize - 4096;
 static uint8_t compressed_data_buf[kCompressedBufSize];
 static uint16_t compressed_data_size;  // Calculated at run-time;
-static uint16_t last_cp_output_data_len;  // Calculated at run-time;
+static uint16_t last_cp_output_data_len;
+static uint16_t last_encrypt_output_data_len;
 
-static const uint32_t kSeqIntrData = 0x11223344;
+static uint16_t kCPVersion = 0x1234;
+static constexpr uint32_t kSeqIntrData = 0x11223344;
 
 static dp_mem_t *uncompressed_buf;
 static dp_mem_t *uncompressed_host_buf;
@@ -152,25 +165,28 @@ static dp_mem_t *xts_opaque_host_buf;
 
 static dp_mem_t *pad_buf;
 
+// Decomp descriptor for use by XTS-decrypt to decomp chaining
+static dp_mem_t *xts_decomp_cp_desc;
+
 // Forward declaration with default param values
-int run_cp_test(cp_desc_t *desc, dp_mem_t *status, const cp_status_no_hash_t &exp,
+static int compress_status_verify(dp_mem_t *status,
+                                  dp_mem_t *dst_buf,
+                                  const cp_desc_t& desc,
+                                  bool log_error=true);
+static int decompress_status_verify(dp_mem_t *status,
+                                    const cp_desc_t& desc,
+                                    uint32_t exp_output_data_len,
+                                    bool log_error=true);
+int run_cp_test(cp_desc_t& desc,
+                dp_mem_t *dst_buf,
+                dp_mem_t *status,
                 comp_queue_push_t push_type = COMP_QUEUE_PUSH_HW_DIRECT,
                 uint32_t seq_comp_qid = 0);
-int run_dc_test(cp_desc_t *desc, dp_mem_t *status, const cp_status_no_hash_t &exp,
+int run_dc_test(cp_desc_t& desc,
+                dp_mem_t *status,
+                uint32_t exp_output_data_len,
                 comp_queue_push_t push_type = COMP_QUEUE_PUSH_HW_DIRECT,
                 uint32_t seq_comp_qid = 0);
-
-// Write zeros to the 1st 8 bytes of compressed data buffer in hostmem.
-void InvalidateHdrInHostMem() {
-  dp_mem_t *cp_hdr = compressed_host_buf->fragment_find(0, sizeof(cp_hdr_t));
-  cp_hdr->clear_thru();
-}
-
-// Write zeros to the 1st 8 bytes of compressed data buffer in hbm.
-void InvalidateHdrInHBM() {
-  dp_mem_t *cp_hdr = compressed_buf->fragment_find(0, sizeof(cp_hdr_t));
-  cp_hdr->clear_thru();
-}
 
 static bool status_poll(dp_mem_t *status) {
   auto func = [status] () -> int {
@@ -190,6 +206,142 @@ static bool status_poll(dp_mem_t *status) {
     return true;
   return false;
 }
+
+#define LOG_CHECK_PRINTF(fmt, ...)  \
+    if (log_error) {printf(fmt, __VA_ARGS__);}
+
+static int
+compress_status_verify(dp_mem_t *status,
+                       dp_mem_t *dst_buf,
+                       const cp_desc_t& desc,
+                       bool log_error)
+{
+    cp_status_sha512_t *st = (cp_status_sha512_t *)status->read_thru();
+
+    if (!st->valid) {
+        LOG_CHECK_PRINTF("%s ERROR: Status valid bit not set\n", __func__);
+        return -1;
+    }
+    if (st->err) {
+        LOG_CHECK_PRINTF("%s ERROR: status err 0x%x is unexpected\n",
+                         __func__, st->err);
+        return -1;
+    }
+    if (st->partial_data != desc.status_data) {
+        LOG_CHECK_PRINTF("%s ERROR: partial data mismatch, expected 0x%x, "
+                         "received 0x%x\n", __func__, desc.status_data,
+                         st->partial_data);
+        return -1;
+    }
+    if (desc.cmd_bits.comp_decomp_en && desc.cmd_bits.insert_header) {
+        dp_mem_t *hdr_buf = dst_buf->fragment_find(0, sizeof(cp_hdr_t));
+        cp_hdr_t *hdr = (cp_hdr_t *)hdr_buf->read_thru();
+
+        if (hdr->version != kCPVersion) {
+            LOG_CHECK_PRINTF("%s Header version mismatch, expected 0x%x, "
+                             "received 0x%x\n", __func__, kCPVersion, hdr->version);
+            return -1;
+        }
+        if (hdr->cksum == 0) {
+            LOG_CHECK_PRINTF("%s ERROR: Header with zero cksum\n", __func__);
+            return -1;
+        }
+        uint32_t datain_len = desc.datain_len == 0 ?
+                              kCompEngineMaxSize : desc.datain_len;
+        if ((hdr->data_len == 0) ||
+            (hdr->data_len > (dst_buf->line_size_get() - sizeof(cp_hdr_t))) ||
+            (hdr->data_len > datain_len)) {
+
+            LOG_CHECK_PRINTF("%s ERROR: Invalid data_len 0x%x\n",
+                             __func__, hdr->data_len);
+            return -1;
+        }
+        if (st->output_data_len != (hdr->data_len + sizeof(cp_hdr_t))) {
+            LOG_CHECK_PRINTF("%s ERROR: output_data_len %u mismatches hdr size %d\n",
+                             __func__, st->output_data_len,
+                             (int)(hdr->data_len + sizeof(cp_hdr_t)));
+            return -1;
+        }
+    }
+    if (desc.cmd_bits.comp_decomp_en && desc.cmd_bits.sha_en) {
+        int sha_size = desc.cmd_bits.sha_type ? 32 : 64;
+        if (memcmp(st->sha512, all_zeros, sha_size) == 0) {
+            LOG_CHECK_PRINTF("%s ERROR: Sha is all zero\n", __func__);
+            return -1;
+        }
+    }
+    if (st->integrity_data == 0) {
+        LOG_CHECK_PRINTF("%s Integrity is all zero\n", __func__);
+        return -1;
+    }
+    return 0;
+}
+
+static int
+decompress_status_verify(dp_mem_t *status,
+                         const cp_desc_t& desc,
+                         uint32_t exp_output_data_len,
+                         bool log_error)
+{
+    cp_status_sha512_t *st = (cp_status_sha512_t *)status->read_thru();
+
+    if (!st->valid) {
+        LOG_CHECK_PRINTF("%s ERROR: Status valid bit not set\n", __func__);
+        return -1;
+    }
+    if (st->err) {
+        LOG_CHECK_PRINTF("%s ERROR: status err 0x%x is unexpected\n",
+                         __func__, st->err);
+        return -1;
+    }
+    if (st->partial_data != desc.status_data) {
+        LOG_CHECK_PRINTF("%s ERROR: partial data mismatch, expected 0x%x, "
+                         "received 0x%x\n",__func__, desc.status_data,
+                         st->partial_data);
+        return -1;
+    }
+    if (st->output_data_len != exp_output_data_len) {
+        LOG_CHECK_PRINTF("%s ERROR: output data len mismatch, expected %u, "
+                         "received %u\n", __func__, exp_output_data_len,
+                         st->output_data_len);
+        return -1;
+    }
+    return 0;
+}
+
+static uint32_t
+comp_status_output_data_len_get(dp_mem_t *status)
+{
+    cp_status_sha512_t *st = (cp_status_sha512_t *)status->read_thru();
+    return st->output_data_len;
+}
+
+static int
+data_verify_and_dump(uint8_t *expected_data,
+                     uint8_t *actual_data,
+                     uint32_t len)
+{
+    int     cmp_result;
+
+    cmp_result = memcmp(expected_data, actual_data, len);
+    if (cmp_result) {
+        if (cmp_result < 0) {
+            cmp_result = -cmp_result;
+        }
+        printf("Data of length %u mismatch at offset %d\n", len, cmp_result);
+        if (cmp_result < (int)len) {
+            printf("\nDumping expected data starting at offset %u\n", cmp_result);
+            utils::dump(expected_data + cmp_result, len - cmp_result);
+            printf("\nDumping actual data starting at offset %u\n", cmp_result);
+            utils::dump(actual_data + cmp_result, len - cmp_result);
+        }
+
+        return -1;
+    }
+
+    return 0;
+}
+
 
 uint64_t
 queue_mem_pa_get(uint64_t reg_addr)
@@ -228,7 +380,7 @@ comp_queue_alloc(comp_queue_t &comp_queue,
 }
 
 void
-comp_queue_push(const cp_desc_t *src_desc,
+comp_queue_push(const cp_desc_t& src_desc,
                 comp_queue_t &comp_queue,
                 comp_queue_push_t push_type,
                 uint32_t seq_comp_qid)
@@ -246,7 +398,7 @@ comp_queue_push(const cp_desc_t *src_desc,
         comp_queue.curr_pd_idx = (comp_queue.curr_pd_idx + 1) % kNumSubqEntries;
 
         dst_desc = &comp_queue.q_base_mem[curr_pd_idx];
-        memcpy(dst_desc, src_desc, sizeof(*dst_desc));
+        memcpy(dst_desc, &src_desc, sizeof(*dst_desc));
 
         comp_queue.curr_seq_comp_qid = seq_comp_qid;
         seq_comp_desc = queues::pvm_sq_consume_entry(comp_queue.curr_seq_comp_qid,
@@ -285,7 +437,7 @@ comp_queue_push(const cp_desc_t *src_desc,
     case COMP_QUEUE_PUSH_HW_DIRECT:
     case COMP_QUEUE_PUSH_HW_DIRECT_BATCH:
         write_mem(comp_queue.q_base_mem_pa + (comp_queue.curr_pd_idx * sizeof(cp_desc_t)),
-                  (uint8_t *)src_desc, sizeof(cp_desc_t));
+                  (uint8_t *)&src_desc, sizeof(cp_desc_t));
         comp_queue.curr_pd_idx = (comp_queue.curr_pd_idx + 1) % kNumSubqEntries;
         if (push_type == COMP_QUEUE_PUSH_HW_DIRECT) {
             write_reg(comp_queue.cfg_q_pd_idx, comp_queue.curr_pd_idx);
@@ -376,22 +528,25 @@ compression_buf_init()
     xts_status_desc_buf = new dp_mem_t(1, sizeof(xts::xts_status_desc_t),
                                       DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
                                       sizeof(xts::xts_status_desc_t));
-    xts_status_buf = new dp_mem_t(1, sizeof(uint64_t));
-    xts_status_host_buf = new dp_mem_t(1, sizeof(uint64_t),
+    xts_status_buf = new dp_mem_t(1, sizeof(uint32_t));
+    xts_status_host_buf = new dp_mem_t(1, sizeof(uint32_t),
                                        DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     xts_opaque_host_buf = new dp_mem_t(1, sizeof(uint32_t),
                                        DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
+
+    xts_decomp_cp_desc = new dp_mem_t(1, sizeof(cp_desc_t), DP_MEM_ALIGN_SPEC,
+                                      DP_MEM_TYPE_HBM, sizeof(cp_desc_t));
 
     // Pre-fill input buffers.
     uint64_t *p64 = (uint64_t *)uncompressed_data;
     for (uint64_t i = 0; i < (kUncompressedDataSize/sizeof(uint64_t)); i++)
       p64[i] = i;
 
-    bcopy(uncompressed_data, uncompressed_buf->read(),
-          uncompressed_buf->line_size_get());
+    memcpy(uncompressed_buf->read(), uncompressed_data,
+           uncompressed_buf->line_size_get());
     uncompressed_buf->write_thru();
-    bcopy(uncompressed_data, uncompressed_host_buf->read(),
+    memcpy(uncompressed_host_buf->read(), uncompressed_data,
           uncompressed_host_buf->line_size_get());
     uncompressed_host_buf->write_thru();
 }
@@ -463,135 +618,103 @@ compression_init()
   printf("Compression init done\n");
 }
 
-// We only compare err and partial data from exp.
-int run_cp_test(cp_desc_t *desc, dp_mem_t *status, const cp_status_no_hash_t &exp,
-                comp_queue_push_t push_type, uint32_t seq_comp_qid) {
+int run_cp_test(cp_desc_t& desc,
+                dp_mem_t *dst_buf,
+                dp_mem_t *status,
+                comp_queue_push_t push_type,
+                uint32_t seq_comp_qid)
+{
+    status->clear_thru();
+    comp_queue_push(desc, cp_queue, push_type, seq_comp_qid);
+    if (!status_poll(status)) {
+      printf("ERROR: status never came\n");
+      return -1;
+    }
 
-  status->clear_thru();
-  desc->status_addr = status->pa();
-
-  comp_queue_push(desc, cp_queue, push_type, seq_comp_qid);
-  if (!status_poll(status)) {
-    printf("ERROR: status never came\n");
+    if (compress_status_verify(status, dst_buf, desc) == 0) {
+        last_cp_output_data_len = comp_status_output_data_len_get(status);
+        printf("Last output data len = %u\n", last_cp_output_data_len);
+        return 0;
+    }
     return -1;
-  }
-  cp_status_sha512_t *st = (cp_status_sha512_t *)status->read();
-  if (!st->valid) {
-    printf("ERROR: Status valid bit not set\n");
-    return -1;
-  }
-  if (st->err != exp.err) {
-    printf("ERROR: status err 0x%x is unexpected\n", st->err);
-    return -1;
-  }
-  if (st->partial_data != exp.partial_data) {
-    printf("ERROR: status partial data 0x%x is unexpected\n", st->partial_data);
-    return -1;
-  }
-  if (desc->cmd_bits.comp_decomp_en && desc->cmd_bits.insert_header && (st->err == 0)) {
-    cp_hdr_t *hdr = (cp_hdr_t *)compressed_host_buf->read_thru();
-    // If the dst was hbm, copy over header from there.
-    if (!(desc->dst & (1ul << 63))) {
-      hdr = (cp_hdr_t *)compressed_buf->read_thru();
-    }
-    if (hdr->version != kCPVersion) {
-      printf("Header version mismatch, expected 0x%x, received 0x%x\n",
-             kCPVersion, hdr->version);
-      return -1;
-    }
-    if (hdr->cksum == 0) {
-      printf("ERROR: Header with zero cksum\n");
-      return -1;
-    }
-    uint32_t datain_len = desc->datain_len;
-    if (datain_len == 0)
-      datain_len = 65536;
-    if ((hdr->data_len == 0) || (hdr->data_len > (kCompressedBufSize - sizeof(cp_hdr_t)))
-        || (hdr->data_len > datain_len)) {
-      printf("ERROR: Invalid data_len 0x%x\n", hdr->data_len);
-      return -1;
-    }
-    if (st->output_data_len != (hdr->data_len + sizeof(cp_hdr_t))) {
-      printf("ERROR: output_data_len %u does not match hdr+sizeof(cp_hdr_t) %d\n",
-             st->output_data_len, (int)(hdr->data_len + sizeof(cp_hdr_t)));
-      return -1;
-    }
-  }
-  if (desc->cmd_bits.comp_decomp_en && (st->err == 0) && desc->cmd_bits.sha_en) {
-    int sha_size = desc->cmd_bits.sha_type ? 32 : 64;
-    if (bcmp(st->sha512, all_zeros, sha_size) == 0) {
-      printf("ERROR: Sha is all zero\n");
-      return -1;
-    }
-  }
-  if ((st->err == 0) && (st->integrity_data == 0)) {
-    printf("Integrity is all zero\n");
-    return -1;
-  }
-  last_cp_output_data_len = st->output_data_len;
-  printf("Last output data len = %u\n", last_cp_output_data_len);
-  return 0;
 }
 
-// Only err, output_data_len and partial_data is compared from exp.
-int run_dc_test(cp_desc_t *desc, dp_mem_t *status, const cp_status_no_hash_t &exp,
-                comp_queue_push_t push_type, uint32_t seq_comp_qid) {
+int run_dc_test(cp_desc_t& desc,
+                dp_mem_t *status,
+                uint32_t exp_output_data_len,
+                comp_queue_push_t push_type,
+                uint32_t seq_comp_qid)
+{
+    status->clear_thru();
+    comp_queue_push(desc, dc_queue, push_type, seq_comp_qid);
+    if (!status_poll(status)) {
+      printf("ERROR: status never came\n");
+      return -1;
+    }
+    return decompress_status_verify(status, desc, exp_output_data_len);
+}
 
-  status->clear_thru();
-  desc->status_addr = status->pa();
+void compress_cp_desc_template_fill(cp_desc_t &d,
+                                    dp_mem_t *src_buf,
+                                    dp_mem_t *dst_buf,
+                                    dp_mem_t *status_buf,
+                                    dp_mem_t *invalidate_hdr_buf,
+                                    uint32_t src_len)
+{
+    memset(&d, 0, sizeof(d));
+    d.cmd_bits.comp_decomp_en = 1;
+    d.cmd_bits.insert_header = 1;
+    d.cmd_bits.sha_en = 1;
+    d.src = src_buf->pa();
+    d.dst = dst_buf->pa();
+    d.status_addr = status_buf->pa();
+    d.datain_len = src_len == kCompEngineMaxSize ? 0 : src_len;
+    d.threshold_len = src_len - sizeof(cp_hdr_t);
+    d.status_data = 0x1234;
 
-  comp_queue_push(desc, dc_queue, push_type, seq_comp_qid);
-  if (!status_poll(status)) {
-    printf("ERROR: status never came\n");
-    return -1;
-  }
-  cp_status_sha512_t *st = (cp_status_sha512_t *)status->read();
-  if (!st->valid) {
-    printf("ERROR: Status valid bit not set\n");
-    return -1;
-  }
-  if (st->err != exp.err) {
-    printf("ERROR: status err 0x%x is unexpected\n", st->err);
-    return -1;
-  }
-  if (st->partial_data != exp.partial_data) {
-    printf("ERROR: status partial data 0x%x is unexpected\n", st->partial_data);
-    return -1;
-  }
-  if ((st->err == 0) && (st->output_data_len != exp.output_data_len)) {
-    printf("ERROR: output data len mismatch, expected 0x%x, received 0x%x\n",
-           exp.output_data_len, st->output_data_len);
-    return -1;
-  }
-  return 0;
+    if (invalidate_hdr_buf) {
+        dp_mem_t *cp_hdr = invalidate_hdr_buf->fragment_find(0, sizeof(cp_hdr_t));
+        cp_hdr->clear_thru();
+    }
+}
+
+void decompress_cp_desc_template_fill(cp_desc_t &d,
+                                      dp_mem_t *src_buf,
+                                      dp_mem_t *dst_buf,
+                                      dp_mem_t *status_buf,
+                                      uint32_t src_len,
+                                      uint32_t threshold_len)
+{
+    memset(&d, 0, sizeof(d));
+    d.cmd_bits.comp_decomp_en = 1;
+    d.cmd_bits.header_present = 1;
+    d.cmd_bits.cksum_verify_en = 1;
+    d.src = src_buf->pa();
+    d.dst = dst_buf->pa();
+    d.status_addr = status_buf->pa();
+    d.datain_len = src_len == kCompEngineMaxSize ? 0 : src_len;
+    d.threshold_len = threshold_len == kCompEngineMaxSize ? 0 : threshold_len;
+    d.status_data = 0x3456;
 }
 
 int _compress_flat_64K_buf(comp_queue_push_t push_type,
                            uint32_t seq_comp_qid) {
+  cp_desc_t d;
+
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
          __func__, push_type, seq_comp_qid);
-  cp_desc_t d;
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.insert_header = 1;
-  d.cmd_bits.sha_en = 1;
-  d.src = uncompressed_host_buf->pa();
-  d.dst = compressed_host_buf->pa();
-  d.datain_len = 0;  // 0 = 64K
-  d.threshold_len = kCompressedBufSize - sizeof(cp_hdr_t);
-  d.status_data = 0x1234;
-  InvalidateHdrInHostMem();
-
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x1234;
-  if (run_cp_test(&d, status_host_buf, exp_st, push_type, seq_comp_qid) < 0) {
+  compress_cp_desc_template_fill(d, uncompressed_host_buf, compressed_host_buf,
+                                 status_host_buf, compressed_host_buf,
+                                 kUncompressedDataSize);
+  if (run_cp_test(d, compressed_host_buf, status_host_buf,
+                  push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
   printf("Testcase %s passed\n", __func__);
   // Save compressed data.
   cp_hdr_t *hdr = (cp_hdr_t *)compressed_host_buf->read_thru();
-  bcopy(hdr, compressed_data_buf, hdr->data_len + sizeof(cp_hdr_t));
+  memcpy(compressed_data_buf, hdr, hdr->data_len + sizeof(cp_hdr_t));
   compressed_data_size = hdr->data_len + sizeof(cp_hdr_t);
   return 0;
 }
@@ -607,25 +730,17 @@ int seq_compress_flat_64K_buf() {
 
 int _compress_same_src_and_dst(comp_queue_push_t push_type,
                                uint32_t seq_comp_qid) {
+  cp_desc_t d;
+
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
          __func__, push_type, seq_comp_qid);
-  cp_desc_t d;
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.insert_header = 1;
-  d.cmd_bits.sha_en = 1;
-  bcopy(uncompressed_host_buf->read(),
-        compressed_host_buf->read(), 4096);
-  compressed_host_buf->write_thru();
-  d.src = compressed_host_buf->pa();
-  d.dst = compressed_host_buf->pa();
-  d.datain_len = 4096;
-  d.threshold_len = 4096 - sizeof(cp_hdr_t);
-  d.status_data = 0x1234;
 
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x1234;
-  if (run_cp_test(&d, status_host_buf, exp_st, push_type, seq_comp_qid) < 0) {
+  memcpy(compressed_host_buf->read(), uncompressed_data, kCompAppMinSize);
+  compressed_host_buf->write_thru();
+  compress_cp_desc_template_fill(d, compressed_host_buf, compressed_host_buf,
+                                 status_host_buf, nullptr, kCompAppMinSize);
+  if (run_cp_test(d, compressed_host_buf, status_host_buf, 
+                  push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -644,33 +759,29 @@ int seq_compress_same_src_and_dst() {
 
 int _decompress_to_flat_64K_buf(comp_queue_push_t push_type,
                                 uint32_t seq_comp_qid) {
-  uncompressed_host_buf->clear_thru();
-  bcopy(compressed_data_buf, compressed_host_buf->read(), compressed_data_size);
-  compressed_host_buf->write_thru();
+  cp_desc_t d;
 
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
          __func__, push_type, seq_comp_qid);
-  cp_desc_t d;
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.header_present = 1;
-  d.cmd_bits.cksum_verify_en = 1;
-  d.dst = uncompressed_host_buf->pa();
-  d.src = compressed_host_buf->pa();
-  d.datain_len = compressed_data_size;
-  d.threshold_len = 0;  // 64K, output len
-  d.status_data = 0x3456;
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x3456;
-  if (run_dc_test(&d, status_host_buf, exp_st, push_type, seq_comp_qid) < 0) {
+
+  uncompressed_host_buf->clear_thru();
+  memcpy(compressed_host_buf->read(), compressed_data_buf, compressed_data_size);
+  compressed_host_buf->write_thru();
+
+  decompress_cp_desc_template_fill(d, compressed_host_buf, uncompressed_host_buf,
+                                   status_host_buf, compressed_data_size,
+                                   kUncompressedDataSize);
+  if (run_dc_test(d, status_host_buf, 0,
+                  push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
   // Verify data buf
-  if (bcmp(uncompressed_host_buf->read_thru(), uncompressed_data, kUncompressedDataSize) != 0) {
-    printf("Data does not match after decompress\n");
-    printf("Testcase %s failed\n", __func__);
-    return -1;
+  if (data_verify_and_dump(uncompressed_data,
+                           uncompressed_host_buf->read_thru(),
+                           kUncompressedDataSize)) {
+      printf("Testcase %s failed\n", __func__);
+      return -1;
   }
   printf("Testcase %s passed\n", __func__);
   return 0;
@@ -686,21 +797,12 @@ int seq_decompress_to_flat_64K_buf() {
 }
 
 int compress_odd_size_buf() {
-  printf("Starting testcase %s\n", __func__);
   cp_desc_t d;
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.insert_header = 1;
-  d.cmd_bits.sha_en = 1;
-  d.src = uncompressed_host_buf->pa();
-  d.dst = compressed_host_buf->pa();
-  d.datain_len = 567;  // 0 = 64K
-  d.threshold_len = 567 - sizeof(cp_hdr_t);
-  d.status_data = 0x1234;
-  InvalidateHdrInHostMem();
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x1234;
-  if (run_cp_test(&d, status_host_buf, exp_st) < 0) {
+
+  printf("Starting testcase %s\n", __func__);
+  compress_cp_desc_template_fill(d, uncompressed_host_buf, compressed_host_buf,
+                                 status_host_buf, compressed_host_buf, 567);
+  if (run_cp_test(d, compressed_host_buf, status_host_buf) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -709,29 +811,21 @@ int compress_odd_size_buf() {
 }
 
 int decompress_odd_size_buf() {
-  printf("Starting testcase %s\n", __func__);
   cp_desc_t d;
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.header_present = 1;
-  d.cmd_bits.cksum_verify_en = 1;
-  d.dst = uncompressed_host_buf->pa();
-  d.src = compressed_host_buf->pa();
-  d.datain_len = last_cp_output_data_len;
-  d.threshold_len = 567;  // 64K, output len
-  d.status_data = 0x3456;
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x3456;
-  exp_st.output_data_len = 567;
-  if (run_dc_test(&d, status_host_buf, exp_st) < 0) {
+
+  printf("Starting testcase %s\n", __func__);
+  decompress_cp_desc_template_fill(d, compressed_host_buf, uncompressed_host_buf,
+                                   status_host_buf, last_cp_output_data_len, 567);
+  if (run_dc_test(d, status_host_buf, 567) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
   // Verify data buf
-  if (bcmp(uncompressed_host_buf->read_thru(), uncompressed_data, 567) != 0) {
-    printf("Data does not match after decompress\n");
-    printf("Testcase %s failed\n", __func__);
-    return -1;
+  if (data_verify_and_dump(uncompressed_data,
+                           uncompressed_host_buf->read_thru(),
+                           567)) {
+      printf("Testcase %s failed\n", __func__);
+      return -1;
   }
   printf("Testcase %s passed\n", __func__);
   return 0;
@@ -739,6 +833,8 @@ int decompress_odd_size_buf() {
 
 int _compress_host_sgl_to_host_sgl(comp_queue_push_t push_type,
                                    uint32_t seq_comp_qid) {
+  cp_desc_t d;
+
   // Prepare source SGLs
   host_sgl1->clear();
   host_sgl2->clear();
@@ -776,22 +872,12 @@ int _compress_host_sgl_to_host_sgl(comp_queue_push_t push_type,
 
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
          __func__, push_type, seq_comp_qid);
-  cp_desc_t d;
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.insert_header = 1;
-  d.cmd_bits.sha_en = 1;
+  compress_cp_desc_template_fill(d, host_sgl1, host_sgl3, status_host_buf,
+                                 compressed_host_buf, 6000);
   d.cmd_bits.src_is_list = 1;
   d.cmd_bits.dst_is_list = 1;
-  d.src = host_sgl1->pa();
-  d.dst = host_sgl3->pa();
-  d.datain_len = 6000;
-  d.threshold_len = 6000 - sizeof(cp_hdr_t);
-  d.status_data = 0x1234;
-  InvalidateHdrInHostMem();
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x1234;
-  if (run_cp_test(&d, status_host_buf, exp_st, push_type, seq_comp_qid) < 0) {
+  if (run_cp_test(d, compressed_host_buf, status_host_buf, 
+                  push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -810,7 +896,9 @@ int seq_compress_host_sgl_to_host_sgl() {
 
 int _decompress_host_sgl_to_host_sgl(comp_queue_push_t push_type,
                                      uint32_t seq_comp_qid) {
-  // bzero some initial area.
+  cp_desc_t d;
+
+  // clear some initial area.
   dp_mem_t *partial_buf = uncompressed_host_buf->fragment_find(0, 1024);
   partial_buf->clear_thru();
 
@@ -844,29 +932,19 @@ int _decompress_host_sgl_to_host_sgl(comp_queue_push_t push_type,
 
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
          __func__, push_type, seq_comp_qid);
-  cp_desc_t d;
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.header_present = 1;
-  d.cmd_bits.cksum_verify_en = 1;
+  decompress_cp_desc_template_fill(d, host_sgl1, host_sgl3, status_host_buf,
+                                   last_cp_output_data_len, 6000);
   d.cmd_bits.src_is_list = 1;
   d.cmd_bits.dst_is_list = 1;
-  d.src = host_sgl1->pa();
-  d.dst = host_sgl3->pa();
-  d.datain_len = last_cp_output_data_len;
-  d.threshold_len = 6000;
-  d.status_data = 0x1234;
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x1234;
-  exp_st.output_data_len = 6000;
-  if (run_dc_test(&d, status_host_buf, exp_st, push_type, seq_comp_qid) < 0) {
+  if (run_dc_test(d, status_host_buf, 6000, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
-  if (bcmp(uncompressed_host_buf->read_thru(), uncompressed_data, 6000) != 0) {
-    printf("Data does not match after decompress\n");
-    printf("Testcase %s failed\n", __func__);
-    return -1;
+  if (data_verify_and_dump(uncompressed_data,
+                           uncompressed_host_buf->read_thru(),
+                           6000)) {
+      printf("Testcase %s failed\n", __func__);
+      return -1;
   }
   printf("Testcase %s passed\n", __func__);
   return 0;
@@ -883,22 +961,13 @@ int seq_decompress_host_sgl_to_host_sgl() {
 
 int _compress_flat_64K_buf_in_hbm(comp_queue_push_t push_type,
                                   uint32_t seq_comp_qid) {
+  cp_desc_t d;
+
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
           __func__, push_type, seq_comp_qid);
-  cp_desc_t d;
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.insert_header = 1;
-  d.cmd_bits.sha_en = 1;
-  d.src = uncompressed_buf->pa();
-  d.dst = compressed_buf->pa();
-  d.datain_len = 0;  // 0 = 64K
-  d.threshold_len = kCompressedBufSize - sizeof(cp_hdr_t);
-  d.status_data = 0x1234;
-  InvalidateHdrInHBM();
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x1234;
-  if (run_cp_test(&d, status_buf, exp_st, push_type, seq_comp_qid) < 0) {
+  compress_cp_desc_template_fill(d, uncompressed_buf, compressed_buf,
+                                 status_buf, compressed_buf, kUncompressedDataSize);
+  if (run_cp_test(d, compressed_buf, status_buf, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -918,24 +987,18 @@ int seq_compress_flat_64K_buf_in_hbm() {
 int _decompress_to_flat_64K_buf_in_hbm(comp_queue_push_t push_type,
                                        uint32_t seq_comp_qid) {
 
-  // bzero some initial area.
+  cp_desc_t d;
+
+  // clear some initial area.
   dp_mem_t *partial_buf = uncompressed_buf->fragment_find(0, 16);
   partial_buf->clear_thru();
+
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
           __func__, push_type, seq_comp_qid);
-  cp_desc_t d;
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.header_present = 1;
-  d.cmd_bits.cksum_verify_en = 1;
-  d.dst = uncompressed_buf->pa();
-  d.src = compressed_buf->pa();
-  d.datain_len = compressed_data_size;
-  d.threshold_len = 0;  // 64K, output len
-  d.status_data = 0x3456;
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x3456;
-  if (run_dc_test(&d, status_buf, exp_st, push_type, seq_comp_qid) < 0) {
+  decompress_cp_desc_template_fill(d, compressed_buf, uncompressed_buf,
+                                   status_buf, compressed_data_size,
+                                   kUncompressedDataSize);
+  if (run_dc_test(d, status_buf, 0, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -956,23 +1019,13 @@ int seq_decompress_to_flat_64K_buf_in_hbm() {
 // boundry issues of compression engine.
 int _compress_output_through_sequencer(comp_queue_push_t push_type,
                                        uint32_t seq_comp_qid) {
+  cp_desc_t d;
+
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
          __func__, push_type, seq_comp_qid);
-  cp_desc_t d;
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.insert_header = 1;
-  d.cmd_bits.sha_en = 1;
-  d.src = uncompressed_host_buf->pa();
-  d.dst = compressed_buf->pa();
-  d.datain_len = 0;  // 0 = 64K
-  d.threshold_len = kCompressedBufSize - sizeof(cp_hdr_t);
-  d.status_data = 0x1234;
-  InvalidateHdrInHBM();
-  InvalidateHdrInHostMem();
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x1234;
-
+  compress_cp_desc_template_fill(d, uncompressed_host_buf, compressed_buf,
+                                 status_buf, compressed_buf,
+                                 kUncompressedDataSize);
   // Prepare an SGL for the sequencer to output data.
   seq_sgl->clear();
   cp_sq_ent_sgl_t *ssgl = (cp_sq_ent_sgl_t *)seq_sgl->read();
@@ -987,35 +1040,35 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
   ssgl->len[3] = kCompressedBufSize - (199 + 537 + 1123);
   seq_sgl->write_thru();
 
-  cp_seq_params_t seq_params;
-  bzero(&seq_params, sizeof(seq_params));
+  acc_chain_params_t chain_params = {0};
   status_host_buf->clear_thru();
-  seq_params.seq_ent.status_hbm_pa = status_buf->pa();
-  seq_params.seq_ent.status_host_pa = status_host_buf->pa();
-  seq_params.seq_ent.src_hbm_pa = d.src;
-  seq_params.seq_ent.dst_hbm_pa = d.dst;
-  seq_params.seq_ent.sgl_out_aol_pa = seq_sgl->pa();
-  seq_params.seq_ent.sgl_xfer_en = 1;
-  seq_params.seq_ent.intr_pa = opaque_host_buf->pa();
-  seq_params.seq_ent.intr_data = kSeqIntrData;
+  chain_params.desc_format_fn = test_setup_post_comp_seq_status_entry;
+  chain_params.chain_ent.status_hbm_pa = status_buf->pa();
+  chain_params.chain_ent.status_host_pa = status_host_buf->pa();
+  chain_params.chain_ent.src_hbm_pa = d.src;
+  chain_params.chain_ent.dst_hbm_pa = d.dst;
+  chain_params.chain_ent.sgl_out_aol_pa = seq_sgl->pa();
+  chain_params.chain_ent.sgl_xfer_en = 1;
+  chain_params.chain_ent.intr_pa = opaque_host_buf->pa();
+  chain_params.chain_ent.intr_data = kSeqIntrData;
 
   // Clear the area where interrupt from sequencer is going to come.
   opaque_host_buf->clear_thru();
-  seq_params.seq_ent.status_len = status_buf->line_size_get();
-  seq_params.seq_ent.status_dma_en = 1;
-  seq_params.seq_ent.intr_en = 1;
-  seq_params.seq_comp_status_q = queues::get_pvm_seq_comp_status_sq(0);
-  if (test_setup_cp_seq_status_ent(&seq_params) != 0) {
-    printf("cp_seq_ent failed\n");
+  chain_params.chain_ent.status_len = status_buf->line_size_get();
+  chain_params.chain_ent.status_dma_en = 1;
+  chain_params.chain_ent.intr_en = 1;
+  chain_params.seq_status_q = queues::get_pvm_seq_comp_status_sq(0);
+  if (test_setup_seq_acc_chain_entry(chain_params) != 0) {
+    printf("cp_chain_ent failed\n");
     return -1;
   }
-  d.doorbell_addr = seq_params.ret_doorbell_addr;
-  d.doorbell_data = seq_params.ret_doorbell_data;
+  d.doorbell_addr = chain_params.ret_doorbell_addr;
+  d.doorbell_data = chain_params.ret_doorbell_data;
   d.cmd_bits.doorbell_on = 1;
 
   // Verify(wait for) that the status makes it to HBM.
   // We could directly poll for sequencer but this is just additional verification.
-  if (run_cp_test(&d, status_buf, exp_st, push_type, seq_comp_qid) < 0) {
+  if (run_cp_test(d, compressed_buf, status_buf, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -1030,9 +1083,11 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
   if (intr_poll(seq_intr_poll_func) != 0) {
     printf("ERROR: Interrupt from sequencer never came.\n");
   }
-  if (bcmp(compressed_host_buf->read(), compressed_data_buf, last_cp_output_data_len) != 0) {
-    printf("ERROR: compressed data size mismatch\n");
-    return -1;
+  if (data_verify_and_dump(compressed_data_buf,
+                           compressed_host_buf->read_thru(),
+                           last_cp_output_data_len)) {
+      printf("Testcase %s failed\n", __func__);
+      return -1;
   }
   // Status verification done.
 
@@ -1051,17 +1106,21 @@ int seq_compress_output_through_sequencer() {
 
 void compress_xts_encrypt_setup(cp_desc_t& d,
                                 XtsCtx& xts_ctx,
-                                cp_seq_params_t& seq_params,
+                                acc_chain_params_t& chain_params,
                                 dp_mem_t *src_buf,
                                 dp_mem_t *dst_buf) {
   xts::xts_cmd_t cmd;
   xts::xts_desc_t *xts_desc_addr;
   uint32_t datain_len;
 
+  // Calling xts_ctx init only to get its xts_db allocated
+  xts_ctx.init(0, false);
   xts_ctx.op = xts::AES_ENCR_ONLY;
   xts_ctx.use_seq = false;
-  xts_ctx.seq_xts_status_q = seq_params.seq_xts_status_q;
-  xts_ctx.num_sectors = 1;
+  if (chain_params.seq_next_q) {
+      xts_ctx.use_seq = true;
+      xts_ctx.seq_xts_q = chain_params.seq_next_q;
+  }
   xts_ctx.copy_desc = false;
   xts_ctx.ring_db = false;
 
@@ -1070,7 +1129,7 @@ void compress_xts_encrypt_setup(cp_desc_t& d,
 
   // Note: p4+ will modify L0 and L1 below based on compression
   // output_data_len and any required padding
-  datain_len = d.datain_len == 0 ? 65536 :  d.datain_len;
+  datain_len = d.datain_len == 0 ? kCompEngineMaxSize :  d.datain_len;
   xts_in->a0 = src_buf->pa();
   xts_in->l0 = datain_len;
   xts_in->a1 = pad_buf->pa();
@@ -1083,26 +1142,8 @@ void compress_xts_encrypt_setup(cp_desc_t& d,
   xts_out->l0 = datain_len + sizeof(cp_hdr_t);
   xts_out_aol->write_thru();
 
-  // Set up XTS status chaining;
-  // Note: XTS status chaining is not strictly necessary since encryption is the last
-  // in the chain. It is used here to validate XTS completion status and interrupt.
-  //
-  // Clear the area where interrupt from sequencer is going to come.
-  xts_opaque_host_buf->clear_thru();
   memset(xts_status_host_buf->read(), 0xff, xts_status_host_buf->line_size_get());
   xts_status_host_buf->write_thru();
-
-  xts_status_desc_buf->clear();
-  xts_status_desc_buf->write_bit_fields(128, 64, xts_status_buf->pa());
-  xts_status_desc_buf->write_bit_fields(192, 64, xts_status_host_buf->pa());
-  xts_status_desc_buf->write_bit_fields(256, 64, xts_opaque_host_buf->pa());
-  xts_status_desc_buf->write_bit_fields(320, 32, kSeqIntrData);
-  xts_status_desc_buf->write_bit_fields(352, 16, xts_status_host_buf->line_size_get());
-  xts_status_desc_buf->write_bit_fields(368, 1, 1); // status_dma_en
-  xts_status_desc_buf->write_bit_fields(370, 1, 1); // intr_en
-  xts_status_desc_buf->write_bit_fields(372, 1, 1); // stop_chain_on_error
-  xts_status_desc_buf->write_thru();
-  xts_ctx.desc_write_seq_xts_status(xts_status_desc_buf);
 
   // Set up XTS encrypt descriptor
   xts_ctx.cmd_eval_seq_xts(cmd);
@@ -1110,140 +1151,348 @@ void compress_xts_encrypt_setup(cp_desc_t& d,
   xts_desc_addr->in_aol = xts_in_aol->pa();
   xts_desc_addr->out_aol = xts_out_aol->pa();
   xts_desc_addr->cmd = cmd;
+  xts_desc_addr->status = xts_status_host_buf->pa();
+  xts_desc_buf->write_thru();
+  xts_ctx.desc_write_seq_xts(xts_desc_buf);
+}
+
+int _compress_output_encrypt(uint32_t app_blk_size,
+                             comp_queue_push_t push_type,
+                             uint32_t seq_comp_qid,
+                             uint32_t seq_comp_status_qid,
+                             uint32_t seq_xts_status_qid) {
+  XtsCtx                xts_ctx;
+  cp_desc_t             d;
+  acc_chain_params_t    chain_params = {0};
+
+  printf("Starting testcase %s app_blk_size %u push_type %d seq_comp_qid %u "
+         "seq_comp_status_qid %u seq_xts_status_qid %u\n", __func__,
+         app_blk_size, push_type, seq_comp_qid, seq_comp_status_qid,
+         seq_xts_status_qid);
+  memcpy(uncompressed_host_buf->read(), uncompressed_data,
+         uncompressed_host_buf->line_size_get());
+  uncompressed_host_buf->write_thru();
+
+  compress_cp_desc_template_fill(d, uncompressed_host_buf, compressed_buf,
+                                 status_buf, compressed_buf, app_blk_size);
+  // XTS chaining will use direct Barco push action from
+  // comp status queue handler. Hence, no XTS seq queue needed.
+  chain_params.desc_format_fn = test_setup_post_comp_seq_status_entry;
+  chain_params.seq_q = seq_comp_qid;
+  chain_params.seq_status_q = seq_comp_status_qid;
+
+  // Set up encryption
+  compress_xts_encrypt_setup(d, xts_ctx, chain_params, compressed_buf,
+                             xts_encrypt_host_buf);
+
+  // encryption will use direct Barco push action
+  chain_params.chain_ent.next_doorbell_en = 1;
+  chain_params.chain_ent.next_db_action_barco_push = 1;
+  chain_params.chain_ent.push_entry.barco_ring_addr = xts_ctx.xts_ring_base_addr;
+  chain_params.chain_ent.push_entry.barco_pndx_addr = xts_ctx.xts_ring_pi_addr;
+  chain_params.chain_ent.push_entry.barco_desc_addr = xts_desc_buf->pa();
+  chain_params.chain_ent.push_entry.barco_desc_size =
+                         (uint8_t)log2(xts_desc_buf->line_size_get());
+  chain_params.chain_ent.push_entry.barco_pndx_size =
+                         (uint8_t)log2(xts::kXtsPISize);
+  status_buf->clear_thru();
+  chain_params.chain_ent.status_hbm_pa = status_buf->pa();
+  chain_params.chain_ent.status_host_pa = status_host_buf->pa();
+  chain_params.chain_ent.status_len = status_buf->line_size_get();
+
+  // Note that encryption data transfer is handled by compress_xts_encrypt_setup()
+  // above. The compression status sequencer will use the AOLs given below
+  // only to update the length fields with the correct output data length
+  // and pad length.
+  chain_params.chain_ent.sgl_in_aol_pa = xts_in_aol->pa();
+  chain_params.chain_ent.sgl_out_aol_pa = xts_out_aol->pa();
+  chain_params.chain_ent.status_dma_en = 1;
+  chain_params.chain_ent.stop_chain_on_error = 1;
+  chain_params.chain_ent.aol_pad_xfer_en = 1;
+  chain_params.chain_ent.pad_len_shift =
+               (uint8_t)log2(pad_buf->line_size_get());
+
+  // Enable interrupt in case compression fails
+  opaque_host_buf->clear_thru();
+  chain_params.chain_ent.intr_pa = opaque_host_buf->pa();
+  chain_params.chain_ent.intr_data = kSeqIntrData;
+  chain_params.chain_ent.intr_en = 1;
+
+  if (test_setup_seq_acc_chain_entry(chain_params) != 0) {
+    printf("test_setup_seq_acc_chain_entry failed\n");
+    return -1;
+  }
+
+  // Chain compression to compression status sequencer 
+  d.doorbell_addr = chain_params.ret_doorbell_addr;
+  d.doorbell_data = chain_params.ret_doorbell_data;
+  d.cmd_bits.doorbell_on = 1;
+
+  if (run_cp_test(d, compressed_buf, status_buf,
+                  push_type, seq_comp_qid) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+
+  // Now verify XTS engine doorbell
+  if (xts_ctx.verify_doorbell(false)) {
+      printf("ERROR: doorbell from XTS engine never came.\n");
+      return -1;
+  }
+
+  // Validate XTS status
+  uint32_t curr_xts_status = *((uint32_t *)xts_status_host_buf->read_thru());
+  if (curr_xts_status) {
+    printf("ERROR: XTS error 0x%x\n", curr_xts_status);
+    return -1;
+  }
+
+  // Status verification done.
+  xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read_thru();
+  last_encrypt_output_data_len = xts_out->l0;
+
+  printf("Testcase %s passed: last_encrypt_output_data_len %u\n",
+         __func__, last_encrypt_output_data_len);
+  return 0;
+}
+
+
+int compress_output_encrypt_app_min_size() {
+    return _compress_output_encrypt(kCompAppMinSize,
+                                    COMP_QUEUE_PUSH_HW_DIRECT, 0,
+                                    queues::get_pvm_seq_comp_status_sq(0),
+                                    queues::get_pvm_seq_xts_status_sq(0));
+}
+
+int seq_compress_output_encrypt_app_min_size() {
+    return _compress_output_encrypt(kCompAppMinSize,
+                                    COMP_QUEUE_PUSH_SEQUENCER, 
+                                    queues::get_pvm_seq_comp_sq(0),
+                                    queues::get_pvm_seq_comp_status_sq(0),
+                                    queues::get_pvm_seq_xts_status_sq(0));
+}
+
+int compress_output_encrypt_app_max_size() {
+    return _compress_output_encrypt(kCompAppMaxSize,
+                                    COMP_QUEUE_PUSH_HW_DIRECT, 0,
+                                    queues::get_pvm_seq_comp_status_sq(0),
+                                    queues::get_pvm_seq_xts_status_sq(0));
+}
+
+int seq_compress_output_encrypt_app_max_size() {
+    return _compress_output_encrypt(kCompAppMaxSize,
+                                    COMP_QUEUE_PUSH_SEQUENCER, 
+                                    queues::get_pvm_seq_comp_sq(0),
+                                    queues::get_pvm_seq_comp_status_sq(0),
+                                    queues::get_pvm_seq_xts_status_sq(0));
+}
+
+int compress_output_encrypt_app_nominal_size() {
+    return _compress_output_encrypt(kCompAppNominalSize,
+                                    COMP_QUEUE_PUSH_HW_DIRECT, 0,
+                                    queues::get_pvm_seq_comp_status_sq(0),
+                                    queues::get_pvm_seq_xts_status_sq(0));
+}
+
+int seq_compress_output_encrypt_app_nominal_size() {
+    return _compress_output_encrypt(kCompAppNominalSize,
+                                    COMP_QUEUE_PUSH_SEQUENCER, 
+                                    queues::get_pvm_seq_comp_sq(0),
+                                    queues::get_pvm_seq_comp_status_sq(0),
+                                    queues::get_pvm_seq_xts_status_sq(0));
+}
+
+void xts_decrypt_decompress_setup(cp_desc_t& d,
+                                  XtsCtx& xts_ctx,
+                                  acc_chain_params_t& chain_params,
+                                  dp_mem_t *src_buf,
+                                  dp_mem_t *dst_buf) {
+  xts::xts_cmd_t cmd;
+  xts::xts_desc_t *xts_desc_addr;
+
+  // Calling xts_ctx init only to get its xts_db allocated
+  xts_ctx.init(0, false);
+  xts_ctx.op = xts::AES_DECR_ONLY;
+  xts_ctx.use_seq = true;
+  xts_ctx.seq_xts_q = chain_params.seq_q;
+  xts_ctx.seq_xts_status_q = chain_params.seq_status_q;
+  xts_ctx.copy_desc = false;
+  xts_ctx.ring_db = false;
+
+  xts_in_aol->clear();
+  xts::xts_aol_t *xts_in = (xts::xts_aol_t *)xts_in_aol->read();
+
+  xts_in->a0 = src_buf->pa();
+  xts_in->l0 = last_encrypt_output_data_len;
+  xts_in_aol->write_thru();
+
+  xts_out_aol->clear();
+  xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read();
+  xts_out->a0 = dst_buf->pa();
+  xts_out->l0 = last_encrypt_output_data_len;
+  xts_out_aol->write_thru();
+
+  // Set up XTS decrypt descriptor
+  xts_ctx.cmd_eval_seq_xts(cmd);
+  xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
+  xts_desc_addr->in_aol = xts_in_aol->pa();
+  xts_desc_addr->out_aol = xts_out_aol->pa();
+  xts_desc_addr->cmd = cmd;
   xts_desc_addr->status = xts_status_buf->pa();
+
+  // Chain XTS decrypt to XTS status sequencer 
   queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE,
-                             xts_ctx.seq_xts_status_q, 0, xts_ctx.seq_xts_status_index, 
+                             xts_ctx.seq_xts_status_q, 0,
+                             chain_params.ret_seq_status_index, 
                              &xts_desc_addr->db_addr, &xts_desc_addr->db_data);
   xts_desc_buf->write_thru();
   xts_ctx.desc_write_seq_xts(xts_desc_buf);
 }
 
-int _compress_output_encrypt(comp_queue_push_t push_type,
-                             uint32_t seq_comp_qid) {
-  XtsCtx xts_ctx;
+int _decrypt_output_decompress(uint32_t app_blk_size,
+                               uint32_t seq_xts_qid,
+                               uint32_t seq_xts_status_qid,
+                               uint32_t seq_comp_status_qid) {
+  XtsCtx                xts_ctx;
+  cp_desc_t             d;
+  acc_chain_params_t    chain_params = {0};
 
-  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
-         __func__, push_type, seq_comp_qid);
-  cp_desc_t d;
-  bzero(&d, sizeof(d));
-  bcopy(uncompressed_data, uncompressed_host_buf->read(),
-        uncompressed_host_buf->line_size_get());
-  uncompressed_host_buf->write_thru();
+  printf("Starting testcase %s seq_xts_qid %u "
+         "seq_xts_status_qid %u seq_comp_status_qid %u\n", __func__,
+         seq_xts_qid, seq_xts_status_qid, seq_comp_status_qid);
+  status_host_buf->clear_thru();
+  decompress_cp_desc_template_fill(d, compressed_buf, uncompressed_host_buf,
+                                   status_host_buf, last_cp_output_data_len,
+                                   kUncompressedDataSize);
+  chain_params.desc_format_fn = test_setup_post_xts_seq_status_entry;
+  chain_params.seq_q = seq_xts_qid;
+  chain_params.seq_status_q = seq_xts_status_qid;
 
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.insert_header = 1;
-  d.cmd_bits.sha_en = 1;
-  d.src = uncompressed_host_buf->pa();
-  d.dst = compressed_buf->pa();
-  d.datain_len = 0;  // 0 = 64K
-  d.threshold_len = kCompressedBufSize - sizeof(cp_hdr_t);
-  d.status_data = 0x1234;
-  InvalidateHdrInHBM();
-  InvalidateHdrInHostMem();
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x1234;
+  // Decompression will use direct barco push action
+  chain_params.chain_ent.next_doorbell_en = 1;
+  chain_params.chain_ent.next_db_action_barco_push = 1;
+  chain_params.chain_ent.push_entry.barco_ring_addr = dc_queue.q_base_mem_pa;
+  chain_params.chain_ent.push_entry.barco_pndx_addr = dc_queue.cfg_q_pd_idx;
+  chain_params.chain_ent.push_entry.barco_desc_addr = xts_decomp_cp_desc->pa();
+  chain_params.chain_ent.push_entry.barco_desc_size = 
+                         (uint8_t)log2(xts_decomp_cp_desc->line_size_get());
+  chain_params.chain_ent.push_entry.barco_pndx_size = 
+                         (uint8_t)log2(sizeof(uint32_t));
+  memset(xts_status_host_buf->read(), 0xff,
+         xts_status_host_buf->line_size_get());
+  chain_params.chain_ent.status_hbm_pa = xts_status_buf->pa();
+  chain_params.chain_ent.status_host_pa = xts_status_host_buf->pa();
+  chain_params.chain_ent.status_len = xts_status_buf->line_size_get();
+  chain_params.chain_ent.status_dma_en = 1;
+  chain_params.chain_ent.stop_chain_on_error = 1;
 
-  cp_seq_params_t seq_params;
-  bzero(&seq_params, sizeof(seq_params));
-  seq_params.seq_comp_status_q = queues::get_pvm_seq_comp_status_sq(0);
-  seq_params.seq_xts_q = queues::get_pvm_seq_xts_sq(0);
-  seq_params.seq_xts_status_q = queues::get_pvm_seq_xts_status_sq(0);
+  // Enable interrupt in case decryption fails
+  xts_opaque_host_buf->clear_thru();
+  chain_params.chain_ent.intr_pa = xts_opaque_host_buf->pa();
+  chain_params.chain_ent.intr_data = kSeqIntrData;
+  chain_params.chain_ent.intr_en = 1;
 
-  // Set up encryption
-  compress_xts_encrypt_setup(d, xts_ctx, seq_params, compressed_buf,
-                             xts_encrypt_host_buf);
-
-  // encryption will use direct barco push action
-  seq_params.seq_ent.next_doorbell_en = 1;
-  seq_params.seq_ent.is_next_db_barco_push = 1;
-  seq_params.seq_ent.push_entry.barco_ring_addr = xts_ctx.xts_ring_base_addr;
-  seq_params.seq_ent.push_entry.barco_pndx_addr = xts_ctx.xts_ring_pi_addr;
-  seq_params.seq_ent.push_entry.barco_desc_addr = xts_desc_buf->pa();
-  seq_params.seq_ent.push_entry.barco_desc_size = (uint8_t)log2(xts_desc_buf->line_size_get());
-  seq_params.seq_ent.push_entry.barco_pndx_size = (uint8_t)log2(xts::kXtsPISize);
-  
-  status_buf->clear_thru();
-  seq_params.seq_ent.status_hbm_pa = status_buf->pa();
-  seq_params.seq_ent.status_host_pa = status_host_buf->pa();
-  seq_params.seq_ent.status_len = status_buf->line_size_get();
-
-  // Note that encryption data transfer is handled by compress_xts_encrypt_setup()
-  // above. The compression status sequencer will use the AOLs given below
-  // only to update the length fields with the correct output data length and pad length.
-  seq_params.seq_ent.sgl_in_aol_pa = xts_in_aol->pa();
-  seq_params.seq_ent.sgl_out_aol_pa = xts_out_aol->pa();
-  seq_params.seq_ent.status_dma_en = 1;
-  seq_params.seq_ent.stop_chain_on_error = 1;
-  seq_params.seq_ent.aol_pad_xfer_en = 1;
-  seq_params.seq_ent.pad_len_shift = (uint8_t)log2(pad_buf->line_size_get());
-
-  // Enable interrupt in case compression fails
-  opaque_host_buf->clear_thru();
-  seq_params.seq_ent.intr_pa = opaque_host_buf->pa();
-  seq_params.seq_ent.intr_data = kSeqIntrData;
-  seq_params.seq_ent.intr_en = 1;
-
-  if (test_setup_cp_seq_status_ent(&seq_params) != 0) {
-    printf("cp_seq_ent failed\n");
+  if (test_setup_seq_acc_chain_entry(chain_params) != 0) {
+    printf("test_setup_seq_acc_chain_entry failed\n");
     return -1;
   }
-  d.doorbell_addr = seq_params.ret_doorbell_addr;
-  d.doorbell_data = seq_params.ret_doorbell_data;
-  d.cmd_bits.doorbell_on = 1;
 
-  // Verify(wait for) that the status makes it to HBM.
-  // We could directly poll for sequencer but this is just additional verification.
-  if (run_cp_test(&d, status_buf, exp_st, push_type, seq_comp_qid) < 0) {
-    printf("Testcase %s failed\n", __func__);
-    return -1;
-  }
-  // Now poll for XTS status sequencer interrupt.
-  auto seq_intr_poll_func = [] () -> int {
-    uint32_t *p = (uint32_t *)xts_opaque_host_buf->read_thru();
-    if (*p == kSeqIntrData)
+  // Set up decryption
+  xts_decrypt_decompress_setup(d, xts_ctx, chain_params, xts_encrypt_host_buf,
+                               compressed_buf);
+
+  // Barco push action will operate on the following descriptor
+  memcpy(xts_decomp_cp_desc->read(), &d,
+         xts_decomp_cp_desc->line_size_get());
+  xts_decomp_cp_desc->write_thru();
+
+  // Initiate the test starting with XTS decryption
+  xts_ctx.ring_doorbell();
+
+  // Don't call xts_ctx.verify_doorbell() as XTS completion would go
+  // to XTS status sequenceer in the decrypt chaining case.
+
+  // Poll for XTS status
+  auto xts_status_poll_func = [] () -> int {
+    uint32_t curr_xts_status = *((uint32_t *)xts_status_host_buf->read_thru());
+    if (!curr_xts_status)
       return 0;
     return 1;
   };
-  tests::Poller intr_poll;
-  if (intr_poll(seq_intr_poll_func) != 0) {
-    printf("ERROR: Interrupt from XTS status sequencer never came.\n");
-  }
 
-  // Validate XTS status
-  uint64_t curr_xts_status = *((uint64_t *)xts_status_host_buf->read_thru());
-  if (curr_xts_status) {
-    printf("ERROR: XTS error 0x%lx\n", curr_xts_status);
+  tests::Poller xts_poll;
+  if (xts_poll(xts_status_poll_func) != 0) {
+    uint32_t curr_xts_status = *((uint32_t *)xts_status_host_buf->read());
+    printf("ERROR: XTS decrypt error 0x%x\n", curr_xts_status);
     return -1;
   }
-  // Status verification done.
 
+  // Poll for decomp status
+  if (!status_poll(status_host_buf)) {
+    printf("ERROR: decompression status never came\n");
+    return -1;
+  }
+
+  // Validate decomp status
+  if (decompress_status_verify(status_host_buf, d, app_blk_size)) {
+    printf("ERROR: decompression failed\n");
+    return -1;
+  }
+
+  // Validate data
+  if (data_verify_and_dump(uncompressed_data,
+                           uncompressed_host_buf->read_thru(),
+                           app_blk_size)) {
+      printf("ERROR: data verification failed\n");
+      return -1;
+  }
+  
   printf("Testcase %s passed\n", __func__);
   return 0;
 }
 
 
-int compress_output_encrypt() {
-    return _compress_output_encrypt(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+int seq_decrypt_output_decompress_app_min_size() {
+
+    // This test is always initiated from XTS sequencer queue, with chaining
+    // to decomp from P4+.
+    return _decrypt_output_decompress(kCompAppMinSize,
+                                      queues::get_pvm_seq_xts_sq(0),
+                                      queues::get_pvm_seq_xts_status_sq(0),
+                                      queues::get_pvm_seq_comp_status_sq(0));
 }
 
-int seq_compress_output_encrypt() {
-    return _compress_output_encrypt(COMP_QUEUE_PUSH_SEQUENCER, 
-                                    queues::get_pvm_seq_comp_sq(0));
+int seq_decrypt_output_decompress_app_max_size() {
+
+    // This test is always initiated from XTS sequencer queue, with chaining
+    // to decomp from P4+.
+    return _decrypt_output_decompress(kCompAppMaxSize,
+                                      queues::get_pvm_seq_xts_sq(0),
+                                      queues::get_pvm_seq_xts_status_sq(0),
+                                      queues::get_pvm_seq_comp_status_sq(0));
+}
+
+int seq_decrypt_output_decompress_app_nominal_size() {
+
+    // This test is always initiated from XTS sequencer queue, with chaining
+    // to decomp from P4+.
+    return _decrypt_output_decompress(kCompAppNominalSize,
+                                      queues::get_pvm_seq_xts_sq(0),
+                                      queues::get_pvm_seq_xts_status_sq(0),
+                                      queues::get_pvm_seq_comp_status_sq(0));
 }
 
 // Verify integrity of >64K buffer
 int verify_integrity_for_gt64K() {
-  printf("Starting testcase %s\n", __func__);
   cp_desc_t d;
-  bzero(&d, sizeof(d));
-  d.src = uncompressed_host_buf->pa();
+  printf("Starting testcase %s\n", __func__);
+
+  compress_cp_desc_template_fill(d, uncompressed_host_buf, compressed_host_buf,
+                                 status_host_buf, nullptr, kCompAppMinSize);
   // Give 68K length
-  d.datain_len = 4096;
   d.extended_len = 1;
   d.status_data = 0x7654;
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x7654;
-  if (run_cp_test(&d, status_host_buf, exp_st) < 0) {
+  if (run_cp_test(d, compressed_host_buf, status_host_buf) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -1251,13 +1500,10 @@ int verify_integrity_for_gt64K() {
   uint64_t old_integiry = st2->integrity_data;
 
   // Now repeat the test using only 4K data i.e. higher 16 bits are zero.
-  bzero(&d, sizeof(d));
-  d.src = uncompressed_host_buf->pa();
-  d.datain_len = 4096;
+  compress_cp_desc_template_fill(d, uncompressed_host_buf, compressed_host_buf,
+                                 status_host_buf, nullptr, kCompAppMinSize);
   d.status_data = 0x5454;
-  exp_st = {0};
-  exp_st.partial_data = 0x5454;
-  if (run_cp_test(&d, status_host_buf, exp_st) < 0) {
+  if (run_cp_test(d, compressed_host_buf, status_host_buf) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -1271,66 +1517,27 @@ int verify_integrity_for_gt64K() {
   return 0;
 }
 
-#define MAX_CP_REQ	16
-#define MAX_DC_REQ	2
-#define MAX_CPDC_REQ	(MAX_CP_REQ + MAX_DC_REQ)
-#define TMP_BLK_SIZE	8192
-
-/*
- * TBD: Cleanup -- following function is duplicated for quick-testing.
- * To avoid duplication, size of the buffer and buffers may need to be
- * parameterized.
- *
- */
-int _max_data_rate_compress_flat_buf(comp_queue_push_t push_type,
-                                     uint32_t seq_comp_qid) {
-  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
-         __func__, push_type, seq_comp_qid);
-
-  cp_desc_t d;
-
-  InvalidateHdrInHostMem();
-  bzero(&d, sizeof(d));
-
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.insert_header = 1;
-  d.cmd_bits.sha_en = 1;
-
-  dp_mem_t *partial_buf = uncompressed_buf->fragment_find(0, TMP_BLK_SIZE);
-  bcopy(uncompressed_data, partial_buf->read(), TMP_BLK_SIZE);
-  partial_buf->write_thru();
-
-  d.src = partial_buf->pa();
-  d.dst = compressed_buf->pa();
-  d.datain_len = TMP_BLK_SIZE;
-  d.threshold_len = TMP_BLK_SIZE - sizeof(cp_hdr_t);
-
-  d.status_data = 0x1234;
-
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x1234;
-  if (run_cp_test(&d, status_buf, exp_st, push_type, seq_comp_qid) < 0) {
-    printf("Testcase %s failed\n", __func__);
-    return -1;
-  }
-
-  printf("Testcase %s passed\n", __func__);
-
-  // Save compressed data.
-  cp_hdr_t *hdr = (cp_hdr_t *)compressed_buf->read_thru();
-  bcopy(hdr, compressed_data_buf, hdr->data_len + sizeof(cp_hdr_t));
-  compressed_data_size = hdr->data_len + sizeof(cp_hdr_t);
-
-  return 0;
-}
-
 int _max_data_rate(comp_queue_push_t push_type,
                    uint32_t seq_comp_qid_cp,
-                   uint32_t seq_comp_qid_dc) {
+                   uint32_t seq_comp_qid_dc)
+{
   comp_queue_push_t last_push_type;
-  cp_desc_t         d;
+  cp_desc_t         comp_cp_desc[MAX_CP_REQ];
+  cp_desc_t         decomp_cp_desc[MAX_DC_REQ];
+  cp_desc_t         *d;
+  uint32_t          source_compressed_len;
 
-  _max_data_rate_compress_flat_buf(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+  // Generate source compressed data for use by decompression below
+  dp_mem_t *partial_buf = uncompressed_buf->fragment_find(0, kCompAppNominalSize);
+  memcpy(partial_buf->read(), uncompressed_data, kCompAppNominalSize);
+  partial_buf->write_thru();
+  compress_cp_desc_template_fill(comp_cp_desc[0], partial_buf, compressed_buf,
+                                 status_buf, compressed_buf, kCompAppNominalSize);
+  if (run_cp_test(comp_cp_desc[0], compressed_buf, status_buf) < 0) {
+    printf("%s source compressed data generation failed\n", __func__);
+    return -1;
+  }
+  source_compressed_len = last_cp_output_data_len;
 
   printf("Starting testcase %s push_type %d seq_comp_qid_cp %u "
          "seq_comp_qid_dc %u\n", __func__, push_type,
@@ -1347,12 +1554,12 @@ int _max_data_rate(comp_queue_push_t push_type,
   }
 
   uint32_t i;
-  dp_mem_t *max_cp_uncompressed_buf = new dp_mem_t(MAX_CP_REQ, TMP_BLK_SIZE,
+  dp_mem_t *max_cp_uncompressed_buf = new dp_mem_t(MAX_CP_REQ, kCompAppNominalSize,
                                                    DP_MEM_ALIGN_PAGE);
-  dp_mem_t *max_cp_compressed_buf = new dp_mem_t(MAX_CP_REQ, TMP_BLK_SIZE,
+  dp_mem_t *max_cp_compressed_buf = new dp_mem_t(MAX_CP_REQ, kCompAppNominalSize,
                                                  DP_MEM_ALIGN_PAGE);
   dp_mem_t *max_cp_status_buf = new dp_mem_t(MAX_CP_REQ, sizeof(cp_status_sha512_t));
-  dp_mem_t *max_dc_uncompressed_buf = new dp_mem_t(MAX_DC_REQ, TMP_BLK_SIZE,
+  dp_mem_t *max_dc_uncompressed_buf = new dp_mem_t(MAX_DC_REQ, kCompAppNominalSize,
                                                    DP_MEM_ALIGN_PAGE);
   dp_mem_t *max_dc_status_buf = new dp_mem_t(MAX_DC_REQ, sizeof(cp_status_sha512_t));
 
@@ -1368,55 +1575,42 @@ int _max_data_rate(comp_queue_push_t push_type,
   exp_opaque_data_buf->write_thru();
 
   // allocate and fill descriptors to load compression engine with requests
-  for (i = 0; i < MAX_CP_REQ; i++) {
-    bzero(&d, sizeof(d));
- 
-    d.cmd_bits.comp_decomp_en = 1;
-    d.cmd_bits.insert_header = 1;
-    d.cmd_bits.opaque_tag_on = 1;
+  for (i = 0, d = &comp_cp_desc[0];
+       i < MAX_CP_REQ;
+       i++, d++) {
 
     max_cp_uncompressed_buf->line_set(i);
-    d.src = max_cp_uncompressed_buf->pa();
     max_cp_compressed_buf->line_set(i);
-    d.dst = max_cp_compressed_buf->pa();
-
-    d.datain_len = TMP_BLK_SIZE;	// TBD: parameterize this
-    d.threshold_len = TMP_BLK_SIZE - sizeof(cp_hdr_t);
-  
     max_cp_status_buf->line_set(i);
-    d.status_addr = max_cp_status_buf->pa();
-    d.status_data = 0x1234;
-    
-    d.opaque_tag_addr = max_cp_opaque_host_buf->pa() + (i * sizeof(uint32_t));
-    d.opaque_tag_data = exp_opaque_data;
-    comp_queue_push(&d, cp_queue, 
+    compress_cp_desc_template_fill(*d, max_cp_uncompressed_buf,
+                                   max_cp_compressed_buf, max_cp_status_buf,
+                                   nullptr, kCompAppNominalSize);
+    d->status_data += i;
+    d->cmd_bits.opaque_tag_on = 1;
+    d->opaque_tag_addr = max_cp_opaque_host_buf->pa() + (i * sizeof(uint32_t));
+    d->opaque_tag_data = exp_opaque_data;
+    comp_queue_push(*d, cp_queue, 
                     i == (MAX_CP_REQ - 1) ? last_push_type : push_type,
                     seq_comp_qid_cp);
   }
 
   // Ring the doorbell after loading decompression engine with requests
-  for (i = 0; i < MAX_DC_REQ; i++) {
-    bzero(&d, sizeof(d));
+  for (i = 0, d = &decomp_cp_desc[0];
+       i < MAX_DC_REQ;
+       i++, d++) {
 
-    d.cmd_bits.comp_decomp_en = 1;
-    d.cmd_bits.header_present = 1;
-    d.cmd_bits.opaque_tag_on = 1;
-
-    // decompress from data obtained from _max_data_rate_compress_flat_buf() above
-    d.src = compressed_buf->pa();
-
+    // decompress from data obtained from sourced compressed data
+    // created earlier
     max_dc_uncompressed_buf->line_set(i);
-    d.dst = max_dc_uncompressed_buf->pa();
-    d.datain_len = compressed_data_size;	// predefined fixed size
-    d.threshold_len = TMP_BLK_SIZE;
-
     max_dc_status_buf->line_set(i);
-    d.status_addr = max_dc_status_buf->pa();
-    d.status_data = 0x4321;
-
-    d.opaque_tag_addr = max_dc_opaque_host_buf->pa() + (i * sizeof(uint32_t));
-    d.opaque_tag_data = exp_opaque_data;
-    comp_queue_push(&d, dc_queue, 
+    decompress_cp_desc_template_fill(*d, compressed_buf, max_dc_uncompressed_buf,
+                                     max_dc_status_buf, source_compressed_len,
+                                     kCompAppNominalSize);
+    d->status_data += i;
+    d->cmd_bits.opaque_tag_on = 1;
+    d->opaque_tag_addr = max_dc_opaque_host_buf->pa() + (i * sizeof(uint32_t));
+    d->opaque_tag_data = exp_opaque_data;
+    comp_queue_push(*d, dc_queue, 
                     i == (MAX_DC_REQ - 1) ? last_push_type : push_type,
                     seq_comp_qid_dc);
   }
@@ -1428,10 +1622,12 @@ int _max_data_rate(comp_queue_push_t push_type,
   // Wait for all the interrupts
   auto func = [max_cp_opaque_host_buf, max_dc_opaque_host_buf,
                exp_opaque_data_buf,
-               max_cp_status_buf, max_dc_status_buf] () -> int {
+               max_cp_status_buf, max_dc_status_buf,
+               max_cp_compressed_buf,
+               comp_cp_desc, decomp_cp_desc] () -> int {
 
-      uint32_t              i;
-      cp_status_sha512_t    *s;
+      const cp_desc_t   *d;
+      uint32_t          i;
 
       if (memcmp(max_cp_opaque_host_buf->read_thru(),
                  exp_opaque_data_buf->read_thru(),
@@ -1444,32 +1640,25 @@ int _max_data_rate(comp_queue_push_t push_type,
 	      return -1;
       }
 
-      for (i = 0; i < MAX_CP_REQ; i++) {
+      for (i = 0, d = &comp_cp_desc[0];
+           i < MAX_CP_REQ;
+           i++, d++) {
+
           max_cp_status_buf->line_set(i);
-          s = (cp_status_sha512_t *)max_cp_status_buf->read_thru();
-          if (!s->valid) {
-              printf("Compression status for buf %u is invalid! "
-                      "status: %llx\n", i, *((unsigned long long *) s));
-              return -1;
-          }
-          if (s->err != 0) {
-              printf("ERROR: buf %u compression err 0x%x is unexpected!\n",
-                     i, s->err);
+          max_cp_compressed_buf->line_set(i);
+          if (compress_status_verify(max_cp_status_buf,
+                                     max_cp_compressed_buf, *d, false)) {
               return -1;
           }
       }
 
-      for (i = 0; i < MAX_DC_REQ; i++) {
+      for (i = 0, d = &decomp_cp_desc[0];
+           i < MAX_DC_REQ;
+           i++, d++) {
+
           max_dc_status_buf->line_set(i);
-          s = (cp_status_sha512_t *)max_dc_status_buf->read_thru();
-          if (!s->valid) {
-              printf("Decompression status for buf %u is invalid! "
-                      "status: %llx\n", i, *((unsigned long long *) s));
-              return -1;
-          }
-          if (s->err != 0) {
-              printf("ERROR: buf %u decompression err 0x%x is unexpected!\n",
-                     i, s->err);
+          if (decompress_status_verify(max_dc_status_buf, *d,
+                                       kCompAppNominalSize, false)) {
               return -1;
           }
       }
@@ -1529,66 +1718,45 @@ static int cp_dualq_flat_4K_buf(dp_mem_t *comp_buf,
                                 comp_queue_push_t push_type,
                                 uint32_t seq_comp_qid_cp,
                                 uint32_t seq_comp_qid_hotq) {
-  // Setup compression descriptor for low prirority queue
   cp_desc_t lq_desc;
-  bzero(&lq_desc, sizeof(lq_desc));
+  cp_desc_t hq_desc;
 
-  lq_desc.cmd_bits.comp_decomp_en = 1;
-  lq_desc.cmd_bits.insert_header = 1;
-  lq_desc.cmd_bits.sha_en = 1;
-
-  lq_desc.src = uncomp_buf->pa();
-  lq_desc.dst = comp_buf->pa();
-  lq_desc.datain_len = 4096;
-  lq_desc.threshold_len = 4096 - sizeof(cp_hdr_t);
-
-  lq_desc.status_addr = status_buf1->pa();
-  lq_desc.status_data = 0x1234;
+  // Setup compression descriptor for low prirority queue
+  compress_cp_desc_template_fill(lq_desc, uncomp_buf, comp_buf,
+                                 status_buf1, comp_buf, kCompAppMinSize);
 
   // Setup compression descriptor for high prirority queue
-  cp_desc_t hq_desc;
-  bzero(&hq_desc, sizeof(hq_desc));
-
-  hq_desc.cmd_bits.comp_decomp_en = 1;
-  hq_desc.cmd_bits.insert_header = 1;
-  hq_desc.cmd_bits.sha_en = 1;
-
-  hq_desc.src = uncomp_buf->pa() + 4096;
-  hq_desc.dst = comp_buf->pa() + 4096;
-  hq_desc.datain_len = 4096;
-  hq_desc.threshold_len = 4096 - sizeof(cp_hdr_t);
-
-  hq_desc.status_addr = status_buf2->pa();
-  hq_desc.status_data = 0x5678;
+  dp_mem_t *hq_uncomp_buf = uncomp_buf->fragment_find(kCompAppMinSize,
+                                                      kCompAppMinSize);
+  dp_mem_t *hq_comp_buf = comp_buf->fragment_find(kCompAppMinSize,
+                                                  kCompAppMinSize);
+  compress_cp_desc_template_fill(hq_desc, hq_uncomp_buf, hq_comp_buf,
+                                 status_buf2, hq_comp_buf, kCompAppMinSize);
+  hq_desc.status_data = lq_desc.status_data * 2;
 
   // Initialize status for both the requests
   status_buf1->clear_thru();
   status_buf2->clear_thru();
 
-  // Add descriptor for both high and low priority queue
-  comp_queue_push(&lq_desc, cp_queue, push_type, seq_comp_qid_cp);
+  // Add descriptor for both high and low priority queues
+  comp_queue_push(lq_desc, cp_queue, push_type, seq_comp_qid_cp);
 
   // Dont ring the doorbell yet
-  comp_queue_push(&hq_desc, cp_hotq, push_type, seq_comp_qid_hotq);
+  comp_queue_push(hq_desc, cp_hotq, push_type, seq_comp_qid_hotq);
 
-  // Now ring door bells for both high and low queue
+  // Now ring door bells for both high and low queues
   comp_queue_post_push(cp_queue);
   comp_queue_post_push(cp_hotq);
 
   // Check status update to both the descriptors
-  auto func = [status_buf1, status_buf2] () -> int {
-    cp_status_sha512_t *s;
-    s = (cp_status_sha512_t *)status_buf1->read_thru();
-    if (!s->valid) {
-      printf("Compression request in low queue did not complete "
-	  "status: %llx\n", *((unsigned long long *) s));
+  auto func = [status_buf1, status_buf2,
+               comp_buf, hq_comp_buf,
+               lq_desc, hq_desc] () -> int {
+    if (compress_status_verify(status_buf1, comp_buf, lq_desc, false)) {
       return -1;
     }
 
-    s = (cp_status_sha512_t *)status_buf2->read_thru();
-    if (!s->valid) {
-      printf("Compression request in high/hot queue did not complete "
-	  "status: %llx\n", *((unsigned long long *) s));
+    if (compress_status_verify(status_buf2, hq_comp_buf, hq_desc, false)) {
       return -1;
     }
 
@@ -1601,13 +1769,19 @@ static int cp_dualq_flat_4K_buf(dp_mem_t *comp_buf,
     return 0;
   }
 
+  if (compress_status_verify(status_buf1, comp_buf, lq_desc)) {
+    printf("Compression request in low queue verification failed\n");
+  }
+
+  if (compress_status_verify(status_buf2, hq_comp_buf, hq_desc)) {
+    printf("Compression request in high/hot queue verification failed\n");
+  }
+
   return -1;
 }
 
 int compress_dualq_flat_4K_buf() {
   printf("Starting testcase %s\n", __func__);
-
-  InvalidateHdrInHostMem();
 
   int rc = cp_dualq_flat_4K_buf(compressed_host_buf, uncompressed_host_buf,
                                 status_host_buf, status_host_buf2,
@@ -1622,8 +1796,6 @@ int compress_dualq_flat_4K_buf() {
 
 int seq_compress_dualq_flat_4K_buf() {
   printf("Starting testcase %s\n", __func__);
-
-  InvalidateHdrInHostMem();
 
   int rc = cp_dualq_flat_4K_buf(compressed_host_buf, uncompressed_host_buf,
                                 status_host_buf, status_host_buf2,
@@ -1641,8 +1813,6 @@ int seq_compress_dualq_flat_4K_buf() {
 int compress_dualq_flat_4K_buf_in_hbm() {
   printf("Starting testcase %s\n", __func__);
 
-  InvalidateHdrInHBM();
-
   int rc = cp_dualq_flat_4K_buf(compressed_buf, uncompressed_buf,
                                 status_buf, status_buf2,
                                 COMP_QUEUE_PUSH_HW_DIRECT_BATCH, 0, 0);
@@ -1656,8 +1826,6 @@ int compress_dualq_flat_4K_buf_in_hbm() {
 
 int seq_compress_dualq_flat_4K_buf_in_hbm() {
   printf("Starting testcase %s\n", __func__);
-
-  InvalidateHdrInHBM();
 
   int rc = cp_dualq_flat_4K_buf(compressed_buf, uncompressed_buf,
                                 status_buf, status_buf2,

@@ -307,6 +307,12 @@ XtsCtx::desc_prefill_seq_xts(dp_mem_t *xts_desc) {
     xts_desc_addr->opaque_tag = opaque_tag;
   }
 
+  if(!xts_db_addr) {
+    xts_db_addr = host_mem_v2p(xts_db);
+  }
+  xts_desc_addr->db_addr = xts_db_addr;
+  xts_desc_addr->db_data = exp_db_data;
+
   if(t10_en) {
     xts_desc_addr->sector_num = start_sec_num;
     xts_desc_addr->sector_size = sector_size;
@@ -463,15 +469,11 @@ int XtsCtx::test_seq_xts() {
 
   status = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
   *status = STATUS_DEF_VALUE;
-  if(!xts_db_addr)
-    xts_db_addr = host_mem_v2p(xts_db);
 
   // Fill the XTS ring descriptor
   xts_desc_addr = desc_prefill_seq_xts(xts_desc);
   xts_desc_addr->in_aol = host_mem_v2p(in_aol[0]);
   xts_desc_addr->out_aol = host_mem_v2p(out_aol[0]);
-  xts_desc_addr->db_addr = xts_db_addr;
-  xts_desc_addr->db_data = exp_db_data;
   xts_desc_addr->cmd = cmd;
   xts_desc_addr->status = host_mem_v2p(status);
   xts_desc->write_thru();
@@ -512,7 +514,7 @@ int XtsCtx::ring_doorbell() {
   return 0;
 }
 
-int XtsCtx::verify_doorbell() {
+int XtsCtx::verify_doorbell(bool verify_pi) {
 
   // Poll for doorbell data as XTS which runs in a different thread
   auto func = [this] () {
@@ -529,13 +531,15 @@ int XtsCtx::verify_doorbell() {
 
   printf("Doorbell returned successfully \n");
 
-  if(0 == rv && t10_en && !decr_en && !is_dst_hbm_buf)
-    rv = verify_prot_info((char *)dst_buf, num_aols, out_aol, sector_size, start_sec_num, app_tag);
+  if(verify_pi) {
+    if(0 == rv && t10_en && !decr_en && !is_dst_hbm_buf)
+      rv = verify_prot_info((char *)dst_buf, num_aols, out_aol, sector_size, start_sec_num, app_tag);
 
-  if(0 == rv) {
-    if(STATUS_DEF_VALUE != *status) {
-      printf(" status check failed - status value %lu\n", *status);
-      rv = -1;
+    if(0 == rv) {
+      if(STATUS_DEF_VALUE != *status) {
+        printf(" status check failed - status value %lu\n", *status);
+        rv = -1;
+      }
     }
   }
   uint32_t exp_opaque_tag = decr_en? exp_opaque_tag_decr : exp_opaque_tag_encr;

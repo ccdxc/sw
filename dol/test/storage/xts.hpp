@@ -191,7 +191,7 @@ public:
   int desc_write_seq_xts_status(dp_mem_t *xts_status_desc);
   int test_seq_xts();
   int ring_doorbell();
-  int verify_doorbell();
+  int verify_doorbell(bool verify_pi=true);
   int queue_req_n_ring_db_from_host();
 
   void* src_buf = (void*)write_buf->va();

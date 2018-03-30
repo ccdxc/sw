@@ -234,7 +234,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
 				     barco_desc_size, barco_pndx_size, filler,
                                      status_hbm_addr, status_host_addr, 
                                      intr_addr, intr_data, status_len, status_dma_en,
-                                     next_db_en, intr_en, is_next_db_barco_push) {
+                                     next_db_en, intr_en, next_db_action_barco_push) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
@@ -256,7 +256,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_comp_status_desc0_scratch.status_dma_en, status_dma_en);
   modify_field(seq_comp_status_desc0_scratch.next_db_en, next_db_en);
   modify_field(seq_comp_status_desc0_scratch.intr_en, intr_en);
-  modify_field(seq_comp_status_desc0_scratch.is_next_db_barco_push, is_next_db_barco_push);
+  modify_field(seq_comp_status_desc0_scratch.next_db_action_barco_push, next_db_action_barco_push);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(storage_kivec4.barco_ring_addr, seq_comp_status_desc0_scratch.next_db_addr);
@@ -267,7 +267,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(storage_kivec5.status_dma_en, seq_comp_status_desc0_scratch.status_dma_en);
   modify_field(storage_kivec5.next_db_en, seq_comp_status_desc0_scratch.next_db_en);
   modify_field(storage_kivec5.intr_en, seq_comp_status_desc0_scratch.intr_en);
-  modify_field(storage_kivec5.is_next_db_barco_push, seq_comp_status_desc0_scratch.is_next_db_barco_push);
+  modify_field(storage_kivec5.next_db_action_barco_push, seq_comp_status_desc0_scratch.next_db_action_barco_push);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
   // Fence with the SGL mem2mem DMA for ordering.
@@ -315,8 +315,9 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
 
 //@pragma little_endian src_hbm_pa dst_hbm_pa sgl_in_aol_pa sgl_out_aol_pa data_len
 action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_in_aol_pa, sgl_out_aol_pa, 
-                                     data_len, pad_len_shift, data_len_from_desc, aol_pad_xfer_en,
-				     sgl_xfer_en, copy_src_dst_on_error, stop_chain_on_error) {
+                                     data_len, pad_len_shift, stop_chain_on_error,
+				     data_len_from_desc, aol_pad_xfer_en,
+				     sgl_xfer_en, copy_src_dst_on_error) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
@@ -328,20 +329,20 @@ action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_in_aol_pa, sgl_
   modify_field(seq_comp_status_desc1_scratch.sgl_out_aol_pa, sgl_out_aol_pa);
   modify_field(seq_comp_status_desc1_scratch.data_len, data_len);
   modify_field(seq_comp_status_desc1_scratch.pad_len_shift, pad_len_shift);
+  modify_field(seq_comp_status_desc1_scratch.stop_chain_on_error, stop_chain_on_error);
   modify_field(seq_comp_status_desc1_scratch.data_len_from_desc, data_len_from_desc);
   modify_field(seq_comp_status_desc1_scratch.aol_pad_xfer_en, aol_pad_xfer_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_xfer_en, sgl_xfer_en);
   modify_field(seq_comp_status_desc1_scratch.copy_src_dst_on_error, copy_src_dst_on_error);
-  modify_field(seq_comp_status_desc1_scratch.stop_chain_on_error, stop_chain_on_error);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(storage_kivec5.data_len, seq_comp_status_desc1_scratch.data_len);
   modify_field(storage_kivec5.pad_len_shift, seq_comp_status_desc1_scratch.pad_len_shift);
+  modify_field(storage_kivec5.stop_chain_on_error, seq_comp_status_desc1_scratch.stop_chain_on_error);
   modify_field(storage_kivec5.data_len_from_desc, seq_comp_status_desc1_scratch.data_len_from_desc);
   modify_field(storage_kivec5.aol_pad_xfer_en, seq_comp_status_desc1_scratch.aol_pad_xfer_en);
   modify_field(storage_kivec5.sgl_xfer_en, seq_comp_status_desc1_scratch.sgl_xfer_en);
   modify_field(storage_kivec5.copy_src_dst_on_error, seq_comp_status_desc1_scratch.copy_src_dst_on_error);
-  modify_field(storage_kivec5.stop_chain_on_error, seq_comp_status_desc1_scratch.stop_chain_on_error);
 }
 
 /*****************************************************************************
@@ -517,17 +518,26 @@ action seq_comp_sgl_handler(addr0, addr1, addr2, addr3,
 
 //@pragma little_endian next_db_addr next_db_data status_hbm_addr status_host_addr intr_addr intr_data status_len
 @pragma little_endian next_db_data intr_data
-action seq_xts_status_desc_handler(next_db_addr, next_db_data, status_hbm_addr, status_host_addr, 
-                                   intr_addr, intr_data, status_len,
-                                   status_dma_en, next_db_en, intr_en,
-				   is_next_db_barco_push, stop_chain_on_error) {
+action seq_xts_status_desc_handler(next_db_addr, next_db_data,
+                                   barco_desc_addr, barco_pndx_addr,
+				   barco_desc_size, barco_pndx_size, filler,
+                                   status_hbm_addr, status_host_addr, 
+                                   intr_addr, intr_data, status_len, status_dma_en,
+                                   next_db_en, intr_en, next_db_action_barco_push,
+				   stop_chain_on_error) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
+  STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_xts_status_desc_scratch.next_db_addr, next_db_addr);
   modify_field(seq_xts_status_desc_scratch.next_db_data, next_db_data);
+  modify_field(seq_xts_status_desc_scratch.barco_desc_addr, barco_desc_addr);
+  modify_field(seq_xts_status_desc_scratch.barco_pndx_addr, barco_pndx_addr);
+  modify_field(seq_xts_status_desc_scratch.barco_desc_size, barco_desc_size);
+  modify_field(seq_xts_status_desc_scratch.barco_pndx_size, barco_pndx_size);
+  modify_field(seq_xts_status_desc_scratch.filler, filler);
   modify_field(seq_xts_status_desc_scratch.status_hbm_addr, status_hbm_addr);
   modify_field(seq_xts_status_desc_scratch.status_host_addr, status_host_addr);
   modify_field(seq_xts_status_desc_scratch.intr_addr, intr_addr);
@@ -536,14 +546,19 @@ action seq_xts_status_desc_handler(next_db_addr, next_db_data, status_hbm_addr, 
   modify_field(seq_xts_status_desc_scratch.status_dma_en, status_dma_en);
   modify_field(seq_xts_status_desc_scratch.next_db_en, next_db_en);
   modify_field(seq_xts_status_desc_scratch.intr_en, intr_en);
-  modify_field(seq_xts_status_desc_scratch.is_next_db_barco_push, is_next_db_barco_push);
+  modify_field(seq_xts_status_desc_scratch.next_db_action_barco_push, next_db_action_barco_push);
   modify_field(seq_xts_status_desc_scratch.stop_chain_on_error, stop_chain_on_error);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
+  modify_field(storage_kivec4.barco_ring_addr, seq_xts_status_desc_scratch.next_db_addr);
+  modify_field(storage_kivec4.barco_pndx_addr, seq_xts_status_desc_scratch.barco_pndx_addr);
+  modify_field(storage_kivec4.barco_desc_size, seq_xts_status_desc_scratch.barco_desc_size);
+  modify_field(storage_kivec4.barco_pndx_size, seq_xts_status_desc_scratch.barco_pndx_size);
+  modify_field(storage_kivec5.intr_addr, seq_xts_status_desc_scratch.intr_addr);
   modify_field(storage_kivec5.status_dma_en, seq_xts_status_desc_scratch.status_dma_en);
   modify_field(storage_kivec5.next_db_en, seq_xts_status_desc_scratch.next_db_en);
   modify_field(storage_kivec5.intr_en, seq_xts_status_desc_scratch.intr_en);
-  modify_field(storage_kivec5.is_next_db_barco_push, seq_xts_status_desc_scratch.is_next_db_barco_push);
+  modify_field(storage_kivec5.next_db_action_barco_push, seq_xts_status_desc_scratch.next_db_action_barco_push);
   modify_field(storage_kivec5.stop_chain_on_error, seq_xts_status_desc_scratch.stop_chain_on_error);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
