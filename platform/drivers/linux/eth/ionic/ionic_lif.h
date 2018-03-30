@@ -88,6 +88,8 @@ struct lif {
 	u32 hw_features;
 	union stats_dump *stats_dump;
 	dma_addr_t stats_dump_pa;
+	u32 tx_coalesce_usecs;
+	u32 rx_coalesce_usecs;
 };
 
 #define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)

@@ -88,6 +88,7 @@ struct doorbell {
 };
 
 #define INTR_CTRL_REGS_MAX	64
+#define INTR_CTRL_COAL_MAX	0x3F
 
 /**
  * struct intr_ctrl - Interrupt control register
@@ -160,6 +161,7 @@ struct intr_ctrl {
 	u32 rsvd6[3];
 };
 
+#define intr_to_coal(intr_ctrl)			(void *)((u8 *)(intr_ctrl) + 0)
 #define intr_to_mask(intr_ctrl)			(void *)((u8 *)(intr_ctrl) + 4)
 #define intr_to_credits(intr_ctrl)		(void *)((u8 *)(intr_ctrl) + 8)
 #define intr_to_mask_on_assert(intr_ctrl)	(void *)((u8 *)(intr_ctrl) + 12)
@@ -329,6 +331,7 @@ void ionic_intr_mask_on_assertion(struct intr *intr);
 void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
 			       bool unmask, bool reset_timer);
 void ionic_intr_mask(struct intr *intr, bool mask);
+void ionic_intr_coal_set(struct intr *intr, u32 coal_usecs);
 int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 		  unsigned int num_descs, size_t desc_size);
 void ionic_cq_map(struct cq *cq, void *base, dma_addr_t base_pa);
