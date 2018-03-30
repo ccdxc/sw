@@ -439,6 +439,18 @@ profiles:
       fields:
          ip_normalize_ttl: 32
 
+    - id: SEC_PROF_TCP_NORMALIZE_MSS_WITH_MSS_OPTION
+      fields:
+         tcp_normalize_mss: 1460
+
+    - id: SEC_PROF_TCP_NORMALIZE_MSS_WITHOUT_MSS_OPTION
+      fields:
+         tcp_normalize_mss: 1460
+
+    - id: SEC_PROF_TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION
+      fields:
+         tcp_normalize_mss: 1460
+
     - id: SEC_PROF_FIREWALL
       fields:
         cnxn_tracking_en: True

@@ -17,7 +17,15 @@ l4_profile:
 
   seq         c1, k.tcp_valid, TRUE
   phvwr.c1    p.l4_metadata_tcp_normalization_en, d.u.l4_profile_d.tcp_normalization_en
-  seq         c1, k.icmp_valid, TRUE
+
+  // Code begin to update tcp_data_len for IPv6 options case. Added here as we couldn't
+  // add it in input_mapping_native and tunnel because of key makers being full.
+  // Overhead for good packet is 2 instructions.
+  seq         c2, k.l3_metadata_ip_option_seen, TRUE
+  balcf       r7, [c1 & c2], lb_l4_profile_ip_option_update_tcp_data_len
+  seq         c1, k.icmp_valid, TRUE // Delay slot, critical path code.
+  // Code end for updating tcp_data_len
+
   phvwr.c1    p.l4_metadata_icmp_normalization_en, d.u.l4_profile_d.icmp_normalization_en
 
   phvwr       p.l4_metadata_icmp_deprecated_msgs_drop, \
@@ -71,6 +79,8 @@ l4_profile:
                    l4_metadata_tcp_non_syn_first_pkt_drop}, \
                 d.{u.l4_profile_d.tcp_invalid_flags_drop, \
                    u.l4_profile_d.tcp_non_syn_first_pkt_drop}
+  phvwr       p.l4_metadata_tcp_normalize_mss, \
+                d.u.l4_profile_d.tcp_normalize_mss
   b           f_p4plus_to_p4_1
   phvwrpair   p.l4_metadata_tcp_split_handshake_drop, \
                 d.u.l4_profile_d.tcp_split_handshake_drop, \
@@ -413,6 +423,26 @@ lb_ipv6_norm_hop_limit:
   jr          r7
   nop
 
+
+
+// Don't use c1 in this code. It is used in delay slot of caller for optimal path
+// r7 is the return address
+// Packet is already confirmed to be a TCP Packet with IP options.
+// Need to take care if its V4/V6 and Tunnel/Native
+// We only need to adjust the tcp_data_len for V6 only and not for V4 options.
+lb_l4_profile_ip_option_update_tcp_data_len:
+  seq         c2, k.ipv6_valid, TRUE
+  seq         c3, k.inner_ipv6_valid, TRUE
+  seq         c4, k.tunnel_metadata_tunnel_terminate, TRUE
+  setcf       c5, [c2 & !c4] // Native IPv6
+  setcf       c6, [c3 & c4]  // Tunnel with Inner IPv6
+  sub.c5      r1, k.l4_metadata_tcp_data_len, k.l3_metadata_ipv6_options_len
+  sub.c6      r1, k.l4_metadata_tcp_data_len, k.l3_metadata_inner_ipv6_options_len
+  setcf       c2, [c5 | c6]
+  jr          r7
+  phvwr.c2    p.l4_metadata_tcp_data_len, r1
+
+  // Code end for updating tcp_data_len
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nop:

@@ -312,7 +312,7 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
         NWSEC_SPEC_CHECK(tcp_strip_timestamp_option) ||
         NWSEC_SPEC_CHECK(tcp_conn_track_bypass_window_err) ||
         NWSEC_SPEC_CHECK(tcp_urg_flag_ptr_clear) ||
-        NWSEC_SPEC_CHECK(tcp_mss) ||
+        NWSEC_SPEC_CHECK(tcp_normalize_mss) ||
         NWSEC_SPEC_CHECK(multicast_src_drop)) {
                 app_ctxt->nwsec_changed = true;
     }
@@ -432,7 +432,7 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
     NWSEC_SPEC_ASSIGN(tcp_strip_timestamp_option);
     NWSEC_SPEC_ASSIGN(tcp_conn_track_bypass_window_err);
     NWSEC_SPEC_ASSIGN(tcp_urg_flag_ptr_clear);
-    NWSEC_SPEC_ASSIGN(tcp_mss);
+    NWSEC_SPEC_ASSIGN(tcp_normalize_mss);
 
     NWSEC_SPEC_ASSIGN(multicast_src_drop);
 
@@ -750,7 +750,7 @@ security_profile_spec_print (SecurityProfileSpec& spec)
     NWSEC_SPEC_FIELD_PRINT(tcp_strip_timestamp_option);
     NWSEC_SPEC_FIELD_PRINT(tcp_conn_track_bypass_window_err);
     NWSEC_SPEC_FIELD_PRINT(tcp_urg_flag_ptr_clear);
-    NWSEC_SPEC_FIELD_PRINT(tcp_mss);
+    NWSEC_SPEC_FIELD_PRINT(tcp_normalize_mss);
     NWSEC_SPEC_FIELD_PRINT(multicast_src_drop);
     buf.write("\n");
 
@@ -1463,6 +1463,7 @@ securityprofile_get (nwsec::SecurityProfileGetRequest& req,
     spec->set_tcp_ts_not_present_drop(sec_prof->tcp_ts_not_present_drop);
     spec->set_tcp_invalid_flags_drop(sec_prof->tcp_invalid_flags_drop);
     spec->set_tcp_nonsyn_noack_drop(sec_prof->tcp_nonsyn_noack_drop);
+    spec->set_tcp_normalize_mss(sec_prof->tcp_normalize_mss);
 
     // fill operational state of this profile
     rsp->mutable_status()->set_profile_handle(sec_prof->hal_handle);

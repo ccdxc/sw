@@ -127,7 +127,7 @@ typedef struct nwsec_profile_s {
     uint32_t              tcp_strip_timestamp_option:1;
     uint32_t              tcp_conn_track_bypass_window_err:1;
     uint32_t              tcp_urg_flag_ptr_clear:1;
-    uint32_t              tcp_mss;
+    uint32_t              tcp_normalize_mss;
 
     uint32_t              multicast_src_drop:1;
 

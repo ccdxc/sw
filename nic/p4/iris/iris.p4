@@ -259,6 +259,7 @@ header_type scratch_metadata_t {
 
         syn_cookie_delta              : 32 (signed);  // TCP seq/ack# adjustment
 
+        tcp_mss                       : 16;
         // icmp code and type needed for ip normalization
         icmp_code                     : 8;
         icmp_type                     : 8;

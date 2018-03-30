@@ -50,7 +50,8 @@ knobs_list = [
     ('NormalizationAction', 'tcp_unexpected_sack_option_action', '54'),
     ('bool', 'tcp_ts_not_present_drop', '55'),
     ('bool', 'tcp_invalid_flags_drop', '56'),
-    ('bool', 'tcp_nonsyn_noack_drop', '57')]
+    ('bool', 'tcp_nonsyn_noack_drop', '57'),
+    ('uint32', 'tcp_normalize_mss', '58')]
 
 print 'meta:'
 print '    id: SECURITY_PROFILES'
