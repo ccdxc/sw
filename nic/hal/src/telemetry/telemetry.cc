@@ -366,6 +366,7 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp,
 hal_ret_t
 flow_monitor_rule_create (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
 {
+    pd_flow_monitor_rule_create_args_t args = {0};
     flow_monitor_rule_t rule = {0};
     hal_ret_t ret = HAL_RET_OK;
     
@@ -381,7 +382,14 @@ flow_monitor_rule_create (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
     if (ret != HAL_RET_OK) {
         goto end;
     }
-    // TODO: Add PD hooks
+    args.rule = &rule;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_MONITOR_RULE_CREATE, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-FlowMonitor create failed {}", ret);
+    } else {
+        HAL_TRACE_DEBUG("PI-MirrorSession create succeeded");
+    }
+    rsp->mutable_spec()->CopyFrom(*spec);
     
 end:
     return ret;
@@ -390,6 +398,7 @@ end:
 hal_ret_t
 flow_monitor_rule_delete (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
 {
+    pd_flow_monitor_rule_create_args_t args = {0};
     flow_monitor_rule_t rule = {0};
     hal_ret_t ret;
 
@@ -404,7 +413,14 @@ flow_monitor_rule_delete (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
     if (ret != HAL_RET_OK) {
         goto end;
     }
-    // TODO: Add PD hooks
+    args.rule = &rule;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-FlowMonitor delete failed {}", ret);
+    } else {
+        HAL_TRACE_DEBUG("PI-MirrorSession delete succeeded");
+    }
+    rsp->mutable_spec()->CopyFrom(*spec);
 
 end:
     return ret;

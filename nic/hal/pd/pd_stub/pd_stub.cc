@@ -187,6 +187,11 @@ PD_FUNC_STUB(pd_mirror_session_create);
 PD_FUNC_STUB(pd_mirror_session_delete);
 PD_FUNC_STUB(pd_mirror_session_get);
 
+// flow monitor rule
+PD_FUNC_STUB(pd_flow_monitor_rule_create);
+PD_FUNC_STUB(pd_flow_monitor_rule_delete);
+PD_FUNC_STUB(pd_flow_monitor_rule_get);
+
 // collector
 PD_FUNC_STUB(pd_collector_create);
 

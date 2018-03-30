@@ -343,6 +343,7 @@ telemetry_export_dest::commit()
 hal_ret_t
 pd_flow_monitor_rule_create(pd_flow_monitor_rule_create_args_t *args)
 {
+    // TODO: Add rules to itree
     hal_ret_t ret = HAL_RET_OK;
 
     return ret;
