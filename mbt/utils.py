@@ -111,7 +111,11 @@ def CompareJsonStrings(expected, actual):
    
     result = ObjectCompare(DictToObj(actual), DictToObj(expected))
     return not result.not_empty()
-    
+
+def CompareJson(expected, actual):
+    result = ObjectCompare(DictToObj(actual), DictToObj(expected)) 
+    return not result.not_empty()
+
 def TopologicalSort(graph_unsorted):
 
     graph_sorted = []

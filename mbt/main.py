@@ -36,10 +36,30 @@ else:
     os.environ['MBT_RANDOM_SEED'] = str(random.randint(1,10000000))
 
 print("The random seed(MBT_RANDOM_SEED) being used for this test is %s" %(str(os.environ['MBT_RANDOM_SEED'])))
+import grpc_meta.types as grpc_meta_types
+grpc_meta_types.set_random_seed()
+
+def get_hal_channel():
+    if 'HAL_GRPC_PORT' in os.environ:
+        port = os.environ['HAL_GRPC_PORT']
+    else:
+        port = '50054'
+    print("Creating GRPC channel to HAL on port %s" %(port))
+    server = 'localhost:' + port
+    hal_channel = grpc.insecure_channel(server)
+    print("Waiting for HAL to be ready ...")
+    grpc.channel_ready_future(hal_channel).result()
+    print("Connected to HAL!")
+    return hal_channel
 
 # This ordering is needed because the random seed is set by the below 2 imports
 import grpc_proxy
 import config_mgr
+out_file = ws_top + '/mbt/hal_proto_gen.py'
+template = ws_top + '/mbt/hal_proto_gen_template.py'
+grpc_proxy.genProxyServerMethods('config_mgr', template, out_file, ws_top)
+import hal_proto_gen
+hal_proto_gen.set_grpc_forward_channel(get_hal_channel())
 
 objects.CallbackField.SetPackagePath("cfg.callbacks")
 
@@ -59,18 +79,6 @@ def start_zmq_server():
 if GlobalOptions.mbt:
     threading.Thread(target=start_zmq_server).start()
 
-def get_hal_channel():
-    if 'HAL_GRPC_PORT' in os.environ:
-        port = os.environ['HAL_GRPC_PORT']
-    else:
-        port = '50054'
-    print("Creating GRPC channel to HAL on port %s" %(port))
-    server = 'localhost:' + port
-    hal_channel = grpc.insecure_channel(server)
-    print("Waiting for HAL to be ready ...")
-    grpc.channel_ready_future(hal_channel).result()
-    print("Connected to HAL!")
-    return hal_channel
 
 op_map = {
         "Create"   : "CreateConfigs",
@@ -102,7 +110,7 @@ signal.signal(signal.SIGUSR1, handle_pdb)
 
 if GlobalOptions.mbt:
     # This is blocking.
-    grpc_proxy.serve()
+    grpc_proxy.serve(hal_proto_gen.proxyServer)
 
 reference_spec = parser.ParseFile("../mbt/cfg/references", "references.spec")
 for object in reference_spec.objects:

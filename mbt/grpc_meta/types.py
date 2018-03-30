@@ -7,16 +7,12 @@ import os
 
 from google.protobuf.descriptor import FieldDescriptor
 
-#This is bad design but when right now object generation is tied to the types
-import config_mgr
-
 def set_random_seed():
     assert('MBT_RANDOM_SEED' in os.environ)
     seed = os.environ['MBT_RANDOM_SEED']
 
     random.seed(seed)
 
-set_random_seed()
 _tag_checker_map = {
      "key_field"     : lambda x, y : (x == "gogoproto.moretags" or x == "gogoproto.jsontag") and "key" in y,
      "ext_ref_field" : lambda x, y : (x == "gogoproto.moretags" or x == "gogoproto.jsontag") and "ref" in y,

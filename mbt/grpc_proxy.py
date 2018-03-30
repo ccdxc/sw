@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-from concurrent import futures
 import grpc
 import os
 import sys
@@ -23,32 +22,30 @@ from infra.common.logging import logger
 from tenjin import *
 from tenjin_wrapper import *
 
-def genProxyServerMethods():
+def genProxyServerMethods(proxy_handler, template, out_file, ws_dir=None):
     tenjin_prefix = "//::"
     
-    template = ws_top + '/mbt/hal_proto_gen_template.py'
-    out_file = ws_top + '/mbt/hal_proto_gen.py'
     
-    dic = {}
+    dic = { 
+            "proxy_handler" : proxy_handler,
+            "ws_top" : ws_dir
+          }
     with open(out_file, "w") as of:
         render_template(of, template, dic, './', prefix=tenjin_prefix)
         of.close()
 
-genProxyServerMethods()
-import hal_proto_gen
 
 def initClient():
     HalChannel = grpc.insecure_channel('localhost:%s'%(port))
     grpc.channel_ready_future(HalChannel).result()
     print( "Connected to HAL" )
 
-def serve():
+def serve(server):
     if 'MBT_GRPC_PORT' in os.environ:
         port = os.environ['MBT_GRPC_PORT']
     else:
         port = '50051'
     logger.info("Starting Model Based Tester GRPC Server on port %s" %(port))
-    server = hal_proto_gen.proxyServer
     server.add_insecure_port('[::]:%s' %(port))
     server.start()
     try:
@@ -58,5 +55,4 @@ def serve():
         server.stop(0)
 
 if __name__ == '__main__':
-    initClient()
     serve()

@@ -6,8 +6,8 @@ import os
 import sys
 from concurrent import futures
 import pdb
-import config_mgr
 from infra.common.logging import logger
+import ${proxy_handler}
 
 def grpc_server_start():
     proxyServer = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
@@ -21,11 +21,12 @@ def grpc_client_connect():
     channel = grpc.insecure_channel('localhost:%s' %(port))
     return channel
 
-proxyServer = grpc_server_start()
-channel     = grpc_client_connect()
+def set_grpc_forward_channel(grpc_channel):
+    global channel
+    channel = grpc_channel
 
-//:: ws_top = os.path.dirname(sys.argv[0]) + '/..'
-//:: ws_top = os.path.abspath(ws_top)
+proxyServer = grpc_server_start()
+//:: ws_top = ws_top  or os.path.abspath(os.path.dirname(sys.argv[0]) + '/..')
 //:: os.environ['WS_TOP'] = ws_top
 //:: fullpath = ws_top + '/nic/gen/proto/'
 //:: sys.path.insert(0, fullpath)
@@ -64,11 +65,11 @@ class ${service[0]}(${fileGrpcName}.${servicerName}):
 //::         for table in service[1].methods_by_name.items():
     def ${table[0]}(self, request, context):
          stub = ${fileGrpcName}.${stubName}(channel)
-         response, err = config_mgr.CreateConfigFromDol(request, '${table[0]}')
+         response, err = ${proxy_handler}.CreateConfigFromDol(request, '${table[0]}')
          if err:
-            logger.info("Sending DOL message for message type %s\n%s\n"%(type(request), request))
+            #logger.info("Sending DOL message for message type %s\n%s\n"%(type(request), request))
             response = stub.${table[0]}(request)
-            logger.info("Received HAL response \n%s\n" %(response))
+            #logger.info("Received HAL response \n%s\n" %(response))
          return response
 
 //::         #endfor
