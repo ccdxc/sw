@@ -70,7 +70,7 @@ lib:
 	@mkdir -p obj/lib/external
 	@find bazel-bin/lib -name "*.so" ! -name '*_*' -exec cp {} obj/lib \;
 	@find bazel-bin/linkmgr -name "*.so" ! -name '*_*' -exec cp {} obj/lib \;
-	cp ../../bazel-bin/nic/hal/pd/capri/csrlite/libcsrlite.so obj/lib/external
+	@cp ../../bazel-bin/nic/hal/pd/capri/csrlite/libcsrlite.so obj/lib/external
 	@chmod 755 obj/lib/*.so obj/lib/external/*.so
 
 test: lib build-test

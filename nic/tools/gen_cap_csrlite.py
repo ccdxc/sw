@@ -314,7 +314,7 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
             array_str = ''
 
             if self.size > 64:
-                wide_str = '[{0}]'.format((self.size + 63) / 64)
+                wide_str = '[{0}]'.format(int((self.size + 63) / 64))
 
             if self.array > 1:
                 array_str = '[{0}]'.format(self.array)
