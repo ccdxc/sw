@@ -4,8 +4,9 @@
 #define __HAL_HPP__
 
 #include <string>
-#include "nic/include/base.h"
 #include "sdk/thread.hpp"
+#include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 
@@ -51,6 +52,34 @@ extern hal_ret_t hal_wait(void);
 // return's HAL memory manager
 //------------------------------------------------------------------------------
 shmmgr *hal_mmgr(void);
+
+// meta class for each object
+typedef uint32_t (*marshall_cb_t)(void *obj, uint8_t *mem, uint32_t len);
+typedef uint32_t (*unmarshall_cb_t)(uint8_t *mem);
+class hal_obj_meta {
+public:
+    hal_obj_meta(hal_slab_t slab_id,
+                 marshall_cb_t mcb,
+                 unmarshall_cb_t umcb) {
+        this->slab_id_ = slab_id;
+        this->marshall_cb_ = mcb;
+        this->unmarshall_cb_ = umcb;
+    }
+    ~hal_obj_meta() {}
+    hal_slab_t slab_id(void) const { return slab_id_; }
+    marshall_cb_t marshall_cb(void) const { return marshall_cb_; }
+    unmarshall_cb_t unmarshall_cb(void) const { return unmarshall_cb_; }
+
+private:
+    hal_slab_t         slab_id_;
+    marshall_cb_t      marshall_cb_;      // serialize the state
+    unmarshall_cb_t    unmarshall_cb_;    // deserialize the state
+};
+void hal_obj_meta_init(void);
+
+// per module information that HAL infra needs to maintain
+typedef struct hal_module_meta_s {
+} __PACK__ hal_module_meta_t;
 
 //------------------------------------------------------------------------------
 // one time memory related initializatino for HAL

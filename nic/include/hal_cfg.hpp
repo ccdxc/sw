@@ -119,28 +119,28 @@ typedef hal_ret_t (*hal_cfg_cleanup_cb_t)(cfg_op_ctxt_t *ctxt);
 // HAL config object identifiers
 //------------------------------------------------------------------------------
 typedef enum hal_obj_id_e {
-    HAL_OBJ_ID_NONE,
+    HAL_OBJ_ID_NONE,                              // NOTE: must be first
+    HAL_OBJ_ID_MIN,
+    HAL_OBJ_ID_LIF                                = HAL_OBJ_ID_MIN,
+    HAL_OBJ_ID_INTERFACE,
     HAL_OBJ_ID_VRF,
-    HAL_OBJ_ID_SECURITY_PROFILE,
-    HAL_OBJ_ID_DOS_POLICY,
     HAL_OBJ_ID_L2SEG,
     HAL_OBJ_ID_NETWORK,
-    HAL_OBJ_ID_INTERFACE,
-    HAL_OBJ_ID_LIF,
+    HAL_OBJ_ID_SECURITY_PROFILE,
     HAL_OBJ_ID_ENDPOINT,
     HAL_OBJ_ID_SESSION,
-    HAL_OBJ_ID_ACL,
     HAL_OBJ_ID_SECURITY_GROUP,
     HAL_OBJ_ID_SECURITY_POLICY,
-    HAL_OBJ_ID_PORT,
-    HAL_OBJ_ID_MC_ENTRY,
+    HAL_OBJ_ID_ACL,
     HAL_OBJ_ID_QOS_CLASS,
     HAL_OBJ_ID_COPP,
+    HAL_OBJ_ID_MC_ENTRY,
+    HAL_OBJ_ID_DOS_POLICY,
     HAL_OBJ_ID_GFT_EXACT_MATCH_PROFILE,
     HAL_OBJ_ID_GFT_HDR_TRANSPOSITION_PROFILE,
     HAL_OBJ_ID_GFT_EXACT_MATCH_FLOW_ENTRY,
-
-    HAL_OBJ_ID_MAX
+    HAL_OBJ_ID_PORT,                              // TBD: doesn't belong in HAL
+    HAL_OBJ_ID_MAX                                // NOTE: must be the last
 } hal_obj_id_t;
 
 //------------------------------------------------------------------------------

@@ -52,631 +52,24 @@ namespace hal {
 class hal_state    *g_hal_state;
 class shmmgr       *g_h2s_shmmgr, *g_h3s_shmmgr;
 
+typedef struct tlv_s {
+    uint32_t    type;
+    uint32_t    len;
+    uint8_t     val[0];
+} __PACK__ tlv_t;
+
+typedef struct hal_state_mctxt_s {
+    uint32_t         obj_id;         // object id (i.e., HAL_OBJ_ID_XXX)
+    uint8_t          *mem;           // buffer to marshall the state into
+    uint32_t         len;            // length of the buffer available
+    marshall_cb_t    marshall_cb;    // marshal callback pointer
+} __PACK__ hal_state_mctxt_t;
+
 //------------------------------------------------------------------------------
 // initialize DBs and caches that needs to be persisted across restarts/upgrades
 //------------------------------------------------------------------------------
 bool
 hal_cfg_db::init_pss(shmmgr *mmgr)
-{
-
-    // initialize vrf related data structures
-    vrf_id_ht_ = ht::factory(HAL_MAX_VRFS,
-                             hal::vrf_id_get_key_func,
-                             hal::vrf_id_compute_hash_func,
-                             hal::vrf_id_compare_key_func,
-                             true, mmgr);
-    HAL_ASSERT_RETURN((vrf_id_ht_ != NULL), false);
-
-    // initialize network related data structures
-    network_key_ht_ = ht::factory(HAL_MAX_VRFS,
-                                  hal::network_get_key_func,
-                                  hal::network_compute_hash_func,
-                                  hal::network_compare_key_func,
-                                  true, mmgr);
-    HAL_ASSERT_RETURN((network_key_ht_ != NULL), false);
-
-    // initialize security profile related data structures
-    nwsec_profile_id_ht_ = ht::factory(HAL_MAX_NWSEC_PROFILES,
-                                       hal::nwsec_profile_id_get_key_func,
-                                       hal::nwsec_profile_id_compute_hash_func,
-                                       hal::nwsec_profile_id_compare_key_func,
-                                       true, mmgr);
-    HAL_ASSERT_RETURN((nwsec_profile_id_ht_ != NULL), false);
-
-    // initialize L2 segment related data structures
-    l2seg_id_ht_ = ht::factory(HAL_MAX_L2SEGMENTS,
-                               hal::l2seg_id_get_key_func,
-                               hal::l2seg_id_compute_hash_func,
-                               hal::l2seg_id_compare_key_func,
-                               true, mmgr);
-    HAL_ASSERT_RETURN((l2seg_id_ht_ != NULL), false);
-
-    // initialize mc entry related data structures
-    mc_key_ht_ = ht::factory(HAL_MAX_MC_ENTRIES,
-                             hal::mc_entry_get_key_func,
-                             hal::mc_entry_compute_hash_func,
-                             hal::mc_entry_compare_key_func,
-                             true, mmgr);
-    HAL_ASSERT_RETURN((mc_key_ht_ != NULL), false);
-
-    // initialize LIF related data structures
-    lif_id_ht_ = ht::factory(HAL_MAX_LIFS,
-                             hal::lif_id_get_key_func,
-                             hal::lif_id_compute_hash_func,
-                             hal::lif_id_compare_key_func,
-                             true, mmgr);
-    HAL_ASSERT_RETURN((lif_id_ht_ != NULL), false);
-
-    // initialize interface related data structures
-    if_id_ht_ = ht::factory(HAL_MAX_INTERFACES,
-                            hal::if_id_get_key_func,
-                            hal::if_id_compute_hash_func,
-                            hal::if_id_compare_key_func,
-                            true, mmgr);
-    HAL_ASSERT_RETURN((if_id_ht_ != NULL), false);
-
-    // initialize flow/session related data structures
-    session_id_ht_ = ht::factory(HAL_MAX_SESSIONS,
-                                 hal::session_get_key_func,
-                                 hal::session_compute_hash_func,
-                                 hal::session_compare_key_func,
-                                 true, mmgr);
-    HAL_ASSERT_RETURN((session_id_ht_ != NULL), false);
-
-    session_hal_handle_ht_ = ht::factory(HAL_MAX_SESSIONS,
-                                         hal::session_get_handle_key_func,
-                                         hal::session_compute_handle_hash_func,
-                                         hal::session_compare_handle_key_func,
-                                         true, mmgr);
-    HAL_ASSERT_RETURN((session_hal_handle_ht_ != NULL), false);
-
-    session_hal_iflow_ht_ = ht::factory(HAL_MAX_SESSIONS,
-                                        hal::session_get_iflow_key_func,
-                                        hal::session_compute_iflow_hash_func,
-                                        hal::session_compare_iflow_key_func,
-                                        true, mmgr);
-    HAL_ASSERT_RETURN((session_hal_iflow_ht_ != NULL), false);
-
-    session_hal_rflow_ht_ = ht::factory(HAL_MAX_SESSIONS,
-                                        hal::session_get_rflow_key_func,
-                                        hal::session_compute_rflow_hash_func,
-                                        hal::session_compare_rflow_key_func,
-                                        true, mmgr);
-    HAL_ASSERT_RETURN((session_hal_rflow_ht_ != NULL), false);
-
-    // initialize l4lb related data structures
-    l4lb_ht_ = ht::factory(HAL_MAX_L4LB_SERVICES,
-                           hal::l4lb_get_key_func,
-                           hal::l4lb_compute_key_hash_func,
-                           hal::l4lb_compare_key_func,
-                           true, mmgr);
-    HAL_ASSERT_RETURN((l4lb_ht_ != NULL), false);
-
-    // initialize Qos-class related data structures
-    qos_class_ht_ = ht::factory(HAL_MAX_QOS_CLASSES,
-                                hal::qos_class_get_key_func,
-                                hal::qos_class_compute_hash_func,
-                                hal::qos_class_compare_key_func,
-                                true, mmgr);
-    HAL_ASSERT_RETURN((qos_class_ht_ != NULL), false);
-
-    // initialize Copp related data structures
-    copp_ht_ = ht::factory(HAL_MAX_COPPS,
-                           hal::copp_get_key_func,
-                           hal::copp_compute_hash_func,
-                           hal::copp_compare_key_func,
-                           true, mmgr);
-    HAL_ASSERT_RETURN((copp_ht_ != NULL), false);
-
-    // initialize acl related data structures
-    acl_ht_ = ht::factory(HAL_MAX_ACLS,
-                          hal::acl_get_key_func,
-                          hal::acl_compute_hash_func,
-                          hal::acl_compare_key_func,
-                          true, mmgr);
-    HAL_ASSERT_RETURN((acl_ht_ != NULL), false);
-
-    nwsec_group_ht_ = ht::factory(HAL_MAX_NW_SEC_GROUP_CFG,
-                                  hal::nwsec_group_get_key_func,
-                                  hal::nwsec_group_compute_hash_func,
-                                  hal::nwsec_group_compare_key_func,
-                                  true, mmgr);
-    HAL_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
-
-    gft_exact_match_profile_id_ht_ = ht::factory(HAL_MAX_GFT_EXACT_MATCH_PROFILES,
-                                                 hal::gft_exact_match_profile_id_get_key_func,
-                                                 hal::gft_exact_match_profile_id_compute_hash_func,
-                                                 hal::gft_exact_match_profile_id_compare_key_func,
-                                                 true, mmgr);
-    HAL_ASSERT_RETURN((gft_exact_match_profile_id_ht_ != NULL), false);
-
-    gft_hdr_transposition_profile_id_ht_ =
-        ht::factory(HAL_MAX_GFT_HDR_TRANSPOSITION_PROFILES,
-                    hal::gft_hdr_transposition_profile_id_get_key_func,
-                    hal::gft_hdr_transposition_profile_id_compute_hash_func,
-                    hal::gft_hdr_transposition_profile_id_compare_key_func,
-                    true, mmgr);
-    HAL_ASSERT_RETURN((gft_hdr_transposition_profile_id_ht_ != NULL), false);
-
-    gft_exact_match_flow_entry_id_ht_ = ht::factory(HAL_MAX_GFT_EXACT_MATCH_FLOW_ENTRIES,
-                                                    hal::gft_exact_match_flow_entry_id_get_key_func,
-                                                    hal::gft_exact_match_flow_entry_id_compute_hash_func,
-                                                    hal::gft_exact_match_flow_entry_id_compare_key_func,
-                                                    true, mmgr);
-    HAL_ASSERT_RETURN((gft_exact_match_flow_entry_id_ht_ != NULL), false);
-
-    return true;
-}
-
-//------------------------------------------------------------------------------
-// initialize DBs and caches that don't to be persisted (i.e., volatile) across
-// restarts/upgrades and these will have to be rebuilt after restart/upgrade
-//------------------------------------------------------------------------------
-bool
-hal_cfg_db::init_vss(void)
-{
-    // initialize TLS CB related data structures
-    tlscb_id_ht_ = ht::factory(HAL_MAX_TLSCB,
-                               hal::tlscb_get_key_func,
-                               hal::tlscb_compute_hash_func,
-                               hal::tlscb_compare_key_func);
-    HAL_ASSERT_RETURN((tlscb_id_ht_ != NULL), false);
-
-    // initialize TCB CB related data structures
-    tcpcb_id_ht_ = ht::factory(HAL_MAX_TCPCB,
-                               hal::tcpcb_get_key_func,
-                               hal::tcpcb_compute_hash_func,
-                               hal::tcpcb_compare_key_func);
-    HAL_ASSERT_RETURN((tcpcb_id_ht_ != NULL), false);
-
-    qos_cmap_pcp_bmp_ = bitmap::factory(HAL_MAX_DOT1Q_PCP_VALS, true);
-    HAL_ASSERT_RETURN((qos_cmap_pcp_bmp_ != NULL), false);
-
-    qos_cmap_dscp_bmp_ = bitmap::factory(HAL_MAX_IP_DSCP_VALS, true);
-    HAL_ASSERT_RETURN((qos_cmap_dscp_bmp_ != NULL), false);
-
-    // initialize WRing related data structures
-    wring_id_ht_ = ht::factory(HAL_MAX_WRING,
-                               hal::wring_get_key_func,
-                               hal::wring_compute_hash_func,
-                               hal::wring_compare_key_func);
-    HAL_ASSERT_RETURN((wring_id_ht_ != NULL), false);
-
-    // initialize proxy service related data structures
-    proxy_type_ht_ = ht::factory(HAL_MAX_PROXY,
-                                 hal::proxy_get_key_func,
-                                 hal::proxy_compute_hash_func,
-                                 hal::proxy_compare_key_func);
-    HAL_ASSERT_RETURN((proxy_type_ht_ != NULL), false);
-
-    // initialize IPSEC CB related data structures
-    ipseccb_id_ht_ = ht::factory(HAL_MAX_IPSECCB,
-                                 hal::ipseccb_get_key_func,
-                                 hal::ipseccb_compute_hash_func,
-                                 hal::ipseccb_compare_key_func);
-    HAL_ASSERT_RETURN((ipseccb_id_ht_ != NULL), false);
-
-    // initialize CPU CB related data structures
-    cpucb_id_ht_ = ht::factory(HAL_MAX_CPUCB,
-                               hal::cpucb_get_key_func,
-                               hal::cpucb_compute_hash_func,
-                               hal::cpucb_compare_key_func);
-    HAL_ASSERT_RETURN((cpucb_id_ht_ != NULL), false);
-
-    // initialize Raw Redirect CB related data structures
-    rawrcb_id_ht_ = ht::factory(HAL_MAX_RAWRCB_HT_SIZE,
-                                hal::rawrcb_get_key_func,
-                                hal::rawrcb_compute_hash_func,
-                                hal::rawrcb_compare_key_func);
-    HAL_ASSERT_RETURN((rawrcb_id_ht_ != NULL), false);
-
-    // initialize Raw Chain CB related data structures
-    rawccb_id_ht_ = ht::factory(HAL_MAX_RAWCCB_HT_SIZE,
-                                hal::rawccb_get_key_func,
-                                hal::rawccb_compute_hash_func,
-                                hal::rawccb_compare_key_func);
-    HAL_ASSERT_RETURN((rawccb_id_ht_ != NULL), false);
-
-    // initialize Raw Redirect CB related data structures
-    proxyrcb_id_ht_ = ht::factory(HAL_MAX_PROXYRCB_HT_SIZE,
-                                  hal::proxyrcb_get_key_func,
-                                  hal::proxyrcb_compute_hash_func,
-                                  hal::proxyrcb_compare_key_func);
-    HAL_ASSERT_RETURN((proxyrcb_id_ht_ != NULL), false);
-
-    // initialize Raw Chain CB related data structures
-    proxyccb_id_ht_ = ht::factory(HAL_MAX_PROXYCCB_HT_SIZE,
-                                  hal::proxyccb_get_key_func,
-                                  hal::proxyccb_compute_hash_func,
-                                  hal::proxyccb_compare_key_func);
-    HAL_ASSERT_RETURN((proxyccb_id_ht_ != NULL), false);
-
-    nwsec_policy_cfg_ht_ = ht::factory(HAL_MAX_NW_SEC_POLICY_CFG,
-                                       hal::nwsec_policy_cfg_get_key_func,
-                                       hal::nwsec_policy_cfg_compute_hash_func,
-                                       hal::nwsec_policy_cfg_compare_key_func);
-    HAL_ASSERT_RETURN((nwsec_policy_cfg_ht_ != NULL), false);
-
-    nwsec_policy_ht_ = ht::factory(HAL_MAX_NW_SEC_POLICY_CFG,
-                                   hal::nwsec_policy_get_key_func,
-                                   hal::nwsec_policy_compute_hash_func,
-                                   hal::nwsec_policy_compare_key_func);
-    HAL_ASSERT_RETURN((nwsec_policy_ht_ != NULL), false);
-
-    return true;
-}
-
-//------------------------------------------------------------------------------
-// init() function to instantiate all the config db init state
-//------------------------------------------------------------------------------
-bool
-hal_cfg_db::init(shmmgr *mmgr)
-{
-    mmgr_ = mmgr;
-    HAL_ASSERT_RETURN((init_pss(mmgr) == true), false);
-    HAL_ASSERT_RETURN((init_vss() == true), false);
-    return true;
-}
-
-//------------------------------------------------------------------------------
-// initialize the state that is not valid after a process restart
-//------------------------------------------------------------------------------
-void
-hal_cfg_db::init_on_restart(void) {
-    init_vss();
-}
-
-//------------------------------------------------------------------------------
-// (private) constructor method
-//------------------------------------------------------------------------------
-hal_cfg_db::hal_cfg_db()
-{
-    mmgr_ = NULL;
-    vrf_id_ht_ = NULL;
-    network_key_ht_ = NULL;
-    nwsec_profile_id_ht_ = NULL;
-    l2seg_id_ht_ = NULL;
-    mc_key_ht_ = NULL;
-    lif_id_ht_ = NULL;
-    if_id_ht_ = NULL;
-    session_id_ht_ = NULL;
-    session_hal_handle_ht_ = NULL;
-    session_hal_iflow_ht_  = NULL;
-    session_hal_rflow_ht_  = NULL;
-    l4lb_ht_ = NULL;
-    nwsec_policy_cfg_ht_  = NULL;
-    nwsec_policy_ht_      = NULL;
-    nwsec_group_ht_       = NULL;
-    qos_class_ht_ = NULL;
-    qos_cmap_pcp_bmp_ = NULL;
-    qos_cmap_dscp_bmp_ = NULL;
-    copp_ht_ = NULL;
-    acl_ht_ = NULL;
-    tlscb_id_ht_ = NULL;
-    tcpcb_id_ht_ = NULL;
-    wring_id_ht_ = NULL;
-    proxy_type_ht_ = NULL;
-    ipseccb_id_ht_ = NULL;
-    cpucb_id_ht_ = NULL;
-    rawrcb_id_ht_ = NULL;
-    app_redir_if_id_ = HAL_IFINDEX_INVALID;
-    rawccb_id_ht_ = NULL;
-    proxyrcb_id_ht_ = NULL;
-    proxyccb_id_ht_ = NULL;
-    gft_exact_match_profile_id_ht_ = NULL;
-    gft_hdr_transposition_profile_id_ht_ = NULL;
-    gft_exact_match_flow_entry_id_ht_ = NULL;
-    forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
-}
-
-//------------------------------------------------------------------------------
-// destructor
-//------------------------------------------------------------------------------
-hal_cfg_db::~hal_cfg_db()
-{
-    vrf_id_ht_ ? ht::destroy(vrf_id_ht_, mmgr_) : HAL_NOP;
-    network_key_ht_ ? ht::destroy(network_key_ht_, mmgr_) : HAL_NOP;
-    nwsec_profile_id_ht_ ? ht::destroy(nwsec_profile_id_ht_, mmgr_) : HAL_NOP;
-    l2seg_id_ht_ ? ht::destroy(l2seg_id_ht_, mmgr_) : HAL_NOP;
-    mc_key_ht_ ? ht::destroy(mc_key_ht_, mmgr_) : HAL_NOP;
-    lif_id_ht_ ? ht::destroy(lif_id_ht_, mmgr_) : HAL_NOP;
-    if_id_ht_ ? ht::destroy(if_id_ht_, mmgr_) : HAL_NOP;
-    session_id_ht_ ? ht::destroy(session_id_ht_, mmgr_) : HAL_NOP;
-    session_hal_handle_ht_ ? ht::destroy(session_hal_handle_ht_) : HAL_NOP;
-    session_hal_iflow_ht_ ? ht::destroy(session_hal_iflow_ht_) : HAL_NOP;
-    session_hal_rflow_ht_ ? ht::destroy(session_hal_rflow_ht_) : HAL_NOP;
-    l4lb_ht_ ? ht::destroy(l4lb_ht_, mmgr_) : HAL_NOP;
-    tlscb_id_ht_ ? ht::destroy(tlscb_id_ht_) : HAL_NOP;
-    tcpcb_id_ht_ ? ht::destroy(tcpcb_id_ht_) : HAL_NOP;
-    qos_class_ht_ ? ht::destroy(qos_class_ht_, mmgr_) : HAL_NOP;
-    qos_cmap_pcp_bmp_ ? bitmap::destroy(qos_cmap_pcp_bmp_) : HAL_NOP;
-    qos_cmap_dscp_bmp_ ? bitmap::destroy(qos_cmap_dscp_bmp_) : HAL_NOP;
-    copp_ht_ ? ht::destroy(copp_ht_, mmgr_) : HAL_NOP;
-    acl_ht_ ? ht::destroy(acl_ht_, mmgr_) : HAL_NOP;
-    wring_id_ht_ ? ht::destroy(wring_id_ht_) : HAL_NOP;
-    proxy_type_ht_ ? ht::destroy(proxy_type_ht_) : HAL_NOP;
-    ipseccb_id_ht_ ? ht::destroy(ipseccb_id_ht_) : HAL_NOP;
-    cpucb_id_ht_ ? ht::destroy(cpucb_id_ht_) : HAL_NOP;
-    rawrcb_id_ht_ ? ht::destroy(rawrcb_id_ht_) : HAL_NOP;
-    rawccb_id_ht_ ? ht::destroy(rawccb_id_ht_) : HAL_NOP;
-    proxyrcb_id_ht_ ? ht::destroy(proxyrcb_id_ht_) : HAL_NOP;
-    proxyccb_id_ht_ ? ht::destroy(proxyccb_id_ht_) : HAL_NOP;
-    nwsec_policy_cfg_ht_ ? ht::destroy(nwsec_policy_cfg_ht_) : HAL_NOP;
-    nwsec_policy_ht_ ? ht::destroy(nwsec_policy_ht_) : HAL_NOP;
-    nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
-    gft_exact_match_profile_id_ht_ ? ht::destroy(gft_exact_match_profile_id_ht_, mmgr_) : HAL_NOP;
-    gft_hdr_transposition_profile_id_ht_ ? ht::destroy(gft_hdr_transposition_profile_id_ht_, mmgr_) : HAL_NOP;
-    gft_exact_match_flow_entry_id_ht_ ? ht::destroy(gft_exact_match_flow_entry_id_ht_, mmgr_) : HAL_NOP;
-}
-
-//------------------------------------------------------------------------------
-// factory method
-//------------------------------------------------------------------------------
-hal_cfg_db *
-hal_cfg_db::factory(shmmgr *mmgr)
-{
-    void          *mem;
-    hal_cfg_db    *cfg_db;
-
-    if (mmgr) {
-        mem = mmgr->alloc(sizeof(hal_cfg_db), 4, true);
-    } else {
-        mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(hal_cfg_db));
-    }
-
-    if (mem) {
-        cfg_db = new(mem) hal_cfg_db();
-        if (cfg_db->init(mmgr) == false) {
-            cfg_db->~hal_cfg_db();
-            if (mmgr) {
-                mmgr->free(mem);
-            } else {
-                HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
-            }
-            return NULL;
-        }
-        return cfg_db;
-    }
-    return NULL;
-}
-
-//------------------------------------------------------------------------------
-// destroy method
-//------------------------------------------------------------------------------
-void
-hal_cfg_db::destroy(hal_cfg_db *cfg_db)
-{
-    shmmgr    *mmgr;
-
-    if (!cfg_db) {
-        return;
-    }
-    mmgr = cfg_db->mmgr_;
-    cfg_db->~hal_cfg_db();
-    if (mmgr) {
-        mmgr->free(cfg_db);
-    } else {
-        HAL_FREE(HAL_MEM_ALLOC_INFRA, cfg_db);
-    }
-}
-
-//------------------------------------------------------------------------------
-// API to call before processing any packet by FTE, any operation by config
-// thread or periodic thread etc.
-// NOTE: once opened, cfg db has to be closed properly and reserved version
-//       should be released/committed or else next open will fail
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_cfg_db::db_open(cfg_op_t cfg_op)
-{
-    // if the cfg db was already opened by this thread, error out
-    if (t_cfg_db_ctxt.cfg_db_open_) {
-        HAL_TRACE_ERR("Failed to open cfg db, opened already, thread {}",
-                      hal_get_current_thread()->name());
-        return HAL_RET_ERR;
-    }
-
-    // take a read lock irrespective of whether the db is open in read/write
-    // mode, for write mode, we will eventually take a write lock when needed
-    g_hal_state->cfg_db()->rlock();
-
-    t_cfg_db_ctxt.cfg_op_ = cfg_op;
-    t_cfg_db_ctxt.cfg_db_open_ = true;
-    HAL_TRACE_DEBUG("{} acquired rlock, opened cfg db, cfg op : {}",
-                    hal_get_current_thread()->name(), cfg_op);
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// API to call after processing any packet by FTE, any operation by config
-// thread or periodic thread etc. If successful, this will make the currently
-// reserved (and cached) version of the DB valid. In case of failure, the
-// currently reserved version will not be marked as valid and object updates
-// made with this reserved version are left as they are ... they are either
-// cleaned up when we touch those objects next time, or by periodic thread that
-// will release instances of objects with invalid versions (or versions that
-// slide out of the valid-versions window)
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_cfg_db::db_close(void)
-{
-    if (t_cfg_db_ctxt.cfg_db_open_) {
-        t_cfg_db_ctxt.cfg_db_open_ = FALSE;
-        t_cfg_db_ctxt.cfg_op_ = CFG_OP_NONE;
-        g_hal_state->cfg_db()->runlock();
-    }
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// register a config object's meta information
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_cfg_db::register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz)
-{
-    if ((obj_id <= HAL_OBJ_ID_NONE) || (obj_id >= HAL_OBJ_ID_MAX)) {
-        return HAL_RET_INVALID_ARG;
-    }
-    obj_meta_[obj_id].obj_sz = obj_sz;
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// return a config object's size given its id
-//------------------------------------------------------------------------------
-uint32_t
-hal_cfg_db::object_size(hal_obj_id_t obj_id) const
-{
-    if ((obj_id <= HAL_OBJ_ID_NONE) || (obj_id >= HAL_OBJ_ID_MAX)) {
-        return 0;
-    }
-    return obj_meta_[obj_id].obj_sz;
-}
-
-//------------------------------------------------------------------------------
-// initialize DBs and caches that needs to be persisted across restarts/upgrades
-//------------------------------------------------------------------------------
-bool
-hal_oper_db::init_pss(shmmgr *mmgr)
-{
-    hal_handle_id_ht_ = ht::factory(HAL_MAX_HANDLES,
-                                    hal::hal_handle_id_get_key_func,
-                                    hal::hal_handle_id_compute_hash_func,
-                                    hal::hal_handle_id_compare_key_func,
-                                    true, mmgr);
-    HAL_ASSERT_RETURN((hal_handle_id_ht_ != NULL), false);
-
-    ep_l2_ht_ = ht::factory(HAL_MAX_ENDPOINTS,
-                            hal::ep_get_l2_key_func,
-                            hal::ep_compute_l2_hash_func,
-                            hal::ep_compare_l2_key_func,
-                            true, mmgr);
-    HAL_ASSERT_RETURN((ep_l2_ht_ != NULL), false);
-
-    ep_l3_entry_ht_ = ht::factory(HAL_MAX_ENDPOINTS << 1,
-                                  hal::ep_get_l3_key_func,
-                                  hal::ep_compute_l3_hash_func,
-                                  hal::ep_compare_l3_key_func,
-                                  true, mmgr);
-    HAL_ASSERT_RETURN((ep_l3_entry_ht_ != NULL), false);
-
-    return true;
-}
-
-//------------------------------------------------------------------------------
-// initialize DBs and caches that don't to be persisted (i.e., volatile) across
-// restarts/upgrades and these will have to be rebuilt after restart/upgrade
-//------------------------------------------------------------------------------
-bool
-hal_oper_db::init_vss(void)
-{
-    event_mgr_ = eventmgr::factory(HAL_MAX_EVENTS);
-    HAL_ASSERT_RETURN((event_mgr_ != NULL), false);
-
-    return true;
-}
-
-//------------------------------------------------------------------------------
-// init() function to instantiate all the oper db init state
-//------------------------------------------------------------------------------
-bool
-hal_oper_db::init(shmmgr *mmgr)
-{
-    mmgr_ = mmgr;
-    HAL_ASSERT_RETURN((init_pss(mmgr) == true), false);
-    HAL_ASSERT_RETURN((init_vss() == true), false);
-    return true;
-}
-
-//------------------------------------------------------------------------------
-// initialize the state that is not valid after a process restart
-//------------------------------------------------------------------------------
-void
-hal_oper_db::init_on_restart(void) {
-    init_vss();
-}
-
-//------------------------------------------------------------------------------
-// (private) constructor method
-//------------------------------------------------------------------------------
-hal_oper_db::hal_oper_db()
-{
-    infra_vrf_handle_ = HAL_HANDLE_INVALID;
-    event_mgr_ = NULL;
-    hal_handle_id_ht_  = NULL;
-    ep_l2_ht_ = NULL;
-    ep_l3_entry_ht_ = NULL;
-    memset(&mytep_ip, 0, sizeof(mytep_ip));
-    mmgr_ = NULL;
-}
-
-//------------------------------------------------------------------------------
-// destructor
-//------------------------------------------------------------------------------
-hal_oper_db::~hal_oper_db()
-{
-    hal_handle_id_ht_ ? ht::destroy(hal_handle_id_ht_, mmgr_) : HAL_NOP;
-    ep_l2_ht_ ? ht::destroy(ep_l2_ht_, mmgr_) : HAL_NOP;
-    ep_l3_entry_ht_ ? ht::destroy(ep_l3_entry_ht_, mmgr_) : HAL_NOP;
-    event_mgr_ ? eventmgr::destroy(event_mgr_) : HAL_NOP;
-}
-
-//------------------------------------------------------------------------------
-// factory method
-//------------------------------------------------------------------------------
-hal_oper_db *
-hal_oper_db::factory(shmmgr *mmgr)
-{
-    void           *mem;
-    hal_oper_db    *oper_db;
-
-    if (mmgr) {
-        mem = mmgr->alloc(sizeof(hal_oper_db), 4, true);
-    } else {
-        mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(hal_oper_db));
-    }
-
-    if (mem) {
-        oper_db = new(mem) hal_oper_db();
-        if (oper_db->init(mmgr) == false) {
-            oper_db->~hal_oper_db();
-            if (mmgr) {
-                mmgr->free(mem);
-            } else {
-                HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
-            }
-            return NULL;
-        }
-        return oper_db;
-    }
-    return NULL;
-}
-
-//------------------------------------------------------------------------------
-// destroy method
-//------------------------------------------------------------------------------
-void
-hal_oper_db::destroy(hal_oper_db *oper_db)
-{
-    shmmgr    *mmgr;
-
-    if (!oper_db) {
-        return;
-    }
-    mmgr = oper_db->mmgr_;
-    oper_db->~hal_oper_db();
-    if (mmgr) {
-        mmgr->free(oper_db);
-    } else {
-        HAL_FREE(HAL_MEM_ALLOC_INFRA, oper_db);
-    }
-}
-
-//------------------------------------------------------------------------------
-// initialize DBs and caches that needs to be persisted across restarts/upgrades
-//------------------------------------------------------------------------------
-bool
-hal_mem_db::init_pss(shmmgr *mmgr)
 {
     // initialize slab for HAL handles
     slabs_[HAL_SLAB_HANDLE] =
@@ -880,7 +273,7 @@ hal_mem_db::init_pss(shmmgr *mmgr)
 // restarts/upgrades and these will have to be rebuilt after restart/upgrade
 //------------------------------------------------------------------------------
 bool
-hal_mem_db::init_vss(void)
+hal_cfg_db::init_vss(void)
 {
     // initialize TLS CB related data structures
     slabs_[HAL_SLAB_TLSCB] = slab::factory("tlscb", HAL_SLAB_TLSCB,
@@ -990,10 +383,10 @@ hal_mem_db::init_vss(void)
 }
 
 //------------------------------------------------------------------------------
-// init() function to instantiate all the mem db init state
+// init() function to instantiate all the config db init state
 //------------------------------------------------------------------------------
 bool
-hal_mem_db::init(shmmgr *mmgr)
+hal_cfg_db::init(shmmgr *mmgr)
 {
     mmgr_ = mmgr;
     HAL_ASSERT_RETURN((init_pss(mmgr) == true), false);
@@ -1005,14 +398,14 @@ hal_mem_db::init(shmmgr *mmgr)
 // initialize the state that is not valid after a process restart
 //------------------------------------------------------------------------------
 void
-hal_mem_db::init_on_restart(void) {
+hal_cfg_db::init_on_restart(void) {
     init_vss();
 }
 
 //------------------------------------------------------------------------------
 // (private) constructor method
 //------------------------------------------------------------------------------
-hal_mem_db::hal_mem_db()
+hal_cfg_db::hal_cfg_db()
 {
     memset(slabs_, 0, sizeof(slabs_));
     mmgr_ = NULL;
@@ -1021,7 +414,7 @@ hal_mem_db::hal_mem_db()
 //------------------------------------------------------------------------------
 // destructor
 //------------------------------------------------------------------------------
-hal_mem_db::~hal_mem_db()
+hal_cfg_db::~hal_cfg_db()
 {
     uint32_t    i;
 
@@ -1035,22 +428,22 @@ hal_mem_db::~hal_mem_db()
 //------------------------------------------------------------------------------
 // factory method
 //------------------------------------------------------------------------------
-hal_mem_db *
-hal_mem_db::factory(shmmgr *mmgr)
+hal_cfg_db *
+hal_cfg_db::factory(shmmgr *mmgr)
 {
     void          *mem;
-    hal_mem_db    *mem_db;
+    hal_cfg_db    *cfg_db;
 
     if (mmgr) {
-        mem = mmgr->alloc(sizeof(hal_mem_db), 4, true);
+        mem = mmgr->alloc(sizeof(hal_cfg_db), 4, true);
     } else {
-        mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(hal_mem_db));
+        mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(hal_cfg_db));
     }
 
     if (mem) {
-        mem_db = new(mem) hal_mem_db();
-        if (mem_db->init(mmgr) == false) {
-            mem_db->~hal_mem_db();
+        cfg_db = new(mem) hal_cfg_db();
+        if (cfg_db->init(mmgr) == false) {
+            cfg_db->~hal_cfg_db();
             if (mmgr) {
                 mmgr->free(mem);
             } else {
@@ -1058,7 +451,7 @@ hal_mem_db::factory(shmmgr *mmgr)
             }
             return NULL;
         }
-        return mem_db;
+        return cfg_db;
     }
     return NULL;
 }
@@ -1067,19 +460,19 @@ hal_mem_db::factory(shmmgr *mmgr)
 // destroy method
 //------------------------------------------------------------------------------
 void
-hal_mem_db::destroy(hal_mem_db *mem_db)
+hal_cfg_db::destroy(hal_cfg_db *cfg_db)
 {
     shmmgr    *mmgr;
 
-    if (!mem_db) {
+    if (!cfg_db) {
         return;
     }
-    mmgr = mem_db->mmgr_;
-    mem_db->~hal_mem_db();
+    mmgr = cfg_db->mmgr_;
+    cfg_db->~hal_cfg_db();
     if (mmgr) {
-        mmgr->free(mem_db);
+        mmgr->free(cfg_db);
     } else {
-        HAL_FREE(HAL_MEM_ALLOC_INFRA, mem_db);
+        HAL_FREE(HAL_MEM_ALLOC_INFRA, cfg_db);
     }
 }
 
@@ -1087,7 +480,7 @@ hal_mem_db::destroy(hal_mem_db *mem_db)
 // gives the slab of a slab id
 //----------------------------------------------------------------------------
 slab *
-hal_mem_db::get_slab(hal_slab_t slab_id)
+hal_cfg_db::get_slab(hal_slab_t slab_id)
 {
     if (slab_id >= HAL_SLAB_PI_MAX) {
         return NULL;
@@ -1095,105 +488,492 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     return TO_SLAB_PTR(slabs_[slab_id]);
 }
 
+//------------------------------------------------------------------------------
+// API to call before processing any packet by FTE, any operation by config
+// thread or periodic thread etc.
+// NOTE: once opened, cfg db has to be closed properly and reserved version
+//       should be released/committed or else next open will fail
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_cfg_db::db_open(cfg_op_t cfg_op)
+{
+    // if the cfg db was already opened by this thread, error out
+    if (t_cfg_db_ctxt.cfg_db_open_) {
+        HAL_TRACE_ERR("Failed to open cfg db, opened already, thread {}",
+                      hal_get_current_thread()->name());
+        return HAL_RET_ERR;
+    }
+
+    // take a read lock irrespective of whether the db is open in read/write
+    // mode, for write mode, we will eventually take a write lock when needed
+    g_hal_state->cfg_db()->rlock();
+
+    t_cfg_db_ctxt.cfg_op_ = cfg_op;
+    t_cfg_db_ctxt.cfg_db_open_ = true;
+    HAL_TRACE_DEBUG("{} acquired rlock, opened cfg db, cfg op : {}",
+                    hal_get_current_thread()->name(), cfg_op);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// API to call after processing any packet by FTE, any operation by config
+// thread or periodic thread etc. If successful, this will make the currently
+// reserved (and cached) version of the DB valid. In case of failure, the
+// currently reserved version will not be marked as valid and object updates
+// made with this reserved version are left as they are ... they are either
+// cleaned up when we touch those objects next time, or by periodic thread that
+// will release instances of objects with invalid versions (or versions that
+// slide out of the valid-versions window)
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_cfg_db::db_close(void)
+{
+    if (t_cfg_db_ctxt.cfg_db_open_) {
+        t_cfg_db_ctxt.cfg_db_open_ = FALSE;
+        t_cfg_db_ctxt.cfg_op_ = CFG_OP_NONE;
+        g_hal_state->cfg_db()->runlock();
+    }
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// register a config object's meta information
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_cfg_db::register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz)
+{
+    if ((obj_id <= HAL_OBJ_ID_NONE) || (obj_id >= HAL_OBJ_ID_MAX)) {
+        return HAL_RET_INVALID_ARG;
+    }
+    //obj_meta_[obj_id].obj_sz = obj_sz;
+    return HAL_RET_OK;
+}
+
 #if 0
 //------------------------------------------------------------------------------
-// init() function to instantiate all HAL init state
+// return a config object's size given its id
+//------------------------------------------------------------------------------
+uint32_t
+hal_cfg_db::object_size(hal_obj_id_t obj_id) const
+{
+    if ((obj_id <= HAL_OBJ_ID_NONE) || (obj_id >= HAL_OBJ_ID_MAX)) {
+        return 0;
+    }
+    return obj_meta_[obj_id].obj_sz;
+}
+#endif
+
+//------------------------------------------------------------------------------
+// initialize DBs and caches that needs to be persisted across restarts/upgrades
 //------------------------------------------------------------------------------
 bool
-hal_state::init(shmmgr *mmgr)
+hal_oper_db::init_pss(shmmgr *mmgr)
+{
+    hal_handle_id_ht_ = ht::factory(HAL_MAX_HANDLES,
+                                    hal::hal_handle_id_get_key_func,
+                                    hal::hal_handle_id_compute_hash_func,
+                                    hal::hal_handle_id_compare_key_func,
+                                    true, mmgr);
+    HAL_ASSERT_RETURN((hal_handle_id_ht_ != NULL), false);
+
+    // initialize vrf related data structures
+    vrf_id_ht_ = ht::factory(HAL_MAX_VRFS,
+                             hal::vrf_id_get_key_func,
+                             hal::vrf_id_compute_hash_func,
+                             hal::vrf_id_compare_key_func,
+                             true, mmgr);
+    HAL_ASSERT_RETURN((vrf_id_ht_ != NULL), false);
+
+    // initialize network related data structures
+    network_key_ht_ = ht::factory(HAL_MAX_VRFS,
+                                  hal::network_get_key_func,
+                                  hal::network_compute_hash_func,
+                                  hal::network_compare_key_func,
+                                  true, mmgr);
+    HAL_ASSERT_RETURN((network_key_ht_ != NULL), false);
+
+    // initialize security profile related data structures
+    nwsec_profile_id_ht_ = ht::factory(HAL_MAX_NWSEC_PROFILES,
+                                       hal::nwsec_profile_id_get_key_func,
+                                       hal::nwsec_profile_id_compute_hash_func,
+                                       hal::nwsec_profile_id_compare_key_func,
+                                       true, mmgr);
+    HAL_ASSERT_RETURN((nwsec_profile_id_ht_ != NULL), false);
+
+    // initialize L2 segment related data structures
+    l2seg_id_ht_ = ht::factory(HAL_MAX_L2SEGMENTS,
+                               hal::l2seg_id_get_key_func,
+                               hal::l2seg_id_compute_hash_func,
+                               hal::l2seg_id_compare_key_func,
+                               true, mmgr);
+    HAL_ASSERT_RETURN((l2seg_id_ht_ != NULL), false);
+
+    ep_l2_ht_ = ht::factory(HAL_MAX_ENDPOINTS,
+                            hal::ep_get_l2_key_func,
+                            hal::ep_compute_l2_hash_func,
+                            hal::ep_compare_l2_key_func,
+                            true, mmgr);
+    HAL_ASSERT_RETURN((ep_l2_ht_ != NULL), false);
+
+    ep_l3_entry_ht_ = ht::factory(HAL_MAX_ENDPOINTS << 1,
+                                  hal::ep_get_l3_key_func,
+                                  hal::ep_compute_l3_hash_func,
+                                  hal::ep_compare_l3_key_func,
+                                  true, mmgr);
+    HAL_ASSERT_RETURN((ep_l3_entry_ht_ != NULL), false);
+
+    // initialize mc entry related data structures
+    mc_key_ht_ = ht::factory(HAL_MAX_MC_ENTRIES,
+                             hal::mc_entry_get_key_func,
+                             hal::mc_entry_compute_hash_func,
+                             hal::mc_entry_compare_key_func,
+                             true, mmgr);
+    HAL_ASSERT_RETURN((mc_key_ht_ != NULL), false);
+
+    // initialize LIF related data structures
+    lif_id_ht_ = ht::factory(HAL_MAX_LIFS,
+                             hal::lif_id_get_key_func,
+                             hal::lif_id_compute_hash_func,
+                             hal::lif_id_compare_key_func,
+                             true, mmgr);
+    HAL_ASSERT_RETURN((lif_id_ht_ != NULL), false);
+
+    // initialize interface related data structures
+    if_id_ht_ = ht::factory(HAL_MAX_INTERFACES,
+                            hal::if_id_get_key_func,
+                            hal::if_id_compute_hash_func,
+                            hal::if_id_compare_key_func,
+                            true, mmgr);
+    HAL_ASSERT_RETURN((if_id_ht_ != NULL), false);
+
+    // initialize flow/session related data structures
+    session_id_ht_ = ht::factory(HAL_MAX_SESSIONS,
+                                 hal::session_get_key_func,
+                                 hal::session_compute_hash_func,
+                                 hal::session_compare_key_func,
+                                 true, mmgr);
+    HAL_ASSERT_RETURN((session_id_ht_ != NULL), false);
+
+    session_hal_handle_ht_ = ht::factory(HAL_MAX_SESSIONS,
+                                         hal::session_get_handle_key_func,
+                                         hal::session_compute_handle_hash_func,
+                                         hal::session_compare_handle_key_func,
+                                         true, mmgr);
+    HAL_ASSERT_RETURN((session_hal_handle_ht_ != NULL), false);
+
+    session_hal_iflow_ht_ = ht::factory(HAL_MAX_SESSIONS,
+                                        hal::session_get_iflow_key_func,
+                                        hal::session_compute_iflow_hash_func,
+                                        hal::session_compare_iflow_key_func,
+                                        true, mmgr);
+    HAL_ASSERT_RETURN((session_hal_iflow_ht_ != NULL), false);
+
+    session_hal_rflow_ht_ = ht::factory(HAL_MAX_SESSIONS,
+                                        hal::session_get_rflow_key_func,
+                                        hal::session_compute_rflow_hash_func,
+                                        hal::session_compare_rflow_key_func,
+                                        true, mmgr);
+    HAL_ASSERT_RETURN((session_hal_rflow_ht_ != NULL), false);
+
+    // initialize l4lb related data structures
+    l4lb_ht_ = ht::factory(HAL_MAX_L4LB_SERVICES,
+                           hal::l4lb_get_key_func,
+                           hal::l4lb_compute_key_hash_func,
+                           hal::l4lb_compare_key_func,
+                           true, mmgr);
+    HAL_ASSERT_RETURN((l4lb_ht_ != NULL), false);
+
+    // initialize Qos-class related data structures
+    qos_class_ht_ = ht::factory(HAL_MAX_QOS_CLASSES,
+                                hal::qos_class_get_key_func,
+                                hal::qos_class_compute_hash_func,
+                                hal::qos_class_compare_key_func,
+                                true, mmgr);
+    HAL_ASSERT_RETURN((qos_class_ht_ != NULL), false);
+
+    // initialize Copp related data structures
+    copp_ht_ = ht::factory(HAL_MAX_COPPS,
+                           hal::copp_get_key_func,
+                           hal::copp_compute_hash_func,
+                           hal::copp_compare_key_func,
+                           true, mmgr);
+    HAL_ASSERT_RETURN((copp_ht_ != NULL), false);
+
+    // initialize acl related data structures
+    acl_ht_ = ht::factory(HAL_MAX_ACLS,
+                          hal::acl_get_key_func,
+                          hal::acl_compute_hash_func,
+                          hal::acl_compare_key_func,
+                          true, mmgr);
+    HAL_ASSERT_RETURN((acl_ht_ != NULL), false);
+
+    nwsec_group_ht_ = ht::factory(HAL_MAX_NW_SEC_GROUP_CFG,
+                                  hal::nwsec_group_get_key_func,
+                                  hal::nwsec_group_compute_hash_func,
+                                  hal::nwsec_group_compare_key_func,
+                                  true, mmgr);
+    HAL_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
+
+    gft_exact_match_profile_id_ht_ = ht::factory(HAL_MAX_GFT_EXACT_MATCH_PROFILES,
+                                                 hal::gft_exact_match_profile_id_get_key_func,
+                                                 hal::gft_exact_match_profile_id_compute_hash_func,
+                                                 hal::gft_exact_match_profile_id_compare_key_func,
+                                                 true, mmgr);
+    HAL_ASSERT_RETURN((gft_exact_match_profile_id_ht_ != NULL), false);
+
+    gft_hdr_transposition_profile_id_ht_ =
+        ht::factory(HAL_MAX_GFT_HDR_TRANSPOSITION_PROFILES,
+                    hal::gft_hdr_transposition_profile_id_get_key_func,
+                    hal::gft_hdr_transposition_profile_id_compute_hash_func,
+                    hal::gft_hdr_transposition_profile_id_compare_key_func,
+                    true, mmgr);
+    HAL_ASSERT_RETURN((gft_hdr_transposition_profile_id_ht_ != NULL), false);
+
+    gft_exact_match_flow_entry_id_ht_ = ht::factory(HAL_MAX_GFT_EXACT_MATCH_FLOW_ENTRIES,
+                                                    hal::gft_exact_match_flow_entry_id_get_key_func,
+                                                    hal::gft_exact_match_flow_entry_id_compute_hash_func,
+                                                    hal::gft_exact_match_flow_entry_id_compare_key_func,
+                                                    true, mmgr);
+    HAL_ASSERT_RETURN((gft_exact_match_flow_entry_id_ht_ != NULL), false);
+
+    return true;
+}
+
+//------------------------------------------------------------------------------
+// initialize DBs and caches that don't to be persisted (i.e., volatile) across
+// restarts/upgrades and these will have to be rebuilt after restart/upgrade
+//------------------------------------------------------------------------------
+bool
+hal_oper_db::init_vss(void)
+{
+    event_mgr_ = eventmgr::factory(HAL_MAX_EVENTS);
+    HAL_ASSERT_RETURN((event_mgr_ != NULL), false);
+
+    // initialize TLS CB related data structures
+    tlscb_id_ht_ = ht::factory(HAL_MAX_TLSCB,
+                               hal::tlscb_get_key_func,
+                               hal::tlscb_compute_hash_func,
+                               hal::tlscb_compare_key_func);
+    HAL_ASSERT_RETURN((tlscb_id_ht_ != NULL), false);
+
+    // initialize TCB CB related data structures
+    tcpcb_id_ht_ = ht::factory(HAL_MAX_TCPCB,
+                               hal::tcpcb_get_key_func,
+                               hal::tcpcb_compute_hash_func,
+                               hal::tcpcb_compare_key_func);
+    HAL_ASSERT_RETURN((tcpcb_id_ht_ != NULL), false);
+
+    qos_cmap_pcp_bmp_ = bitmap::factory(HAL_MAX_DOT1Q_PCP_VALS, true);
+    HAL_ASSERT_RETURN((qos_cmap_pcp_bmp_ != NULL), false);
+
+    qos_cmap_dscp_bmp_ = bitmap::factory(HAL_MAX_IP_DSCP_VALS, true);
+    HAL_ASSERT_RETURN((qos_cmap_dscp_bmp_ != NULL), false);
+
+    // initialize WRing related data structures
+    wring_id_ht_ = ht::factory(HAL_MAX_WRING,
+                               hal::wring_get_key_func,
+                               hal::wring_compute_hash_func,
+                               hal::wring_compare_key_func);
+    HAL_ASSERT_RETURN((wring_id_ht_ != NULL), false);
+
+    // initialize proxy service related data structures
+    proxy_type_ht_ = ht::factory(HAL_MAX_PROXY,
+                                 hal::proxy_get_key_func,
+                                 hal::proxy_compute_hash_func,
+                                 hal::proxy_compare_key_func);
+    HAL_ASSERT_RETURN((proxy_type_ht_ != NULL), false);
+
+    // initialize IPSEC CB related data structures
+    ipseccb_id_ht_ = ht::factory(HAL_MAX_IPSECCB,
+                                 hal::ipseccb_get_key_func,
+                                 hal::ipseccb_compute_hash_func,
+                                 hal::ipseccb_compare_key_func);
+    HAL_ASSERT_RETURN((ipseccb_id_ht_ != NULL), false);
+
+    // initialize CPU CB related data structures
+    cpucb_id_ht_ = ht::factory(HAL_MAX_CPUCB,
+                               hal::cpucb_get_key_func,
+                               hal::cpucb_compute_hash_func,
+                               hal::cpucb_compare_key_func);
+    HAL_ASSERT_RETURN((cpucb_id_ht_ != NULL), false);
+
+    // initialize Raw Redirect CB related data structures
+    rawrcb_id_ht_ = ht::factory(HAL_MAX_RAWRCB_HT_SIZE,
+                                hal::rawrcb_get_key_func,
+                                hal::rawrcb_compute_hash_func,
+                                hal::rawrcb_compare_key_func);
+    HAL_ASSERT_RETURN((rawrcb_id_ht_ != NULL), false);
+
+    // initialize Raw Chain CB related data structures
+    rawccb_id_ht_ = ht::factory(HAL_MAX_RAWCCB_HT_SIZE,
+                                hal::rawccb_get_key_func,
+                                hal::rawccb_compute_hash_func,
+                                hal::rawccb_compare_key_func);
+    HAL_ASSERT_RETURN((rawccb_id_ht_ != NULL), false);
+
+    // initialize Raw Redirect CB related data structures
+    proxyrcb_id_ht_ = ht::factory(HAL_MAX_PROXYRCB_HT_SIZE,
+                                  hal::proxyrcb_get_key_func,
+                                  hal::proxyrcb_compute_hash_func,
+                                  hal::proxyrcb_compare_key_func);
+    HAL_ASSERT_RETURN((proxyrcb_id_ht_ != NULL), false);
+
+    // initialize Raw Chain CB related data structures
+    proxyccb_id_ht_ = ht::factory(HAL_MAX_PROXYCCB_HT_SIZE,
+                                  hal::proxyccb_get_key_func,
+                                  hal::proxyccb_compute_hash_func,
+                                  hal::proxyccb_compare_key_func);
+    HAL_ASSERT_RETURN((proxyccb_id_ht_ != NULL), false);
+
+    nwsec_policy_cfg_ht_ = ht::factory(HAL_MAX_NW_SEC_POLICY_CFG,
+                                       hal::nwsec_policy_cfg_get_key_func,
+                                       hal::nwsec_policy_cfg_compute_hash_func,
+                                       hal::nwsec_policy_cfg_compare_key_func);
+    HAL_ASSERT_RETURN((nwsec_policy_cfg_ht_ != NULL), false);
+
+    nwsec_policy_ht_ = ht::factory(HAL_MAX_NW_SEC_POLICY_CFG,
+                                   hal::nwsec_policy_get_key_func,
+                                   hal::nwsec_policy_compute_hash_func,
+                                   hal::nwsec_policy_compare_key_func);
+    HAL_ASSERT_RETURN((nwsec_policy_ht_ != NULL), false);
+
+    return true;
+}
+
+//------------------------------------------------------------------------------
+// init() function to instantiate all the oper db init state
+//------------------------------------------------------------------------------
+bool
+hal_oper_db::init(shmmgr *mmgr)
 {
     mmgr_ = mmgr;
-    cfg_db_ = hal_cfg_db::factory(mmgr);
-    oper_db_ = hal_oper_db::factory(mmgr);
-    mem_db_ = hal_mem_db::factory(mmgr);
-    if (mmgr) {
-        api_stats_ =
-            (hal_stats_t *)mmgr->alloc(sizeof(hal_stats_t) * HAL_API_MAX,
-                                       4, true);
-    } else {
-        api_stats_ = (hal_stats_t *)HAL_CALLOC(HAL_MEM_ALLOC_API_STATS,
-                                        sizeof(hal_stats_t) * HAL_API_MAX);
-    }
-
-    HAL_ASSERT_GOTO((cfg_db_ && oper_db_ && mem_db_ && api_stats_), cleanup);
+    HAL_ASSERT_RETURN((init_pss(mmgr) == true), false);
+    HAL_ASSERT_RETURN((init_vss() == true), false);
     return true;
+}
 
-cleanup:
-
-    if (cfg_db_) {
-        hal_cfg_db::destroy(cfg_db_);
-    }
-    if (oper_db_) {
-        hal_oper_db::destroy(oper_db_);
-    }
-    if (mem_db_) {
-        hal_mem_db::destroy(mem_db_);
-    }
-    if (api_stats_) {
-        if (mmgr) {
-            mmgr->free(api_stats_);
-        } else {
-            HAL_FREE(HAL_MEM_ALLOC_API_STATS, api_stats_);
-        }
-    }
-
-    return false;
+//------------------------------------------------------------------------------
+// initialize the state that is not valid after a process restart
+//------------------------------------------------------------------------------
+void
+hal_oper_db::init_on_restart(void) {
+    init_vss();
 }
 
 //------------------------------------------------------------------------------
 // (private) constructor method
 //------------------------------------------------------------------------------
-hal_state::hal_state()
+hal_oper_db::hal_oper_db()
 {
-    cfg_db_ = NULL;
-    oper_db_ = NULL;
-    mem_db_ = NULL;
-    catalog_ = NULL;
-    api_stats_ = NULL;
+    /// keep the below stuff ///
     mmgr_ = NULL;
+    hal_handle_id_ht_  = NULL;
+    vrf_id_ht_ = NULL;
+    network_key_ht_ = NULL;
+    nwsec_profile_id_ht_ = NULL;
+    l2seg_id_ht_ = NULL;
+    ep_l2_ht_ = NULL;
+    ep_l3_entry_ht_ = NULL;
+    mc_key_ht_ = NULL;
+    lif_id_ht_ = NULL;
+    if_id_ht_ = NULL;
+    session_id_ht_ = NULL;
+    session_hal_handle_ht_ = NULL;
+    session_hal_iflow_ht_  = NULL;
+    session_hal_rflow_ht_  = NULL;
+    l4lb_ht_ = NULL;
+    nwsec_policy_cfg_ht_  = NULL;
+    nwsec_policy_ht_      = NULL;
+    nwsec_group_ht_       = NULL;
+    qos_class_ht_ = NULL;
+    qos_cmap_pcp_bmp_ = NULL;
+    qos_cmap_dscp_bmp_ = NULL;
+    copp_ht_ = NULL;
+    acl_ht_ = NULL;
+    tlscb_id_ht_ = NULL;
+    tcpcb_id_ht_ = NULL;
+    wring_id_ht_ = NULL;
+    proxy_type_ht_ = NULL;
+    ipseccb_id_ht_ = NULL;
+    cpucb_id_ht_ = NULL;
+    rawrcb_id_ht_ = NULL;
+    app_redir_if_id_ = HAL_IFINDEX_INVALID;
+    rawccb_id_ht_ = NULL;
+    proxyrcb_id_ht_ = NULL;
+    proxyccb_id_ht_ = NULL;
+    gft_exact_match_profile_id_ht_ = NULL;
+    gft_hdr_transposition_profile_id_ht_ = NULL;
+    gft_exact_match_flow_entry_id_ht_ = NULL;
+
+    forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
+    infra_vrf_handle_ = HAL_HANDLE_INVALID;
+    event_mgr_ = NULL;
+    memset(&mytep_ip, 0, sizeof(mytep_ip));
 }
 
 //------------------------------------------------------------------------------
 // destructor
 //------------------------------------------------------------------------------
-hal_state::~hal_state() {
-    if (cfg_db_) {
-        hal_cfg_db::destroy(cfg_db_);
-    }
-    if (oper_db_) {
-        hal_oper_db::destroy(oper_db_);
-    }
-    if (mem_db_) {
-        hal_mem_db::destroy(mem_db_);
-    }
-    if (api_stats_) {
-        if (mmgr_) {
-            mmgr_->free(api_stats_);
-        } else {
-            HAL_FREE(HAL_MEM_ALLOC_API_STATS, api_stats_);
-        }
-    }
+hal_oper_db::~hal_oper_db()
+{
+    hal_handle_id_ht_ ? ht::destroy(hal_handle_id_ht_, mmgr_) : HAL_NOP;
+    vrf_id_ht_ ? ht::destroy(vrf_id_ht_, mmgr_) : HAL_NOP;
+    network_key_ht_ ? ht::destroy(network_key_ht_, mmgr_) : HAL_NOP;
+    nwsec_profile_id_ht_ ? ht::destroy(nwsec_profile_id_ht_, mmgr_) : HAL_NOP;
+    l2seg_id_ht_ ? ht::destroy(l2seg_id_ht_, mmgr_) : HAL_NOP;
+    ep_l2_ht_ ? ht::destroy(ep_l2_ht_, mmgr_) : HAL_NOP;
+    ep_l3_entry_ht_ ? ht::destroy(ep_l3_entry_ht_, mmgr_) : HAL_NOP;
+    mc_key_ht_ ? ht::destroy(mc_key_ht_, mmgr_) : HAL_NOP;
+    lif_id_ht_ ? ht::destroy(lif_id_ht_, mmgr_) : HAL_NOP;
+    if_id_ht_ ? ht::destroy(if_id_ht_, mmgr_) : HAL_NOP;
+    session_id_ht_ ? ht::destroy(session_id_ht_, mmgr_) : HAL_NOP;
+    session_hal_handle_ht_ ? ht::destroy(session_hal_handle_ht_) : HAL_NOP;
+    session_hal_iflow_ht_ ? ht::destroy(session_hal_iflow_ht_) : HAL_NOP;
+    session_hal_rflow_ht_ ? ht::destroy(session_hal_rflow_ht_) : HAL_NOP;
+    l4lb_ht_ ? ht::destroy(l4lb_ht_, mmgr_) : HAL_NOP;
+    tlscb_id_ht_ ? ht::destroy(tlscb_id_ht_) : HAL_NOP;
+    tcpcb_id_ht_ ? ht::destroy(tcpcb_id_ht_) : HAL_NOP;
+    qos_class_ht_ ? ht::destroy(qos_class_ht_, mmgr_) : HAL_NOP;
+    qos_cmap_pcp_bmp_ ? bitmap::destroy(qos_cmap_pcp_bmp_) : HAL_NOP;
+    qos_cmap_dscp_bmp_ ? bitmap::destroy(qos_cmap_dscp_bmp_) : HAL_NOP;
+    copp_ht_ ? ht::destroy(copp_ht_, mmgr_) : HAL_NOP;
+    acl_ht_ ? ht::destroy(acl_ht_, mmgr_) : HAL_NOP;
+    wring_id_ht_ ? ht::destroy(wring_id_ht_) : HAL_NOP;
+    proxy_type_ht_ ? ht::destroy(proxy_type_ht_) : HAL_NOP;
+    ipseccb_id_ht_ ? ht::destroy(ipseccb_id_ht_) : HAL_NOP;
+    cpucb_id_ht_ ? ht::destroy(cpucb_id_ht_) : HAL_NOP;
+    rawrcb_id_ht_ ? ht::destroy(rawrcb_id_ht_) : HAL_NOP;
+    rawccb_id_ht_ ? ht::destroy(rawccb_id_ht_) : HAL_NOP;
+    proxyrcb_id_ht_ ? ht::destroy(proxyrcb_id_ht_) : HAL_NOP;
+    proxyccb_id_ht_ ? ht::destroy(proxyccb_id_ht_) : HAL_NOP;
+    nwsec_policy_cfg_ht_ ? ht::destroy(nwsec_policy_cfg_ht_) : HAL_NOP;
+    nwsec_policy_ht_ ? ht::destroy(nwsec_policy_ht_) : HAL_NOP;
+    nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
+    gft_exact_match_profile_id_ht_ ? ht::destroy(gft_exact_match_profile_id_ht_, mmgr_) : HAL_NOP;
+    gft_hdr_transposition_profile_id_ht_ ? ht::destroy(gft_hdr_transposition_profile_id_ht_, mmgr_) : HAL_NOP;
+    gft_exact_match_flow_entry_id_ht_ ? ht::destroy(gft_exact_match_flow_entry_id_ht_, mmgr_) : HAL_NOP;
+    event_mgr_ ? eventmgr::destroy(event_mgr_) : HAL_NOP;
 }
 
 //------------------------------------------------------------------------------
 // factory method
 //------------------------------------------------------------------------------
-hal_state *
-hal_state::factory(shmmgr *mmgr)
+hal_oper_db *
+hal_oper_db::factory(shmmgr *mmgr)
 {
-    void         *mem;
-    hal_state    *state;
+    void           *mem;
+    hal_oper_db    *oper_db;
 
     if (mmgr) {
-        mem = mmgr->alloc(sizeof(hal_state), 4, true);
+        mem = mmgr->alloc(sizeof(hal_oper_db), 4, true);
     } else {
-        mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(hal_state));
+        mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(hal_oper_db));
     }
 
     if (mem) {
-        state = new (mem) hal_state();
-        if (state->init(mmgr) == false) {
-            state->~hal_state();
+        oper_db = new(mem) hal_oper_db();
+        if (oper_db->init(mmgr) == false) {
+            oper_db->~hal_oper_db();
             if (mmgr) {
                 mmgr->free(mem);
             } else {
@@ -1201,7 +981,7 @@ hal_state::factory(shmmgr *mmgr)
             }
             return NULL;
         }
-        return state;
+        return oper_db;
     }
     return NULL;
 }
@@ -1210,22 +990,21 @@ hal_state::factory(shmmgr *mmgr)
 // destroy method
 //------------------------------------------------------------------------------
 void
-hal_state::destroy(hal_state *state)
+hal_oper_db::destroy(hal_oper_db *oper_db)
 {
     shmmgr    *mmgr;
 
-    if (!state) {
+    if (!oper_db) {
         return;
     }
-    mmgr = state->mmgr_;
-    state->~hal_state();
+    mmgr = oper_db->mmgr_;
+    oper_db->~hal_oper_db();
     if (mmgr) {
-        mmgr->free(state);
+        mmgr->free(oper_db);
     } else {
-        HAL_FREE(HAL_MEM_ALLOC_INFRA, state);
+        HAL_FREE(HAL_MEM_ALLOC_INFRA, oper_db);
     }
 }
-#endif
 
 //------------------------------------------------------------------------------
 // common cleanup method
@@ -1238,9 +1017,6 @@ hal_state::cleanup(void) {
     if (oper_db_) {
         hal_oper_db::destroy(oper_db_);
     }
-    if (mem_db_) {
-        hal_mem_db::destroy(mem_db_);
-    }
     if (api_stats_) {
         if (mmgr_) {
             mmgr_->free(api_stats_);
@@ -1248,19 +1024,21 @@ hal_state::cleanup(void) {
             HAL_FREE(HAL_MEM_ALLOC_API_STATS, api_stats_);
         }
     }
+    mmgr_ = NULL;
+    obj_meta_ = NULL;
 }
 
 //------------------------------------------------------------------------------
 // constructor method
 //------------------------------------------------------------------------------
-hal_state::hal_state(shmmgr *mmgr)
+hal_state::hal_state(hal_obj_meta **obj_meta, shmmgr *mmgr)
 {
     mmgr_ = mmgr;
     cfg_db_ = NULL;
     oper_db_ = NULL;
-    mem_db_ = NULL;
     api_stats_ = NULL;
     catalog_ = NULL;
+    obj_meta_ = obj_meta;
 
     cfg_db_ = hal_cfg_db::factory(mmgr);
     HAL_ASSERT_GOTO(cfg_db_, error);
@@ -1268,8 +1046,6 @@ hal_state::hal_state(shmmgr *mmgr)
     oper_db_ = hal_oper_db::factory(mmgr);
     HAL_ASSERT_GOTO(oper_db_, error);
 
-    mem_db_ = hal_mem_db::factory(mmgr);
-    HAL_ASSERT_GOTO(mem_db_, error);
     if (mmgr) {
         api_stats_ =
             (hal_stats_t *)mmgr->alloc(sizeof(hal_stats_t) * HAL_API_MAX,
@@ -1301,17 +1077,74 @@ hal_state::init_on_restart(void) {
     catalog_ = NULL;
     cfg_db_->init_on_restart();
     oper_db_->init_on_restart();
-    mem_db_->init_on_restart();
+}
+
+//------------------------------------------------------------------------------
+// common slab object marshalling callback
+//------------------------------------------------------------------------------
+static bool
+slab_marshall_cb (void *obj, void *ctxt)
+{
+    hal_state_mctxt_t    *mctxt;
+    tlv_t                *tlv;
+
+    mctxt = (hal_state_mctxt_t *)ctxt;
+    tlv = (tlv_t *)mctxt->mem;
+    tlv->type = mctxt->obj_id;
+    tlv->len = mctxt->marshall_cb(obj, tlv->val, mctxt->len - sizeof(tlv_t));
+    mctxt->mem += sizeof(tlv_t) + tlv->len;
+    mctxt->len -= sizeof(tlv_t) + tlv->len;
+
+     return false;
 }
 
 //------------------------------------------------------------------------------
 // preserve the state in the class in the given persistent memory and return
 // the number of bytes used up
+// this is called when the upgrade starts
 //------------------------------------------------------------------------------
 uint64_t
-hal_state::preserve_state(void *mem, uint32_t len)
+hal_state::preserve_state(void)
 {
-    return 0;
+    uint32_t             len = HAL_SERIALIZED_STATE_STORE_SIZE;
+    uint32_t             obj_id, avail_sz = len - 32;
+    hal_state_mctxt_t    mctxt = { 0 };
+    slab                 *slab_obj;
+
+    g_h3s_shmmgr =
+        shmmgr::factory(HAL_SERIALIZED_STATE_STORE,
+                        HAL_SERIALIZED_STATE_STORE_SIZE,
+                        sdk::lib::SHM_CREATE_ONLY,
+                        (void *)HAL_SERIALIZED_STATE_STORE_VADDR);
+    if (g_h3s_shmmgr == NULL) {
+        HAL_TRACE_ERR("Failed to create HAL serialized state store");
+        return 0;
+    }
+
+    // initialize the marshalling context
+    mctxt.len = avail_sz;
+    mctxt.mem = (uint8_t *)g_h3s_shmmgr->alloc(avail_sz);
+    HAL_ASSERT(mctxt.mem != NULL);
+
+    // walk all objects and preserve the state, if needed
+    for (obj_id = (uint32_t)HAL_OBJ_ID_MIN;
+         obj_id < (uint32_t)HAL_OBJ_ID_MAX; obj_id++) {
+        if (obj_meta_[obj_id] == NULL) {
+            continue;
+        }
+        mctxt.obj_id = (uint32_t)obj_id;
+        mctxt.marshall_cb = obj_meta_[obj_id]->marshall_cb();
+        slab_obj = cfg_db_->get_slab(obj_meta_[obj_id]->slab_id());
+        HAL_ASSERT(slab_obj != NULL);
+        HAL_TRACE_DEBUG("Preserving state in slab {} for obj id {}",
+                        slab_obj->name(), obj_id);
+        slab_obj->walk(slab_marshall_cb, &mctxt);
+        HAL_TRACE_DEBUG("Preserved state in slab {}, state store size {}, "
+                        "used {}, free {}", slab_obj->name(), avail_sz,
+                        avail_sz - mctxt.len, mctxt.len);
+    }
+
+    return 0;    // TODO: FIXME
 }
 
 //------------------------------------------------------------------------------
@@ -1352,7 +1185,7 @@ hal_mem_init (bool shm_mode)
             shmmgr::remove(HAL_SERIALIZED_STATE_STORE);
         }
         // instantiate HAL state in regular linux memory
-        g_hal_state = new hal_state();
+        g_hal_state = new hal_state(nullptr);
     } else if (h2s_exists) {
         // stateful restart case
         HAL_TRACE_DEBUG("Stateful restart detected, restoring state");
@@ -1395,9 +1228,15 @@ hal_mem_init (bool shm_mode)
                             (void *)HAL_STATE_STORE_VADDR);
         HAL_ABORT(g_h2s_shmmgr != NULL);
 
-        // TODO:
-        // 1. restore state
-        // 2. nuke HAL_SERIALIZED_STATE_STORE (i.e., g_h3s_shmmgr->destroy())
+        // instantiate HAL state in persistent memory
+        fixed_managed_shared_memory    *fm_shm_mgr;
+        fm_shm_mgr = (fixed_managed_shared_memory *)g_h2s_shmmgr->mmgr();
+        g_hal_state = fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(nullptr, g_h2s_shmmgr);
+
+        // TODO: restore state
+  
+        // nuke serialized state store now that we finished restoring all state
+        shmmgr::destroy(g_h3s_shmmgr);
     } else {
         // coming up in shm mode, but no existing state store
         HAL_TRACE_DEBUG("Creating new HAL state store in shared memory");
@@ -1407,12 +1246,10 @@ hal_mem_init (bool shm_mode)
                             (void *)HAL_STATE_STORE_VADDR);
         HAL_ABORT(g_h2s_shmmgr != NULL);
 
-        // instantiate HAL state in regular linux memory
-        //g_hal_state = hal_state::factory(g_h2s_shmmgr);
+        // instantiate HAL state in persistent memory
         fixed_managed_shared_memory    *fm_shm_mgr;
         fm_shm_mgr = (fixed_managed_shared_memory *)g_h2s_shmmgr->mmgr();
-        g_hal_state = fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(g_h2s_shmmgr);
-        //g_hal_state = new hal_state(g_h2s_shmmgr);
+        g_hal_state = fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(nullptr, g_h2s_shmmgr);
     }
 
     // in all cases g_hal_state must be setup by now

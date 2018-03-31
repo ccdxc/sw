@@ -619,6 +619,7 @@ hal_init (hal_cfg_t *hal_cfg)
     // do memory related initialization
     HAL_ABORT(hal_mem_init(hal_cfg->shm_mode) == HAL_RET_OK);
     g_hal_state->set_catalog(catalog);
+
     // set the forwarding mode
     g_hal_state->set_forwarding_mode(hal_cfg->forwarding_mode);
 

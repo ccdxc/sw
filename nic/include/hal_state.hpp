@@ -54,10 +54,8 @@ class hal_handle;
 
 //------------------------------------------------------------------------------
 // HAL config database
-// TODO:
-// rename this as hal_oper_db
-// nothing in this needs to be persisted during upgrade,
-// but for restart it will help greatly if we persist
+// This should consist of only the slabs needed to allocate config related
+// objects, and the state from this is persisted and restored during upgrades
 //------------------------------------------------------------------------------
 class hal_cfg_db {
 public:
@@ -79,176 +77,17 @@ public:
 
     // API to register a config object with HAL infra
     hal_ret_t register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz);
-    uint32_t object_size(hal_obj_id_t obj_id) const;
-
-    ht *vrf_id_ht(void) const { return vrf_id_ht_; }
-    ht *network_key_ht(void) const { return network_key_ht_; }
-    ht *nwsec_profile_id_ht(void) const { return nwsec_profile_id_ht_; }
-    ht *nwsec_policy_cfg_ht(void) const { return nwsec_policy_cfg_ht_; }
-    ht *nwsec_policy_ht(void) const { return nwsec_policy_ht_; }
-    ht *nwsec_group_ht(void) const { return nwsec_group_ht_; }
-    ht *l2seg_id_ht(void) const { return l2seg_id_ht_; }
-    ht *mc_key_ht(void) const { return mc_key_ht_; }
-    ht *lif_id_ht(void) const { return lif_id_ht_; }
-    ht *if_id_ht(void) const { return if_id_ht_; }
-    ht *l4lb_ht(void) const { return l4lb_ht_; }
-    ht *session_id_ht(void) const { return session_id_ht_; }
-    ht *session_hal_handle_ht(void) const { return session_hal_handle_ht_; }
-    ht *session_hal_iflow_ht(void)  const { return session_hal_iflow_ht_; }
-    ht *session_hal_rflow_ht(void)  const { return session_hal_rflow_ht_; }
-
-    ht *tlscb_id_ht(void) const { return tlscb_id_ht_; }
-    ht *tcpcb_id_ht(void) const { return tcpcb_id_ht_; }
-
-    ht *qos_class_ht(void) const { return qos_class_ht_; }
-    bitmap *qos_cmap_pcp_bmp(void) const { return qos_cmap_pcp_bmp_; }
-    bitmap *qos_cmap_dscp_bmp(void) const { return qos_cmap_dscp_bmp_; }
-
-    ht *copp_ht(void) const { return copp_ht_; }
-
-    ht *acl_ht(void) const { return acl_ht_; }
-
-    ht *wring_id_ht(void) const { return wring_id_ht_; }
-
-    // get APIs for Proxy state
-    ht *proxy_type_ht(void) const { return proxy_type_ht_; }
-
-    // get APIs for IPSEC CB state
-    ht *ipseccb_id_ht(void) const { return ipseccb_id_ht_; }
-
-    ht *cpucb_id_ht(void) const { return cpucb_id_ht_; }
-
-    // get APIs for Raw Redirect CB state
-    ht *rawrcb_id_ht(void) const { return rawrcb_id_ht_; }
-    if_id_t app_redir_if_id(void) const { return app_redir_if_id_; }
-
-    void set_app_redir_if_id(if_id_t id) { 
-        app_redir_if_id_ = id;
-    }
-
-    // get APIs for Raw Chain CB state
-    ht *rawccb_id_ht(void) const { return rawccb_id_ht_; }
-
-    // get APIs for Proxy Redirect CB state
-    ht *proxyrcb_id_ht(void) const { return proxyrcb_id_ht_; }
-
-    // get APIs for Proxy Chain CB state
-    ht *proxyccb_id_ht(void) const { return proxyccb_id_ht_; }
-
-    // get APIs for GFT state
-    ht *gft_exact_match_profile_id_ht(void) const { return gft_exact_match_profile_id_ht_; }
-    ht *gft_hdr_transposition_profile_id_ht(void) const { return gft_hdr_transposition_profile_id_ht_; }
-    ht *gft_exact_match_flow_entry_id_ht(void) const { return gft_exact_match_flow_entry_id_ht_; }
-
-    void set_forwarding_mode(hal_forwarding_mode_t mode) {
-        forwarding_mode_ = mode;
-    }
-    hal_forwarding_mode_t forwarding_mode(void) const { return forwarding_mode_; }
-
-private:
-    // following come from shared memory or non-linux HBM memory
-    // NOTE: strictly not required as we can rebuild this from slab elements,
-    // but restart case will be extremely efficent if we do this
-    ht    *vrf_id_ht_;
-    ht    *network_key_ht_;
-    ht    *nwsec_profile_id_ht_;
-    ht    *nwsec_policy_cfg_ht_;
-    ht    *nwsec_policy_ht_;
-    ht    *nwsec_group_ht_;
-    ht    *l2seg_id_ht_;
-    ht    *mc_key_ht_;
-    ht    *lif_id_ht_;
-    ht    *if_id_ht_;
-    ht    *session_id_ht_;
-    ht    *session_hal_handle_ht_;
-    ht    *session_hal_iflow_ht_;
-    ht    *session_hal_rflow_ht_;
-    ht    *l4lb_ht_;
-    ht    *tlscb_id_ht_;
-    ht    *tcpcb_id_ht_;
-    ht    *qos_class_ht_;
-    ht    *copp_ht_;
-    ht    *wring_id_ht_;
-    ht    *proxy_type_ht_;
-    ht    *acl_ht_;
-    ht    *ipseccb_id_ht_;
-    ht    *cpucb_id_ht_;
-    ht    *rawrcb_id_ht_;
-    ht    *rawccb_id_ht_;
-    ht    *proxyrcb_id_ht_;
-    ht    *proxyccb_id_ht_;
-    ht    *gft_exact_match_profile_id_ht_;
-    ht    *gft_hdr_transposition_profile_id_ht_;
-    ht    *gft_exact_match_flow_entry_id_ht_;
-    bitmap    *qos_cmap_pcp_bmp_;
-    bitmap    *qos_cmap_dscp_bmp_;
-    if_id_t    app_redir_if_id_;
-    hal_forwarding_mode_t   forwarding_mode_;
-
-    // following comes from linux process virtual memory
-    shmmgr       *mmgr_;
-    wp_rwlock    rwlock_;
-    typedef struct obj_meta_s {
-        uint32_t        obj_sz;
-    } __PACK__ obj_meta_t;
-    obj_meta_t    obj_meta_[HAL_OBJ_ID_MAX];
-
-private:
-    hal_cfg_db();
-    ~hal_cfg_db();
-    bool init_pss(shmmgr *mmgr);
-    bool init_vss(void);
-    bool init(shmmgr *mmgr = NULL);
-};
-
-// HAL operational database
-// TODO: merge with hal_cfg_db above
-class hal_oper_db {
-public:
-    static hal_oper_db *factory(shmmgr *mmgr = NULL);
-    static void destroy(hal_oper_db *oper_db);
-    void init_on_restart(void);
-
-    ht *hal_handle_id_ht(void) const { return hal_handle_id_ht_; };
-    hal_handle_t infra_vrf_handle(void) const { return infra_vrf_handle_; }
-    void set_infra_vrf_handle(hal_handle_t infra_vrf_hdl) { infra_vrf_handle_ = infra_vrf_hdl; }
-    ht *ep_l2_ht(void) const { return ep_l2_ht_; }
-    ht *ep_l3_entry_ht(void) const { return ep_l3_entry_ht_; }
-    ip_addr_t *mytep(void) { return &mytep_ip; }
-    eventmgr *event_mgr(void) const { return event_mgr_; }
-
-private:
-    hal_handle_t    infra_vrf_handle_;    // infra vrf handle
-    eventmgr        *event_mgr_;
-    ht              *hal_handle_id_ht_;
-    ht              *ep_l2_ht_;
-    ht              *ep_l3_entry_ht_;
-    ip_addr_t       mytep_ip;
-
-    // following comes from linux process virtual memory
-    shmmgr       *mmgr_;
-
-private:
-    bool init_pss(shmmgr *mmgr);
-    bool init_vss(void);
-    bool init(shmmgr *mmgr = NULL);
-    hal_oper_db();
-    ~hal_oper_db();
-};
-
-// HAL memory slabs and any other memory manager state
-class hal_mem_db {
-public:
-    static hal_mem_db *factory(shmmgr *mmgr = NULL);
-    static void destroy(hal_mem_db *mem_db);
-    void init_on_restart(void);
+    //uint32_t object_size(hal_obj_id_t obj_id) const;
 
     slab *get_slab(hal_slab_t slab_id);
     slab *hal_handle_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE]); }
     slab *hal_handle_ht_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_HT_ENTRY]); }
+
+    // TODO: Is this config or oper ??
     slab *hal_handle_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_LIST_ENTRY]); }
     slab *hal_handle_id_ht_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_ID_HT_ENTRY]); }
     slab *hal_handle_id_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_ID_LIST_ENTRY]); }
+
     slab *dos_policy_sg_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_DOS_POLICY_SG_LIST]); }
     slab *vrf_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_VRF]); }
     slab *network_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NETWORK]); }
@@ -292,15 +131,141 @@ public:
 
 private:
     slab_ptr_t    slabs_[HAL_SLAB_PI_MAX - HAL_SLAB_PI_MIN];
+
     // following comes from linux process virtual memory
-    shmmgr        *mmgr_;
+    shmmgr       *mmgr_;
+    wp_rwlock    rwlock_;
+    typedef struct slab_meta_s {
+        hal_obj_id_t       obj_id;           // unique object id
+    } slab_meta_t;
+    slab_meta_t        slab_meta_[HAL_SLAB_PI_MAX];
+
+private:
+    hal_cfg_db();
+    ~hal_cfg_db();
+    bool init_pss(shmmgr *mmgr);
+    bool init_vss(void);
+    bool init(shmmgr *mmgr = NULL);
+};
+
+//------------------------------------------------------------------------------
+// HAL oper db consists of the following:
+// 1. caches built for faster lookups in the data path (and hence need not be
+//    preserved/restored but can be rebuilt during upgrades)
+// 2. any opertional state that is learnt - DHCP/ARP EP learns etc.
+//------------------------------------------------------------------------------
+class hal_oper_db {
+public:
+    static hal_oper_db *factory(shmmgr *mmgr = NULL);
+    static void destroy(hal_oper_db *oper_db);
+    void init_on_restart(void);
+
+    ht *hal_handle_id_ht(void) const { return hal_handle_id_ht_; };
+    ht *vrf_id_ht(void) const { return vrf_id_ht_; }
+    ht *network_key_ht(void) const { return network_key_ht_; }
+    ht *nwsec_profile_id_ht(void) const { return nwsec_profile_id_ht_; }
+    ht *nwsec_policy_cfg_ht(void) const { return nwsec_policy_cfg_ht_; }
+    ht *nwsec_policy_ht(void) const { return nwsec_policy_ht_; }
+    ht *nwsec_group_ht(void) const { return nwsec_group_ht_; }
+    ht *l2seg_id_ht(void) const { return l2seg_id_ht_; }
+    ht *ep_l2_ht(void) const { return ep_l2_ht_; }
+    ht *ep_l3_entry_ht(void) const { return ep_l3_entry_ht_; }
+    ht *mc_key_ht(void) const { return mc_key_ht_; }
+    ht *lif_id_ht(void) const { return lif_id_ht_; }
+    ht *if_id_ht(void) const { return if_id_ht_; }
+    ht *l4lb_ht(void) const { return l4lb_ht_; }
+    ht *session_id_ht(void) const { return session_id_ht_; }
+    ht *session_hal_handle_ht(void) const { return session_hal_handle_ht_; }
+    ht *session_hal_iflow_ht(void)  const { return session_hal_iflow_ht_; }
+    ht *session_hal_rflow_ht(void)  const { return session_hal_rflow_ht_; }
+    ht *qos_class_ht(void) const { return qos_class_ht_; }
+    bitmap *qos_cmap_pcp_bmp(void) const { return qos_cmap_pcp_bmp_; }
+    bitmap *qos_cmap_dscp_bmp(void) const { return qos_cmap_dscp_bmp_; }
+    ht *tlscb_id_ht(void) const { return tlscb_id_ht_; }
+    ht *tcpcb_id_ht(void) const { return tcpcb_id_ht_; }
+    ht *copp_ht(void) const { return copp_ht_; }
+    ht *acl_ht(void) const { return acl_ht_; }
+    ht *wring_id_ht(void) const { return wring_id_ht_; }
+    ht *proxy_type_ht(void) const { return proxy_type_ht_; }
+    ht *ipseccb_id_ht(void) const { return ipseccb_id_ht_; }
+    ht *cpucb_id_ht(void) const { return cpucb_id_ht_; }
+    ht *rawrcb_id_ht(void) const { return rawrcb_id_ht_; }
+    ht *rawccb_id_ht(void) const { return rawccb_id_ht_; }
+    ht *proxyrcb_id_ht(void) const { return proxyrcb_id_ht_; }
+    ht *proxyccb_id_ht(void) const { return proxyccb_id_ht_; }
+    ht *gft_exact_match_profile_id_ht(void) const { return gft_exact_match_profile_id_ht_; }
+    ht *gft_hdr_transposition_profile_id_ht(void) const { return gft_hdr_transposition_profile_id_ht_; }
+    ht *gft_exact_match_flow_entry_id_ht(void) const { return gft_exact_match_flow_entry_id_ht_; }
+
+    void set_infra_vrf_handle(hal_handle_t infra_vrf_hdl) { infra_vrf_handle_ = infra_vrf_hdl; }
+    hal_handle_t infra_vrf_handle(void) const { return infra_vrf_handle_; }
+    ip_addr_t *mytep(void) { return &mytep_ip; }
+    eventmgr *event_mgr(void) const { return event_mgr_; }
+    if_id_t app_redir_if_id(void) const { return app_redir_if_id_; }
+    void set_app_redir_if_id(if_id_t id) { 
+        app_redir_if_id_ = id;
+    }
+    void set_forwarding_mode(hal_forwarding_mode_t mode) {
+        forwarding_mode_ = mode;
+    }
+    hal_forwarding_mode_t forwarding_mode(void) const { return forwarding_mode_; }
+
+private:
+    // following can come from shared memory or non-linux HBM memory
+    // NOTE: strictly shmnot required as we can rebuild this from slab elements,
+    //       but restart case will be extremely efficent if we do this
+    ht    *hal_handle_id_ht_;
+    ht    *vrf_id_ht_;
+    ht    *network_key_ht_;
+    ht    *nwsec_profile_id_ht_;
+    ht    *nwsec_policy_cfg_ht_;
+    ht    *nwsec_policy_ht_;
+    ht    *nwsec_group_ht_;
+    ht    *l2seg_id_ht_;
+    ht    *ep_l2_ht_;
+    ht    *ep_l3_entry_ht_;
+    ht    *mc_key_ht_;
+    ht    *lif_id_ht_;
+    ht    *if_id_ht_;
+    ht    *session_id_ht_;
+    ht    *session_hal_handle_ht_;
+    ht    *session_hal_iflow_ht_;
+    ht    *session_hal_rflow_ht_;
+    ht    *l4lb_ht_;
+    ht    *tlscb_id_ht_;
+    ht    *tcpcb_id_ht_;
+    ht    *qos_class_ht_;
+    ht    *copp_ht_;
+    ht    *wring_id_ht_;
+    ht    *proxy_type_ht_;
+    ht    *acl_ht_;
+    ht    *ipseccb_id_ht_;
+    ht    *cpucb_id_ht_;
+    ht    *rawrcb_id_ht_;
+    ht    *rawccb_id_ht_;
+    ht    *proxyrcb_id_ht_;
+    ht    *proxyccb_id_ht_;
+    ht    *gft_exact_match_profile_id_ht_;
+    ht    *gft_hdr_transposition_profile_id_ht_;
+    ht    *gft_exact_match_flow_entry_id_ht_;
+    bitmap                  *qos_cmap_pcp_bmp_;
+    bitmap                  *qos_cmap_dscp_bmp_;
+
+    hal_handle_t            infra_vrf_handle_;    // infra vrf handle
+    eventmgr                *event_mgr_;
+    ip_addr_t               mytep_ip;
+    hal_forwarding_mode_t   forwarding_mode_;
+    if_id_t                 app_redir_if_id_;
+
+    // following comes from linux process virtual memory
+    shmmgr       *mmgr_;
 
 private:
     bool init_pss(shmmgr *mmgr);
     bool init_vss(void);
-    bool init(shmmgr *mmgr);
-    hal_mem_db();
-    ~hal_mem_db();
+    bool init(shmmgr *mmgr = NULL);
+    hal_oper_db();
+    ~hal_oper_db();
 };
 
 //------------------------------------------------------------------------------
@@ -311,7 +276,7 @@ private:
 //------------------------------------------------------------------------------
 class hal_state {
 public:
-    hal_state(shmmgr *mmgr = NULL);
+    hal_state(hal_obj_meta **obj_meta, shmmgr *mmgr = NULL);
     ~hal_state();
     void init_on_restart(void);
     shmmgr *mmgr(void) const { return mmgr_; }
@@ -319,164 +284,163 @@ public:
     // get APIs for various DBs
     hal_cfg_db *cfg_db(void) const { return cfg_db_; }
     hal_oper_db *oper_db(void) const { return oper_db_; }
-    hal_mem_db *mem_db(void) const { return mem_db_; }
 
-    slab *get_slab(hal_slab_t slab_id) const { return mem_db_->get_slab(slab_id); }
+    slab *get_slab(hal_slab_t slab_id) const { return cfg_db_->get_slab(slab_id); }
 
     // get APIs for HAL handle related state
-    slab *hal_handle_slab(void) const { return mem_db_->hal_handle_slab(); }
-    slab *hal_handle_ht_entry_slab(void) const { return mem_db_->hal_handle_ht_entry_slab(); }
-    slab *hal_handle_list_entry_slab(void) const { return mem_db_->hal_handle_list_entry_slab(); }
-    slab *hal_handle_id_ht_entry_slab(void) const { return mem_db_->hal_handle_id_ht_entry_slab(); }
-    slab *hal_handle_id_list_entry_slab(void) const { return mem_db_->hal_handle_id_list_entry_slab(); }
-    slab *dos_policy_sg_list_entry_slab(void) const { return mem_db_->dos_policy_sg_list_entry_slab(); }
+    slab *hal_handle_slab(void) const { return cfg_db_->hal_handle_slab(); }
+    slab *hal_handle_ht_entry_slab(void) const { return cfg_db_->hal_handle_ht_entry_slab(); }
+    slab *hal_handle_list_entry_slab(void) const { return cfg_db_->hal_handle_list_entry_slab(); }
+    slab *hal_handle_id_ht_entry_slab(void) const { return cfg_db_->hal_handle_id_ht_entry_slab(); }
+    slab *hal_handle_id_list_entry_slab(void) const { return cfg_db_->hal_handle_id_list_entry_slab(); }
+    slab *dos_policy_sg_list_entry_slab(void) const { return cfg_db_->dos_policy_sg_list_entry_slab(); }
     ht *hal_handle_id_ht(void) const { return oper_db_->hal_handle_id_ht(); }
 
      hal_ret_t register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz) {
          return cfg_db_->register_cfg_object(obj_id, obj_sz);
      }
-     uint32_t object_size(hal_obj_id_t obj_id) { return cfg_db_->object_size(obj_id); }
+     //uint32_t object_size(hal_obj_id_t obj_id) { return cfg_db_->object_size(obj_id); }
 
     // get APIs for vrf related state
-    slab *vrf_slab(void) const { return mem_db_->vrf_slab(); }
-    ht *vrf_id_ht(void) const { return cfg_db_->vrf_id_ht(); }
+    slab *vrf_slab(void) const { return cfg_db_->vrf_slab(); }
+    ht *vrf_id_ht(void) const { return oper_db_->vrf_id_ht(); }
 
     // get APIs for network related state
-    slab *network_slab(void) const { return mem_db_->network_slab(); }
-    ht *network_key_ht(void) const { return cfg_db_->network_key_ht(); }
+    slab *network_slab(void) const { return cfg_db_->network_slab(); }
+    ht *network_key_ht(void) const { return oper_db_->network_key_ht(); }
 
     // get APIs for security profile related state
-    slab *nwsec_profile_slab(void) const { return mem_db_->nwsec_profile_slab(); }
-    ht *nwsec_profile_id_ht(void) const { return cfg_db_->nwsec_profile_id_ht(); }
+    slab *nwsec_profile_slab(void) const { return cfg_db_->nwsec_profile_slab(); }
+    ht *nwsec_profile_id_ht(void) const { return oper_db_->nwsec_profile_id_ht(); }
 
     // get APIs for security Policy related state
-    slab *nwsec_group_slab(void) const { return mem_db_->nwsec_group_slab(); }
-    slab *nwsec_rule_slab(void) const { return mem_db_->nwsec_rule_slab(); }
-    slab *ruledb_slab(void) const    { return mem_db_->ruledb_slab(); }
-    slab *nwsec_policy_rules_slab(void) const { return mem_db_->nwsec_policy_rules_slab(); }
-    slab *nwsec_policy_cfg_slab(void) const { return mem_db_->nwsec_policy_cfg_slab(); }
-    slab *nwsec_policy_svc_slab(void) const { return mem_db_->nwsec_policy_svc_slab(); }
-    slab *nwsec_policy_appid_slab(void) const { return mem_db_->nwsec_policy_appid_slab(); }
-    ht   *nwsec_policy_cfg_ht(void) const { return cfg_db_->nwsec_policy_cfg_ht(); }
-    ht   *nwsec_policy_ht(void) const { return cfg_db_->nwsec_policy_ht(); }
-    ht   *nwsec_group_ht(void) const { return cfg_db_->nwsec_group_ht(); }
+    slab *nwsec_group_slab(void) const { return cfg_db_->nwsec_group_slab(); }
+    slab *nwsec_rule_slab(void) const { return cfg_db_->nwsec_rule_slab(); }
+    slab *ruledb_slab(void) const    { return cfg_db_->ruledb_slab(); }
+    slab *nwsec_policy_rules_slab(void) const { return cfg_db_->nwsec_policy_rules_slab(); }
+    slab *nwsec_policy_cfg_slab(void) const { return cfg_db_->nwsec_policy_cfg_slab(); }
+    slab *nwsec_policy_svc_slab(void) const { return cfg_db_->nwsec_policy_svc_slab(); }
+    slab *nwsec_policy_appid_slab(void) const { return cfg_db_->nwsec_policy_appid_slab(); }
+    ht   *nwsec_policy_cfg_ht(void) const { return oper_db_->nwsec_policy_cfg_ht(); }
+    ht   *nwsec_policy_ht(void) const { return oper_db_->nwsec_policy_ht(); }
+    ht   *nwsec_group_ht(void) const { return oper_db_->nwsec_group_ht(); }
 
     // get APIs for dos policy related state
-    slab *dos_policy_slab(void) const { return mem_db_->dos_policy_slab(); }
+    slab *dos_policy_slab(void) const { return cfg_db_->dos_policy_slab(); }
 
     // get APIs for L2 segment state
-    slab *l2seg_slab(void) const { return mem_db_->l2seg_slab(); }
-    ht *l2seg_id_ht(void) const { return cfg_db_->l2seg_id_ht(); }
+    slab *l2seg_slab(void) const { return cfg_db_->l2seg_slab(); }
+    ht *l2seg_id_ht(void) const { return oper_db_->l2seg_id_ht(); }
 
     // get APIs for multicast entry state
-    slab *mc_entry_slab(void) const { return mem_db_->mc_entry_slab(); }
-    ht *mc_key_ht(void) const { return cfg_db_->mc_key_ht(); }
+    slab *mc_entry_slab(void) const { return cfg_db_->mc_entry_slab(); }
+    ht *mc_key_ht(void) const { return oper_db_->mc_key_ht(); }
 
     // get APIs for LIF state
-    slab *lif_slab(void) const { return mem_db_->lif_slab(); }
-    ht *lif_id_ht(void) const { return cfg_db_->lif_id_ht(); }
+    slab *lif_slab(void) const { return cfg_db_->lif_slab(); }
+    ht *lif_id_ht(void) const { return oper_db_->lif_id_ht(); }
 
     // get APIs for interface state
-    slab *if_slab(void) const { return mem_db_->if_slab(); }
-    ht *if_id_ht(void) const { return cfg_db_->if_id_ht(); }
-    slab *enic_l2seg_entry_slab(void) const { return mem_db_->enic_l2seg_entry_slab(); }
+    slab *if_slab(void) const { return cfg_db_->if_slab(); }
+    ht *if_id_ht(void) const { return oper_db_->if_id_ht(); }
+    slab *enic_l2seg_entry_slab(void) const { return cfg_db_->enic_l2seg_entry_slab(); }
 
     // get APIs for endpoint state
-    slab *ep_slab(void) const { return mem_db_->ep_slab(); }
-    slab *ep_ip_entry_slab(void) const { return mem_db_->ep_ip_entry_slab(); }
-    slab *ep_l3_entry_slab(void) const { return mem_db_->ep_l3_entry_slab(); }
+    slab *ep_slab(void) const { return cfg_db_->ep_slab(); }
+    slab *ep_ip_entry_slab(void) const { return cfg_db_->ep_ip_entry_slab(); }
+    slab *ep_l3_entry_slab(void) const { return cfg_db_->ep_l3_entry_slab(); }
     ht *ep_l2_ht(void) const { return oper_db_->ep_l2_ht(); }
     ht *ep_l3_entry_ht(void) const { return oper_db_->ep_l3_entry_ht(); }
 
     // get APIs for l4lb state
-    slab *l4lb_slab(void) const { return mem_db_->l4lb_slab(); }
-    ht *l4lb_ht(void) const { return cfg_db_->l4lb_ht(); }
+    slab *l4lb_slab(void) const { return cfg_db_->l4lb_slab(); }
+    ht *l4lb_ht(void) const { return oper_db_->l4lb_ht(); }
 
     // get APIs for flow/session state
-    slab *flow_slab(void) const { return mem_db_->flow_slab(); }
-    slab *session_slab(void) const { return mem_db_->session_slab(); }
-    ht *session_id_ht(void) const { return cfg_db_->session_id_ht(); }
-    ht *session_hal_handle_ht(void) const { return cfg_db_->session_hal_handle_ht(); }
-    ht *session_hal_iflow_ht(void) const { return cfg_db_->session_hal_iflow_ht(); }
-    ht *session_hal_rflow_ht(void) const { return cfg_db_->session_hal_rflow_ht(); }
+    slab *flow_slab(void) const { return cfg_db_->flow_slab(); }
+    slab *session_slab(void) const { return cfg_db_->session_slab(); }
+    ht *session_id_ht(void) const { return oper_db_->session_id_ht(); }
+    ht *session_hal_handle_ht(void) const { return oper_db_->session_hal_handle_ht(); }
+    ht *session_hal_iflow_ht(void) const { return oper_db_->session_hal_iflow_ht(); }
+    ht *session_hal_rflow_ht(void) const { return oper_db_->session_hal_rflow_ht(); }
 
     // get APIs for TLS CB state
-    slab *tlscb_slab(void) const { return mem_db_->tlscb_slab(); }
-    ht *tlscb_id_ht(void) const { return cfg_db_->tlscb_id_ht(); }
+    slab *tlscb_slab(void) const { return cfg_db_->tlscb_slab(); }
+    ht *tlscb_id_ht(void) const { return oper_db_->tlscb_id_ht(); }
 
     // get APIs for TCP CB state
-    slab *tcpcb_slab(void) const { return mem_db_->tcpcb_slab(); }
-    ht *tcpcb_id_ht(void) const { return cfg_db_->tcpcb_id_ht(); }
+    slab *tcpcb_slab(void) const { return cfg_db_->tcpcb_slab(); }
+    ht *tcpcb_id_ht(void) const { return oper_db_->tcpcb_id_ht(); }
 
     // get APIs for qos-class state
-    slab *qos_class_slab(void) const { return mem_db_->qos_class_slab(); }
-    ht *qos_class_ht(void) const { return cfg_db_->qos_class_ht(); }
-    bitmap *qos_cmap_pcp_bmp(void) const { return cfg_db_->qos_cmap_pcp_bmp(); }
-    bitmap *qos_cmap_dscp_bmp(void) const { return cfg_db_->qos_cmap_dscp_bmp(); }
+    slab *qos_class_slab(void) const { return cfg_db_->qos_class_slab(); }
+    ht *qos_class_ht(void) const { return oper_db_->qos_class_ht(); }
+    bitmap *qos_cmap_pcp_bmp(void) const { return oper_db_->qos_cmap_pcp_bmp(); }
+    bitmap *qos_cmap_dscp_bmp(void) const { return oper_db_->qos_cmap_dscp_bmp(); }
 
     // get APIs for copp state
-    slab *copp_slab(void) const { return mem_db_->copp_slab(); }
-    ht *copp_ht(void) const { return cfg_db_->copp_ht(); }
+    slab *copp_slab(void) const { return cfg_db_->copp_slab(); }
+    ht *copp_ht(void) const { return oper_db_->copp_ht(); }
 
     // get APIs for acl state
-    slab *acl_slab(void) const { return mem_db_->acl_slab(); }
-    ht *acl_ht(void) const { return cfg_db_->acl_ht(); }
+    slab *acl_slab(void) const { return cfg_db_->acl_slab(); }
+    ht *acl_ht(void) const { return oper_db_->acl_ht(); }
 
     // get APIs for WRing state
-    slab *wring_slab(void) const { return mem_db_->wring_slab(); }
-    ht *wring_id_ht(void) const { return cfg_db_->wring_id_ht(); }
+    slab *wring_slab(void) const { return cfg_db_->wring_slab(); }
+    ht *wring_id_ht(void) const { return oper_db_->wring_id_ht(); }
 
     // get APIs for Proxy state
-    slab *proxy_slab(void) const { return mem_db_->proxy_slab(); }
-    slab *proxy_flow_info_slab(void) const { return mem_db_->proxy_flow_info_slab(); }
-    ht *proxy_type_ht(void) const { return cfg_db_->proxy_type_ht(); }
+    slab *proxy_slab(void) const { return cfg_db_->proxy_slab(); }
+    slab *proxy_flow_info_slab(void) const { return cfg_db_->proxy_flow_info_slab(); }
+    ht *proxy_type_ht(void) const { return oper_db_->proxy_type_ht(); }
 
     // get API for infra VRF
     hal_handle_t infra_vrf_handle(void) { return oper_db_->infra_vrf_handle(); }
     void set_infra_vrf_handle(hal_handle_t infra_vrf_handle) { oper_db_->set_infra_vrf_handle(infra_vrf_handle); }
 
     // get APIs for IPSEC CB state
-    slab *ipseccb_slab(void) const { return mem_db_->ipseccb_slab(); }
-    ht *ipseccb_id_ht(void) const { return cfg_db_->ipseccb_id_ht(); }
+    slab *ipseccb_slab(void) const { return cfg_db_->ipseccb_slab(); }
+    ht *ipseccb_id_ht(void) const { return oper_db_->ipseccb_id_ht(); }
 
     // get APIs for CPU CB state
-    slab *cpucb_slab(void) const { return mem_db_->cpucb_slab(); }
-    ht *cpucb_id_ht(void) const { return cfg_db_->cpucb_id_ht(); }
+    slab *cpucb_slab(void) const { return cfg_db_->cpucb_slab(); }
+    ht *cpucb_id_ht(void) const { return oper_db_->cpucb_id_ht(); }
 
     // get APIs for Raw Redirect CB state
-    slab *rawrcb_slab(void) const { return mem_db_->rawrcb_slab(); }
-    ht *rawrcb_id_ht(void) const { return cfg_db_->rawrcb_id_ht(); }
-    if_id_t app_redir_if_id(void) const { return cfg_db_->app_redir_if_id(); }
+    slab *rawrcb_slab(void) const { return cfg_db_->rawrcb_slab(); }
+    ht *rawrcb_id_ht(void) const { return oper_db_->rawrcb_id_ht(); }
+    if_id_t app_redir_if_id(void) const { return oper_db_->app_redir_if_id(); }
 
     void set_app_redir_if_id(if_id_t id) { 
-        cfg_db_->set_app_redir_if_id(id);
+        oper_db_->set_app_redir_if_id(id);
     }
 
     // get APIs for Raw Chain CB state
-    slab *rawccb_slab(void) const { return mem_db_->rawccb_slab(); }
-    ht *rawccb_id_ht(void) const { return cfg_db_->rawccb_id_ht(); }
+    slab *rawccb_slab(void) const { return cfg_db_->rawccb_slab(); }
+    ht *rawccb_id_ht(void) const { return oper_db_->rawccb_id_ht(); }
 
     // get APIs for Raw Redirect CB state
-    slab *proxyrcb_slab(void) const { return mem_db_->proxyrcb_slab(); }
-    ht *proxyrcb_id_ht(void) const { return cfg_db_->proxyrcb_id_ht(); }
+    slab *proxyrcb_slab(void) const { return cfg_db_->proxyrcb_slab(); }
+    ht *proxyrcb_id_ht(void) const { return oper_db_->proxyrcb_id_ht(); }
 
     // get APIs for Raw Chain CB state
-    slab *proxyccb_slab(void) const { return mem_db_->proxyccb_slab(); }
-    ht *proxyccb_id_ht(void) const { return cfg_db_->proxyccb_id_ht(); }
+    slab *proxyccb_slab(void) const { return cfg_db_->proxyccb_slab(); }
+    ht *proxyccb_id_ht(void) const { return oper_db_->proxyccb_id_ht(); }
 
     // get APIs for GFT state
-    slab *gft_exact_match_profile_slab(void) const { return mem_db_->gft_exact_match_profile_slab(); }
-    ht *gft_exact_match_profile_id_ht(void) const { return cfg_db_->gft_exact_match_profile_id_ht(); }
-    slab *gft_hdr_transposition_profile_slab(void) const { return mem_db_->gft_hdr_transposition_profile_slab(); }
-    ht *gft_hdr_transposition_profile_id_ht(void) const { return cfg_db_->gft_hdr_transposition_profile_id_ht(); }
-    slab *gft_exact_match_flow_entry_slab(void) const { return mem_db_->gft_exact_match_flow_entry_slab(); }
-    ht *gft_exact_match_flow_entry_id_ht(void) const { return cfg_db_->gft_exact_match_flow_entry_id_ht(); }
+    slab *gft_exact_match_profile_slab(void) const { return cfg_db_->gft_exact_match_profile_slab(); }
+    ht *gft_exact_match_profile_id_ht(void) const { return oper_db_->gft_exact_match_profile_id_ht(); }
+    slab *gft_hdr_transposition_profile_slab(void) const { return cfg_db_->gft_hdr_transposition_profile_slab(); }
+    ht *gft_hdr_transposition_profile_id_ht(void) const { return oper_db_->gft_hdr_transposition_profile_id_ht(); }
+    slab *gft_exact_match_flow_entry_slab(void) const { return cfg_db_->gft_exact_match_flow_entry_slab(); }
+    ht *gft_exact_match_flow_entry_id_ht(void) const { return oper_db_->gft_exact_match_flow_entry_id_ht(); }
 
     // forwarding mode APIs
     void set_forwarding_mode(hal_forwarding_mode_t mode) { 
-        cfg_db_->set_forwarding_mode(mode);
+        oper_db_->set_forwarding_mode(mode);
     }
-    hal_forwarding_mode_t forwarding_mode(void) const { return cfg_db_->forwarding_mode(); }
+    hal_forwarding_mode_t forwarding_mode(void) const { return oper_db_->forwarding_mode(); }
 
     eventmgr *event_mgr(void) const { return oper_db_->event_mgr(); }
 
@@ -485,19 +449,19 @@ public:
 
     hal_stats_t api_stats(int idx) const { return api_stats_[idx]; }
     void set_api_stats(int idx, int val) { api_stats_[idx] = val; }
-    uint64_t preserve_state(void *mem, uint32_t len);
+    uint64_t preserve_state(void);
     uint64_t restore_state(void *mem);
 
 private:
     // following come from shared memory or non-linux HBM memory
     hal_cfg_db           *cfg_db_;
     hal_oper_db          *oper_db_;
-    hal_mem_db           *mem_db_;
     hal_stats_t          *api_stats_;
 
     // following come from linux process virtual memory
-    sdk::lib::catalog    *catalog_;
     shmmgr               *mmgr_;
+    sdk::lib::catalog    *catalog_;
+    hal_obj_meta         **obj_meta_;
 
 private:
     void cleanup(void);

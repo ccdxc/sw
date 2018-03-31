@@ -632,7 +632,7 @@ hal_state_pd::~hal_state_pd()
 // factory method
 //------------------------------------------------------------------------------
 hal_state_pd *
-hal_state_pd::factory(void)
+hal_state_pd::factory (void)
 {
     hal_state_pd *state;
 
@@ -644,14 +644,6 @@ hal_state_pd::factory(void)
     }
     return state;
 }
-
-// ----------------------------------------------------------------------------
-// Gives slab for a slab id
-// ----------------------------------------------------------------------------
-#define GET_SLAB(slab_name) \
-    if (slab_name && slab_name->slab_id() == slab_id) { \
-        return slab_name; \
-    }
 
 hal_ret_t
 pd_get_slab (pd_get_slab_args_t *args)
@@ -1091,7 +1083,7 @@ pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
     p4pd_def_cfg.hal_cfg = args->hal_cfg;
     ret = p4pd_table_defaults_init(&p4pd_def_cfg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to program default entries, err: {}", ret);
+        HAL_TRACE_ERR("Failed to program default entries, err : {}", ret);
     }
 
     return ret;
@@ -1108,13 +1100,13 @@ pd_pgm_def_p4plus_entries (pd_pgm_def_p4plus_entries_args_t *args)
     HAL_TRACE_DEBUG("Programming p4plus default entries ...");
     ret = wring_pd_init_global_rings();
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to program default rings, err: {}", ret);
+        HAL_TRACE_ERR("Failed to program default rings, err : {}", ret);
         return ret;
     }
 
     ret = crypto_pd_init();
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to intialize Capri Barco err: {}", ret);
+        HAL_TRACE_ERR("Failed to intialize Capri Barco err : {}", ret);
         return ret;
     }
     return ret;
@@ -1279,12 +1271,11 @@ pd_slab_delay_delete_cb (void *timer, hal_slab_t slab_id, void *elem)
     } else if (slab_id < HAL_SLAB_PD_MAX) {
         ret = hal::pd::free_to_slab(slab_id, elem);
     } else {
-        HAL_TRACE_ERR("{}: Unexpected slab id {}", __FUNCTION__, slab_id);
+        HAL_TRACE_ERR("Unexpected slab id {}", slab_id);
         ret = HAL_RET_INVALID_ARG;
     }
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("[{}:{}] Failed to release elem {} to slab id {}",
-                      __FUNCTION__, __LINE__, elem, slab_id);
+        HAL_TRACE_ERR("Failed to release elem {} to slab id {}", elem, slab_id);
     }
 
     return;

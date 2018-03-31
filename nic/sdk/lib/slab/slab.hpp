@@ -15,6 +15,8 @@
 namespace sdk {
 namespace lib {
 
+typedef bool (slab_walk_cb_t)(void *elem, void *ctxt);
+
 // slab id servers as unique identifier for a slab instance, this id is not used
 // by the library itself
 typedef uint32_t slab_id_t;
@@ -24,7 +26,7 @@ enum {
     SDK_SLAB_ID_RSVD,
 };
 
-#define SLAB_NAME_MAX_LEN        16
+#define SLAB_NAME_MAX_LEN                                 16
 
 typedef struct slab_block_s slab_block_t;
 struct slab_block_s {
@@ -38,6 +40,7 @@ struct slab_block_s {
 class slab {
 public:
     // static methods for instantiating and destroying slabs
+    // slab_id is unique id to identify this slab (library doesn't use this)
     static slab *factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
                          uint32_t elems_per_block, bool thread_safe=false,
                          bool grow_on_demand=true, bool zero_on_alloc=false,
@@ -47,6 +50,8 @@ public:
     // per instance member functions
     void *alloc(void);
     void free(void *elem);
+    // walk elements of the slab, if callback returns true, walk is stopped
+    sdk_ret_t walk(slab_walk_cb_t walk_cb, void *ctxt);
     uint32_t num_in_use(void) const { return num_in_use_; }
     uint32_t num_allocs(void) const { return num_allocs_; }
     uint32_t num_frees(void) const { return num_frees_; }
@@ -54,7 +59,7 @@ public:
     uint32_t num_blocks(void) const { return num_blocks_; }
 
     slab_id_t slab_id(void) const { return slab_id_; }
-    const char *slab_name(void) const { return name_; }
+    const char *name(void) const { return name_; }
     uint32_t elem_sz(void) const { return elem_sz_; }
     uint32_t elems_per_block(void) const { return elems_per_block_; }
     bool thread_safe(void) const { return thread_safe_; }

@@ -82,7 +82,7 @@ set_slab_response (slab *s, debug::SlabGetResponseMsg *rsp)
 
     response->set_api_status(types::API_STATUS_OK);
 
-    response->mutable_spec()->set_name(s->slab_name());
+    response->mutable_spec()->set_name(s->name());
     response->mutable_spec()->set_id(s->slab_id());
     response->mutable_spec()->set_element_size(s->elem_sz());
     response->mutable_spec()->set_elements_per_block(s->elems_per_block());

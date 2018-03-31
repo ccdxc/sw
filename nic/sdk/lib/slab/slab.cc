@@ -13,6 +13,13 @@
 namespace sdk {
 namespace lib {
 
+// per element meta that is added internally
+typedef struct slab_emeta_s {
+    uint32_t        in_use:1;
+    uint32_t        rsvd:31;               // for future use
+} __PACK__ slab_emeta_t;
+#define SLAB_ELEM_META_SIZE        sizeof(slab_emeta_t)
+
 //------------------------------------------------------------------------------
 // slab instance initialization
 //------------------------------------------------------------------------------
@@ -35,6 +42,7 @@ slab::init(const char *name, slab_id_t slab_id, uint32_t elem_sz,
     memset(this->name_, 0, sizeof(this->name_));
     strncpy(this->name_, name, SLAB_NAME_MAX_LEN);
     this->slab_id_ = slab_id;
+    elem_sz += SLAB_ELEM_META_SIZE;
     this->elem_sz_ = (elem_sz + 7) & ~0x07;
     this->elems_per_block_ = elems_per_block;
     this->raw_block_sz_ = (elem_sz_ * elems_per_block_) + sizeof(slab_block_t);
@@ -160,6 +168,7 @@ slab_block_t *
 slab::alloc_block_(void)
 {
     slab_block_t    *block;
+    slab_emeta_t    *emeta;
     uint8_t         *ptr;
 
 #if SDK_DEBUG
@@ -175,9 +184,6 @@ slab::alloc_block_(void)
     if (block == NULL) {
         SDK_TRACE_ERR("Failed to allocate block for slab %s, id %u\n",
                       name_, slab_id_);
-#if SDK_DEBUG
-        SDK_ASSERT(FALSE);
-#endif
         return NULL;
     }
     block->prev_ = block->next_ = NULL;
@@ -186,10 +192,16 @@ slab::alloc_block_(void)
 
     ptr = block->elems_;
     for (uint32_t i = 0; i < elems_per_block_ - 1; i++) {
-        *(void **)ptr = (ptr + elem_sz_);
+        emeta = (slab_emeta_t *)ptr;
+        emeta->in_use = FALSE;
+        *(void **)(emeta + 1) = ptr + elem_sz_;
         ptr += elem_sz_;
     }
-    *(void **)ptr = NULL;
+
+    // initialize the last element
+    emeta = (slab_emeta_t *)ptr;
+    emeta->in_use = FALSE;
+    *(void **)(emeta + 1) = NULL;
     this->num_blocks_++;
 
     return block;
@@ -203,13 +215,14 @@ slab::alloc(void)
 {
     void            *elem = NULL;
     slab_block_t    *block;
+    slab_emeta_t    *emeta;
 
     if (thread_safe_) {
         SDK_SPINLOCK_LOCK(&slock_);
     }
 
     block = this->block_head_;
-    while (block && block->free_head_  == NULL) {
+    while (block && (block->free_head_  == NULL)) {
         block = block->next_;
     }
 
@@ -231,7 +244,9 @@ slab::alloc(void)
         }
     }
 
-    elem = block->free_head_;
+    emeta = (slab_emeta_t *)block->free_head_;
+    emeta->in_use = TRUE;
+    elem = emeta + 1;
     block->free_head_ = *(void **)elem;
     this->num_allocs_++;
     this->num_in_use_++;
@@ -242,7 +257,7 @@ slab::alloc(void)
     }
 
     if (this->zero_on_alloc_) {
-        memset(elem, 0, this->elem_sz_);
+        memset(elem, 0, (this->elem_sz_ - SLAB_ELEM_META_SIZE));
     }
 
     return elem;
@@ -263,12 +278,18 @@ void
 slab::free_(void *elem)
 {
     slab_block_t    *block;
+    slab_emeta_t    *emeta;
+    void            *ptr;
+
+    SDK_ASSERT(elem != NULL);
+    ptr = emeta = (slab_emeta_t *)(((uint8_t *)elem) - SLAB_ELEM_META_SIZE);
+    SDK_ASSERT(emeta->in_use == TRUE);
 
     // find the block this element belongs to
     block = this->block_head_;
     while (block) {
-        if ((elem > block) &&
-            (elem < ((uint8_t *)block + raw_block_sz_))) {
+        if ((ptr > block) &&
+            (ptr < ((uint8_t *)block + raw_block_sz_))) {
             break;
         }
         block = block->next_;
@@ -276,7 +297,8 @@ slab::free_(void *elem)
 
     if (block) {
         *(void **)elem = block->free_head_;
-        block->free_head_ = elem;
+        block->free_head_ = emeta;
+        emeta->in_use = FALSE;
         this->num_frees_++;
         this->num_in_use_--;
         block->num_in_use_--;
@@ -316,6 +338,38 @@ slab::free(void *elem)
     if (thread_safe_) {
         SDK_SPINLOCK_UNLOCK(&slock_);
     }
+}
+
+sdk_ret_t
+slab::walk(slab_walk_cb_t walk_cb, void *ctxt)
+{
+    uint32_t        i;
+    uint8_t         *ptr;
+    slab_block_t    *block;
+    slab_emeta_t    *emeta;
+    bool            stop_walk = false;
+
+    SDK_ASSERT_RETURN((walk_cb != NULL), SDK_RET_INVALID_ARG);
+    for (block = this->block_head_; block; block = block->next_) {
+        if (block->num_in_use_ == 0) {
+            continue;
+        }
+        ptr = block->elems_;
+        for (i = 0; i < elems_per_block_; i++) {
+            emeta = (slab_emeta_t *)ptr;
+            if (emeta->in_use == TRUE) {
+                stop_walk = walk_cb(emeta + 1, ctxt);
+                if (stop_walk) {
+                    goto end;
+                }
+            }
+            ptr += elem_sz_;
+        }
+    }
+
+end:
+
+    return SDK_RET_OK;
 }
 
 }    // namespace lib

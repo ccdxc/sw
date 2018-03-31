@@ -58,6 +58,7 @@ cc_library(
         "hal.cc",
         "hal_state.cc",
         "hal_cfg.cc",
+        "hal_obj.cc",
     ] + 
     glob(["src/nw/*.cc"]) +
     glob(["src/aclqos/*.cc"]) +
