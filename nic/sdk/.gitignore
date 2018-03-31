@@ -8,3 +8,4 @@ obj/lib/*.so
 obj/lib/external/*.so
 cscope.*
 gen
+include/sdk/asic/capri/csrlite/cap_top_csr_defines.h
