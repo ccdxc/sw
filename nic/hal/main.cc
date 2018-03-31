@@ -293,7 +293,7 @@ main (int argc, char **argv)
     }
 
     // register for all gRPC services
-    svc_reg(std::string("localhost:") + hal_cfg.grpc_port, hal_cfg.features);
+    svc_reg(std::string("0.0.0.0:") + hal_cfg.grpc_port, hal_cfg.features);
 
     // wait for HAL threads to cleanup
     hal::hal_wait();

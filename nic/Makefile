@@ -135,6 +135,8 @@ package-clean:
 package: swig-cli package-clean
     ifeq ($(ARCH),aarch64)
 		cd ../ && python nic/tools/package.py
+    else
+		cd ../ && python nic/tools/package.py x86_64
     endif
 
 platform:

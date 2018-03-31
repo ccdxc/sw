@@ -1,6 +1,7 @@
 import os
 from subprocess import call
 import pdb
+import sys
 
 output_dir          = 'fake_root_target/'
 arm_server          = '192.168.75.242'
@@ -8,6 +9,18 @@ arm_server_username = 'root'
 arm_server_passwd   = 'pen123'
 
 input_file = 'nic/tools/pack_local_files.txt'
+arm_pkg = 1
+
+if len(sys.argv) == 2:
+    if sys.argv[1] == 'x86_64':
+        arm_pkg = 0
+        input_file = 'nic/tools/pack_local_files_x86_64.txt'
+        print ("packaging x86_64")
+    else:
+        print ("packaging aarch64")
+else:
+    print ("packaging aarch64")
+
 f          = open(input_file, 'r')
 
 for line in f:
@@ -47,9 +60,14 @@ for root, dirs, files in os.walk(output_dir):
         if '.so' in file or 'hal' in file or 'linkmgr' in file:
             non_stripped = os.path.join(root, file)
             call(['chmod', '755', non_stripped])
-            call(['/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objcopy', '--only-keep-debug', non_stripped, non_stripped + '.debug'])
-            call(['/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-strip', non_stripped])
-            call(['/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objcopy', '--add-gnu-debuglink=' + non_stripped + '.debug', non_stripped])
+            if arm_pkg == 0:
+                call(['objcopy', '--only-keep-debug', non_stripped, non_stripped + '.debug'])
+                call(['strip', non_stripped])
+                call(['objcopy', '--add-gnu-debuglink=' + non_stripped + '.debug', non_stripped])
+            else:
+                call(['/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objcopy', '--only-keep-debug', non_stripped, non_stripped + '.debug'])
+                call(['/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-strip', non_stripped])
+                call(['/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objcopy', '--add-gnu-debuglink=' + non_stripped + '.debug', non_stripped])
 
 cmd = 'mkdir -p fake_root_target/nic/lib'
 call(cmd, shell=True)

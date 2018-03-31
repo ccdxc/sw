@@ -401,18 +401,12 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
 }
 
 static void wait_loop() {
-    int rc;
-    buffer_hdr_t *buff;
-    char zmqsockstr[600];
-    char *model_socket_name = NULL;
-    char recv_buff[MODEL_ZMQ_BUFF_SIZE];
-    
-    const char* user_str = std::getenv("ZMQ_SOC_DIR");
-    model_socket_name = std::getenv("MODEL_SOCKET_NAME");
-    if (model_socket_name == NULL) {
-        model_socket_name = (char *)"zmqsock";
-    }
-    snprintf(zmqsockstr, 600, "ipc:///%s/%s", user_str, model_socket_name);
+    int             rc;
+    buffer_hdr_t    *buff;
+    char            *zmqsockstr = NULL;
+    char            recv_buff[MODEL_ZMQ_BUFF_SIZE];
+   
+    zmqsockstr = model_utils_get_zmqsockstr();
 
     //  ZMQ Socket to talk to clients
     void *context = zmq_ctx_new ();

@@ -146,7 +146,10 @@ def init():
         port = '50054'
     logger.info("Creating GRPC channel to HAL on port %s" %(port))
     server = 'localhost:' + port
+    if 'HAL_GRPC_IP' in os.environ:
+        server = os.environ['HAL_GRPC_IP'] + ':' + port
     HalChannel = grpc.insecure_channel(server)
+    logger.info("HAL Server IP and Port = ", server)
     logger.info("Waiting for HAL to be ready ...")
     grpc.channel_ready_future(HalChannel).result()
     logger.info("Connected to HAL!")

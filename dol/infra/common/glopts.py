@@ -2,6 +2,7 @@
 import argparse
 import pdb
 import sys
+import os
 
 import infra.common.utils as utils
 
@@ -76,6 +77,14 @@ parser.add_argument('--perf', dest='perf', default=False,
                     action='store_true', help='Run only Perf tests.')
 parser.add_argument('--e2e', dest='e2e', action='store_true',
                     help='Start DOL with E2E Testing')
+parser.add_argument('--zmqtcp', dest='zmqtcp', default=False,
+                    action='store_true', help='Use ZMQ TCP instead of IPC')
+parser.add_argument('--hal_ip', dest='hal_ip', default=None,
+                    help='HAL IP Address.')
+parser.add_argument('--model_ip', dest='model_ip', default=None,
+                    help='Model IP Address.')
+
+
 GlobalOptions = parser.parse_args()
 
 def ValidateGlopts():
@@ -130,6 +139,13 @@ def ValidateGlopts():
     GlobalOptions.feature_set = "iris"
     if GlobalOptions.gft:
         GlobalOptions.feature_set = "gft"
+
+    if GlobalOptions.zmqtcp:
+        os.environ['MODEL_ZMQ_TYPE_TCP'] = '1'
+    if GlobalOptions.hal_ip:
+        os.environ["HAL_GRPC_IP"] = GlobalOptions.hal_ip
+    if GlobalOptions.model_ip:
+        os.environ["MODEL_ZMQ_SERVER_IP"] = GlobalOptions.model_ip
 
     print("========================================================")
     print("Global Command Line Options")

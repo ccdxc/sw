@@ -693,6 +693,12 @@ def main():
                         action='store_true', help='Run Perf tests.')
     parser.add_argument('--cfgjson', dest='cfgjson', default=None,
                         help='Dump DOL configuration to json file')
+    parser.add_argument('--zmqtcp', dest='zmqtcp', default=None,
+                        action='store_true', help='Run for ZEBU environment.')
+    parser.add_argument('--hal_ip', dest='hal_ip', default=None,
+                        help='HAL IP Address.')
+    parser.add_argument('--model_ip', dest='model_ip', default=None,
+                        help='Model IP Address.')
 
     args = parser.parse_args()
 
@@ -731,12 +737,15 @@ def main():
         sys.exit(1)
 
     port = find_port()
-
     if args.mbt_test:
         port = int(os.environ["HAL_GRPC_PORT"])
-
     print "* Using port (" + str(port) + ") for HAL\n"
     os.environ["HAL_GRPC_PORT"] = str(port)
+
+    if args.zmqtcp:
+        os.environ['MODEL_ZMQ_TYPE_TCP'] = '1'
+        zmq_tcp_port = find_port()
+        os.environ['MODEL_ZMQ_TCP_PORT'] = str(zmq_tcp_port)
 
     if args.dryrun is False:
         if args.rtl:

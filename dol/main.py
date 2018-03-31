@@ -25,18 +25,19 @@ for path in paths:
     #print("Adding Path: %s" % fullpath)
     sys.path.insert(0, fullpath)
 
-import infra.factory.factory    as factory
-import infra.engine.engine      as engine
-import infra.config.config      as config
-import config.generator         as generator
-import infra.e2e.main           as e2e
-
 # This import will parse all the command line options.
 import infra.common.glopts as glopts
 from infra.common.logging import logger
 import sys
 
 glopts.ValidateGlopts()
+
+import infra.factory.factory    as factory
+import infra.engine.engine      as engine
+import infra.config.config      as config
+import config.generator         as generator
+import infra.e2e.main           as e2e
+
 def Main():
     logger.info("Initializing Config Infra")
     config.init()

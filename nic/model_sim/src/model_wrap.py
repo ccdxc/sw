@@ -25,12 +25,22 @@ def zmq_connect ():
     socket = context.socket(zmq.REQ)
     socket.setsockopt(zmq.RCVTIMEO, _model_sock_timeo_sec * 1000) 
     socket.setsockopt(zmq.SNDTIMEO, _model_sock_timeo_sec * 1000)
-    model_socket_name = 'zmqsock'
-    if 'MODEL_SOCKET_NAME' in os.environ:
-        model_socket_name = os.environ['MODEL_SOCKET_NAME']
 
-    model_sock_path = os.environ['ZMQ_SOC_DIR']
-    zmqsockstr = 'ipc:///' + model_sock_path + '/' + model_socket_name
+    if 'MODEL_ZMQ_TYPE_TCP' in os.environ:
+        model_socket_name = '50055'
+        if 'MODEL_ZMQ_TCP_PORT' in os.environ:
+            model_socket_name = os.environ['MODEL_ZMQ_TCP_PORT']
+        model_server_ip = '127.0.0.1'
+        if 'MODEL_ZMQ_SERVER_IP' in os.environ:
+            model_server_ip = os.environ['MODEL_ZMQ_SERVER_IP']
+        zmqsockstr = 'tcp://' + model_server_ip + ':' + model_socket_name
+    else:
+        model_socket_name = 'zmqsock'
+        if 'MODEL_SOCKET_NAME' in os.environ:
+            model_socket_name = os.environ['MODEL_SOCKET_NAME']
+        model_sock_path = os.environ['ZMQ_SOC_DIR']
+        zmqsockstr = 'ipc:///' + model_sock_path + '/' + model_socket_name
+
     print("ZMQ SOCKET STRING = %s" % zmqsockstr)
     socket.connect(zmqsockstr)
     gl_socket = socket
