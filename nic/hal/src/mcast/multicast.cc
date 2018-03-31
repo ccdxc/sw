@@ -1232,15 +1232,62 @@ static void
 mc_entry_get_fill_rsp(MulticastEntryGetResponse *rsp,
                       mc_entry_t *mc_entry)
 {
+    uint32_t                        numoif = 0;
+    l2seg_t                         *l2seg = NULL;
     dllist_ctxt_t                   *lnode = NULL;
     hal_handle_id_list_entry_t      *entry = NULL;
 
-    dllist_for_each(lnode, &mc_entry->if_list_head) {
-        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        rsp->add_oif_handles(entry->handle_id);
+    HAL_ASSERT(mc_entry);
+
+    l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
+    if (l2seg == NULL) {
+        rsp->set_api_status(types::API_STATUS_ERR);
+        goto end;
     }
 
+    rsp->mutable_spec()->mutable_meta()->set_vrf_id(
+        vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
+    rsp->mutable_spec()->mutable_key_or_handle()->mutable_key()->
+        mutable_l2segment_key_handle()->set_segment_id(l2seg->seg_id);
+
+    if (mc_entry->key.type == MC_KEY_TYPE_IP) {
+        if (mc_entry->key.u.ip.af == types::IP_AF_INET) {
+            rsp->mutable_spec()->mutable_key_or_handle()->mutable_key()->
+                mutable_ip()->mutable_group()->set_ip_af(types::IP_AF_INET);
+            rsp->mutable_spec()->mutable_key_or_handle()->mutable_key()->
+                mutable_ip()->mutable_group()->set_v4_addr(mc_entry->
+                key.u.ip.addr.v4_addr);
+        } else if (mc_entry->key.u.ip.af == types::IP_AF_INET6) {
+            rsp->mutable_spec()->mutable_key_or_handle()->mutable_key()->
+                mutable_ip()->mutable_group()->set_ip_af(types::IP_AF_INET6);
+            rsp->mutable_spec()->mutable_key_or_handle()->mutable_key()->
+                mutable_ip()->mutable_group()->set_v6_addr(&mc_entry->
+                key.u.ip.addr.v6_addr, sizeof(ipv6_addr_t));
+        } else {
+            rsp->set_api_status(types::API_STATUS_ERR);
+            goto end;
+        }
+    } else if (mc_entry->key.type == MC_KEY_TYPE_MAC) {
+        rsp->mutable_spec()->mutable_key_or_handle()->mutable_key()->
+            mutable_mac()->set_group(MAC_TO_UINT64(mc_entry->key.u.mac));
+    } else {
+        rsp->set_api_status(types::API_STATUS_ERR);
+        goto end;
+    }
+
+    dllist_for_each(lnode, &mc_entry->if_list_head) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        rsp->mutable_spec()->add_oif_key_handles()->
+            set_if_handle(entry->handle_id);
+        numoif ++;
+    }
+
+    rsp->mutable_stats()->set_num_oifs(numoif);
+    rsp->mutable_status()->set_multicast_handle(mc_entry->hal_handle);
     rsp->set_api_status(types::API_STATUS_OK);
+
+end:
+    return;
 }
 
 static bool

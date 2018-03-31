@@ -68,9 +68,16 @@ message MulticastEntryGetRequestMsg {
   repeated MulticastEntryGetRequest request = 1;    // batched request
 }
 
+// MulticastEntryStats is the statistics object of multicast entry type
+message MulticastEntryStats {
+  uint32                num_oifs      = 1;    // number of OIFs in this multicast entry
+}
+
 message MulticastEntryGetResponse {
-  types.ApiStatus  api_status  = 1 [(gogoproto.jsontag) = "venice:api_status"];
-  repeated fixed64 oif_handles = 2;    // output interface handles
+  types.ApiStatus       api_status    = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  MulticastEntrySpec    spec          = 2;    // Multicast Entry Configuration
+  MulticastEntryStatus  status        = 3;    // operational state of the multicast entry
+  MulticastEntryStats   stats         = 4;    // stats of the multicast entry
 }
 
 message MulticastEntryGetResponseMsg {

@@ -454,6 +454,7 @@
 		MulticastEntryDeleteResponseMsg
 		MulticastEntryGetRequest
 		MulticastEntryGetRequestMsg
+		MulticastEntryStats
 		MulticastEntryGetResponse
 		MulticastEntryGetResponseMsg
 		NatPool
