@@ -41,7 +41,7 @@ class OrderedDictYAMLLoader(yaml.Loader):
             key = self.construct_object(key_node, deep=deep)
             try:
                 hash(key)
-            except TypeError, exc:
+            except TypeError as exc:
                 raise yaml.constructor.ConstructorError('while constructing a mapping',
                                                         node.start_mark, 'found unacceptable key (%s)' % exc,
                                                         key_node.start_mark)
@@ -663,10 +663,10 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
 #ifndef {0}_HPP
 #define {0}_HPP
 
-#include "cap_csr_base.hpp"
+#include "sdk/asic/capri/csrlite/cap_csr_base.hpp"
 """.format(block_name.upper())
         for i in include_map:
-            cur_str = cur_str + """#include "{0}.hpp"
+            cur_str = cur_str + """#include "sdk/asic/capri/csrlite/{0}.hpp"
 """.format(i)
         cur_str = cur_str + """
 using namespace std;""".format(block_name.upper())
@@ -678,7 +678,7 @@ using namespace std;""".format(block_name.upper())
     def gen_c_source(self):
         cur_str = """
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
-#include "{0}.hpp"
+#include "sdk/asic/capri/csrlite/{0}.hpp"
 
 using namespace std;
         """.format(block_name)
@@ -704,10 +704,10 @@ using namespace std;
 #ifndef {0}_HELPER_HPP
 #define {0}_HELPER_HPP
 
-#include "{1}.hpp"
+#include "sdk/asic/capri/csrlite/{1}.hpp"
 """.format(block_name.upper(), block_name)
         for i in include_map:
-            cur_str = cur_str + """#include "{0}_helper.hpp" 
+            cur_str = cur_str + """#include "sdk/asic/capri/csrlite/{0}_helper.hpp" 
 """.format(i)
         cur_str = cur_str + """
 using namespace std;
@@ -719,7 +719,7 @@ using namespace std;
         return cur_str
     def gen_c_helper_source(self):
         cur_str = """
-#include "{0}_helper.hpp"
+#include "sdk/asic/capri/csrlite/{0}_helper.hpp"
 """.format(block_name)
         cur_str = cur_str + """
 using namespace std;
@@ -783,9 +783,9 @@ def recurse(e, parent, depth=0):
                 recurse(e[k], parent.fields[-1], depth + 1)
 
     else:
-        print 'ERROR:', parent.name, "  " * depth, e
+        print ('ERROR:', parent.name, "  " * depth, e)
 
-def gen_decoders(yaml_src_file, _block_name, gen_dir):
+def gen_decoders(yaml_src_file, _block_name, cc_gen_dir, hdr_gen_dir):
     global block_name
     f = open(yaml_src_file)
     data_map = yaml.load(f, OrderedDictYAMLLoader)
@@ -808,22 +808,22 @@ def gen_decoders(yaml_src_file, _block_name, gen_dir):
     filter_map.set_tot_size()
 
     temp = copy.deepcopy(filter_map)
-    out_f = open(gen_dir+'include/'+block+'.hpp', 'w')
+    out_f = open(hdr_gen_dir + '/' + block + '.hpp', 'w')
     out_f.write(temp.gen_c_header(include_map))
     out_f.close()
 
     temp = copy.deepcopy(filter_map)
-    out_f = open(gen_dir+block+'.cc', 'w')
+    out_f = open(cc_gen_dir + block + '.cc', 'w')
     out_f.write(temp.gen_c_source())
     out_f.close()
 
     temp = copy.deepcopy(filter_map)
-    out_f = open(gen_dir+'include/'+block+'_helper.hpp', 'w')
+    out_f = open(hdr_gen_dir +'/' + block + '_helper.hpp', 'w')
     out_f.write(temp.gen_c_helper_header(include_map))
     out_f.close()
 
     temp = copy.deepcopy(filter_map)
-    out_f = open(gen_dir+block+'_helper.cc', 'w')
+    out_f = open(cc_gen_dir + block + '_helper.cc', 'w')
     out_f.write(temp.gen_c_helper_source())
     out_f.close()
 
@@ -842,16 +842,23 @@ def gen_block_name(filename):
 
 if __name__ == '__main__':
 
-    input_dir = '../asic/capri/verif/common/csr_gen/'
-    gen_dir = '../gen/csr_lite/'
-    if not os.path.exists(gen_dir + 'include'):
-        os.makedirs(gen_dir + 'include')
+    input_dir   = '../asic/capri/verif/common/csr_gen/'
+    cc_gen_dir  = '../gen/csrlite/'
+    hdr_gen_dir = '../sdk/gen/include/sdk/asic/capri/csrlite/'
+
+    # create cc_gen_dir if not exists
+    if not os.path.exists(cc_gen_dir):
+        os.makedirs(cc_gen_dir)
+
+    # create hdr_gen_dir if not exists
+    if not os.path.exists(hdr_gen_dir):
+        os.makedirs(hdr_gen_dir)
 
     files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f)) and f.endswith(".yaml")]
     for file in files:
         block = gen_block_name(file)
         if block is not None:
-            print "Processing " +input_dir+file+ " ==> " +gen_dir+block+".cc [include/"+block+".hpp]"
-            gen_decoders(input_dir+file, block, gen_dir)
+            print ("Processing " +input_dir+file+ " ==> " + cc_gen_dir + block + ".cc " + "[" + hdr_gen_dir + block + ".hpp]")
+            gen_decoders(input_dir+file, block, cc_gen_dir, hdr_gen_dir)
         else:
-            print "Skipped " + input_dir+file
+            print ("Skipped " + input_dir+file)

@@ -62,8 +62,8 @@ call(cmd, shell=True)
 cmd = 'rm -f fake_root_target/platform/lib/*.a'
 call(cmd, shell=True)
 
-# remove csr_lite until main csr lib is not removed
-cmd = 'rm -f fake_root_target/nic/lib/libcsr_lite.so'
+# remove csrlite until main csr lib is not removed
+cmd = 'rm -f fake_root_target/nic/lib/libcsrlite.so'
 call(cmd, shell=True)
 
 # remove *.log from nic/conf/init_bins libs

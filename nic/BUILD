@@ -3,30 +3,10 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
-    name = "csr_lite_asic_includes",
-    hdrs = [
-        "asic/capri/model/cap_top/cap_top_csr_defines.h",
-    ],
-    includes = [
-        "asic/capri/model/cap_top",
-    ],
-)
-
-cc_library(
-    name = "csr_lite_gen_includes",
-    hdrs = glob(["gen/csr_lite/include/*.hpp"]),
-    includes = [
-        "gen/csr_lite/include"
-    ],
-)
-
-cc_library(
-    name = "csr_lite_gen",
-    srcs = glob(["gen/csr_lite/*.cc"]),
+    name = "csrlite_gen",
+    srcs = glob(["gen/csrlite/*.cc"]),
     deps = [
-       ":csr_lite_gen_includes",
-       ":csr_lite_asic_includes",
-       "//nic/hal/pd/capri/csr_lite:csr_lite_base_includes",
+       "@sdk//:csrlite_gen_includes",
        "//nic/utils/pack_bytes:pack_bytes",
    ],
    alwayslink = 1

@@ -67,10 +67,11 @@ lib:
 	bazel $(BZL_OPT) build $(BUILD_OPTS) linkmgr
 	bazel $(BZL_OPT) build $(BUILD_OPTS) examples/...
 	@echo Copying over libs ...
-	@find bazel-bin/lib -name "*.so" ! -name '*_*' -exec cp {} obj \;
-	@find bazel-bin/linkmgr -name "*.so" ! -name '*_*' -exec cp {} obj \;
-	cp ../../bazel-bin/nic/hal/pd/capri/csr_lite/libcsr_lite.so obj/
-	@chmod 755 obj/*.so
+	@mkdir -p obj/lib/external
+	@find bazel-bin/lib -name "*.so" ! -name '*_*' -exec cp {} obj/lib \;
+	@find bazel-bin/linkmgr -name "*.so" ! -name '*_*' -exec cp {} obj/lib \;
+	cp ../../bazel-bin/nic/hal/pd/capri/csrlite/libcsrlite.so obj/lib/external
+	@chmod 755 obj/lib/*.so obj/lib/external/*.so
 
 test: lib build-test
 	@echo Running tests ...
@@ -83,7 +84,7 @@ build-test:
 clean:
 	bazel $(BZL_OPT) clean
 	bazel $(BZL_OPT) shutdown
-	$(RM) obj/*.so
+	$(RM) obj/lib/*.so
 
 # -----------------------------------------      For Container     -----------------------------------------
 

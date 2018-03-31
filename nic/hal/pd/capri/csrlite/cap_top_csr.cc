@@ -1,5 +1,5 @@
-#include "nic/hal/pd/capri/csr_lite/include/cap_top_csr.hpp"
-#include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
+#include "sdk/asic/capri/csrlite/cap_top_csr.hpp"
+#include "sdk/asic/capri/csrlite/cap_top_csr_defines.h"
 
 class cap_top_csr_helper_t cap_top_csr_helper; 
 

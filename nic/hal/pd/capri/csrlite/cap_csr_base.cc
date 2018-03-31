@@ -1,5 +1,4 @@
-#include "nic/hal/pd/capri/csr_lite/include/cap_csr_base.hpp"
-#include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
+#include "sdk/asic/capri/csrlite/cap_csr_base.hpp"
 #include "sdk/pal.hpp"
 
 cap_sw_csr_base::cap_sw_csr_base()=default;

@@ -53,7 +53,7 @@ hal-rtl: p4 platform capsim-master
 	$(MAKE) gen-proto
 	$(MAKE) build-proto
 	$(MAKE) third-party
-	$(MAKE) csr-lite
+	$(MAKE) csrlite
 	$(MAKE) sdk
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal:hal
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
@@ -76,7 +76,7 @@ gft: platform capsim-master go-proto
 	$(MAKE) -C asm msft_gft AS_DEFINES="-DGFT -DCAPRI_IGNORE_TIMESTAMP"
 	$(MAKE) gen-proto
 	$(MAKE) -j4 build-proto
-	$(MAKE) csr-lite
+	$(MAKE) csrlite
 	$(MAKE) sdk
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
 	#bazel build --copt=-DGFT $(SDK_OPTS) hal:hal
@@ -188,7 +188,7 @@ gen-clean:
 	rm -rf gen/hal
 	rm -rf gen/x86_64
 	rm -rf gen/aarch64
-	$(MAKE) clean-csr-lite
+	$(MAKE) clean-csrlite
 
 gen-proto:
 	$(MAKE) -C proto
@@ -197,18 +197,19 @@ gen-proto:
 build-proto:
 	$(PATH_OPTS) $(MAKE) -j8 $(BUILD_OPTS) -C gen/proto/hal
 
-clean-csr-lite:
-	rm -rf gen/csr_lite
+clean-csrlite:
+	rm -rf gen/csrlite
 
-gen-csr-lite:
-	cd tools && python gen_cap_csr_lite.py
+gen-csrlite:
+	cd tools && python gen_cap_csrlite.py
+	cp asic/capri/model/cap_top/cap_top_csr_defines.h sdk/include/sdk/asic/capri/csrlite/
 
-build-csr-lite:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/capri/csr_lite:libcsr_lite.so
+build-csrlite:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/capri/csrlite:libcsrlite.so
 
-csr-lite:
-	$(MAKE) gen-csr-lite
-	$(MAKE) build-csr-lite
+csrlite:
+	$(MAKE) gen-csrlite
+	$(MAKE) build-csrlite
 
 # make target to run bazel build with appropriate build OPTS
 # usage: make bazel-build target=fte:fte_test
@@ -253,7 +254,7 @@ halctl:
 pd: pd_iris pd_stub
 
 # code generation stage
-stage0: p4 gen-proto csr-lite go-proto utils capsim-master
+stage0: p4 gen-proto csrlite go-proto utils capsim-master
 
 # lib building stage
 stage1: asm capmodel build-proto sdk third-party

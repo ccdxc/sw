@@ -7,7 +7,7 @@ licenses(["notice"])  # MIT license
 cc_library(
     name = "sdk_logger",
     srcs = [
-        "liblogger.so",
+        "lib/liblogger.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -28,7 +28,7 @@ cc_library(
 cc_library(
     name = "sdk_slab",
     srcs = [
-        "libslab.so",
+        "lib/libslab.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -39,7 +39,7 @@ cc_library(
 cc_library(
     name = "sdk_ht",
     srcs = [
-        "libht.so",
+        "lib/libht.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -50,7 +50,7 @@ cc_library(
 cc_library(
     name = "sdk_indexer",
     srcs = [
-        "libindexer.so",
+        "lib/libindexer.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -61,7 +61,7 @@ cc_library(
 cc_library(
     name = "sdk_pal",
     srcs = [
-        "libpal.so",
+        "lib/libpal.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -72,7 +72,7 @@ cc_library(
 cc_library(
     name = "sdk_directmap",
     srcs = [
-        "libdirectmap.so",
+        "lib/libdirectmap.so",
     ],
     deps = [
         "//lib/table/directmap:directmap",
@@ -83,7 +83,7 @@ cc_library(
 cc_library(
     name = "sdk_tcam",
     srcs = [
-        "libtcam.so",
+        "lib/libtcam.so",
     ],
     deps = [
         "//lib/table/tcam:tcam",
@@ -94,7 +94,7 @@ cc_library(
 cc_library(
     name = "sdk_hash",
     srcs = [
-        "libhash.so",
+        "lib/libhash.so",
     ],
     deps = [
         "//lib/table/hash:hash",
@@ -105,7 +105,7 @@ cc_library(
 cc_library(
     name = "sdk_catalog",
     srcs = [
-        "libcatalog.so",
+        "lib/libcatalog.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -116,7 +116,7 @@ cc_library(
 cc_library(
     name = "sdk_thread",
     srcs = [
-        "libthread.so",
+        "lib/libthread.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -127,7 +127,7 @@ cc_library(
 cc_library(
     name = "sdk_twheel",
     srcs = [
-        "libtwheel.so",
+        "lib/libtwheel.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -138,7 +138,7 @@ cc_library(
 cc_library(
     name = "sdk_timerfd",
     srcs = [
-        "libtimerfd.so",
+        "lib/libtimerfd.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -149,7 +149,7 @@ cc_library(
 cc_library(
     name = "sdk_linkmgr",
     srcs = [
-        "liblinkmgr.so",
+        "lib/liblinkmgr.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -160,7 +160,7 @@ cc_library(
 cc_library(
     name = "sdk_shmmgr",
     srcs = [
-        "libshmmgr.so",
+        "lib/libshmmgr.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -171,7 +171,7 @@ cc_library(
 cc_library(
     name = "sdk_utils",
     srcs = [
-        "libutils.so",
+        "lib/libutils.so",
     ],
     deps = [
         "//:sdk_headers",
@@ -180,9 +180,9 @@ cc_library(
 
 # csr_lite library
 cc_library(
-    name = "sdk_csr_lite",
+    name = "sdk_csrlite",
     srcs = [
-        "libcsr_lite.so",
+        "lib/external/libcsrlite.so",
     ],
     deps = [
         "//:sdk_headers",

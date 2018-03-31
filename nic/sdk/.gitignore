@@ -4,5 +4,7 @@ bazel-out*
 bazel-src*
 bazel-testlogs*
 bazel-*
-obj/*.so
+obj/lib/*.so
+obj/lib/external/*.so
 cscope.*
+gen

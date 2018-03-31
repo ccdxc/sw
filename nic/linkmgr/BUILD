@@ -38,7 +38,7 @@ cc_library(
         "//nic:libprotobuf",
         "//nic/utils/trace:trace",
         "@sdk//obj:sdk_linkmgr",
-        "@sdk//obj:sdk_csr_lite",
+        "@sdk//obj:sdk_csrlite",
         "//nic:google_includes",
     ],
     copts = sdk_copts,

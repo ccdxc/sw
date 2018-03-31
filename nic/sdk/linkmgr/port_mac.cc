@@ -8,7 +8,7 @@
 #include "port.hpp"
 #include "port_mac.hpp"
 #include "linkmgr_rw.hpp"
-#include "sdk/csr_lite/cap_mx_csr_helper.hpp"
+#include "sdk/asic/capri/csrlite/cap_mx_csr_helper.hpp"
 
 namespace sdk {
 namespace linkmgr {
