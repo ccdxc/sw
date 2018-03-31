@@ -9,16 +9,15 @@
 #include <errno.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <sys/time.h>
 
 #include "pal.h"
+#include "pciehsys.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
 #define MAC_INTREGF_(REG) \
     (CAP_PXC_CSR_INT_C_MAC_INTREG_ ##REG## _INTERRUPT_FIELD_MASK)
-#define STA_RSTF_(REG) \
-    (CAP_PXC_CSR_STA_C_PORT_RST_ ##REG## _FIELD_MASK)
-
 /*
  * 3 conditions for link up
  *     1) PCIE clock (PERSTxN_DN2UP)
@@ -34,7 +33,10 @@ pcieport_intr(pcieport_t *p)
     int_mac = pal_reg_rd32(PXC_(INT_C_MAC_INTREG, pn));
     if (int_mac == 0) return -1;
 
-    sta_rst = pal_reg_rd32(PXC_(STA_C_PORT_RST, pn));
+    /*
+     * Snapshot current status here *before* ack'ing int_mac intrs.
+     */
+    sta_rst = pcieport_get_sta_rst(p);
     pal_reg_wr32(PXC_(INT_C_MAC_INTREG, pn), int_mac);
 
     if (int_mac & MAC_INTREGF_(LINK_UP2DN)) {
@@ -56,6 +58,16 @@ pcieport_intr(pcieport_t *p)
         }
     }
     return 0;
+}
+
+static void
+pcieport_poweron(pcieport_t *p)
+{
+    int r;
+
+    pcieport_set_ltssm_st_cnt(p, 0);
+    r = pcieport_config(p);
+    if (r) pciehsys_log("%d: poweron: %d\n", p->port, r);
 }
 
 #define INTREG_PERST0N \
@@ -94,8 +106,11 @@ pp_intr(void)
 
     for (port = 0; port < PCIEPORT_NPORTS; port++) {
         pcieport_t *p = &pi->pcieport[port];
-        if (p->open && (int_pp & INTREG_PERSTN(port))) {
-            pcieport_fsm(p, PCIEPORTEV_POWERON);
+        if (p->open &&
+            (int_pp & INTREG_PERSTN(port)) &&
+            pcieport_get_perstn(p)) {
+
+            pcieport_poweron(p);
         }
     }
 

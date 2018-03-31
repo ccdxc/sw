@@ -81,36 +81,46 @@ pcieport_unreset(pcieport_t *p)
     pal_reg_wr32(PP_(CFG_PP_SW_RESET), val);
 }
 
-static void
+static int
 pcieport_mac_unreset(pcieport_t *p)
 {
     u_int16_t phystatus;
+    int perstn;
     const int maxpolls = 2000; /* 2 seconds */
     int polls = 0;
 
     do {
         usleep(1000);
         phystatus = pcieport_get_phystatus(p);
-    } while (phystatus && ++polls < maxpolls);
+        perstn = pcieport_get_perstn(p);
+    } while (phystatus && perstn && ++polls < maxpolls);
 
     p->phypolllast = polls;
     if (polls > p->phypollmax) {
         p->phypollmax = polls;
     }
 
+    if (!perstn) {
+        /*
+         * perstn went away - we went back into reset
+         */
+        p->phypollperstn++;
+        return -1;
+    }
+
     if (phystatus != 0) {
         /*
          * PHY didn't come out of reset as expected?
-         * Make some noise about it.
          */
-        pciehsys_error("Warning: port%d phy reset phystatus 0x%x\n",
-                       p->port, phystatus);
-        pcieport_fault(p, "PHY reset failed");
+        p->phypollfail++;
+        return -1;
     }
+
     pcieport_set_mac_reset(p, 0); /* mac unreset */
+    return 0;
 }
 
-static void
+static int
 pcieport_hostconfig(pcieport_t *p)
 {
     /* toggle these resets */
@@ -125,8 +135,11 @@ pcieport_hostconfig(pcieport_t *p)
     pcieport_mac_k_rx_cred(p);
     pcieport_mac_k_pciconf(p);
     pcieport_mac_set_ids(p);
+
     /* now ready to unreset mac */
-    pcieport_mac_unreset(p);
+    if (pcieport_mac_unreset(p) < 0) {
+        return -1;
+    }
 
     if (!pal_is_asic()) {
         /* reduce clock frequency for fpga */
@@ -134,25 +147,30 @@ pcieport_hostconfig(pcieport_t *p)
     }
 
     pcieport_set_ltssm_en(p, 1);  /* ready for ltssm */
+    return 0;
 }
 
-static void
+static int
 pcieport_rcconfig(pcieport_t *p)
 {
     /* XXX */
     assert(0);
+    return 0;
 }
 
-void
+int
 pcieport_config(pcieport_t *p)
 {
-    if (!p->config) return;
+    int r;
+
+    if (!p->config) return -1;
 
     if (p->host) {
-        pcieport_hostconfig(p);
+        r = pcieport_hostconfig(p);
     } else {
-        pcieport_rcconfig(p);
+        r = pcieport_rcconfig(p);
     }
+    return r;
 }
 
 static int

@@ -292,3 +292,28 @@ pcieport_get_phystatus(pcieport_t *p)
 {
     return pal_reg_rd32(PXC_(STA_C_PORT_PHYSTATUS, p->port));
 }
+
+u_int32_t
+pcieport_get_sta_rst(pcieport_t *p)
+{
+    return pal_reg_rd32(PXC_(STA_C_PORT_RST, p->port));
+}
+
+int
+pcieport_get_perstn(pcieport_t *p)
+{
+    const u_int32_t sta_rst = pcieport_get_sta_rst(p);
+    return (sta_rst & STA_RSTF_(PERSTN)) != 0;
+}
+
+int
+pcieport_get_ltssm_st_cnt(pcieport_t *p)
+{
+    return pal_reg_rd32(PXP_(SAT_P_PORT_CNT_LTSSM_STATE_CHANGED, p->port));
+}
+
+void
+pcieport_set_ltssm_st_cnt(pcieport_t *p, const int cnt)
+{
+    pal_reg_wr32(PXP_(SAT_P_PORT_CNT_LTSSM_STATE_CHANGED, p->port), cnt);
+}

@@ -21,7 +21,6 @@ typedef enum pcieportst_e {
 } pcieportst_t;
 
 typedef enum pcieportev_e {
-    PCIEPORTEV_POWERON,
     PCIEPORTEV_MACDN,
     PCIEPORTEV_MACUP,
     PCIEPORTEV_LINKDN,
@@ -49,6 +48,8 @@ struct pcieport_s {
     u_int64_t linkup;
     u_int64_t phypolllast;
     u_int64_t phypollmax;
+    u_int64_t phypollperstn;
+    u_int64_t phypollfail;
     u_int64_t gatepolllast;
     u_int64_t gatepollmax;
     u_int64_t markerpolllast;
@@ -67,7 +68,7 @@ typedef struct pcieport_info_s pcieport_info_t;
 
 extern pcieport_info_t pcieport_info;
 
-void pcieport_config(pcieport_t *p);
+int pcieport_config(pcieport_t *p);
 void pcieport_fsm(pcieport_t *p, pcieportev_t ev);
 int pcieport_tgt_marker_rx_wait(pcieport_t *p);
 int pcieport_tgt_axi_pending_wait(pcieport_t *p);
@@ -80,6 +81,10 @@ void pcieport_set_ltssm_en(pcieport_t *p, const int on);
 void pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq);
 void pcieport_rx_credit_bfr(const int port, const int base, const int limit);
 u_int16_t pcieport_get_phystatus(pcieport_t *p);
+u_int32_t pcieport_get_sta_rst(pcieport_t *p);
+int pcieport_get_perstn(pcieport_t *p);
+int pcieport_get_ltssm_st_cnt(pcieport_t *p);
+void pcieport_set_ltssm_st_cnt(pcieport_t *p, const int cnt);
 
 void pcieport_fault(pcieport_t *p, const char *fmt, ...)
     __attribute__((format (printf, 2, 3)));
@@ -101,5 +106,9 @@ void pcieport_fsm_dbg(int argc, char *argv[]);
     (CAP_ADDR_BASE_PP_PP_OFFSET + \
      ((pn) * CAP_PXP_CSR_BYTE_SIZE) + \
      CAP_PP_CSR_PORT_P_ ##REG## _BYTE_ADDRESS)
+
+/* sta_rst flags */
+#define STA_RSTF_(REG) \
+    (CAP_PXC_CSR_STA_C_PORT_RST_ ##REG## _FIELD_MASK)
 
 #endif /* __PCIEPORT_IMPL_H__ */

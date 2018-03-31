@@ -42,18 +42,18 @@ itr_port_addr(const int port)
     return ITR_PORT_BASE + (port * ITR_PORT_STRIDE);
 }
 
-static u_int32_t
-pciehw_itr_port_set_rdreq_limit(const int port, const u_int32_t limit)
+static void
+itr_port_init(const int port,
+              const u_int32_t limit,
+              const u_int32_t tick)
 {
-    const u_int64_t pa = itr_port_addr(port);
+    const u_int64_t cfg_itr_port = itr_port_addr(port);
     itr_portcfg_t cfg;
-    u_int32_t olimit;
 
-    cfg.all64 = pal_reg_rd64(pa);
-    olimit = cfg.rdreq_limit;
+    cfg.all64 = pal_reg_rd64(cfg_itr_port);
     cfg.rdreq_limit = limit;
-    pal_reg_wr64(pa, cfg.all64);
-    return olimit;
+    cfg.timer_tick = tick;
+    pal_reg_wr64(cfg_itr_port, cfg.all64);
 }
 
 void
@@ -63,7 +63,14 @@ pciehw_itr_port_init(pciehw_t *phw)
 
     for (port = 0; port < phw->nports; port++) {
         if (pciehw_port_is_enabled(port)) {
-            pciehw_itr_port_set_rdreq_limit(port, 0x10);
+            if (!pal_is_asic()) {
+                /* reduce rdreq on haps */
+                const u_int32_t limit = 0x10;
+                /* timer_tick to 1/100 default on haps */
+                const u_int32_t tick = 0x19e;
+
+                itr_port_init(port, limit, tick);
+            }
         }
     }
 }

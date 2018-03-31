@@ -134,6 +134,8 @@ cmd_port(int argc, char *argv[])
     pciehsys_log("%-*s: %"PRIu64"\n", w, "linkup", p->linkup);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "phypolllast", p->phypolllast);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "phypollmax", p->phypollmax);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "phypollperstn", p->phypollperstn);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "phypollfail", p->phypollfail);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "gatepolllast", p->gatepolllast);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "gatepollmax", p->gatepollmax);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "markerpolllast", p->markerpolllast);
