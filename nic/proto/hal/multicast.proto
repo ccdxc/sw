@@ -1,4 +1,6 @@
 //------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
 // protobuf specification for Multicast APIs
 //------------------------------------------------------------------------------
 
@@ -18,8 +20,8 @@ service Multicast {
 }
 
 message MulticastEntrySpec {
-  types.ObjectMeta        meta                   = 1;
-  kh.MulticastEntryKeyHandle key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  types.ObjectMeta               meta            = 1;
+  kh.MulticastEntryKeyHandle     key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];
   repeated kh.InterfaceKeyHandle oif_key_handles = 3 [(gogoproto.moretags) = "venice:ref"]; // output interface handles
 }
 
@@ -28,11 +30,11 @@ message MulticastEntryRequestMsg {
 }
 
 message MulticastEntryStatus {
-  fixed64  multicast_handle = 1 [(gogoproto.moretags) = "venice:ref"];                    // handle
+  fixed64 multicast_handle = 1;
 }
 
 message MulticastEntryResponse {
-  types.ApiStatus      api_status   = 1 [(gogoproto.moretags) = "venice:api_status"];            // status
+  types.ApiStatus      api_status   = 1 [(gogoproto.moretags) = "venice:api_status"];    // status
   MulticastEntryStatus entry_status = 2;
 }
 
@@ -41,7 +43,7 @@ message MulticastEntryResponseMsg {
 }
 
 message MulticastEntryDeleteRequest {
-  types.ObjectMeta        meta          = 1;
+  types.ObjectMeta           meta          = 1;
   kh.MulticastEntryKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
@@ -52,12 +54,13 @@ message MulticastEntryDeleteRequestMsg {
 message MulticastEntryDeleteResponse {
   types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
 }
+
 message MulticastEntryDeleteResponseMsg {
   repeated MulticastEntryDeleteResponse response = 1;          // batched response
 }
 
 message MulticastEntryGetRequest {
-  types.ObjectMeta        meta          = 1;
+  types.ObjectMeta           meta          = 1;
   kh.MulticastEntryKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
@@ -67,7 +70,7 @@ message MulticastEntryGetRequestMsg {
 
 message MulticastEntryGetResponse {
   types.ApiStatus  api_status  = 1 [(gogoproto.jsontag) = "venice:api_status"];
-  repeated fixed64 oif_handles = 2 [(gogoproto.moretags) = "venice:ref"];        // output interface handles
+  repeated fixed64 oif_handles = 2;    // output interface handles
 }
 
 message MulticastEntryGetResponseMsg {
