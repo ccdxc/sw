@@ -27,7 +27,7 @@ for line in f:
     items = line.split()
     directory = output_dir + items[1]
     if not os.path.exists(directory):
-        print 'Creating dir: ' + directory
+        print ('Creating dir: ' + directory)
         os.makedirs(directory)
 
     if (os.path.isdir(items[0])):
@@ -35,7 +35,7 @@ for line in f:
         call(cmd, shell=True)
     else:
         cmd = 'cp ' + items[0] + ' ' + directory
-        print cmd
+        print (cmd)
         call(cmd, shell=True)
 
 '''

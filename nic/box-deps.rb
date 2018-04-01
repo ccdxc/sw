@@ -39,6 +39,7 @@ PIP3_PACKAGES = %w[
   jsonrpc2_zeromq
   setuptools
   pipenv
+  pyyaml
 ]
 
 PACKAGES = %w[
@@ -273,7 +274,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.19"
+tag "pensando/nic:1.20"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
