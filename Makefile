@@ -40,7 +40,7 @@ SHELL := /bin/bash
 GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
-BUILD_CONTAINER ?= pens-bld:v0.10
+BUILD_CONTAINER ?= pens-bld:v0.11
 
 default:
 	$(MAKE) ws-tools
@@ -116,7 +116,7 @@ c-stop:
 
 install:
 	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd
-	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; do cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
+	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
 deploy:

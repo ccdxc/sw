@@ -14,7 +14,7 @@ COPY webapp/package.json /usr/local/lib/webapp
 RUN cd /usr/local/lib/webapp && npm install -g
 
 # Install ng
-RUN npm install -g @angular/cli
+RUN npm install -g @angular/cli@1.7.3
 
 # Install Swagger
 RUN curl -o /usr/local/bin/swagger -L'#' https://github.com/go-swagger/go-swagger/releases/download/0.10.0/swagger_linux_amd64 ; chmod +x /usr/local/bin/swagger
