@@ -31,6 +31,16 @@ func (m *AuthenticationPolicy) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *Role) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "roles/", m.Tenant, "/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *RoleBinding) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "role-bindings/", m.Tenant, "/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *User) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
 }
@@ -38,6 +48,18 @@ func (m *User) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AuthenticationPolicyList) MakeKey(prefix string) string {
 	obj := AuthenticationPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *RoleBindingList) MakeKey(prefix string) string {
+	obj := RoleBinding{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *RoleList) MakeKey(prefix string) string {
+	obj := Role{}
 	return obj.MakeKey(prefix)
 }
 
@@ -50,6 +72,18 @@ func (m *UserList) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgAuthenticationPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := AuthenticationPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgRoleBindingWatchHelper) MakeKey(prefix string) string {
+	obj := RoleBinding{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgRoleWatchHelper) MakeKey(prefix string) string {
+	obj := Role{}
 	return obj.MakeKey(prefix)
 }
 
@@ -113,6 +147,24 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper) Clone(into interface{}) error {
 	return nil
 }
 
+func (m *AutoMsgRoleBindingWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgRoleBindingWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgRoleWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgRoleWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 func (m *AutoMsgUserWatchHelper) Clone(into interface{}) error {
 	out, ok := into.(*AutoMsgUserWatchHelper)
 	if !ok {
@@ -149,8 +201,89 @@ func (m *Local) Clone(into interface{}) error {
 	return nil
 }
 
+func (m *Permission) Clone(into interface{}) error {
+	out, ok := into.(*Permission)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 func (m *Radius) Clone(into interface{}) error {
 	out, ok := into.(*Radius)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Role) Clone(into interface{}) error {
+	out, ok := into.(*Role)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RoleBinding) Clone(into interface{}) error {
+	out, ok := into.(*RoleBinding)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RoleBindingList) Clone(into interface{}) error {
+	out, ok := into.(*RoleBindingList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RoleBindingSpec) Clone(into interface{}) error {
+	out, ok := into.(*RoleBindingSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RoleBindingStatus) Clone(into interface{}) error {
+	out, ok := into.(*RoleBindingStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RoleList) Clone(into interface{}) error {
+	out, ok := into.(*RoleList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RoleSpec) Clone(into interface{}) error {
+	out, ok := into.(*RoleSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RoleStatus) Clone(into interface{}) error {
+	out, ok := into.(*RoleStatus)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -256,6 +389,17 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper) Validate(ver string, ignoreStat
 	return true
 }
 
+func (m *AutoMsgRoleBindingWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgRoleWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
+	return true
+}
+
 func (m *AutoMsgUserWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
@@ -275,7 +419,69 @@ func (m *Local) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *Permission) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := funcMapAuth["Permission"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapAuth["Permission"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (m *Radius) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *Role) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
+	return true
+}
+
+func (m *RoleBinding) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *RoleBindingList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *RoleBindingSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *RoleBindingStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *RoleList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *RoleSpec) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Permissions {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *RoleStatus) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
@@ -331,6 +537,27 @@ func init() {
 			if _, ok := Authenticators_AuthenticatorType_value[v]; !ok {
 				return false
 			}
+		}
+		return true
+	})
+
+	funcMapAuth["Permission"] = make(map[string][]func(interface{}) bool)
+	funcMapAuth["Permission"]["all"] = append(funcMapAuth["Permission"]["all"], func(i interface{}) bool {
+		m := i.(*Permission)
+
+		for _, v := range m.Actions {
+			if _, ok := Permission_ActionType_value[v]; !ok {
+				return false
+			}
+		}
+		return true
+	})
+
+	funcMapAuth["Permission"]["all"] = append(funcMapAuth["Permission"]["all"], func(i interface{}) bool {
+		m := i.(*Permission)
+
+		if _, ok := Permission_ResrcKind_value[m.ResourceKind]; !ok {
+			return false
 		}
 		return true
 	})

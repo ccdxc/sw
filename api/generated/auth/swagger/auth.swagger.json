@@ -131,7 +131,6 @@
           },
           {
             "name": "Spec.Authenticators.Ldap.Url",
-            "description": "UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -152,14 +151,12 @@
           },
           {
             "name": "Spec.Authenticators.Ldap.TLSOptions.ServerName",
-            "description": "Spec contains configuration of authentication mechanisms.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.Authenticators.Ldap.TLSOptions.TrustedCerts",
-            "description": "Status contains the current state of the authentication policy.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -172,7 +169,6 @@
           },
           {
             "name": "Spec.Authenticators.Ldap.BindDN",
-            "description": "GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -234,6 +230,7 @@
           },
           {
             "name": "Spec.Authenticators.Radius.Enabled",
+            "description": "Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint.",
             "in": "query",
             "required": false,
             "type": "boolean",
@@ -330,6 +327,592 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/authAuthenticationPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "AuthV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/role-bindings": {
+      "get": {
+        "operationId": "AutoListRoleBinding",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authRoleBindingList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "AuthV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddRoleBinding",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authRoleBinding"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authRoleBinding"
+            }
+          }
+        ],
+        "tags": [
+          "AuthV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/role-bindings/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetRoleBinding",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authRoleBinding"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Users",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.UserGroups",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.Role",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuthV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteRoleBinding",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authRoleBinding"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuthV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateRoleBinding",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authRoleBinding"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authRoleBinding"
+            }
+          }
+        ],
+        "tags": [
+          "AuthV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/roles": {
+      "get": {
+        "operationId": "AutoListRole",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authRoleList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "AuthV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddRole",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authRole"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authRole"
+            }
+          }
+        ],
+        "tags": [
+          "AuthV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/roles/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetRole",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authRole"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuthV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteRole",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authRole"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuthV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateRole",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authRole"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authRole"
             }
           }
         ],
@@ -857,7 +1440,7 @@
         }
       }
     },
-    "authAutoMsgUserWatchHelper": {
+    "authAutoMsgRoleBindingWatchHelper": {
       "type": "object",
       "properties": {
         "Type": {
@@ -865,8 +1448,31 @@
           "title": "StartTLS determines if ldap connection uses TLS"
         },
         "Object": {
-          "$ref": "#/definitions/authUser",
+          "$ref": "#/definitions/authRoleBinding",
           "description": "SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name.\nIf SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.\nIn this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing."
+        }
+      }
+    },
+    "authAutoMsgRoleWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/authRole",
+          "title": "UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search"
+        }
+      }
+    },
+    "authAutoMsgUserWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/authUser"
         }
       }
     },
@@ -878,8 +1484,7 @@
           "format": "boolean"
         },
         "Url": {
-          "type": "string",
-          "title": "UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search"
+          "type": "string"
         },
         "TLSOptions": {
           "$ref": "#/definitions/authTLSOptions"
@@ -888,8 +1493,7 @@
           "type": "string"
         },
         "BindDN": {
-          "type": "string",
-          "title": "GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search"
+          "type": "string"
         },
         "BindPassword": {
           "type": "string"
@@ -923,7 +1527,8 @@
         "Fullname": {
           "type": "string"
         }
-      }
+      },
+      "title": "status part of authentication policy object"
     },
     "authLocal": {
       "type": "object",
@@ -932,14 +1537,52 @@
           "type": "boolean",
           "format": "boolean"
         }
-      }
+      },
+      "title": "AuthenticationPolicy defines various authentication mechanisms available and order in which they are used"
+    },
+    "authPermission": {
+      "type": "object",
+      "properties": {
+        "ResourceTenant": {
+          "type": "string",
+          "description": "ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant\nto which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant."
+        },
+        "ResourceGroup": {
+          "type": "string",
+          "title": "ResourceGroup is grouping of resource types for which a permission is defined"
+        },
+        "ResourceKind": {
+          "type": "string",
+          "title": "ResourceKind is a resource kind for which permission is defined. It can be an API Server object or an arbitrary API endpoint"
+        },
+        "ResourceNamespace": {
+          "type": "string",
+          "title": "ResourceNamespace is a namespace to which a resource (API Server object) belongs"
+        },
+        "ResourceNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "ResourceNames identify specific objects on which this permission applies."
+        },
+        "Actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Actions are actions on a resource that a permission allows"
+        }
+      },
+      "description": "Permission defines if actions are allowed on resource group, resource type, resource name or arbitrary API endpoints."
     },
     "authRadius": {
       "type": "object",
       "properties": {
         "Enabled": {
           "type": "boolean",
-          "format": "boolean"
+          "format": "boolean",
+          "title": "Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint"
         },
         "Ip": {
           "type": "string"
@@ -954,7 +1597,119 @@
           "type": "string"
         }
       },
-      "title": "status part of authentication policy object"
+      "title": "spec part of role object"
+    },
+    "authRole": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/authRoleSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/authRoleStatus"
+        }
+      },
+      "title": "status part of role object"
+    },
+    "authRoleBinding": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/authRoleBindingSpec",
+          "description": "Spec contains the configuration of the role."
+        },
+        "Status": {
+          "$ref": "#/definitions/authRoleBindingStatus",
+          "description": "Status contains the current state of the role."
+        }
+      },
+      "title": "Role is a collection of permissions"
+    },
+    "authRoleBindingList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authRoleBinding"
+          }
+        }
+      },
+      "title": "spec part of role binding object"
+    },
+    "authRoleBindingSpec": {
+      "type": "object",
+      "properties": {
+        "Users": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "UserGroups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Role": {
+          "type": "string"
+        }
+      },
+      "title": "status part of role binding object"
+    },
+    "authRoleBindingStatus": {
+      "type": "object",
+      "title": "RoleBinding is an assignment of a role to users or groups"
+    },
+    "authRoleList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authRole"
+          }
+        }
+      }
+    },
+    "authRoleSpec": {
+      "type": "object",
+      "properties": {
+        "Permissions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authPermission"
+          }
+        }
+      }
+    },
+    "authRoleStatus": {
+      "type": "object"
     },
     "authTLSOptions": {
       "type": "object",
@@ -968,15 +1723,12 @@
           "format": "boolean"
         },
         "ServerName": {
-          "type": "string",
-          "description": "Spec contains configuration of authentication mechanisms."
+          "type": "string"
         },
         "TrustedCerts": {
-          "type": "string",
-          "description": "Status contains the current state of the authentication policy."
+          "type": "string"
         }
-      },
-      "title": "AuthenticationPolicy defines various authentication mechanisms available and order in which they are used"
+      }
     },
     "authUser": {
       "type": "object",

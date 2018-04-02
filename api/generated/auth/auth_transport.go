@@ -26,14 +26,24 @@ type grpcServerAuthV1 struct {
 	Endpoints EndpointsAuthV1Server
 
 	AutoAddAuthenticationPolicyHdlr    grpctransport.Handler
+	AutoAddRoleHdlr                    grpctransport.Handler
+	AutoAddRoleBindingHdlr             grpctransport.Handler
 	AutoAddUserHdlr                    grpctransport.Handler
 	AutoDeleteAuthenticationPolicyHdlr grpctransport.Handler
+	AutoDeleteRoleHdlr                 grpctransport.Handler
+	AutoDeleteRoleBindingHdlr          grpctransport.Handler
 	AutoDeleteUserHdlr                 grpctransport.Handler
 	AutoGetAuthenticationPolicyHdlr    grpctransport.Handler
+	AutoGetRoleHdlr                    grpctransport.Handler
+	AutoGetRoleBindingHdlr             grpctransport.Handler
 	AutoGetUserHdlr                    grpctransport.Handler
 	AutoListAuthenticationPolicyHdlr   grpctransport.Handler
+	AutoListRoleHdlr                   grpctransport.Handler
+	AutoListRoleBindingHdlr            grpctransport.Handler
 	AutoListUserHdlr                   grpctransport.Handler
 	AutoUpdateAuthenticationPolicyHdlr grpctransport.Handler
+	AutoUpdateRoleHdlr                 grpctransport.Handler
+	AutoUpdateRoleBindingHdlr          grpctransport.Handler
 	AutoUpdateUserHdlr                 grpctransport.Handler
 }
 
@@ -52,6 +62,20 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAuthenticationPolicy", logger)))...,
 		),
 
+		AutoAddRoleHdlr: grpctransport.NewServer(
+			endpoints.AutoAddRoleEndpoint,
+			DecodeGrpcReqRole,
+			EncodeGrpcRespRole,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRole", logger)))...,
+		),
+
+		AutoAddRoleBindingHdlr: grpctransport.NewServer(
+			endpoints.AutoAddRoleBindingEndpoint,
+			DecodeGrpcReqRoleBinding,
+			EncodeGrpcRespRoleBinding,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRoleBinding", logger)))...,
+		),
+
 		AutoAddUserHdlr: grpctransport.NewServer(
 			endpoints.AutoAddUserEndpoint,
 			DecodeGrpcReqUser,
@@ -64,6 +88,20 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			DecodeGrpcReqAuthenticationPolicy,
 			EncodeGrpcRespAuthenticationPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAuthenticationPolicy", logger)))...,
+		),
+
+		AutoDeleteRoleHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteRoleEndpoint,
+			DecodeGrpcReqRole,
+			EncodeGrpcRespRole,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRole", logger)))...,
+		),
+
+		AutoDeleteRoleBindingHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteRoleBindingEndpoint,
+			DecodeGrpcReqRoleBinding,
+			EncodeGrpcRespRoleBinding,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRoleBinding", logger)))...,
 		),
 
 		AutoDeleteUserHdlr: grpctransport.NewServer(
@@ -80,6 +118,20 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAuthenticationPolicy", logger)))...,
 		),
 
+		AutoGetRoleHdlr: grpctransport.NewServer(
+			endpoints.AutoGetRoleEndpoint,
+			DecodeGrpcReqRole,
+			EncodeGrpcRespRole,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRole", logger)))...,
+		),
+
+		AutoGetRoleBindingHdlr: grpctransport.NewServer(
+			endpoints.AutoGetRoleBindingEndpoint,
+			DecodeGrpcReqRoleBinding,
+			EncodeGrpcRespRoleBinding,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRoleBinding", logger)))...,
+		),
+
 		AutoGetUserHdlr: grpctransport.NewServer(
 			endpoints.AutoGetUserEndpoint,
 			DecodeGrpcReqUser,
@@ -94,6 +146,20 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAuthenticationPolicy", logger)))...,
 		),
 
+		AutoListRoleHdlr: grpctransport.NewServer(
+			endpoints.AutoListRoleEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespRoleList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRole", logger)))...,
+		),
+
+		AutoListRoleBindingHdlr: grpctransport.NewServer(
+			endpoints.AutoListRoleBindingEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespRoleBindingList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRoleBinding", logger)))...,
+		),
+
 		AutoListUserHdlr: grpctransport.NewServer(
 			endpoints.AutoListUserEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -106,6 +172,20 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			DecodeGrpcReqAuthenticationPolicy,
 			EncodeGrpcRespAuthenticationPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAuthenticationPolicy", logger)))...,
+		),
+
+		AutoUpdateRoleHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateRoleEndpoint,
+			DecodeGrpcReqRole,
+			EncodeGrpcRespRole,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRole", logger)))...,
+		),
+
+		AutoUpdateRoleBindingHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateRoleBindingEndpoint,
+			DecodeGrpcReqRoleBinding,
+			EncodeGrpcRespRoleBinding,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRoleBinding", logger)))...,
 		),
 
 		AutoUpdateUserHdlr: grpctransport.NewServer(
@@ -131,6 +211,42 @@ func decodeHTTPrespAuthV1AutoAddAuthenticationPolicy(_ context.Context, r *http.
 		return nil, errorDecoder(r)
 	}
 	var resp AuthenticationPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoAddRole(ctx oldcontext.Context, req *Role) (*Role, error) {
+	_, resp, err := s.AutoAddRoleHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoAddRole).V
+	return &r, resp.(respAuthV1AutoAddRole).Err
+}
+
+func decodeHTTPrespAuthV1AutoAddRole(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Role
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoAddRoleBinding(ctx oldcontext.Context, req *RoleBinding) (*RoleBinding, error) {
+	_, resp, err := s.AutoAddRoleBindingHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoAddRoleBinding).V
+	return &r, resp.(respAuthV1AutoAddRoleBinding).Err
+}
+
+func decodeHTTPrespAuthV1AutoAddRoleBinding(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoleBinding
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -171,6 +287,42 @@ func decodeHTTPrespAuthV1AutoDeleteAuthenticationPolicy(_ context.Context, r *ht
 	return &resp, err
 }
 
+func (s *grpcServerAuthV1) AutoDeleteRole(ctx oldcontext.Context, req *Role) (*Role, error) {
+	_, resp, err := s.AutoDeleteRoleHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoDeleteRole).V
+	return &r, resp.(respAuthV1AutoDeleteRole).Err
+}
+
+func decodeHTTPrespAuthV1AutoDeleteRole(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Role
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoDeleteRoleBinding(ctx oldcontext.Context, req *RoleBinding) (*RoleBinding, error) {
+	_, resp, err := s.AutoDeleteRoleBindingHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoDeleteRoleBinding).V
+	return &r, resp.(respAuthV1AutoDeleteRoleBinding).Err
+}
+
+func decodeHTTPrespAuthV1AutoDeleteRoleBinding(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoleBinding
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerAuthV1) AutoDeleteUser(ctx oldcontext.Context, req *User) (*User, error) {
 	_, resp, err := s.AutoDeleteUserHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -203,6 +355,42 @@ func decodeHTTPrespAuthV1AutoGetAuthenticationPolicy(_ context.Context, r *http.
 		return nil, errorDecoder(r)
 	}
 	var resp AuthenticationPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoGetRole(ctx oldcontext.Context, req *Role) (*Role, error) {
+	_, resp, err := s.AutoGetRoleHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoGetRole).V
+	return &r, resp.(respAuthV1AutoGetRole).Err
+}
+
+func decodeHTTPrespAuthV1AutoGetRole(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Role
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoGetRoleBinding(ctx oldcontext.Context, req *RoleBinding) (*RoleBinding, error) {
+	_, resp, err := s.AutoGetRoleBindingHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoGetRoleBinding).V
+	return &r, resp.(respAuthV1AutoGetRoleBinding).Err
+}
+
+func decodeHTTPrespAuthV1AutoGetRoleBinding(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoleBinding
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -243,6 +431,42 @@ func decodeHTTPrespAuthV1AutoListAuthenticationPolicy(_ context.Context, r *http
 	return &resp, err
 }
 
+func (s *grpcServerAuthV1) AutoListRole(ctx oldcontext.Context, req *api.ListWatchOptions) (*RoleList, error) {
+	_, resp, err := s.AutoListRoleHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoListRole).V
+	return &r, resp.(respAuthV1AutoListRole).Err
+}
+
+func decodeHTTPrespAuthV1AutoListRole(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoleList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoListRoleBinding(ctx oldcontext.Context, req *api.ListWatchOptions) (*RoleBindingList, error) {
+	_, resp, err := s.AutoListRoleBindingHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoListRoleBinding).V
+	return &r, resp.(respAuthV1AutoListRoleBinding).Err
+}
+
+func decodeHTTPrespAuthV1AutoListRoleBinding(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoleBindingList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerAuthV1) AutoListUser(ctx oldcontext.Context, req *api.ListWatchOptions) (*UserList, error) {
 	_, resp, err := s.AutoListUserHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -279,6 +503,42 @@ func decodeHTTPrespAuthV1AutoUpdateAuthenticationPolicy(_ context.Context, r *ht
 	return &resp, err
 }
 
+func (s *grpcServerAuthV1) AutoUpdateRole(ctx oldcontext.Context, req *Role) (*Role, error) {
+	_, resp, err := s.AutoUpdateRoleHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoUpdateRole).V
+	return &r, resp.(respAuthV1AutoUpdateRole).Err
+}
+
+func decodeHTTPrespAuthV1AutoUpdateRole(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Role
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoUpdateRoleBinding(ctx oldcontext.Context, req *RoleBinding) (*RoleBinding, error) {
+	_, resp, err := s.AutoUpdateRoleBindingHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoUpdateRoleBinding).V
+	return &r, resp.(respAuthV1AutoUpdateRoleBinding).Err
+}
+
+func decodeHTTPrespAuthV1AutoUpdateRoleBinding(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoleBinding
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerAuthV1) AutoUpdateUser(ctx oldcontext.Context, req *User) (*User, error) {
 	_, resp, err := s.AutoUpdateUserHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -303,6 +563,14 @@ func (s *grpcServerAuthV1) AutoWatchUser(in *api.ListWatchOptions, stream AuthV1
 
 func (s *grpcServerAuthV1) AutoWatchAuthenticationPolicy(in *api.ListWatchOptions, stream AuthV1_AutoWatchAuthenticationPolicyServer) error {
 	return s.Endpoints.AutoWatchAuthenticationPolicy(in, stream)
+}
+
+func (s *grpcServerAuthV1) AutoWatchRole(in *api.ListWatchOptions, stream AuthV1_AutoWatchRoleServer) error {
+	return s.Endpoints.AutoWatchRole(in, stream)
+}
+
+func (s *grpcServerAuthV1) AutoWatchRoleBinding(in *api.ListWatchOptions, stream AuthV1_AutoWatchRoleBindingServer) error {
+	return s.Endpoints.AutoWatchRoleBinding(in, stream)
 }
 
 func encodeHTTPAuthenticationPolicy(ctx context.Context, req *http.Request, request interface{}) error {
@@ -577,6 +845,40 @@ func DecodeGrpcRespLocal(ctx context.Context, response interface{}) (interface{}
 	return response, nil
 }
 
+func encodeHTTPPermission(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPermission(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Permission
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPermission encodes GRPC request
+func EncodeGrpcReqPermission(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Permission)
+	return req, nil
+}
+
+// DecodeGrpcReqPermission decodes GRPC request
+func DecodeGrpcReqPermission(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Permission)
+	return req, nil
+}
+
+// EncodeGrpcRespPermission encodes GRC response
+func EncodeGrpcRespPermission(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPermission decodes GRPC response
+func DecodeGrpcRespPermission(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPRadius(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -608,6 +910,278 @@ func EncodeGrpcRespRadius(ctx context.Context, response interface{}) (interface{
 
 // DecodeGrpcRespRadius decodes GRPC response
 func DecodeGrpcRespRadius(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRole(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRole(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Role
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRole encodes GRPC request
+func EncodeGrpcReqRole(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Role)
+	return req, nil
+}
+
+// DecodeGrpcReqRole decodes GRPC request
+func DecodeGrpcReqRole(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Role)
+	return req, nil
+}
+
+// EncodeGrpcRespRole encodes GRC response
+func EncodeGrpcRespRole(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRole decodes GRPC response
+func DecodeGrpcRespRole(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRoleBinding(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRoleBinding(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RoleBinding
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRoleBinding encodes GRPC request
+func EncodeGrpcReqRoleBinding(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleBinding)
+	return req, nil
+}
+
+// DecodeGrpcReqRoleBinding decodes GRPC request
+func DecodeGrpcReqRoleBinding(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleBinding)
+	return req, nil
+}
+
+// EncodeGrpcRespRoleBinding encodes GRC response
+func EncodeGrpcRespRoleBinding(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRoleBinding decodes GRPC response
+func DecodeGrpcRespRoleBinding(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRoleBindingList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRoleBindingList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RoleBindingList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRoleBindingList encodes GRPC request
+func EncodeGrpcReqRoleBindingList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleBindingList)
+	return req, nil
+}
+
+// DecodeGrpcReqRoleBindingList decodes GRPC request
+func DecodeGrpcReqRoleBindingList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleBindingList)
+	return req, nil
+}
+
+// EncodeGrpcRespRoleBindingList endodes the GRPC response
+func EncodeGrpcRespRoleBindingList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRoleBindingList decodes the GRPC response
+func DecodeGrpcRespRoleBindingList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRoleBindingSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRoleBindingSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RoleBindingSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRoleBindingSpec encodes GRPC request
+func EncodeGrpcReqRoleBindingSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleBindingSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqRoleBindingSpec decodes GRPC request
+func DecodeGrpcReqRoleBindingSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleBindingSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespRoleBindingSpec encodes GRC response
+func EncodeGrpcRespRoleBindingSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRoleBindingSpec decodes GRPC response
+func DecodeGrpcRespRoleBindingSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRoleBindingStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRoleBindingStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RoleBindingStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRoleBindingStatus encodes GRPC request
+func EncodeGrpcReqRoleBindingStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleBindingStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqRoleBindingStatus decodes GRPC request
+func DecodeGrpcReqRoleBindingStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleBindingStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespRoleBindingStatus encodes GRC response
+func EncodeGrpcRespRoleBindingStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRoleBindingStatus decodes GRPC response
+func DecodeGrpcRespRoleBindingStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRoleList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRoleList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RoleList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRoleList encodes GRPC request
+func EncodeGrpcReqRoleList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleList)
+	return req, nil
+}
+
+// DecodeGrpcReqRoleList decodes GRPC request
+func DecodeGrpcReqRoleList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleList)
+	return req, nil
+}
+
+// EncodeGrpcRespRoleList endodes the GRPC response
+func EncodeGrpcRespRoleList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRoleList decodes the GRPC response
+func DecodeGrpcRespRoleList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRoleSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRoleSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RoleSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRoleSpec encodes GRPC request
+func EncodeGrpcReqRoleSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqRoleSpec decodes GRPC request
+func DecodeGrpcReqRoleSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespRoleSpec encodes GRC response
+func EncodeGrpcRespRoleSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRoleSpec decodes GRPC response
+func DecodeGrpcRespRoleSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRoleStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRoleStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RoleStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRoleStatus encodes GRPC request
+func EncodeGrpcReqRoleStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqRoleStatus decodes GRPC request
+func DecodeGrpcReqRoleStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoleStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespRoleStatus encodes GRC response
+func EncodeGrpcRespRoleStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRoleStatus decodes GRPC response
+func DecodeGrpcRespRoleStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

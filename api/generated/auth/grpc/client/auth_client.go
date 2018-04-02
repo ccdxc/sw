@@ -42,6 +42,34 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		).Endpoint()
 		lAutoAddAuthenticationPolicyEndpoint = trace.ClientEndPoint("AuthV1:AutoAddAuthenticationPolicy")(lAutoAddAuthenticationPolicyEndpoint)
 	}
+	var lAutoAddRoleEndpoint endpoint.Endpoint
+	{
+		lAutoAddRoleEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoAddRole",
+			auth.EncodeGrpcReqRole,
+			auth.DecodeGrpcRespRole,
+			&auth.Role{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddRoleEndpoint = trace.ClientEndPoint("AuthV1:AutoAddRole")(lAutoAddRoleEndpoint)
+	}
+	var lAutoAddRoleBindingEndpoint endpoint.Endpoint
+	{
+		lAutoAddRoleBindingEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoAddRoleBinding",
+			auth.EncodeGrpcReqRoleBinding,
+			auth.DecodeGrpcRespRoleBinding,
+			&auth.RoleBinding{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddRoleBindingEndpoint = trace.ClientEndPoint("AuthV1:AutoAddRoleBinding")(lAutoAddRoleBindingEndpoint)
+	}
 	var lAutoAddUserEndpoint endpoint.Endpoint
 	{
 		lAutoAddUserEndpoint = grpctransport.NewClient(
@@ -69,6 +97,34 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteAuthenticationPolicyEndpoint = trace.ClientEndPoint("AuthV1:AutoDeleteAuthenticationPolicy")(lAutoDeleteAuthenticationPolicyEndpoint)
+	}
+	var lAutoDeleteRoleEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteRoleEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoDeleteRole",
+			auth.EncodeGrpcReqRole,
+			auth.DecodeGrpcRespRole,
+			&auth.Role{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteRoleEndpoint = trace.ClientEndPoint("AuthV1:AutoDeleteRole")(lAutoDeleteRoleEndpoint)
+	}
+	var lAutoDeleteRoleBindingEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteRoleBindingEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoDeleteRoleBinding",
+			auth.EncodeGrpcReqRoleBinding,
+			auth.DecodeGrpcRespRoleBinding,
+			&auth.RoleBinding{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteRoleBindingEndpoint = trace.ClientEndPoint("AuthV1:AutoDeleteRoleBinding")(lAutoDeleteRoleBindingEndpoint)
 	}
 	var lAutoDeleteUserEndpoint endpoint.Endpoint
 	{
@@ -98,6 +154,34 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		).Endpoint()
 		lAutoGetAuthenticationPolicyEndpoint = trace.ClientEndPoint("AuthV1:AutoGetAuthenticationPolicy")(lAutoGetAuthenticationPolicyEndpoint)
 	}
+	var lAutoGetRoleEndpoint endpoint.Endpoint
+	{
+		lAutoGetRoleEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoGetRole",
+			auth.EncodeGrpcReqRole,
+			auth.DecodeGrpcRespRole,
+			&auth.Role{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetRoleEndpoint = trace.ClientEndPoint("AuthV1:AutoGetRole")(lAutoGetRoleEndpoint)
+	}
+	var lAutoGetRoleBindingEndpoint endpoint.Endpoint
+	{
+		lAutoGetRoleBindingEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoGetRoleBinding",
+			auth.EncodeGrpcReqRoleBinding,
+			auth.DecodeGrpcRespRoleBinding,
+			&auth.RoleBinding{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetRoleBindingEndpoint = trace.ClientEndPoint("AuthV1:AutoGetRoleBinding")(lAutoGetRoleBindingEndpoint)
+	}
 	var lAutoGetUserEndpoint endpoint.Endpoint
 	{
 		lAutoGetUserEndpoint = grpctransport.NewClient(
@@ -125,6 +209,34 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListAuthenticationPolicyEndpoint = trace.ClientEndPoint("AuthV1:AutoListAuthenticationPolicy")(lAutoListAuthenticationPolicyEndpoint)
+	}
+	var lAutoListRoleEndpoint endpoint.Endpoint
+	{
+		lAutoListRoleEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoListRole",
+			auth.EncodeGrpcReqListWatchOptions,
+			auth.DecodeGrpcRespRoleList,
+			&auth.RoleList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListRoleEndpoint = trace.ClientEndPoint("AuthV1:AutoListRole")(lAutoListRoleEndpoint)
+	}
+	var lAutoListRoleBindingEndpoint endpoint.Endpoint
+	{
+		lAutoListRoleBindingEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoListRoleBinding",
+			auth.EncodeGrpcReqListWatchOptions,
+			auth.DecodeGrpcRespRoleBindingList,
+			&auth.RoleBindingList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListRoleBindingEndpoint = trace.ClientEndPoint("AuthV1:AutoListRoleBinding")(lAutoListRoleBindingEndpoint)
 	}
 	var lAutoListUserEndpoint endpoint.Endpoint
 	{
@@ -154,6 +266,34 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		).Endpoint()
 		lAutoUpdateAuthenticationPolicyEndpoint = trace.ClientEndPoint("AuthV1:AutoUpdateAuthenticationPolicy")(lAutoUpdateAuthenticationPolicyEndpoint)
 	}
+	var lAutoUpdateRoleEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateRoleEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoUpdateRole",
+			auth.EncodeGrpcReqRole,
+			auth.DecodeGrpcRespRole,
+			&auth.Role{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateRoleEndpoint = trace.ClientEndPoint("AuthV1:AutoUpdateRole")(lAutoUpdateRoleEndpoint)
+	}
+	var lAutoUpdateRoleBindingEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateRoleBindingEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoUpdateRoleBinding",
+			auth.EncodeGrpcReqRoleBinding,
+			auth.DecodeGrpcRespRoleBinding,
+			&auth.RoleBinding{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateRoleBindingEndpoint = trace.ClientEndPoint("AuthV1:AutoUpdateRoleBinding")(lAutoUpdateRoleBindingEndpoint)
+	}
 	var lAutoUpdateUserEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateUserEndpoint = grpctransport.NewClient(
@@ -172,14 +312,24 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		Client: auth.NewAuthV1Client(conn),
 
 		AutoAddAuthenticationPolicyEndpoint:    lAutoAddAuthenticationPolicyEndpoint,
+		AutoAddRoleEndpoint:                    lAutoAddRoleEndpoint,
+		AutoAddRoleBindingEndpoint:             lAutoAddRoleBindingEndpoint,
 		AutoAddUserEndpoint:                    lAutoAddUserEndpoint,
 		AutoDeleteAuthenticationPolicyEndpoint: lAutoDeleteAuthenticationPolicyEndpoint,
+		AutoDeleteRoleEndpoint:                 lAutoDeleteRoleEndpoint,
+		AutoDeleteRoleBindingEndpoint:          lAutoDeleteRoleBindingEndpoint,
 		AutoDeleteUserEndpoint:                 lAutoDeleteUserEndpoint,
 		AutoGetAuthenticationPolicyEndpoint:    lAutoGetAuthenticationPolicyEndpoint,
+		AutoGetRoleEndpoint:                    lAutoGetRoleEndpoint,
+		AutoGetRoleBindingEndpoint:             lAutoGetRoleBindingEndpoint,
 		AutoGetUserEndpoint:                    lAutoGetUserEndpoint,
 		AutoListAuthenticationPolicyEndpoint:   lAutoListAuthenticationPolicyEndpoint,
+		AutoListRoleEndpoint:                   lAutoListRoleEndpoint,
+		AutoListRoleBindingEndpoint:            lAutoListRoleBindingEndpoint,
 		AutoListUserEndpoint:                   lAutoListUserEndpoint,
 		AutoUpdateAuthenticationPolicyEndpoint: lAutoUpdateAuthenticationPolicyEndpoint,
+		AutoUpdateRoleEndpoint:                 lAutoUpdateRoleEndpoint,
+		AutoUpdateRoleBindingEndpoint:          lAutoUpdateRoleBindingEndpoint,
 		AutoUpdateUserEndpoint:                 lAutoUpdateUserEndpoint,
 	}
 }
@@ -529,9 +679,349 @@ func (a *restObjAuthV1AuthenticationPolicy) Allowed(oper apiserver.APIOperType) 
 	}
 }
 
+type grpcObjAuthV1Role struct {
+	logger log.Logger
+	client auth.ServiceAuthV1Client
+}
+
+func (a *grpcObjAuthV1Role) Create(ctx context.Context, in *auth.Role) (*auth.Role, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Role", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddRole(nctx, in)
+}
+
+func (a *grpcObjAuthV1Role) Update(ctx context.Context, in *auth.Role) (*auth.Role, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Role", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateRole(nctx, in)
+}
+
+func (a *grpcObjAuthV1Role) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.Role, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Role", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.Role{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetRole(nctx, &in)
+}
+
+func (a *grpcObjAuthV1Role) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*auth.Role, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Role", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.Role{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteRole(nctx, &in)
+}
+
+func (a *grpcObjAuthV1Role) List(ctx context.Context, options *api.ListWatchOptions) ([]*auth.Role, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Role", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListRole(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjAuthV1Role) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Role", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchRole(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(auth.AuthV1_AutoWatchRoleClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			ev := kvstore.WatchEvent{
+				Type:   kvstore.WatchEventType(r.Type),
+				Object: r.Object,
+			}
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjAuthV1Role) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjAuthV1Role struct {
+	endpoints auth.EndpointsAuthV1RestClient
+	instance  string
+}
+
+func (a *restObjAuthV1Role) Create(ctx context.Context, in *auth.Role) (*auth.Role, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddRole(ctx, in)
+}
+
+func (a *restObjAuthV1Role) Update(ctx context.Context, in *auth.Role) (*auth.Role, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateRole(ctx, in)
+}
+
+func (a *restObjAuthV1Role) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.Role, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.Role{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetRole(ctx, &in)
+}
+
+func (a *restObjAuthV1Role) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*auth.Role, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.Role{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteRole(ctx, &in)
+}
+
+func (a *restObjAuthV1Role) List(ctx context.Context, options *api.ListWatchOptions) ([]*auth.Role, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	r, err := a.endpoints.AutoListRole(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjAuthV1Role) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not allowed")
+}
+
+func (a *restObjAuthV1Role) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return true
+	case apiserver.UpdateOper:
+		return true
+	case apiserver.GetOper:
+		return true
+	case apiserver.DeleteOper:
+		return true
+	case apiserver.ListOper:
+		return true
+	case apiserver.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
+type grpcObjAuthV1RoleBinding struct {
+	logger log.Logger
+	client auth.ServiceAuthV1Client
+}
+
+func (a *grpcObjAuthV1RoleBinding) Create(ctx context.Context, in *auth.RoleBinding) (*auth.RoleBinding, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoleBinding", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddRoleBinding(nctx, in)
+}
+
+func (a *grpcObjAuthV1RoleBinding) Update(ctx context.Context, in *auth.RoleBinding) (*auth.RoleBinding, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoleBinding", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateRoleBinding(nctx, in)
+}
+
+func (a *grpcObjAuthV1RoleBinding) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.RoleBinding, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoleBinding", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.RoleBinding{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetRoleBinding(nctx, &in)
+}
+
+func (a *grpcObjAuthV1RoleBinding) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*auth.RoleBinding, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoleBinding", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.RoleBinding{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteRoleBinding(nctx, &in)
+}
+
+func (a *grpcObjAuthV1RoleBinding) List(ctx context.Context, options *api.ListWatchOptions) ([]*auth.RoleBinding, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoleBinding", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListRoleBinding(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjAuthV1RoleBinding) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoleBinding", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchRoleBinding(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(auth.AuthV1_AutoWatchRoleBindingClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			ev := kvstore.WatchEvent{
+				Type:   kvstore.WatchEventType(r.Type),
+				Object: r.Object,
+			}
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjAuthV1RoleBinding) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjAuthV1RoleBinding struct {
+	endpoints auth.EndpointsAuthV1RestClient
+	instance  string
+}
+
+func (a *restObjAuthV1RoleBinding) Create(ctx context.Context, in *auth.RoleBinding) (*auth.RoleBinding, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddRoleBinding(ctx, in)
+}
+
+func (a *restObjAuthV1RoleBinding) Update(ctx context.Context, in *auth.RoleBinding) (*auth.RoleBinding, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateRoleBinding(ctx, in)
+}
+
+func (a *restObjAuthV1RoleBinding) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.RoleBinding, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.RoleBinding{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetRoleBinding(ctx, &in)
+}
+
+func (a *restObjAuthV1RoleBinding) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*auth.RoleBinding, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.RoleBinding{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteRoleBinding(ctx, &in)
+}
+
+func (a *restObjAuthV1RoleBinding) List(ctx context.Context, options *api.ListWatchOptions) ([]*auth.RoleBinding, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	r, err := a.endpoints.AutoListRoleBinding(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjAuthV1RoleBinding) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not allowed")
+}
+
+func (a *restObjAuthV1RoleBinding) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return true
+	case apiserver.UpdateOper:
+		return true
+	case apiserver.GetOper:
+		return true
+	case apiserver.DeleteOper:
+		return true
+	case apiserver.ListOper:
+		return true
+	case apiserver.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
 type crudClientAuthV1 struct {
 	grpcUser                 auth.AuthV1UserInterface
 	grpcAuthenticationPolicy auth.AuthV1AuthenticationPolicyInterface
+	grpcRole                 auth.AuthV1RoleInterface
+	grpcRoleBinding          auth.AuthV1RoleBindingInterface
 }
 
 // NewGrpcCrudClientAuthV1 creates a GRPC client for the service
@@ -541,6 +1031,8 @@ func NewGrpcCrudClientAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.Auth
 
 		grpcUser:                 &grpcObjAuthV1User{client: client, logger: logger},
 		grpcAuthenticationPolicy: &grpcObjAuthV1AuthenticationPolicy{client: client, logger: logger},
+		grpcRole:                 &grpcObjAuthV1Role{client: client, logger: logger},
+		grpcRoleBinding:          &grpcObjAuthV1RoleBinding{client: client, logger: logger},
 	}
 }
 
@@ -552,9 +1044,19 @@ func (a *crudClientAuthV1) AuthenticationPolicy() auth.AuthV1AuthenticationPolic
 	return a.grpcAuthenticationPolicy
 }
 
+func (a *crudClientAuthV1) Role() auth.AuthV1RoleInterface {
+	return a.grpcRole
+}
+
+func (a *crudClientAuthV1) RoleBinding() auth.AuthV1RoleBindingInterface {
+	return a.grpcRoleBinding
+}
+
 type crudRestClientAuthV1 struct {
 	restUser                 auth.AuthV1UserInterface
 	restAuthenticationPolicy auth.AuthV1AuthenticationPolicyInterface
+	restRole                 auth.AuthV1RoleInterface
+	restRoleBinding          auth.AuthV1RoleBindingInterface
 }
 
 // NewRestCrudClientAuthV1 creates a REST client for the service.
@@ -567,6 +1069,8 @@ func NewRestCrudClientAuthV1(url string) auth.AuthV1Interface {
 
 		restUser:                 &restObjAuthV1User{endpoints: endpoints, instance: url},
 		restAuthenticationPolicy: &restObjAuthV1AuthenticationPolicy{endpoints: endpoints, instance: url},
+		restRole:                 &restObjAuthV1Role{endpoints: endpoints, instance: url},
+		restRoleBinding:          &restObjAuthV1RoleBinding{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -576,4 +1080,12 @@ func (a *crudRestClientAuthV1) User() auth.AuthV1UserInterface {
 
 func (a *crudRestClientAuthV1) AuthenticationPolicy() auth.AuthV1AuthenticationPolicyInterface {
 	return a.restAuthenticationPolicy
+}
+
+func (a *crudRestClientAuthV1) Role() auth.AuthV1RoleInterface {
+	return a.restRole
+}
+
+func (a *crudRestClientAuthV1) RoleBinding() auth.AuthV1RoleBindingInterface {
+	return a.restRoleBinding
 }

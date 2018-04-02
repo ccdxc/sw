@@ -65,6 +65,42 @@ func (a adapterAuthV1) AutoAddAuthenticationPolicy(oldctx oldcontext.Context, t 
 	return ret.(*auth.AuthenticationPolicy), err
 }
 
+func (a adapterAuthV1) AutoAddRole(oldctx oldcontext.Context, t *auth.Role, options ...grpc.CallOption) (*auth.Role, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddRole")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.Role)
+		return a.service.AutoAddRole(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.Role), err
+}
+
+func (a adapterAuthV1) AutoAddRoleBinding(oldctx oldcontext.Context, t *auth.RoleBinding, options ...grpc.CallOption) (*auth.RoleBinding, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddRoleBinding")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.RoleBinding)
+		return a.service.AutoAddRoleBinding(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.RoleBinding), err
+}
+
 func (a adapterAuthV1) AutoAddUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -99,6 +135,42 @@ func (a adapterAuthV1) AutoDeleteAuthenticationPolicy(oldctx oldcontext.Context,
 		return nil, err
 	}
 	return ret.(*auth.AuthenticationPolicy), err
+}
+
+func (a adapterAuthV1) AutoDeleteRole(oldctx oldcontext.Context, t *auth.Role, options ...grpc.CallOption) (*auth.Role, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteRole")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.Role)
+		return a.service.AutoDeleteRole(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.Role), err
+}
+
+func (a adapterAuthV1) AutoDeleteRoleBinding(oldctx oldcontext.Context, t *auth.RoleBinding, options ...grpc.CallOption) (*auth.RoleBinding, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteRoleBinding")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.RoleBinding)
+		return a.service.AutoDeleteRoleBinding(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.RoleBinding), err
 }
 
 func (a adapterAuthV1) AutoDeleteUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
@@ -137,6 +209,42 @@ func (a adapterAuthV1) AutoGetAuthenticationPolicy(oldctx oldcontext.Context, t 
 	return ret.(*auth.AuthenticationPolicy), err
 }
 
+func (a adapterAuthV1) AutoGetRole(oldctx oldcontext.Context, t *auth.Role, options ...grpc.CallOption) (*auth.Role, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetRole")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.Role)
+		return a.service.AutoGetRole(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.Role), err
+}
+
+func (a adapterAuthV1) AutoGetRoleBinding(oldctx oldcontext.Context, t *auth.RoleBinding, options ...grpc.CallOption) (*auth.RoleBinding, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetRoleBinding")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.RoleBinding)
+		return a.service.AutoGetRoleBinding(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.RoleBinding), err
+}
+
 func (a adapterAuthV1) AutoGetUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -171,6 +279,42 @@ func (a adapterAuthV1) AutoListAuthenticationPolicy(oldctx oldcontext.Context, t
 		return nil, err
 	}
 	return ret.(*auth.AuthenticationPolicyList), err
+}
+
+func (a adapterAuthV1) AutoListRole(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.RoleList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListRole")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListRole(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.RoleList), err
+}
+
+func (a adapterAuthV1) AutoListRoleBinding(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.RoleBindingList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListRoleBinding")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListRoleBinding(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.RoleBindingList), err
 }
 
 func (a adapterAuthV1) AutoListUser(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.UserList, error) {
@@ -209,6 +353,42 @@ func (a adapterAuthV1) AutoUpdateAuthenticationPolicy(oldctx oldcontext.Context,
 	return ret.(*auth.AuthenticationPolicy), err
 }
 
+func (a adapterAuthV1) AutoUpdateRole(oldctx oldcontext.Context, t *auth.Role, options ...grpc.CallOption) (*auth.Role, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateRole")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.Role)
+		return a.service.AutoUpdateRole(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.Role), err
+}
+
+func (a adapterAuthV1) AutoUpdateRoleBinding(oldctx oldcontext.Context, t *auth.RoleBinding, options ...grpc.CallOption) (*auth.RoleBinding, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateRoleBinding")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.RoleBinding)
+		return a.service.AutoUpdateRoleBinding(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.RoleBinding), err
+}
+
 func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -237,18 +417,38 @@ func (a adapterAuthV1) AutoWatchAuthenticationPolicy(oldctx oldcontext.Context, 
 	return a.service.AutoWatchAuthenticationPolicy(ctx, in)
 }
 
+func (a adapterAuthV1) AutoWatchRole(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchRoleClient, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchRole(ctx, in)
+}
+
+func (a adapterAuthV1) AutoWatchRoleBinding(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchRoleBindingClient, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchRoleBinding(ctx, in)
+}
+
 func (e *sAuthV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
 	e.svcProf["AutoAddAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
 

@@ -36,14 +36,24 @@ type EndpointsAuthV1Client struct {
 	Client AuthV1Client
 
 	AutoAddAuthenticationPolicyEndpoint    endpoint.Endpoint
+	AutoAddRoleEndpoint                    endpoint.Endpoint
+	AutoAddRoleBindingEndpoint             endpoint.Endpoint
 	AutoAddUserEndpoint                    endpoint.Endpoint
 	AutoDeleteAuthenticationPolicyEndpoint endpoint.Endpoint
+	AutoDeleteRoleEndpoint                 endpoint.Endpoint
+	AutoDeleteRoleBindingEndpoint          endpoint.Endpoint
 	AutoDeleteUserEndpoint                 endpoint.Endpoint
 	AutoGetAuthenticationPolicyEndpoint    endpoint.Endpoint
+	AutoGetRoleEndpoint                    endpoint.Endpoint
+	AutoGetRoleBindingEndpoint             endpoint.Endpoint
 	AutoGetUserEndpoint                    endpoint.Endpoint
 	AutoListAuthenticationPolicyEndpoint   endpoint.Endpoint
+	AutoListRoleEndpoint                   endpoint.Endpoint
+	AutoListRoleBindingEndpoint            endpoint.Endpoint
 	AutoListUserEndpoint                   endpoint.Endpoint
 	AutoUpdateAuthenticationPolicyEndpoint endpoint.Endpoint
+	AutoUpdateRoleEndpoint                 endpoint.Endpoint
+	AutoUpdateRoleBindingEndpoint          endpoint.Endpoint
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
 }
 
@@ -54,16 +64,28 @@ type EndpointsAuthV1RestClient struct {
 	instance string
 
 	AutoAddAuthenticationPolicyEndpoint    endpoint.Endpoint
+	AutoAddRoleEndpoint                    endpoint.Endpoint
+	AutoAddRoleBindingEndpoint             endpoint.Endpoint
 	AutoAddUserEndpoint                    endpoint.Endpoint
 	AutoDeleteAuthenticationPolicyEndpoint endpoint.Endpoint
+	AutoDeleteRoleEndpoint                 endpoint.Endpoint
+	AutoDeleteRoleBindingEndpoint          endpoint.Endpoint
 	AutoDeleteUserEndpoint                 endpoint.Endpoint
 	AutoGetAuthenticationPolicyEndpoint    endpoint.Endpoint
+	AutoGetRoleEndpoint                    endpoint.Endpoint
+	AutoGetRoleBindingEndpoint             endpoint.Endpoint
 	AutoGetUserEndpoint                    endpoint.Endpoint
 	AutoListAuthenticationPolicyEndpoint   endpoint.Endpoint
+	AutoListRoleEndpoint                   endpoint.Endpoint
+	AutoListRoleBindingEndpoint            endpoint.Endpoint
 	AutoListUserEndpoint                   endpoint.Endpoint
 	AutoUpdateAuthenticationPolicyEndpoint endpoint.Endpoint
+	AutoUpdateRoleEndpoint                 endpoint.Endpoint
+	AutoUpdateRoleBindingEndpoint          endpoint.Endpoint
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
 	AutoWatchAuthenticationPolicyEndpoint  endpoint.Endpoint
+	AutoWatchRoleEndpoint                  endpoint.Endpoint
+	AutoWatchRoleBindingEndpoint           endpoint.Endpoint
 	AutoWatchUserEndpoint                  endpoint.Endpoint
 }
 
@@ -73,18 +95,30 @@ type MiddlewareAuthV1Server func(ServiceAuthV1Server) ServiceAuthV1Server
 // EndpointsAuthV1Server is the server endpoints
 type EndpointsAuthV1Server struct {
 	AutoAddAuthenticationPolicyEndpoint    endpoint.Endpoint
+	AutoAddRoleEndpoint                    endpoint.Endpoint
+	AutoAddRoleBindingEndpoint             endpoint.Endpoint
 	AutoAddUserEndpoint                    endpoint.Endpoint
 	AutoDeleteAuthenticationPolicyEndpoint endpoint.Endpoint
+	AutoDeleteRoleEndpoint                 endpoint.Endpoint
+	AutoDeleteRoleBindingEndpoint          endpoint.Endpoint
 	AutoDeleteUserEndpoint                 endpoint.Endpoint
 	AutoGetAuthenticationPolicyEndpoint    endpoint.Endpoint
+	AutoGetRoleEndpoint                    endpoint.Endpoint
+	AutoGetRoleBindingEndpoint             endpoint.Endpoint
 	AutoGetUserEndpoint                    endpoint.Endpoint
 	AutoListAuthenticationPolicyEndpoint   endpoint.Endpoint
+	AutoListRoleEndpoint                   endpoint.Endpoint
+	AutoListRoleBindingEndpoint            endpoint.Endpoint
 	AutoListUserEndpoint                   endpoint.Endpoint
 	AutoUpdateAuthenticationPolicyEndpoint endpoint.Endpoint
+	AutoUpdateRoleEndpoint                 endpoint.Endpoint
+	AutoUpdateRoleBindingEndpoint          endpoint.Endpoint
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
 
 	watchHandlerUser                 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerAuthenticationPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerRole                 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerRoleBinding          func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AutoAddAuthenticationPolicy is endpoint for AutoAddAuthenticationPolicy
@@ -98,6 +132,34 @@ func (e EndpointsAuthV1Client) AutoAddAuthenticationPolicy(ctx context.Context, 
 
 type respAuthV1AutoAddAuthenticationPolicy struct {
 	V   AuthenticationPolicy
+	Err error
+}
+
+// AutoAddRole is endpoint for AutoAddRole
+func (e EndpointsAuthV1Client) AutoAddRole(ctx context.Context, in *Role) (*Role, error) {
+	resp, err := e.AutoAddRoleEndpoint(ctx, in)
+	if err != nil {
+		return &Role{}, err
+	}
+	return resp.(*Role), nil
+}
+
+type respAuthV1AutoAddRole struct {
+	V   Role
+	Err error
+}
+
+// AutoAddRoleBinding is endpoint for AutoAddRoleBinding
+func (e EndpointsAuthV1Client) AutoAddRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
+	resp, err := e.AutoAddRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return &RoleBinding{}, err
+	}
+	return resp.(*RoleBinding), nil
+}
+
+type respAuthV1AutoAddRoleBinding struct {
+	V   RoleBinding
 	Err error
 }
 
@@ -129,6 +191,34 @@ type respAuthV1AutoDeleteAuthenticationPolicy struct {
 	Err error
 }
 
+// AutoDeleteRole is endpoint for AutoDeleteRole
+func (e EndpointsAuthV1Client) AutoDeleteRole(ctx context.Context, in *Role) (*Role, error) {
+	resp, err := e.AutoDeleteRoleEndpoint(ctx, in)
+	if err != nil {
+		return &Role{}, err
+	}
+	return resp.(*Role), nil
+}
+
+type respAuthV1AutoDeleteRole struct {
+	V   Role
+	Err error
+}
+
+// AutoDeleteRoleBinding is endpoint for AutoDeleteRoleBinding
+func (e EndpointsAuthV1Client) AutoDeleteRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
+	resp, err := e.AutoDeleteRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return &RoleBinding{}, err
+	}
+	return resp.(*RoleBinding), nil
+}
+
+type respAuthV1AutoDeleteRoleBinding struct {
+	V   RoleBinding
+	Err error
+}
+
 // AutoDeleteUser is endpoint for AutoDeleteUser
 func (e EndpointsAuthV1Client) AutoDeleteUser(ctx context.Context, in *User) (*User, error) {
 	resp, err := e.AutoDeleteUserEndpoint(ctx, in)
@@ -154,6 +244,34 @@ func (e EndpointsAuthV1Client) AutoGetAuthenticationPolicy(ctx context.Context, 
 
 type respAuthV1AutoGetAuthenticationPolicy struct {
 	V   AuthenticationPolicy
+	Err error
+}
+
+// AutoGetRole is endpoint for AutoGetRole
+func (e EndpointsAuthV1Client) AutoGetRole(ctx context.Context, in *Role) (*Role, error) {
+	resp, err := e.AutoGetRoleEndpoint(ctx, in)
+	if err != nil {
+		return &Role{}, err
+	}
+	return resp.(*Role), nil
+}
+
+type respAuthV1AutoGetRole struct {
+	V   Role
+	Err error
+}
+
+// AutoGetRoleBinding is endpoint for AutoGetRoleBinding
+func (e EndpointsAuthV1Client) AutoGetRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
+	resp, err := e.AutoGetRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return &RoleBinding{}, err
+	}
+	return resp.(*RoleBinding), nil
+}
+
+type respAuthV1AutoGetRoleBinding struct {
+	V   RoleBinding
 	Err error
 }
 
@@ -185,6 +303,34 @@ type respAuthV1AutoListAuthenticationPolicy struct {
 	Err error
 }
 
+// AutoListRole is endpoint for AutoListRole
+func (e EndpointsAuthV1Client) AutoListRole(ctx context.Context, in *api.ListWatchOptions) (*RoleList, error) {
+	resp, err := e.AutoListRoleEndpoint(ctx, in)
+	if err != nil {
+		return &RoleList{}, err
+	}
+	return resp.(*RoleList), nil
+}
+
+type respAuthV1AutoListRole struct {
+	V   RoleList
+	Err error
+}
+
+// AutoListRoleBinding is endpoint for AutoListRoleBinding
+func (e EndpointsAuthV1Client) AutoListRoleBinding(ctx context.Context, in *api.ListWatchOptions) (*RoleBindingList, error) {
+	resp, err := e.AutoListRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return &RoleBindingList{}, err
+	}
+	return resp.(*RoleBindingList), nil
+}
+
+type respAuthV1AutoListRoleBinding struct {
+	V   RoleBindingList
+	Err error
+}
+
 // AutoListUser is endpoint for AutoListUser
 func (e EndpointsAuthV1Client) AutoListUser(ctx context.Context, in *api.ListWatchOptions) (*UserList, error) {
 	resp, err := e.AutoListUserEndpoint(ctx, in)
@@ -213,6 +359,34 @@ type respAuthV1AutoUpdateAuthenticationPolicy struct {
 	Err error
 }
 
+// AutoUpdateRole is endpoint for AutoUpdateRole
+func (e EndpointsAuthV1Client) AutoUpdateRole(ctx context.Context, in *Role) (*Role, error) {
+	resp, err := e.AutoUpdateRoleEndpoint(ctx, in)
+	if err != nil {
+		return &Role{}, err
+	}
+	return resp.(*Role), nil
+}
+
+type respAuthV1AutoUpdateRole struct {
+	V   Role
+	Err error
+}
+
+// AutoUpdateRoleBinding is endpoint for AutoUpdateRoleBinding
+func (e EndpointsAuthV1Client) AutoUpdateRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
+	resp, err := e.AutoUpdateRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return &RoleBinding{}, err
+	}
+	return resp.(*RoleBinding), nil
+}
+
+type respAuthV1AutoUpdateRoleBinding struct {
+	V   RoleBinding
+	Err error
+}
+
 // AutoUpdateUser is endpoint for AutoUpdateUser
 func (e EndpointsAuthV1Client) AutoUpdateUser(ctx context.Context, in *User) (*User, error) {
 	resp, err := e.AutoUpdateUserEndpoint(ctx, in)
@@ -237,6 +411,16 @@ func (e EndpointsAuthV1Client) AutoWatchAuthenticationPolicy(ctx context.Context
 	return e.Client.AutoWatchAuthenticationPolicy(ctx, in)
 }
 
+// AutoWatchRole performs Watch for Role
+func (e EndpointsAuthV1Client) AutoWatchRole(ctx context.Context, in *api.ListWatchOptions) (AuthV1_AutoWatchRoleClient, error) {
+	return e.Client.AutoWatchRole(ctx, in)
+}
+
+// AutoWatchRoleBinding performs Watch for RoleBinding
+func (e EndpointsAuthV1Client) AutoWatchRoleBinding(ctx context.Context, in *api.ListWatchOptions) (AuthV1_AutoWatchRoleBindingClient, error) {
+	return e.Client.AutoWatchRoleBinding(ctx, in)
+}
+
 // AutoAddAuthenticationPolicy implementation on server Endpoint
 func (e EndpointsAuthV1Server) AutoAddAuthenticationPolicy(ctx context.Context, in AuthenticationPolicy) (AuthenticationPolicy, error) {
 	resp, err := e.AutoAddAuthenticationPolicyEndpoint(ctx, in)
@@ -257,6 +441,50 @@ func MakeAuthV1AutoAddAuthenticationPolicyEndpoint(s ServiceAuthV1Server, logger
 		}, nil
 	}
 	return trace.ServerEndpoint("AuthV1:AutoAddAuthenticationPolicy")(f)
+}
+
+// AutoAddRole implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoAddRole(ctx context.Context, in Role) (Role, error) {
+	resp, err := e.AutoAddRoleEndpoint(ctx, in)
+	if err != nil {
+		return Role{}, err
+	}
+	return *resp.(*Role), nil
+}
+
+// MakeAuthV1AutoAddRoleEndpoint creates  AutoAddRole endpoints for the service
+func MakeAuthV1AutoAddRoleEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Role)
+		v, err := s.AutoAddRole(ctx, *req)
+		return respAuthV1AutoAddRole{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoAddRole")(f)
+}
+
+// AutoAddRoleBinding implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoAddRoleBinding(ctx context.Context, in RoleBinding) (RoleBinding, error) {
+	resp, err := e.AutoAddRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return RoleBinding{}, err
+	}
+	return *resp.(*RoleBinding), nil
+}
+
+// MakeAuthV1AutoAddRoleBindingEndpoint creates  AutoAddRoleBinding endpoints for the service
+func MakeAuthV1AutoAddRoleBindingEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RoleBinding)
+		v, err := s.AutoAddRoleBinding(ctx, *req)
+		return respAuthV1AutoAddRoleBinding{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoAddRoleBinding")(f)
 }
 
 // AutoAddUser implementation on server Endpoint
@@ -303,6 +531,50 @@ func MakeAuthV1AutoDeleteAuthenticationPolicyEndpoint(s ServiceAuthV1Server, log
 	return trace.ServerEndpoint("AuthV1:AutoDeleteAuthenticationPolicy")(f)
 }
 
+// AutoDeleteRole implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoDeleteRole(ctx context.Context, in Role) (Role, error) {
+	resp, err := e.AutoDeleteRoleEndpoint(ctx, in)
+	if err != nil {
+		return Role{}, err
+	}
+	return *resp.(*Role), nil
+}
+
+// MakeAuthV1AutoDeleteRoleEndpoint creates  AutoDeleteRole endpoints for the service
+func MakeAuthV1AutoDeleteRoleEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Role)
+		v, err := s.AutoDeleteRole(ctx, *req)
+		return respAuthV1AutoDeleteRole{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoDeleteRole")(f)
+}
+
+// AutoDeleteRoleBinding implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoDeleteRoleBinding(ctx context.Context, in RoleBinding) (RoleBinding, error) {
+	resp, err := e.AutoDeleteRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return RoleBinding{}, err
+	}
+	return *resp.(*RoleBinding), nil
+}
+
+// MakeAuthV1AutoDeleteRoleBindingEndpoint creates  AutoDeleteRoleBinding endpoints for the service
+func MakeAuthV1AutoDeleteRoleBindingEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RoleBinding)
+		v, err := s.AutoDeleteRoleBinding(ctx, *req)
+		return respAuthV1AutoDeleteRoleBinding{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoDeleteRoleBinding")(f)
+}
+
 // AutoDeleteUser implementation on server Endpoint
 func (e EndpointsAuthV1Server) AutoDeleteUser(ctx context.Context, in User) (User, error) {
 	resp, err := e.AutoDeleteUserEndpoint(ctx, in)
@@ -345,6 +617,50 @@ func MakeAuthV1AutoGetAuthenticationPolicyEndpoint(s ServiceAuthV1Server, logger
 		}, nil
 	}
 	return trace.ServerEndpoint("AuthV1:AutoGetAuthenticationPolicy")(f)
+}
+
+// AutoGetRole implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoGetRole(ctx context.Context, in Role) (Role, error) {
+	resp, err := e.AutoGetRoleEndpoint(ctx, in)
+	if err != nil {
+		return Role{}, err
+	}
+	return *resp.(*Role), nil
+}
+
+// MakeAuthV1AutoGetRoleEndpoint creates  AutoGetRole endpoints for the service
+func MakeAuthV1AutoGetRoleEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Role)
+		v, err := s.AutoGetRole(ctx, *req)
+		return respAuthV1AutoGetRole{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoGetRole")(f)
+}
+
+// AutoGetRoleBinding implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoGetRoleBinding(ctx context.Context, in RoleBinding) (RoleBinding, error) {
+	resp, err := e.AutoGetRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return RoleBinding{}, err
+	}
+	return *resp.(*RoleBinding), nil
+}
+
+// MakeAuthV1AutoGetRoleBindingEndpoint creates  AutoGetRoleBinding endpoints for the service
+func MakeAuthV1AutoGetRoleBindingEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RoleBinding)
+		v, err := s.AutoGetRoleBinding(ctx, *req)
+		return respAuthV1AutoGetRoleBinding{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoGetRoleBinding")(f)
 }
 
 // AutoGetUser implementation on server Endpoint
@@ -391,6 +707,50 @@ func MakeAuthV1AutoListAuthenticationPolicyEndpoint(s ServiceAuthV1Server, logge
 	return trace.ServerEndpoint("AuthV1:AutoListAuthenticationPolicy")(f)
 }
 
+// AutoListRole implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoListRole(ctx context.Context, in api.ListWatchOptions) (RoleList, error) {
+	resp, err := e.AutoListRoleEndpoint(ctx, in)
+	if err != nil {
+		return RoleList{}, err
+	}
+	return *resp.(*RoleList), nil
+}
+
+// MakeAuthV1AutoListRoleEndpoint creates  AutoListRole endpoints for the service
+func MakeAuthV1AutoListRoleEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListRole(ctx, *req)
+		return respAuthV1AutoListRole{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoListRole")(f)
+}
+
+// AutoListRoleBinding implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoListRoleBinding(ctx context.Context, in api.ListWatchOptions) (RoleBindingList, error) {
+	resp, err := e.AutoListRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return RoleBindingList{}, err
+	}
+	return *resp.(*RoleBindingList), nil
+}
+
+// MakeAuthV1AutoListRoleBindingEndpoint creates  AutoListRoleBinding endpoints for the service
+func MakeAuthV1AutoListRoleBindingEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListRoleBinding(ctx, *req)
+		return respAuthV1AutoListRoleBinding{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoListRoleBinding")(f)
+}
+
 // AutoListUser implementation on server Endpoint
 func (e EndpointsAuthV1Server) AutoListUser(ctx context.Context, in api.ListWatchOptions) (UserList, error) {
 	resp, err := e.AutoListUserEndpoint(ctx, in)
@@ -433,6 +793,50 @@ func MakeAuthV1AutoUpdateAuthenticationPolicyEndpoint(s ServiceAuthV1Server, log
 		}, nil
 	}
 	return trace.ServerEndpoint("AuthV1:AutoUpdateAuthenticationPolicy")(f)
+}
+
+// AutoUpdateRole implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoUpdateRole(ctx context.Context, in Role) (Role, error) {
+	resp, err := e.AutoUpdateRoleEndpoint(ctx, in)
+	if err != nil {
+		return Role{}, err
+	}
+	return *resp.(*Role), nil
+}
+
+// MakeAuthV1AutoUpdateRoleEndpoint creates  AutoUpdateRole endpoints for the service
+func MakeAuthV1AutoUpdateRoleEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Role)
+		v, err := s.AutoUpdateRole(ctx, *req)
+		return respAuthV1AutoUpdateRole{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoUpdateRole")(f)
+}
+
+// AutoUpdateRoleBinding implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoUpdateRoleBinding(ctx context.Context, in RoleBinding) (RoleBinding, error) {
+	resp, err := e.AutoUpdateRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return RoleBinding{}, err
+	}
+	return *resp.(*RoleBinding), nil
+}
+
+// MakeAuthV1AutoUpdateRoleBindingEndpoint creates  AutoUpdateRoleBinding endpoints for the service
+func MakeAuthV1AutoUpdateRoleBindingEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RoleBinding)
+		v, err := s.AutoUpdateRoleBinding(ctx, *req)
+		return respAuthV1AutoUpdateRoleBinding{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoUpdateRoleBinding")(f)
 }
 
 // AutoUpdateUser implementation on server Endpoint
@@ -483,23 +887,61 @@ func MakeAutoWatchAuthenticationPolicyEndpoint(s ServiceAuthV1Server, logger log
 	}
 }
 
+// AutoWatchRole is the watch handler for Role on the server side.
+func (e EndpointsAuthV1Server) AutoWatchRole(in *api.ListWatchOptions, stream AuthV1_AutoWatchRoleServer) error {
+	return e.watchHandlerRole(in, stream)
+}
+
+// MakeAutoWatchRoleEndpoint creates the Watch endpoint
+func MakeAutoWatchRoleEndpoint(s ServiceAuthV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(AuthV1_AutoWatchRoleServer)
+		return s.AutoWatchRole(options, wstream)
+	}
+}
+
+// AutoWatchRoleBinding is the watch handler for RoleBinding on the server side.
+func (e EndpointsAuthV1Server) AutoWatchRoleBinding(in *api.ListWatchOptions, stream AuthV1_AutoWatchRoleBindingServer) error {
+	return e.watchHandlerRoleBinding(in, stream)
+}
+
+// MakeAutoWatchRoleBindingEndpoint creates the Watch endpoint
+func MakeAutoWatchRoleBindingEndpoint(s ServiceAuthV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(AuthV1_AutoWatchRoleBindingServer)
+		return s.AutoWatchRoleBinding(options, wstream)
+	}
+}
+
 // MakeAuthV1ServerEndpoints creates server endpoints
 func MakeAuthV1ServerEndpoints(s ServiceAuthV1Server, logger log.Logger) EndpointsAuthV1Server {
 	return EndpointsAuthV1Server{
 
 		AutoAddAuthenticationPolicyEndpoint:    MakeAuthV1AutoAddAuthenticationPolicyEndpoint(s, logger),
+		AutoAddRoleEndpoint:                    MakeAuthV1AutoAddRoleEndpoint(s, logger),
+		AutoAddRoleBindingEndpoint:             MakeAuthV1AutoAddRoleBindingEndpoint(s, logger),
 		AutoAddUserEndpoint:                    MakeAuthV1AutoAddUserEndpoint(s, logger),
 		AutoDeleteAuthenticationPolicyEndpoint: MakeAuthV1AutoDeleteAuthenticationPolicyEndpoint(s, logger),
+		AutoDeleteRoleEndpoint:                 MakeAuthV1AutoDeleteRoleEndpoint(s, logger),
+		AutoDeleteRoleBindingEndpoint:          MakeAuthV1AutoDeleteRoleBindingEndpoint(s, logger),
 		AutoDeleteUserEndpoint:                 MakeAuthV1AutoDeleteUserEndpoint(s, logger),
 		AutoGetAuthenticationPolicyEndpoint:    MakeAuthV1AutoGetAuthenticationPolicyEndpoint(s, logger),
+		AutoGetRoleEndpoint:                    MakeAuthV1AutoGetRoleEndpoint(s, logger),
+		AutoGetRoleBindingEndpoint:             MakeAuthV1AutoGetRoleBindingEndpoint(s, logger),
 		AutoGetUserEndpoint:                    MakeAuthV1AutoGetUserEndpoint(s, logger),
 		AutoListAuthenticationPolicyEndpoint:   MakeAuthV1AutoListAuthenticationPolicyEndpoint(s, logger),
+		AutoListRoleEndpoint:                   MakeAuthV1AutoListRoleEndpoint(s, logger),
+		AutoListRoleBindingEndpoint:            MakeAuthV1AutoListRoleBindingEndpoint(s, logger),
 		AutoListUserEndpoint:                   MakeAuthV1AutoListUserEndpoint(s, logger),
 		AutoUpdateAuthenticationPolicyEndpoint: MakeAuthV1AutoUpdateAuthenticationPolicyEndpoint(s, logger),
+		AutoUpdateRoleEndpoint:                 MakeAuthV1AutoUpdateRoleEndpoint(s, logger),
+		AutoUpdateRoleBindingEndpoint:          MakeAuthV1AutoUpdateRoleBindingEndpoint(s, logger),
 		AutoUpdateUserEndpoint:                 MakeAuthV1AutoUpdateUserEndpoint(s, logger),
 
 		watchHandlerUser:                 MakeAutoWatchUserEndpoint(s, logger),
 		watchHandlerAuthenticationPolicy: MakeAutoWatchAuthenticationPolicyEndpoint(s, logger),
+		watchHandlerRole:                 MakeAutoWatchRoleEndpoint(s, logger),
+		watchHandlerRoleBinding:          MakeAutoWatchRoleBindingEndpoint(s, logger),
 	}
 }
 
@@ -546,6 +988,32 @@ func (m loggingAuthV1MiddlewareClient) AutoAddAuthenticationPolicy(ctx context.C
 	resp, err = m.next.AutoAddAuthenticationPolicy(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareClient) AutoAddRole(ctx context.Context, in *Role) (resp *Role, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoAddRoleBinding(ctx context.Context, in *RoleBinding) (resp *RoleBinding, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddRoleBinding(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareClient) AutoAddUser(ctx context.Context, in *User) (resp *User, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -570,6 +1038,32 @@ func (m loggingAuthV1MiddlewareClient) AutoDeleteAuthenticationPolicy(ctx contex
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoDeleteAuthenticationPolicy(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoDeleteRole(ctx context.Context, in *Role) (resp *Role, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoDeleteRoleBinding(ctx context.Context, in *RoleBinding) (resp *RoleBinding, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteRoleBinding(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareClient) AutoDeleteUser(ctx context.Context, in *User) (resp *User, err error) {
@@ -598,6 +1092,32 @@ func (m loggingAuthV1MiddlewareClient) AutoGetAuthenticationPolicy(ctx context.C
 	resp, err = m.next.AutoGetAuthenticationPolicy(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareClient) AutoGetRole(ctx context.Context, in *Role) (resp *Role, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoGetRoleBinding(ctx context.Context, in *RoleBinding) (resp *RoleBinding, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetRoleBinding(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareClient) AutoGetUser(ctx context.Context, in *User) (resp *User, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -624,6 +1144,32 @@ func (m loggingAuthV1MiddlewareClient) AutoListAuthenticationPolicy(ctx context.
 	resp, err = m.next.AutoListAuthenticationPolicy(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareClient) AutoListRole(ctx context.Context, in *api.ListWatchOptions) (resp *RoleList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoListRoleBinding(ctx context.Context, in *api.ListWatchOptions) (resp *RoleBindingList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListRoleBinding(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareClient) AutoListUser(ctx context.Context, in *api.ListWatchOptions) (resp *UserList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -648,6 +1194,32 @@ func (m loggingAuthV1MiddlewareClient) AutoUpdateAuthenticationPolicy(ctx contex
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateAuthenticationPolicy(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoUpdateRole(ctx context.Context, in *Role) (resp *Role, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoUpdateRoleBinding(ctx context.Context, in *RoleBinding) (resp *RoleBinding, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateRoleBinding(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareClient) AutoUpdateUser(ctx context.Context, in *User) (resp *User, err error) {
@@ -690,6 +1262,32 @@ func (m loggingAuthV1MiddlewareClient) AutoWatchAuthenticationPolicy(ctx context
 	resp, err = m.next.AutoWatchAuthenticationPolicy(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareClient) AutoWatchRole(ctx context.Context, in *api.ListWatchOptions) (resp AuthV1_AutoWatchRoleClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoWatchRoleBinding(ctx context.Context, in *api.ListWatchOptions) (resp AuthV1_AutoWatchRoleBindingClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchRoleBinding(ctx, in)
+	return
+}
 
 func (m loggingAuthV1MiddlewareServer) AutoAddAuthenticationPolicy(ctx context.Context, in AuthenticationPolicy) (resp AuthenticationPolicy, err error) {
 	defer func(begin time.Time) {
@@ -702,6 +1300,32 @@ func (m loggingAuthV1MiddlewareServer) AutoAddAuthenticationPolicy(ctx context.C
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddAuthenticationPolicy(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoAddRole(ctx context.Context, in Role) (resp Role, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoAddRoleBinding(ctx context.Context, in RoleBinding) (resp RoleBinding, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddRoleBinding(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareServer) AutoAddUser(ctx context.Context, in User) (resp User, err error) {
@@ -730,6 +1354,32 @@ func (m loggingAuthV1MiddlewareServer) AutoDeleteAuthenticationPolicy(ctx contex
 	resp, err = m.next.AutoDeleteAuthenticationPolicy(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareServer) AutoDeleteRole(ctx context.Context, in Role) (resp Role, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoDeleteRoleBinding(ctx context.Context, in RoleBinding) (resp RoleBinding, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteRoleBinding(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareServer) AutoDeleteUser(ctx context.Context, in User) (resp User, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -754,6 +1404,32 @@ func (m loggingAuthV1MiddlewareServer) AutoGetAuthenticationPolicy(ctx context.C
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetAuthenticationPolicy(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoGetRole(ctx context.Context, in Role) (resp Role, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoGetRoleBinding(ctx context.Context, in RoleBinding) (resp RoleBinding, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetRoleBinding(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareServer) AutoGetUser(ctx context.Context, in User) (resp User, err error) {
@@ -782,6 +1458,32 @@ func (m loggingAuthV1MiddlewareServer) AutoListAuthenticationPolicy(ctx context.
 	resp, err = m.next.AutoListAuthenticationPolicy(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareServer) AutoListRole(ctx context.Context, in api.ListWatchOptions) (resp RoleList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoListRoleBinding(ctx context.Context, in api.ListWatchOptions) (resp RoleBindingList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListRoleBinding(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareServer) AutoListUser(ctx context.Context, in api.ListWatchOptions) (resp UserList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -806,6 +1508,32 @@ func (m loggingAuthV1MiddlewareServer) AutoUpdateAuthenticationPolicy(ctx contex
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateAuthenticationPolicy(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoUpdateRole(ctx context.Context, in Role) (resp Role, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoUpdateRoleBinding(ctx context.Context, in RoleBinding) (resp RoleBinding, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateRoleBinding(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareServer) AutoUpdateUser(ctx context.Context, in User) (resp User, err error) {
@@ -848,6 +1576,32 @@ func (m loggingAuthV1MiddlewareServer) AutoWatchAuthenticationPolicy(in *api.Lis
 	err = m.next.AutoWatchAuthenticationPolicy(in, stream)
 	return
 }
+func (m loggingAuthV1MiddlewareServer) AutoWatchRole(in *api.ListWatchOptions, stream AuthV1_AutoWatchRoleServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "AuthV1", "method", "AutoWatchRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchRole(in, stream)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoWatchRoleBinding(in *api.ListWatchOptions, stream AuthV1_AutoWatchRoleBindingServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "AuthV1", "method", "AutoWatchRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchRoleBinding(in, stream)
+	return
+}
 func (r *EndpointsAuthV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -870,6 +1624,16 @@ func makeURIAuthV1AutoAddAuthenticationPolicyCreateOper(in *AuthenticationPolicy
 }
 
 //
+func makeURIAuthV1AutoAddRoleCreateOper(in *Role) string {
+	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/roles")
+}
+
+//
+func makeURIAuthV1AutoAddRoleBindingCreateOper(in *RoleBinding) string {
+	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/role-bindings")
+}
+
+//
 func makeURIAuthV1AutoAddUserCreateOper(in *User) string {
 	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/users")
 }
@@ -877,6 +1641,16 @@ func makeURIAuthV1AutoAddUserCreateOper(in *User) string {
 //
 func makeURIAuthV1AutoDeleteAuthenticationPolicyDeleteOper(in *AuthenticationPolicy) string {
 	return fmt.Sprint("/v1/auth", "/authn-policy/", in.Name)
+}
+
+//
+func makeURIAuthV1AutoDeleteRoleDeleteOper(in *Role) string {
+	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/roles/", in.Name)
+}
+
+//
+func makeURIAuthV1AutoDeleteRoleBindingDeleteOper(in *RoleBinding) string {
+	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/role-bindings/", in.Name)
 }
 
 //
@@ -890,8 +1664,28 @@ func makeURIAuthV1AutoGetAuthenticationPolicyGetOper(in *AuthenticationPolicy) s
 }
 
 //
+func makeURIAuthV1AutoGetRoleGetOper(in *Role) string {
+	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/roles/", in.Name)
+}
+
+//
+func makeURIAuthV1AutoGetRoleBindingGetOper(in *RoleBinding) string {
+	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/role-bindings/", in.Name)
+}
+
+//
 func makeURIAuthV1AutoGetUserGetOper(in *User) string {
 	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/users/", in.Name)
+}
+
+//
+func makeURIAuthV1AutoListRoleListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/roles")
+}
+
+//
+func makeURIAuthV1AutoListRoleBindingListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/role-bindings")
 }
 
 //
@@ -902,6 +1696,16 @@ func makeURIAuthV1AutoListUserListOper(in *api.ListWatchOptions) string {
 //
 func makeURIAuthV1AutoUpdateAuthenticationPolicyUpdateOper(in *AuthenticationPolicy) string {
 	return fmt.Sprint("/v1/auth", "/authn-policy/", in.Name)
+}
+
+//
+func makeURIAuthV1AutoUpdateRoleUpdateOper(in *Role) string {
+	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/roles/", in.Name)
+}
+
+//
+func makeURIAuthV1AutoUpdateRoleBindingUpdateOper(in *RoleBinding) string {
+	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/role-bindings/", in.Name)
 }
 
 //
@@ -1083,6 +1887,196 @@ func (r *EndpointsAuthV1RestClient) AutoListAuthenticationPolicy(ctx context.Con
 
 // AutoWatchAuthenticationPolicy CRUD method for AuthenticationPolicy
 func (r *EndpointsAuthV1RestClient) AutoWatchAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoAddRole CRUD method for Role
+func (r *EndpointsAuthV1RestClient) AutoAddRole(ctx context.Context, in *Role) (*Role, error) {
+	path := makeURIAuthV1AutoAddRoleCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1AutoAddRole(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Role), nil
+}
+
+// AutoUpdateRole CRUD method for Role
+func (r *EndpointsAuthV1RestClient) AutoUpdateRole(ctx context.Context, in *Role) (*Role, error) {
+	path := makeURIAuthV1AutoUpdateRoleUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1AutoUpdateRole(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Role), err
+}
+
+// AutoGetRole CRUD method for Role
+func (r *EndpointsAuthV1RestClient) AutoGetRole(ctx context.Context, in *Role) (*Role, error) {
+	path := makeURIAuthV1AutoGetRoleGetOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1AutoGetRole(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Role), err
+}
+
+// AutoDeleteRole CRUD method for Role
+func (r *EndpointsAuthV1RestClient) AutoDeleteRole(ctx context.Context, in *Role) (*Role, error) {
+	path := makeURIAuthV1AutoDeleteRoleDeleteOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1AutoDeleteRole(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Role), err
+}
+
+// AutoListRole CRUD method for Role
+func (r *EndpointsAuthV1RestClient) AutoListRole(ctx context.Context, options *api.ListWatchOptions) (*RoleList, error) {
+	path := makeURIAuthV1AutoListRoleListOper(options)
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1AutoListRole(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoleList), err
+}
+
+// AutoWatchRole CRUD method for Role
+func (r *EndpointsAuthV1RestClient) AutoWatchRole(ctx context.Context, in *Role) (*Role, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoAddRoleBinding CRUD method for RoleBinding
+func (r *EndpointsAuthV1RestClient) AutoAddRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
+	path := makeURIAuthV1AutoAddRoleBindingCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1AutoAddRoleBinding(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoleBinding), nil
+}
+
+// AutoUpdateRoleBinding CRUD method for RoleBinding
+func (r *EndpointsAuthV1RestClient) AutoUpdateRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
+	path := makeURIAuthV1AutoUpdateRoleBindingUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1AutoUpdateRoleBinding(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoleBinding), err
+}
+
+// AutoGetRoleBinding CRUD method for RoleBinding
+func (r *EndpointsAuthV1RestClient) AutoGetRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
+	path := makeURIAuthV1AutoGetRoleBindingGetOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1AutoGetRoleBinding(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoleBinding), err
+}
+
+// AutoDeleteRoleBinding CRUD method for RoleBinding
+func (r *EndpointsAuthV1RestClient) AutoDeleteRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
+	path := makeURIAuthV1AutoDeleteRoleBindingDeleteOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1AutoDeleteRoleBinding(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoleBinding), err
+}
+
+// AutoListRoleBinding CRUD method for RoleBinding
+func (r *EndpointsAuthV1RestClient) AutoListRoleBinding(ctx context.Context, options *api.ListWatchOptions) (*RoleBindingList, error) {
+	path := makeURIAuthV1AutoListRoleBindingListOper(options)
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1AutoListRoleBinding(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoleBindingList), err
+}
+
+// AutoWatchRoleBinding CRUD method for RoleBinding
+func (r *EndpointsAuthV1RestClient) AutoWatchRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
 	return nil, errors.New("not allowed")
 }
 

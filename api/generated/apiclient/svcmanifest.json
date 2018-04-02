@@ -39,7 +39,9 @@
         "Version": "v1",
         "Messages": [
           "User",
-          "AuthenticationPolicy"
+          "AuthenticationPolicy",
+          "Role",
+          "RoleBinding"
         ]
       }
     },

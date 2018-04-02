@@ -37,8 +37,32 @@ type AuthV1AuthenticationPolicyInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
+// AuthV1RoleInterface exposes the CRUD methods for Role
+type AuthV1RoleInterface interface {
+	Create(ctx context.Context, in *Role) (*Role, error)
+	Update(ctx context.Context, in *Role) (*Role, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Role, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Role, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Role, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
+// AuthV1RoleBindingInterface exposes the CRUD methods for RoleBinding
+type AuthV1RoleBindingInterface interface {
+	Create(ctx context.Context, in *RoleBinding) (*RoleBinding, error)
+	Update(ctx context.Context, in *RoleBinding) (*RoleBinding, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*RoleBinding, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*RoleBinding, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*RoleBinding, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
 // AuthV1Interface exposes objects with CRUD operations allowed by the service
 type AuthV1Interface interface {
 	User() AuthV1UserInterface
 	AuthenticationPolicy() AuthV1AuthenticationPolicyInterface
+	Role() AuthV1RoleInterface
+	RoleBinding() AuthV1RoleBindingInterface
 }

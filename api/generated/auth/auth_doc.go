@@ -13,11 +13,22 @@ The following Messages are defined.
   AuthenticationPolicyStatus
   Authenticators
   AutoMsgAuthenticationPolicyWatchHelper
+  AutoMsgRoleBindingWatchHelper
+  AutoMsgRoleWatchHelper
   AutoMsgUserWatchHelper
   Ldap
   LdapAttributeMapping
   Local
+  Permission
   Radius
+  Role
+  RoleBinding
+  RoleBindingList
+  RoleBindingSpec
+  RoleBindingStatus
+  RoleList
+  RoleSpec
+  RoleStatus
   TLSOptions
   User
   UserList
@@ -28,16 +39,28 @@ The following Services and Methods are defined.
 
  Service: AuthV1
    AutoAddAuthenticationPolicy
+   AutoAddRole
+   AutoAddRoleBinding
    AutoAddUser
    AutoDeleteAuthenticationPolicy
+   AutoDeleteRole
+   AutoDeleteRoleBinding
    AutoDeleteUser
    AutoGetAuthenticationPolicy
+   AutoGetRole
+   AutoGetRoleBinding
    AutoGetUser
    AutoListAuthenticationPolicy
+   AutoListRole
+   AutoListRoleBinding
    AutoListUser
    AutoUpdateAuthenticationPolicy
+   AutoUpdateRole
+   AutoUpdateRoleBinding
    AutoUpdateUser
    AutoWatchAuthenticationPolicy
+   AutoWatchRole
+   AutoWatchRoleBinding
    AutoWatchUser
 
 */
