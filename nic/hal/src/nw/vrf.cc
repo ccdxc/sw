@@ -165,7 +165,7 @@ vrf_add_to_db (vrf_t *vrf, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("adding to vrf id hash table");
+    HAL_TRACE_DEBUG("Adding to vrf id hash table");
     // allocate an entry to establish mapping from vrf id to its handle
     entry =
         (hal_handle_id_ht_entry_t *)g_hal_state->
@@ -180,7 +180,7 @@ vrf_add_to_db (vrf_t *vrf, hal_handle_t handle)
                                                         entry, &entry->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("failed to add vrf id to handle mapping, "
+        HAL_TRACE_ERR("Failed to add vrf id to handle mapping, "
                       "err : {}", ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -196,7 +196,7 @@ vrf_del_from_db (vrf_t *vrf)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("removing from vrf id hash table");
+    HAL_TRACE_DEBUG("Removing from vrf id hash table");
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->vrf_id_ht()->
         remove(&vrf->vrf_id);
@@ -219,44 +219,51 @@ vrf_spec_print (VrfSpec& spec)
     ip_addr_t           my_tep;
     ip_prefix_t         gipo_pfx;
 
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return HAL_RET_OK;
+    }
+
     buf.write("Vrf Spec: ");
     if (spec.has_key_or_handle()) {
         auto kh = spec.key_or_handle();
         if (kh.key_or_handle_case() == VrfKeyHandle::kVrfId) {
-            buf.write("vrf_id:{}, ", kh.vrf_id());
+            buf.write("vrf_id : {}, ", kh.vrf_id());
         } else if (kh.key_or_handle_case() == VrfKeyHandle::kVrfHandle) {
-            buf.write("vrf_hdl:{}, ", kh.vrf_handle());
+            buf.write("vrf_hdl : {}, ", kh.vrf_handle());
         }
     } else {
-        buf.write("vrf_id_hdl:NULL, ");
+        buf.write("vrf_id_hdl : NULL, ");
     }
 
     if (spec.has_security_key_handle()) {
         auto kh = spec.security_key_handle();
         if (kh.key_or_handle_case() == SecurityProfileKeyHandle::kProfileId) {
-            buf.write("sec_prof_id:{}, ", kh.profile_id());
+            buf.write("sec_prof_id : {}, ", kh.profile_id());
         } else if (kh.key_or_handle_case() == SecurityProfileKeyHandle::kProfileHandle) {
-            buf.write("sec_prof_hdl:{}, ", kh.profile_handle());
+            buf.write("sec_prof_hdl : {}, ", kh.profile_handle());
         }
     } else {
-        buf.write("sec_pro_id_hdl:NULL, ");
+        buf.write("sec_pro_id_hdl : NULL, ");
     }
 
-    buf.write("type: {}, ", (spec.vrf_type() == types::VrfType::VRF_TYPE_NONE) ? "none" :
-              (spec.vrf_type() == types::VrfType::VRF_TYPE_INFRA) ? "infra" : "customer");
+    buf.write("type : {}, ",
+              (spec.vrf_type() == types::VrfType::VRF_TYPE_NONE) ? "none" :
+              (spec.vrf_type() == types::VrfType::VRF_TYPE_INFRA) ? "infra" :
+              "customer");
 
     if (spec.has_mytep_ip()) {
         ip_addr_spec_to_ip_addr(&my_tep, spec.mytep_ip());
-        buf.write("my_tep:{}", ipaddr2str(&my_tep));
+        buf.write("my_tep : {}", ipaddr2str(&my_tep));
     }
     if (spec.has_gipo_prefix()) {
         ret = ip_pfx_spec_to_pfx_spec(&gipo_pfx, spec.gipo_prefix());
         if (ret == HAL_RET_OK) {
-            buf.write("gipo_pfx:{}/{}", ipaddr2str(&gipo_pfx.addr), gipo_pfx.len);
+            buf.write("gipo_pfx : {}/{}", ipaddr2str(&gipo_pfx.addr),
+                      gipo_pfx.len);
         }
     }
-
     HAL_TRACE_DEBUG("{}", buf.c_str());
+
     return ret;
 }
 
@@ -288,7 +295,7 @@ validate_vrf_create (VrfSpec& spec, VrfResponse *rsp)
 
     // check if vrf id is in the valid range
     if (kh.vrf_id() == HAL_VRF_ID_INVALID) {
-        HAL_TRACE_ERR("vrf id {} invalid in the request",
+        HAL_TRACE_ERR("Invalid vrf id {} in the request",
                       HAL_VRF_ID_INVALID);
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -297,7 +304,7 @@ validate_vrf_create (VrfSpec& spec, VrfResponse *rsp)
     infra_vrf_handle = g_hal_state->infra_vrf_handle();
     if ((spec.vrf_type() == types::VRF_TYPE_INFRA) && 
         (infra_vrf_handle != HAL_HANDLE_INVALID)) {
-        HAL_TRACE_ERR("Infra VRF already exists with handle: {}",
+        HAL_TRACE_ERR("Infra VRF already exists with handle {}",
                       infra_vrf_handle);
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         return HAL_RET_INVALID_ARG;
@@ -330,12 +337,7 @@ vrf_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf_t                    *vrf = NULL;
     vrf_create_app_ctxt_t    *app_ctxt = NULL; 
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt = (vrf_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -348,11 +350,8 @@ vrf_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_vrf_args.nwsec_profile = app_ctxt->sec_prof;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_CREATE, (void *)&pd_vrf_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to create vrf pd, err : {}", 
-                ret);
+        HAL_TRACE_ERR("Failed to create vrf pd, err : {}", ret);
     }
-
-end:
     return ret;
 }
 
@@ -370,12 +369,7 @@ vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
     vrf_create_app_ctxt_t       *app_ctxt  = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -387,8 +381,7 @@ vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // add to vrf id hash table
     ret = vrf_add_to_db(vrf, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to add vrf {} to db, err : {}", 
-                vrf->vrf_id, ret);
+        HAL_TRACE_ERR("Failed to add vrf {} to db, err : {}", vrf->vrf_id, ret);
         goto end;
     }
 
@@ -396,7 +389,8 @@ vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
         ret = nwsec_prof_add_vrf(app_ctxt->sec_prof, vrf);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to add rel. from nwsec. prof");
+            HAL_TRACE_ERR("Failed to add vrf {} to nwsec prof {}",
+                          vrf->vrf_id, vrf->nwsec_profile_handle);
             goto end;
         }
     }
@@ -407,6 +401,7 @@ vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
 end:
+
     return ret;
 }
 
@@ -429,19 +424,14 @@ vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf_t *vrf                           = NULL;
     hal_handle_t hal_handle              = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
     vrf = (vrf_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create abort CB {}", vrf->vrf_id);
+    HAL_TRACE_DEBUG("VRF {} create abort cb", vrf->vrf_id);
 
     // 1. delete call to PD
     if (vrf->pd) {
@@ -449,16 +439,16 @@ vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_vrf_args.vrf = vrf;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_DELETE, (void *)&pd_vrf_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to delete vrf pd, err : {}", ret);
+            HAL_TRACE_ERR("Failed to delete vrf pd, err : {}", ret);
         }
     }
 
     // 2. remove object from hal_handle id based hash table in infra
     hal_handle_free(hal_handle);
 
-    // 3. Free PI vrf
+    // 3. free PI vrf
     vrf_free(vrf);
-end:
+
     return ret;
 }
 
@@ -502,8 +492,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt  = { 0 };
 
-    HAL_TRACE_DEBUG("creating vrf with id {}",
-                    spec.key_or_handle().vrf_id());
+    HAL_TRACE_DEBUG("Creating vrf with id {}", spec.key_or_handle().vrf_id());
 
     // dump spec
     vrf_spec_print(spec);
@@ -511,14 +500,13 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     // validate the request message
     ret = validate_vrf_create(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("validation failed, ret : {}", ret);
+        HAL_TRACE_ERR("vrf validation failed, err : {}", ret);
         goto end;
     }
 
     // check if vrf exists already, and reject if one is found
     if ((vrf = vrf_lookup_by_id(spec.key_or_handle().vrf_id()))) {
-        HAL_TRACE_ERR("failed to create a vrf, "
-                      "vrf {} exists already", 
+        HAL_TRACE_ERR("Failed to create a vrf, vrf {} exists already", 
                       spec.key_or_handle().vrf_id());
         ret = HAL_RET_ENTRY_EXISTS;
         goto end;
@@ -527,7 +515,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     // instantiate a PI vrf object
     vrf = vrf_alloc_init();
     if (vrf == NULL) {
-        HAL_TRACE_ERR("{}:failed to create teanant, err : {}", ret);
+        HAL_TRACE_ERR("Failed to alloc/init vrf, err : {}", ret);
         ret = HAL_RET_OOM;
         goto end;
     }
@@ -560,12 +548,12 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
         if (spec.has_gipo_prefix()) {
             ret = ip_pfx_spec_to_pfx_spec(&vrf->gipo_prefix, spec.gipo_prefix());
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Invalid GIPO prefix specified for VRF {}", 
+                HAL_TRACE_ERR("Invalid GIPo prefix specified for VRF {}", 
                                vrf->vrf_id);
                 goto end;
             }
         }
-        HAL_TRACE_DEBUG("Local VTEP: {}; GIPo Prefix: {}/{}",
+        HAL_TRACE_DEBUG("Local VTEP : {}, GIPo Prefix : {}/{}",
                         ipaddr2str(g_hal_state->oper_db()->mytep()),
                         ipaddr2str(&vrf->gipo_prefix.addr),
                         vrf->gipo_prefix.len);
@@ -574,8 +562,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     // allocate hal handle id
     vrf->hal_handle = hal_handle_alloc(HAL_OBJ_ID_VRF);
     if (vrf->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("failed to alloc handle {}", 
-                      vrf->vrf_id);
+        HAL_TRACE_ERR("Failed to alloc handle {}", vrf->vrf_id);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         vrf_free(vrf);
         ret = HAL_RET_HANDLE_INVALID;
@@ -597,6 +584,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
                              vrf_create_cleanup_cb);
 
 end:
+
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
         if (vrf) {
             // if there is an error, if will be freed in abort CB
@@ -627,13 +615,12 @@ vrf_handle_nwsec_update (vrf_t *vrf, nwsec_profile_t *nwsec_prof)
         return ret;
     }
 
-    HAL_TRACE_DEBUG("vrf_id: {}", vrf->vrf_id);
-    // Walk L2 segs
+    // walk L2 segs
     for (const void *ptr : *vrf->l2seg_list) {
         p_hdl_id = (hal_handle_t *)ptr;
         l2seg = l2seg_lookup_by_handle(*p_hdl_id);
         if (!l2seg) {
-            HAL_TRACE_ERR("unable to find l2seg with handle:{}", *p_hdl_id);
+            HAL_TRACE_ERR("Failed to find L2seg with handle {}", *p_hdl_id);
             continue;
         }
         l2seg_handle_nwsec_update(l2seg, nwsec_prof);
@@ -653,7 +640,7 @@ validate_vrf_update (VrfSpec& spec, VrfResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("spec has no key or handle");
+        HAL_TRACE_ERR("VRF spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -668,10 +655,11 @@ vrf_nwsec_update (VrfSpec& spec, vrf_t *vrf, bool *nwsec_change,
                      hal_handle_t *new_nwsec_handle)
 {
     *nwsec_change = false;
+
     if (vrf->nwsec_profile_handle != spec.security_key_handle().profile_handle()) {
-        HAL_TRACE_DEBUG("nwSec profile updated");
         *nwsec_change = true;
         *new_nwsec_handle = spec.security_key_handle().profile_handle();
+        HAL_TRACE_DEBUG("Updated nwsec profile to {}", *new_nwsec_handle);
     }
 
     return HAL_RET_OK;
@@ -709,6 +697,7 @@ vrf_gipo_prefix_update (VrfSpec& spec, vrf_t *vrf, bool *gipo_prefix_change,
     }
 
 end:
+
     return HAL_RET_OK;
 }
 
@@ -732,8 +721,7 @@ vrf_check_for_updates (VrfSpec& spec, vrf_t *vrf,
     ret = vrf_nwsec_update(spec, vrf, &app_ctxt->nwsec_prof_change, 
                            &app_ctxt->nwsec_profile_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to check for nwsec update. ret:{}", 
-                      ret);
+        HAL_TRACE_ERR("Failed to check for nwsec update. err : {}", ret);
         goto end;
     }
 
@@ -741,12 +729,12 @@ vrf_check_for_updates (VrfSpec& spec, vrf_t *vrf,
     ret = vrf_gipo_prefix_update(spec, vrf, &app_ctxt->gipo_prefix_change,
                                  &app_ctxt->new_gipo_prefix);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to check for gipo pfx update. ret:{}", 
-                      ret);
+        HAL_TRACE_ERR("Failed to check for gipo pfx update. err : {}", ret);
         goto end;
     }
 
 end:
+
     return ret;
 }
 
@@ -758,27 +746,21 @@ end:
 hal_ret_t
 vrf_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                ret         = HAL_RET_OK;
-    pd::pd_vrf_update_args_t        pd_vrf_args = { 0 };
-    dllist_ctxt_t            *lnode      = NULL;
-    dhl_entry_t              *dhl_entry  = NULL;
-    vrf_t                    *vrf        = NULL, *vrf_clone = NULL;
-    vrf_update_app_ctxt_t    *app_ctxt   = NULL;
+    hal_ret_t                   ret         = HAL_RET_OK;
+    pd::pd_vrf_update_args_t    pd_vrf_args = { 0 };
+    dllist_ctxt_t               *lnode      = NULL;
+    dhl_entry_t                 *dhl_entry  = NULL;
+    vrf_t                       *vrf        = NULL, *vrf_clone = NULL;
+    vrf_update_app_ctxt_t       *app_ctxt   = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt  = (vrf_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
     vrf       = (vrf_t *)dhl_entry->obj;
     vrf_clone = (vrf_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update upd CB for vrf:{}",
-                    vrf->vrf_id);
+    HAL_TRACE_DEBUG("VRF update upd cb for vrf {}", vrf->vrf_id);
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_vrf_update_args_init(&pd_vrf_args);
@@ -789,8 +771,7 @@ vrf_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("new_gipo_pfx: {}", ippfx2str(pd_vrf_args.new_gipo_prefix));
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_UPDATE, (void *)&pd_vrf_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to update vrf pd, err : {}",
-                      ret);
+        HAL_TRACE_ERR("Failed to update vrf pd, err : {}", ret);
     }
 
     // Pass the vrf(old/new is fine) and new nwsec profile
@@ -798,8 +779,6 @@ vrf_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         // Triggers reprogramming of input properties table for enicifs and uplinks
         vrf_handle_nwsec_update(vrf, app_ctxt->nwsec_prof);
     }
-
-end:
     return ret;
 }
 
@@ -842,12 +821,7 @@ vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     vrf_update_app_ctxt_t             *app_ctxt   = NULL;
     nwsec_profile_t                   *nwsec_prof = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt = (vrf_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -855,8 +829,7 @@ vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     vrf = (vrf_t *)dhl_entry->obj;
     vrf_clone = (vrf_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update commit CB {}", vrf->vrf_id);
-
+    HAL_TRACE_DEBUG("VRF update commit cb {}", vrf->vrf_id);
     // update clone with new attrs
     if (app_ctxt->nwsec_prof_change) {
         vrf_clone->nwsec_profile_handle = app_ctxt->nwsec_profile_handle;
@@ -866,14 +839,13 @@ vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
             nwsec_prof = find_nwsec_profile_by_handle(
                          vrf->nwsec_profile_handle);
             if (nwsec_prof == NULL) {
-                HAL_TRACE_ERR("unable to find nwsec prof "
-                        "with hdl:{}",
-                        vrf->nwsec_profile_handle);
+                HAL_TRACE_ERR("Failed to find nwsec prof with hdl:{}",
+                              vrf->nwsec_profile_handle);
                 goto end;
             }
             ret = nwsec_prof_del_vrf(nwsec_prof, vrf);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("unable to detach old nwsec prof");
+                HAL_TRACE_ERR("Failed to detach old nwsec prof");
                 goto end;
             }
         }
@@ -882,7 +854,7 @@ vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
             // attach to new nwsec prof
             ret = nwsec_prof_add_vrf(app_ctxt->nwsec_prof, vrf_clone);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("unable to attach new nwsec prof");
+                HAL_TRACE_ERR("Failed to attach new nwsec prof");
                 goto end;
             }
         }
@@ -899,12 +871,14 @@ vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     pd_vrf_args.vrf = vrf;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_MEM_FREE, (void *)&pd_vrf_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to delete vrf pd, err : {}", ret);
+        HAL_TRACE_ERR("Failed to delete vrf pd, err : {}", ret);
     }
 
     // Free PI. Make sure the lists copied into clone are untouched
     vrf_free(vrf);
+
 end:
+
     return ret;
 }
 
@@ -921,32 +895,24 @@ vrf_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                     *dhl_entry  = NULL;
     vrf_t                           *vrf        = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     // app_ctxt = (vrf_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     vrf = (vrf_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update commit CB {}", vrf->vrf_id);
-
+    HAL_TRACE_DEBUG("VRF update commit cb {}", vrf->vrf_id);
     // Free PD
     pd::pd_vrf_mem_free_args_init(&pd_vrf_args);
     pd_vrf_args.vrf = vrf;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_MEM_FREE, (void *)&pd_vrf_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to delete vrf pd, err : {}", ret);
+        HAL_TRACE_ERR("Failed to delete vrf pd, err : {}", ret);
     }
 
-    // Free Clone
+    // free Clone
     vrf_cleanup(vrf);
-end:
-
     return ret;
 }
 
@@ -975,28 +941,27 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     // validate the request message
     ret = validate_vrf_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("vrf delete validation failed, ret : {}", ret);
+        HAL_TRACE_ERR("VRF delete validation failure, err : {}", ret);
         goto end;
     }
 
     vrf = vrf_lookup_key_or_handle(kh);
     if (vrf == NULL) {
-        HAL_TRACE_ERR("failed to find vrf, id {}, handle {}",
+        HAL_TRACE_ERR("Failed to find vrf, id {}, handle {}",
                       kh.vrf_id(), kh.vrf_handle());
         ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("update vrf {}", 
-                    vrf->vrf_id);
 
+    HAL_TRACE_DEBUG("Updating vrf {}", vrf->vrf_id);
     ret = vrf_check_for_updates(spec, vrf, &app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to check if vrf is updated.");
+        HAL_TRACE_ERR("Failed to check if vrf is updated.");
         goto end;
     }
 
     if (!app_ctxt.nwsec_prof_change && !app_ctxt.gipo_prefix_change) {
-        HAL_TRACE_ERR("no change in vrf update: noop");
+        HAL_TRACE_ERR("No change in vrf update detected");
         // Its a no-op. We can just return HAL_RET_OK
         // ret = HAL_RET_INVALID_OP;
         goto end;
@@ -1009,14 +974,14 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     } else {
         app_ctxt.nwsec_prof = find_nwsec_profile_by_handle(app_ctxt.nwsec_profile_handle);
         if (app_ctxt.nwsec_prof == NULL) {
-            HAL_TRACE_ERR("security profile with handle {} not found", 
+            HAL_TRACE_ERR("nwsec profile with handle {} not found",
                     app_ctxt.nwsec_profile_handle);
             ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
             HAL_API_STATS_INC(HAL_API_VRF_UPDATE_FAIL);
             goto end;
         } else {
-            HAL_TRACE_DEBUG("new nwsec profile id: {}",
-                    app_ctxt.nwsec_prof->profile_id);
+            HAL_TRACE_DEBUG("new nwsec profile id : {}",
+                            app_ctxt.nwsec_prof->profile_id);
         }
     }
 
@@ -1130,7 +1095,7 @@ validate_vrf_delete_req (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("spec has no key or handle");
+        HAL_TRACE_ERR("VRF spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -1166,35 +1131,24 @@ vrf_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry  = NULL;
     vrf_t                       *vrf        = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     // TODO: Check the dependency ref count for the vrf. 
     //       If its non zero, fail the delete.
-
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
     vrf = (vrf_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("delete del CB {}",
-                    vrf->vrf_id);
-
+    HAL_TRACE_DEBUG("VRF delete del cb {}", vrf->vrf_id);
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_vrf_delete_args_init(&pd_vrf_args);
     pd_vrf_args.vrf = vrf;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_DELETE, (void *)&pd_vrf_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to delete vrf pd, err : {}", 
+        HAL_TRACE_ERR("Failed to delete vrf pd, err : {}", 
                       ret);
     }
-
-end:
-
     return ret;
 }
 
@@ -1214,27 +1168,21 @@ vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t       hal_handle = 0;
     nwsec_profile_t    *sec_prof = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
     vrf = (vrf_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("delete commit CB {}",
-                    vrf->vrf_id);
+    HAL_TRACE_DEBUG("VRF delete commit cb {}", vrf->vrf_id);
 
     // Remove vrf references from other objects
     if (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
         sec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
         ret = nwsec_prof_del_vrf(sec_prof, vrf);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to del rel. from nwsec. prof");
+            HAL_TRACE_ERR("Failed to del rel. from nwsec. prof");
             goto end;
         }
 
@@ -1243,7 +1191,7 @@ vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // a. Remove from vrf id hash table
     ret = vrf_del_from_db(vrf);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to del vrf {} from db, err : {}", 
+        HAL_TRACE_ERR("Failed to del vrf {} from db, err : {}", 
                       vrf->vrf_id, ret);
         goto end;
     }
@@ -1293,7 +1241,7 @@ validate_vrf_delete (vrf_t *vrf)
     // check for no presence of l2segs
     if (vrf->l2seg_list->num_elems()) {
         ret = HAL_RET_OBJECT_IN_USE;
-        HAL_TRACE_ERR("l2segs still referring:");
+        HAL_TRACE_ERR("VRF delete failure, l2segs still referring :");
         hal_print_handles_block_list(vrf->l2seg_list);
     }
 
@@ -1315,24 +1263,24 @@ vrf_delete (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
     // validate the request message
     ret = validate_vrf_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("vrf delete validation failed, ret : {}", ret);
+        HAL_TRACE_ERR("vrf delete validation failed, err : {}", ret);
         goto end;
     }
 
     vrf = vrf_lookup_key_or_handle(kh);
     if (vrf == NULL) {
-        HAL_TRACE_ERR("failed to find vrf, id {}, handle {}",
+        HAL_TRACE_ERR("Failed to find vrf, id {}, handle {}",
                       kh.vrf_id(), kh.vrf_handle());
         ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("deleting vrf {}", vrf->vrf_id);
+    HAL_TRACE_DEBUG("Deleting vrf {}", vrf->vrf_id);
 
     // validate if there no objects referring this sec. profile
     ret = validate_vrf_delete(vrf);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("vrf delete validation failed, ret : {}", ret);
+        HAL_TRACE_ERR("vrf delete validation failed, err : {}", ret);
         goto end;
     }
 
@@ -1376,15 +1324,14 @@ vrf_add_l2seg (vrf_t *vrf, l2seg_t *l2seg)
     ret = vrf->l2seg_list->insert(&l2seg->hal_handle);
     vrf_unlock(vrf, __FILENAME__, __LINE__, __func__);    // unlock
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to insert into vrf's l2seg list. ret:{}", ret);
+        HAL_TRACE_DEBUG("Failed to add l2seg {} to vrf {}",
+                        l2seg->seg_id, vrf->vrf_id);
         goto end;
     }
 
 end:
 
-    HAL_TRACE_DEBUG("add vrf => l2seg, {} => {}, ret:{}",
-                    vrf ? vrf->vrf_id : 0, 
-                    l2seg ? l2seg->seg_id : 0, ret);
+    HAL_TRACE_DEBUG("Added l2seg {} to vrf {}", l2seg->seg_id, vrf->vrf_id);
 
     return ret;
 }
@@ -1406,16 +1353,30 @@ vrf_del_l2seg (vrf_t *vrf, l2seg_t *l2seg)
     ret = vrf->l2seg_list->remove(&l2seg->hal_handle);
     vrf_unlock(vrf, __FILENAME__, __LINE__, __func__);    // unlock
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to remove from vrf's l2seg list. ret:{}", ret);
+        HAL_TRACE_ERR("Failed to remove l2seg {} from from vrf {}, err : {}",
+                       l2seg->seg_id, vrf->vrf_id, ret);
         goto end;
     }
-
-    HAL_TRACE_DEBUG("del vrf =/=> l2seg, {} =/=> {}, ret:{}",
-                    vrf->vrf_id, l2seg->seg_id, ret);
+    HAL_TRACE_DEBUG("Deleted l2seg {} from vrf {}", l2seg->seg_id, vrf->vrf_id);
 
 end:
 
     return ret;
+}
+
+//-----------------------------------------------------------------------------
+// given vrf_t, marshall it for persisting the vrf obj
+//-----------------------------------------------------------------------------
+uint32_t
+vrf_marshall (void *obj, uint8_t *mem, uint32_t len)
+{
+    return 0;
+}
+
+uint32_t
+vrf_unmarshall (void *obj, uint32_t len)
+{
+    return 0;
 }
 
 }    // namespace hal

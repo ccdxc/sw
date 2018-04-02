@@ -450,7 +450,7 @@ public:
     hal_stats_t api_stats(int idx) const { return api_stats_[idx]; }
     void set_api_stats(int idx, int val) { api_stats_[idx] = val; }
     uint64_t preserve_state(void);
-    uint64_t restore_state(void *mem);
+    hal_ret_t restore_state(void *mem);
 
 private:
     // following come from shared memory or non-linux HBM memory

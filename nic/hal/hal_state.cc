@@ -62,8 +62,53 @@ typedef struct hal_state_mctxt_s {
     uint32_t         obj_id;         // object id (i.e., HAL_OBJ_ID_XXX)
     uint8_t          *mem;           // buffer to marshall the state into
     uint32_t         len;            // length of the buffer available
-    marshall_cb_t    marshall_cb;    // marshal callback pointer
+    marshall_cb_t    marshall_cb;    // marshall callback pointer
 } __PACK__ hal_state_mctxt_t;
+
+typedef struct hal_state_umctxt_s {
+    uint32_t           obj_id;           // object id (i.e., HAL_OBJ_ID_XXX)
+    void               *obj;             // buffer to unmarshall the state from
+    uint32_t           len;              // length of the marshalled obj
+    unmarshall_cb_t    unmarshall_cb;    // unmarshall callback pointer
+} __PACK__ hal_state_umctxt_t;
+
+// HAL serialized state store hints used while restoring the state
+class hal_state_hints {
+public:
+    hal_state_hints() {
+        pi_state_ = NULL;
+        pi_state_len_ = 0;
+        pd_state_ = NULL;
+        pd_state_len_ = 0;
+        asic_pd_state_ = NULL ;
+        asic_pd_state_len_ = 0;
+    }
+    ~hal_state_hints() {}
+
+    void set_pi_state(void *state) { pi_state_ = state; }
+    void *pi_state(void) { return pi_state_; }
+    void set_pi_state_len(uint32_t len) { pi_state_len_ = len; }
+    uint32_t pi_state_len(void) const { return pi_state_len_; }
+
+    void set_pd_state(void *state) { pd_state_ = state; }
+    void *pd_state(void) { return pd_state_; }
+    void set_pd_state_len(uint32_t len) { pd_state_len_ = len; }
+    uint32_t pd_state_len(void) const { return pd_state_len_; }
+
+    void set_asic_pd_state(void *state) { asic_pd_state_ = state; }
+    void *asic_pd_state(void) { return asic_pd_state_; }
+    void set_asic_pd_state_len(uint32_t len) { asic_pd_state_len_ = len; }
+    uint32_t asic_pd_state_len(void) const { return asic_pd_state_len_; }
+
+private:
+    void        *pi_state_;
+    uint32_t    pi_state_len_;
+    void        *pd_state_;
+    uint32_t    pd_state_len_;
+    void        *asic_pd_state_;
+    uint32_t    asic_pd_state_len_;
+};
+#define HAL_STATE_HINTS        "h3s-hints"
 
 //------------------------------------------------------------------------------
 // initialize DBs and caches that needs to be persisted across restarts/upgrades
@@ -1080,10 +1125,10 @@ hal_state::init_on_restart(void) {
 }
 
 //------------------------------------------------------------------------------
-// common slab object marshalling callback
+// common object marshalling hook
 //------------------------------------------------------------------------------
 static bool
-slab_marshall_cb (void *obj, void *ctxt)
+hal_obj_marshall (void *obj, void *ctxt)
 {
     hal_state_mctxt_t    *mctxt;
     tlv_t                *tlv;
@@ -1095,7 +1140,18 @@ slab_marshall_cb (void *obj, void *ctxt)
     mctxt->mem += sizeof(tlv_t) + tlv->len;
     mctxt->len -= sizeof(tlv_t) + tlv->len;
 
-     return false;
+     return false;    // don't stop the walk
+}
+
+//------------------------------------------------------------------------------
+// common object unmarshalling hook
+//------------------------------------------------------------------------------
+static hal_ret_t
+hal_obj_unmarshall (hal_state_umctxt_t *umctxt)
+{
+    HAL_ASSERT((umctxt != NULL) && (umctxt->obj != NULL) && (umctxt->len > 0));
+    umctxt->unmarshall_cb(umctxt->obj, umctxt->len);
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -1106,10 +1162,11 @@ slab_marshall_cb (void *obj, void *ctxt)
 uint64_t
 hal_state::preserve_state(void)
 {
-    uint32_t             len = HAL_SERIALIZED_STATE_STORE_SIZE;
-    uint32_t             obj_id, avail_sz = len - 32;
-    hal_state_mctxt_t    mctxt = { 0 };
-    slab                 *slab_obj;
+    uint32_t                       obj_id, avail_sz;
+    hal_state_mctxt_t              mctxt = { 0 };
+    hal_state_hints               *h3s_hints;
+    slab                           *slab_obj;
+    fixed_managed_shared_memory    *fm_shm_mgr;
 
     g_h3s_shmmgr =
         shmmgr::factory(HAL_SERIALIZED_STATE_STORE,
@@ -1121,10 +1178,16 @@ hal_state::preserve_state(void)
         return 0;
     }
 
+    // construct our root (aka. hints) object
+    fm_shm_mgr = (fixed_managed_shared_memory *)g_h3s_shmmgr->mmgr();
+    h3s_hints = fm_shm_mgr->construct<hal_state_hints>(HAL_STATE_HINTS)();
+    HAL_ASSERT(h3s_hints != NULL);
+
     // initialize the marshalling context
-    mctxt.len = avail_sz;
+    mctxt.len = avail_sz = g_h3s_shmmgr->free_size() - 32;    // 32 bytes for internal meta of boost mem mgr.
     mctxt.mem = (uint8_t *)g_h3s_shmmgr->alloc(avail_sz);
     HAL_ASSERT(mctxt.mem != NULL);
+    h3s_hints->set_pi_state(mctxt.mem);
 
     // walk all objects and preserve the state, if needed
     for (obj_id = (uint32_t)HAL_OBJ_ID_MIN;
@@ -1138,22 +1201,71 @@ hal_state::preserve_state(void)
         HAL_ASSERT(slab_obj != NULL);
         HAL_TRACE_DEBUG("Preserving state in slab {} for obj id {}",
                         slab_obj->name(), obj_id);
-        slab_obj->walk(slab_marshall_cb, &mctxt);
+        slab_obj->walk(hal_obj_marshall, &mctxt);
         HAL_TRACE_DEBUG("Preserved state in slab {}, state store size {}, "
                         "used {}, free {}", slab_obj->name(), avail_sz,
                         avail_sz - mctxt.len, mctxt.len);
     }
+    h3s_hints->set_pi_state_len(avail_sz - mctxt.len);
 
-    return 0;    // TODO: FIXME
+    return (avail_sz - mctxt.len);
 }
 
 //------------------------------------------------------------------------------
 // restore the state from given memory segment
 //------------------------------------------------------------------------------
-uint64_t
+hal_ret_t
 hal_state::restore_state(void *mem)
 {
-    return 0;
+    hal_state_hints                *h3s_hints;
+    fixed_managed_shared_memory    *fm_shm_mgr;
+    uint8_t                        *state;
+    uint32_t                       obj_id, state_len;
+    tlv_t                          *tlv;
+    hal_state_umctxt_t             umctxt = { 0 };
+
+    fm_shm_mgr = (fixed_managed_shared_memory *)g_h3s_shmmgr->mmgr();
+    std::pair<hal_state_hints *, std::size_t> h3shints_info =
+        fm_shm_mgr->find<hal_state_hints>(HAL_STATE_HINTS);
+    if ((h3s_hints = h3shints_info.first) == NULL) {
+        HAL_TRACE_ERR("Failed to find HAL state hints in state store");
+        return HAL_RET_ERR;
+    }
+
+    // start unmarshalling objs
+    state = (uint8_t *)h3s_hints->pi_state();
+    state_len = h3s_hints->pi_state_len();
+    while (state_len) {
+        HAL_TRACE_DEBUG("PI state len {}", state_len);
+        tlv = (tlv_t *)state;
+        if (!obj_meta_[obj_id = tlv->type]) {
+            // no need to carry over this object's state into new version
+            HAL_TRACE_ERR("Skipping state restoration for obj {}", obj_id);
+            goto skip;
+        }
+#if 0
+        slab_obj = get_slab(obj_meta_[obj_id].slab_id);
+        if (slab_obj) {
+            HAL_TRACE_ERR("Skipping state restoration for obj {}, slab {} "
+                          "not found", obj_id, obj_meta_[obj_id].slab_id);
+            state += sizeof(tlv_t) + tlv->len;
+            state_len -= sizeof(tlv_t) + tlv->len
+            continue;
+        }
+#endif
+        // now unmarshall this object
+        umctxt.obj_id = obj_id;
+        umctxt.obj = state;
+        umctxt.len = tlv->len;
+        umctxt.unmarshall_cb = obj_meta_[obj_id]->unmarshall_cb();
+        hal_obj_unmarshall(&umctxt);
+skip:
+        state += sizeof(tlv_t) + tlv->len;
+        state_len -= sizeof(tlv_t) + tlv->len;
+    }
+
+    // restore PI state to new slabs
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------

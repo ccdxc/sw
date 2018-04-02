@@ -55,7 +55,7 @@ shmmgr *hal_mmgr(void);
 
 // meta class for each object
 typedef uint32_t (*marshall_cb_t)(void *obj, uint8_t *mem, uint32_t len);
-typedef uint32_t (*unmarshall_cb_t)(uint8_t *mem);
+typedef uint32_t (*unmarshall_cb_t)(void *obj, uint32_t len);
 class hal_obj_meta {
 public:
     hal_obj_meta(hal_slab_t slab_id,

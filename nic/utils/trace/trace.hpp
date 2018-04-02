@@ -59,9 +59,6 @@
 namespace hal {
 namespace utils {
 
-using logger = spdlog::logger;
-logger *hal_logger(void);
-logger *hal_syslogger(void);
 enum log_mode_e {
     log_mode_sync     = 0,     // write logs in the context of the caller thread
     log_mode_async    = 1,    // write logs/traces in the context of a backend thread
@@ -84,6 +81,11 @@ enum syslog_level_e {
     log_info      = 7,
     log_debug     = 8,
 };
+
+using logger = spdlog::logger;
+logger *hal_logger(void);
+logger *hal_syslogger(void);
+trace_level_e hal_trace_level(void);
 
 // logger class with support for log rotation
 class log {

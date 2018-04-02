@@ -13,7 +13,7 @@ hal_default_marshall_cb (void *obj, uint8_t *mem, uint32_t len)
 }
 
 uint32_t
-hal_default_unmarshall_cb (uint8_t *mem)
+hal_default_unmarshall_cb (void *mem, uint32_t len)
 {
     return 0;
 }

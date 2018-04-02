@@ -31,6 +31,16 @@ hal_syslogger (void)
     return NULL;
 }
 
+trace_level_e
+hal_trace_level (void)
+{
+    if (g_syslog_logger) {
+        return g_syslog_logger->trace_level();
+    }
+    return trace_none;
+}
+
+
 // logger class static constants
 const size_t log::k_async_qsize_ = 64 * 1024;    // must be power of 2
 const spdlog::async_overflow_policy log::k_async_overflow_policy_ = spdlog::async_overflow_policy::discard_log_msg;

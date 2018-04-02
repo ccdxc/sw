@@ -79,18 +79,12 @@ typedef struct vrf_update_app_ctxt_s {
 static inline void 
 vrf_lock (vrf_t *vrf, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:locking vrf:{} from {}:{}:{}", 
-                    __FUNCTION__, vrf->vrf_id,
-                    fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&vrf->slock);
 }
 
 static inline void 
 vrf_unlock (vrf_t *vrf, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:unlocking vrf:{} from {}:{}:{}", 
-                    __FUNCTION__, vrf->vrf_id,
-                    fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&vrf->slock);
 }
 
@@ -106,13 +100,11 @@ vrf_lookup_by_handle (hal_handle_t handle)
 
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
-        HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",
-                        __FUNCTION__, handle);
+        HAL_TRACE_DEBUG("Failed to find object with handle {}", handle);
         return NULL;
     }
     if (hal_handle->obj_id() != HAL_OBJ_ID_VRF) {
-        HAL_TRACE_DEBUG("{}:failed to find vrf with handle:{}",
-                        __FUNCTION__, handle);
+        HAL_TRACE_DEBUG("Failed to find vrf with handle {}", handle);
         return NULL;
     }
     return (vrf_t *)hal_handle->get_obj();
