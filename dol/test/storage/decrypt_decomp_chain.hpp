@@ -5,6 +5,9 @@
 #include "xts.hpp"
 #include "compression.hpp"
 
+/*
+ * Accelerator XTS-encrypt to decompression chaining DOL
+ */
 namespace tests {
 
 class comp_encrypt_chain_t;

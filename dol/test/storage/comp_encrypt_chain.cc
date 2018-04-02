@@ -239,6 +239,8 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
         xts_ctx.exp_db_data = caller_xts_opaque_data;
         xts_ctx.caller_xts_db_en = true;
     }
+    xts_ctx.copy_desc = false;
+    xts_ctx.ring_db = false;
 
     // Calling xts_ctx init only to get its xts_db initialized
     xts_ctx.init(0, false);

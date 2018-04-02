@@ -1,5 +1,5 @@
-#ifndef	COMP_ENCRYPT_CHAIN_HPP_
-#define	COMP_ENCRYPT_CHAIN_HPP_
+#ifndef COMP_ENCRYPT_CHAIN_HPP_
+#define COMP_ENCRYPT_CHAIN_HPP_
 
 #include "tests.hpp"
 #include "xts.hpp"
