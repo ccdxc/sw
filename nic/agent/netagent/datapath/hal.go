@@ -712,7 +712,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) err
 			EncapValue: nw.Spec.VlanID,
 		},
 		TunnelEncap: &halproto.EncapInfo{
-			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
+			EncapType:  halproto.EncapType_ENCAP_TYPE_VXLAN,
 			EncapValue: nw.Spec.VlanID,
 		},
 		VrfKeyHandle: vrfKey,
@@ -760,7 +760,7 @@ func (hd *Datapath) UpdateNetwork(nw *netproto.Network) error {
 			EncapValue: nw.Spec.VlanID,
 		},
 		TunnelEncap: &halproto.EncapInfo{
-			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
+			EncapType:  halproto.EncapType_ENCAP_TYPE_VXLAN,
 			EncapValue: nw.Spec.VlanID,
 		},
 	}

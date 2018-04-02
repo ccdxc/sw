@@ -360,6 +360,28 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
         return HAL_RET_INVALID_ARG;
     }
 
+    switch (spec.wire_encap().encap_type()) {
+    case types::ENCAP_TYPE_NONE:
+    case types::ENCAP_TYPE_DOT1Q:
+    case types::ENCAP_TYPE_VXLAN:
+        break;
+    default:
+        HAL_TRACE_ERR("L2seg id wire encap type {} not allowed", spec.wire_encap().encap_type());
+        rsp->set_api_status(types::API_STATUS_ENCAP_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (spec.has_tunnel_encap()) {
+        switch (spec.tunnel_encap().encap_type()) {
+        case types::ENCAP_TYPE_VXLAN:
+            break;
+        default:
+            HAL_TRACE_ERR("L2seg id tunnel encap type {} not allowed", spec.tunnel_encap().encap_type());
+            rsp->set_api_status(types::API_STATUS_ENCAP_INVALID);
+            return HAL_RET_INVALID_ARG;
+        }
+    }
+
     // fetch the vrf
     vrf = vrf_lookup_key_or_handle(spec.vrf_key_handle());
     if (vrf == NULL) {

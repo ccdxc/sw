@@ -22,7 +22,7 @@ service Multicast {
 message MulticastEntrySpec {
   types.ObjectMeta               meta            = 1;
   kh.MulticastEntryKeyHandle     key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  repeated kh.InterfaceKeyHandle oif_key_handles = 3 [(gogoproto.moretags) = "venice:ref"]; // output interface handles
+  repeated kh.InterfaceKeyHandle oif_key_handles = 3 [(gogoproto.moretags) = "venice:ref, venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_ENIC}"]; // output interface handles
 }
 
 message MulticastEntryRequestMsg {
