@@ -1,6 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../p4/iris/include/defines.h"
+#include "nw.h"
 
 struct registered_macs_k k;
 struct registered_macs_d d;
@@ -9,6 +10,11 @@ struct phv_              p;
 %%
 
 registered_macs:
+  K_DBG_WR(0x140)
+  DBG_WR(0x148, d.registered_macs_d.multicast_en)
+  DBG_WR(0x149, d.registered_macs_d.dst_lport)
+  DBG_WR(0x14a, k.flow_lkp_metadata_pkt_type)
+  DBG_WR(0x14b, k.control_metadata_flow_miss_idx)
   bcf         [c1], registered_macs_hit
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST

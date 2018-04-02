@@ -15,6 +15,12 @@ input_properties:
   DBG_WR(0x08, r1)
   nop.!c1.e
   phvwr         p.control_metadata_nic_mode, r5[0]
+  DBG_WR(0x09,  k.capri_intrinsic_lif_sbit0_ebit2)
+  DBG_WR(0x0a,  k.capri_intrinsic_lif_sbit3_ebit10)
+  DBG_WR(0x0b,  d.input_properties_d.dst_lport)
+  DBG_WR(0x0c,  d.input_properties_d.src_lport)
+  DBG_WR(0x0d,  d.input_properties_d.vrf)
+  DBG_WR(0x0e,  d.input_properties_d.flow_miss_idx)
   phvwr         p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
   phvwr         p.flow_lkp_metadata_lkp_vrf, d.input_properties_d.vrf
   phvwrpair     p.control_metadata_dst_lport[10:0], d.input_properties_d.dst_lport, \

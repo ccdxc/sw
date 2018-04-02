@@ -22,7 +22,7 @@ nop:
 .align
 native_ipv4_packet:
   K_DBG_WR(0x10)
-  DBG_WR(0x18, 0x18)
+  DBG_WR(0x18, k.ethernet_dstAddr)
   bbeq          k.ethernet_dstAddr[40], 0, native_ipv4_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -59,7 +59,7 @@ native_ipv4_esp_packet:
 
 .align
 native_ipv6_packet:
-  DBG_WR(0x19, 0x19)
+  DBG_WR(0x19, k.ethernet_dstAddr)
   bbeq          k.ethernet_dstAddr[40], 0, native_ipv6_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -90,7 +90,7 @@ native_ipv6_packet_common:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 native_non_ip_packet:
   K_DBG_WR(0x10)
-  DBG_WR(0x1a, 0x1a)
+  DBG_WR(0x1a, k.ethernet_dstAddr)
   bbeq          k.ethernet_dstAddr[40], 0, native_non_ip_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0

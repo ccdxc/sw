@@ -11,7 +11,7 @@ struct phv_                        p;
 
 input_properties_mac_vlan:
   K_DBG_WR(0x30)
-  DBG_WR(0x38, 0x38)
+  DBG_WR(0x38, r1)
   seq           c2, k.control_metadata_tm_iport, TM_PORT_DMA
   phvwr.c2      p.flow_lkp_metadata_lkp_inst, k.p4plus_to_p4_lkp_inst
 
@@ -30,7 +30,12 @@ input_properties_mac_vlan:
   // if table lookup is miss, return
   nop.!c1.e
   phvwr         p.capri_p4_intrinsic_packet_len, r1
-  DBG_WR(0x3a, 0x3a)
+  DBG_WR(0x3a,  k.capri_intrinsic_lif_sbit0_ebit2)
+  DBG_WR(0x3b,  k.capri_intrinsic_lif_sbit3_ebit10)
+  DBG_WR(0x3c,  d.input_properties_mac_vlan_d.src_lif)
+  DBG_WR(0x3d,  d.input_properties_mac_vlan_d.dst_lport)
+  DBG_WR(0x3e,  d.input_properties_mac_vlan_d.vrf)
+  DBG_WR(0x3f,  d.input_properties_mac_vlan_d.flow_miss_idx)
 
   seq           c1, d.input_properties_mac_vlan_d.src_lif_check_en, 1
   seq           c2, d.input_properties_mac_vlan_d.src_lif, \
