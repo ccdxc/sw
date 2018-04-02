@@ -12,8 +12,24 @@ cc_binary(
 
 cc_library(
     name = "pd_iris",
-    srcs = [] + glob(["*.cc"]),
-    hdrs = [] + glob(["*.hpp"]) + glob(["*.h"]),
+    srcs = [] + glob(["*.cc"]) +
+           glob(["aclqos/*.cc"]) +
+           glob(["internal/*.cc"]) +
+           glob(["l4lb/*.cc"]) +
+           glob(["lif/*.cc"]) +
+           glob(["mcast/*.cc"]) +
+           glob(["nw/*.cc"]) +
+           glob(["security/*.cc"]) +
+           glob(["telemetry/*.cc"]),
+    hdrs = [] + glob(["*.hpp"]) + glob(["*.h"]) +
+           glob(["aclqos/*.hpp"]) +
+           glob(["internal/*.hpp"]) +
+           glob(["l4lb/*.hpp"]) +
+           glob(["lif/*.hpp"]) +
+           glob(["mcast/*.hpp"]) +
+           glob(["nw/*.hpp"]) +
+           glob(["security/*.hpp"]) +
+           glob(["telemetry/*.hpp"]),
     copts = sdk_copts,
     deps = [
         # PD Cleanup Only
@@ -51,14 +67,14 @@ cc_library(
 cc_library(
     name = "iris_includes",
     srcs = [],
-    hdrs = ["eth_pd.hpp",
-            "rdma_pd.hpp",
+    hdrs = ["lif/eth_pd.hpp",
+            "internal/rdma_pd.hpp",
             "hal_state_pd.hpp",
-            "rw_pd.hpp",
-            "tnnl_rw_pd.hpp",
-            "acl_pd.hpp",
-            "p4plus_pd_api.h",
-            "if_pd_utils.hpp"],
+            "nw/rw_pd.hpp",
+            "nw/tnnl_rw_pd.hpp",
+            "aclqos/acl_pd.hpp",
+            "internal/p4plus_pd_api.h",
+            "nw/if_pd_utils.hpp"],
     deps = [
         "//nic:gen_iris_includes",
         "//nic:gen_common_includes",

@@ -78,7 +78,7 @@ cc_library(
     glob(["src/aclqos/*.hpp"]) +
     glob(["src/telemetry/*.hpp"]) +
     glob(["src/debug/*.hpp"]) +
-    glob(["src/internal/*.hpp"]) +
+    glob(["src/internal/*.hpp"]) + glob(["src/internal/*.h"]) +
     glob(["src/l4lb/*.hpp"]) +
     glob(["src/mcast/*.hpp"]) +
     glob(["src/lif/*.hpp"]) +

@@ -7,7 +7,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/include/capri_common.h"
 #include "nic/include/capri_barco.h"
-#include "nic/hal/pd/iris/p4plus_pd_api.h"
+#include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
 namespace hal {
 namespace pd {

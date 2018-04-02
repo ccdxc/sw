@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
+#include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/hal/pd/pd_api.hpp"

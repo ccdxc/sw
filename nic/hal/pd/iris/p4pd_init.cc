@@ -10,14 +10,14 @@
 #include "nic/p4/include/common_defines.h"
 #include "nic/p4/rdma/include/rdma_defines.h"
 #include "nic/p4/iris/include/table_sizes.h"
-#include "nic/hal/pd/iris/rw_pd.hpp"
-#include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
+#include "nic/hal/pd/iris/nw/rw_pd.hpp"
+#include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/gen/proto/hal/types.pb.h"
-#include "nic/hal/pd/iris/acl_pd.hpp"
+#include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/hal/pd/hal_pd.hpp"
 
 using sdk::table::tcam;
