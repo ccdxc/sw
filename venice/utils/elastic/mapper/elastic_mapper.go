@@ -16,6 +16,16 @@ const (
 	indentation = "    "
 )
 
+// Elastic mapper options
+type options struct {
+	shards   uint   // Shard count
+	replicas uint   // Replica count
+	codec    string // Codec compression scheme
+}
+
+// Option fills the optional params for Mapper
+type Option func(opt *options)
+
 // ElasticConfig contains the settings and mappings
 // definition for an Elastic Index.
 type ElasticConfig struct {
@@ -42,6 +52,9 @@ type Settings struct {
 
 	// Replicas is count of secondary replicas
 	Replicas uint `json:"number_of_replicas"`
+
+	// Codec compression config
+	Codec string `json:"codec"`
 }
 
 // Properties contains the mapping of all fields in
@@ -52,12 +65,12 @@ type Properties struct {
 	ElasticMapping `json:"properties"`
 }
 
-// FieldOrTypeOverride is map of special types per docType
+// fieldOrTypeOverride is map of special types per docType
 // based on our usecase to support aggregations and mapping
 // for non-primitive data types
 // This is organized per docType/category to accomadate potential
 // conflicts in field-name to type mapping.
-var FieldOrTypeOverride = map[string]map[string]string{
+var fieldOrTypeOverride = map[string]map[string]string{
 
 	// Config DocType
 	elastic.GetDocType(globals.Configs): {
@@ -80,6 +93,35 @@ var FieldOrTypeOverride = map[string]map[string]string{
 		// special types mapping
 		"Timestamp": "date",
 	},
+}
+
+func defaultOptions() *options {
+	return &options{
+		shards:   3,
+		replicas: 2,
+		codec:    "best_compression",
+	}
+}
+
+// WithShardCount specifies the shard count
+func WithShardCount(shards uint) Option {
+	return func(o *options) {
+		o.shards = shards
+	}
+}
+
+// WithReplicaCount specifies the replica count
+func WithReplicaCount(replicas uint) Option {
+	return func(o *options) {
+		o.replicas = replicas
+	}
+}
+
+// WithCodec specifies the compressing algorithm
+func WithCodec(codec string) Option {
+	return func(o *options) {
+		o.codec = codec
+	}
 }
 
 // GetElasticType returns the mapping to go data type
@@ -135,10 +177,19 @@ func GetElasticType(kind reflect.Kind) string {
 //  	str, err = config.JSONString()
 //              (or)
 //  	str, err = config.JSONPrettyString()
-func ElasticMapper(obj interface{}, docType string, shards, replicas uint) (ElasticConfig, error) {
+func ElasticMapper(obj interface{}, docType string, opts ...Option) (ElasticConfig, error) {
 
-	log.Debugf("Object: %+v docType: %s shards: %d replicas: %s",
-		obj, docType, shards, replicas)
+	options := *defaultOptions()
+
+	// add custom options
+	for _, o := range opts {
+		if o != nil {
+			o(&options)
+		}
+	}
+
+	log.Debugf("Object: %+v docType: %s options: %+v",
+		obj, docType, options)
 
 	// Value of object has to be valid
 	val := reflect.ValueOf(obj)
@@ -148,8 +199,9 @@ func ElasticMapper(obj interface{}, docType string, shards, replicas uint) (Elas
 
 	// Fill in index settings
 	settings := Settings{
-		Shards:   shards,
-		Replicas: replicas,
+		Shards:   options.shards,
+		Replicas: options.replicas,
+		Codec:    options.codec,
 	}
 
 	// Generate mappings for Object
@@ -178,7 +230,7 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 		indent, config, key, val.Type().Name(), val.Kind(), val.Interface())
 
 	// check for override by field name
-	if kind, ok := FieldOrTypeOverride[docType][key]; ok {
+	if kind, ok := fieldOrTypeOverride[docType][key]; ok {
 		eType := ElasticMapping{
 			"type": kind,
 		}
@@ -187,7 +239,7 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 	}
 
 	// check for override by type
-	if kind, ok := FieldOrTypeOverride[docType][val.Type().Name()]; ok {
+	if kind, ok := fieldOrTypeOverride[docType][val.Type().Name()]; ok {
 		eType := ElasticMapping{
 			"type": kind,
 		}

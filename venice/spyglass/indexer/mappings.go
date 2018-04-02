@@ -142,8 +142,8 @@ func (idr *Indexer) getIndexMapping(dType globals.DataType) (string, error) {
 		// get the elastic mapping config
 		config, err := mapper.ElasticMapper(search.Entry{},
 			elastic.GetDocType(globals.Configs),
-			3, // #of shards
-			2) // #of additional replicas
+			mapper.WithShardCount(3),
+			mapper.WithReplicaCount(2))
 		if err != nil {
 			log.Errorf("Failed to generate elastic mapping for docType: %d, err: %v", dType, err)
 			return "", err

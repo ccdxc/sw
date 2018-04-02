@@ -94,7 +94,10 @@ func TestElastic(t *testing.T) {
 			Source:    &events.EventSource{},
 		},
 	}
-	mapping, err := mapper.ElasticMapper(eventObj, indexType, 1, 0)
+	mapping, err := mapper.ElasticMapper(eventObj,
+		indexType,
+		mapper.WithShardCount(1),
+		mapper.WithReplicaCount(0))
 	AssertOk(t, err, "Failed to generate elastic mapping for events")
 
 	// Generate JSON string for the mapping

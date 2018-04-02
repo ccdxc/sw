@@ -14,11 +14,12 @@ import (
 )
 
 const (
-	eventMapping       = `{"settings":{"number_of_shards":1,"number_of_replicas":0},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"first-timestamp":{"type":"text"},"kind":{"type":"keyword"},"last-timestamp":{"type":"text"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"type":"keyword"},"name":{"type":"text"},"namespace":{"type":"text"}}},"severity":{"type":"keyword"},"source":{"properties":{"component":{"type":"keyword"},"node-name":{"type":"text"}}},"type":{"type":"keyword"}}}}}`
+	eventMapping       = `{"settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression"},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"first-timestamp":{"type":"text"},"kind":{"type":"keyword"},"last-timestamp":{"type":"text"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"type":"keyword"},"name":{"type":"text"},"namespace":{"type":"text"}}},"severity":{"type":"keyword"},"source":{"properties":{"component":{"type":"keyword"},"node-name":{"type":"text"}}},"type":{"type":"keyword"}}}}}`
 	eventMappingPretty = `{
     "settings": {
         "number_of_shards": 1,
-        "number_of_replicas": 0
+        "number_of_replicas": 0,
+        "codec": "best_compression"
     },
     "mappings": {
         "events": {
@@ -113,11 +114,12 @@ const (
     }
 }`
 
-	searchMapping       = `{"settings":{"number_of_shards":1,"number_of_replicas":0},"mappings":{"configs":{"properties":{"api-version":{"type":"text"},"kind":{"type":"keyword"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}}}}}}`
+	searchMapping       = `{"settings":{"number_of_shards":3,"number_of_replicas":2,"codec":"best_compression"},"mappings":{"configs":{"properties":{"api-version":{"type":"text"},"kind":{"type":"keyword"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"type":"keyword"},"uuid":{"type":"text"}}}}}}}`
 	searchMappingPretty = `{
     "settings": {
-        "number_of_shards": 1,
-        "number_of_replicas": 0
+        "number_of_shards": 3,
+        "number_of_replicas": 2,
+        "codec": "best_compression"
     },
     "mappings": {
         "configs": {
@@ -170,11 +172,12 @@ const (
         }
     }
 }`
-	s2Mapping       = `{"settings":{"number_of_shards":1,"number_of_replicas":0},"mappings":{"s2":{"properties":{"P":{"properties":{"X":{"type":"long"},"Y":{"type":"boolean"},"Z":{"properties":{"X":{"type":"text"}}}}}}}}}`
+	s2Mapping       = `{"settings":{"number_of_shards":5,"number_of_replicas":1,"codec":"lz4"},"mappings":{"s2":{"properties":{"P":{"properties":{"X":{"type":"long"},"Y":{"type":"boolean"},"Z":{"properties":{"X":{"type":"text"}}}}}}}}}`
 	s2MappingPretty = `{
     "settings": {
-        "number_of_shards": 1,
-        "number_of_replicas": 0
+        "number_of_shards": 5,
+        "number_of_replicas": 1,
+        "codec": "lz4"
     },
     "mappings": {
         "s2": {
@@ -200,11 +203,12 @@ const (
         }
     }
 }`
-	nullMapping       = `{"settings":{"number_of_shards":0,"number_of_replicas":0},"mappings":null}`
+	nullMapping       = `{"settings":{"number_of_shards":0,"number_of_replicas":0,"codec":""},"mappings":null}`
 	nullMappingPretty = `{
     "settings": {
         "number_of_shards": 0,
-        "number_of_replicas": 0
+        "number_of_replicas": 0,
+        "codec": ""
     },
     "mappings": null
 }`
@@ -244,8 +248,7 @@ func TestElasticMapper(t *testing.T) {
 	testCases := []struct {
 		object                interface{}
 		docType               string
-		shards                uint
-		replicas              uint
+		options               []Option
 		err                   error
 		expectedMapping       string
 		expectedMappingPretty string
@@ -253,8 +256,7 @@ func TestElasticMapper(t *testing.T) {
 		{
 			search.Entry{},
 			elastic.GetDocType(globals.Configs),
-			1,
-			0,
+			nil, // test default option
 			nil,
 			searchMapping,
 			searchMappingPretty,
@@ -269,8 +271,10 @@ func TestElasticMapper(t *testing.T) {
 				},
 			},
 			elastic.GetDocType(globals.Events),
-			1,
-			0,
+			[]Option{
+				WithReplicaCount(0),
+				WithShardCount(1),
+			},
 			nil,
 			eventMapping,
 			eventMappingPretty,
@@ -283,8 +287,11 @@ func TestElasticMapper(t *testing.T) {
 				},
 			},
 			"s2",
-			1,
-			0,
+			[]Option{
+				WithShardCount(5),
+				WithReplicaCount(1),
+				WithCodec("lz4"),
+			},
 			nil,
 			s2Mapping,
 			s2MappingPretty,
@@ -292,8 +299,7 @@ func TestElasticMapper(t *testing.T) {
 		{
 			nil,
 			"Nil",
-			1,
-			0,
+			nil,
 			errors.New("Invalid object"),
 			nullMapping,
 			nullMappingPretty,
@@ -304,7 +310,7 @@ func TestElasticMapper(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.docType, func(t *testing.T) {
 			// generate Elastic mapping and settings
-			config, err := ElasticMapper(tc.object, tc.docType, tc.shards, tc.replicas)
+			config, err := ElasticMapper(tc.object, tc.docType, tc.options...)
 			AssertEquals(t, tc.err, err, "Error status mismatch for elastic mapper")
 			t.Logf("\nEntry: %+v", tc.object)
 			t.Logf("\nMapping: %+v", config)
