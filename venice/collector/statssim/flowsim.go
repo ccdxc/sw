@@ -3,7 +3,9 @@ package statssim
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -263,8 +265,8 @@ func (e *EP) TalkSimple() (map[string]string, map[string]interface{}) {
 	flow["destPort"] = d[1]
 	flow["vlan"] = e.Vlan
 
-	stats["Rcv Bytes"] = SafeRandInt(16000)
-	stats["Tx Bytes"] = SafeRandInt(19000)
+	stats["RcvBytes"] = SafeRandInt(16000)
+	stats["TxBytes"] = SafeRandInt(19000)
 
 	return flow, stats
 }
@@ -290,4 +292,26 @@ func SafeRandInt(x int) int {
 	}
 
 	return rand.Intn(x)
+}
+
+// GetLinePoints returns the specified number of points in line protocol
+func GetLinePoints(ss *StatsSim, meas string, count int) []string {
+	res := make([]string, 0, count)
+	for ix := 0; ix < count; ix++ {
+		tags, fields := ss.GetFlowStats()
+		l := meas
+		for k, v := range tags {
+			l = fmt.Sprintf("%s,%s=%s", l, k, v)
+		}
+
+		sep := " "
+		for k, v := range fields {
+			l = fmt.Sprintf("%s%s%s=%di", l, sep, k, v)
+			sep = ","
+		}
+
+		l = l + " " + strconv.FormatInt(time.Now().UnixNano(), 10) + "\n"
+		res = append(res, l)
+	}
+	return res
 }

@@ -294,6 +294,10 @@ func (d *dummyMetricServer) WriteMetrics(ctx context.Context, mb *metric.MetricB
 	return &api.Empty{}, nil
 }
 
+func (d *dummyMetricServer) WriteLines(ctx context.Context, lb *metric.LineBundle) (*api.Empty, error) {
+	return &api.Empty{}, nil
+}
+
 type testSuite struct {
 	rpcServer    *rpckit.RPCServer
 	rpcClient    *rpckit.RPCClient

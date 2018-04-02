@@ -918,8 +918,8 @@ func TestFloatIter(t *testing.T) {
 	e := MustOpenDefaultEngine()
 	defer e.Close()
 
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Rcv Bytes"), influxql.Float, false)
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Tx Bytes"), influxql.Float, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("RcvBytes"), influxql.Float, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("TxBytes"), influxql.Float, false)
 	points := getPoints(models.Float, 12)
 	for _, pp := range points {
 		var keyBuf []byte
@@ -938,8 +938,8 @@ func TestFloatIter(t *testing.T) {
 
 	// create a simple varref iterator
 	opts := query.IteratorOptions{
-		Expr: &influxql.VarRef{Type: influxql.Float, Val: "Rcv Bytes"},
-		//Expr:       influxql.MustParseExpr("Rcv Bytes"),
+		Expr: &influxql.VarRef{Type: influxql.Float, Val: "RcvBytes"},
+		//Expr:       influxql.MustParseExpr("RcvBytes"),
 		StartTime:  influxql.MinTime,
 		EndTime:    influxql.MaxTime,
 		Dimensions: []string{"fwAction"},
@@ -983,8 +983,8 @@ func TestIntegerIter(t *testing.T) {
 	e := MustOpenDefaultEngine()
 	defer e.Close()
 
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Rcv Bytes"), influxql.Integer, false)
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Tx Bytes"), influxql.Integer, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("RcvBytes"), influxql.Integer, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("TxBytes"), influxql.Integer, false)
 	points := getPoints(models.Integer, 12)
 	for _, pp := range points {
 		var keyBuf []byte
@@ -1003,7 +1003,7 @@ func TestIntegerIter(t *testing.T) {
 
 	// create a simple varref iterator
 	opts := query.IteratorOptions{
-		Expr:      &influxql.VarRef{Type: influxql.Integer, Val: "Rcv Bytes"},
+		Expr:      &influxql.VarRef{Type: influxql.Integer, Val: "RcvBytes"},
 		StartTime: influxql.MinTime,
 		EndTime:   influxql.MaxTime,
 		Ascending: true,
@@ -1045,8 +1045,8 @@ func TestBooleanIter(t *testing.T) {
 	e := MustOpenDefaultEngine()
 	defer e.Close()
 
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Rcv Bytes"), influxql.Boolean, false)
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Tx Bytes"), influxql.Boolean, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("RcvBytes"), influxql.Boolean, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("TxBytes"), influxql.Boolean, false)
 	points := getPoints(models.Boolean, 12)
 	for _, pp := range points {
 		var keyBuf []byte
@@ -1065,8 +1065,8 @@ func TestBooleanIter(t *testing.T) {
 
 	// create a simple varref iterator
 	opts := query.IteratorOptions{
-		Expr: &influxql.VarRef{Type: influxql.Boolean, Val: "Rcv Bytes"},
-		//Expr:       influxql.MustParseExpr("Rcv Bytes"),
+		Expr: &influxql.VarRef{Type: influxql.Boolean, Val: "RcvBytes"},
+		//Expr:       influxql.MustParseExpr("RcvBytes"),
 		Condition: &influxql.BinaryExpr{
 			Op:  influxql.EQ,
 			LHS: &influxql.VarRef{Val: "fwAction"},
@@ -1115,8 +1115,8 @@ func TestStringIter(t *testing.T) {
 	e := MustOpenDefaultEngine()
 	defer e.Close()
 
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Rcv Bytes"), influxql.String, false)
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Tx Bytes"), influxql.String, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("RcvBytes"), influxql.String, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("TxBytes"), influxql.String, false)
 	points := getPoints(models.String, 12)
 	for _, pp := range points {
 		var keyBuf []byte
@@ -1135,13 +1135,13 @@ func TestStringIter(t *testing.T) {
 
 	// create a simple varref iterator
 	opts := query.IteratorOptions{
-		Expr: &influxql.VarRef{Type: influxql.String, Val: "Rcv Bytes"},
+		Expr: &influxql.VarRef{Type: influxql.String, Val: "RcvBytes"},
 		Condition: &influxql.BinaryExpr{
 			Op:  influxql.EQ,
 			LHS: &influxql.VarRef{Val: "fwAction"},
 			RHS: &influxql.StringLiteral{Val: "Learn"},
 		},
-		//Expr:       influxql.MustParseExpr("Rcv Bytes"),
+		//Expr:       influxql.MustParseExpr("RcvBytes"),
 		StartTime: influxql.MinTime,
 		EndTime:   influxql.MaxTime,
 		Ascending: false,
@@ -1184,8 +1184,8 @@ func TestCastIterFloat(t *testing.T) {
 	e := MustOpenDefaultEngine()
 	defer e.Close()
 
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Rcv Bytes"), influxql.Float, false)
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Tx Bytes"), influxql.Float, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("RcvBytes"), influxql.Float, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("TxBytes"), influxql.Float, false)
 	points := getPoints(models.Float, 12)
 	for _, pp := range points {
 		var keyBuf []byte
@@ -1204,14 +1204,14 @@ func TestCastIterFloat(t *testing.T) {
 
 	// create a simple varref iterator
 	opts := query.IteratorOptions{
-		Expr: &influxql.VarRef{Type: influxql.Integer, Val: "Rcv Bytes"},
-		Aux:  []influxql.VarRef{{Val: "Tx Bytes", Type: influxql.Integer}, {Val: "_tagKey"}},
+		Expr: &influxql.VarRef{Type: influxql.Integer, Val: "RcvBytes"},
+		Aux:  []influxql.VarRef{{Val: "TxBytes", Type: influxql.Integer}, {Val: "_tagKey"}},
 		Condition: &influxql.BinaryExpr{
 			Op:  influxql.NEQ,
 			LHS: &influxql.VarRef{Val: "fwAction", Type: influxql.Tag},
 			RHS: &influxql.StringLiteral{Val: "_tagKey"},
 		},
-		//Expr:       influxql.MustParseExpr("Rcv Bytes"),
+		//Expr:       influxql.MustParseExpr("RcvBytes"),
 		StartTime: influxql.MinTime,
 		EndTime:   influxql.MaxTime,
 		Ascending: false,
@@ -1254,8 +1254,8 @@ func TestCastIterInteger(t *testing.T) {
 	e := MustOpenDefaultEngine()
 	defer e.Close()
 
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Rcv Bytes"), influxql.Integer, false)
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Tx Bytes"), influxql.Integer, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("RcvBytes"), influxql.Integer, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("TxBytes"), influxql.Integer, false)
 	points := getPoints(models.Integer, 12)
 	for _, pp := range points {
 		var keyBuf []byte
@@ -1274,14 +1274,14 @@ func TestCastIterInteger(t *testing.T) {
 
 	// create a simple varref iterator
 	opts := query.IteratorOptions{
-		//Expr: &influxql.VarRef{Type: influxql.Float, Val: "Rcv Bytes"},
-		Aux: []influxql.VarRef{{Val: "Tx Bytes", Type: influxql.Float}, {Val: "_tagKey"}, {Val: "None1", Type: influxql.Float}, {Val: "None2", Type: influxql.Integer}, {Val: "None3", Type: influxql.Unsigned}, {Val: "None4", Type: influxql.Integer}, {Val: "None5", Type: influxql.Boolean}, {Val: "None6", Type: influxql.String}},
+		//Expr: &influxql.VarRef{Type: influxql.Float, Val: "RcvBytes"},
+		Aux: []influxql.VarRef{{Val: "TxBytes", Type: influxql.Float}, {Val: "_tagKey"}, {Val: "None1", Type: influxql.Float}, {Val: "None2", Type: influxql.Integer}, {Val: "None3", Type: influxql.Unsigned}, {Val: "None4", Type: influxql.Integer}, {Val: "None5", Type: influxql.Boolean}, {Val: "None6", Type: influxql.String}},
 		Condition: &influxql.BinaryExpr{
 			Op:  influxql.EQ,
 			LHS: &influxql.VarRef{Val: "fwAction"},
 			RHS: &influxql.StringLiteral{Val: "Learn"},
 		},
-		//Expr:       influxql.MustParseExpr("Rcv Bytes"),
+		//Expr:       influxql.MustParseExpr("RcvBytes"),
 		StartTime: influxql.MinTime,
 		EndTime:   influxql.MaxTime,
 		Ascending: false,
@@ -1325,8 +1325,8 @@ func TestCallRef(t *testing.T) {
 	e := MustOpenDefaultEngine()
 	defer e.Close()
 
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Rcv Bytes"), influxql.Integer, false)
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Tx Bytes"), influxql.Integer, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("RcvBytes"), influxql.Integer, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("TxBytes"), influxql.Integer, false)
 	points := getPoints(models.Integer, 12)
 	for _, pp := range points {
 		var keyBuf []byte
@@ -1345,14 +1345,14 @@ func TestCallRef(t *testing.T) {
 
 	// create a simple varref iterator
 	opts := query.IteratorOptions{
-		Expr: &influxql.Call{Name: "last", Args: []influxql.Expr{&influxql.VarRef{Val: "Rcv Bytes"}, &influxql.NumberLiteral{Val: 1}}},
-		Aux:  []influxql.VarRef{{Val: "Tx Bytes", Type: influxql.Float}, {Val: "_tagKey"}},
+		Expr: &influxql.Call{Name: "last", Args: []influxql.Expr{&influxql.VarRef{Val: "RcvBytes"}, &influxql.NumberLiteral{Val: 1}}},
+		Aux:  []influxql.VarRef{{Val: "TxBytes", Type: influxql.Float}, {Val: "_tagKey"}},
 		Condition: &influxql.BinaryExpr{
 			Op:  influxql.EQ,
 			LHS: &influxql.VarRef{Val: "fwAction"},
 			RHS: &influxql.StringLiteral{Val: "Learn"},
 		},
-		//Expr:       influxql.MustParseExpr("Rcv Bytes"),
+		//Expr:       influxql.MustParseExpr("RcvBytes"),
 		StartTime: influxql.MinTime,
 		EndTime:   influxql.MaxTime,
 		Ascending: false,
@@ -1395,8 +1395,8 @@ func TestIterNonexist(t *testing.T) {
 	e := MustOpenDefaultEngine()
 	defer e.Close()
 
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Rcv Bytes"), influxql.Integer, false)
-	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("Tx Bytes"), influxql.Integer, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("RcvBytes"), influxql.Integer, false)
+	e.MeasurementFields([]byte(testMeas)).CreateFieldIfNotExists([]byte("TxBytes"), influxql.Integer, false)
 	points := getPoints(models.Integer, 12)
 	for _, pp := range points {
 		var keyBuf []byte
@@ -1415,8 +1415,8 @@ func TestIterNonexist(t *testing.T) {
 
 	// create a simple varref iterator
 	opts := query.IteratorOptions{
-		//Expr: &influxql.VarRef{Type: influxql.Float, Val: "Rcv Bytes"},
-		Aux: []influxql.VarRef{{Val: "Tx Bytes", Type: influxql.Float}, {Val: "_tagKey"}},
+		//Expr: &influxql.VarRef{Type: influxql.Float, Val: "RcvBytes"},
+		Aux: []influxql.VarRef{{Val: "TxBytes", Type: influxql.Float}, {Val: "_tagKey"}},
 		Condition: &influxql.BinaryExpr{
 			Op: influxql.AND,
 			LHS: &influxql.BinaryExpr{
@@ -1430,7 +1430,7 @@ func TestIterNonexist(t *testing.T) {
 				RHS: &influxql.StringLiteral{Val: "Learn"},
 			},
 		},
-		//Expr:       influxql.MustParseExpr("Rcv Bytes"),
+		//Expr:       influxql.MustParseExpr("RcvBytes"),
 		StartTime: influxql.MaxTime,
 		EndTime:   influxql.MinTime,
 		Ascending: false,

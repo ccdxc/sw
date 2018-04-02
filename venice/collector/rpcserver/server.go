@@ -66,6 +66,19 @@ func (s *CollRPCSrv) Stop() {
 	<-s.grpcSrv.DoneCh
 }
 
+// WriteLines implements the RPC method
+func (s *CollRPCSrv) WriteLines(c context.Context, lb *metric.LineBundle) (*api.Empty, error) {
+	e := &api.Empty{}
+
+	dbName := lb.GetDbName()
+	if dbName == "" { // TODO: precise db validation
+		atomic.AddUint64(&s.badReqs, 1)
+		return e, nil
+	}
+	s.c.WriteLines(lb.GetDbName(), lb.Lines)
+	return e, nil
+}
+
 // WriteMetrics implements the RPC method
 func (s *CollRPCSrv) WriteMetrics(c context.Context, mb *metric.MetricBundle) (*api.Empty, error) {
 	e := &api.Empty{}

@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/influxdata/influxdb/models"
 
 	"github.com/pensando/sw/venice/utils/log"
@@ -22,6 +21,7 @@ type Backend interface {
 	Open(BEConfig, chan<- error) error
 	Close()
 	Write(interface{}, *sync.WaitGroup)
+	WriteLines(string, []string, *sync.WaitGroup)
 }
 
 // BEConfig defines backend config
@@ -97,34 +97,70 @@ func (c *Collector) AddBackEnd(addr string) error {
 // WritePoints adds points to a batch which get sent out when the batch closes
 func (c *Collector) WritePoints(db, meas string, points []models.Point) {
 	key := db + meas
-	wf := func(bp influx.BatchPoints) {
+	wf := func(b BatchWriter) {
 		// write to all backends and block until completion
 		var batchWG sync.WaitGroup
 		c.mutex.RLock()
 		for _, be := range c.backends {
 			batchWG.Add(1)
-			be.Write(bp, &batchWG)
+			be.Write(b.Points(), &batchWG)
 		}
 		c.mutex.RUnlock()
 
 		batchWG.Wait()
 	}
-	c.mutex.Lock()
-	b := c.activeBatches[key]
-	if b == nil {
-		b = NewBatch(c.ctx, db, "ms", wf).WithPeriod(c.batchPeriod).WithSize(c.batchSize)
-		c.activeBatches[key] = b
-	}
-	c.mutex.Unlock()
 
+	b := c.atomicNewBatch(nil, key, db, wf)
 	for !b.AddPoints(points) {
-		b = NewBatch(c.ctx, db, "ms", wf).WithPeriod(c.batchPeriod).WithSize(c.batchSize)
-		c.mutex.Lock()
-		c.activeBatches[key] = b
-		c.mutex.Unlock()
+		// retry to handle batch close
+		b = c.atomicNewBatch(b, key, db, wf)
 	}
 
 	b.WaitCompletion()
+}
+
+// WriteLines adds points to a batch which get sent out when the batch closes
+func (c *Collector) WriteLines(db string, lines []string) {
+	key := db
+	lwf := func(b BatchWriter) {
+		// write to all backends and block until completion
+		var batchWG sync.WaitGroup
+
+		db, lines := b.Lines()
+		if len(lines) == 0 {
+			return
+		}
+		c.mutex.RLock()
+		for _, be := range c.backends {
+			batchWG.Add(1)
+			be.WriteLines(db, lines, &batchWG)
+		}
+		c.mutex.RUnlock()
+
+		batchWG.Wait()
+	}
+
+	b := c.atomicNewBatch(nil, key, db, lwf)
+	for !b.AddLines(lines) {
+		// retry to handle batch close
+		b = c.atomicNewBatch(b, key, db, lwf)
+	}
+
+	b.WaitCompletion()
+}
+
+func (c *Collector) atomicNewBatch(b BatchWriter, db, key string, w WriterFunc) BatchWriter {
+	c.mutex.Lock()
+	if c.activeBatches[key] == b {
+
+		b = NewBatch(c.ctx, db, c.batchPeriod, w).WithSize(c.batchSize)
+		c.activeBatches[key] = b
+	}
+
+	b = c.activeBatches[key]
+	c.mutex.Unlock()
+
+	return b
 }
 
 // watchErrors monitors a backend

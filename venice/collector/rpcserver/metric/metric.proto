@@ -13,6 +13,13 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 // Metric API service definition.
 service MetricApi {
 	rpc WriteMetrics(MetricBundle) returns (api.Empty) {}
+	rpc WriteLines(LineBundle) returns (api.Empty) {}
+}
+
+message LineBundle {
+	string dbName = 1;
+	uint64 srcID = 2;
+	repeated string Lines = 3;
 }
 
 // Field is one of (uint64, float64, string, bool)

@@ -26,7 +26,7 @@ type Suite struct {
 
 // NewSuite sets up influx backends, collector and rpc
 func NewSuite(numBE int, url string, batchPeriod time.Duration) *Suite {
-	c := tec.NewCollector(context.Background()).WithPeriod(batchPeriod)
+	c := tec.NewCollector(context.Background()).WithPeriod(batchPeriod).WithSize(10000)
 	s := &Suite{
 		col: c,
 	}
@@ -128,6 +128,12 @@ func GetMetricPoint(name string, tags map[string]string, fields map[string]inter
 			f[k] = &metric.Field{
 				F: &metric.Field_Int64{
 					Int64: v.(int64),
+				},
+			}
+		case int:
+			f[k] = &metric.Field{
+				F: &metric.Field_Int64{
+					Int64: int64(v.(int)),
 				},
 			}
 		case float64:

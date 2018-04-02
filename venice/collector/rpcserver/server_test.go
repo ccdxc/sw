@@ -187,4 +187,14 @@ func TestServer(t *testing.T) {
 	bundle.DbName = testDB
 	tb.mc.WriteMetrics(context.Background(), bundle)
 	tu.Assert(t, tb.srv.badReqs == 2, "Expected 2 badReqs, got ", tb.srv.badReqs)
+
+	// WriteLines
+	lb := &metric.LineBundle{
+		DbName: testDB,
+	}
+
+	lb.Lines = statssim.GetLinePoints(tb.sim, "measA", 10)
+	tb.mc.WriteLines(context.Background(), lb)
+	tu.Assert(t, tb.dbB.PointsWritten == 18, "Expected 18 points, got ", tb.dbB.PointsWritten)
+	tu.Assert(t, tb.dbA.PointsWritten == 18, "Expected 18 points, got ", tb.dbA.PointsWritten)
 }
