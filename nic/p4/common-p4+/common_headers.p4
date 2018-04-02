@@ -168,7 +168,7 @@ header_type scratch_metadata_t {
     modify_field(scratch.data6, data6);		\
     modify_field(scratch.data7, data7);		\
 
-#define SCRATCH_METADATA_INIT_7(scratch) 		\
+#define SCRATCH_METADATA_INIT_7(scratch) 	\
     modify_field(scratch.data0, data0);		\
     modify_field(scratch.data1, data1);		\
     modify_field(scratch.data2, data2);		\

@@ -17,7 +17,7 @@ struct phv_          p;
 ipfix_start:
     slt         c1, k.p4_txdma_intr_qid, IPFIX_EXPORT_ID_MAX
     bcf         [!c1], ipfix_export_start
-    phvwr.c1    p.ipfix_metadata_export_id, k.p4_txdma_intr_qid
+    phvwr       p.ipfix_metadata_export_id, k.p4_txdma_intr_qid
 
     seq         c1, d.{u.ipfix_start_d.flow_hash_table_type}, \
                     IPFIX_FLOW_HASH_TABLE
@@ -57,18 +57,17 @@ ipfix_flow_hash_overflow_scan_complete:
     tblwr       d.{u.ipfix_start_d.flow_hash_index_next}, 0
     tblwr       d.{u.ipfix_start_d.flow_hash_table_type}, \
                     IPFIX_FLOW_HASH_TABLE
-    // disable scheduler bit
-    addi        r1, r0, DB_ADDR_BASE
-    or          r1, r1, 0x2, DB_UPD_SHFT
-    or          r1, r1, 1005, DB_LIF_SHFT
-    add         r2, r0, k.p4_txdma_intr_qid, 24
-    memwr.dx    r1, r2
     // set table address in r1 for this scan
     addi        r1, r0, loword(p4_flow_hash_base)
     addui       r1, r1, hiword(p4_flow_hash_base)
     add         r1, r1, d.{u.ipfix_start_d.flow_hash_index_next}.wx, 6
 
 ipfix_flow_hash_setup:
+    phvwr       p.ipfix_t0_metadata_flow_hash_table_type, \
+                    d.{u.ipfix_start_d.flow_hash_table_type}
+    phvwr       p.ipfix_t0_metadata_flow_hash_index_next, \
+                    d.{u.ipfix_start_d.flow_hash_index_next}.wx
+
     // save info to global
     phvwr       p.ipfix_metadata_qstate_addr, \
                     k.{p4_txdma_intr_qstate_addr_sbit0_ebit1, \
@@ -85,17 +84,24 @@ ipfix_flow_hash_setup:
     nop
 
 ipfix_export_start:
-    // disable scheduler bit
-    addi        r1, r0, DB_ADDR_BASE
-    or          r1, r1, 0x2, DB_UPD_SHFT
-    or          r1, r1, 1005, DB_LIF_SHFT
-    add         r2, r0, k.p4_txdma_intr_qid, 24
-    memwr.dx    r1, r2
+    seq         c1, d.u.ipfix_start_d.next_record_offset, IPFIX_SCAN_COMPLETE
+    phvwr.c1    p.ipfix_metadata_scan_complete, 1
 
-    // reset next ptr
+    // is export complete?
     seq         c1, d.u.ipfix_start_d.next_record_offset, 0
     bcf         [c1], ipfix_exit
     tblwr.!c1   d.u.ipfix_start_d.next_record_offset, 0
+
+    // save info for next stage
+    phvwr       p.ipfix_t1_metadata_flow_hash_table_type, \
+                    d.u.ipfix_start_d.flow_hash_table_type
+    phvwr       p.ipfix_t1_metadata_flow_hash_index_next, \
+                    d.{u.ipfix_start_d.flow_hash_index_next}.wx
+    add         r1, d.{u.ipfix_start_d.ipfix_hdr_offset}.hx, 16
+    phvwr       p.ipfix_t1_metadata_next_record_offset, r1[15:0].hx
+    phvwr       p.ipfix_metadata_qstate_addr, \
+                    k.{p4_txdma_intr_qstate_addr_sbit0_ebit1, \
+                       p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
     // table 1 : lookup qstate address of expoter's qid (subtract 64B*16)
     sub         r1, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1, \

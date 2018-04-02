@@ -2,19 +2,28 @@ header_type ipfix_metadata_t {
     fields {
         flow_index : 32;
         session_index : 32;
+        export_id : 8;
         flow_type : 4;
-        export_id : 4;
+        export_en : 4;
         flow_role : 1;
         scan_complete : 1;
-        export_en : 4;
-        pad : 2;
+        pad : 12;
         qstate_addr : 34;
     }
 }
 
-header_type ipfix_t0_metadata_t {
+header_type ipfix_flow_hash_metadata_t {
     fields {
-        doorbell_data : 64;
+        next_record_offset : 16;
+        flow_hash_table_type : 8;
+        flow_hash_index_next : 32;
+    }
+}
+
+header_type ipfix_s5_metadata_t {
+    fields {
+        doorbell1_data : 64;
+        doorbell2_data : 64;
     }
 }
 
@@ -119,6 +128,8 @@ header_type ipfix_scratch_metadata_t {
         export_en : 4;
         flow_index : 32;
         session_index : 32;
+        flow_hash_table_type : 8;
+        flow_hash_index_next : 32;
         qstate_addr : 34;
         counter64 : 64;
     }

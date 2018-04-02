@@ -11,8 +11,14 @@ struct phv_                  p;
 %%
 
 ipfix_create_record:
+    // check if there is space available to fit a record
+    add         r7, d.{u.ipfix_create_record_d.next_record_offset}.hx, \
+                    IPFIX_MAX_RECORD_SIZE
+    sle         c1, r7, d.{u.ipfix_create_record_d.pktsize}.hx
+    bcf         [!c1], ipfix_record_exit
+
     // setup dma cmd ptr
-    phvwr       p.p4_txdma_intr_dma_cmd_ptr, \
+    phvwr.c1    p.p4_txdma_intr_dma_cmd_ptr, \
                     CAPRI_PHV_START_OFFSET(phv2mem_cmd1_dma_cmd_pad) / 16
 
     bbeq        k.ipfix_metadata_scan_complete, TRUE, ipfix_header_fixups
@@ -98,7 +104,13 @@ ipfix_create_ipv6_record:
                     IPFIX_IPv6_RECORD_SIZE
 
 ipfix_header_fixups:
+    // if scan is not complete and there is space for another record,
+    // don't flush the packet out
     seq         c1, k.ipfix_metadata_scan_complete, FALSE
+    cmov        r6, c1, IPFIX_SCAN_INCOMPLETE, IPFIX_SCAN_COMPLETE
+    add         r7, d.{u.ipfix_create_record_d.next_record_offset}.hx, \
+                    IPFIX_MAX_RECORD_SIZE
+    sle.c1      c1, r7, d.{u.ipfix_create_record_d.pktsize}.hx
     bcf         [c1], ipfix_record_done
     phvwr.c1    p.phv2mem_cmd2_dma_cmd_eop, 1
 
@@ -119,29 +131,50 @@ ipfix_header_fixups:
                     d.u.ipfix_create_record_d.ipfix_hdr_offset
     phvwr       p.phv2mem_cmd3_dma_cmd_addr, r1
 
-    // setup doorbell address in r1
+    // disable doorbell (self)
+    addi        r1, r0, DB_ADDR_BASE
+    or          r1, r1, 0x2, DB_UPD_SHFT
+    or          r1, r1, 1005, DB_LIF_SHFT
+    add         r2, r0, k.ipfix_metadata_export_id, 24
+    phvwr       p.ipfix_s5_metadata_doorbell1_data, r2.dx
+    phvwr       p.phv2mem_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwr       p.phv2mem_cmd4_dma_cmd_phv_start_addr, \
+                    CAPRI_PHV_START_OFFSET(ipfix_s5_metadata_doorbell1_data)
+    phvwr       p.phv2mem_cmd4_dma_cmd_phv_end_addr, \
+                    CAPRI_PHV_END_OFFSET(ipfix_s5_metadata_doorbell1_data)
+    phvwr       p.phv2mem_cmd4_dma_cmd_addr, r1
+
+    // update table type and next index in qstate of (self+16)
+    phvwr       p.ipfix_t0_metadata_next_record_offset, r6
+    add         r1, k.{ipfix_metadata_qstate_addr_sbit0_ebit1,\
+                       ipfix_metadata_qstate_addr_sbit2_ebit33}, ((64*16)+32)
+    phvwr       p.phv2mem_cmd5_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwr       p.phv2mem_cmd5_dma_cmd_phv_start_addr, \
+                    CAPRI_PHV_START_OFFSET(ipfix_t0_metadata_next_record_offset)
+    phvwr       p.phv2mem_cmd5_dma_cmd_phv_end_addr, \
+                    CAPRI_PHV_END_OFFSET(ipfix_t0_metadata_flow_hash_index_next)
+    phvwr       p.phv2mem_cmd5_dma_cmd_addr, r1
+
+    // ring doorbell (self+16)
     addi        r1, r0, DB_ADDR_BASE
     or          r1, r1, 0x3, DB_UPD_SHFT
     or          r1, r1, 1005, DB_LIF_SHFT
-
-    // setup doorbell data in r2
     add         r2, k.ipfix_metadata_export_id, IPFIX_EXPORT_ID_MAX
     add         r2, r0, r2, 24
-    phvwr       p.ipfix_t0_metadata_doorbell_data, r2.dx
-
-    // ring doorbell via phv2mem DMA command
-    phvwr       p.phv2mem_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwr       p.phv2mem_cmd4_dma_cmd_phv_start_addr, \
-                    CAPRI_PHV_START_OFFSET(ipfix_t0_metadata_doorbell_data)
-    phvwr       p.phv2mem_cmd4_dma_cmd_phv_end_addr, \
-                    CAPRI_PHV_END_OFFSET(ipfix_t0_metadata_doorbell_data)
-    phvwr       p.phv2mem_cmd4_dma_cmd_addr, r1
-    phvwr       p.phv2mem_cmd4_dma_cmd_wr_fence, 1
-    phvwr       p.phv2mem_cmd4_dma_cmd_eop, 1
+    phvwr       p.ipfix_s5_metadata_doorbell2_data, r2.dx
+    phvwr       p.phv2mem_cmd6_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwr       p.phv2mem_cmd6_dma_cmd_phv_start_addr, \
+                    CAPRI_PHV_START_OFFSET(ipfix_s5_metadata_doorbell2_data)
+    phvwr       p.phv2mem_cmd6_dma_cmd_phv_end_addr, \
+                    CAPRI_PHV_END_OFFSET(ipfix_s5_metadata_doorbell2_data)
+    phvwr       p.phv2mem_cmd6_dma_cmd_addr, r1
+    phvwr       p.phv2mem_cmd6_dma_cmd_wr_fence, 1
+    phvwr       p.phv2mem_cmd6_dma_cmd_eop, 1
 
 ipfix_record_done:
-    phvwr       p.app_header_table0_valid, 0
-    phvwr       p.app_header_table1_valid, 0
-    phvwr       p.app_header_table2_valid, 0
-    phvwr.e     p.app_header_table3_valid, 0
+    phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0
     nop
+
+ipfix_record_exit:
+    phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0
+    phvwr       p.p4_intr_global_drop, 1

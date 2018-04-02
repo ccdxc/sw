@@ -147,7 +147,7 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
 
     // first records start 16B after ipfix header
     qstate.pktaddr = htobe64(pktaddr);
-    qstate.pktsize = payload_size;
+    qstate.pktsize = (payload_size > 1500) ? 1500 : payload_size;
     qstate.ipfix_hdr_offset = payload_start;
     qstate.next_record_offset = qstate.ipfix_hdr_offset + 16;
     qstate.flow_hash_index_next = (100 * qid) + 100;

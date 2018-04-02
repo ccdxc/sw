@@ -32,7 +32,15 @@ metadata ipfix_metadata_t ipfix_metadata;
 
 @pragma dont_trim
 @pragma pa_header_union ingress common_t0_s2s
-metadata ipfix_t0_metadata_t ipfix_t0_metadata;
+metadata ipfix_flow_hash_metadata_t ipfix_t0_metadata;
+
+@pragma dont_trim
+@pragma pa_header_union ingress common_t1_s2s
+metadata ipfix_flow_hash_metadata_t ipfix_t1_metadata;
+
+@pragma dont_trim
+@pragma pa_header_union ingress to_stage_5
+metadata ipfix_s5_metadata_t ipfix_s5_metadata;
 
 @pragma dont_trim
 @pragma pa_header_union ingress app_header
@@ -62,8 +70,15 @@ metadata dma_cmd_phv2mem_t phv2mem_cmd3;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t phv2mem_cmd4;
 @pragma dont_trim
+metadata dma_cmd_phv2mem_t phv2mem_cmd5;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t phv2mem_cmd6;
+
+@pragma dont_trim
+@pragma pa_header_union ingress phv2mem_cmd1
 metadata dma_cmd_phv2pkt_t phv2pkt_cmd1;
 @pragma dont_trim
+@pragma pa_header_union ingress phv2mem_cmd2
 metadata dma_cmd_mem2pkt_t mem2pkt_cmd;
 
 action ipfix_start(rsvd, cos_a, cos_b, cos_sel, eval_last, host_rings,
@@ -160,6 +175,11 @@ action ipfix_create_record(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
     modify_field(scratch_metadata.flow_type, ipfix_metadata.flow_type);
     modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
     modify_field(scratch_metadata.export_id, ipfix_metadata.export_id);
+    modify_field(scratch_metadata.qstate_addr, ipfix_metadata.qstate_addr);
+    modify_field(scratch_metadata.flow_hash_table_type,
+                 ipfix_t0_metadata.flow_hash_table_type);
+    modify_field(scratch_metadata.flow_hash_index_next,
+                 ipfix_t0_metadata.flow_hash_index_next);
 }
 
 action ipfix_export_packet(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
@@ -190,4 +210,8 @@ action ipfix_export_packet(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
     modify_field(qstate_metadata.flow_hash_index_max, flow_hash_index_max);
     modify_field(qstate_metadata.flow_hash_overflow_index_max,
                  flow_hash_overflow_index_max);
+
+    modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
+    modify_field(scratch_metadata.export_id, ipfix_metadata.export_id);
+    modify_field(scratch_metadata.qstate_addr, ipfix_metadata.qstate_addr);
 }

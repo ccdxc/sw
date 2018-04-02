@@ -8,6 +8,9 @@
 #define IPFIX_FLOW_HASH_TABLE           0
 #define IPFIX_FLOW_HASH_OVERFLOW_TABLE  1
 
+#define IPFIX_SCAN_COMPLETE             0xFFFE
+#define IPFIX_SCAN_INCOMPLETE           0xFFFF
+
 #define IPFIX_HEADER_SIZE \
     ((CAPRI_PHV_END_OFFSET(ipfix_record_header_domain_id) - \
       CAPRI_PHV_START_OFFSET(ipfix_record_header_version)) + 1)
@@ -33,3 +36,5 @@
        CAPRI_PHV_START_OFFSET(ipfix_record_common_flow_id)) + 1) + \
      ((CAPRI_PHV_END_OFFSET(ipfix_record_nonip_ether_type) - \
        CAPRI_PHV_START_OFFSET(ipfix_record_nonip_set_id)) + 1))
+
+#define IPFIX_MAX_RECORD_SIZE IPFIX_IPv6_RECORD_SIZE

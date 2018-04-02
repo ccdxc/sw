@@ -916,7 +916,7 @@ packets:
                 last_seen_timestamp     : 0
                 drop_vector             : 0
     - packet:
-        id          : EPKT2
+        id          : EPKT2_1
         template    : ref://factory/packets/id=IPFIX
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
@@ -952,10 +952,38 @@ packets:
                     - record: ref://testcase/packets/id=IPV4_REC2_8/rawbytes
                     - record: ref://testcase/packets/id=IPV4_REC2_9/rawbytes
                     - record: ref://testcase/packets/id=IPV4_REC2_10/rawbytes
+
+    - packet:
+        id          : EPKT2_2
+        template    : ref://factory/packets/id=IPFIX
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth     :
+                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=2
+                dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=2
+            qtag    :
+                prio            : 0
+                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=2
+            ipv4    :
+                src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=2
+                dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=2
+                tos             : 0
+                id  : 0
+            udp     :
+                sport           : 32007
+                dport           : 4739
+            ipfix   :
+                version         : 0
+                len             : 0
+                export_time     : 0
+                seq_num         : 0
+                domain_id       : 0
+                records         :
                     - record: ref://testcase/packets/id=IPV4_REC2_11/rawbytes
 
     - packet:
-        id          : EPKT3
+        id          : EPKT3_1
         template    : ref://factory/packets/id=IPFIX
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
@@ -991,10 +1019,38 @@ packets:
                     - record: ref://testcase/packets/id=IPV4_REC3_8/rawbytes
                     - record: ref://testcase/packets/id=IPV4_REC3_9/rawbytes
                     - record: ref://testcase/packets/id=IPV4_REC3_10/rawbytes
+
+    - packet:
+        id          : EPKT3_2
+        template    : ref://factory/packets/id=IPFIX
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth     :
+                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=3
+                dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=3
+            qtag    :
+                prio            : 0
+                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=3
+            ipv4    :
+                src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=3
+                dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=3
+                tos             : 0
+                id  : 0
+            udp     :
+                sport           : 32007
+                dport           : 4739
+            ipfix   :
+                version         : 0
+                len             : 0
+                export_time     : 0
+                seq_num         : 0
+                domain_id       : 0
+                records         :
                     - record: ref://testcase/packets/id=IPV4_REC3_11/rawbytes
 
     - packet:
-        id          : ECPUPKT2
+        id          : ECPUPKT2_1
         template    : ref://factory/packets/id=IPFIX
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
@@ -1031,10 +1087,39 @@ packets:
                     - record: ref://testcase/packets/id=IPV4_REC2_8/rawbytes
                     - record: ref://testcase/packets/id=IPV4_REC2_9/rawbytes
                     - record: ref://testcase/packets/id=IPV4_REC2_10/rawbytes
+
+    - packet:
+        id          : ECPUPKT2_2
+        template    : ref://factory/packets/id=IPFIX
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth     :
+                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=2
+                dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=2
+            qtag    :
+                #prio            : callback://networking/packets/GetExpectedPacketCos
+                prio            : 0
+                vlan            : 6
+            ipv4    :
+                src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=2
+                dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=2
+                id              : 0
+                tos             : 0
+            udp     :
+                sport           : 32007
+                dport           : 4739
+            ipfix   :
+                version         : 0
+                len             : 0
+                export_time     : 0
+                seq_num         : 0
+                domain_id       : 0
+                records         :
                     - record: ref://testcase/packets/id=IPV4_REC2_11/rawbytes
 
     - packet:
-        id          : ECPUPKT3
+        id          : ECPUPKT3_1
         template    : ref://factory/packets/id=IPFIX
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
@@ -1071,6 +1156,35 @@ packets:
                     - record: ref://testcase/packets/id=IPV4_REC3_8/rawbytes
                     - record: ref://testcase/packets/id=IPV4_REC3_9/rawbytes
                     - record: ref://testcase/packets/id=IPV4_REC3_10/rawbytes
+
+    - packet:
+        id          : ECPUPKT3_2
+        template    : ref://factory/packets/id=IPFIX
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth     :
+                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=3
+                dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=3
+            qtag    :
+                #prio            : callback://networking/packets/GetExpectedPacketCos
+                prio            : 0
+                vlan            : 6
+            ipv4    :
+                src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=3
+                dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=3
+                id              : 0
+                tos             : 0
+            udp     :
+                sport           : 32007
+                dport           : 4739
+            ipfix   :
+                version         : 0
+                len             : 0
+                export_time     : 0
+                seq_num         : 0
+                domain_id       : 0
+                records         :
                     - record: ref://testcase/packets/id=IPV4_REC3_11/rawbytes
 
 trigger:
@@ -1079,14 +1193,26 @@ expect:
     delay           : callback://networking/packets/GetExpectDelay
     packets:
         - packet:
-            object  : ref://testcase/packets/id=EPKT2
+            object  : ref://testcase/packets/id=EPKT2_1
             port    : 3
         - packet:
-            object  : ref://testcase/packets/id=EPKT3
+            object  : ref://testcase/packets/id=EPKT2_2
+            port    : 3
+        - packet:
+            object  : ref://testcase/packets/id=EPKT3_1
             port    : 4
         - packet:
-            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT2
+            object  : ref://testcase/packets/id=EPKT3_2
+            port    : 4
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT2_1
             port    : 128
         - packet:
-            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT3
+            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT2_2
+            port    : 128
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT3_1
+            port    : 128
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT3_2
             port    : 128
