@@ -54,7 +54,8 @@ extern hal_ret_t hal_wait(void);
 shmmgr *hal_mmgr(void);
 
 // meta class for each object
-typedef uint32_t (*marshall_cb_t)(void *obj, uint8_t *mem, uint32_t len);
+typedef hal_ret_t (*marshall_cb_t)(void *obj, uint8_t *mem,
+                                   uint32_t len, uint32_t *mlen);
 typedef uint32_t (*unmarshall_cb_t)(void *obj, uint32_t len);
 class hal_obj_meta {
 public:

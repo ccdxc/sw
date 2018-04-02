@@ -89,7 +89,7 @@ typedef struct l2seg_s {
 #define HAL_MCAST_OIFLIST_OFFSET      1
 #define HAL_PRMSC_OIFLIST_OFFSET      2
 
-// CB data structures
+// cb data structures
 typedef struct l2seg_create_app_ctxt_s {
     vrf_t    *vrf;
 } __PACK__ l2seg_create_app_ctxt_t;

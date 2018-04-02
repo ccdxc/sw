@@ -140,7 +140,7 @@ typedef struct ep_l3_entry_s {
 // max. number of endpoints supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_ENDPOINTS                            (1 << 20)
 
-// CB data structures
+// cb data structures
 typedef struct ep_create_app_ctxt_s {
     vrf_t           *vrf;
     l2seg_t         *l2seg;

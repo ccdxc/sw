@@ -407,7 +407,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     spec         = app_ctxt->spec;
     rsp          = app_ctxt->rsp;
 
-    HAL_TRACE_DEBUG("{}:create add CB {}",
+    HAL_TRACE_DEBUG("{}:create add cb {}",
                     __FUNCTION__, lif->lif_id);
 
     // allocate a hw lif id
@@ -497,7 +497,7 @@ lif_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif        = (lif_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:create commit CB {}",
+    HAL_TRACE_DEBUG("{}:create commit cb {}",
                     __FUNCTION__, lif->lif_id);
 
     // 1. a. Add to lif id hash table
@@ -545,7 +545,7 @@ lif_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif        = (lif_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:create abort CB {}",
+    HAL_TRACE_DEBUG("{}:create abort cb {}",
                     __FUNCTION__, lif->lif_id);
 
     // 1. delete call to PD
@@ -722,7 +722,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 
     if (ret != HAL_RET_OK && lif != NULL) {
         HAL_TRACE_ERR("{}:error in creating lif with id ", __FUNCTION__, lif->lif_id);
-        // if there is an error, lif will be freed in abort CB
+        // if there is an error, lif will be freed in abort cb
         lif_prepare_rsp(rsp, ret, HAL_HANDLE_INVALID);
         return ret;
     }
@@ -811,7 +811,7 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif = (lif_t *)dhl_entry->obj;
     lif_clone = (lif_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update upd CB {}",
+    HAL_TRACE_DEBUG("{}:update upd cb {}",
                     __FUNCTION__, lif->lif_id);
 
     // Rule of thumb is if anything which clone has to be updated doesnt result
@@ -941,7 +941,7 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     lif       = (lif_t *)dhl_entry->obj;
     lif_clone = (lif_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit cb {}",
                     __FUNCTION__, lif->lif_id);
 
 #if 0
@@ -1003,7 +1003,7 @@ lif_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lif = (lif_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit cb {}",
                     __FUNCTION__, lif->lif_id);
 
     // Free PD
@@ -1259,7 +1259,7 @@ lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lif = (lif_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:delete del CB {}",
+    HAL_TRACE_DEBUG("{}:delete del cb {}",
                     __FUNCTION__, lif->lif_id);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -1305,7 +1305,7 @@ lif_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif        = (lif_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:delete commit CB {}",
+    HAL_TRACE_DEBUG("{}:delete commit cb {}",
                     __FUNCTION__, lif->lif_id);
 
     // a. Remove from lif id hash table
@@ -1690,8 +1690,8 @@ lif_print(lif_t *lif)
 //-----------------------------------------------------------------------------
 // Print lif spec
 //-----------------------------------------------------------------------------
-hal_ret_t
-lif_spec_print (LifSpec& spec)
+static hal_ret_t
+lif_spec_dump (LifSpec& spec)
 {
     hal_ret_t           ret = HAL_RET_OK;
     fmt::MemoryWriter   buf;

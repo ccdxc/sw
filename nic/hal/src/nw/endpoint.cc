@@ -110,7 +110,7 @@ ep_init (ep_t *ep)
     }
     memset(ep, 0, sizeof(ep_t));
     HAL_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_SHARED);
-    
+
     sdk::lib::dllist_reset(&ep->ip_list_head);
     sdk::lib::dllist_reset(&ep->session_list_head);
     ep->sgs.sg_id_cnt = 0;
@@ -150,7 +150,7 @@ find_ep_by_l2_key (l2seg_id_t l2seg_id, const mac_addr_t mac_addr)
         ep_l2_ht()->lookup(&l2_key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_ENDPOINT);
         ep = (ep_t *)hal_handle_get_obj(entry->handle_id);
         return ep;
@@ -407,7 +407,7 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ep = (ep_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("EP create add CB {}", ep_l2_key_to_str(ep));
+    HAL_TRACE_DEBUG("EP create add cb {}", ep_l2_key_to_str(ep));
 
     // PD Call to allocate PD resources and HW programming
     pd::pd_ep_create_args_init(&pd_ep_args);
@@ -452,12 +452,12 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle = dhl_entry->handle;
     vrf = app_ctxt->vrf;
 
-    HAL_TRACE_DEBUG("EP create commit CB {}", ep_l2_key_to_str(ep));
+    HAL_TRACE_DEBUG("EP create commit cb {}", ep_l2_key_to_str(ep));
 
     // add EP to L2 DB
     ret = ep_add_to_l2_db (ep, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add EP {} to L2 DB, err : {}", 
+        HAL_TRACE_ERR("Failed to add EP {} to L2 DB, err : {}",
                       ep_l2_key_to_str(ep), ret);
         goto end;
     }
@@ -469,7 +469,7 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         l3_key.ip_addr = pi_ip_entry->ip_addr;
         ret = ep_add_to_l3_db(&l3_key, pi_ip_entry, hal_handle);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to add EP {} to L3 DB, err : {}", 
+            HAL_TRACE_ERR("Failed to add EP {} to L3 DB, err : {}",
                           ep_l2_key_to_str(ep), ret);
             goto end;
         }
@@ -518,7 +518,7 @@ endpoint_cleanup(ep_t *ep)
         l3_key.ip_addr = pi_ip_entry->ip_addr;
         ret = ep_del_from_l3_db(&l3_key);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to del EP:{} from L3 DB", 
+            HAL_TRACE_ERR("Failed to del EP:{} from L3 DB",
                           ep_l2_key_to_str(ep));
             goto end;
         }
@@ -545,7 +545,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI vrf 
+// 3. Free PI vrf
 //------------------------------------------------------------------------------
 hal_ret_t
 endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -563,7 +563,7 @@ endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep = (ep_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("EP create abort CB");
+    HAL_TRACE_DEBUG("EP create abort cb");
     if (ep->pd) {
         pd::pd_ep_delete_args_init(&pd_ep_args);
         pd_ep_args.ep = ep;
@@ -597,7 +597,7 @@ endpoint_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // Converts hal_ret_t to API status
 //------------------------------------------------------------------------------
 hal_ret_t
-ep_prepare_rsp (EndpointResponse *rsp, hal_ret_t ret, 
+ep_prepare_rsp (EndpointResponse *rsp, hal_ret_t ret,
                 hal_handle_t hal_handle)
 {
     if (ret == HAL_RET_OK) {
@@ -625,8 +625,8 @@ static hal_ret_t
 pin_endpoint (ep_t *ep)
 {
     if_t        *hal_if = NULL;
-    if_id_t     pin_ifid = 0;        
-    
+    if_id_t     pin_ifid = 0;
+
     ep->pinned_if_handle = HAL_HANDLE_INVALID;
     if (is_forwarding_mode_host_pinned() == FALSE) {
         HAL_TRACE_DEBUG("Forwarding mode is not host-pinned, no-op");
@@ -669,7 +669,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     if_t                            *hal_if = NULL;
     ep_l3_entry_t                   **l3_entry = NULL;
     ep_ip_entry_t                   **ip_entry = NULL;
-    // pd::pd_ep_args_t                pd_ep_args; 
+    // pd::pd_ep_args_t                pd_ep_args;
     ep_create_app_ctxt_t            app_ctxt;
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
@@ -720,7 +720,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     // initialize the EP record
     ep->l2_key.l2_segid = l2seg->seg_id;
     MAC_UINT64_TO_ADDR(ep->l2_key.mac_addr, spec.key_or_handle().endpoint_key().l2_key().mac_address());
-    HAL_TRACE_DEBUG("L2seg id {}, Mac {} if {}", l2seg->seg_id, 
+    HAL_TRACE_DEBUG("L2seg id {}, Mac {} if {}", l2seg->seg_id,
                     ether_ntoa((struct ether_addr*)(ep->l2_key.mac_addr)),
                     hal_if->if_id);
     ep->l2seg_handle = l2seg->hal_handle;
@@ -775,7 +775,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         // add the IP to EP
         sdk::lib::dllist_reset(&ip_entry[i]->ep_ip_lentry);
         ip_addr_spec_to_ip_addr(&ip_entry[i]->ip_addr, spec.endpoint_attrs().ip_address(i));
-        ip_entry[i]->ip_flags = EP_FLAGS_LEARN_SRC_CFG; 
+        ip_entry[i]->ip_flags = EP_FLAGS_LEARN_SRC_CFG;
         sdk::lib::dllist_add(&ep->ip_list_head, &ip_entry[i]->ep_ip_lentry);
     }
 
@@ -816,10 +816,10 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_add_obj(ep->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_add_obj(ep->hal_handle, &cfg_ctxt,
                              endpoint_create_add_cb,
                              endpoint_create_commit_cb,
-                             endpoint_create_abort_cb, 
+                             endpoint_create_abort_cb,
                              endpoint_create_cleanup_cb);
 
 end:
@@ -887,7 +887,7 @@ ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         session = find_session_by_handle(entry->handle_id);
         HAL_ABORT(session != NULL);
-        // TODO: vmotion: Call FTE API to handle 
+        // TODO: vmotion: Call FTE API to handle
         // ret = fte_handle_if_change(session, ep, &fte_event);
     }
 
@@ -941,7 +941,7 @@ end:
 
 //------------------------------------------------------------------------------
 // Make a clone
-//-- Both PI and PD objects cloned. 
+//-- Both PI and PD objects cloned.
 //------------------------------------------------------------------------------
 hal_ret_t
 ep_make_clone (ep_t *ep, ep_t **ep_clone)
@@ -1004,7 +1004,7 @@ endpoint_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep = (ep_t *)dhl_entry->obj;
     ep_clone = (ep_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("EP update commit CB");
+    HAL_TRACE_DEBUG("EP update commit cb");
 
     // TODO: move like how we did in if for uplink mbrs
     ep_copy_ip_list(ep_clone, ep);
@@ -1077,7 +1077,7 @@ endpoint_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // helper to get endpoint from key or handle
 //------------------------------------------------------------------------------
 static hal_ret_t
-find_ep (vrf_id_t tid, EndpointKeyHandle kh, ep_t **ep, 
+find_ep (vrf_id_t tid, EndpointKeyHandle kh, ep_t **ep,
          ::types::ApiStatus *api_status)
 {
     ep_l3_key_t            l3_key    = { 0 };
@@ -1090,7 +1090,7 @@ find_ep (vrf_id_t tid, EndpointKeyHandle kh, ep_t **ep,
             auto ep_l2_key = ep_key.l2_key();
             MAC_UINT64_TO_ADDR(mac_addr, ep_l2_key.mac_address());
             HAL_TRACE_DEBUG("l2 key : seg {}, handle {}, mac {}",
-                            ep_l2_key.l2segment_key_handle().segment_id(), 
+                            ep_l2_key.l2segment_key_handle().segment_id(),
                             ep_l2_key.l2segment_key_handle().l2segment_handle(),
                             macaddr2str(mac_addr));
             l2seg = l2seg_lookup_key_or_handle(ep_l2_key.l2segment_key_handle());
@@ -1150,7 +1150,7 @@ endpoint_validate_update_change (ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
                             ep->vmotion_state, app_ctxt->new_vmotion_state);
         } else {
             HAL_TRACE_ERR("Invalid vmotion state change: {} => {}",
-                          ep->vmotion_state, 
+                          ep->vmotion_state,
                           app_ctxt->new_vmotion_state);
             ret = HAL_RET_INVALID_ARG;
             goto end;
@@ -1167,7 +1167,7 @@ endpoint_validate_update_change (ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
 
             hal_if = find_if_by_handle(app_ctxt->new_if_handle);
             if (!hal_if) {
-                HAL_TRACE_ERR("Invalid update, new if {} not present", 
+                HAL_TRACE_ERR("Invalid update, new if {} not present",
                               app_ctxt->new_if_handle);
                 ret = HAL_RET_INVALID_ARG;
                 goto end;
@@ -1175,7 +1175,7 @@ endpoint_validate_update_change (ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
 
             if (hal_if->if_type != intf::IF_TYPE_TUNNEL) {
                 HAL_TRACE_ERR("Invalid update, if has to be tunnel "
-                              "if if_hdl : {}, if_type : {}", 
+                              "if if_hdl : {}, if_type : {}",
                               app_ctxt->new_if_handle, hal_if->if_type);
                 ret = HAL_RET_INVALID_ARG;
                 goto end;
@@ -1183,17 +1183,17 @@ endpoint_validate_update_change (ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
         }
 
         // Vmotion Start => Setup, Setup => Activate, Activate => End
-        if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_START, 
+        if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_START,
                                    VMOTION_STATE_SETUP) ||
-            EP_VMOTION_STATE_CHECK(VMOTION_STATE_SETUP, 
+            EP_VMOTION_STATE_CHECK(VMOTION_STATE_SETUP,
                                    VMOTION_STATE_ACTIVATE) ||
-            EP_VMOTION_STATE_CHECK(VMOTION_STATE_ACTIVATE, 
+            EP_VMOTION_STATE_CHECK(VMOTION_STATE_ACTIVATE,
                                    VMOTION_END)) {
             // For now, assumption is nothing else changes
             if (app_ctxt->iplist_change || app_ctxt->if_change) {
                 HAL_TRACE_ERR("Invalid update. vmotion update "
                               "requires nothing else should change"
-                              "iplist_chg : {}, if_change : {}", 
+                              "iplist_chg : {}, if_change : {}",
                               app_ctxt->iplist_change, app_ctxt->if_change);
                 ret = HAL_RET_INVALID_ARG;
                 goto end;
@@ -1225,12 +1225,12 @@ endpoint_check_update (EndpointUpdateRequest& req, ep_t *ep,
              ret = HAL_RET_INVALID_ARG;
              goto end;
         }
-      
+
         if (ep->if_handle != hal_if->hal_handle) {
             app_ctxt->if_change = true;
             app_ctxt->new_if_handle = hal_if->hal_handle;
         }
-        
+
         // Check if vmotion state changed
         if (ep->vmotion_state != req.endpoint_attrs().vmotion_state()) {
             app_ctxt->vmotion_state_change = true;
@@ -1251,8 +1251,8 @@ end:
 }
 
 hal_ret_t
-endpoint_l2seg_update(EndpointUpdateRequest& req, ep_t *ep, 
-                      bool *l2seg_change, hal_handle_t *new_l2seg_hdl) 
+endpoint_l2seg_update(EndpointUpdateRequest& req, ep_t *ep,
+                      bool *l2seg_change, hal_handle_t *new_l2seg_hdl)
 {
     *l2seg_change = false;
 #if 0
@@ -1265,7 +1265,7 @@ endpoint_l2seg_update(EndpointUpdateRequest& req, ep_t *ep,
     return HAL_RET_OK;
 }
 
-bool 
+bool
 ip_in_ep(ip_addr_t *ip, ep_t *ep, ep_ip_entry_t **ip_entry)
 {
     dllist_ctxt_t       *lnode = NULL;
@@ -1406,12 +1406,12 @@ endpoint_update_ip_delete (ep_t *ep, ip_addr_t *ip_addr,
 hal_ret_t
 endpoint_ip_list_update (EndpointUpdateRequest& req, ep_t *ep,
                          bool *iplist_change,
-                         dllist_ctxt_t **add_iplist, 
+                         dllist_ctxt_t **add_iplist,
                          dllist_ctxt_t **del_iplist)
 {
     hal_ret_t       ret = HAL_RET_OK;
     uint16_t        num_ips = 0, i = 0;
-    ip_addr_t       ip_addr;  
+    ip_addr_t       ip_addr;
     ep_ip_entry_t   *ep_ipe = NULL;
     dllist_ctxt_t   *lnode = NULL;
     ep_ip_entry_t   *pi_ip_entry = NULL;
@@ -1466,7 +1466,7 @@ endpoint_ip_list_update (EndpointUpdateRequest& req, ep_t *ep,
         if (!ip_exists) {
             // Have to delet the IP
             // Create ep_ip_entry, copy it over and add it to del list
-            // Note: Both PIs are pointing to the same PD. 
+            // Note: Both PIs are pointing to the same PD.
             ep_ipe = (ep_ip_entry_t *)g_hal_state->ep_ip_entry_slab()->alloc();
             HAL_ABORT(ep_ipe != NULL);
             memcpy(&ep_ipe->ip_addr, &pi_ip_entry->ip_addr, sizeof(ip_addr_t));
@@ -1552,7 +1552,7 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
 
         sdk::lib::dllist_del(&pi_ip_entry->ep_ip_lentry);
 
-        // Insert into EP's ip list 
+        // Insert into EP's ip list
         sdk::lib::dllist_add(&ep->ip_list_head, &pi_ip_entry->ep_ip_lentry);
 
         // Insert to L3 hash table with (VRF, IP) key
@@ -1565,7 +1565,7 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
         }
         HAL_TRACE_DEBUG("Added EP ({}, {}) to L3 DB",
                         l3_key.vrf_id, ipaddr2str(&l3_key.ip_addr));
-    
+
 
 #if 0
         l3_entry = (ep_l3_entry_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP,
@@ -1601,7 +1601,7 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
             l3_key.ip_addr = pi_ip_entry->ip_addr;
             ret = ep_del_from_l3_db(&l3_key);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to del EP {} from L3 DB", 
+                HAL_TRACE_ERR("Failed to del EP {} from L3 DB",
                               ep_l2_key_to_str(ep));
                 goto end;
             }
@@ -1724,7 +1724,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
         pd_ep_upd_args.iplist_change = true;
         pd_ep_upd_args.add_iplist = add_iplist;
         pd_ep_upd_args.del_iplist = del_iplist;
-        // Revisit the position of this call if multiple changes 
+        // Revisit the position of this call if multiple changes
         // have to be sent to PD
         ret = pd::pd_ep_update(&pd_ep_upd_args);
         if (ret != HAL_RET_OK) {
@@ -1747,10 +1747,10 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_upd_obj(ep->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_upd_obj(ep->hal_handle, &cfg_ctxt,
                              endpoint_update_upd_cb,
                              endpoint_update_commit_cb,
-                             endpoint_update_abort_cb, 
+                             endpoint_update_abort_cb,
                              endpoint_update_cleanup_cb);
 
 end:
@@ -1803,7 +1803,7 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
-    // TODO: Check the dependency ref count for the ep. 
+    // TODO: Check the dependency ref count for the ep.
     //       If its non zero, fail the delete.
 
 
@@ -1812,7 +1812,7 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ep = (ep_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("EP del CB");
+    HAL_TRACE_DEBUG("EP del cb");
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_ep_delete_args_init(&pd_ep_args);
@@ -1846,7 +1846,7 @@ endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep = (ep_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("Delete commit CB");
+    HAL_TRACE_DEBUG("Delete commit cb");
 
     ret = endpoint_cleanup(ep);
     if (ret != HAL_RET_OK) {
@@ -1886,7 +1886,7 @@ endpoint_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // process a nwsec delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-endpoint_delete (EndpointDeleteRequest& req, 
+endpoint_delete (EndpointDeleteRequest& req,
                  EndpointDeleteResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
@@ -1921,7 +1921,7 @@ endpoint_delete (EndpointDeleteRequest& req,
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Deleting EP {}", ep_l2_key_to_str(ep)); 
+    HAL_TRACE_DEBUG("Deleting EP {}", ep_l2_key_to_str(ep));
 
     // form ctxt and call infra add
     dhl_entry.handle = ep->hal_handle;
@@ -1930,10 +1930,10 @@ endpoint_delete (EndpointDeleteRequest& req,
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_del_obj(ep->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_del_obj(ep->hal_handle, &cfg_ctxt,
                              endpoint_delete_del_cb,
                              endpoint_delete_commit_cb,
-                             endpoint_delete_abort_cb, 
+                             endpoint_delete_abort_cb,
                              endpoint_delete_cleanup_cb);
 
 end:
@@ -2172,7 +2172,7 @@ ep_del_session (ep_t *ep, session_t *session)
 
     HAL_TRACE_DEBUG("add ep =/=> session, ids: {} =/=> {}, "
                     "hdls: {} => {}, ret:{}",
-                    ep_l2_key_to_str(ep), session->config.session_id, 
+                    ep_l2_key_to_str(ep), session->config.session_id,
                     ep->hal_handle, session->hal_handle, ret);
     return ret;
 }

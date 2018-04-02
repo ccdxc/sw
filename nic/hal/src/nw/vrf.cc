@@ -146,7 +146,7 @@ vrf_lookup_by_id (vrf_id_t tid)
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
 
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                 HAL_OBJ_ID_VRF);
 
         vrf = (vrf_t *)hal_handle_get_obj(entry->handle_id);
@@ -209,10 +209,10 @@ vrf_del_from_db (vrf_t *vrf)
 
 
 //-----------------------------------------------------------------------------
-// Print vrf spec
+// print vrf spec
 //-----------------------------------------------------------------------------
-hal_ret_t
-vrf_spec_print (VrfSpec& spec)
+static hal_ret_t
+vrf_spec_dump (VrfSpec& spec)
 {
     hal_ret_t           ret = HAL_RET_OK;
     fmt::MemoryWriter   buf;
@@ -302,7 +302,7 @@ validate_vrf_create (VrfSpec& spec, VrfResponse *rsp)
     }
 
     infra_vrf_handle = g_hal_state->infra_vrf_handle();
-    if ((spec.vrf_type() == types::VRF_TYPE_INFRA) && 
+    if ((spec.vrf_type() == types::VRF_TYPE_INFRA) &&
         (infra_vrf_handle != HAL_HANDLE_INVALID)) {
         HAL_TRACE_ERR("Infra VRF already exists with handle {}",
                       infra_vrf_handle);
@@ -311,7 +311,7 @@ validate_vrf_create (VrfSpec& spec, VrfResponse *rsp)
     }
 #if 0
     infra_vrf = (vrf_t *)g_hal_state->infra_vrf();
-    if ((spec.vrf_type() == types::VRF_TYPE_INFRA) && 
+    if ((spec.vrf_type() == types::VRF_TYPE_INFRA) &&
         (infra_vrf != NULL)) {
         HAL_TRACE_ERR("Infra VRF already exists vrf id: {}",
                       infra_vrf->vrf_id);
@@ -335,7 +335,7 @@ vrf_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     vrf_t                    *vrf = NULL;
-    vrf_create_app_ctxt_t    *app_ctxt = NULL; 
+    vrf_create_app_ctxt_t    *app_ctxt = NULL;
 
     HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
@@ -412,7 +412,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI vrf 
+// 3. Free PI vrf
 //------------------------------------------------------------------------------
 hal_ret_t
 vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -495,7 +495,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     HAL_TRACE_DEBUG("Creating vrf with id {}", spec.key_or_handle().vrf_id());
 
     // dump spec
-    vrf_spec_print(spec);
+    vrf_spec_dump(spec);
 
     // validate the request message
     ret = validate_vrf_create(spec, rsp);
@@ -506,7 +506,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
 
     // check if vrf exists already, and reject if one is found
     if ((vrf = vrf_lookup_by_id(spec.key_or_handle().vrf_id()))) {
-        HAL_TRACE_ERR("Failed to create a vrf, vrf {} exists already", 
+        HAL_TRACE_ERR("Failed to create a vrf, vrf {} exists already",
                       spec.key_or_handle().vrf_id());
         ret = HAL_RET_ENTRY_EXISTS;
         goto end;
@@ -530,7 +530,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
         sec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
         if (sec_prof == NULL) {
             HAL_TRACE_ERR("Failed to create vrf, "
-                          "security profile with handle {} not found", 
+                          "security profile with handle {} not found",
                           vrf->nwsec_profile_handle);
             rsp->set_api_status(types::API_STATUS_NOT_FOUND);
             vrf_free(vrf);
@@ -543,12 +543,12 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
         // Update global mytep ip.
         // Assumption: There is only one mytep ip. So for all tunnel ifs,
         //             my tep ip have to be same.
-        ip_addr_spec_to_ip_addr(g_hal_state->oper_db()->mytep(), 
+        ip_addr_spec_to_ip_addr(g_hal_state->oper_db()->mytep(),
                                 spec.mytep_ip());
         if (spec.has_gipo_prefix()) {
             ret = ip_pfx_spec_to_pfx_spec(&vrf->gipo_prefix, spec.gipo_prefix());
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Invalid GIPo prefix specified for VRF {}", 
+                HAL_TRACE_ERR("Invalid GIPo prefix specified for VRF {}",
                                vrf->vrf_id);
                 goto end;
             }
@@ -577,17 +577,17 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_add_obj(vrf->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_add_obj(vrf->hal_handle, &cfg_ctxt,
                              vrf_create_add_cb,
                              vrf_create_commit_cb,
-                             vrf_create_abort_cb, 
+                             vrf_create_abort_cb,
                              vrf_create_cleanup_cb);
 
 end:
 
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
         if (vrf) {
-            // if there is an error, if will be freed in abort CB
+            // if there is an error, if will be freed in abort cb
             vrf = NULL;
         }
         HAL_API_STATS_INC(HAL_API_VRF_CREATE_FAIL);
@@ -595,7 +595,7 @@ end:
         HAL_API_STATS_INC(HAL_API_VRF_CREATE_SUCCESS);
     }
 
-    vrf_prepare_rsp(rsp, ret, 
+    vrf_prepare_rsp(rsp, ret,
                       vrf ? vrf->hal_handle : HAL_HANDLE_INVALID);
     return ret;
 }
@@ -684,14 +684,14 @@ vrf_gipo_prefix_update (VrfSpec& spec, vrf_t *vrf, bool *gipo_prefix_change,
     if (spec.has_gipo_prefix()) {
         ret = ip_pfx_spec_to_pfx_spec(new_gipo_prefix, spec.gipo_prefix());
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Invalid GIPO prefix specified for VRF Update {}", 
+            HAL_TRACE_ERR("Invalid GIPO prefix specified for VRF Update {}",
                            vrf->vrf_id);
             goto end;
         }
     }
     if (!ip_prefix_is_equal(&vrf->gipo_prefix, new_gipo_prefix)) {
-        HAL_TRACE_DEBUG("gipo prefix change {} => {}", 
-                        ippfx2str(&vrf->gipo_prefix), 
+        HAL_TRACE_DEBUG("gipo prefix change {} => {}",
+                        ippfx2str(&vrf->gipo_prefix),
                         ippfx2str(new_gipo_prefix));
         *gipo_prefix_change = true;
     }
@@ -705,20 +705,20 @@ end:
 // check if anything changed for vrf
 //------------------------------------------------------------------------------
 hal_ret_t
-vrf_check_for_updates (VrfSpec& spec, vrf_t *vrf, 
+vrf_check_for_updates (VrfSpec& spec, vrf_t *vrf,
                        vrf_update_app_ctxt_t *app_ctxt)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
     if (vrf->vrf_type != spec.vrf_type()) {
-        HAL_TRACE_ERR("Vrf type change from {} to {} not allowed", 
+        HAL_TRACE_ERR("Vrf type change from {} to {} not allowed",
                       vrf->vrf_type, spec.vrf_type());
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
     // check for nwsec update
-    ret = vrf_nwsec_update(spec, vrf, &app_ctxt->nwsec_prof_change, 
+    ret = vrf_nwsec_update(spec, vrf, &app_ctxt->nwsec_prof_change,
                            &app_ctxt->nwsec_profile_handle);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to check for nwsec update. err : {}", ret);
@@ -785,7 +785,7 @@ vrf_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
 //------------------------------------------------------------------------------
 // Make a clone
-// - Both PI and PD objects cloned. 
+// - Both PI and PD objects cloned.
 // - Clone will have the lists copied as its just a pointer
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -911,7 +911,7 @@ vrf_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_TRACE_ERR("Failed to delete vrf pd, err : {}", ret);
     }
 
-    // free Clone
+    // free the cloned object
     vrf_cleanup(vrf);
     return ret;
 }
@@ -936,7 +936,7 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     vrf_update_app_ctxt_t    app_ctxt  = { 0 };
 
     // dump spec
-    vrf_spec_print(spec);
+    vrf_spec_dump(spec);
 
     // validate the request message
     ret = validate_vrf_update(spec, rsp);
@@ -994,10 +994,10 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_upd_obj(vrf->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_upd_obj(vrf->hal_handle, &cfg_ctxt,
                              vrf_update_upd_cb,
                              vrf_update_commit_cb,
-                             vrf_update_abort_cb, 
+                             vrf_update_abort_cb,
                              vrf_update_cleanup_cb);
 
 end:
@@ -1008,11 +1008,14 @@ end:
         HAL_API_STATS_INC(HAL_API_VRF_UPDATE_FAIL);
     }
 
-    vrf_prepare_rsp(rsp, ret, 
+    vrf_prepare_rsp(rsp, ret,
                        vrf ? vrf->hal_handle : HAL_HANDLE_INVALID);
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// process a get request for a given vrf
+//------------------------------------------------------------------------------
 static void
 vrf_process_get (vrf_t *vrf, VrfGetResponse *rsp)
 {
@@ -1038,6 +1041,9 @@ vrf_process_get (vrf_t *vrf, VrfGetResponse *rsp)
     rsp->set_api_status(types::API_STATUS_OK);
 }
 
+//------------------------------------------------------------------------------
+// callback invoked from vrf hash table while processing vrf get request
+//------------------------------------------------------------------------------
 static bool
 vrf_get_ht_cb (void *ht_entry, void *ctxt)
 {
@@ -1049,8 +1055,7 @@ vrf_get_ht_cb (void *ht_entry, void *ctxt)
     vrf = (vrf_t *)hal_handle_get_obj(entry->handle_id);
     vrf_process_get(vrf, response);
 
-    // Always return false here, so that we walk through all hash table
-    // entries. 
+    // return false here, so that we walk through all hash table entries.
     return false;
 }
 
@@ -1064,8 +1069,8 @@ vrf_get (VrfGetRequest& req, VrfGetResponseMsg *rsp)
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        // If the Vrf key handle field is not set, then this is a request 
-        // for information from all VRFs. Run through all VRFs in the hash 
+        // If the Vrf key handle field is not set, then this is a request
+        // for information from all VRFs. Run through all VRFs in the hash
         // table and populate the response.
         g_hal_state->vrf_id_ht()->walk(vrf_get_ht_cb, rsp);
     } else {
@@ -1132,7 +1137,7 @@ vrf_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf_t                       *vrf        = NULL;
 
     HAL_ASSERT(cfg_ctxt != NULL);
-    // TODO: Check the dependency ref count for the vrf. 
+    // TODO: Check the dependency ref count for the vrf.
     //       If its non zero, fail the delete.
 
     lnode = cfg_ctxt->dhl.next;
@@ -1146,7 +1151,7 @@ vrf_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_vrf_args.vrf = vrf;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_DELETE, (void *)&pd_vrf_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete vrf pd, err : {}", 
+        HAL_TRACE_ERR("Failed to delete vrf pd, err : {}",
                       ret);
     }
     return ret;
@@ -1191,7 +1196,7 @@ vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // a. Remove from vrf id hash table
     ret = vrf_del_from_db(vrf);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to del vrf {} from db, err : {}", 
+        HAL_TRACE_ERR("Failed to del vrf {} from db, err : {}",
                       vrf->vrf_id, ret);
         goto end;
     }
@@ -1291,10 +1296,10 @@ vrf_delete (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_del_obj(vrf->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_del_obj(vrf->hal_handle, &cfg_ctxt,
                              vrf_delete_del_cb,
                              vrf_delete_commit_cb,
-                             vrf_delete_abort_cb, 
+                             vrf_delete_abort_cb,
                              vrf_delete_cleanup_cb);
 end:
 
@@ -1314,7 +1319,7 @@ hal_ret_t
 vrf_add_l2seg (vrf_t *vrf, l2seg_t *l2seg)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    
+
     if (vrf == NULL || l2seg == NULL) {
         ret = HAL_RET_INVALID_ARG;
         goto end;
@@ -1365,16 +1370,44 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// given vrf_t, marshall it for persisting the vrf obj
+// given a vrf, marshall it for persisting the vrf state (spec, status, stats)
+//
+// obj points to vrf object i.e., vrf_t
+// mem is the memory buffer to serialize the state into
+// len is the length of the buffer provided
+// mlen is to be filled by this function with marshalled state length
 //-----------------------------------------------------------------------------
-uint32_t
-vrf_marshall (void *obj, uint8_t *mem, uint32_t len)
+hal_ret_t
+vrf_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
 {
-    return 0;
+    VrfGetResponse    rsp;
+    uint32_t          serialized_state_sz;
+    vrf_t             *vrf = (vrf_t *)obj;
+
+    HAL_ASSERT((vrf != NULL) && (mlen != NULL));
+    *mlen = 0;
+
+    // get all information about this vrf (includes spec, status & stats)
+    vrf_process_get(vrf, &rsp);
+    serialized_state_sz = rsp.ByteSizeLong();
+    if (serialized_state_sz > len) {
+        HAL_TRACE_ERR("Failed to marshall VRF {}, not enough room, "
+                      "required size {}, available size {}",
+                      vrf->vrf_id, serialized_state_sz, len);
+        return HAL_RET_OOM;
+    }
+
+    // serialize all the state
+    if (rsp.SerializeToArray(mem, serialized_state_sz) == false) {
+        HAL_TRACE_ERR("Failed to serialize vrf {}", vrf->vrf_id);
+        return HAL_RET_OOM;
+    }
+    *mlen = serialized_state_sz;
+    return HAL_RET_OK;
 }
 
 uint32_t
-vrf_unmarshall (void *obj, uint32_t len)
+vrf_unmarshall_cb (void *obj, uint32_t len)
 {
     return 0;
 }

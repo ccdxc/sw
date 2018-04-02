@@ -76,13 +76,13 @@ typedef struct vrf_update_app_ctxt_s {
 // max. number of VRFs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_VRFS                                 256
 
-static inline void 
+static inline void
 vrf_lock (vrf_t *vrf, const char *fname, int lineno, const char *fxname)
 {
     HAL_SPINLOCK_LOCK(&vrf->slock);
 }
 
-static inline void 
+static inline void
 vrf_unlock (vrf_t *vrf, const char *fname, int lineno, const char *fxname)
 {
     HAL_SPINLOCK_UNLOCK(&vrf->slock);
@@ -110,20 +110,21 @@ vrf_lookup_by_handle (hal_handle_t handle)
     return (vrf_t *)hal_handle->get_obj();
 }
 
-extern vrf_t *vrf_lookup_by_id(vrf_id_t tid);
-extern void *vrf_id_get_key_func(void *entry);
-extern uint32_t vrf_id_compute_hash_func(void *key, uint32_t ht_size);
-extern bool vrf_id_compare_key_func(void *key1, void *key2);
-vrf_t *vrf_lookup_key_or_handle (const VrfKeyHandle& kh);
+vrf_t *vrf_lookup_by_id(vrf_id_t tid);
+void *vrf_id_get_key_func(void *entry);
+uint32_t vrf_id_compute_hash_func(void *key, uint32_t ht_size);
+bool vrf_id_compare_key_func(void *key1, void *key2);
+vrf_t *vrf_lookup_key_or_handle(const VrfKeyHandle& kh);
 
-hal_ret_t vrf_create(vrf::VrfSpec& spec,
-                     vrf::VrfResponse *rsp);
-hal_ret_t vrf_update(vrf::VrfSpec& spec,
-                     vrf::VrfResponse *rsp);
-hal_ret_t vrf_delete(vrf::VrfDeleteRequest& req,
-                     vrf::VrfDeleteResponse *rsp);
-hal_ret_t vrf_get(vrf::VrfGetRequest& req,
-                  vrf::VrfGetResponseMsg *rsp);
+hal_ret_t vrf_create(vrf::VrfSpec& spec, vrf::VrfResponse *rsp);
+hal_ret_t vrf_update(vrf::VrfSpec& spec, vrf::VrfResponse *rsp);
+hal_ret_t vrf_delete(vrf::VrfDeleteRequest& req, vrf::VrfDeleteResponse *rsp);
+hal_ret_t vrf_get(vrf::VrfGetRequest& req, vrf::VrfGetResponseMsg *rsp);
+
+hal_ret_t vrf_marshall_cb(void *obj, uint8_t *mem,
+                          uint32_t len, uint32_t *mlen);
+uint32_t vrf_unmarshall_cb(void *obj, uint32_t len);
+
 }    // namespace hal
 
 #endif    // __VRF_HPP__

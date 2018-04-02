@@ -6,127 +6,97 @@
 
 namespace hal {
 
-//----------------------------------------------------------------------------
-// LIF API: Get LIF's ID
-//----------------------------------------------------------------------------
 uint32_t
-lif_get_lif_id(lif_t *pi_lif)
+lif_get_lif_id (lif_t *pi_lif)
 {
     return pi_lif->lif_id;
 }
 
-//-----------------------------------------------------------------------------
-// LIF API: Get qtype from purpose
-//-----------------------------------------------------------------------------
 uint8_t
-lif_get_qtype(lif_t *pi_lif, intf::LifQPurpose purpose)
+lif_get_qtype (lif_t *pi_lif, intf::LifQPurpose purpose)
 {
     HAL_ASSERT_RETURN(purpose <= intf::LifQPurpose_MAX, 0);
 
     return pi_lif->qinfo[purpose].type;
 }
 
-//----------------------------------------------------------------------------
-// LIF API: Set PD LIF in PI LIF
-//----------------------------------------------------------------------------
-void 
-lif_set_pd_lif(lif_t *pi_lif, void *pd_lif)
+void
+lif_set_pd_lif (lif_t *pi_lif, void *pd_lif)
 {
     pi_lif->pd_lif = pd_lif;
 }
 
-//----------------------------------------------------------------------------
-// Returns PD Lif
-//----------------------------------------------------------------------------
 void *
-lif_get_pd_lif(lif_t *pi_lif)
+lif_get_pd_lif (lif_t *pi_lif)
 {
     return pi_lif->pd_lif;
 }
 
-//----------------------------------------------------------------------------
-// LIF API: Get Tx qos class
-//----------------------------------------------------------------------------
 qos_class_t *
-lif_get_tx_qos_class(lif_t *pi_lif)
+lif_get_tx_qos_class (lif_t *pi_lif)
 {
     hal_handle_t qos_class_handle;
+
     qos_class_handle = pi_lif->qos_info.tx_qos_class_handle;
     return find_qos_class_by_handle(qos_class_handle);
 }
 
-//----------------------------------------------------------------------------
-// LIF API: Get Rx qos class
-//----------------------------------------------------------------------------
 qos_class_t *
-lif_get_rx_qos_class(lif_t *pi_lif)
+lif_get_rx_qos_class (lif_t *pi_lif)
 {
     hal_handle_t qos_class_handle;
+
     qos_class_handle = pi_lif->qos_info.rx_qos_class_handle;
     return find_qos_class_by_handle(qos_class_handle);
 }
 
-//----------------------------------------------------------------------------
-// IF API: Get If Type
-//----------------------------------------------------------------------------
 intf::IfType
-intf_get_if_type(if_t *pi_if)
+intf_get_if_type (if_t *pi_if)
 {
-    if (!pi_if)
+    if (!pi_if) {
         return intf::IfType::IF_TYPE_NONE;
+    }
     return pi_if->if_type;
 }
 
-//----------------------------------------------------------------------------
-// IF API: Get IF's ID
-//----------------------------------------------------------------------------
 uint32_t
-if_get_if_id(if_t *pi_if)
+if_get_if_id (if_t *pi_if)
 {
     return pi_if->if_id;
 }
 
-// ----------------------------------------------------------------------------
-// IF API: Get IF's HAL Handle
-// ----------------------------------------------------------------------------
 hal_handle_t
-if_get_hal_handle(if_t *pi_if)
+if_get_hal_handle (if_t *pi_if)
 {
     return pi_if->hal_handle;
 }
 
-// ----------------------------------------------------------------------------
-// UplinkIF API: Get UplinkIF's Port number
-//----------------------------------------------------------------------------
 uint32_t
-uplinkif_get_port_num(if_t *pi_if)
+uplinkif_get_port_num (if_t *pi_if)
 {
     return pi_if->uplink_port_num;
 }
 
-//----------------------------------------------------------------------------
-// IF API: Set PD IF in PI IF to Uplink PD
-//----------------------------------------------------------------------------
 void
-if_set_pd_if(if_t *pi_if, void *pd_if)
+if_set_pd_if (if_t *pi_if, void *pd_if)
 {
     pi_if->pd_if = pd_if;
 }
 
 //----------------------------------------------------------------------------
-// Returns PD If
+// returns PD If
 //----------------------------------------------------------------------------
 void *
-if_get_pd_if(if_t *pi_if)
+if_get_pd_if (if_t *pi_if)
 {
     return pi_if->pd_if;
 }
 
 //----------------------------------------------------------------------------
-// Returns true if l2seg is native on if
+// returns true if l2seg is native on if
 //----------------------------------------------------------------------------
 bool
-is_l2seg_native(l2seg_t *l2seg, if_t *pi_if)
+is_l2seg_native (l2seg_t *l2seg, if_t *pi_if)
 {
     // Valid only for Uplink
     if ((pi_if->if_type == intf::IF_TYPE_UPLINK ||
@@ -139,12 +109,11 @@ is_l2seg_native(l2seg_t *l2seg, if_t *pi_if)
 }
 
 lif_t *
-if_get_lif(if_t *pi_if)
+if_get_lif (if_t *pi_if)
 {
     if (!pi_if) {
         return NULL;
     }
-    // May return NULL for UplinkIf/PC
     if (pi_if->if_type == intf::IF_TYPE_ENIC) {
         return find_lif_by_handle(pi_if->lif_handle);
     } else if (pi_if->if_type == intf::IF_TYPE_CPU) {
@@ -157,10 +126,10 @@ if_get_lif(if_t *pi_if)
 }
 
 //----------------------------------------------------------------------------
-// Returns enic type of interface
+// returns enic type of interface
 //----------------------------------------------------------------------------
-intf::IfEnicType 
-if_get_enicif_type(if_t *pi_if)
+intf::IfEnicType
+if_get_enicif_type (if_t *pi_if)
 {
     // Check if if is enicif
     if (pi_if->if_type == intf::IF_TYPE_ENIC) {
@@ -171,38 +140,38 @@ if_get_enicif_type(if_t *pi_if)
 }
 
 //----------------------------------------------------------------------------
-// Get the encap vlan
+// get the encap vlan
 //----------------------------------------------------------------------------
-vlan_id_t 
-if_get_encap_vlan(if_t *pi_if)
+vlan_id_t
+if_get_encap_vlan (if_t *pi_if)
 {
     return pi_if->encap_vlan;
 }
 
 //----------------------------------------------------------------------------
-// Get enic ifs mac address
+// get enic ifs mac address
 //----------------------------------------------------------------------------
 mac_addr_t *
-if_get_mac_addr(if_t *pi_if)
+if_get_mac_addr (if_t *pi_if)
 {
     return &(pi_if->mac_addr);
 }
 
-// ----------------------------------------------------------------------------
-// Get the uplink for the Host Pinned mode
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// get the uplink for the Host Pinned mode
+//----------------------------------------------------------------------------
 uint8_t
-if_enicif_get_host_pinned_uplink(if_t *pi_if)
+if_enicif_get_host_pinned_uplink (if_t *pi_if)
 {
     // HACK! Fix this
     return ((uint8_t*)(if_get_mac_addr(pi_if)))[3];
 }
 
-// ----------------------------------------------------------------------------
-// Get the pd segment for enicif. Assumption a ENIC if has only one l2seg to it.
+//----------------------------------------------------------------------------
+// get the pd segment for enicif. Assumption a ENIC if has only one l2seg to it.
 //----------------------------------------------------------------------------
 void *
-if_enicif_get_pd_l2seg(if_t *pi_if)
+if_enicif_get_pd_l2seg (if_t *pi_if)
 {
     l2seg_t *pi_seg = NULL;
 
@@ -213,10 +182,10 @@ if_enicif_get_pd_l2seg(if_t *pi_if)
 }
 
 //----------------------------------------------------------------------------
-// Get the pi segment for enicif. Assumption a ENIC if has only one l2seg to it.
+// get the pi segment for enicif. Assumption a ENIC if has only one l2seg to it.
 //----------------------------------------------------------------------------
 void *
-if_enicif_get_pi_l2seg(if_t *pi_if)
+if_enicif_get_pi_l2seg (if_t *pi_if)
 {
     l2seg_t *pi_seg = NULL;
 
@@ -243,10 +212,10 @@ if_enicif_get_pi_l2seg(if_t *pi_if)
 }
 
 //----------------------------------------------------------------------------
-// Returns nwsec for the enicif
+// returns nwsec for the enicif
 //----------------------------------------------------------------------------
 void *
-if_enicif_get_pd_nwsec(if_t *pi_if)
+if_enicif_get_pd_nwsec (if_t *pi_if)
 {
     nwsec_profile_t     *pi_nwsec = NULL;
 
@@ -262,12 +231,11 @@ if_enicif_get_pd_nwsec(if_t *pi_if)
 // Returns nwsec for the interface
 //----------------------------------------------------------------------------
 void *
-if_enicif_get_pi_nwsec(if_t *pi_if)
+if_enicif_get_pi_nwsec (if_t *pi_if)
 {
-    vrf_t            *pi_vrf = NULL;
-    nwsec_profile_t     *pi_nwsec = NULL;
+    vrf_t              *pi_vrf = NULL;
+    nwsec_profile_t    *pi_nwsec = NULL;
 
-    // Check if if is enicif
     if (pi_if->if_type == intf::IF_TYPE_ENIC) {
         if (pi_if->tid == 0) {
             return NULL;
@@ -286,10 +254,10 @@ if_enicif_get_pi_nwsec(if_t *pi_if)
 }
 
 //----------------------------------------------------------------------------
-// Returns ipsg_en for enicif
+// returns ipsg_en for enicif
 //----------------------------------------------------------------------------
 uint32_t
-if_enicif_get_ipsg_en(if_t *pi_if)
+if_enicif_get_ipsg_en (if_t *pi_if)
 {
     nwsec_profile_t     *pi_nwsec = NULL;
 
@@ -302,10 +270,10 @@ if_enicif_get_ipsg_en(if_t *pi_if)
 }
 
 //-----------------------------------------------------------------------------
-// Get native vlan id for classic enic
+// get native vlan id for classic enic
 //-----------------------------------------------------------------------------
 hal_ret_t
-if_enicif_get_native_l2seg_clsc_vlan(if_t *pi_if, uint32_t *vlan_id)
+if_enicif_get_native_l2seg_clsc_vlan (if_t *pi_if, uint32_t *vlan_id)
 {
     hal_ret_t           ret     = HAL_RET_OK;
     intf::IfType        if_type = intf::IF_TYPE_NONE;
@@ -317,7 +285,7 @@ if_enicif_get_native_l2seg_clsc_vlan(if_t *pi_if, uint32_t *vlan_id)
     *vlan_id = 0;
 
     if (if_type != intf::IF_TYPE_ENIC) {
-        HAL_TRACE_ERR("{}:native l2seg classic is only for ENIC. if_type:{}", 
+        HAL_TRACE_ERR("{}:native l2seg classic is only for ENIC. if_type:{}",
                       __FUNCTION__, if_type);
         ret = HAL_RET_INVALID_ARG;
         goto end;
@@ -331,7 +299,7 @@ if_enicif_get_native_l2seg_clsc_vlan(if_t *pi_if, uint32_t *vlan_id)
             ret = HAL_RET_INVALID_ARG;
             goto end;
         }
-    
+
         // Check if wire encap is vlan
         if (pi_seg->wire_encap.type != types::ENCAP_TYPE_DOT1Q) {
             HAL_TRACE_ERR("{}:native l2seg classic doesn't have wire encap",
@@ -344,11 +312,12 @@ if_enicif_get_native_l2seg_clsc_vlan(if_t *pi_if, uint32_t *vlan_id)
     }
 
 end:
+
     return ret;
 }
 
 //----------------------------------------------------------------------------
-// Returns uplink if
+// returns uplink if
 //----------------------------------------------------------------------------
 hal_ret_t
 if_enicif_get_pinned_if(if_t *pi_if, if_t **uplink_if)
@@ -364,13 +333,13 @@ if_enicif_get_pinned_if(if_t *pi_if, if_t **uplink_if)
 
     if_type = intf_get_if_type(pi_if);
     if (if_type != intf::IF_TYPE_ENIC) {
-        HAL_TRACE_ERR("{}:pinned if is only for ENIC. if_type:{}", 
+        HAL_TRACE_ERR("{}:pinned if is only for ENIC. if_type:{}",
                       __FUNCTION__, if_type);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    // Enic has pinned uplink, return it 
+    // Enic has pinned uplink, return it
     if (pi_if->pinned_uplink != HAL_HANDLE_INVALID) {
         uplink_hdl = pi_if->pinned_uplink;
     } else {
@@ -388,7 +357,7 @@ if_enicif_get_pinned_if(if_t *pi_if, if_t **uplink_if)
     if (uplink_hdl != HAL_HANDLE_INVALID) {
         *uplink_if = find_if_by_handle(uplink_hdl);
         if (!*uplink_if) {
-            HAL_TRACE_ERR("{}:unable to find if for if_hdl:{}", 
+            HAL_TRACE_ERR("{}:unable to find if for if_hdl:{}",
                           __FUNCTION__, uplink_hdl);
             ret = HAL_RET_IF_NOT_FOUND;
             goto end;
@@ -400,15 +369,15 @@ if_enicif_get_pinned_if(if_t *pi_if, if_t **uplink_if)
     }
 
 end:
+
     return ret;
 }
 
-
 //----------------------------------------------------------------------------
-// Returns hwlif id
+// returns hwlif id
 //----------------------------------------------------------------------------
 uint32_t
-if_allocate_hwlif_id()
+if_allocate_hwlif_id (void)
 {
     int32_t hw_lif_id = -1;
 
@@ -421,10 +390,10 @@ if_allocate_hwlif_id()
 }
 
 //----------------------------------------------------------------------------
-// Given a PI If and L2 Seg, get its encap vlan
+// given a PI If and L2 Seg, get its encap vlan
 //----------------------------------------------------------------------------
 uint32_t
-if_l2seg_get_encap_vlan(if_t *pi_if, l2seg_t *pi_l2seg)
+if_l2seg_get_encap_vlan (if_t *pi_if, l2seg_t *pi_l2seg)
 {
     intf::IfType    if_type;
 
@@ -456,60 +425,63 @@ if_l2seg_get_encap_vlan(if_t *pi_if, l2seg_t *pi_l2seg)
 }
 
 //----------------------------------------------------------------------------
-// Returns the encap used for l2seg on an if. 
+// returns the encap used for l2seg on an if.
 // Assumption: Ingress & Egress are same.
 //----------------------------------------------------------------------------
-hal_ret_t   
-if_l2seg_get_encap(if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
-                           uint16_t *vlan_id)
+hal_ret_t
+if_l2seg_get_encap (if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
+                    uint16_t *vlan_id)
 {
     if (!pi_if && !pi_l2seg) {
         return HAL_RET_INVALID_ARG;
     }
 
     switch(pi_if->if_type) {
-        case intf::IF_TYPE_ENIC:
-            switch (pi_if->enic_type) {
-                case intf::IF_ENIC_TYPE_USEG:
-                case intf::IF_ENIC_TYPE_PVLAN:
-                    *vlan_v = TRUE;
-                    *vlan_id = if_l2seg_get_encap_vlan(pi_if, pi_l2seg);
-                    break;
-                case intf::IF_ENIC_TYPE_CLASSIC:
-                    if (pi_if->native_l2seg_clsc == pi_l2seg->hal_handle) {
-                        *vlan_v = FALSE;
-                        *vlan_id = 0;
-                    } else {
-                        *vlan_v = TRUE;
-                        *vlan_id = 0; // Retain original vlan for classic case
-                    }
-                    break;
-                case intf::IF_ENIC_TYPE_DIRECT:
-                    *vlan_v = FALSE;
-                    *vlan_id = 0;
-                    break;
-                default:
-                    HAL_ASSERT(0);
-                    break;
-            }
+    case intf::IF_TYPE_ENIC:
+        switch (pi_if->enic_type) {
+        case intf::IF_ENIC_TYPE_USEG:
+        case intf::IF_ENIC_TYPE_PVLAN:
+            *vlan_v = TRUE;
+            *vlan_id = if_l2seg_get_encap_vlan(pi_if, pi_l2seg);
             break;
-        case intf::IF_TYPE_UPLINK:
-        case intf::IF_TYPE_UPLINK_PC:
-            if (is_l2seg_native(pi_l2seg, pi_if)) {
+        case intf::IF_ENIC_TYPE_CLASSIC:
+            if (pi_if->native_l2seg_clsc == pi_l2seg->hal_handle) {
                 *vlan_v = FALSE;
                 *vlan_id = 0;
             } else {
                 *vlan_v = TRUE;
-                *vlan_id = if_l2seg_get_encap_vlan(pi_if, pi_l2seg);
+                *vlan_id = 0; // Retain original vlan for classic case
             }
             break;
-        case intf::IF_TYPE_TUNNEL:
-            // DO NOT REMOVE HAL_ASSERT
-            // This API is not expected to be called for tunnel-if
-            HAL_ASSERT(0);
+        case intf::IF_ENIC_TYPE_DIRECT:
+            *vlan_v = FALSE;
+            *vlan_id = 0;
             break;
         default:
             HAL_ASSERT(0);
+            break;
+    }
+    break;
+
+    case intf::IF_TYPE_UPLINK:
+    case intf::IF_TYPE_UPLINK_PC:
+        if (is_l2seg_native(pi_l2seg, pi_if)) {
+            *vlan_v = FALSE;
+            *vlan_id = 0;
+        } else {
+            *vlan_v = TRUE;
+            *vlan_id = if_l2seg_get_encap_vlan(pi_if, pi_l2seg);
+        }
+        break;
+
+    case intf::IF_TYPE_TUNNEL:
+        // DO NOT REMOVE HAL_ASSERT
+        // This API is not expected to be called for tunnel-if
+        HAL_ASSERT(0);
+        break;
+
+    default:
+        HAL_ASSERT(0);
     }
 
     return HAL_RET_OK;
@@ -519,7 +491,7 @@ if_l2seg_get_encap(if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
 // LIF API: Get LIF's rdma enable status
 //----------------------------------------------------------------------------
 bool
-lif_get_enable_rdma(lif_t *pi_lif)
+lif_get_enable_rdma (lif_t *pi_lif)
 {
     return pi_lif->enable_rdma;
 }
@@ -527,8 +499,8 @@ lif_get_enable_rdma(lif_t *pi_lif)
 //----------------------------------------------------------------------------
 // LIF API: Set rdma enable in PI LIF
 //----------------------------------------------------------------------------
-void 
-lif_set_enable_rdma(lif_t *pi_lif, bool enable_rdma)
+void
+lif_set_enable_rdma (lif_t *pi_lif, bool enable_rdma)
 {
     pi_lif->enable_rdma = enable_rdma;
 }
@@ -538,13 +510,13 @@ lif_set_enable_rdma(lif_t *pi_lif, bool enable_rdma)
 // LIF API: Get total number of LIF queues across all qtypes.
 //----------------------------------------------------------------------------
 uint32_t
-lif_get_total_qcount (uint32_t hw_lif_id) 
+lif_get_total_qcount (uint32_t hw_lif_id)
 {
     uint32_t total_qcount = 0, i = 0;
 
     LIFQState *qstate = g_lif_manager->GetLIFQState(hw_lif_id);
 
-    if (qstate == NULL) 
+    if (qstate == NULL)
         goto end;
 
     for (i = 0; i < kNumQTypes; i++) {
@@ -554,5 +526,6 @@ lif_get_total_qcount (uint32_t hw_lif_id)
 end:
     return total_qcount;
 }
+
 } // namespace hal
 

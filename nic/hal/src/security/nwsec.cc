@@ -132,12 +132,12 @@ find_nwsec_profile_by_handle (hal_handle_t handle)
     }
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
-        HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",
+        HAL_TRACE_DEBUG("{}:Failed to find object with handle:{}",
                         __FUNCTION__, handle);
         return NULL;
     }
     if (hal_handle->obj_id() != HAL_OBJ_ID_SECURITY_PROFILE) {
-        HAL_TRACE_DEBUG("{}:failed to find nwsec profile with handle:{}",
+        HAL_TRACE_DEBUG("{}:Failed to find nwsec profile with handle:{}",
                         __FUNCTION__, handle);
         return NULL;
     }
@@ -189,7 +189,7 @@ nwsec_add_to_db (nwsec_profile_t *nwsec, hal_handle_t handle)
         insert_with_key(&nwsec->profile_id, entry, &entry->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("failed to add nwsec id to handle mapping, "
+        HAL_TRACE_ERR("Failed to add nwsec id to handle mapping, "
                       "err : {}", ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -469,7 +469,7 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// main Create CB
+// main Create cb
 // - PD Call to allocate PD resources and HW programming
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -480,21 +480,15 @@ nwsec_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t                       *lnode = NULL;
     dhl_entry_t                         *dhl_entry = NULL;
     nwsec_profile_t                     *nwsec = NULL;
-    // nwsec_create_app_ctxt_t         *app_ctxt = NULL; 
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     // app_ctxt = (nwsec_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("create add CB for nwsec_prof_id:{}",
+    HAL_TRACE_DEBUG("create add cb for nwsec_prof_id:{}",
                     nwsec->profile_id);
 
     // PD Call to allocate PD resources and HW programming
@@ -503,10 +497,9 @@ nwsec_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_CREATE, 
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to create nwsec pd, err : {}", ret);
+        HAL_TRACE_ERR("Failed to create nwsec pd, err : {}", ret);
     }
 
-end:
     return ret;
 }
 
@@ -524,12 +517,7 @@ nwsec_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t             *nwsec = NULL;
     hal_handle_t                hal_handle = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -537,14 +525,14 @@ nwsec_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create commit CB for nwsec_prof_id:{}",
+    HAL_TRACE_DEBUG("create commit cb for nwsec_prof_id:{}",
                     nwsec->profile_id);
 
 
     // 1. a. Add to nwsec id hash table
     ret = nwsec_add_to_db(nwsec, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to add nwsec {} to db, err : {}", 
+        HAL_TRACE_ERR("Failed to add nwsec {} to db, err : {}", 
                       nwsec->profile_id, ret);
         goto end;
     }
@@ -573,20 +561,14 @@ nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t                     *nwsec = NULL;
     hal_handle_t                        hal_handle = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create abort CB {}",
-                    nwsec->profile_id);
+    HAL_TRACE_DEBUG("Create abort cb {}", nwsec->profile_id);
 
     // 1. delete call to PD
     if (nwsec->pd) {
@@ -595,19 +577,15 @@ nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_DELETE, 
                               (void *)&pd_nwsec_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to delete nwsec pd, err : {}", 
-                          ret);
+            HAL_TRACE_ERR("Failed to delete nwsec pd, err : {}", ret);
         }
     }
 
     // 2. remove object from hal_handle id based hash table in infra
     hal_handle_free(hal_handle);
 
-    // 3. Free PI vrf
+    // 3. free PI vrf
     nwsec_profile_free(nwsec);
-
-end:
-
     return ret;
 }
 
@@ -617,9 +595,7 @@ end:
 hal_ret_t
 nwsec_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t   ret = HAL_RET_OK;
-
-    return ret;
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -632,9 +608,7 @@ nwsec_prepare_rsp (SecurityProfileResponse *rsp, hal_ret_t ret,
     if (ret == HAL_RET_OK) {
         rsp->mutable_profile_status()->set_profile_handle(hal_handle);
     }
-
     rsp->set_api_status(hal_prepare_rsp(ret));
-
     return HAL_RET_OK;
 }
 
@@ -642,11 +616,15 @@ nwsec_prepare_rsp (SecurityProfileResponse *rsp, hal_ret_t ret,
 // Security Profile dump
 //-----------------------------------------------------------------------------
 #define NWSEC_SPEC_FIELD_PRINT(fname) buf.write(#fname":{}, ", spec.fname())
-hal_ret_t
-security_profile_spec_print (SecurityProfileSpec& spec)
+static hal_ret_t
+security_profile_spec_dump (SecurityProfileSpec& spec)
 {
     hal_ret_t           ret = HAL_RET_OK;
     fmt::MemoryWriter   buf;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return HAL_RET_OK;
+    }
 
     buf.write("Security Profile Spec: ");
     if (spec.has_key_or_handle()) {
@@ -772,8 +750,8 @@ securityprofile_create (SecurityProfileSpec& spec,
     HAL_TRACE_DEBUG("Creating security profile id {}",
                     spec.key_or_handle().profile_id());
 
-    // Prints spec
-    security_profile_spec_print(spec);
+    // dump spec
+    security_profile_spec_dump(spec);
 
     // validate the request message
     ret = validate_nwsec_create(spec, rsp);
@@ -806,7 +784,7 @@ securityprofile_create (SecurityProfileSpec& spec,
     // allocate hal handle id
     sec_prof->hal_handle = hal_handle_alloc(HAL_OBJ_ID_SECURITY_PROFILE);
     if (sec_prof->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("failed to alloc handle {}", 
+        HAL_TRACE_ERR("Failed to alloc handle {}", 
                       sec_prof->profile_id);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
@@ -829,7 +807,7 @@ end:
 
     if (ret != HAL_RET_OK) {
         if (sec_prof) {
-            // if there is an error, if will be freed in abort CB
+            // if there is an error, if will be freed in abort cb
             sec_prof = NULL;
         }
         HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_CREATE_FAIL);
@@ -874,7 +852,7 @@ nwsec_handle_ipsg_change (nwsec_profile_t *nwsec, nwsec_profile_t *nwsec_clone)
     }
 
     HAL_TRACE_DEBUG("sec_prof_id:{}", nwsec_clone->profile_id);
-    // clone didnt have the lists moved yet. They happen in commit CB.
+    // clone didnt have the lists moved yet. They happen in commit cb.
     // So walking vrf list in the original.
     dllist_for_each_safe(curr, next, &nwsec->vrf_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
@@ -909,12 +887,7 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t                     *nwsec = NULL, *nwsec_clone = NULL;
     nwsec_update_app_ctxt_t             *app_ctxt = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt = (nwsec_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -932,7 +905,7 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_UPDATE, 
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to update nwsec pd, err : {}", ret);
+        HAL_TRACE_ERR("Failed to update nwsec pd, err : {}", ret);
         goto end;
     }
 
@@ -942,13 +915,14 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         // nwsec_clone->ipsg_en = app_ctxt->ipsg_en;
         ret = nwsec_handle_ipsg_change(nwsec, nwsec_clone);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to handle ipsg "
+            HAL_TRACE_ERR("Failed to handle ipsg "
                           "change, err:{}", ret);
             goto end;
         }
     }
 
 end:
+
     return ret;
 }
 
@@ -994,14 +968,8 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t                       *lnode = NULL;
     dhl_entry_t                         *dhl_entry = NULL;
     nwsec_profile_t                     *nwsec = NULL, *nwsec_clone = NULL;
-    // nwsec_update_app_ctxt_t     *app_ctxt = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     // app_ctxt = (nwsec_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -1009,7 +977,7 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
     nwsec_clone = (nwsec_profile_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update commit CB {}",
+    HAL_TRACE_DEBUG("update commit cb {}",
                     nwsec->profile_id);
 
     // move lists
@@ -1025,18 +993,18 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("clone_ipsg:{}",
                     (nwsec_clone)->ipsg_en);
 
-    // Free PD
+    // free PD
     pd::pd_nwsec_profile_mem_free_args_init(&pd_nwsec_args);
     pd_nwsec_args.nwsec_profile = nwsec;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MEM_FREE,
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to delete nwsec pd, err : {}", ret);
+        HAL_TRACE_ERR("Failed to delete nwsec pd, err : {}", ret);
     }
 
-    // Free PI
+    // free PI
     nwsec_profile_free(nwsec);
-end:
+
     return ret;
 }
 
@@ -1053,19 +1021,14 @@ nwsec_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t             *nwsec = NULL;
     pd::pd_nwsec_profile_mem_free_args_t pd_nwsec_args = { 0 };
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
     // assign clone as we are trying to free only the clone
     nwsec = (nwsec_profile_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update commit CB for nwsec_prof_id:{}",
+    HAL_TRACE_DEBUG("update commit cb for nwsec_prof_id:{}",
                     nwsec->profile_id);
 
     // Free PD
@@ -1074,12 +1037,11 @@ nwsec_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MEM_FREE,
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to delete nwsec pd, err : {}", ret);
+        HAL_TRACE_ERR("Failed to delete nwsec pd, err : {}", ret);
     }
 
-    // Free PI
+    // free PI
     nwsec_profile_free(nwsec);
-end:
 
     return ret;
 }
@@ -1102,25 +1064,23 @@ securityprofile_update (nwsec::SecurityProfileSpec& spec,
     nwsec_update_app_ctxt_t        app_ctxt  = { 0 };
     const SecurityProfileKeyHandle &kh       = spec.key_or_handle();
 
-    hal_api_trace(" API Begin: security profile update ");
-    HAL_TRACE_DEBUG("nwsec update for id:{} or handle:{}",
+    HAL_TRACE_DEBUG("Rcvd nwsec {} update, handle:{}",
                     spec.key_or_handle().profile_id(),
                     spec.key_or_handle().profile_handle());
 
-    // Prints spec
-    security_profile_spec_print(spec);
+    security_profile_spec_dump(spec);
 
     // validate the request message
     ret = validate_nwsec_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("nwsec update validation failed, ret : {}", ret);
+        HAL_TRACE_ERR("nwsec update validation failed, err : {}", ret);
         goto end;
     }
 
     // lookup this security profile
     sec_prof = nwsec_lookup_key_or_handle(spec.key_or_handle());
     if (!sec_prof) {
-        HAL_TRACE_ERR("failed to find nwsec, id {}, handle {}",
+        HAL_TRACE_ERR("Failed to find nwsec, id {}, handle {}",
                       kh.profile_id(), kh.profile_handle());
         ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
         goto end;
@@ -1129,7 +1089,7 @@ securityprofile_update (nwsec::SecurityProfileSpec& spec,
     // check what changed
     ret = nwsec_handle_update(spec, sec_prof, &app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("nwsec check update failed, ret : {}", ret);
+        HAL_TRACE_ERR("nwsec check update failed, err : {}", ret);
         goto end;
     }
 
@@ -1155,6 +1115,7 @@ securityprofile_update (nwsec::SecurityProfileSpec& spec,
                              nwsec_update_cleanup_cb);
 
 end:
+
     if (ret == HAL_RET_OK) {
         HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_UPDATE_SUCCESS);
     } else {
@@ -1196,19 +1157,13 @@ nwsec_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t             *nwsec = NULL;
     pd::pd_nwsec_profile_delete_args_t pd_nwsec_args = { 0 };
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("delete del CB {}",
-                    nwsec->profile_id);
+    HAL_TRACE_DEBUG("Delete del cb {}", nwsec->profile_id);
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_nwsec_profile_delete_args_init(&pd_nwsec_args);
@@ -1217,10 +1172,8 @@ nwsec_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
                           (void *)&pd_nwsec_args);
 
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to delete nwsec pd, err : {}", ret);
+        HAL_TRACE_ERR("Failed to delete nwsec pd, err : {}", ret);
     }
-
-end:
     return ret;
 }
 
@@ -1239,41 +1192,36 @@ nwsec_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t                     *nwsec = NULL;
     hal_handle_t                hal_handle = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
+    HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("delete commit CB {}",
-                    nwsec->profile_id);
+    HAL_TRACE_DEBUG("Delete commit cb {}", nwsec->profile_id);
 
-    // a. Remove from nwsec id hash table
+    // a. remove from nwsec id hash table
     ret = nwsec_del_from_db(nwsec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to del nwsec {} from db, err : {}", 
+        HAL_TRACE_ERR("Failed to del nwsec {} from db, err : {}", 
                       nwsec->profile_id, ret);
         goto end;
     }
 
-    // b. Remove object from handle id based hash table
+    // b. remove object from handle id based hash table
     hal_handle_free(hal_handle);
 
-    // c. Free PI nwsec
+    // c. free PI nwsec
     nwsec_profile_free(nwsec);
 
 end:
+
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// If delete fails, nothing to do
+// nwsec delete fails, nothing to do
 //------------------------------------------------------------------------------
 hal_ret_t
 nwsec_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -1282,7 +1230,7 @@ nwsec_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 //------------------------------------------------------------------------------
-// If delete fails, nothing to do
+// nwsec delete fails, nothing to do
 //------------------------------------------------------------------------------
 hal_ret_t
 nwsec_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -1307,6 +1255,7 @@ validate_nwsec_delete (nwsec_profile_t *nwsec)
 
     return ret;
 }
+
 //------------------------------------------------------------------------------
 // process a nwsec delete request
 //------------------------------------------------------------------------------
@@ -1320,31 +1269,28 @@ securityprofile_delete (SecurityProfileDeleteRequest& req,
     dhl_entry_t                     dhl_entry = { 0 };
     const SecurityProfileKeyHandle  &kh = req.key_or_handle();
 
-    hal_api_trace(" API Begin: security profile delete ");
-
     // validate the request message
     ret = validate_nwsec_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("nwsec delete validation failed, ret : {}", ret);
+        HAL_TRACE_ERR("nwsec delete validation failed, err : {}", ret);
         goto end;
     }
 
     // lookup nwsec
     nwsec = nwsec_lookup_key_or_handle(kh);
     if (nwsec == NULL) {
-        HAL_TRACE_ERR("failed to find nwsec, id {}, handle {}",
+        HAL_TRACE_ERR("Failed to find nwsec, id {}, handle {}",
                       kh.profile_id(), kh.profile_handle());
         ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("deleting nwsec profile {}", 
-                    nwsec->profile_id);
+    HAL_TRACE_DEBUG("Deleting nwsec profile {}", nwsec->profile_id);
 
     // validate if there no objects referring this sec. profile
     ret = validate_nwsec_delete(nwsec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("sec prof delete validation failed, "
-                      "ret : {}", ret);
+        HAL_TRACE_ERR("sec prof {} delete validation failed, err : {}",
+                      nwsec->profile_id, ret);
         goto end;
     }
 
@@ -1362,6 +1308,7 @@ securityprofile_delete (SecurityProfileDeleteRequest& req,
                              nwsec_delete_cleanup_cb);
 
 end:
+
     if (ret == HAL_RET_OK) {
         HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_DELETE_SUCCESS);
     } else {
@@ -1504,9 +1451,7 @@ nwsec_prof_add_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
     nwsec_profile_unlock(nwsec, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("add nwsec => vrf, {} => {}, ten_hdl:{} ret:{}",
-                    nwsec->profile_id, vrf->vrf_id,
-                    vrf->hal_handle, ret);
+
     return ret;
 }
 
@@ -1534,9 +1479,6 @@ nwsec_prof_del_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
         }
     }
     nwsec_profile_unlock(nwsec, __FILENAME__, __LINE__, __func__);    // unlock
-
-    HAL_TRACE_DEBUG("del nwsec =/=> vrf, {} =/=> {}, ret:{}",
-                    nwsec->profile_id, vrf->vrf_id, ret);
     return ret;
 }
 

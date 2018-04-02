@@ -58,7 +58,7 @@ typedef struct mc_entry_s {
 
 } __PACK__ mc_entry_t;
 
-// CB data structures
+// callback data structures
 typedef struct mc_entry_create_app_ctxt_s {
     mc_key_t   key;
 } __PACK__ mc_entry_create_app_ctxt_t;

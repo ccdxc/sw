@@ -11,41 +11,41 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
-// MockisL2SegmentStatus_L2SegInfo is a mock of isL2SegmentStatus_L2SegInfo interface
-type MockisL2SegmentStatus_L2SegInfo struct {
+// MockisL2SegmentStatus_L2SegStatus is a mock of isL2SegmentStatus_L2SegStatus interface
+type MockisL2SegmentStatus_L2SegStatus struct {
 	ctrl     *gomock.Controller
-	recorder *MockisL2SegmentStatus_L2SegInfoMockRecorder
+	recorder *MockisL2SegmentStatus_L2SegStatusMockRecorder
 }
 
-// MockisL2SegmentStatus_L2SegInfoMockRecorder is the mock recorder for MockisL2SegmentStatus_L2SegInfo
-type MockisL2SegmentStatus_L2SegInfoMockRecorder struct {
-	mock *MockisL2SegmentStatus_L2SegInfo
+// MockisL2SegmentStatus_L2SegStatusMockRecorder is the mock recorder for MockisL2SegmentStatus_L2SegStatus
+type MockisL2SegmentStatus_L2SegStatusMockRecorder struct {
+	mock *MockisL2SegmentStatus_L2SegStatus
 }
 
-// NewMockisL2SegmentStatus_L2SegInfo creates a new mock instance
-func NewMockisL2SegmentStatus_L2SegInfo(ctrl *gomock.Controller) *MockisL2SegmentStatus_L2SegInfo {
-	mock := &MockisL2SegmentStatus_L2SegInfo{ctrl: ctrl}
-	mock.recorder = &MockisL2SegmentStatus_L2SegInfoMockRecorder{mock}
+// NewMockisL2SegmentStatus_L2SegStatus creates a new mock instance
+func NewMockisL2SegmentStatus_L2SegStatus(ctrl *gomock.Controller) *MockisL2SegmentStatus_L2SegStatus {
+	mock := &MockisL2SegmentStatus_L2SegStatus{ctrl: ctrl}
+	mock.recorder = &MockisL2SegmentStatus_L2SegStatusMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockisL2SegmentStatus_L2SegInfo) EXPECT() *MockisL2SegmentStatus_L2SegInfoMockRecorder {
+func (_m *MockisL2SegmentStatus_L2SegStatus) EXPECT() *MockisL2SegmentStatus_L2SegStatusMockRecorder {
 	return _m.recorder
 }
 
-// isL2SegmentStatus_L2SegInfo mocks base method
-func (_m *MockisL2SegmentStatus_L2SegInfo) isL2SegmentStatus_L2SegInfo() {
-	_m.ctrl.Call(_m, "isL2SegmentStatus_L2SegInfo")
+// isL2SegmentStatus_L2SegStatus mocks base method
+func (_m *MockisL2SegmentStatus_L2SegStatus) isL2SegmentStatus_L2SegStatus() {
+	_m.ctrl.Call(_m, "isL2SegmentStatus_L2SegStatus")
 }
 
-// isL2SegmentStatus_L2SegInfo indicates an expected call of isL2SegmentStatus_L2SegInfo
-func (_mr *MockisL2SegmentStatus_L2SegInfoMockRecorder) isL2SegmentStatus_L2SegInfo() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isL2SegmentStatus_L2SegInfo", reflect.TypeOf((*MockisL2SegmentStatus_L2SegInfo)(nil).isL2SegmentStatus_L2SegInfo))
+// isL2SegmentStatus_L2SegStatus indicates an expected call of isL2SegmentStatus_L2SegStatus
+func (_mr *MockisL2SegmentStatus_L2SegStatusMockRecorder) isL2SegmentStatus_L2SegStatus() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isL2SegmentStatus_L2SegStatus", reflect.TypeOf((*MockisL2SegmentStatus_L2SegStatus)(nil).isL2SegmentStatus_L2SegStatus))
 }
 
 // MarshalTo mocks base method
-func (_m *MockisL2SegmentStatus_L2SegInfo) MarshalTo(_param0 []byte) (int, error) {
+func (_m *MockisL2SegmentStatus_L2SegStatus) MarshalTo(_param0 []byte) (int, error) {
 	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
@@ -53,20 +53,20 @@ func (_m *MockisL2SegmentStatus_L2SegInfo) MarshalTo(_param0 []byte) (int, error
 }
 
 // MarshalTo indicates an expected call of MarshalTo
-func (_mr *MockisL2SegmentStatus_L2SegInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisL2SegmentStatus_L2SegInfo)(nil).MarshalTo), arg0)
+func (_mr *MockisL2SegmentStatus_L2SegStatusMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisL2SegmentStatus_L2SegStatus)(nil).MarshalTo), arg0)
 }
 
 // Size mocks base method
-func (_m *MockisL2SegmentStatus_L2SegInfo) Size() int {
+func (_m *MockisL2SegmentStatus_L2SegStatus) Size() int {
 	ret := _m.ctrl.Call(_m, "Size")
 	ret0, _ := ret[0].(int)
 	return ret0
 }
 
 // Size indicates an expected call of Size
-func (_mr *MockisL2SegmentStatus_L2SegInfoMockRecorder) Size() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisL2SegmentStatus_L2SegInfo)(nil).Size))
+func (_mr *MockisL2SegmentStatus_L2SegStatusMockRecorder) Size() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisL2SegmentStatus_L2SegStatus)(nil).Size))
 }
 
 // MockL2SegmentClient is a mock of L2SegmentClient interface

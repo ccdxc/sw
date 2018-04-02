@@ -128,7 +128,7 @@ find_l2seg_by_id (l2seg_id_t l2seg_id)
         l2seg_id_ht()->lookup(&l2seg_id);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_L2SEG);
         l2seg = (l2seg_t *)hal_handle_get_obj(entry->handle_id);
         return l2seg;
@@ -152,10 +152,10 @@ l2seg_lookup_by_handle (hal_handle_t handle)
         HAL_TRACE_DEBUG("Failed to find l2seg with handle : {}", handle);
         return NULL;
     }
-   return (l2seg_t *)hal_handle_get_obj(handle); 
+   return (l2seg_t *)hal_handle_get_obj(handle);
 #if 0
     // check for object type
-    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
+    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
                HAL_OBJ_ID_L2SEG);
     return (l2seg_t *)hal_handle_get_obj(handle);
 #endif
@@ -190,7 +190,7 @@ l2seg_add_to_db (l2seg_t *l2seg, hal_handle_t handle)
     hal_handle_id_ht_entry_t    *entry;
 
     HAL_TRACE_DEBUG("Adding l2seg {} to db", l2seg->seg_id);
-                    
+
     // allocate an entry to establish mapping from seg id to its handle
     entry =
         (hal_handle_id_ht_entry_t *)g_hal_state->
@@ -412,7 +412,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     l2seg_t                     *l2seg = NULL;
-    l2seg_create_app_ctxt_t     *app_ctxt = NULL; 
+    l2seg_create_app_ctxt_t     *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -426,7 +426,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     l2seg     = (l2seg_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("create add CB for l2seg_id : {}", l2seg->seg_id);
+    HAL_TRACE_DEBUG("create add cb for l2seg_id : {}", l2seg->seg_id);
 
     ret = l2seg_create_oifs(l2seg);
     if (ret != HAL_RET_OK) {
@@ -508,13 +508,13 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg = (l2seg_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create commit CB for l2seg_id : {}",
+    HAL_TRACE_DEBUG("create commit cb for l2seg_id : {}",
                     l2seg->seg_id);
 
     // Add to l2seg id hash table
     ret = l2seg_add_to_db(l2seg, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add l2seg {} to db, err : {}", 
+        HAL_TRACE_ERR("Failed to add l2seg {} to db, err : {}",
                       l2seg->seg_id, ret);
         goto end;
     }
@@ -547,7 +547,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI vrf 
+// 3. Free PI vrf
 //------------------------------------------------------------------------------
 hal_ret_t
 l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -571,7 +571,7 @@ l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg = (l2seg_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create abort CB {}",
+    HAL_TRACE_DEBUG("create abort cb {}",
                     l2seg->seg_id);
 
     // delete call to PD
@@ -580,7 +580,7 @@ l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_l2seg_args.l2seg = l2seg;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, (void *)&pd_l2seg_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to delete l2seg pd, err : {}", 
+            HAL_TRACE_ERR("Failed to delete l2seg pd, err : {}",
                           ret);
         }
     }
@@ -615,8 +615,8 @@ l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, l2seg_t *l2seg)
     if (ret == HAL_RET_OK) {
         // No error, hance l2seg is valid
 #if 0
-        rsp->mutable_l2segment_status()->set_l2segment_handle(l2seg ? 
-                                                              l2seg->hal_handle : 
+        rsp->mutable_l2segment_status()->set_l2segment_handle(l2seg ?
+                                                              l2seg->hal_handle :
                                                               HAL_HANDLE_INVALID);
 #endif
         rsp->mutable_l2segment_status()->set_l2segment_handle(l2seg->hal_handle);
@@ -624,7 +624,7 @@ l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, l2seg_t *l2seg)
         args.l2seg = l2seg;
         pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
         rsp->mutable_l2segment_status()->set_vrf_id(args.hwid);
-          
+
     }
 
     rsp->set_api_status(hal_prepare_rsp(ret));
@@ -648,13 +648,13 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
     HAL_TRACE_DEBUG("received {} networks", num_nws);
 
     for (i = 0; i < num_nws; i++) {
-        nw_key_handle = spec.network_key_handle(i);        
+        nw_key_handle = spec.network_key_handle(i);
         nw = network_lookup_key_or_handle(nw_key_handle, spec.vrf_key_handle().vrf_id());
         if (nw == NULL) {
             ret = HAL_RET_NETWORK_NOT_FOUND;
             goto end;
         }
-        HAL_TRACE_DEBUG("adding network: {} with handle : {}", 
+        HAL_TRACE_DEBUG("adding network: {} with handle : {}",
                         ippfx2str(&nw->nw_key.ip_pfx), nw->hal_handle);
 
         // add nw to list
@@ -666,13 +666,13 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
 #if 0
     sdk::lib::dllist_reset(&l2seg->nw_list_head);
     for (i = 0; i < num_nws; i++) {
-        nw_key_handle = spec.network_key_handle(i);        
+        nw_key_handle = spec.network_key_handle(i);
         nw = network_lookup_key_or_handle(nw_key_handle, spec.vrf_key_handle().vrf_id());
         if (nw == NULL) {
             ret = HAL_RET_NETWORK_NOT_FOUND;
             goto end;
         }
-        HAL_TRACE_DEBUG("adding network: {} with handl : {}", 
+        HAL_TRACE_DEBUG("adding network: {} with handl : {}",
                         ippfx2str(&nw->nw_key.ip_pfx), nw->hal_handle);
 
         // add nw to list
@@ -688,7 +688,7 @@ end:
 }
 
 static bool
-is_l2seg_same (l2seg_t *l2seg, L2SegmentSpec& spec, l2seg_create_app_ctxt_t &app_ctxt) 
+is_l2seg_same (l2seg_t *l2seg, L2SegmentSpec& spec, l2seg_create_app_ctxt_t &app_ctxt)
 {
     bool             ret            = false;
     uint32_t         num_nws        = 0;
@@ -755,7 +755,7 @@ is_l2seg_same (l2seg_t *l2seg, L2SegmentSpec& spec, l2seg_create_app_ctxt_t &app
     if (spec.pinned_uplink_if_handle() != l2seg->pinned_uplink) {
         return ret;
     }
-    
+
     num_nws = spec.network_key_handle_size();
 
     for (i = 0; i < num_nws; i++) {
@@ -769,7 +769,7 @@ is_l2seg_same (l2seg_t *l2seg, L2SegmentSpec& spec, l2seg_create_app_ctxt_t &app
             return false;
         }
     }
- 
+
     // If we've reached this point, it means that the L2Segment spec is the same
     // as the one that exists. Return the existing handle in this case.
     return true;
@@ -878,17 +878,17 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_add_obj(l2seg->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_add_obj(l2seg->hal_handle, &cfg_ctxt,
                              l2seg_create_add_cb,
                              l2seg_create_commit_cb,
-                             l2seg_create_abort_cb, 
+                             l2seg_create_abort_cb,
                              l2seg_create_cleanup_cb);
 
 end:
 
     if (ret != HAL_RET_OK) {
         if (l2seg) {
-            // if there is an error, it will be cleaned up in abort CB
+            // if there is an error, it will be cleaned up in abort cb
             // l2seg_cleanup(l2seg);
             l2seg = NULL;
         }
@@ -929,7 +929,7 @@ validate_l2seg_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 // check if fwd policy changed for l2seg
 //------------------------------------------------------------------------------
 hal_ret_t
-l2seg_fwdpolicy_update (L2SegmentSpec& spec, l2seg_t *l2seg, 
+l2seg_fwdpolicy_update (L2SegmentSpec& spec, l2seg_t *l2seg,
                         l2seg_update_app_ctxt_t *app_ctxt)
 {
     if (!app_ctxt) {
@@ -990,7 +990,7 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_TRACE_ERR("Failed to update l2seg pd, err : {}", ret);
     }
 
-    // TODO: Call the CB for mcast and bcast fwd policy change
+    // TODO: Call the cb for mcast and bcast fwd policy change
     if (app_ctxt->mcast_fwd_policy_change) {
     }
     if (app_ctxt->bcast_fwd_policy_change) {
@@ -1004,7 +1004,7 @@ end:
 
 //------------------------------------------------------------------------------
 // Make a clone
-//  Both PI and PD objects cloned. 
+//  Both PI and PD objects cloned.
 //------------------------------------------------------------------------------
 hal_ret_t
 l2seg_make_clone (l2seg_t *l2seg, l2seg_t **l2seg_clone)
@@ -1018,20 +1018,20 @@ l2seg_make_clone (l2seg_t *l2seg, l2seg_t **l2seg_clone)
     args.clone = *l2seg_clone;
     pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MAKE_CLONE, (void *)&args);
 
-    // Lists are copied into clone. 
-    //  - Update Success: 
+    // Lists are copied into clone.
+    //  - Update Success:
     //      - Destroy Add and Delete lists in app ctxt
     //      - Destroy clone's list which is original's list as well
     //      - Assign aggr list to clone's list
     //      - Free original
-    //  - Update Failure: 
+    //  - Update Failure:
     //      - Free clone
 
     return HAL_RET_OK;
 }
 
 //-----------------------------------------------------------------------------
-//  - Update Success: 
+//  - Update Success:
 //      - Destroy Add and Delete lists in app ctxt
 //      - Destroy clone's list which is original's list as well
 //      - Assign aggr list to clone's list
@@ -1108,7 +1108,7 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg = (l2seg_t *)dhl_entry->obj;
     l2seg_clone = (l2seg_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update commit CB for l2seg_id : {}", l2seg->seg_id);
+    HAL_TRACE_DEBUG("update commit cb for l2seg_id : {}", l2seg->seg_id);
 
 #if 0
     // move lists to clone
@@ -1127,7 +1127,7 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 #endif
 
-    //  - Update Success: 
+    //  - Update Success:
     //      - Destroy Add and Delete lists in app ctxt
     //      - Destroy clone's list which is original's list as well
     //      - Assign aggr list to clone's list
@@ -1179,7 +1179,7 @@ l2seg_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // assign clone as we are trying to free only the clone
     l2seg = (l2seg_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update commit CB {}",
+    HAL_TRACE_DEBUG("update commit cb {}",
                     l2seg->seg_id);
 
     // Free PD
@@ -1211,7 +1211,7 @@ l2seg_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 
 hal_ret_t
 l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
-                      bool *nwlist_change, block_list *add_nwlist, 
+                      bool *nwlist_change, block_list *add_nwlist,
                       block_list *del_nwlist, block_list *aggr_nwlist)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -1257,7 +1257,7 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     //     entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
     for (const void *ptr : *l2seg->nw_list) {
         p_hdl_id = (hal_handle_t *)ptr;
-        HAL_TRACE_DEBUG("Checking for nw: {}", 
+        HAL_TRACE_DEBUG("Checking for nw: {}",
                         *p_hdl_id);
         for (i = 0; i < num_nws; i++) {
             nw_key_handle = spec.network_key_handle(i);
@@ -1285,7 +1285,7 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
 #endif
             hal_add_to_handle_block_list(del_nwlist, *p_hdl_id);
             *nwlist_change = true;
-            HAL_TRACE_DEBUG("added to delete list hdl: {}", 
+            HAL_TRACE_DEBUG("added to delete list hdl: {}",
                             *p_hdl_id);
         }
         nw_exists = false;
@@ -1317,7 +1317,7 @@ l2seg_check_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     hal_ret_t           ret = HAL_RET_OK;
 
     // check for fwd policy change
-    ret = l2seg_fwdpolicy_update(spec, l2seg, app_ctxt); 
+    ret = l2seg_fwdpolicy_update(spec, l2seg, app_ctxt);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to check if fwdpolicy is updated.");
         goto end;
@@ -1444,7 +1444,7 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         }
     }
 
-    HAL_TRACE_DEBUG("update l2seg {}", 
+    HAL_TRACE_DEBUG("update l2seg {}",
                     l2seg->seg_id);
 
     ret = l2seg_update_app_ctxt_init(&app_ctxt);
@@ -1483,10 +1483,10 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_upd_obj(l2seg->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_upd_obj(l2seg->hal_handle, &cfg_ctxt,
                              l2seg_update_upd_cb,
                              l2seg_update_commit_cb,
-                             l2seg_update_abort_cb, 
+                             l2seg_update_abort_cb,
                              l2seg_update_cleanup_cb);
 
 end:
@@ -1576,12 +1576,12 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     l2seg = (l2seg_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("delete del CB {}",
+    HAL_TRACE_DEBUG("delete del cb {}",
                     l2seg->seg_id);
 
     // TODO: Check the dependency ref count for the l2seg. whoever is refering
     //       to l2seg should be counted against this ref count.
-    //      - Sessions 
+    //      - Sessions
     //       If its non zero, fail the delete.
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -1606,14 +1606,14 @@ end:
 // detach from networks
 //------------------------------------------------------------------------------
 hal_ret_t
-l2seg_detach_from_networks (l2seg_t *l2seg) 
+l2seg_detach_from_networks (l2seg_t *l2seg)
 {
     hal_ret_t                   ret = HAL_RET_OK;
 
     ret = l2seg_update_network_relation(l2seg->nw_list, l2seg, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to del network -/-> l2seg"
-                      "relation ret : {}", 
+                      "relation ret : {}",
                       ret);
         goto end;
     }
@@ -1654,7 +1654,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg = (l2seg_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("delete commit CB {}",
+    HAL_TRACE_DEBUG("delete commit cb {}",
                     l2seg->seg_id);
 
     // Remove l2seg references from other objects
@@ -1676,7 +1676,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // a. Remove from l2seg id hash table
     ret = l2seg_del_from_db(l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to del l2seg {} from db, err : {}", 
+        HAL_TRACE_ERR("Failed to del l2seg {} from db, err : {}",
                       l2seg->seg_id, ret);
         goto end;
     }
@@ -1701,7 +1701,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
 end:
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("commit CBs can't fail: ret : {}",
+        HAL_TRACE_ERR("commit cbs can't fail: ret : {}",
                       ret);
         HAL_ASSERT(0);
     }
@@ -1769,10 +1769,10 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse* rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_del_obj(l2seg->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_del_obj(l2seg->hal_handle, &cfg_ctxt,
                              l2seg_delete_del_cb,
                              l2seg_delete_commit_cb,
-                             l2seg_delete_abort_cb, 
+                             l2seg_delete_abort_cb,
                              l2seg_delete_cleanup_cb);
 
 end:
@@ -1832,12 +1832,12 @@ l2segment_get_ht_cb (void *ht_entry, void *ctxt)
     L2SegmentGetResponseMsg *rsp    = (L2SegmentGetResponseMsg *)ctxt;
     L2SegmentGetResponse    *response = rsp->add_response();
     l2seg_t                 *l2seg    = NULL;
-    
+
     l2seg = (l2seg_t *)hal_handle_get_obj(entry->handle_id);
     l2segment_process_get(l2seg, response);
 
     // Always return false here, so that we walk through all hash table
-    // entries. 
+    // entries.
     return false;
 }
 
@@ -1851,7 +1851,7 @@ l2segment_get_list_cb (void *list_entry, void *ctxt)
 
     l2seg = l2seg_lookup_by_handle(l2seg_handle);
 
-    // l2seg should not be deleted here because we are still in the context 
+    // l2seg should not be deleted here because we are still in the context
     // of the config thread.
     HAL_ASSERT(l2seg != NULL);
 
@@ -1867,7 +1867,7 @@ hal_ret_t
 l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponseMsg *rsp)
 {
     l2seg_t *l2seg = NULL;
-    vrf_t   *vrf   = NULL;                        
+    vrf_t   *vrf   = NULL;
 
     if (req.has_vrf_key_handle()) {
         vrf = vrf_lookup_key_or_handle(req.vrf_key_handle());
@@ -1964,7 +1964,7 @@ l2seg_handle_nwsec_update (l2seg_t *l2seg, nwsec_profile_t *nwsec_prof)
         return ret;
     }
 
-    HAL_TRACE_DEBUG("Handling nwsec update seg_id: {}", 
+    HAL_TRACE_DEBUG("Handling nwsec update seg_id: {}",
                     l2seg->seg_id);
     // Walk through Ifs and call respective functions
     for (const void *ptr : *l2seg->if_list) {

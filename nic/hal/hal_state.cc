@@ -78,10 +78,10 @@ public:
     hal_state_hints() {
         pi_state_ = NULL;
         pi_state_len_ = 0;
-        pd_state_ = NULL;
-        pd_state_len_ = 0;
-        asic_pd_state_ = NULL ;
-        asic_pd_state_len_ = 0;
+        //pd_state_ = NULL;
+        //pd_state_len_ = 0;
+        //asic_pd_state_ = NULL ;
+        //asic_pd_state_len_ = 0;
     }
     ~hal_state_hints() {}
 
@@ -90,23 +90,25 @@ public:
     void set_pi_state_len(uint32_t len) { pi_state_len_ = len; }
     uint32_t pi_state_len(void) const { return pi_state_len_; }
 
-    void set_pd_state(void *state) { pd_state_ = state; }
-    void *pd_state(void) { return pd_state_; }
-    void set_pd_state_len(uint32_t len) { pd_state_len_ = len; }
-    uint32_t pd_state_len(void) const { return pd_state_len_; }
+    //void set_pd_state(void *state) { pd_state_ = state; }
+    //void *pd_state(void) { return pd_state_; }
+    //void set_pd_state_len(uint32_t len) { pd_state_len_ = len; }
+    //uint32_t pd_state_len(void) const { return pd_state_len_; }
 
-    void set_asic_pd_state(void *state) { asic_pd_state_ = state; }
-    void *asic_pd_state(void) { return asic_pd_state_; }
-    void set_asic_pd_state_len(uint32_t len) { asic_pd_state_len_ = len; }
-    uint32_t asic_pd_state_len(void) const { return asic_pd_state_len_; }
+    //void set_asic_pd_state(void *state) { asic_pd_state_ = state; }
+    //void *asic_pd_state(void) { return asic_pd_state_; }
+    //void set_asic_pd_state_len(uint32_t len) { asic_pd_state_len_ = len; }
+    //uint32_t asic_pd_state_len(void) const { return asic_pd_state_len_; }
 
 private:
+    // NOTE: rename pi_state_ to obj_state_ as this is including all cfg, oper,
+    //       stats fully now
     void        *pi_state_;
     uint32_t    pi_state_len_;
-    void        *pd_state_;
-    uint32_t    pd_state_len_;
-    void        *asic_pd_state_;
-    uint32_t    asic_pd_state_len_;
+    //void        *pd_state_;
+    //uint32_t    pd_state_len_;
+    //void        *asic_pd_state_;
+    //uint32_t    asic_pd_state_len_;
 };
 #define HAL_STATE_HINTS        "h3s-hints"
 
@@ -172,7 +174,7 @@ hal_cfg_db::init_pss(shmmgr *mmgr)
                       sizeof(hal::nwsec_profile_t), 8,
                       false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_SECURITY_PROFILE] != NULL), false);
-    
+
     // initialize dos policy related data structures
     slabs_[HAL_SLAB_DOS_POLICY] =
         slab::factory("dos-policy",
@@ -1130,13 +1132,20 @@ hal_state::init_on_restart(void) {
 static bool
 hal_obj_marshall (void *obj, void *ctxt)
 {
+    hal_ret_t            ret;
     hal_state_mctxt_t    *mctxt;
     tlv_t                *tlv;
 
     mctxt = (hal_state_mctxt_t *)ctxt;
     tlv = (tlv_t *)mctxt->mem;
     tlv->type = mctxt->obj_id;
-    tlv->len = mctxt->marshall_cb(obj, tlv->val, mctxt->len - sizeof(tlv_t));
+    ret = mctxt->marshall_cb(obj, tlv->val,
+                             mctxt->len - sizeof(tlv_t), &tlv->len);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Marshalling failed for obj id {}, buf len available {}",
+                      tlv->type, mctxt->len);
+        // TODO: abort ??
+    }
     mctxt->mem += sizeof(tlv_t) + tlv->len;
     mctxt->len -= sizeof(tlv_t) + tlv->len;
 
@@ -1346,7 +1355,7 @@ hal_mem_init (bool shm_mode)
         g_hal_state = fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(nullptr, g_h2s_shmmgr);
 
         // TODO: restore state
-  
+
         // nuke serialized state store now that we finished restoring all state
         shmmgr::destroy(g_h3s_shmmgr);
     } else {
@@ -1502,7 +1511,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_IPSECCB:
         g_hal_state->ipseccb_slab()->free(elem);
-    
+
     case HAL_SLAB_CPUCB:
         g_hal_state->cpucb_slab()->free(elem);
         break;

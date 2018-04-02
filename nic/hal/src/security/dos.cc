@@ -254,7 +254,7 @@ dos_policy_create_add_cb (cfg_op_ctxt_t *cfg_ctx)
 
     dosp = (dos_policy_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:create add CB",
+    HAL_TRACE_DEBUG("{}:create add cb",
                     __FUNCTION__);
 
     // PD Call to allocate PD resources and HW programming
@@ -291,7 +291,7 @@ dos_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctx)
     //lnode = cfg_ctx->dhl.next;
     //dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    HAL_TRACE_DEBUG("{}:create commit CB",
+    HAL_TRACE_DEBUG("{}:create commit cb",
                     __FUNCTION__);
 
     // TODO: Increment the ref counts of dependent objects
@@ -332,7 +332,7 @@ dos_policy_create_abort_cb (cfg_op_ctxt_t *cfg_ctx)
     dosp = (dos_policy_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:create abort CB {}",
+    HAL_TRACE_DEBUG("{}:create abort cb {}",
                     __FUNCTION__, dosp->hal_handle);
 
     // 1. delete call to PD
@@ -584,7 +584,7 @@ dos_policy_update_commit_cb(cfg_op_ctxt_t *cfg_ctx)
 
     dosp = (dos_policy_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit cb {}",
                     __FUNCTION__, dosp->hal_handle);
 
     // Free PD
@@ -629,7 +629,7 @@ dos_policy_update_abort_cb (cfg_op_ctxt_t *cfg_ctx)
     // assign clone as we are trying to free only the clone
     dosp = (dos_policy_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit cb {}",
                     __FUNCTION__, dosp->hal_handle);
 
     // Free PD
@@ -794,7 +794,7 @@ dos_policy_delete_del_cb (cfg_op_ctxt_t *cfg_ctx)
 
     dosp = (dos_policy_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:delete del CB {}",
+    HAL_TRACE_DEBUG("{}:delete del cb {}",
                     __FUNCTION__, dosp->hal_handle);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -839,7 +839,7 @@ dos_policy_delete_commit_cb (cfg_op_ctxt_t *cfg_ctx)
     dosp = (dos_policy_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:delete commit CB {}",
+    HAL_TRACE_DEBUG("{}:delete commit cb {}",
                     __FUNCTION__, dosp->hal_handle);
 
     // a. Remove object from handle id based hash table

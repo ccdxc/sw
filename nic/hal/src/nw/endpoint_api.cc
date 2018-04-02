@@ -31,19 +31,19 @@ ep_get_rmac (ep_t *pi_ep, l2seg_t *l2seg)
 }
 
 if_t *
-ep_get_if (ep_t *pi_ep) 
+ep_get_if (ep_t *pi_ep)
 {
     return (find_if_by_handle(pi_ep->if_handle));
 }
 
 vrf_t *
-ep_get_vrf (ep_t *pi_ep) 
+ep_get_vrf (ep_t *pi_ep)
 {
     return (vrf_lookup_by_handle(pi_ep->vrf_handle));
 }
 
 network_t *
-ep_get_nw (ep_t *pi_ep, l2seg_t *l2seg) 
+ep_get_nw (ep_t *pi_ep, l2seg_t *l2seg)
 {
     network_t                   *nw = NULL;
     ep_ip_entry_t               *pi_ip_entry = NULL;
@@ -76,7 +76,7 @@ end:
 //-----------------------------------------------------------------------------
 // set PD EP in PI EP
 //-----------------------------------------------------------------------------
-void 
+void
 ep_set_pd_ep (ep_t *pi_ep, pd::pd_ep_t *pd_ep)
 {
     pi_ep->pd = pd_ep;

@@ -132,7 +132,7 @@ typedef struct qos_class_s {
     pd::pd_qos_class_t   *pd;
 } __PACK__ qos_class_t;
 
-// CB data structures
+// cb data structures
 typedef struct qos_class_create_app_ctxt_s {
 } __PACK__ qos_class_create_app_ctxt_t;
 
@@ -292,7 +292,7 @@ typedef struct copp_s {
     pd::pd_copp_t  *pd;
 } __PACK__ copp_t;
 
-// CB data structures
+// cb data structures
 typedef struct copp_create_app_ctxt_s {
 } __PACK__ copp_create_app_ctxt_t;
 

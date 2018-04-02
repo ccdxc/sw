@@ -195,7 +195,7 @@ typedef struct acl_s {
     pd::pd_acl_t      *pd;
 } __PACK__ acl_t;
 
-// CB data structures
+// cb data structures
 typedef struct acl_create_app_ctxt_s {
 } __PACK__ acl_create_app_ctxt_t;
 

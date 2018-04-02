@@ -1539,7 +1539,7 @@ nwsec_policy_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     policy = (nwsec_policy_t *) dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("delete commit CB");
+    HAL_TRACE_DEBUG("delete commit cb");
     ret  = security_policy_cleanup_ruledb(policy);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to del security policy from db, err: {}",

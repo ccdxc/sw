@@ -36,33 +36,29 @@ message VrfRequestMsg {
   repeated VrfSpec    request = 1;    // batched request
 }
 
-// Vrf oper state for Iris pipeline
-message VrfStatusIris {
-  uint32            hw_vrf_id           = 2;    // hw VRF id. Used to compute vrf_lookup_id
-  uint32            vrf_lookup_id       = 3;    // VRF id for flow lookup
-  uint32            vrf_vlan_id_cpu     = 4;    // Vlan carried by CPU Tx packets to map to this VRF
-  uint32            inp_prop_cpu_idx    = 5;    // Inpurt properties table idx. Installed for
-                                                //  for CPU TX packets with CPU injecting into a VRF.
-  repeated uint32   gipo_inp_map_nat_idx= 6;    // GIPo termination entries in Input Mappnig Native table
-                                                //  1. Inner IPv4
-                                                //  2. Inner IPv6
-                                                //  3. Inner MAC
-  repeated uint32   gipo_inp_map_tnl_idx= 7;    // GIPo termination entries in Input Mappnig Tunnel table
-                                                //  1. Inner IPv4
-                                                //  2. Inner IPv6
-                                                //  3. Inner MAC
+// Vrf oper state for enterprise pipeline
+message VrfStatusEpd {
+  uint32            hw_vrf_id            = 2;    // hw VRF id
+  uint32            vrf_lookup_id        = 3;    // VRF id for flow lookup
+  uint32            vrf_vlan_id_cpu      = 4;    // vlan carried by CPU Tx packets to map to this VRF
+  uint32            inp_prop_cpu_idx     = 5;    // inpurt properties table idx, installed for
+                                                 // for CPU TX packets with CPU injecting into a VRF
+  repeated uint32   gipo_inp_map_nat_idx = 6;    // GIPo termination entries in input mapping native table
+                                                 //  1. Inner IPv4, 2. Inner IPv6, 3. Inner MAC
+  repeated uint32   gipo_inp_map_tnl_idx = 7;    // GIPo termination entries in input mappnig tunnel table
+                                                 //  1. Inner IPv4, 2. Inner IPv6, 3. Inner MAC
 }
 
-// Vrf oper state for GFT pipeline
-message VrfStatusGFT {
+// Vrf oper state for cloud pipeline
+message VrfStatusCpd {
 }
 
 // VrfStatus is the operational status of a given vrf
 message VrfStatus {
   fixed64           vrf_handle          = 1;    // id of vrf returned by HAL
-  oneof vrf_info {
-      VrfStatusIris iris_info           = 2;    // Vrf oper state for Iris pipeline
-      VrfStatusGFT  gft_info            = 3;    // Vrf oper state for GFT pipeline
+  oneof vrf_pd_status {
+      VrfStatusEpd  epd_status          = 2;    // Vrf oper state for enterprise pipeline
+      VrfStatusCpd  cpd_status          = 3;    // Vrf oper state for cloud pipeline
   }
 }
 

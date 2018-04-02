@@ -186,7 +186,7 @@ network_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nw = (network_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
     
-    HAL_TRACE_DEBUG("{}:create commit CB {}",
+    HAL_TRACE_DEBUG("{}:create commit cb {}",
                     __FUNCTION__, network_to_str(nw));
 
     // Add network to key DB
@@ -237,7 +237,7 @@ network_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     nw = (network_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:network:{}:create abort CB",
+    HAL_TRACE_DEBUG("{}:network:{}:create abort cb",
                     __FUNCTION__, network_to_str(nw));
 
     // clean up sgs as these are inserted before callbacks
@@ -426,7 +426,7 @@ end:
     
     if (ret != HAL_RET_OK) {
 	    if (nw != NULL) {
-            // if there is an error, nw will be freed in abort CB
+            // if there is an error, nw will be freed in abort cb
             // network_free(nw);
             nw = NULL;
 	    }
@@ -626,7 +626,7 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// network update main CB
+// network update main cb
 //------------------------------------------------------------------------------
 hal_ret_t
 network_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -669,7 +669,7 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// network update commit CB
+// network update commit cb
 //------------------------------------------------------------------------------
 hal_ret_t
 network_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -693,7 +693,7 @@ network_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nw = (network_t *)dhl_entry->obj;
     nw_clone = (network_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit cb {}",
                     __FUNCTION__, network_to_str(nw));
 
     // move lists
@@ -718,7 +718,7 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// network update abort CB
+// network update abort cb
 //------------------------------------------------------------------------------
 hal_ret_t
 network_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -742,7 +742,7 @@ network_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     nw = (network_t *)dhl_entry->obj;
     // nw_clone = (network_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update abort CB {}",
+    HAL_TRACE_DEBUG("{}:update abort cb {}",
                     __FUNCTION__, network_to_str(nw));
 
     // Free sg lists
@@ -758,7 +758,7 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// network update cleanup CB
+// network update cleanup cb
 //------------------------------------------------------------------------------
 hal_ret_t
 network_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -1123,7 +1123,7 @@ validate_network_delete (network_t *nw)
     return ret;
 }
 //------------------------------------------------------------------------------
-// Delete main CB
+// Delete main cb
 //------------------------------------------------------------------------------
 hal_ret_t
 network_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -1182,7 +1182,7 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nw = (network_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:delete commit CB {}",
+    HAL_TRACE_DEBUG("{}:delete commit cb {}",
                     __FUNCTION__, network_to_str(nw));
 
     
@@ -1212,7 +1212,7 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
 end:
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:commit CBs can't fail: ret:{}",
+        HAL_TRACE_ERR("{}:commit cbs can't fail: ret:{}",
                       __FUNCTION__, ret);
         HAL_ASSERT(0);
     }

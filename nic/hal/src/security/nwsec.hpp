@@ -161,9 +161,6 @@ static inline void
 nwsec_profile_lock(nwsec_profile_t *nwsec_profile, const char *fname, 
                    int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:locking nwsec_profile:{} from {}:{}:{}", 
-                    __FUNCTION__, nwsec_profile->profile_id,
-                    fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&nwsec_profile->slock);
 }
 
@@ -171,9 +168,6 @@ static inline void
 nwsec_profile_unlock(nwsec_profile_t *nwsec_profile, const char *fname, 
                      int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:unlocking nwsec_profile:{} from {}:{}:{}", 
-                    __FUNCTION__, nwsec_profile->profile_id,
-                    fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&nwsec_profile->slock);
 }
 

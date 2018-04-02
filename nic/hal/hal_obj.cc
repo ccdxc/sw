@@ -3,13 +3,16 @@
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/hal/src/nw/vrf.hpp"
 
 namespace hal {
 
-uint32_t
-hal_default_marshall_cb (void *obj, uint8_t *mem, uint32_t len)
+hal_ret_t
+hal_default_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
 {
-    return 0;
+    HAL_ASSERT((obj != NULL) && (mlen != NULL));
+    *mlen = 0;
+    return HAL_RET_OK;
 }
 
 uint32_t
@@ -33,8 +36,8 @@ hal_obj_meta_init (void)
                          hal_default_unmarshall_cb);
     g_obj_meta[HAL_OBJ_ID_VRF] =
         new hal_obj_meta(HAL_SLAB_VRF,
-                         hal_default_marshall_cb,
-                         hal_default_unmarshall_cb);
+                         vrf_marshall_cb,
+                         vrf_unmarshall_cb);
     g_obj_meta[HAL_OBJ_ID_L2SEG] =
         new hal_obj_meta(HAL_SLAB_L2SEG,
                          hal_default_marshall_cb,

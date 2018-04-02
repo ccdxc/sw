@@ -11,41 +11,41 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
-// MockisVrfStatus_VrfInfo is a mock of isVrfStatus_VrfInfo interface
-type MockisVrfStatus_VrfInfo struct {
+// MockisVrfStatus_VrfPdStatus is a mock of isVrfStatus_VrfPdStatus interface
+type MockisVrfStatus_VrfPdStatus struct {
 	ctrl     *gomock.Controller
-	recorder *MockisVrfStatus_VrfInfoMockRecorder
+	recorder *MockisVrfStatus_VrfPdStatusMockRecorder
 }
 
-// MockisVrfStatus_VrfInfoMockRecorder is the mock recorder for MockisVrfStatus_VrfInfo
-type MockisVrfStatus_VrfInfoMockRecorder struct {
-	mock *MockisVrfStatus_VrfInfo
+// MockisVrfStatus_VrfPdStatusMockRecorder is the mock recorder for MockisVrfStatus_VrfPdStatus
+type MockisVrfStatus_VrfPdStatusMockRecorder struct {
+	mock *MockisVrfStatus_VrfPdStatus
 }
 
-// NewMockisVrfStatus_VrfInfo creates a new mock instance
-func NewMockisVrfStatus_VrfInfo(ctrl *gomock.Controller) *MockisVrfStatus_VrfInfo {
-	mock := &MockisVrfStatus_VrfInfo{ctrl: ctrl}
-	mock.recorder = &MockisVrfStatus_VrfInfoMockRecorder{mock}
+// NewMockisVrfStatus_VrfPdStatus creates a new mock instance
+func NewMockisVrfStatus_VrfPdStatus(ctrl *gomock.Controller) *MockisVrfStatus_VrfPdStatus {
+	mock := &MockisVrfStatus_VrfPdStatus{ctrl: ctrl}
+	mock.recorder = &MockisVrfStatus_VrfPdStatusMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockisVrfStatus_VrfInfo) EXPECT() *MockisVrfStatus_VrfInfoMockRecorder {
+func (_m *MockisVrfStatus_VrfPdStatus) EXPECT() *MockisVrfStatus_VrfPdStatusMockRecorder {
 	return _m.recorder
 }
 
-// isVrfStatus_VrfInfo mocks base method
-func (_m *MockisVrfStatus_VrfInfo) isVrfStatus_VrfInfo() {
-	_m.ctrl.Call(_m, "isVrfStatus_VrfInfo")
+// isVrfStatus_VrfPdStatus mocks base method
+func (_m *MockisVrfStatus_VrfPdStatus) isVrfStatus_VrfPdStatus() {
+	_m.ctrl.Call(_m, "isVrfStatus_VrfPdStatus")
 }
 
-// isVrfStatus_VrfInfo indicates an expected call of isVrfStatus_VrfInfo
-func (_mr *MockisVrfStatus_VrfInfoMockRecorder) isVrfStatus_VrfInfo() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isVrfStatus_VrfInfo", reflect.TypeOf((*MockisVrfStatus_VrfInfo)(nil).isVrfStatus_VrfInfo))
+// isVrfStatus_VrfPdStatus indicates an expected call of isVrfStatus_VrfPdStatus
+func (_mr *MockisVrfStatus_VrfPdStatusMockRecorder) isVrfStatus_VrfPdStatus() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isVrfStatus_VrfPdStatus", reflect.TypeOf((*MockisVrfStatus_VrfPdStatus)(nil).isVrfStatus_VrfPdStatus))
 }
 
 // MarshalTo mocks base method
-func (_m *MockisVrfStatus_VrfInfo) MarshalTo(_param0 []byte) (int, error) {
+func (_m *MockisVrfStatus_VrfPdStatus) MarshalTo(_param0 []byte) (int, error) {
 	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
@@ -53,20 +53,20 @@ func (_m *MockisVrfStatus_VrfInfo) MarshalTo(_param0 []byte) (int, error) {
 }
 
 // MarshalTo indicates an expected call of MarshalTo
-func (_mr *MockisVrfStatus_VrfInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisVrfStatus_VrfInfo)(nil).MarshalTo), arg0)
+func (_mr *MockisVrfStatus_VrfPdStatusMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisVrfStatus_VrfPdStatus)(nil).MarshalTo), arg0)
 }
 
 // Size mocks base method
-func (_m *MockisVrfStatus_VrfInfo) Size() int {
+func (_m *MockisVrfStatus_VrfPdStatus) Size() int {
 	ret := _m.ctrl.Call(_m, "Size")
 	ret0, _ := ret[0].(int)
 	return ret0
 }
 
 // Size indicates an expected call of Size
-func (_mr *MockisVrfStatus_VrfInfoMockRecorder) Size() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisVrfStatus_VrfInfo)(nil).Size))
+func (_mr *MockisVrfStatus_VrfPdStatusMockRecorder) Size() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisVrfStatus_VrfPdStatus)(nil).Size))
 }
 
 // MockVrfClient is a mock of VrfClient interface

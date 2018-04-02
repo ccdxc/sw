@@ -138,9 +138,13 @@ acl_free (acl_t *acl, bool free_pd)
 // Print acl spec
 //-----------------------------------------------------------------------------
 static hal_ret_t
-acl_spec_print (AclSpec& spec)
+acl_spec_dump (AclSpec& spec)
 {
     fmt::MemoryWriter   buf;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return HAL_RET_OK;
+    }
 
     buf.write("Acl Spec: ");
     if (spec.has_key_or_handle()) {
@@ -336,7 +340,7 @@ acl_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     acl = (acl_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("create add CB {}",
+    HAL_TRACE_DEBUG("create add cb {}",
                     acl->key);
 
     // PD Call to allocate PD resources and HW programming
@@ -379,7 +383,7 @@ acl_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl = (acl_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create commit CB {}",
+    HAL_TRACE_DEBUG("create commit cb {}",
                     acl->key);
 
     // Add to DB
@@ -430,7 +434,7 @@ acl_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl = (acl_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create abort CB");
+    HAL_TRACE_DEBUG("create abort cb");
 
     // 1. delete call to PD
     if (acl->pd) {
@@ -1474,7 +1478,7 @@ acl_create (AclSpec& spec, AclResponse *rsp)
                     spec.key_or_handle().acl_id());
 
     // dump spec
-    acl_spec_print(spec);
+    acl_spec_dump(spec);
 
     ret = validate_acl_create(spec);
     if (ret != HAL_RET_OK) {
@@ -1585,7 +1589,7 @@ acl_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     acl_clone = (acl_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update upd CB {}",
+    HAL_TRACE_DEBUG("update upd cb {}",
                     acl_clone->key);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -1665,7 +1669,7 @@ acl_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     acl = (acl_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("update commit CB {}",
+    HAL_TRACE_DEBUG("update commit cb {}",
                     acl->key);
 
     // Free PI.
@@ -1697,7 +1701,7 @@ acl_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     acl_clone = (acl_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update abort CB {}",
+    HAL_TRACE_DEBUG("update abort cb {}",
                     acl_clone->key);
 
     // Free Clone
@@ -1729,7 +1733,7 @@ acl_update (AclSpec& spec, AclResponse *rsp)
     HAL_TRACE_DEBUG("Rcvd ACL update");
 
     // dump spec
-    acl_spec_print(spec);
+    acl_spec_dump(spec);
 
     // validate the request message
     ret = validate_acl_update(spec, rsp);
@@ -1873,7 +1877,7 @@ acl_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     acl = (acl_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("delete del CB {} handle {}",
+    HAL_TRACE_DEBUG("delete del cb {} handle {}",
                     acl->key, acl->hal_handle);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -1916,7 +1920,7 @@ acl_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl = (acl_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("delete commit CB {} handle {}",
+    HAL_TRACE_DEBUG("delete commit cb {} handle {}",
                     acl->key, acl->hal_handle);
 
     // a. Remove from acl id hash table

@@ -144,7 +144,6 @@ extern lif_t *find_lif_by_id(lif_id_t lif_id);
 extern lif_t *find_lif_by_handle(hal_handle_t handle);
 void lif_print_ifs(lif_t *lif);
 void lif_print(lif_t *lif);
-hal_ret_t lif_spec_print(LifSpec& spec);
 hal_ret_t lif_update_trigger_if(lif_t *lif, 
                                 bool vlan_strip_en_changed,
                                 bool vlan_strip_en,

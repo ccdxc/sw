@@ -349,7 +349,7 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_ASSERT(mc_entry);
 
-    HAL_TRACE_DEBUG("{}:create add CB {}",__FUNCTION__,
+    HAL_TRACE_DEBUG("{}:create add cb {}",__FUNCTION__,
                     mc_entry->hal_handle);
 
     l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
@@ -436,7 +436,7 @@ mc_entry_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     mc_entry = (mc_entry_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}: create commit CB {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("{}: create commit cb {}", __FUNCTION__,
                     mc_key_to_string(&mc_entry->key));
 
     // 1. a. Add to mc key hash table
@@ -480,7 +480,7 @@ mc_entry_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     mc_entry = (mc_entry_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:create abort CB {}",
+    HAL_TRACE_DEBUG("{}:create abort cb {}",
                     __FUNCTION__, mc_key_to_string(&mc_entry->key));
 
     // delete call to PD
@@ -722,7 +722,7 @@ mc_entry_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_ASSERT(mc_entry);
 
-    HAL_TRACE_DEBUG("{}:delete del CB. Handle {}",__FUNCTION__,
+    HAL_TRACE_DEBUG("{}:delete del cb. Handle {}",__FUNCTION__,
                     mc_entry->hal_handle);
 
     l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
@@ -819,7 +819,7 @@ mc_entry_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     mc_entry = (mc_entry_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:delete commit CB. Handle {}",__FUNCTION__,
+    HAL_TRACE_DEBUG("{}:delete commit cb. Handle {}",__FUNCTION__,
                     mc_entry->hal_handle);
 
     // Free the outgoing interface handles linked list
@@ -844,7 +844,7 @@ mc_entry_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
 end:
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("commit CBs can't fail: ret:{}", ret);
+        HAL_TRACE_ERR("commit cbs can't fail: ret:{}", ret);
         HAL_ASSERT(0);
     }
     return ret;
@@ -1082,7 +1082,7 @@ mc_entry_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     mc_entry = (mc_entry_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:update commit CB. Handle {}",__FUNCTION__,
+    HAL_TRACE_DEBUG("{}:update commit cb. Handle {}",__FUNCTION__,
                     mc_entry->hal_handle);
 
     // Free the old outgoing interface handles linked list
@@ -1097,7 +1097,7 @@ mc_entry_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
 end:
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("commit CBs can't fail: ret:{}", ret);
+        HAL_TRACE_ERR("commit cbs can't fail: ret:{}", ret);
         HAL_ASSERT(0);
     }
     return ret;
@@ -1124,7 +1124,7 @@ mc_entry_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     upd_entry = (mc_entry_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update abort CB. Handle {}",__FUNCTION__,
+    HAL_TRACE_DEBUG("{}:update abort cb. Handle {}",__FUNCTION__,
                     upd_entry->hal_handle);
 
     // Free the old outgoing interface handles linked list

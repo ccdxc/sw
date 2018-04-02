@@ -340,9 +340,13 @@ qos_class_free (qos_class_t *qos_class, bool free_pd)
 // Print qos_class spec
 //-----------------------------------------------------------------------------
 static hal_ret_t
-qos_class_spec_print (QosClassSpec& spec)
+qos_class_spec_dump (QosClassSpec& spec)
 {
     fmt::MemoryWriter   buf;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return HAL_RET_OK;
+    }
 
     buf.write("QosClass Spec: ");
     if (spec.has_key_or_handle()) {
@@ -592,7 +596,7 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     qos_class = (qos_class_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("create add CB {}",
+    HAL_TRACE_DEBUG("create add cb {}",
                     qos_class->key);
 
     // PD Call to allocate PD resources and HW programming
@@ -636,7 +640,7 @@ qos_class_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create commit CB {}",
+    HAL_TRACE_DEBUG("create commit cb {}",
                     qos_class->key);
 
     // Add to DB
@@ -687,7 +691,7 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create abort CB {}");
+    HAL_TRACE_DEBUG("create abort cb {}");
 
     // 1. delete call to PD
     if (qos_class->pd) {
@@ -862,7 +866,7 @@ qosclass_create (QosClassSpec& spec, QosClassResponse *rsp)
 
     hal_api_trace(" API Begin: qos_class create");
     // dump spec
-    qos_class_spec_print(spec);
+    qos_class_spec_dump(spec);
 
     ret = validate_qos_class_create(spec, rsp);
     if (ret != HAL_RET_OK) {
@@ -997,7 +1001,7 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     qos_class_clone = (qos_class_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update upd CB {}",
+    HAL_TRACE_DEBUG("update upd cb {}",
                     qos_class_clone->key);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -1093,7 +1097,7 @@ qos_class_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     qos_class_clone = (qos_class_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update commit CB {}",
+    HAL_TRACE_DEBUG("update commit cb {}",
                     qos_class->key);
 
     qos_class_update_db(qos_class, qos_class_clone);
@@ -1127,7 +1131,7 @@ qos_class_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     qos_class_clone = (qos_class_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update abort CB {}",
+    HAL_TRACE_DEBUG("update abort cb {}",
                     qos_class_clone->key);
 
     // Free Clone
@@ -1218,7 +1222,7 @@ qosclass_update (QosClassSpec& spec, QosClassResponse *rsp)
     hal_api_trace(" API Begin: qos_class update");
 
     // dump spec
-    qos_class_spec_print(spec);
+    qos_class_spec_dump(spec);
 
     // validate the request message
     ret = validate_qos_class_update(spec, rsp);
@@ -1354,7 +1358,7 @@ qos_class_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     qos_class = (qos_class_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("delete del CB {} handle {}",
+    HAL_TRACE_DEBUG("delete del cb {} handle {}",
                     qos_class->key, qos_class->hal_handle);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -1397,7 +1401,7 @@ qos_class_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("delete commit CB {} handle {}",
+    HAL_TRACE_DEBUG("delete commit cb {} handle {}",
                     qos_class->key, qos_class->hal_handle);
 
     // a. Remove from qos_class id hash table
@@ -1739,9 +1743,13 @@ copp_free (copp_t *copp, bool free_pd)
 // Print copp spec
 //-----------------------------------------------------------------------------
 static hal_ret_t
-copp_spec_print (CoppSpec& spec)
+copp_spec_dump (CoppSpec& spec)
 {
     fmt::MemoryWriter   buf;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return HAL_RET_OK;
+    }
 
     buf.write("Copp Spec: ");
     if (spec.has_key_or_handle()) {
@@ -1832,7 +1840,7 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     copp = (copp_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("create add CB {}",
+    HAL_TRACE_DEBUG("create add cb {}",
                     copp->key);
 
     // PD Call to allocate PD resources and HW programming
@@ -1876,7 +1884,7 @@ copp_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp = (copp_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create commit CB {}",
+    HAL_TRACE_DEBUG("create commit cb {}",
                     copp->key);
 
     // Add to DB
@@ -1927,7 +1935,7 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp = (copp_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create abort CB {}");
+    HAL_TRACE_DEBUG("create abort cb {}");
 
     // 1. delete call to PD
     if (copp->pd) {
@@ -1998,7 +2006,7 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
 
     hal_api_trace(" API Begin: copp create");
     // dump spec
-    copp_spec_print(spec);
+    copp_spec_dump(spec);
 
     ret = validate_copp_create(spec);
     if (ret != HAL_RET_OK) {
@@ -2117,7 +2125,7 @@ copp_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     copp_clone = (copp_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update upd CB {}",
+    HAL_TRACE_DEBUG("update upd cb {}",
                     copp_clone->key);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -2197,7 +2205,7 @@ copp_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     copp = (copp_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("update commit CB {}",
+    HAL_TRACE_DEBUG("update commit cb {}",
                     copp->key);
 
     // Free PI.
@@ -2229,7 +2237,7 @@ copp_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     copp_clone = (copp_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update abort CB {}",
+    HAL_TRACE_DEBUG("update abort cb {}",
                     copp_clone->key);
 
     // Free Clone
@@ -2275,7 +2283,7 @@ copp_update (CoppSpec& spec, CoppResponse *rsp)
     hal_api_trace(" API Begin: copp update");
 
     // dump spec
-    copp_spec_print(spec);
+    copp_spec_dump(spec);
 
     // validate the request message
     ret = validate_copp_update(spec, rsp);
