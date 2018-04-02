@@ -9,6 +9,7 @@ import (
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
+	_ "github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	trace "github.com/pensando/sw/venice/utils/trace"

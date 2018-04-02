@@ -13,7 +13,10 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authn"
+	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 var (
@@ -27,22 +30,20 @@ var (
 	ErrNoneOrMultipleGroupEntries = errors.New("group does not exist or too many entries returned")
 )
 
-//UserCredential is user credential passed to LDAPAuthenticator to authenticate user. It consists of username and password.
-type UserCredential struct {
-	Username string
-	Password string
-}
-
 //authenticator is used for authenticating LDAP user. It implements authn.Authenticator interface.
 type authenticator struct {
-	apicl      apiclient.Services
+	name       string
+	apiServer  string
+	resolver   resolver.Interface
 	ldapConfig *auth.Ldap
 }
 
 //NewLdapAuthenticator returns an instance of Authenticator
-func NewLdapAuthenticator(apicl apiclient.Services, config *auth.Ldap) authn.Authenticator {
+func NewLdapAuthenticator(name, apiServer string, rslver resolver.Interface, config *auth.Ldap) authn.Authenticator {
 	return &authenticator{
-		apicl:      apicl,
+		name:       name,
+		apiServer:  apiServer,
+		resolver:   rslver,
 		ldapConfig: config,
 	}
 }
@@ -91,9 +92,9 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		return nil, false, err
 	}
 
-	ldapCredential, found := credential.(UserCredential)
+	ldapCredential, found := credential.(*authn.PasswordCredential)
 	if !found {
-		log.Errorf("Incorrect credential type: expected 'UserCredential', got [%T]", credential)
+		log.Errorf("Incorrect credential type: expected '*authn.PasswordCredential', got [%T]", credential)
 		return nil, false, authn.ErrInvalidCredentialType
 	}
 
@@ -133,12 +134,22 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		return nil, false, err
 	}
 
+	// create a grpc client
+	config := log.GetDefaultConfig(a.name)
+	l := log.GetNewLogger(config)
+	b := balancer.New(a.resolver)
+	apicl, err := apiclient.NewGrpcAPIClient(a.name, a.apiServer, l, rpckit.WithBalancer(b))
+	if err != nil {
+		log.Errorf("Failed to connect to gRPC server [%s], Err: %v", a.apiServer, err)
+		return nil, false, err
+	}
+
 	//Create external user
 	objMeta := &api.ObjectMeta{
 		Name:   ldapCredential.Username,
 		Tenant: sr.Entries[0].GetAttributeValue(a.ldapConfig.GetAttributeMapping().GetTenant()),
 	}
-	user, err := a.apicl.AuthV1().User().Get(context.Background(), objMeta)
+	user, err := apicl.AuthV1().User().Get(context.Background(), objMeta)
 
 	// user object
 	user = &auth.User{
@@ -158,14 +169,14 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 	}
 
 	if err != nil {
-		user, err = a.apicl.AuthV1().User().Create(context.Background(), user)
+		user, err = apicl.AuthV1().User().Create(context.Background(), user)
 		if err != nil {
 			log.Errorf("ldapauth: Error creating external user [%s], Err: %v", user.Name, err)
 			return nil, false, err
 		}
 		log.Debugf("ldapauth: External user [%s] created.", ldapCredential.Username)
 	} else {
-		user, err = a.apicl.AuthV1().User().Update(context.Background(), user)
+		user, err = apicl.AuthV1().User().Update(context.Background(), user)
 		if err != nil {
 			log.Errorf("ldapauth: Error updating external user [%s], Err: %v", user.Name, err)
 			return nil, false, err

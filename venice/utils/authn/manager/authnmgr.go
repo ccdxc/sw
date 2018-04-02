@@ -1,85 +1,51 @@
 package manager
 
 import (
-	"context"
-	"fmt"
-	"strings"
+	"errors"
 	"time"
 
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authn"
-	"github.com/pensando/sw/venice/utils/authn/ldap"
-	"github.com/pensando/sw/venice/utils/authn/password"
-	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/rpckit"
+)
+
+var (
+	// ErrUserNotFound error is returned when no user is found when validating token
+	ErrUserNotFound = errors.New("user not found")
 )
 
 // AuthenticationManager authenticates and returns user information
 type AuthenticationManager struct {
-	authenticators []authn.Authenticator
-	tokenManager   TokenManager
-	apicl          apiclient.Services
+	authGetter      AuthGetter
+	name            string
+	apiServer       string
+	resolver        resolver.Interface
+	tokenExpiration time.Duration
 }
 
 // NewAuthenticationManager returns an instance of AuthenticationManager
-func NewAuthenticationManager(name, apiServer string, resolverUrls string, tokenExpiration time.Duration) (*AuthenticationManager, error) {
-	l := log.WithContext("Pkg", "authn")
-	// create a resolver
-	r := resolver.New(&resolver.Config{Name: name, Servers: strings.Split(resolverUrls, ",")})
-	apicl, err := apiclient.NewGrpcAPIClient(name, apiServer, l, rpckit.WithBalancer(balancer.New(r)))
-	if err != nil {
-		log.Errorf("Failed to connect to API server [%s]\n", apiServer)
-		return nil, err
-	}
-
-	// fetch authentication policy
-	objMeta := &api.ObjectMeta{
-		Name: "AuthenticationPolicy",
-	}
-	policy, err := apicl.AuthV1().AuthenticationPolicy().Get(context.Background(), objMeta)
-	if err != nil {
-		log.Errorf("Error fetching authentication policy: Err: %v", err)
-		return nil, err
-	}
-
-	// instantiate authenticators
-	authenticatorOrder := policy.Spec.Authenticators.GetAuthenticatorOrder()
-	authenticators := make([]authn.Authenticator, len(authenticatorOrder))
-	for i, authenticatorType := range authenticatorOrder {
-		switch authenticatorType {
-		case auth.Authenticators_LOCAL.String():
-			authenticators[i] = password.NewPasswordAuthenticator(apicl, policy.Spec.Authenticators.GetLocal())
-		case auth.Authenticators_LDAP.String():
-			authenticators[i] = ldap.NewLdapAuthenticator(apicl, policy.Spec.Authenticators.GetLdap())
-		case auth.Authenticators_RADIUS.String():
-			return nil, fmt.Errorf("[%s] Authenticator not yet implemented", authenticatorType)
-		}
-	}
-
-	// instantiate token manager
-	tokenManager, err := NewJWTManager(policy.Spec.GetSecret(), tokenExpiration)
-	if err != nil {
-		log.Errorf("Error creating TokenManager: Err: %v", err)
-		return nil, err
-	}
+func NewAuthenticationManager(name, apiServer string, rslver resolver.Interface, tokenExpiration time.Duration) (*AuthenticationManager, error) {
 
 	return &AuthenticationManager{
-		authenticators: authenticators,
-		tokenManager:   tokenManager,
-		apicl:          apicl,
+		authGetter:      GetAuthGetter(name, apiServer, rslver, tokenExpiration), // get singleton user cache
+		name:            name,
+		apiServer:       apiServer,
+		resolver:        rslver,
+		tokenExpiration: tokenExpiration,
 	}, nil
 }
 
 // Authenticate authenticates user using authenticators in the order defined in AuthenticationPolicy. If any authenticator succeeds, it doesn't try the remaining authenticators.
 func (authnmgr *AuthenticationManager) Authenticate(credential authn.Credential) (*auth.User, bool, error) {
+	authenticators, err := authnmgr.authGetter.GetAuthenticators()
+	if err != nil {
+		return nil, false, err
+	}
 	var errlist []error
-	for _, authenticator := range authnmgr.authenticators {
+	for _, authenticator := range authenticators {
 		user, ok, err := authenticator.Authenticate(credential)
 		if ok {
 			return user, ok, err
@@ -91,12 +57,52 @@ func (authnmgr *AuthenticationManager) Authenticate(credential authn.Credential)
 	return nil, false, k8serrors.NewAggregate(errlist)
 }
 
-// CreateToken creates session token. It should be called only after successful authentication.
-func (authnmgr *AuthenticationManager) CreateToken(user *auth.User) (string, error) {
-	return authnmgr.tokenManager.CreateToken(user)
+// CreateToken creates session token. It should be called only after successful authentication. It saves passed in objects in the session.
+// Objects should support JSON serialization.
+func (authnmgr *AuthenticationManager) CreateToken(user *auth.User, objects map[string]interface{}) (string, error) {
+	tokenManager, err := authnmgr.authGetter.GetTokenManager()
+	if err != nil {
+		return "", err
+	}
+	return tokenManager.CreateToken(user, objects)
 }
 
 // ValidateToken validates session token and checks if it has not expired.
-func (authnmgr *AuthenticationManager) ValidateToken(token string) (*auth.User, bool, error) {
-	return authnmgr.tokenManager.ValidateToken(token)
+// Upon successful validation
+// Returns
+//  user information
+//  true if token/session is valid/not expired
+//  CSRF synchronizer token
+func (authnmgr *AuthenticationManager) ValidateToken(token string) (*auth.User, bool, string, error) {
+	tokenManager, err := authnmgr.authGetter.GetTokenManager()
+	if err != nil {
+		return nil, false, "", err
+	}
+	tokenInfo, ok, err := tokenManager.ValidateToken(token)
+	if !ok {
+		return nil, ok, "", err
+	}
+	// get username
+	username, ok := tokenInfo[SubClaim].(string)
+	if !ok {
+		log.Errorf("username is not of type string: {%+v}", username)
+		return nil, ok, "", ErrUserNotFound
+	}
+	// get tenant if present
+	tenant, _ := tokenInfo[TenantClaim].(string)
+
+	// get user from cache
+	user, ok := authnmgr.authGetter.GetUser(username, tenant)
+	if !ok {
+		log.Errorf("User [%s] in tenant [%s] not found in cache", username, tenant)
+		return nil, ok, "", ErrUserNotFound
+	}
+	// get csrf token if present
+	csrfToken, _ := tokenInfo[CsrfClaim].(string)
+	return user, ok, csrfToken, nil
+}
+
+// Uninitialize stops watchers, un-initializes authentication manager. It should be called only when server is shutting down.
+func (authnmgr *AuthenticationManager) Uninitialize() {
+	authnmgr.authGetter.Stop()
 }

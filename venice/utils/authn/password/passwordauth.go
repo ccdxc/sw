@@ -8,7 +8,10 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authn"
+	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 var (
@@ -16,23 +19,20 @@ var (
 	ErrInvalidCredential = errors.New("incorrect credential")
 )
 
-//LocalUserPasswordCredential is user credential passed to Authenticator to authenticate user. It consists of username, password and tenant.
-type LocalUserPasswordCredential struct {
-	Username string
-	Password string
-	Tenant   string
-}
-
 //authenticator is used for authenticating local user. It implements authn.Authenticator interface.
 type authenticator struct {
-	apicl      apiclient.Services
+	name       string
+	apiServer  string
+	resolver   resolver.Interface
 	authConfig *auth.Local
 }
 
 //NewPasswordAuthenticator returns an instance of Authenticator
-func NewPasswordAuthenticator(apicl apiclient.Services, config *auth.Local) authn.Authenticator {
+func NewPasswordAuthenticator(name, apiServer string, rslver resolver.Interface, config *auth.Local) authn.Authenticator {
 	return &authenticator{
-		apicl:      apicl,
+		name:       name,
+		apiServer:  apiServer,
+		resolver:   rslver,
 		authConfig: config,
 	}
 }
@@ -48,10 +48,20 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		return nil, false, nil
 	}
 
-	passwdcred, found := credential.(LocalUserPasswordCredential)
+	passwdcred, found := credential.(*authn.PasswordCredential)
 	if !found {
-		log.Errorf("Incorrect credential type: expected 'LocalUserPasswordCredential', got [%T]", credential)
+		log.Errorf("Incorrect credential type: expected '*authn.PasswordCredential', got [%T]", credential)
 		return nil, false, authn.ErrInvalidCredentialType
+	}
+
+	// create a grpc client
+	config := log.GetDefaultConfig(a.name)
+	l := log.GetNewLogger(config)
+	b := balancer.New(a.resolver)
+	apicl, err := apiclient.NewGrpcAPIClient(a.name, a.apiServer, l, rpckit.WithBalancer(b))
+	if err != nil {
+		log.Errorf("Failed to connect to gRPC server [%s], Err: %v", a.apiServer, err)
+		return nil, false, err
 	}
 
 	// fetch user
@@ -59,7 +69,7 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		Name:   passwdcred.Username,
 		Tenant: passwdcred.Tenant,
 	}
-	user, err := a.apicl.AuthV1().User().Get(context.Background(), objMeta)
+	user, err := apicl.AuthV1().User().Get(context.Background(), objMeta)
 	if err != nil {
 		log.Errorf("passwordauth: Error fetching user [%s], Err: %v", passwdcred.Username, err)
 		return nil, false, ErrInvalidCredential

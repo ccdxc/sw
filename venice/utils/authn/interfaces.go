@@ -16,10 +16,17 @@ type Credential interface{}
 
 // Authenticator represents an authentication strategy/mechanism used to authenticate user. For example, LDAP authenticator, local user/password authenticator
 type Authenticator interface {
-	//Authenticate authenticates user
-	//Returns
+	// Authenticate authenticates user
+	// Returns
 	//  *auth.User user information
 	//  bool true if authentication is successful
 	//  error if there is any error authenticating user
 	Authenticate(credential Credential) (*auth.User, bool, error)
+}
+
+// PasswordCredential is user credential passed to Authenticator to authenticate user. It consists of username, password and tenant.
+type PasswordCredential struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Tenant   string `json:"tenant"`
 }

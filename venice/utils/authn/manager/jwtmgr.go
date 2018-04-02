@@ -17,7 +17,7 @@ import (
 
 const (
 	issuerClaimValue = "venice" //TODO: Should this be cluster identification?
-	userClaim        = "user"
+
 	/* HS256 Block(B) = 64bytes,  HashOutput(L)=32bytes, 32bytes <= KeySize <= 64bytes
 	   HS512 Block(B) = 128bytes, HashOutput(L)=64bytes, 64bytes <= KeySize <= 128bytes
 	   HMAC => H(K XOR opad, H(K XOR ipad, text))
@@ -29,10 +29,6 @@ const (
 )
 
 var (
-	// ErrMissingUserInfo error is returned when no user information is provided while creating token
-	ErrMissingUserInfo = errors.New("user information is required to create token")
-	// ErrInvalidPrivateClaim error is returned when private claim cannot be parsed while validating token
-	ErrInvalidPrivateClaim = errors.New("private claim cannot be parsed from token")
 	// ErrInvalidSignature error is returned when token signature contains incorrect algorithm or multiple signatures are present
 	ErrInvalidSignature = errors.New("invalid signature")
 	// ErrInvalidTokenFormat error is returned when token doesn't consist of two parts
@@ -76,8 +72,8 @@ func NewJWTManager(secret []byte, expiration time.Duration) (TokenManager, error
 }
 
 // CreateToken creates headless JWT token without header
-func (t *jwtMgr) CreateToken(user *auth.User) (string, error) {
-	token, err := t.createJWTToken(user)
+func (t *jwtMgr) CreateToken(user *auth.User, privateClaims map[string]interface{}) (string, error) {
+	token, err := t.createJWTToken(user, privateClaims)
 	if err != nil {
 		return "", err
 	}
@@ -85,23 +81,26 @@ func (t *jwtMgr) CreateToken(user *auth.User) (string, error) {
 }
 
 // createJWTToken creates JWT token with header
-func (t *jwtMgr) createJWTToken(user *auth.User) (string, error) {
+func (t *jwtMgr) createJWTToken(user *auth.User, privateClaims map[string]interface{}) (string, error) {
 	if user == nil || user.Name == "" {
 		log.Errorf("User information is required to create a JWT token")
 		return "", ErrMissingUserInfo
 	}
 	// standard jwt claims like sub, iss, exp
 	claims := jwt.Claims{
-		Subject: user.Name,
-		Issuer:  issuerClaimValue,
-		Expiry:  jwt.NewNumericDate(time.Now().Add(t.expiration * time.Second)),
+		Subject:  user.Name,
+		Issuer:   issuerClaimValue,
+		Expiry:   jwt.NewNumericDate(time.Now().Add(t.expiration * time.Second)),
+		IssuedAt: jwt.NewNumericDate(time.Now()),
 	}
 	// venice custom claims
-	customClaims := struct {
-		User auth.User `json:"user"`
-	}{*user}
+	if privateClaims == nil {
+		privateClaims = make(map[string]interface{})
+	}
+	privateClaims[TenantClaim] = user.GetTenant()
+	privateClaims[RolesClaim] = user.Status.GetRoles()
 	// create signed JWT
-	token, err := jwt.Signed(t.signer).Claims(claims).Claims(customClaims).CompactSerialize()
+	token, err := jwt.Signed(t.signer).Claims(claims).Claims(privateClaims).CompactSerialize()
 	if err != nil {
 		log.Errorf("Unable to create JWT token: Err: %v", err)
 		return "", err
@@ -109,31 +108,71 @@ func (t *jwtMgr) createJWTToken(user *auth.User) (string, error) {
 	return token, err
 }
 
-// ValidateToken validates headless JWT token. It re-creates JWT header with alg as HS512 and prepends it to the headless token
-// before doing validation
-func (t *jwtMgr) ValidateToken(token string) (*auth.User, bool, error) {
+// Get returns object stored in session for the given key
+// Returns
+//   object
+//   true if object exists otherwise false
+func (t *jwtMgr) Get(token, key string) (interface{}, bool, error) {
 	if !validateTokenFormat(token) {
 		return nil, false, ErrInvalidTokenFormat
 	}
-	return t.validateJWTToken(fmt.Sprintf("%s.%s", t.header, token))
+	standardClaims, privateClaims, ok, err := t.validateJWTToken(fmt.Sprintf("%s.%s", t.header, token))
+	if !ok {
+		return nil, ok, err
+	}
+	// check key in standard and private claims
+	switch key {
+	case IssuerClaim:
+		return standardClaims.Issuer, true, nil
+	case SubClaim:
+		return standardClaims.Subject, true, nil
+	case ExpClaim:
+		return standardClaims.Expiry, true, nil
+	case IssuedAtClaim:
+		return standardClaims.IssuedAt, true, nil
+	case AudienceClaim, NotBeforeClaim, IDClaim:
+		return nil, false, nil
+	default:
+		val, ok := privateClaims[key]
+		return val, ok, nil
+	}
+}
+
+// ValidateToken validates headless JWT token. It re-creates JWT header with alg as HS512 and prepends it to the headless token
+// before doing validation
+func (t *jwtMgr) ValidateToken(token string) (map[string]interface{}, bool, error) {
+	if !validateTokenFormat(token) {
+		return nil, false, ErrInvalidTokenFormat
+	}
+	standardClaims, privateClaims, ok, err := t.validateJWTToken(fmt.Sprintf("%s.%s", t.header, token))
+	if !ok {
+		return nil, ok, err
+	}
+	// collect all claims in a map
+	privateClaims[SubClaim] = standardClaims.Subject
+	privateClaims[IssuerClaim] = standardClaims.Issuer
+	privateClaims[IssuedAtClaim] = standardClaims.IssuedAt
+	privateClaims[ExpClaim] = standardClaims.Expiry
+
+	return privateClaims, true, nil
 }
 
 // validateJWTToken validates JWT token. It checks algorithm in signature is HS512. It validates expiration and issuer claim.
-func (t *jwtMgr) validateJWTToken(token string) (*auth.User, bool, error) {
+func (t *jwtMgr) validateJWTToken(token string) (*jwt.Claims, map[string]interface{}, bool, error) {
 	tok, err := jwt.ParseSigned(token)
 	if err != nil {
 		log.Errorf("Unable to parse JWT token: Err: %v", err)
-		return nil, false, err
+		return nil, nil, false, err
 	}
 	// there should be only one signature
 	if len(tok.Headers) != 1 {
 		log.Errorf("Multiple signatures present in JWT")
-		return nil, false, ErrInvalidSignature
+		return nil, nil, false, ErrInvalidSignature
 	}
 	// signature algorithm type should be HS512
 	if jose.SignatureAlgorithm(tok.Headers[0].Algorithm) != signatureAlgorithm {
 		log.Errorf("Incorrect signature algorithm type")
-		return nil, false, ErrInvalidSignature
+		return nil, nil, false, ErrInvalidSignature
 	}
 	// standard jwt claims like sub, iss, exp
 	standardClaims := jwt.Claims{}
@@ -141,41 +180,14 @@ func (t *jwtMgr) validateJWTToken(token string) (*auth.User, bool, error) {
 	privateClaims := make(map[string]interface{})
 	if err := tok.Claims(t.secret, &standardClaims, &privateClaims); err != nil {
 		log.Errorf("Unable to parse claims in JWT token: Err: %v", err)
-		return nil, false, err
+		return nil, nil, false, err
 	}
 	// check if token is not expired and has correct issuer
 	if err := standardClaims.Validate(jwt.Expected{Issuer: issuerClaimValue, Time: time.Now()}); err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
 
-	// get auth.User obj from user claim in JWT
-	user, err := getUserFromClaim(privateClaims[userClaim])
-	if err != nil {
-		log.Errorf("Unable to unmarshal user from claim [%s] in JWT token: Err: %v", privateClaims[userClaim], err)
-		return nil, false, err
-	}
-
-	return user, true, nil
-}
-
-func getUserFromClaim(claim interface{}) (*auth.User, error) {
-	userMap, ok := claim.(map[string]interface{})
-	if !ok {
-		// this shouldn't normally happen unless there is a bug in JOSE library
-		log.Errorf("Invalid user claim map, expected map[string]interface{}")
-		return nil, ErrInvalidPrivateClaim
-	}
-	userBytes, err := json.Marshal(userMap)
-	if err != nil {
-		log.Errorf("Unable to marshal a map to json bytes: Err: %v", err)
-		return nil, err
-	}
-	user := &auth.User{}
-	if err = json.Unmarshal(userBytes, user); err != nil {
-		log.Errorf("Unable to unmarshal a map bytes to auth.User: Err: %v", err)
-		return nil, err
-	}
-	return user, nil
+	return &standardClaims, privateClaims, true, nil
 }
 
 // removeJWTHeader removes header from JWT token. We will send headless JWT token to browser and recreate header while verifying token

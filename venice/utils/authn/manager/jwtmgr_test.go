@@ -12,6 +12,8 @@ import (
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 
+	"sort"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -36,6 +38,8 @@ var testUserObj = auth.User{
 	},
 }
 
+var testCsrfToken = "csrftoken"
+
 // createToken creates JWT token
 //   alg: JWT signing algorithm for example HS256
 //   secret: JWT signing secret
@@ -48,20 +52,28 @@ func createToken(alg jose.SignatureAlgorithm, secret []byte, expiration time.Dur
 
 	}
 	claims := jwt.Claims{
-		Subject: testUser,
-		Issuer:  issuer,
-		Expiry:  jwt.NewNumericDate(time.Now().Add(expiration)),
+		Subject:  testUser,
+		Issuer:   issuer,
+		Expiry:   jwt.NewNumericDate(time.Now().Add(expiration)),
+		IssuedAt: jwt.NewNumericDate(time.Now()),
 	}
 	// venice custom claims
-	customClaims := struct {
-		User auth.User `json:"user"`
-	}{testUserObj}
+	customClaims := make(map[string]interface{})
+	customClaims[TenantClaim] = tenant
+	customClaims[CsrfClaim] = testCsrfToken
+	customClaims[RolesClaim] = testRoles
 
 	token, err := jwt.Signed(sig).Claims(claims).Claims(customClaims).CompactSerialize()
 	if err != nil {
 		panic(fmt.Sprintf("Unable to create JWT token: Err: %v", err))
 	}
 	return token
+}
+
+func createHeadlessToken(alg jose.SignatureAlgorithm, secret []byte, expiration time.Duration, issuer string) string {
+	token := createToken(alg, secret, expiration, issuer)
+	parts := strings.Split(token, ".")
+	return fmt.Sprintf("%s.%s", parts[1], parts[2])
 }
 
 func createJwtMgr() *jwtMgr {
@@ -85,7 +97,7 @@ func createJwtMgr() *jwtMgr {
 
 func TestCreateToken(t *testing.T) {
 	jwtMgr := createJwtMgr()
-	tokStr, err := jwtMgr.createJWTToken(&testUserObj)
+	tokStr, err := jwtMgr.createJWTToken(&testUserObj, nil)
 
 	AssertOk(t, err, "Error creating JWT token")
 
@@ -97,70 +109,91 @@ func TestCreateToken(t *testing.T) {
 	err = token.Claims(secret, &standardClaims, &customClaims)
 	AssertOk(t, err, fmt.Sprintf("Error verifying JWT token: %s", tokStr))
 
-	userFromJWT, err := getUserFromClaim(customClaims[userClaim])
-	AssertOk(t, err, fmt.Sprintf("Error un-marshalling user from JWT token: %v", customClaims[userClaim]))
+	Assert(t, standardClaims.Subject == testUserObj.Name, "Incorrect subject claim")
+	Assert(t, customClaims[TenantClaim] == testUserObj.Tenant, "Incorrect tenant claim")
+	Assert(t, rolesEqual(customClaims[RolesClaim].([]interface{}), testRoles),
+		fmt.Sprintf("Incorrect roles, expected {%+v}, got {%+v}", testRoles, customClaims[RolesClaim]))
+}
+
+func TestCreateTokenWithCsrf(t *testing.T) {
+	jwtMgr := createJwtMgr()
+	privateClaims := make(map[string]interface{})
+	privateClaims[CsrfClaim] = testCsrfToken
+	tokStr, err := jwtMgr.createJWTToken(&testUserObj, privateClaims)
+
+	AssertOk(t, err, "Error creating JWT token")
+
+	token, err := jwt.ParseSigned(tokStr)
+	AssertOk(t, err, fmt.Sprintf("Error parsing JWT token: %s", tokStr))
+
+	standardClaims := jwt.Claims{}
+	customClaims := make(map[string]interface{})
+	err = token.Claims(secret, &standardClaims, &customClaims)
+	AssertOk(t, err, fmt.Sprintf("Error verifying JWT token: %s", tokStr))
 
 	Assert(t, standardClaims.Subject == testUserObj.Name, "Incorrect subject claim")
-	Assert(t, userFromJWT.Tenant == testUserObj.Tenant, "Incorrect tenant claim")
-	Assert(t, reflect.DeepEqual(userFromJWT.Status.GetRoles(), testRoles), "Incorrect roles")
-
+	Assert(t, customClaims[TenantClaim] == testUserObj.Tenant, "Incorrect tenant claim")
+	Assert(t, rolesEqual(customClaims[RolesClaim].([]interface{}), testRoles),
+		fmt.Sprintf("Incorrect roles, expected {%+v}, got {%+v}", testRoles, customClaims[RolesClaim]))
+	Assert(t, customClaims[CsrfClaim] == testCsrfToken, fmt.Sprintf("Incorrect csrf token returned: %s", customClaims[CsrfClaim]))
 }
 
 func TestCreateTokenWithMissingUserInfo(t *testing.T) {
 	jwtMgr := createJwtMgr()
-	tokStr, err := jwtMgr.createJWTToken(nil)
+	tokStr, err := jwtMgr.createJWTToken(nil, nil)
 	Assert(t, tokStr == "", fmt.Sprintf("Token returned for missing user: %s", tokStr))
 	Assert(t, err != nil, "No error returned for missing user")
 	Assert(t, err == ErrMissingUserInfo, "Incorrect error returned for missing user info")
-
 }
 
 func TestValidateToken(t *testing.T) {
 	jwtMgr := createJwtMgr()
-	user, ok, err := jwtMgr.validateJWTToken(testHS512JWTToken)
+	tokInfo, ok, err := jwtMgr.ValidateToken(testHS512JWTToken)
 	Assert(t, ok, "Token validation failed")
 	AssertOk(t, err, "Error validating token")
-	Assert(t, user.Name == testUser, "Incorrect user name")
-	Assert(t, user.Tenant == tenant, "Incorrect tenant name")
-	Assert(t, reflect.DeepEqual(user.Status.GetRoles(), testRoles), "Incorrect roles")
+	Assert(t, tokInfo[SubClaim] == testUser, "Incorrect user name")
+	Assert(t, tokInfo[TenantClaim] == tenant, "Incorrect tenant name")
+	Assert(t, rolesEqual(tokInfo[RolesClaim].([]interface{}), testRoles),
+		fmt.Sprintf("Incorrect roles, expected {%+v}, got {%+v}", testRoles, tokInfo[RolesClaim]))
+	Assert(t, tokInfo[CsrfClaim] == testCsrfToken, fmt.Sprintf("Incorrect csrf token returned: %s", tokInfo[CsrfClaim]))
 }
 
 func TestValidateTokenWithInvalidSecret(t *testing.T) {
 	// create token with an invalid secret
-	token := createToken(signatureAlgorithm, []byte("invalid secret"), time.Hour, issuerClaimValue)
+	token := createHeadlessToken(signatureAlgorithm, []byte("invalid secret"), time.Hour, issuerClaimValue)
 	jwtMgr := createJwtMgr()
-	user, ok, err := jwtMgr.validateJWTToken(token)
+	tokInfo, ok, err := jwtMgr.ValidateToken(token)
 	Assert(t, !ok, "Token validation should fail for invalid secret")
 	Assert(t, err != nil, "No error returned for invalid secret")
-	Assert(t, user == nil, "User returned while validating invalid token")
+	Assert(t, tokInfo == nil, "Token info returned while validating invalid token")
 }
 
 func TestValidateTokenWithExpiredToken(t *testing.T) {
 	// create expired token
-	token := createToken(signatureAlgorithm, secret, -time.Hour, issuerClaimValue)
+	token := createHeadlessToken(signatureAlgorithm, secret, -time.Hour, issuerClaimValue)
 	jwtMgr := createJwtMgr()
-	user, ok, err := jwtMgr.validateJWTToken(token)
+	tokInfo, ok, err := jwtMgr.ValidateToken(token)
 	Assert(t, !ok, "Token validation should fail for expired token")
 	Assert(t, err != nil, "No error returned for expired token")
 	Assert(t, err == jwt.ErrExpired, "Incorrect error returned for expired token")
-	Assert(t, user == nil, "User returned while validating expired token")
+	Assert(t, tokInfo == nil, "Token info returned while validating expired token")
 }
 
 func TestValidateTokenWithInvalidIssuer(t *testing.T) {
 	// create token with invalid issuer
-	token := createToken(signatureAlgorithm, secret, time.Hour, "invalid issuer")
+	token := createHeadlessToken(signatureAlgorithm, secret, time.Hour, "invalid issuer")
 	jwtMgr := createJwtMgr()
-	user, ok, err := jwtMgr.validateJWTToken(token)
+	tokInfo, ok, err := jwtMgr.ValidateToken(token)
 	Assert(t, !ok, "Token validation should fail for token with invalid issuer")
 	Assert(t, err != nil, "No error returned for token with invalid issuer")
 	Assert(t, err == jwt.ErrInvalidIssuer, "Incorrect error returned for token with invalid issuer")
-	Assert(t, user == nil, "User returned while validating token with invalid issuer")
+	Assert(t, tokInfo == nil, "Token info returned while validating token with invalid issuer")
 }
 
-// modifySubjectClaimInToken returns jwt token with modified payload and original signature
+// modifySubjectClaimInToken returns headless jwt token with modified payload and original signature
 func modifySubjectClaimInToken(token string) string {
 	parts := strings.Split(token, ".")
-	claimBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	claimBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
 	if err != nil {
 		panic("unable to decode payload to modify user claim")
 	}
@@ -174,23 +207,23 @@ func modifySubjectClaimInToken(token string) string {
 	if err != nil {
 		panic("unable to marshal modified claims")
 	}
-	return fmt.Sprintf("%s.%s.%s", parts[0], base64.RawURLEncoding.EncodeToString(claimBytes), parts[2])
+	return fmt.Sprintf("%s.%s", base64.RawURLEncoding.EncodeToString(claimBytes), parts[1])
 }
 
 func TestValidateTokenWithModifiedClaims(t *testing.T) {
-	correctToken := createToken(signatureAlgorithm, secret, time.Duration(expiration)*time.Second, issuerClaimValue)
+	correctToken := createHeadlessToken(signatureAlgorithm, secret, time.Duration(expiration)*time.Second, issuerClaimValue)
 	modifiedToken := modifySubjectClaimInToken(correctToken)
 	jwtMgr := createJwtMgr()
-	_, ok, err := jwtMgr.validateJWTToken(correctToken)
+	_, ok, err := jwtMgr.ValidateToken(correctToken)
 	Assert(t, ok, "Token validation failed for valid token")
 	AssertOk(t, err, "Error returned for valid token")
 
 	// validating token with modified "sub" claim while keeping the signature same
-	user, ok, err := jwtMgr.validateJWTToken(modifiedToken)
+	tokInfo, ok, err := jwtMgr.ValidateToken(modifiedToken)
 	Assert(t, !ok, "Token validation should fail for invalid signature")
 	Assert(t, err != nil, "No error returned for invalid signature contained in token")
 	Assert(t, err == jose.ErrCryptoFailure, "Expecting jose.ErrCryptoFailure error")
-	Assert(t, user == nil, "User returned while validating token with invalid signature")
+	Assert(t, tokInfo == nil, "Token info returned while validating token with invalid signature")
 }
 
 func TestValidateTokenWithNoneAlg(t *testing.T) {
@@ -200,34 +233,27 @@ func TestValidateTokenWithNoneAlg(t *testing.T) {
 		secret:     secret,
 		expiration: time.Duration(expiration),
 	}
-	user, ok, err := jwtMgr.validateJWTToken(token)
+	_, privateClaims, ok, err := jwtMgr.validateJWTToken(token)
 	Assert(t, !ok, "Token validation should fail for token with 'none' alg type")
 	Assert(t, err != nil, "No error returned for 'none' alg token")
 	Assert(t, err == ErrInvalidSignature, "Incorrect error returned for 'none' alg token")
-	Assert(t, user == nil, "User returned while validating 'none' alg token")
+	Assert(t, privateClaims == nil, "Claims returned while validating 'none' alg token")
 }
 
-func BenchmarkValidateToken(t *testing.B) {
+func BenchmarkValidateToken(b *testing.B) {
 	jwtMgr := createJwtMgr()
-	jwtMgr.validateJWTToken(testHS512JWTToken)
-}
-
-func TestGetUserClaim(t *testing.T) {
-	userClaim := make(map[string]interface{})
-	userClaim["testKey"] = make(chan int)
-	user, err := getUserFromClaim(userClaim)
-	Assert(t, err != nil, "No error returned for invalid user claim map")
-	Assert(t, user == nil, fmt.Sprintf("User returned for invalid user claim map: %v", user))
-
-	user, err = getUserFromClaim("invalidClaimObject")
-	Assert(t, err != nil, "No error returned for invalid user claim type")
-	Assert(t, user == nil, fmt.Sprintf("User returned for invalid user claim type: %v", user))
+	b.ResetTimer()
+	b.Run("ValidateToken", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			jwtMgr.ValidateToken(testHS512JWTToken)
+		}
+	})
 }
 
 func TestCreateHeadlessJWTToken(t *testing.T) {
 	jwtMgr, err := NewJWTManager(secret, time.Duration(expiration))
 	AssertOk(t, err, "Error creating JWT token manager")
-	headlessToken, err := jwtMgr.CreateToken(&testUserObj)
+	headlessToken, err := jwtMgr.CreateToken(&testUserObj, nil)
 	AssertOk(t, err, "Error creating headless JWT token")
 	Assert(t, len(strings.Split(headlessToken, ".")) == 2, "Headless token should contain only two parts")
 	headerStr, err := createJWTHeader()
@@ -242,12 +268,10 @@ func TestCreateHeadlessJWTToken(t *testing.T) {
 	err = token.Claims(secret, &standardClaims, &customClaims)
 	AssertOk(t, err, fmt.Sprintf("Error verifying JWT token: %s", jwtToken))
 
-	userFromJWT, err := getUserFromClaim(customClaims[userClaim])
-	AssertOk(t, err, fmt.Sprintf("Error un-marshalling user from JWT token: %v", customClaims[userClaim]))
-
 	Assert(t, standardClaims.Subject == testUserObj.Name, "Incorrect subject claim")
-	Assert(t, userFromJWT.Tenant == testUserObj.Tenant, "Incorrect tenant claim")
-	Assert(t, reflect.DeepEqual(userFromJWT.Status.GetRoles(), testRoles), "Incorrect roles")
+	Assert(t, customClaims[TenantClaim] == testUserObj.Tenant, "Incorrect tenant claim")
+	Assert(t, rolesEqual(customClaims[RolesClaim].([]interface{}), testRoles),
+		fmt.Sprintf("Incorrect roles, expected {%+v}, got {%+v}", testRoles, customClaims[RolesClaim]))
 }
 
 func TestCreateJWTHeader(t *testing.T) {
@@ -263,18 +287,6 @@ func TestCreateJWTHeader(t *testing.T) {
 	Assert(t, jose.SignatureAlgorithm(headers.Algorithm) == signatureAlgorithm, "Incorrect algorithm specified in JWT header")
 	// check if "typ" header is JWT
 	Assert(t, headers.Type == headerTypeValue, "Incorrect type specified in JWT header")
-}
-
-func TestValidateHeadlessJWTToken(t *testing.T) {
-	parts := strings.Split(testHS512JWTToken, ".")
-	jwtMgr, err := NewJWTManager(secret, time.Duration(expiration))
-	AssertOk(t, err, "Error creating JWT token manager")
-	user, ok, err := jwtMgr.ValidateToken(fmt.Sprintf("%s.%s", parts[1], parts[2]))
-	AssertOk(t, err, "Error validating headless JWT token")
-	Assert(t, ok, "Headless token validation failed")
-	Assert(t, user.Name == testUser, "Incorrect user name")
-	Assert(t, user.Tenant == tenant, "Incorrect tenant name")
-	Assert(t, reflect.DeepEqual(user.Status.GetRoles(), testRoles), "Incorrect roles")
 }
 
 func erroneousTokenData() map[string]string {
@@ -294,12 +306,12 @@ func TestErroneousTokens(t *testing.T) {
 	jwtMgr, err := NewJWTManager(secret, time.Duration(expiration))
 	AssertOk(t, err, "Error creating JWT token manager")
 	for testtype, token := range erroneousTokenData() {
-		user, ok, err := jwtMgr.ValidateToken(token)
+		tokenInfo, ok, err := jwtMgr.ValidateToken(token)
 
 		Assert(t, !ok, fmt.Sprintf("[%v] Token validation should fail", testtype))
 		Assert(t, err != nil, fmt.Sprintf("[%v] No error returned for invalid token", testtype))
 		Assert(t, err != jwt.ErrExpired, fmt.Sprintf("[%v] It should error out before token expiration check", testtype))
-		Assert(t, user == nil, fmt.Sprintf("[%v] User returned for invalid token", testtype))
+		Assert(t, tokenInfo == nil, fmt.Sprintf("[%v] Token info returned for invalid token", testtype))
 	}
 }
 
@@ -308,4 +320,57 @@ func TestRemoveJWTHeader(t *testing.T) {
 	headless := removeJWTHeader(token)
 	parts := strings.Split(token, ".")
 	Assert(t, headless == fmt.Sprintf("%s.%s", parts[1], parts[2]), "Invalid headless token")
+}
+
+func TestGet(t *testing.T) {
+	jwtMgr, err := NewJWTManager(secret, time.Duration(expiration))
+	AssertOk(t, err, "Error creating JWT token manager")
+	tests := []struct {
+		claim              string
+		exists             bool
+		expectedClaimValue interface{}
+	}{
+		{SubClaim, true, testUser},
+		{IssuerClaim, true, issuerClaimValue},
+		{IssuedAtClaim, true, "non nil"},
+		{ExpClaim, true, "non nil"},
+		{NotBeforeClaim, false, nil},
+		{AudienceClaim, false, nil},
+		{IDClaim, false, nil},
+		{CsrfClaim, true, testCsrfToken},
+	}
+	for _, test := range tests {
+		val, ok, err := jwtMgr.Get(testHS512JWTToken, test.claim)
+		Assert(t, ok == test.exists, fmt.Sprintf("Get returned unexpected value for [%s] claim", val))
+		AssertOk(t, err, fmt.Sprintf("Error fetching [%s] claim", val))
+		switch test.claim {
+		case "iat", "exp":
+			Assert(t, val != nil, fmt.Sprintf("got nil value for claim [%s]", test.claim))
+		default:
+			Assert(t, val == test.expectedClaimValue, fmt.Sprintf("Incorrect claim value, expected [%s], got [%s]", test.expectedClaimValue, val))
+		}
+	}
+	// test with expired token
+	// create expired token
+	token := createHeadlessToken(signatureAlgorithm, secret, -time.Hour, issuerClaimValue)
+	val, ok, err := jwtMgr.Get(token, "sub")
+	Assert(t, !ok, "Get should fail for expired token")
+	Assert(t, err != nil, "No error returned for expired token")
+	Assert(t, err == jwt.ErrExpired, "Incorrect error returned for expired token")
+	Assert(t, val == nil, "claim value returned for expired token")
+}
+
+func rolesEqual(roleClaims []interface{}, roles []string) bool {
+	sort.Slice(roleClaims, func(i, j int) bool {
+		return roleClaims[i].(string) < roleClaims[j].(string)
+	})
+	sort.Slice(roles, func(i, j int) bool {
+		return roles[i] < roles[j]
+	})
+
+	strRoleClaims := make([]string, len(roleClaims))
+	for i, claim := range roleClaims {
+		strRoleClaims[i] = fmt.Sprint(claim)
+	}
+	return reflect.DeepEqual(strRoleClaims, roles)
 }

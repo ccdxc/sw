@@ -6,13 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"context"
-
-	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/authn"
+	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -183,137 +182,82 @@ func authenticationPoliciesData() map[string]*auth.Ldap {
 
 // createDefaultAuthenticationPolicy creates an authentication policy with LDAP with TLS enabled
 func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
-
-	// authn policy object
-	policy := auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "AuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Ldap: &auth.Ldap{
-					Enabled: true,
-					Url:     ldapURL,
-					TLSOptions: &auth.TLSOptions{
-						StartTLS:                   true,
-						SkipServerCertVerification: false,
-						ServerName:                 serverName,
-						TrustedCerts:               trustedCerts,
-					},
-					BaseDN:       baseDN,
-					BindDN:       bindDN,
-					BindPassword: bindPassword,
-					AttributeMapping: &auth.LdapAttributeMapping{
-						User:             userAttribute,
-						UserObjectClass:  userObjectClassAttribute,
-						Group:            groupAttribute,
-						GroupObjectClass: groupObjectClassAttribute,
-					},
-				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
-				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+	return CreateAuthenticationPolicy(apicl,
+		&auth.Local{
+			Enabled: true,
+		}, &auth.Ldap{
+			Enabled: true,
+			Url:     ldapURL,
+			TLSOptions: &auth.TLSOptions{
+				StartTLS:                   true,
+				SkipServerCertVerification: false,
+				ServerName:                 serverName,
+				TrustedCerts:               trustedCerts,
 			},
-		},
-	}
-
-	// create authentication policy object in api server
-	_, err := apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), &policy)
-	if err != nil {
-		panic("Error creating authentication policy")
-	}
-	return &policy
-}
-
-func createAuthenticationPolicy(ldapconf *auth.Ldap) *auth.AuthenticationPolicy {
-	// authn policy object
-	policy := auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "AuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Ldap: ldapconf,
-				Local: &auth.Local{
-					Enabled: true,
-				},
-				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+			BaseDN:       baseDN,
+			BindDN:       bindDN,
+			BindPassword: bindPassword,
+			AttributeMapping: &auth.LdapAttributeMapping{
+				User:             userAttribute,
+				UserObjectClass:  userObjectClassAttribute,
+				Group:            groupAttribute,
+				GroupObjectClass: groupObjectClassAttribute,
 			},
-		},
-	}
-
-	// create authentication policy object in api server
-	_, err := apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), &policy)
-	if err != nil {
-		panic("Error creating authentication policy")
-	}
-	return &policy
-}
-
-// deleteAuthenticationPolicy deletes an authentication policy
-func deleteAuthenticationPolicy() {
-	// delete authentication policy object in api server
-	apicl.AuthV1().AuthenticationPolicy().Delete(context.Background(), &api.ObjectMeta{Name: "AuthenticationPolicy"})
+		})
 }
 
 func TestAuthenticate(t *testing.T) {
 	for testtype, ldapconf := range authenticationPoliciesData() {
-		createAuthenticationPolicy(ldapconf)
+		CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, ldapconf)
 		// create password authenticator
-		authenticator := NewLdapAuthenticator(apicl, ldapconf)
+		authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, ldapconf)
 
 		// authenticate
-		autheduser, ok, err := authenticator.Authenticate(UserCredential{Username: testUser, Password: testPassword})
+		autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
+		DeleteAuthenticationPolicy(apicl)
 
 		Assert(t, ok, fmt.Sprintf("[%v] Unsuccessful ldap user authentication", testtype))
 		Assert(t, autheduser.Name == testUser, fmt.Sprintf("[%v] User returned by ldap authenticator didn't match user being authenticated", testtype))
 		Assert(t, autheduser.Spec.GetType() == auth.UserSpec_EXTERNAL.String(), fmt.Sprintf("[%v] User created is not of type EXTERNAL", testtype))
 		AssertOk(t, err, fmt.Sprintf("[%v] Error authenticating user", testtype))
-
-		deleteAuthenticationPolicy()
 	}
 
 }
 
 func TestIncorrectPasswordAuthentication(t *testing.T) {
 	policy := createDefaultAuthenticationPolicy()
+	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator
-	authenticator := NewLdapAuthenticator(apicl, policy.Spec.Authenticators.GetLdap())
+	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(UserCredential{Username: testUser, Password: "wrongpassword"})
+	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: "wrongpassword"})
 
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned while authenticating with wrong password")
 	Assert(t, err != nil, "No error returned while authenticating with wrong password")
-
-	deleteAuthenticationPolicy()
-
 }
 
 func TestIncorrectUserAuthentication(t *testing.T) {
 	policy := createDefaultAuthenticationPolicy()
+	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator
-	authenticator := NewLdapAuthenticator(apicl, policy.Spec.Authenticators.GetLdap())
+	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(UserCredential{Username: "test1", Password: "password"})
+	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: "test1", Password: "password"})
 
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned while authenticating with incorrect username")
 	Assert(t, err != nil, "No error returned while authenticating with incorrect username")
 	Assert(t, err == ErrNoneOrMultipleUserEntries, "Incorrect error type returned")
 
-	deleteAuthenticationPolicy()
 }
 
 func TestMissingLdapAttributeMapping(t *testing.T) {
-	policy := createAuthenticationPolicy(&auth.Ldap{
+	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Url:     ldapURL,
 		TLSOptions: &auth.TLSOptions{
@@ -323,21 +267,20 @@ func TestMissingLdapAttributeMapping(t *testing.T) {
 		BindDN:       bindDN,
 		BindPassword: bindPassword,
 	})
+	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator
-	authenticator := NewLdapAuthenticator(apicl, policy.Spec.Authenticators.GetLdap())
+	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(UserCredential{Username: testUser, Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Missing LDAP Attribute Mapping")
 	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Missing LDAP Attribute Mapping")
-
-	deleteAuthenticationPolicy()
 }
 
 func TestIncorrectLdapAttributeMapping(t *testing.T) {
-	policy := createAuthenticationPolicy(&auth.Ldap{
+	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Url:     ldapURL,
 		TLSOptions: &auth.TLSOptions{
@@ -353,21 +296,20 @@ func TestIncorrectLdapAttributeMapping(t *testing.T) {
 			GroupObjectClass: "groupOfNames",
 		},
 	})
+	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator
-	authenticator := NewLdapAuthenticator(apicl, policy.Spec.Authenticators.GetLdap())
+	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(UserCredential{Username: testUser, Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect LDAP Attribute Mapping")
 	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect LDAP Attribute Mapping")
-
-	deleteAuthenticationPolicy()
 }
 
 func TestIncorrectBaseDN(t *testing.T) {
-	policy := createAuthenticationPolicy(&auth.Ldap{
+	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Url:     ldapURL,
 		TLSOptions: &auth.TLSOptions{
@@ -383,21 +325,20 @@ func TestIncorrectBaseDN(t *testing.T) {
 			GroupObjectClass: groupObjectClassAttribute,
 		},
 	})
+	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator
-	authenticator := NewLdapAuthenticator(apicl, policy.Spec.Authenticators.GetLdap())
+	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(UserCredential{Username: testUser, Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect Base DN")
 	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect Base DN")
-
-	deleteAuthenticationPolicy()
 }
 
 func TestIncorrectBindPassword(t *testing.T) {
-	policy := createAuthenticationPolicy(&auth.Ldap{
+	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Url:     ldapURL,
 		TLSOptions: &auth.TLSOptions{
@@ -413,21 +354,20 @@ func TestIncorrectBindPassword(t *testing.T) {
 			GroupObjectClass: groupObjectClassAttribute,
 		},
 	})
+	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator
-	authenticator := NewLdapAuthenticator(apicl, policy.Spec.Authenticators.GetLdap())
+	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(UserCredential{Username: testUser, Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect Bind Password")
 	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect Bind Password")
-
-	deleteAuthenticationPolicy()
 }
 
 func TestDisabledLdapAuthenticator(t *testing.T) {
-	policy := createAuthenticationPolicy(&auth.Ldap{
+	policy := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: false,
 		Url:     ldapURL,
 		TLSOptions: &auth.TLSOptions{
@@ -443,15 +383,14 @@ func TestDisabledLdapAuthenticator(t *testing.T) {
 			GroupObjectClass: groupObjectClassAttribute,
 		},
 	})
+	defer DeleteAuthenticationPolicy(apicl)
 
 	// create ldap authenticator
-	authenticator := NewLdapAuthenticator(apicl, policy.Spec.Authenticators.GetLdap())
+	authenticator := NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(UserCredential{Username: testUser, Password: testPassword})
+	autheduser, ok, err := authenticator.Authenticate(&authn.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned with disabled LDAP authenticator")
 	AssertOk(t, err, "Error returned with disabled LDAP authenticator")
-
-	deleteAuthenticationPolicy()
 }
