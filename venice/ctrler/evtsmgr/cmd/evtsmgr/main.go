@@ -6,10 +6,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // main (command source) for events manager
@@ -28,11 +30,10 @@ func main() {
 			"Path of the log file",
 		)
 
-		//FIXME: read elastic address using resolver
-		elasticURL = flag.String(
-			"elastic-url",
-			"",
-			"Elasticsearch server address",
+		resolverURLs = flag.String(
+			"resolver-urls",
+			":"+globals.CMDResolverPort,
+			"comma separated list of resolver URLs of the form 'ip:port'",
 		)
 
 		listenURL = flag.String(
@@ -63,9 +64,14 @@ func main() {
 
 	logger := log.SetConfig(config)
 
+	// create resolver client
+	resolverClient := resolver.New(&resolver.Config{
+		Name:    globals.EvtsMgr,
+		Servers: strings.Split(*resolverURLs, ",")})
+
 	// create the controller
-	emgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr,
-		*listenURL, *elasticURL, logger)
+	emgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, *listenURL,
+		resolverClient, logger)
 	if err != nil {
 		log.Fatalf("error creating events manager instance: %v", err)
 	}

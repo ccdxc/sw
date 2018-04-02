@@ -323,6 +323,12 @@ var k8sModules = map[string]protos.Module{
 						//"xpack.security.enabled": "false",
 						"ES_JAVA_OPTS": "-Xms256m -Xmx256m",
 					},
+					Services: []*protos.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.ElasticSearch,
+							Port: runtime.MustUint32(globals.ElasticsearchRESTPort),
+						},
+					},
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
@@ -391,6 +397,36 @@ var k8sModules = map[string]protos.Module{
 							Name: globals.Spyglass,
 							Port: runtime.MustUint32(globals.SpyglassRPCPort),
 						},
+					},
+				},
+			},
+			Volumes: []*protos.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	},
+	globals.EvtsMgr: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.EvtsMgr,
+		},
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_DaemonSet,
+			Submodules: []*protos.ModuleSpec_Submodule{
+				{
+					Name:  globals.EvtsMgr,
+					Image: globals.EvtsMgr,
+					Services: []*protos.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.EvtsMgr,
+							Port: runtime.MustUint32(globals.EvtsMgrRPCPort),
+						},
+					},
+					Args: []string{
+						"-resolver-urls", "$RESOLVER_URLS",
 					},
 				},
 			},

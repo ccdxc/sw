@@ -44,6 +44,10 @@ function createTpmContainer() {
     docker build --rm --no-cache -t pen-tpm:latest -f tools/docker-files/tpm/Dockerfile tools/docker-files/tpm
 }
 
+function createEvtsmgrContainer() {
+    docker build --rm --no-cache -t pen-evtsmgr:latest -f tools/docker-files/evtsmgr/Dockerfile tools/docker-files/evtsmgr
+}
+
 function createBinContainerTarBall() {
     staticimages="registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.7.14 \
         registry.test.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.7.14 \
@@ -61,7 +65,7 @@ function createBinContainerTarBall() {
     mkdir -p bin/tars
     dynamicimages="pen-cmd:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest \
         pen-npm:latest pen-vcsim:latest pen-netagent:latest pen-nmd:latest pen-collector:latest \
-        pen-tpm:latest pen-spyglass:latest"
+        pen-tpm:latest pen-spyglass:latest pen-evtsmgr:latest"
     for i in $staticimages $dynamicimages
     do
         # i is registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
@@ -90,6 +94,7 @@ case $1 in
     collector) createCollectorContainer;;
     tpm) createTpmContainer;;
     spyglass) createSpyglassContainer;;
+    evtsmgr) createEvtsmgrContainer;;
     createBinContainerTarBall) createBinContainerTarBall;;
     startCluster) startCluster;;
     stopCluster) stopCluster ;;

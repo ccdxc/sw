@@ -3,7 +3,6 @@
 package testutils
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"sync"
@@ -100,7 +99,7 @@ func (m *MockServer) Stop() {
 	m.wg.Wait()
 }
 
-// URL returns the listen URL
+// URL returns the listen URL IP:Port
 func (m *MockServer) URL() string {
-	return fmt.Sprintf("http://%s", m.listener.Addr().String())
+	return m.listener.Addr().String()
 }

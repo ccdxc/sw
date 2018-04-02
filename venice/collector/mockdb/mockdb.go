@@ -59,7 +59,7 @@ func (i *MockTSDB) Setup() (string, error) {
 	i.ms.AddHandler("/write", "POST", n.MakeHTTPHandler(n.RestAPIFunc(testWriter)))
 	go i.ms.Start()
 
-	i.URL = i.ms.URL()
+	i.URL = fmt.Sprintf("http://%s", i.ms.URL())
 	log.Infof("server started {%+v}", i.URL)
 	return i.URL, nil
 }

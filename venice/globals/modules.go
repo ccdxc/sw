@@ -13,7 +13,7 @@ const (
 	Collector             = "pen-collector"
 	EvtsMgr               = "pen-evtsmgr"
 	Spyglass              = "pen-spyglass"
-	ElasticSearch         = "pen-elasticsearch"
+	ElasticSearch         = "pen-elastic"
 	KubeAPIServer         = "pen-kube-apiserver"
 	KubeScheduler         = "pen-kube-scheduler"
 	KubeControllerManager = "pen-kube-controller-manager"

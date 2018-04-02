@@ -30,8 +30,10 @@ func TestMockElasticServer(t *testing.T) {
 	mes.Start()
 	defer mes.Stop()
 
+	elasticURL := fmt.Sprintf("http://%s", mes.GetElasticURL())
+
 	// create a new elastic client using the mock server address
-	client, err := elastic.NewClient(mes.GetElasticURL(), nil)
+	client, err := elastic.NewClient(elasticURL, nil)
 	tu.AssertOk(t, err, "failed to create client")
 
 	ctx := context.Background()
