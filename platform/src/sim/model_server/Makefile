@@ -34,6 +34,7 @@ LIBRARIES = \
 	-lsimlib \
 	-lsimdev \
 	-lpciehsvc \
+	-lpcieport \
 	-lpciehw \
 	-lpcietlp \
 	-lintrutils \
