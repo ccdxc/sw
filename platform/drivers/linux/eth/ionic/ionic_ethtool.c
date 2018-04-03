@@ -54,6 +54,8 @@ static int ionic_set_coalesce(struct net_device *netdev,
 			      struct ethtool_coalesce *coalesce)
 {
 	struct lif *lif = netdev_priv(netdev);
+	union identity *ident = lif->ionic->ident;
+	u32 tx_coal, rx_coal;
 	unsigned int i;
 
 	if (coalesce->rx_max_coalesced_frames ||
@@ -78,21 +80,28 @@ static int ionic_set_coalesce(struct net_device *netdev,
 	    coalesce->rate_sample_interval)
 		return -EINVAL;
 
-	if (coalesce->tx_coalesce_usecs > INTR_CTRL_COAL_MAX ||
-	    coalesce->rx_coalesce_usecs > INTR_CTRL_COAL_MAX)
+	if (ident->dev.intr_coal_div == 0)
+		return -EIO;
+
+	/* Convert from usecs to device units */
+
+	tx_coal = coalesce->tx_coalesce_usecs * ident->dev.intr_coal_mult /
+		  ident->dev.intr_coal_div;
+	rx_coal = coalesce->rx_coalesce_usecs * ident->dev.intr_coal_mult /
+		  ident->dev.intr_coal_div;
+
+	if (tx_coal > INTR_CTRL_COAL_MAX || rx_coal > INTR_CTRL_COAL_MAX)
 		return -ERANGE;
 
 	if (coalesce->tx_coalesce_usecs != lif->tx_coalesce_usecs) {
 		for (i = 0; i < lif->ntxqcqs; i++)
-			ionic_intr_coal_set(&lif->txqcqs[i]->intr,
-					    coalesce->tx_coalesce_usecs);
+			ionic_intr_coal_set(&lif->txqcqs[i]->intr, tx_coal);
 		lif->tx_coalesce_usecs = coalesce->tx_coalesce_usecs;
 	}
 
 	if (coalesce->rx_coalesce_usecs != lif->rx_coalesce_usecs) {
 		for (i = 0; i < lif->nrxqcqs; i++)
-			ionic_intr_coal_set(&lif->rxqcqs[i]->intr,
-					    coalesce->rx_coalesce_usecs);
+			ionic_intr_coal_set(&lif->rxqcqs[i]->intr, rx_coal);
 		lif->rx_coalesce_usecs = coalesce->rx_coalesce_usecs;
 	}
 

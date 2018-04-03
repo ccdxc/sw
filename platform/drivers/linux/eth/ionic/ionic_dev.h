@@ -93,16 +93,21 @@ struct doorbell {
 /**
  * struct intr_ctrl - Interrupt control register
  * @coalescing_init:  Coalescing timer initial value, in
- *                    microseconds.  When an interrupt is sent
- *                    the interrupt coalescing timer current
- *                    value (@coalescing_curr) is initialized with
- *                    this value and begins counting down.  No
- *                    more interrupts are sent until the
- *                    coalescing timer reaches 0.  When
- *                    @coalescing_init=0 interrupt coalescing is
- *                    effectively disabled and every interrupt
- *                    assert results in an interrupt.  Reset
- *                    value: 0.
+ *                    device units.  Use @identity->intr_coal_mult
+ *                    and @identity->intr_coal_div to convert from
+ *                    usecs to device units:
+ *
+ *                      coal_init = coal_usecs * coal_mutl / coal_div
+ *
+ *                    When an interrupt is sent the interrupt
+ *                    coalescing timer current value
+ *                    (@coalescing_curr) is initialized with this
+ *                    value and begins counting down.  No more
+ *                    interrupts are sent until the coalescing
+ *                    timer reaches 0.  When @coalescing_init=0
+ *                    interrupt coalescing is effectively disabled
+ *                    and every interrupt assert results in an
+ *                    interrupt.  Reset value: 0.
  * @mask:             Interrupt mask.  When @mask=1 the interrupt
  *                    resource will not send an interrupt.  When
  *                    @mask=0 the interrupt resource will send an

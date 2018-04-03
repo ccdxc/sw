@@ -216,11 +216,11 @@ void ionic_intr_mask(struct intr *intr, bool mask)
 	(void)ioread32(intr_to_mask(intr->ctrl)); /* flush write */
 }
 
-void ionic_intr_coal_set(struct intr *intr, u32 coal_usecs)
+void ionic_intr_coal_set(struct intr *intr, u32 intr_coal)
 {
 	struct intr_ctrl ctrl = {
-		.coalescing_init = coal_usecs > INTR_CTRL_COAL_MAX ?
-			INTR_CTRL_COAL_MAX : coal_usecs,
+		.coalescing_init = intr_coal > INTR_CTRL_COAL_MAX ?
+			INTR_CTRL_COAL_MAX : intr_coal,
 	};
 
 	iowrite32(*(u32 *)intr_to_coal(&ctrl), intr_to_coal(intr->ctrl));

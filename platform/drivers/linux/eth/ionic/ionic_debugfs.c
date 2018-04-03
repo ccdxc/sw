@@ -307,6 +307,8 @@ static int identity_show(struct seq_file *seq, void *v)
 	seq_printf(seq, "nintrs:           %d\n", ident->dev.nintrs);
 	seq_printf(seq, "nucasts_per_lif:  %d\n", ident->dev.nucasts_per_lif);
 	seq_printf(seq, "nmcasts_per_lif:  %d\n", ident->dev.nmcasts_per_lif);
+	seq_printf(seq, "intr_coal_mult:   %d\n", ident->dev.intr_coal_mult);
+	seq_printf(seq, "intr_coal_div:    %d\n", ident->dev.intr_coal_div);
 
 	return 0;
 }

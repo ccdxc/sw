@@ -212,6 +212,14 @@ enum os_type {
  *                        supported
  *     @nmcasts_per_lif:  Number of perfect multicast addresses
  *                        supported.
+ *     @intr_coal_mult:   Interrupt coalescing multiplication factor.
+ *                        Scale user-supplied interrupt coalescing
+ *                        value in usecs to device units using:
+ *                           device units = usecs * mult / div
+ *     @intr_coal_div:    Interrupt coalescing division factor.
+ *                        Scale user-supplied interrupt coalescing
+ *                        value in usecs to device units using:
+ *                           device units = usecs * mult / div
  */
 union identity {
 	struct {
@@ -240,6 +248,8 @@ union identity {
 		u32 nintrs;
 		u32 nucasts_per_lif;
 		u32 nmcasts_per_lif;
+		u32 intr_coal_mult;
+		u32 intr_coal_div;
 	} dev;
 	u32 words[1024];
 };
