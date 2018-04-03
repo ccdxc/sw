@@ -26,7 +26,7 @@ pcieport_mac_k_gen(pcieport_t *p)
     gen &= 0xffffffff00000000ULL;
     gen |= 0x80e20254; /* XXX replace hard-coded value? */
 
-    switch (p->width) {
+    switch (p->cap_width) {
     case 1: gen |= (0xf << 24); break;
     case 2: gen |= (0xe << 24); break;
     case 4: gen |= (0xc << 24); break;
@@ -179,17 +179,17 @@ pcieport_cmd_hostconfig(pcieport_t *p, void *arg)
     pcieport_hostconfig_t *pcfg = arg;
 
     if (pcfg) {
-        p->gen = pcfg->gen;
-        p->width = pcfg->width;
+        p->cap_gen = pcfg->gen;
+        p->cap_width = pcfg->width;
         p->subvendorid = pcfg->subvendorid;
         p->subdeviceid = pcfg->subdeviceid;
     }
 
-    if (p->gen == 0) {
-        p->gen = 4;
+    if (p->cap_gen == 0) {
+        p->cap_gen = pal_is_asic() ? 4 : 1;
     }
-    if (p->width == 0) {
-        p->width = 4;
+    if (p->cap_width == 0) {
+        p->cap_width = pal_is_asic() ? 4 : 4;
     }
     if (p->subvendorid == 0) {
         p->subvendorid = PCI_VENDOR_ID_PENSANDO;
@@ -198,7 +198,7 @@ pcieport_cmd_hostconfig(pcieport_t *p, void *arg)
         p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
     }
 
-    /* fpga config x4 */
+    /* XXX fpga config x4 */
     p->lanemask = 0xf << (p->port << 1);
 
     p->host = 1;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2018, Pensando Systems Inc.
  */
 
 #ifndef __PCIEPORT_H__
@@ -11,6 +11,8 @@ extern "C" {
 } /* close to calm emacs autoindent */
 #endif
 #endif
+
+#include "pcieport_events.h"
 
 struct pcieport_s;
 typedef struct pcieport_s pcieport_t;

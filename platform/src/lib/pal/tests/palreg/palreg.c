@@ -9,7 +9,6 @@
 #include <inttypes.h>
 #include <assert.h>
 
-#include "misc.h"
 #include "pal.h"
 
 #define pal_readreg32(pr, pa, v) \

@@ -9,6 +9,8 @@
 #include "cap_pxb_c_hdr.h"
 #include "cap_pp_c_hdr.h"
 
+#include "events.h"
+
 typedef enum pcieportst_e {
     PCIEPORTST_OFF,
     PCIEPORTST_DOWN,
@@ -32,8 +34,10 @@ typedef enum pcieportev_e {
 
 struct pcieport_s {
     int port;
-    int gen;
-    int width;
+    int cap_gen;
+    int cap_width;
+    int cur_gen;
+    int cur_width;
     u_int16_t lanemask;
     u_int16_t subvendorid;
     u_int16_t subdeviceid;
@@ -45,7 +49,7 @@ struct pcieport_s {
     pcieportev_t event;
     char fault_reason[80];
     char last_fault_reason[80];
-    u_int64_t linkup;
+    u_int64_t hostup;
     u_int64_t phypolllast;
     u_int64_t phypollmax;
     u_int64_t phypollperstn;
@@ -67,6 +71,13 @@ struct pcieport_info_s {
 typedef struct pcieport_info_s pcieport_info_t;
 
 extern pcieport_info_t pcieport_info;
+
+static inline pcieport_info_t *
+pcieport_info_get(void)
+{
+    extern pcieport_info_t pcieport_info;
+    return &pcieport_info;
+}
 
 int pcieport_config(pcieport_t *p);
 void pcieport_fsm(pcieport_t *p, pcieportev_t ev);
@@ -110,5 +121,13 @@ void pcieport_fsm_dbg(int argc, char *argv[]);
 /* sta_rst flags */
 #define STA_RSTF_(REG) \
     (CAP_PXC_CSR_STA_C_PORT_RST_ ##REG## _FIELD_MASK)
+
+/* sta_mac flags */
+#define STA_MACF_(REG) \
+    (CAP_PXC_CSR_STA_C_PORT_MAC_ ##REG## _FIELD_MASK)
+
+/* cfg_mac flags */
+#define CFG_MACF_(REG) \
+    (CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_ ##REG## _FIELD_MASK)
 
 #endif /* __PCIEPORT_IMPL_H__ */

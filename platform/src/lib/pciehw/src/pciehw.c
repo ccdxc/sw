@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -14,6 +14,7 @@
 
 #include "misc.h"
 #include "pal.h"
+#include "pcieport.h"
 #include "pciehost.h"
 #include "cfgspace.h"
 #include "pciehw.h"
@@ -211,10 +212,68 @@ pciehw_init(pciehw_t *phw)
     pciehw_vfstride_init(phw);
     pciehw_tgt_port_init(phw);
     pciehw_itr_port_init(phw);
-    pciehw_hdrt_init(phw);
+    pciehw_hdrt_init();
     pciehw_portmap_init(phw);
     pciehw_notify_init(phw);
     pciehw_indirect_init(phw);
+}
+
+typedef void (*pciehw_cb_t)(pciehwdev_t *phwdev, void *cbarg);
+
+void
+pciehw_foreach(int port, pciehw_cb_t cb, void *cbarg)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    pciehwdevh_t phwdevh;
+    pciehwdev_t *phwdev;
+
+    /*
+     * XXX Use better data structures for per-port searches.
+     */
+    phwdev = &phwmem->dev[1];
+    for (phwdevh = 1; phwdevh <= phwmem->allocdev; phwdevh++, phwdev++) {
+        if (phwdev->port == port) {
+            cb(phwdev, cbarg);
+        }
+    }
+}
+
+static void
+pciehw_hostup(pciehwdev_t *phwdev, void *arg)
+{
+    if (phwdev->lif_valid) {
+        pciehw_hdrt_load(phwdev->lif, phwdev->bdf);
+    }    
+}
+
+static void
+pciehw_hostdn(pciehwdev_t *phwdev, void *arg)
+{
+    pciehw_intr_reset(phwdev);
+    if (phwdev->lif_valid) {
+        pciehw_hdrt_unload(phwdev->lif);
+    }    
+    /* XXX reset cfg/bars */
+}
+
+static void
+pciehw_port_event_handler(pcieport_event_t *ev, void *arg)
+{
+    switch (ev->type) {
+    case PCIEPORT_EVENT_HOSTUP: {
+        const int port = ev->hostup.port;
+        pciehw_foreach(port, pciehw_hostup, NULL);
+        break;
+    }
+    case PCIEPORT_EVENT_HOSTDN: {
+        const int port = ev->hostdn.port;
+        pciehw_foreach(port, pciehw_hostdn, NULL);
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 int
@@ -255,6 +314,12 @@ pciehw_open(pciehw_params_t *hwparams)
         pciehw_closeregs(phw);
         pciehw_closemem(phw);
         return -ENOEXEC;
+    }
+
+    if (pcieport_register_event_handler(pciehw_port_event_handler, NULL) < 0) {
+        pciehw_closeregs(phw);
+        pciehw_closemem(phw);
+        return -EINVAL;
     }
 
     if (phw->hwparams.inithw) {
@@ -304,10 +369,12 @@ pciehw_initialize_topology(const u_int8_t port)
 
     if (phwmem) {
         /* XXX these are global, not per-port */
-        phwmem->allocdev = 0;
-        phwmem->allocprt = 0;
+        if (phw->hwparams.inithw) {
+            phwmem->allocdev = 0;
+            phwmem->allocprt = 0;
 
-        phwmem->rooth[port] = 0;
+            phwmem->rooth[port] = 0;
+        }
     }
 }
 
@@ -419,10 +486,13 @@ pciehw_finalize_dev(pciehdev_t *pdev)
      * need to add to hw tables to virtualize.
      */
     if (parent) {
-        /* bar first, the cfg below */
+        /* bar first, then cfg below */
         pciehw_bar_finalize(pdev);
         if (phwdev->lif_valid) {
-            pciehw_hdrt_load(phw, phwdev->lif, phwdev->bdf);
+            /*
+             * We'll load hdrt when the link comes up.
+             * pciehw_hdrt_load(phwdev->lif, phwdev->bdf);
+             */
             pciehw_portmap_load(phw, phwdev->lif, phwdev->port);
         }
     }

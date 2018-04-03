@@ -86,55 +86,73 @@ pcieport_clear_fault(pcieport_t *p)
     }
 }
 
+static int
+pcieport_drain(pcieport_t *p)
+{
+    if (pcieport_tgt_marker_rx_wait(p) < 0) {
+        pciehsys_error("port%d: port tgt_marker_rx failed\n", p->port);
+        return -1;
+    }
+    if (pcieport_tgt_axi_pending_wait(p) < 0) {
+        pciehsys_error("port%d: port tgt_axi_pending failed\n", p->port);
+        return -1;
+    }
+    return 0;
+}
+
+static void
+pcieport_buschg(pcieport_t *p)
+{
+}
+
+static void
+pcieport_hostup(pcieport_t *p)
+{
+    p->hostup++;
+    pcieport_event_hostup(p);
+}
+
+static void
+pcieport_hostdn(pcieport_t *p)
+{
+    pcieport_event_hostdn(p);
+}
+
 static void
 pcieport_linkup(pcieport_t *p)
 {
-    p->linkup++;
+    if (pcieport_gate_open(p) < 0) {
+        pcieport_fault(p, "gate_open failed");
+        return;
+    }
+    pcieport_set_crs(p, p->crs);
 }
 
 static void
 pcieport_linkdn(pcieport_t *p)
 {
-    /* XXX need link down event */
+    pcieport_set_crs(p, 1);
 }
 
-static int
-pcieport_drain(pcieport_t *p)
-{
-    if (pcieport_tgt_marker_rx_wait(p) < 0) {
-        pcieport_fault(p, "port tgt_marker_rx failed");
-        return -1;
-    }
-    if (pcieport_tgt_axi_pending_wait(p) < 0) {
-        pcieport_fault(p, "port tgt_axi_pending failed");
-        return -1;
-    }
-    return 0;
-}
-
-static int
+static void
 pcieport_macup(pcieport_t *p)
 {
-    if (pcieport_gate_open(p) < 0) {
-        pcieport_fault(p, "portgate open failed");
-        return -1;
-    }
-    return 0;
 }
 
-static int
+static void
 pcieport_macdn(pcieport_t *p)
 {
     pcieport_clear_fault(p);
     if (pcieport_drain(p) < 0) {
-        return -1;
+        pcieport_fault(p, "drain failed");
+        return;
     }
-    return 0;
 }
 
 static void
 fsm_nop(pcieport_t *p)
 {
+    /* nothing to do here, move along... */
 }
 
 static void
@@ -146,51 +164,50 @@ fsm_inv(pcieport_t *p)
 static void
 fsm_macup(pcieport_t *p)
 {
-    if (pcieport_macup(p) < 0) {
-        return;
-    }
     p->state = PCIEPORTST_MACUP;
+    pcieport_macup(p);
 }
 
 static void
 fsm_macdn(pcieport_t *p)
 {
-    if (pcieport_macdn(p) < 0) {
-        return;
-    }
     p->state = PCIEPORTST_DOWN;
+    pcieport_macdn(p);
 }
 
 static void
 fsm_linkup(pcieport_t *p)
 {
-    pcieport_set_crs(p, p->crs);
     p->state = PCIEPORTST_LINKUP;
+    pcieport_linkup(p);
 }
 
 static void
 fsm_linkdn(pcieport_t *p)
 {
     p->state = PCIEPORTST_MACUP;
+    pcieport_linkdn(p);
 }
 
 static void
 fsm_up_linkdn(pcieport_t *p)
 {
-    pcieport_linkdn(p);
     p->state = PCIEPORTST_MACUP;
+    pcieport_hostdn(p);
+    pcieport_linkdn(p);
 }
 
 static void
 fsm_up(pcieport_t *p)
 {
-    pcieport_linkup(p);
     p->state = PCIEPORTST_UP;
+    pcieport_hostup(p);
 }
 
 static void
 fsm_buschg(pcieport_t *p)
 {
+    pcieport_buschg(p);
 }
 
 #define NOP fsm_nop

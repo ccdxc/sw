@@ -7,6 +7,7 @@
 
 void pciehw_intrhw_init(pciehw_t *phw);
 void pciehw_intr_init(pciehwdev_t *phwdev);
+void pciehw_intr_reset(pciehwdev_t *phwdev);
 void pciehw_intr_config(pciehwdev_t *phwdev,
                         const int legacy, const int fmask);
 

@@ -33,9 +33,9 @@ typedef struct {
     u_int64_t rsrv      :60;
 } __attribute__((packed)) hdrt_t;
 
-void pciehw_hdrt_init(pciehw_t *phw);
-int pciehw_hdrt_load(pciehw_t *phw, const u_int32_t lif, const u_int16_t bdf);
-int pciehw_hdrt_unload(pciehw_t *phw, const u_int32_t lif);
+void pciehw_hdrt_init(void);
+int pciehw_hdrt_load(const u_int32_t lif, const u_int16_t bdf);
+int pciehw_hdrt_unload(const u_int32_t lif);
 void pciehw_hdrt_dbg(int argc, char *argv[]);
 
 #endif /* __HDRT_H__ */

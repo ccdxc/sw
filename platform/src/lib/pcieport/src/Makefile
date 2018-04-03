@@ -5,6 +5,7 @@
 LIBRARY = libpcieport.a libpcieport.so
 SOURCES = \
 	pcieport.c \
+	events.c \
 	ctrl.c \
 	intr.c \
 	fsm.c \

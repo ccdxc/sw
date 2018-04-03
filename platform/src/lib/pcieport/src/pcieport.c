@@ -120,7 +120,8 @@ cmd_port(int argc, char *argv[])
     }
 
     p = &pi->pcieport[port];
-    pciehsys_log("%-*s: gen%dx%d\n", w, "config", p->gen, p->width);
+    pciehsys_log("%-*s: cap gen%dx%d\n", w, "config", p->cap_gen,p->cap_width);
+    pciehsys_log("%-*s: cur gen%dx%d\n", w, "current",p->cur_gen,p->cur_width);
     pciehsys_log("%-*s: 0x%04x\n", w, "lanemask", p->lanemask);
     pciehsys_log("%-*s: 0x%04x\n", w, "subvendorid", p->subvendorid);
     pciehsys_log("%-*s: 0x%04x\n", w, "subdeviceid", p->subdeviceid);
@@ -131,7 +132,7 @@ cmd_port(int argc, char *argv[])
     pciehsys_log("%-*s: %d\n", w, "event", p->event);
     pciehsys_log("%-*s: %s\n", w, "fault_reason", p->fault_reason);
     pciehsys_log("%-*s: %s\n", w, "last_fault_reason", p->last_fault_reason);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "linkup", p->linkup);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "hostup", p->hostup);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "phypolllast", p->phypolllast);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "phypollmax", p->phypollmax);
     pciehsys_log("%-*s: %"PRIu64"\n", w, "phypollperstn", p->phypollperstn);

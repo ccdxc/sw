@@ -6,18 +6,11 @@ PROGRAM = palreg
 SOURCES = palreg.c
 
 LCFLAGS = \
-	-I ../../../misc/include \
 	-I ../../../pal/include \
 	$(NULL)
 
 LIBRARIES = \
 	-lpal \
-	-lmisc \
-	-lpciehost \
-	-lcfgspace \
-	-lpciehw \
-	-lintrutils \
-	-lpcietlp \
 	$(NULL)
 
 TOPDIR = ../../../../..

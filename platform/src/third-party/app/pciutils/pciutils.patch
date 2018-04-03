@@ -236,7 +236,7 @@ diff -uprN pciutils-3.5.6-orig/lib/pen-libpciehost.c pciutils-3.5.6/lib/pen-libp
 diff -uprN pciutils-3.5.6-orig/Makefile pciutils-3.5.6/Makefile
 --- pciutils-3.5.6-orig/Makefile	2017-11-17 05:00:27.000000000 -0800
 +++ pciutils-3.5.6/Makefile	2018-02-10 23:05:23.232755294 -0800
-@@ -87,6 +87,27 @@ common.o: common.c pciutils.h $(PCIINC)
+@@ -87,6 +87,28 @@ common.o: common.c pciutils.h $(PCIINC)
  lspci: LDLIBS+=$(LIBKMOD_LIBS)
  ls-kernel.o: CFLAGS+=$(LIBKMOD_CFLAGS)
  
@@ -247,6 +247,7 @@ diff -uprN pciutils-3.5.6-orig/Makefile pciutils-3.5.6/Makefile
 +LIBPCIE = \
 +	$(LIBPCIEDIR)/libpciehsvc.a \
 +	$(LIBPCIEDIR)/libpciehw.a \
++	$(LIBPCIEDIR)/libpcieport.a \
 +	$(LIBPCIEDIR)/libpcietlp.a \
 +	$(LIBPCIEDIR)/libpciehost.a \
 +	$(LIBPCIEDIR)/libcfgspace.a \

@@ -13,11 +13,6 @@ LCFLAGS = \
 LIBRARIES = \
 	-lpal \
 	-lmisc \
-	-lpciehost \
-	-lcfgspace \
-	-lpciehw \
-	-lintrutils \
-	-lpcietlp \
 	$(NULL)
 
 TOPDIR = ../../../../..

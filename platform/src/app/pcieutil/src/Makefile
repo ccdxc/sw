@@ -5,6 +5,8 @@
 PROGRAM = pcieutil
 SOURCES = pcieutil.cc
 LCFLAGS = \
+	-I $(ASIC_ROOT)/capri/model/cap_top \
+	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
 	-I ../../../../src/lib/pal/include \
 	$(NULL)
 

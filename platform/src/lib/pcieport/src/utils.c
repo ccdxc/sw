@@ -11,7 +11,6 @@
 #include <inttypes.h>
 
 #include "pal.h"
-#include "pciehsys.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
@@ -34,9 +33,10 @@ pcieport_get_tgt_marker_rx(pcieport_t *p)
  * the port logic inserts a marker into the port transaction
  * pipeline.  When the marker is received at the end of the pipe
  * we know the pipeline has been flushed and all pending transactions
- * have been process.  The hardware logic sets the tgt_marker_rx bit
+ * have been processed.  The hardware logic sets the tgt_marker_rx bit
  * for the port when the marker is received at the end of the pipeline.
  * We wait here for the indication that the tgt marker has been received.
+ *
  * If we busy wait and block the cpu (as we currently do) we must be
  * sure that no transactions in the pipeline require the cpu to complete
  * them, such as indirect transactions, or we will deadlock and wait
@@ -147,17 +147,15 @@ pcieport_gate_open(pcieport_t *p)
 void
 pcieport_set_crs(pcieport_t *p, const int on)
 {
-    const int pn = p->port;
-    u_int32_t reg = pal_reg_rd32(PXC_(CFG_C_PORT_MAC, pn));
-#define CFG_RETRY_EN \
-    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_0_2_CFG_RETRY_EN_FIELD_MASK
+    const u_int64_t cfg_mac_reg = PXC_(CFG_C_PORT_MAC, p->port);
+    u_int32_t cfg_mac = pal_reg_rd32(cfg_mac_reg);
 
     if (on) {
-        reg |= CFG_RETRY_EN;
+        cfg_mac |= CFG_MACF_(0_2_CFG_RETRY_EN);
     } else {
-        reg &= ~CFG_RETRY_EN;
+        cfg_mac &= ~CFG_MACF_(0_2_CFG_RETRY_EN);
     }
-    pal_reg_wr32(PXC_(CFG_C_PORT_MAC, pn), reg);
+    pal_reg_wr32(cfg_mac_reg, cfg_mac);
 }
 
 /*

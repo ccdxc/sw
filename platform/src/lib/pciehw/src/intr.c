@@ -113,16 +113,32 @@ swizzle_intx_pin(pciehwdev_t *phwdev)
     return (swizzle_intx_pin(parent_hwdev) + d) % 4;
 }
 
+/*
+ * Reset intrs to default state.
+ *
+ *     clear any pending intrs/pba
+ *     reset to legacy intr
+ *     set driver mask, clear mask_on_assert
+ *     msix config is reset
+ */
+void
+pciehw_intr_reset(pciehwdev_t *phwdev)
+{
+    init_intr_pba(phwdev);
+    init_intr_fwcfg(phwdev);
+    init_intr_drvcfg(phwdev);
+    init_intr_msixcfg(phwdev);
+}
+
 void
 pciehw_intr_init(pciehwdev_t *phwdev)
 {
+    /* setup/config */
     phwdev->intpin = swizzle_intx_pin(phwdev);
-
     init_intr_pba_cfg(phwdev);
-    init_intr_fwcfg(phwdev);
-    init_intr_pba(phwdev);
-    init_intr_drvcfg(phwdev);
-    init_intr_msixcfg(phwdev);
+
+    /* return intr resources to default reset state */
+    pciehw_intr_reset(phwdev);
 }
 
 void

@@ -14,6 +14,7 @@ LCFLAGS = \
 LIBRARIES = \
 	-lpciehsvc \
 	-lpciehw \
+	-lpcieport \
 	-lpcietlp \
 	-lintrutils \
 	-lpal \

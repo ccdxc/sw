@@ -31,6 +31,7 @@ LCFLAGS += \
 	-I ../../pal/include \
 	-I ../../pcietlp/include \
 	-I ../../cfgspace/include \
+	-I ../../pcieport/include \
 	-I ../../pciehost/include \
 	-I ../include \
 	$(NULL)

@@ -34,25 +34,25 @@ hdrt_addr(const u_int32_t lif)
 }
 
 static void
-hdrt_get(pciehw_t *phw, const u_int32_t lif, hdrt_t *hdrt)
+hdrt_get(const u_int32_t lif, hdrt_t *hdrt)
 {
     pal_reg_rd32w(hdrt_addr(lif), (u_int32_t *)hdrt, HDRT_NWORDS);
 }
 
 static void
-hdrt_set(pciehw_t *phw, const u_int32_t lif, const hdrt_t *hdrt)
+hdrt_set(const u_int32_t lif, const hdrt_t *hdrt)
 {
     pal_reg_wr32w(hdrt_addr(lif), (u_int32_t *)hdrt, HDRT_NWORDS);
 }
 
 static void
-hdrt_set_itr(pciehw_t *phw, const u_int32_t lif, const u_int16_t bdf)
+hdrt_set_itr(const u_int32_t lif, const u_int16_t bdf)
 {
     hdrt_t h = { 0 };
 
     h.valid = 1;
     h.bdf = bdf;
-    hdrt_set(phw, lif, &h);
+    hdrt_set(lif, &h);
 }
 
 /******************************************************************
@@ -60,28 +60,28 @@ hdrt_set_itr(pciehw_t *phw, const u_int32_t lif, const u_int16_t bdf)
  */
 
 int
-pciehw_hdrt_load(pciehw_t *phw, const u_int32_t lif, const u_int16_t bdf)
+pciehw_hdrt_load(const u_int32_t lif, const u_int16_t bdf)
 {
-    hdrt_set_itr(phw, lif, bdf);
+    hdrt_set_itr(lif, bdf);
     return 0;
 }
 
 int
-pciehw_hdrt_unload(pciehw_t *phw, const u_int32_t lif)
+pciehw_hdrt_unload(const u_int32_t lif)
 {
-    hdrt_t h = { 0 };
-    hdrt_set(phw, lif, &h);
+    const hdrt_t h = { 0 };
+    hdrt_set(lif, &h);
     return 0;
 }
 
 void
-pciehw_hdrt_init(pciehw_t *phw)
+pciehw_hdrt_init(void)
 {
-    hdrt_t h = { 0 };
+    const hdrt_t h = { 0 };
     int i;
 
     for (i = 0; i < hdrt_size(); i++) {
-        hdrt_set(phw, i, &h);
+        hdrt_set(i, &h);
     }
 }
 
@@ -106,13 +106,12 @@ hdrt_show_entry(const u_int32_t lif, hdrt_t *h)
 static void
 hdrt_show(void)
 {
-    pciehw_t *phw = pciehw_get();
     hdrt_t h;
     int i;
 
     hdrt_show_hdr();
     for (i = 0; i < hdrt_size(); i++) {
-        hdrt_get(phw, i, &h);
+        hdrt_get(i, &h);
         if (h.valid) {
             hdrt_show_entry(i, &h);
         }
