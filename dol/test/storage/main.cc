@@ -230,7 +230,7 @@ int main(int argc, char**argv) {
       run_nvme_be_tests = true;
       run_nvme_wrr_tests = false;		// Never enable this for RTL sanity
       run_local_e2e_tests = true;
-      run_comp_tests = true;
+      run_comp_tests = false;       // Enable after s/w debugging 
       run_comp_seq_tests = false;		// Enable after s/w debugging
       run_xts_tests = true;
       run_rdma_tests = true;
