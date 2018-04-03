@@ -1772,7 +1772,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	ident = ionic_api_get_identity(lif, &dev->lif_id);
 
 	ionic_api_get_dbpages(lif, &dev->dbid, &dev->dbpage,
-			      &dev->phys_dbpage_base);
+			      &dev->phys_dbpage_base,
+			      &dev->intr_ctrl);
 
 	/* XXX hardcode values, should come from identify */
 	dev->sq_qtype = 3;

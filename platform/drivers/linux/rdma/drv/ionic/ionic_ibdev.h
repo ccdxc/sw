@@ -33,6 +33,8 @@ struct ionic_ibdev {
 	struct lif		*lif;
 	int			lif_id;
 
+	u32		__iomem *intr_ctrl;
+
 	phys_addr_t		phys_dbpage_base;
 	u64		__iomem *dbpage;
 	u32			dbid;

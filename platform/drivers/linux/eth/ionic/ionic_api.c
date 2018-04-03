@@ -70,7 +70,8 @@ void ionic_api_put_intr(struct lif *lif, int intr)
 EXPORT_SYMBOL_GPL(ionic_api_put_intr);
 
 void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
-			  phys_addr_t *phys_dbpage_base)
+			   phys_addr_t *phys_dbpage_base,
+			   u32 __iomem **intr_ctrl)
 {
 	/* XXX dbpage of the eth driver, first page for now */
 	/* XXX kernel should only ioremap one dbpage, not the whole BAR */
@@ -78,6 +79,8 @@ void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
 	*dbpage = (void *)lif->ionic->idev.db_pages;
 
 	*phys_dbpage_base = lif->ionic->idev.phy_db_pages;
+
+	*intr_ctrl = (void *)lif->ionic->idev.intr_ctrl;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_dbpages);
 
