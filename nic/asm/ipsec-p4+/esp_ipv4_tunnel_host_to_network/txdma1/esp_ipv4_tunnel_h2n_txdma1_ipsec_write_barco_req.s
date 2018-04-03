@@ -16,7 +16,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
     //seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
     //b.!c1 esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_do_nothing
 esp_ipv4_tunnel_h2n_post_to_barco_ring:
-    and r3, d.barco_pindex, IPSEC_BARCO_RING_INDEX_MASK
+    and r3, d.barco_pindex, IPSEC_BARCO_RING_INDEX_MASK 
     sll r3, r3, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.barco_ring_base_addr 
     phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3

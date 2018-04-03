@@ -13,7 +13,8 @@ struct phv_ p;
 
 esp_ipv4_tunnel_h2n_allocate_input_page_semaphore:
     phvwri p.app_header_table2_valid, 1
-    sll r1, d.{in_page_ring_index}.dx, 3 
+    and r1, d.{in_page_ring_index}.dx, 0x3FF 
+    sll r1, r1, 3 
     addui r1, r1, hiword(RNMPR_TABLE_BASE)
     addi r1, r1, loword(RNMPR_TABLE_BASE)
     phvwr  p.common_te2_phv_table_addr, r1

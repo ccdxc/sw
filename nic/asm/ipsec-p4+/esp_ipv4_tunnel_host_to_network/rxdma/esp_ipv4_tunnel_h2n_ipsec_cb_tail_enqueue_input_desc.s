@@ -23,11 +23,11 @@ esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc:
 esp_ipv4_tunnel_h2n_post_to_cb_ring:
     //add r2, r0, d.cb_ring_base_addr_hi, 32
     add r2, r0, d.cb_ring_base_addr
-    and r3, d.cb_pindex, IPSEC_CB_RING_INDEX_MASK 
+    and r3, d.cb_pindex, 0xFF 
     sll r3, r3, IPSEC_CB_RING_ENTRY_SHIFT_SIZE
     add r3, r3, r2
     add r7, d.cb_pindex, 1
-    //andi r7, r7, IPSEC_CB_RING_INDEX_MASK
+    andi r7, r7, 0x3FF 
     phvwri p.dma_cmd_post_cb_ring_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
     phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_start_addr, IPSEC_CB_RING_IN_DESC_START

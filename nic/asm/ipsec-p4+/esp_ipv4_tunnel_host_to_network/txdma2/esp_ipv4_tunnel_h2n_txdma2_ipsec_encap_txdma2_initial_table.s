@@ -22,7 +22,8 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwri p.app_header_table0_valid, 1
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_barco_req[33:6] 
-    sll r1, d.barco_cindex, BRQ_RING_ENTRY_SIZE_SHIFT 
+    and r1, d.barco_cindex, IPSEC_BARCO_RING_INDEX_MASK 
+    sll r1, r1, BRQ_RING_ENTRY_SIZE_SHIFT 
     add r1, r1, d.barco_ring_base_addr 
     phvwr  p.common_te0_phv_table_addr, r1
     phvwr p.ipsec_to_stage2_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
@@ -33,10 +34,10 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     smeqb c3, d.flags, IPSEC_FLAGS_NATT_MASK, IPSEC_FLAGS_NATT_MASK 
     phvwr.c3.f p.ipsec_to_stage3_is_nat_t, 1
     add r7, d.barco_cindex, 1
-    and r7, r7, IPSEC_BARCO_RING_INDEX_MASK  
+    and r7, r7, IPSEC_BARCO_RING_INDEX_MASK 
     tblwr d.barco_cindex, r7 
     nop
-    tblmincri.f  d.{barco_ring_cindex}.hx, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    tblmincri.f  d.{barco_ring_cindex}.hx, 10, 1
     nop
     seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 
     b.!c1 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
