@@ -329,11 +329,7 @@ acl_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t       *dhl_entry = NULL;
     acl_t             *acl = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -352,7 +348,6 @@ acl_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                       ret);
     }
 
-end:
     return ret;
 }
 
@@ -370,11 +365,7 @@ acl_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl_t        *acl = NULL;
     hal_handle_t  hal_handle = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
@@ -422,11 +413,7 @@ acl_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl_t             *acl = NULL;
     hal_handle_t       hal_handle = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -452,7 +439,6 @@ acl_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 3. Free PI acl
     acl_free(acl, false);
-end:
     return ret;
 }
 
@@ -899,18 +885,10 @@ extract_match_spec (acl_match_spec_t *ms,
                     const acl::AclSelector &sel)
 {
     hal_ret_t            ret = HAL_RET_OK;
-    vrf_t             *vrf = NULL;
-    vrf_id_t          vrf_id;
-    hal_handle_t         vrf_handle = 0;
+    vrf_t                *vrf = NULL;
     if_t                 *src_if = NULL;
-    if_id_t              src_if_id;
-    hal_handle_t         src_if_handle = 0;
     if_t                 *dest_if = NULL;
-    if_id_t              dest_if_id;
-    hal_handle_t         dest_if_handle = 0;
     l2seg_t              *l2seg = NULL;
-    l2seg_id_t           l2seg_id;
-    hal_handle_t         l2seg_handle = 0;
     acl_eth_match_spec_t *eth_key;
     acl_eth_match_spec_t *eth_mask;
     acl_ip_match_spec_t  *ip_key;
@@ -926,15 +904,7 @@ extract_match_spec (acl_match_spec_t *ms,
 
     if (sel.has_src_if_key_handle()) {
         ms->src_if_match = true;
-
-        auto src_if_kh = sel.src_if_key_handle();
-        if (src_if_kh.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId) {
-            src_if_id = src_if_kh.interface_id();
-            src_if = find_if_by_id(src_if_id);
-        } else {
-            src_if_handle = src_if_kh.if_handle();
-            src_if = find_if_by_handle(src_if_handle);
-        }
+        src_if = if_lookup_key_or_handle(sel.src_if_key_handle());
 
         if(src_if == NULL) {
             HAL_TRACE_ERR("Source interface not found");
@@ -947,15 +917,7 @@ extract_match_spec (acl_match_spec_t *ms,
 
     if (sel.has_dst_if_key_handle()) {
         ms->dest_if_match = true;
-
-        auto dest_if_kh = sel.dst_if_key_handle();
-        if (dest_if_kh.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId) {
-            dest_if_id = dest_if_kh.interface_id();
-            dest_if = find_if_by_id(dest_if_id);
-        } else {
-            dest_if_handle = dest_if_kh.if_handle();
-            dest_if = find_if_by_handle(dest_if_handle);
-        }
+        dest_if = if_lookup_key_or_handle(sel.dst_if_key_handle());
 
         if(dest_if == NULL) {
             HAL_TRACE_ERR("Destination interface not found");
@@ -968,15 +930,7 @@ extract_match_spec (acl_match_spec_t *ms,
 
     if (sel.seg_selector_case() == acl::AclSelector::kVrfKeyHandle) {
         ms->vrf_match = true;
-
-        auto vrf_kh = sel.vrf_key_handle();
-        if (vrf_kh.key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
-            vrf_id = vrf_kh.vrf_id();
-            vrf = vrf_lookup_by_id(vrf_id);
-        } else {
-            vrf_handle = vrf_kh.vrf_handle();
-            vrf = vrf_lookup_by_handle(vrf_handle);
-        }
+        vrf = vrf_lookup_key_or_handle(sel.vrf_key_handle());
 
         if(vrf == NULL) {
             HAL_TRACE_ERR("Vrf not found");
@@ -987,15 +941,7 @@ extract_match_spec (acl_match_spec_t *ms,
         }
     } else if (sel.seg_selector_case() == acl::AclSelector::kL2SegmentKeyHandle) {
         ms->l2seg_match = true;
-
-        auto l2seg_kh = sel.l2segment_key_handle();
-        if (l2seg_kh.key_or_handle_case() == kh::L2SegmentKeyHandle::kSegmentId) {
-            l2seg_id = l2seg_kh.segment_id();
-            l2seg = find_l2seg_by_id(l2seg_id);
-        } else {
-            l2seg_handle = l2seg_kh.l2segment_handle();
-            l2seg = l2seg_lookup_by_handle(l2seg_handle);
-        }
+        l2seg = l2seg_lookup_key_or_handle(sel.l2segment_key_handle());
 
         if(l2seg == NULL) {
             HAL_TRACE_ERR("L2 segment not found");
@@ -1233,8 +1179,6 @@ extract_action_spec (acl_action_spec_t *as,
 {
     hal_ret_t    ret = HAL_RET_OK;
     if_t         *redirect_if = NULL;
-    if_id_t      redirect_if_id;
-    hal_handle_t redirect_if_handle = 0;
     uint8_t      ingress, egress;
     bool         copp_needed = false;
     copp_t       *copp = NULL;
@@ -1264,15 +1208,7 @@ extract_action_spec (acl_action_spec_t *as,
             goto end;
         }
 
-        auto redirect_if_kh = ainfo.redirect_if_key_handle();
-        if (redirect_if_kh.key_or_handle_case() ==
-            kh::InterfaceKeyHandle::kInterfaceId) {
-            redirect_if_id = redirect_if_kh.interface_id();
-            redirect_if = find_if_by_id(redirect_if_id);
-        } else {
-            redirect_if_handle = redirect_if_kh.if_handle();
-            redirect_if = find_if_by_handle(redirect_if_handle);
-        }
+        redirect_if = if_lookup_key_or_handle(ainfo.redirect_if_key_handle());
 
         if(redirect_if == NULL) {
             HAL_TRACE_ERR("Redirect interface not found");
@@ -1578,11 +1514,7 @@ acl_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t           *dhl_entry = NULL;
     acl_t                 *acl_clone = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-acl{}:invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1601,7 +1533,6 @@ acl_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                       ret);
     }
 
-end:
     return ret;
 }
 
@@ -1658,11 +1589,7 @@ acl_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t           *dhl_entry = NULL;
     acl_t                 *acl = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-acl{}:invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1674,7 +1601,6 @@ acl_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // Free PI.
     acl_free(acl, true);
-end:
     return ret;
 }
 
@@ -1690,11 +1616,7 @@ acl_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t       *dhl_entry = NULL;
     acl_t             *acl_clone = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-acl{}:invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1706,7 +1628,6 @@ acl_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // Free Clone
     acl_free(acl_clone, true);
-end:
 
     return ret;
 }
@@ -1862,11 +1783,7 @@ acl_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry  = NULL;
     acl_t                       *acl        = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     // TODO: Check the dependency ref count for the acl.
     //       If its non zero, fail the delete.
@@ -1889,7 +1806,6 @@ acl_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
                       ret);
     }
 
-end:
     return ret;
 }
 
@@ -1908,11 +1824,7 @@ acl_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl_t           *acl = NULL;
     hal_handle_t    hal_handle = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);

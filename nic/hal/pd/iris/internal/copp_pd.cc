@@ -15,7 +15,7 @@ static void
 copp_pd_link_pi_pd (pd_copp_t *pd_copp, copp_t *pi_copp)
 {
     pd_copp->pi_copp = pi_copp;
-    pi_copp->pd = pd_copp;
+    copp_set_pd_copp(pi_copp, pd_copp);
 }
 
 // ----------------------------------------------------------------------------
@@ -24,12 +24,8 @@ copp_pd_link_pi_pd (pd_copp_t *pd_copp, copp_t *pi_copp)
 static void
 copp_pd_delink_pi_pd (pd_copp_t *pd_copp, copp_t *pi_copp)
 {
-    if (pd_copp) {
-        pd_copp->pi_copp = NULL;
-    }
-    if (pi_copp) {
-        pi_copp->pd = NULL;
-    }
+    pd_copp->pi_copp = NULL;
+    copp_set_pd_copp(pi_copp, NULL);
 }
 
 // ----------------------------------------------------------------------------

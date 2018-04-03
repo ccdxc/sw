@@ -585,11 +585,7 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     qos_class_t                 *qos_class = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -609,7 +605,6 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                       ret);
     }
 
-end:
     return ret;
 }
 
@@ -627,11 +622,7 @@ qos_class_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t                 *qos_class = NULL;
     hal_handle_t                hal_handle = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
@@ -679,11 +670,7 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t             *qos_class = NULL;
     hal_handle_t            hal_handle = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -710,7 +697,6 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 3. Free PI qos class
     qos_class_free(qos_class, false);
-end:
     return ret;
 }
 
@@ -989,11 +975,7 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t                    *qos_class_clone = NULL;
     qos_class_update_app_ctxt_t    *app_ctxt = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-qos_class{}:invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1025,7 +1007,6 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                       ret);
     }
 
-end:
     return ret;
 }
 
@@ -1085,11 +1066,7 @@ qos_class_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t           *qos_class = NULL;
     qos_class_t           *qos_class_clone = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-qos_class{}:invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1104,7 +1081,6 @@ qos_class_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // Free PI.
     qos_class_free(qos_class, true);
-end:
     return ret;
 }
 
@@ -1120,11 +1096,7 @@ qos_class_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t       *dhl_entry = NULL;
     qos_class_t             *qos_class_clone = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-qos_class{}:invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1136,7 +1108,6 @@ qos_class_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // Free Clone
     qos_class_free(qos_class_clone, true);
-end:
 
     return ret;
 }
@@ -1343,11 +1314,7 @@ qos_class_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                    *dhl_entry  = NULL;
     qos_class_t                    *qos_class        = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     // TODO: Check the dependency ref count for the qos_class.
     //       If its non zero, fail the delete.
@@ -1370,7 +1337,6 @@ qos_class_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
                       ret);
     }
 
-end:
     return ret;
 }
 
@@ -1389,11 +1355,7 @@ qos_class_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t           *qos_class = NULL;
     hal_handle_t    hal_handle = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1829,11 +1791,7 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t        *dhl_entry = NULL;
     copp_t             *copp = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1853,7 +1811,6 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                       ret);
     }
 
-end:
     return ret;
 }
 
@@ -1871,11 +1828,7 @@ copp_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t        *copp = NULL;
     hal_handle_t  hal_handle = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
@@ -1923,11 +1876,7 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t             *copp = NULL;
     hal_handle_t       hal_handle = 0;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1954,7 +1903,6 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 3. Free PI copp
     copp_free(copp, false);
-end:
     return ret;
 }
 
@@ -2114,11 +2062,7 @@ copp_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t               *dhl_entry = NULL;
     copp_t                    *copp_clone = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-copp{}:invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -2137,7 +2081,6 @@ copp_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                       ret);
     }
 
-end:
     return ret;
 }
 
@@ -2194,11 +2137,7 @@ copp_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t   *dhl_entry = NULL;
     copp_t        *copp = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-copp{}:invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -2210,7 +2149,6 @@ copp_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // Free PI.
     copp_free(copp, true);
-end:
     return ret;
 }
 
@@ -2226,11 +2164,7 @@ copp_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t       *dhl_entry = NULL;
     copp_t             *copp_clone = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-copp{}:invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -2242,7 +2176,6 @@ copp_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // Free Clone
     copp_free(copp_clone, true);
-end:
 
     return ret;
 }

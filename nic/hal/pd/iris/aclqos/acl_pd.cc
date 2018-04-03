@@ -200,8 +200,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
     copp_t                                 *copp;
     uint32_t                               copp_index = 0;
 
-    ms = &pi_acl->match_spec;
-    as = &pi_acl->action_spec;
+    ms = acl_get_match_spec(pi_acl);
+    as = acl_get_action_spec(pi_acl);
 
     eth_key = &ms->key.eth;
     eth_mask = &ms->mask.eth;

@@ -16,9 +16,7 @@ namespace hal {
 using hal::qos_class_t;
 
 // Qos-class APIs
-hal_handle_t qos_class_get_qos_class_handle(qos_class_t *pi_qos_class);
 void qos_class_set_pd_qos_class(qos_class_t *pi_qos_class, pd::pd_qos_class_t *pd_qos_class);
-pd::pd_qos_class_t* qos_class_get_pd_qos_class(qos_class_t *pi_qos_class);
 qos_group_t qos_class_get_qos_group(qos_class_t *pi_qos_class);
 bool qos_class_is_no_drop(qos_class_t *pi_qos_class);
 

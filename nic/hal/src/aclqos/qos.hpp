@@ -223,13 +223,6 @@ qos_class_is_user_defined (qos_class_t *qos_class)
     return qos_group_is_user_defined(qos_class->key.qos_group);
 }
 
-static inline bool
-qos_class_is_default (qos_class_t *qos_class)
-{
-    return qos_class->key.qos_group == QOS_GROUP_DEFAULT;
-}
-
-
 // SVC CRUD APIs
 hal_ret_t qosclass_create(qos::QosClassSpec& spec,
                           qos::QosClassResponse *rsp);
