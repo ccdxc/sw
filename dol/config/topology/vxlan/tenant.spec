@@ -8,8 +8,6 @@ overlay : vxlan
 segments:
     - spec  : ref://store/specs/id=VXLANTOPO_SEGMENT_DEFAULT
       count : 1
-    - spec  : ref://store/specs/id=SEGMENT_BLACKHOLE
-      count : 1
     - spec  : ref://store/specs/id=VXLANTOPO_SEGMENT_VXLAN
       count : 2
 

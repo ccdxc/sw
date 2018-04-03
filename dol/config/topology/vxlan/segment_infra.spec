@@ -1,15 +1,15 @@
 # Segment Configuration Spec
 meta:
-    id: VXLANTOPO_SEGMENT_VXLAN
+    id: VXLANTOPO_SEGMENT_INFRA
 
-type        : tenant
-fabencap    : vxlan
+type        : infra
+fabencap    : vlan
 native      : False
 broadcast   : flood
-multicast   : replicate
+multicast   : flood
 l4lb        : False
 endpoints   :
     useg    : 0
-    pvlan   : 1
+    pvlan   : 0
     direct  : 0
-    remote  : 2
+    remote  : 4 # Remote TEPs

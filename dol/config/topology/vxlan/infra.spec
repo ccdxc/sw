@@ -6,7 +6,7 @@ type    : infra
 overlay : vlan
 
 segments:
-    - spec  : ref://store/specs/id=SEGMENT_INFRA
+    - spec  : ref://store/specs/id=VXLANTOPO_SEGMENT_INFRA
       count : 1
 
 tunnels:
@@ -15,7 +15,6 @@ tunnels:
 security_profile: ref://store/objects/id=SEC_PROF_DEFAULT
 sessions:
     unidest:
-        scale: 16
         ipv4:
         ipv6: None
         mac: None
