@@ -8,8 +8,6 @@ import (
 	"flag"
 	"strings"
 
-	"github.com/golang/mock/gomock"
-
 	"github.com/pensando/sw/nic/agent/netagent"
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/state"
@@ -89,20 +87,10 @@ func main() {
 		}
 	} else {
 		// Set expectations to allow mock testing
-		mockDp, err := hal.NewHalDatapath("mock")
-		mockDp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-		mockDp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-		mockDp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-		mockDp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-		mockDp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-		mockDp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-		mockDp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-		mockDp.Hal.MockClients.MockIfclient.EXPECT().InterfaceCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-		mockDp.Hal.MockClients.MockEpclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+		dp, err = hal.NewHalDatapath("mock")
 		if err != nil {
 			log.Fatalf("Error creating mock datapath. Err: %v", err)
 		}
-		dp = mockDp
 	}
 
 	// create the new NetAgent

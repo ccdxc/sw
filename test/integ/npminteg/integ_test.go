@@ -15,7 +15,6 @@ import (
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/utils/tsdb"
 
-	"github.com/golang/mock/gomock"
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
@@ -161,15 +160,6 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 
 // basic connectivity tests between NPM and agent
 func (it *integTestSuite) TestNpmAgentBasic(c *C) {
-	// expect a network create/delete call in data path
-	if it.datapathKind.String() == "mock" {
-		for _, ag := range it.agents {
-			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		}
-	}
-
 	// create a network in controller
 	err := it.ctrler.Watchr.CreateNetwork("default", "testNetwork", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(c, err, "error creating network")
@@ -200,16 +190,6 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 
 // test endpoint create workflow e2e
 func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
-	// expect network and endpoint calls
-	if it.datapathKind.String() == "mock" {
-		for _, ag := range it.agents {
-			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockEpclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).MaxTimes(it.numAgents+1).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockEpclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).MaxTimes(it.numAgents+1).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-		}
-	}
-
 	// create a network in controller
 	err := it.ctrler.Watchr.CreateNetwork("default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
 	c.Assert(err, IsNil)

@@ -5,7 +5,6 @@ package npminteg
 import (
 	"fmt"
 
-	"github.com/golang/mock/gomock"
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api/generated/network"
@@ -15,17 +14,6 @@ import (
 
 // TestNpmSgCreateDelete
 func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
-	// expect sg calls in datapath
-	if it.datapathKind.String() == "mock" {
-		for _, ag := range it.agents {
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyUpdate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-		}
-	}
-
 	// create sg in watcher
 	err := it.ctrler.Watchr.CreateSecurityGroup("default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	c.Assert(err, IsNil)
@@ -103,27 +91,6 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 }
 
 func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
-	// expect sg & ep calls in datapath
-	//FIXME with real hal
-	// expect sg calls in datapath
-	if it.datapathKind.String() == "mock" {
-		for _, ag := range it.agents {
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyUpdate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockEpclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockEpclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockEpclient.EXPECT().EndpointUpdate(gomock.Any(), gomock.Any()).MaxTimes(1).Return(nil, nil)
-			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-		}
-	}
-
 	// create a network in controller
 	err := it.ctrler.Watchr.CreateNetwork("default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
 	c.Assert(err, IsNil)

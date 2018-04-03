@@ -265,15 +265,6 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 
 // basic test to make sure all components come up
 func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
-	// expect a network create/delete call in data path
-	if it.datapathKind.String() == "mock" {
-		for _, dp := range it.datapaths {
-			dp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-			dp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-			dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		}
-	}
-
 	var intervals []string
 	// Slightly relax AssertEventually timeouts when agent is using the hal datapath.
 	if it.datapathKind == "hal" {

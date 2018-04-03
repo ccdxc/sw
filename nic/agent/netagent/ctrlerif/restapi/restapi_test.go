@@ -50,36 +50,6 @@ func setup() (*RestServer, error) {
 		return nil, err
 	}
 
-	if dp.Kind.String() == "mock" {
-		dp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
-		dp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		dp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-
-		dp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
-		dp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		dp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-
-		dp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
-		dp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		dp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-
-		dp.Hal.MockClients.MockEpclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
-		dp.Hal.MockClients.MockEpclient.EXPECT().EndpointUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		dp.Hal.MockClients.MockEpclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-
-		dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
-		dp.Hal.MockClients.MockTnclient.EXPECT().VrfUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		dp.Hal.MockClients.MockTnclient.EXPECT().VrfDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-
-		dp.Hal.MockClients.MockIfclient.EXPECT().InterfaceCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
-		dp.Hal.MockClients.MockIfclient.EXPECT().InterfaceUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		dp.Hal.MockClients.MockIfclient.EXPECT().InterfaceDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-
-		dp.Hal.MockClients.MockIfclient.EXPECT().LifCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
-		dp.Hal.MockClients.MockIfclient.EXPECT().LifUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		dp.Hal.MockClients.MockIfclient.EXPECT().LifDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-	}
-
 	err = populatePreTestData(nagent)
 
 	if err != nil {
