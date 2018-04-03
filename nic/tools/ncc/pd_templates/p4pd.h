@@ -174,10 +174,11 @@ typedef union __${table}_union${i}_t { /* Sourced from field union */
     };
 //::                    #endfor
 } ${table}_union${i}_t;
-//::                    i+=1
 //::                #endif
+//::                i+=1
 //::            #endfor
 
+//::            i = 1
 //::            for hdrunion in pddict['tables'][table]['hdrunion_keys']:
 //::                (union_name, un_fields) = hdrunion
 //::                if len(un_fields) > 1:
@@ -196,8 +197,8 @@ typedef union __${table}_hdr_union${i}_t { /* Sourced from header union */
 //::                        #endif
 //::                    #endfor
 } ${table}_hdr_union${i}_t;
-//::                    i+=1
 //::                #endif
+//::                i+=1
 //::            #endfor
 
 typedef struct __attribute__((__packed__)) ${table}_swkey {
@@ -219,7 +220,6 @@ typedef struct __attribute__((__packed__)) ${table}_swkey {
 //::                (container_field, un_fields) = fldunion
 //::                if len(un_fields) > 1:
     ${table}_union${i}_t ${table}_u${i};
-//::                    i+=1
 //::                else:
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
@@ -235,12 +235,13 @@ typedef struct __attribute__((__packed__)) ${table}_swkey {
 //::                        #endif
 //::                    #endfor
 //::                #endif
+//::                i+=1
 //::            #endfor
+//::            i = 1
 //::            for hdrunion in pddict['tables'][table]['hdrunion_keys']:
 //::                (union_name, un_fields) = hdrunion
 //::                if len(un_fields) > 1:
     ${table}_hdr_union${i}_t ${table}_hdr_u${i};
-//::                    i+=1
 //::                else:
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
@@ -256,6 +257,7 @@ typedef struct __attribute__((__packed__)) ${table}_swkey {
 //::                        #endif
 //::                    #endfor
 //::                #endif
+//::                i+=1
 //::            #endfor
 } ${table}_swkey_t;
 
@@ -290,6 +292,7 @@ typedef union __${table}_mask_union${i}_t { /* Sourced from field union */
 //::                        i += 1
 //::                    #endif
 //::                #endfor
+//::                i = 1
 //::                for fldunion in pddict['tables'][table]['hdrunion_keys']:
 //::                    (unionname, un_fields) = fldunion
 //::                    if len(un_fields) > 1:
@@ -348,6 +351,7 @@ typedef struct __attribute__((__packed__)) ${table}_swkey_mask {
 //::                        #endfor
 //::                    #endif
 //::                #endfor
+//::                i = 1
 //::                for fldunion in pddict['tables'][table]['hdrunion_keys']:
 //::                    (unionname, un_fields) = fldunion
 //::                    if len(un_fields) > 1:
