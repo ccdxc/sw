@@ -8,14 +8,12 @@ GEN_DIR = $(TOPDIR)/gen
 include $(TOPDIR)/make/Make.inc
 
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
-NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
-NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 INC_DIR = -I ../common/include -I ./include -I $(GEN_DIR) -I $(TOPDIR)/include -I ../req_rx/include -I ../resp_rx/include
 
 src = $(wildcard *.s)
 bin = $(src:.s=.bin)
 
-LDFLAGS = 
+LDFLAGS =
 CFLAGS = -g
 
 all: deps asm
@@ -23,11 +21,11 @@ all: deps asm
 deps: $(GEN_DIR)/rdma_rxdma/asm_out/ingress.h
 
 %.h: $(P4_DIR)/rdma_rxdma.p4
-	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/rdma_rxdma.p4 --gen-dir $(GEN_DIR)
+	$(MAKE) -C $(P4_DIR) ../../gen/rdma_rxdma/asm_out/ingress.h
 
 asm: $(bin)
 
-.PHONY: clean 
+.PHONY: clean
 clean:
 	@rm -fR $(OBJ_DIR)/*.bin
 
@@ -39,7 +37,6 @@ TEST_FILES := \
     $(SRC_DIR)/ctl/tx_stage0_load_rdma_params.ctl
 
 TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))
-
 
 $(TMP_FILES): %.x: %.ctl
 	@echo Testing ...

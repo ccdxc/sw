@@ -3,7 +3,6 @@ GEN_DIR = $(TOPDIR)/gen
 CUSTOM = $(GEN_DIR)/.cpu_rx_asm
 CUSTOM_CLEAN = clean
 
-
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
 
@@ -15,10 +14,7 @@ COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
 INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../common-p4+/include -I../../../include
 SRC_DIR = .
 
-
 CAPSIM_BIN = ../../../asic/capri/model/capsim-gen/bin/capsim
-NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
-NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 
 SRC_FILES := \
     $(SRC_DIR)/cpu_initial_action.s \
@@ -29,7 +25,7 @@ SRC_FILES := \
     $(SRC_DIR)/cpu_page_alloc.s \
     $(SRC_DIR)/cpu_hash_calc_id.s \
     $(SRC_DIR)/cpu_write_arq.s \
-	
+
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 
 FILES = $(basename $(notdir $(BIN_FILES)))
@@ -42,19 +38,6 @@ DEPS_DIRS = $(subst -I,, $(INC_DIRS))
 DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
 $(OBJ_DIR)/%.bin: %.s $(DEPS) $(CAPAS_BIN)
 	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $(AS_DEFINES) $< -o $@
-
-#BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
-#
-#$(BIN_FILES): %.bin: %.s
-#	@echo $@
-#	@mkdir -p $(OBJ_DIR)
-#	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
-#
-#%.h: $(P4_DIR)/$(PROJ).p4 $(COMMON_P4_DIR)/common_headers.p4
-#	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/$(PROJ).p4 --gen-dir $(GEN_DIR)
-#	
-#
-#asm: $(BIN_FILES)
 
 TEST_FILES := $(patsubst %.s, %.ctl, $(SRC_FILES))
 TEST_FILES := \

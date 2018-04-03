@@ -8,29 +8,19 @@ GEN_DIR = $(TOPDIR)/gen
 include $(TOPDIR)/make/Make.inc
 
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
-NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
-NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 INC_DIR = -I ../common/include -I ../../../p4/iris/include -I ./include -I $(GEN_DIR)/rdma_req_txdma/asm_out -I $(TOPDIR)/include -I$(TOPDIR)/p4/include
 
 src = $(wildcard *.s)
 bin = $(src:.s=.bin)
 
-LDFLAGS = 
+LDFLAGS =
 CFLAGS = -g
 
-#deps
 all: asm
-
-#deps: $(GEN_DIR)/rdma_req_txdma/asm_out/ingress.h
-
-#$(P4_DIR)/rdma_req_txdma.p4
-%.h: $(COMMON_P4_DIR)/common_headers.p4 $(COMMON_P4_DIR)/common_txdma_actions.p4
-	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/rdma_req_txdma.p4 --gen-dir $(GEN_DIR)
-	
 
 asm: $(bin)
 
-.PHONY: clean 
+.PHONY: clean
 clean:
 	@rm -fR $(OBJ_DIR)/*.bin
 

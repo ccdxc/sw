@@ -1,4 +1,3 @@
-
 TOPDIR = ../../../../..
 CUSTOM = all
 CUSTOM_CLEAN = clean
@@ -17,12 +16,8 @@ INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../../../../common-p4+/include \
 SRC_DIR = .
 CAPAS_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capas
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
-NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
-NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 
-all: deps asm
-
-deps: 
+all: asm
 
 SRC_FILES := \
     $(SRC_DIR)/rawr_rx_start.s \
@@ -42,8 +37,6 @@ SRC_FILES := \
     $(SRC_DIR)/rawr_mpage_free.s \
     $(SRC_DIR)/rawr_chain_xfer.s \
     $(SRC_DIR)/rawr_stats.s \
-	
-
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 
@@ -51,10 +44,6 @@ $(BIN_FILES): %.bin: %.s
 	@echo $@
 	@mkdir -p $(OBJ_DIR)
 	$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
-
-%.h: $(P4_DIR)/$(PROJ).p4 $(COMMON_P4_DIR)/common_headers.p4
-	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/$(PROJ).p4 --gen-dir $(GEN_DIR)
-	
 
 asm: $(BIN_FILES)
 
