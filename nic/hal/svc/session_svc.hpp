@@ -29,6 +29,7 @@ using session::SessionGetRequest;
 using session::SessionGetRequestMsg;
 using session::SessionGetResponse;
 using session::SessionGetResponseMsg;
+using session::SessionDeleteResponse;
 
 class SessionServiceImpl final : public Session::Service {
     Status SessionCreate(ServerContext *context,
@@ -42,6 +43,7 @@ class SessionServiceImpl final : public Session::Service {
     Status SessionGet(ServerContext *context,
                       const SessionGetRequestMsg *req,
                       SessionGetResponseMsg *rsp) override;
+
 public:
 };
 

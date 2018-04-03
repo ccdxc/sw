@@ -270,6 +270,7 @@ message SessionDeleteRequestMsg {
 // SessionDeleteResponse is response to session delete request
 message SessionDeleteResponse {
   types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  fixed64         session_handle = 2;         // session handle for which the API status is set
 }
 
 // SessionDeleteResponseMsg is batched response to SessionDeleteRequestMsg

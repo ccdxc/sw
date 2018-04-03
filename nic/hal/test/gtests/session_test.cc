@@ -799,7 +799,7 @@ TEST_F(session_test, test4)
 
     // Create Session
     sess_spec.mutable_meta()->set_vrf_id(4);
-    sess_spec.set_session_id(1);
+    sess_spec.set_session_id(4);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
@@ -827,7 +827,7 @@ TEST_F(session_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     sess_spec2.mutable_meta()->set_vrf_id(4);
-    sess_spec2.set_session_id(2);
+    sess_spec2.set_session_id(5);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->
@@ -981,7 +981,7 @@ TEST_F(session_test, test5)
 
     // Create Session
     sess_spec.mutable_meta()->set_vrf_id(5);
-    sess_spec.set_session_id(1);
+    sess_spec.set_session_id(6);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
@@ -1580,8 +1580,9 @@ TEST_F(session_test, test9)
     NetworkResponse             nw_rsp, nw_rsp1;
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
-    NetworkKeyHandle                *nkh = NULL;
-
+    NetworkKeyHandle           *nkh = NULL;
+    SessionDeleteRequest        delreq;
+    SessionDeleteResponse       delrsp;
 
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(9);
@@ -1687,7 +1688,7 @@ TEST_F(session_test, test9)
 
     // Create Session
     sess_spec.mutable_meta()->set_vrf_id(9);
-    sess_spec.set_session_id(1);
+    sess_spec.set_session_id(133);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
@@ -1713,9 +1714,11 @@ TEST_F(session_test, test9)
     uint64_t sess_hdl = sess_rsp.mutable_status()->session_handle();
     HAL_TRACE_DEBUG("Session Handle: {}", sess_hdl);
 
-    ret = fte::session_delete(sess_spec, &sess_rsp);
+    delreq.set_session_handle(sess_hdl);
+    ret = fte::session_delete(delreq, &delrsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(delrsp.api_status() == types::API_STATUS_OK);
 }
 
 TEST_F(session_test, test10) 
@@ -1902,6 +1905,18 @@ TEST_F(session_test, test10)
     // Delete Session
     ret = fte::session_delete(hal::find_session_by_id(10));
     ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
+TEST_F(session_test, test11)
+{
+    SessionDeleteResponseMsg delrsp;
+    SessionGetResponseMsg    getrsp;
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    hal::session_get_all(&getrsp);
+
+    hal::session_delete_all(&delrsp);
+    hal::hal_cfg_db_close();  
 }
 
 int main(int argc, char **argv) {

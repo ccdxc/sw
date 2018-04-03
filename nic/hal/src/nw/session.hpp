@@ -34,6 +34,8 @@ using session::SessionGetRequest;
 using session::SessionGetRequestMsg;
 using session::SessionGetResponse;
 using session::SessionGetResponseMsg;
+using session::SessionDeleteRequest;
+using session::SessionDeleteResponse;
 using session::FlowTCPState;
 using types::IPProtocol;
 
@@ -402,6 +404,8 @@ hal_ret_t schedule_tcp_half_closed_timer(session_t *session);
 hal_ret_t schedule_tcp_cxnsetup_timer(session_t *session);
 void session_set_tcp_state(session_t *session, hal::flow_role_t role, 
                            FlowTCPState tcp_state);
+hal_ret_t session_get_all(session::SessionGetResponseMsg *rsp);
+hal_ret_t session_delete_all(session::SessionDeleteResponseMsg *rsp);
 
 }    // namespace hal
 

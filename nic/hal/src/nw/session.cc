@@ -1288,4 +1288,59 @@ session_set_tcp_state (session_t *session, hal::flow_role_t role,
     HAL_TRACE_DEBUG("Updated tcp state to {}", tcp_state);
 }
 
+typedef struct session_walkall_args {
+    void   *rsp;
+    bool    is_del;
+} session_walkall_args_t;
+
+bool
+hal_walkall_session(void *entry, void *ctxt)
+{
+    session_t                *session = (session_t *)entry;
+    session_walkall_args_t   *args = (session_walkall_args_t *)ctxt;
+    
+    if (args->is_del) {
+        SessionDeleteResponseMsg *rsp = (SessionDeleteResponseMsg *)args->rsp;
+        SessionDeleteResponse    *response;
+        SessionDeleteRequest      req;
+
+        req.set_session_handle(session->hal_handle);
+        response = rsp->add_response();
+        fte::session_delete(req, response);
+    } else {
+        SessionGetResponseMsg *rsp = (SessionGetResponseMsg *)args->rsp;
+        SessionGetResponse    *response;
+        SessionGetRequest      req;
+
+        req.set_session_handle(session->hal_handle);
+        response = rsp->add_response();
+        hal::session_get(req, response);
+    }
+
+    return false;
+}
+ 
+hal_ret_t 
+session_get_all(SessionGetResponseMsg *rsp)
+{
+    session_walkall_args_t args;
+
+    args.rsp = rsp;
+    args.is_del = false;
+    
+    return (hal_sdk_ret_to_hal_ret(g_hal_state->session_hal_handle_ht()->\
+            walk_safe(hal_walkall_session, (void *)&args)));
+}
+
+hal_ret_t
+session_delete_all(SessionDeleteResponseMsg *rsp)
+{
+    session_walkall_args_t args;
+
+    args.rsp = rsp;
+    args.is_del = true;
+
+    return (hal_sdk_ret_to_hal_ret(g_hal_state->session_hal_handle_ht()->\
+            walk(hal_walkall_session, (void *)&args)));
+}
 }    // namespace hal

@@ -57,8 +57,9 @@ void unregister_features_and_pipelines();
 
 // grpc session request
 hal_ret_t session_create(SessionSpec& spec, SessionResponse *rsp);
-hal_ret_t session_delete(SessionSpec& spec, SessionResponse *rsp);
-hal_ret_t session_delete(hal::session_t *session);
+hal_ret_t session_delete(SessionDeleteRequest& spec, SessionDeleteResponse *rsp);
+hal_ret_t session_delete(hal::session_t *session, bool force_delete=false);
+void hal_ret_to_api_status(hal_ret_t ret, SessionResponse *rsp);
 
 // FTE pkt loop (infinite loop)
 void fte_start(uint8_t fte_id);
