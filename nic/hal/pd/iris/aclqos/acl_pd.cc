@@ -265,6 +265,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
                 data.nacl_action_u.nacl_nacl_permit.qid_en = 1;
                 data.nacl_action_u.nacl_nacl_permit.qid = qid;
                 data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
+                data.nacl_action_u.nacl_nacl_permit.discard_drop = 1;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_flags = 0;
@@ -277,6 +278,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
             } else {
                 // TODO: Figure out how to get these values
                 data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 0;
+                data.nacl_action_u.nacl_nacl_permit.discard_drop = 0;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_en = 0;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_flags = 0;
@@ -286,6 +288,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
                 data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 0;
 #ifdef ACL_DOL_TEST_ONLY
                 data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
+                data.nacl_action_u.nacl_nacl_permit.discard_drop = 1;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_index =
                     as->int_as.rw_idx;

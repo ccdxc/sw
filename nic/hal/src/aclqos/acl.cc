@@ -1027,32 +1027,24 @@ extract_match_spec (acl_match_spec_t *ms,
     // Key of internal fields for use only with DOL/testing infra
     // For production builds this needs to be removed
     // TODO: REMOVE
-    if (sel.has_internal_key() != sel.has_internal_mask()) {
-        HAL_TRACE_ERR("ACL Internal selector key/mask not specified");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
+    ms->int_key.direction = sel.internal_key().direction();
+    ms->int_mask.direction = sel.internal_mask().direction();
+    ms->int_key.from_cpu = sel.internal_key().from_cpu();
+    ms->int_mask.from_cpu = sel.internal_mask().from_cpu();
+    ms->int_key.flow_miss = sel.internal_key().flow_miss();
+    ms->int_mask.flow_miss = sel.internal_mask().flow_miss();
+    ms->int_key.ip_options = sel.internal_key().ip_options();
+    ms->int_mask.ip_options = sel.internal_mask().ip_options();
+    ms->int_key.ip_frag = sel.internal_key().ip_frag();
+    ms->int_mask.ip_frag = sel.internal_mask().ip_frag();
+    for (i = 0; i < sel.internal_key().drop_reason_size(); i++) {
+        ms->int_key.drop_reasons[sel.internal_key().drop_reason(i)] = true;
     }
-
-    if (sel.has_internal_key()) {
-        ms->int_key.direction = sel.internal_key().direction();
-        ms->int_mask.direction = sel.internal_mask().direction();
-        ms->int_key.from_cpu = sel.internal_key().from_cpu();
-        ms->int_mask.from_cpu = sel.internal_mask().from_cpu();
-        ms->int_key.flow_miss = sel.internal_key().flow_miss();
-        ms->int_mask.flow_miss = sel.internal_mask().flow_miss();
-        ms->int_key.ip_options = sel.internal_key().ip_options();
-        ms->int_mask.ip_options = sel.internal_mask().ip_options();
-        ms->int_key.ip_frag = sel.internal_key().ip_frag();
-        ms->int_mask.ip_frag = sel.internal_mask().ip_frag();
-        for (i = 0; i < sel.internal_key().drop_reason_size(); i++) {
-            ms->int_key.drop_reasons[sel.internal_key().drop_reason(i)] = true;
-        }
-        for (i = 0; i < sel.internal_mask().drop_reason_size(); i++) {
-            ms->int_mask.drop_reasons[sel.internal_mask().drop_reason(i)] = true;
-        }
-        MAC_UINT64_TO_ADDR(ms->int_key.outer_mac_da, sel.internal_key().outer_dst_mac());
-        MAC_UINT64_TO_ADDR(ms->int_mask.outer_mac_da, sel.internal_mask().outer_dst_mac());
+    for (i = 0; i < sel.internal_mask().drop_reason_size(); i++) {
+        ms->int_mask.drop_reasons[sel.internal_mask().drop_reason(i)] = true;
     }
+    MAC_UINT64_TO_ADDR(ms->int_key.outer_mac_da, sel.internal_key().outer_dst_mac());
+    MAC_UINT64_TO_ADDR(ms->int_mask.outer_mac_da, sel.internal_mask().outer_dst_mac());
 #endif
 end:
     return ret;

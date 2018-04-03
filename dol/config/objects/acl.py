@@ -213,9 +213,21 @@ class AclObject(base.ConfigObjectBase):
             reqspec.match.vrf_key_handle.vrf_id =\
                     self.fields.match.tenant.id
 
-        for dm in self.fields.match.dropmask:
-            en = haldefs.acl.DropReason.Value(dm.upper() + "__DROP")
+        if self.ActionRedirect():
+            # If the action is redirect, match only when drop is due to flow-miss
+            # Set the mask for all drops except flow-miss
+            dropmask_ks = []
+            dropmask_ms = haldefs.acl.DropReason.keys()
+            dropmask_ms.remove("FLOW_MISS__DROP")
+        else:
+            dropmask_ks = [x + "__DROP" for x in self.fields.match.dropmask]
+            dropmask_ms = dropmask_ks[:]
+
+        for dm in dropmask_ks:
+            en = haldefs.acl.DropReason.Value(dm.upper())
             reqspec.match.internal_key.drop_reason.append(en)
+        for dm in dropmask_ms:
+            en = haldefs.acl.DropReason.Value(dm.upper())
             reqspec.match.internal_mask.drop_reason.append(en)
 
         if self.MatchOnEth():

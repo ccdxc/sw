@@ -28,10 +28,6 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
     if (force_flow_hit == TRUE) {
         modify_field(control_metadata.flow_miss, FALSE);
         modify_field(control_metadata.flow_miss_ingress, FALSE);
-        if (control_metadata.drop_reason == (1<<DROP_FLOW_MISS)) {
-            permit_packet();
-            modify_field(control_metadata.drop_reason, 0);
-        }
     }
     if (qid_en == TRUE) {
         modify_field(control_metadata.qid, qid);
