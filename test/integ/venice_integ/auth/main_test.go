@@ -48,7 +48,7 @@ func startSpyglass() finder.Interface {
 	tinfo.esServer.Start()
 
 	fdr, err := finder.NewFinder(context.Background(),
-		tinfo.esServer.GetElasticURL(),
+		fmt.Sprintf("http://%s", tinfo.esServer.GetElasticURL()),
 		"localhost:0",
 		tinfo.l)
 	if err != nil {
