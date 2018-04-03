@@ -1403,6 +1403,8 @@ vrf_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
         return HAL_RET_OOM;
     }
     *mlen = serialized_state_sz;
+    HAL_TRACE_DEBUG("Marshalled vrf {}, len {}",
+                    vrf->vrf_id, serialized_state_sz);
     return HAL_RET_OK;
 }
 

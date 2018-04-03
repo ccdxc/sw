@@ -84,8 +84,6 @@ using gft::GftExactMatchFlowEntryResponseMsg;
 #define GFT_HEADER_FIELD_OOB_TENANT_ID             0x00080000ULL
 #define GFT_HEADER_FIELD_GRE_PROTOCOL              0x00100000ULL
 
-
-
 namespace hal {
 
 typedef uint32_t vport_id_t;
@@ -154,15 +152,16 @@ typedef enum gft_table_type_e {
 } gft_table_type_t;
 
 static inline const char *
-gft_table_type_to_str(gft_table_type_t type) {
+gft_table_type_to_str (gft_table_type_t type)
+{
     switch (type) {
-        case GFT_TABLE_TYPE_NONE: return "NONE";
-        case GFT_TABLE_TYPE_WILDCARD_INGRESS: return "WILDCARD_INGRESS";
-        case GFT_TABLE_TYPE_WILDCARD_EGRESS: return "WILDCARD_EGRESS";
-        case GFT_TABLE_TYPE_EXACT_MATCH_INGRESS: return "EXACT_INGRESS";
-        case GFT_TABLE_TYPE_EXACT_MATCH_EGRESS: return "EXACT_EGRESS";
-        case GFT_TABLE_TYPE_PACKET_DIRECT:
-        default: return "ERROR";
+    case GFT_TABLE_TYPE_NONE: return "NONE";
+    case GFT_TABLE_TYPE_WILDCARD_INGRESS: return "WILDCARD_INGRESS";
+    case GFT_TABLE_TYPE_WILDCARD_EGRESS: return "WILDCARD_EGRESS";
+    case GFT_TABLE_TYPE_EXACT_MATCH_INGRESS: return "EXACT_INGRESS";
+    case GFT_TABLE_TYPE_EXACT_MATCH_EGRESS: return "EXACT_EGRESS";
+    case GFT_TABLE_TYPE_PACKET_DIRECT:
+    default: return "ERROR";
     }
 }
 
@@ -359,7 +358,7 @@ typedef struct gft_hdr_xposition_profile_s {
     gft_table_type_t                     table_type;    // table type
     uint32_t                             num_htp;       // number of header transposition profiles
     gft_hdr_group_xposition_profile_t    *hdr_xposition_profiles;
-    
+
     // operational state
     hal_handle_t          hal_handle;              // HAL allocated handle
 
@@ -463,7 +462,7 @@ find_gft_hdr_xposition_profile_by_handle (hal_handle_t handle)
         return NULL;
     }
     if (hal_handle->obj_id() != HAL_OBJ_ID_GFT_HDR_TRANSPOSITION_PROFILE) {
-        HAL_TRACE_DEBUG("Failed to find GFT header transposition profile with handle {}",
+        HAL_TRACE_DEBUG("Failed to find GFT header transposition profile, handle {}",
                         handle);
         return NULL;
     }
@@ -644,7 +643,7 @@ find_gft_exact_match_flow_entry_by_handle (hal_handle_t handle)
         return NULL;
     }
     if (hal_handle->obj_id() != HAL_OBJ_ID_GFT_EXACT_MATCH_FLOW_ENTRY) {
-        HAL_TRACE_DEBUG("Failed to find GFT exact match flow entry with handle {}",
+        HAL_TRACE_DEBUG("Failed to find GFT exact match flow entry, handle {}",
                         handle);
         return NULL;
     }

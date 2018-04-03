@@ -85,7 +85,7 @@ typedef struct hal_module_meta_s {
 //------------------------------------------------------------------------------
 // one time memory related initializatino for HAL
 //------------------------------------------------------------------------------
-extern hal_ret_t hal_mem_init(bool shm_mode);
+hal_ret_t hal_mem_init(hal_cfg_t *hal_cfg);
 
 }    // namespace hal
 

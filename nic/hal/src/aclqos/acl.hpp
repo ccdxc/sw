@@ -36,7 +36,7 @@ using acl::AclGetResponseMsg;
 
 namespace hal {
 
-#define HAL_MAX_ACLS 512 
+#define HAL_MAX_ACLS 512
 
 #define ACL_IP_FRAGMENT_DROP_ENTRY_ID    0
 #define ACL_QUIESCE_ENTRY_ID             1

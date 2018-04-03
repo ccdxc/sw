@@ -313,7 +313,7 @@ hal_get_forwarding_mode (std::string mode)
 // parse HAL .ini file
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg) 
+hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
 {
     std::string         ini_file, line;
 
@@ -617,7 +617,7 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Platform initialization done");
 
     // do memory related initialization
-    HAL_ABORT(hal_mem_init(hal_cfg->shm_mode) == HAL_RET_OK);
+    HAL_ABORT(hal_mem_init(hal_cfg) == HAL_RET_OK);
     g_hal_state->set_catalog(catalog);
 
     // set the forwarding mode
@@ -638,7 +638,7 @@ hal_init (hal_cfg_t *hal_cfg)
     // do rdma init
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
 
-    if (!getenv("CAPRI_MOCK_MODE") && 
+    if (!getenv("CAPRI_MOCK_MODE") &&
         !getenv("DISABLE_FTE") &&
         !(hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC)) {
         // start fte threads

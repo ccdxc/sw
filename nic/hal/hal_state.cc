@@ -116,7 +116,7 @@ private:
 // initialize DBs and caches that needs to be persisted across restarts/upgrades
 //------------------------------------------------------------------------------
 bool
-hal_cfg_db::init_pss(shmmgr *mmgr)
+hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 {
     // initialize slab for HAL handles
     slabs_[HAL_SLAB_HANDLE] =
@@ -290,27 +290,29 @@ hal_cfg_db::init_pss(shmmgr *mmgr)
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_GROUP] != NULL), false);
 
-    // initialize GFT related slabs
-    slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] =
-        slab::factory("gft_exact_match_profile",
-                      HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
-                      sizeof(hal::gft_exact_match_profile_t),
-                      16, false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] != NULL), false);
+    if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
+        // initialize GFT related slabs
+        slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] =
+            slab::factory("gft_exact_match_profile",
+                          HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
+                          sizeof(hal::gft_exact_match_profile_t),
+                          16, false, true, true, mmgr);
+        HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] != NULL), false);
 
-    slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] =
-        slab::factory("gft_hdr_xposition_profile",
-                      HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE,
-                      sizeof(hal::gft_hdr_xposition_profile_t),
-                      16, false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] != NULL), false);
+        slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] =
+            slab::factory("gft_hdr_xposition_profile",
+                          HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE,
+                          sizeof(hal::gft_hdr_xposition_profile_t),
+                          16, false, true, true, mmgr);
+        HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] != NULL), false);
 
-    slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] =
-         slab::factory("gft_exact_match_flow_entry",
-                       HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY,
-                       sizeof(hal::gft_exact_match_flow_entry_t),
-                       16, false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] != NULL), false);
+        slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] =
+             slab::factory("gft_exact_match_flow_entry",
+                           HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY,
+                           sizeof(hal::gft_exact_match_flow_entry_t),
+                           16, false, true, true, mmgr);
+        HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] != NULL), false);
+    }
 
     return true;
 }
@@ -320,7 +322,7 @@ hal_cfg_db::init_pss(shmmgr *mmgr)
 // restarts/upgrades and these will have to be rebuilt after restart/upgrade
 //------------------------------------------------------------------------------
 bool
-hal_cfg_db::init_vss(void)
+hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
 {
     // initialize TLS CB related data structures
     slabs_[HAL_SLAB_TLSCB] = slab::factory("tlscb", HAL_SLAB_TLSCB,
@@ -433,11 +435,11 @@ hal_cfg_db::init_vss(void)
 // init() function to instantiate all the config db init state
 //------------------------------------------------------------------------------
 bool
-hal_cfg_db::init(shmmgr *mmgr)
+hal_cfg_db::init(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 {
     mmgr_ = mmgr;
-    HAL_ASSERT_RETURN((init_pss(mmgr) == true), false);
-    HAL_ASSERT_RETURN((init_vss() == true), false);
+    HAL_ASSERT_RETURN((init_pss(hal_cfg, mmgr) == true), false);
+    HAL_ASSERT_RETURN((init_vss(hal_cfg) == true), false);
     return true;
 }
 
@@ -445,8 +447,8 @@ hal_cfg_db::init(shmmgr *mmgr)
 // initialize the state that is not valid after a process restart
 //------------------------------------------------------------------------------
 void
-hal_cfg_db::init_on_restart(void) {
-    init_vss();
+hal_cfg_db::init_on_restart(hal_cfg_t *hal_cfg) {
+    init_vss(hal_cfg);
 }
 
 //------------------------------------------------------------------------------
@@ -476,7 +478,7 @@ hal_cfg_db::~hal_cfg_db()
 // factory method
 //------------------------------------------------------------------------------
 hal_cfg_db *
-hal_cfg_db::factory(shmmgr *mmgr)
+hal_cfg_db::factory(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 {
     void          *mem;
     hal_cfg_db    *cfg_db;
@@ -489,7 +491,7 @@ hal_cfg_db::factory(shmmgr *mmgr)
 
     if (mem) {
         cfg_db = new(mem) hal_cfg_db();
-        if (cfg_db->init(mmgr) == false) {
+        if (cfg_db->init(hal_cfg, mmgr) == false) {
             cfg_db->~hal_cfg_db();
             if (mmgr) {
                 mmgr->free(mem);
@@ -614,7 +616,7 @@ hal_cfg_db::object_size(hal_obj_id_t obj_id) const
 // initialize DBs and caches that needs to be persisted across restarts/upgrades
 //------------------------------------------------------------------------------
 bool
-hal_oper_db::init_pss(shmmgr *mmgr)
+hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 {
     hal_handle_id_ht_ = ht::factory(HAL_MAX_HANDLES,
                                     hal::hal_handle_id_get_key_func,
@@ -791,7 +793,7 @@ hal_oper_db::init_pss(shmmgr *mmgr)
 // restarts/upgrades and these will have to be rebuilt after restart/upgrade
 //------------------------------------------------------------------------------
 bool
-hal_oper_db::init_vss(void)
+hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
 {
     event_mgr_ = eventmgr::factory(HAL_MAX_EVENTS);
     HAL_ASSERT_RETURN((event_mgr_ != NULL), false);
@@ -891,11 +893,11 @@ hal_oper_db::init_vss(void)
 // init() function to instantiate all the oper db init state
 //------------------------------------------------------------------------------
 bool
-hal_oper_db::init(shmmgr *mmgr)
+hal_oper_db::init(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 {
     mmgr_ = mmgr;
-    HAL_ASSERT_RETURN((init_pss(mmgr) == true), false);
-    HAL_ASSERT_RETURN((init_vss() == true), false);
+    HAL_ASSERT_RETURN((init_pss(hal_cfg, mmgr) == true), false);
+    HAL_ASSERT_RETURN((init_vss(hal_cfg) == true), false);
     return true;
 }
 
@@ -903,8 +905,8 @@ hal_oper_db::init(shmmgr *mmgr)
 // initialize the state that is not valid after a process restart
 //------------------------------------------------------------------------------
 void
-hal_oper_db::init_on_restart(void) {
-    init_vss();
+hal_oper_db::init_on_restart(hal_cfg_t *hal_cfg) {
+    init_vss(hal_cfg);
 }
 
 //------------------------------------------------------------------------------
@@ -1006,7 +1008,7 @@ hal_oper_db::~hal_oper_db()
 // factory method
 //------------------------------------------------------------------------------
 hal_oper_db *
-hal_oper_db::factory(shmmgr *mmgr)
+hal_oper_db::factory(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 {
     void           *mem;
     hal_oper_db    *oper_db;
@@ -1019,7 +1021,7 @@ hal_oper_db::factory(shmmgr *mmgr)
 
     if (mem) {
         oper_db = new(mem) hal_oper_db();
-        if (oper_db->init(mmgr) == false) {
+        if (oper_db->init(hal_cfg, mmgr) == false) {
             oper_db->~hal_oper_db();
             if (mmgr) {
                 mmgr->free(mem);
@@ -1078,7 +1080,7 @@ hal_state::cleanup(void) {
 //------------------------------------------------------------------------------
 // constructor method
 //------------------------------------------------------------------------------
-hal_state::hal_state(hal_obj_meta **obj_meta, shmmgr *mmgr)
+hal_state::hal_state(hal_obj_meta **obj_meta, hal_cfg_t *hal_cfg, shmmgr *mmgr)
 {
     mmgr_ = mmgr;
     cfg_db_ = NULL;
@@ -1087,10 +1089,10 @@ hal_state::hal_state(hal_obj_meta **obj_meta, shmmgr *mmgr)
     catalog_ = NULL;
     obj_meta_ = obj_meta;
 
-    cfg_db_ = hal_cfg_db::factory(mmgr);
+    cfg_db_ = hal_cfg_db::factory(hal_cfg, mmgr);
     HAL_ASSERT_GOTO(cfg_db_, error);
 
-    oper_db_ = hal_oper_db::factory(mmgr);
+    oper_db_ = hal_oper_db::factory(hal_cfg, mmgr);
     HAL_ASSERT_GOTO(oper_db_, error);
 
     if (mmgr) {
@@ -1120,10 +1122,10 @@ hal_state::~hal_state() {
 // initialize the state that is not valid after a process restart
 //------------------------------------------------------------------------------
 void
-hal_state::init_on_restart(void) {
+hal_state::init_on_restart(hal_cfg_t *hal_cfg) {
     catalog_ = NULL;
-    cfg_db_->init_on_restart();
-    oper_db_->init_on_restart();
+    cfg_db_->init_on_restart(hal_cfg);
+    oper_db_->init_on_restart(hal_cfg);
 }
 
 //------------------------------------------------------------------------------
@@ -1217,6 +1219,7 @@ hal_state::preserve_state(void)
     }
     h3s_hints->set_pi_state_len(avail_sz - mctxt.len);
 
+    HAL_TRACE_ERR("Total marshalled state len is {}", avail_sz - mctxt.len);
     return (avail_sz - mctxt.len);
 }
 
@@ -1244,8 +1247,8 @@ hal_state::restore_state(void *mem)
     // start unmarshalling objs
     state = (uint8_t *)h3s_hints->pi_state();
     state_len = h3s_hints->pi_state_len();
+    HAL_TRACE_DEBUG("Total marshalled state len found is {}", state_len);
     while (state_len) {
-        HAL_TRACE_DEBUG("PI state len {}", state_len);
         tlv = (tlv_t *)state;
         if (!obj_meta_[obj_id = tlv->type]) {
             // no need to carry over this object's state into new version
@@ -1271,6 +1274,7 @@ hal_state::restore_state(void *mem)
 skip:
         state += sizeof(tlv_t) + tlv->len;
         state_len -= sizeof(tlv_t) + tlv->len;
+        HAL_TRACE_DEBUG("state remaining is {}", state_len);
     }
 
     // restore PI state to new slabs
@@ -1281,9 +1285,10 @@ skip:
 // one time memory related initialization for HAL
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_mem_init (bool shm_mode)
+hal_mem_init (hal_cfg_t *hal_cfg)
 {
     bool    h2s_exists = false, h3s_exists = false;
+    bool    shm_mode = hal_cfg->shm_mode;
 
     // check if memory segments of interest exist
     h2s_exists = shmmgr::exists(HAL_STATE_STORE,
@@ -1306,7 +1311,7 @@ hal_mem_init (bool shm_mode)
             shmmgr::remove(HAL_SERIALIZED_STATE_STORE);
         }
         // instantiate HAL state in regular linux memory
-        g_hal_state = new hal_state(nullptr);
+        g_hal_state = new hal_state(nullptr, hal_cfg, nullptr);
     } else if (h2s_exists) {
         // stateful restart case
         HAL_TRACE_DEBUG("Stateful restart detected, restoring state");
@@ -1315,6 +1320,7 @@ hal_mem_init (bool shm_mode)
                             sdk::lib::SHM_OPEN_ONLY,
                             (void *)HAL_STATE_STORE_VADDR);
         HAL_ABORT(g_h2s_shmmgr != NULL);
+
         // reconstruct hal state
         fixed_managed_shared_memory    *fm_shm_mgr;
         fm_shm_mgr = (fixed_managed_shared_memory *)g_h2s_shmmgr->mmgr();
@@ -1324,12 +1330,13 @@ hal_mem_init (bool shm_mode)
             HAL_TRACE_ERR("Failed to find HAL state obj in state store");
             return HAL_RET_ERR;
         }
+
         // there may be some state in g_hal_state that needs to be
         // reset/reinitialized (e.g., pointers to objects in non-shared memory
         // like catalog pointer etc. aren't valid after restart, so need to
         // reset to NULL at this point .. the pointers to objects that exist in
         // shared memory are still valid, so we don't reset them
-        g_hal_state->init_on_restart();
+        g_hal_state->init_on_restart(hal_cfg);
         HAL_TRACE_DEBUG("HAL state obj found, state restored");
     } else if (h3s_exists) {
         // stateful upgrade case
@@ -1352,7 +1359,10 @@ hal_mem_init (bool shm_mode)
         // instantiate HAL state in persistent memory
         fixed_managed_shared_memory    *fm_shm_mgr;
         fm_shm_mgr = (fixed_managed_shared_memory *)g_h2s_shmmgr->mmgr();
-        g_hal_state = fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(nullptr, g_h2s_shmmgr);
+        g_hal_state =
+            fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(nullptr,
+                                                            hal_cfg,
+                                                            g_h2s_shmmgr);
 
         // TODO: restore state
 
@@ -1370,7 +1380,9 @@ hal_mem_init (bool shm_mode)
         // instantiate HAL state in persistent memory
         fixed_managed_shared_memory    *fm_shm_mgr;
         fm_shm_mgr = (fixed_managed_shared_memory *)g_h2s_shmmgr->mmgr();
-        g_hal_state = fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(nullptr, g_h2s_shmmgr);
+        g_hal_state =
+            fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(nullptr, hal_cfg,
+                                                            g_h2s_shmmgr);
     }
 
     // in all cases g_hal_state must be setup by now

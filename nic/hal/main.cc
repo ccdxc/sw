@@ -95,7 +95,7 @@ svc_reg (const std::string& server_addr,
     ProxyServiceImpl         proxy_svc;
     IpsecCbServiceImpl       ipseccb_svc;
     CpuCbServiceImpl         cpucb_svc;
-    CryptoKeyServiceImpl     crypto_key_svc; 
+    CryptoKeyServiceImpl     crypto_key_svc;
     RawrCbServiceImpl        rawrcb_svc;
     RawcCbServiceImpl        rawccb_svc;
     ProxyrCbServiceImpl      proxyrcb_svc;
@@ -160,7 +160,7 @@ svc_reg (const std::string& server_addr,
         // Revisit. DOL was not able to create Lif without qos class
         server_builder.RegisterService(&qos_svc);
         // Revisit. DOL was not able to create Tenant with security profile.
-        server_builder.RegisterService(&nwsec_svc);     
+        server_builder.RegisterService(&nwsec_svc);
         server_builder.RegisterService(&endpoint_svc);
     }
 

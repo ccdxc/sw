@@ -41,7 +41,7 @@ typedef enum hal_timer_id_s {
     HAL_TIMER_ID_TCP_CLOSE_WAIT           = 2,
     HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT     = 3,
     HAL_TIMER_ID_TCP_CXNSETUP_WAIT        = 4,
-    HAL_TIMER_ID_MAX                      = 5, 
+    HAL_TIMER_ID_MAX                      = 5,
 } hal_timer_id_t;
 
 #define HAL_HANDLE_HT_SZ                             (16 << 10)
@@ -59,9 +59,9 @@ class hal_handle;
 //------------------------------------------------------------------------------
 class hal_cfg_db {
 public:
-    static hal_cfg_db *factory(shmmgr *mmgr = NULL);
+    static hal_cfg_db *factory(hal_cfg_t *hal_cfg, shmmgr *mmgr = NULL);
     static void destroy(hal_cfg_db *cfg_db);
-    void init_on_restart(void);
+    void init_on_restart(hal_cfg_t *hal_cfg);
 
     void rlock(void) { rwlock_.rlock(); }
     void runlock(void) { rwlock_.runlock(); }
@@ -143,9 +143,9 @@ private:
 private:
     hal_cfg_db();
     ~hal_cfg_db();
-    bool init_pss(shmmgr *mmgr);
-    bool init_vss(void);
-    bool init(shmmgr *mmgr = NULL);
+    bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
+    bool init_vss(hal_cfg_t *hal_cfg);
+    bool init(hal_cfg_t *hal_cfg, shmmgr *mmgr = NULL);
 };
 
 //------------------------------------------------------------------------------
@@ -156,9 +156,9 @@ private:
 //------------------------------------------------------------------------------
 class hal_oper_db {
 public:
-    static hal_oper_db *factory(shmmgr *mmgr = NULL);
+    static hal_oper_db *factory(hal_cfg_t *hal_cfg, shmmgr *mmgr = NULL);
     static void destroy(hal_oper_db *oper_db);
-    void init_on_restart(void);
+    void init_on_restart(hal_cfg_t *hal_cfg);
 
     ht *hal_handle_id_ht(void) const { return hal_handle_id_ht_; };
     ht *vrf_id_ht(void) const { return vrf_id_ht_; }
@@ -202,7 +202,7 @@ public:
     ip_addr_t *mytep(void) { return &mytep_ip; }
     eventmgr *event_mgr(void) const { return event_mgr_; }
     if_id_t app_redir_if_id(void) const { return app_redir_if_id_; }
-    void set_app_redir_if_id(if_id_t id) { 
+    void set_app_redir_if_id(if_id_t id) {
         app_redir_if_id_ = id;
     }
     void set_forwarding_mode(hal_forwarding_mode_t mode) {
@@ -261,9 +261,9 @@ private:
     shmmgr       *mmgr_;
 
 private:
-    bool init_pss(shmmgr *mmgr);
-    bool init_vss(void);
-    bool init(shmmgr *mmgr = NULL);
+    bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
+    bool init_vss(hal_cfg_t *hal_cfg);
+    bool init(hal_cfg_t *hal_cfg, shmmgr *mmgr = NULL);
     hal_oper_db();
     ~hal_oper_db();
 };
@@ -276,9 +276,9 @@ private:
 //------------------------------------------------------------------------------
 class hal_state {
 public:
-    hal_state(hal_obj_meta **obj_meta, shmmgr *mmgr = NULL);
+    hal_state(hal_obj_meta **obj_meta, hal_cfg_t *hal_cfg, shmmgr *mmgr = NULL);
     ~hal_state();
-    void init_on_restart(void);
+    void init_on_restart(hal_cfg_t *hal_cfg);
     shmmgr *mmgr(void) const { return mmgr_; }
 
     // get APIs for various DBs
@@ -412,7 +412,7 @@ public:
     ht *rawrcb_id_ht(void) const { return oper_db_->rawrcb_id_ht(); }
     if_id_t app_redir_if_id(void) const { return oper_db_->app_redir_if_id(); }
 
-    void set_app_redir_if_id(if_id_t id) { 
+    void set_app_redir_if_id(if_id_t id) {
         oper_db_->set_app_redir_if_id(id);
     }
 
@@ -437,7 +437,7 @@ public:
     ht *gft_exact_match_flow_entry_id_ht(void) const { return oper_db_->gft_exact_match_flow_entry_id_ht(); }
 
     // forwarding mode APIs
-    void set_forwarding_mode(hal_forwarding_mode_t mode) { 
+    void set_forwarding_mode(hal_forwarding_mode_t mode) {
         oper_db_->set_forwarding_mode(mode);
     }
     hal_forwarding_mode_t forwarding_mode(void) const { return oper_db_->forwarding_mode(); }
