@@ -17,7 +17,7 @@ objects:
             api      : L2SegmentUpdate
             request  : L2SegmentRequestMsg
             response : L2SegmentResponseMsg
-            pre_cb   : None
+            pre_cb   : callback://l2segment/PreUpdateCb
             post_cb  : None
         delete:
             api      : L2SegmentDelete

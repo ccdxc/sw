@@ -373,6 +373,7 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
 
     if (spec.has_tunnel_encap()) {
         switch (spec.tunnel_encap().encap_type()) {
+        case types::ENCAP_TYPE_NONE:
         case types::ENCAP_TYPE_VXLAN:
             break;
         default:
