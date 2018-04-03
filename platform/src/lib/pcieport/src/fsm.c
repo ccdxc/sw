@@ -143,7 +143,7 @@ static void
 pcieport_macdn(pcieport_t *p)
 {
     pcieport_clear_fault(p);
-    if (pcieport_drain(p) < 0) {
+    if (pcieport_drain(p) < 0 && 0 /* XXX for HAPS2 */) {
         pcieport_fault(p, "drain failed");
         return;
     }
