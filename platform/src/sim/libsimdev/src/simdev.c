@@ -95,6 +95,17 @@ simdev_doorbell(u_int64_t addr, u_int64_t data)
     return 0;
 }
 
+void simdev_hal_create_eq(void *cmd,
+                          void *comp,
+                          u_int32_t *done)
+{
+    simdev_api_t *api = simdevinfo_api();
+
+    if (api && api->hal_create_eq) {
+        return api->hal_create_eq(cmd, comp, done);
+    }
+}
+
 void simdev_hal_create_mr(void *cmd,
                           void *comp,
                           u_int32_t *done)

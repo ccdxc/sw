@@ -254,7 +254,8 @@ static inline u64 ionic_queue_dbell_val_arm(struct ionic_queue *q)
  */
 static inline void ionic_dbell_ring(u64 __iomem *dbreg, u64 val)
 {
-	iowrite64(val, dbreg);
+	/* XXX should be iowrite64, but waiting on Logan's patch lib/iomap.c */
+	writeq(val, dbreg);
 }
 
 #endif /* IONIC_QUEUE_H */

@@ -178,6 +178,43 @@ int simdev_read_host_mem(u_int64_t addr, void *buf, size_t size);
 int simdev_write_host_mem(u_int64_t addr, void *buf, size_t size);
 } /* extern "c" */
 
+void hal_create_eq (struct create_eq_cmd  *cmd,
+                    struct admin_comp     *comp,
+                    hal_req_resp_t        *item)
+{
+    shared_ptr<Rdma::Stub> rdma_svc = GetRdmaStub();
+
+    ClientContext context;
+    RdmaEqRequestMsg request;
+    RdmaEqResponseMsg response;
+
+    RdmaEqSpec *spec = request.add_request();
+    spec->set_eq_id(cmd->intr);
+    spec->set_hw_lif_id(cmd->lif_id+lif_base);
+    spec->set_num_eq_wqes(1u << cmd->log_depth);
+    spec->set_eq_wqe_size(1u << cmd->log_stride);
+    spec->set_eqe_base_addr_phy(cmd->dma_addr);
+    spec->set_int_num(cmd->intr);
+
+    Status status = rdma_svc->RdmaEqCreate(&context, request, &response);
+    if (status.ok()) {
+        //This loop gets executed only once.
+        for (int i = 0; i < response.response().size(); i++) {
+            RdmaEqResponse eq_response = response.response(i);
+            comp->status = eq_response.api_status();
+            cout << "lib_driver.cc: hal_create_eq RPC: SUCCESS" << endl;
+        }
+    } else {
+        comp->status = status.error_code();
+        cout << "lib_driver.cc: hal_create_eq RPC: " << status.error_message() << endl;
+    }
+
+    cout << "lib_driver.cc: hal_create_eq comp status: " << comp->status << endl;
+
+    *item->done = 1;
+    return;
+}
+
 void hal_create_mr (struct create_mr_cmd  *cmd,
                     struct create_mr_comp *comp,
                     hal_req_resp_t        *item)
@@ -518,6 +555,12 @@ public:
 
             switch(req.cmd.opcode)
             {
+            case CMD_OPCODE_RDMA_CREATE_EQ:
+                hal_create_eq((struct create_eq_cmd *)&req.cmd,
+                              (struct admin_comp *)&req.comp,
+                              &req);
+                break;
+
             case CMD_OPCODE_RDMA_CREATE_MR:
                 hal_create_mr((struct create_mr_cmd *)&req.cmd,
                               (struct create_mr_comp *)&req.comp,
@@ -543,6 +586,7 @@ public:
                 break;
 
             default:
+                std::cout << "HalReqThread: default case... missing something?" << std::endl;
                 break;
             }
         }
@@ -567,6 +611,23 @@ extern "C" void init_lib_driver (void)
      * Lets create the thread that interacts with HAL in asynchronous fashion
      */
     consumer_thread = new std::thread(&HalReqThread::run, &reqThr);
+}
+
+extern "C" void hal_create_eq_wrapper (struct create_eq_cmd  *cmd,
+                                       struct admin_comp     *comp,
+                                       u_int32_t             *done)
+{
+    hal_req_resp_t item;
+
+    memset(&item, 0, sizeof(item));
+    std::cout << "Queing Req with opcode %d: " << cmd->opcode << std::endl;
+    memcpy(&item.cmd, cmd, sizeof(*cmd));
+    memcpy(&item.comp, comp, sizeof(*comp));
+
+    item.done = done;
+
+    reqBuf.add(item);
+    comp->status = 0;
 }
 
 extern "C" void hal_create_mr_wrapper (struct create_mr_cmd  *cmd,

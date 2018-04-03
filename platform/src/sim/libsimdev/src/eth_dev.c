@@ -42,6 +42,8 @@ typedef struct ethparams_s {
     int txq_count;
     int rxq_type;
     int rxq_count;
+    int eq_type;
+    int eq_count;
     int intr_base;
     int intr_count;
     int upd[8];
@@ -202,10 +204,10 @@ devcmd_identify(struct admin_cmd *acmd, struct admin_comp *acomp)
             .ndbpgs_per_lif = 4,
             .ntxqs_per_lif = ep->txq_count,
             .nrxqs_per_lif = ep->rxq_count,
+            .neqs_per_lif = ep->eq_count,
             .ncqs_per_lif = 0,
             .nrdmasqs_per_lif = 16,
             .nrdmarqs_per_lif = 16,
-            .neqs_per_lif = 0,
             .nintrs = ep->intr_count,
             .nucasts_per_lif = 0,
             .nmcasts_per_lif = 0,
@@ -565,6 +567,17 @@ devcmd_debug_q_dump(struct admin_cmd *acmd, struct admin_comp *acomp)
 }
 
 static void
+devcmd_create_eq (struct admin_cmd  *acmd,
+                  struct admin_comp *acomp,
+                  u_int32_t         *done)
+{
+    struct create_eq_cmd *cmd = (void *)acmd;
+    struct create_eq_comp *comp = (void *)acomp;
+
+    simdev_hal_create_eq(cmd, comp, done);
+}
+
+static void
 devcmd_create_mr (struct admin_cmd  *acmd,
                   struct admin_comp *acomp,
                   u_int32_t         *done)
@@ -682,6 +695,10 @@ devcmd(struct dev_cmd_regs *dc)
         break;
     case CMD_OPCODE_DEBUG_Q_DUMP:
         devcmd_debug_q_dump(cmd, comp);
+        break;
+
+    case CMD_OPCODE_RDMA_CREATE_EQ:
+        devcmd_create_eq(cmd, comp, &dc->done);
         break;
 
     case CMD_OPCODE_RDMA_CREATE_MR:
@@ -1308,6 +1325,8 @@ eth_init(simdev_t *sd, const char *devparams)
                      "    txq_count=<txq_count>\n"
                      "    rxq_type=<rxq_type>\n"
                      "    rxq_count=<rxq_count>\n"
+                     "    eq_type=<eq_type>\n"
+                     "    eq_count=<eq_count>\n"
                      "    qstate_addr=<qstate_addr>\n"
                      "    qstate_size=<qstate_size>\n"
                      "    intr_base=<intr_base>\n"
@@ -1333,6 +1352,8 @@ eth_init(simdev_t *sd, const char *devparams)
     GET_PARAM(txq_count, int);
     GET_PARAM(rxq_type, int);
     GET_PARAM(rxq_count, int);
+    GET_PARAM(eq_type, int);
+    GET_PARAM(eq_count, int);
     GET_PARAM(intr_base, int);
     GET_PARAM(intr_count, int);
     GET_PARAM(mac, mac);
