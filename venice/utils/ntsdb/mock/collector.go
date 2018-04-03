@@ -39,6 +39,11 @@ func (f *Collector) WriteMetrics(ctx context.Context, mb *metric.MetricBundle) (
 	return &api.Empty{}, nil
 }
 
+// WriteLines method allows for writing line protocol towards collector
+func (f *Collector) WriteLines(ctx context.Context, in *metric.LineBundle) (*api.Empty, error) {
+	return &api.Empty{}, nil
+}
+
 // ValidateSendInterval gets the time when last write function was called
 func (f *Collector) ValidateSendInterval(expDuration time.Duration) bool {
 	actualDuration := f.lastWrite.Sub(f.prevWrite)
