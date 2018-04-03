@@ -1,15 +1,16 @@
 {
-  "mode": "sim",
-  "asic":
+  "mode" : "sim",
+  "asic" :
   {
-    "name": "capri",
+    "name" : "capri",
     "loader_info_file" : "gen/capri_loader.conf",
     "hbm_cache" : "true"
   },
   "sw" : {
-    "grpc_port": "50054",
-    "feature_set": "iris",
-    "control_cores_mask": "0x1",
-    "data_cores_mask": "0x2"
+    "grpc_port" : "50054",
+    "feature_set" : "iris",
+    "control_cores_mask" : "0x1",
+    "data_cores_mask" : "0x2",
+    "shm" : false
   }
 }

@@ -1161,6 +1161,7 @@ static hal_ret_t
 hal_obj_unmarshall (hal_state_umctxt_t *umctxt)
 {
     HAL_ASSERT((umctxt != NULL) && (umctxt->obj != NULL) && (umctxt->len > 0));
+    HAL_TRACE_DEBUG("Unmarshalling obj id {}, len {}");
     umctxt->unmarshall_cb(umctxt->obj, umctxt->len);
     return HAL_RET_OK;
 }
@@ -1271,7 +1272,9 @@ hal_state::restore_state(void *mem)
         umctxt.len = tlv->len;
         umctxt.unmarshall_cb = obj_meta_[obj_id]->unmarshall_cb();
         hal_obj_unmarshall(&umctxt);
+
 skip:
+
         state += sizeof(tlv_t) + tlv->len;
         state_len -= sizeof(tlv_t) + tlv->len;
         HAL_TRACE_DEBUG("state remaining is {}", state_len);
@@ -1285,7 +1288,7 @@ skip:
 // one time memory related initialization for HAL
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_mem_init (hal_cfg_t *hal_cfg)
+hal_mem_init (hal_cfg_t *hal_cfg, hal_obj_meta **obj_meta)
 {
     bool    h2s_exists = false, h3s_exists = false;
     bool    shm_mode = hal_cfg->shm_mode;
@@ -1311,7 +1314,7 @@ hal_mem_init (hal_cfg_t *hal_cfg)
             shmmgr::remove(HAL_SERIALIZED_STATE_STORE);
         }
         // instantiate HAL state in regular linux memory
-        g_hal_state = new hal_state(nullptr, hal_cfg, nullptr);
+        g_hal_state = new hal_state(obj_meta, hal_cfg, nullptr);
     } else if (h2s_exists) {
         // stateful restart case
         HAL_TRACE_DEBUG("Stateful restart detected, restoring state");
@@ -1360,7 +1363,7 @@ hal_mem_init (hal_cfg_t *hal_cfg)
         fixed_managed_shared_memory    *fm_shm_mgr;
         fm_shm_mgr = (fixed_managed_shared_memory *)g_h2s_shmmgr->mmgr();
         g_hal_state =
-            fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(nullptr,
+            fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(obj_meta,
                                                             hal_cfg,
                                                             g_h2s_shmmgr);
 
@@ -1381,7 +1384,7 @@ hal_mem_init (hal_cfg_t *hal_cfg)
         fixed_managed_shared_memory    *fm_shm_mgr;
         fm_shm_mgr = (fixed_managed_shared_memory *)g_h2s_shmmgr->mmgr();
         g_hal_state =
-            fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(nullptr, hal_cfg,
+            fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(obj_meta, hal_cfg,
                                                             g_h2s_shmmgr);
     }
 

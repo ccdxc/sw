@@ -38,7 +38,7 @@ pd_vrf_create (pd_vrf_create_args_t *args)
     // allocate resources
     ret = vrf_pd_alloc_res(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to allocated resources", 
+        HAL_TRACE_ERR("{}:failed to allocated resources",
                       __FUNCTION__);
         goto end;
     }
@@ -84,7 +84,7 @@ pd_vrf_update (pd_vrf_update_args_t *args)
         }
 
         // Program input mapping native & tunnel with new gipo prefix
-        ret = vrf_pd_program_gipo_prefix(vrf_pd, 
+        ret = vrf_pd_program_gipo_prefix(vrf_pd,
                                          args->new_gipo_prefix);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("{}:unable to program gipo pfx term. ret:{}",
@@ -194,9 +194,9 @@ vrf_pd_del_from_db (pd_vrf_t *pd_vrf)
     return HAL_RET_OK;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // DeProgram HW
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
 vrf_pd_deprogram_hw (pd_vrf_t *vrf_pd)
 {
@@ -217,9 +217,9 @@ vrf_pd_deprogram_hw (pd_vrf_t *vrf_pd)
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // DeProgram input propterties table for cpu tx traffic
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
 vrf_pd_depgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
 {
@@ -229,7 +229,7 @@ vrf_pd_depgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
-    
+
     sdk_ret = inp_prop_tbl->remove(vrf_pd->inp_prop_tbl_cpu_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -246,9 +246,9 @@ vrf_pd_depgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
 }
 
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Program HW
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
 vrf_pd_program_hw (pd_vrf_t *vrf_pd)
 {
@@ -268,9 +268,9 @@ vrf_pd_program_hw (pd_vrf_t *vrf_pd)
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Program input propterties table for cpu tx traffic
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
 vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
 {
@@ -381,9 +381,9 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Program input mapping table to terminate GIPo tunnels
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
 vrf_pd_del_gipo_termination_prefix(pd_vrf_t *vrf_pd,
                                    p4pd_table_id tbl_id)
@@ -424,9 +424,9 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // De-Program HW
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
 vrf_pd_deprogram_gipo_prefix(pd_vrf_t *vrf_pd)
 {
@@ -441,11 +441,11 @@ vrf_pd_deprogram_gipo_prefix(pd_vrf_t *vrf_pd)
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Program input mapping table to terminate GIPo tunnels
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
-vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd, 
+vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd,
                            ip_prefix_t *gipo_prefix)
 {
     uint32_t     idx;
@@ -528,7 +528,7 @@ fail_flag:
 }
 
 //-----------------------------------------------------------------------------
-// Allocate resources. 
+// Allocate resources.
 //-----------------------------------------------------------------------------
 hal_ret_t
 vrf_pd_alloc_res(pd_vrf_t *vrf_pd)
@@ -540,7 +540,7 @@ vrf_pd_alloc_res(pd_vrf_t *vrf_pd)
     rs = g_hal_state_pd->vrf_hwid_idxr()->
                          alloc((uint32_t *)&vrf_pd->vrf_hw_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("{}:failed to alloc vrf_hw_id err: {}", 
+        HAL_TRACE_ERR("{}:failed to alloc vrf_hw_id err: {}",
                       __FUNCTION__, rs);
         vrf_pd->vrf_hw_id = INVALID_INDEXER_INDEX;
         ret = HAL_RET_NO_RESOURCE;
@@ -549,7 +549,7 @@ vrf_pd_alloc_res(pd_vrf_t *vrf_pd)
 
     vrf_pd->vrf_fl_lkup_id = vrf_pd->vrf_hw_id << HAL_PD_VRF_SHIFT;
 
-    HAL_TRACE_DEBUG("{}:allocated vrf_hw_id:{}, vrf_fl_lkup_id:{}", 
+    HAL_TRACE_DEBUG("{}:allocated vrf_hw_id:{}, vrf_fl_lkup_id:{}",
                     __FUNCTION__, vrf_pd->vrf_hw_id, vrf_pd->vrf_fl_lkup_id);
 
     ret = vrf_pd_alloc_cpuid(vrf_pd);
@@ -563,7 +563,7 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// De-Allocate resources. 
+// De-Allocate resources.
 //-----------------------------------------------------------------------------
 hal_ret_t
 vrf_pd_dealloc_res(pd_vrf_t *vrf_pd)
@@ -574,13 +574,13 @@ vrf_pd_dealloc_res(pd_vrf_t *vrf_pd)
     if (vrf_pd->vrf_hw_id != INVALID_INDEXER_INDEX) {
         rs = g_hal_state_pd->vrf_hwid_idxr()->free(vrf_pd->vrf_hw_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("{}:failed to free vrf_hw_id err: {}", 
+            HAL_TRACE_ERR("{}:failed to free vrf_hw_id err: {}",
                           __FUNCTION__, vrf_pd->vrf_hw_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("{}:freed vrf_hw_id: {}", 
+        HAL_TRACE_DEBUG("{}:freed vrf_hw_id: {}",
                         __FUNCTION__, vrf_pd->vrf_hw_id);
     }
 
@@ -610,8 +610,8 @@ vrf_pd_alloc_cpuid(pd_vrf_t *pd_vrf)
         pd_vrf->vrf_fromcpu_vlan_id = INVALID_INDEXER_INDEX;
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("{}: vrf_id:{} allocated from_cpu_vlan_id: {}", 
-                    __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}: vrf_id:{} allocated from_cpu_vlan_id: {}",
+                    __FUNCTION__,
                     ((vrf_t*)(pd_vrf->vrf))->vrf_id,
                     pd_vrf->vrf_fromcpu_vlan_id);
 
@@ -632,13 +632,13 @@ vrf_pd_dealloc_cpuid(pd_vrf_t *vrf_pd)
         rs = g_hal_state_pd->l2seg_cpu_idxr()->free(vrf_pd->
                                                     vrf_fromcpu_vlan_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("{}:failed to free cpuid err: {}", 
+            HAL_TRACE_ERR("{}:failed to free cpuid err: {}",
                           __FUNCTION__, vrf_pd->vrf_fromcpu_vlan_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("{}:freed from_cpu_vlan_id: {}", 
+        HAL_TRACE_DEBUG("{}:freed from_cpu_vlan_id: {}",
                         __FUNCTION__, vrf_pd->vrf_fromcpu_vlan_id);
     }
 
@@ -652,7 +652,7 @@ end:
 //  - Delink PI <-> PD
 //  - Free PD vrf
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -669,7 +669,7 @@ vrf_pd_cleanup(pd_vrf_t *vrf_pd)
     // Check if l2segs have been removed before vrf cleanup
     // index 0 is reserved.
     if (vrf_pd->l2seg_hw_id_idxr_->num_indices_allocated() > 1) {
-        HAL_TRACE_ERR("{}:l2seg idxr still in use. usage:{}", 
+        HAL_TRACE_ERR("{}:l2seg idxr still in use. usage:{}",
                       __FUNCTION__, vrf_pd->l2seg_hw_id_idxr_->
                       num_indices_allocated());
         ret = HAL_RET_INVALID_OP;
@@ -679,8 +679,8 @@ vrf_pd_cleanup(pd_vrf_t *vrf_pd)
     // Releasing resources
     ret = vrf_pd_dealloc_res(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for vrf: {}", 
-                      __FUNCTION__, 
+        HAL_TRACE_ERR("{}: unable to dealloc res for vrf: {}",
+                      __FUNCTION__,
                       ((vrf_t *)(vrf_pd->vrf))->vrf_id);
         goto end;
     }
@@ -710,15 +710,15 @@ vrf_pd_alloc_l2seg_hw_id(pd_vrf_t *vrf_pd, uint32_t *l2seg_hw_id)
 
     rs = vrf_pd->l2seg_hw_id_idxr_->alloc(l2seg_hw_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("{}:failed to alloc l2seg_hw_id err: {}", 
+        HAL_TRACE_ERR("{}:failed to alloc l2seg_hw_id err: {}",
                       __FUNCTION__, rs);
         *l2seg_hw_id = INVALID_INDEXER_INDEX;
         ret = HAL_RET_NO_RESOURCE;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}:allocated l2seg_hw_id: {} for vrf: {}", 
-                    __FUNCTION__, *l2seg_hw_id, 
+    HAL_TRACE_DEBUG("{}:allocated l2seg_hw_id: {} for vrf: {}",
+                    __FUNCTION__, *l2seg_hw_id,
                     ((vrf_t *)(vrf_pd->vrf))->vrf_id);
 
 end:
@@ -739,7 +739,7 @@ vrf_pd_free_l2seg_hw_id(pd_vrf_t *vrf_pd, uint32_t l2seg_hw_id)
         goto end;
     }
 
-    if (l2seg_hw_id != INVALID_INDEXER_INDEX) { 
+    if (l2seg_hw_id != INVALID_INDEXER_INDEX) {
         rs = vrf_pd->l2seg_hw_id_idxr_->free(l2seg_hw_id);
         if (rs != indexer::SUCCESS) {
             HAL_TRACE_ERR("{}:Failed to free l2seg_hw_id:{} "
@@ -748,8 +748,8 @@ vrf_pd_free_l2seg_hw_id(pd_vrf_t *vrf_pd, uint32_t l2seg_hw_id)
             ret = HAL_RET_NO_RESOURCE;
             goto end;
         }
-        HAL_TRACE_DEBUG("{}:freed l2seg_hw_id: {} for vrf: {}", 
-                        __FUNCTION__, l2seg_hw_id, 
+        HAL_TRACE_DEBUG("{}:freed l2seg_hw_id: {} for vrf: {}",
+                        __FUNCTION__, l2seg_hw_id,
                         ((vrf_t *)(vrf_pd->vrf))->vrf_id);
     }
 
@@ -757,20 +757,20 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Linking PI <-> PD
-// ----------------------------------------------------------------------------
-void 
+//-----------------------------------------------------------------------------
+void
 link_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten)
 {
     pd_ten->vrf = pi_ten;
     pi_ten->pd = pd_ten;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
-// ----------------------------------------------------------------------------
-void 
+//-----------------------------------------------------------------------------
+void
 delink_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten)
 {
     if (pd_ten) {
@@ -781,9 +781,9 @@ delink_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten)
     }
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Makes a clone
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
 pd_vrf_make_clone(pd_vrf_make_clone_args_t *args)
 {
@@ -808,9 +808,9 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
 pd_vrf_mem_free(pd_vrf_mem_free_args_t *args)
 {
@@ -823,12 +823,11 @@ pd_vrf_mem_free(pd_vrf_mem_free_args_t *args)
     return ret;
 }
 
-// ----------------------------------------------------------------------------
-// Returns the vlan id for packets from CPU 
+//-----------------------------------------------------------------------------
+// Returns the vlan id for packets from CPU
 // Note: Currently being used only for IPSec packets.
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
-// pd_vrf_get_fromcpu_vlanid(vrf_t *vrf, uint16_t *vid)
 pd_vrf_get_fromcpu_vlanid(pd_vrf_get_fromcpu_vlanid_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;

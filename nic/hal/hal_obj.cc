@@ -7,6 +7,8 @@
 
 namespace hal {
 
+hal_obj_meta    *g_obj_meta[HAL_OBJ_ID_MAX];
+
 hal_ret_t
 hal_default_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
 {
@@ -20,8 +22,6 @@ hal_default_unmarshall_cb (void *mem, uint32_t len)
 {
     return 0;
 }
-
-hal_obj_meta    *g_obj_meta[HAL_OBJ_ID_MAX];
 
 void
 hal_obj_meta_init (void)

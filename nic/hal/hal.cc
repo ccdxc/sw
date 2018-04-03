@@ -445,7 +445,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             hal_cfg->features = HAL_FEATURE_SET_GFT;
         } else {
             hal_cfg->features = HAL_FEATURE_SET_NONE;
-            HAL_TRACE_ERR("Uknown feature set {}", sparam.c_str());
+            HAL_TRACE_ERR("Unknown feature set {}", sparam.c_str());
         }
         strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
         hal_cfg->shm_mode = pt.get<bool>("sw.shm", false);
@@ -617,7 +617,8 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Platform initialization done");
 
     // do memory related initialization
-    HAL_ABORT(hal_mem_init(hal_cfg) == HAL_RET_OK);
+    hal_obj_meta_init();
+    HAL_ABORT(hal_mem_init(hal_cfg, g_obj_meta) == HAL_RET_OK);
     g_hal_state->set_catalog(catalog);
 
     // set the forwarding mode
