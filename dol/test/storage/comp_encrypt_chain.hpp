@@ -1,5 +1,5 @@
-#ifndef COMP_ENCRYPT_CHAIN_HPP_
-#define COMP_ENCRYPT_CHAIN_HPP_
+#ifndef	COMP_ENCRYPT_CHAIN_HPP_
+#define	COMP_ENCRYPT_CHAIN_HPP_
 
 #include "tests.hpp"
 #include "xts.hpp"
@@ -275,8 +275,6 @@ private:
     bool            destructor_free_buffers;
     bool            suppress_info_log;
     bool            success;
-    bool            success;
-    bool            destructor_free_buffers;
 };
 
 

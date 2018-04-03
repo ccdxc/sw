@@ -408,7 +408,7 @@ int lifs_setup() {
   printf("Successfully set NVME LIF %lu BDF %u \n", nvme_lif, kNvmeLifBdf);
   
   bzero(&pvm_lif_params, sizeof(pvm_lif_params));
-  lif_params_init(&pvm_lif_params, SQ_TYPE, kPvmNumEntries, PvmNumSQs);
+  lif_params_init(&pvm_lif_params, SQ_TYPE, kPvmNumEntriesMax, PvmNumSQs);
   lif_params_init(&pvm_lif_params, CQ_TYPE, kPvmNumEntries, PvmNumCQs);
 
   if (hal_if::create_lif(&pvm_lif_params, &pvm_lif) < 0) {

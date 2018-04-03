@@ -110,6 +110,10 @@ int test_setup() {
   // Initialize resources
   if (queues::resources_init() < 0) {
     printf("Failed to initialize resources \n");
+
+  // Initialize queues
+  if (queues::queues_setup() < 0) {
+    printf("Failed to setup lif and queues \n");
     return -1;
   }
   printf("Initialized resources \n");

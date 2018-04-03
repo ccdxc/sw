@@ -79,14 +79,7 @@ cc_library(
         "compression.hpp",
         "compression_test.hpp",
         "comp_encrypt_chain.hpp",
-<<<<<<< HEAD
-<<<<<<< HEAD
         "decrypt_decomp_chain.hpp",
-=======
->>>>>>> - Refactor accelerator chaining tests and begin scaling them.
-=======
-        "decrypt_decomp_chain.hpp",
->>>>>>> - Add decrypt-decompress chain class.
         "utils.hpp",
         "dp_mem.hpp",
 	"queues.hpp",
@@ -105,7 +98,6 @@ cc_library(
 )
 
 cc_library(
-<<<<<<< HEAD
     name = "acc_scale_tests",
     srcs = [
         "acc_scale_tests.cc",
@@ -132,8 +124,6 @@ cc_library(
 )
 
 cc_library(
-=======
->>>>>>> - Refactor accelerator chaining tests and begin scaling them.
     name = "comp_encrypt_chain",
     srcs = [
         "comp_encrypt_chain.cc",
@@ -156,10 +146,6 @@ cc_library(
         "//external:gflags",
     ],
 )
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> - Add decrypt-decompress chain class.
 
 cc_library(
     name = "decrypt_decomp_chain",
@@ -186,11 +172,6 @@ cc_library(
     ],
 )
 
-<<<<<<< HEAD
-=======
->>>>>>> - Refactor accelerator chaining tests and begin scaling them.
-=======
->>>>>>> - Add decrypt-decompress chain class.
 cc_library(
     name= "r2n",
     srcs = [
@@ -296,17 +277,9 @@ cc_binary(
         ":tests",
         ":rdma",
         ":compression",
-<<<<<<< HEAD
         ":acc_scale_tests",
         ":comp_encrypt_chain",
         ":decrypt_decomp_chain",
-=======
-        ":comp_encrypt_chain",
-<<<<<<< HEAD
->>>>>>> - Refactor accelerator chaining tests and begin scaling them.
-=======
-        ":decrypt_decomp_chain",
->>>>>>> - Add decrypt-decompress chain class.
         "//nic:grpc",
         "//nic:libprotobuf",
         "//external:gflags",
