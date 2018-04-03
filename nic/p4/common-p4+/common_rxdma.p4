@@ -1239,6 +1239,7 @@ header_type toeplitz_input1_t {
 header_type toeplitz_input2_t {
     fields {
         data : 32;
+        data2 : 8;
     }
 }
 
@@ -1330,7 +1331,7 @@ action rx_table_cpu_hash_action() {
 
 @pragma stage 3
 @pragma hash_type 4
-@pragma toeplitz_key toeplitz_input0.data toeplitz_input1.data toeplitz_input2.data
+@pragma toeplitz_key toeplitz_input0.data toeplitz_input1.data toeplitz_input2.data toeplitz_input2.data2
 @pragma toeplitz_seed toeplitz_key0.data toeplitz_key1.data toeplitz_key2.data
 table rx_table_cpu_hash {
     reads {
@@ -1341,6 +1342,7 @@ table rx_table_cpu_hash {
         toeplitz_key1.data        : exact;
         // Flit 3
         toeplitz_input2.data      : exact;
+        toeplitz_input2.data2     : exact;
         toeplitz_key2.data        : exact;
     }
     actions {

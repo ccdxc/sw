@@ -98,14 +98,15 @@
     .brcase CPU_PACKET_TYPE_IPV4; \
         b           _brend_label; \
         phvwrpair   p.toeplitz_input0_data[127:64], k.##_app_header##_ip_sa_sbit32_ebit127[79:16], \
-                    p.toeplitz_input0_data[63:32],  k.{##_app_header##_l4_sport...##_app_header##_l4_dport_sbit8_ebit15}; \
+                    p.toeplitz_input0_data[63:24],  k.{##_app_header##_ip_proto...##_app_header##_l4_dport_sbit8_ebit15}; \
     .brcase CPU_PACKET_TYPE_IPV6; \
         phvwr       p.toeplitz_input0_data, k.{##_app_header##_ip_sa_sbit0_ebit15...##_app_header##_ip_sa_sbit32_ebit127}; \
         phvwrpair   p.toeplitz_input1_data[127:120], k.##_app_header##_ip_da1_sbit0_ebit7, \
                     p.toeplitz_input1_data[119:64],  k.##_app_header##_ip_da1_sbit8_ebit63; \
         phvwr       p.toeplitz_input1_data[63:0], k.##_app_header##_ip_da2; \
         b           _brend_label; \
-        phvwr       p.toeplitz_input2_data, k.{##_app_header##_l4_sport...##_app_header##_l4_dport_sbit8_ebit15}; \
+        phvwrpair   p.toeplitz_input2_data, k.{##_app_header##_l4_sport...##_app_header##_l4_dport_sbit8_ebit15}, \
+                    p.toeplitz_input2_data2, k.##_app_header##_ip_proto; \
     .brcase 3; \
         illegal; \
         nop; \
