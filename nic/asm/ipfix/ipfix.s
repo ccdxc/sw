@@ -54,8 +54,8 @@ ipfix_flow_hash_overflow_scan:
 ipfix_flow_hash_overflow_scan_complete:
     phvwr       p.ipfix_metadata_scan_complete, 1
     // set table type and index for next scan
-    tblwr       d.{u.ipfix_start_d.flow_hash_index_next}, 0
-    tblwr       d.{u.ipfix_start_d.flow_hash_table_type}, \
+    tblwr.l     d.{u.ipfix_start_d.flow_hash_index_next}, 0
+    tblwr.l     d.{u.ipfix_start_d.flow_hash_table_type}, \
                     IPFIX_FLOW_HASH_TABLE
     // set table address in r1 for this scan
     addi        r1, r0, loword(p4_flow_hash_base)

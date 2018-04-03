@@ -24,28 +24,12 @@ ipfix_export_packet:
     add         r1, d.{u.ipfix_export_packet_d.ipfix_hdr_offset}.hx, 16
     seq         c1, r1, d.{u.ipfix_export_packet_d.next_record_offset}.hx
     bcf         [c1], ipfix_export_packet_exit
-    phvwr.c1    p.phv2mem_cmd3_dma_cmd_eop, 1
+    phvwr.c1    p.phv2mem_cmd4_dma_cmd_eop, 1
 
-    phvwr       p.p4_intr_global_tm_iport, TM_PORT_DMA
-    phvwr       p.p4_intr_global_tm_oport, TM_PORT_INGRESS
-    phvwr       p.p4_intr_global_lif, 1003
-    phvwri      p.ipfix_app_header_flags, \
-                    (P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | \
-                     P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN)
-
+    // is the scan complete?
     seq         c1, k.ipfix_metadata_scan_complete, 1
     bcf         [c1], ipfix_export_dma_packet
-    phvwr.c1    p.phv2mem_cmd3_dma_cmd_eop, 1
-
-    // update table type and next index in qstate of (self-16)
-    sub         r1, k.{ipfix_metadata_qstate_addr_sbit0_ebit1,\
-                       ipfix_metadata_qstate_addr_sbit2_ebit33}, ((64*16)-32)
-    phvwr       p.phv2mem_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwr       p.phv2mem_cmd4_dma_cmd_phv_start_addr, \
-                    CAPRI_PHV_START_OFFSET(ipfix_t1_metadata_next_record_offset)
-    phvwr       p.phv2mem_cmd4_dma_cmd_phv_end_addr, \
-                    CAPRI_PHV_END_OFFSET(ipfix_t1_metadata_flow_hash_index_next)
-    phvwr       p.phv2mem_cmd4_dma_cmd_addr, r1
+    phvwr.c1    p.phv2mem_cmd4_dma_cmd_eop, 1
 
     // ring doorbell (self-16)
     addi        r1, r0, DB_ADDR_BASE
@@ -64,6 +48,13 @@ ipfix_export_packet:
     phvwr       p.phv2mem_cmd5_dma_cmd_eop, 1
 
 ipfix_export_dma_packet:
+    phvwr       p.p4_intr_global_tm_iport, TM_PORT_DMA
+    phvwr       p.p4_intr_global_tm_oport, TM_PORT_INGRESS
+    phvwr       p.p4_intr_global_lif, 1003
+    phvwri      p.ipfix_app_header_flags, \
+                    (P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | \
+                     P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN)
+
     // global intrinsic to packet
     phvwr       p.phv2pkt_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwr       p.phv2pkt_cmd1_dma_cmd_phv_start_addr, \
@@ -97,6 +88,16 @@ ipfix_export_packet_exit:
                     CAPRI_PHV_START_OFFSET(ipfix_s5_metadata_doorbell1_data)
     phvwr       p.phv2mem_cmd3_dma_cmd_phv_end_addr, \
                     CAPRI_PHV_END_OFFSET(ipfix_s5_metadata_doorbell1_data)
-    phvwr.e     p.phv2mem_cmd3_dma_cmd_addr, r1
+    phvwr       p.phv2mem_cmd3_dma_cmd_addr, r1
+
+    // update table type and next index in qstate of (self-16)
+    sub         r1, k.{ipfix_metadata_qstate_addr_sbit0_ebit1,\
+                       ipfix_metadata_qstate_addr_sbit2_ebit33}, ((64*16)-32)
+    phvwr       p.phv2mem_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwr       p.phv2mem_cmd4_dma_cmd_phv_start_addr, \
+                    CAPRI_PHV_START_OFFSET(ipfix_t1_metadata_next_record_offset)
+    phvwr       p.phv2mem_cmd4_dma_cmd_phv_end_addr, \
+                    CAPRI_PHV_END_OFFSET(ipfix_t1_metadata_flow_hash_index_next)
+    phvwr.e     p.phv2mem_cmd4_dma_cmd_addr, r1
 
     phvwr       p.{app_header_table0_valid...app_header_table2_valid}, 0
