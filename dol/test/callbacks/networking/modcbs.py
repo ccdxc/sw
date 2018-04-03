@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import config.objects.stats_utils as stats_utils
+import config.objects.drop_stats as drop_stats
 
 from infra.common.logging import logger as logger
 
@@ -87,6 +88,8 @@ def TestCaseSetup(tc):
     tc.pvtdata.ipopts = getattr(iterelem, 'ipopts', None)
     tc.pvtdata.verify_lif_stats = getattr(iterelem, "lif_stats", False)
     tc.pvtdata.verify_session_stats = getattr(iterelem, "session_stats", False)
+    tc.pvtdata.verify_drop_stats = getattr(iterelem, "drop_stats", False)
+    tc.pvtdata.drop_reasons = getattr(iterelem, "drop_reasons", [])
     
     if getattr(iterelem, 'drop', False):
         tc.SetDrop()
@@ -101,6 +104,10 @@ def TestCasePreTrigger(tc):
         tc.pvtdata.svh.InitLifStats(tc)
     if tc.pvtdata.verify_session_stats:
         tc.pvtdata.svh.InitSessionStats(tc)
+
+    if tc.pvtdata.verify_drop_stats:
+        tc.pvtdata.dvh = drop_stats.DropStatsVerifHelper()
+        tc.pvtdata.dvh.Init(tc)
     return
 
 def TestCaseTeardown(tc):
@@ -146,5 +153,8 @@ def TestCaseVerify(tc):
         ret = False
     if tc.pvtdata.verify_session_stats and\
        tc.pvtdata.svh.VerifySessionStats(tc) is False:
+        ret = False
+    if tc.pvtdata.verify_drop_stats and\
+       tc.pvtdata.dvh.Verify(tc) is False:
         ret = False
     return ret

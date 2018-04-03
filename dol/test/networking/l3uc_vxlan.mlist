@@ -3,7 +3,7 @@ feature:
     id      : vxlan
     sub     : l3uc
     package : test.networking
-    module  : vxlan
+    module  : networking
     enable  : True
     ignore  : False
 
@@ -28,17 +28,29 @@ modules:
         name    : IPV4_GFT_DROP
         spec    : l3uc_vxlan.testspec
         iterate :
-            - flow: filter://type=IPV4,proto=UDP,label=GFT_DROP
-            - flow: filter://type=IPV4,proto=TCP,label=GFT_DROP
-            - flow: filter://type=IPV4,proto=ICMP,label=GFT_DROP
+            - flow          : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_flow_hit ]
+            - flow          : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_flow_hit ]
+            - flow          : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_flow_hit ]
 
     - module:
         name    : IPV6_GFT_DROP
         spec    : l3uc_vxlan.testspec
         iterate :
-            - flow: filter://type=IPV6,proto=UDP,label=GFT_DROP
-            - flow: filter://type=IPV6,proto=TCP,label=GFT_DROP
-            - flow: filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+            - flow          : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_flow_hit ]
+            - flow          : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_flow_hit ]
+            - flow          : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_flow_hit ]
 
     - module:
         name    : EDGE_ENCAP

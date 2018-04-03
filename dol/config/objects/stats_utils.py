@@ -123,7 +123,6 @@ class StatsVerifHelper:
     def __compare_tx_lif_stats(self, entry):
         if entry.exp is None:
             return False
-
         err = False
         exp = entry.exp.tx_stats
         act = entry.post.tx_stats

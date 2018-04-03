@@ -1,5 +1,6 @@
 # /usr/bin/python3
 import pdb
+import copy
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
@@ -10,6 +11,7 @@ import config.resmgr            as resmgr
 
 from config.store               import Store
 from infra.common.logging       import logger
+from infra.common.glopts        import GlobalOptions
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -45,40 +47,55 @@ class SystemObject(base.ConfigObjectBase):
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        return
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp):
+        self.__get_resp = copy.deepcopy(get_resp)
+        return
+
+    def Get(self):
+        halapi.GetSystem([self])
+        return
+
+    def GetDropStats(self):
+        if GlobalOptions.dryrun:
+            return None
+        self.Get()
+        return self.__get_resp.stats.drop_stats
+
 class SystemObjectHelper:
     def __init__(self):
-        self.systemObject = []
+        self.systemObject = None
         return
 
     def Configure(self):
-        logger.info("Configuring System Object")
-        objs = []
-
-        objs.append(self.systemObject)
-        halapi.ConfigureSystem(objs)
+        if self.systemObject:
+            logger.info("Configuring System Object")
+            halapi.ConfigureSystem([self.systemObject])
         return
 
     def Generate(self, topospec):
-        if 'dropaction' in topospec.__dict__ and topospec.dropaction == "span":
-            self.systemObject = SystemObject()
-            self.systemObject.Init()
-            for ssn in Store.objects.GetAllByClass(span.SpanSessionObject):
-                if ssn.IsErspan:
-                    # reconfigure the ERSPAN session.
-                    ssn.Update(0, "ERSPAN", None)
-                self.systemObject.mirror_sessions.append(ssn)
-            self.systemObject.Show()
+        self.systemObject = SystemObject()
+        self.systemObject.Init()
+
+        dropaction = getattr(topospec, 'dropaction', None)
+        if dropaction != "span":
+            return
+
+        for ssn in Store.objects.GetAllByClass(span.SpanSessionObject):
+            if ssn.IsErspan:
+                # reconfigure the ERSPAN session.
+                ssn.Update(0, "ERSPAN", None)
+            self.systemObject.mirror_sessions.append(ssn)
+        self.systemObject.Show()
 
     def GetSystemObject(self):
-        ret = []
-        for c in self.systemObject:
-            ret.append(c)
-        return ret
+        return self.systemObject
 
     def main(self, topospec):
         self.Generate(topospec)
-        if 'dropaction' in topospec.__dict__ and topospec.dropaction == "span":
-            self.Configure()
+        self.Configure()
         return
 
 SystemHelper = SystemObjectHelper()

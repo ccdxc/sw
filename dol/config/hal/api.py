@@ -42,33 +42,20 @@ import barco_rings_pb2      as barco_rings_pb2
 import system_pb2           as system_pb2
 import gft_pb2              as gft_pb2
 
-#import endpoint_pb2_grpc        as endpoint_pb2_grpc
-#import l2segment_pb2_grpc       as l2segment_pb2_grpc
-#import vrf_pb2_grpc          as vrf_pb2_grpc
-#import interface_pb2_grpc       as interface_pb2_grpc
-#import session_pb2_grpc         as session_pb2_grpc
-#import nwsec_pb2_grpc           as nwsec_pb2_grpc
-#import nw_pb2_grpc              as nw_pb2_grpc
-#import telemetry_pb2_grpc       as telemetry_pb2_grpc
-#import tcp_proxy_cb_pb2_grpc    as tcpcb_pb2_grpc
-#import tls_proxy_cb_pb2_grpc    as tlscb_pb2_grpc
-#import descriptor_aol_pb2_grpc  as descriptor_aol_pb2_grpc
-#import wring_pb2_grpc           as wring_pb2_grpc
-#import acl_pb2_grpc             as acl_pb2_grpc
-#import qos_pb2_grpc             as qos_pb2_grpc
-#import proxy_pb2_grpc           as proxy_pb2_grpc
-#import ipseccb_pb2_grpc         as ipseccb_pb2_grpc
-#import l4lb_pb2_grpc            as l4lb_pb2_grpc
-#import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
-#import rdma_pb2_grpc            as rdma_pb2_grpc
-#import cpucb_pb2_grpc           as cpucb_pb2_grpc
-#import rawrcb_pb2_grpc          as rawrcb_pb2_grpc
-#import rawccb_pb2_grpc          as rawccb_pb2_grpc
-
 HAL_MAX_BATCH_SIZE = 64
 
 HalChannel = None
 def __process_response(resp_msg, req_msg, req_objs, respcb):
+    if req_msg is None:
+        for idx in range(len(req_objs)):
+            req_obj = req_objs[idx]
+            resp_spec = resp_msg
+            getattr(req_obj, respcb)(None, resp_spec)
+            if resp_spec.api_status != types_pb2.API_STATUS_OK:
+                logger.error(" HAL Returned API Status:%d" % (resp_spec.api_status))
+                assert(0)
+        return
+
     num_req_specs = len(req_msg.request)
     num_resp_specs = len(resp_msg.response)
     if num_req_specs != num_resp_specs:
@@ -86,32 +73,42 @@ def __process_response(resp_msg, req_msg, req_objs, respcb):
             assert(0)
     return
 
+def __invoke_api(api, req_msg):
+    if req_msg:
+        resp_msg = api(req_msg)
+    else:
+        resp_msg = api(types_pb2.Empty())
+    return resp_msg
+
 def __hal_api_handler(objs, reqmsg_class, api, reqcb, respcb):
-    req_msg = reqmsg_class()
+    req_msg = None
+    if reqmsg_class: 
+        req_msg = reqmsg_class()
     req_objs = []
     count = 0
     for obj in objs:
-        req_spec = req_msg.request.add()
+        req_spec = None
+        if req_msg:
+            req_spec = req_msg.request.add()
         getattr(obj,reqcb)(req_spec)
         req_objs.append(obj)
 
         count += 1
         if count >= HAL_MAX_BATCH_SIZE:
-            resp_msg = api(req_msg)
+            resp_msg = __invoke_api(api, req_msg)
             __process_response(resp_msg, req_msg, req_objs, respcb)
             req_msg = reqmsg_class()
             req_objs = []
             count = 0
 
     if count != 0:
-        resp_msg = api(req_msg)
+        resp_msg = __invoke_api(api, req_msg)
         __process_response(resp_msg, req_msg, req_objs, respcb)
     return
 
 def __config(objs, reqmsg_class, config_method):
     return __hal_api_handler(objs, reqmsg_class, config_method,\
                             "PrepareHALRequestSpec", "ProcessHALResponse")
-
 
 def __get(objs, reqmsg_class, config_method):
     return __hal_api_handler(objs, reqmsg_class, config_method,\
@@ -729,3 +726,10 @@ def ConfigureGftFlows(objlist):
     __config(objlist, gft_pb2.GftExactMatchFlowEntryRequestMsg,
              stub.GftExactMatchFlowEntryCreate)
     return
+
+def GetSystem(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = system_pb2.SystemStub(HalChannel)
+    __get(objlist, None, stub.SystemGet)
+    return
+
