@@ -67,6 +67,16 @@ void *ionic_api_get_private(struct lif *lif,
 int ionic_api_set_private(struct lif *lif, void *priv,
 			  enum ionic_api_private kind);
 
+/** ionic_api_get_identity - Get result of device identification.
+ * @lif:		Handle to lif.
+ * @lif_id:		This lif id.
+ *
+ * The dev member of the union is valid.
+ *
+ * Return: pointer to result of identification.
+ */
+const union identity *ionic_api_get_identity(struct lif *lif, int *lif_id);
+
 /** ionic_api_get_intr - Reserve a device iterrupt index.
  * @lif:		Handle to lif.
  * @irq:		OS interrupt number returned.

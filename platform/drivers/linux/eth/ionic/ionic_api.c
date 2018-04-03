@@ -47,6 +47,14 @@ int ionic_api_set_private(struct lif *lif, void *priv,
 }
 EXPORT_SYMBOL_GPL(ionic_api_set_private);
 
+const union identity *ionic_api_get_identity(struct lif *lif, int *lif_id)
+{
+	*lif_id = lif->index;
+
+	return lif->ionic->ident;
+}
+EXPORT_SYMBOL_GPL(ionic_api_get_identity);
+
 int ionic_api_get_intr(struct lif *lif, int *irq)
 {
 	/* XXX second intr for rdma driver, eth will use intr zero.

@@ -29,8 +29,9 @@ struct ionic_ibdev {
 	struct ib_device_attr	dev_attr;
 	struct ib_port_attr	port_attr;
 
-	struct lif		*lif;
 	struct net_device	*ndev;
+	struct lif		*lif;
+	int			lif_id;
 
 	phys_addr_t		phys_dbpage_base;
 	u64		__iomem *dbpage;

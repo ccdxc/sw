@@ -31,8 +31,6 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define DEVICE_DESCRIPTION "Pensando Capri RoCE HCA"
 
 /* XXX cleanup */
-#include <ionic_dev.h> /* XXX prereq for include ionic_lif.h */
-#include <ionic_lif.h> /* XXX for lif.index */
 #define IONIC_NUM_RSQ_WQE         4
 #define IONIC_NUM_RRQ_WQE         4
 /* XXX cleanup */
@@ -641,7 +639,7 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 			.opcode = CMD_OPCODE_RDMA_CREATE_MR,
 			.pd_num = pd->pdid,
 			/* XXX lif should be dbid */
-			.lif = dev->lif->index,
+			.lif = dev->lif_id,
 			.access_flags = access,
 			.start = start,
 			.length = length,
@@ -873,7 +871,7 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq)
 		.cmd.create_cq = {
 			.opcode = CMD_OPCODE_RDMA_CREATE_CQ,
 			/* XXX lif should be dbid */
-			.lif_id = dev->lif->index,
+			.lif_id = dev->lif_id,
 			.cq_num = cq->cqid,
 			/* XXX may overflow, zero means 2^16 */
 			.num_cq_wqes = cq->q.mask + 1,
@@ -1147,7 +1145,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			.num_rrq_wqes = IONIC_NUM_RRQ_WQE,
 			.pd = pd->pdid,
 			/* XXX lif should be dbid */
-			.lif_id = dev->lif->index,
+			.lif_id = dev->lif_id,
 			/* XXX ib_qp_type_to_ionic(init_attr->qp_type) */
 			.service = 0,
 			.pmtu = 1024,
@@ -1755,6 +1753,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 {
 	struct ib_device *ibdev;
 	struct ionic_ibdev *dev;
+	const union identity *ident;
 	size_t size;
 	int rc;
 
@@ -1767,8 +1766,10 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	}
 
 	dev = to_ionic_ibdev(ibdev);
-	dev->lif = lif;
 	dev->ndev = ndev;
+	dev->lif = lif;
+
+	ident = ionic_api_get_identity(lif, &dev->lif_id);
 
 	ionic_api_get_dbpages(lif, &dev->dbid, &dev->dbpage,
 			      &dev->phys_dbpage_base);
@@ -1787,7 +1788,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.vendor_id = 0;
 	dev->dev_attr.vendor_part_id = 0;
 	dev->dev_attr.hw_ver = 0;
-	dev->dev_attr.max_qp = 20;
+	dev->dev_attr.max_qp = 20; /* XXX ident->dev.nrdmasqs_per_lif */
 	dev->dev_attr.max_qp_wr = 0xfff;
 	dev->dev_attr.device_cap_flags =
 		//IB_DEVICE_LOCAL_DMA_LKEY |
@@ -1799,7 +1800,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		0;
 	dev->dev_attr.max_sge = 6;
 	dev->dev_attr.max_sge_rd = 7;
-	dev->dev_attr.max_cq = 40;
+	dev->dev_attr.max_cq = 40; /* XXX ident->dev.ncqs_per_lif */
 	dev->dev_attr.max_cqe = 0xfff;
 	dev->dev_attr.max_mr = 40;
 	dev->dev_attr.max_pd = 40;
@@ -1814,7 +1815,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_mcast_grp = 0;
 	dev->dev_attr.max_mcast_qp_attach = 0;
 	dev->dev_attr.max_ah = 0;
-	dev->dev_attr.max_srq = 40;
+	dev->dev_attr.max_srq = 40; /* XXX ident->dev.nrdmarqs_per_lif */
 	dev->dev_attr.max_srq_wr = 0xfff;
 	dev->dev_attr.max_srq_sge = 7;
 	dev->dev_attr.max_fast_reg_page_list_len = 0;
