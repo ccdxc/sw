@@ -441,6 +441,7 @@ class capri_parse_state:
 
         self.active_lkp_lfs = [None for _ in self.parser.be.hw_model['parser']['lkp_regs']]
         self.len_chk_profiles = []
+        self.payload_offset_expr = None
 
         # hardware information
         self.lkp_regs = [capri_lkp_reg(v) for v in self.parser.be.hw_model['parser']['lkp_regs']]
@@ -537,6 +538,24 @@ class capri_parse_state:
             return self.p4_state._parsed_pragmas['generic_checksum_start'].keys()[0]
         else:
             return None
+
+    def create_payload_offset_expr(self):
+        assert (isinstance(self.extract_len, capri_parser_expr)), pdb.set_trace()
+        # need one of the terms free to use it for current offset
+        assert (not self.extract_len.op2 or not self.extract_len.op3), pdb.set_trace()
+        # payload_offset = current_offset + self.extract_len
+        payload_expr = copy.copy(self.extract_len)
+        # [cf2 OP2] [(cf1 [OP1 shft]) OP3] [const]
+        if not payload_expr.op2:
+            payload_expr.op2 = '+'
+            payload_expr.src_reg = (0, 0)
+        elif not payload_expr.op3:
+            payload_expr.op3 = '+'
+            payload_expr.src1 = (0, 0)
+            payload_expr.op1 = '>>'
+
+        self.payload_offset_expr = payload_expr
+        return
 
     def __repr__(self):
         return self.name

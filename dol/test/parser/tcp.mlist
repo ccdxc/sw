@@ -102,3 +102,11 @@ modules:
         name    : TCP_UNKNOWN_OPT_LEN_GT_PKT
         spec    : tcpopt_unknown_len_gt_pkt.testspec
 
+    - module:
+        name    : TCP_OPT_LEN_INTO_PAYLOAD
+        spec    : tcpopt_len_into_payload.testspec
+
+    - module:
+        name    : TCP_OPT_LEN_INVALID_WHQL_TEST
+        spec    : tcp_opt_len_invalid_whql_test.testspec
+

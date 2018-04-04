@@ -244,7 +244,10 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
             assert mux_id1 != None, pdb.set_trace()
             mux_inst['muxsel']['value'] = str(mux_id1)
             if isinstance(capri_expr.src1, tuple):
-                mask = (1<<capri_expr.src1[1]) - 1
+                if capri_expr.src1[1] == 0:
+                    mask = 0xFFFF
+                else:
+                    mask = (1<<capri_expr.src1[1]) - 1
             else:
                 mask = (1<<capri_expr.src1.width) - 1
             mux_inst['mask_val']['value'] = str(mask)
@@ -267,7 +270,10 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
             c_soff = (off / 8) * 8
             c_eoff = ((eoff+7)/8) * 8
             # since the lkp regs are 16bits each, end offset must be aligned to register
-            c_eoff = max(c_eoff, (c_soff + 16))
+            if c_soff != c_eoff:
+                # soff and eoff are same when 'current' is used
+                c_eoff = max(c_eoff, (c_soff + 16))
+
             if c_soff != off:
                 # not aligned at the start of the container - nothing to do
                 pass
@@ -276,7 +282,10 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
                 mask = capri_expr.mask
             else:
                 if isinstance(capri_expr.src1, tuple):
-                    mask = (1<<capri_expr.src1[1]) - 1
+                    if capri_expr.src1[1] == 0:
+                        mask = 0xFFFF
+                    else:
+                        mask = (1<<capri_expr.src1[1]) - 1
                 else:
                     mask = (1<<capri_expr.src1.width) - 1
 
@@ -1838,6 +1847,70 @@ def _allocate_mux_inst_resoures(capri_expr, nxt_cs, r, pkt_off1, pkt_off2, \
 
     return reg_id1, reg_id2, mux_id1, mux_id2
 
+def _allocate_mux_inst_resoures2(capri_expr, nxt_cs, add_off, \
+    mux_idx_allocator, sram):
+    # support src1 and src2 to be either reg, pkt[] or current_offset
+    reg_id1 = None; reg_id2 = None
+    mux_id1 = None; mux_id2 = None
+
+    if capri_expr.src_reg:
+        off = -1
+        if isinstance(capri_expr.src_reg, tuple):
+            if capri_expr.src_reg[1] == 0:
+                mux_id2 = mux_idx_alloc(mux_idx_allocator, 'current')
+                sram['mux_idx'][mux_id2]['sel']['value'] = str(3)
+                sram['mux_idx'][mux_id2]['lkpsel']['value'] = str(0)   # NA
+                sram['mux_idx'][mux_id2]['idx']['value'] = str(0)
+            else:
+                off = capri_expr.src_reg[0] + (add_off*8)
+                #off = pkt_off2
+        else:
+            if capri_expr.src_reg.is_meta:
+                if capri_expr.src_reg.hfname not in nxt_cs.lkp_flds:
+                    reg_id1 = nxt_cs.active_reg_find(set_op.capri_expr.src_reg)
+                else:
+                    reg_id1 = nxt_cs.lkp_flds[capri_expr.src_reg.hfname].reg_id
+            else:
+                off = pkt_off2
+        if off >= 0:
+            mux_id2 = mux_idx_alloc(mux_idx_allocator, off/8)
+            sram['mux_idx'][mux_id2]['sel']['value'] = str(0)
+            sram['mux_idx'][mux_id2]['lkpsel']['value'] = str(0)   # NA
+            sram['mux_idx'][mux_id2]['idx']['value'] = str((off/8))
+
+    if capri_expr.src1:
+        off = -1
+        if isinstance(capri_expr.src1, tuple):
+            if capri_expr.src1[1] == 0:
+                mux_id1 = mux_idx_alloc(mux_idx_allocator, 'current')
+                sram['mux_idx'][mux_id1]['sel']['value'] = str(3)
+                sram['mux_idx'][mux_id1]['lkpsel']['value'] = str(0)   # NA
+                sram['mux_idx'][mux_id1]['idx']['value'] = str(0)
+            else:
+                #off = pkt_off1
+                off = capri_expr.src1[0] + (add_off*8)
+        else:
+            if capri_expr.src1.is_meta:
+                if capri_expr.src1.hfname not in nxt_cs.lkp_flds:
+                    reg_id2 = nxt_cs.active_reg_find(capri_expr.src1)
+                else:
+                    reg_id2 = nxt_cs.lkp_flds[capri_expr.src1.hfname].reg_id
+                mux_id1 = mux_idx_alloc(mux_idx_allocator, capri_expr.src1.hfname)
+                sram['mux_idx'][mux_id1]['sel']['value'] = str(1)
+                sram['mux_idx'][mux_id1]['lkpsel']['value'] = str(reg_id2)
+                sram['mux_idx'][mux_id1]['load_stored_lkp']['value'] = str(0)
+                sram['mux_idx'][mux_id1]['idx']['value'] = str(0)
+            else:
+                #off = pkt_off1
+                off = nxt_cs.fld_off[set_op.capri_expr.src1] + (add_off*8)
+        if off >= 0:
+            mux_id1 = mux_idx_alloc(mux_idx_allocator, off/8)
+            sram['mux_idx'][mux_id1]['sel']['value'] = str(0)
+            sram['mux_idx'][mux_id1]['lkpsel']['value'] = str(0)   # NA
+            sram['mux_idx'][mux_id1]['idx']['value'] = str((off/8))
+
+    return reg_id1, reg_id2, mux_id1, mux_id2
+
 def _fill_parser_sram_entry_for_csum(sram, parse_states_in_path, nxt_cs,            \
                                      parser, all_set_ops,                           \
                                      ohi_instr_allocated_count, ohi_inst_allocator, \
@@ -2349,9 +2422,13 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         else:
             #assert isinstance(nxt_cs.extract_len, capri_parser_expr)
             expr_const = nxt_cs.extract_len.const
+            if nxt_cs.capture_payload_offset():
+                adjust_const = False
+            else:
+                adjust_const = True
             mux_inst_id, adjusted_const = mux_inst_alloc(mux_inst_allocator,\
                                                          nxt_cs.extract_len,\
-                                                         adjust_const=True)
+                                                         adjust_const=adjust_const)
             mux_inst_id_to_capri_expr_map[mux_inst_id] = nxt_cs.extract_len
             off = 0
             if nxt_cs.extract_len.src1:
@@ -2409,22 +2486,51 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         # is used, offset_instruction will be 0
         ohi_payload_slot = parser.be.hw_model['parser']['ohi_threshold']
         assert s < hw_max_ohi_per_state, pdb.set_trace()# 'No OHI instr available in end state %s' % cs.name
-        if isinstance(nxt_cs.extract_len, int) or nxt_cs.dont_advance_packet():
+        if isinstance(nxt_cs.extract_len, int): # or nxt_cs.dont_advance_packet():
             # when don't advance is set, offset_inst is programmed as 0
-            sram['ohi_inst'][s]['sel']['value'] = str(1)    # integer extraction
+            sram['ohi_inst'][s]['sel']['value'] = str(1)    # current_offset + idx_val
             sram['ohi_inst'][s]['muxsel']['value'] = str(0) # NA
             sram['ohi_inst'][s]['idx_val']['value'] = offset_inst['val']['value']
             sram['ohi_inst'][s]['slot_num']['value'] = str((ohi_payload_slot))
         else:
             assert add_off == 0, "XXX add_off and exit is not a common case, need to support this"
-            offset_inst['val']['value'] = str(add_off)
+            # since extract len is an expression
+            # create new expression for payload offset as
+            # payload_offset = current_offset + extract_len
+            # Ideally this should be done in capri_parser.py... this is a quick HACK
+            if not nxt_cs.payload_offset_expr:
+                nxt_cs.create_payload_offset_expr()
+
+            pyld_expr = nxt_cs.payload_offset_expr
+
+            reg_id1, reg_id2, mux_id1, mux_id2 = \
+                    _allocate_mux_inst_resoures2(pyld_expr, nxt_cs, add_off, \
+                        mux_idx_allocator, sram)
+
+
+            # build mux instruction
+            mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, pyld_expr)
+            _build_mux_inst2(parser, nxt_cs, sram['mux_inst'][mux_inst_id], reg_id1, reg_id2,
+                    mux_id1, mux_id2, pyld_expr)
+
+            mux_inst_id_to_capri_expr_map[mux_inst_id] = pyld_expr
+            mux_inst_id_to_mux_index_id_map[mux_inst_id] = (mux_id1, mux_id2)
+
             sram['ohi_inst'][s]['sel']['value'] = str(3)    # use mux inst
-            sram['ohi_inst'][s]['muxsel']['value'] = offset_inst['muxsel']['value']
+            sram['ohi_inst'][s]['muxsel']['value'] =  str(mux_inst_id)
             sram['ohi_inst'][s]['idx_val']['value'] = str(0)
             sram['ohi_inst'][s]['slot_num']['value'] = str((ohi_payload_slot))
 
         parser.logger.debug('%s:%s:Payload Offset: OHI instruction[%d] slot %d' % \
                             (parser.d.name, nxt_cs.name, s, ohi_payload_slot))
+
+    if nxt_cs.dont_advance_packet():
+        # to be able to extract same header over and over (e.g. tcp_options_blob and individual
+        # tcp options), state may be marked with dont_advance_packet
+        offset_inst['sel']['value'] = str(0)
+        offset_inst['muxsel']['value'] = str(0)
+        offset_inst['val']['value'] = str(0)
+
     # meta_inst
     # meta inst for hv bits -
     # use all headers from add_cs and nxt_cs

@@ -1,0 +1,35 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow            : filter://proto=TCP
+    maxflows        : 1
+
+packets:
+    - packet:
+        id          : PKT # Base packet
+        payloadsize : ref://factory/payloads/id=TCP_OPT_LEN_INTO_PAYLOAD/size
+        template    : ref://factory/packets/id=RAW
+        headers     :
+            payload:
+                data    : ref://factory/payloads/id=TCP_OPT_LEN_INTO_PAYLOAD/data
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT
+            port    : ref://testcase/config/dst/endpoint/intf/ports
