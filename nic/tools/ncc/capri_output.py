@@ -220,13 +220,19 @@ def _parser_init_profile_print(parser, cfg_init_profile):
     pstr += 'lkp_val_pkt_idx2 = %s\n' % cfg_init_profile['lkp_val_pkt_idx2']['value']
     return pstr
 
-def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_expr):
+def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_expr, add_off=0):
     #capri_expr = copy.copy(_capri_expr)
     capri_expr = _capri_expr
+    use_current = False # for special handling of add_offset with current_offset
     if capri_expr.op2:
         mux_inst['sel']['value'] = str(1)
         mux_inst['lkp_addsub']['value'] = str(1) if capri_expr.op2 == '+' else str(0)
         if mux_id2 != None:
+            # when 'current' is used as src_reg operand
+            # mux_id2 is already programmed to src current_offset
+            if isinstance(capri_expr.src_reg, tuple) and \
+                capri_expr.src_reg[1] == 0:
+                use_current = True
             mux_inst['load_mux_pkt']['value'] = str(1)
             mux_inst['lkpsel']['value'] = str(mux_id2)
         else:
@@ -243,13 +249,8 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
         if rid2 != None:
             assert mux_id1 != None, pdb.set_trace()
             mux_inst['muxsel']['value'] = str(mux_id1)
-            if isinstance(capri_expr.src1, tuple):
-                if capri_expr.src1[1] == 0:
-                    mask = 0xFFFF
-                else:
-                    mask = (1<<capri_expr.src1[1]) - 1
-            else:
-                mask = (1<<capri_expr.src1.width) - 1
+            assert not isinstance(capri_expr.src1, tuple), pdb.set_trace() # Cannot have tuple w/ rid2
+            mask = (1<<capri_expr.src1.width) - 1
             mux_inst['mask_val']['value'] = str(mask)
             mux_inst['shift_val']['value'] = str(capri_expr.shft)
         else:
@@ -284,6 +285,7 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
                 if isinstance(capri_expr.src1, tuple):
                     if capri_expr.src1[1] == 0:
                         mask = 0xFFFF
+                        use_current = True
                     else:
                         mask = (1<<capri_expr.src1[1]) - 1
                 else:
@@ -319,13 +321,29 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
         mux_inst['mask_val']['value'] = str(0)     # mask off all bits
         mux_inst['shift_val']['value'] = str(0)
 
-    mux_inst['addsub_val']['value'] = str(capri_expr.const)
-    # XXX name changed - remove this once move to new format is complete
+
+    addsub_val = capri_expr.const
+    op3 = capri_expr.op3
+    if use_current and add_off and addsub_val:
+        # adjust the addsub value (testcase - gft program)
+        if capri_expr.op3 == '-':
+            delta_const = capri_expr.const - add_off
+            if delta_const < 0:
+                op3 = '+'
+                addsub_val = (-1) * delta_const
+            else:
+                addsub_val = delta_const
+        else:
+            addsub_val += add_off
+
+    mux_inst['addsub_val']['value'] = str(addsub_val)
+    mux_inst['addsub']['value'] = str(1) if op3 == '+' else str(0)
+
+    # XXX h/w register name changed - remove this once move to new format is complete
     if 'shift_left' in mux_inst.keys():
         mux_inst['shift_left']['value'] = str(1) if op1 == '<<' else str(0)
     else:
         mux_inst['shift']['value'] = str(1) if op1 == '<<' else str(0)
-    mux_inst['addsub']['value'] = str(1) if capri_expr.op3 == '+' else str(0)
 
 def _build_mux_inst(parser, cs, rid, mux_inst, mux_id, _capri_expr):
     # DO NOT modify _capri_expr, this function is called multiple times for the same state
@@ -1863,15 +1881,14 @@ def _allocate_mux_inst_resoures2(capri_expr, nxt_cs, add_off, \
                 sram['mux_idx'][mux_id2]['idx']['value'] = str(0)
             else:
                 off = capri_expr.src_reg[0] + (add_off*8)
-                #off = pkt_off2
         else:
             if capri_expr.src_reg.is_meta:
                 if capri_expr.src_reg.hfname not in nxt_cs.lkp_flds:
-                    reg_id1 = nxt_cs.active_reg_find(set_op.capri_expr.src_reg)
+                    reg_id1 = nxt_cs.active_reg_find(capri_expr.src_reg)
                 else:
                     reg_id1 = nxt_cs.lkp_flds[capri_expr.src_reg.hfname].reg_id
             else:
-                off = pkt_off2
+                off = nxt_cs.fld_off[capri_expr.src_reg] + (add_off*8)
         if off >= 0:
             mux_id2 = mux_idx_alloc(mux_idx_allocator, off/8)
             sram['mux_idx'][mux_id2]['sel']['value'] = str(0)
@@ -1887,7 +1904,6 @@ def _allocate_mux_inst_resoures2(capri_expr, nxt_cs, add_off, \
                 sram['mux_idx'][mux_id1]['lkpsel']['value'] = str(0)   # NA
                 sram['mux_idx'][mux_id1]['idx']['value'] = str(0)
             else:
-                #off = pkt_off1
                 off = capri_expr.src1[0] + (add_off*8)
         else:
             if capri_expr.src1.is_meta:
@@ -1901,8 +1917,7 @@ def _allocate_mux_inst_resoures2(capri_expr, nxt_cs, add_off, \
                 sram['mux_idx'][mux_id1]['load_stored_lkp']['value'] = str(0)
                 sram['mux_idx'][mux_id1]['idx']['value'] = str(0)
             else:
-                #off = pkt_off1
-                off = nxt_cs.fld_off[set_op.capri_expr.src1] + (add_off*8)
+                off = nxt_cs.fld_off[capri_expr.src1] + (add_off*8)
         if off >= 0:
             mux_id1 = mux_idx_alloc(mux_idx_allocator, off/8)
             sram['mux_idx'][mux_id1]['sel']['value'] = str(0)
@@ -1986,21 +2001,6 @@ def _fill_parser_sram_entry_for_csum(sram, parse_states_in_path, nxt_cs,        
                                            nxt_cs, sram, ohi_instr_allocated_count,\
                                            ohi_inst_allocator, mux_idx_allocator,\
                                            mux_inst_allocator)
-        '''
-        # Also capture PayloadLen in ohi slot or stored lookup reg
-        ohi_instr_allocated_count = parser.be.checksum.CsumParserPayloadLenGenerate(\
-                                           nxt_cs, sram, ohi_instr_allocated_count,\
-                                           ohi_inst_allocator, mux_idx_allocator,\
-                                           mux_inst_allocator, csum_l4len_mux_idx_id)
-        '''
-    '''
-    if nxt_cs.csum_payloadlen_ohi_instr_gen[0]:
-        #In case of option parsing, parse states where l4_verify_len is updated,
-        #store the expression result back into OHI.
-        _ = parser.be.checksum.CsumParserPayloadLenUpdateInstrGenerate(\
-                                                        nxt_cs, sram, s, ohi_inst_allocator,\
-                                                        mux_inst_allocator, mux_idx_allocator)
-    '''
 
     #Gso Csum Config
     if nxt_cs.gso_csum_calfldobj:
@@ -2086,23 +2086,16 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 # pkt_field
                 # mux_inst natively supports one lkpsel (reg) second reg must use mux_sel and vice-
                 # versa for pkt field
-                pkt_off2=0; pkt_off1=0
-                if lkp_reg.capri_expr.src_reg:
-                    if isinstance(lkp_reg.capri_expr.src_reg, tuple) or \
-                        not lkp_reg.capri_expr.src_reg.is_meta:
-                        pkt_off2 = lkp_reg.pkt_off2 + (add_off*8)
-                if lkp_reg.capri_expr.src1:
-                    if isinstance(lkp_reg.capri_expr.src1, tuple) or \
-                        not lkp_reg.capri_expr.src1.is_meta:
-                        pkt_off1 = lkp_reg.pkt_off + (add_off*8)
-
                 reg_id1, reg_id2, mux_id1, mux_id2 = \
-                    _allocate_mux_inst_resoures(lkp_reg.capri_expr, nxt_cs, r, pkt_off1, pkt_off2, \
-                        mux_idx_allocator, sram)
+                        _allocate_mux_inst_resoures2(lkp_reg.capri_expr, nxt_cs, add_off, \
+                            mux_idx_allocator, sram)
 
+                # build mux instruction
                 mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, lkp_reg.capri_expr)
                 _build_mux_inst2(parser, nxt_cs, sram['mux_inst'][mux_inst_id], reg_id1, reg_id2,
-                    mux_id1, mux_id2, lkp_reg.capri_expr)
+                        mux_id1, mux_id2, lkp_reg.capri_expr)
+
+                # >>>
                 mux_inst_id_to_capri_expr_map[mux_inst_id] = lkp_reg.capri_expr
                 mux_inst_id_to_mux_index_id_map[mux_inst_id] = (mux_id1, mux_id2)
                 sram['lkp_val_inst'][r]['sel']['value'] = str(1)
@@ -2156,57 +2149,15 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     for set_op in nxt_cs.no_reg_set_ops:
         assert set_op.capri_expr, pdb.set_trace()
         if set_op.capri_expr:
-            #if set_op.capri_expr.src_reg:
-            pkt_off2=0; pkt_off1=0
-            r = -1
-            if set_op.capri_expr.src_reg:
-                if isinstance(set_op.capri_expr.src_reg, tuple):
-                    pkt_off2 = set_op.capri_expr.src_reg[0] + (add_off*8)
-                elif not set_op.capri_expr.src_reg.is_meta:
-                    pkt_off2 = nxt_cs.fld_off[set_op.capri_expr.src_reg] + (add_off*8)
-                else:
-                    pkt_off2=0
-                    r = nxt_cs.active_reg_find(set_op.capri_expr.src_reg)
-            if set_op.capri_expr.src1:
-                if isinstance(set_op.capri_expr.src1, tuple) and set_op.capri_expr.src1[1] == 0:
-                    # XXX re-org the code to do it w/o continue
-                    # special case - src1 is current_offset
-                    mux_id = mux_idx_alloc(mux_idx_allocator, 'current')
-                    sram['mux_idx'][mux_id]['sel']['value'] = str(3)
-                    sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
-                    sram['mux_idx'][mux_id]['idx']['value'] = str(0)
-                    # adjust the constant in expr based on where the current is
-                    if add_off:
-                        if set_op.capri_expr.op3 == '-':
-                            delta_const = set_op.capri_expr.const - add_off
-                            if delta_const < 0:
-                                set_op.capri_expr.op3 = '+'
-                                set_op.capri_expr.const = (-1) * delta_const
-                            else:
-                                set_op.capri_expr.const = delta_const
-                        else:
-                            set_op.capri_expr.const += add_off
-
-                    mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, set_op.capri_expr)
-
-                    _build_mux_inst(parser, nxt_cs, None, sram['mux_inst'][mux_inst_id],
-                        mux_id, set_op.capri_expr)
-                    continue
-                elif isinstance(set_op.capri_expr.src1, tuple):
-                    pkt_off1 = set_op.capri_expr.src1[0] + (add_off*8)
-                elif not set_op.capri_expr.src1.is_meta:
-                    pkt_off1 = nxt_cs.fld_off[set_op.capri_expr.src1] + (add_off*8)
-                else:
-                    pkt_off1=0
-                    r = nxt_cs.active_reg_find(set_op.capri_expr.src1)
-
             reg_id1, reg_id2, mux_id1, mux_id2 = \
-                _allocate_mux_inst_resoures(set_op.capri_expr, nxt_cs, r, pkt_off1, pkt_off2, \
-                    mux_idx_allocator, sram)
+                    _allocate_mux_inst_resoures2(set_op.capri_expr, nxt_cs, add_off, \
+                        mux_idx_allocator, sram)
 
+            # build mux instruction
             mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, set_op.capri_expr)
             _build_mux_inst2(parser, nxt_cs, sram['mux_inst'][mux_inst_id], reg_id1, reg_id2,
-                mux_id1, mux_id2, set_op.capri_expr)
+                    mux_id1, mux_id2, set_op.capri_expr, add_off)
+
             mux_inst_id_to_capri_expr_map[mux_inst_id] = set_op.capri_expr
             mux_inst_id_to_mux_index_id_map[mux_inst_id] = (mux_id1, mux_id2)
         else:
@@ -2482,15 +2433,16 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
     if nxt_cs.capture_payload_offset():
         # need to capture current_offset where parser stops parsing. This is needed for the
-        # deparser, use offset instruction for computing ohi. When explicit END state
+        # deparser, 
+        # Earlier offset instruction programming was used to reuse the code and expression,
+        # but that is incorrect, especially when dont_advance_offset pragma is also used
         # is used, offset_instruction will be 0
         ohi_payload_slot = parser.be.hw_model['parser']['ohi_threshold']
         assert s < hw_max_ohi_per_state, pdb.set_trace()# 'No OHI instr available in end state %s' % cs.name
-        if isinstance(nxt_cs.extract_len, int): # or nxt_cs.dont_advance_packet():
-            # when don't advance is set, offset_inst is programmed as 0
+        if isinstance(nxt_cs.extract_len, int):
             sram['ohi_inst'][s]['sel']['value'] = str(1)    # current_offset + idx_val
             sram['ohi_inst'][s]['muxsel']['value'] = str(0) # NA
-            sram['ohi_inst'][s]['idx_val']['value'] = offset_inst['val']['value']
+            sram['ohi_inst'][s]['idx_val']['value'] = str(nxt_cs.extract_len + add_off)
             sram['ohi_inst'][s]['slot_num']['value'] = str((ohi_payload_slot))
         else:
             assert add_off == 0, "XXX add_off and exit is not a common case, need to support this"
@@ -2507,7 +2459,6 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     _allocate_mux_inst_resoures2(pyld_expr, nxt_cs, add_off, \
                         mux_idx_allocator, sram)
 
-
             # build mux instruction
             mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, pyld_expr)
             _build_mux_inst2(parser, nxt_cs, sram['mux_inst'][mux_inst_id], reg_id1, reg_id2,
@@ -2523,13 +2474,6 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
         parser.logger.debug('%s:%s:Payload Offset: OHI instruction[%d] slot %d' % \
                             (parser.d.name, nxt_cs.name, s, ohi_payload_slot))
-
-    if nxt_cs.dont_advance_packet():
-        # to be able to extract same header over and over (e.g. tcp_options_blob and individual
-        # tcp options), state may be marked with dont_advance_packet
-        offset_inst['sel']['value'] = str(0)
-        offset_inst['muxsel']['value'] = str(0)
-        offset_inst['val']['value'] = str(0)
 
     # meta_inst
     # meta inst for hv bits -
@@ -3453,10 +3397,6 @@ def capri_te_cfg_output(stage):
             # ASIC seems to use tcam entry 0 on miss (Initally plan was to skip table lookups on miss)
             # If all entries al already programmed.. we can skip this... but need to make sure if there
             # can be a tcam miss - XXX
-            '''
-            assert prof_idx < stage.gtm.tm.be.hw_model['match_action']['num_table_profiles'], \
-                pdb.set_trace()
-            '''
             te = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % prof_idx]
             _fill_te_tcam_catch_all(te)
 

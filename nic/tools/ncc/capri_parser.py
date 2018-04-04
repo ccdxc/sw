@@ -621,11 +621,7 @@ class capri_parser_expr:
         self.const = 0
 
         # fields programmed later, based on usage and field alignment
-        self.pkt_offset = -1    # applicable for op1
         self.mask = None        # applicable for op1, user supplied mask is not supported
-        self.pkt_offset2 = -1   # applicable for src2, when used
-        self.lkp_sel = -1       # register assigned to src_reg
-        self.lkp_sel2 = -1      # applicable for reg2, when used
 
         if p4_expr:
             #self.process_p4_expr(copy.deepcopy(p4_expr))
@@ -648,11 +644,7 @@ class capri_parser_expr:
         new_obj.src_reg = (self.src_reg)
         new_obj.op3 = copy.copy(self.op3)
         new_obj.const = copy.copy(self.const)
-        new_obj.pkt_offset = copy.copy(self.pkt_offset)
-        new_obj.pkt_offset2 = copy.copy(self.pkt_offset2)
         new_obj.mask = copy.copy(self.mask)
-        new_obj.lkp_sel = copy.copy(self.lkp_sel)
-        new_obj.lkp_sel2 = copy.copy(self.lkp_sel2)
         return new_obj
 
     def process_p4_expr(self, p4_expr):
@@ -842,14 +834,14 @@ class capri_parser_expr:
             pstr = 'EXPR:%s %s (%s %s %s) %s\n' % \
                 (self.src_reg.hfname if isinstance(self.src_reg, capri_field) else self.src_reg, self.op2,
                  self.src1.hfname if isinstance(self.src1, capri_field) else self.src1,
-                 self.op1, self.shft, self.op3)
+                 self.op1, self.shft, self.op3 if self.const else 'None')
 
         else:
             pstr = 'EXPR:%s %s (%s %s %s) %s %s\n' % \
                 (self.src_reg.hfname if isinstance(self.src_reg, capri_field) else self.src_reg, self.op2,
                  self.src1.hfname if isinstance(self.src1, capri_field) else self.src1,
                  self.op1, self.shft,
-                 self.op3, self.const)
+                 self.op3 if self.const else 'None', self.const)
         return pstr
 
 
@@ -859,8 +851,6 @@ class capri_parser_expr:
                  self.src1.hfname if isinstance(self.src1, capri_field) else self.src1,
                  self.op1, self.shft,
                  self.op3, self.const)
-        #pstr += 'pkt_offset %d, mask 0x%x, lkp_sel %d' % \
-        #            (self.pkt_offset, self.mask if self.mask != None else 0, self.lkp_sel)
         return pstr
 
 class capri_parser_len_chk_profile:
