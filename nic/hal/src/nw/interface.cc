@@ -1845,6 +1845,7 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
     spec->set_type(hal_if->if_type);
     rsp->mutable_status()->set_if_handle(hal_if->hal_handle);
     spec->set_admin_status(hal_if->if_admin_status);
+
     switch (hal_if->if_type) {
     case intf::IF_TYPE_ENIC:
     {
@@ -2677,8 +2678,6 @@ tunnel_if_get_remote_tep_ep(if_t *pi_if)
 
     return remote_tep_ep;
 }
-
-
 
 //------------------------------------------------------------------------------
 // Tunnel If Create
@@ -3854,6 +3853,46 @@ uplink_del_enicif (if_t *uplink, if_t *enic_if)
 
     HAL_TRACE_DEBUG("{} {}, ret : {}", uplink->if_id, enic_if->if_id, ret);
     return ret;
+}
+
+//-----------------------------------------------------------------------------
+// given an interface, marshall it for persisting its state (spec, status,
+// stats)
+//
+// obj points to interface object i.e., if_t
+// mem is the memory buffer to serialize the state into
+// len is the length of the buffer provided
+// mlen is to be filled by this function with marshalled state length
+//-----------------------------------------------------------------------------
+hal_ret_t
+if_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
+{
+    InterfaceGetResponse    rsp;
+    uint32_t                serialized_state_sz;
+    if_t                    *hal_if = (if_t *)obj;
+
+    HAL_ASSERT((hal_if != NULL) && (mlen != NULL));
+    *mlen = 0;
+
+    // get all information about this interface
+    if_process_get(hal_if, &rsp);
+    serialized_state_sz = rsp.ByteSizeLong();
+    if (serialized_state_sz > len) {
+        HAL_TRACE_ERR("Failed to marshall interface {}, not enough room, "
+                      "required size {}, available size {}",
+                      hal_if->if_id, serialized_state_sz, len);
+        return HAL_RET_OOM;
+    }
+
+    // serialize all the state
+    if (rsp.SerializeToArray(mem, serialized_state_sz) == false) {
+        HAL_TRACE_ERR("Failed to serialize interface {}", hal_if->if_id);
+        return HAL_RET_OOM;
+    }
+    *mlen = serialized_state_sz;
+    HAL_TRACE_DEBUG("Marshalled interface {}, len {}",
+                    hal_if->if_id, serialized_state_sz);
+    return HAL_RET_OK;
 }
 
 }    // namespace hal

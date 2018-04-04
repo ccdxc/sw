@@ -63,7 +63,7 @@ typedef struct l2seg_s {
     eplearn_cfg_t         eplearn_cfg;             // eplearn cfg
     MulticastFwdPolicy    mcast_fwd_policy;        // multicast policy
     BroadcastFwdPolicy    bcast_fwd_policy;        // broadcast policy
-    ip_addr_t             gipo;                    // gipo for vxlan 
+    ip_addr_t             gipo;                    // gipo for vxlan
 
     oif_list_id_t         base_oif_list_id;        // Base replication list id
     hal_handle_t          pinned_uplink;           // pinned uplink
@@ -72,9 +72,9 @@ typedef struct l2seg_s {
     hal_handle_t          hal_handle;              // HAL allocated handle
     uint32_t              num_ep;                  // no. of endpoints
     // forward references
-    block_list            *nw_list;                // network list 
+    block_list            *nw_list;                // network list
     // back references
-    block_list            *if_list;                // interface list  
+    block_list            *if_list;                // interface list
 
     // Looks like sessions need only if, ep, network
     // dllist_ctxt_t         ep_list_head;            // endpoint list
@@ -111,19 +111,19 @@ typedef struct l2seg_update_app_ctxt_s {
 // max. number of L2 segments supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_L2SEGMENTS                           2048
 
-static inline void 
+static inline void
 l2seg_lock (l2seg_t *l2seg, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:locking l2seg:{} from {}:{}:{}", 
+    HAL_TRACE_DEBUG("{}:operlock:locking l2seg:{} from {}:{}:{}",
                     __FUNCTION__, l2seg->seg_id,
                     fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&l2seg->slock);
 }
 
-static inline void 
+static inline void
 l2seg_unlock (l2seg_t *l2seg, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:unlocking l2seg:{} from {}:{}:{}", 
+    HAL_TRACE_DEBUG("{}:operlock:unlocking l2seg:{} from {}:{}:{}",
                     __FUNCTION__, l2seg->seg_id,
                     fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&l2seg->slock);
@@ -151,6 +151,9 @@ hal_ret_t l2segment_delete(L2SegmentDeleteRequest& req,
                            L2SegmentDeleteResponse *rsp);
 hal_ret_t l2segment_get(l2segment::L2SegmentGetRequest& req,
                         l2segment::L2SegmentGetResponseMsg *rsp);
+
+hal_ret_t l2seg_marshall_cb(void *obj, uint8_t *mem,
+                          uint32_t len, uint32_t *mlen);
 
 }    // namespace hal
 

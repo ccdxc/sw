@@ -82,7 +82,7 @@ typedef struct if_s {
             hal_handle_t        l2seg_handle;       // handle to l2seg
             mac_addr_t          mac_addr;           // EP's MAC addr
             vlan_id_t           encap_vlan;         // vlan enabled on this if
-            // classic mode fields                  
+            // classic mode fields
             hal_handle_t        native_l2seg_clsc;  // native l2seg
             hal_handle_t        pinned_uplink;      // pinned uplink
         } __PACK__;
@@ -92,13 +92,13 @@ typedef struct if_s {
             // doesnt have to exist. hence storing the id. have to exist only
             //    on add_l2seg_to_uplink
             l2seg_id_t          native_l2seg;       // native (vlan) on uplink (pc).
-                                                     
+
 
             // TOOD: List of L2segs on this Uplink
             // uplink if
             struct {
                 uint32_t        uplink_port_num;    // uplink port number
-                bool            is_pc_mbr;          // is a PC member   
+                bool            is_pc_mbr;          // is a PC member
                 hal_handle_t    uplinkpc_handle;    // PC its part of
             } __PACK__;
             // uplink PC if
@@ -138,23 +138,23 @@ typedef struct if_s {
     // forward references
     dllist_ctxt_t       mbr_if_list_head;       // list of member ports for uplink PC
     dllist_ctxt_t       l2seg_list_clsc_head;   // l2segments in classic nic
-                                                // mode for enic ifs. 
+                                                // mode for enic ifs.
                                                 // l2seg_entry_classic_t
     // back references
     // Uplinks
     dllist_ctxt_t       l2seg_list_head;        // l2segments, add_l2seg_on_uplink
-    dllist_ctxt_t       enicif_list_head;       // enicifs, Classic enics 
+    dllist_ctxt_t       enicif_list_head;       // enicifs, Classic enics
 
     // dllist_ctxt_t       ep_list_head;       // endpoints behind this interface
     // dllist_ctxt_t       session_list_head;  // session from this
 
     // PD Uplink/Enic ... Interpret based on type ... Careful!!
-    void                *pd_if;                      
+    void                *pd_if;
 } __PACK__ if_t;
 
 typedef struct if_create_app_ctxt_s {
     // l2seg_t    *l2seg;                                 // valid for enic if
-    lif_t      *lif;                                   // valid for enic if 
+    lif_t      *lif;                                   // valid for enic if
 } __PACK__ if_create_app_ctxt_t;
 
 typedef struct if_update_app_ctxt_s {
@@ -195,21 +195,19 @@ typedef struct if_update_app_ctxt_s {
 // max. number of interfaces supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_INTERFACES                           2048
 
-static inline void 
+static inline void
 if_lock (if_t *hal_if, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:locking if:{} from {}:{}:{}", 
-                    __FUNCTION__, hal_if->if_id,
-                    fname, lineno, fxname);
+    HAL_TRACE_DEBUG("operlock:locking if:{} from {}:{}:{}",
+                    hal_if->if_id, fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&hal_if->slock);
 }
 
-static inline void 
+static inline void
 if_unlock (if_t *hal_if, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:unlocking if:{} from {}:{}:{}", 
-                    __FUNCTION__, hal_if->if_id,
-                    fname, lineno, fxname);
+    HAL_TRACE_DEBUG("operlock:unlocking if:{} from {}:{}:{}",
+                    hal_if->if_id, fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&hal_if->slock);
 }
 
@@ -226,62 +224,57 @@ lif_t *find_lif_by_if_handle(hal_handle_t if_handle);
 extern void *if_id_get_key_func(void *entry);
 extern uint32_t if_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool if_id_compare_key_func(void *key1, void *key2);
-
-hal_ret_t uplinkif_add_uplinkpc (if_t *upif, if_t *uppc);
-hal_ret_t uplinkif_del_uplinkpc (if_t *upif, if_t *uppc);
-hal_ret_t uplinkpc_update_mbrs_relation (dllist_ctxt_t *mbr_list, 
-                                         if_t *uppc, bool add);
-hal_ret_t uplinkpc_add_uplinkif (if_t *uppc, if_t *upif);
-hal_ret_t uplinkpc_del_uplinkif (if_t *uppc, if_t *upif);
-hal_ret_t
-uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
-                        bool *mbrlist_change,
-                        dllist_ctxt_t **add_mbrlist, 
-                        dllist_ctxt_t **del_mbrlist,
-                        dllist_ctxt_t **aggr_mbrlist);
+hal_ret_t uplinkif_add_uplinkpc(if_t *upif, if_t *uppc);
+hal_ret_t uplinkif_del_uplinkpc(if_t *upif, if_t *uppc);
+hal_ret_t uplinkpc_update_mbrs_relation(dllist_ctxt_t *mbr_list,
+                                        if_t *uppc, bool add);
+hal_ret_t uplinkpc_add_uplinkif(if_t *uppc, if_t *upif);
+hal_ret_t uplinkpc_del_uplinkif(if_t *uppc, if_t *upif);
+hal_ret_t uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
+                                   bool *mbrlist_change,
+                                   dllist_ctxt_t **add_mbrlist,
+                                   dllist_ctxt_t **del_mbrlist,
+                                   dllist_ctxt_t **aggr_mbrlist);
 hal_ret_t interface_cleanup_handle_list(dllist_ctxt_t **list);
 void enicif_print_l2seg_entry_list(dllist_ctxt_t  *list);
 void enicif_free_l2seg_entry_list(dllist_ctxt_t *list);
-hal_ret_t
-enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
-                              bool *l2seglist_change,
-                              dllist_ctxt_t **add_l2seglist, 
-                              dllist_ctxt_t **del_l2seglist);
+hal_ret_t enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
+                                        bool *l2seglist_change,
+                                        dllist_ctxt_t **add_l2seglist,
+                                        dllist_ctxt_t **del_l2seglist);
 hal_ret_t enicif_update_l2segs_relation(dllist_ctxt_t *l2segs_list,
                                         if_t *hal_if, bool add);
 hal_ret_t enicif_update_l2segs_oif_lists(if_t *hal_if, lif_t *lif, bool add);
 hal_ret_t enicif_cleanup_l2seg_entry_list(dllist_ctxt_t **list);
-bool l2seg_in_classic_enicif(if_t *hal_if, hal_handle_t l2seg_handle, 
+bool l2seg_in_classic_enicif(if_t *hal_if, hal_handle_t l2seg_handle,
                              if_l2seg_entry_t **l2seg_entry);
 
-
-
-hal_ret_t enic_if_create(intf::InterfaceSpec& spec, 
+hal_ret_t enic_if_create(intf::InterfaceSpec& spec,
                          intf::InterfaceResponse *rsp,
                          if_t *hal_if);
-hal_ret_t uplink_if_create(intf::InterfaceSpec& spec, 
+hal_ret_t uplink_if_create(intf::InterfaceSpec& spec,
                            intf::InterfaceResponse *rsp,
                            if_t *hal_if);
-hal_ret_t uplink_pc_create(intf::InterfaceSpec& spec, 
+hal_ret_t uplink_pc_create(intf::InterfaceSpec& spec,
                            intf::InterfaceResponse *rsp,
                            if_t *hal_if);
-hal_ret_t cpu_if_create(intf::InterfaceSpec& spec, 
+hal_ret_t cpu_if_create(intf::InterfaceSpec& spec,
                         intf::InterfaceResponse *rsp,
                         if_t *hal_if);
-hal_ret_t app_redir_if_create(intf::InterfaceSpec& spec, 
+hal_ret_t app_redir_if_create(intf::InterfaceSpec& spec,
                               intf::InterfaceResponse *rsp,
                               if_t *hal_if);
-hal_ret_t uplink_if_update(intf::InterfaceSpec& spec, 
+hal_ret_t uplink_if_update(intf::InterfaceSpec& spec,
                            intf::InterfaceResponse *rsp,
                            if_t *hal_if, void *if_args);
-hal_ret_t uplink_pc_update(intf::InterfaceSpec& spec, 
+hal_ret_t uplink_pc_update(intf::InterfaceSpec& spec,
                            intf::InterfaceResponse *rsp,
                            if_t *hal_if,
                            void *if_args);
-hal_ret_t tunnel_if_create(intf::InterfaceSpec& spec, 
+hal_ret_t tunnel_if_create(intf::InterfaceSpec& spec,
                            intf::InterfaceResponse *rsp,
                            if_t *hal_if);
-hal_ret_t get_lif_handle_for_enic_if(intf::InterfaceSpec& spec, 
+hal_ret_t get_lif_handle_for_enic_if(intf::InterfaceSpec& spec,
                                      intf::InterfaceResponse *rsp,
                                      if_t *hal_if);
 hal_ret_t get_lif_handle_for_cpu_if(intf::InterfaceSpec& spec,
@@ -295,9 +288,8 @@ if_t *if_lookup_key_or_handle(const kh::InterfaceKeyHandle& key_handle);
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
 
-hal_ret_t lif_create(intf::LifSpec& spec, intf::LifResponse *rsp, 
+hal_ret_t lif_create(intf::LifSpec& spec, intf::LifResponse *rsp,
                      lif_hal_info_t *lif_hal_info);
-
 hal_ret_t interface_create(intf::InterfaceSpec& spec,
                            intf::InterfaceResponse *rsp);
 hal_ret_t interface_update(intf::InterfaceSpec& spec,
@@ -306,12 +298,13 @@ hal_ret_t interface_delete(intf::InterfaceDeleteRequest& req,
                            intf::InterfaceDeleteResponse *rsp);
 hal_ret_t interface_get(intf::InterfaceGetRequest& spec,
                         intf::InterfaceGetResponseMsg *rsp);
-
 hal_ret_t add_l2seg_on_uplink(intf::InterfaceL2SegmentSpec& spec,
                               intf::InterfaceL2SegmentResponse *rsp);
-
 hal_ret_t del_l2seg_on_uplink(intf::InterfaceL2SegmentSpec& spec,
                               intf::InterfaceL2SegmentResponse *rsp);
+
+hal_ret_t if_marshall_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
+
 }    // namespace hal
 
 #endif    // __INTERFACE_HPP__

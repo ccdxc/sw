@@ -238,9 +238,9 @@ message SessionStatus {
   uint32                 app_id_state      = 5;    // L7 app id state
   nwsec.ALGName          alg               = 6;    // ALG applied on the session
   oneof alg_info {
-      TFTPALGInfo        tftp_info          = 7;   
-      RPCALGInfo         rpc_info           = 8;
-      SIPALGInfo         sip_info           = 9;
+      TFTPALGInfo        tftp_info         = 7;   
+      RPCALGInfo         rpc_info          = 8;
+      SIPALGInfo         sip_info          = 9;
   } 
 }
 

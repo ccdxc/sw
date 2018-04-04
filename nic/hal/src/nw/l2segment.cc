@@ -2006,4 +2006,43 @@ l2seg_ep_learning_update (L2SegmentSpec& spec, l2seg_t *l2seg)
     }
 }
 
+//-----------------------------------------------------------------------------
+// given a l2seg, marshall it for persisting its state (spec, status, stats)
+//
+// obj points to vrf object i.e., l2seg_t
+// mem is the memory buffer to serialize the state into
+// len is the length of the buffer provided
+// mlen is to be filled by this function with marshalled state length
+//-----------------------------------------------------------------------------
+hal_ret_t
+l2seg_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
+{
+    L2SegmentGetResponse    rsp;
+    uint32_t                serialized_state_sz;
+    l2seg_t                 *l2seg = (l2seg_t *)obj;
+
+    HAL_ASSERT((l2seg != NULL) && (mlen != NULL));
+    *mlen = 0;
+
+    // get all information about this l2seg (includes spec, status & stats)
+    l2segment_process_get(l2seg, &rsp);
+    serialized_state_sz = rsp.ByteSizeLong();
+    if (serialized_state_sz > len) {
+        HAL_TRACE_ERR("Failed to marshall L2 segment {}, not enough room, "
+                      "required size {}, available size {}",
+                      l2seg->seg_id, serialized_state_sz, len);
+        return HAL_RET_OOM;
+    }
+
+    // serialize all the state
+    if (rsp.SerializeToArray(mem, serialized_state_sz) == false) {
+        HAL_TRACE_ERR("Failed to serialize L2 segment {}", l2seg->seg_id);
+        return HAL_RET_OOM;
+    }
+    *mlen = serialized_state_sz;
+    HAL_TRACE_DEBUG("Marshalled L2 segment {}, len {}",
+                    l2seg->seg_id, serialized_state_sz);
+    return HAL_RET_OK;
+}
+
 }    // namespace hal
