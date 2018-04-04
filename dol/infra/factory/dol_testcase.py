@@ -133,11 +133,10 @@ class DOLTestCase(TestCase):
 
             self.__setup_packet_ports(tpkt, spkt)
             logger.info("- Adding Packet: %s, Ports :" %\
-                      tpkt.packet.GID(), tpkt.ports)
+                        tpkt.packet.GID(), tpkt.ports)
             tpkt.packet.Show()
             tcsn.packets.append(tpkt)
-            stats.AddStatsEntry(tpkt.ports[0], 1,
-                                len(tpkt.packet.rawbytes))
+            stats.AddStatsEntry(tpkt.ports[0], 1, len(tpkt.packet.rawbytes))
         return
 
     def __setup_descriptors(self, tcsn, spsn, stats):

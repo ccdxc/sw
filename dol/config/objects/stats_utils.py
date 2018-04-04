@@ -164,11 +164,15 @@ class StatsVerifHelper:
         return self.__compare_lif_stats_entries(self.tx_entries)
 
     def Init(self, tc):
+        if GlobalOptions.skipverify:
+            return
         self.__create_tx_entries(tc)
         self.__create_rx_entries(tc)
         return
 
     def InitLifStats(self, tc):
+        if GlobalOptions.skipverify:
+            return
         self.__fetch_hw_lif_stats(pre = True)
         return
 
@@ -256,6 +260,8 @@ class StatsVerifHelper:
         return ret1 and ret2
 
     def InitSessionStats(self, tc):
+        if GlobalOptions.skipverify:
+            return
         self.__fetch_hw_session_stats(tc, pre = True)
         return
 

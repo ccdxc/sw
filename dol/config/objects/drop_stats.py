@@ -59,6 +59,8 @@ class DropStatsVerifHelper:
         return
 
     def Init(self, tc):
+        if GlobalOptions.skipverify:
+            return
         resp = self.systemObject.GetDropStats()
         self.__parse_drop_stats_get_response(resp, pre = True)
         return
@@ -84,8 +86,9 @@ class DropStatsVerifHelper:
             for reason in tc.pvtdata.drop_reasons:
                 val = getattr(self.exp_stats, reason, None)
                 assert(val != None)
-                val = val + tc_entry.npkts
-                setattr(self.exp_stats, reason, val)
+                if tc_entry.npkts != None:
+                    val = val + tc_entry.npkts
+                    setattr(self.exp_stats, reason, val)
         return
 
     def Verify(self, tc):
