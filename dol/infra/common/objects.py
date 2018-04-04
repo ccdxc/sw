@@ -518,6 +518,17 @@ class CallbackArgsObject:
             self.__dict__[nv[0]] = value
         return
 
+class FileField(FrameworkFieldObject):
+    def __init__(self, valobj):
+        self.valobj = valobj
+        self.path = "."
+        for param in valobj.params:
+            self.path += "/%s" % param
+        return
+
+    def Get(self):
+        return self.path
+
 class CallbackField(FrameworkFieldObject):
     def __init__(self, valobj):
         super().__init__()
@@ -878,6 +889,11 @@ TemplateFieldValueToObject = {
     },
     'scale-ref://': {
         'object': ScaledReferenceField,
+        'pcount': 1,
+        'opcount': 128,
+    },
+    'file://': {
+        'object': FileField,
         'pcount': 1,
         'opcount': 128,
     },

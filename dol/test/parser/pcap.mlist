@@ -1,0 +1,14 @@
+# Feature Test Modules List
+feature:
+    id      : parser
+    sub     : pcap
+    package : test.parser
+    module  : parser
+    enable  : True
+    ignore  : False
+
+modules:
+    - module:
+        name    : IPV4-TCP-OPT-CHKSUM-ERROR-1
+        spec    : pcap.testspec
+        enable  : False

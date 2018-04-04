@@ -33,6 +33,25 @@ class ScapyHeaderBuilder_BASE:
                 assert(0)
 
         return shdr
+
+    def update(self, spkt, hdr):
+        if hdr.meta.scapy not in spkt:
+            logger.error("SCAPY has no header = %s" %
+                         hdr.meta.scapy)
+            assert(0)
+        logger.debug("Updating Header: %s" % hdr.meta.scapy)
+        shdr = spkt[hdr.meta.scapy]
+        for key, value in hdr.fields.__dict__.items():
+            if objects.IsFrameworkObjectInternalAttr(key): continue
+            logger.debug("  - %-10s =" % key, value)
+            try:
+                shdr.__setattr__(key, value)
+            except:
+                logger.error("ScapyHeaderBuilder: Failed to update %s.%s to" %\
+                             (hdr.meta.id, key), value)
+                assert(0)
+        return shdr
+
 BASE_builder = ScapyHeaderBuilder_BASE()
 
 class ScapyHeaderBuilder_ICMPV6(ScapyHeaderBuilder_BASE):
@@ -334,13 +353,20 @@ class ScapyPacketObject:
     def GetScapyPacket(self):
         return self.spkt
 
-    def __build_header(self, hdr):
+    def __get_builder(self, hdr):
+        meta = getattr(hdr, 'meta', None)
+        if meta is None:
+            return None
         builder_name = '%s_builder' % hdr.meta.id
         if hasattr(sys.modules[__name__], builder_name):
             logger.verbose("Using builder %s" % builder_name)
             builder = getattr(sys.modules[__name__], builder_name)
-            return builder.build(hdr)
-        return BASE_builder.build(hdr)
+            return builder
+        return BASE_builder
+
+    def __build_header(self, hdr):
+        builder = self.__get_builder(hdr)
+        return builder.build(hdr)
 
     def __add_header(self, hdr):
         shdr = self.__build_header(hdr)
@@ -353,6 +379,12 @@ class ScapyPacketObject:
             self.spkt = shdr
         return
 
+    def __update_header(self, hdr):
+        builder = self.__get_builder(hdr)
+        if builder is None:
+            return None
+        return builder.update(self.spkt, hdr)
+       
     def __add_dol_header(self, tcid, step_id):
         hdr = FactoryStore.headers.Get('PENDOL')
         hdr.fields.tcid = tcid
@@ -389,7 +421,7 @@ class ScapyPacketObject:
         logger.debug("ICRC after byte swap: 0x%x" % icrc) 
         self.spkt[penscapy.ICRC].icrc = icrc
         return
-        
+
     def __build_from_packet_meta(self, packet):
         logger.debug("Generating SCAPY Packet.")
         for hdrid in packet.hdrsorder:
@@ -412,6 +444,26 @@ class ScapyPacketObject:
             self.rawbytes = self.rawbytes[:len(self.rawbytes) + padsize]
         else:  
             self.rawbytes += bytes([0xff] * padsize)
+    
+    def __update_pcap_packet_headers(self, packet):
+        for hdr in packet.headers.__dict__.values():
+            self.__update_header(hdr)
+        return
+
+    def __build_from_pcap(self, packet):
+        pcap_fileref = packet.GetPcap()
+        pkts = penscapy.rdpcap(pcap_fileref.Get())
+        self.spkt = pkts[0]
+        self.__update_pcap_packet_headers(packet)
+        self.rawbytes = bytes(self.spkt)
+        return
+
+    def __build_from_packet_spec(self, packet):
+        if packet.GetPcap() is None:
+            self.__build_from_packet_meta(packet)
+        else:
+            self.__build_from_pcap(packet)
+        return
 
     def __build_from_scapypacket(self, spkt):
         self.spkt       = spkt
@@ -420,7 +472,7 @@ class ScapyPacketObject:
 
     def Build(self, packet = None, scapypacket = None):
         if packet is not None:
-            self.__build_from_packet_meta(packet)
+            self.__build_from_packet_spec(packet)
         elif scapypacket is not None:
             self.__build_from_scapypacket(scapypacket)
         else:

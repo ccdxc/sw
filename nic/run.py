@@ -437,6 +437,10 @@ def run_dol(args):
         cmd.append('--perf')
     if args.e2e_mode == "auto":
         cmd.append("--e2e")
+    if args.debug:
+        cmd.append("--debug")
+    if args.verbose:
+        cmd.append("--verbose")
 
     if args.coveragerun:
         #Increasing timeout for coverage runs only.
@@ -699,6 +703,10 @@ def main():
                         help='HAL IP Address.')
     parser.add_argument('--model_ip', dest='model_ip', default=None,
                         help='Model IP Address.')
+    parser.add_argument('--debug', dest='debug', default=None,
+                        action='store_true', help='Set loglevel to DEBUG.')
+    parser.add_argument('--verbose', dest='verbose', default=None,
+                        action='store_true', help='Set loglevel to VERBOSE.')
 
     args = parser.parse_args()
 

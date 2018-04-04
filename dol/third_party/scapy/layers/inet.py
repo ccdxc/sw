@@ -419,7 +419,9 @@ class L4OptionsField(StrField):
                     #if onum == 5:  # SAck
                     if ofmt == "!": #SAck
                         ofmt += "%iI" % len(oval)
-                    if ofmt is not None and (type(oval) is not str or "s" in ofmt):
+                    if type(oval) is bytes:
+                        oval = oval
+                    elif ofmt is not None and (type(oval) is not str or "s" in ofmt):
                         if type(oval) is not tuple:
                             oval = (oval,)
                         oval = struct.pack(ofmt, *oval)
@@ -432,10 +434,14 @@ class L4OptionsField(StrField):
                     continue
             else:
                 onum = oname
-                if type(oval) is not str:
+                if type(oval) is not str and\
+                   type(oval) is not bytes:
                     warning("option [%i] is not string." % onum)
                     continue
-                oval = oval.encode('UTF=8')
+                if type(oval) is str:
+                    oval = oval.encode('UTF=8')
+                else:
+                    oval = oval
             if oname == "OCS_FILL":
                OCSfill = 1
                OCS_oval_index = len(opt) + 2

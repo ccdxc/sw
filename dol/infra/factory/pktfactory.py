@@ -157,6 +157,7 @@ class PacketSpec(objects.FrameworkObject):
         self.headers        = PacketHeaders(None)
         self.pendol         = getattr(spec, 'pendol', False)
         self.icrc           = getattr(spec, 'icrc', False)
+        self.pcap           = getattr(spec, 'pcap', None)
         self.ConvertHeaders(spec)
         return
 
@@ -208,7 +209,10 @@ class Packet(objects.FrameworkObject):
         self.size       = None
         self.pendol     = pktspec.pendol or self.pendol
         return
-
+    
+    def GetPcap(self):
+        return self.pktspec.pcap
+    
     def IsDolHeaderRequired(self):
         return self.pendol
 
@@ -322,6 +326,13 @@ class Packet(objects.FrameworkObject):
     def __process_headers(self, tc):
         return
 
+    def __copy_header_meta(self, template_hdrs):
+        for k,template_hdr in template_hdrs.__dict__.items():
+            hdr = getattr(self.headers, k, None)
+            if hdr is None: continue
+            hdr.meta = copy.deepcopy(template_hdr.meta)
+        return
+
     def __merge_headers(self, tc):
         spec_hdrs = PacketHeaders(self.spec.headers)
         template_hdrs = PacketHeaders(self.template.headers)
@@ -329,7 +340,14 @@ class Packet(objects.FrameworkObject):
             self.headers = objects.MergeObjects(spec_hdrs, self.headers)
         else:
             self.headers = spec_hdrs
-        self.headers = objects.MergeObjects(self.headers, template_hdrs)
+
+        if self.GetPcap():
+            # For PCAP based packets, dont inherit the default values from templates.
+            # Any field that is not specified in testspec should retain its value from 
+            # the PCAP file.
+            self.__copy_header_meta(template_hdrs)
+        else:
+            self.headers = objects.MergeObjects(self.headers, template_hdrs)
         self.hdrsorder = copy.deepcopy(self.template.hdrsorder)
         self.headers.show()
         return
@@ -357,6 +375,10 @@ class Packet(objects.FrameworkObject):
 
     def __add_payload(self, tc):
         if getattr(self.headers, 'payload', None) is None:
+            self.payloadsize = 0
+            return
+
+        if self.GetPcap():
             self.payloadsize = 0
             return
         self.headers.payload.meta.size = self.payloadsize
@@ -397,7 +419,10 @@ class Packet(objects.FrameworkObject):
         return
 
     def __resolve(self, tc):
+        if self.hdrsorder is None:
+            return
         for h in self.hdrsorder:
+            if h not in self.headers.__dict__: continue
             hdr = self.headers.__dict__[h]
             if not IsPacketHeader(hdr): continue
             hdr.Build(tc, self)

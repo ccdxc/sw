@@ -1,0 +1,47 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow            : filter://type=IPV4,proto=TCP
+    maxflows        : 1
+
+packets:
+    - packet:
+        id          : INPUT
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        pcap        : file://factory/templates/pcaps/send-ipv4-tcp-opt-chksum-error-1.pcap
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+                chksum  : None
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=INPUT
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:

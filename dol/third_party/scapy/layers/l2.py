@@ -131,10 +131,8 @@ class ARPSourceMACField(MACField):
 
 
 ### Layers
-
-
 class Ether(Packet):
-    name = "Ethernet"
+    name = "Ether"
     fields_desc = [ DestMACField("dst"),
                     SourceMACField("src"),
                     XShortEnumField("type", 0x9000, ETHER_TYPES) ]
