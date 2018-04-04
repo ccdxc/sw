@@ -1,0 +1,38 @@
+# Feature Test Modules List
+#
+feature:
+    id          : proxy_host_to_ul_multi_flow_gcm_encrypt
+    sub         : proxy
+    package     : test.tcp_tls_proxy
+    module      : None
+    enable      : True
+    rtl         : True
+    ignore      : False
+    runorder    : 10
+
+modules:
+    - module:
+        name    : HOST_TO_UL_GCM_ENCRYPT_MULTI_FLOW_CONFIG
+        spec    : host_to_uplink_no_pkt.testspec
+        module  : pkt_to_bsq_encrypt
+        rtl     : True
+        args    :
+            cipher_suite: GCM
+            key_size : 32
+            maxflows : 10
+            snd_cwnd : 1000
+            skip_verify : True
+
+    - module:
+        name    : HOST_TO_UL_GCM_ENCRYPT_MULTI_FLOW_SEND_PKTS
+        spec    : host_to_uplink_multi_flow_brq.testspec
+        module  : pkt_to_bsq_encrypt
+        rtl     : True
+        modscale: 3
+        args    :
+            cipher_suite: GCM
+            key_size : 32
+            maxflows : 10
+            skip_config : True
+            skip_verify : True
+

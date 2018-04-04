@@ -1668,17 +1668,19 @@ hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t s
 
     /* IV is not directly located in the ring, hence dereference it */
     
-    if(capri_hbm_read_mem(req_descr->iv_address, 
-			   (uint8_t*)&symm_req_descr->salt,
-			   sizeof(symm_req_descr->salt))) {
-       HAL_TRACE_ERR("{}@{:x}: Failed to read the Salt information from HBM",
-		     barco_ring->ring_name, (uint64_t) req_descr->iv_address);  
-    }
-    if(capri_hbm_read_mem(req_descr->iv_address + 4, 
-			   (uint8_t*)&symm_req_descr->explicit_iv, 
-			   sizeof(symm_req_descr->explicit_iv))) {
-        HAL_TRACE_ERR("{}@{:x}: Failed to read the explicit IV information from HBM",
-		      barco_ring->ring_name, (uint64_t) (req_descr->iv_address + 4));  
+    if (req_descr->iv_address) {
+        if(capri_hbm_read_mem(req_descr->iv_address, 
+	    		   (uint8_t*)&symm_req_descr->salt,
+	    		   sizeof(symm_req_descr->salt))) {
+           HAL_TRACE_ERR("{}@{:x}: Failed to read the Salt information from HBM",
+	    	     barco_ring->ring_name, (uint64_t) req_descr->iv_address);  
+        }
+        if(capri_hbm_read_mem(req_descr->iv_address + 4, 
+	    		   (uint8_t*)&symm_req_descr->explicit_iv, 
+	    		   sizeof(symm_req_descr->explicit_iv))) {
+            HAL_TRACE_ERR("{}@{:x}: Failed to read the explicit IV information from HBM",
+	    	      barco_ring->ring_name, (uint64_t) (req_descr->iv_address + 4));  
+        }
     }
     if (req_descr->status_addr) {
         if(capri_hbm_read_mem(req_descr->status_addr, 

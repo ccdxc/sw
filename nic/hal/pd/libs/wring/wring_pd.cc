@@ -329,15 +329,20 @@ hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *sl
 
     /* IV is not directly located in the ring, hence dereference it */
     
-    if(!p4plus_hbm_read(gcm_desc->iv_address, 
-                        (uint8_t*)&wring->slot_info.gcm_desc.salt,
-                        sizeof(wring->slot_info.gcm_desc.salt))) {
-        HAL_TRACE_ERR("Failed to read the Salt information from HBM");    
-    }
-    if(!p4plus_hbm_read(gcm_desc->iv_address + 4, 
-                        (uint8_t*)&wring->slot_info.gcm_desc.explicit_iv, 
-                        sizeof(wring->slot_info.gcm_desc.explicit_iv))) {
-        HAL_TRACE_ERR("Failed to read the explicit IV information from HBM");    
+    if (gcm_desc->iv_address) {
+        if(!p4plus_hbm_read(gcm_desc->iv_address, 
+                            (uint8_t*)&wring->slot_info.gcm_desc.salt,
+                            sizeof(wring->slot_info.gcm_desc.salt))) {
+            HAL_TRACE_ERR("Failed to read the Salt information from HBM");    
+        }
+        if(!p4plus_hbm_read(gcm_desc->iv_address + 4, 
+                            (uint8_t*)&wring->slot_info.gcm_desc.explicit_iv, 
+                            sizeof(wring->slot_info.gcm_desc.explicit_iv))) {
+            HAL_TRACE_ERR("Failed to read the explicit IV information from HBM");    
+        }
+    } else {
+            wring->slot_info.gcm_desc.salt = 0;
+            wring->slot_info.gcm_desc.explicit_iv = 0;
     }
     if (gcm_desc->status_address) {
         if(!p4plus_hbm_read(gcm_desc->status_address, 
