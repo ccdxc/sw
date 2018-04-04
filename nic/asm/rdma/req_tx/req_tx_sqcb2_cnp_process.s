@@ -48,9 +48,28 @@ add_headers:
     sll            r4, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
     DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, d.header_template_size, r4)
 
-    // Load dcqcn_cb to fetch pkey to fill in BTH
-    add     r4, r4, HDR_TEMPLATE_T_SIZE_BYTES
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_cnp_process, r4)
 
+    // CNP RDMA Headers - BTH + Rsvd bytes.
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_HEADERS)
+    // addr1 - BTH 
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(DMA_CMD_BASE, bth, bth, 2)
+    // addr2 - RSVD 16 bytes.
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_N(DMA_CMD_BASE, cnp_rsvd, cnp_rsvd, 1)
+
+    // Update BTH opcode
+    phvwr       p.bth.opcode, RDMA_PKT_OPC_CNP
+    // Update partition key in CNP packet
+    phvwr       p.bth.pkey, 0xffff
+
+    // For PAD and ICRC
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_PAD_ICRC)
+    // dma_cmd[0] : addr1 - pad/icrc
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(DMA_CMD_BASE, immeth, immeth, 1)
+    
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+
+exit:
+    CAPRI_SET_TABLE_0_VALID(0)
     nop.e
     nop
