@@ -71,6 +71,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
 
     // vrf pd calls
     PD_SYMBOL_LOAD(PD_FUNC_ID_VRF_CREATE, pd_vrf_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_VRF_RESTORE, pd_vrf_restore);
     PD_SYMBOL_LOAD(PD_FUNC_ID_VRF_DELETE, pd_vrf_delete);
     PD_SYMBOL_LOAD(PD_FUNC_ID_VRF_UPDATE, pd_vrf_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_VRF_MEM_FREE, pd_vrf_mem_free);
@@ -413,6 +414,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
 
     // vrf pd calls
     PD_SYMBOL_CALL(PD_FUNC_ID_VRF_CREATE, pd_vrf_create);
+    PD_SYMBOL_CALL(PD_FUNC_ID_VRF_RESTORE, pd_vrf_restore);
     PD_SYMBOL_CALL(PD_FUNC_ID_VRF_DELETE, pd_vrf_delete);
     PD_SYMBOL_CALL(PD_FUNC_ID_VRF_UPDATE, pd_vrf_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_VRF_MEM_FREE, pd_vrf_mem_free);

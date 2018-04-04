@@ -39,7 +39,7 @@ hal_obj_meta_init (void)
     g_obj_meta[HAL_OBJ_ID_VRF] =
         new hal_obj_meta(HAL_SLAB_VRF,
                          vrf_marshall_cb,
-                         vrf_unmarshall_cb);
+                         vrf_restore_cb);
     g_obj_meta[HAL_OBJ_ID_L2SEG] =
         new hal_obj_meta(HAL_SLAB_L2SEG,
                          l2seg_marshall_cb,

@@ -73,8 +73,8 @@ private:
 };
 
 #define HAL_MAX_HANDLES                              8192
-extern hal_handle_t hal_handle_alloc(void);
-extern hal_handle_t hal_handle_alloc(hal_obj_id_t obj_id);
+extern hal_handle_t hal_handle_alloc(hal_obj_id_t obj_id,
+                                     hal_handle_t handle_id = HAL_HANDLE_INVALID);
 extern void hal_handle_free(hal_handle_t handle_id);
 extern hal_ret_t hal_handle_add_obj(hal_handle_t handle_id, cfg_op_ctxt_t *ctxt,
                                     hal_cfg_op_cb_t add_cb,

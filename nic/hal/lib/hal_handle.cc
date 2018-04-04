@@ -69,7 +69,6 @@ hal_handle::factory(hal_obj_id_t obj_id)
 //------------------------------------------------------------------------------
 hal_handle::~hal_handle()
 {
-    //HAL_SPINLOCK_DESTROY(&slock_);
 }
 
 //------------------------------------------------------------------------------
@@ -224,14 +223,13 @@ hal_handle::del_obj(cfg_op_ctxt_t *ctxt, hal_cfg_op_cb_t del_cb,
 }
 
 //------------------------------------------------------------------------------
-// allocate a handle for an object instance
+// allocate a handle for an object instance, if handle is provided use it or
+// else allocate one
 //------------------------------------------------------------------------------
 hal_handle_t
-hal_handle_alloc (hal_obj_id_t obj_id)
+hal_handle_alloc (hal_obj_id_t obj_id, hal_handle_t handle_id)
 {
-    hal_ret_t                ret;
     sdk_ret_t                sdk_ret;
-    hal_handle_t             handle_id;
     hal_handle               *handle;
     hal_handle_ht_entry_t    *entry;
 
@@ -239,19 +237,22 @@ hal_handle_alloc (hal_obj_id_t obj_id)
     entry =
         (hal_handle_ht_entry_t *)hal_handle_ht_entry_slab()->alloc();
     if (entry == NULL) {
-        HAL_TRACE_ERR("Failed to allocate hal handle ht entry");
+        HAL_TRACE_ERR("Failed to allocate hal handle ht entry, obj id {}",
+                      obj_id);
         return HAL_HANDLE_INVALID;
     }
 
     // allocate hal handle object itself
     handle = hal_handle::factory(obj_id);
     if (handle == NULL) {
-        HAL_TRACE_ERR("Failed to allocate handle");
+        HAL_TRACE_ERR("Failed to allocate handle, obj id {}", obj_id);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_HT_ENTRY, entry);
         return HAL_HANDLE_INVALID;
     }
-    // allocate unique handle id
-    handle_id = HAL_ATOMIC_INC_UINT32(&g_hal_handle, 1);
+    // allocate unique handle id, if not provided
+    if (handle_id == HAL_HANDLE_INVALID) {
+        handle_id = HAL_ATOMIC_INC_UINT32(&g_hal_handle, 1);
+    }
     handle->set_handle_id(handle_id);
 
     // prepare the entry to be inserted
@@ -260,16 +261,15 @@ hal_handle_alloc (hal_obj_id_t obj_id)
     sdk_ret = hal_handle_id_ht()->insert_with_key(&handle_id,
                                                   entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("Failed to add handle id {} to handle obj", handle_id);
+        HAL_TRACE_ERR("Failed to add handle id {} to handle db, obj id {}",
+                      handle_id, obj_id);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_HT_ENTRY, entry);
         handle->~hal_handle();
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE, handle);
         return HAL_HANDLE_INVALID;
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
-    HAL_TRACE_DEBUG("Assigned hal_handle:{} for an object of obj_id:{}, ret:{}",
-                    handle_id, obj_id, ret);
+    HAL_TRACE_DEBUG("Assigned hal_handle {} for obj id {}", handle_id, obj_id);
     return handle_id;
 }
 

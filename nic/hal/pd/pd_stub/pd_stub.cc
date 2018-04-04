@@ -31,6 +31,7 @@ PD_FUNC_STUB(pd_pgm_def_p4plus_entries);
 
 // vrf pd calls
 PD_FUNC_STUB(pd_vrf_create);
+PD_FUNC_STUB(pd_vrf_restore);
 PD_FUNC_STUB(pd_vrf_delete);
 PD_FUNC_STUB(pd_vrf_update);
 PD_FUNC_STUB(pd_vrf_mem_free);

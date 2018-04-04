@@ -24,6 +24,7 @@ using kh::VrfKeyHandle;
 
 using vrf::VrfSpec;
 using vrf::VrfStatus;
+using vrf::VrfStats;
 using vrf::VrfResponse;
 using vrf::VrfRequestMsg;
 using vrf::VrfResponseMsg;
@@ -44,14 +45,18 @@ typedef struct vrf_s {
     vrf_id_t           vrf_id;               // app provided vrf id
     hal_handle_t       nwsec_profile_handle; // security profile handle
     ip_prefix_t        gipo_prefix;          // the prefix to terminate gipo
+    ip_addr_t          mytep_ip;             // mytep address for this VRF
 
     // operational state of vrf
     hal_handle_t       hal_handle;           // HAL allocated handle
+
+    // vrf stats
     uint32_t           num_l2seg;            // no. of L2 segments
     uint32_t           num_sg;               // no. of security groups
     uint32_t           num_l4lb_svc;         // no. of L4 LB services
     uint32_t           num_ep;               // no. of endpoints
-    // Back references
+
+    // back references
     block_list         *l2seg_list;           // L2 segment list
 
     // PD state
@@ -123,7 +128,7 @@ hal_ret_t vrf_get(vrf::VrfGetRequest& req, vrf::VrfGetResponseMsg *rsp);
 
 hal_ret_t vrf_marshall_cb(void *obj, uint8_t *mem,
                           uint32_t len, uint32_t *mlen);
-uint32_t vrf_unmarshall_cb(void *obj, uint32_t len);
+uint32_t vrf_restore_cb(void *obj, uint32_t len);
 
 }    // namespace hal
 

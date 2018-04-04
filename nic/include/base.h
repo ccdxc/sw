@@ -45,7 +45,7 @@ using sdk::sdk_ret_t;
 // basic types used in the packet processing path
 // WARNING: some of these types may have more bits than needed (like VRF, BD
 // etc.), so be careful in using these as key fields of other lookup data
-// structures 
+// structures
 //------------------------------------------------------------------------------
 typedef uint64_t        hal_handle_t;
 typedef uint64_t        l2seg_id_t;
@@ -138,8 +138,8 @@ do {                                                       \
 //
 // Example:
 //
-// #define SAMPLE_ENUM_ENTRIES(ENTRY)           
-//    ENTRY(OK, 0, "ok")                        
+// #define SAMPLE_ENUM_ENTRIES(ENTRY)
+//    ENTRY(OK, 0, "ok")
 //    ENTRY(ERR, 1, "err")
 //
 // DEFINE_ENUM(sample_enum_t, SAMPLE_ENUM_ENTRIES)
@@ -247,6 +247,7 @@ do {                                                       \
     ENTRY(HAL_RET_COPP_NOT_FOUND,             65, "copp not found")                \
     ENTRY(HAL_RET_OPENSSL_ENGINE_NOT_FOUND,   66, "openssl engine not found")      \
     ENTRY(HAL_RET_SSL_CERT_KEY_ADD_ERR,       67, "failed to add cert/key to SSL") \
+    ENTRY(HAL_RET_KEY_HANDLE_NOT_SPECIFIED,   68, "key and handle not set")        \
                                                                                    \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
@@ -258,7 +259,7 @@ DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)
 #define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 
 static inline hal_ret_t
-hal_sdk_ret_to_hal_ret(sdk_ret_t sdk_ret) 
+hal_sdk_ret_to_hal_ret(sdk_ret_t sdk_ret)
 {
     switch (sdk_ret) {
     case sdk::SDK_RET_OK:

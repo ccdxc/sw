@@ -957,7 +957,7 @@ hal_oper_db::hal_oper_db()
     forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
     infra_vrf_handle_ = HAL_HANDLE_INVALID;
     event_mgr_ = NULL;
-    memset(&mytep_ip, 0, sizeof(mytep_ip));
+    memset(&mytep_ip_, 0, sizeof(mytep_ip_));
 }
 
 //------------------------------------------------------------------------------

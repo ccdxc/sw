@@ -157,15 +157,15 @@ typedef struct nwsec_update_app_ctxt_s {
 // max. number of security profiles supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_NWSEC_PROFILES                       256
 
-static inline void 
-nwsec_profile_lock(nwsec_profile_t *nwsec_profile, const char *fname, 
+static inline void
+nwsec_profile_lock(nwsec_profile_t *nwsec_profile, const char *fname,
                    int lineno, const char *fxname)
 {
     HAL_SPINLOCK_LOCK(&nwsec_profile->slock);
 }
 
-static inline void 
-nwsec_profile_unlock(nwsec_profile_t *nwsec_profile, const char *fname, 
+static inline void
+nwsec_profile_unlock(nwsec_profile_t *nwsec_profile, const char *fname,
                      int lineno, const char *fxname)
 {
     HAL_SPINLOCK_UNLOCK(&nwsec_profile->slock);
@@ -176,18 +176,16 @@ extern nwsec_profile_t *find_nwsec_profile_by_handle(hal_handle_t handle);
 extern void *nwsec_profile_id_get_key_func(void *entry);
 extern uint32_t nwsec_profile_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool nwsec_profile_id_compare_key_func(void *key1, void *key2);
-nwsec_profile_t *nwsec_lookup_key_or_handle(const SecurityProfileKeyHandle& kh);
+hal_ret_t find_nwsec_by_key_or_handle(const SecurityProfileKeyHandle& kh,
+                                      nwsec_profile_t **nwsec_profile);
 
-// Forward declarations
+// forward declarations
 hal_ret_t securityprofile_create(nwsec::SecurityProfileSpec& spec,
                                  nwsec::SecurityProfileResponse *rsp);
-
 hal_ret_t securityprofile_update(nwsec::SecurityProfileSpec& spec,
                                  nwsec::SecurityProfileResponse *rsp);
-
 hal_ret_t securityprofile_delete(nwsec::SecurityProfileDeleteRequest& req,
                                  nwsec::SecurityProfileDeleteResponse *rsp);
-
 hal_ret_t securityprofile_get(nwsec::SecurityProfileGetRequest& req,
                               nwsec::SecurityProfileGetResponseMsg *rsp);
 
@@ -260,11 +258,11 @@ typedef struct dos_policy_prop_s {
 typedef struct dos_policy_s {
     hal_spinlock_t        slock;                  // lock to protect this structure
     hal_handle_t          hal_handle;             // HAL allocated handle
-    hal_handle_t          vrf_handle;          // vrf handle 
-    
+    hal_handle_t          vrf_handle;          // vrf handle
+
     bool                  ingr_pol_valid;
     bool                  egr_pol_valid;
-    
+
     dos_policy_prop_t     ingress;
     dos_policy_prop_t     egress;
 

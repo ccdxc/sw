@@ -62,7 +62,7 @@ protected:
 // ----------------------------------------------------------------------------
 // Vrf delete test
 // ----------------------------------------------------------------------------
-TEST_F(vrf_test, test1) 
+TEST_F(vrf_test, test1)
 {
     hal_ret_t               ret;
     VrfSpec                 ten_spec;
@@ -168,7 +168,7 @@ TEST_F(vrf_test, test1)
         ASSERT_TRUE(get_rsp_msg.response(i).stats().num_endpoints() == 0);
     }
 
-    // Delete vrf 1 
+    // Delete vrf 1
     del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -186,7 +186,7 @@ TEST_F(vrf_test, test1)
 }
 
 // Update vrf test with enicifs
-TEST_F(vrf_test, test2) 
+TEST_F(vrf_test, test2)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -312,7 +312,7 @@ TEST_F(vrf_test, test2)
 // ----------------------------------------------------------------------------
 // Update vrf test with uplink ifs
 // ----------------------------------------------------------------------------
-TEST_F(vrf_test, test3) 
+TEST_F(vrf_test, test3)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -423,7 +423,7 @@ TEST_F(vrf_test, test3)
 // ----------------------------------------------------------------------------
 // Updating a vrf with no nwsec profile
 // ----------------------------------------------------------------------------
-TEST_F(vrf_test, test4) 
+TEST_F(vrf_test, test4)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -535,7 +535,7 @@ TEST_F(vrf_test, test4)
 // ----------------------------------------------------------------------------
 // Updating a vrf without any change
 // ----------------------------------------------------------------------------
-TEST_F(vrf_test, test5) 
+TEST_F(vrf_test, test5)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -647,7 +647,7 @@ TEST_F(vrf_test, test5)
 // ----------------------------------------------------------------------------
 // Vrf delete test with another create
 // ----------------------------------------------------------------------------
-TEST_F(vrf_test, test6) 
+TEST_F(vrf_test, test6)
 {
     hal_ret_t                    ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -697,7 +697,7 @@ TEST_F(vrf_test, test6)
 // ----------------------------------------------------------------------------
 // Vrf update test without l2segments
 // ----------------------------------------------------------------------------
-TEST_F(vrf_test, test7) 
+TEST_F(vrf_test, test7)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -747,7 +747,7 @@ TEST_F(vrf_test, test7)
 }
 
 // Update vrf test with scale of segs and enicifs
-TEST_F(vrf_test, test8) 
+TEST_F(vrf_test, test8)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -870,7 +870,7 @@ TEST_F(vrf_test, test8)
 // ----------------------------------------------------------------------------
 // Update vrf test with scale of uplink ifs
 // ----------------------------------------------------------------------------
-TEST_F(vrf_test, test9) 
+TEST_F(vrf_test, test9)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -1149,7 +1149,7 @@ TEST_F(vrf_test, test9)
 // Create Vrf
 // Update nwsec
 // ----------------------------------------------------------------------------
-TEST_F(vrf_test, test10) 
+TEST_F(vrf_test, test10)
 {
     hal_ret_t                           ret;
     VrfSpec                          ten_spec;
@@ -1216,7 +1216,7 @@ TEST_F(vrf_test, test10)
 }
 
 // Test Gipo prefix update
-TEST_F(vrf_test, test12) 
+TEST_F(vrf_test, test12)
 {
     hal_ret_t               ret;
     VrfSpec                 ten_spec, ten_spec1;
@@ -1292,7 +1292,7 @@ TEST_F(vrf_test, test12)
 // ----------------------------------------------------------------------------
 // Vrf -ve test cases
 // ----------------------------------------------------------------------------
-TEST_F(vrf_test, test11) 
+TEST_F(vrf_test, test11)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1, infra_spec;
@@ -1333,7 +1333,7 @@ TEST_F(vrf_test, test11)
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
-    
+
     // Create vrf with handle and not key
     ten_spec.mutable_key_or_handle()->set_vrf_handle(1000);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl );
@@ -1384,8 +1384,8 @@ TEST_F(vrf_test, test11)
     ret = hal::vrf_create(infra_spec, &infra_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
-    
-    // Create more than 256 vrfs. Will result in PD failure and create 
+
+    // Create more than 256 vrfs. Will result in PD failure and create
     for (int i = 0; i < 254; i++) {
         ten_spec.mutable_key_or_handle()->set_vrf_id(1100 + i);
         ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);

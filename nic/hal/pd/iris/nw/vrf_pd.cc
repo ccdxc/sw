@@ -147,6 +147,59 @@ end:
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// pd vrf restore
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_vrf_restore (pd_vrf_restore_args_t *args)
+{
+    hal_ret_t   ret;
+    pd_vrf_t    *vrf_pd;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("Creating pd state for vrf {}", args->vrf->vrf_id);
+
+    // allocate PD vrf state
+    vrf_pd = vrf_pd_alloc_init();
+    if (vrf_pd == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // link pi & pd
+    link_pi_pd(vrf_pd, args->vrf);
+
+#if 0
+    // allocate resources
+    ret = vrf_pd_alloc_res(vrf_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to allocated resources");
+        goto end;
+    }
+
+    // program hw
+    ret = vrf_pd_program_hw(vrf_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:failed to program hw", __FUNCTION__);
+        goto end;
+    }
+#endif
+
+    // add to flow lookup id ht
+    ret = vrf_pd_add_to_db(vrf_pd, ((vrf_t *)(vrf_pd->vrf))->hal_handle);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+
+end:
+
+    if (ret != HAL_RET_OK) {
+        vrf_pd_cleanup(vrf_pd);
+    }
+
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // insert the vrf into flow lookup id DB
 //------------------------------------------------------------------------------

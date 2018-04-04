@@ -97,7 +97,7 @@ find_qos_class_by_group (qos_group_t qos_group)
         qos_class_ht()->lookup(&qos_class_key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_QOS_CLASS);
         qos_class = (qos_class_t *)hal_handle_get_obj(entry->handle_id);
         return qos_class;
@@ -130,7 +130,7 @@ find_qos_class_by_key_handle (const QosClassKeyHandle& kh)
 {
     if (kh.key_or_handle_case() == QosClassKeyHandle::kQosGroup) {
         qos_group_t qos_group = qos_spec_qos_group_to_qos_group(kh.qos_group());
-        return valid_qos_group(qos_group) ? 
+        return valid_qos_group(qos_group) ?
                                     find_qos_class_by_group(qos_group) : NULL;
     } else if (kh.key_or_handle_case() == QosClassKeyHandle::kQosClassHandle) {
         return find_qos_class_by_handle(kh.qos_class_handle());
@@ -417,7 +417,7 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
 
     // mtu should be set
     if ((mtu < HAL_MIN_MTU) || (mtu > HAL_JUMBO_MTU)) {
-        HAL_TRACE_ERR("mtu {} not within {}-{} bytes", 
+        HAL_TRACE_ERR("mtu {} not within {}-{} bytes",
                       mtu, HAL_MIN_MTU, HAL_JUMBO_MTU);
         return HAL_RET_INVALID_ARG;
     }
@@ -438,14 +438,14 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
         min_xoff_threshold = 2*mtu;
         max_xoff_threshold = 8*mtu;
 
-        if ((xon_threshold < min_xon_threshold) || 
+        if ((xon_threshold < min_xon_threshold) ||
             (xon_threshold > max_xon_threshold)) {
             HAL_TRACE_ERR("xon_threshold {} should be in the range {}-{} bytes",
                           xon_threshold, min_xon_threshold, max_xon_threshold);
             return HAL_RET_INVALID_ARG;
         }
 
-        if ((xoff_threshold < min_xoff_threshold) || 
+        if ((xoff_threshold < min_xoff_threshold) ||
             (xoff_threshold > max_xoff_threshold)) {
             HAL_TRACE_ERR("xoff_threshold {} should be in the range {}-{} bytes",
                           xoff_threshold, min_xoff_threshold, max_xoff_threshold);
@@ -489,7 +489,7 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
             return HAL_RET_INVALID_ARG;
         }
 
-        
+
         for (int i = 0; i < spec.uplink_class_map().ip_dscp_size(); i++) {
             ip_dscp = spec.uplink_class_map().ip_dscp(i);
             if (ip_dscp >= HAL_MAX_IP_DSCP_VALS) {
@@ -994,7 +994,7 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_qos_class_args.ip_dscp_changed = app_ctxt->ip_dscp_changed;
     pd_qos_class_args.dot1q_pcp_changed = app_ctxt->dot1q_pcp_changed;
     pd_qos_class_args.dot1q_pcp_src = app_ctxt->dot1q_pcp_src;
-    HAL_ASSERT(sizeof(pd_qos_class_args.ip_dscp_remove) == 
+    HAL_ASSERT(sizeof(pd_qos_class_args.ip_dscp_remove) ==
                sizeof(app_ctxt->ip_dscp_remove));
     memcpy(pd_qos_class_args.ip_dscp_remove, app_ctxt->ip_dscp_remove,
            sizeof(app_ctxt->ip_dscp_remove));
@@ -1582,7 +1582,7 @@ find_copp_by_copp_type (copp_type_t copp_type)
         copp_ht()->lookup(&copp_key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_COPP);
         copp = (copp_t *)hal_handle_get_obj(entry->handle_id);
         return copp;

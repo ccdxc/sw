@@ -199,7 +199,10 @@ public:
 
     void set_infra_vrf_handle(hal_handle_t infra_vrf_hdl) { infra_vrf_handle_ = infra_vrf_hdl; }
     hal_handle_t infra_vrf_handle(void) const { return infra_vrf_handle_; }
-    ip_addr_t *mytep(void) { return &mytep_ip; }
+    ip_addr_t *mytep(void) { return &mytep_ip_; }
+    void set_mytep_ip(ip_addr_t *mytep_ip) {
+        memcpy(&mytep_ip_, mytep_ip, sizeof(mytep_ip_));
+    }
     eventmgr *event_mgr(void) const { return event_mgr_; }
     if_id_t app_redir_if_id(void) const { return app_redir_if_id_; }
     void set_app_redir_if_id(if_id_t id) {
@@ -253,7 +256,7 @@ private:
 
     hal_handle_t            infra_vrf_handle_;    // infra vrf handle
     eventmgr                *event_mgr_;
-    ip_addr_t               mytep_ip;
+    ip_addr_t               mytep_ip_;
     hal_forwarding_mode_t   forwarding_mode_;
     if_id_t                 app_redir_if_id_;
 

@@ -59,10 +59,14 @@ typedef struct pd_pgm_def_p4plus_entries_args_s {
 // vrf
 typedef struct pd_vrf_create_args_s {
     vrf_t               *vrf;
-    nwsec_profile_t     *nwsec_profile;
     bool                gipo_prefix_change;
     ip_prefix_t         *new_gipo_prefix;
 } __PACK__ pd_vrf_create_args_t;
+
+typedef struct pd_vrf_restore_args_s {
+    vrf_t              *vrf;
+    const VrfStatus    *vrf_status;
+} __PACK__ pd_vrf_restore_args_t;
 
 typedef struct pd_vrf_delete_args_s {
     vrf_t               *vrf;
@@ -94,6 +98,14 @@ static inline void
 pd_vrf_create_args_init (pd_vrf_create_args_t *args)
 {
     args->vrf = NULL;
+    return;
+}
+
+static inline void
+pd_vrf_restore_args_init (pd_vrf_restore_args_t *args)
+{
+    args->vrf = NULL;
+    args->vrf_status = NULL;
     return;
 }
 
@@ -2465,7 +2477,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_FLOW_MONITOR_RULE_CREATE, 211, "PD_FUNC_ID_FLOW_MONITOR_RULE_CREATE")\
     ENTRY(PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE, 212, "PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE")\
     ENTRY(PD_FUNC_ID_FLOW_MONITOR_RULE_GET,    213, "PD_FUNC_ID_FLOW_MONITOR_RULE_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                   214, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_VRF_RESTORE,           214, "PD_FUNC_ID_VRF_RESTORE") \
+    ENTRY(PD_FUNC_ID_MAX,                   215, "PD_FUNC_ID_MAX")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2490,6 +2503,7 @@ PD_FUNCP_TYPEDEF(pd_pgm_def_p4plus_entries);
 
 // vrf pd calls
 PD_FUNCP_TYPEDEF(pd_vrf_create);
+PD_FUNCP_TYPEDEF(pd_vrf_restore);
 PD_FUNCP_TYPEDEF(pd_vrf_delete);
 PD_FUNCP_TYPEDEF(pd_vrf_update);
 PD_FUNCP_TYPEDEF(pd_vrf_mem_free);
@@ -2822,6 +2836,7 @@ typedef struct pd_call_s {
 
         // vrf pd calls
         PD_UNION_FIELD(pd_vrf_create);
+        PD_UNION_FIELD(pd_vrf_restore);
         PD_UNION_FIELD(pd_vrf_delete);
         PD_UNION_FIELD(pd_vrf_update);
         PD_UNION_FIELD(pd_vrf_mem_free);

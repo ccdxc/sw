@@ -40,7 +40,7 @@ pd_vrf_create (pd_vrf_create_args_t *args)
     // allocate resources
     ret = vrf_pd_alloc_res(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to allocated resources", 
+        HAL_TRACE_ERR("{}:failed to allocated resources",
                       __FUNCTION__);
         goto end;
     }
@@ -126,7 +126,7 @@ vrf_pd_program_hw (pd_vrf_t *vrf_pd)
 }
 
 //-----------------------------------------------------------------------------
-// Allocate resources. 
+// Allocate resources.
 //-----------------------------------------------------------------------------
 hal_ret_t
 vrf_pd_alloc_res(pd_vrf_t *vrf_pd)
@@ -137,7 +137,7 @@ vrf_pd_alloc_res(pd_vrf_t *vrf_pd)
 }
 
 //-----------------------------------------------------------------------------
-// De-Allocate resources. 
+// De-Allocate resources.
 //-----------------------------------------------------------------------------
 hal_ret_t
 vrf_pd_dealloc_res(pd_vrf_t *vrf_pd)
@@ -163,8 +163,8 @@ vrf_pd_cleanup(pd_vrf_t *vrf_pd)
     // Releasing resources
     ret = vrf_pd_dealloc_res(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for vrf: {}", 
-                      __FUNCTION__, 
+        HAL_TRACE_ERR("{}: unable to dealloc res for vrf: {}",
+                      __FUNCTION__,
                       ((vrf_t *)(vrf_pd->vrf))->vrf_id);
         goto end;
     }
@@ -181,7 +181,7 @@ end:
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 link_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten)
 {
     pd_ten->vrf = pi_ten;
@@ -191,7 +191,7 @@ link_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten)
 // ----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 delink_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten)
 {
     if (pd_ten) {
