@@ -19,6 +19,7 @@ cc_library(
            glob(["lif/*.cc"]) +
            glob(["mcast/*.cc"]) +
            glob(["nw/*.cc"]) +
+           glob(["debug/*.cc"]) +
            glob(["security/*.cc"]) +
            glob(["telemetry/*.cc"]),
     hdrs = [] + glob(["*.hpp"]) + glob(["*.h"]) +

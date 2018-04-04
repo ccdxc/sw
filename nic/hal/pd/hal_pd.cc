@@ -336,6 +336,8 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     // asic
     PD_SYMBOL_LOAD(PD_FUNC_ID_ASIC_INIT, pd_asic_init);
 
+    PD_SYMBOL_LOAD(PD_FUNC_ID_TABLE_PROPERTIES_GET, pd_table_properties_get);
+
     // capri
     PD_SYMBOL_LOAD(PD_FUNC_ID_GET_START_OFFSET, pd_get_start_offset);
     PD_SYMBOL_LOAD(PD_FUNC_ID_GET_REG_SIZE, pd_get_size_kb);
@@ -677,6 +679,8 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
 
     // asic
     PD_SYMBOL_CALL(PD_FUNC_ID_ASIC_INIT, pd_asic_init);
+
+    PD_SYMBOL_CALL(PD_FUNC_ID_TABLE_PROPERTIES_GET, pd_table_properties_get);
 
     // capri
     PD_SYMBOL_CALL(PD_FUNC_ID_GET_START_OFFSET, pd_get_start_offset);

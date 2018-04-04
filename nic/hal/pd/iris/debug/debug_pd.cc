@@ -105,5 +105,22 @@ pd_debug_cli_write(pd_debug_cli_write_args_t *args)
     return ret;
 }
 
+hal_ret_t
+pd_table_properties_get (hal::pd::pd_table_properties_get_args_t *args)
+{
+    p4pd_error_t            pd_err = P4PD_SUCCESS;
+    p4pd_table_properties_t tbl_ctx;
+
+    memset(&tbl_ctx, 0 , sizeof(p4pd_table_properties_t));
+
+    pd_err = p4pd_global_table_properties_get(args->tableid, &tbl_ctx);
+    if (pd_err != P4PD_SUCCESS) {
+        return HAL_RET_ERR;
+    }
+
+    args->tabledepth = tbl_ctx.tabledepth;
+    return HAL_RET_OK;
+}
+
 }    // namespace pd
 }    // namespace hal

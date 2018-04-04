@@ -115,6 +115,21 @@ def ${table}_index(ctx, ids):
     backend.populate_table(config)
     pass
 
+@${table}.group(invoke_without_command=True)
+@click.pass_context
+def all(ctx):
+    config = {}
+    config['table_name'] = ctx.obj['table_name']
+    config['action_name'] = ''
+    config['opn'] = ctx.obj['opn']
+    config['index'] = 0xffffffff
+    config['actionid_vld'] = False
+    config['actionfld'] = {}
+    config['swkey']={}
+    config['swkey_mask']={}
+    backend.populate_table(config)
+    pass
+
 //::    #endfor
 
 

@@ -193,4 +193,3 @@ p4pd_global_table_properties_get (uint32_t tableid, void *tbl_ctx)
     }
     return P4PD_SUCCESS;
 }
-

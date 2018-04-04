@@ -151,15 +151,32 @@ ${api_prefix}_entry_write(uint32_t tableid,
     return (P4PD_SUCCESS);
 }
 
+void*
+allocate_debug_response_msg (void)
+{
+    DebugResponseMsg *debug_rsp_msg = new DebugResponseMsg;
+    return debug_rsp_msg;
+}
+
+void
+free_debug_response_msg (void *rsp_msg)
+{
+    DebugResponseMsg *debug_rsp_msg = (DebugResponseMsg*)rsp_msg;
+    delete debug_rsp_msg;
+}
+
+/* read the table info from HAL */
 p4pd_error_t
 ${api_prefix}_entry_read(uint32_t  tableid,
                          uint32_t  index,
-                         void      *swkey, 
+                         void      *swkey,
                          void      *swkey_mask,
-                         void      *actiondata)
+                         void      *actiondata,
+                         void      *rsp_msg,
+                         int       *size)
 {
     DebugRequestMsg  debug_req_msg;
-    DebugResponseMsg debug_rsp_msg;
+    DebugResponseMsg *debug_rsp_msg = (DebugResponseMsg*)rsp_msg;
     ClientContext    context;
     DebugSpec        *debug_spec    = NULL;
     DebugKeyHandle   *key_or_handle = NULL;
@@ -221,10 +238,30 @@ ${api_prefix}_entry_read(uint32_t  tableid,
         default:
             // Invalid tableid
             return (P4PD_FAIL);
-            break;
     }
 
-    Status status = stub->DebugInvoke(&context, debug_req_msg, &debug_rsp_msg);
+    Status status = stub->DebugInvoke(&context, debug_req_msg, debug_rsp_msg);
+    if (status.ok()) {
+        *size = debug_rsp_msg->response(0).spec_size();
+        return (P4PD_SUCCESS);
+    }
+
+    return P4PD_FAIL;
+}
+
+p4pd_error_t
+${api_prefix}_entry_populate(uint32_t  tableid,
+                             void      *swkey,
+                             void      *swkey_mask,
+                             void      *actiondata,
+                             void      *rsp_msg,
+                             int       response_index)
+{
+    if (rsp_msg == NULL) {
+        return P4PD_FAIL;
+    }
+
+    DebugResponseMsg *debug_rsp_msg = (DebugResponseMsg*)rsp_msg;
 
     switch (tableid) {
         //::        for table, tid in tabledict.items():
@@ -239,28 +276,28 @@ ${api_prefix}_entry_read(uint32_t  tableid,
         case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-            memcpy(actiondata, (void*)debug_rsp_msg.response(0).spec().actiondata().c_str(),
+            memcpy(actiondata, (void*)debug_rsp_msg->response(0).spec(response_index).actiondata().c_str(),
                    sizeof(${table}_actiondata));
             break;
 
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
-            memcpy(swkey, (void*)debug_rsp_msg.response(0).spec().swkey().c_str(),
+            memcpy(swkey, (void*)debug_rsp_msg->response(0).spec(response_index).swkey().c_str(),
                    sizeof(${table}_swkey_t));
 
-            memcpy(actiondata, (void*)debug_rsp_msg.response(0).spec().actiondata().c_str(),
+            memcpy(actiondata, (void*)debug_rsp_msg->response(0).spec(response_index).actiondata().c_str(),
                    sizeof(${table}_actiondata));
             break;
 
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Ternary':
-            memcpy(swkey, (void*)debug_rsp_msg.response(0).spec().swkey().c_str(),
+            memcpy(swkey, (void*)debug_rsp_msg->response(0).spec(response_index).swkey().c_str(),
                    sizeof(${table}_swkey_t));
 
-            memcpy(swkey_mask, (void*)debug_rsp_msg.response(0).spec().swkey_mask().c_str(),
+            memcpy(swkey_mask, (void*)debug_rsp_msg->response(0).spec(response_index).swkey_mask().c_str(),
                    sizeof(${table}_swkey_mask_t));
 
-            memcpy(actiondata, (void*)debug_rsp_msg.response(0).spec().actiondata().c_str(),
+            memcpy(actiondata, (void*)debug_rsp_msg->response(0).spec(response_index).actiondata().c_str(),
                    sizeof(${table}_actiondata));
             break;
             //
@@ -269,8 +306,8 @@ ${api_prefix}_entry_read(uint32_t  tableid,
         default:
             // Invalid tableid
             return (P4PD_FAIL);
-            break;
     }
+
     return (P4PD_SUCCESS);
 }
 

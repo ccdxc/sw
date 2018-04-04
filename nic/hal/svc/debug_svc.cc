@@ -32,13 +32,16 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
                               const DebugRequestMsg *req,
                               DebugResponseMsg *rsp)
 {
-    hal_ret_t                            ret;
-    bool                                 table_access = false;
-    bool                                 reg_access = false;
-    hal::pd::pd_debug_cli_read_args_t    args;
-    string                               data;
+    hal_ret_t                               ret          = HAL_RET_OK;
+    bool                                    table_access = false;
+    bool                                    reg_access   = false;
+    int                                     index        = 0;
+    int                                     num_indices  = 0;
+    string                                  data;
+    hal::pd::pd_debug_cli_read_args_t       args;
+    hal::pd::pd_table_properties_get_args_t table_prop_args;
 
-    HAL_TRACE_DEBUG("Rcvd Ddebug request");
+    HAL_TRACE_DEBUG("Rcvd Debug request");
 
     DebugSpec spec = req->request(0);
     DebugResponse *response = rsp->add_response();
@@ -46,11 +49,11 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
 
     if ((key_handle.key_or_handle_case() == debug::DebugKeyHandle::kTableId) ||
         (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kTableName)) {
-        HAL_TRACE_DEBUG("{}: Table: {}", __FUNCTION__, key_handle.table_id());
+        HAL_TRACE_DEBUG("Table: {}", key_handle.table_id());
         table_access = true;
     } else if ((key_handle.key_or_handle_case() == debug::DebugKeyHandle::kRegId) ||
                (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kRegName)) {
-        HAL_TRACE_DEBUG("{}: Reg: {}", __FUNCTION__, key_handle.reg_id());
+        HAL_TRACE_DEBUG("Reg: {}", key_handle.reg_id());
         reg_access = true;
     }
     if (spec.mem_type() == debug::DEBUG_MEM_TYPE_TABLE) {
@@ -59,29 +62,54 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
         reg_access = true;
     }
 
-    HAL_TRACE_DEBUG("{}: operation: {} index: {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("operation: {} index: {}",
                     spec.opn_type(), spec.index());
 
     if (table_access) {
         if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
-            DebugSpec *rsp_spec = response->mutable_spec();
-            args.tableid = key_handle.table_id();
-            args.index = spec.index();
-            args.swkey = (void *)spec.swkey().c_str();
-            args.swkey_mask = (void *)spec.swkey_mask().c_str();
-            args.actiondata = (void *)spec.actiondata().c_str();
-            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_READ, (void *)&args);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_DEBUG("{}: Hardware read failure, err : {}",
-                                __FUNCTION__, ret);
-                response->set_api_status(types::API_STATUS_HW_READ_ERROR);
-                return Status::OK;
+
+            if (spec.index() == 0xffffffff) {
+                table_prop_args.tableid = key_handle.table_id();
+
+                ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TABLE_PROPERTIES_GET,
+                                           (void *)&table_prop_args);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_DEBUG("Failed to get table properties for"
+                                    " table: {}, err: {}",
+                                    key_handle.table_id(), ret);
+                    // TODO
+                    response->set_api_status(types::API_STATUS_HW_READ_ERROR);
+                    return Status::OK;
+                }
+                index       = 0;
+                num_indices = table_prop_args.tabledepth;
+            } else {
+                index       = spec.index();
+                num_indices = 1;
             }
 
+            HAL_TRACE_DEBUG("index start: {}, num indices: {}",
+                            index, index + num_indices);
+
+            for (int i = index; i < index + num_indices; ++i) {
+                DebugSpec *rsp_spec = response->add_spec();
+                args.tableid = key_handle.table_id();
+                args.index = i;
+                args.swkey = (void *)spec.swkey().c_str();
+                args.swkey_mask = (void *)spec.swkey_mask().c_str();
+                args.actiondata = (void *)spec.actiondata().c_str();
+                ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_READ, (void *)&args);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_DEBUG("Hardware read failure, err: {}", ret);
+                    response->set_api_status(types::API_STATUS_HW_READ_ERROR);
+                    return Status::OK;
+                }
+
+                rsp_spec->set_swkey(spec.swkey());
+                rsp_spec->set_swkey_mask(spec.swkey_mask());
+                rsp_spec->set_actiondata(spec.actiondata());
+            }
             response->set_api_status(types::API_STATUS_OK);
-            rsp_spec->set_swkey(spec.swkey());
-            rsp_spec->set_swkey_mask(spec.swkey_mask());
-            rsp_spec->set_actiondata(spec.actiondata());
         } else {
             args.tableid = key_handle.table_id();
             args.index = spec.index();
@@ -90,16 +118,14 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
             args.actiondata = (void *)spec.actiondata().c_str();
             ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_WRITE, (void *)&args);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_DEBUG("{}: Hardware write failure, err : {}",
-                                __FUNCTION__, ret);
+                HAL_TRACE_DEBUG("Hardware write failure, err: {}", ret);
                 response->set_api_status(types::API_STATUS_HW_READ_ERROR);
                 return Status::OK;
             }
             response->set_api_status(types::API_STATUS_OK);
         }
     } else if (reg_access) {
-        HAL_TRACE_DEBUG("{}: Register address: 0x{0:x}", __FUNCTION__,
-                        spec.addr());
+        HAL_TRACE_DEBUG("Register address: {#x}", spec.addr());
         if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
             if (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kRegName) {
 
@@ -173,8 +199,7 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
                 data = std::to_string(val);
             }
         } else {
-            HAL_TRACE_DEBUG("{}: Writing Data: 0x{0:x}",
-                            __FUNCTION__, spec.reg_data());
+            HAL_TRACE_DEBUG("Writing Data: {#x}", spec.reg_data());
             uint32_t reg_data = spec.reg_data();
             hal::pd::asic_reg_write(spec.addr(), &reg_data);
         }

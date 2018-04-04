@@ -602,14 +602,29 @@ class ${table}():
 
         self.populate_table(ctx)
 
-        index = ctx['index']
+        index   = ctx['index']
+        rsp_msg = ${pddict['cli-name']}.allocate_debug_response_msg()
+        size    = new_intp()
 
-        ret = ${pddict['cli-name']}.p4pd_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p)
-
+        ret = ${pddict['cli-name']}.p4pd_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, size)
         if ret < 0:
             print('Error: p4pd_entry_read() returned %d!' % (ret))
             return;
 
+        for i in range (0, intp_value(size)):
+            ret = ${pddict['cli-name']}.p4pd_entry_populate(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, i)
+            if ret < 0:
+                print('Error: p4pd_entry_populate() returned %d!' % (ret))
+                return;
+
+            print ('Index: %d' % i)
+            self.print_entry();
+            print ('')
+
+        delete_intp(size)
+        ${pddict['cli-name']}.free_debug_response_msg(rsp_msg)
+
+    def print_entry(self):
 //::        if pddict['tables'][table]['type'] != 'Index':
 
         print('${table}_swkey_t:')

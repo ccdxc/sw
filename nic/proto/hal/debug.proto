@@ -111,7 +111,7 @@ message RegisterData {
 // DEBUG response - captures keys and data of table as well as registers
 message DebugResponse {
   types.ApiStatus             api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  DebugSpec                   spec       = 2; // incoming spec
+  repeated DebugSpec          spec       = 2; // incoming spec
   repeated RegisterData       data       = 3; // return data for register read operations
 }
 

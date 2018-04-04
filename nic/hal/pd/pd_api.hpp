@@ -1589,6 +1589,12 @@ pd_del_l2seg_uplink_args_init (pd_del_l2seg_uplink_args_t *args)
     return;
 }
 
+// table properties
+typedef struct pd_table_properties_get_args_s {
+    uint32_t tableid;
+    uint32_t tabledepth;
+} __PACK__ pd_table_properties_get_args_t;
+
 // debug cli
 typedef struct pd_debug_cli_read_args_s {
     uint32_t tableid;
@@ -2477,8 +2483,9 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_FLOW_MONITOR_RULE_CREATE, 211, "PD_FUNC_ID_FLOW_MONITOR_RULE_CREATE")\
     ENTRY(PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE, 212, "PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE")\
     ENTRY(PD_FUNC_ID_FLOW_MONITOR_RULE_GET,    213, "PD_FUNC_ID_FLOW_MONITOR_RULE_GET")\
-    ENTRY(PD_FUNC_ID_VRF_RESTORE,           214, "PD_FUNC_ID_VRF_RESTORE") \
-    ENTRY(PD_FUNC_ID_MAX,                   215, "PD_FUNC_ID_MAX")
+    ENTRY(PD_FUNC_ID_VRF_RESTORE,              214, "PD_FUNC_ID_VRF_RESTORE") \
+    ENTRY(PD_FUNC_ID_TABLE_PROPERTIES_GET,     215, "PD_FUNC_ID_TABLE_PROPERTIES_GET") \
+    ENTRY(PD_FUNC_ID_MAX,                      216, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2766,6 +2773,8 @@ PD_FUNCP_TYPEDEF(pd_rss_indir_table_entry_add);
 
 // asic init
 PD_FUNCP_TYPEDEF(pd_asic_init);
+
+PD_FUNCP_TYPEDEF(pd_table_properties_get);
 
 // capri
 PD_FUNCP_TYPEDEF(pd_get_start_offset);
@@ -3097,6 +3106,8 @@ typedef struct pd_call_s {
 
         // asic init
         PD_UNION_FIELD(pd_asic_init);
+
+        PD_UNION_FIELD(pd_table_properties_get);
 
         // capri
         PD_UNION_FIELD(pd_get_start_offset);

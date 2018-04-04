@@ -295,6 +295,8 @@ PD_FUNC_STUB(pd_rss_indir_table_entry_add);
 // asic init
 PD_FUNC_STUB(pd_asic_init);
 
+PD_FUNC_STUB(pd_table_properties_get);
+
 // capri
 PD_FUNC_STUB(pd_get_start_offset);
 PD_FUNC_STUB(pd_get_size_kb);

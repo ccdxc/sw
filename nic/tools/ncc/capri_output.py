@@ -4193,32 +4193,53 @@ def capri_p4pd_create_swig_custom_hdr(be):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    content_str = 'p4pd_error_t\n';
-    content_str += 'p4pd_entry_read(uint32_t  tableid,\n';
-    content_str += '                uint32_t  index,\n';
-    content_str += '                void      *swkey,\n';
-    content_str += '                void      *swkey_mask,\n';
-    content_str += '                void      *actiondata);\n';
-    content_str += '\n';
-    content_str += 'p4pd_error_t\n';
-    content_str += 'p4pd_entry_write(uint32_t tableid,\n';
-    content_str += '                 uint32_t index,\n';
-    content_str += '                 void     *swkey,\n';
-    content_str += '                 void     *swkey_mask,\n';
-    content_str += '                 void     *actiondata);\n';
+    content_str = """
 
-    content_str += 'void\n';
-    content_str += 'p4pd_register_entry_read(std::string blockname,\n';
-    content_str += '                        std::string regname,\n';
-    content_str += '                        std::string filename);\n';
+/* populates the rsp_msg struct with the response obatined from HAL */
+p4pd_error_t
+p4pd_entry_read(uint32_t  tableid,
+                uint32_t  index,
+                void      *swkey,
+                void      *swkey_mask,
+                void      *actiondata,
+                void      *rsp_msg,
+                int       *size);
 
-    content_str += 'void\n';
-    content_str += 'p4pd_register_list(std::string blockname,\n';
-    content_str += '                   std::string regname,\n';
-    content_str += '                   std::string filename);\n';
+p4pd_error_t
+p4pd_entry_populate(uint32_t  tableid,
+                    void      *swkey,
+                    void      *swkey_mask,
+                    void      *actiondata,
+                    void      *rsp_msg,
+                    int       response_index);
 
-    content_str += 'p4pd_error_t\n';
-    content_str += 'p4pd_cli_init(char* grpc_server_port);\n';
+void*
+allocate_debug_response_msg (void);
+
+void
+free_debug_response_msg (void*);
+
+p4pd_error_t
+p4pd_entry_write(uint32_t tableid,
+                 uint32_t index,
+                 void     *swkey,
+                 void     *swkey_mask,
+                 void     *actiondata);
+
+void
+p4pd_register_entry_read(std::string blockname,
+                        std::string regname,
+                        std::string filename);
+
+void
+p4pd_register_list(std::string blockname,
+                   std::string regname,
+                   std::string filename);
+
+p4pd_error_t
+p4pd_cli_init(char* grpc_server_port);
+
+"""
 
     out_file = out_dir + name + '_custom.h'
     with open(out_file, "w") as of:
@@ -4312,6 +4333,7 @@ typedef unsigned long long uint64_t;
 %pointer_functions(uint16_t, uint16_ptr_t);
 %pointer_functions(uint32_t, uint32_ptr_t);
 %pointer_functions(uint64_t, uint64_ptr_t);
+%pointer_functions(int, intp);
 %array_functions(uint8_t, uint8_array_t);
 %array_functions(uint16_t, uint16_array_t);
 %array_functions(uint32_t, uint32_array_t);
