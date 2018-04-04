@@ -10,6 +10,10 @@ struct phv_ p;
         .param          IPSEC_PAD_BYTES_HBM_TABLE_BASE
         .align 
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
+    sub r1, d.{rxdma_ring_cindex}.hx, 1
+    seq c5, d.{rxdma_ring_pindex}.hx, r1
+    bcf [c5], esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table_cb_ring_full
+    
     phvwrpair p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index, p.ipsec_int_header_payload_start, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
     smeqb c1, d.flags, IPSEC_FLAGS_V6_MASK, IPSEC_FLAGS_V6_MASK 
     cmov r1, c1, IPV6_HDR_SIZE+ESP_FIXED_HDR_SIZE, IPV4_HDR_SIZE+ESP_FIXED_HDR_SIZE
@@ -53,4 +57,8 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     tbladd.f d.iv, 1
     nop.e
     nop
- 
+
+esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table_cb_ring_full:
+    phvwri p.p4_intr_global_drop, 1 
+    nop.e
+    nop

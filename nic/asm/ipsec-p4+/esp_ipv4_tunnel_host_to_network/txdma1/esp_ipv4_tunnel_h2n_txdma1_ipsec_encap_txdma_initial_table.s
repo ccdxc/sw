@@ -13,6 +13,10 @@ struct phv_ p;
         .param      TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
+    sub r1, d.{barco_ring_cindex}.hx, 1
+    seq c5, d.{barco_ring_pindex}.hx, r1
+    bcf [c5], esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table_barco_ring_full
+
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
     b.c1 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing
     phvwri.c1 p.p4_intr_global_drop, 1
@@ -49,3 +53,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing:
     nop.e
     nop
    
+esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table_barco_ring_full:
+    phvwri p.p4_intr_global_drop, 1 
+    nop.e
+    nop
