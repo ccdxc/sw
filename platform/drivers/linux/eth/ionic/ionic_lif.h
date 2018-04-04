@@ -104,4 +104,7 @@ int ionic_lifs_register(struct ionic *ionic);
 void ionic_lifs_unregister(struct ionic *ionic);
 int ionic_lifs_size(struct ionic *ionic);
 
+int ionic_intr_alloc(struct lif *lif, struct intr *intr);
+void ionic_intr_free(struct lif *lif, struct intr *intr);
+
 #endif /* _IONIC_LIF_H_ */

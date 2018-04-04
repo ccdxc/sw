@@ -507,7 +507,7 @@ static irqreturn_t ionic_isr(int irq, void *data)
 	return IRQ_HANDLED;
 }
 
-static int ionic_intr_alloc(struct lif *lif, struct intr *intr)
+int ionic_intr_alloc(struct lif *lif, struct intr *intr)
 {
 	struct ionic *ionic = lif->ionic;
 	struct ionic_dev *idev = &ionic->idev;
@@ -521,7 +521,7 @@ static int ionic_intr_alloc(struct lif *lif, struct intr *intr)
 	return ionic_intr_init(idev, intr, index);
 }
 
-static void ionic_intr_free(struct lif *lif, struct intr *intr)
+void ionic_intr_free(struct lif *lif, struct intr *intr)
 {
 	if (intr->index != INTR_INDEX_NOT_ASSIGNED)
 		clear_bit(intr->index, lif->ionic->intrs);

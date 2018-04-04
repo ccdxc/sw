@@ -4,6 +4,7 @@
 
 #include "ionic.h"
 #include "ionic_if.h"
+#include "ionic_bus.h"
 #include "ionic_dev.h"
 #include "ionic_lif.h"
 
@@ -57,15 +58,31 @@ EXPORT_SYMBOL_GPL(ionic_api_get_identity);
 
 int ionic_api_get_intr(struct lif *lif, int *irq)
 {
-	/* XXX second intr for rdma driver, eth will use intr zero.
-	 * TODO: actual allocator here. */
-	return 1;
+	struct intr intr_obj = {};
+	int err;
+
+	err = ionic_intr_alloc(lif, &intr_obj);
+	if (err)
+		return err;
+
+	err = ionic_bus_get_irq(lif->ionic, intr_obj.index);
+	if (err < 0) {
+		ionic_intr_free(lif, &intr_obj);
+		return err;
+	}
+
+	*irq = err;
+	return intr_obj.index;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_intr);
 
 void ionic_api_put_intr(struct lif *lif, int intr)
 {
-	/* TODO: actual allocator here. */
+	struct intr intr_obj = {
+		.index = intr
+	};
+
+	ionic_intr_free(lif, &intr_obj);
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_intr);
 
