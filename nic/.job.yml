@@ -43,6 +43,7 @@ targets:
   p4pt:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --topo p4pt --feature p4pt ; ret=$? ; make sanity_logs ; exit $ret" ]
   app_redir:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo app_redir --feature app_redir ; ret=$? ; make sanity_logs ; exit $ret" ]
   e2el7:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --e2e-l7-dol ; ret=$? ; make sanity_logs ; exit $ret" ]
+  mbt: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --mbt && ./run.py --topo=up2up --feature=networking --mbt; ret=$? ; make sanity_logs ; exit $ret" ]
   # configtoggle: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo up2up --feature networking --configtoggle ; ret=$? ; make sanity_logs ; exit $ret" ]
   gft/gtest:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py --gft_gtest && make run-gft-gtests ; ret=$? ; make sanity_logs ; exit $ret" ]
   gft:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py  --topo gft --feature gft --gft ; ret=$? ; make sanity_logs ; exit $ret" ]

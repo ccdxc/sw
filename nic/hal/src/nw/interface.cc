@@ -1922,7 +1922,10 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
     }
         break;
 
-    case intf::IF_TYPE_CPU:     // TODO: why is this exposed in API or only GET is supported ?
+    case intf::IF_TYPE_CPU:
+    {
+        spec->mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_handle(hal_if->lif_handle);
+    }
         break;
 
     case intf::IF_TYPE_APP_REDIR:
