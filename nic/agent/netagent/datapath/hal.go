@@ -43,7 +43,8 @@ type Hal struct {
 	MockClients mockClients
 	Epclient    halproto.EndpointClient
 	Ifclient    halproto.InterfaceClient
-	Netclient   halproto.L2SegmentClient
+	L2SegClient halproto.L2SegmentClient
+	Netclient   halproto.NetworkClient
 	Lbclient    halproto.L4LbClient
 	Sgclient    halproto.NwSecurityClient
 	Sessclient  halproto.SessionClient
@@ -52,13 +53,14 @@ type Hal struct {
 
 // MockClients stores references for mockclients to be used for setting expectations
 type mockClients struct {
-	MockEpclient   *halproto.MockEndpointClient
-	MockIfclient   *halproto.MockInterfaceClient
-	MockNetclient  *halproto.MockL2SegmentClient
-	MockLbclient   *halproto.MockL4LbClient
-	MockSgclient   *halproto.MockNwSecurityClient
-	MockSessclient *halproto.MockSessionClient
-	MockTnclient   *halproto.MockVrfClient
+	MockEpclient    *halproto.MockEndpointClient
+	MockIfclient    *halproto.MockInterfaceClient
+	MockL2Segclient *halproto.MockL2SegmentClient
+	MockNetClient   *halproto.MockNetworkClient
+	MockLbclient    *halproto.MockL4LbClient
+	MockSgclient    *halproto.MockNwSecurityClient
+	MockSessclient  *halproto.MockSessionClient
+	MockTnclient    *halproto.MockVrfClient
 }
 
 // DB holds all the state information.
@@ -126,7 +128,8 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		}
 		hal.Epclient = halproto.NewEndpointClient(hal.client.ClientConn)
 		hal.Ifclient = halproto.NewInterfaceClient(hal.client.ClientConn)
-		hal.Netclient = halproto.NewL2SegmentClient(hal.client.ClientConn)
+		hal.L2SegClient = halproto.NewL2SegmentClient(hal.client.ClientConn)
+		hal.Netclient = halproto.NewNetworkClient(hal.client.ClientConn)
 		hal.Lbclient = halproto.NewL4LbClient(hal.client.ClientConn)
 		hal.Sgclient = halproto.NewNwSecurityClient(hal.client.ClientConn)
 		hal.Sessclient = halproto.NewSessionClient(hal.client.ClientConn)
@@ -136,18 +139,20 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 	}
 	hal.mockCtrl = gomock.NewController(&hal)
 	hal.MockClients = mockClients{
-		MockEpclient:   halproto.NewMockEndpointClient(hal.mockCtrl),
-		MockIfclient:   halproto.NewMockInterfaceClient(hal.mockCtrl),
-		MockNetclient:  halproto.NewMockL2SegmentClient(hal.mockCtrl),
-		MockLbclient:   halproto.NewMockL4LbClient(hal.mockCtrl),
-		MockSgclient:   halproto.NewMockNwSecurityClient(hal.mockCtrl),
-		MockSessclient: halproto.NewMockSessionClient(hal.mockCtrl),
-		MockTnclient:   halproto.NewMockVrfClient(hal.mockCtrl),
+		MockEpclient:    halproto.NewMockEndpointClient(hal.mockCtrl),
+		MockIfclient:    halproto.NewMockInterfaceClient(hal.mockCtrl),
+		MockL2Segclient: halproto.NewMockL2SegmentClient(hal.mockCtrl),
+		MockNetClient:   halproto.NewMockNetworkClient(hal.mockCtrl),
+		MockLbclient:    halproto.NewMockL4LbClient(hal.mockCtrl),
+		MockSgclient:    halproto.NewMockNwSecurityClient(hal.mockCtrl),
+		MockSessclient:  halproto.NewMockSessionClient(hal.mockCtrl),
+		MockTnclient:    halproto.NewMockVrfClient(hal.mockCtrl),
 	}
 
 	hal.Epclient = hal.MockClients.MockEpclient
 	hal.Ifclient = hal.MockClients.MockIfclient
-	hal.Netclient = hal.MockClients.MockNetclient
+	hal.L2SegClient = hal.MockClients.MockL2Segclient
+	hal.Netclient = hal.MockClients.MockNetClient
 	hal.Lbclient = hal.MockClients.MockLbclient
 	hal.Sgclient = hal.MockClients.MockSgclient
 	hal.Sessclient = hal.MockClients.MockSessclient
@@ -170,9 +175,13 @@ func (hd *Hal) setExpectations() {
 	hd.MockClients.MockIfclient.EXPECT().LifUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIfclient.EXPECT().LifDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 
-	hd.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockNetclient.EXPECT().L2SegmentUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockL2Segclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockL2Segclient.EXPECT().L2SegmentUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockL2Segclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
+	hd.MockClients.MockNetClient.EXPECT().NetworkCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockNetClient.EXPECT().NetworkUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockNetClient.EXPECT().NetworkDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 
 	hd.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
@@ -719,13 +728,64 @@ func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 	return nil
 }
 
-// CreateNetwork creates a network in datapath
+// CreateNetwork creates a l2 segment in datapath if vlan id is specified and a network if IPSubnet is specified.
+// ToDo Investigate if HAL needs network updates and deletes.
 func (hd *Datapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) error {
 	// construct vrf key that gets passed on to hal
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: tn.Status.TenantID,
 		},
+	}
+
+	if len(nw.Spec.IPv4Subnet) != 0 {
+		ip, net, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
+		if err != nil {
+			log.Errorf("Error parsing the subnet mask. Err: %v", err)
+			return err
+		}
+		prefixLen, _ := net.Mask.Size()
+
+		nwKey := &halproto.NetworkKeyHandle{
+			KeyOrHandle: &halproto.NetworkKeyHandle_IpPrefix{
+				IpPrefix: &halproto.IPPrefix{
+					Address: &halproto.IPAddress{
+						IpAf: halproto.IPAddressFamily_IP_AF_INET,
+						V4OrV6: &halproto.IPAddress_V4Addr{
+							V4Addr: ipv4Touint32(ip),
+						},
+					},
+					PrefixLen: uint32(prefixLen),
+				},
+			},
+		}
+
+		halNw := halproto.NetworkSpec{
+			VrfKeyHandle: vrfKey,
+			KeyOrHandle:  nwKey,
+		}
+
+		halNwReq := halproto.NetworkRequestMsg{
+			Request: []*halproto.NetworkSpec{&halNw},
+		}
+		// create the tenant. Enforce HAL Status == OK for HAL datapath
+		if hd.Kind == "hal" {
+			resp, err := hd.Hal.Netclient.NetworkCreate(context.Background(), &halNwReq)
+			if err != nil {
+				log.Errorf("Error creating network. Err: %v", err)
+				return err
+			}
+			if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+				return ErrHALNotOK
+			}
+		} else {
+			_, err := hd.Hal.Netclient.NetworkCreate(context.Background(), &halNwReq)
+			if err != nil {
+				log.Errorf("Error creating tenant. Err: %v", err)
+				return err
+			}
+		}
 	}
 
 	// build l2 segment data
@@ -754,7 +814,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) err
 
 	// create the tenant. Enforce HAL Status == OK for HAL datapath
 	if hd.Kind == "hal" {
-		resp, err := hd.Hal.Netclient.L2SegmentCreate(context.Background(), &segReq)
+		resp, err := hd.Hal.L2SegClient.L2SegmentCreate(context.Background(), &segReq)
 		if err != nil {
 			log.Errorf("Error creating network. Err: %v", err)
 			return err
@@ -764,7 +824,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) err
 			return ErrHALNotOK
 		}
 	} else {
-		_, err := hd.Hal.Netclient.L2SegmentCreate(context.Background(), &segReq)
+		_, err := hd.Hal.L2SegClient.L2SegmentCreate(context.Background(), &segReq)
 		if err != nil {
 			log.Errorf("Error creating tenant. Err: %v", err)
 			return err
@@ -800,7 +860,7 @@ func (hd *Datapath) UpdateNetwork(nw *netproto.Network) error {
 	}
 
 	// update the l2 segment
-	_, err := hd.Hal.Netclient.L2SegmentUpdate(context.Background(), &segReq)
+	_, err := hd.Hal.L2SegClient.L2SegmentUpdate(context.Background(), &segReq)
 	if err != nil {
 		log.Errorf("Error updating network. Err: %v", err)
 		return err
@@ -826,7 +886,7 @@ func (hd *Datapath) DeleteNetwork(nw *netproto.Network) error {
 	}
 
 	// delete the l2 segment
-	_, err := hd.Hal.Netclient.L2SegmentDelete(context.Background(), &segDelReqMsg)
+	_, err := hd.Hal.L2SegClient.L2SegmentDelete(context.Background(), &segDelReqMsg)
 	if err != nil {
 		log.Errorf("Error deleting network. Err: %v", err)
 		return err
@@ -1380,4 +1440,11 @@ func (hd *Datapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.Secur
 		PolicyRules: &policyRules,
 	}
 	return &sgPolicy, nil
+}
+
+func ipv4Touint32(ip net.IP) uint32 {
+	if len(ip) == 16 {
+		return binary.BigEndian.Uint32(ip[12:16])
+	}
+	return binary.BigEndian.Uint32(ip)
 }

@@ -12,7 +12,7 @@ default:
 	mockgen -source=nwsec.pb.go -destination=nwsec_mock.go -package=halproto
 	mockgen -source=session.pb.go -destination=session_mock.go -package=halproto
 	mockgen -source=vrf.pb.go -destination=tenant_mock.go -package=halproto
-	
+	mockgen -source=nw.pb.go -destination=network_mock.go -package=halproto
 	# Run go imports on mock files
 	goimports -w -l *mock.go
 
