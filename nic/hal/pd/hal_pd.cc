@@ -36,19 +36,19 @@ pd_call_t    *g_pd_calls;
 //------------------------------------------------------------------------------
 // TODO: Sample Expansion of above macro. Remove this once the code is stable
 //
-//   g_pd_calls[PD_FUNC_ID_VRF_CREATE].pd_vrf_create = 
-//       (pd_vrf_create_t)dlsym(g_hal_state->pd_so(), 
+//   g_pd_calls[PD_FUNC_ID_VRF_CREATE].pd_vrf_create =
+//       (pd_vrf_create_t)dlsym(g_hal_state->pd_so(),
 //                              "pd_vrf_create");
 //   dlsym_error = dlerror();
 //   if (dlsym_error) {
-//       HAL_TRACE_ERR("{}: cannot load symbol from PD LIB {}: {}", 
+//       HAL_TRACE_ERR("{}: cannot load symbol from PD LIB {}: {}",
 //                     __FUNCTION__, "pd_vrf_create", dlsym_error);
-//       g_pd_calls[PD_FUNC_ID_VRF_CREATE].pd_vrf_create = 
-//           (pd_vrf_create_t)dlsym(g_hal_state->pd_stub_so(), 
+//       g_pd_calls[PD_FUNC_ID_VRF_CREATE].pd_vrf_create =
+//           (pd_vrf_create_t)dlsym(g_hal_state->pd_stub_so(),
 //                                  "pd_vrf_create");
 //       dlsym_error = dlerror();
 //       if (dlsym_error) {
-//           HAL_TRACE_ERR("{}: cannot load symbol from PD STUB LIB {}: {}", 
+//           HAL_TRACE_ERR("{}: cannot load symbol from PD STUB LIB {}: {}",
 //                         __FUNCTION__, "pd_vrf_create", dlsym_error);
 //           HAL_ASSERT(0);
 //       }
@@ -60,7 +60,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     hal_ret_t       ret = HAL_RET_OK;
     const char*     dlsym_error = NULL;
 
-    g_pd_calls = (pd_call_t *)HAL_CALLOC(HAL_MEM_ALLOC_PD_CALLS, 
+    g_pd_calls = (pd_call_t *)HAL_CALLOC(HAL_MEM_ALLOC_PD_CALLS,
                                        PD_FUNC_ID_MAX * sizeof(pd_call_t));
 
     // init pd calls
@@ -82,7 +82,6 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_UPDATE, pd_l2seg_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_MEM_FREE, pd_l2seg_mem_free);
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_MAKE_CLONE, pd_l2seg_make_clone);
-    PD_SYMBOL_LOAD(PD_FUNC_ID_FIND_L2SEG_BY_HWID, pd_find_l2seg_by_hwid);
 
     // misc apis for vrf and l2seg
     PD_SYMBOL_LOAD(PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, pd_get_object_from_flow_lkupid);
@@ -402,7 +401,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
 }
 
 hal_ret_t
-hal_pd_call (pd_func_id_t pd_func_id, void *args) 
+hal_pd_call (pd_func_id_t pd_func_id, void *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -425,7 +424,6 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_UPDATE, pd_l2seg_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_MEM_FREE, pd_l2seg_mem_free);
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_MAKE_CLONE, pd_l2seg_make_clone);
-    PD_SYMBOL_CALL(PD_FUNC_ID_FIND_L2SEG_BY_HWID, pd_find_l2seg_by_hwid);
 
     PD_SYMBOL_CALL(PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, pd_get_object_from_flow_lkupid);
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, pd_l2seg_get_flow_lkupid);
@@ -862,7 +860,7 @@ cleanup:
     return ret;
 }
 
-extern "C" int 
+extern "C" int
 pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *xq,
         uint8_t *yq, uint8_t *r, uint8_t *s, uint8_t *h)
@@ -889,7 +887,7 @@ pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
     return 1;
 }
 
-extern "C" int 
+extern "C" int
 pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -906,7 +904,7 @@ pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c)
     return 1;
 }
 
-extern "C" int 
+extern "C" int
 pd_tls_asym_rsa2k_sig_gen(uint8_t *n, uint8_t *d, uint8_t *h,  uint8_t *s)
 {
     hal_ret_t ret = HAL_RET_OK;

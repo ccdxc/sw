@@ -174,17 +174,30 @@ update_flow_fwding(fte::ctx_t *fte_ctx)
     ep_t *dep = nullptr;
     if_t *dif;
     hal_ret_t ret;
-    hal::pd::pd_find_l2seg_by_hwid_args_t args;
+    hal::pd::pd_get_object_from_flow_lkupid_args_t args;
+    hal::hal_obj_id_t obj_id;
+    void *obj;
 
     dep = fte_ctx->dep();
 
     if (dep == nullptr) {
+#if 0
 #if 0
         dl2seg =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
 #endif
         args.hwid = cpu_rxhdr_->lkp_vrf;
         hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_FIND_L2SEG_BY_HWID, (void *)&args);
         dl2seg = args.l2seg;
+#endif
+        args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
+        args.obj_id = &obj_id;
+        args.pi_obj = &obj;
+        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
+        if (ret != HAL_RET_OK && obj_id != hal::HAL_OBJ_ID_L2SEG) {
+            HAL_TRACE_ERR("fte: Invalid obj id: {}, ret:{}", obj_id, ret);
+            return HAL_RET_L2SEG_NOT_FOUND;
+        }
+        dl2seg = (hal::l2seg_t *)obj;
 
         HAL_ASSERT(dl2seg != nullptr);
         ethhdr = (ether_header_t *)(fte_ctx->pkt() + cpu_rxhdr_->l2_offset);

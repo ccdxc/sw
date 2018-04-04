@@ -56,7 +56,7 @@ typedef struct pd_pgm_def_p4plus_entries_args_s {
     hal_cfg_t    *hal_cfg;
 } __PACK__ pd_pgm_def_p4plus_entries_args_t;
 
-// vrf 
+// vrf
 typedef struct pd_vrf_create_args_s {
     vrf_t               *vrf;
     nwsec_profile_t     *nwsec_profile;
@@ -152,11 +152,6 @@ typedef struct pd_l2seg_make_clone_args_s {
     l2seg_t *clone;
 } __PACK__ pd_l2seg_make_clone_args_t;
 
-typedef struct pd_find_l2seg_by_hwid_args_s {
-    l2seg_hw_id_t   hwid;   // i/p
-    l2seg_t         *l2seg; // o/p
-} pd_find_l2seg_by_hwid_args_t;
-
 static inline void
 pd_l2seg_create_args_init (pd_l2seg_create_args_t *args)
 {
@@ -185,13 +180,6 @@ static inline void
 pd_l2seg_mem_free_args_init (pd_l2seg_mem_free_args_t *args)
 {
     args->vrf = NULL;
-    args->l2seg = NULL;
-    return;
-}
-
-static inline void
-pd_find_l2seg_by_hwid_args_init (pd_find_l2seg_by_hwid_args_t *args)
-{
     args->l2seg = NULL;
     return;
 }
@@ -1021,7 +1009,7 @@ pd_cpucb_get_args_init (pd_cpucb_get_args_t *args)
     return;
 }
 
-// rawrcb 
+// rawrcb
 typedef struct pd_rawrcb_create_args_s {
     rawrcb_t           *rawrcb;
 } __PACK__ pd_rawrcb_create_args_t;
@@ -1809,7 +1797,7 @@ pd_system_drop_action_args_init (pd_system_drop_action_args_t *args)
     args->spec = NULL;
 }
 
-// oiflist 
+// oiflist
 typedef struct pd_oif_list_create_args_s {
     oif_list_id_t *list;
 } __PACK__ pd_oif_list_create_args_t;
@@ -1985,14 +1973,14 @@ typedef struct p4pt_pd_init_args_s {
 // eth
 typedef struct pd_rss_params_table_entry_add_args_s {
     uint32_t hw_lif_id;
-    uint8_t rss_type; 
+    uint8_t rss_type;
     uint8_t *rss_key;
 } __PACK__ pd_rss_params_table_entry_add_args_t;
 
 typedef struct pd_rss_indir_table_entry_add_args_s {
-    uint32_t hw_lif_id; 
-    uint8_t index; 
-    uint8_t enable; 
+    uint32_t hw_lif_id;
+    uint8_t index;
+    uint8_t enable;
     uint8_t qid;
 } __PACK__ pd_rss_indir_table_entry_add_args_t;
 
@@ -2017,51 +2005,51 @@ typedef struct pd_clear_qstate_args_s {
 } __PACK__ pd_clear_qstate_args_t;
 
 typedef struct pd_read_qstate_args_s {
-    uint64_t q_addr; 
-    uint8_t *buf; 
+    uint64_t q_addr;
+    uint8_t *buf;
     uint32_t q_size;
 } __PACK__ pd_read_qstate_args_t;
 
 typedef struct pd_write_qstate_args_s {
-    uint64_t q_addr; 
-    const uint8_t *buf; 
+    uint64_t q_addr;
+    const uint8_t *buf;
     uint32_t q_size;
 } __PACK__ pd_write_qstate_args_t;
 
 typedef struct pd_get_pc_offset_args_s {
-    const char *handle; 
+    const char *handle;
     const char *prog_name;
-    const char *label; 
+    const char *label;
     uint8_t *offset;
 } __PACK__ pd_get_pc_offset_args_t;
 
 typedef struct pd_capri_hbm_read_mem_args_s {
-    uint64_t addr; 
-    uint8_t *buf; 
+    uint64_t addr;
+    uint8_t *buf;
     uint32_t size;
 } __PACK__ pd_capri_hbm_read_mem_args_t;
 
 typedef struct pd_capri_hbm_write_mem_args_s {
-    uint64_t addr; 
-    uint8_t *buf; 
+    uint64_t addr;
+    uint8_t *buf;
     uint32_t size;
 } __PACK__ pd_capri_hbm_write_mem_args_t;
 
 typedef struct pd_capri_program_label_to_offset_args_s {
     const char *handle;
-    char *prog_name; 
+    char *prog_name;
     char *label_name;
     uint64_t *offset;
 } __PACK__ pd_capri_program_label_to_offset_args_t;
 
 typedef struct pd_capri_pxb_cfg_lif_bdf_args_s {
-    uint32_t lif; 
+    uint32_t lif;
     uint16_t bdf;
 } __PACK__ pd_capri_pxb_cfg_lif_bdf_args_t;
 
 typedef struct pd_capri_program_to_base_addr_args_s {
     const char *handle;
-    char *prog_name; 
+    char *prog_name;
     uint64_t *base_addr;
 } __PACK__ pd_capri_program_to_base_addr_args_t;
 
@@ -2071,106 +2059,106 @@ typedef struct pd_capri_barco_asym_req_descr_get_args_s {
 } __PACK__ pd_capri_barco_asym_req_descr_get_args_t;
 
 typedef struct pd_capri_barco_symm_req_descr_get_args_s {
-    types::BarcoRings ring_type; 
+    types::BarcoRings ring_type;
     uint32_t slot_index;
     hal::barco_symm_descr_t *symm_req_descr;
 } __PACK__ pd_capri_barco_symm_req_descr_get_args_t;
 
 typedef struct pd_capri_barco_ring_meta_get_args_s {
-    types::BarcoRings ring_type; 
-    uint32_t *pi; 
+    types::BarcoRings ring_type;
+    uint32_t *pi;
     uint32_t *ci;
 } __PACK__ pd_capri_barco_ring_meta_get_args_t;
 
 // crypto
 typedef struct pd_capri_barco_asym_ecc_point_mul_p256_args_s {
-    uint8_t *p; 
+    uint8_t *p;
     uint8_t *n;
-    uint8_t *xg; 
-    uint8_t *yg; 
-    uint8_t *a; 
-    uint8_t *b; 
-    uint8_t *x1; 
+    uint8_t *xg;
+    uint8_t *yg;
+    uint8_t *a;
+    uint8_t *b;
+    uint8_t *x1;
     uint8_t *y1;
-    uint8_t *k; 
-    uint8_t *x3; 
+    uint8_t *k;
+    uint8_t *x3;
     uint8_t *y3;
 } __PACK__ pd_capri_barco_asym_ecc_point_mul_p256_args_t;
 
 typedef struct pd_capri_barco_asym_ecdsa_p256_sig_gen_args_s {
-    uint8_t *p; 
+    uint8_t *p;
     uint8_t *n;
-    uint8_t *xg; 
-    uint8_t *yg; 
-    uint8_t *a; 
-    uint8_t *b; 
+    uint8_t *xg;
+    uint8_t *yg;
+    uint8_t *a;
+    uint8_t *b;
     uint8_t *da;
-    uint8_t *k; 
-    uint8_t *h; 
-    uint8_t *r; 
+    uint8_t *k;
+    uint8_t *h;
+    uint8_t *r;
     uint8_t *s;
 } __PACK__ pd_capri_barco_asym_ecdsa_p256_sig_gen_args_t;
 
 typedef struct pd_capri_barco_asym_ecdsa_p256_sig_verify_args_s {
-    uint8_t *p; 
+    uint8_t *p;
     uint8_t *n;
-    uint8_t *xg; 
-    uint8_t *yg; 
-    uint8_t *a; 
-    uint8_t *b; 
+    uint8_t *xg;
+    uint8_t *yg;
+    uint8_t *a;
+    uint8_t *b;
     uint8_t *xq;
-    uint8_t *yq; 
-    uint8_t *r; 
-    uint8_t *s; 
+    uint8_t *yq;
+    uint8_t *r;
+    uint8_t *s;
     uint8_t *h;
 } __PACK__ pd_capri_barco_asym_ecdsa_p256_sig_verify_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_encrypt_args_s {
-    uint8_t *n; 
+    uint8_t *n;
     uint8_t *e;
-    uint8_t *m;  
+    uint8_t *m;
     uint8_t *c;
 } __PACK__ pd_capri_barco_asym_rsa2k_encrypt_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_decrypt_args_s {
-    uint8_t *n; 
+    uint8_t *n;
     uint8_t *d;
-    uint8_t *c;  
+    uint8_t *c;
     uint8_t *m;
 } __PACK__ pd_capri_barco_asym_rsa2k_decrypt_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_crt_decrypt_args_s {
-    uint8_t *p; 
-    uint8_t *q; 
+    uint8_t *p;
+    uint8_t *q;
     uint8_t *dp;
-    uint8_t *dq; 
-    uint8_t *qinv; 
-    uint8_t *c; 
+    uint8_t *dq;
+    uint8_t *qinv;
+    uint8_t *c;
     uint8_t *m;
 } __PACK__ pd_capri_barco_asym_rsa2k_crt_decrypt_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_sig_gen_args_s {
-    uint8_t *n; 
+    uint8_t *n;
     uint8_t *d;
-    uint8_t *h; 
+    uint8_t *h;
     uint8_t *s;
 } __PACK__ pd_capri_barco_asym_rsa2k_sig_gen_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_sig_verify_args_s {
-    uint8_t *n; 
+    uint8_t *n;
     uint8_t *e;
-    uint8_t *h; 
+    uint8_t *h;
     uint8_t *s;
 } __PACK__ pd_capri_barco_asym_rsa2k_sig_verify_args_t;
 
 typedef struct pd_capri_barco_sym_hash_process_request_args_s {
-    cryptoapis::CryptoApiHashType hash_type; 
+    cryptoapis::CryptoApiHashType hash_type;
     bool generate;
-    unsigned char *key; 
+    unsigned char *key;
     int key_len;
-    unsigned char *data; 
+    unsigned char *data;
     int data_len;
-    uint8_t *output_digest; 
+    uint8_t *output_digest;
     int digest_len;
 } __PACK__ pd_capri_barco_sym_hash_process_request_args_t;
 
@@ -2513,7 +2501,6 @@ PD_FUNCP_TYPEDEF(pd_l2seg_update);
 PD_FUNCP_TYPEDEF(pd_l2seg_delete);
 PD_FUNCP_TYPEDEF(pd_l2seg_mem_free);
 PD_FUNCP_TYPEDEF(pd_l2seg_make_clone);
-PD_FUNCP_TYPEDEF(pd_find_l2seg_by_hwid);
 
 // misc apis for vrf and l2seg
 PD_FUNCP_TYPEDEF(pd_get_object_from_flow_lkupid);
@@ -2799,14 +2786,14 @@ PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_update, pd_gft_exact_match_prof
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_mem_free, pd_gft_exact_match_profile);
 PD_FUNCP_TYPEDEF(pd_gft_exact_match_profile_make_clone);
 
-// gft group xposition profile 
+// gft group xposition profile
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_create, pd_gft_hdr_group_xposition_profile);
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_delete, pd_gft_hdr_group_xposition_profile);
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_update, pd_gft_hdr_group_xposition_profile);
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_mem_free, pd_gft_hdr_group_xposition_profile);
 PD_FUNCP_TYPEDEF(pd_gft_hdr_group_xposition_profile_make_clone);
 
-// gft match flow entry 
+// gft match flow entry
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_create, pd_gft_exact_match_flow_entry);
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_delete, pd_gft_exact_match_flow_entry);
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_update, pd_gft_exact_match_flow_entry);
@@ -2846,7 +2833,6 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_l2seg_delete);
         PD_UNION_FIELD(pd_l2seg_mem_free);
         PD_UNION_FIELD(pd_l2seg_make_clone);
-        PD_UNION_FIELD(pd_find_l2seg_by_hwid);
 
         // misc apis for vrf and l2seg
         PD_UNION_FIELD(pd_get_object_from_flow_lkupid);

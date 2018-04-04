@@ -43,27 +43,27 @@ ctx_t::extract_flow_key()
     udp_header_t *udphdr;
     icmp_header_t *icmphdr;
     ipsec_esp_header_t *esphdr;
-    hal::pd::pd_find_l2seg_by_hwid_args_t args;
+    hal::pd::pd_get_object_from_flow_lkupid_args_t args;
     hal::l2seg_t *l2seg = NULL;
-    
+    hal::hal_obj_id_t obj_id;
+    void *obj;
+    hal_ret_t ret;
+
     HAL_ASSERT_RETURN(cpu_rxhdr_ != NULL && pkt_ != NULL, HAL_RET_INVALID_ARG);
 
     key_.dir = cpu_rxhdr_->lkp_dir;
 
-    // Lookup l2seg using vrf id
-    // TODO: Bharat: Please start using pd_get_object_from_flow_lkupid
-    // hal::l2seg_t *l2seg =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
-    args.hwid = cpu_rxhdr_->lkp_vrf;
-
-    // hal::pd::pd_find_l2seg_by_hwid(args);
-    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_FIND_L2SEG_BY_HWID, (void *)&args);
-    if (args.l2seg == NULL) {
-        HAL_TRACE_ERR("fte: l2seg not found, hwid={}", cpu_rxhdr_->lkp_vrf);
+    args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
+    args.obj_id = &obj_id;
+    args.pi_obj = &obj;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
+    if (ret != HAL_RET_OK && obj_id != hal::HAL_OBJ_ID_L2SEG) {
+        HAL_TRACE_ERR("fte: Invalid obj id: {}, ret: {}", obj_id, ret);
         return HAL_RET_L2SEG_NOT_FOUND;
     }
-    l2seg = args.l2seg;
+    l2seg = (hal::l2seg_t *)obj;
 
-    key_.vrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id; 
+    key_.vrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id;
 
     // extract src/dst/proto
     switch (cpu_rxhdr_->lkp_type) {
@@ -77,7 +77,7 @@ ctx_t::extract_flow_key()
             ntohs(((vlan_header_t*)ethhdr)->etype): ntohs(ethhdr->etype);
         break;
 
-    case FLOW_KEY_LOOKUP_TYPE_IPV4: 
+    case FLOW_KEY_LOOKUP_TYPE_IPV4:
         iphdr = (ipv4_header_t*)(pkt_ + cpu_rxhdr_->l3_offset);
         key_.flow_type = hal::FLOW_TYPE_V4;
         key_.sip.v4_addr = ntohl(iphdr->saddr);
@@ -85,7 +85,7 @@ ctx_t::extract_flow_key()
         key_.proto = (types::IPProtocol) iphdr->protocol;
         break;
 
-    case FLOW_KEY_LOOKUP_TYPE_IPV6: 
+    case FLOW_KEY_LOOKUP_TYPE_IPV6:
         iphdr6 = (ipv6_header_t *)(pkt_ + cpu_rxhdr_->l3_offset);
         key_.flow_type = hal::FLOW_TYPE_V6;
         memcpy(key_.sip.v6_addr.addr8, iphdr6->saddr, sizeof(key_.sip.v6_addr.addr8));
@@ -101,18 +101,18 @@ ctx_t::extract_flow_key()
     // extract l4 info
     if (cpu_rxhdr_->l4_offset > 0) {
         switch (key_.proto) {
-        case IPPROTO_TCP: 
+        case IPPROTO_TCP:
             tcphdr = (tcp_header_t*)(pkt_ + cpu_rxhdr_->l4_offset);
             key_.sport = ntohs(tcphdr->sport);
             key_.dport = ntohs(tcphdr->dport);
             break;
-            
-        case IPPROTO_UDP: 
+
+        case IPPROTO_UDP:
             udphdr = (udp_header_t*)(pkt_ + cpu_rxhdr_->l4_offset);
             key_.sport = ntohs(udphdr->sport);
             key_.dport = ntohs(udphdr->dport);
             break;
-            
+
         case IPPROTO_ICMP:
         case IPPROTO_ICMPV6:
             icmphdr = (icmp_header_t*)(pkt_ + cpu_rxhdr_->l4_offset);
@@ -120,12 +120,12 @@ ctx_t::extract_flow_key()
             key_.icmp_code = icmphdr->code;
             key_.icmp_id = ntohs(icmphdr->echo.id);
             break;
-            
+
         case IPPROTO_ESP:
             esphdr = (ipsec_esp_header_t*)(pkt_ + cpu_rxhdr_->l4_offset);
             key_.spi = ntohl(esphdr->spi);
             break;
-            
+
         default:
             key_.sport = key_.dport = 0;
         }
@@ -141,7 +141,10 @@ hal_ret_t
 ctx_t::lookup_flow_objs()
 {
     ether_header_t *ethhdr;
-    hal::pd::pd_find_l2seg_by_hwid_args_t args;
+    hal::pd::pd_get_object_from_flow_lkupid_args_t args;
+    hal::hal_obj_id_t obj_id;
+    void *obj;
+    hal_ret_t ret;
 
     vrf_ = hal::vrf_lookup_by_id(key_.vrf_id);
     if (vrf_ == NULL) {
@@ -164,18 +167,18 @@ ctx_t::lookup_flow_objs()
     } else {
         HAL_TRACE_ERR("fte: src ep unknown, key={}", key_);
         if (!cpu_rxhdr_) {
-            return HAL_RET_EP_NOT_FOUND;            
+            return HAL_RET_EP_NOT_FOUND;
         }
-        // lookup l2seg from cpuheader lkp_vrf
-        // TODO: Bharat: Please start using pd_get_object_from_flow_lkupid
-#if 0
-        sl2seg_ =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
-        HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
-#endif
-        args.hwid = cpu_rxhdr_->lkp_vrf;
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_FIND_L2SEG_BY_HWID, (void *)&args);
-        sl2seg_ = args.l2seg;
-        //HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
+
+        args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
+        args.obj_id = &obj_id;
+        args.pi_obj = &obj;
+        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
+        if (ret != HAL_RET_OK && obj_id != hal::HAL_OBJ_ID_L2SEG) {
+            HAL_TRACE_ERR("fte: Invalid obj id: {}, ret:{}", obj_id, ret);
+            return HAL_RET_L2SEG_NOT_FOUND;
+        }
+        sl2seg_ = (hal::l2seg_t *)obj;
 
         // Try to find sep by looking at L2.
          ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
@@ -206,7 +209,7 @@ ctx_t::lookup_flow_objs()
 //------------------------------------------------------------------------------
 // Returns flow key of the specified flow
 //------------------------------------------------------------------------------
-const hal::flow_key_t& 
+const hal::flow_key_t&
 ctx_t::get_key(hal::flow_role_t role)
 {
     flow_t *flow = NULL;
@@ -298,7 +301,7 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
                 }
             }
             if (hflow->assoc_flow) {
-                iflow_[++stage]->from_config(hflow->assoc_flow->config, 
+                iflow_[++stage]->from_config(hflow->assoc_flow->config,
                                            hflow->assoc_flow->pgm_attrs);
             }
     } else {
@@ -307,14 +310,14 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
             rflow_[++stage]->from_config(hflow->assoc_flow->config,
                                          hflow->assoc_flow->pgm_attrs);
         }
-        iflow_[stage]->from_config(hflow->reverse_flow->config, 
+        iflow_[stage]->from_config(hflow->reverse_flow->config,
                                    hflow->reverse_flow->pgm_attrs);
         if (sess->iflow->assoc_flow) {
             iflow_[++stage]->from_config(
                                        sess->iflow->assoc_flow->config,
                                        sess->iflow->assoc_flow->pgm_attrs);
         }
- 
+
         valid_rflow_ = true;
     }
 }
@@ -326,7 +329,7 @@ hal_ret_t
 ctx_t::lookup_session()
 {
     if (protobuf_request()) {
-        return HAL_RET_SESSION_NOT_FOUND; 
+        return HAL_RET_SESSION_NOT_FOUND;
     }
 
     session_ = hal::session_lookup(key_, &role_);
@@ -357,15 +360,15 @@ ctx_t::create_session()
     if (sep_ == NULL && dep_ == NULL) {
         HAL_TRACE_ERR("fte: both src and dst ep unknown, key={}", key_);
         return HAL_RET_EP_NOT_FOUND;
-    } 
+    }
 
     ikey = key_;
     for (int i = 0; i < MAX_STAGES; i++) {
         iflow_[i]->set_key(ikey);
     }
- 
+
     cleanup_hal_ = false;
-   
+
     valid_iflow_ = true;
     // read rkey from spec
     if (protobuf_request()) {
@@ -373,7 +376,7 @@ ctx_t::create_session()
             ret = extract_flow_key_from_spec(sess_spec_->meta().vrf_id(),
                                              &rkey,
                                              sess_spec_->responder_flow().flow_key());
-            
+
             if (ret != HAL_RET_OK) {
                 return ret;
             }
@@ -424,7 +427,7 @@ ctx_t::create_session()
         for (int i = 0; i < MAX_STAGES; i++) {
             rflow_[i]->set_key(rkey);
         }
-    } 
+    }
 
     set_role(hal::FLOW_ROLE_INITIATOR);
 
@@ -477,7 +480,7 @@ ctx_t::update_flow_table()
         // For existing sessions initialize with the configs the session
         // came with and update anything else
         if (existing_session() && stage == 0 && session_->iflow) {
-            iflow_cfg = session_->iflow->config; 
+            iflow_cfg = session_->iflow->config;
             iflow_attrs = session_->iflow->pgm_attrs;
         }
 
@@ -514,7 +517,7 @@ ctx_t::update_flow_table()
             session_args.session_state = &session_state;
             session_state.iflow_state = iflow->flow_state();
         }
-       
+
         if (is_proxy_enabled()) {
             iflow_attrs.is_proxy_en = 1;
         }
@@ -582,11 +585,11 @@ ctx_t::update_flow_table()
 
         session_args.rflow[stage] = &rflow_cfg;
         session_args.rflow_attrs[stage] = &rflow_attrs;
-            
+
         if (rflow->valid_flow_state()) {
             session_state.rflow_state = rflow->flow_state();
         }
-            
+
         HAL_TRACE_DEBUG("fte::update_flow_table: rflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
@@ -700,9 +703,9 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
             rkey.dir = (dep_->ep_flags & EP_FLAGS_LOCAL) ?
                 FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
             rflow_[i]->set_key(rkey);
-        }  
+        }
     }
-    
+
     return  HAL_RET_OK;
 }
 
@@ -719,7 +722,7 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
         rflow_[i] = &rflow[i];
         iflow_[i]->init(this);
         rflow_[i]->init(this);
-    } 
+    }
 
     // Build the key and lookup flow
     if (sess_spec_) {
@@ -760,7 +763,7 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
 }
 
 //------------------------------------------------------------------------------
-// Initialize the context 
+// Initialize the context
 //------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_features)
@@ -859,7 +862,7 @@ ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflo
 // Initialize the context from session -- needed when called from hal for cleanup
 //------------------------------------------------------------------------------------
 hal_ret_t
-ctx_t::init(hal::session_t *session, flow_t iflow[], flow_t rflow[], 
+ctx_t::init(hal::session_t *session, flow_t iflow[], flow_t rflow[],
             feature_state_t feature_state[], uint16_t num_features)
 {
     hal_ret_t ret;
@@ -872,7 +875,7 @@ ctx_t::init(hal::session_t *session, flow_t iflow[], flow_t rflow[],
 
     for (uint8_t i = 0; i < MAX_STAGES; i++) {
         iflow_[i] = &iflow[i];
-        rflow_[i] = &rflow[i];        
+        rflow_[i] = &rflow[i];
         iflow_[i]->init(this);
         rflow_[i]->init(this);
     }
@@ -903,7 +906,7 @@ ctx_t::update_flow(const flow_update_t& flowupd)
 // Updates the specified flow with the sepcified flowupd info
 //------------------------------------------------------------------------------
 hal_ret_t
-ctx_t::update_flow(const flow_update_t& flowupd, 
+ctx_t::update_flow(const flow_update_t& flowupd,
                    const hal::flow_role_t role)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -991,7 +994,7 @@ ctx_t::update_flow(const flow_update_t& flowupd,
     case FLOWUPD_MCAST_COPY:
         ret = flow->merge_mcast_info(flowupd.mcast_info);
         if (ret == HAL_RET_OK) {
-            LOG_FLOW_UPDATE(mcast_info); 
+            LOG_FLOW_UPDATE(mcast_info);
         }
         break;
 
@@ -1034,7 +1037,7 @@ hal_ret_t
 ctx_t::advance_to_next_stage() {
 
     if (existing_session()) {
-        if (role_ == hal::FLOW_ROLE_INITIATOR && 
+        if (role_ == hal::FLOW_ROLE_INITIATOR &&
             session()->iflow && session()->iflow->assoc_flow) {
             HAL_ASSERT_RETURN(istage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
             istage_++;
@@ -1043,7 +1046,7 @@ ctx_t::advance_to_next_stage() {
                    session()->rflow && session()->rflow->assoc_flow) {
             HAL_ASSERT_RETURN(rstage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
             rstage_++;
-            HAL_TRACE_DEBUG("fte: advancing to next rflow stage {}", rstage_);    
+            HAL_TRACE_DEBUG("fte: advancing to next rflow stage {}", rstage_);
         }
     } else {
 
@@ -1073,12 +1076,12 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
 {
     txpkt_info_t *pkt_info;
     hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args;
-    
+
     if (txpkt_cnt_ >= MAX_QUEUED_PKTS) {
         HAL_TRACE_ERR("fte: queued tx pkts exceeded {}", txpkt_cnt_);
         return HAL_RET_ERR;
     }
-    
+
     pkt_info = &txpkts_[txpkt_cnt_++];
     HAL_TRACE_DEBUG("fte: txpkt for dir={}", key_.dir);
     if (cpu_header) {
@@ -1092,11 +1095,11 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
             args.l2seg = sl2seg_;
             args.vid = &pkt_info->cpu_header.hw_vlan_id;
 
-            if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID, 
+            if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
                                      (void*)&args) == HAL_RET_OK) {
 
 #if 0
-            if (hal::pd::pd_l2seg_get_fromcpu_vlanid(sl2seg_, 
+            if (hal::pd::pd_l2seg_get_fromcpu_vlanid(sl2seg_,
                                                      &pkt_info->cpu_header.hw_vlan_id) == HAL_RET_OK) {
 #endif
 
@@ -1106,7 +1109,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     }
 
     pkt_info->cpu_header.tm_oq = cpu_rxhdr_->src_tm_iq;
-    
+
     if (p4plus_header) {
         pkt_info->p4plus_header = *p4plus_header;
     }
@@ -1266,7 +1269,7 @@ ctx_t::is_proxy_enabled()
 {
     flow_t **flow = (role_ == hal::FLOW_ROLE_INITIATOR) ? iflow_ : rflow_;
 
-    // For existing sessions, fwding will be set to TRUE even if it is 
+    // For existing sessions, fwding will be set to TRUE even if it is
     // not proxy. So, get it from the pgm attrs
     if (existing_session()) {
         if (stage() == 0 && flow[stage()]->is_proxy_enabled())
@@ -1294,7 +1297,7 @@ ctx_t::is_proxy_flow()
 
     // In the case of pkts from uplink, stage 0 flow is proxy flow and
     // in the case of pkts from host, stage 1 flow is the proxy flow
-    return (flow[stage()]->key().dir == FLOW_DIR_FROM_UPLINK) ?  
+    return (flow[stage()]->key().dir == FLOW_DIR_FROM_UPLINK) ?
                                 stage() == 0 : stage() != 0;
 }
 
@@ -1317,13 +1320,13 @@ std::ostream& operator<<(std::ostream& os, const header_rewrite_info_t& val)
 {
     char buf[400];
     fmt::ArrayWriter out(buf, 400);
-    out.write("{{"); 
+    out.write("{{");
     switch (val.valid_hdrs&FTE_L2_HEADERS) {
     case FTE_HEADER_ether:
         HEADER_FORMAT_FLD(out, val, ether, smac);
         HEADER_FORMAT_FLD(out, val, ether, dmac);
         HEADER_FORMAT_FLD(out, val, ether, vlan_id);
-        HEADER_FORMAT_FLD(out, val, ether, dot1p); 
+        HEADER_FORMAT_FLD(out, val, ether, dot1p);
         break;
     }
     switch(val.valid_hdrs&FTE_L3_HEADERS){
@@ -1358,7 +1361,7 @@ std::ostream& operator<<(std::ostream& os, const header_push_info_t& val)
 {
     char buf[400];
     fmt::ArrayWriter out(buf, 400);
-    out.write("{{"); 
+    out.write("{{");
     switch (val.valid_hdrs&FTE_L2_HEADERS) {
     case FTE_HEADER_ether:
         HEADER_FORMAT_FLD(out, val, ether, smac);
@@ -1391,7 +1394,7 @@ std::ostream& operator<<(std::ostream& os, const header_push_info_t& val)
         break;
     case FTE_HEADER_gre:
         HEADER_FORMAT_FLD(out, val, gre, dummy);
-        break; 
+        break;
     case FTE_HEADER_erspan:
         HEADER_FORMAT_FLD(out, val, erspan, dummy);
         break;
@@ -1426,7 +1429,7 @@ std::ostream& operator<<(std::ostream& os, const fwding_info_t& val)
     if (val.dif) {
         os << " ,dif=" << val.dif->if_id;
     }
-    
+
     if (val.dl2seg) {
         os << " ,dl2seg=" << val.dl2seg->seg_id;
     }
