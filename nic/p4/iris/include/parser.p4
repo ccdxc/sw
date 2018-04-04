@@ -444,10 +444,24 @@ parser parse_txdma {
     extract(p4plus_to_p4_vlan);
     set_metadata(ohi.gso_start, p4plus_to_p4.gso_start + 0);
     set_metadata(ohi.gso_offset, p4plus_to_p4.gso_offset + 0);
-    return select(p4plus_to_p4.gso_valid) {
-        0x1:        parse_gso;
+    //set_metadata(control_metadata.skip_flow_lkp, p4plus_to_p4.flow_index_valid + 0);
+    return select(p4plus_to_p4.gso_valid, p4plus_to_p4.flow_index_valid) {
+        0x1:        parse_p4plus_to_p4_flow_index_valid;
+        0x2:        parse_gso;
+        0x3:        parse_p4plus_to_p4_flow_index_valid_gso_valid;
         default:    parse_ethernet;
     }
+}
+
+@pragma generic_checksum_start capri_gso_csum.gso_checksum
+parser parse_p4plus_to_p4_flow_index_valid_gso_valid {
+    set_metadata(control_metadata.skip_flow_lkp, 1);
+    return parse_ethernet;
+}
+
+parser parse_p4plus_to_p4_flow_index_valid {
+    set_metadata(control_metadata.skip_flow_lkp, 1);
+    return parse_ethernet;
 }
 
 @pragma generic_checksum_start capri_gso_csum.gso_checksum

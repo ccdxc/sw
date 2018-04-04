@@ -157,6 +157,13 @@ flow_hit_drop:
   phvwr         p.capri_intrinsic_drop, 1
 
 .align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+flow_info_from_cpu:
+  seq.e         c1, k.p4plus_to_p4_dst_lport_valid, TRUE
+  phvwr.c1      p.control_metadata_dst_lport, \
+                    k.{p4plus_to_p4_dst_lport_sbit0_ebit7, p4plus_to_p4_dst_lport_sbit8_ebit10}
+
+.align
 flow_hit_from_vm_bounce:
   nop.e
   nop

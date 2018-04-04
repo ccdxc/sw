@@ -71,6 +71,9 @@ typedef struct p4plus_to_p4_header_s {
     uint8_t     flags;
     uint8_t     udp_opt_bytes;
     uint8_t     rsvd[3];
+    uint16_t    dst_lport:11;
+    uint16_t    dst_lport_valid:1;
+    uint16_t    pad1:4;
     uint16_t    ip_id_delta;
     uint32_t    tcp_seq_delta;
     uint32_t    gso_start:14;

@@ -23,6 +23,9 @@ header_type p4plus_to_p4_classic_header_t {
         update_ip_id            : 1;
         udp_opt_bytes           : 8;
         flow_index              : 24;
+        dst_lport               : 11;
+        dst_lport_valid         : 1;
+        pad1                    : 4;
         ip_id_delta             : 16;
         tcp_seq_delta           : 32;
         gso_start               : 14;

@@ -58,8 +58,8 @@ struct resp_tx_phv_t {
     //ICRC data does not need to be given as zero as Capri overtites icrc after computation
     icrc     :  32;                              //  4B
     rsq_c_index   : 16;                          //  2B
-    rsvd2    : 296;                              // 37B
-    struct p4plus_to_p4_header_t p4plus_to_p4;   // 18B
+    rsvd2    : 280;                              // 37B
+    struct p4plus_to_p4_header_t p4plus_to_p4;   // 20B
 
     /* flit 6 */
     rsvd1   : 16;                                //  2B

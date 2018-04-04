@@ -14,6 +14,9 @@ struct p4plus_to_p4_header_t {
     flags              : 8;
     udp_opt_bytes      : 8;  // exclude these bytes from udp payload_len
     flow_index         : 24;
+    dst_lport          : 11;
+    dst_lport_valid    : 1;
+    pad1               : 4;
     ip_id_delta        : 16;
     tcp_seq_delta      : 32;
     gso_start           : 14;

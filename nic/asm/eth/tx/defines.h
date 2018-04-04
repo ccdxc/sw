@@ -98,7 +98,7 @@ eth_tx_opcode_start:; \
 .brend; \
 eth_tx_calc_csum:; \
     GET_CSUM_START(n, r2); \
-    addi        r2, r2, 44;\
+    addi        r2, r2, 46;\
     GET_CSUM_OFF(n, r3); \
     add         r3, r3, r2;\
     phvwr       p.eth_tx_app_hdr##n##_gso_valid, 1; \

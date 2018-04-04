@@ -124,8 +124,8 @@ struct req_tx_phv_t {
 
     /* flit 6 */
     rrq_p_index: 16;                                //  2B
-    struct rdma_immeth_t immeth;                    //  4B
-    struct p4plus_to_p4_header_t p4plus_to_p4;      // 18B
+    struct p4plus_to_p4_header_t p4plus_to_p4;      // 20B
+    pad: 16;
 
     union {                                         // 28B
         struct rdma_reth_t reth;                        // 16B
@@ -157,7 +157,8 @@ struct req_tx_phv_t {
                 struct p4_to_p4plus_roce_header_t p4_to_p4plus;
                 struct roce_options_t roce_options;
             };
-            pad5: 96;
+            struct rdma_immeth_t immeth;                    //  4B
+            pad5: 64;
             pad4: 512;
             pad3: 512;
             pad2: 512;

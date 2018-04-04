@@ -209,6 +209,15 @@ action flow_info(dst_lport, multicast_ptr, multicast_en, qtype,
     modify_field(scratch_metadata.size16, twice_nat_idx);
 }
 
+// We can add new parameters as we need. For now if none of the
+// rewrite fields are set that measn the packet will not be
+// modified.
+action flow_info_from_cpu() {
+    if (p4plus_to_p4.dst_lport_valid == TRUE) {
+        modify_field(control_metadata.dst_lport, p4plus_to_p4.dst_lport);
+    }
+}
+
 action recirc_packet(recirc_reason) {
     modify_field(control_metadata.ingress_bypass, 1);
     add_header(capri_p4_intrinsic);
@@ -253,6 +262,7 @@ table flow_info {
     actions {
         nop;
         flow_info;
+        flow_info_from_cpu;
         flow_miss;
         flow_hit_drop;
         flow_hit_from_vm_bounce;
@@ -421,7 +431,7 @@ table flow_hash_overflow {
 control process_flow_table {
     // NCC-predication (currently) does not allow sourcing condition bits from headers
     // If a header can be placed in first flit, this problem can be fixed XXX
-    if (control_metadata.nic_mode == NIC_MODE_SMART) {
+    if (control_metadata.nic_mode == NIC_MODE_SMART and control_metadata.skip_flow_lkp == FALSE) {
         if (valid(recirc_header) and
             (control_metadata.recirc_reason == RECIRC_FLOW_HASH_OVERFLOW)) {
             apply(flow_hash_overflow);

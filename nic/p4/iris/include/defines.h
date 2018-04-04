@@ -463,7 +463,7 @@
 /* P4+ to P4 header size constants (in bytes)                                */
 /*****************************************************************************/
 #define CAPRI_TXDMA_INTRINSIC_HDR_SZ   9
-#define P4PLUS_TO_P4_HDR_SZ            18
+#define P4PLUS_TO_P4_HDR_SZ            20
 
 /*****************************************************************************/
 /* Classic NIC header flags                                                  */

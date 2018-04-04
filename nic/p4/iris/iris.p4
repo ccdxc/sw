@@ -93,6 +93,7 @@ header_type control_metadata_t {
         vlan_strip                     : 1;
         span_copy                      : 1;
         nic_mode                       : 1;
+        skip_flow_lkp                  : 1;
         parse_tcp_option_error         : 1;
         allow_flood                    : 1;
         checksum_ctl                   : 8;

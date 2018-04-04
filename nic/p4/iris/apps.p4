@@ -652,6 +652,10 @@ action f_p4plus_to_p4_1() {
     if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_CPU)  {
         modify_field(control_metadata.from_cpu, TRUE);
     }
+
+    if (p4plus_to_p4.flow_index_valid == 1) {
+        modify_field(flow_info_metadata.flow_index, p4plus_to_p4.flow_index);
+    }
 }
 
 action f_p4plus_to_p4_2() {

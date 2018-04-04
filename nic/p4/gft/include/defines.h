@@ -16,7 +16,7 @@
 #define P4PLUS_CPU_HDR_SZ              40
 #define P4PLUS_CPU_PKT_SZ              37
 #define CAPRI_TXDMA_INTRINSIC_HDR_SZ   9
-#define P4PLUS_TO_P4_HDR_SZ            18
+#define P4PLUS_TO_P4_HDR_SZ            20
 
 /*****************************************************************************/
 /* Ether types                                                               */
