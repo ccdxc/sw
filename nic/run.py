@@ -120,7 +120,8 @@ def run_rtl(args):
     if args.test_suf:
         model_log = nic_dir + "/logs_%s/model.log" % args.test_suf
     log = open(model_log, "w")
-    os.environ["ASIC_SRC"] = os.getcwd() + "/asic"
+    asic_src = os.getcwd() + "/asic"
+    os.environ["ASIC_SRC"] = asic_src
     os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64:" + os.getcwd() + "/asic/capri/model/capsim-gen/lib:/home/asic/bin/tools/lib64"
     os.environ["PATH"] = os.getcwd() + "/asic/common/tools/bin" + ":" + os.environ["PATH"]
 
@@ -134,12 +135,16 @@ def run_rtl(args):
         print "Unknown port_mode", args.port_mode
         sys.exit(1)
 
+    coverage_opts = []
+    if args.rtl_coverage:
+        coverage_opts = [ '-cov', '-tcov' ]
+
     one_pkt_mode = ""
     if args.model_test:
         model_test = args.model_test
     if not args.skipverify:
         one_pkt_mode = "+dol_one_pkt_mode=1 +save_rtl_pkts=1"
-    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-run_args', ' %s  +flow_stat_tbl_base=0x107fce800 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_MEDIUM +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=100 +top_sb/initial_timeout_ns=60000 %s ' % (one_pkt_mode, args.runtest_runargs), '-cfg_args', 'core/axi_master/<0:3>/max_read_latency=3000 core/axi_master/<0:3>/avg_max_read_latency=3000 core/axi_master/<0:3>/max_write_latency=3000 core/axi_master/<0:3>/avg_max_write_latency=3000' ]
+    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-run_args', ' %s  +flow_stat_tbl_base=0x107fce800 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_MEDIUM +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=100 +top_sb/initial_timeout_ns=60000 %s ' % (one_pkt_mode, args.runtest_runargs), '-cfg_args', 'core/axi_master/<0:3>/max_read_latency=3000 core/axi_master/<0:3>/avg_max_read_latency=3000 core/axi_master/<0:3>/max_write_latency=3000 core/axi_master/<0:3>/avg_max_write_latency=3000' ] + coverage_opts
     if args.noverilog:
         model_cmd = model_cmd + ['-ro']
     if not args.no_asic_dump:
@@ -707,6 +712,8 @@ def main():
                         action='store_true', help='Set loglevel to DEBUG.')
     parser.add_argument('--verbose', dest='verbose', default=None,
                         action='store_true', help='Set loglevel to VERBOSE.')
+    parser.add_argument('--rtl_coverage', dest='rtl_coverage', default=None, action='store_true',
+                        help='Dump RTL toggle coverage')
 
     args = parser.parse_args()
 
