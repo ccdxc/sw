@@ -210,12 +210,11 @@ public:
 
     void add(acc_scale_tests_t *scale_test);
     int run(const char *test_name);
-    int completion_check(void);
+    int completion_check(uint32_t &num_completed);
     void outstanding_report(void);
 
 private:
     std::list<acc_scale_tests_t*>   tests_list;
-    std::list<acc_scale_tests_t*>   compl_list;
 };
 
 

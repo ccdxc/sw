@@ -579,12 +579,13 @@ acc_scale_tests_list_t::run(const char *test_name)
     /*
      * Poll for completion of all tests in the list
      */
-    auto completion_poll = [this] () -> int
+    auto completion_poll = [this,
+                            &num_completed] () -> int
     {
-        return completion_check();
+        return completion_check(num_completed);
     };
 
-    while (!tests_list.empty() || !compl_list.empty()) {
+    while (num_completed != tests_list.size()) {
 
         if (poll(completion_poll)) {
             printf("test %s timed out\n", test_name);
@@ -626,7 +627,7 @@ acc_scale_tests_list_t::run(const char *test_name)
  * Check for test list completion and return 0 if so
  */
 int 
-acc_scale_tests_list_t::completion_check(void)
+acc_scale_tests_list_t::completion_check(uint32_t &num_completed)
 {
     acc_scale_tests_t   *scale_test;
     std::list<acc_scale_tests_t*>::iterator it;
@@ -648,7 +649,7 @@ acc_scale_tests_list_t::completion_check(void)
         }
     }
 
-    return tests_list.empty() ? 0 : -1;
+    return num_completed == tests_list.size() ? 0 : -1;
 }
 
 
@@ -664,9 +665,11 @@ acc_scale_tests_list_t::outstanding_report(void)
     for (it = tests_list.begin(); it != tests_list.end(); it++) {
         scale_test = *it;
 
-        printf("\nOutstanding test report for %s:\n",
-               scale_test->scale_test_name_get());
-        scale_test->full_verify();
+        if (!scale_test->run_completed_get()) {
+            printf("\nOutstanding test report for %s:\n",
+                   scale_test->scale_test_name_get());
+            scale_test->full_verify();
+        }
     }
 }
 
