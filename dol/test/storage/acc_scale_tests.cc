@@ -515,7 +515,9 @@ acc_scale_tests_comp_encrypt_decrypt_decomp(void)
  * List of accelerator scale tests
  * Constructor
  */
-acc_scale_tests_list_t::acc_scale_tests_list_t()
+acc_scale_tests_list_t::acc_scale_tests_list_t() :
+    num_tests_completed(0),
+    num_tests_failed(0)
 {
 }
 
@@ -540,7 +542,6 @@ acc_scale_tests_list_t::~acc_scale_tests_list_t()
         delete scale_test;
     }
 
-    compl_list.clear();
     tests_list.clear();
 }
 
@@ -579,13 +580,12 @@ acc_scale_tests_list_t::run(const char *test_name)
     /*
      * Poll for completion of all tests in the list
      */
-    auto completion_poll = [this,
-                            &num_completed] () -> int
+    auto completion_poll = [this] () -> int
     {
-        return completion_check(num_completed);
+        return completion_check();
     };
 
-    while (num_completed != tests_list.size()) {
+    while ((num_tests_completed + num_tests_failed) < tests_list.size()) {
 
         if (poll(completion_poll)) {
             printf("test %s timed out\n", test_name);
@@ -618,7 +618,7 @@ acc_scale_tests_list_t::run(const char *test_name)
     }
 
     outstanding_report();
-    return tests_list.empty() && compl_list.empty() ? 0 : -1;
+    return num_tests_completed == tests_list.size() ? 0 : -1;
 }
 
 
@@ -627,10 +627,11 @@ acc_scale_tests_list_t::run(const char *test_name)
  * Check for test list completion and return 0 if so
  */
 int 
-acc_scale_tests_list_t::completion_check(uint32_t &num_completed)
+acc_scale_tests_list_t::completion_check(void)
 {
     acc_scale_tests_t   *scale_test;
     std::list<acc_scale_tests_t*>::iterator it;
+    uint32_t            num_tests_checked = 0;
 
     it = tests_list.begin(); 
     while (it != tests_list.end()) {
@@ -649,7 +650,7 @@ acc_scale_tests_list_t::completion_check(uint32_t &num_completed)
         }
     }
 
-    return num_completed == tests_list.size() ? 0 : -1;
+    return num_tests_checked == tests_list.size() ? 0 : -1;
 }
 
 

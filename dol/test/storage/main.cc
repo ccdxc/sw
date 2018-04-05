@@ -129,7 +129,6 @@ std::vector<tests::TestEntry> local_e2e_tests = {
 };
 
 std::vector<tests::TestEntry> comp_tests = {
-#if 0
   {&tests::compress_flat_64K_buf, "Compress Host->Host flat 64K buf", false},
   {&tests::compress_same_src_and_dst, "Compress with same src and dst", false},
   {&tests::decompress_to_flat_64K_buf, "Decompress Host->Host to flat 64K buf", false},
@@ -142,7 +141,6 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::compress_output_through_sequencer, "Compress and pull data from HBM through sequencer", false},
   {&tests::compress_dualq_flat_4K_buf, "Compress Host-Host flat 4K buf on hot and cold queues", false},
   {&tests::compress_dualq_flat_4K_buf_in_hbm, "Compress HBM-HBM flat 4K buf on hot and cold queues", false},
-#endif
   {&tests::compress_output_encrypt_app_min_size, "Compress->XTS encrypt chaining: app min block size", false},
   {&tests::compress_output_encrypt_app_nominal_size, "Compress->XTS encrypt chaining: app nominal block size", false},
   {&tests::compress_output_encrypt_app_max_size, "Compress->XTS encrypt chaining: app max block size", false},
@@ -161,7 +159,6 @@ std::vector<tests::TestEntry> comp_seq_tests = {
   {&tests::seq_compress_output_through_sequencer, "Sequencer Compress and pull data from HBM through sequencer", false},
   {&tests::seq_compress_dualq_flat_4K_buf, "Sequencer Compress Host-Host flat 4K buf on hot and cold queues", false},
   {&tests::seq_compress_dualq_flat_4K_buf_in_hbm, "Sequencer Compress HBM-HBM flat 4K buf on hot and cold queues", false},
-#endif
   {&tests::seq_compress_output_encrypt_app_min_size, "Sequencer Compress->XTS encrypt chaining: app min block size", false},
   {&tests::seq_decrypt_output_decompress_last_app_blk, "Sequencer XTS decrypt->Decompress chaining: app min block size", false},
   {&tests::seq_compress_output_encrypt_app_nominal_size, "Sequencer Compress->XTS encrypt chaining: app nominal block size", false},

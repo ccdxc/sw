@@ -27,6 +27,10 @@ public:
     {
     }
 
+    virtual ~acc_scale_tests_t()
+    {
+    }
+
     // Pure virtual functions.
     virtual int push(void) = 0;
     virtual int completion_check(void) = 0;
@@ -210,11 +214,14 @@ public:
 
     void add(acc_scale_tests_t *scale_test);
     int run(const char *test_name);
-    int completion_check(uint32_t &num_completed);
+    int completion_check(void);
     void outstanding_report(void);
 
 private:
     std::list<acc_scale_tests_t*>   tests_list;
+
+    uint32_t        num_tests_completed;
+    uint32_t        num_tests_failed;
 };
 
 
