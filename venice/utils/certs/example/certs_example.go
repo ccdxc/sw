@@ -45,7 +45,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		cert, err := certs.SelfSign(*days, "", privateKey)
+		cert, err := certs.SelfSign("", privateKey, certs.WithValidityDays(*days))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -76,7 +76,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		cert, err := certs.SignCSRwithCA(*days, csr, cacerts[0], privatekey)
+		cert, err := certs.SignCSRwithCA(csr, cacerts[0], privatekey, certs.WithValidityDays(*days))
 		if err != nil {
 			log.Fatal(err)
 		}

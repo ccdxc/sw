@@ -22,7 +22,7 @@ func TestGetFunctions(t *testing.T) {
 	}
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	AssertOk(t, err, "GenerateKey fail")
-	cert, err := certs.SelfSign(1, "hello", privateKey)
+	cert, err := certs.SelfSign("hello", privateKey, certs.WithValidityDays(1))
 	AssertOk(t, err, "Failed to generate certificate")
 
 	ctx1 := MakeMockContext(addr, nil)

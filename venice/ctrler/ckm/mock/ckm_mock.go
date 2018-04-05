@@ -66,7 +66,7 @@ func (c *CKMctrler) SignCertificateRequest(ctx context.Context, req *ckmproto.Ce
 		return &ckmproto.CertificateSignResp{Approved: false}, err
 	}
 
-	cert, err := certs.SignCSRwithCA(7 /* days */, csr, c.certificate, c.privateKey)
+	cert, err := certs.SignCSRwithCA(csr, c.certificate, c.privateKey, certs.WithValidityDays(7))
 	if err != nil {
 		log.Errorf("Error signing CSR: %v", err)
 		return &ckmproto.CertificateSignResp{Approved: false}, err

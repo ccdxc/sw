@@ -14,11 +14,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	mathrand "math/rand"
 	"net/rpc"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -62,7 +64,7 @@ func testSaveAndReadCertificate(privateKey crypto.PrivateKey, t *testing.T) {
 	tmpfileName := tmpfile.Name()
 	defer os.Remove(tmpfileName)
 
-	cert, err := SelfSign(days, "", privateKey)
+	cert, err := SelfSign("", privateKey, WithValidityDays(days))
 	AssertOk(t, err, "Error creating self-signed certificate")
 	err = SaveCertificate(tmpfileName, cert)
 	AssertOk(t, err, "Error saving certificate")
@@ -199,7 +201,7 @@ func TestCertificateValidationRoutines(t *testing.T) {
 		privateKey := keys[i][0]
 		altPrivateKey := keys[i][1]
 
-		cert, err := SelfSign(days, "", privateKey)
+		cert, err := SelfSign("", privateKey, WithValidityDays(days))
 		AssertOk(t, err, "Error creating self-signed certificate")
 		Assert(t, IsSelfSigned(cert), "Failed to detect self-signed certificate")
 		valid, err := ValidateKeyCertificatePair(privateKey, cert)
@@ -264,7 +266,7 @@ func generateKeysAndCerts(t *testing.T, caCertFile, serverCertFile, serverPrivKe
 	numRsaBits := 2048
 	caprivatekey, err := rsa.GenerateKey(rand.Reader, numRsaBits)
 	AssertOk(t, err, "GenerateKey fail")
-	cacert, err := SelfSign(days, "", caprivatekey)
+	cacert, err := SelfSign("", caprivatekey, WithValidityDays(days))
 	AssertOk(t, err, "Error generating self-signed certificate")
 	SaveCertificate(caCertFile, cacert)
 
@@ -273,7 +275,7 @@ func generateKeysAndCerts(t *testing.T, caCertFile, serverCertFile, serverPrivKe
 	SavePrivateKey(serverPrivKeyFile, srvprivatekey)
 	csr, err := CreateCSR(srvprivatekey, nil, nil)
 	AssertOk(t, err, "Error generating CSR")
-	srvcert, err := SignCSRwithCA(days, csr, cacert, caprivatekey)
+	srvcert, err := SignCSRwithCA(csr, cacert, caprivatekey, WithValidityDays(days))
 	AssertOk(t, err, "Error signing CSR")
 	SaveCertificate(serverCertFile, srvcert)
 
@@ -282,7 +284,7 @@ func generateKeysAndCerts(t *testing.T, caCertFile, serverCertFile, serverPrivKe
 	SavePrivateKey(clientPrivKeyFile, clientprivatekey)
 	csr, err = CreateCSR(clientprivatekey, nil, nil)
 	AssertOk(t, err, "Error generating CSR")
-	clientcert, err := SignCSRwithCA(days, csr, cacert, caprivatekey)
+	clientcert, err := SignCSRwithCA(csr, cacert, caprivatekey, WithValidityDays(days))
 	AssertOk(t, err, "Error signing CSR")
 	SaveCertificate(clientCertFile, clientcert)
 }
@@ -359,5 +361,124 @@ func startClientAndDoRPC(t *testing.T, addr string, clientCertFile, clientPrivKe
 	}
 	if reply.C != args.A+args.B {
 		t.Errorf("Add: expected %d got %d", reply.C, args.A+args.B)
+	}
+}
+
+func TestOptions(t *testing.T) {
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+
+	// TIME VALIDITY NEGATIVE TEST CASES
+
+	// no validity options
+	c, err := SelfSign("hello", privateKey)
+	Assert(t, c == nil && err != nil, "SelfSign without validity options did not fail as expected")
+
+	// same as no validity options
+	c, err = SelfSign("hello", privateKey, WithValidityDays(0))
+	Assert(t, c == nil && err != nil, "SelfSign with invalid options did not fail as expected")
+	c, err = SelfSign("hello", privateKey, WithNotBefore(time.Time{}), WithNotAfter(time.Time{}))
+	Assert(t, c == nil && err != nil, "SelfSign with invalid options did not fail as expected")
+
+	// not enough options
+	c, err = SelfSign("hello", privateKey, WithNotBefore(time.Now()))
+	Assert(t, c == nil && err != nil, "SelfSign with invalid options did not fail as expected")
+	c, err = SelfSign("hello", privateKey, WithNotAfter(time.Now()))
+	Assert(t, c == nil && err != nil, "SelfSign with invalid options did not fail as expected")
+
+	// too many options
+	c, err = SelfSign("hello", privateKey, WithNotBefore(time.Now()), WithNotAfter(time.Now()), WithValidityDays(1))
+	Assert(t, c == nil && err != nil, "SelfSign with invalid options did not fail as expected")
+
+	// NotBefore > NotAfter
+	c, err = SelfSign("hello", privateKey, WithNotBefore(time.Now()), WithNotAfter(time.Now().Add(-time.Second*10)))
+	Assert(t, c == nil && err != nil, "SelfSign with invalid options did not fail as expected")
+	c, err = SelfSign("hello", privateKey, WithValidityDays(-1))
+	Assert(t, c == nil && err != nil, "SelfSign with invalid options did not fail as expected")
+
+	// TIME VALIDITY POSITIVE TEST CASES
+	var notBefore time.Time
+	var notAfter time.Time
+
+	testTime1 := time.Now().Add(time.Second * time.Duration(mathrand.Intn(10000))).Truncate(time.Second).UTC()
+	testTime2 := time.Now().Add(time.Second * time.Duration(mathrand.Intn(10000))).Truncate(time.Second).UTC()
+	days := mathrand.Intn(10000)
+
+	if testTime1.Before(testTime2) {
+		notBefore = testTime1
+		notAfter = testTime2
+	} else {
+		notBefore = testTime2
+		notAfter = testTime1
+	}
+
+	csr, err := CreateCSR(privateKey, nil, nil)
+	AssertOk(t, err, "Error generating CSR")
+	caCert, err := SelfSign("hello", privateKey, WithValidityDays(10000))
+
+	cert := func(c *x509.Certificate, err error) *x509.Certificate {
+		AssertOk(t, err, fmt.Sprintf("Error generating cert: %v", err))
+		return c
+	}
+
+	type testParam struct {
+		cert         *x509.Certificate
+		expNotBefore time.Time
+		expNotAfter  time.Time
+	}
+
+	testParams := []testParam{
+		{
+			cert(SelfSign("hello", privateKey, WithValidityDays(days))),
+			time.Now().Truncate(time.Second).UTC(),
+			time.Now().AddDate(0, 0, days).Truncate(time.Second).UTC(),
+		},
+		{
+			cert(SelfSign("hello", privateKey, WithNotBefore(notBefore), WithValidityDays(days))),
+			notBefore,
+			notBefore.AddDate(0, 0, days).Truncate(time.Second).UTC(),
+		},
+		{
+			cert(SelfSign("hello", privateKey, WithNotAfter(notAfter), WithValidityDays(days))),
+			notAfter.AddDate(0, 0, -days).Truncate(time.Second).UTC(),
+			notAfter,
+		},
+		{
+			cert(SelfSign("hello", privateKey, WithNotBefore(notBefore), WithNotAfter(notAfter))),
+			notBefore,
+			notAfter,
+		},
+		{
+			cert(SignCSRwithCA(csr, caCert, privateKey, WithValidityDays(days))),
+			time.Now().Truncate(time.Second).UTC(),
+			time.Now().AddDate(0, 0, days).Truncate(time.Second).UTC(),
+		},
+		{
+			cert(SignCSRwithCA(csr, caCert, privateKey, WithNotBefore(notBefore), WithValidityDays(days))),
+			notBefore,
+			notBefore.AddDate(0, 0, days).Truncate(time.Second).UTC(),
+		},
+		{
+			cert(SignCSRwithCA(csr, caCert, privateKey, WithNotAfter(notAfter), WithValidityDays(days))),
+			notAfter.AddDate(0, 0, -days).Truncate(time.Second).UTC(),
+			notAfter,
+		},
+		{
+			cert(SignCSRwithCA(csr, caCert, privateKey, WithNotBefore(notBefore), WithNotAfter(notAfter))),
+			notBefore,
+			notAfter,
+		},
+	}
+
+	absDiff := func(d1, d2 time.Time) time.Duration {
+		if d1.After(d2) {
+			return d1.Sub(d2)
+		}
+		return d2.Sub(d1)
+	}
+
+	for i, tp := range testParams {
+		// Allow 1 sec difference to account for the time taken by functions SelfSign and SignCSRWithCA
+		Assert(t, absDiff(tp.cert.NotBefore, tp.expNotBefore) <= time.Second, fmt.Sprintf("Unexpected value for NotBefore, index: %d. Have: %v, want: %v", i, tp.cert.NotBefore, tp.expNotBefore))
+		Assert(t, absDiff(tp.cert.NotAfter, tp.expNotAfter) <= time.Second, fmt.Sprintf("Unexpected value for NotAfter, index: %d. Have: %v, want: %v", i, tp.cert.NotAfter, tp.expNotAfter))
 	}
 }

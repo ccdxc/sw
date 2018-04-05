@@ -6,6 +6,7 @@ import (
 	"crypto"
 	"crypto/x509"
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -23,6 +24,10 @@ const (
 
 	// The validity period of the certificates that we issue to cluster nodes
 	nodeCertDurationDays = 33
+
+	// When the CA issues a certificate it sets the NotBefore time to time.Now() - caBackdateInterval
+	// to account for clock skews in the cluster.
+	certBackdateInterval = 60 * time.Second
 
 	caKeyID                 = "CaKey"
 	caKeyType               = keymgr.RSA4096
@@ -76,7 +81,9 @@ func (l *CertificateAuthority) init(bootstrap bool) error {
 		if err != nil {
 			return errors.Wrap(err, "Error generating signing key")
 		}
-		selfSignedCert, err := certs.SelfSign(caSelfSignedCertDurationDays, "CMDRootCA", caKey)
+		selfSignedCert, err := certs.SelfSign("CMDRootCA", caKey,
+			certs.WithValidityDays(caSelfSignedCertDurationDays),
+			certs.WithNotBefore(time.Now().Add(-certBackdateInterval)))
 		if err != nil {
 			return errors.Wrap(err, "Error generating self-signed certificate")
 		}
@@ -142,7 +149,9 @@ func (l *CertificateAuthority) init(bootstrap bool) error {
 
 // Sign validates and sign a certificate signing request (CSR)
 func (l *CertificateAuthority) Sign(csr *x509.CertificateRequest) (*x509.Certificate, error) {
-	cert, err := certs.SignCSRwithCA(nodeCertDurationDays, csr, l.caCertificate, l.caKey)
+	cert, err := certs.SignCSRwithCA(csr, l.caCertificate, l.caKey,
+		certs.WithValidityDays(nodeCertDurationDays),
+		certs.WithNotBefore(time.Now().Add(-certBackdateInterval)))
 	if err != nil {
 		return nil, errors.Wrap(err, "Error signing CSR")
 	}

@@ -66,7 +66,7 @@ func (c *CertSrv) SignCertificateRequest(ctx context.Context, req *certapi.Certi
 		return nil, errors.Wrapf(err, "CSR has invalid signature")
 	}
 
-	cert, err := certs.SignCSRwithCA(7 /* days */, csr, c.certificate, c.privateKey)
+	cert, err := certs.SignCSRwithCA(csr, c.certificate, c.privateKey, certs.WithValidityDays(7))
 	if err != nil {
 		log.Errorf("Error signing CSR: %v", err)
 		return nil, errors.Wrapf(err, "Error signing CSR")

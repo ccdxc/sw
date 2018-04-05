@@ -34,6 +34,82 @@ const (
 	rsaPrivateKeyPemBlockType      = "RSA PRIVATE KEY"
 )
 
+type options struct {
+	notBefore time.Time
+	notAfter  time.Time
+	days      int
+}
+
+// WithNotBefore specifies the time at which the certificate starts to be valid
+func WithNotBefore(nb time.Time) Option {
+	return func(o *options) {
+		o.notBefore = nb
+	}
+}
+
+// WithNotAfter specifies the time at which the certificate stops to be valid
+func WithNotAfter(na time.Time) Option {
+	return func(o *options) {
+		o.notAfter = na
+	}
+}
+
+// WithValidityDays specifies the number of days the certificate is valid for.
+// The validity start or stop date can be specified using WithNotBefore or WithNotAfter respectively
+func WithValidityDays(days int) Option {
+	return func(o *options) {
+		o.days = days
+	}
+}
+
+func applyOptions(cert *x509.Certificate, opts ...Option) error {
+	var t options
+	for _, o := range opts {
+		if o != nil {
+			o(&t)
+		}
+	}
+
+	/*  Allowed validity parameter combinations
+
+	    |---------------------------------------------------------------|
+	    |    input params       |    NotBefore      |    NotAfter       |
+	    |-----------------------|-------------------|-------------------|
+	    |  Days                 |  Now              |  Now + days       |
+	    |  NotBefore, Days      |  NotBefore        |  NotBefore + days |
+	    |  NotAfter, Days       |  NotAfter - days  |  NotAfter         |
+	    |  NotBefore, NotAfter  |  NotBefore        |  NotAfter         |
+	    |---------------------------------------------------------------|
+
+	    All other combinations are not valid
+	*/
+
+	if t.days != 0 && t.notBefore.IsZero() && t.notAfter.IsZero() {
+		cert.NotBefore = time.Now()
+		cert.NotAfter = cert.NotBefore.AddDate(0, 0, t.days)
+	} else if t.days != 0 && !t.notBefore.IsZero() && t.notAfter.IsZero() {
+		cert.NotBefore = t.notBefore
+		cert.NotAfter = cert.NotBefore.AddDate(0, 0, t.days)
+	} else if t.days != 0 && t.notBefore.IsZero() && !t.notAfter.IsZero() {
+		cert.NotAfter = t.notAfter
+		cert.NotBefore = cert.NotAfter.AddDate(0, 0, -t.days)
+	} else if t.days == 0 && !t.notBefore.IsZero() && !t.notAfter.IsZero() {
+		cert.NotBefore = t.notBefore
+		cert.NotAfter = t.notAfter
+	} else {
+		return fmt.Errorf("Invalid parameters combinations: %+v", t)
+	}
+
+	if !cert.NotBefore.Before(cert.NotAfter) {
+		return fmt.Errorf("NotAfter has to be later than NotBefore: %+v", t)
+	}
+
+	return nil
+}
+
+// Option fills the optional params for SelfSign and CreateCSR APIs
+type Option func(opt *options)
+
 func saveRsaPrivateKey(pemfile io.Writer, privatekey *rsa.PrivateKey) error {
 	pemkey := &pem.Block{
 		Type:  rsaPrivateKeyPemBlockType,
@@ -209,7 +285,7 @@ func ReadCSR(csrFile string) (*x509.CertificateRequest, error) {
 
 // SelfSign generates a self-signed certificate valid for the specified number of days using the supplied private key.
 // If hostname is not provided, it populates it using os.Hostname()
-func SelfSign(days int, hostname string, privatekey crypto.PrivateKey) (*x509.Certificate, error) {
+func SelfSign(hostname string, privatekey crypto.PrivateKey, opts ...Option) (*x509.Certificate, error) {
 	var err error
 	if hostname == "" {
 		hostname, err = os.Hostname()
@@ -226,11 +302,14 @@ func SelfSign(days int, hostname string, privatekey crypto.PrivateKey) (*x509.Ce
 		Subject: pkix.Name{
 			CommonName: hostname,
 		},
-		NotBefore:   time.Now(),
-		NotAfter:    time.Now().AddDate(0, 0, days),
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		DNSNames:    []string{hostname},
+	}
+
+	err = applyOptions(template, opts...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error applying certificate options")
 	}
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	template.SerialNumber, err = rand.Int(rand.Reader, serialNumberLimit)
@@ -302,15 +381,13 @@ func CreateCSR(privatekey crypto.PrivateKey, dnsnames []string, ipaddrs []net.IP
 
 // SignCSRwithCA signs the CSR for specified number of days, by the CA privateKey and CA certificate
 // Any security checks (whether CSR should be signed or not) are done by the caller
-func SignCSRwithCA(days int, csr *x509.CertificateRequest, caCert *x509.Certificate, privatekey crypto.PrivateKey) (*x509.Certificate, error) {
+func SignCSRwithCA(csr *x509.CertificateRequest, caCert *x509.Certificate, privatekey crypto.PrivateKey, opts ...Option) (*x509.Certificate, error) {
 	publickey := csr.PublicKey
 
 	template := &x509.Certificate{
 		IsCA: false,
 		BasicConstraintsValid: true,
 		Subject:               csr.Subject,
-		NotBefore:             time.Now(),
-		NotAfter:              time.Now().AddDate(0, 0, days),
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage:              x509.KeyUsageDataEncipherment | x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 
@@ -318,8 +395,12 @@ func SignCSRwithCA(days int, csr *x509.CertificateRequest, caCert *x509.Certific
 		DNSNames:    csr.DNSNames,
 		IPAddresses: csr.IPAddresses,
 	}
+
+	err := applyOptions(template, opts...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error applying certificate options")
+	}
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
-	var err error
 	template.SerialNumber, err = rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to Generate Random number during Certificate signing.")

@@ -39,7 +39,7 @@ func testObjectStoreSerialAccess(t *testing.T, keyMgr *KeyMgr, prefix string) {
 	key, err := keyMgr.CreateKeyPair(keyID, ECDSA256)
 	AssertOk(t, err, "Error generating private key")
 	Assert(t, key.KeyType == ECDSA256, "Error generating private key")
-	cert, err := certs.SelfSign(1, certID, key)
+	cert, err := certs.SelfSign(certID, key, certs.WithValidityDays(1))
 	AssertOk(t, err, "Error generating self-signed certificate")
 
 	// KeyPair object
@@ -80,7 +80,7 @@ func testObjectStoreSerialAccess(t *testing.T, keyMgr *KeyMgr, prefix string) {
 	defer keyMgr.DestroyObject(signKeyID, ObjectTypeKeyPair)
 	bundle := make([]*x509.Certificate, 0)
 	for i := 0; i < 20; i++ {
-		cert, err := certs.SelfSign(1, getBundleCertificateID(bundleID, i), signKey)
+		cert, err := certs.SelfSign(getBundleCertificateID(bundleID, i), signKey, certs.WithValidityDays(1))
 		bundle = append(bundle, cert)
 		AssertOk(t, err, "Error generating self-signed certificate")
 	}
@@ -169,7 +169,7 @@ func testWarmStart(t *testing.T, be Backend) {
 	key, err := keyMgr.CreateKeyPair(keyID, RSA2048)
 	AssertOk(t, err, "Error generating private key")
 	defer keyMgr.DestroyObject(keyID, ObjectTypeKeyPair)
-	cert, err := certs.SelfSign(1, certID, key)
+	cert, err := certs.SelfSign(certID, key, certs.WithValidityDays(1))
 	AssertOk(t, err, "Error generating self-signed certificate")
 	err = keyMgr.StoreObject(NewCertificateObject(certID, cert))
 	AssertOk(t, err, "Error storing certificate")
