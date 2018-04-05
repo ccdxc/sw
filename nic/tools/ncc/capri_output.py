@@ -324,7 +324,7 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
 
     addsub_val = capri_expr.const
     op3 = capri_expr.op3
-    if use_current and add_off and addsub_val:
+    if use_current and add_off: # and addsub_val:
         # adjust the addsub value (testcase - gft program)
         if capri_expr.op3 == '-':
             delta_const = capri_expr.const - add_off
@@ -335,6 +335,7 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
                 addsub_val = delta_const
         else:
             addsub_val += add_off
+            op3 = '+'
 
     mux_inst['addsub_val']['value'] = str(addsub_val)
     mux_inst['addsub']['value'] = str(1) if op3 == '+' else str(0)
