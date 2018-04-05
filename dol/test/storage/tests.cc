@@ -103,12 +103,40 @@ int test_setup() {
       queues::seq_queue_pdma_num_set(FLAGS_num_pdma_queues);
   }
 
-  // Initialize queues
-  if (queues::queues_setup() < 0) {
-    printf("Failed to setup lif and queues \n");
+  // Initialize resources
+  if (queues::resources_init() < 0) {
+    printf("Failed to initialize resources \n");
     return -1;
   }
-  printf("Setup lif and queues \n");
+  printf("Initialized resources \n");
+
+  // Setup LIFs
+  if (queues::lifs_setup() < 0) {
+    printf("Failed to setup LIFs\n");
+    return -1;
+  }
+  printf("Setup LIFs \n");
+
+  // Setup NVME PVM U-turn queues
+  if (queues::nvme_pvm_queues_setup() < 0) {
+    printf("Failed to setup NVME PVM U-turn queues \n");
+    return -1;
+  }
+  printf("Setup NVME PVM U-turn queues  \n");
+
+  // Setup PVM queues
+  if (queues::pvm_queues_setup() < 0) {
+    printf("Failed to setup PVM queues \n");
+    return -1;
+  }
+  printf("Setup PVM queues  \n");
+
+  // Setup Sequencer queues
+  if (queues::seq_queues_setup() < 0) {
+    printf("Failed to setup Sequencer queues \n");
+    return -1;
+  }
+  printf("Setup Sequeuncer queues \n");
 
   // Allocate the read and write buffer
   // TODO: Have a fancy allocator with various pages

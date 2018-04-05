@@ -17,7 +17,15 @@ namespace queues {
 
 void seq_queue_pdma_num_set(uint64_t& num_pdma_queues);
 
-int queues_setup();
+int resources_init();
+
+int lifs_setup();
+
+int nvme_pvm_queues_setup();
+
+int pvm_queues_setup();
+
+int seq_queues_setup();
 
 int pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, 
                      uint32_t roce_qid, dp_mem_t *mem, 

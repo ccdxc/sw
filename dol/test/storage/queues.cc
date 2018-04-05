@@ -322,7 +322,7 @@ alloc_queues()
   }
 }
 
-int queues_setup() {
+int resources_init() {
 
   // Calculate the total queues for all queue types
   calc_total_queues();
@@ -350,6 +350,11 @@ int queues_setup() {
   }
   pndx_data_pa = host_mem_v2p(pndx_data_va);
 
+  return 0;
+}
+
+
+int lifs_setup() {
 
   // Create NVME, Sequencer and PVM LIFs
   hal_if::lif_params_t nvme_lif_params, seq_lif_params, pvm_lif_params;
@@ -400,8 +405,14 @@ int queues_setup() {
     return -1;
   }
   printf("Successfully set Sequencer LIF %lu BDF %u \n", seq_lif, kSeqLifBdf);
+
+  return 0;
+}
   
-  int i, j;
+
+int
+nvme_pvm_queues_setup() {
+  int i;
 
   // Initialize NVME SQs
   host_nvme_sq_base = 0; // first queue
@@ -450,6 +461,14 @@ int queues_setup() {
       return -1;
     }
   }
+  return 0;
+}
+
+
+
+int
+pvm_queues_setup() {
+  int i, j;
 
   // Initialize PVM SQs for processing commands from NVME VF only
   // Note: i is overall index across PVM SQs, j iterates the loop
@@ -625,6 +644,102 @@ int queues_setup() {
   pvm_last_sq = i;
   printf("PVM's last saved SQ %lu \n", pvm_last_sq);
 
+  // Initialize PVM CQs for processing commands from NVME VF only
+  // Note: i is overall index across PVM CQs, j iterates the loop
+  pvm_nvme_cq_base = 0; // first queue
+  for (j = 0, i = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeCQs); j++, i++) {
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
+                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+      printf("Unable to allocate host memory for PVM NVME CQ %d\n", i);
+      return -1;
+    }
+    printf("Initialized PVM NVME CQ %d \n", i);
+
+    // Setup the queue state in Capri:
+    // 1. no dst queues for these as these are in host
+    // 2. no program address for these as these are in host
+    if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kPvmCqHandler,
+                                 kDefaultTotalRings, kDefaultHostRings, 
+                                 kPvmNumEntries, pvm_cqs[i].mem->pa(),
+                                 kDefaultEntrySize, false, 0, 0,
+                                 0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
+      printf("Failed to setup PVM NVME CQ %d state \n", i);
+      return -1;
+    }
+  }
+
+  // Initialize PVM CQs for processing R2N commands 
+  pvm_r2n_cq_base = i;
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nCQs); j++, i++) {
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
+                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+      printf("Unable to allocate host memory for PVM R2N CQ %d\n", i);
+      return -1;
+    }
+    printf("Initialized PVM R2N CQ %d \n", i);
+
+    // Setup the queue state in Capri:
+    // 1. no dst queues for these as these are in host
+    // 2. no program address for these as these are in host
+    // 3. The push address is that of the SSD's SQ's PI 
+    if (qstate_if::setup_pci_q_state(pvm_lif, CQ_TYPE, i,
+                                     kDefaultTotalRings, kDefaultNoHostRings, 
+                                     kPvmNumEntries, pvm_cqs[i].mem->pa(),
+                                     kDefaultEntrySize, pndx_data_pa, 
+                                     0, 0, 0) < 0) {
+      printf("Failed to setup PVM NVME SQ %d state \n", i);
+      return -1;
+    }
+  }
+
+  // Initialize PVM CQs for processing NVME backend commands 
+  // Note: Incrementing ssd_q in the for loop as the NVME backend corresponds 1:1 
+  //       with the SSD
+  pvm_nvme_be_cq_base = i;
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeBeCQs); j++, i++) {
+    // For the special E2E SSD, use NvmeSsd class to initialize the queue
+    if  (j == kE2eSsdhandle) {
+      // Initialize the queue in the DOL enviroment
+      if (nvme_e2e_ssd_cq_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
+                               NUM_TO_VAL(kNvmeCQEntrySize)) < 0) {
+        printf("Unable to allocate host memory for PVM E2E SSD CQ %d\n", i);
+        return -1;
+      }
+      printf("Initialized PVM NVME backend E2E CQ %d \n", i);
+    } else {
+      // Initialize the queue in the DOL enviroment
+      if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
+                     NUM_TO_VAL(kNvmeCQEntrySize)) < 0) {
+        printf("Unable to allocate host memory for PVM NVME backend CQ %d\n", i);
+        return -1;
+      }
+      printf("Initialized PVM NVME backend CQ %d \n", i);
+    }
+
+    // Setup the queue state in Capri: 
+    if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kNvmeBeCqHandler, 
+                                 kDefaultTotalRings, kDefaultHostRings, 
+                                 kPvmNumEntries, pvm_cqs[i].mem->pa(),
+                                 kNvmeCQEntrySize, true, pvm_lif, CQ_TYPE,
+                                 get_pvm_r2n_cq(0), 0, 0, storage_hbm_ssd_bm_addr, 0, 0,
+                                 ssd_cndx_addr[j]) < 0) {
+      printf("Failed to setup PVM NVME backend CQ %d state \n", i);
+      return -1;
+    }
+  }
+
+  pvm_last_cq = i;
+  printf("PVM's last saved CQ %lu \n", pvm_last_cq);
+
+  return 0;
+}
+
+int
+seq_queues_setup() {
+  int i, j;
+
   // Initialize PVM SQs for processing Sequencer commands for PDMA
   pvm_seq_pdma_sq_base = 0;
   for (i = 0, j = 0; j < (int) NUM_TO_VAL(SeqNumPdmaSQs); j++, i++) {
@@ -714,94 +829,6 @@ int queues_setup() {
     printf("Setup PVM Seq Compression Status queue %d \n", i);
   }
 
-  // Initialize PVM CQs for processing commands from NVME VF only
-  // Note: i is overall index across PVM CQs, j iterates the loop
-  pvm_nvme_cq_base = 0; // first queue
-  for (j = 0, i = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeCQs); j++, i++) {
-    // Initialize the queue in the DOL enviroment
-    if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
-                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
-      printf("Unable to allocate host memory for PVM NVME CQ %d\n", i);
-      return -1;
-    }
-    printf("Initialized PVM NVME CQ %d \n", i);
-
-    // Setup the queue state in Capri:
-    // 1. no dst queues for these as these are in host
-    // 2. no program address for these as these are in host
-    if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kPvmCqHandler,
-                                 kDefaultTotalRings, kDefaultHostRings, 
-                                 kPvmNumEntries, pvm_cqs[i].mem->pa(),
-                                 kDefaultEntrySize, false, 0, 0,
-                                 0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
-      printf("Failed to setup PVM NVME CQ %d state \n", i);
-      return -1;
-    }
-  }
-
-  // Initialize PVM CQs for processing R2N commands 
-  pvm_r2n_cq_base = i;
-  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nCQs); j++, i++) {
-    // Initialize the queue in the DOL enviroment
-    if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
-                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
-      printf("Unable to allocate host memory for PVM R2N CQ %d\n", i);
-      return -1;
-    }
-    printf("Initialized PVM R2N CQ %d \n", i);
-
-    // Setup the queue state in Capri:
-    // 1. no dst queues for these as these are in host
-    // 2. no program address for these as these are in host
-    // 3. The push address is that of the SSD's SQ's PI 
-    if (qstate_if::setup_pci_q_state(pvm_lif, CQ_TYPE, i,
-                                     kDefaultTotalRings, kDefaultNoHostRings, 
-                                     kPvmNumEntries, pvm_cqs[i].mem->pa(),
-                                     kDefaultEntrySize, pndx_data_pa, 
-                                     0, 0, 0) < 0) {
-      printf("Failed to setup PVM NVME SQ %d state \n", i);
-      return -1;
-    }
-  }
-
-  // Initialize PVM CQs for processing NVME backend commands 
-  // Note: Incrementing ssd_q in the for loop as the NVME backend corresponds 1:1 
-  //       with the SSD
-  pvm_nvme_be_cq_base = i;
-  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeBeCQs); j++, i++) {
-    // For the special E2E SSD, use NvmeSsd class to initialize the queue
-    if  (j == kE2eSsdhandle) {
-      // Initialize the queue in the DOL enviroment
-      if (nvme_e2e_ssd_cq_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
-                               NUM_TO_VAL(kNvmeCQEntrySize)) < 0) {
-        printf("Unable to allocate host memory for PVM E2E SSD CQ %d\n", i);
-        return -1;
-      }
-      printf("Initialized PVM NVME backend E2E CQ %d \n", i);
-    } else {
-      // Initialize the queue in the DOL enviroment
-      if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
-                     NUM_TO_VAL(kNvmeCQEntrySize)) < 0) {
-        printf("Unable to allocate host memory for PVM NVME backend CQ %d\n", i);
-        return -1;
-      }
-      printf("Initialized PVM NVME backend CQ %d \n", i);
-    }
-
-    // Setup the queue state in Capri: 
-    if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kNvmeBeCqHandler, 
-                                 kDefaultTotalRings, kDefaultHostRings, 
-                                 kPvmNumEntries, pvm_cqs[i].mem->pa(),
-                                 kNvmeCQEntrySize, true, pvm_lif, CQ_TYPE,
-                                 get_pvm_r2n_cq(0), 0, 0, storage_hbm_ssd_bm_addr, 0, 0,
-                                 ssd_cndx_addr[j]) < 0) {
-      printf("Failed to setup PVM NVME backend CQ %d state \n", i);
-      return -1;
-    }
-  }
-
-  pvm_last_cq = i;
-  printf("PVM's last saved CQ %lu \n", pvm_last_cq);
 
   return 0;
 }
