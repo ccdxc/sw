@@ -15,5 +15,7 @@ nic/hal/third-party/lkl/export/aarch64/bin/liblkl.so             /nic/lib/
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so  /nic/lib/
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so  /nic/lib/
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so     /nic/lib/
+nic/hal/third-party/openssl/aarch64/lib/libssl.so.1.1            /nic/lib/
+nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1         /nic/lib/
 platform/gen/aarch64/bin                                         /platform/bin/
 platform/gen/aarch64/lib                                         /platform/lib/

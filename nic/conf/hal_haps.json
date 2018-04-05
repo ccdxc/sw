@@ -4,7 +4,7 @@
   {
     "name": "capri",
     "loader_info_file" : "capri_loader.conf",
-    "hbm_cache" : "false"
+    "hbm_cache" : "true"
   },
   "sw" :
   {
