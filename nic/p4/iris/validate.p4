@@ -89,6 +89,7 @@ action validate_flow_key() {
 action validate_native_packet() {
     if ((ethernet.srcAddr == 0) or
         (ethernet.dstAddr == 0) or
+        (ethernet.srcAddr == ethernet.dstAddr) or
         ((ethernet.srcAddr & 0x010000000000) == 0x010000000000) or
         (ethernet.srcAddr == 0xFFFFFFFFFFFF)) {
         malformed_packet();
@@ -115,12 +116,14 @@ action validate_tunneled_packet() {
     // outer SIP might still be invalid).
     if ((ethernet.srcAddr == 0) or
         (ethernet.dstAddr == 0) or
+        (ethernet.srcAddr == ethernet.dstAddr) or
         ((ethernet.srcAddr & 0x010000000000) == 0x010000000000) or
         (ethernet.srcAddr == 0xFFFFFFFFFFFF)) {
         malformed_packet();
     }
     if ((inner_ethernet.srcAddr == 0) or
         (inner_ethernet.dstAddr == 0) or
+        (inner_ethernet.srcAddr == inner_ethernet.dstAddr) or
         ((inner_ethernet.srcAddr & 0x010000000000) == 0x010000000000) or
         (inner_ethernet.srcAddr == 0xFFFFFFFFFFFF)) {
         malformed_packet();
