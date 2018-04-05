@@ -25,6 +25,7 @@ esp_ipv4_tunnel_h2n_dma_cmd_fill_esp_hdr:
     add r1, r1, d.iv_size
     phvwr p.dma_cmd_fill_esp_hdr_dma_cmd_addr, r1
     phvwri p.dma_cmd_fill_esp_hdr_dma_cmd_phv_start_addr, IPSEC_ESP_HDR_PHV_START
+    smeqb c3, d.flags, IPSEC_FLAGS_RANDOM_MASK, IPSEC_FLAGS_RANDOM_MASK
     phvwri.!c3 p.dma_cmd_fill_esp_hdr_dma_cmd_phv_end_addr, IPSEC_ESP_HDR_PHV_END
     phvwri.c3 p.dma_cmd_fill_esp_hdr_dma_cmd_phv_end_addr, IPSEC_ESP2_HDR_PHV_END
   

@@ -15,6 +15,10 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     bcf [c5], esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table_cb_ring_full
     
     phvwrpair p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index, p.ipsec_int_header_payload_start, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
+    phvwr p.ipsec_global_ipsec_cb_index, d.ipsec_cb_index
+    // I understand that I need to take care of 32 bit overflow into esn-hi etc.
+    tbladd d.esn_lo, 1
+    tbladd.f d.iv, 1
     smeqb c1, d.flags, IPSEC_FLAGS_V6_MASK, IPSEC_FLAGS_V6_MASK 
     cmov r1, c1, IPV6_HDR_SIZE+ESP_FIXED_HDR_SIZE, IPV4_HDR_SIZE+ESP_FIXED_HDR_SIZE
     add r2, r1, d.iv_size
@@ -32,7 +36,6 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     subi r5, r5, 2
     smeqb c4, d.flags, IPSEC_FLAGS_EXTRA_PAD, IPSEC_FLAGS_EXTRA_PAD
     addi.c4 r5, r5, 64
-
     phvwrpair p.ipsec_to_stage3_pad_size, r5, p.ipsec_to_stage3_iv_size, d.iv_size
     addui r6, r0, hiword(IPSEC_PAD_BYTES_HBM_TABLE_BASE)
     addi r6, r6, loword(IPSEC_PAD_BYTES_HBM_TABLE_BASE)
@@ -50,11 +53,6 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_global_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     phvwrpair p.esp_header_spi, d.spi, p.esp_header_seqno, d.esn_lo
     phvwr.f p.esp_header_iv, d.iv
-
-
-    // I understand that I need to take care of 32 bit overflow into esn-hi etc.
-    tbladd d.esn_lo, 1
-    tbladd.f d.iv, 1
     nop.e
     nop
 

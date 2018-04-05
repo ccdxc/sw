@@ -37,7 +37,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     and r7, r7, IPSEC_BARCO_RING_INDEX_MASK 
     tblwr d.barco_cindex, r7 
     nop
-    tblmincri.f  d.{barco_ring_cindex}.hx, 10, 1
+    tblmincri.f  d.{barco_ring_cindex}.hx, IPSEC_BARCO_RING_WIDTH, 1
     nop
     seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 
     b.!c1 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
