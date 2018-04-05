@@ -5,7 +5,7 @@
 #include "nic/hal/src/export/vrf_api.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/include/l2segment_api.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/hal/src/nw/nw.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
 
@@ -32,7 +32,7 @@ l2seg_get_l2seg_id(l2seg_t *seg)
 // ----------------------------------------------------------------------------
 // Returns tunnel encap type
 // ----------------------------------------------------------------------------
-types::encapType 
+types::encapType
 l2seg_get_tunnel_encap_type(l2seg_t *seg)
 {
     return seg->tunnel_encap.type;
@@ -41,7 +41,7 @@ l2seg_get_tunnel_encap_type(l2seg_t *seg)
 // ----------------------------------------------------------------------------
 // Returns tunnel encap value
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 l2seg_get_tunnel_encap_val(l2seg_t *seg)
 {
     return seg->tunnel_encap.val;
@@ -59,7 +59,7 @@ l2seg_get_pinned_uplink(l2seg_t *seg)
 // ----------------------------------------------------------------------------
 // Returns wire encap type
 // ----------------------------------------------------------------------------
-types::encapType 
+types::encapType
 l2seg_get_wire_encap_type(l2seg_t *seg)
 {
     return seg->wire_encap.type;
@@ -68,7 +68,7 @@ l2seg_get_wire_encap_type(l2seg_t *seg)
 // ----------------------------------------------------------------------------
 // Returns wire encap value
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 l2seg_get_wire_encap_val(l2seg_t *seg)
 {
     return seg->wire_encap.val;
@@ -126,7 +126,7 @@ l2seg_get_infra_l2seg()
     }
 
     if (vrf->l2seg_list->num_elems() != 1) {
-        HAL_TRACE_ERR("Invalid number of l2segs in infra vrf: {}", 
+        HAL_TRACE_ERR("Invalid number of l2segs in infra vrf: {}",
                       vrf->l2seg_list->num_elems());
         goto end;
     }

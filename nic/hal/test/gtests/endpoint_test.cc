@@ -2,7 +2,7 @@
 #include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
@@ -65,7 +65,7 @@ protected:
 // ----------------------------------------------------------------------------
 // Creating a endpoint
 // ----------------------------------------------------------------------------
-TEST_F(endpoint_test, test1) 
+TEST_F(endpoint_test, test1)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -174,7 +174,7 @@ TEST_F(endpoint_test, test1)
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
 #if 0
     ep_spec1.mutable_vrf_key_handle()->set_vrf_id(1);
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
@@ -241,7 +241,7 @@ TEST_F(endpoint_test, test1)
 // ----------------------------------------------------------------------------
 // Creating a endpoint with mcast mac
 // ----------------------------------------------------------------------------
-TEST_F(endpoint_test, test2) 
+TEST_F(endpoint_test, test2)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -314,7 +314,7 @@ TEST_F(endpoint_test, test2)
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
-    
+
 }
 
 int main(int argc, char **argv) {

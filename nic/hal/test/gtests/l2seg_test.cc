@@ -7,7 +7,7 @@
 #include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,7 +58,7 @@ protected:
 };
 
 // Update l2seg test with enicifs
-TEST_F(l2seg_test, test1) 
+TEST_F(l2seg_test, test1)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -223,7 +223,7 @@ TEST_F(l2seg_test, test1)
 }
 
 // Create 100 l2segs and delete them
-TEST_F(l2seg_test, test2) 
+TEST_F(l2seg_test, test2)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -330,7 +330,7 @@ TEST_F(l2seg_test, test2)
 //-----------------------------------------------------------------------------
 // l2seg update with no change
 //-----------------------------------------------------------------------------
-TEST_F(l2seg_test, test3) 
+TEST_F(l2seg_test, test3)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -440,7 +440,7 @@ TEST_F(l2seg_test, test3)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_VRF_NOT_FOUND);
 
-    // Set back the original VRF id, and add a non-existent network key. 
+    // Set back the original VRF id, and add a non-existent network key.
     l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(3);
     nkh = l2seg_spec1.add_network_key_handle();
     nkh->set_nw_handle(10000);
@@ -479,7 +479,7 @@ TEST_F(l2seg_test, test3)
 }
 
 // l2segments with multiple networks
-TEST_F(l2seg_test, test4) 
+TEST_F(l2seg_test, test4)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec;
@@ -499,8 +499,8 @@ TEST_F(l2seg_test, test4)
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
     hal_handle_t                    nw_v4handles[100], nw_v6handles[100];
-    std::string                     ipv6_ip1 = "00010001000100010001000100010001"; 
-    std::string                     ipv6_ip2 = "00010001000100010001000100010001"; 
+    std::string                     ipv6_ip1 = "00010001000100010001000100010001";
+    std::string                     ipv6_ip2 = "00010001000100010001000100010001";
     std::string                     v6_pattern = "010101";
     NetworkKeyHandle                *nkh = NULL;
 
@@ -649,7 +649,7 @@ TEST_F(l2seg_test, test4)
 // ----------------------------------------------------------------------------
 // L2Segment -ve test cases
 // ----------------------------------------------------------------------------
-TEST_F(l2seg_test, test5) 
+TEST_F(l2seg_test, test5)
 {
     hal_ret_t                        ret = HAL_RET_OK;
     L2SegmentSpec                    l2seg_spec, l2seg_spec1, l2seg_spec2, infra_spec;
@@ -832,7 +832,7 @@ TEST_F(l2seg_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
- 
+
     // Create l2seg which already exists, this should be idempotent and return the old
     // handle
     l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
@@ -864,7 +864,7 @@ TEST_F(l2seg_test, test5)
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK || ret == HAL_RET_NO_RESOURCE);
     }
-    
+
     // Update l2seg with no key or handle
     l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(5);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);

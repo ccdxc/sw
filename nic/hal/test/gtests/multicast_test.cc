@@ -9,7 +9,7 @@
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/multicast.pb.h"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>

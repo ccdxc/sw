@@ -1,8 +1,9 @@
-//{C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/fte/fte.hpp"
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/p4/iris/include/defines.h"
-#include "nic/hal/src/security/nwsec_group.hpp"
+#include "nic/hal/src/firewall/nwsec_group.hpp"
 #include "core.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 #include "nic/hal/plugins/alg_utils/alg_db.hpp"
@@ -34,7 +35,7 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
                 matched_svc = nwsec_plcy_svc;
                 HAL_TRACE_DEBUG("Wild card Rule match {} {}", match_rslt->action, match_rslt->log);
                 break;
-                
+
             } else if (nwsec_plcy_svc->ipproto == flow_key.proto) {        //Compare proto
                 if (nwsec_plcy_svc->ipproto == IPPROTO_ICMP ||
                     nwsec_plcy_svc->ipproto == IPPROTO_ICMPV6) {
@@ -290,7 +291,7 @@ sfw_exec(fte::ctx_t& ctx)
     // security policy action
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
 
-    // ALG Wild card entry table lookup. 
+    // ALG Wild card entry table lookup.
     if (!ctx.existing_session() && ctx.role() == hal::FLOW_ROLE_INITIATOR) {
         expected_flow_t *expected_flow = lookup_expected_flow(ctx.key());
         if (expected_flow) {
@@ -302,7 +303,7 @@ sfw_exec(fte::ctx_t& ctx)
     // TODO(goli) instead set the feature name to the feature that installed
     //            the expected flow prior to calling handler, so that handler
     //            doen't need to do it
-    ctx.set_feature_name(FTE_FEATURE_SFW.c_str()); 
+    ctx.set_feature_name(FTE_FEATURE_SFW.c_str());
 
     // ToDo (lseshan) - for now handling only ingress rules
     // Need to select SPs based on the flow direction

@@ -2,7 +2,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/pd/iris/security/dos_pd.hpp"
+#include "nic/hal/pd/iris/dos/dos_pd.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/include/pd.hpp"
@@ -18,7 +18,7 @@ namespace pd {
 hal_ret_t
 pd_dos_policy_create (pd_dos_policy_create_args_t *args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;
     pd_dos_policy_t      *pd_dosp;
 
     HAL_TRACE_DEBUG("{}: creating pd state ",
@@ -58,7 +58,7 @@ end:
 hal_ret_t
 pd_dos_policy_update (pd_dos_policy_update_args_t *args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;;
     pd_dos_policy_t   *pd_dosp;
 
     HAL_TRACE_DEBUG("{}: updating pd state ",
@@ -79,8 +79,8 @@ pd_dos_policy_update (pd_dos_policy_update_args_t *args)
     // Cache the PI pointer since the ptr in the
     // args is a local copy
     void *cached_pi_ptr = pd_dosp->pi_dos_policy;
-     
-    pd_dosp->pi_dos_policy = (void *) args->dos_policy; 
+
+    pd_dosp->pi_dos_policy = (void *) args->dos_policy;
     // Program HW
     ret = dos_pd_program_hw(pd_dosp, FALSE);
     if (ret != HAL_RET_OK) {
@@ -143,12 +143,12 @@ dos_pd_program_ddos_src_vf_tcam (uint16_t slport, int actionid,
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    
+
     key.entry_inactive_ddos_src_vf = 0;
     key.control_metadata_src_lport = slport;
     mask.entry_inactive_ddos_src_vf_mask = 0xFF;
     mask.control_metadata_src_lport_mask = 0xFFFF;
-    
+
     data.actionid = actionid;
     data.ddos_src_vf_action_u.ddos_src_vf_ddos_src_vf_hit.ddos_src_vf_base_policer_idx = policer_idx;
     HAL_TRACE_DEBUG("{}: act_id: {} pol_index: {} slport: {}",
@@ -191,7 +191,7 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr, bool is_icmp,
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    
+
     if (ip_addr->af == IP_AF_IPV6) {
         memcpy(key.flow_lkp_metadata_lkp_dst, ip_addr->addr.v6_addr.addr8,
                IP6_ADDR8_LEN);
@@ -217,7 +217,7 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr, bool is_icmp,
     mask.flow_lkp_metadata_lkp_vrf_mask = (vrf_mask << 12);
     key.entry_inactive_ddos_service = 0;
     mask.entry_inactive_ddos_service_mask = 0xFF;
-     
+
     data.actionid = actionid;
     data.ddos_service_action_u.ddos_service_ddos_service_hit.ddos_service_base_policer_idx = policer_idx;
     HAL_TRACE_DEBUG("{} ip-addr: {} dport: {} proto: {}"
@@ -267,7 +267,7 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    
+
     /* Return if both addresses are not v4/v6 */
     if (!((src_ip_addr->af == IP_AF_IPV4) && (dst_ip_addr->af == IP_AF_IPV4)) &&
        (!(src_ip_addr->af == IP_AF_IPV6) && (dst_ip_addr->af == IP_AF_IPV6))) {
@@ -324,7 +324,7 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
     mask.flow_lkp_metadata_lkp_vrf_mask = (vrf_mask << 12);
     key.entry_inactive_ddos_src_dst = 0;
     mask.entry_inactive_ddos_src_dst_mask = 0xFF;
-    
+
     data.actionid = actionid;
     data.ddos_src_dst_action_u.ddos_src_dst_ddos_src_dst_hit.ddos_src_dst_base_policer_idx = policer_idx;
 
@@ -361,10 +361,10 @@ dos_pd_program_ddos_policer_action (uint8_t actionid, uint8_t saved_color,
     sdk_ret_t                           sdk_ret;
     directmap                           *dm;
     ddos_service_policer_action_actiondata d = { 0 };
-    
+
     dm = g_hal_state_pd->dm_table(tbl_id);
     HAL_ASSERT(dm != NULL);
-    
+
     d.actionid = actionid;
     DDOS_POLICER_ACTION(ddos_service_policer_saved_color) = saved_color;
     DDOS_POLICER_ACTION(ddos_service_policer_dropped_packets) = dropped_pkts;
@@ -392,11 +392,11 @@ dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
     directmap                           *dm;
     ddos_service_policer_actiondata     d = { 0 };
     uint32_t                            tbkt;
-    
+
     dm = g_hal_state_pd->dm_table(tbl_id);
     HAL_ASSERT(dm != NULL);
-    
-    /* TODO: Hardcode number of tokens. Only for model testing 
+
+    /* TODO: Hardcode number of tokens. Only for model testing
      * Token bucket value should be zero since we want to allow one packet
      * The second packet will get dropped when the token bucket goes negative
      * Token bucket setting will be removed for real hw/emulator
@@ -419,7 +419,7 @@ dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
     memcpy(DDOS_POLICER(rate2), &pir, sizeof(uint32_t));
     memcpy(DDOS_POLICER(burst2), &pbr, sizeof(uint32_t));
     memcpy(DDOS_POLICER(tbkt2), &tbkt, sizeof(uint32_t));
-    
+
     sdk_ret = dm->insert(&d, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -478,7 +478,7 @@ dos_pd_program_ddos_policers (dos_policy_prop_t *dospp, uint8_t actionid,
                                              pol_action_tbl_id,
                                              &ret_idx_action);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-    
+
     /* DDOS ICMP Policer */
     ret = dos_pd_program_ddos_policer(actionid, TRUE, TRUE,
                                dospp->icmp_flood_limits.protect_pps,
@@ -642,7 +642,7 @@ dos_pd_program_ddos_src_dst_policy (pd_dos_policy_t *pd_dosp,
     /* Program the src-dst subnets if ingress policy is valid */
     HAL_TRACE_DEBUG("{}: ingr_pol_valid: {} ingress.peer_sg_id: {}",
                     __FUNCTION__, dosp->ingr_pol_valid, dosp->ingress.peer_sg_id);
-    if (dosp->ingr_pol_valid && 
+    if (dosp->ingr_pol_valid &&
             (dosp->ingress.peer_sg_id != HAL_NWSEC_INVALID_SG_ID)) {
         ret = dos_pd_program_ddos_src_dst_table (dosp, &dosp->ingress, pd_dosp,
                                                  pi_dosp, ten_pd);
@@ -652,7 +652,7 @@ dos_pd_program_ddos_src_dst_policy (pd_dos_policy_t *pd_dosp,
     /* Program the src-dst subnets if egress policy is valid */
     HAL_TRACE_DEBUG("{}: egr_pol_valid: {} egress.peer_sg_id: {}",
                     __FUNCTION__, dosp->egr_pol_valid, dosp->egress.peer_sg_id);
-    if (dosp->egr_pol_valid && 
+    if (dosp->egr_pol_valid &&
             (dosp->egress.peer_sg_id != HAL_NWSEC_INVALID_SG_ID)) {
         ret = dos_pd_program_ddos_src_dst_table (dosp, &dosp->egress, pd_dosp,
                                                  pi_dosp, ten_pd);
@@ -767,7 +767,7 @@ dos_pd_program_hw (pd_dos_policy_t *pd_dosp, bool create)
             intf = ep_get_if(ep);
             HAL_ASSERT(intf != NULL);
             HAL_TRACE_DEBUG("{}: Intf-id: {}", __FUNCTION__, intf->if_id);
-            /* 
+            /*
              * TODO: Can program a single set of policers for all EPs since the
              * policer rates are the same. Using different policers for DOL.
              * Revisit and fix
@@ -782,7 +782,7 @@ dos_pd_program_hw (pd_dos_policy_t *pd_dosp, bool create)
             HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
         }
     }
-    
+
     // Program DDoS src-dst policer
     ret = dos_pd_program_ddos_src_dst_policy (pd_dosp, dp, ten_pd);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
@@ -814,7 +814,7 @@ dos_pd_deprogram_hw (pd_dos_policy_t *dos_pd)
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Uplink if
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 dos_pd_alloc_res(pd_dos_policy_t *pd_dosp)
 {
     return HAL_RET_OK;
@@ -823,7 +823,7 @@ dos_pd_alloc_res(pd_dos_policy_t *pd_dosp)
 // ----------------------------------------------------------------------------
 // De-Allocate resources for PD Uplink if
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 dos_pd_dealloc_res(pd_dos_policy_t *pd_dosp)
 {
     return HAL_RET_OK;
@@ -835,7 +835,7 @@ dos_pd_dealloc_res(pd_dos_policy_t *pd_dosp)
 //  - Delink PI <-> PD
 //  - Free PD Vrf
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -852,8 +852,8 @@ dos_pd_cleanup(pd_dos_policy_t *dos_pd)
     // Releasing resources
     ret = dos_pd_dealloc_res(dos_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for dos hdl: {}", 
-                      __FUNCTION__, 
+        HAL_TRACE_ERR("{}: unable to dealloc res for dos hdl: {}",
+                      __FUNCTION__,
                       ((dos_policy_t*)(dos_pd->pi_dos_policy))->hal_handle);
         goto end;
     }
@@ -870,7 +870,7 @@ end:
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 dos_link_pi_pd(pd_dos_policy_t *pd_dosp, dos_policy_t *pi_nw)
 {
     pd_dosp->pi_dos_policy = pi_nw;
@@ -880,7 +880,7 @@ dos_link_pi_pd(pd_dos_policy_t *pd_dosp, dos_policy_t *pi_nw)
 // ----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 dos_delink_pi_pd(pd_dos_policy_t *pd_dosp, dos_policy_t  *pi_nw)
 {
     pd_dosp->pi_dos_policy = NULL;

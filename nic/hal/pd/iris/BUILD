@@ -20,7 +20,8 @@ cc_library(
            glob(["mcast/*.cc"]) +
            glob(["nw/*.cc"]) +
            glob(["debug/*.cc"]) +
-           glob(["security/*.cc"]) +
+           glob(["firewall/*.cc"]) +
+           glob(["dos/*.cc"]) +
            glob(["telemetry/*.cc"]),
     hdrs = [] + glob(["*.hpp"]) + glob(["*.h"]) +
            glob(["aclqos/*.hpp"]) +
@@ -29,7 +30,8 @@ cc_library(
            glob(["lif/*.hpp"]) +
            glob(["mcast/*.hpp"]) +
            glob(["nw/*.hpp"]) +
-           glob(["security/*.hpp"]) +
+           glob(["firewall/*.hpp"]) +
+           glob(["dos/*.hpp"]) +
            glob(["telemetry/*.hpp"]),
     copts = sdk_copts,
     deps = [

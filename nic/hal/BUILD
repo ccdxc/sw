@@ -44,6 +44,7 @@ cc_library(
     name = "hal_hdrs",
     hdrs = [
         "hal.hpp",
+        "hal_module.hpp",
     ] + glob(["src/*.hpp"]),
     deps = [
         "//nic/hal/lib:hal_lib_includes",
@@ -59,6 +60,7 @@ cc_library(
         "hal_state.cc",
         "hal_cfg.cc",
         "hal_obj.cc",
+        "hal_module.cc",
     ] + 
     glob(["src/nw/*.cc"]) +
     glob(["src/aclqos/*.cc"]) +
@@ -68,11 +70,13 @@ cc_library(
     glob(["src/l4lb/*.cc"]) +
     glob(["src/mcast/*.cc"]) +
     glob(["src/lif/*.cc"]) +
-    glob(["src/security/*.cc"]) +
+    glob(["src/firewall/*.cc"]) +
+    glob(["src/dos/*.cc"]) +
     glob(["src/utils/*.cc"]) +
     glob(["src/gft/*.cc"]),
     hdrs = [
         "hal.hpp",
+        "hal_module.hpp",
     ] + 
     glob(["src/nw/*.hpp"]) +
     glob(["src/aclqos/*.hpp"]) +
@@ -82,7 +86,8 @@ cc_library(
     glob(["src/l4lb/*.hpp"]) +
     glob(["src/mcast/*.hpp"]) +
     glob(["src/lif/*.hpp"]) +
-    glob(["src/security/*.hpp"]) +
+    glob(["src/firewall/*.hpp"]) +
+    glob(["src/dos/*.hpp"]) +
     glob(["src/utils/*.hpp"]) +
     glob(["src/gft/*.hpp"]) +
     glob(["src/export/*.hpp"]),
@@ -140,7 +145,8 @@ cc_library(
         glob(["src/l4lb/*.hpp"]) +
         glob(["src/mcast/*.hpp"]) +
         glob(["src/lif/*.hpp"]) +
-        glob(["src/security/*.hpp"]) +
+        glob(["src/firewall/*.hpp"]) +
+        glob(["src/dos/*.hpp"]) +
         glob(["src/utils/*.hpp"]) +
         glob(["src/gft/*.hpp"]) +
         glob(["src/export/*.hpp"]),

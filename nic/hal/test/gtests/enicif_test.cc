@@ -1,7 +1,7 @@
 #include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"
@@ -58,7 +58,7 @@ protected:
 // ----------------------------------------------------------------------------
 // Creating a useg enicif
 // ----------------------------------------------------------------------------
-TEST_F(enicif_test, test1) 
+TEST_F(enicif_test, test1)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -167,7 +167,7 @@ TEST_F(enicif_test, test1)
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding 
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
     post = hal_test_utils_collect_slab_stats();
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
@@ -177,7 +177,7 @@ TEST_F(enicif_test, test1)
 // ----------------------------------------------------------------------------
 // Creating a classic enicif
 // ----------------------------------------------------------------------------
-TEST_F(enicif_test, test2) 
+TEST_F(enicif_test, test2)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -353,7 +353,7 @@ TEST_F(enicif_test, test2)
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     // Create classic enic
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
@@ -377,7 +377,7 @@ TEST_F(enicif_test, test2)
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     // Create classic enic
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec1, &enicif_rsp);
@@ -391,7 +391,7 @@ TEST_F(enicif_test, test2)
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     // Create classic enic
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec1, &enicif_rsp);
@@ -405,7 +405,7 @@ TEST_F(enicif_test, test2)
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     // Create classic enic
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec1, &enicif_rsp);
@@ -419,7 +419,7 @@ TEST_F(enicif_test, test2)
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     // Create classic enic
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec1, &enicif_rsp);
@@ -433,7 +433,7 @@ TEST_F(enicif_test, test2)
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     // Create classic enic
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec1, &enicif_rsp);
@@ -447,7 +447,7 @@ TEST_F(enicif_test, test2)
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     // Create classic enic
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec1, &enicif_rsp);
@@ -462,7 +462,7 @@ TEST_F(enicif_test, test2)
 // ----------------------------------------------------------------------------
 // Creating a enicif with lif having pinned uplink
 // ----------------------------------------------------------------------------
-TEST_F(enicif_test, test3) 
+TEST_F(enicif_test, test3)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -582,7 +582,7 @@ TEST_F(enicif_test, test3)
 // ----------------------------------------------------------------------------
 // Creating muliple enicifs
 // ----------------------------------------------------------------------------
-TEST_F(enicif_test, test2) 
+TEST_F(enicif_test, test2)
 {
     hal_ret_t            ret;
     enicifSpec spec;

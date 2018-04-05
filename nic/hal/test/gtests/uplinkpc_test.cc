@@ -4,7 +4,7 @@
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include <gtest/gtest.h>
@@ -54,7 +54,7 @@ protected:
 // ----------------------------------------------------------------------------
 // Creating a uplinkpc
 // ----------------------------------------------------------------------------
-TEST_F(uplinkpc_test, test1) 
+TEST_F(uplinkpc_test, test1)
 {
     hal_ret_t            ret;
     InterfaceSpec       spec;
@@ -105,7 +105,7 @@ TEST_F(uplinkpc_test, test1)
 // ----------------------------------------------------------------------------
 // Creating muliple uplinkpcs
 // ----------------------------------------------------------------------------
-TEST_F(uplinkpc_test, test2) 
+TEST_F(uplinkpc_test, test2)
 {
     hal_ret_t            ret;
     InterfaceSpec       spec;
@@ -141,7 +141,7 @@ TEST_F(uplinkpc_test, test2)
 // ----------------------------------------------------------------------------
 // Creating a uplinkpc and segements
 // ----------------------------------------------------------------------------
-TEST_F(uplinkpc_test, test3) 
+TEST_F(uplinkpc_test, test3)
 {
     hal_ret_t                       ret;
     InterfaceSpec                   if_spec;
@@ -201,7 +201,7 @@ TEST_F(uplinkpc_test, test3)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     ::google::protobuf::uint64 up_hdl = if_rsp.mutable_status()->if_handle();
-    
+
     // Create l2segment
     l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nkh = l2seg_spec.add_network_key_handle();
@@ -241,7 +241,7 @@ TEST_F(uplinkpc_test, test3)
 // ----------------------------------------------------------------------------
 // Creating and deleting a uplinkpc
 // ----------------------------------------------------------------------------
-TEST_F(uplinkpc_test, test4) 
+TEST_F(uplinkpc_test, test4)
 {
     hal_ret_t            ret;
     // InterfaceSpec       spec;
@@ -298,7 +298,7 @@ TEST_F(uplinkpc_test, test4)
 //      - Add 4
 //      - Remove 2 and add 4
 // ----------------------------------------------------------------------------
-TEST_F(uplinkpc_test, test5) 
+TEST_F(uplinkpc_test, test5)
 {
     hal_ret_t                        ret;
     InterfaceSpec                   spec;

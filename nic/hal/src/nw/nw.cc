@@ -8,8 +8,7 @@
 #include "nic/hal/src/nw/nw.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/nwsec_group_api.hpp"
-#include "nic/hal/src/security/nwsec_group.hpp"
-
+#include "nic/hal/src/firewall/nwsec_group.hpp"
 
 namespace hal {
 
@@ -68,7 +67,7 @@ network_add_to_db (network_t *nw, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:adding to network key hash table", 
+    HAL_TRACE_DEBUG("{}:adding to network key hash table",
                     __FUNCTION__);
     // allocate an entry to establish mapping from l2key to its handle
     entry =
@@ -81,7 +80,7 @@ network_add_to_db (network_t *nw, hal_handle_t handle)
     // add mapping from vrf id to its handle
     entry->handle_id = handle;
     sdk_ret = g_hal_state->network_key_ht()->insert_with_key(&nw->nw_key,
-                                                         entry, 
+                                                         entry,
                                                          &entry->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
@@ -105,7 +104,7 @@ network_del_from_db (network_t *nw)
     hal_ret_t                   ret = HAL_RET_OK;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:removing from network key hash table", 
+    HAL_TRACE_DEBUG("{}:removing from network key hash table",
                     __FUNCTION__);
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->network_key_ht()->
@@ -169,7 +168,7 @@ network_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     network_t                       *nw = NULL;
     dllist_ctxt_t                   *lnode = NULL;
     dhl_entry_t                     *dhl_entry = NULL;
-    // network_create_app_ctxt_t       *app_ctxt = NULL; 
+    // network_create_app_ctxt_t       *app_ctxt = NULL;
     hal_handle_t                    hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
@@ -185,14 +184,14 @@ network_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     nw = (network_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
-    
+
     HAL_TRACE_DEBUG("{}:create commit cb {}",
                     __FUNCTION__, network_to_str(nw));
 
     // Add network to key DB
     ret = network_add_to_db (nw, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to add network to DB", 
+        HAL_TRACE_ERR("{}:unable to add network to DB",
                       __FUNCTION__);
         goto end;
     }
@@ -205,7 +204,7 @@ network_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}:added network to DB", 
+    HAL_TRACE_DEBUG("{}:added network to DB",
                     __FUNCTION__);
 end:
     return ret;
@@ -268,7 +267,7 @@ network_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // Converts hal_ret_t to API status
 //------------------------------------------------------------------------------
 hal_ret_t
-network_prepare_rsp (NetworkResponse *rsp, hal_ret_t ret, 
+network_prepare_rsp (NetworkResponse *rsp, hal_ret_t ret,
                      hal_handle_t hal_handle)
 {
     if (ret == HAL_RET_OK) {
@@ -301,7 +300,7 @@ network_read_security_groups (network_t *nw, NetworkSpec& spec)
         if (!sg) {
             return HAL_RET_INVALID_ARG;
         }
-        
+
         // Add to aggregated list
         sg_handle = sg->hal_handle;
         hal_add_to_handle_list(&nw->sg_list_head, sg_handle);
@@ -381,7 +380,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     nw = network_alloc_init();
     if (nw == NULL) {
         ret = HAL_RET_OOM;
-        HAL_TRACE_ERR("{}: out of memory. err: {}", 
+        HAL_TRACE_ERR("{}: out of memory. err: {}",
                       ret);
         goto end;
     }
@@ -389,7 +388,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     // allocate hal handle id
     nw->hal_handle = hal_handle_alloc(HAL_OBJ_ID_NETWORK);
     if (nw->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}: failed to alloc handle", 
+        HAL_TRACE_ERR("{}: failed to alloc handle",
                       __FUNCTION__);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
@@ -405,7 +404,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     }
     network_read_security_groups(nw, spec);
 
-    HAL_TRACE_DEBUG("{}:nw: {}, rmac: {}", 
+    HAL_TRACE_DEBUG("{}:nw: {}, rmac: {}",
                     __FUNCTION__,
                     ippfx2str(&nw->nw_key.ip_pfx),
                     macaddr2str(nw->rmac_addr));
@@ -416,14 +415,14 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_add_obj(nw->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_add_obj(nw->hal_handle, &cfg_ctxt,
                              network_create_add_cb,
                              network_create_commit_cb,
-                             network_create_abort_cb, 
+                             network_create_abort_cb,
                              network_create_cleanup_cb);
 
 end:
-    
+
     if (ret != HAL_RET_OK) {
 	    if (nw != NULL) {
             // if there is an error, nw will be freed in abort cb
@@ -486,7 +485,7 @@ network_lookup_key_or_handle (NetworkKeyHandle& kh, vrf_id_t tid)
 
 //------------------------------------------------------------------------------
 // Make a clone
-// - Both PI and PD objects cloned. 
+// - Both PI and PD objects cloned.
 //------------------------------------------------------------------------------
 hal_ret_t
 network_make_clone (network_t *nw, network_t **nw_clone)
@@ -599,7 +598,7 @@ network_update_pi_with_sg_list (network_t *nw, network_update_app_ctxt_t *app_ct
                                      nw, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to add sg -> network "
-                "relation ret:{}", 
+                "relation ret:{}",
                 __FUNCTION__,  ret);
         goto end;
     }
@@ -608,7 +607,7 @@ network_update_pi_with_sg_list (network_t *nw, network_update_app_ctxt_t *app_ct
                                      nw, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to del sg -/-> network "
-                "relation ret:{}", 
+                "relation ret:{}",
                 __FUNCTION__,  ret);
         goto end;
     }
@@ -771,7 +770,7 @@ network_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 //------------------------------------------------------------------------------
 // checks if sg in network
 //------------------------------------------------------------------------------
-bool 
+bool
 sg_in_network (network_t *nw, uint32_t sg_id, hal_handle_id_list_entry_t **handle_entry)
 {
     dllist_ctxt_t                   *lnode = NULL;
@@ -798,7 +797,7 @@ sg_in_network (network_t *nw, uint32_t sg_id, hal_handle_id_list_entry_t **handl
 hal_ret_t
 network_check_sglist_update(NetworkSpec& spec, network_t *nw,
                             bool *sglist_change,
-                            dllist_ctxt_t **add_sglist, 
+                            dllist_ctxt_t **add_sglist,
                             dllist_ctxt_t **del_sglist,
                             dllist_ctxt_t **aggr_sglist)
 {
@@ -813,10 +812,10 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
 
     *sglist_change = false;
 
-    *add_sglist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST, 
+    *add_sglist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST,
                                                sizeof(dllist_ctxt_t));
     HAL_ABORT(*add_sglist != NULL);
-    *del_sglist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST, 
+    *del_sglist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST,
                                                sizeof(dllist_ctxt_t));
     HAL_ABORT(*del_sglist != NULL);
     *aggr_sglist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST,
@@ -828,7 +827,7 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
     sdk::lib::dllist_reset(*aggr_sglist);
 
     num_sgs = spec.sg_key_handle_size();
-    HAL_TRACE_DEBUG("{}:num_sgs:{}", 
+    HAL_TRACE_DEBUG("{}:num_sgs:{}",
                     __FUNCTION__, num_sgs);
     for (i = 0; i < num_sgs; i++) {
         sg = nwsec_group_lookup_key_or_handle(spec.sg_key_handle(i));
@@ -848,7 +847,7 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
             // Add to added list
             hal_add_to_handle_list(*add_sglist, sg_handle);
             *sglist_change = true;
-            HAL_TRACE_DEBUG("{}: added to add list hdl: {}", 
+            HAL_TRACE_DEBUG("{}: added to add list hdl: {}",
                     __FUNCTION__, sg_handle);
         }
     }
@@ -862,7 +861,7 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
 
     dllist_for_each(lnode, &(nw->sg_list_head)) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        HAL_TRACE_DEBUG("{}: Checking for sg: {}", 
+        HAL_TRACE_DEBUG("{}: Checking for sg: {}",
                 __FUNCTION__, entry->handle_id);
         for (i = 0; i < num_sgs; i++) {
             auto sg = nwsec_group_lookup_key_or_handle(spec.sg_key_handle(i));
@@ -886,7 +885,7 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
             // Insert into the list
             sdk::lib::dllist_add(*del_sglist, &lentry->dllist_ctxt);
             *sglist_change = true;
-            HAL_TRACE_DEBUG("{}: added to delete list hdl: {}", 
+            HAL_TRACE_DEBUG("{}: added to delete list hdl: {}",
                     __FUNCTION__, lentry->handle_id);
         }
         sg_exists = false;
@@ -909,7 +908,7 @@ end:
 // check what changes in the network update
 //------------------------------------------------------------------------------
 hal_ret_t
-network_check_update (NetworkSpec& spec, network_t *nw, 
+network_check_update (NetworkSpec& spec, network_t *nw,
                       network_update_app_ctxt_t *app_ctxt)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -919,7 +918,7 @@ network_check_update (NetworkSpec& spec, network_t *nw,
         app_ctxt->gw_ep_changed = true;
         app_ctxt->new_gw_ep_handle = spec.gateway_ep_handle();
     }
-    
+
     // check for sg list change
     ret = network_check_sglist_update(spec, nw, &app_ctxt->sglist_changed,
                                       &app_ctxt->add_sglist,
@@ -979,14 +978,14 @@ network_update (NetworkSpec& spec, NetworkResponse *rsp)
 
     ret = network_check_update(spec, nw, &app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:network check update failed, ret : {}", 
+        HAL_TRACE_ERR("{}:network check update failed, ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
 
     // check if anything changed
     if (!app_ctxt.network_changed) {
-        HAL_TRACE_ERR("{}:no change in network update: noop", 
+        HAL_TRACE_ERR("{}:no change in network update: noop",
                       __FUNCTION__);
         goto end;
     }
@@ -1001,10 +1000,10 @@ network_update (NetworkSpec& spec, NetworkResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_upd_obj(nw->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_upd_obj(nw->hal_handle, &cfg_ctxt,
                              network_update_upd_cb,
                              network_update_commit_cb,
-                             network_update_abort_cb, 
+                             network_update_abort_cb,
                              network_update_cleanup_cb);
 
 end:
@@ -1013,7 +1012,7 @@ end:
     } else {
 	    HAL_API_STATS_INC(HAL_API_NETWORK_UPDATE_FAIL);
     }
-    network_prepare_rsp(rsp, ret, 
+    network_prepare_rsp(rsp, ret,
                         nw ? nw->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: network update ");
     return ret;
@@ -1086,7 +1085,7 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
 }
 
 hal_ret_t
-validate_network_delete_req (NetworkDeleteRequest& req, 
+validate_network_delete_req (NetworkDeleteRequest& req,
                          NetworkDeleteResponse* rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -1134,14 +1133,14 @@ network_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 hal_ret_t
-network_detach_from_security_groups (network_t *nw) 
+network_detach_from_security_groups (network_t *nw)
 {
     hal_ret_t                   ret = HAL_RET_OK;
 
     ret = network_update_sg_relation(&nw->sg_list_head, nw, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to del sg -/-> network"
-                "relation ret:{}", 
+                "relation ret:{}",
                 __FUNCTION__,  ret);
         goto end;
     }
@@ -1185,7 +1184,7 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("{}:delete commit cb {}",
                     __FUNCTION__, network_to_str(nw));
 
-    
+
     // remove back refs from security groups and free up list
     ret = network_detach_from_security_groups(nw);
     if (ret != HAL_RET_OK) {
@@ -1197,7 +1196,7 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Remove from network key hash table
     ret = network_del_from_db(nw);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to del network {} from db, err : {}", 
+        HAL_TRACE_ERR("{}:failed to del network {} from db, err : {}",
                       __FUNCTION__, network_to_str(nw), ret);
         goto end;
     }
@@ -1205,7 +1204,7 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Remove object from handle id based hash table
     hal_handle_free(hal_handle);
 
-    // Free PI network 
+    // Free PI network
     network_free(nw);
 
     // TODO: Decrement the ref counts of dependent objects
@@ -1269,7 +1268,7 @@ network_delete (NetworkDeleteRequest& req, NetworkDeleteResponse *rsp)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}:deleting nw :{}", 
+    HAL_TRACE_DEBUG("{}:deleting nw :{}",
                     __FUNCTION__, network_to_str(nw));
 
 
@@ -1287,10 +1286,10 @@ network_delete (NetworkDeleteRequest& req, NetworkDeleteResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_del_obj(nw->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_del_obj(nw->hal_handle, &cfg_ctxt,
                              network_delete_del_cb,
                              network_delete_commit_cb,
-                             network_delete_abort_cb, 
+                             network_delete_abort_cb,
                              network_delete_cleanup_cb);
 
 end:
@@ -1334,7 +1333,7 @@ network_add_l2seg (network_t *nw, l2seg_t *l2seg)
 
 end:
     HAL_TRACE_DEBUG("{}:add network => l2seg(id:hdl), {} => {}:{}, ret:{}",
-                    __FUNCTION__, network_to_str(nw), 
+                    __FUNCTION__, network_to_str(nw),
                     l2seg->seg_id, l2seg->hal_handle, ret);
     return ret;
 }
@@ -1366,7 +1365,7 @@ network_del_l2seg (network_t *nw, l2seg_t *l2seg)
 
     HAL_TRACE_DEBUG("{}:del network =/=> l2seg(id:hdl), "
                     "{} =/=> {}:{}, ret:{}",
-                    __FUNCTION__, network_to_str(nw), l2seg->seg_id, 
+                    __FUNCTION__, network_to_str(nw), l2seg->seg_id,
                     l2seg->hal_handle, ret);
     return ret;
 }
@@ -1402,7 +1401,7 @@ network_add_session (network_t *nw, session_t *sess)
 end:
     HAL_TRACE_DEBUG("{}:add network => session_hdl, {} => {}, "
                     "ret:{}",
-                    __FUNCTION__, network_to_str(nw), 
+                    __FUNCTION__, network_to_str(nw),
                     sess->hal_handle, ret);
     return ret;
 }
@@ -1433,7 +1432,7 @@ network_del_session (network_t *nw, session_t *sess)
 
     HAL_TRACE_DEBUG("{}:del network =/=> session_hdl, {} =/=> {}, "
                     "ret:{}",
-                    __FUNCTION__, network_to_str(nw), 
+                    __FUNCTION__, network_to_str(nw),
                     sess->hal_handle, ret);
     return ret;
 }
@@ -1454,5 +1453,16 @@ network_to_str (network_t *nw)
     return buf;
 }
 
+hal_ret_t
+hal_nw_init_cb (void)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+hal_nw_cleanup_cb (void)
+{
+    return HAL_RET_OK;
+}
 
 }    // namespace hal

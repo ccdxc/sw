@@ -1,6 +1,6 @@
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
 

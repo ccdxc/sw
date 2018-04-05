@@ -161,6 +161,7 @@ slab *hal_handle_ht_entry_slab(void);
 ht *hal_handle_id_ht(void);
 void hal_handle_cfg_db_lock(bool readlock, bool lock);
 
-}   /* namespace hal */
+}   // namespace hal
 
-#endif /* __HAL_LIB_HAL_HANDLE_HPP__ */
+#endif    // __HAL_LIB_HAL_HANDLE_HPP__
+

@@ -79,8 +79,8 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
     std::string qos_class_configs;
     std::string copp_configs;
 
-    sdk_ret = sdk::lib::catalog::get_child_str(hal_cfg->catalog_file, 
-                                               "qos.configs.qos_class", 
+    sdk_ret = sdk::lib::catalog::get_child_str(hal_cfg->catalog_file,
+                                               "qos.configs.qos_class",
                                                qos_class_configs);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -89,8 +89,8 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
         goto end;
     }
 
-    sdk_ret = sdk::lib::catalog::get_child_str(hal_cfg->catalog_file, 
-                                               "qos.configs.copp", 
+    sdk_ret = sdk::lib::catalog::get_child_str(hal_cfg->catalog_file,
+                                               "qos.configs.copp",
                                                copp_configs);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -137,13 +137,13 @@ hal_smart_nic_acl_config_init (void)
     hal_ret_t     ret;
     AclSpec       spec;
     AclResponse   rsp;
-    AclSelector   *match; 
+    AclSelector   *match;
     AclActionInfo *action;
 
     if (g_hal_state->forwarding_mode() != HAL_FORWARDING_MODE_SMART_SWITCH) {
         HAL_TRACE_DEBUG("Skipping smart nic acls");
         return HAL_RET_OK;
-    } 
+    }
 
     // Drop IP fragmented packets
     spec.Clear();
@@ -318,7 +318,7 @@ hal_acl_config_init (void)
     hal_ret_t ret;
     AclSpec       spec;
     AclResponse   rsp;
-    AclSelector   *match; 
+    AclSelector   *match;
     AclActionInfo *action;
 
     hal::hal_cfg_db_open(CFG_OP_WRITE);

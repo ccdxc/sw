@@ -3,7 +3,7 @@
 #include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
@@ -72,7 +72,7 @@ protected:
 // ----------------------------------------------------------------------------
 // Creating a session
 // ----------------------------------------------------------------------------
-TEST_F(session_test, test1) 
+TEST_F(session_test, test1)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -180,7 +180,7 @@ TEST_F(session_test, test1)
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     ep_spec1.mutable_vrf_key_handle()->set_vrf_id(1);
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
@@ -231,7 +231,7 @@ TEST_F(session_test, test1)
 // ----------------------------------------------------------------------------
 // Creating a session with enicifs
 // ----------------------------------------------------------------------------
-TEST_F(session_test, test2) 
+TEST_F(session_test, test2)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -379,7 +379,7 @@ TEST_F(session_test, test2)
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     ep_spec1.mutable_vrf_key_handle()->set_vrf_id(2);
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
     ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl2);
@@ -403,7 +403,7 @@ TEST_F(session_test, test2)
     ret = hal::endpoint_create(ep_spec2, &ep_rsp2);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     ep_spec3.mutable_vrf_key_handle()->set_vrf_id(2);
     ep_spec3.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
     ep_spec3.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl2);
@@ -485,7 +485,7 @@ TEST_F(session_test, test2)
 // ----------------------------------------------------------------------------
 // Creating a session with enicifs
 // ----------------------------------------------------------------------------
-TEST_F(session_test, test3) 
+TEST_F(session_test, test3)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -506,8 +506,8 @@ TEST_F(session_test, test3)
     InterfaceResponse           enicif_rsp1, enicif_rsp2;
     NetworkSpec                 nw_spec, nw_spec1;
     NetworkResponse             nw_rsp, nw_rsp1;
-    ::std::string ipv6_ip1 = "00010001000100010001000100010001"; 
-    ::std::string ipv6_ip2 = "10010001000100010001000100010002"; 
+    ::std::string ipv6_ip1 = "00010001000100010001000100010001";
+    ::std::string ipv6_ip2 = "10010001000100010001000100010002";
     NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
@@ -618,12 +618,12 @@ TEST_F(session_test, test3)
     ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
-    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip1);  
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     ep_spec1.mutable_vrf_key_handle()->set_vrf_id(3);
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl2);
@@ -675,7 +675,7 @@ TEST_F(session_test, test3)
 // ----------------------------------------------------------------------------
 // Creating a session with uplinks for routing
 // ----------------------------------------------------------------------------
-TEST_F(session_test, test4) 
+TEST_F(session_test, test4)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -783,7 +783,7 @@ TEST_F(session_test, test4)
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     ep_spec1.mutable_vrf_key_handle()->set_vrf_id(4);
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
     ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
@@ -857,7 +857,7 @@ TEST_F(session_test, test4)
 // ----------------------------------------------------------------------------
 // Creating a session with uplinks for routing
 // ----------------------------------------------------------------------------
-TEST_F(session_test, test5) 
+TEST_F(session_test, test5)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -965,7 +965,7 @@ TEST_F(session_test, test5)
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     ep_spec1.mutable_vrf_key_handle()->set_vrf_id(5);
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
     ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
@@ -1013,7 +1013,7 @@ TEST_F(session_test, test5)
 // ----------------------------------------------------------------------------
 // Creating a session with uplinks for routing and NAT
 // ----------------------------------------------------------------------------
-TEST_F(session_test, test6) 
+TEST_F(session_test, test6)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -1123,7 +1123,7 @@ TEST_F(session_test, test6)
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
 #if 0
     // VIP
     ep_spec1.mutable_vrf_key_handle()->set_vrf_id(6);
@@ -1146,7 +1146,7 @@ TEST_F(session_test, test6)
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001235);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip3); 
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip3);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -1200,7 +1200,7 @@ TEST_F(session_test, test6)
 // ----------------------------------------------------------------------------
 // Creating a session with drop
 // ----------------------------------------------------------------------------
-TEST_F(session_test, test7) 
+TEST_F(session_test, test7)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -1308,7 +1308,7 @@ TEST_F(session_test, test7)
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     ep_spec1.mutable_vrf_key_handle()->set_vrf_id(7);
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
@@ -1358,7 +1358,7 @@ TEST_F(session_test, test7)
 // ----------------------------------------------------------------------------
 // Creating a session with uplinks for bridging and NAT
 // ----------------------------------------------------------------------------
-TEST_F(session_test, test8) 
+TEST_F(session_test, test8)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -1469,7 +1469,7 @@ TEST_F(session_test, test8)
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
 #if 0
     // VIP
     ep_spec1.mutable_vrf_key_handle()->set_vrf_id(6);
@@ -1492,7 +1492,7 @@ TEST_F(session_test, test8)
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001235);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip3); 
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip3);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -1563,7 +1563,7 @@ TEST_F(session_test, test8)
 // ----------------------------------------------------------------------------
 // Creating a session
 // ----------------------------------------------------------------------------
-TEST_F(session_test, test9) 
+TEST_F(session_test, test9)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -1672,7 +1672,7 @@ TEST_F(session_test, test9)
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     ep_spec1.mutable_vrf_key_handle()->set_vrf_id(9);
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
@@ -1721,7 +1721,7 @@ TEST_F(session_test, test9)
     ASSERT_TRUE(delrsp.api_status() == types::API_STATUS_OK);
 }
 
-TEST_F(session_test, test10) 
+TEST_F(session_test, test10)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -1742,8 +1742,8 @@ TEST_F(session_test, test10)
     InterfaceResponse           enicif_rsp1, enicif_rsp2;
     NetworkSpec                 nw_spec, nw_spec1;
     NetworkResponse             nw_rsp, nw_rsp1;
-    ::std::string ipv6_ip1 = "00010001000100010001000100010001"; 
-    ::std::string ipv6_ip2 = "00020001000100010001000100010002"; 
+    ::std::string ipv6_ip1 = "00010001000100010001000100010001";
+    ::std::string ipv6_ip2 = "00020001000100010001000100010002";
     NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
@@ -1854,12 +1854,12 @@ TEST_F(session_test, test10)
     ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
-    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip1);  
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     ep_spec1.mutable_vrf_key_handle()->set_vrf_id(10);
     ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl2);
@@ -1916,7 +1916,7 @@ TEST_F(session_test, test11)
     hal::session_get_all(&getrsp);
 
     hal::session_delete_all(&delrsp);
-    hal::hal_cfg_db_close();  
+    hal::hal_cfg_db_close();
 }
 
 int main(int argc, char **argv) {

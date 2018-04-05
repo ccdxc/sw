@@ -60,21 +60,19 @@ find_l4lb_by_key (l4lb_key_t *key)
 }
 
 const char *l4lb_to_str(l4lb_service_entry_t *l4lb);
-extern void *l4lb_get_key_func(void *entry);
-extern uint32_t l4lb_compute_key_hash_func(void *key, uint32_t ht_size);
-extern bool l4lb_compare_key_func(void *key1, void *key2);
-
-extern void *l4lb_get_handle_key_func(void *entry);
-extern uint32_t l4lb_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool l4lb_compare_handle_key_func(void *key1, void *key2);
+void *l4lb_get_key_func(void *entry);
+uint32_t l4lb_compute_key_hash_func(void *key, uint32_t ht_size);
+bool l4lb_compare_key_func(void *key1, void *key2);
+void *l4lb_get_handle_key_func(void *entry);
+uint32_t l4lb_compute_handle_hash_func(void *key, uint32_t ht_size);
+bool l4lb_compare_handle_key_func(void *key1, void *key2);
+hal_ret_t hal_l4lb_init_cb(void);
+hal_ret_t hal_l4lb_cleanup_cb(void);
 
 hal_ret_t l4lbservice_create(l4lb::L4LbServiceSpec& spec,
                              l4lb::L4LbServiceResponse *rsp);
-
-
 hal_ret_t l4lbservice_update(l4lb::L4LbServiceSpec& spec,
                              l4lb::L4LbServiceResponse *rsp);
-
 hal_ret_t l4lbservice_get(l4lb::L4LbServiceSpec& spec,
                           l4lb::L4LbServiceGetResponseMsg *rsp);
 }    // namespace hal

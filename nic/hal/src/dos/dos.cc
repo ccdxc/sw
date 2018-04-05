@@ -5,9 +5,9 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/security/nwsec_group.hpp"
+#include "nic/hal/src/firewall/nwsec_group.hpp"
 
 namespace hal {
 
@@ -84,13 +84,13 @@ find_dos_policy_by_handle (hal_handle_t handle)
         return NULL;
     }
     // check for object type
-    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
+    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
                HAL_OBJ_ID_DOS_POLICY);
-    return (dos_policy_t *)hal_handle_get_obj(handle); 
+    return (dos_policy_t *)hal_handle_get_obj(handle);
 }
 
 static inline hal_ret_t
-dos_policy_handle_update (DoSPolicySpec& spec, dos_policy_t *dosp, 
+dos_policy_handle_update (DoSPolicySpec& spec, dos_policy_t *dosp,
                           dos_policy_update_app_ctx_t *app_ctx)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -240,7 +240,7 @@ dos_policy_create_add_cb (cfg_op_ctxt_t *cfg_ctx)
     dllist_ctxt_t                   *lnode = NULL;
     dhl_entry_t                     *dhl_entry = NULL;
     dos_policy_t                    *dosp = NULL;
-    // dos_policy_create_app_ctx_t         *app_ctx = NULL; 
+    // dos_policy_create_app_ctx_t         *app_ctx = NULL;
 
     if (cfg_ctx == NULL) {
         HAL_TRACE_ERR("{}: invalid cfg_ctx", __FUNCTION__);
@@ -260,10 +260,10 @@ dos_policy_create_add_cb (cfg_op_ctxt_t *cfg_ctx)
     // PD Call to allocate PD resources and HW programming
     pd::pd_dos_policy_create_args_init(&pd_dosp_args);
     pd_dosp_args.dos_policy = dosp;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DOS_POLICY_CREATE, 
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DOS_POLICY_CREATE,
                           (void *)&pd_dosp_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to create dosp pd, err : {}", 
+        HAL_TRACE_ERR("{}:failed to create dosp pd, err : {}",
                 __FUNCTION__, ret);
     }
 
@@ -308,7 +308,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI vrf 
+// 3. Free PI vrf
 //------------------------------------------------------------------------------
 hal_ret_t
 dos_policy_create_abort_cb (cfg_op_ctxt_t *cfg_ctx)
@@ -342,7 +342,7 @@ dos_policy_create_abort_cb (cfg_op_ctxt_t *cfg_ctx)
         pd_dosp_args.dos_policy = dosp;
         ret = pd::pd_dos_policy_delete(&pd_dosp_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to delete dosp pd, err : {}", 
+            HAL_TRACE_ERR("{}:failed to delete dosp pd, err : {}",
                           __FUNCTION__, ret);
         }
 #endif
@@ -372,7 +372,7 @@ dos_policy_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctx)
 // Converts hal_ret_t to API status
 //------------------------------------------------------------------------------
 hal_ret_t
-dos_policy_prepare_rsp (DoSPolicyResponse *rsp, hal_ret_t ret, 
+dos_policy_prepare_rsp (DoSPolicyResponse *rsp, hal_ret_t ret,
                         hal_handle_t hal_handle)
 {
     if (ret == HAL_RET_OK) {
@@ -404,7 +404,7 @@ dospolicy_create (nwsec::DoSPolicySpec& spec,
     // check if dos policy exists already, and reject if one is found
     if (find_dos_policy_by_handle(spec.dos_handle())) {
         HAL_TRACE_ERR("{}:failed to create a dosp, "
-                      "dosp{} exists already", __FUNCTION__, 
+                      "dosp{} exists already", __FUNCTION__,
                       spec.dos_handle());
         ret =  HAL_RET_ENTRY_EXISTS;
         goto end;
@@ -423,7 +423,7 @@ dospolicy_create (nwsec::DoSPolicySpec& spec,
     // allocate hal handle id
     dosp->hal_handle = hal_handle_alloc(HAL_OBJ_ID_DOS_POLICY);
     if (dosp->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}: failed to alloc handle {}", 
+        HAL_TRACE_ERR("{}: failed to alloc handle {}",
                       __FUNCTION__, dosp->hal_handle);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
@@ -444,10 +444,10 @@ dospolicy_create (nwsec::DoSPolicySpec& spec,
     sdk::lib::dllist_reset(&cfg_ctx.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctx.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_add_obj(dosp->hal_handle, &cfg_ctx, 
+    ret = hal_handle_add_obj(dosp->hal_handle, &cfg_ctx,
                              dos_policy_create_add_cb,
                              dos_policy_create_commit_cb,
-                             dos_policy_create_abort_cb, 
+                             dos_policy_create_abort_cb,
                              dos_policy_create_cleanup_cb);
 
 end:
@@ -540,10 +540,10 @@ end:
 
 //------------------------------------------------------------------------------
 // Make a clone
-// - Both PI and PD objects cloned. 
+// - Both PI and PD objects cloned.
 //------------------------------------------------------------------------------
 hal_ret_t
-dos_policy_make_clone (dos_policy_t *dosp, dos_policy_t **dosp_clone, 
+dos_policy_make_clone (dos_policy_t *dosp, dos_policy_t **dosp_clone,
                   DoSPolicySpec& spec)
 {
     *dosp_clone = dos_policy_alloc_init();
@@ -674,7 +674,7 @@ dospolicy_update (nwsec::DoSPolicySpec& spec,
     // validate the request message
     ret = validate_dos_policy_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:dosp update validation failed, ret : {}", 
+        HAL_TRACE_ERR("{}:dosp update validation failed, ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
@@ -690,7 +690,7 @@ dospolicy_update (nwsec::DoSPolicySpec& spec,
 
     ret = dos_policy_handle_update(spec, dosp, &app_ctx);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:dosp check update failed, ret : {}", 
+        HAL_TRACE_ERR("{}:dosp check update failed, ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
@@ -711,10 +711,10 @@ dospolicy_update (nwsec::DoSPolicySpec& spec,
     sdk::lib::dllist_reset(&cfg_ctx.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctx.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_upd_obj(dosp->hal_handle, &cfg_ctx, 
+    ret = hal_handle_upd_obj(dosp->hal_handle, &cfg_ctx,
                              dos_policy_update_upd_cb,
                              dos_policy_update_commit_cb,
-                             dos_policy_update_abort_cb, 
+                             dos_policy_update_abort_cb,
                              dos_policy_update_cleanup_cb);
 
 end:
@@ -737,13 +737,13 @@ end:
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
         goto end;
     } else {
-        // Success: Update the store PI object 
+        // Success: Update the store PI object
         dos_policy_init_from_spec(dosp, spec);
     }
 
 end:
 
-    HAL_TRACE_DEBUG("PI-Nwsec:{}: Nwsec Update for id {} handle {} ret{}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("PI-Nwsec:{}: Nwsec Update for id {} handle {} ret{}", __FUNCTION__,
                     spec.key_or_handle().security_group_id(), spec.key_or_handle().profile_handle(), ret);
     return ret;
 #endif
@@ -753,7 +753,7 @@ end:
 // validate dosp delete request
 //------------------------------------------------------------------------------
 static hal_ret_t
-validate_dos_policy_delete (DoSPolicyDeleteRequest& req, 
+validate_dos_policy_delete (DoSPolicyDeleteRequest& req,
                        DoSPolicyDeleteResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -785,7 +785,7 @@ dos_policy_delete_del_cb (cfg_op_ctxt_t *cfg_ctx)
         goto end;
     }
 
-    // TODO: Check the dependency ref count for the dosp. 
+    // TODO: Check the dependency ref count for the dosp.
     //       If its non zero, fail the delete.
 
 
@@ -803,7 +803,7 @@ dos_policy_delete_del_cb (cfg_op_ctxt_t *cfg_ctx)
     pd_dosp_args.dos_policy = dosp;
     ret = pd::pd_dos_policy_delete(&pd_dosp_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to delete dosp pd, err : {}", 
+        HAL_TRACE_ERR("{}:failed to delete dosp pd, err : {}",
                       __FUNCTION__, ret);
     }
 #endif
@@ -877,7 +877,7 @@ dos_policy_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctx)
 // process a dosp delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-dospolicy_delete (DoSPolicyDeleteRequest& req, 
+dospolicy_delete (DoSPolicyDeleteRequest& req,
                   DoSPolicyDeleteResponse *rsp)
 {
     hal_ret_t       ret = HAL_RET_OK;
@@ -903,7 +903,7 @@ dospolicy_delete (DoSPolicyDeleteRequest& req,
         ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("{}:deleting dos policy {}", 
+    HAL_TRACE_DEBUG("{}:deleting dos policy {}",
                     __FUNCTION__, dosp->hal_handle);
 
     // form ctxt and call infra add
@@ -913,10 +913,10 @@ dospolicy_delete (DoSPolicyDeleteRequest& req,
     sdk::lib::dllist_reset(&cfg_ctx.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctx.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_del_obj(dosp->hal_handle, &cfg_ctx, 
+    ret = hal_handle_del_obj(dosp->hal_handle, &cfg_ctx,
                              dos_policy_delete_del_cb,
                              dos_policy_delete_commit_cb,
-                             dos_policy_delete_abort_cb, 
+                             dos_policy_delete_abort_cb,
                              dos_policy_delete_cleanup_cb);
 
 end:
@@ -938,7 +938,7 @@ dospolicy_get (nwsec::DoSPolicyGetRequest& req,
     nwsec::DoSPolicyGetResponse *rsp = resp->add_response();
 
     if (req.dos_handle() == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}:dosp update validation failed, ret : {}", 
+        HAL_TRACE_ERR("{}:dosp update validation failed, ret : {}",
                       __FUNCTION__, ret);
         HAL_API_STATS_INC(HAL_API_DOSPOLICY_GET_FAIL);
         return HAL_RET_INVALID_ARG;
@@ -957,6 +957,18 @@ dospolicy_get (nwsec::DoSPolicyGetRequest& req,
     // fill stats, if any, of this profile
 
     HAL_API_STATS_INC(HAL_API_DOSPOLICY_GET_SUCCESS);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+hal_dos_init_cb (void)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+hal_dos_cleanup_cb (void)
+{
     return HAL_RET_OK;
 }
 

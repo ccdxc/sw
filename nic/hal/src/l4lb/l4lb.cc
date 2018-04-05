@@ -89,8 +89,8 @@ validate_l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceRespo
 // process a l4lb service request
 //------------------------------------------------------------------------------
 //
-hal_ret_t 
-l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp) 
+hal_ret_t
+l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp)
 {
     hal_ret_t                   ret;
     vrf_id_t                    tid;
@@ -98,7 +98,7 @@ l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp)
     l4lb_service_entry_t        *l4lb = NULL;
     pd::pd_l4lb_create_args_t   pd_l4lb_args = {0};
 
-    HAL_TRACE_DEBUG("PI-L4LBService:{}: L4LB Create for vrf: {}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("PI-L4LBService:{}: L4LB Create for vrf: {}", __FUNCTION__,
                     spec.meta().vrf_id());
 
 
@@ -125,10 +125,10 @@ l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp)
     }
 
     // copy the key
-    ip_addr_spec_to_ip_addr(&l4lb->l4lb_key.service_ip, 
+    ip_addr_spec_to_ip_addr(&l4lb->l4lb_key.service_ip,
             spec.key_or_handle().service_key().service_ip_address());
     l4lb->l4lb_key.proto = spec.key_or_handle().service_key().ip_protocol();
-    l4lb->l4lb_key.service_port = 
+    l4lb->l4lb_key.service_port =
         spec.key_or_handle().service_key().service_port();
 
     l4lb->l4lb_key.vrf_id = tid;
@@ -170,7 +170,7 @@ end:
     }
     return ret;
 }
-    
+
 //------------------------------------------------------------------------------
 // process a l4lb update request
 //------------------------------------------------------------------------------
@@ -192,10 +192,22 @@ l4lb_to_str (l4lb_service_entry_t *l4lb)
     if (l4lb) {
         snprintf(buf, 100, "ten_id:%lu, serv_ip:%s, proto:%d, serv_port:%d, serv_mac:%s",
                 l4lb->l4lb_key.vrf_id, ipaddr2str(&l4lb->l4lb_key.service_ip),
-                l4lb->l4lb_key.proto, l4lb->l4lb_key.service_port, 
+                l4lb->l4lb_key.proto, l4lb->l4lb_key.service_port,
                 ether_ntoa((struct ether_addr*)(l4lb->serv_mac_addr)));
     }
     return buf;
+}
+
+hal_ret_t
+hal_l4lb_init_cb (void)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+hal_l4lb_cleanup_cb (void)
+{
+    return HAL_RET_OK;
 }
 
 }    // namespace hal

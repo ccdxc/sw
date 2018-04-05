@@ -79,10 +79,6 @@ private:
 void hal_obj_meta_init(void);
 extern hal_obj_meta *g_obj_meta[HAL_OBJ_ID_MAX];
 
-// per module information that HAL infra needs to maintain
-typedef struct hal_module_meta_s {
-} __PACK__ hal_module_meta_t;
-
 //------------------------------------------------------------------------------
 // one time memory related initializatino for HAL
 //------------------------------------------------------------------------------

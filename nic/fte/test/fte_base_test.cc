@@ -5,7 +5,7 @@
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/security/nwsec_group.hpp"
+#include "nic/hal/src/firewall/nwsec_group.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"
@@ -142,12 +142,11 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<v4_r
 
     hal::vrf_t *vrf = hal::vrf_lookup_by_handle(vrfh);
     EXPECT_NE(vrf, nullptr);
-    
+
     spec.mutable_policy_key_or_handle()->mutable_security_policy_key()->
         set_security_policy_id(++nwsec_id_);
     spec.mutable_policy_key_or_handle()->mutable_security_policy_key()->
         mutable_vrf_id_or_handle()->set_vrf_id(vrf->vrf_id);
-        
 
     uint32_t rule_id = 0;
     for (auto &rule: rules) {

@@ -1,4 +1,5 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __ACL_HPP__
 #define __ACL_HPP__
 
@@ -246,7 +247,7 @@ find_acl_by_id (acl_id_t acl_id)
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->acl_ht()->lookup(&acl_key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_ACL);
         acl = (acl_t *)hal_handle_get_obj(entry->handle_id);
         return acl;
@@ -285,9 +286,11 @@ acl_lookup_by_key_or_handle (const AclKeyHandle& kh)
     return NULL;
 }
 
-extern void *acl_get_key_func(void *entry);
-extern uint32_t acl_compute_hash_func(void *key, uint32_t ht_size);
-extern bool acl_compare_key_func(void *key1, void *key2);
+void *acl_get_key_func(void *entry);
+uint32_t acl_compute_hash_func(void *key, uint32_t ht_size);
+bool acl_compare_key_func(void *key1, void *key2);
+hal_ret_t hal_aclqos_init_cb(void);
+hal_ret_t hal_aclqos_cleanup_cb(void);
 
 hal_ret_t acl_create(acl::AclSpec& spec,
                      acl::AclResponse *rsp);

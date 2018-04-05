@@ -7,8 +7,8 @@
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/endpoint_api.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
-#include "nic/hal/src/security/nwsec_group.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec_group.hpp"
 
 namespace hal {
 

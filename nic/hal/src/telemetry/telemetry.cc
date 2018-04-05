@@ -140,7 +140,7 @@ mirror_session_create (MirrorSessionSpec *spec, MirrorSession *rsp)
                         __FUNCTION__, ipaddr2str(&dst_addr));
                 return HAL_RET_INVALID_ARG;
             }
-            session.mirror_destination_u.er_span_dest.tunnel_if = ift; 
+            session.mirror_destination_u.er_span_dest.tunnel_if = ift;
             session.type = hal::MIRROR_DEST_ERSPAN;
             break;
         }
@@ -234,7 +234,7 @@ collector_create (CollectorSpec *spec, Collector *resp)
 
     HAL_TRACE_DEBUG("PI-ExportControl:{}: ExportID {}", __FUNCTION__,
             spec->export_controlid().id());
-    
+
     cfg.exporter_id = spec->export_controlid().id();
     ip_addr_spec_to_ip_addr(&cfg.src_ip, spec->src_ip());
     ip_addr_spec_to_ip_addr(&cfg.dst_ip, spec->dest_ip());
@@ -296,14 +296,14 @@ collector_update (CollectorSpec *spec, Collector *resp)
 
 hal_ret_t
 collector_get (ExportControlId *id, Collector *resp) {
-    
+
     return HAL_RET_OK;
 }
 
 hal_ret_t
 collector_delete (ExportControlId *id, Collector *resp)
 {
-    
+
     return HAL_RET_OK;
 }
 
@@ -369,7 +369,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
     pd_flow_monitor_rule_create_args_t args = {0};
     flow_monitor_rule_t rule = {0};
     hal_ret_t ret = HAL_RET_OK;
-    
+
     HAL_TRACE_DEBUG("PI-FlowMonitorRule create");
     if (spec->meta().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
@@ -390,7 +390,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
         HAL_TRACE_DEBUG("PI-MirrorSession create succeeded");
     }
     rsp->mutable_spec()->CopyFrom(*spec);
-    
+
 end:
     return ret;
 }
@@ -430,10 +430,22 @@ hal_ret_t
 flow_monitor_rule_get (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
-    
+
     // TODO
 
     return ret;
 }
 
-} // namespace hal
+hal_ret_t
+hal_telemetry_init_cb (void)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+hal_telemetry_cleanup_cb (void)
+{
+    return HAL_RET_OK;
+}
+
+}    // namespace hal

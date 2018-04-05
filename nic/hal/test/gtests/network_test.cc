@@ -7,7 +7,7 @@
 #include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,7 +58,7 @@ protected:
 };
 
 // Update networktest with enicifs
-TEST_F(nw_test, test1) 
+TEST_F(nw_test, test1)
 {
     hal_ret_t                       ret;
     VrfSpec                      ten_spec, ten_spec1;
@@ -82,8 +82,8 @@ TEST_F(nw_test, test1)
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
     hal_handle_t                    nw_v4handles[100], nw_v6handles[100];
-    std::string                     ipv6_ip1 = "00010001000100010001000100010001"; 
-    std::string                     ipv6_ip2 = "00010001000100010001000100010001"; 
+    std::string                     ipv6_ip1 = "00010001000100010001000100010001";
+    std::string                     ipv6_ip2 = "00010001000100010001000100010001";
     std::string                     v6_pattern = "010101";
 
 

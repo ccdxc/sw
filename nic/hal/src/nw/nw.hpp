@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __NETWORK_HPP__
 #define __NETWORK_HPP__
 
@@ -42,15 +44,15 @@ typedef struct network_s {
     hal_handle_t      hal_handle;           // HAL allocated handle
 
     // forward references
-    dllist_ctxt_t     sg_list_head;         // security group list   
+    dllist_ctxt_t     sg_list_head;         // security group list
     // back references
     dllist_ctxt_t     l2seg_list_head;      // l2segs referring to this
     dllist_ctxt_t     session_list_head;    // sessions referring to this
 
-    // meta data maintained for network     
+    // meta data maintained for network
     // ht_ctxt_t         nwkey_ht_ctxt;        // network key based hash table ctxt
     // ht_ctxt_t         hal_handle_ht_ctxt;   // hal handle based hash table ctxt
-    // Clean up 
+    // Clean up
     // dllist_ctxt_t     l2seg_nw_lentry;      // L2 segment's nw list entry
 } __PACK__ network_t;
 
@@ -75,24 +77,22 @@ typedef struct network_update_app_ctxt_s {
 } __PACK__ network_update_app_ctxt_t;
 
 const char *network_to_str (network_t *nw);
-static inline void 
-network_lock(network_t *network, const char *fname, int lineno, 
-             const char *fxname)
+static inline void
+network_lock (network_t *network, const char *fname, int lineno,
+              const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:locking network:{} from {}:{}:{}", 
-                    __FUNCTION__, 
-                    network_to_str(network), 
+    HAL_TRACE_DEBUG("Locking network : {} from {} : {} : {}",
+                    network_to_str(network),
                     fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&network->slock);
 }
 
-static inline void 
-network_unlock(network_t *network, const char *fname, int lineno, 
-               const char *fxname)
+static inline void
+network_unlock (network_t *network, const char *fname, int lineno,
+                const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:unlocking network:{} from {}:{}:{}", 
-                    __FUNCTION__, 
-                    network_to_str(network), 
+    HAL_TRACE_DEBUG("Unlocking network : {} from {} : {} : {}",
+                    network_to_str(network),
                     fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&network->slock);
 }
@@ -122,7 +122,6 @@ network_init (network_t *network)
     sdk::lib::dllist_reset(&network->sg_list_head);
     sdk::lib::dllist_reset(&network->l2seg_list_head);
     sdk::lib::dllist_reset(&network->session_list_head);
-
 
     // initialize the operational state
     // network->rmac_addr = 0;
@@ -160,14 +159,13 @@ network_get_ht_cb (void *ht_entry, void *ctxt)
     NetworkGetResponse       *rsp;
 
     nw = (network_t *)hal_handle_get_obj(entry->handle_id);
-
     rsp = response->add_response();
     // fill config spec of this vrf
     rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
     rsp->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
     rsp->set_api_status(types::API_STATUS_OK);
 
-    // Always return false here, so that we walk through all hash table
+    // always return false here, so that we walk through all hash table
     // entries.
     return false;
 }
@@ -183,12 +181,11 @@ find_network_by_key (vrf_id_t tid, const ip_prefix_t *ip_pfx)
     nw_key.vrf_id = tid;
     memcpy(&nw_key.ip_pfx, ip_pfx, sizeof(ip_prefix_t));
 
-
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->
         network_key_ht()->lookup(&nw_key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                 HAL_OBJ_ID_NETWORK);
         nw = (network_t *)hal_handle_get_obj(entry->handle_id);
         return nw;
@@ -205,31 +202,23 @@ find_network_by_handle (hal_handle_t handle)
     }
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
-        HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",
-                        __FUNCTION__, handle);
+        HAL_TRACE_DEBUG("Failed to find object with handle {}", handle);
         return NULL;
     }
     if (hal_handle->obj_id() != HAL_OBJ_ID_NETWORK) {
-        HAL_TRACE_DEBUG("{}:failed to find network with handle:{}",
-                        __FUNCTION__, handle);
+        HAL_TRACE_DEBUG("Failed to find network with handle {}", handle);
         return NULL;
     }
     return (network_t *)hal_handle->get_obj();
-#if 0
-    // check for object type
-    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
-               HAL_OBJ_ID_NETWORK);
-    return (network_t *)hal_handle_get_obj(handle);
-    // return (network_t *)g_hal_state->network_hal_handle_ht()->lookup(&handle);
-#endif
 }
 
-extern void *network_get_key_func(void *entry);
-extern uint32_t network_compute_hash_func(void *key, uint32_t ht_size);
-extern bool network_compare_key_func(void *key1, void *key2);
-
-hal_ret_t network_update_sg_relation (dllist_ctxt_t *sg_list, 
-                                      network_t *nw, bool add);
+void *network_get_key_func(void *entry);
+uint32_t network_compute_hash_func(void *key, uint32_t ht_size);
+bool network_compare_key_func(void *key1, void *key2);
+hal_ret_t network_update_sg_relation(dllist_ctxt_t *sg_list,
+                                     network_t *nw, bool add);
+hal_ret_t hal_nw_init_cb(void);
+hal_ret_t hal_nw_cleanup_cb(void);
 
 hal_ret_t network_create(nw::NetworkSpec& spec,
                          nw::NetworkResponse *rsp);
@@ -239,8 +228,8 @@ hal_ret_t network_delete(nw::NetworkDeleteRequest& req,
                          nw::NetworkDeleteResponse *rsp);
 hal_ret_t network_get(nw::NetworkGetRequest& req,
                       nw::NetworkGetResponseMsg *rsp);
-network_t *
-network_lookup_key_or_handle (NetworkKeyHandle& kh, vrf_id_t tid);
+network_t *network_lookup_key_or_handle(NetworkKeyHandle& kh, vrf_id_t tid);
+
 }    // namespace hal
 
 #endif    // __NETWORK_HPP__

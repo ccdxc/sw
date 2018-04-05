@@ -1,5 +1,6 @@
 #ifndef __TELEMETRY_HPP__
 #define __TELEMETRY_HPP__
+
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/include/interface_api.hpp"
@@ -24,10 +25,10 @@ using hal::lif_t;
 
 #define MIRROR_DESTTYPES(ENTRY)                                  \
     ENTRY(MIRROR_DEST_NONE,     0,  "Disabled")                  \
-    ENTRY(MIRROR_DEST_LOCAL,    1,  "Local Destination")          \
+    ENTRY(MIRROR_DEST_LOCAL,    1,  "Local Destination")         \
     ENTRY(MIRROR_DEST_RSPAN,    2,  "Remote SPAN destination")   \
     ENTRY(MIRROR_DEST_ERSPAN,   3,  "ERSPAN destination")        \
-    ENTRY(MIRROR_DEST_MAX,      4,  "Invalid") 
+    ENTRY(MIRROR_DEST_MAX,      4,  "Invalid")
 
 DEFINE_ENUM(mirror_desttype_en, MIRROR_DESTTYPES)
 #undef MIRROR_DESTTYPES
@@ -114,6 +115,8 @@ typedef struct collector_config_s {
     export_formats_en   format;
 } collector_config_t;
 
+hal_ret_t hal_telemetry_init_cb(void);
+hal_ret_t hal_telemetry_cleanup_cb(void);
 hal_ret_t mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp);
 hal_ret_t mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp);
 hal_ret_t collector_create(CollectorSpec *spec, Collector *resp);
@@ -123,6 +126,8 @@ hal_ret_t collector_delete(ExportControlId *id, Collector *resp);
 hal_ret_t flow_monitor_rule_create(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
 hal_ret_t flow_monitor_rule_delete(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
 hal_ret_t flow_monitor_rule_get(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
-}
 
-#endif // __TELEMETRY_HPP__
+}    // namespace
+
+#endif    // __TELEMETRY_HPP__
+

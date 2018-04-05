@@ -9,7 +9,7 @@
 #include "nic/hal/pd/iris/nw/tunnelif_pd.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"
 #include "nic/hal/pd/iris/nw/uplinkpc_pd.hpp"
-#include "nic/hal/pd/iris/security/nwsec_pd.hpp"
+#include "nic/hal/pd/iris/firewall/nwsec_pd.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/p4/iris/include/defines.h"
 
@@ -20,7 +20,7 @@ namespace pd {
 
 
 //-----------------------------------------------------------------------------
-// Given a PI If, return true if it is a CPU If 
+// Given a PI If, return true if it is a CPU If
 //-----------------------------------------------------------------------------
 bool
 if_is_cpu_if(if_t *pi_if)
@@ -33,7 +33,7 @@ if_is_cpu_if(if_t *pi_if)
 }
 
 //-----------------------------------------------------------------------------
-// Given a PI If, return true if it is an App Redirect If 
+// Given a PI If, return true if it is an App Redirect If
 //-----------------------------------------------------------------------------
 bool
 if_is_app_redir_if(if_t *pi_if)
@@ -46,7 +46,7 @@ if_is_app_redir_if(if_t *pi_if)
 }
 
 //-----------------------------------------------------------------------------
-// Given a PI If, return true if it is a Tunnel If 
+// Given a PI If, return true if it is a Tunnel If
 //-----------------------------------------------------------------------------
 bool
 if_is_tunnel_if(if_t *pi_if)
@@ -162,7 +162,7 @@ end:
 // Given a PI If, get its hw lif id
 //-----------------------------------------------------------------------------
 uint32_t
-if_get_hw_lif_id(if_t *pi_if) 
+if_get_hw_lif_id(if_t *pi_if)
 {
     pd_if_get_hw_lif_id_args_t args;
     args.pi_if = pi_if;
@@ -172,7 +172,7 @@ if_get_hw_lif_id(if_t *pi_if)
 
 #if 0
 uint32_t
-if_get_hw_lif_id(if_t *pi_if) 
+if_get_hw_lif_id(if_t *pi_if)
 #endif
 hal_ret_t
 pd_if_get_hw_lif_id(pd_if_get_hw_lif_id_args_t *args)
@@ -240,7 +240,7 @@ if_get_tunnelif_remote_tep_ep(if_t *pi_if)
 {
     ep_t *remote_tep_ep = NULL;
 
-    if (pi_if->encap_type == 
+    if (pi_if->encap_type ==
             intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
         if (pi_if->vxlan_rtep.af == IP_AF_IPV4) {
             remote_tep_ep = find_ep_by_v4_key(pi_if->tid,
@@ -250,7 +250,7 @@ if_get_tunnelif_remote_tep_ep(if_t *pi_if)
             remote_tep_ep = find_ep_by_v6_key(pi_if->tid, &pi_if->vxlan_rtep);
             *v4_valid = FALSE;
         }
-    } else if (pi_if->encap_type == 
+    } else if (pi_if->encap_type ==
             intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_GRE) {
         if (pi_if->gre_dest.af == IP_AF_IPV4) {
             remote_tep_ep = find_ep_by_v4_key(pi_if->tid,
@@ -267,7 +267,7 @@ if_get_tunnelif_remote_tep_ep(if_t *pi_if)
 #endif
 
 //-----------------------------------------------------------------------------
-// Given an EP return PI if 
+// Given an EP return PI if
 //-----------------------------------------------------------------------------
 if_t *
 if_get_if_from_ep(ep_t *ep)
@@ -281,7 +281,7 @@ if_get_if_from_ep(ep_t *ep)
 // Given an Uplink If or PC, get its ifpc id
 //-----------------------------------------------------------------------------
 uint32_t
-if_get_uplink_ifpc_id(if_t *pi_if) 
+if_get_uplink_ifpc_id(if_t *pi_if)
 {
     pd_uplinkif_t   *pd_upif = NULL;
     pd_uplinkpc_t   *pd_uppc = NULL;
@@ -320,7 +320,7 @@ if_get_uplink_ifpc_id(if_t *pi_if)
 // Given an Uplink If or PC, get its lport id
 //-----------------------------------------------------------------------------
 uint32_t
-if_get_uplink_lport_id(if_t *pi_if) 
+if_get_uplink_lport_id(if_t *pi_if)
 {
     pd_uplinkif_t   *pd_upif = NULL;
     pd_uplinkpc_t   *pd_uppc = NULL;
@@ -355,11 +355,11 @@ if_get_uplink_lport_id(if_t *pi_if)
 }
 
 //-----------------------------------------------------------------------------
-// Given a PI If, get its tm_oport 
+// Given a PI If, get its tm_oport
 //-----------------------------------------------------------------------------
 #if 0
 uint32_t
-if_get_tm_oport(if_t *pi_if) 
+if_get_tm_oport(if_t *pi_if)
 #endif
 hal_ret_t
 pd_if_get_tm_oport(pd_if_get_tm_oport_args_t *args)
@@ -490,7 +490,7 @@ pd_tunnelif_get_rw_idx (pd_tunnelif_get_rw_idx_args_t *args)
 //-----------------------------------------------------------------------------
 // Given a PI Vrf, get the nwsec profile hw id
 //-----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 ten_get_nwsec_prof_hw_id(vrf_t *pi_ten)
 {
     nwsec_profile_t     *pi_nwsec = NULL;
@@ -520,8 +520,8 @@ nwsec_get_nwsec_prof_hw_id(nwsec_profile_t *pi_nwsec)
 }
 
 hal_ret_t
-pd_get_l2seg_ten_masks(uint16_t *l2seg_mask, uint16_t *ten_mask, 
-                       uint8_t *ten_shift) 
+pd_get_l2seg_ten_masks(uint16_t *l2seg_mask, uint16_t *ten_mask,
+                       uint8_t *ten_shift)
 {
     if (!l2seg_mask || !ten_mask || !ten_shift) {
         return HAL_RET_INVALID_ARG;

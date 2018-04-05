@@ -152,7 +152,7 @@ find_mc_entry_by_handle (hal_handle_t handle)
                         __FUNCTION__, handle);
         return NULL;
     }
-    // HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
+    // HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
     //           HAL_OBJ_ID_TENANT);
    return (mc_entry_t *)hal_handle_get_obj(handle);
 }
@@ -162,6 +162,8 @@ uint32_t mc_entry_compute_hash_func(void *key, uint32_t ht_size);
 bool mc_entry_compare_key_func(void *key1, void *key2);
 mc_entry_t *mc_entry_lookup_key_or_handle (const MulticastEntryKeyHandle& kh);
 char *mc_key_to_string (mc_key_t *key);
+hal_ret_t hal_mcast_init_cb(void);
+hal_ret_t hal_mcast_cleanup_cb(void);
 
 // SVC CRUD APIs
 hal_ret_t multicastentry_create(MulticastEntrySpec& spec,

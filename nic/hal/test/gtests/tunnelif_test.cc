@@ -1,7 +1,7 @@
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/nw/nw.hpp"
 #include "nic/hal/src/nw/endpoint.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"
@@ -61,7 +61,7 @@ protected:
 // ----------------------------------------------------------------------------
 // Creating a useg tunnelif
 // ----------------------------------------------------------------------------
-TEST_F(tunnelif_test, test1) 
+TEST_F(tunnelif_test, test1)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;
@@ -146,7 +146,7 @@ TEST_F(tunnelif_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    
+
     // tunnel create
     tnnl_spec.mutable_key_or_handle()->set_interface_id(2);
     tnnl_spec.set_type(intf::IF_TYPE_TUNNEL);

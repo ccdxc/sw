@@ -2,7 +2,7 @@
 
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"
-#include "nic/hal/pd/iris/security/nwsec_pd.hpp"
+#include "nic/hal/pd/iris/firewall/nwsec_pd.hpp"
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
 #include "nic/hal/pd/iris/mcast/multicast_pd.hpp"
 #include "nic/hal/pd/iris/lif/lif_pd.hpp"
@@ -40,7 +40,7 @@
 #include "nic/hal/pd/iris/internal/rawccb_pd.hpp"
 #include "nic/hal/pd/iris/internal/proxyrcb_pd.hpp"
 #include "nic/hal/pd/iris/internal/proxyccb_pd.hpp"
-#include "nic/hal/pd/iris/security/dos_pd.hpp"
+#include "nic/hal/pd/iris/dos/dos_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
@@ -66,15 +66,15 @@ bool
 hal_state_pd::init(void)
 {
     // initialize vrf related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] =
         slab::factory("Vrf PD", HAL_SLAB_VRF_PD,
                       sizeof(hal::pd::pd_vrf_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] != NULL),
                       false);
 
     vrf_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_VRFS,
-                                                  true, /* thread safe */ 
+                                                  true, /* thread safe */
                                                   true); /*skip zero */
     HAL_ASSERT_RETURN((vrf_hwid_idxr_ != NULL), false);
     // vrf_hwid_idxr_->alloc_withid(0);
@@ -85,11 +85,11 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((nwsec_profile_hwid_idxr_ != NULL), false);
 
     // initialize l2seg related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L2SEG_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L2SEG_PD)] =
         slab::factory("L2Segment PD", HAL_SLAB_L2SEG_PD,
                       sizeof(hal::pd::pd_l2seg_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L2SEG_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L2SEG_PD)] != NULL),
                       false);
 
     flow_lkupid_ht_ = ht::factory(HAL_MAX_HW_L2SEGMENTS + HAL_MAX_HW_VRFS,
@@ -98,146 +98,146 @@ hal_state_pd::init(void)
                                  hal::pd::flow_lkupid_compare_hw_key_func);
     HAL_ASSERT_RETURN((flow_lkupid_ht_ != NULL), false);
 
-    l2seg_cpu_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_L2SEGMENTS, 
+    l2seg_cpu_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_L2SEGMENTS,
                                                  true, /* thread safe */
                                                  true);/* skip zero */
     HAL_ASSERT_RETURN((l2seg_cpu_idxr_ != NULL), false);
 
     // initialize mc entry related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_MC_ENTRY_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_MC_ENTRY_PD)] =
         slab::factory("mc entry PD", HAL_SLAB_MC_ENTRY_PD,
                       sizeof(hal::pd::pd_mc_entry_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_MC_ENTRY_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_MC_ENTRY_PD)] != NULL),
                       false);
 
     // initialize lport indexer
-    lport_idxr_ = sdk::lib::indexer::factory(HAL_MAX_LPORTS, 
+    lport_idxr_ = sdk::lib::indexer::factory(HAL_MAX_LPORTS,
                                              true,     /* thread safe */
                                              true);    /* skip zero */
     HAL_ASSERT_RETURN((lport_idxr_ != NULL), false);
 
     // initialize LIF PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] =
         slab::factory("LIF_PD", HAL_SLAB_LIF_PD,
                       sizeof(hal::pd::pd_lif_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] != NULL),
                       false);
 
     lif_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_LIFS);
     HAL_ASSERT_RETURN((lif_hwid_idxr_ != NULL), false);
 
     // initialize Uplink If PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] =
         slab::factory("UPLINKIF_PD", HAL_SLAB_UPLINKIF_PD,
                       sizeof(hal::pd::pd_uplinkif_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] != NULL),
                       false);
 
     // initialize Uplink PC PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKPC_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKPC_PD)] =
         slab::factory("UPLINKPC_PD", HAL_SLAB_UPLINKPC_PD,
                       sizeof(hal::pd::pd_uplinkpc_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKPC_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKPC_PD)] != NULL),
                       false);
 
     uplinkifpc_idxr_ = sdk::lib::indexer::factory(HAL_MAX_UPLINK_IF_PCS);
     HAL_ASSERT_RETURN((uplinkifpc_idxr_ != NULL), false);
 
     // initialize ENIC If PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] =
         slab::factory("ENICIF_PD", HAL_SLAB_ENICIF_PD,
                       sizeof(hal::pd::pd_enicif_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] != NULL),
                       false);
 
     // initialize ENIC If l2seg PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IF_L2SEG_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IF_L2SEG_PD)] =
         slab::factory("IF_L2SEG_PD", HAL_SLAB_IF_L2SEG_PD,
                       sizeof(hal::pd::pd_if_l2seg_entry_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IF_L2SEG_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IF_L2SEG_PD)] != NULL),
                       false);
 
     // initialize CPU If PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUIF_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUIF_PD)] =
         slab::factory("CPUIF_PD", HAL_SLAB_CPUIF_PD,
                       sizeof(hal::pd::pd_cpuif_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUIF_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUIF_PD)] != NULL),
                       false);
 
     // initialize App Redirect If PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_APP_REDIR_IF_PD)] = 
-        slab::factory("APP_REDIR_IF_PD", 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_APP_REDIR_IF_PD)] =
+        slab::factory("APP_REDIR_IF_PD",
                       HAL_SLAB_APP_REDIR_IF_PD,
-                      sizeof(hal::pd::pd_app_redir_if_t), 
+                      sizeof(hal::pd::pd_app_redir_if_t),
                       2,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_APP_REDIR_IF_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_APP_REDIR_IF_PD)] != NULL),
                       false);
 
     // initialize TUNNEL If PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNELIF_PD)] = 
-        slab::factory("TUNNELIF_PD", 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNELIF_PD)] =
+        slab::factory("TUNNELIF_PD",
                       HAL_SLAB_TUNNELIF_PD,
-                      sizeof(hal::pd::pd_tunnelif_t), 
+                      sizeof(hal::pd::pd_tunnelif_t),
                       8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNELIF_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNELIF_PD)] != NULL),
                       false);
 
     // initialize EP PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] =
         slab::factory("EP_PD", HAL_SLAB_EP_PD,
                       sizeof(hal::pd::pd_ep_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] != NULL),
                       false);
 
     // initialize EP PD l3 entry related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_IP_ENTRY_PD)] = 
-        slab::factory("EP_PD_IP_ENTRY", 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_IP_ENTRY_PD)] =
+        slab::factory("EP_PD_IP_ENTRY",
                       HAL_SLAB_EP_IP_ENTRY_PD,
                       sizeof(hal::pd::pd_ep_ip_entry_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_IP_ENTRY_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_IP_ENTRY_PD)] != NULL),
                       false);
 
     // initialize dos-policy PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_DOS_POLICY_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_DOS_POLICY_PD)] =
         slab::factory("NWSEC_PD", HAL_SLAB_DOS_POLICY_PD,
                       sizeof(hal::pd::pd_dos_policy_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_DOS_POLICY_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_DOS_POLICY_PD)] != NULL),
                       false);
 
     // initialize nwsec PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SECURITY_PROFILE_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SECURITY_PROFILE_PD)] =
         slab::factory("NWSEC_PD", HAL_SLAB_SECURITY_PROFILE_PD,
                       sizeof(hal::pd::pd_nwsec_profile_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SECURITY_PROFILE_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SECURITY_PROFILE_PD)] != NULL),
                       false);
 
     // initialize session related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SESSION_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SESSION_PD)] =
         slab::factory("Session PD", HAL_SLAB_SESSION_PD,
                       sizeof(hal::pd::pd_session_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SESSION_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SESSION_PD)] != NULL),
                       false);
 
     // initialize Qos class PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_QOS_CLASS_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_QOS_CLASS_PD)] =
         slab::factory("QOS_CLASS_PD", HAL_SLAB_QOS_CLASS_PD,
                       sizeof(hal::pd::pd_qos_class_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_QOS_CLASS_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_QOS_CLASS_PD)] != NULL),
                       false);
 
     qos_txdma_iq_idxr_ = sdk::lib::indexer::factory(HAL_MAX_TXDMA_IQS);
@@ -253,19 +253,19 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((qos_rxdma_oq_idxr_ != NULL), false);
 
     // initialize Copp PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_COPP_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_COPP_PD)] =
         slab::factory("COPP_PD", HAL_SLAB_COPP_PD,
                       sizeof(hal::pd::pd_copp_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_COPP_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_COPP_PD)] != NULL),
                       false);
 
     // initialize TLSCB related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TLSCB_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TLSCB_PD)] =
         slab::factory("TLSCB PD", HAL_SLAB_TLSCB_PD,
                       sizeof(hal::pd::pd_tlscb_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TLSCB_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TLSCB_PD)] != NULL),
                       false);
 
     tlscb_hwid_ht_ = ht::factory(HAL_MAX_HW_TLSCBS,
@@ -275,11 +275,11 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((tlscb_hwid_ht_ != NULL), false);
 
     // initialize TCPCB related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TCPCB_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TCPCB_PD)] =
         slab::factory("TCPCB PD", HAL_SLAB_TCPCB_PD,
                       sizeof(hal::pd::pd_tcpcb_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TCPCB_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TCPCB_PD)] != NULL),
                       false);
 
     tcpcb_hwid_ht_ = ht::factory(HAL_MAX_HW_TCPCBS,
@@ -289,19 +289,19 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((tcpcb_hwid_ht_ != NULL), false);
 
     // initialize Acl PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)] =
         slab::factory("ACL_PD", HAL_SLAB_ACL_PD,
                       sizeof(hal::pd::pd_acl_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)] != NULL),
                       false);
 
     // initialize WRING related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_WRING_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_WRING_PD)] =
         slab::factory("WRING PD", HAL_SLAB_WRING_PD,
                       sizeof(hal::pd::pd_wring_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_WRING_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_WRING_PD)] != NULL),
                       false);
 
     wring_hwid_ht_ = ht::factory(HAL_MAX_HW_WRING,
@@ -315,11 +315,11 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((session_keys_idxr_ != NULL), false);
 
     // initialize IPSECCB related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_PD)] =
         slab::factory("IPSECCB PD", HAL_SLAB_IPSECCB_PD,
                       sizeof(hal::pd::pd_ipseccb_encrypt_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_PD)] != NULL),
                       false);
 
     ipseccb_hwid_ht_ = ht::factory(HAL_MAX_HW_IPSECCBS,
@@ -328,12 +328,12 @@ hal_state_pd::init(void)
                                  hal::pd::ipseccb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((ipseccb_hwid_ht_ != NULL), false);
 
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_DECRYPT_PD)] = 
-        slab::factory("IPSECCB PD", 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_DECRYPT_PD)] =
+        slab::factory("IPSECCB PD",
                       HAL_SLAB_IPSECCB_DECRYPT_PD,
                       sizeof(hal::pd::pd_ipseccb_decrypt_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_DECRYPT_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_DECRYPT_PD)] != NULL),
                       false);
 
     ipseccb_decrypt_hwid_ht_ = ht::factory(HAL_MAX_HW_IPSECCBS,
@@ -343,19 +343,19 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((ipseccb_decrypt_hwid_ht_ != NULL), false);
 
     // initialize L4LB PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)] =
         slab::factory("L4LB_PD", HAL_SLAB_L4LB_PD,
                       sizeof(hal::pd::pd_l4lb_t), 8,
                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)] != NULL),
                       false);
 
     // initialize rw table management structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RW_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RW_PD)] =
         slab::factory("RW TBL", HAL_SLAB_RW_PD,
                       sizeof(hal::pd::pd_rw_entry_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RW_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RW_PD)] != NULL),
                       false);
 
     rw_table_ht_ = ht::factory(HAL_MAX_RW_TBL_ENTRIES,
@@ -368,11 +368,11 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((rw_tbl_idxr_ != NULL), false);
 
     // initialize tunnel rw table management structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNEL_RW_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNEL_RW_PD)] =
         slab::factory("TUNNEL RW TBL", HAL_SLAB_TUNNEL_RW_PD,
                       sizeof(hal::pd::pd_tnnl_rw_entry_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNEL_RW_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNEL_RW_PD)] != NULL),
                       false);
 
     tnnl_rw_table_ht_ = ht::factory(HAL_TUNNEL_RW_TABLE_SIZE,
@@ -383,13 +383,13 @@ hal_state_pd::init(void)
 
     tnnl_rw_tbl_idxr_ = sdk::lib::indexer::factory(HAL_TUNNEL_RW_TABLE_SIZE);
     HAL_ASSERT_RETURN((tnnl_rw_tbl_idxr_ != NULL), false);
-    
+
     // initialize CPUCB related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUCB_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUCB_PD)] =
         slab::factory("CPUCB PD", HAL_SLAB_CPUCB_PD,
                       sizeof(hal::pd::pd_cpucb_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUCB_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUCB_PD)] != NULL),
                       false);
 
     cpucb_hwid_ht_ = ht::factory(HAL_MAX_HW_CPUCBS,
@@ -399,19 +399,19 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((cpucb_hwid_ht_ != NULL), false);
 
     // initialize CPUPKT related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_PD)] =
         slab::factory("CPUPKT PD", HAL_SLAB_CPUPKT_PD,
                       sizeof(hal::pd::cpupkt_ctxt_t), MAX_CPU_PKT_QUEUES,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_PD)] != NULL),
                       false);
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_QINST_INFO_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_QINST_INFO_PD)] =
         slab::factory("CPUPKT QINFO PD",
                       HAL_SLAB_CPUPKT_QINST_INFO_PD,
                       sizeof(hal::pd::cpupkt_queue_info_t),
                       MAX_CPU_PKT_QUEUES,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_QINST_INFO_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_QINST_INFO_PD)] != NULL),
                       false);
 
     cpupkt_descr_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_CPU_PKT_DESCR_ENTRIES);
@@ -420,11 +420,11 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((cpupkt_page_hwid_idxr_ != NULL), false);
 
     // initialize RAWRCB related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWRCB_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWRCB_PD)] =
         slab::factory("RAWRCB PD", HAL_SLAB_RAWRCB_PD,
                       sizeof(hal::pd::pd_rawrcb_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWRCB_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWRCB_PD)] != NULL),
                       false);
 
     rawrcb_hwid_ht_ = ht::factory(HAL_MAX_HW_RAWRCB_HT_SIZE,
@@ -434,7 +434,7 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((rawrcb_hwid_ht_ != NULL), false);
 
     // initialize PROXYRCB related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_PROXYRCB_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_PROXYRCB_PD)] =
         slab::factory("PROXYRCB PD", HAL_SLAB_PROXYRCB_PD,
                       sizeof(hal::pd::pd_proxyrcb_t), 128,
                       true, true, true);
@@ -447,11 +447,11 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((proxyrcb_hwid_ht_ != NULL), false);
 
     // initialize RAWCCB related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWCCB_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWCCB_PD)] =
         slab::factory("RAWCCB PD", HAL_SLAB_RAWCCB_PD,
                       sizeof(hal::pd::pd_rawccb_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWCCB_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWCCB_PD)] != NULL),
                       false);
 
     rawccb_hwid_ht_ = ht::factory(HAL_MAX_HW_RAWCCB_HT_SIZE,
@@ -461,11 +461,11 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((rawccb_hwid_ht_ != NULL), false);
 
     // initialize PROXYCCB related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_PROXYCCB_PD)] = 
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_PROXYCCB_PD)] =
         slab::factory("PROXYCCB PD", HAL_SLAB_PROXYCCB_PD,
                       sizeof(hal::pd::pd_proxyccb_t), 128,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_PROXYCCB_PD)] != NULL), 
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_PROXYCCB_PD)] != NULL),
                       false);
 
     proxyccb_hwid_ht_ = ht::factory(HAL_MAX_HW_PROXYCCB_HT_SIZE,
@@ -495,7 +495,7 @@ hal_state_pd::hal_state_pd()
 {
     // slab
     memset(slabs_, 0, sizeof(slabs_));
-    
+
     // indexer
     vrf_hwid_idxr_           = NULL;
     nwsec_profile_hwid_idxr_ = NULL;
@@ -609,7 +609,7 @@ hal_state_pd::~hal_state_pd()
         for (tid = P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN;
              tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
             if (p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
-                directmap::destroy(p4plus_rxdma_dm_tables_[tid - 
+                directmap::destroy(p4plus_rxdma_dm_tables_[tid -
                                    P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
             }
         }
@@ -620,7 +620,7 @@ hal_state_pd::~hal_state_pd()
         for (tid = P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN;
              tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
             if (p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
-                directmap::destroy(p4plus_txdma_dm_tables_[tid - 
+                directmap::destroy(p4plus_txdma_dm_tables_[tid -
                                    P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
             }
         }
@@ -823,8 +823,8 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                 // ACL tcam table with priority 0 as highest and no duplicate
                 // priorities
                 acl_table_ = acl_tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
-                                               tinfo.key_struct_size, 
-                                               tinfo.actiondata_struct_size, 
+                                               tinfo.key_struct_size,
+                                               tinfo.actiondata_struct_size,
                                                false, false);
                 HAL_ASSERT(acl_table_ != NULL);
             } else if ((tid == P4TBL_ID_DDOS_SRC_VF) ||
@@ -854,11 +854,11 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
             if (tid == P4TBL_ID_TWICE_NAT) {
                 dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
                     directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
-                                       tinfo.actiondata_struct_size, true, 
+                                       tinfo.actiondata_struct_size, true,
                                        ENTRY_TRACE_EN);
             } else {
                 dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
-                    directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, 
+                    directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
                                        tinfo.actiondata_struct_size, false,
                                        ENTRY_TRACE_EN);
             }
@@ -929,7 +929,7 @@ hal_state_pd::p4plus_rxdma_init_tables(pd_mem_init_args_t *args)
          tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; tid++) {
         rc = p4pluspd_rxdma_table_properties_get(tid, &tinfo);
         HAL_ASSERT(rc == P4PD_SUCCESS);
-        
+
         switch (tinfo.table_type) {
         case P4_TBL_TYPE_INDEX:
             p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
@@ -984,7 +984,7 @@ hal_state_pd::p4plus_txdma_init_tables(pd_mem_init_args_t *args)
          tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; tid++) {
         rc = p4pluspd_txdma_table_properties_get(tid, &tinfo);
         HAL_ASSERT(rc == P4PD_SUCCESS);
-        
+
         switch (tinfo.table_type) {
         case P4_TBL_TYPE_INDEX:
             p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
@@ -1051,7 +1051,7 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
                                                {P4TBL_ID_TX_STATS, 6},
                                                {P4TBL_ID_INGRESS_TX_STATS, 3}};
     int arrlen = sizeof(region_arr)/sizeof(asicpd_stats_region_info_t);
-    
+
     // Capri asic initializations
     // Initialize the p4pd stats region
     HAL_ASSERT(asicpd_p4plus_table_mpu_base_init() == HAL_RET_OK);
@@ -1175,7 +1175,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
     case HAL_SLAB_SESSION_PD:
         g_hal_state_pd->session_slab()->free(elem);
         break;
- 
+
     case HAL_SLAB_TLSCB_PD:
         g_hal_state_pd->tlscb_slab()->free(elem);
         break;
@@ -1199,11 +1199,11 @@ free_to_slab (hal_slab_t slab_id, void *elem)
     case HAL_SLAB_IPSECCB_PD:
         g_hal_state_pd->ipseccb_slab()->free(elem);
         break;
- 
+
     case HAL_SLAB_IPSECCB_DECRYPT_PD:
         g_hal_state_pd->ipseccb_decrypt_slab()->free(elem);
         break;
-    
+
     case HAL_SLAB_CPUCB_PD:
         g_hal_state_pd->cpucb_slab()->free(elem);
         break;

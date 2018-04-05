@@ -5,7 +5,7 @@
 #include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
@@ -58,14 +58,14 @@ protected:
 // 2. Update native l2seg
 // 3. No l2seg, update will be a noop
 // ----------------------------------------------------------------------------
-TEST_F(uplinkif_test, test1) 
+TEST_F(uplinkif_test, test1)
 {
     hal_ret_t            ret;
     InterfaceSpec       spec;
     InterfaceResponse   rsp;
 
     spec.set_type(intf::IF_TYPE_UPLINK);
-    
+
     spec.mutable_key_or_handle()->set_interface_id(1);
     spec.mutable_if_uplink_info()->set_port_num(1);
     spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
@@ -91,7 +91,7 @@ TEST_F(uplinkif_test, test1)
 // 1. Create uplinks
 // 2. Delete uplinks
 // ----------------------------------------------------------------------------
-TEST_F(uplinkif_test, test2) 
+TEST_F(uplinkif_test, test2)
 {
     hal_ret_t                   ret;
     InterfaceSpec               spec;
@@ -150,7 +150,7 @@ TEST_F(uplinkif_test, test2)
 // - Add l2seg on uplink
 // - Delete uplink - expect failure
 // ----------------------------------------------------------------------------
-TEST_F(uplinkif_test, test3) 
+TEST_F(uplinkif_test, test3)
 {
     hal_ret_t                       ret;
     InterfaceSpec                   if_spec;
@@ -208,7 +208,7 @@ TEST_F(uplinkif_test, test3)
     ret = hal::interface_create(if_spec, &if_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     // Create l2segment
     l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nkh = l2seg_spec.add_network_key_handle();
@@ -263,7 +263,7 @@ TEST_F(uplinkif_test, test3)
 // - Create an uplink
 // - Delete an uplink
 // ----------------------------------------------------------------------------
-TEST_F(uplinkif_test, test4) 
+TEST_F(uplinkif_test, test4)
 {
     hal_ret_t                        ret;
     InterfaceSpec                   spec;

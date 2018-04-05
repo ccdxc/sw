@@ -2062,6 +2062,7 @@ acl_delete (AclDeleteRequest& req, AclDeleteResponse *rsp)
                              acl_delete_cleanup_cb);
 
 end:
+
     if (ret == HAL_RET_OK) {
         HAL_API_STATS_INC (HAL_API_ACL_DELETE_SUCCESS);
     } else {
@@ -2071,4 +2072,17 @@ end:
     hal_api_trace(" API End: acl delete ");
     return ret;
 }
+
+hal_ret_t
+hal_aclqos_init_cb (void)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+hal_aclqos_cleanup_cb (void)
+{
+    return HAL_RET_OK;
+}
+
 }    // namespace hal

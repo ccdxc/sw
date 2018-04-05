@@ -258,7 +258,7 @@ typedef struct dos_policy_prop_s {
 typedef struct dos_policy_s {
     hal_spinlock_t        slock;                  // lock to protect this structure
     hal_handle_t          hal_handle;             // HAL allocated handle
-    hal_handle_t          vrf_handle;          // vrf handle
+    hal_handle_t          vrf_handle;             // vrf handle
 
     bool                  ingr_pol_valid;
     bool                  egr_pol_valid;
@@ -290,7 +290,8 @@ extern uint32_t dos_policy_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool dos_policy_id_compare_key_func(void *key1, void *key2);
 dos_policy_t *dos_policy_lookup_handle(const nwsec::DoSPolicySpec& dp);
 dos_policy_t *find_dos_policy_by_handle(hal_handle_t handle);
-
+hal_ret_t hal_dos_init_cb(void);
+hal_ret_t hal_dos_cleanup_cb(void);
 hal_ret_t dospolicy_create(nwsec::DoSPolicySpec& spec,
                            nwsec::DoSPolicyResponse *rsp);
 
@@ -325,35 +326,36 @@ hal_ret_t securitygroup_delete(nwsec::SecurityGroupDeleteRequest& req,
                                nwsec::SecurityGroupDeleteResponseMsg *rsp);
 
 hal_ret_t securitygroup_get(nwsec::SecurityGroupGetRequest& req,
-                             nwsec::SecurityGroupGetResponseMsg *rsp);
+                           nwsec::SecurityGroupGetResponseMsg *rsp);
 
 hal_ret_t securitygrouppolicy_create(nwsec::SecurityGroupPolicySpec& req,
-                                       nwsec::SecurityGroupPolicyResponse *rsp);
+                                     nwsec::SecurityGroupPolicyResponse *rsp);
 
 hal_ret_t securitygrouppolicy_update(nwsec::SecurityGroupPolicySpec& req,
-                                       nwsec::SecurityGroupPolicyResponse *rsp);
+                                     nwsec::SecurityGroupPolicyResponse *rsp);
 
 hal_ret_t securitygrouppolicy_delete(nwsec::SecurityGroupPolicyDeleteRequest& req,
-                                       nwsec::SecurityGroupPolicyDeleteResponse *rsp);
+                                     nwsec::SecurityGroupPolicyDeleteResponse *rsp);
 
 hal_ret_t securitygrouppolicy_get(nwsec::SecurityGroupPolicyGetRequest& req,
-                                    nwsec::SecurityGroupPolicyGetResponseMsg *rsp);
+                                  nwsec::SecurityGroupPolicyGetResponseMsg *rsp);
+
+hal_ret_t hal_fw_init_cb(void);
+
+hal_ret_t hal_fw_cleanup_cb(void);
 
 hal_ret_t
 securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
-                       nwsec::SecurityPolicyResponse   *res);
-
+                      nwsec::SecurityPolicyResponse   *res);
 hal_ret_t
 securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
-                       nwsec::SecurityPolicyResponse   *res);
-
+                      nwsec::SecurityPolicyResponse   *res);
 hal_ret_t
 securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&   req,
-                       nwsec::SecurityPolicyDeleteResponse   *res);
-
+                      nwsec::SecurityPolicyDeleteResponse   *res);
 hal_ret_t
 securitypolicy_get(nwsec::SecurityPolicyGetRequest&      req,
-                    nwsec::SecurityPolicyGetResponseMsg   *res);
+                   nwsec::SecurityPolicyGetResponseMsg   *res);
 
 }    // namespace hal
 

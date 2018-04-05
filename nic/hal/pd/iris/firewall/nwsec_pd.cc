@@ -2,7 +2,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/pd/iris/security/nwsec_pd.hpp"
+#include "nic/hal/pd/iris/firewall/nwsec_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/nwsec_api.hpp"
@@ -16,7 +16,7 @@ namespace pd {
 hal_ret_t
 pd_nwsec_profile_create (pd_nwsec_profile_create_args_t *args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;
     pd_nwsec_profile_t   *pd_nwsec;
 
     HAL_TRACE_DEBUG("{}: creating pd state ",
@@ -57,7 +57,7 @@ end:
 hal_ret_t
 pd_nwsec_profile_update (pd_nwsec_profile_update_args_t *args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;;
     pd_nwsec_profile_t   *pd_nwsec;
 
     HAL_TRACE_DEBUG("{}: updating pd state ",
@@ -78,8 +78,8 @@ pd_nwsec_profile_update (pd_nwsec_profile_update_args_t *args)
     // Cache the PI pointer since the ptr in the
     // args is a local copy
     void *cached_pi_ptr = pd_nwsec->nwsec_profile;
-     
-    pd_nwsec->nwsec_profile = (void *) args->nwsec_profile; 
+
+    pd_nwsec->nwsec_profile = (void *) args->nwsec_profile;
     // Program HW
     ret = nwsec_pd_program_hw(pd_nwsec, FALSE);
     if (ret != HAL_RET_OK) {
@@ -153,7 +153,7 @@ nwsec_pd_depgm_l4_prof_tbl (pd_nwsec_profile_t *nwsec_pd)
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_L4_PROFILE);
     HAL_ASSERT_RETURN((dm != NULL), HAL_RET_ERR);
-    
+
     sdk_ret = dm->remove(nwsec_pd->nwsec_hw_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -247,7 +247,7 @@ nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
         profile->tcp_nonsyn_noack_drop;
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_normalize_mss =
         profile->tcp_normalize_mss;
-    
+
     if (create) {
         sdk_ret = dm->insert(&data, (uint32_t *)&pd_nw->nwsec_hw_id);
     } else {
@@ -267,7 +267,7 @@ nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Uplink if
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 nwsec_pd_alloc_res(pd_nwsec_profile_t *pd_nw)
 {
     return HAL_RET_OK;
@@ -276,7 +276,7 @@ nwsec_pd_alloc_res(pd_nwsec_profile_t *pd_nw)
 // ----------------------------------------------------------------------------
 // De-Allocate resources for PD Uplink if
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 nwsec_pd_dealloc_res(pd_nwsec_profile_t *pd_nw)
 {
     return HAL_RET_OK;
@@ -288,7 +288,7 @@ nwsec_pd_dealloc_res(pd_nwsec_profile_t *pd_nw)
 //  - Delink PI <-> PD
 //  - Free PD Vrf
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -305,8 +305,8 @@ nwsec_pd_cleanup(pd_nwsec_profile_t *nwsec_pd)
     // Releasing resources
     ret = nwsec_pd_dealloc_res(nwsec_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for nwsec: {}", 
-                      __FUNCTION__, 
+        HAL_TRACE_ERR("{}: unable to dealloc res for nwsec: {}",
+                      __FUNCTION__,
                       ((nwsec_profile_t*)(nwsec_pd->nwsec_profile))->profile_id);
         goto end;
     }
@@ -337,7 +337,7 @@ nwsec_pd_program_hw(pd_nwsec_profile_t *pd_nw, bool create)
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 nwsec_link_pi_pd(pd_nwsec_profile_t *pd_nw, nwsec_profile_t *pi_nw)
 {
     pd_nw->nwsec_profile = pi_nw;
@@ -347,7 +347,7 @@ nwsec_link_pi_pd(pd_nwsec_profile_t *pd_nw, nwsec_profile_t *pi_nw)
 // ----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 nwsec_delink_pi_pd(pd_nwsec_profile_t *pd_nw, nwsec_profile_t  *pi_nw)
 {
     pd_nw->nwsec_profile = NULL;
@@ -359,7 +359,7 @@ nwsec_delink_pi_pd(pd_nwsec_profile_t *pd_nw, nwsec_profile_t  *pi_nw)
 // ----------------------------------------------------------------------------
 hal_ret_t
 // pd_nwsec_profile_make_clone(nwsec_profile_t *nwsec, nwsec_profile_t *clone)
-pd_nwsec_profile_make_clone(pd_nwsec_profile_make_clone_args_t *args)    
+pd_nwsec_profile_make_clone(pd_nwsec_profile_make_clone_args_t *args)
 {
     hal_ret_t           ret             = HAL_RET_OK;
     pd_nwsec_profile_t  *pd_nwsec_clone = NULL;

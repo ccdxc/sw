@@ -5,7 +5,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 
@@ -1478,6 +1478,18 @@ nwsec_prof_del_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
     }
     nwsec_profile_unlock(nwsec, __FILENAME__, __LINE__, __func__);    // unlock
     return ret;
+}
+
+hal_ret_t
+hal_fw_init_cb (void)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+hal_fw_cleanup_cb (void)
+{
+    return HAL_RET_OK;
 }
 
 }    // namespace hal

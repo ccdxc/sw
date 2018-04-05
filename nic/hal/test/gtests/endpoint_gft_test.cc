@@ -2,7 +2,7 @@
 #include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
@@ -71,7 +71,7 @@ protected:
 // ----------------------------------------------------------------------------
 // Creating a endpoint
 // ----------------------------------------------------------------------------
-TEST_F(endpoint_gft_test, test1) 
+TEST_F(endpoint_gft_test, test1)
 {
     hal_ret_t                   ret;
     VrfSpec                  ten_spec;

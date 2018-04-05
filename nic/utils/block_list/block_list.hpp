@@ -59,7 +59,7 @@ public:
         const dllist_ctxt_t *lcurr, *lnext;
         list_node_t   *node;
         int pos;
-        inline void begin(const block_list* ref) { 
+        inline void begin(const block_list* ref) {
             lcurr = (&ref->list_head_)->next;
             lnext = lcurr ? lcurr -> next : NULL;
             if (lcurr != &ref->list_head_) {
@@ -83,7 +83,7 @@ public:
                 pos = 0;
             }
         }
-        inline void* get(block_list *ref) { 
+        inline void* get(block_list *ref) {
             return ref->element_location_(node, pos);
         }
 
@@ -124,11 +124,11 @@ private:
     ~block_list();
     bool init(uint32_t elem_size, uint32_t elems_per_block, shmmgr *mmgr);
     list_node_t *get_last_node_();
-    hal_ret_t find_(void *elem, list_node_t **elem_in_node, 
+    hal_ret_t find_(void *elem, list_node_t **elem_in_node,
                     uint32_t *elem_id);
     hal_ret_t consolidate_(list_node_t *node, uint32_t elem_id,
                            list_node_t *last_node);
-    void *element_location_(list_node_t *node, 
+    void *element_location_(list_node_t *node,
                             uint32_t elem_id);
     hal_ret_t remove_elem_(list_node_t *node, uint32_t elem_id, bool *last_elem);
 };

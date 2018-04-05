@@ -1,6 +1,6 @@
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/hal/hal.hpp"
 #include "sdk/list.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
@@ -15,7 +15,7 @@
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include "nic/fte/fte_ctx.hpp"
-#include "nic/hal/src/security/nwsec_group.hpp"
+#include "nic/hal/src/firewall/nwsec_group.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 
@@ -74,7 +74,7 @@ protected:
 // Update
 // Delete
 // ----------------------------------------------------------------------------
-TEST_F(nwsec_test, test1) 
+TEST_F(nwsec_test, test1)
 {
     hal_ret_t                               ret;
     SecurityProfileSpec                     sp_spec, sp_spec1;
@@ -131,7 +131,7 @@ TEST_F(nwsec_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding 
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
     post = hal_test_utils_collect_slab_stats();
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
@@ -141,7 +141,7 @@ TEST_F(nwsec_test, test1)
 // ----------------------------------------------------------------------------
 // Create a SecurityGroupPolicySpec
 // ----------------------------------------------------------------------------
-TEST_F(nwsec_test, test2) 
+TEST_F(nwsec_test, test2)
 {
     hal_ret_t                                   ret;
     SecurityGroupSpec                           sg_spec;
@@ -158,19 +158,19 @@ TEST_F(nwsec_test, test2)
     // Create SecurityGroupPolicySpec
     sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_security_group_id(1);
     sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_peer_security_group_id(2);
-    
+
     nwsec::FirewallRuleSpec *fw_rule = sp_spec.mutable_policy_rules()->add_in_fw_rules();
     Service *svc =  fw_rule->add_svc();
     svc->set_ip_protocol(IPProtocol::IPPROTO_IPV4);
     svc->set_dst_port(1000);
     svc->set_alg(ALGName::APP_SVC_TFTP);
-   
+
     /*fw_rule = sp_spec.mutable_egress_policy()->add_fw_rules();
-    svc = fw_rule->add_svc(); 
+    svc = fw_rule->add_svc();
     svc->set_ip_protocol(IPProtocol::IPPROTO_IPV4);
     svc->set_dst_port(2000);
     svc->set_alg(ALGName::APP_SVC_TFTP);*/
-    
+
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securitygrouppolicy_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
@@ -186,20 +186,20 @@ TEST_F(nwsec_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
 
-    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding 
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
     //post = hal_test_utils_collect_slab_stats();
     //hal_test_utils_check_slab_leak(pre, post, &is_leak);
     //ASSERT_TRUE(is_leak == false);
 }
 
-TEST_F(nwsec_test, test3) 
+TEST_F(nwsec_test, test3)
 {
     hal_ret_t                               ret;
     SecurityGroupSpec                       sp_spec;
     SecurityGroupResponse                   sp_rsp;
 
     dllist_ctxt_t                           *curr, *next, *nw_list, *ep_list;
-    hal_handle_id_list_entry_t              *nw_ent = NULL, *ep_ent = NULL; 
+    hal_handle_id_list_entry_t              *nw_ent = NULL, *ep_ent = NULL;
     //slab_stats_t                            *pre = NULL, *post = NULL;
     //bool                                    is_leak = false;
 
@@ -207,7 +207,7 @@ TEST_F(nwsec_test, test3)
 
     // Create SecurityGroupSpec
     sp_spec.mutable_key_or_handle()->set_security_group_id(1);
-    
+
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securitygroup_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
@@ -261,13 +261,13 @@ TEST_F(nwsec_test, test3)
         }
     }
 
-    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding 
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
     //post = hal_test_utils_collect_slab_stats();
     //hal_test_utils_check_slab_leak(pre, post, &is_leak);
     //ASSERT_TRUE(is_leak == false);
 }
 
-TEST_F(nwsec_test, test4) 
+TEST_F(nwsec_test, test4)
 {
     hal_ret_t                               ret;
     SecurityProfileSpec                     sp_spec;
@@ -349,7 +349,7 @@ TEST_F(nwsec_test, test4)
         ASSERT_TRUE(ret == HAL_RET_OK || ret == HAL_RET_SECURITY_PROFILE_NOT_FOUND);
     }
 
-    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding 
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
     post = hal_test_utils_collect_slab_stats();
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);

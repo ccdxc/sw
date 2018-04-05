@@ -15,7 +15,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/ip.h"
-#include "nic/hal/src/security/nwsec.hpp"
+#include "nic/hal/src/firewall/nwsec.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
