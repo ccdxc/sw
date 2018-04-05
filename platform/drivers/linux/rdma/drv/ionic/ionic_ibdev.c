@@ -1051,6 +1051,8 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 		goto err_q;
 	}
 
+	spin_lock_init(&cq->lock);
+
 	rc = ionic_create_cq_cmd(dev, cq);
 	if (rc)
 		goto err_cmd;
@@ -1441,6 +1443,9 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	}
 
 	/* TODO alloc sq HBM */
+
+	spin_lock_init(&qp->sq_lock);
+	spin_lock_init(&qp->rq_lock);
 
 	rc = ionic_create_qp_cmd(dev, pd,
 				 to_ionic_cq(attr->send_cq),
