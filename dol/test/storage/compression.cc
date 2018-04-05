@@ -401,7 +401,7 @@ comp_queue_push(const cp_desc_t& src_desc,
         memcpy(dst_desc, &src_desc, sizeof(*dst_desc));
 
         comp_queue.curr_seq_comp_qid = seq_comp_qid;
-        seq_comp_desc = queues::pvm_sq_consume_entry(comp_queue.curr_seq_comp_qid,
+        seq_comp_desc = queues::seq_sq_consume_entry(comp_queue.curr_seq_comp_qid,
                                                      &comp_queue.curr_seq_comp_pd_idx);
         seq_comp_desc->clear();
         seq_comp_desc->write_bit_fields(0, 64, host_mem_v2p(dst_desc));
@@ -416,7 +416,7 @@ comp_queue_push(const cp_desc_t& src_desc,
         // considerations when using batch mode.
         if (push_type == COMP_QUEUE_PUSH_SEQUENCER) {
             seq_comp_desc->write_thru();
-            test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE,
+            test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE,
                                comp_queue.curr_seq_comp_qid, 0,
                                comp_queue.curr_seq_comp_pd_idx);
             comp_queue.curr_push_type = COMP_QUEUE_PUSH_INVALID;
@@ -464,7 +464,7 @@ comp_queue_post_push(comp_queue_t &comp_queue)
 
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH:
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST:
-        test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, 
+        test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, 
                            comp_queue.curr_seq_comp_qid, 0,
                            comp_queue.curr_seq_comp_pd_idx);
         break;
@@ -725,7 +725,7 @@ int compress_flat_64K_buf() {
 
 int seq_compress_flat_64K_buf() {
   return _compress_flat_64K_buf(COMP_QUEUE_PUSH_SEQUENCER, 
-                                queues::get_pvm_seq_comp_sq(0));
+                                queues::get_seq_comp_sq(0));
 }
 
 int _compress_same_src_and_dst(comp_queue_push_t push_type,
@@ -754,7 +754,7 @@ int compress_same_src_and_dst() {
 
 int seq_compress_same_src_and_dst() {
     return _compress_same_src_and_dst(COMP_QUEUE_PUSH_SEQUENCER, 
-                                      queues::get_pvm_seq_comp_sq(0));
+                                      queues::get_seq_comp_sq(0));
 }
 
 int _decompress_to_flat_64K_buf(comp_queue_push_t push_type,
@@ -793,7 +793,7 @@ int decompress_to_flat_64K_buf() {
 
 int seq_decompress_to_flat_64K_buf() {
     return _decompress_to_flat_64K_buf(COMP_QUEUE_PUSH_SEQUENCER, 
-                                       queues::get_pvm_seq_comp_sq(0));
+                                       queues::get_seq_comp_sq(0));
 }
 
 int compress_odd_size_buf() {
@@ -891,7 +891,7 @@ int compress_host_sgl_to_host_sgl() {
 
 int seq_compress_host_sgl_to_host_sgl() {
     return _compress_host_sgl_to_host_sgl(COMP_QUEUE_PUSH_SEQUENCER, 
-                                          queues::get_pvm_seq_comp_sq(0));
+                                          queues::get_seq_comp_sq(0));
 }
 
 int _decompress_host_sgl_to_host_sgl(comp_queue_push_t push_type,
@@ -956,7 +956,7 @@ int decompress_host_sgl_to_host_sgl() {
 
 int seq_decompress_host_sgl_to_host_sgl() {
     return _decompress_host_sgl_to_host_sgl(COMP_QUEUE_PUSH_SEQUENCER, 
-                                            queues::get_pvm_seq_comp_sq(0));
+                                            queues::get_seq_comp_sq(0));
 }
 
 int _compress_flat_64K_buf_in_hbm(comp_queue_push_t push_type,
@@ -981,7 +981,7 @@ int compress_flat_64K_buf_in_hbm() {
 
 int seq_compress_flat_64K_buf_in_hbm() {
     return _compress_flat_64K_buf_in_hbm(COMP_QUEUE_PUSH_SEQUENCER, 
-                                         queues::get_pvm_seq_comp_sq(0));
+                                         queues::get_seq_comp_sq(0));
 }
 
 int _decompress_to_flat_64K_buf_in_hbm(comp_queue_push_t push_type,
@@ -1012,7 +1012,7 @@ int decompress_to_flat_64K_buf_in_hbm() {
 
 int seq_decompress_to_flat_64K_buf_in_hbm() {
     return _decompress_to_flat_64K_buf_in_hbm(COMP_QUEUE_PUSH_SEQUENCER, 
-                                              queues::get_pvm_seq_comp_sq(0));
+                                              queues::get_seq_comp_sq(0));
 }
 
 // Route the compressed output through sequencer to handle output block
@@ -1057,7 +1057,7 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
   chain_params.chain_ent.status_len = status_buf->line_size_get();
   chain_params.chain_ent.status_dma_en = 1;
   chain_params.chain_ent.intr_en = 1;
-  chain_params.seq_status_q = queues::get_pvm_seq_comp_status_sq(0);
+  chain_params.seq_status_q = queues::get_seq_comp_status_sq(0);
   if (test_setup_seq_acc_chain_entry(chain_params) != 0) {
     printf("cp_chain_ent failed\n");
     return -1;
@@ -1101,7 +1101,7 @@ int compress_output_through_sequencer() {
 
 int seq_compress_output_through_sequencer() {
     return _compress_output_through_sequencer(COMP_QUEUE_PUSH_SEQUENCER, 
-                                              queues::get_pvm_seq_comp_sq(0));
+                                              queues::get_seq_comp_sq(0));
 }
 
 void compress_xts_encrypt_setup(cp_desc_t& d,
@@ -1260,46 +1260,46 @@ int _compress_output_encrypt(uint32_t app_blk_size,
 int compress_output_encrypt_app_min_size() {
     return _compress_output_encrypt(kCompAppMinSize,
                                     COMP_QUEUE_PUSH_HW_DIRECT, 0,
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 int seq_compress_output_encrypt_app_min_size() {
     return _compress_output_encrypt(kCompAppMinSize,
                                     COMP_QUEUE_PUSH_SEQUENCER, 
-                                    queues::get_pvm_seq_comp_sq(0),
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_sq(0),
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 int compress_output_encrypt_app_max_size() {
     return _compress_output_encrypt(kCompAppMaxSize,
                                     COMP_QUEUE_PUSH_HW_DIRECT, 0,
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 int seq_compress_output_encrypt_app_max_size() {
     return _compress_output_encrypt(kCompAppMaxSize,
                                     COMP_QUEUE_PUSH_SEQUENCER, 
-                                    queues::get_pvm_seq_comp_sq(0),
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_sq(0),
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 int compress_output_encrypt_app_nominal_size() {
     return _compress_output_encrypt(kCompAppNominalSize,
                                     COMP_QUEUE_PUSH_HW_DIRECT, 0,
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 int seq_compress_output_encrypt_app_nominal_size() {
     return _compress_output_encrypt(kCompAppNominalSize,
                                     COMP_QUEUE_PUSH_SEQUENCER, 
-                                    queues::get_pvm_seq_comp_sq(0),
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_sq(0),
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 void xts_decrypt_decompress_setup(cp_desc_t& d,
@@ -1341,7 +1341,7 @@ void xts_decrypt_decompress_setup(cp_desc_t& d,
   xts_desc_addr->status = xts_status_buf->pa();
 
   // Chain XTS decrypt to XTS status sequencer 
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE,
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
                              xts_ctx.seq_xts_status_q, 0,
                              chain_params.ret_seq_status_index, 
                              &xts_desc_addr->db_addr, &xts_desc_addr->db_data);
@@ -1457,9 +1457,9 @@ int seq_decrypt_output_decompress_app_min_size() {
     // This test is always initiated from XTS sequencer queue, with chaining
     // to decomp from P4+.
     return _decrypt_output_decompress(kCompAppMinSize,
-                                      queues::get_pvm_seq_xts_sq(0),
-                                      queues::get_pvm_seq_xts_status_sq(0),
-                                      queues::get_pvm_seq_comp_status_sq(0));
+                                      queues::get_seq_xts_sq(0),
+                                      queues::get_seq_xts_status_sq(0),
+                                      queues::get_seq_comp_status_sq(0));
 }
 
 int seq_decrypt_output_decompress_app_max_size() {
@@ -1467,9 +1467,9 @@ int seq_decrypt_output_decompress_app_max_size() {
     // This test is always initiated from XTS sequencer queue, with chaining
     // to decomp from P4+.
     return _decrypt_output_decompress(kCompAppMaxSize,
-                                      queues::get_pvm_seq_xts_sq(0),
-                                      queues::get_pvm_seq_xts_status_sq(0),
-                                      queues::get_pvm_seq_comp_status_sq(0));
+                                      queues::get_seq_xts_sq(0),
+                                      queues::get_seq_xts_status_sq(0),
+                                      queues::get_seq_comp_status_sq(0));
 }
 
 int seq_decrypt_output_decompress_app_nominal_size() {
@@ -1477,9 +1477,9 @@ int seq_decrypt_output_decompress_app_nominal_size() {
     // This test is always initiated from XTS sequencer queue, with chaining
     // to decomp from P4+.
     return _decrypt_output_decompress(kCompAppNominalSize,
-                                      queues::get_pvm_seq_xts_sq(0),
-                                      queues::get_pvm_seq_xts_status_sq(0),
-                                      queues::get_pvm_seq_comp_status_sq(0));
+                                      queues::get_seq_xts_sq(0),
+                                      queues::get_seq_xts_status_sq(0),
+                                      queues::get_seq_comp_status_sq(0));
 }
 
 // Verify integrity of >64K buffer
@@ -1707,8 +1707,8 @@ int max_data_rate() {
 
 int seq_max_data_rate() {
     return _max_data_rate(COMP_QUEUE_PUSH_SEQUENCER_BATCH,
-                          queues::get_pvm_seq_comp_sq(0),
-                          queues::get_pvm_seq_comp_sq(1));
+                          queues::get_seq_comp_sq(0),
+                          queues::get_seq_comp_sq(1));
 }
 
 static int cp_dualq_flat_4K_buf(dp_mem_t *comp_buf,
@@ -1800,8 +1800,8 @@ int seq_compress_dualq_flat_4K_buf() {
   int rc = cp_dualq_flat_4K_buf(compressed_host_buf, uncompressed_host_buf,
                                 status_host_buf, status_host_buf2,
                                 COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST,
-                                queues::get_pvm_seq_comp_sq(0),
-                                queues::get_pvm_seq_comp_sq(1));
+                                queues::get_seq_comp_sq(0),
+                                queues::get_seq_comp_sq(1));
   if (rc == 0)
     printf("Testcase %s passed\n", __func__);
   else
@@ -1830,8 +1830,8 @@ int seq_compress_dualq_flat_4K_buf_in_hbm() {
   int rc = cp_dualq_flat_4K_buf(compressed_buf, uncompressed_buf,
                                 status_buf, status_buf2,
                                 COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST,
-                                queues::get_pvm_seq_comp_sq(0),
-                                queues::get_pvm_seq_comp_sq(1));
+                                queues::get_seq_comp_sq(0),
+                                queues::get_seq_comp_sq(1));
   if (rc == 0)
     printf("Testcase %s passed\n", __func__);
   else

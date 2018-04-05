@@ -103,12 +103,40 @@ int test_setup() {
       queues::seq_queue_pdma_num_set(FLAGS_num_pdma_queues);
   }
 
-  // Initialize queues
-  if (queues::queues_setup() < 0) {
-    printf("Failed to setup lif and queues \n");
+  // Initialize resources
+  if (queues::resources_init() < 0) {
+    printf("Failed to initialize resources \n");
     return -1;
   }
-  printf("Setup lif and queues \n");
+  printf("Initialized resources \n");
+
+  // Setup LIFs
+  if (queues::lifs_setup() < 0) {
+    printf("Failed to setup LIFs\n");
+    return -1;
+  }
+  printf("Setup LIFs \n");
+
+  // Setup NVME PVM U-turn queues
+  if (queues::nvme_pvm_queues_setup() < 0) {
+    printf("Failed to setup NVME PVM U-turn queues \n");
+    return -1;
+  }
+  printf("Setup NVME PVM U-turn queues  \n");
+
+  // Setup PVM queues
+  if (queues::pvm_queues_setup() < 0) {
+    printf("Failed to setup PVM queues \n");
+    return -1;
+  }
+  printf("Setup PVM queues  \n");
+
+  // Setup Sequencer queues
+  if (queues::seq_queues_setup() < 0) {
+    printf("Failed to setup Sequencer queues \n");
+    return -1;
+  }
+  printf("Setup Sequeuncer queues \n");
 
   // Allocate the read and write buffer
   // TODO: Have a fancy allocator with various pages
@@ -549,6 +577,8 @@ int test_run_nvme_pvm_admin_cmd() {
   admin_cmd->dw10_11.qid = 1;
   admin_cmd->dw10_11.qsize = 64;
   nvme_cmd->write_thru();
+
+  printf("pvm_cmd %p \n", pvm_cmd->read());
 
   // Send the NVME admin command and check on PVM side
   rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
@@ -1316,15 +1346,15 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   }
 
   // Sequencer #1: PDMA descriptor
-  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc = queues::seq_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
 
   // Sequencer #2: R2N descriptor
-  seq_r2n_desc = queues::pvm_sq_consume_entry(seq_r2n_q, &seq_r2n_index);
+  seq_r2n_desc = queues::seq_sq_consume_entry(seq_r2n_q, &seq_r2n_index);
   seq_r2n_desc->clear();
 
   // Fill the PDMA descriptor
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_r2n_q, 0, 
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_r2n_q, 0, 
                              seq_r2n_index, &db_addr, &db_data);
   seq_pdma_desc->write_bit_fields(0, 64, db_addr);
   seq_pdma_desc->write_bit_fields(64, 64, bswap_64(db_data));
@@ -1350,7 +1380,7 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   seq_r2n_desc->write_thru();
 
   // Kickstart the sequencer 
-  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
+  test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
   
   // Process the status
   dp_mem_t *nvme_status = status_buf->fragment_find(kR2nStatusNvmeOffset,
@@ -1406,7 +1436,7 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   }
 
   // Sequencer #1: PDMA descriptor
-  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc = queues::seq_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
 
   // Fill the PDMA descriptor
@@ -1420,7 +1450,7 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   seq_pdma_desc->write_thru();
 
   // Update the R2N WQE with the doorbell to the PDMA descriptor
-  r2n::r2n_wqe_db_update(r2n_wqe_buf, queues::get_pvm_lif(), SQ_TYPE, 
+  r2n::r2n_wqe_db_update(r2n_wqe_buf, queues::get_seq_lif(), SQ_TYPE, 
                          seq_pdma_q, seq_pdma_index);
 
   // Kickstart the R2N module with the read command (whose completion will 
@@ -1480,71 +1510,70 @@ int test_seq_e2e_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
 
 
 int test_run_seq_write1() {
-  return test_seq_write_r2n(queues::get_pvm_seq_pdma_sq(0), // seq_pdma_q
-                            queues::get_pvm_seq_r2n_sq(0),  // seq_r2n_q
+  return test_seq_write_r2n(queues::get_seq_pdma_sq(0), // seq_pdma_q
+                            queues::get_seq_r2n_sq(0),  // seq_r2n_q
                             2, 0);   // ssd_handle, io_priority
 }
 
 int test_run_seq_write2() {
-  return test_seq_write_r2n(queues::get_pvm_seq_pdma_sq(1), // seq_pdma_q
-                            queues::get_pvm_seq_r2n_sq(7),  // seq_r2n_q
+  return test_seq_write_r2n(queues::get_seq_pdma_sq(1), // seq_pdma_q
+                            queues::get_seq_r2n_sq(7),  // seq_r2n_q
                             2, 1);   // ssd_handle, io_priority
 }
 
 int test_run_seq_write3() {
-  return test_seq_write_r2n(queues::get_pvm_seq_pdma_sq(0), // seq_pdma_q
-                            queues::get_pvm_seq_r2n_sq(6),  // seq_r2n_q
+  return test_seq_write_r2n(queues::get_seq_pdma_sq(0), // seq_pdma_q
+                            queues::get_seq_r2n_sq(6),  // seq_r2n_q
                             2, 2);   // ssd_handle, io_priority
 }
 
 int test_run_seq_write4() {
-  return test_seq_write_r2n(queues::get_pvm_seq_pdma_sq(7), // seq_pdma_q
-                            queues::get_pvm_seq_r2n_sq(6),  // seq_r2n_q
+  return test_seq_write_r2n(queues::get_seq_pdma_sq(7), // seq_pdma_q
+                            queues::get_seq_r2n_sq(6),  // seq_r2n_q
                             2, 2);   // ssd_handle, io_priority
 }
 
 int test_run_seq_read1() {
-  return test_seq_read_r2n(queues::get_pvm_seq_pdma_sq(0),  // seq_pdma_q
+  return test_seq_read_r2n(queues::get_seq_pdma_sq(0),  // seq_pdma_q
                            2, 0);   // ssd_handle, io_priority
 }
 
 int test_run_seq_read2() {
-  return test_seq_read_r2n(queues::get_pvm_seq_pdma_sq(2),  // seq_pdma_q
+  return test_seq_read_r2n(queues::get_seq_pdma_sq(2),  // seq_pdma_q
                            2, 1);   // ssd_handle, io_priority
 }
 
 int test_run_seq_read3() {
-  return test_seq_read_r2n(queues::get_pvm_seq_pdma_sq(0),  // seq_pdma_q
+  return test_seq_read_r2n(queues::get_seq_pdma_sq(0),  // seq_pdma_q
                            2, 2);   // ssd_handle, io_priority
 }
 
 int test_run_seq_read4() {
-  return test_seq_read_r2n(queues::get_pvm_seq_pdma_sq(6),  // seq_pdma_q
+  return test_seq_read_r2n(queues::get_seq_pdma_sq(6),  // seq_pdma_q
                            2, 1);   // ssd_handle, io_priority
 }
 
 int test_run_seq_e2e1() {
-  return test_seq_e2e_r2n(35, 43,  // seq_pdma_q, seq_r2n_q
-  //return test_seq_e2e_r2n(queues::get_pvm_seq_pdma_sq(0), // seq_pdma_q
-   //                       queues::get_pvm_seq_r2n_sq(0),  // seq_r2n_q
+  return test_seq_e2e_r2n(queues::get_seq_pdma_sq(0), // seq_pdma_q
+                          queues::get_seq_r2n_sq(0),  // seq_r2n_q
                           2, 0);   // ssd_handle, io_priority
 }
 
 int test_run_seq_e2e2() {
-  return test_seq_e2e_r2n(queues::get_pvm_seq_pdma_sq(0), // seq_pdma_q
-                          queues::get_pvm_seq_r2n_sq(1),  // seq_r2n_q
+  return test_seq_e2e_r2n(queues::get_seq_pdma_sq(0), // seq_pdma_q
+                          queues::get_seq_r2n_sq(1),  // seq_r2n_q
                           2, 1);   // ssd_handle, io_priority
 }
 
 int test_run_seq_e2e3() {
-  return test_seq_e2e_r2n(queues::get_pvm_seq_pdma_sq(1), // seq_pdma_q
-                          queues::get_pvm_seq_r2n_sq(1),  // seq_r2n_q
+  return test_seq_e2e_r2n(queues::get_seq_pdma_sq(1), // seq_pdma_q
+                          queues::get_seq_r2n_sq(1),  // seq_r2n_q
                           2, 2);   // ssd_handle, io_priority
 }
 
 int test_run_seq_e2e4() {
-  return test_seq_e2e_r2n(queues::get_pvm_seq_pdma_sq(5), // seq_pdma_q
-                          queues::get_pvm_seq_r2n_sq(5),  // seq_r2n_q
+  return test_seq_e2e_r2n(queues::get_seq_pdma_sq(5), // seq_pdma_q
+                          queues::get_seq_r2n_sq(5),  // seq_r2n_q
                           2, 0);   // ssd_handle, io_priority
 }
 
@@ -1583,11 +1612,11 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   }
 
   // Sequencer #1: PDMA descriptor
-  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc = queues::seq_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
 
   // Sequencer #3: R2N descriptor
-  seq_r2n_desc = queues::pvm_sq_consume_entry(seq_r2n_q, &seq_r2n_index);
+  seq_r2n_desc = queues::seq_sq_consume_entry(seq_r2n_q, &seq_r2n_index);
   seq_r2n_desc->clear();
 
   // Fill the PDMA descriptor
@@ -1604,12 +1633,12 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   xts_ctx.copy_desc = false;
   xts_ctx.ring_db = false;
   xts_ctx.init(kDefaultBufSize);
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_r2n_q, 0,
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_r2n_q, 0,
                              seq_r2n_index, &xts_ctx.xts_db_addr, &xts_ctx.exp_db_data);
   //xts_ctx.exp_db_data = bswap_64(xts_ctx.exp_db_data);
   printf("r2n_db_addr %lx r2n_db_data %lu\n", xts_ctx.xts_db_addr, xts_ctx.exp_db_data);
   xts_ctx.test_seq_xts();
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, xts_ctx.seq_xts_q, 0,
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, xts_ctx.seq_xts_q, 0,
                              xts_ctx.seq_xts_index, &db_addr, &db_data);
   seq_pdma_desc->write_bit_fields(0, 64, db_addr);
   seq_pdma_desc->write_bit_fields(64, 64, bswap_64(db_data));
@@ -1632,7 +1661,7 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   seq_r2n_desc->write_thru();
 
   // Kickstart the sequencer
-  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
+  test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
 
   // Process the status
   dp_mem_t *nvme_status = status_buf->fragment_find(kR2nStatusNvmeOffset,
@@ -1671,7 +1700,7 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   status_buf->clear_thru();
 
   // Consume pdma entry
-  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc = queues::seq_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
 
   // Consume the r2n entry and wqe
@@ -1697,7 +1726,7 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   xts_ctx.copy_desc = false;
   xts_ctx.ring_db = false;
   xts_ctx.init(kDefaultBufSize);
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0,
       seq_pdma_index, &xts_ctx.xts_db_addr, &xts_ctx.exp_db_data);
   //xts_ctx.exp_db_data = bswap_64(xts_ctx.exp_db_data);
   xts_ctx.test_seq_xts();
@@ -1715,7 +1744,7 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   seq_pdma_desc->write_thru();
 
   // Update the R2N WQE with the doorbell to the PDMA descriptor
-  r2n::r2n_wqe_db_update(r2n_wqe_buf, queues::get_pvm_lif(), SQ_TYPE,
+  r2n::r2n_wqe_db_update(r2n_wqe_buf, queues::get_seq_lif(), SQ_TYPE,
                          xts_ctx.seq_xts_q, xts_ctx.seq_xts_index);
 
   // Kickstart the R2N module with the read command (whose completion will
@@ -1772,8 +1801,8 @@ int test_seq_e2e_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
 }
 
 int test_seq_e2e_xts_r2n1() {
-  return test_seq_e2e_xts_r2n(queues::get_pvm_seq_pdma_sq(5), // seq_pdma_q
-                              queues::get_pvm_seq_r2n_sq(5),  // seq_r2n_q
+  return test_seq_e2e_xts_r2n(queues::get_seq_pdma_sq(5), // seq_pdma_q
+                              queues::get_seq_r2n_sq(5),  // seq_r2n_q
                               2, 0);   // ssd_handle, io_priority
 }
 
@@ -1796,15 +1825,15 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
          pdma_dst_addr, pdma_data_size, roce_wqe_addr, roce_wqe_size);
 
   // Sequencer #1: PDMA descriptor
-  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc = queues::seq_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
 
   // Sequencer #2: R2N descriptor
-  seq_roce_desc = queues::pvm_sq_consume_entry(seq_roce_q, &seq_roce_index);
+  seq_roce_desc = queues::seq_sq_consume_entry(seq_roce_q, &seq_roce_index);
   seq_roce_desc->clear();
 
   // Fill the PDMA descriptor
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_roce_q, 0, 
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_roce_q, 0, 
            seq_roce_index, &db_addr, &db_data);
   seq_pdma_desc->write_bit_fields(0, 64, db_addr);
   seq_pdma_desc->write_bit_fields(64, 64, bswap_64(db_data));
@@ -1832,7 +1861,7 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
 
   // Kickstart the sequencer 
   if(rdma_ring_db) {
-    test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
+    test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
   }
   
   return 0;
@@ -1867,7 +1896,7 @@ int test_seq_roce_op_pdma_prefilled(uint16_t seq_start_q,
   seq_roce_desc->write_thru();
 
   // Kickstart the sequencer 
-  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_start_q,
+  test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_start_q,
                      0, seq_start_index);
   
   return 0;
@@ -1892,7 +1921,7 @@ int test_seq_read_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint32_t pvm_ro
          pdma_dst_addr, pdma_data_size, pdma_dst_lif_override, pdma_dst_lif);
 
   // Sequencer #1: R2N descriptor
-  seq_roce_desc = queues::pvm_sq_consume_entry(seq_roce_q, &seq_roce_index);
+  seq_roce_desc = queues::seq_sq_consume_entry(seq_roce_q, &seq_roce_index);
   seq_roce_desc->clear();
 
   uint64_t qaddr;
@@ -1910,7 +1939,7 @@ int test_seq_read_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint32_t pvm_ro
   seq_roce_desc->write_thru();
 
   // Sequencer #2: PDMA descriptor
-  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc = queues::seq_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
   seq_pdma_desc->write_bit_fields(128, 64, pdma_src_addr);
   seq_pdma_desc->write_bit_fields(192, 64, pdma_dst_addr);
@@ -1925,7 +1954,7 @@ int test_seq_read_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint32_t pvm_ro
 
   // Kickstart the sequencer 
   if(rdma_ring_db) {
-    test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_roce_q, 0, seq_roce_index);
+    test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_roce_q, 0, seq_roce_index);
   }
   
   return 0;
@@ -1940,7 +1969,7 @@ int test_seq_pdma_write(uint16_t seq_pdma_q,
   dp_mem_t  *seq_pdma_desc;
 
   // Sequencer #1: PDMA descriptor
-  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc = queues::seq_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
 
   // Fill the PDMA descriptor
@@ -1955,7 +1984,7 @@ int test_seq_pdma_write(uint16_t seq_pdma_q,
   seq_pdma_desc->write_thru();
 
   // Kickstart the sequencer 
-  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
+  test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0,
                      seq_pdma_index, true);
   
   return 0;
@@ -1970,7 +1999,7 @@ int test_seq_pdma_read(uint16_t seq_pdma_q,
   dp_mem_t  *seq_pdma_desc;
 
   // Sequencer #1: PDMA descriptor
-  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc = queues::seq_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
 
   // Fill the PDMA descriptor
@@ -1984,7 +2013,7 @@ int test_seq_pdma_read(uint16_t seq_pdma_q,
   seq_pdma_desc->write_thru();
 
   // Kickstart the sequencer 
-  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
+  test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0,
                      seq_pdma_index, true);
 
   return 0;
@@ -2034,14 +2063,14 @@ int test_run_seq_pdma_multi_xfers() {
 
         // Write from the same source host buffer, 
         // but to different per-queue destination HBM buffers
-        test_seq_pdma_write(queues::get_pvm_seq_pdma_sq(i), pdma_wr_buf,
+        test_seq_pdma_write(queues::get_seq_pdma_sq(i), pdma_wr_buf,
                             pdma_wr_hbm_buf, 
                             SEQ_DB_DATA_ENTRY_PA(wr_seq_db_data->pa(), i),
                             exp_db_data_value);
 
         // Read into different per-queue destination host buffers, 
         // from the different per-queue source HBM buffers above
-        test_seq_pdma_read(queues::get_pvm_seq_pdma_sq(i), pdma_rd_buf,
+        test_seq_pdma_read(queues::get_seq_pdma_sq(i), pdma_rd_buf,
                            pdma_wr_hbm_buf,
                            SEQ_DB_DATA_ENTRY_PA(rd_seq_db_data->pa(), i),
                            exp_db_data_value);
@@ -2152,8 +2181,8 @@ int test_run_rdma_e2e_write() {
 }
 
 int test_run_rdma_e2e_read() {
-  uint32_t seq_pdma_q = queues::get_pvm_seq_pdma_sq(3);
-  uint32_t seq_roce_q = queues::get_pvm_seq_roce_sq(3);
+  uint32_t seq_pdma_q = queues::get_seq_pdma_sq(3);
+  uint32_t seq_roce_q = queues::get_seq_roce_sq(3);
   uint16_t ssd_handle = 2; // the SSD handle
   dp_mem_t *cmd_buf = NULL;
   dp_mem_t *data_buf = NULL;
@@ -2229,8 +2258,8 @@ int test_run_rdma_e2e_read() {
 }
 
 int test_run_rdma_lif_override() {
-  uint32_t seq_pdma_q = queues::get_pvm_seq_pdma_sq(4);
-  uint32_t seq_roce_q = queues::get_pvm_seq_roce_sq(4);
+  uint32_t seq_pdma_q = queues::get_seq_pdma_sq(4);
+  uint32_t seq_roce_q = queues::get_seq_roce_sq(4);
   uint16_t ssd_handle = 2; // the SSD handle
   dp_mem_t *cmd_buf = NULL;
   dp_mem_t *data_buf = NULL;
@@ -2341,11 +2370,11 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
   write_buf->write_thru();
 
   // Sequencer: R2N descriptor
-  seq_roce_desc = queues::pvm_sq_consume_entry(seq_roce_q, &seq_roce_index);
+  seq_roce_desc = queues::seq_sq_consume_entry(seq_roce_q, &seq_roce_index);
   seq_roce_desc->clear();
 
   // Sequencer: PDMA descriptor
-  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc = queues::seq_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
 
   // Pre-fill the PDMA descriptor
@@ -2374,13 +2403,13 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
   // 
   // See StartRoceWritePdmaPrefilled() and test_seq_write_roce_pdma_prefilled().
   
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_roce_q, 0,
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_roce_q, 0,
                              seq_roce_index, &xts_ctx.xts_db_addr,
                              &xts_ctx.exp_db_data);
   printf("After XTS, db_addr is %lx db_data %lx\n",
          xts_ctx.xts_db_addr, xts_ctx.exp_db_data);
   xts_ctx.test_seq_xts();
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, xts_ctx.seq_xts_q, 0,
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, xts_ctx.seq_xts_q, 0,
                              xts_ctx.seq_xts_index, &db_addr, &db_data);
   seq_pdma_desc->write_bit_fields(0, 64, db_addr);
   seq_pdma_desc->write_bit_fields(64, 64, bswap_64(db_data));
@@ -2466,11 +2495,11 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
   // See also StartRoceReadPdmaPrefilled()
   
   // Sequencer: R2N descriptor
-  seq_roce_desc = queues::pvm_sq_consume_entry(seq_roce_q, &seq_roce_index);
+  seq_roce_desc = queues::seq_sq_consume_entry(seq_roce_q, &seq_roce_index);
   seq_roce_desc->clear();
 
   // Sequencer: PDMA descriptor
-  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc = queues::seq_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
 
   // decrypt data from r2n_write_buf payload and store in read_hbm_buf
@@ -2487,7 +2516,7 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
   xts_ctx.copy_desc = false;
   xts_ctx.ring_db = false;
   xts_ctx.init(rdma_r2n_data_size());
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0,
                              seq_pdma_index, &xts_ctx.xts_db_addr,
                              &xts_ctx.exp_db_data);
   printf("After XTS, db_addr is %lx db_data %lx\n",
@@ -2508,7 +2537,7 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
 
   StartRoceReadWithNextLifQueue(seq_roce_q, seq_roce_index, seq_roce_desc, 
                                 r2n_send_buf, r2n_write_buf,
-                                rdma_r2n_data_size(), queues::get_pvm_lif(),
+                                rdma_r2n_data_size(), queues::get_seq_lif(),
                                 SQ_TYPE, xts_ctx.seq_xts_q);
   printf("Sequencer to ROCE + XTS + PDMA to local bufer sent\n");
 
@@ -2586,9 +2615,9 @@ int test_run_rdma_e2e_xts_write1(void)
 {
     XtsCtx xts_ctx;
 
-    return test_run_rdma_e2e_xts_write(queues::get_pvm_seq_pdma_sq(5),
-                                       queues::get_pvm_seq_xts_sq(5),
-                                       queues::get_pvm_seq_roce_sq(5),
+    return test_run_rdma_e2e_xts_write(queues::get_seq_pdma_sq(5),
+                                       queues::get_seq_xts_sq(5),
+                                       queues::get_seq_roce_sq(5),
                                        2, 0,   // ssd_handle, io_priority
                                        xts_ctx);
 }
@@ -2597,9 +2626,9 @@ int test_run_rdma_e2e_xts_read1(void)
 {
     XtsCtx xts_ctx;
 
-    return test_run_rdma_e2e_xts_read(queues::get_pvm_seq_pdma_sq(6),
-                                      queues::get_pvm_seq_xts_sq(6),
-                                      queues::get_pvm_seq_roce_sq(6),
+    return test_run_rdma_e2e_xts_read(queues::get_seq_pdma_sq(6),
+                                      queues::get_seq_xts_sq(6),
+                                      queues::get_seq_roce_sq(6),
                                       2, 0,   // ssd_handle, io_priority
                                       xts_ctx);
 }
@@ -2688,10 +2717,10 @@ int test_setup_seq_acc_chain_entry(acc_chain_params_t& params) {
  
   dp_mem_t *seq_status_desc;
 
-  seq_status_desc = queues::pvm_sq_consume_entry(params.seq_status_q,
+  seq_status_desc = queues::seq_sq_consume_entry(params.seq_status_q,
                                                  &params.ret_seq_status_index);
   // Form the doorbell to be returned by the API
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE,
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
                              params.seq_status_q, 0, params.ret_seq_status_index, 
                              &params.ret_doorbell_addr, &params.ret_doorbell_data);
   

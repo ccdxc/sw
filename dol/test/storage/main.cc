@@ -30,7 +30,6 @@ DEFINE_uint64(long_poll_interval, 300,
 
 DEFINE_uint64(num_pdma_queues, 3,
               "number of queues for PDMA test (in power of 2)");
-DEFINE_validator(num_pdma_queues, &queues::seq_queue_pdma_num_validate);
 
 bool run_unit_tests = false;
 bool run_nvme_tests = false;
