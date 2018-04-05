@@ -87,7 +87,7 @@ ipaddr2str (const ip_addr_t *ip_addr)
 // thread safe helper to stringify IP prefix
 //------------------------------------------------------------------------------
 char *
-ippfx2str (const ip_prefix_t *ip_pfx) 
+ippfx2str (const ip_prefix_t *ip_pfx)
 {
     static thread_local char       ippfx_str[4][44];
     static thread_local uint8_t    ippfx_str_next = 0;

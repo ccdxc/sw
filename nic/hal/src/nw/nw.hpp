@@ -209,7 +209,7 @@ find_network_by_handle (hal_handle_t handle)
         HAL_TRACE_DEBUG("Failed to find network with handle {}", handle);
         return NULL;
     }
-    return (network_t *)hal_handle->get_obj();
+    return (network_t *)hal_handle->obj();
 }
 
 void *network_get_key_func(void *entry);

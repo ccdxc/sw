@@ -34,12 +34,11 @@ hal_syslogger (void)
 trace_level_e
 hal_trace_level (void)
 {
-    if (g_syslog_logger) {
-        return g_syslog_logger->trace_level();
+    if (g_trace_logger) {
+        return g_trace_logger->trace_level();
     }
     return trace_none;
 }
-
 
 // logger class static constants
 const size_t log::k_async_qsize_ = 64 * 1024;    // must be power of 2

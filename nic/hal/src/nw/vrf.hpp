@@ -113,7 +113,7 @@ vrf_lookup_by_handle (hal_handle_t handle)
         HAL_TRACE_DEBUG("Failed to find vrf with handle {}", handle);
         return NULL;
     }
-    return (vrf_t *)hal_handle->get_obj();
+    return (vrf_t *)hal_handle->obj();
 }
 
 vrf_t *vrf_lookup_by_id(vrf_id_t tid);

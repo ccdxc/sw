@@ -7,7 +7,7 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-pd_asic_init (pd_asic_init_args_t *args) 
+pd_asic_init (pd_asic_init_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
 

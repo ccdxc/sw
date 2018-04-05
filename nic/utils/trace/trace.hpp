@@ -53,7 +53,7 @@
  * }
  *
  * MyStruct m = { 1, "foo" };
- * log("m={}", m); 
+ * log("m={}", m);
  */
 
 namespace hal {

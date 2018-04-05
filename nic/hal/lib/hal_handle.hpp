@@ -21,13 +21,10 @@ namespace hal {
 
 class hal_handle {
 public:
-    hal_handle_t    handle_id_;     // TODO: make this private
-
+    hal_handle_t    handle_id_;
 public:
     static hal_handle *factory(hal_obj_id_t obj_id);
     ~hal_handle();
-    hal_obj_id_t obj_id(void) const { return obj_id_; }
-    void set_handle_id(hal_handle_t handle) { handle_id_ = handle; }
 
     // start adding object(s) to cfg db and drive h/w programming, if any
     // NOTE: add can block the caller until all the readers of the cfg database
@@ -57,7 +54,11 @@ public:
                       hal_cfg_abort_cb_t abort_cb,
                       hal_cfg_cleanup_cb_t cleanup_cb);
 
-    void *get_obj(void) const { return obj_; }
+    void *obj(void) const { return obj_; }
+    void set_handle_id(hal_handle_t handle) { handle_id_ = handle; }
+
+    hal_obj_id_t obj_id(void) const { return obj_id_; }
+    hal_handle_t handle_id(void) const { return handle_id_; }
 
 private:
     hal_handle();
@@ -73,25 +74,25 @@ private:
 };
 
 #define HAL_MAX_HANDLES                              8192
-extern hal_handle_t hal_handle_alloc(hal_obj_id_t obj_id,
-                                     hal_handle_t handle_id = HAL_HANDLE_INVALID);
-extern void hal_handle_free(hal_handle_t handle_id);
-extern hal_ret_t hal_handle_add_obj(hal_handle_t handle_id, cfg_op_ctxt_t *ctxt,
-                                    hal_cfg_op_cb_t add_cb,
-                                    hal_cfg_commit_cb_t commit_cb,
-                                    hal_cfg_abort_cb_t abort_cb,
-                                    hal_cfg_cleanup_cb_t cleanup_cb);
-extern hal_ret_t hal_handle_del_obj(hal_handle_t handle_id, cfg_op_ctxt_t *ctxt,
-                                    hal_cfg_op_cb_t del_cb,
-                                    hal_cfg_commit_cb_t commit_cb,
-                                    hal_cfg_abort_cb_t abort_cb,
-                                    hal_cfg_cleanup_cb_t cleanup_cb);
-extern hal_ret_t hal_handle_upd_obj(hal_handle_t handle_id, cfg_op_ctxt_t *ctxt,
-                                    hal_cfg_op_cb_t del_cb,
-                                    hal_cfg_commit_cb_t commit_cb,
-                                    hal_cfg_abort_cb_t abort_cb,
-                                    hal_cfg_cleanup_cb_t cleanup_cb);
-extern void *hal_handle_get_obj(hal_handle_t handle_id);
+hal_handle_t hal_handle_alloc(hal_obj_id_t obj_id,
+                              hal_handle_t handle_id = HAL_HANDLE_INVALID);
+void hal_handle_free(hal_handle_t handle_id);
+hal_ret_t hal_handle_add_obj(hal_handle_t handle_id, cfg_op_ctxt_t *ctxt,
+                             hal_cfg_op_cb_t add_cb,
+                             hal_cfg_commit_cb_t commit_cb,
+                             hal_cfg_abort_cb_t abort_cb,
+                             hal_cfg_cleanup_cb_t cleanup_cb);
+hal_ret_t hal_handle_del_obj(hal_handle_t handle_id, cfg_op_ctxt_t *ctxt,
+                             hal_cfg_op_cb_t del_cb,
+                             hal_cfg_commit_cb_t commit_cb,
+                             hal_cfg_abort_cb_t abort_cb,
+                             hal_cfg_cleanup_cb_t cleanup_cb);
+hal_ret_t hal_handle_upd_obj(hal_handle_t handle_id, cfg_op_ctxt_t *ctxt,
+                             hal_cfg_op_cb_t del_cb,
+                             hal_cfg_commit_cb_t commit_cb,
+                             hal_cfg_abort_cb_t abort_cb,
+                             hal_cfg_cleanup_cb_t cleanup_cb);
+void *hal_handle_get_obj(hal_handle_t handle_id);
 
 //------------------------------------------------------------------------------
 // A HAL object can be indexed by several keys (e.g., like L2 key, L3 keys for

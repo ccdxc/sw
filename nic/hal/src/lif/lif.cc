@@ -131,7 +131,7 @@ find_lif_by_handle (hal_handle_t handle)
                         __FUNCTION__, handle);
         return NULL;
     }
-    return (lif_t *)hal_handle->get_obj();
+    return (lif_t *)hal_handle->obj();
 }
 
 static inline uint64_t

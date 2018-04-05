@@ -331,7 +331,7 @@ hal_handle_get_obj (hal_handle_t handle_id)
     entry =
         (hal_handle_ht_entry_t *)hal_handle_id_ht()->lookup(&handle_id);
     if (entry && entry->handle) {
-        return entry->handle->get_obj();
+        return entry->handle->obj();
     }
     return NULL;
 }

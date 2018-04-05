@@ -174,7 +174,7 @@ find_port_by_handle (hal_handle_t handle)
                         __FUNCTION__, handle);
         return NULL;
     }
-    return (port_t *)hal_handle->get_obj();
+    return (port_t *)hal_handle->obj();
 }
 
 extern void *port_id_get_key_func(void *entry);

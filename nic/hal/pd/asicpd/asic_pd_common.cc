@@ -55,7 +55,7 @@ asicpd_table_entry_write (uint32_t tableid,
     uint32_t oflow_parent_tbl_depth = 0;
     p4pd_table_properties_t tbl_ctx;
     capri_table_mem_layout_t cap_tbl_info = {0};
-    
+
 
     p4pd_global_table_properties_get(tableid, &tbl_ctx);
     assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
@@ -100,7 +100,7 @@ asicpd_table_entry_read (uint32_t tableid,
     uint32_t oflow_parent_tbl_depth = 0;
     p4pd_table_properties_t tbl_ctx;
     capri_table_mem_layout_t cap_tbl_info = {0};
-    
+
 
     p4pd_global_table_properties_get(tableid, &tbl_ctx);
     assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
@@ -535,7 +535,7 @@ hal_ret_t
 asicpd_deparser_init (void)
 {
     capri_deparser_init(TM_PORT_INGRESS, TM_PORT_EGRESS);
-    return HAL_RET_OK;    
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -590,16 +590,16 @@ asicpd_stats_region_init (asicpd_stats_region_info_t *region_arr, int arrlen)
 
 // asicpd_sw_phv_inject
 // Inject a software phv(maintenance PHV) into asic
-hal_ret_t 
-asicpd_sw_phv_inject (asicpd_swphv_type_t type, uint8_t prof_num, 
+hal_ret_t
+asicpd_sw_phv_inject (asicpd_swphv_type_t type, uint8_t prof_num,
 		uint8_t start_idx, uint8_t num_flits, void *data) {
     return capri_sw_phv_inject(type, prof_num, start_idx, num_flits, data);
 }
 
 // asicpd_sw_phv_get
 // get software PHV state from asic
-hal_ret_t 
-asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num, 
+hal_ret_t
+asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num,
 	asicpd_sw_phv_state_t *state) {
     return capri_sw_phv_get(type, prof_num, state);
 }

@@ -459,7 +459,7 @@ nwsec_group_lookup_by_handle (hal_handle_t handle)
                         handle);
         return NULL;
     }
-    return (nwsec_group_t *)hal_handle->get_obj();
+    return (nwsec_group_t *)hal_handle->obj();
 }
 
 //APIs to be consumed by other features
@@ -746,7 +746,7 @@ find_nwsec_policy_by_handle (hal_handle_t handle)
                         handle);
         return NULL;
     }
-    return (nwsec_policy_t *)hal_handle->get_obj();
+    return (nwsec_policy_t *)hal_handle->obj();
 }
 
 /** Rules within a security policy **/
