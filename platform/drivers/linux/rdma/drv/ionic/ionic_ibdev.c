@@ -35,6 +35,11 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define IONIC_NUM_RRQ_WQE         4
 /* XXX cleanup */
 
+static struct workqueue_struct *ionic_workq;
+
+/* access single-threaded thru ionic_workq cpu 0 */
+static LIST_HEAD(ionic_ibdev_list);
+
 static int ionic_validate_udata(struct ib_udata *udata,
 				size_t inlen, size_t outlen)
 {
@@ -1737,6 +1742,8 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 {
 	struct net_device *ndev = dev->ndev;
 
+	list_del(&dev->driver_ent);
+
 	ib_unregister_device(&dev->ibdev);
 
 	kfree(dev->free_qpid);
@@ -2015,6 +2022,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	if (rc)
 		goto err_register;
 
+	list_add(&dev->driver_ent, &ionic_ibdev_list);
+
 	return dev;
 
 err_register:
@@ -2033,8 +2042,6 @@ err_dev:
 	dev_put(ndev);
 	return ERR_PTR(rc);
 }
-
-static struct workqueue_struct *ionic_workq;
 
 struct ionic_netdev_work {
 	struct work_struct ws;
@@ -2200,9 +2207,27 @@ err_workq:
 	return rc;
 }
 
+static void __exit ionic_exit_work(struct work_struct *ws)
+{
+	struct ionic_ibdev *dev, *dev_next;
+
+	list_for_each_entry_safe_reverse(dev, dev_next, &ionic_ibdev_list,
+					 driver_ent) {
+		ionic_api_set_private(dev->lif, NULL, IONIC_RDMA_PRIVATE);
+		ionic_destroy_ibdev(dev);
+	}
+}
+
 static void __exit ionic_mod_exit(void)
 {
+	struct work_struct ws;
+
 	unregister_netdevice_notifier(&ionic_netdev_notifier);
+
+	INIT_WORK_ONSTACK(&ws, ionic_exit_work);
+	queue_work_on(0, ionic_workq, &ws);
+	flush_work(&ws);
+	destroy_work_on_stack(&ws);
 
 	destroy_workqueue(ionic_workq);
 }
