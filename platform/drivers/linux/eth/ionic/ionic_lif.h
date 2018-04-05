@@ -82,6 +82,7 @@ struct lif {
 	struct qcq *adminqcq;
 	struct qcq **txqcqs;
 	struct qcq **rxqcqs;
+	unsigned int neqs;
 	unsigned int ntxqcqs;
 	unsigned int nrxqcqs;
 	unsigned int rx_mode;

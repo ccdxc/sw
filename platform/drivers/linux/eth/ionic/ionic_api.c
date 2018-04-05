@@ -61,6 +61,9 @@ int ionic_api_get_intr(struct lif *lif, int *irq)
 	struct intr intr_obj = {};
 	int err;
 
+	if (!lif->neqs)
+		return -ENOSPC;
+
 	err = ionic_intr_alloc(lif, &intr_obj);
 	if (err)
 		return err;
@@ -70,6 +73,8 @@ int ionic_api_get_intr(struct lif *lif, int *irq)
 		ionic_intr_free(lif, &intr_obj);
 		return err;
 	}
+
+	--lif->neqs;
 
 	*irq = err;
 	return intr_obj.index;
@@ -83,6 +88,8 @@ void ionic_api_put_intr(struct lif *lif, int intr)
 	};
 
 	ionic_intr_free(lif, &intr_obj);
+
+	++lif->neqs;
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_intr);
 
