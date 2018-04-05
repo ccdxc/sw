@@ -1151,14 +1151,7 @@ void compress_xts_encrypt_setup(cp_desc_t& d,
   xts_desc_addr->in_aol = xts_in_aol->pa();
   xts_desc_addr->out_aol = xts_out_aol->pa();
   xts_desc_addr->cmd = cmd;
-<<<<<<< HEAD
   xts_desc_addr->status = xts_status_host_buf->pa();
-=======
-  xts_desc_addr->status = xts_status_buf->pa();
-  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
-                             xts_ctx.seq_xts_status_q, 0, xts_ctx.seq_xts_status_index, 
-                             &xts_desc_addr->db_addr, &xts_desc_addr->db_data);
->>>>>>> Seperate LIFs for Sequencer and PVM target
   xts_desc_buf->write_thru();
   xts_ctx.desc_write_seq_xts(xts_desc_buf);
 }
@@ -1180,7 +1173,6 @@ int _compress_output_encrypt(uint32_t app_blk_size,
          uncompressed_host_buf->line_size_get());
   uncompressed_host_buf->write_thru();
 
-<<<<<<< HEAD
   compress_cp_desc_template_fill(d, uncompressed_host_buf, compressed_buf,
                                  status_buf, compressed_buf, app_blk_size);
   // XTS chaining will use direct Barco push action from
@@ -1188,26 +1180,6 @@ int _compress_output_encrypt(uint32_t app_blk_size,
   chain_params.desc_format_fn = test_setup_post_comp_seq_status_entry;
   chain_params.seq_q = seq_comp_qid;
   chain_params.seq_status_q = seq_comp_status_qid;
-=======
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.insert_header = 1;
-  d.cmd_bits.sha_en = 1;
-  d.src = uncompressed_host_buf->pa();
-  d.dst = compressed_buf->pa();
-  d.datain_len = 0;  // 0 = 64K
-  d.threshold_len = kCompressedBufSize - sizeof(cp_hdr_t);
-  d.status_data = 0x1234;
-  InvalidateHdrInHBM();
-  InvalidateHdrInHostMem();
-  cp_status_no_hash_t exp_st = {0};
-  exp_st.partial_data = 0x1234;
-
-  cp_seq_params_t seq_params;
-  bzero(&seq_params, sizeof(seq_params));
-  seq_params.seq_comp_status_q = queues::get_seq_comp_status_sq(0);
-  seq_params.seq_xts_q = queues::get_seq_xts_sq(0);
-  seq_params.seq_xts_status_q = queues::get_seq_xts_status_sq(0);
->>>>>>> Seperate LIFs for Sequencer and PVM target
 
   // Set up encryption
   compress_xts_encrypt_setup(d, xts_ctx, chain_params, compressed_buf,
@@ -1288,46 +1260,46 @@ int _compress_output_encrypt(uint32_t app_blk_size,
 int compress_output_encrypt_app_min_size() {
     return _compress_output_encrypt(kCompAppMinSize,
                                     COMP_QUEUE_PUSH_HW_DIRECT, 0,
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 int seq_compress_output_encrypt_app_min_size() {
     return _compress_output_encrypt(kCompAppMinSize,
                                     COMP_QUEUE_PUSH_SEQUENCER, 
-                                    queues::get_pvm_seq_comp_sq(0),
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_sq(0),
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 int compress_output_encrypt_app_max_size() {
     return _compress_output_encrypt(kCompAppMaxSize,
                                     COMP_QUEUE_PUSH_HW_DIRECT, 0,
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 int seq_compress_output_encrypt_app_max_size() {
     return _compress_output_encrypt(kCompAppMaxSize,
                                     COMP_QUEUE_PUSH_SEQUENCER, 
-                                    queues::get_pvm_seq_comp_sq(0),
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_sq(0),
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 int compress_output_encrypt_app_nominal_size() {
     return _compress_output_encrypt(kCompAppNominalSize,
                                     COMP_QUEUE_PUSH_HW_DIRECT, 0,
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 int seq_compress_output_encrypt_app_nominal_size() {
     return _compress_output_encrypt(kCompAppNominalSize,
                                     COMP_QUEUE_PUSH_SEQUENCER, 
-                                    queues::get_pvm_seq_comp_sq(0),
-                                    queues::get_pvm_seq_comp_status_sq(0),
-                                    queues::get_pvm_seq_xts_status_sq(0));
+                                    queues::get_seq_comp_sq(0),
+                                    queues::get_seq_comp_status_sq(0),
+                                    queues::get_seq_xts_status_sq(0));
 }
 
 void xts_decrypt_decompress_setup(cp_desc_t& d,
@@ -1369,7 +1341,7 @@ void xts_decrypt_decompress_setup(cp_desc_t& d,
   xts_desc_addr->status = xts_status_buf->pa();
 
   // Chain XTS decrypt to XTS status sequencer 
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE,
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
                              xts_ctx.seq_xts_status_q, 0,
                              chain_params.ret_seq_status_index, 
                              &xts_desc_addr->db_addr, &xts_desc_addr->db_data);
@@ -1485,9 +1457,9 @@ int seq_decrypt_output_decompress_app_min_size() {
     // This test is always initiated from XTS sequencer queue, with chaining
     // to decomp from P4+.
     return _decrypt_output_decompress(kCompAppMinSize,
-                                      queues::get_pvm_seq_xts_sq(0),
-                                      queues::get_pvm_seq_xts_status_sq(0),
-                                      queues::get_pvm_seq_comp_status_sq(0));
+                                      queues::get_seq_xts_sq(0),
+                                      queues::get_seq_xts_status_sq(0),
+                                      queues::get_seq_comp_status_sq(0));
 }
 
 int seq_decrypt_output_decompress_app_max_size() {
@@ -1495,25 +1467,19 @@ int seq_decrypt_output_decompress_app_max_size() {
     // This test is always initiated from XTS sequencer queue, with chaining
     // to decomp from P4+.
     return _decrypt_output_decompress(kCompAppMaxSize,
-                                      queues::get_pvm_seq_xts_sq(0),
-                                      queues::get_pvm_seq_xts_status_sq(0),
-                                      queues::get_pvm_seq_comp_status_sq(0));
+                                      queues::get_seq_xts_sq(0),
+                                      queues::get_seq_xts_status_sq(0),
+                                      queues::get_seq_comp_status_sq(0));
 }
 
-<<<<<<< HEAD
 int seq_decrypt_output_decompress_app_nominal_size() {
 
     // This test is always initiated from XTS sequencer queue, with chaining
     // to decomp from P4+.
     return _decrypt_output_decompress(kCompAppNominalSize,
-                                      queues::get_pvm_seq_xts_sq(0),
-                                      queues::get_pvm_seq_xts_status_sq(0),
-                                      queues::get_pvm_seq_comp_status_sq(0));
-=======
-int seq_compress_output_encrypt() {
-    return _compress_output_encrypt(COMP_QUEUE_PUSH_SEQUENCER, 
-                                    queues::get_seq_comp_sq(0));
->>>>>>> Seperate LIFs for Sequencer and PVM target
+                                      queues::get_seq_xts_sq(0),
+                                      queues::get_seq_xts_status_sq(0),
+                                      queues::get_seq_comp_status_sq(0));
 }
 
 // Verify integrity of >64K buffer

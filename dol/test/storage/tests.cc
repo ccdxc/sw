@@ -2637,14 +2637,7 @@ int test_run_rdma_e2e_xts_read1(void)
 int test_setup_post_comp_seq_status_entry(acc_chain_entry_t &chain_ent,
                                           dp_mem_t *seq_status_desc) {
 
-<<<<<<< HEAD
   seq_status_desc->clear();
-=======
-  // Sequencer #1: Compression descriptor
-  seq_comp_status_desc = queues::seq_sq_consume_entry(params->seq_comp_status_q,
-                                                      &seq_comp_status_index);
-  seq_comp_status_desc->clear();
->>>>>>> Seperate LIFs for Sequencer and PVM target
 
   // desc bytes 0-63
   if (chain_ent.next_db_action_barco_push) {
@@ -2724,18 +2717,12 @@ int test_setup_seq_acc_chain_entry(acc_chain_params_t& params) {
  
   dp_mem_t *seq_status_desc;
 
-  seq_status_desc = queues::pvm_sq_consume_entry(params.seq_status_q,
+  seq_status_desc = queues::seq_sq_consume_entry(params.seq_status_q,
                                                  &params.ret_seq_status_index);
   // Form the doorbell to be returned by the API
-<<<<<<< HEAD
-  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE,
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
                              params.seq_status_q, 0, params.ret_seq_status_index, 
                              &params.ret_doorbell_addr, &params.ret_doorbell_data);
-=======
-  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
-                             params->seq_comp_status_q, 0, seq_comp_status_index, 
-                             &params->ret_doorbell_addr, &params->ret_doorbell_data);
->>>>>>> Seperate LIFs for Sequencer and PVM target
   
   return (*params.desc_format_fn)(params.chain_ent, seq_status_desc);
 }
