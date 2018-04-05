@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.20"
+from "registry.test.pensando.io:5000/pensando/nic:1.21"
 
 copy "tools/test-build/dind", "/dind"
 run "chmod +x /dind"

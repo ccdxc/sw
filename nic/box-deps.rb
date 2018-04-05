@@ -84,6 +84,7 @@ PACKAGES = %w[
   zlib-devel
   iproute
   dhcp
+  dhclient
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -274,7 +275,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.20"
+tag "pensando/nic:1.21"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
