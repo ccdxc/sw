@@ -137,7 +137,7 @@ int test_setup() {
          read_hbm_buf2->pa(), write_hbm_buf2->pa());
 
   // Allocate sequencer doorbell data that will be updated by sequencer and read by PVM
-  if ((seq_db_data = new dp_mem_t(1, kSeqDbDataSize)) == nullptr) return -1;
+  if ((seq_db_data = new dp_mem_t(1, kSeqDbDataSize, DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM)) == nullptr) return -1;
 
   return 0;
 
