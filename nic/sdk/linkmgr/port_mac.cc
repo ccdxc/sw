@@ -8,6 +8,8 @@
 #include "port.hpp"
 #include "port_mac.hpp"
 #include "linkmgr_rw.hpp"
+#include "linkmgr_internal.hpp"
+#include "sdk/mem.hpp"
 #include "sdk/asic/capri/csrlite/cap_mx_csr_helper.hpp"
 
 namespace sdk {
@@ -468,7 +470,8 @@ port::port_mac_fn_init(linkmgr_cfg_t *cfg)
     platform_type_t    platform_type = cfg->platform_type;
 
     // TODO test code
-    cap_mx_csr_helper_t *mx_csr = new cap_mx_csr_helper_t();
+    cap_mx_csr_helper_t *mx_csr = NULL;
+    LINKMGR_CALLOC(mx_csr, SDK_MEM_ALLOC_ID_LINKMGR, cap_mx_csr_helper_t);
     SDK_TRACE_DEBUG("%p", mx_csr);
     mx_csr->int_ecc.init(0x0);
 

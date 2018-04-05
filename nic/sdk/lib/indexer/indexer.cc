@@ -48,7 +48,7 @@ indexer::destroy(indexer *indxr)
 //---------------------------------------------------------------------------
 indexer::indexer(uint32_t size, bool thread_safe, bool skip_zero)
 {
-    int mod = size & WORD_SIZE_MASK;
+    int   mod  = size & WORD_SIZE_MASK;
 
     if (mod) {
         num_words_ = (size >> WORD_SIZE_SHIFT) + 1;
@@ -58,9 +58,12 @@ indexer::indexer(uint32_t size, bool thread_safe, bool skip_zero)
     size_ = size;
 
     // allocate and initialize to 0s
-    // TODO: Why are we using new here ??
-    bits_ = new uint64_t[num_words_]();
-    
+    bits_ = (uint64_t*) SDK_CALLOC(HAL_MEM_ALLOC_LIB_INDEXER,
+                                   sizeof(uint64_t) * num_words_);
+    if (!bits_) {
+        return;
+    }
+
     // set upper bits of the odd word to ensure that they are never used
     if (mod) {
         bits_[num_words_ - 1] = ALL_ONES_64BIT << mod;
@@ -83,8 +86,8 @@ indexer::indexer(uint32_t size, bool thread_safe, bool skip_zero)
 //---------------------------------------------------------------------------
 indexer::~indexer() 
 {
-    // TODO: why are we using delete here ???
-    delete[] bits_;
+    SDK_FREE(HAL_MEM_ALLOC_LIB_INDEXER, bits_);
+
     if (thread_safe_) {
         SDK_SPINLOCK_DESTROY(&slock_);
     }

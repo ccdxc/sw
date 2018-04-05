@@ -1,6 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "linkmgr_state.hpp"
+#include "linkmgr_internal.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -28,14 +29,10 @@ linkmgr_state::factory(void)
 {
     linkmgr_state *state = NULL;
 
-    // TODO: DONOT USE new operator
-    state = new linkmgr_state();
-    if (NULL == state) {
-        return NULL;
-    }
+    LINKMGR_CALLOC(state, SDK_MEM_ALLOC_ID_LINKMGR, linkmgr_state);
 
     if (state->init() != SDK_RET_OK) {
-        delete state;
+        SDK_FREE(SDK_MEM_ALLOC_ID_LINKMGR, state);
         return NULL;
     }
 
