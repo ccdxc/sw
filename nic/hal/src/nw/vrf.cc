@@ -94,6 +94,7 @@ vrf_init (vrf_t *vrf)
 
     // initialize meta information
     vrf->l2seg_list = block_list::factory(sizeof(hal_handle_t));
+    vrf->acl_list = block_list::factory(sizeof(hal_handle_t));
     // utils::dllist_reset(&vrf->l2seg_list_head);
     // utils::dllist_reset(&vrf->ep_list_head);
     // utils::dllist_reset(&vrf->session_list_head);
@@ -127,6 +128,9 @@ vrf_cleanup (vrf_t *vrf)
 {
     if (vrf->l2seg_list) {
         block_list::destroy(vrf->l2seg_list);
+    }
+    if (vrf->acl_list) {
+        block_list::destroy(vrf->acl_list);
     }
     vrf_free(vrf);
 
@@ -426,7 +430,7 @@ vrf_create_abort_cleanup (vrf_t *vrf, hal_handle_t hal_handle)
     hal_handle_free(hal_handle);
 
     // 3. free vrf
-    vrf_free(vrf);
+    vrf_cleanup(vrf);
 
     return HAL_RET_OK;
 }
@@ -618,7 +622,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     if (vrf->hal_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("Failed to alloc handle {}", vrf->vrf_id);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
-        vrf_free(vrf);
+        vrf_cleanup(vrf);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
@@ -964,8 +968,9 @@ vrf_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_TRACE_ERR("Failed to delete vrf pd, err : {}", ret);
     }
 
-    // free the cloned object
-    vrf_cleanup(vrf);
+    // free the cloned object, do not free the lists as they are still being
+    // referenced by the original object
+    vrf_free(vrf);
     return ret;
 }
 
@@ -1086,6 +1091,7 @@ vrf_process_get (vrf_t *vrf, VrfGetResponse *rsp)
 
     // fill stats of this vrf
     rsp->mutable_stats()->set_num_l2_segments(vrf->l2seg_list->num_elems());
+    rsp->mutable_stats()->set_num_acls(vrf->acl_list->num_elems());
     rsp->mutable_stats()->set_num_security_groups(vrf->num_sg);
     rsp->mutable_stats()->set_num_l4lb_services(vrf->num_l4lb_svc);
     rsp->mutable_stats()->set_num_endpoints(vrf->num_ep);
@@ -1263,7 +1269,7 @@ vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // c. Free PI vrf
-    vrf_free(vrf);
+    vrf_cleanup(vrf);
 
 end:
 
@@ -1301,8 +1307,18 @@ validate_vrf_delete (vrf_t *vrf)
         ret = HAL_RET_OBJECT_IN_USE;
         HAL_TRACE_ERR("VRF delete failure, l2segs still referring :");
         hal_print_handles_block_list(vrf->l2seg_list);
+        goto end;
     }
 
+    // check for no presence of acls
+    if (vrf->acl_list->num_elems()) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("VRF delete failure, acls still referring :");
+        hal_print_handles_block_list(vrf->acl_list);
+        goto end;
+    }
+
+end:
     return ret;
 }
 
@@ -1416,6 +1432,63 @@ vrf_del_l2seg (vrf_t *vrf, l2seg_t *l2seg)
         goto end;
     }
     HAL_TRACE_DEBUG("Deleted l2seg {} from vrf {}", l2seg->seg_id, vrf->vrf_id);
+
+end:
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// adds acl into vrf list
+//-----------------------------------------------------------------------------
+hal_ret_t
+vrf_add_acl (vrf_t *vrf, acl_t *acl)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (vrf == NULL || acl == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    vrf_lock(vrf, __FILENAME__, __LINE__, __func__);      // lock
+    ret = vrf->acl_list->insert(&acl->hal_handle);
+    vrf_unlock(vrf, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add acl {} to vrf {}",
+                        acl->key, vrf->vrf_id);
+        goto end;
+    }
+
+end:
+
+    HAL_TRACE_DEBUG("Added acl {} to vrf {}", acl->key, vrf->vrf_id);
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// remove acl from vrf list
+//-----------------------------------------------------------------------------
+hal_ret_t
+vrf_del_acl (vrf_t *vrf, acl_t *acl)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (vrf == NULL || acl == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    vrf_lock(vrf, __FILENAME__, __LINE__, __func__);      // lock
+    ret = vrf->acl_list->remove(&acl->hal_handle);
+    vrf_unlock(vrf, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to remove acl {} from from vrf {}, err : {}",
+                       acl->key, vrf->vrf_id, ret);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Deleted acl {} from vrf {}", acl->key, vrf->vrf_id);
 
 end:
 

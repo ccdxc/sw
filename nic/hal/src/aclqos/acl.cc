@@ -8,6 +8,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/gen/proto/hal/acl.pb.h"
+#include "nic/hal/src/utils/if_utils.hpp"
 
 namespace hal {
 
@@ -316,6 +317,113 @@ acl_spec_dump (AclSpec& spec)
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+acl_add_refs (acl_t *acl)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    acl_match_spec_t *ms = &acl->match_spec;
+    acl_action_spec_t *as = &acl->action_spec;
+
+    if (ms->vrf_match) {
+        ret = vrf_add_acl(vrf_lookup_by_handle(ms->vrf_handle), acl);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add ref to vrf ret {}", ret);
+            goto end;
+        }
+    }
+
+    if (ms->src_if_match) {
+        ret = if_add_acl(find_if_by_handle(ms->src_if_handle), acl, 
+                         IF_ACL_REF_TYPE_SRC);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add ref to src if ret {}", ret);
+            goto end;
+        }
+    }
+
+    if (ms->dest_if_match) {
+        ret = if_add_acl(find_if_by_handle(ms->dest_if_handle), acl, 
+                         IF_ACL_REF_TYPE_DEST);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add ref to dest if ret {}", ret);
+            goto end;
+        }
+    }
+
+    if (ms->l2seg_match) {
+        ret = l2seg_add_acl(l2seg_lookup_by_handle(ms->l2seg_handle), acl);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add ref to l2seg ret {}", ret);
+            goto end;
+        }
+    }
+
+    if (as->redirect_if_handle != HAL_HANDLE_INVALID) {
+        ret = if_add_acl(find_if_by_handle(as->redirect_if_handle), acl, 
+                         IF_ACL_REF_TYPE_REDIRECT);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add ref to redirect if ret {}", ret);
+            goto end;
+        }
+    }
+
+end:
+    return ret;
+}
+
+static hal_ret_t
+acl_rem_refs (acl_t *acl)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    acl_match_spec_t *ms = &acl->match_spec;
+    acl_action_spec_t *as = &acl->action_spec;
+
+    if (ms->vrf_match) {
+        ret = vrf_del_acl(vrf_lookup_by_handle(ms->vrf_handle), acl);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to del ref from vrf ret {}", ret);
+            goto end;
+        }
+    }
+
+    if (ms->src_if_match) {
+        ret = if_del_acl(find_if_by_handle(ms->src_if_handle), acl, 
+                         IF_ACL_REF_TYPE_SRC);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to del ref to src if ret {}", ret);
+            goto end;
+        }
+    }
+
+    if (ms->dest_if_match) {
+        ret = if_del_acl(find_if_by_handle(ms->dest_if_handle), acl, 
+                         IF_ACL_REF_TYPE_DEST);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to del ref to dest if ret {}", ret);
+            goto end;
+        }
+    }
+
+    if (ms->l2seg_match) {
+        ret = l2seg_del_acl(l2seg_lookup_by_handle(ms->l2seg_handle), acl);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to del ref from l2seg ret {}", ret);
+            goto end;
+        }
+    }
+
+    if (as->redirect_if_handle != HAL_HANDLE_INVALID) {
+        ret = if_del_acl(find_if_by_handle(as->redirect_if_handle), acl, 
+                         IF_ACL_REF_TYPE_REDIRECT);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to del ref to redirect if ret {}", ret);
+            goto end;
+        }
+    }
+
+end:
+    return ret;
+}
 
 //------------------------------------------------------------------------------
 // PD Call to allocate PD resources and HW programming
@@ -388,9 +496,19 @@ acl_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("added acl:{} to DB",
                     acl->key);
 
-    // TODO: Increment the ref counts of dependent objects
+    ret = acl_add_refs(acl);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add references for acl {} ret {}", 
+                      acl->key, ret);
+        goto end;
+    }
 
 end:
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("commit cbs can't fail: ret : {}",
+                      ret);
+        HAL_ASSERT(0);
+    }
     return ret;
 }
 
@@ -1580,6 +1698,7 @@ acl_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t         *lnode = NULL;
     dhl_entry_t           *dhl_entry = NULL;
     acl_t                 *acl = NULL;
+    acl_t                 *acl_clone = NULL;
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -1587,12 +1706,33 @@ acl_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
     acl = (acl_t *)dhl_entry->obj;
+    acl_clone = (acl_t *)dhl_entry->cloned_obj;
 
     HAL_TRACE_DEBUG("update commit cb {}",
                     acl->key);
 
+    ret = acl_rem_refs(acl);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to remove references for acl {} ret {}", 
+                      acl->key, ret);
+        goto end;
+    }
+
+    ret = acl_add_refs(acl_clone);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add references for acl_clone {} ret {}", 
+                      acl_clone->key, ret);
+        goto end;
+    }
+
     // Free PI.
     acl_free(acl, true);
+end:
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("commit cbs can't fail: ret : {}",
+                      ret);
+        HAL_ASSERT(0);
+    }
     return ret;
 }
 
@@ -1827,6 +1967,13 @@ acl_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("delete commit cb {} handle {}",
                     acl->key, acl->hal_handle);
 
+    ret = acl_rem_refs(acl);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to remove references for acl {} ret {}", 
+                      acl->key, ret);
+        goto end;
+    }
+
     // a. Remove from acl id hash table
     ret = acl_del_from_db(acl);
     if (ret != HAL_RET_OK) {
@@ -1842,6 +1989,11 @@ acl_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl_free(acl, false);
 
 end:
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("commit cbs can't fail: ret : {}",
+                      ret);
+        HAL_ASSERT(0);
+    }
     return ret;
 }
 

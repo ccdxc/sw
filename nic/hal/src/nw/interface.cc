@@ -100,6 +100,10 @@ if_init (if_t *hal_if)
     sdk::lib::dllist_reset(&hal_if->mbr_if_list_head);
     sdk::lib::dllist_reset(&hal_if->l2seg_list_clsc_head);
 
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(hal_if->acl_list); i++) {
+        hal_if->acl_list[i]= block_list::factory(sizeof(hal_handle_t));
+    }
+
     return hal_if;
 }
 
@@ -116,6 +120,15 @@ if_free (if_t *hal_if)
     HAL_SPINLOCK_DESTROY(&hal_if->slock);
     hal::delay_delete_to_slab(HAL_SLAB_IF, hal_if);
     return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+if_cleanup (if_t *hal_if)
+{
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(hal_if->acl_list); i++) {
+        block_list::destroy(hal_if->acl_list[i]);
+    }
+    return if_free(hal_if);
 }
 
 hal_handle_id_ht_entry_t *
@@ -935,7 +948,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     if (hal_if->hal_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("Failed to alloc handle {}",
                       hal_if->if_id);
-        if_free(hal_if);
+        if_cleanup(hal_if);
         hal_if = NULL;
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
@@ -987,7 +1000,7 @@ end:
 
     if (ret != HAL_RET_OK && hal_if != NULL) {
         // if there is an error, if will be freed in abort cb
-        if_free(hal_if);
+        if_cleanup(hal_if);
         hal_if = NULL;
     }
     if_prepare_rsp(rsp, ret, hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID);
@@ -2837,6 +2850,16 @@ validate_if_delete (if_t *hal_if)
         HAL_TRACE_ERR("invalid if type");
     }
 
+    for (unsigned i = 0; 
+         (ret == HAL_RET_OK) && i < HAL_ARRAY_SIZE(hal_if->acl_list); i++) {
+        if (hal_if->acl_list[i]->num_elems()) {
+            ret = HAL_RET_OBJECT_IN_USE;
+            HAL_TRACE_ERR("If delete failure, acls still referring {}:", 
+                          static_cast<if_acl_ref_type_t>(i));
+            hal_print_handles_block_list(hal_if->acl_list[i]);
+        }
+    }
+
     return ret;
 }
 
@@ -3030,7 +3053,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // c. Free PI if
-    if_free(intf);
+    if_cleanup(intf);
 
     // TODO: Decrement the ref counts of dependent objects
     //  - Have to decrement ref count for nwsec profile
@@ -3895,4 +3918,63 @@ if_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// adds acl into if list
+//-----------------------------------------------------------------------------
+hal_ret_t
+if_add_acl (if_t *hal_if, acl_t *acl, if_acl_ref_type_t type)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (hal_if == NULL || acl == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
+    ret = hal_if->acl_list[type]->insert(&acl->hal_handle);
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add acl {} to hal_if {} type {}",
+                        acl->key, hal_if->if_id, type);
+        goto end;
+    }
+
+end:
+
+    HAL_TRACE_DEBUG("Added acl {} to hal_if {} type {}", 
+                    acl->key, hal_if->if_id, type);
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// remove acl from hal_if list
+//-----------------------------------------------------------------------------
+hal_ret_t
+if_del_acl (if_t *hal_if, acl_t *acl, if_acl_ref_type_t type)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (hal_if == NULL || acl == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
+    ret = hal_if->acl_list[type]->remove(&acl->hal_handle);
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to remove acl {} from from hal_if {} type {}, "
+                      "err : {}",
+                       acl->key, hal_if->if_id, type, ret);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Deleted acl {} from hal_if {} type {}", 
+                    acl->key, hal_if->if_id, type);
+
+end:
+
+    return ret;
+}
 }    // namespace hal

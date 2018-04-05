@@ -58,6 +58,7 @@ typedef struct vrf_s {
 
     // back references
     block_list         *l2seg_list;           // L2 segment list
+    block_list         *acl_list;
 
     // PD state
     void               *pd;                  // all PD specific state

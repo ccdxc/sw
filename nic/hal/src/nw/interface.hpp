@@ -66,6 +66,15 @@ typedef struct if_l2seg_entry_s {
     dllist_ctxt_t   lentry;                         // list context
 } __PACK__ if_l2seg_entry_t;
 
+#define IF_ACL_REF_TYPE(ENTRY)                                \
+    ENTRY(IF_ACL_REF_TYPE_SRC,              0, "src-if")      \
+    ENTRY(IF_ACL_REF_TYPE_DEST,             1, "dest-if")     \
+    ENTRY(IF_ACL_REF_TYPE_REDIRECT,         2, "redirect-if") \
+    ENTRY(IF_ACL_REF_TYPES,                 3, "ref-types")
+
+DEFINE_ENUM(if_acl_ref_type_t, IF_ACL_REF_TYPE)
+#undef IF_ACL_REF_TYPE
+
 // Interface strucutre
 typedef struct if_s {
     hal_spinlock_t      slock;                      // lock to protect this structure
@@ -144,6 +153,7 @@ typedef struct if_s {
     // Uplinks
     dllist_ctxt_t       l2seg_list_head;        // l2segments, add_l2seg_on_uplink
     dllist_ctxt_t       enicif_list_head;       // enicifs, Classic enics
+    block_list          *acl_list[IF_ACL_REF_TYPES]; // List of acls matching on src if
 
     // dllist_ctxt_t       ep_list_head;       // endpoints behind this interface
     // dllist_ctxt_t       session_list_head;  // session from this

@@ -75,6 +75,7 @@ typedef struct l2seg_s {
     block_list            *nw_list;                // network list
     // back references
     block_list            *if_list;                // interface list
+    block_list            *acl_list;               // acl list
 
     // Looks like sessions need only if, ep, network
     // dllist_ctxt_t         ep_list_head;            // endpoint list

@@ -99,6 +99,9 @@ l2seg_init (l2seg_t *l2seg)
         block_list::factory(sizeof(ip_addr_t),
                             BLOCK_LIST_DEFAULT_ELEMS_PER_BLOCK,
                             hal_mmgr());
+    l2seg->acl_list = block_list::factory(sizeof(hal_handle_t),
+                                          BLOCK_LIST_DEFAULT_ELEMS_PER_BLOCK,
+                                          hal_mmgr());
     return l2seg;
 }
 
@@ -170,6 +173,9 @@ l2seg_cleanup (l2seg_t *l2seg)
     }
     if (l2seg->if_list) {
         block_list::destroy(l2seg->if_list);
+    }
+    if (l2seg->acl_list) {
+        block_list::destroy(l2seg->acl_list);
     }
 
     if (l2seg->eplearn_cfg.dhcp_cfg.trusted_servers_list) {
@@ -855,7 +861,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     ret = l2seg_read_networks(l2seg, spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error in reading networks, err {}", ret);
-        l2seg_free(l2seg);
+        l2seg_cleanup(l2seg);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -867,7 +873,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     if (l2seg->hal_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("Failed to alloc handle {}", l2seg->seg_id);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
-        l2seg_free(l2seg);
+        l2seg_cleanup(l2seg);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
@@ -1548,8 +1554,17 @@ validate_l2seg_delete (l2seg_t *l2seg)
         ret = HAL_RET_OBJECT_IN_USE;
         HAL_TRACE_ERR("ifs still referring:");
         hal_print_handles_block_list(l2seg->if_list);
+        goto end;
     }
 
+    if (l2seg->acl_list->num_elems()) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("acls still referring:");
+        hal_print_handles_block_list(l2seg->acl_list);
+        goto end;
+    }
+
+end:
     return ret;
 }
 
@@ -1946,6 +1961,58 @@ l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
 
     HAL_TRACE_DEBUG("del l2seg =/=> if ,{} =/=> {}, ret : {}",
                    l2seg->seg_id, hal_if->if_id, ret);
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Adds If into l2seg list
+//-----------------------------------------------------------------------------
+hal_ret_t
+l2seg_add_acl (l2seg_t *l2seg, acl_t *acl)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    if (l2seg == NULL || acl == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    l2seg_lock(l2seg, __FILENAME__, __LINE__, __func__);      // lock
+    ret = l2seg->acl_list->insert(&acl->hal_handle);
+    l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);    // unlock
+
+end:
+    HAL_TRACE_DEBUG("add l2seg => acl ,{} => {}, ret : {}",
+                    l2seg->seg_id, acl->key, ret);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Remove acl from l2seg list
+//-----------------------------------------------------------------------------
+hal_ret_t
+l2seg_del_acl (l2seg_t *l2seg, acl_t *acl)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    if (l2seg == NULL || acl == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    l2seg_lock(l2seg, __FILENAME__, __LINE__, __func__);      // lock
+    ret = l2seg->acl_list->remove(&acl->hal_handle);
+    l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to remove from l2seg's acl list. ret : {}",
+                      ret);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("del l2seg =/=> acl ,{} =/=> {}, ret : {}",
+                   l2seg->seg_id, acl->key, ret);
 
 end:
     return ret;

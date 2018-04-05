@@ -113,6 +113,7 @@ message VrfStats {
   uint32    num_security_groups = 2;
   uint32    num_l4lb_services   = 3;
   uint32    num_endpoints       = 4;
+  uint32    num_acls            = 5;
 }
 
 // VrfGetResponse captures all the information about a vrf

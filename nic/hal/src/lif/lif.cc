@@ -483,6 +483,8 @@ lif_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t   *dhl_entry = NULL;
     lif_t         *lif       = NULL;
     hal_handle_t  hal_handle = 0;
+    qos_class_t   *rx_qos_class;
+    qos_class_t   *tx_qos_class;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
@@ -509,6 +511,23 @@ lif_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // TODO: Increment the ref counts of dependent objects
+    rx_qos_class = find_qos_class_by_handle(lif->qos_info.rx_qos_class_handle);
+    if (rx_qos_class) {
+        ret = qos_class_add_lif_rx(rx_qos_class, lif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add rx qos class ref. from lif");
+            goto end;
+        }
+    }
+
+    tx_qos_class = find_qos_class_by_handle(lif->qos_info.tx_qos_class_handle);
+    if (tx_qos_class) {
+        ret = qos_class_add_lif_tx(tx_qos_class, lif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add tx qos class ref. from lif");
+            goto end;
+        }
+    }
 
 end:
     return ret;
@@ -1292,6 +1311,8 @@ lif_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t   *dhl_entry = NULL;
     lif_t         *lif       = NULL;
     hal_handle_t  hal_handle = 0;
+    qos_class_t   *rx_qos_class;
+    qos_class_t   *tx_qos_class;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
@@ -1307,6 +1328,24 @@ lif_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("{}:delete commit cb {}",
                     __FUNCTION__, lif->lif_id);
+
+    rx_qos_class = find_qos_class_by_handle(lif->qos_info.rx_qos_class_handle);
+    if (rx_qos_class) {
+        ret = qos_class_del_lif_rx(rx_qos_class, lif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to del rx qos class ref. from lif");
+            goto end;
+        }
+    }
+
+    tx_qos_class = find_qos_class_by_handle(lif->qos_info.tx_qos_class_handle);
+    if (tx_qos_class) {
+        ret = qos_class_del_lif_tx(tx_qos_class, lif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to del tx qos class ref. from lif");
+            goto end;
+        }
+    }
 
     // a. Remove from lif id hash table
     ret = lif_del_from_db(lif);

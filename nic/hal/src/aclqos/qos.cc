@@ -10,6 +10,20 @@
 
 namespace hal {
 
+static inline void
+qos_class_lock (qos_class_t *qos_class, 
+                const char *fname, int lineno, const char *fxname)
+{
+    HAL_SPINLOCK_LOCK(&qos_class->slock);
+}
+
+static inline void
+qos_class_unlock (qos_class_t *qos_class, 
+                  const char *fname, int lineno, const char *fxname)
+{
+    HAL_SPINLOCK_UNLOCK(&qos_class->slock);
+}
+
 // ----------------------------------------------------------------------------
 // hash table qos_group => ht_entry
 //  - Get key from entry
@@ -73,6 +87,13 @@ qos_class_init (qos_class_t *qos_class)
         return NULL;
     }
     HAL_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_SHARED);
+
+    // initialize the operational state
+    qos_class->hal_handle   = HAL_HANDLE_INVALID;
+    qos_class->pd           = NULL;
+
+    qos_class->lif_list_rx = block_list::factory(sizeof(hal_handle_t));
+    qos_class->lif_list_tx = block_list::factory(sizeof(hal_handle_t));
 
     return qos_class;
 }
@@ -331,9 +352,18 @@ qos_class_free (qos_class_t *qos_class, bool free_pd)
             return ret;
         }
     }
+
     HAL_SPINLOCK_DESTROY(&qos_class->slock);
     hal::delay_delete_to_slab(HAL_SLAB_QOS_CLASS, qos_class);
     return ret;
+}
+
+static hal_ret_t
+qos_class_cleanup (qos_class_t *qos_class, bool free_pd)
+{
+    block_list::destroy(qos_class->lif_list_rx);
+    block_list::destroy(qos_class->lif_list_tx);
+    return qos_class_free(qos_class, free_pd);
 }
 
 //-----------------------------------------------------------------------------
@@ -696,7 +726,7 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // 3. Free PI qos class
-    qos_class_free(qos_class, false);
+    qos_class_cleanup(qos_class, false);
     return ret;
 }
 
@@ -873,9 +903,6 @@ qosclass_create (QosClassSpec& spec, QosClassResponse *rsp)
         goto end;
     }
 
-    // initialize the qos class record
-    HAL_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_SHARED);
-
     // populate from the spec
     ret = qos_class_populate_from_spec(qos_class, spec);
     if (ret != HAL_RET_OK) {
@@ -915,7 +942,7 @@ end:
             // PD wouldn't have been allocated if we're coming here
             // PD gets allocated in create_add_cb and if it failed,
             // create_abort_cb would free everything
-            qos_class_free(qos_class, false);
+            qos_class_cleanup(qos_class, false);
             qos_class = NULL;
         }
         HAL_API_STATS_INC(HAL_API_QOSCLASS_CREATE_FAIL);
@@ -1045,7 +1072,7 @@ qos_class_make_clone (qos_class_t *qos_class,
 end:
     if (ret != HAL_RET_OK) {
         if (*qos_class_clone_p) {
-            qos_class_free(*qos_class_clone_p, true);
+            qos_class_cleanup(*qos_class_clone_p, true);
             *qos_class_clone_p = NULL;
         }
     }
@@ -1378,7 +1405,7 @@ qos_class_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // c. Free PI qos_class
-    qos_class_free(qos_class, false);
+    qos_class_cleanup(qos_class, false);
 
 end:
     return ret;
@@ -1399,6 +1426,22 @@ qos_class_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 hal_ret_t
 qos_class_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+validate_qos_class_delete (qos_class_t *qos_class)
+{
+    if (qos_class->lif_list_rx->num_elems()) {
+        HAL_TRACE_ERR("Qos class delete failure, lifs still referring rx:");
+        hal_print_handles_block_list(qos_class->lif_list_rx);
+        return HAL_RET_OBJECT_IN_USE;
+    }
+    if (qos_class->lif_list_tx->num_elems()) {
+        HAL_TRACE_ERR("Qos class delete failure, lifs still referring tx:");
+        hal_print_handles_block_list(qos_class->lif_list_tx);
+        return HAL_RET_OBJECT_IN_USE;
+    }
     return HAL_RET_OK;
 }
 
@@ -1434,6 +1477,13 @@ qosclass_delete (QosClassDeleteRequest& req, QosClassDeleteResponse *rsp)
 
     HAL_TRACE_DEBUG("deleting qos_class {} handle {}",
                     qos_class->key, qos_class->hal_handle);
+
+    // validate if there no objects referring this qos-class 
+    ret = validate_qos_class_delete(qos_class);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("qos_class delete validation failed, err : {}", ret);
+        goto end;
+    }
 
     // form ctxt and call infra add
     dhl_entry.handle = qos_class->hal_handle;
@@ -1492,6 +1542,101 @@ find_qos_cos_info_from_spec (QosClassKeyHandle kh, hal_handle_t pinned_uplink,
         return ret;
     }
     return ret;
+}
+
+static hal_ret_t
+qos_class_add_lif (qos_class_t *qos_class, lif_t *lif, bool rx)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (qos_class == NULL || lif == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    qos_class_lock(qos_class, __FILENAME__, __LINE__, __func__);      // lock
+    if (rx) {
+        ret = qos_class->lif_list_rx->insert(&lif->hal_handle);
+    } else {
+        ret = qos_class->lif_list_tx->insert(&lif->hal_handle);
+    }
+    qos_class_unlock(qos_class, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add lif {} to qos_class {}",
+                        lif->lif_id, qos_class->key);
+        goto end;
+    }
+
+end:
+
+    HAL_TRACE_DEBUG("Added lif {} to qos_class {}", lif->lif_id, qos_class->key);
+
+    return ret;
+}
+
+static hal_ret_t
+qos_class_del_lif (qos_class_t *qos_class, lif_t *lif, bool rx)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (qos_class == NULL || lif == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    qos_class_lock(qos_class, __FILENAME__, __LINE__, __func__);      // lock
+    if (rx) {
+        ret = qos_class->lif_list_rx->remove(&lif->hal_handle);
+    } else {
+        ret = qos_class->lif_list_tx->remove(&lif->hal_handle);
+    }
+    qos_class_unlock(qos_class, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to remove lif {} from from qos_class {}, err : {}",
+                       lif->lif_id, qos_class->key, ret);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Deleted lif {} from qos_class {}", lif->lif_id, qos_class->key);
+
+end:
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// add lif to qos_class rx list
+//-----------------------------------------------------------------------------
+hal_ret_t
+qos_class_add_lif_rx (qos_class_t *qos_class, lif_t *lif)
+{
+    return qos_class_add_lif(qos_class, lif, true);
+}
+
+//-----------------------------------------------------------------------------
+// remove lif from qos_class rx list
+//-----------------------------------------------------------------------------
+hal_ret_t
+qos_class_del_lif_rx (qos_class_t *qos_class, lif_t *lif)
+{
+    return qos_class_del_lif(qos_class, lif, true);
+}
+
+//-----------------------------------------------------------------------------
+// add lif to qos_class tx list
+//-----------------------------------------------------------------------------
+hal_ret_t
+qos_class_add_lif_tx (qos_class_t *qos_class, lif_t *lif)
+{
+    return qos_class_add_lif(qos_class, lif, false);
+}
+
+//-----------------------------------------------------------------------------
+// remove lif from qos_class tx list
+//-----------------------------------------------------------------------------
+hal_ret_t
+qos_class_del_lif_tx (qos_class_t *qos_class, lif_t *lif)
+{
+    return qos_class_del_lif(qos_class, lif, false);
 }
 
 // Copp

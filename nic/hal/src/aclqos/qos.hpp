@@ -7,9 +7,11 @@
 #include "nic/include/bitmap.hpp"
 #include "nic/gen/proto/hal/qos.pb.h"
 #include "nic/include/pd.hpp"
+#include "nic/utils/block_list/block_list.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using hal::utils::bitmap;
+using hal::utils::block_list;
 
 using kh::QosClassKeyHandle;
 using qos::QosClassSpec;
@@ -128,6 +130,10 @@ typedef struct qos_class_s {
 
                                          // operational state of qos-class
     hal_handle_t         hal_handle;     // HAL allocated handle
+
+    // Back references
+    block_list           *lif_list_rx;   // Lif list, rx
+    block_list           *lif_list_tx;   // Lif list, tx
 
     pd::pd_qos_class_t   *pd;
 } __PACK__ qos_class_t;
