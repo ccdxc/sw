@@ -194,51 +194,51 @@ pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
     memcpy(key->control_metadata_drop_reason, &drop_reason,
            sizeof(key->control_metadata_drop_reason));
 
-    stats_entry->set_drop_input_mapping(
+    stats_entry->mutable_reasons()->set_drop_input_mapping(
             drop_reason & (1 << DROP_INPUT_MAPPING));
-    stats_entry->set_drop_input_mapping_dejavu(
+    stats_entry->mutable_reasons()->set_drop_input_mapping_dejavu(
             drop_reason & (1 << DROP_INPUT_MAPPING_DEJAVU));
-    stats_entry->set_drop_flow_hit(
+    stats_entry->mutable_reasons()->set_drop_flow_hit(
             drop_reason & (1 << DROP_FLOW_HIT));
-    stats_entry->set_drop_flow_miss(
+    stats_entry->mutable_reasons()->set_drop_flow_miss(
             drop_reason & (1 << DROP_FLOW_MISS));
-    stats_entry->set_drop_ipsg(
+    stats_entry->mutable_reasons()->set_drop_ipsg(
             drop_reason & (1 << DROP_IPSG));
-    stats_entry->set_drop_nacl(
+    stats_entry->mutable_reasons()->set_drop_nacl(
             drop_reason & (1 << DROP_NACL));
-    stats_entry->set_drop_malformed_pkt(
+    stats_entry->mutable_reasons()->set_drop_malformed_pkt(
             drop_reason & (1 << DROP_MALFORMED_PKT));
-    stats_entry->set_drop_ip_normalization(
+    stats_entry->mutable_reasons()->set_drop_ip_normalization(
             drop_reason & (1 << DROP_IP_NORMALIZATION));
-    stats_entry->set_drop_tcp_normalization(
+    stats_entry->mutable_reasons()->set_drop_tcp_normalization(
             drop_reason & (1 << DROP_TCP_NORMALIZATION));
-    stats_entry->set_drop_tcp_non_syn_first_pkt(
+    stats_entry->mutable_reasons()->set_drop_tcp_non_syn_first_pkt(
             drop_reason & (1 << DROP_TCP_NON_SYN_FIRST_PKT));
-    stats_entry->set_drop_icmp_normalization(
+    stats_entry->mutable_reasons()->set_drop_icmp_normalization(
             drop_reason & (1 << DROP_ICMP_NORMALIZATION));
-    stats_entry->set_drop_input_properties_miss(
+    stats_entry->mutable_reasons()->set_drop_input_properties_miss(
             drop_reason & (1 << DROP_INPUT_PROPERTIES_MISS));
-    stats_entry->set_drop_tcp_out_of_window(
+    stats_entry->mutable_reasons()->set_drop_tcp_out_of_window(
             drop_reason & (1 << DROP_TCP_OUT_OF_WINDOW));
-    stats_entry->set_drop_tcp_split_handshake(
+    stats_entry->mutable_reasons()->set_drop_tcp_split_handshake(
             drop_reason & (1 << DROP_TCP_SPLIT_HANDSHAKE));
-    stats_entry->set_drop_tcp_win_zero_drop(
+    stats_entry->mutable_reasons()->set_drop_tcp_win_zero_drop(
             drop_reason & (1 << DROP_TCP_WIN_ZERO_DROP));
-    stats_entry->set_drop_tcp_data_after_fin(
+    stats_entry->mutable_reasons()->set_drop_tcp_data_after_fin(
             drop_reason & (1 << DROP_TCP_DATA_AFTER_FIN));
-    stats_entry->set_drop_tcp_non_rst_pkt_after_rst(
+    stats_entry->mutable_reasons()->set_drop_tcp_non_rst_pkt_after_rst(
             drop_reason & (1 << DROP_TCP_NON_RST_PKT_AFTER_RST));
-    stats_entry->set_drop_tcp_invalid_responder_first_pkt(
+    stats_entry->mutable_reasons()->set_drop_tcp_invalid_responder_first_pkt(
             drop_reason & (1 << DROP_TCP_INVALID_RESPONDER_FIRST_PKT));
-    stats_entry->set_drop_tcp_unexpected_pkt(
+    stats_entry->mutable_reasons()->set_drop_tcp_unexpected_pkt(
             drop_reason & (1 << DROP_TCP_UNEXPECTED_PKT));
-    stats_entry->set_drop_src_lif_mismatch(
+    stats_entry->mutable_reasons()->set_drop_src_lif_mismatch(
             drop_reason & (1 << DROP_SRC_LIF_MISMATCH));
-    stats_entry->set_drop_parser_icrc_error(
+    stats_entry->mutable_reasons()->set_drop_parser_icrc_error(
             drop_reason & (1 << DROP_PARSER_ICRC_ERR));
-    stats_entry->set_drop_parse_len_error(
+    stats_entry->mutable_reasons()->set_drop_parse_len_error(
             drop_reason & (1 << DROP_PARSER_LEN_ERR));
-    stats_entry->set_drop_hardware_error(
+    stats_entry->mutable_reasons()->set_drop_hardware_error(
             drop_reason & (1 << DROP_HARDWARE_ERR));
 
     uint64_t drop_stats_pkts = 0;

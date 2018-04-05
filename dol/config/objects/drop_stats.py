@@ -54,7 +54,7 @@ class DropStatsVerifHelper:
         stats = self.pre_stats if pre else self.post_stats
         for entry in resp.drop_entries:
             for reason in stats.__dict__.keys():
-                if getattr(entry, reason, False):
+                if getattr(entry.reasons, reason, False):
                     setattr(stats, reason, entry.drop_count)
         return
 
