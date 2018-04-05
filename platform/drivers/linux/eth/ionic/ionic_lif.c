@@ -1401,28 +1401,23 @@ int ionic_lifs_size(struct ionic *ionic)
 	unsigned int nlifs = ident->dev.nlifs;
 	unsigned int ntxqs_per_lif = ident->dev.ntxqs_per_lif;
 	unsigned int nrxqs_per_lif = ident->dev.nrxqs_per_lif;
-	unsigned int nintrs = ident->dev.nintrs;
+	unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
 	int err;
 
 try_again:
 	nintrs = nlifs * (ntxqs_per_lif + nrxqs_per_lif + 1 /* adminq */);
 
-	while (nintrs > ident->dev.nintrs) {
-		if (ntxqs_per_lif-- > 1)
-			goto try_again;
-		if (nrxqs_per_lif-- > 1)
-			goto try_again;
-		return -ENOSPC;
-	}
+	if (nintrs > dev_nintrs)
+		goto try_fewer;
 
 	err = ionic_bus_alloc_irq_vectors(ionic, nintrs);
 	if (err < 0 && err != -ENOSPC)
 		return err;
 	if (err == -ENOSPC)
-		goto try_again;
+		goto try_fewer;
 	if (err != nintrs) {
 		ionic_bus_free_irq_vectors(ionic);
-		goto try_again;
+		goto try_fewer;
 	}
 
 	ionic->ntxqs_per_lif = ntxqs_per_lif;
@@ -1430,4 +1425,15 @@ try_again:
 	ionic->nintrs = nintrs;
 
 	return ionic_debugfs_add_sizes(ionic);
+
+try_fewer:
+	if (ntxqs_per_lif > 1) {
+		--ntxqs_per_lif;
+		goto try_again;
+	}
+	if (nrxqs_per_lif > 1) {
+		--nrxqs_per_lif;
+		goto try_again;
+	}
+	return -ENOSPC;
 }
