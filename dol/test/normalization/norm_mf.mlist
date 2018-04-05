@@ -12,99 +12,139 @@ modules:
     - module:
         name    : SMAC_ZERO
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : DMAC_ZERO
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : SMAC_MCAST
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
     
     - module:
         name    : SMAC_BCAST
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : SIP_MCAST_V4
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : SIP_MCAST_V6
         iterate :
-            - flow: filter://type=IPV6
+            - flow          : filter://type=IPV6
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : SIP_BCAST_V4
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : SIP_LOOPBACK_V4
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
     
     - module:
         name    : SIP_LOOPBACK_V6
         iterate :
-            - flow: filter://type=IPV6
+            - flow          : filter://type=IPV6
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : DIP_LOOPBACK_V4
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
     
     - module:
         name    : DIP_LOOPBACK_V6
         iterate :
-            - flow: filter://type=IPV6
+            - flow          : filter://type=IPV6
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : TTL_ZERO_V4
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : TTL_ZERO_V6
         iterate :
-            - flow: filter://type=IPV6
+            - flow          : filter://type=IPV6
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : IPV4_BAD_VERSION
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
     
     - module:
         name    : IPV6_BAD_VERSION
         iterate :
-            - flow: filter://type=IPV6
+            - flow          : filter://type=IPV6
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
     
     - module:
         name    : SIP_EQ_DIP_V4
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
     
     - module:
         name    : SIP_EQ_DIP_V6
         iterate :
-            - flow: filter://type=IPV6
+            - flow          : filter://type=IPV6
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : SMAC_EQ_DMAC
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
         name    : DIP_ZERO_V4
         iterate :
-            - flow: filter://type=IPV4
+            - flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
     
     - module:
         name    : DIP_ZERO_V6
         iterate :
-            - flow: filter://type=IPV6
+            - flow          : filter://type=IPV6
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]

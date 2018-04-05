@@ -1,10 +1,11 @@
 #! /usr/bin/python3
 import pdb
 
+import infra.common.objects as objects
+
 MAC_ZERO    = '00:00:00:00:00:00'
 MCAST_MAC   = '01:5e:00:00:00:01'
 BCAST_MAC   = 'FF:FF:FF:FF:FF:FF'
-MAC_EQ      = '00:00:00:00:00:99'
 
 IP_MCAST    = '239.1.1.1'
 IP_BCAST    = '255.255.255.255'
@@ -21,18 +22,18 @@ MFFS = {
     'smac::SMAC_ZERO'               : MAC_ZERO,
     'smac::SMAC_MCAST'              : MCAST_MAC,
     'smac::SMAC_BCAST'              : BCAST_MAC,
-    'smac::SMAC_EQ_DMAC'            : MAC_EQ,
+    'smac::SMAC_EQ_DMAC'            : 'ref://testcase/config/src/endpoint/macaddr',
 
     'outersmac::OUTER_SMAC_ZERO'    : MAC_ZERO,
     'outersmac::OUTER_SMAC_MCAST'   : MCAST_MAC,
     'outersmac::OUTER_SMAC_BCAST'   : BCAST_MAC,
-    'outersmac::OUTER_SMAC_EQ_DMAC' : MAC_EQ,
+    'outersmac::OUTER_SMAC_EQ_DMAC' : 'ref://testcase/config/src/endpoint/intf/rmacaddr',
 
     'dmac::DMAC_ZERO'               : MAC_ZERO,
-    'dmac::SMAC_EQ_DMAC'            : MAC_EQ,
+    'dmac::SMAC_EQ_DMAC'            : 'ref://testcase/config/src/endpoint/macaddr',
 
     'outerdmac::OUTER_DMAC_ZERO'    : MAC_ZERO,
-    'outerdmac::OUTER_SMAC_EQ_DMAC' : MAC_EQ,
+    'outerdmac::OUTER_SMAC_EQ_DMAC' : 'ref://testcase/config/src/endpoint/intf/rmacaddr',
 
     'sip::SIP_MCAST_V4'             : IP_MCAST,
     'sip::SIP_BCAST_V4'             : IP_BCAST,
@@ -76,8 +77,20 @@ def __get_lookup_label(tc, prefix):
 def __get_mff(tc, prefix, default):
     lkplabel = __get_lookup_label(tc, prefix)
     if lkplabel in MFFS:
-        return MFFS[lkplabel]
-    return default
+        val = MFFS[lkplabel]
+    else:
+        val = default
+    
+    if type(val) is not str:
+        return val
+
+    if objects.IsTemplateFieldString(val):
+        obj = objects.TemplateFieldObject(val)
+        if objects.IsReference(obj):
+            return obj.Get(tc)
+        else:
+            assert(0)
+    return val
 
 def GetMfSip6(tc, pkt):
     return __get_mff(tc, 'sip6', tc.config.flow.sip)

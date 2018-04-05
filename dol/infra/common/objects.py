@@ -1027,6 +1027,11 @@ def IsAutoField(field):
     return True
 
 
+def IsTemplateFieldString(string):
+    if '://' in string:
+        return True
+    return False
+
 def IsTemplateFieldValueObject(obj):
     return isinstance(obj, TemplateFieldValue)
 

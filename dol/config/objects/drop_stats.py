@@ -55,6 +55,8 @@ class DropStatsVerifHelper:
         for entry in resp.drop_entries:
             for reason in stats.__dict__.keys():
                 if getattr(entry.reasons, reason, False):
+                    logger.debug("DropStats: %s reason count = %d" %\
+                                 (reason, entry.drop_count))
                     setattr(stats, reason, entry.drop_count)
         return
 

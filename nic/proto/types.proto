@@ -294,13 +294,13 @@ enum CpucbId {
 }
 
 message DropReasons {
-  bool      drop_input_mapping                      = 1;        // input mapping table miss
-  bool      drop_input_mapping_dejavu               = 2;        // deja-vu drop
-  bool      drop_flow_hit                           = 3;        // flow hit drop
-  bool      drop_flow_miss                          = 4;        // flow miss drop
-  bool      drop_ipsg                               = 5;        // ipsg drop
+  bool      drop_malformed_pkt                      = 1;        // malformed pkt drop
+  bool      drop_input_mapping                      = 2;        // input mapping table miss
+  bool      drop_input_mapping_dejavu               = 3;        // deja-vu drop
+  bool      drop_flow_hit                           = 4;        // flow hit drop
+  bool      drop_flow_miss                          = 5;        // flow miss drop
   bool      drop_nacl                               = 6;        // nacl drop
-  bool      drop_malformed_pkt                      = 7;        // malformed pkt drop
+  bool      drop_ipsg                               = 7;        // ipsg drop
   bool      drop_ip_normalization                   = 8;        // ip norm. drop
   bool      drop_tcp_normalization                  = 9;        // tcp norm. drop
   bool      drop_tcp_rst_with_invalid_ack_num       = 10;       // rst with invalid ack num

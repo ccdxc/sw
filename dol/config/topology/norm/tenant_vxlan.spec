@@ -7,7 +7,7 @@ overlay : vxlan
 
 segments:
     - spec  : ref://store/specs/id=NORM_SEGMENT_VXLAN
-      count : 2
+      count : 1
 
 # NFV Endpoints:
 # - They will attach to a 'TRUNK' Enic.

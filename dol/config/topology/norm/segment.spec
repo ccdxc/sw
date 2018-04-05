@@ -11,4 +11,4 @@ endpoints   :
     useg    : 0
     pvlan   : 1
     direct  : 0
-    remote  : 4 # Remote TEPs
+    remote  : 2 # Remote TEPs

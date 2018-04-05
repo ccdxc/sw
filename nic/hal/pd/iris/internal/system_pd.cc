@@ -52,6 +52,7 @@ pd_system_populate_drop_stats (DropStatsEntry *stats_entry, uint8_t idx)
     }
 
     if (key.entry_inactive_drop_stats) {
+        HAL_TRACE_DEBUG("Drop stats entry is inactive for idx: {}", idx);
         goto end;
     }
 

@@ -216,13 +216,13 @@
 /*****************************************************************************/
 /* drop reasons - these are bit positions to be used in ASM                  */
 /*****************************************************************************/
-#define DROP_INPUT_MAPPING                      0
-#define DROP_INPUT_MAPPING_DEJAVU               1
-#define DROP_FLOW_HIT                           2
-#define DROP_FLOW_MISS                          3
-#define DROP_IPSG                               4
+#define DROP_MALFORMED_PKT                      0
+#define DROP_INPUT_MAPPING                      1
+#define DROP_INPUT_MAPPING_DEJAVU               2
+#define DROP_FLOW_HIT                           3
+#define DROP_FLOW_MISS                          4
 #define DROP_NACL                               5
-#define DROP_MALFORMED_PKT                      6
+#define DROP_IPSG                               6
 #define DROP_IP_NORMALIZATION                   7        
 #define DROP_TCP_NORMALIZATION                  8
 #define DROP_TCP_RST_WITH_INVALID_ACK_NUM       9
@@ -240,7 +240,7 @@
 #define DROP_PARSER_ICRC_ERR                    21
 #define DROP_PARSER_LEN_ERR                     22
 #define DROP_HARDWARE_ERR                       23
-#define DROP_MIN                                DROP_INPUT_MAPPING
+#define DROP_MIN                                DROP_MALFORMED_PKT
 /*****************************************************************************/
 /* Note: After adding a new drop code, update the system.proto file as well. */
 /*****************************************************************************/

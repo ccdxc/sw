@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 from infra.common.logging import logger as logger
+import test.callbacks.networking.modcbs as modcbs
 
 def Setup(infra, module):
     iterelem = module.iterator.Get()
@@ -21,6 +22,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
+    modcbs.TestCaseSetup(tc)
     asp = tc.module.infra_data.ConfigStore.objects.Get('SEC_PROF_ACTIVE')
 
     iterelem = tc.module.iterator.Get()
@@ -37,6 +39,20 @@ def TestCaseSetup(tc):
 
     return
 
+def TestCasePreTrigger(tc):
+    return modcbs.TestCasePreTrigger(tc)
+
+def TestCaseStepSetup(tc, step):
+    return modcbs.TestCaseStepSetup(tc, step)
+
+def TestCaseStepTrigger(tc, step):
+    return modcbs.TestCaseStepTrigger(tc, step)
+
+def TestCaseStepVerify(tc, step):
+    return modcbs.TestCaseStepVerify(tc, step)
+
+def TestCaseStepTeardown(tc, step):
+    return modcbs.TestCaseStepTeardown(tc, step)
 
 def TestCaseVerify(tc):
-    return True
+    return modcbs.TestCaseVerify(tc)
