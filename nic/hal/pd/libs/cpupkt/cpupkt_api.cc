@@ -10,6 +10,10 @@ namespace hal {
 namespace pd {
 
 thread_local uint32_t gc_pindex = 0;
+thread_local uint32_t cpu_tx_page_pindex = 0;
+thread_local uint32_t cpu_tx_descr_pindex = 0;
+
+#define CPU_MAX_ALLOC_RESOURCES 1000
 
 hal_ret_t cpupkt_descr_free(cpupkt_hw_id_t descr_addr);
 
@@ -445,7 +449,7 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
 hal_ret_t
 pd_cpupkt_descr_alloc(pd_cpupkt_descr_alloc_args_t *args)
 {
-    indexer::status     rs;
+    //indexer::status     rs;
     uint32_t            descr_index;
     cpupkt_hw_id_t      base_addr;
     cpupkt_hw_id_t      *descr_addr = args->descr_addr;
@@ -459,21 +463,26 @@ pd_cpupkt_descr_alloc(pd_cpupkt_descr_alloc_args_t *args)
         HAL_TRACE_ERR("Failed to get the base addr for the page region");
         return HAL_RET_ERR;
     }
-
+    
+    /* 
     rs = g_hal_state_pd->cpupkt_descr_hw_id_idxr()->alloc(&descr_index);
     if(rs != indexer::SUCCESS) {
         HAL_TRACE_ERR("Failed to allocate descr index, err {}", rs);
         return HAL_RET_NO_RESOURCE;
     }
-
+    */
+    descr_index = (cpu_tx_descr_pindex % CPU_MAX_ALLOC_RESOURCES);
     *descr_addr = base_addr + (descr_index * CPU_PKT_DESCR_SIZE);
+    cpu_tx_descr_pindex++;
+    HAL_TRACE_DEBUG("Allocated descr_index: {}, global pi: {}",
+        descr_index, cpu_tx_descr_pindex);
     return HAL_RET_OK;
 }
 
 hal_ret_t
 pd_cpupkt_page_alloc(pd_cpupkt_page_alloc_args_t *args)
 {
-    indexer::status     rs;
+    //indexer::status     rs;
     uint32_t            page_index;
     cpupkt_hw_id_t      base_addr;
     cpupkt_hw_id_t* page_addr = args->page_addr;
@@ -487,14 +496,19 @@ pd_cpupkt_page_alloc(pd_cpupkt_page_alloc_args_t *args)
         HAL_TRACE_ERR("Failed to get the base addr for the page region");
         return HAL_RET_ERR;
     }
-
+    
+    /*
     rs = g_hal_state_pd->cpupkt_page_hw_id_idxr()->alloc(&page_index);
     if(rs != indexer::SUCCESS) {
         HAL_TRACE_ERR("Failed to allocate page index, err {}", rs);
         return HAL_RET_NO_RESOURCE;
     }
-
+    */
+    page_index = (cpu_tx_page_pindex % CPU_MAX_ALLOC_RESOURCES);
     *page_addr = base_addr + (page_index * CPU_PKT_PAGE_SIZE);
+    cpu_tx_page_pindex++;
+    HAL_TRACE_DEBUG("Allocated page_index: {}, global pi: {}",
+        page_index, cpu_tx_page_pindex);
     return HAL_RET_OK;
 }
 
