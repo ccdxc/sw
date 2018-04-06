@@ -21,6 +21,7 @@
 #include <rdma/ib_mad.h>
 
 #include "ionic_ibdev.h"
+#include "ionic_ibdebug.h"
 
 MODULE_AUTHOR("Allen Hubbe <allenbh@pensando.io>");
 MODULE_DESCRIPTION("Pensando Capri RoCE HCA driver");
@@ -30,6 +31,10 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define DRIVER_VERSION "0.2 pre-release"
 #define DRIVER_DESCRIPTION "Pensando Capri RoCE HCA driver"
 #define DEVICE_DESCRIPTION "Pensando Capri RoCE HCA"
+
+static bool ionic_dbgfs_enable = true; /* XXX false for release */
+module_param_named(dbgfs, ionic_dbgfs_enable, bool, 0444);
+MODULE_PARM_DESC(eq_depth, "Enable debugfs for this driver.");
 
 static u16 ionic_eq_depth = 0x1ff; /* XXX needs tuning */
 module_param_named(eq_depth, ionic_eq_depth, ushort, 0444);
@@ -2045,6 +2050,8 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev,
 
 	ionic_intr_mask(dev, eq->intr, IONIC_INTR_MASK_CLEAR);
 
+	ionic_dbgfs_add_eq(dev, eq);
+
 	return eq;
 
 err_cmd:
@@ -2067,12 +2074,18 @@ static int ionic_destroy_eq(struct ionic_eq *eq)
 	struct ionic_ibdev *dev = eq->dev;
 	int rc;
 
+	ionic_dbgfs_rm_eq(eq);
+
 	if (eq->enable) {
 		irq_set_affinity_hint(eq->irq, NULL);
 		free_irq(eq->irq, eq);
 		eq->enable = false;
 		flush_work(&eq->work);
 	}
+
+	disable_irq(eq->irq);
+	eq->enable = false;
+	flush_work(&eq->work);
 
 	rc = ionic_destroy_eq_cmd(dev, eq);
 	if (rc)
@@ -2171,6 +2184,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	struct ib_device *ibdev;
 	struct ionic_ibdev *dev;
 	const union identity *ident;
+	struct dentry *lif_dbgfs;
 	size_t size;
 	int rc;
 
@@ -2303,6 +2317,13 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->free_hbm = NULL;
 	dev->inuse_hbm = NULL;
 	dev->norder_hbm = 0;
+
+	if (ionic_dbgfs_enable)
+		lif_dbgfs = ionic_api_get_debugfs(lif);
+	else
+		lif_dbgfs = NULL;
+
+	ionic_dbgfs_add_dev(dev, lif_dbgfs);
 
 	rc = ionic_create_eqvec(dev);
 	if (rc)

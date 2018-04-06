@@ -82,6 +82,16 @@ struct ionic_ibdev {
 
 	struct ionic_eq		**eq_vec;
 	int			eq_count;
+
+	struct dentry		*debug;
+	struct dentry		*debug_ah;
+	struct dentry		*debug_cq;
+	struct dentry		*debug_eq;
+	struct dentry		*debug_mr;
+	struct dentry		*debug_mw;
+	struct dentry		*debug_pd;
+	struct dentry		*debug_qp;
+	struct dentry		*debug_srq;
 };
 
 struct ionic_eq {
@@ -101,6 +111,8 @@ struct ionic_eq {
 	char			name[32];
 
 	struct cpumask		cpumask;
+
+	struct dentry		*debug;
 };
 
 struct ionic_ctx {
