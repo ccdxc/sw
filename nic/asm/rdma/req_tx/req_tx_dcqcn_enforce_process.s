@@ -71,17 +71,20 @@ token_replenish:
     sub           r1, CUR_TIMESTAMP, d.last_sched_timestamp // BD-Slot
     add           r1, r1, d.delta_ticks_last_sched 
 
-    // Calculate elapsed-time-in-us since last scheduled and store delta-ticks for use when next sched.
+    // Calculate elapsed-time-in-us since last scheduled.
     div           r3, r1, rdma_num_clock_ticks_per_us 
-    mod           r2, r1, rdma_num_clock_ticks_per_us
-    tblwr         d.delta_ticks_last_sched, r2
 
-    // rate-enforced is in Mbps. DCQCN algo will feed timestamp in Mbps granularity!
+    // rate-enforced is in Mbps. DCQCN algo will feed rate in Mbps granularity!
     mul           NUM_TOKENS_ACQUIRED, d.rate_enforced, r3 
  
-    // Update last-sched-timestamp only if tokens are acquired in this stage. 
+    // Update last-sched-timestamp and delta-ticks only if tokens are acquired in this stage. 
     seq           c1, NUM_TOKENS_ACQUIRED, 0     
-    tblwr.!c1     d.last_sched_timestamp, CUR_TIMESTAMP 
+    bcf           [c1], rate_enforce
+    add           r3, NUM_TOKENS_ACQUIRED, d.cur_avail_tokens // BD-slot
+
+    mod           r2, r1, rdma_num_clock_ticks_per_us                                                
+    tblwr         d.delta_ticks_last_sched, r2    
+    tblwr         d.last_sched_timestamp, CUR_TIMESTAMP 
 
     // Replenish tokens in bucket.
     add           r3, NUM_TOKENS_ACQUIRED, d.cur_avail_tokens 

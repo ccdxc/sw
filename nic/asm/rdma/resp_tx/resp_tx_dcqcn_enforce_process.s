@@ -8,11 +8,16 @@ struct dcqcn_cb_t d;
 struct resp_tx_s4_t1_k k;
 
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
-// NOTE: Feeding timestamp from dcqcn_cb for now since model doesn't have timestamps.
+// NOTE: Non-RTL - feeding timestamp from dcqcn_cb since model doesn't have timestamps.
+
+#ifdef RTL
+#define CUR_TIMESTAMP r4
+#else
 #define CUR_TIMESTAMP d.cur_timestamp
+#endif
 
 #define SECS_IN_KSEC         1000
-#define NUM_TOKENS_ACQUIRED  r4
+#define NUM_TOKENS_ACQUIRED  r6
 #define NUM_TOKENS_REQUIRED  r5
 
 #define RQCB0_WB_INFO_P t1_s2s_rqcb0_write_back_info
@@ -48,24 +53,29 @@ resp_tx_dcqcn_enforce_process:
     bcf           [!c3], rate_enforce
 
 token_replenish:
-    sub           r1, CUR_TIMESTAMP, d.last_sched_timestamp // BD slot
-    add           r1, r1, d.delta_ticks_last_sched 
+    sub           r1, CUR_TIMESTAMP, d.last_sched_timestamp // BD-Slot
+    add           r1, r1, d.delta_ticks_last_sched
 
-    // Calculate elapsed-time-in-us since last scheduled and store delta-ticks for use when next sched.
-    div           r3, r1, rdma_num_clock_ticks_per_us 
+    // Calculate elapsed-time-in-us since last scheduled.
+    div           r3, r1, rdma_num_clock_ticks_per_us
+
+    // rate-enforced is in Mbps. DCQCN algo will feed rate in Mbps granularity!
+    mul           NUM_TOKENS_ACQUIRED, d.rate_enforced, r3
+
+    // Update last-sched-timestamp and delta-ticks only if tokens are acquired in this stage. 
+    seq           c1, NUM_TOKENS_ACQUIRED, 0 
+    bcf           [c1], rate_enforce
+    add           r3, NUM_TOKENS_ACQUIRED, d.cur_avail_tokens // BD-slot
+
     mod           r2, r1, rdma_num_clock_ticks_per_us
     tblwr         d.delta_ticks_last_sched, r2
-
-    // rate-enforced is in Mbps. DCQCN algo will feed timestamp in Mbps granularity!
-    mul           NUM_TOKENS_ACQUIRED, d.rate_enforced, r3 
- 
-    // Update last-sched-timestamp only if tokens are acquired in this stage. 
-    seq           c1, NUM_TOKENS_ACQUIRED, 0     
-    tblwr.!c1     d.last_sched_timestamp, CUR_TIMESTAMP 
+    tblwr         d.last_sched_timestamp, CUR_TIMESTAMP
 
     // Replenish tokens in bucket.
-    add           r3, NUM_TOKENS_ACQUIRED, d.cur_avail_tokens 
-    tblwr         d.cur_avail_tokens, r3  
+    slt           c3, r3, d.token_bucket_size
+    add.!c3       r3, d.token_bucket_size, r0 
+    tblwr         d.cur_avail_tokens, r3
+
 
 rate_enforce:
     // Calculate num-tokens-required for current pkt and check with available tokens
