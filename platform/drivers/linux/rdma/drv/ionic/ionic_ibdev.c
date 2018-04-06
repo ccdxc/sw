@@ -1760,8 +1760,7 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 }
 
 static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
-					      struct net_device *ndev,
-					      struct net_device *real_ndev)
+					      struct net_device *ndev)
 {
 	struct ib_device *ibdev;
 	struct ionic_ibdev *dev;
@@ -1899,7 +1898,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->norder_hbm = 0;
 
 	ibdev->owner = THIS_MODULE;
-	ibdev->dev.parent = real_ndev->dev.parent;
+	ibdev->dev.parent = ndev->dev.parent;
 
 	strlcpy(ibdev->name, "ionic_%d", IB_DEVICE_NAME_MAX);
 	strlcpy(ibdev->node_desc, DEVICE_DESCRIPTION, IB_DEVICE_NODE_DESC_MAX);
@@ -2047,7 +2046,6 @@ struct ionic_netdev_work {
 	struct work_struct ws;
 	unsigned long event;
 	struct net_device *ndev;
-	struct net_device *real_ndev;
 	struct lif *lif;
 };
 
@@ -2069,7 +2067,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 
 		dev_dbg(&work->ndev->dev, "register ibdev\n");
 
-		dev = ionic_create_ibdev(work->lif, work->ndev, work->real_ndev);
+		dev = ionic_create_ibdev(work->lif, work->ndev);
 		if (IS_ERR(dev)) {
 			dev_dbg(&work->ndev->dev, "error register ibdev %d\n",
 				(int)PTR_ERR(dev));
@@ -2135,21 +2133,20 @@ static int ionic_netdev_event(struct notifier_block *notifier,
 			      unsigned long event, void *ptr)
 {
 	struct ionic_netdev_work *work;
-	struct net_device *ndev, *real_ndev;
+	struct net_device *ndev;
 	struct lif *lif;
 	int rc;
 
 	ndev = netdev_notifier_info_to_dev(ptr);
-	real_ndev = rdma_vlan_dev_real_dev(ndev) ?: ndev;
 
-	lif = get_netdev_ionic_lif(real_ndev, IONIC_API_VERSION);
+	lif = get_netdev_ionic_lif(ndev, IONIC_API_VERSION);
 	if (!lif) {
 		pr_devel("unrecognized netdev: %s (%s)\n",
-			 ndev->name, real_ndev->name);
+			 ndev->name, ndev->name);
 		goto out;
 	}
 
-	pr_devel("ionic netdev: %s (%s)\n", ndev->name, real_ndev->name);
+	pr_devel("ionic netdev: %s\n", ndev->name);
 	dev_dbg(&ndev->dev, "event %lu\n", event);
 
 	if (!try_module_get(THIS_MODULE))
@@ -2166,7 +2163,6 @@ static int ionic_netdev_event(struct notifier_block *notifier,
 	INIT_WORK(&work->ws, ionic_netdev_work);
 	work->event = event;
 	work->ndev = ndev;
-	work->real_ndev = real_ndev;
 	work->lif = lif;
 
 	queue_work(ionic_workq, &work->ws);
