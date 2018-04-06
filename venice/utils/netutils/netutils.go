@@ -3,14 +3,25 @@
 package netutils
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"os"
 	"strings"
 	"time"
 
+	"sync"
+
 	"github.com/vishvananda/netlink"
 )
+
+var errPortAllocFailed = errors.New("could not find a free port")
+
+// TestListenAddr holds the TCP Endpoint on which a test server can listen.
+type TestListenAddr struct {
+	sync.Mutex
+	ListenURL net.Addr
+}
 
 // nameSliceFromMap return slice of DNS names from Map
 func nameSliceFromMap(namesMap map[string]bool) []string {
@@ -180,4 +191,24 @@ func DeleteIP(ipAddr string) error {
 	}
 	network.IP = ip
 	return netlink.AddrDel(link, &netlink.Addr{IPNet: network})
+}
+
+// GetAvailablePort returns an available port as 127.0.0.1:PORT
+func (t *TestListenAddr) GetAvailablePort() error {
+	t.Lock()
+	defer t.Unlock()
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+
+	if err != nil {
+		return errPortAllocFailed
+	}
+
+	// Try listening
+	l, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		return errPortAllocFailed
+	}
+	defer l.Close()
+	t.ListenURL = l.Addr()
+	return nil
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	types "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -44,7 +45,7 @@ func setup() (*RestServer, error) {
 		dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 	}
 
-	nagent, err := state.NewNetAgent(dp, "", "dummy-node-uuid")
+	nagent, err := state.NewNetAgent(dp, types.AgentMode_CLASSIC, "", "dummy-node-uuid")
 	if err != nil {
 		log.Errorf("Could not create net agent")
 		return nil, err

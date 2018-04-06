@@ -5,6 +5,7 @@ package netagent
 import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
+	types "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -44,47 +45,63 @@ type Agent struct {
 	NetworkAgent *state.NetAgent
 	npmClient    *ctrlerif.NpmClient
 	RestServer   *restapi.RestServer
+	Mode         types.AgentMode
 }
 
 // NewAgent creates an agent instance
-func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, restListenURL string, resolverClient resolver.Interface) (*Agent, error) {
+func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, restListenURL string, resolverClient resolver.Interface, mode types.AgentMode) (*Agent, error) {
+	var ag Agent
 	// create a new network agent
-	nagent, err := state.NewNetAgent(dp, dbPath, nodeUUID)
+	nagent, err := state.NewNetAgent(dp, mode, dbPath, nodeUUID)
 
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err
 	}
 
-	// create the NPM client
-	npmClient, err := ctrlerif.NewNpmClient(nagent, ctrlerURL, resolverClient)
-	if err != nil {
-		log.Errorf("Error creating NPM client. Err: %v", err)
-		return nil, err
-	}
-
-	log.Infof("NPM client {%+v} is running", npmClient)
-
 	// create REST api server
+	// ToDo Open Agent REST Server only in Classic Mode prior to FCS for security reasons.
 	restServer, err := restapi.NewRestServer(nagent, restListenURL)
 	if err != nil {
 		log.Errorf("Error creating the rest API server. Err: %v", err)
 		return nil, err
 	}
 
-	// create the agent instance
-	ag := Agent{
+	if mode == types.AgentMode_MANAGED {
+		// create the NPM client
+		npmClient, err := ctrlerif.NewNpmClient(nagent, ctrlerURL, resolverClient)
+		if err != nil {
+			log.Errorf("Error creating NPM client. Err: %v", err)
+			return nil, err
+		}
+
+		log.Infof("NPM client {%+v} is running", npmClient)
+		ag = Agent{
+			datapath:     dp,
+			NetworkAgent: nagent,
+			npmClient:    npmClient,
+			RestServer:   restServer,
+			Mode:         mode,
+		}
+		return &ag, nil
+	}
+	ag = Agent{
 		datapath:     dp,
 		NetworkAgent: nagent,
-		npmClient:    npmClient,
 		RestServer:   restServer,
+		npmClient:    nil,
+		Mode:         mode,
 	}
-
 	return &ag, nil
 }
 
 // Stop stops the agent
 func (ag *Agent) Stop() {
+	if ag.Mode == types.AgentMode_CLASSIC {
+		ag.RestServer.Stop()
+		ag.NetworkAgent.Stop()
+		return
+	}
 	ag.npmClient.Stop()
 	ag.NetworkAgent.Stop()
 	ag.RestServer.Stop()

@@ -31,6 +31,8 @@ targets:
   pinvxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo fte --feature ftevxlan,hpvxlan --hostpin --lite ; ret=$? ; make sanity_logs ; exit $ret" ]
   agent: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make pull-assets && make checks && cd nic && make nic && make sanity-tests && bash agent/netagent/scripts/sanity.sh ; ret=$? ; make sanity_logs ; exit $ret" ]
   agent-single-threaded: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make pull-assets && make checks && cd nic && make nic && make sanity-tests && bash agent/netagent/scripts/sanity.sh single-threaded ; ret=$? ; make sanity_logs ; exit $ret" ]
+  agent-arm-xcompile: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw make checks && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -a -v github.com/pensando/sw/nic/agent/cmd/netagent github.com/pensando/sw/nic/agent/cmd/nmd" ]
+  agent-standalone: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make checks && cd nic && make pull-assets && make nic && go install github.com/pensando/sw/nic/agent/cmd/netagent && bash agent/netagent/scripts/sanity.sh stand-alone ; ret=$? ; make sanity_logs ; exit $ret"]
   multicast:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo multicast --feature multicast ; ret=$? ; make sanity_logs ; exit $ret" ]
   pinl2mc:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo multicast --feature pinl2mc --hostpin ; ret=$? ; make sanity_logs ; exit $ret" ]
   l4lb:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo l4lb --feature l4lb ; ret=$? ; make sanity_logs ; exit $ret" ]
@@ -53,7 +55,6 @@ targets:
   swphv:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature swphv" ]
   proto-sync: ["sh", "-c", "cd /sw && make pull-assets && cd $GOPATH/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto && make proto-sync" ]
   hal-rtl/parser:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make hal-rtl && ./run.py  --topo parser --feature parser ; ret=$? ; make sanity_logs ; exit $ret" ]
-  agent-arm-xcompile: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw make checks && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -a -v github.com/pensando/sw/nic/agent/cmd/netagent github.com/pensando/sw/nic/agent/cmd/nmd" ]
 
 cache:
   name: "sw"

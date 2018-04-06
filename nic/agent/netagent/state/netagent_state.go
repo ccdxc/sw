@@ -13,7 +13,7 @@ import (
 )
 
 // NewNetAgent creates a new network agent
-func NewNetAgent(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, error) {
+func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID string) (*NetAgent, error) {
 	var emdb emstore.Emstore
 	var err error
 
@@ -46,7 +46,7 @@ func NewNetAgent(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, error) 
 			Kind: "Agent",
 		},
 		Spec: config.AgentSpec{
-			Mode: config.AgentMode_CLASSIC,
+			Mode: mode,
 		},
 	}
 

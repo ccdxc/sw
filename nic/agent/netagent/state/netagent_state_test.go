@@ -10,6 +10,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -199,7 +200,7 @@ func createNetAgent(t *testing.T) (*NetAgent, *mockDatapath, *mockCtrler) {
 	}
 
 	// create new network agent
-	nagent, err := NewNetAgent(dp, "", "some-unique-id")
+	nagent, err := NewNetAgent(dp, state.AgentMode_MANAGED, "", "some-unique-id")
 
 	if err != nil {
 		t.Fatalf("Error creating network agent. Err: %v", err)

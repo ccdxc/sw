@@ -10,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent"
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
+	types "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -29,8 +30,10 @@ func main() {
 		debugflag    = flag.Bool("debug", false, "Enable debug mode")
 		logToFile    = flag.String("logtofile", "/var/log/pensando/naples-netagent.log", "Redirect logs to file")
 		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
+		restURL      = flag.String("rest-url", ":"+globals.AgentRESTPort, "specify Agent REST URL")
 		// ToDo Remove this flag prior to FCS the datapath should be defaulted to HAL
 		datapath = flag.String("datapath", "mock", "specify the agent datapath type either mock or hal")
+		mode     = flag.String("mode", "classic", "specify the agent mode either classic or managed")
 	)
 	flag.Parse()
 
@@ -65,19 +68,6 @@ func main() {
 		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
 	}
 
-	// create a resolver
-	resolverClient := resolver.New(&resolver.Config{Name: "naples-netagent", Servers: strings.Split(*resolverURLs, ",")})
-	//
-	opt := tsdb.Options{
-		ClientName:     "naples-netagent-" + macAddr.String(),
-		ResolverClient: resolverClient,
-	}
-
-	err = tsdb.Init(tsdb.NewBatchTransmitter(context.TODO()), opt)
-	if err != nil {
-		log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
-	}
-
 	var dp state.NetDatapathAPI
 	// ToDo Remove mock hal datapath prior to FCS
 	if *datapath == "hal" {
@@ -92,9 +82,29 @@ func main() {
 			log.Fatalf("Error creating mock datapath. Err: %v", err)
 		}
 	}
+	var agMode types.AgentMode
+	var resolverClient resolver.Interface
+	if *mode == "managed" {
+		agMode = types.AgentMode_MANAGED
+
+		// create a resolver
+		resolverClient = resolver.New(&resolver.Config{Name: "naples-netagent", Servers: strings.Split(*resolverURLs, ",")})
+		//
+		opt := tsdb.Options{
+			ClientName:     "naples-netagent-" + macAddr.String(),
+			ResolverClient: resolverClient,
+		}
+
+		err = tsdb.Init(tsdb.NewBatchTransmitter(context.TODO()), opt)
+		if err != nil {
+			log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
+		}
+	} else {
+		agMode = types.AgentMode_CLASSIC
+	}
 
 	// create the new NetAgent
-	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, ":"+globals.AgentRESTPort, resolverClient)
+	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, *restURL, resolverClient, agMode)
 	if err != nil {
 		log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 	}

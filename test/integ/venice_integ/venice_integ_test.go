@@ -44,6 +44,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"github.com/pensando/sw/nic/agent/netagent/protos"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -205,7 +206,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		}
 
 		// agent
-		agent, aerr := netagent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), globals.Npm, "", rc)
+		agent, aerr := netagent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), globals.Npm, "", rc, state.AgentMode_MANAGED)
 		c.Assert(aerr, IsNil)
 		it.agents = append(it.agents, agent)
 	}
