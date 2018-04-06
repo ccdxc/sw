@@ -177,8 +177,8 @@ sdk_ret_t
 catalog::get_ptree_ (std::string& catalog_file, ptree& prop_tree)
 {
     if (access(catalog_file.c_str(), R_OK) < 0) {
-        SDK_TRACE_ERR("{}: config file {} has no read permissions",
-                      __FUNCTION__,  catalog_file.c_str());
+        SDK_TRACE_ERR("config file %s has no read permissions",
+                      catalog_file.c_str());
         return SDK_RET_ERR;
     }
 
@@ -214,8 +214,8 @@ catalog::factory(std::string catalog_file) {
 
     // make sure file exists
     if (access(catalog_file.c_str(), R_OK) < 0) {
-        SDK_TRACE_ERR("{}: config file {} has no read permissions",
-                      __FUNCTION__,  catalog_file.c_str());
+        SDK_TRACE_ERR("config file %s has no read permissions",
+                      catalog_file.c_str());
         return NULL;
     }
 

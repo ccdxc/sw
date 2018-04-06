@@ -64,7 +64,7 @@ linkmgr_notify (uint8_t operation, void *ctxt)
     linkmgr_entry_t     *rw_entry;
 
     if (g_linkmgr_workq[curr_tid].nentries >= LINKMGR_CONTROL_Q_SIZE) {
-        SDK_TRACE_ERR("Error: operation {} for thread {}, tid {} full",
+        SDK_TRACE_ERR("Error: operation %d for thread %s, tid %d full",
                       operation, curr_thread->name(), curr_tid);
         return SDK_RET_ERR;
     }
@@ -141,13 +141,13 @@ linkmgr_event_loop (void* ctxt)
                 break;
 
             default:
-                SDK_TRACE_ERR("Invalid operation {}", rw_entry->opn);
+                SDK_TRACE_ERR("Invalid operation %d", rw_entry->opn);
                 rv = false;
                 break;
             }
 
-            SDK_TRACE_ERR("%s: invoked control thread. opn %d\n",
-                            __FUNCTION__, rw_entry->opn);
+            SDK_TRACE_ERR("invoked control thread. opn %d",
+                             rw_entry->opn);
 
             // populate the results
             rw_entry->status =  rv ? SDK_RET_OK : SDK_RET_ERR;
@@ -198,8 +198,7 @@ thread_init (void)
                         SCHED_OTHER,
                         true);
     if (g_linkmgr_threads[thread_id] == NULL) {
-        SDK_TRACE_ERR("%s: Failed to create linkmgr periodic thread",
-                      __FUNCTION__);
+        SDK_TRACE_ERR("Failed to create linkmgr periodic thread");
         return SDK_RET_ERR;
     }
 
@@ -253,13 +252,13 @@ linkmgr_init (linkmgr_cfg_t *cfg)
     linkmgr_workq_init();
 
     if ((ret = thread_init()) != SDK_RET_OK) {
-        SDK_TRACE_ERR("%s: linkmgr thread init failed", __FUNCTION__);
+        SDK_TRACE_ERR("linkmgr thread init failed");
         return ret;
     }
 
     g_linkmgr_state = linkmgr_state::factory();
     if (NULL == g_linkmgr_state) {
-        SDK_TRACE_ERR("%s: linkmgr init failed", __FUNCTION__);
+        SDK_TRACE_ERR("linkmgr init failed");
         return SDK_RET_ERR;
     }
 
@@ -319,12 +318,12 @@ port_create (port_args_t *args)
     if (args->admin_state == port_admin_state_t::PORT_ADMIN_STATE_UP) {
         ret = port::port_enable(port_p);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("%s: port enable failed", __FUNCTION__);
+            SDK_TRACE_ERR("port enable failed");
         }
     } else {
         ret = port::port_disable(port_p);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("%s: port disable failed", __FUNCTION__);
+            SDK_TRACE_ERR("port disable failed");
         }
     }
 
@@ -342,7 +341,7 @@ port_update (void *pd_p, port_args_t *args)
     port               *port_p       = (port *)pd_p;
     port_admin_state_t prev_admin_st = port_p->admin_state();
 
-    SDK_TRACE_DEBUG("%s: port update", __FUNCTION__);
+    SDK_TRACE_DEBUG("port update");
 
     // check if any properties have changed
 
@@ -405,7 +404,7 @@ port_delete (void *pd_p)
     sdk_ret_t    ret = SDK_RET_OK;
     port         *port_p = (port *)pd_p;
 
-    SDK_TRACE_DEBUG("%s: port delete", __FUNCTION__);
+    SDK_TRACE_DEBUG("port delete");
     ret = port::port_disable(port_p);
     g_linkmgr_state->port_slab()->free(port_p);
 
@@ -421,7 +420,7 @@ port_get (void *pd_p, port_args_t *args)
     sdk_ret_t            ret = SDK_RET_OK;
     port    *port_p = (port *)pd_p;
 
-    SDK_TRACE_DEBUG("%s: port get", __FUNCTION__);
+    SDK_TRACE_DEBUG("port get");
     args->port_type   = port_p->port_type();
     args->port_speed  = port_p->port_speed();
     args->admin_state = port_p->admin_state();
@@ -443,7 +442,7 @@ port_make_clone (void *pd_orig_p)
     port  *port_p;
     port  *pd_new_clone_p;
 
-    SDK_TRACE_DEBUG("%s: port clone", __FUNCTION__);
+    SDK_TRACE_DEBUG("port clone");
     port_p = (port *)pd_orig_p;
     pd_new_clone_p =
         (port *)g_linkmgr_state->port_slab()->alloc();
@@ -473,7 +472,6 @@ port_mem_free (port_args_t *args)
     sdk_ret_t    ret = SDK_RET_OK;
     port         *port_p = (port *)args->port_p;
 
-    SDK_TRACE_DEBUG("%s: port mem_free", __FUNCTION__);
     g_linkmgr_state->port_slab()->free(port_p);
 
     return ret;

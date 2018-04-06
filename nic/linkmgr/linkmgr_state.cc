@@ -23,7 +23,7 @@ cfg_db::init(void)
                               linkmgr::port_id_compute_hash_func,
                               linkmgr::port_id_compare_key_func);
     if (NULL == port_id_ht_) {
-        HAL_TRACE_ERR("{} port ht allocation failed", __FUNCTION__);
+        HAL_TRACE_ERR("port ht allocation failed");
         return false;
     }
 
@@ -91,7 +91,7 @@ cfg_db::db_open(cfg_op_t cfg_op)
 
     hal::t_cfg_db_ctxt.cfg_op_ = cfg_op;
     hal::t_cfg_db_ctxt.cfg_db_open_ = true;
-    HAL_TRACE_DEBUG("{} acquired rlock, opened cfg db, cfg op : {}",
+    HAL_TRACE_DEBUG("acquired rlock, opened cfg db, cfg op : {}",
                     current_thread() != NULL ?
                     current_thread()->name() :"main thread",
                     cfg_op);
@@ -161,7 +161,7 @@ mem_db::init(void)
                                      hal::HAL_SLAB_HANDLE, sizeof(hal::hal_handle),
                                      64, true, true, true);
     if (NULL == hal_handle_slab_) {
-        HAL_TRACE_ERR("{} hal handle slab allocation failed", __FUNCTION__);
+        HAL_TRACE_ERR("hal handle slab allocation failed");
         return false;
     }
 
@@ -170,7 +170,7 @@ mem_db::init(void)
                                               sizeof(hal::hal_handle_ht_entry_t),
                                               64, true, true, true);
     if (NULL == hal_handle_ht_entry_slab_) {
-        HAL_TRACE_ERR("{} hal handle ht entry allocation failed", __FUNCTION__);
+        HAL_TRACE_ERR("hal handle ht entry allocation failed");
         return false;
     }
 
@@ -179,7 +179,7 @@ mem_db::init(void)
                                                  sizeof(hal::hal_handle_id_ht_entry_t),
                                                  64, true, true, true);
     if (NULL == hal_handle_id_ht_entry_slab_) {
-        HAL_TRACE_ERR("{} handle ht allocation failed", __FUNCTION__);
+        HAL_TRACE_ERR("handle ht allocation failed");
         return false;
     }
 
@@ -188,7 +188,7 @@ mem_db::init(void)
                                sizeof(linkmgr::port_t), 8,
                                false, true, true);
     if (NULL == port_slab_) {
-        HAL_TRACE_ERR("{} port allocation failed", __FUNCTION__);
+        HAL_TRACE_ERR("port allocation failed");
         return false;
     }
 
@@ -292,13 +292,13 @@ linkmgr_state::init()
 
     cfg_db_ = cfg_db::factory();
     if (NULL == cfg_db_) {
-        HAL_TRACE_ERR("{} cfg_db allocation failed", __FUNCTION__);
+        HAL_TRACE_ERR("cfg_db allocation failed");
         return HAL_RET_ERR;
     }
 
     mem_db_ = mem_db::factory();
     if (NULL == mem_db_) {
-        HAL_TRACE_ERR("{} mem_db allocation failed", __FUNCTION__);
+        HAL_TRACE_ERR("mem_db allocation failed");
         return HAL_RET_ERR;
     }
 
@@ -307,7 +307,7 @@ linkmgr_state::init()
                                     hal::hal_handle_id_compute_hash_func,
                                     hal::hal_handle_id_compare_key_func);
     if (NULL == hal_handle_id_ht_) {
-        HAL_TRACE_ERR("{} hal handle id ht allocation failed", __FUNCTION__);
+        HAL_TRACE_ERR("hal handle id ht allocation failed");
         return HAL_RET_ERR;
     }
 

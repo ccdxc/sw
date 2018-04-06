@@ -31,8 +31,11 @@ private:
 }    // namespace lib
 }    // namespace sdk
 
-#define SDK_TRACE_ERR(args...)    sdk::lib::logger::error_log()(args)
-#define SDK_TRACE_DEBUG(args...)    sdk::lib::logger::debug_log()(args)
+#define SDK_TRACE_ERR(fmt, ...)    sdk::lib::logger::error_log()  \
+                          ("[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
+
+#define SDK_TRACE_DEBUG(fmt, ...)  sdk::lib::logger::debug_log()  \
+                          ("[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
 
 #endif  // __SDK_LOGGER_HPP__
 

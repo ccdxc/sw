@@ -114,8 +114,8 @@ mac_temac_mdio_wr_haps (uint32_t chip, uint32_t port_num, uint32_t phy_addr,
     while ((mdio_ready == 0) && (g_linkmgr_cfg.hw_mock == false)) {
         mac_temac_regrd_haps(chip, port_num, MDIO_CTRL_OFFSET_HAPS, &reg_data);
         mdio_ready = (reg_data >> 7) & 0x1;
-        SDK_TRACE_DEBUG("%s reg_data 0x%x mdio_ready %d\n",
-                        __FUNCTION__, reg_data, mdio_ready);
+        SDK_TRACE_DEBUG("reg_data 0x%x mdio_ready %d\n",
+                        reg_data, mdio_ready);
     }
 
     return 0;
@@ -282,133 +282,133 @@ mac_temac_stats_rd (uint32_t port_num, uint32_t size)
     size = 1;
 
     mac_temac_regrd_words_haps(chip, port_num, 0x200, size, data);
-    SDK_TRACE_DEBUG("{}: Received Bytes Counter:                       {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("Received Bytes Counter:                       %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x208, size, data);
-    SDK_TRACE_DEBUG("{}: Transmitted Bytes Counter:                    {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("Transmitted Bytes Counter:                    %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x210, size, data);
-    SDK_TRACE_DEBUG("{}: Underside Frames Counter:                     {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("Underside Frames Counter:                     %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x218, size, data);
-    SDK_TRACE_DEBUG("{}: Fragment Frames Counter:                      {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("Fragment Frames Counter:                      %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x220, size, data);
-    SDK_TRACE_DEBUG("{}: RX 64-Byte Frames Counter:                    {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX 64-Byte Frames Counter:                    %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x228, size, data);
-    SDK_TRACE_DEBUG("{}: RX 65-127-Byte Frames Counter:                {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX 65-127-Byte Frames Counter:                %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x230, size, data);
-    SDK_TRACE_DEBUG("{}: RX 128-255-Byte Frames Counter:               {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX 128-255-Byte Frames Counter:               %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x238, size, data);
-    SDK_TRACE_DEBUG("{}: RX 256-511-Byte Frames Counter:               {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX 256-511-Byte Frames Counter:               %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x240, size, data);
-    SDK_TRACE_DEBUG("{}: RX 512-1023-Byte Frames Counter:              {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX 512-1023-Byte Frames Counter:              %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x248, size, data);
-    SDK_TRACE_DEBUG("{}: RX 1024-Max Frames Size Frames Counter:       {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX 1024-Max Frames Size Frames Counter:       %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x250, size, data);
-    SDK_TRACE_DEBUG("{}: RX Oversize Frames Counter:                   {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX Oversize Frames Counter:                   %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x258, size, data);
-    SDK_TRACE_DEBUG("{}: TX 64-Byte Frames Counter:                    {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX 64-Byte Frames Counter:                    %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x260, size, data);
-    SDK_TRACE_DEBUG("{}: TX 65-127-Byte Frames Counter:                {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX 65-127-Byte Frames Counter:                %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x268, size, data);
-    SDK_TRACE_DEBUG("{}: TX 128-255-Byte Frames Counter:               {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX 128-255-Byte Frames Counter:               %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x270, size, data);
-    SDK_TRACE_DEBUG("{}: TX 256-511-Byte Frames Counter:               {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX 256-511-Byte Frames Counter:               %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x278, size, data);
-    SDK_TRACE_DEBUG("{}: TX 512-1023-Byte Frames Counter:              {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX 512-1023-Byte Frames Counter:              %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x280, size, data);
-    SDK_TRACE_DEBUG("{}: TX 1024-Max Frames Size Frames Counter:       {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX 1024-Max Frames Size Frames Counter:       %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x288, size, data);
-    SDK_TRACE_DEBUG("{}: TX Oversize Frames Counter:                   {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Oversize Frames Counter:                   %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x290, size, data);
-    SDK_TRACE_DEBUG("{}: RX Good Frames Counter:                       {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX Good Frames Counter:                       %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x298, size, data);
-    SDK_TRACE_DEBUG("{}: RX Frame Check Sequence Errors Counter:       {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX Frame Check Sequence Errors Counter:       %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2a0, size, data);
-    SDK_TRACE_DEBUG("{}: RX Good Broadcast Frames Counter:             {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX Good Broadcast Frames Counter:             %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2a8, size, data);
-    SDK_TRACE_DEBUG("{}: RX Good Multicast Frames Counter:             {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX Good Multicast Frames Counter:             %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2b0, size, data);
-    SDK_TRACE_DEBUG("{}: RX Good Control Frames Counter:               {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX Good Control Frames Counter:               %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2b8, size, data);
-    SDK_TRACE_DEBUG("{}: RX Length/Type Out of Range Errrors Counter:  {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX Length/Type Out of Range Errrors Counter:  %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2c0, size, data);
-    SDK_TRACE_DEBUG("{}: RX Good VLAN Tagged Frames Counter:           {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX Good VLAN Tagged Frames Counter:           %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2c8, size, data);
-    SDK_TRACE_DEBUG("{}: RX Good Pause Frames Counter:                 {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX Good Pause Frames Counter:                 %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2d0, size, data);
-    SDK_TRACE_DEBUG("{}: RX Bad Opcode Frames Counter:                 {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX Bad Opcode Frames Counter:                 %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2d8, size, data);
-    SDK_TRACE_DEBUG("{}: TX Good Frames Counter:                       {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Good Frames Counter:                       %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2e0, size, data);
-    SDK_TRACE_DEBUG("{}: TX Good Broadcast Frames Counter:             {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Good Broadcast Frames Counter:             %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2e8, size, data);
-    SDK_TRACE_DEBUG("{}: TX Good Multicast Frames Counter:             {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Good Multicast Frames Counter:             %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2f0, size, data);
-    SDK_TRACE_DEBUG("{}: TX Underrun Errors Counter:                   {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Underrun Errors Counter:                   %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x2f8, size, data);
-    SDK_TRACE_DEBUG("{}: TX Good Control Frames Counter:               {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Good Control Frames Counter:               %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x300, size, data);
-    SDK_TRACE_DEBUG("{}: TX Good VLAN Tagged Frames Counter:           {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Good VLAN Tagged Frames Counter:           %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x308, size, data);
-    SDK_TRACE_DEBUG("{}: TX Good Pause Frames Counter:                 {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Good Pause Frames Counter:                 %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x310, size, data);
-    SDK_TRACE_DEBUG("{}: TX Single Collision Frames Counter:           {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Single Collision Frames Counter:           %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x318, size, data);
-    SDK_TRACE_DEBUG("{}: TX Multiple Collision Frames Counter:         {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Multiple Collision Frames Counter:         %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x320, size, data);
-    SDK_TRACE_DEBUG("{}: TX Deferred Frames Counter:                   {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Deferred Frames Counter:                   %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x328, size, data);
-    SDK_TRACE_DEBUG("{}: TX Late Collision Counter:                    {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Late Collision Counter:                    %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x330, size, data);
-    SDK_TRACE_DEBUG("{}: TX Excess Collision Counter:                  {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Excess Collision Counter:                  %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x338, size, data);
-    SDK_TRACE_DEBUG("{}: TX Excess Deferral Counter:                   {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX Excess Deferral Counter:                   %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x340, size, data);
-    SDK_TRACE_DEBUG("{}: RX Alignment Errors Counter:                  {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX Alignment Errors Counter:                  %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x348, size, data);
-    SDK_TRACE_DEBUG("{}: RX PFC Frames Counter:                        {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("RX PFC Frames Counter:                        %d", data[i]);
 
     mac_temac_regrd_words_haps(chip, port_num, 0x350, size, data);
-    SDK_TRACE_DEBUG("{}: TX PFC Frames Counter:                        {}", __FUNCTION__, data[i]);
+    SDK_TRACE_DEBUG("TX PFC Frames Counter:                        %d", data[i]);
 
     return 0;
 }

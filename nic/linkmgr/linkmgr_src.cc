@@ -128,7 +128,7 @@ linkmgr_uplink_create(uint32_t uplink_port)
         spec.set_admin_state(::port::PORT_ADMIN_STATE_UP);
     }
 
-    HAL_TRACE_DEBUG("{}. creating uplink port {}", __FUNCTION__, uplink_port);
+    HAL_TRACE_DEBUG("creating uplink port {}",  uplink_port);
 
     linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
 
@@ -152,8 +152,8 @@ linkmgr_uplinks_create()
                                              ++uplink_port) {
         ret = linkmgr_uplink_create(uplink_port);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}: Error creating uplink port {}",
-                          __FUNCTION__,  uplink_port);
+            HAL_TRACE_ERR("Error creating uplink port {}",
+                            uplink_port);
         }
     }
 
@@ -165,8 +165,6 @@ svc_reg (const std::string& server_addr)
 {
     PortServiceImpl   port_svc;
     ServerBuilder     server_builder;
-
-    HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
 
     // listen on the given address (no authentication)
     server_builder.AddListeningPort(server_addr,
@@ -200,7 +198,7 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
         return HAL_RET_INVALID_ARG;
     }
 
-    HAL_TRACE_DEBUG("{}: cfg file {}", __FUNCTION__, cfgfile);
+    HAL_TRACE_DEBUG("cfg file {}",  cfgfile);
 
     std::ifstream json_cfg(cfgfile);
 
@@ -218,7 +216,7 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 
         if (getenv("HAL_GRPC_PORT")) {
             linkmgr_cfg->grpc_port = getenv("HAL_GRPC_PORT");
-            HAL_TRACE_DEBUG("Overriding GRPC Port to : {}", linkmgr_cfg->grpc_port);
+            HAL_TRACE_DEBUG("Overriding GRPC Port to {}", linkmgr_cfg->grpc_port);
         }
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
@@ -263,19 +261,19 @@ linkmgr_init (void)
 
     sdk_ret = sdk::linkmgr::linkmgr_init(&sdk_cfg);
     if (sdk_ret != SDK_RET_OK) {
-        HAL_TRACE_ERR("{} linkmgr init failed", __FUNCTION__);
+        HAL_TRACE_ERR("linkmgr init failed");
         return HAL_RET_ERR;
     }
 
     if (sdk::lib::pal_init(platform_type()) != sdk::lib::PAL_RET_OK) {
-        HAL_TRACE_ERR("{} pal init failed", __FUNCTION__);
+        HAL_TRACE_ERR("pal init failed");
         return HAL_RET_ERR;
     }
 
     // must be done after sdk linkmgr init
     ret_hal = linkmgr_uplinks_create();
     if (ret_hal != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} uplinks create failed", __FUNCTION__);
+        HAL_TRACE_ERR("uplinks create failed");
     }
 
     // start the linkmgr control thread
@@ -329,8 +327,7 @@ port_add_to_db (port_t *pi_p, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:adding to port id hash table",
-                    __FUNCTION__);
+    HAL_TRACE_DEBUG("adding to port id hash table");
     // allocate an entry to establish mapping from port id to its handle
     entry =
         (hal_handle_id_ht_entry_t *)g_linkmgr_state->
@@ -344,8 +341,8 @@ port_add_to_db (port_t *pi_p, hal_handle_t handle)
     sdk_ret = g_linkmgr_state->port_id_ht()->insert_with_key(&pi_p->port_num,
                                                        entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to add port num to handle mapping, "
-                      "err : {}", __FUNCTION__, sdk_ret);
+        HAL_TRACE_ERR("failed to add port num to handle mapping, "
+                      "err: {}",  sdk_ret);
         g_linkmgr_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -364,8 +361,7 @@ validate_port_create (PortSpec& spec, PortResponse *rsp)
 {
 #if 0
     if (!spec.has_meta()) {
-        HAL_TRACE_ERR("{}:no meta",
-                      __FUNCTION__);
+        HAL_TRACE_ERR("no meta");
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -376,8 +372,8 @@ validate_port_create (PortSpec& spec, PortResponse *rsp)
     // must have key-handle set
     str = "key_or_handle";
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:{} not set in request",
-                      __FUNCTION__, str.c_str());
+        HAL_TRACE_ERR("{} not set in request",
+                       str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -385,8 +381,8 @@ validate_port_create (PortSpec& spec, PortResponse *rsp)
     // port type
     str = "port type";
     if (spec.port_type() == ::port::PORT_TYPE_NONE) {
-        HAL_TRACE_ERR("{}:{} not set in request",
-                      __FUNCTION__, str.c_str());
+        HAL_TRACE_ERR("not set in request",
+                       str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_TYPE_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -394,8 +390,8 @@ validate_port_create (PortSpec& spec, PortResponse *rsp)
     // port speed
     str = "port speed";
     if (spec.port_speed() == ::port::PORT_SPEED_NONE) {
-        HAL_TRACE_ERR("{}:{} not set in request",
-                      __FUNCTION__, str.c_str());
+        HAL_TRACE_ERR("not set in request",
+                       str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_SPEED_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -403,8 +399,8 @@ validate_port_create (PortSpec& spec, PortResponse *rsp)
     // number of lanes for the port
     str = "number of lanes";
     if (spec.num_lanes() == 0) {
-        HAL_TRACE_ERR("{}:{} not set in request",
-                      __FUNCTION__, str.c_str());
+        HAL_TRACE_ERR("not set in request",
+                       str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_NUM_LANES_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -426,7 +422,7 @@ port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     port_create_app_ctxt_t  *app_ctxt  = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -437,8 +433,8 @@ port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     pi_p = (port_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:port_num:{}:create add CB.",
-                    __FUNCTION__, pi_p->port_num);
+    HAL_TRACE_DEBUG("port_num: {}, create add CB.",
+                     pi_p->port_num);
 
     // PD Call to allocate PD resources and HW programming
     sdk::linkmgr::port_args_init(&port_args);
@@ -461,8 +457,8 @@ port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     pi_p->pd_p = sdk::linkmgr::port_create(&port_args);
     if (NULL == pi_p->pd_p) {
-        HAL_TRACE_ERR("{}:failed to create port pd, err : {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("failed to create port pd, err: {}",
+                       ret);
     }
 
 end:
@@ -482,7 +478,7 @@ port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t             hal_handle_id = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -494,14 +490,14 @@ port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     pi_p = (port_t *)dhl_entry->obj;
     hal_handle_id = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:port_num:{}:create commit CB.",
-                    __FUNCTION__, pi_p->port_num);
+    HAL_TRACE_DEBUG("port_num: {}, create commit CB.",
+                     pi_p->port_num);
 
     // Add to port id hash table
     ret = port_add_to_db(pi_p, hal_handle_id);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to add port {} to db, err : {}",
-                __FUNCTION__, pi_p->port_num, ret);
+        HAL_TRACE_ERR("failed to add port {} to db, err: {}",
+                      pi_p->port_num, ret);
         goto end;
     }
 
@@ -529,7 +525,7 @@ port_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t  *lnode        = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -540,15 +536,15 @@ port_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     pi_p = (port_t *)dhl_entry->obj;
     hal_handle_id = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:port_num:{}:create abort CB",
-                    __FUNCTION__, pi_p->port_num);
+    HAL_TRACE_DEBUG("port_num: {}, create abort CB",
+                     pi_p->port_num);
 
     // delete call to PD
     if (pi_p->pd_p) {
         sdk_ret = sdk::linkmgr::port_delete(pi_p->pd_p);
         if (sdk_ret != SDK_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to delete port pd, err : {}",
-                          __FUNCTION__, ret);
+            HAL_TRACE_ERR("failed to delete port pd, err: {}",
+                           ret);
         }
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -603,13 +599,13 @@ port_create (PortSpec& spec, PortResponse *rsp)
     memset(&app_ctxt, 0, sizeof(port_create_app_ctxt_t));
 
     hal::hal_api_trace(" API Begin: port create ");
-    HAL_TRACE_DEBUG("{}:port create with id:{}", __FUNCTION__,
+    HAL_TRACE_DEBUG("port create with id: {}",
                     spec.key_or_handle().port_id());
 
     // check if port exists already, and reject if one is found
     if (find_port_by_id(spec.key_or_handle().port_id())) {
-        HAL_TRACE_ERR("{}:failed to create a port, "
-                      "port {} exists already", __FUNCTION__,
+        HAL_TRACE_ERR("failed to create a port, "
+                      "port {} exists already",
                       spec.key_or_handle().port_id());
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         return HAL_RET_ENTRY_EXISTS;
@@ -619,16 +615,16 @@ port_create (PortSpec& spec, PortResponse *rsp)
     ret = validate_port_create(spec, rsp);
     if (ret != HAL_RET_OK) {
         // api_status already set, just return
-        HAL_TRACE_ERR("{}:validation Failed. ret: {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("validation Failed. ret: {}",
+                       ret);
         goto end;
     }
 
     // instantiate the port
     pi_p = port_alloc_init();
     if (pi_p == NULL) {
-        HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("unable to allocate handle/memory ret: {}",
+                       ret);
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         return HAL_RET_OOM;
     }
@@ -636,8 +632,8 @@ port_create (PortSpec& spec, PortResponse *rsp)
     pi_p->hal_handle_id = hal_handle_alloc(hal::HAL_OBJ_ID_PORT);
 
     if (pi_p->hal_handle_id == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}: failed to alloc handle for port id {}",
-                      __FUNCTION__, spec.key_or_handle().port_id());
+        HAL_TRACE_ERR("failed to alloc handle for port id {}",
+                       spec.key_or_handle().port_id());
         port_free(pi_p);
         pi_p = NULL;
         ret = HAL_RET_HANDLE_INVALID;
@@ -706,8 +702,8 @@ validate_port_update (PortSpec& spec, PortResponse*rsp)
     // must have key-handle set
     str = "key_or_handle";
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:{} not set in update request",
-                      __FUNCTION__, str.c_str());
+        HAL_TRACE_ERR("not set in update request",
+                       str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -715,8 +711,8 @@ validate_port_update (PortSpec& spec, PortResponse*rsp)
     // port type must not be set in update
     str = "port type";
     if (spec.port_type() != ::port::PORT_TYPE_NONE) {
-        HAL_TRACE_ERR("{}:{} set in update request",
-                      __FUNCTION__, str.c_str());
+        HAL_TRACE_ERR("set in update request",
+                       str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_TYPE_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -724,8 +720,8 @@ validate_port_update (PortSpec& spec, PortResponse*rsp)
     // number of lanes must not be set in update
     str = "number of lanes";
     if (spec.num_lanes() != 0) {
-        HAL_TRACE_ERR("{}:{} set in update request",
-                      __FUNCTION__, str.c_str());
+        HAL_TRACE_ERR("set in update request",
+                       str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_NUM_LANES_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -768,7 +764,7 @@ port_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     port_update_app_ctxt_t  *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -780,8 +776,8 @@ port_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     // send the cloned obj to PD for update
     pi_p = (port_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}: update upd cb {}.",
-                    __FUNCTION__, pi_p->port_num);
+    HAL_TRACE_DEBUG("update upd cb {}.",
+                     pi_p->port_num);
 
     // 1. PD Call to allocate PD resources and HW programming
     sdk::linkmgr::port_args_init(&port_args);
@@ -797,8 +793,8 @@ port_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     sdk_ret = sdk::linkmgr::port_update(pi_p->pd_p, &port_args);
     if (sdk_ret != SDK_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to update port pd, err : {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("failed to update port pd, err: {}",
+                       ret);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -823,7 +819,7 @@ port_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     port_t         *pi_clone_p = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -834,8 +830,8 @@ port_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     // send the original object to PD to free the memory
     pi_p = (port_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:update commit CB {}.",
-                    __FUNCTION__, pi_p->port_num);
+    HAL_TRACE_DEBUG("update commit CB {}.",
+                     pi_p->port_num);
     printf("Original: %p, Clone: %p\n", pi_p, pi_clone_p);
 
 #if 0
@@ -843,8 +839,8 @@ port_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     sdk::linkmgr::port_args_init(&port_args);
     sdk_ret = sdk::linkmgr::port_delete(pi_p->pd_p);
     if (sdk_ret != SDK_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to free original port pd, err : {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("failed to free original port pd, err: {}",
+                       ret);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -871,7 +867,7 @@ port_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     port_t           *pi_p = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -882,15 +878,15 @@ port_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // send the cloned object to PD to be freed
     pi_p = (port_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update abort CB {}.",
-                    __FUNCTION__, pi_p->port_num);
+    HAL_TRACE_DEBUG("update abort CB {}.",
+                     pi_p->port_num);
 
     // Free PD
     sdk::linkmgr::port_args_init(&port_args);
     sdk_ret = sdk::linkmgr::port_delete(pi_p->pd_p);
     if (sdk_ret != SDK_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to delete port pd, err : {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("failed to delete port pd, err: {}",
+                       ret);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -927,21 +923,21 @@ port_update (PortSpec& spec, PortResponse *rsp)
     // validate the request message
     ret = validate_port_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:port update validation failed, ret : {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("port update validation failed, ret : {}",
+                       ret);
         goto end;
     }
 
     pi_p = port_lookup_key_or_handle(kh);
     if (!pi_p) {
-        HAL_TRACE_ERR("{}:failed to find port id {}, handle {}",
-                      __FUNCTION__, kh.port_id(), kh.port_handle());
+        HAL_TRACE_ERR("failed to find port id {}, handle {}",
+                       kh.port_id(), kh.port_handle());
         ret = HAL_RET_PORT_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}: port update for port id {}, handle {}",
-                    __FUNCTION__, kh.port_id(), kh.port_handle());
+    HAL_TRACE_DEBUG("port update for port id {}, handle {}",
+                     kh.port_id(), kh.port_handle());
 
     // form ctxt and call infra add
     app_ctxt.admin_state = spec.admin_state();
@@ -988,7 +984,7 @@ validate_port_delete_req (PortDeleteRequest& req, PortDeleteResponseMsg *rsp)
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -1003,7 +999,7 @@ port_del_from_db (port_t *pi_p)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:removing from port id hash table", __FUNCTION__);
+    HAL_TRACE_DEBUG("removing from port id hash table");
 
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_linkmgr_state->port_id_ht()->
@@ -1027,7 +1023,7 @@ port_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     port_t           *pi_p = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1037,13 +1033,13 @@ port_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     pi_p = (port_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:delete del CB {}",
-                    __FUNCTION__, pi_p->port_num);
+    HAL_TRACE_DEBUG("delete del CB {}",
+                     pi_p->port_num);
 
     sdk_ret = sdk::linkmgr::port_delete(pi_p->pd_p);
     if (sdk_ret != SDK_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to delete port pd, err : {}", 
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("failed to delete port pd, err: {}",
+                       ret);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -1067,7 +1063,7 @@ port_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t    hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1078,14 +1074,14 @@ port_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     pi_p = (port_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:delete commit CB {}",
-                    __FUNCTION__, pi_p->port_num);
+    HAL_TRACE_DEBUG("delete commit CB {}",
+                     pi_p->port_num);
 
     // a. Remove from port id hash table
     ret = port_del_from_db(pi_p);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to del port {} from db, err : {}", 
-                      __FUNCTION__, pi_p->port_num, ret);
+        HAL_TRACE_ERR("failed to del port {} from db, err: {}",
+                       pi_p->port_num, ret);
         goto end;
     }
 
@@ -1134,21 +1130,21 @@ port_delete (PortDeleteRequest& req, PortDeleteResponseMsg *rsp)
     // validate the request message
     ret = validate_port_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:port delete request validation failed, ret : {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("port delete request validation failed, ret : {}",
+                       ret);
         goto end;
     }
 
     pi_p = port_lookup_key_or_handle(kh);
     if (pi_p == NULL) {
-        HAL_TRACE_ERR("{}:failed to find port, id {}, handle {}",
-                      __FUNCTION__, kh.port_id(), kh.port_handle());
+        HAL_TRACE_ERR("failed to find port, id {}, handle {}",
+                       kh.port_id(), kh.port_handle());
         ret = HAL_RET_PORT_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}: port delete for id {}",
-                    __FUNCTION__, pi_p->port_num);
+    HAL_TRACE_DEBUG("port delete for id {}",
+                     pi_p->port_num);
 
     // form ctxt and call infra add
     dhl_entry.handle = pi_p->hal_handle_id;
@@ -1205,8 +1201,8 @@ port_get (PortGetRequest& req, PortGetResponse *rsp)
 
     sdk_ret = sdk::linkmgr::port_get(pi_p->pd_p, &port_args);
     if (sdk_ret != SDK_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to get port pd, err : {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("failed to get port pd, err: {}",
+                       ret);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 

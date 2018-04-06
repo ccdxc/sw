@@ -84,8 +84,8 @@ typedef port_create_app_ctxt_t port_update_app_ctxt_t;
 static inline void
 port_lock(port_t *pi_p, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:locking port:{} from {}:{}:{}", 
-                    __FUNCTION__, pi_p-> port_num,
+    HAL_TRACE_DEBUG("operlock:locking port:{} from {}:{}:{}", 
+                     pi_p-> port_num,
                     fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&pi_p->slock);
 }
@@ -93,8 +93,8 @@ port_lock(port_t *pi_p, const char *fname, int lineno, const char *fxname)
 static inline void
 port_unlock(port_t *pi_p, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:unlocking port:{} from {}:{}:{}", 
-                    __FUNCTION__, pi_p->port_num,
+    HAL_TRACE_DEBUG("operlock:unlocking port:{} from {}:{}:{}", 
+                     pi_p->port_num,
                     fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&pi_p->slock);
 }
@@ -165,13 +165,13 @@ find_port_by_handle (hal_handle_t handle)
 
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
-        HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",
-                        __FUNCTION__, handle);
+        HAL_TRACE_DEBUG("failed to find object with handle: {}",
+                         handle);
         return NULL;
     }
     if (hal_handle->obj_id() != hal::HAL_OBJ_ID_PORT) {
-        HAL_TRACE_DEBUG("{}:failed to find port with handle:{}",
-                        __FUNCTION__, handle);
+        HAL_TRACE_DEBUG("failed to find port with handle: {}",
+                         handle);
         return NULL;
     }
     return (port_t *)hal_handle->obj();

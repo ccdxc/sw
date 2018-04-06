@@ -23,7 +23,7 @@ typedef enum thread_role_e {
 //------------------------------------------------------------------------------
 typedef void *(*thread_entry_func_t)(void *ctxt);
 
-#define SDK_MAX_THREAD_NAME_LEN        16
+#define SDK_MAX_THREAD_NAME_LEN        30
 
 // call this macro from the entry function of every thread
 #define SDK_THREAD_INIT(ctxt)                                          \

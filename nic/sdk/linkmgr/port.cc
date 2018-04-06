@@ -462,8 +462,7 @@ port::port_enable(port *port_p)
         ret = linkmgr_notify(LINKMGR_OPERATION_PORT_ENABLE, port_p);
 
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("%s: Error notifying control-thread for port enable",
-                          __FUNCTION__);
+            SDK_TRACE_ERR("Error notifying control-thread for port enable");
         }
     }
 
@@ -482,8 +481,7 @@ port::port_disable(port *port_p)
         ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DISABLE, port_p);
 
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("%s: Error notifying control-thread for port disable",
-                          __FUNCTION__);
+            SDK_TRACE_ERR("Error notifying control-thread for port disable");
         }
     }
 
