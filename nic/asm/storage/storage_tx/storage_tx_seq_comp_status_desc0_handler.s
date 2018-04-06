@@ -56,6 +56,7 @@ storage_tx_seq_comp_status_desc0_handler_start:
    // in K+I vector.
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
                             d.barco_pndx_addr, dma_p2m_11)
+   DMA_PHV2MEM_FENCE(dma_p2m_11)
    b            status_dma_setup
    
    // Note that d.next_db_addr in this case is really d.barco_ring_addr

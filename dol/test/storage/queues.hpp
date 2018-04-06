@@ -27,6 +27,10 @@ int pvm_queues_setup();
 
 int seq_queues_setup();
 
+bool seq_queue_acc_sub_num_validate(const char *flag_name,
+                                    uint64_t value);
+void seq_queue_acc_sub_num_set(uint64_t& num_acc_queue_submissions);
+
 int pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, 
                      uint32_t roce_qid, dp_mem_t *mem, 
                      uint32_t num_entries, uint32_t entry_size);

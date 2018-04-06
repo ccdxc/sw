@@ -2,8 +2,14 @@
 #define	COMPRESSION_HPP_
 
 #include <stdint.h>
+#include "dol/test/storage/dp_mem.hpp"
+
+using namespace dp_mem;
 
 namespace tests {
+
+class comp_encrypt_chain_t;
+class decrypt_decomp_chain_t;
 
 typedef struct ccmd {
   uint16_t comp_decomp_en:1, // 1-engine enable, 0-only SHA/integrity
@@ -99,6 +105,94 @@ typedef struct cp_status_sha256 {
   uint64_t integrity_data;
   uint8_t  sha256[32];
 } cp_status_sha256_t;
+
+// comp_queue_t provides usage flexibility as follows:
+// - HW queue configuration performed by this DOL module or elsewhere (such as HAL)
+// - queue entry submission via sequencer or directly to HW producer register
+typedef enum {
+  COMP_QUEUE_PUSH_INVALID,
+  COMP_QUEUE_PUSH_SEQUENCER,
+  COMP_QUEUE_PUSH_SEQUENCER_DEFER,
+  COMP_QUEUE_PUSH_SEQUENCER_BATCH,
+  COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST,
+  COMP_QUEUE_PUSH_HW_DIRECT,
+  COMP_QUEUE_PUSH_HW_DIRECT_BATCH,
+} comp_queue_push_t;
+
+class comp_queue_t
+{
+public:
+    comp_queue_t(uint64_t cfg_q_base,
+                 uint64_t cfg_q_pd_idx);
+    void push(const cp_desc_t& src_desc,
+              comp_queue_push_t push_type,
+              uint32_t seq_comp_qid);
+    void post_push(void);
+
+    uint64_t q_base_mem_pa_get(void)
+    {
+        return q_base_mem_pa;
+    }
+
+    uint64_t cfg_q_pd_idx_get(void)
+    {
+        return cfg_q_pd_idx;
+    }
+
+private:
+    uint64_t    cfg_q_base;
+    uint64_t    cfg_q_pd_idx;
+    cp_desc_t   *q_base_mem;
+    uint64_t    q_base_mem_pa;
+
+    uint32_t    curr_seq_comp_qid;
+    uint16_t    curr_seq_comp_pd_idx;
+    uint16_t    curr_pd_idx;
+    comp_queue_push_t curr_push_type;
+};
+
+
+// Max block size supported by hardware engine
+constexpr uint32_t kCompEngineMaxSize = 65536;
+
+// Typical sizes used by customer application
+constexpr uint32_t kCompAppMinSize = 4096;
+constexpr uint32_t kCompAppMaxSize = 32768;
+constexpr uint32_t kCompAppNominalSize = 8192;
+
+constexpr uint32_t kCompSeqIntrData = 0x11223344;
+
+extern comp_queue_t *cp_queue;
+extern comp_queue_t *dc_queue;
+
+extern comp_queue_t *cp_hotq;
+extern comp_queue_t *dc_hotq;
+
+extern comp_encrypt_chain_t   *comp_encrypt_chain;
+extern decrypt_decomp_chain_t *decrypt_decomp_chain;
+
+bool comp_status_poll(dp_mem_t *status);
+void compress_cp_desc_template_fill(cp_desc_t &d,
+                                    dp_mem_t *src_buf,
+                                    dp_mem_t *dst_buf,
+                                    dp_mem_t *status_buf,
+                                    dp_mem_t *invalidate_hdr_buf,
+                                    uint32_t src_len);
+void decompress_cp_desc_template_fill(cp_desc_t &d,
+                                      dp_mem_t *src_buf,
+                                      dp_mem_t *dst_buf,
+                                      dp_mem_t *status_buf,
+                                      uint32_t src_len,
+                                      uint32_t threshold_len);
+int compress_status_verify(dp_mem_t *status,
+                           dp_mem_t *dst_buf,
+                           const cp_desc_t& desc,
+                           bool log_error=true);
+int decompress_status_verify(dp_mem_t *status,
+                             const cp_desc_t& desc,
+                             uint32_t exp_output_data_len,
+                             bool log_error=true);
+uint32_t comp_status_output_data_len_get(dp_mem_t *status);
 
 }  // namespace tests
 

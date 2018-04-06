@@ -731,8 +731,7 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
   // command
   dp_mem_t *wr_buf = r2n_buf_va->fragment_find(kR2NDataBufOffset - offsetof(r2n::r2n_buf_t, cmd_buf),
                                                kR2NDataSize);
-  memset(wr_buf->read(), byte_val, kR2NDataSize);
-  wr_buf->write_thru();
+  wr_buf->fill_thru(byte_val);
 
   // For the send wqe
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);

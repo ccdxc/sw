@@ -110,7 +110,8 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
         default:
             printf("%s invalid memory type %u\n",
                    __FUNCTION__, mem_type);
-            assert(mem_type < DP_MEM_TYPE_LAST);
+            assert((mem_type == DP_MEM_TYPE_HBM) ||
+                   (mem_type == DP_MEM_TYPE_HOST_MEM));
             break;
         }
     }
@@ -125,12 +126,10 @@ dp_mem_t::~dp_mem_t()
     /*
      * Iterate and delete fragments
      */
-    for (fragment_it =  fragments_map.begin();
-         fragment_it != fragments_map.end();
-         fragment_it++) {
-
+    fragment_it =  fragments_map.begin();
+    while (fragment_it != fragments_map.end()) {
         fragment = fragment_it->second;
-        fragments_map.erase(fragment_it);
+        fragment_it = fragments_map.erase(fragment_it);
         delete fragment;
     }
     
@@ -213,13 +212,36 @@ dp_mem_t::line_advance(void)
 
 
 /*
+ * Fill memory at current cache line with a repeated byte value,
+ * but not its corresponding datapath memory (see fill_thru()).
+ */
+void
+dp_mem_t::fill(uint8_t fill_byte)
+{
+    memset(cache_line_addr(), fill_byte, line_size);
+}
+
+
+/*
+ * Clear memory at current cache line and its corresponding
+ * datapath memory.
+ */
+void
+dp_mem_t::fill_thru(uint8_t fill_byte)
+{
+    fill(fill_byte);
+    write_thru();
+}
+
+
+/*
  * Clear memory at current cache line, but not its corresponding
  * datapath memory (see clear_thru()).
  */
 void
 dp_mem_t::clear(void)
 {
-    memset(cache_line_addr(), 0, line_size);
+    fill(0);
 }
 
 
@@ -230,8 +252,7 @@ dp_mem_t::clear(void)
 void
 dp_mem_t::clear_thru(void)
 {
-    clear();
-    write_thru();
+    fill_thru(0);
 }
 
 

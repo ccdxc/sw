@@ -16,6 +16,7 @@
 #include "dol/test/storage/rdma.hpp"
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/compression_test.hpp"
+#include "dol/test/storage/acc_scale_tests.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
 
 namespace queues {
@@ -30,6 +31,24 @@ DEFINE_uint64(long_poll_interval, 300,
 
 DEFINE_uint64(num_pdma_queues, 3,
               "number of queues for PDMA test (in power of 2)");
+
+// Number of accelerator queues for scale testing
+DEFINE_uint64(acc_scale_submissions, 2,
+              "number of accelerator queue submissions for scale testing (in power of 2)");
+DEFINE_validator(acc_scale_submissions, &queues::seq_queue_acc_sub_num_validate);
+
+// Block size for accelerator scale testing
+DEFINE_uint64(acc_scale_blk_size, 13,
+              "Block size for accelerator scale testing (in power of 2)");
+DEFINE_validator(acc_scale_blk_size, &tests::acc_scale_tests_blk_size_validate);
+
+// Number of iterations for accelerator scale testing
+DEFINE_uint64(acc_scale_iters, 1,
+              "Number of iterations for accelerator scale testing (0 = infinite)");
+
+// Verification method for accelerator scale testing
+DEFINE_string(acc_scale_verify_method, "full",
+              "Per-iteration verification method for accelerator scale testing: fast, or full");
 
 bool run_unit_tests = false;
 bool run_nvme_tests = false;
@@ -47,6 +66,7 @@ bool run_xts_perf_tests = false;
 bool run_comp_perf_tests = false;
 bool run_noc_perf_tests = false;
 bool run_rdma_perf_tests = false;
+bool run_acc_scale_tests = false;
 
 std::vector<tests::TestEntry> test_suite;
 
@@ -139,11 +159,11 @@ std::vector<tests::TestEntry> comp_seq_tests = {
   {&tests::seq_compress_dualq_flat_4K_buf, "Sequencer Compress Host-Host flat 4K buf on hot and cold queues", false},
   {&tests::seq_compress_dualq_flat_4K_buf_in_hbm, "Sequencer Compress HBM-HBM flat 4K buf on hot and cold queues", false},
   {&tests::seq_compress_output_encrypt_app_min_size, "Sequencer Compress->XTS encrypt chaining: app min block size", false},
-  {&tests::seq_decrypt_output_decompress_app_min_size, "Sequencer XTS decrypt->Decompress chaining: app min block size", false},
+  {&tests::seq_decrypt_output_decompress_last_app_blk, "Sequencer XTS decrypt->Decompress chaining: app min block size", false},
   {&tests::seq_compress_output_encrypt_app_nominal_size, "Sequencer Compress->XTS encrypt chaining: app nominal block size", false},
-  {&tests::seq_decrypt_output_decompress_app_nominal_size, "Sequencer XTS decrypt->Decompress chaining: app nominal block size", false},
+  {&tests::seq_decrypt_output_decompress_last_app_blk, "Sequencer XTS decrypt->Decompress chaining: app nominal block size", false},
   {&tests::seq_compress_output_encrypt_app_max_size, "Sequencer Compress->XTS encrypt chaining: app max block size", false},
-  {&tests::seq_decrypt_output_decompress_app_max_size, "Sequencer XTS decrypt->Decompress chaining: app max block size", false},
+  {&tests::seq_decrypt_output_decompress_last_app_blk, "Sequencer XTS decrypt->Decompress chaining: app max block size", false},
 };
 
 std::vector<tests::TestEntry> comp_perf_tests = {
@@ -183,6 +203,11 @@ std::vector<tests::TestEntry> rdma_perf_tests = {
   {&tests::test_run_perf_rdma_e2e_write, "Perf e2e rdma write", false},
 };
 
+std::vector<tests::TestEntry> acc_scale_tests = {
+  {&tests::acc_scale_tests_comp_encrypt_decrypt_decomp,
+   "Accelerator scale compress-encrypt-decrypt-decompress", false},
+};
+
 void sig_handler(int sig) {
   void *array[16];
   size_t size;
@@ -202,9 +227,13 @@ int main(int argc, char**argv) {
   signal(SIGSEGV, sig_handler);
 
   std::cout << "Input - hal_port: "   << FLAGS_hal_port 
-            << ", test group: "       << FLAGS_test_group
-            << ", polling interval: " << FLAGS_poll_interval 
-            << ", # PDMA queues (power of 2): " << FLAGS_num_pdma_queues 
+            << "\nTest group: "       << FLAGS_test_group
+            << "\nPolling interval: " << FLAGS_poll_interval 
+            << "\n# PDMA queues (power of 2): " << FLAGS_num_pdma_queues 
+            << "\n# Accelerator queue submissions (power of 2): " << FLAGS_acc_scale_submissions 
+            << "\nBlock size for accelerator scale testing (in power of 2): " << FLAGS_acc_scale_blk_size 
+            << "\n# Iterations for accelerator scale testing (0 = infinite): " << FLAGS_acc_scale_iters 
+            << "\nVerification method for accelerator scale testing: " << FLAGS_acc_scale_verify_method 
             << std::endl;
 
   // Set the test group based on flags. Default is to allow all.
@@ -223,6 +252,7 @@ int main(int argc, char**argv) {
       run_xts_perf_tests = false;
       run_comp_perf_tests = false;
       run_pdma_tests = true;
+      run_acc_scale_tests = false;
   } else if (FLAGS_test_group == "rtl_sanity") {
       run_unit_tests = true;
       run_nvme_tests = true;
@@ -238,6 +268,7 @@ int main(int argc, char**argv) {
       run_xts_perf_tests = false;		// Never enable this for RTL sanity
       run_comp_perf_tests = false;		// Never enable this for RTL sanity
       run_pdma_tests = false;			// Never enable this for RTL sanity
+      run_acc_scale_tests = false;
   } else if (FLAGS_test_group == "unit") {
       run_unit_tests = true;
   } else if (FLAGS_test_group == "nvme") {
@@ -266,8 +297,11 @@ int main(int argc, char**argv) {
       run_noc_perf_tests = true;
   } else if (FLAGS_test_group == "rdma_perf") {
       run_rdma_perf_tests = true;
+  } else if (FLAGS_test_group == "acc_scale") {
+      run_acc_scale_tests = true;
   } else {
-    printf("Usage: ./storage_test [--hal_port <xxx>] [--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma|rtl_sanity] "
+    printf("Usage: ./storage_test [--hal_port <xxx>] "
+           "[--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma|acc_scale|rtl_sanity] "
            " [--poll_interval <yyy>] \n");
     return -1;
   }
@@ -418,6 +452,14 @@ int main(int argc, char**argv) {
       test_suite.push_back(rdma_perf_tests[i]);
     }
     printf("Added rdma Perf tests \n");
+  }
+
+  // Add accelerator scale tests
+  if (run_acc_scale_tests) {
+    for (size_t i = 0; i < acc_scale_tests.size(); i++) {
+      test_suite.push_back(acc_scale_tests[i]);
+    }
+    printf("Added accelerator scale tests \n");
   }
 
   printf("Formed test suite with %d cases \n", (int) test_suite.size());

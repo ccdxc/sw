@@ -184,10 +184,10 @@ typedef struct capri_barco_ring_s {
 #define BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE(sz)     \
         (((sz) & BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_MASK) << BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_SHFT)
 
-#define BARCO_CRYPTO_CP_RING_SIZE                   1024
-#define BARCO_CRYPTO_CP_HOT_RING_SIZE               1024
-#define BARCO_CRYPTO_DC_RING_SIZE                   1024
-#define BARCO_CRYPTO_DC_HOT_RING_SIZE               1024
+#define BARCO_CRYPTO_CP_RING_SIZE                   4096
+#define BARCO_CRYPTO_CP_HOT_RING_SIZE               4096
+#define BARCO_CRYPTO_DC_RING_SIZE                   4096
+#define BARCO_CRYPTO_DC_HOT_RING_SIZE               4096
 
 hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag, bool);
 bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag);

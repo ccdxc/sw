@@ -21,9 +21,9 @@ namespace dp_mem {
  * with its method functions.
  */
 typedef enum {
+    DP_MEM_TYPE_VOID,
     DP_MEM_TYPE_HBM,
-    DP_MEM_TYPE_HOST_MEM,
-    DP_MEM_TYPE_LAST
+    DP_MEM_TYPE_HOST_MEM
 } dp_mem_type_t;
 
 
@@ -58,6 +58,8 @@ public:
 
     void clear(void);
     void clear_thru(void);
+    void fill(uint8_t fill_byte);
+    void fill_thru(uint8_t fill_byte);
     uint8_t *read(void);
     uint8_t *read_thru(void);
     void write_bit_fields(uint32_t start_bit_offset,

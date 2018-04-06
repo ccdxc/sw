@@ -10,14 +10,19 @@
 DECLARE_uint64(poll_interval);
 DECLARE_uint64(long_poll_interval);
 DECLARE_uint64(num_pdma_queues);
+DECLARE_uint64(acc_scale_submissions);
+DECLARE_uint64(acc_scale_blk_size);
+DECLARE_uint64(acc_scale_iters);
+DECLARE_string(acc_scale_verify_method);
 
 extern bool run_pdma_tests;
+extern bool run_acc_scale_tests;
 
 using namespace dp_mem;
 
 namespace tests {
 
-const static uint32_t  kDefaultBufSize       = 4096;
+const static uint32_t   kDefaultBufSize       = 4096;
 
 // Accelerator chaining
 
@@ -111,6 +116,9 @@ int test_setup_post_comp_seq_status_entry(acc_chain_entry_t &chain_ent,
                                           dp_mem_t *seq_status_desc);
 int test_setup_post_xts_seq_status_entry(acc_chain_entry_t &chain_ent,
                                          dp_mem_t *seq_status_desc);
+int test_data_verify_and_dump(uint8_t *expected_data,
+                              uint8_t *actual_data,
+                              uint32_t len);
 
 int test_setup();
 

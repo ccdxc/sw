@@ -34,9 +34,9 @@ const static uint32_t	kPvmNumNvmeBeCQs	 = 4;
       static uint32_t	SeqNumPdmaSQs		 = 3; // pdma test may modify at run time
 const static uint32_t	kSeqNumR2nSQs		 = 3;
 const static uint32_t	kSeqNumXtsSQs		 = 3;
-const static uint32_t	kSeqNumXtsStatusSQs	 = 4;
+      static uint32_t	kSeqNumXtsStatusSQs	 = 4;
 const static uint32_t	kSeqNumCompSQs		 = 4;
-const static uint32_t	kSeqNumCompStatusSQs	 = 4;
+      static uint32_t	kSeqNumCompStatusSQs	 = 4;
 const static uint32_t	kSeqNumRoceSQs		 = 3;
 
 // NOTE CAREFULLY: END
@@ -49,6 +49,8 @@ const static uint32_t	kNvmeCQEntrySize	 = 4; // NVME CQ is 16 bytes
 const static uint32_t	kNvmeNumEntries		 = 6;
 const static uint32_t	kPvmNumEntries		 = 6;
 const static uint32_t	kSeqNumEntries	 = 6;
+      static uint32_t	kSeqNumEntriesMax	 = 6; // accelerator scale test may modify at run time
+      static uint32_t   kSeqNumAccEntries = 6; // accelerator scale test may modify at run time
 
 const static char	*kNvmeSqHandler		 = "storage_tx_nvme_sq_handler.bin";
 const static char	*kPvmCqHandler		 = "storage_tx_pvm_cq_handler.bin";
@@ -230,6 +232,35 @@ void seq_queue_pdma_num_set(uint64_t& num_pdma_queues) {
     SeqNumPdmaSQs = num_pdma_queues;
 }
 
+bool seq_queue_acc_sub_num_validate(const char *flag_name,
+                                    uint64_t value) {
+   if (value >= 2) {
+       return true;
+   }
+
+   printf("Value for --%s (in power of 2) must be a minimum of 2\n", flag_name);
+   return false;
+}
+
+void seq_queue_acc_sub_num_set(uint64_t& num_acc_queue_submissions) {
+
+    // Make adjustment for the number of seq SQs needed for accelerator
+    // scale testing.
+    // Note num_acc_queue_submissions denotes 2 ^ num_acc_queue_submissions
+    if (num_acc_queue_submissions < 1) {
+        num_acc_queue_submissions = 1;
+    }
+
+    kSeqNumAccEntries = std::max(kSeqNumAccEntries, 
+                                 (uint32_t)num_acc_queue_submissions);
+    kSeqNumCompStatusSQs = std::max(kSeqNumCompStatusSQs,
+                                    (uint32_t)num_acc_queue_submissions);
+    kSeqNumXtsStatusSQs = std::max(kSeqNumXtsStatusSQs,
+                                   (uint32_t)num_acc_queue_submissions);
+    kSeqNumEntriesMax = std::max(kSeqNumEntriesMax,
+                                 (uint32_t)num_acc_queue_submissions);
+}
+
 int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
                     uint16_t total_rings, uint16_t host_rings) {
 
@@ -392,7 +423,7 @@ int lifs_setup() {
   printf("Successfully set PVM LIF %lu BDF %u \n", pvm_lif, kPvmLifBdf);
   
   bzero(&seq_lif_params, sizeof(seq_lif_params));
-  lif_params_init(&seq_lif_params, SQ_TYPE, kPvmNumEntries, SeqNumSQs);
+  lif_params_init(&seq_lif_params, SQ_TYPE, kSeqNumEntriesMax, SeqNumSQs);
 
   if (hal_if::create_lif(&seq_lif_params, &seq_lif) < 0) {
     printf("can't create Sequencer lif \n");
@@ -765,9 +796,20 @@ seq_queues_setup() {
   // Initialize PVM SQs for processing Sequencer commands for XTS
   pvm_seq_xts_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumXtsSQs); j++, i++) {
-    if (seq_queue_setup(&seq_sqs[i], i, (char *) kSeqXtsSqHandler,
-                        kDefaultTotalRings, kDefaultHostRings) < 0) {
-      printf("Failed to setup PVM Seq Xts queue %d \n", i);
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumAccEntries),
+                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+      printf("Unable to allocate host memory for Seq XTS SQ %d\n", i);
+      return -1;
+    }
+
+    // Setup the queue state in Capri:
+    if (qstate_if::setup_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqXtsSqHandler, 
+                                 kDefaultTotalRings, kDefaultHostRings, 
+                                 kSeqNumAccEntries, seq_sqs[i].mem->pa(),
+                                 kDefaultEntrySize, false, 0, 0,
+                                 0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
+      printf("Failed to setup Seq Xts SQ %d state \n", i);
       return -1;
     }
     printf("Setup PVM Seq Xts queue %d \n", i);
@@ -798,9 +840,20 @@ seq_queues_setup() {
   // Initialize PVM SQs for processing Sequencer commands for compression
   pvm_seq_comp_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumCompSQs); j++, i++) {
-    if (seq_queue_setup(&seq_sqs[i], i, (char *) kSeqCompSqHandler,
-                        kDefaultTotalRings, kDefaultHostRings) < 0) {
-      printf("Failed to setup PVM Seq Compression queue %d \n", i);
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumAccEntries),
+                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+      printf("Unable to allocate host memory for Seq Comp SQ %d\n", i);
+      return -1;
+    }
+
+    // Setup the queue state in Capri:
+    if (qstate_if::setup_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqCompSqHandler, 
+                                 kDefaultTotalRings, kDefaultHostRings, 
+                                 kSeqNumAccEntries, seq_sqs[i].mem->pa(),
+                                 kDefaultEntrySize, false, 0, 0,
+                                 0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
+      printf("Failed to setup Seq Comp SQ %d state \n", i);
       return -1;
     }
     printf("Setup PVM Seq Compression queue %d \n", i);
@@ -972,7 +1025,7 @@ uint32_t get_seq_xts_sq(uint32_t offset) {
 }
 
 uint32_t get_seq_xts_status_sq(uint32_t offset) {
-  assert(offset < NUM_TO_VAL(kSeqNumXtsStatusSQs));
+  assert((int)offset < NUM_TO_VAL(kSeqNumXtsStatusSQs));
   return (pvm_seq_xts_status_sq_base + offset);
 }
 
@@ -987,7 +1040,7 @@ uint32_t get_seq_comp_sq(uint32_t offset) {
 }
 
 uint32_t get_seq_comp_status_sq(uint32_t offset) {
-  assert(offset < NUM_TO_VAL(kSeqNumCompStatusSQs));
+  assert((int)offset < NUM_TO_VAL(kSeqNumCompStatusSQs));
   return (pvm_seq_comp_status_sq_base + offset);
 }
 

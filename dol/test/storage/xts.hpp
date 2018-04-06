@@ -223,10 +223,11 @@ public:
 
   // ctx data needed for verification of op completion
   uint64_t xts_db_addr = 0;
-  uint64_t* xts_db = NULL;
+  dp_mem_t* xts_db = NULL;
   uint64_t exp_db_data = 0xdeadbeefdeadbeef;
   uint64_t* status = NULL;
   uint32_t opaque_tag = 0;
+  bool caller_xts_db_en = false;
   bool opa_tag_en = true;
   bool t10_en = false;
   bool decr_en = false;

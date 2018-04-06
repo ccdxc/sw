@@ -103,6 +103,10 @@ int test_setup() {
       queues::seq_queue_pdma_num_set(FLAGS_num_pdma_queues);
   }
 
+  if (run_acc_scale_tests) {
+      queues::seq_queue_acc_sub_num_set(FLAGS_acc_scale_submissions);
+  }
+
   // Initialize resources
   if (queues::resources_init() < 0) {
     printf("Failed to initialize resources \n");
@@ -450,8 +454,7 @@ int form_write_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
                             uint64_t slba, uint16_t nlb)
 {
   uint8_t byte_val = get_next_byte();
-  memset(write_buf->read(), byte_val, kDefaultBufSize);
-  write_buf->write_thru();
+  write_buf->fill_thru(byte_val);
   nvme_cmd->clear();
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd->read();
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
@@ -492,8 +495,7 @@ int form_write_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   // Init the write buf as this will be the source despite staging
   // in HBM
   uint8_t byte_val = get_next_byte();
-  memset(write_buf->read(), byte_val, kDefaultBufSize);
-  write_buf->write_thru();
+  write_buf->fill_thru(byte_val);
   nvme_cmd->clear();
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd->read();
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
@@ -2049,7 +2051,7 @@ int test_run_seq_pdma_multi_xfers() {
     // destination host buffers
     pdma_wr_buf = new dp_mem_t(1, kDefaultBufSize,
                                DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
-    memset(pdma_wr_buf->read(), 0x55, kDefaultBufSize);
+    pdma_wr_buf->fill_thru(0x55);
     pdma_rd_buf = new dp_mem_t(val_pdma_queues, kDefaultBufSize,
                                DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
     pdma_wr_hbm_buf = new dp_mem_t(val_pdma_queues, kDefaultBufSize,
@@ -2057,7 +2059,7 @@ int test_run_seq_pdma_multi_xfers() {
 
     // Set expected completion doorbell data value
     exp_db_data_value = 0xdbdbdbdb;
-    memset(exp_seq_db_data->read(), 0xdb, total_seq_db_data_size);
+    exp_seq_db_data->fill_thru(0xdb);
     
     for (i = 0; i < val_pdma_queues; i++) {
 
@@ -2366,8 +2368,7 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
 
   // initialize write data pattern
   byte_val = get_next_byte();
-  memset(write_buf->read(), byte_val, kDefaultBufSize);
-  write_buf->write_thru();
+  write_buf->fill_thru(byte_val);
 
   // Sequencer: R2N descriptor
   seq_roce_desc = queues::seq_sq_consume_entry(seq_roce_q, &seq_roce_index);
@@ -2726,4 +2727,33 @@ int test_setup_seq_acc_chain_entry(acc_chain_params_t& params) {
   
   return (*params.desc_format_fn)(params.chain_ent, seq_status_desc);
 }
+
+
+// Verify data and dump on any miscompare.
+int
+test_data_verify_and_dump(uint8_t *expected_data,
+                          uint8_t *actual_data,
+                          uint32_t len)
+{
+    int     cmp_result;
+
+    cmp_result = memcmp(expected_data, actual_data, len);
+    if (cmp_result) {
+        if (cmp_result < 0) {
+            cmp_result = -cmp_result;
+        }
+        printf("Data of length %u mismatch at offset %d\n", len, cmp_result);
+        if (cmp_result < (int)len) {
+            printf("\nDumping expected data starting at offset %u\n", cmp_result);
+            utils::dump(expected_data + cmp_result, len - cmp_result);
+            printf("\nDumping actual data starting at offset %u\n", cmp_result);
+            utils::dump(actual_data + cmp_result, len - cmp_result);
+        }
+
+        return -1;
+    }
+
+    return 0;
+}
+
 }  // namespace tests

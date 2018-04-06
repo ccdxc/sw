@@ -129,8 +129,12 @@ int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en, uint64_t poll_inter
 }
 
 void XtsCtx::init(uint32_t size, bool chain) {
-  xts_db = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
-  *xts_db = 0;
+  if (xts_db) {
+    xts_db->clear_thru();
+  } else {
+    xts_db = new dp_mem_t(1, sizeof(uint64_t), DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+    caller_xts_db_en = false;
+  }
   if(!is_src_hbm_buf) {
     if(!chain) {
       srand(time(NULL));
@@ -203,13 +207,13 @@ XtsCtx::XtsCtx() {
 
 XtsCtx::~XtsCtx() {
   if(op == xts::INVALID) {
-    //if(xts_db) free_host_mem(xts_db);
+    //if(xts_db && !caller_xts_db_en) delete xts_db;
     return;
   }
   if(xts_desc) delete xts_desc;
   if(status) free_host_mem(status);
   // TODO: This seems to be crashing - needs investigation
-  // if(xts_db) free_host_mem(xts_db);
+  //if(xts_db && !caller_xts_db_en) delete xts_db;
   if(iv) free_host_mem(iv);
   for(uint32_t i = 0; i < num_aols; i++) {
     if(in_aol[i]) free_host_mem(in_aol[i]);
@@ -280,8 +284,10 @@ XtsCtx::desc_prefill_seq_xts(dp_mem_t *xts_desc) {
 
   xts::xts_desc_t *xts_desc_addr = (xts::xts_desc_t *)xts_desc->read();
 
-  iv = (unsigned char*)alloc_host_mem(IV_SIZE);
-  memcpy(iv, iv_src, IV_SIZE);
+  if (!iv) {
+    iv = (unsigned char*)alloc_host_mem(IV_SIZE);
+    memcpy(iv, iv_src, IV_SIZE);
+  }
 
   // Fill the XTS ring descriptor
   xts_desc->clear();
@@ -308,7 +314,7 @@ XtsCtx::desc_prefill_seq_xts(dp_mem_t *xts_desc) {
   }
 
   if(!xts_db_addr) {
-    xts_db_addr = host_mem_v2p(xts_db);
+    xts_db_addr = xts_db->pa();
   }
   xts_desc_addr->db_addr = xts_db_addr;
   xts_desc_addr->db_data = exp_db_data;
@@ -467,7 +473,9 @@ int XtsCtx::test_seq_xts() {
     }
   }
 
-  status = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
+  if (!status) {
+    status = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
+  }
   *status = STATUS_DEF_VALUE;
 
   // Fill the XTS ring descriptor
@@ -518,7 +526,7 @@ int XtsCtx::verify_doorbell(bool verify_pi) {
 
   // Poll for doorbell data as XTS which runs in a different thread
   auto func = [this] () {
-    if(*xts_db != exp_db_data) {
+    if(*((uint64_t *)xts_db->read_thru()) != exp_db_data) {
       //printf("Doorbell data not yet there - try again \n");
       return -1;
     }
@@ -527,7 +535,11 @@ int XtsCtx::verify_doorbell(bool verify_pi) {
 
   Poller poll;
   int rv = poll(func);
-  if(0 != rv) return rv;
+  if(0 != rv) {
+      printf("last XTS doorbell data 0x%lx\n",
+             *((uint64_t *)xts_db->read_thru()));
+    return rv;
+  }
 
   printf("Doorbell returned successfully \n");
 

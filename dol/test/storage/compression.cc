@@ -6,6 +6,8 @@
 #include "utils.hpp"
 #include "queues.hpp"
 #include "xts.hpp"
+#include "decrypt_decomp_chain.hpp"
+#include "comp_encrypt_chain.hpp"
 #include "nic/asic/capri/design/common/cap_addr_define.h"
 #include "nic/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
 
@@ -80,48 +82,16 @@ static const bool comp_inited_by_hal = true;
 static const uint32_t kNumSubqEntries = 1024;
 static const uint32_t kQueueMemSize = sizeof(cp_desc_t) * kNumSubqEntries;
 
-typedef enum {
-  COMP_QUEUE_PUSH_INVALID,
-  COMP_QUEUE_PUSH_SEQUENCER,
-  COMP_QUEUE_PUSH_SEQUENCER_BATCH,
-  COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST,
-  COMP_QUEUE_PUSH_HW_DIRECT,
-  COMP_QUEUE_PUSH_HW_DIRECT_BATCH,
-} comp_queue_push_t;
+comp_queue_t *cp_queue;
+comp_queue_t *dc_queue;
 
-// comp_queue_t provides usage flexibility as follows:
-// - HW queue configuration performed by this DOL module or elsewhere (such as HAL)
-// - queue entry submission via sequencer or directly to HW producer register
-typedef struct {
-  uint64_t  cfg_q_base;
-  uint64_t  cfg_q_pd_idx;
-  cp_desc_t *q_base_mem;
-  uint64_t  q_base_mem_pa;
-
-  uint32_t  curr_seq_comp_qid;
-  uint16_t  curr_seq_comp_pd_idx;
-  uint16_t  curr_pd_idx;
-  comp_queue_push_t curr_push_type;
-} comp_queue_t;
-
-static comp_queue_t cp_queue;
-static comp_queue_t dc_queue;
-
-static comp_queue_t cp_hotq;
-static comp_queue_t dc_hotq;
+comp_queue_t *cp_hotq;
+comp_queue_t *dc_hotq;
 
 // These constants equate to the number of 
 // hardware compression/decompression engines.
 #define MAX_CP_REQ	16
 #define MAX_DC_REQ	2
-
-// Max block size supported by hardware engine
-static constexpr uint32_t kCompEngineMaxSize = 65536;
-
-// Typical sizes used by customer application
-static constexpr uint32_t kCompAppMinSize = 4096;
-static constexpr uint32_t kCompAppMaxSize = 32768;
-static constexpr uint32_t kCompAppNominalSize = 8192;
 
 // Sample data generated during test.
 static const uint8_t all_zeros[kCompEngineMaxSize] = {0};
@@ -131,10 +101,8 @@ static constexpr uint32_t kCompressedBufSize = kCompEngineMaxSize - 4096;
 static uint8_t compressed_data_buf[kCompressedBufSize];
 static uint16_t compressed_data_size;  // Calculated at run-time;
 static uint16_t last_cp_output_data_len;
-static uint16_t last_encrypt_output_data_len;
 
 static uint16_t kCPVersion = 0x1234;
-static constexpr uint32_t kSeqIntrData = 0x11223344;
 
 static dp_mem_t *uncompressed_buf;
 static dp_mem_t *uncompressed_host_buf;
@@ -153,30 +121,14 @@ static dp_mem_t *host_sgl3;
 static dp_mem_t *host_sgl4;
 static dp_mem_t *seq_sgl;
 
-static dp_mem_t *xts_encrypt_host_buf;
-static dp_mem_t *xts_decrypt_buf;
-static dp_mem_t *xts_in_aol;
-static dp_mem_t *xts_out_aol;
-static dp_mem_t *xts_desc_buf;
-static dp_mem_t *xts_status_desc_buf;
-static dp_mem_t *xts_status_buf;
 static dp_mem_t *xts_status_host_buf;
-static dp_mem_t *xts_opaque_host_buf;
 
-static dp_mem_t *pad_buf;
+comp_encrypt_chain_t   *comp_encrypt_chain;
+decrypt_decomp_chain_t *decrypt_decomp_chain;
 
-// Decomp descriptor for use by XTS-decrypt to decomp chaining
-static dp_mem_t *xts_decomp_cp_desc;
+static dp_mem_t *comp_pad_buf;
 
 // Forward declaration with default param values
-static int compress_status_verify(dp_mem_t *status,
-                                  dp_mem_t *dst_buf,
-                                  const cp_desc_t& desc,
-                                  bool log_error=true);
-static int decompress_status_verify(dp_mem_t *status,
-                                    const cp_desc_t& desc,
-                                    uint32_t exp_output_data_len,
-                                    bool log_error=true);
 int run_cp_test(cp_desc_t& desc,
                 dp_mem_t *dst_buf,
                 dp_mem_t *status,
@@ -188,7 +140,7 @@ int run_dc_test(cp_desc_t& desc,
                 comp_queue_push_t push_type = COMP_QUEUE_PUSH_HW_DIRECT,
                 uint32_t seq_comp_qid = 0);
 
-static bool status_poll(dp_mem_t *status) {
+bool comp_status_poll(dp_mem_t *status) {
   auto func = [status] () -> int {
     cp_status_sha512_t *s = (cp_status_sha512_t *)status->read_thru();
     if (s->valid) {
@@ -210,7 +162,7 @@ static bool status_poll(dp_mem_t *status) {
 #define LOG_CHECK_PRINTF(fmt, ...)  \
     if (log_error) {printf(fmt, __VA_ARGS__);}
 
-static int
+int
 compress_status_verify(dp_mem_t *status,
                        dp_mem_t *dst_buf,
                        const cp_desc_t& desc,
@@ -277,7 +229,7 @@ compress_status_verify(dp_mem_t *status,
     return 0;
 }
 
-static int
+int
 decompress_status_verify(dp_mem_t *status,
                          const cp_desc_t& desc,
                          uint32_t exp_output_data_len,
@@ -309,37 +261,11 @@ decompress_status_verify(dp_mem_t *status,
     return 0;
 }
 
-static uint32_t
+uint32_t
 comp_status_output_data_len_get(dp_mem_t *status)
 {
     cp_status_sha512_t *st = (cp_status_sha512_t *)status->read_thru();
     return st->output_data_len;
-}
-
-static int
-data_verify_and_dump(uint8_t *expected_data,
-                     uint8_t *actual_data,
-                     uint32_t len)
-{
-    int     cmp_result;
-
-    cmp_result = memcmp(expected_data, actual_data, len);
-    if (cmp_result) {
-        if (cmp_result < 0) {
-            cmp_result = -cmp_result;
-        }
-        printf("Data of length %u mismatch at offset %d\n", len, cmp_result);
-        if (cmp_result < (int)len) {
-            printf("\nDumping expected data starting at offset %u\n", cmp_result);
-            utils::dump(expected_data + cmp_result, len - cmp_result);
-            printf("\nDumping actual data starting at offset %u\n", cmp_result);
-            utils::dump(actual_data + cmp_result, len - cmp_result);
-        }
-
-        return -1;
-    }
-
-    return 0;
 }
 
 
@@ -358,95 +284,99 @@ queue_mem_pa_get(uint64_t reg_addr)
 }
 
 
-void
-comp_queue_alloc(comp_queue_t &comp_queue,
-                 uint64_t cfg_q_base,
-                 uint64_t cfg_q_pd_idx)
+comp_queue_t::comp_queue_t(uint64_t cfg_q_base,
+                           uint64_t cfg_q_pd_idx) :
+    cfg_q_base(cfg_q_base),
+    cfg_q_pd_idx(cfg_q_pd_idx),
+    curr_seq_comp_qid(0),
+    curr_seq_comp_pd_idx(0),
+    curr_pd_idx(0),
+    curr_push_type(COMP_QUEUE_PUSH_INVALID)
 {
-    memset(&comp_queue, 0, sizeof(comp_queue));
-    comp_queue.cfg_q_base = cfg_q_base;
-    comp_queue.cfg_q_pd_idx = cfg_q_pd_idx;
-
     // If comp was initialized by HAL, q_base_mem below would be used
     // as descriptor cache for sequencer submission.
-    comp_queue.q_base_mem = (cp_desc_t *)alloc_page_aligned_host_mem(kQueueMemSize);
-    assert(comp_queue.q_base_mem != nullptr);
+    q_base_mem = (cp_desc_t *)alloc_page_aligned_host_mem(kQueueMemSize);
+    assert(q_base_mem != nullptr);
 
     if (comp_inited_by_hal) {
-        comp_queue.q_base_mem_pa = queue_mem_pa_get(cfg_q_base);
+        q_base_mem_pa = queue_mem_pa_get(cfg_q_base);
     } else {
-        comp_queue.q_base_mem_pa = host_mem_v2p(comp_queue.q_base_mem);
+        q_base_mem_pa = host_mem_v2p(q_base_mem);
     }
 }
 
 void
-comp_queue_push(const cp_desc_t& src_desc,
-                comp_queue_t &comp_queue,
-                comp_queue_push_t push_type,
-                uint32_t seq_comp_qid)
+comp_queue_t::push(const cp_desc_t& src_desc,
+                   comp_queue_push_t push_type,
+                   uint32_t seq_comp_qid)
 {
     cp_desc_t   *dst_desc;
     dp_mem_t    *seq_comp_desc;
-    uint16_t    curr_pd_idx;
+    uint16_t    pd_idx;
 
     switch (push_type) {
 
     case COMP_QUEUE_PUSH_SEQUENCER:
+    case COMP_QUEUE_PUSH_SEQUENCER_DEFER:
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH:
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST:
-        curr_pd_idx = comp_queue.curr_pd_idx;
-        comp_queue.curr_pd_idx = (comp_queue.curr_pd_idx + 1) % kNumSubqEntries;
+        pd_idx = curr_pd_idx;
+        curr_pd_idx = (curr_pd_idx + 1) % kNumSubqEntries;
 
-        dst_desc = &comp_queue.q_base_mem[curr_pd_idx];
+        dst_desc = &q_base_mem[pd_idx];
         memcpy(dst_desc, &src_desc, sizeof(*dst_desc));
 
-        comp_queue.curr_seq_comp_qid = seq_comp_qid;
-        seq_comp_desc = queues::seq_sq_consume_entry(comp_queue.curr_seq_comp_qid,
-                                                     &comp_queue.curr_seq_comp_pd_idx);
+        curr_seq_comp_qid = seq_comp_qid;
+        seq_comp_desc = queues::seq_sq_consume_entry(curr_seq_comp_qid,
+                                                     &curr_seq_comp_pd_idx);
         seq_comp_desc->clear();
         seq_comp_desc->write_bit_fields(0, 64, host_mem_v2p(dst_desc));
-        seq_comp_desc->write_bit_fields(64, 34, comp_queue.cfg_q_pd_idx);
+        seq_comp_desc->write_bit_fields(64, 34, cfg_q_pd_idx);
         seq_comp_desc->write_bit_fields(98, 4, (uint8_t)log2(sizeof(*dst_desc)));
         seq_comp_desc->write_bit_fields(102, 3, (uint8_t)log2(sizeof(uint32_t)));
 
         // skip 1 filler bit
-        seq_comp_desc->write_bit_fields(106, 34, comp_queue.q_base_mem_pa);
+        seq_comp_desc->write_bit_fields(106, 34, q_base_mem_pa);
 
         // Sequencer queue depth is limited and should be taken into
         // considerations when using batch mode.
         if (push_type == COMP_QUEUE_PUSH_SEQUENCER) {
             seq_comp_desc->write_thru();
             test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE,
-                               comp_queue.curr_seq_comp_qid, 0,
-                               comp_queue.curr_seq_comp_pd_idx);
-            comp_queue.curr_push_type = COMP_QUEUE_PUSH_INVALID;
+                               curr_seq_comp_qid, 0,
+                               curr_seq_comp_pd_idx);
+            curr_push_type = COMP_QUEUE_PUSH_INVALID;
             break;
         }
 
-        seq_comp_desc->write_bit_fields(140, 16, curr_pd_idx);
-        seq_comp_desc->write_bit_fields(156, 1, 1); /* set barco_batch_mode */
-        if (push_type == COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST) {
-            seq_comp_desc->write_bit_fields(157, 1, 1); /* set barco_batch_last */
+        // Indicate Barco batch mode only as instructed;
+        // Otherwise, simply defer the push as seen below
+        if (push_type != COMP_QUEUE_PUSH_SEQUENCER_DEFER) {
+            seq_comp_desc->write_bit_fields(140, 16, pd_idx);
+            seq_comp_desc->write_bit_fields(156, 1, 1); /* set barco_batch_mode */
+            if (push_type == COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST) {
+                seq_comp_desc->write_bit_fields(157, 1, 1); /* set barco_batch_last */
+            }
         }
 
-        // defer until caller calls comp_queue_post_push()
+        // defer until caller calls post_push()
         seq_comp_desc->write_thru();
-        comp_queue.curr_push_type = push_type;
+        curr_push_type = push_type;
         break;
 
     case COMP_QUEUE_PUSH_HW_DIRECT:
     case COMP_QUEUE_PUSH_HW_DIRECT_BATCH:
-        write_mem(comp_queue.q_base_mem_pa + (comp_queue.curr_pd_idx * sizeof(cp_desc_t)),
+        write_mem(q_base_mem_pa + (curr_pd_idx * sizeof(cp_desc_t)),
                   (uint8_t *)&src_desc, sizeof(cp_desc_t));
-        comp_queue.curr_pd_idx = (comp_queue.curr_pd_idx + 1) % kNumSubqEntries;
+        curr_pd_idx = (curr_pd_idx + 1) % kNumSubqEntries;
         if (push_type == COMP_QUEUE_PUSH_HW_DIRECT) {
-            write_reg(comp_queue.cfg_q_pd_idx, comp_queue.curr_pd_idx);
-            comp_queue.curr_push_type = COMP_QUEUE_PUSH_INVALID;
+            write_reg(cfg_q_pd_idx, curr_pd_idx);
+            curr_push_type = COMP_QUEUE_PUSH_INVALID;
             break;
         }
 
-        // defer until caller calls comp_queue_post_push()
-        comp_queue.curr_push_type = push_type;
+        // defer until caller calls post_push()
+        curr_push_type = push_type;
         break;
 
     default:
@@ -456,30 +386,31 @@ comp_queue_push(const cp_desc_t& src_desc,
     }
 }
 
-// Execute any deferred comp_queue_push() on the given comp_queue.
+// Execute any deferred push() on the given comp_queue.
 void
-comp_queue_post_push(comp_queue_t &comp_queue)
+comp_queue_t::post_push(void)
 {
-    switch (comp_queue.curr_push_type) {
+    switch (curr_push_type) {
 
+    case COMP_QUEUE_PUSH_SEQUENCER_DEFER:
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH:
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST:
         test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, 
-                           comp_queue.curr_seq_comp_qid, 0,
-                           comp_queue.curr_seq_comp_pd_idx);
+                           curr_seq_comp_qid, 0,
+                           curr_seq_comp_pd_idx);
         break;
 
     case COMP_QUEUE_PUSH_HW_DIRECT_BATCH:
-        write_reg(comp_queue.cfg_q_pd_idx, comp_queue.curr_pd_idx);
+        write_reg(cfg_q_pd_idx, curr_pd_idx);
         break;
 
     default:
         printf("%s nothing to do for curr_push_type %d\n", __FUNCTION__,
-               comp_queue.curr_push_type);
+               curr_push_type);
         break;
     }
 
-    comp_queue.curr_push_type = COMP_QUEUE_PUSH_INVALID;
+    curr_push_type = COMP_QUEUE_PUSH_INVALID;
 }
 
 void
@@ -513,30 +444,9 @@ compression_buf_init()
                              DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     seq_sgl = new dp_mem_t(1, sizeof(cp_sq_ent_sgl_t));
 
-    // XTS AOL must be 512 byte aligned
-    xts_encrypt_host_buf = new dp_mem_t(1, kUncompressedDataSize + sizeof(cp_hdr_t),
-                                        DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
-    xts_decrypt_buf = new dp_mem_t(1, kUncompressedDataSize + sizeof(cp_hdr_t),
-                                   DP_MEM_ALIGN_PAGE);
-    xts_in_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
-                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM, 512);
-    xts_out_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
-                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM, 512);
-    xts_desc_buf = new dp_mem_t(1, sizeof(xts::xts_desc_t),
-                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
-                                sizeof(xts::xts_desc_t));
-    xts_status_desc_buf = new dp_mem_t(1, sizeof(xts::xts_status_desc_t),
-                                      DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
-                                      sizeof(xts::xts_status_desc_t));
-    xts_status_buf = new dp_mem_t(1, sizeof(uint32_t));
     xts_status_host_buf = new dp_mem_t(1, sizeof(uint32_t),
                                        DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-    xts_opaque_host_buf = new dp_mem_t(1, sizeof(uint32_t),
-                                       DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-    pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
-
-    xts_decomp_cp_desc = new dp_mem_t(1, sizeof(cp_desc_t), DP_MEM_ALIGN_SPEC,
-                                      DP_MEM_TYPE_HBM, sizeof(cp_desc_t));
+    comp_pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
 
     // Pre-fill input buffers.
     uint64_t *p64 = (uint64_t *)uncompressed_data;
@@ -549,15 +459,45 @@ compression_buf_init()
     memcpy(uncompressed_host_buf->read(), uncompressed_data,
           uncompressed_host_buf->line_size_get());
     uncompressed_host_buf->write_thru();
+
+    // Create and initialize compression->XTS-encrypt chaining
+    comp_encrypt_chain_params_t cec_ctor;
+    comp_encrypt_chain = 
+         new comp_encrypt_chain_t(cec_ctor.app_max_size(kCompAppMaxSize).
+                                           uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
+                                           comp_mem_type(DP_MEM_TYPE_HBM).
+                                           comp_status_mem_type1(DP_MEM_TYPE_HBM).
+                                           comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
+                                           encrypt_mem_type(DP_MEM_TYPE_HOST_MEM).
+                                           destructor_free_buffers(false));
+    comp_encrypt_chain_pre_push_params_t cec_pre_push;
+    comp_encrypt_chain->pre_push(cec_pre_push.caller_comp_pad_buf(comp_pad_buf).
+                                              caller_xts_status_buf(xts_status_host_buf).
+                                              caller_xts_opaque_buf(nullptr).
+                                              caller_xts_opaque_data(0));
+
+    // Create and initialize XTS-decrypt->decompression chaining
+    decrypt_decomp_chain_params_t ddc_ctor;
+    decrypt_decomp_chain = 
+         new decrypt_decomp_chain_t(ddc_ctor.app_max_size(kCompAppMaxSize).
+                                             uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
+                                             xts_status_mem_type1(DP_MEM_TYPE_HBM).
+                                             xts_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
+                                             decrypt_mem_type(DP_MEM_TYPE_HBM).
+                                             destructor_free_buffers(false));
+    decrypt_decomp_chain_pre_push_params_t ddc_pre_push;
+    decrypt_decomp_chain->pre_push(ddc_pre_push.caller_comp_status_buf(status_host_buf).
+                                                caller_comp_opaque_buf(nullptr).
+                                                caller_comp_opaque_data(0));
 }
 
 void
 compression_init()
 {
-  comp_queue_alloc(cp_queue, cp_cfg_q_base, cp_cfg_q_pd_idx);
-  comp_queue_alloc(cp_hotq, cp_cfg_hotq_base, cp_cfg_hotq_pd_idx);
-  comp_queue_alloc(dc_queue, dc_cfg_q_base, dc_cfg_q_pd_idx);
-  comp_queue_alloc(dc_hotq, dc_cfg_hotq_base, dc_cfg_hotq_pd_idx);
+  cp_queue = new comp_queue_t(cp_cfg_q_base, cp_cfg_q_pd_idx);
+  cp_hotq = new comp_queue_t(cp_cfg_hotq_base, cp_cfg_hotq_pd_idx);
+  dc_queue = new comp_queue_t(dc_cfg_q_base, dc_cfg_q_pd_idx);
+  dc_hotq = new comp_queue_t(dc_cfg_hotq_base, dc_cfg_hotq_base);
 
   compression_buf_init();
 
@@ -572,20 +512,20 @@ compression_init()
 
       // Write cp queue base.
       write_reg(cp_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
-      write_reg(cp_cfg_q_base, cp_queue.q_base_mem_pa & 0xFFFFFFFFu);
-      write_reg(cp_cfg_q_base + 4, (cp_queue.q_base_mem_pa >> 32) & 0xFFFFFFFFu);
+      write_reg(cp_cfg_q_base, cp_queue->q_base_mem_pa_get() & 0xFFFFFFFFu);
+      write_reg(cp_cfg_q_base + 4, (cp_queue->q_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
 
-      write_reg(cp_cfg_hotq_base, cp_hotq.q_base_mem_pa & 0xFFFFFFFFu);
-      write_reg(cp_cfg_hotq_base + 4, (cp_hotq.q_base_mem_pa >> 32) & 0xFFFFFFFFu);
+      write_reg(cp_cfg_hotq_base, cp_hotq->q_base_mem_pa_get() & 0xFFFFFFFFu);
+      write_reg(cp_cfg_hotq_base + 4, (cp_hotq->q_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
 
       // Write dc queue base.
       read_reg(dc_cfg_glob, lo_reg);
       write_reg(dc_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
-      write_reg(dc_cfg_q_base, dc_queue.q_base_mem_pa & 0xFFFFFFFFu);
-      write_reg(dc_cfg_q_base + 4, (dc_queue.q_base_mem_pa >> 32) & 0xFFFFFFFFu);
+      write_reg(dc_cfg_q_base, dc_queue->q_base_mem_pa_get() & 0xFFFFFFFFu);
+      write_reg(dc_cfg_q_base + 4, (dc_queue->q_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
 
-      write_reg(dc_cfg_hotq_base, dc_hotq.q_base_mem_pa & 0xFFFFFFFFu);
-      write_reg(dc_cfg_hotq_base + 4, (dc_hotq.q_base_mem_pa >> 32) & 0xFFFFFFFFu);
+      write_reg(dc_cfg_hotq_base, dc_hotq->q_base_mem_pa_get() & 0xFFFFFFFFu);
+      write_reg(dc_cfg_hotq_base + 4, (dc_hotq->q_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
 
       // Enable all 16 cp engines.
       read_reg(cp_cfg_ueng, lo_reg);
@@ -625,8 +565,8 @@ int run_cp_test(cp_desc_t& desc,
                 uint32_t seq_comp_qid)
 {
     status->clear_thru();
-    comp_queue_push(desc, cp_queue, push_type, seq_comp_qid);
-    if (!status_poll(status)) {
+    cp_queue->push(desc, push_type, seq_comp_qid);
+    if (!comp_status_poll(status)) {
       printf("ERROR: status never came\n");
       return -1;
     }
@@ -646,8 +586,8 @@ int run_dc_test(cp_desc_t& desc,
                 uint32_t seq_comp_qid)
 {
     status->clear_thru();
-    comp_queue_push(desc, dc_queue, push_type, seq_comp_qid);
-    if (!status_poll(status)) {
+    dc_queue->push(desc, push_type, seq_comp_qid);
+    if (!comp_status_poll(status)) {
       printf("ERROR: status never came\n");
       return -1;
     }
@@ -777,9 +717,9 @@ int _decompress_to_flat_64K_buf(comp_queue_push_t push_type,
     return -1;
   }
   // Verify data buf
-  if (data_verify_and_dump(uncompressed_data,
-                           uncompressed_host_buf->read_thru(),
-                           kUncompressedDataSize)) {
+  if (test_data_verify_and_dump(uncompressed_data,
+                                uncompressed_host_buf->read_thru(),
+                                kUncompressedDataSize)) {
       printf("Testcase %s failed\n", __func__);
       return -1;
   }
@@ -821,9 +761,9 @@ int decompress_odd_size_buf() {
     return -1;
   }
   // Verify data buf
-  if (data_verify_and_dump(uncompressed_data,
-                           uncompressed_host_buf->read_thru(),
-                           567)) {
+  if (test_data_verify_and_dump(uncompressed_data,
+                                uncompressed_host_buf->read_thru(),
+                                567)) {
       printf("Testcase %s failed\n", __func__);
       return -1;
   }
@@ -940,9 +880,9 @@ int _decompress_host_sgl_to_host_sgl(comp_queue_push_t push_type,
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
-  if (data_verify_and_dump(uncompressed_data,
-                           uncompressed_host_buf->read_thru(),
-                           6000)) {
+  if (test_data_verify_and_dump(uncompressed_data,
+                                uncompressed_host_buf->read_thru(),
+                                6000)) {
       printf("Testcase %s failed\n", __func__);
       return -1;
   }
@@ -1050,7 +990,7 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
   chain_params.chain_ent.sgl_out_aol_pa = seq_sgl->pa();
   chain_params.chain_ent.sgl_xfer_en = 1;
   chain_params.chain_ent.intr_pa = opaque_host_buf->pa();
-  chain_params.chain_ent.intr_data = kSeqIntrData;
+  chain_params.chain_ent.intr_data = kCompSeqIntrData;
 
   // Clear the area where interrupt from sequencer is going to come.
   opaque_host_buf->clear_thru();
@@ -1075,7 +1015,7 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
   // Now poll for sequencer interrupt.
   auto seq_intr_poll_func = [] () -> int {
     uint32_t *p = (uint32_t *)opaque_host_buf->read_thru();
-    if (*p == kSeqIntrData)
+    if (*p == kCompSeqIntrData)
       return 0;
     return 1;
   };
@@ -1083,9 +1023,9 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
   if (intr_poll(seq_intr_poll_func) != 0) {
     printf("ERROR: Interrupt from sequencer never came.\n");
   }
-  if (data_verify_and_dump(compressed_data_buf,
-                           compressed_host_buf->read_thru(),
-                           last_cp_output_data_len)) {
+  if (test_data_verify_and_dump(compressed_data_buf,
+                                compressed_host_buf->read_thru(),
+                                last_cp_output_data_len)) {
       printf("Testcase %s failed\n", __func__);
       return -1;
   }
@@ -1102,384 +1042,6 @@ int compress_output_through_sequencer() {
 int seq_compress_output_through_sequencer() {
     return _compress_output_through_sequencer(COMP_QUEUE_PUSH_SEQUENCER, 
                                               queues::get_seq_comp_sq(0));
-}
-
-void compress_xts_encrypt_setup(cp_desc_t& d,
-                                XtsCtx& xts_ctx,
-                                acc_chain_params_t& chain_params,
-                                dp_mem_t *src_buf,
-                                dp_mem_t *dst_buf) {
-  xts::xts_cmd_t cmd;
-  xts::xts_desc_t *xts_desc_addr;
-  uint32_t datain_len;
-
-  // Calling xts_ctx init only to get its xts_db allocated
-  xts_ctx.init(0, false);
-  xts_ctx.op = xts::AES_ENCR_ONLY;
-  xts_ctx.use_seq = false;
-  if (chain_params.seq_next_q) {
-      xts_ctx.use_seq = true;
-      xts_ctx.seq_xts_q = chain_params.seq_next_q;
-  }
-  xts_ctx.copy_desc = false;
-  xts_ctx.ring_db = false;
-
-  xts_in_aol->clear();
-  xts::xts_aol_t *xts_in = (xts::xts_aol_t *)xts_in_aol->read();
-
-  // Note: p4+ will modify L0 and L1 below based on compression
-  // output_data_len and any required padding
-  datain_len = d.datain_len == 0 ? kCompEngineMaxSize :  d.datain_len;
-  xts_in->a0 = src_buf->pa();
-  xts_in->l0 = datain_len;
-  xts_in->a1 = pad_buf->pa();
-  xts_in->l1 = pad_buf->line_size_get();
-  xts_in_aol->write_thru();
-
-  xts_out_aol->clear();
-  xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read();
-  xts_out->a0 = dst_buf->pa();
-  xts_out->l0 = datain_len + sizeof(cp_hdr_t);
-  xts_out_aol->write_thru();
-
-  memset(xts_status_host_buf->read(), 0xff, xts_status_host_buf->line_size_get());
-  xts_status_host_buf->write_thru();
-
-  // Set up XTS encrypt descriptor
-  xts_ctx.cmd_eval_seq_xts(cmd);
-  xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
-  xts_desc_addr->in_aol = xts_in_aol->pa();
-  xts_desc_addr->out_aol = xts_out_aol->pa();
-  xts_desc_addr->cmd = cmd;
-  xts_desc_addr->status = xts_status_host_buf->pa();
-  xts_desc_buf->write_thru();
-  xts_ctx.desc_write_seq_xts(xts_desc_buf);
-}
-
-int _compress_output_encrypt(uint32_t app_blk_size,
-                             comp_queue_push_t push_type,
-                             uint32_t seq_comp_qid,
-                             uint32_t seq_comp_status_qid,
-                             uint32_t seq_xts_status_qid) {
-  XtsCtx                xts_ctx;
-  cp_desc_t             d;
-  acc_chain_params_t    chain_params = {0};
-
-  printf("Starting testcase %s app_blk_size %u push_type %d seq_comp_qid %u "
-         "seq_comp_status_qid %u seq_xts_status_qid %u\n", __func__,
-         app_blk_size, push_type, seq_comp_qid, seq_comp_status_qid,
-         seq_xts_status_qid);
-  memcpy(uncompressed_host_buf->read(), uncompressed_data,
-         uncompressed_host_buf->line_size_get());
-  uncompressed_host_buf->write_thru();
-
-  compress_cp_desc_template_fill(d, uncompressed_host_buf, compressed_buf,
-                                 status_buf, compressed_buf, app_blk_size);
-  // XTS chaining will use direct Barco push action from
-  // comp status queue handler. Hence, no XTS seq queue needed.
-  chain_params.desc_format_fn = test_setup_post_comp_seq_status_entry;
-  chain_params.seq_q = seq_comp_qid;
-  chain_params.seq_status_q = seq_comp_status_qid;
-
-  // Set up encryption
-  compress_xts_encrypt_setup(d, xts_ctx, chain_params, compressed_buf,
-                             xts_encrypt_host_buf);
-
-  // encryption will use direct Barco push action
-  chain_params.chain_ent.next_doorbell_en = 1;
-  chain_params.chain_ent.next_db_action_barco_push = 1;
-  chain_params.chain_ent.push_entry.barco_ring_addr = xts_ctx.xts_ring_base_addr;
-  chain_params.chain_ent.push_entry.barco_pndx_addr = xts_ctx.xts_ring_pi_addr;
-  chain_params.chain_ent.push_entry.barco_desc_addr = xts_desc_buf->pa();
-  chain_params.chain_ent.push_entry.barco_desc_size =
-                         (uint8_t)log2(xts_desc_buf->line_size_get());
-  chain_params.chain_ent.push_entry.barco_pndx_size =
-                         (uint8_t)log2(xts::kXtsPISize);
-  status_buf->clear_thru();
-  chain_params.chain_ent.status_hbm_pa = status_buf->pa();
-  chain_params.chain_ent.status_host_pa = status_host_buf->pa();
-  chain_params.chain_ent.status_len = status_buf->line_size_get();
-
-  // Note that encryption data transfer is handled by compress_xts_encrypt_setup()
-  // above. The compression status sequencer will use the AOLs given below
-  // only to update the length fields with the correct output data length
-  // and pad length.
-  chain_params.chain_ent.sgl_in_aol_pa = xts_in_aol->pa();
-  chain_params.chain_ent.sgl_out_aol_pa = xts_out_aol->pa();
-  chain_params.chain_ent.status_dma_en = 1;
-  chain_params.chain_ent.stop_chain_on_error = 1;
-  chain_params.chain_ent.aol_pad_xfer_en = 1;
-  chain_params.chain_ent.pad_len_shift =
-               (uint8_t)log2(pad_buf->line_size_get());
-
-  // Enable interrupt in case compression fails
-  opaque_host_buf->clear_thru();
-  chain_params.chain_ent.intr_pa = opaque_host_buf->pa();
-  chain_params.chain_ent.intr_data = kSeqIntrData;
-  chain_params.chain_ent.intr_en = 1;
-
-  if (test_setup_seq_acc_chain_entry(chain_params) != 0) {
-    printf("test_setup_seq_acc_chain_entry failed\n");
-    return -1;
-  }
-
-  // Chain compression to compression status sequencer 
-  d.doorbell_addr = chain_params.ret_doorbell_addr;
-  d.doorbell_data = chain_params.ret_doorbell_data;
-  d.cmd_bits.doorbell_on = 1;
-
-  if (run_cp_test(d, compressed_buf, status_buf,
-                  push_type, seq_comp_qid) < 0) {
-    printf("Testcase %s failed\n", __func__);
-    return -1;
-  }
-
-  // Now verify XTS engine doorbell
-  if (xts_ctx.verify_doorbell(false)) {
-      printf("ERROR: doorbell from XTS engine never came.\n");
-      return -1;
-  }
-
-  // Validate XTS status
-  uint32_t curr_xts_status = *((uint32_t *)xts_status_host_buf->read_thru());
-  if (curr_xts_status) {
-    printf("ERROR: XTS error 0x%x\n", curr_xts_status);
-    return -1;
-  }
-
-  // Status verification done.
-  xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read_thru();
-  last_encrypt_output_data_len = xts_out->l0;
-
-  printf("Testcase %s passed: last_encrypt_output_data_len %u\n",
-         __func__, last_encrypt_output_data_len);
-  return 0;
-}
-
-
-int compress_output_encrypt_app_min_size() {
-    return _compress_output_encrypt(kCompAppMinSize,
-                                    COMP_QUEUE_PUSH_HW_DIRECT, 0,
-                                    queues::get_seq_comp_status_sq(0),
-                                    queues::get_seq_xts_status_sq(0));
-}
-
-int seq_compress_output_encrypt_app_min_size() {
-    return _compress_output_encrypt(kCompAppMinSize,
-                                    COMP_QUEUE_PUSH_SEQUENCER, 
-                                    queues::get_seq_comp_sq(0),
-                                    queues::get_seq_comp_status_sq(0),
-                                    queues::get_seq_xts_status_sq(0));
-}
-
-int compress_output_encrypt_app_max_size() {
-    return _compress_output_encrypt(kCompAppMaxSize,
-                                    COMP_QUEUE_PUSH_HW_DIRECT, 0,
-                                    queues::get_seq_comp_status_sq(0),
-                                    queues::get_seq_xts_status_sq(0));
-}
-
-int seq_compress_output_encrypt_app_max_size() {
-    return _compress_output_encrypt(kCompAppMaxSize,
-                                    COMP_QUEUE_PUSH_SEQUENCER, 
-                                    queues::get_seq_comp_sq(0),
-                                    queues::get_seq_comp_status_sq(0),
-                                    queues::get_seq_xts_status_sq(0));
-}
-
-int compress_output_encrypt_app_nominal_size() {
-    return _compress_output_encrypt(kCompAppNominalSize,
-                                    COMP_QUEUE_PUSH_HW_DIRECT, 0,
-                                    queues::get_seq_comp_status_sq(0),
-                                    queues::get_seq_xts_status_sq(0));
-}
-
-int seq_compress_output_encrypt_app_nominal_size() {
-    return _compress_output_encrypt(kCompAppNominalSize,
-                                    COMP_QUEUE_PUSH_SEQUENCER, 
-                                    queues::get_seq_comp_sq(0),
-                                    queues::get_seq_comp_status_sq(0),
-                                    queues::get_seq_xts_status_sq(0));
-}
-
-void xts_decrypt_decompress_setup(cp_desc_t& d,
-                                  XtsCtx& xts_ctx,
-                                  acc_chain_params_t& chain_params,
-                                  dp_mem_t *src_buf,
-                                  dp_mem_t *dst_buf) {
-  xts::xts_cmd_t cmd;
-  xts::xts_desc_t *xts_desc_addr;
-
-  // Calling xts_ctx init only to get its xts_db allocated
-  xts_ctx.init(0, false);
-  xts_ctx.op = xts::AES_DECR_ONLY;
-  xts_ctx.use_seq = true;
-  xts_ctx.seq_xts_q = chain_params.seq_q;
-  xts_ctx.seq_xts_status_q = chain_params.seq_status_q;
-  xts_ctx.copy_desc = false;
-  xts_ctx.ring_db = false;
-
-  xts_in_aol->clear();
-  xts::xts_aol_t *xts_in = (xts::xts_aol_t *)xts_in_aol->read();
-
-  xts_in->a0 = src_buf->pa();
-  xts_in->l0 = last_encrypt_output_data_len;
-  xts_in_aol->write_thru();
-
-  xts_out_aol->clear();
-  xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read();
-  xts_out->a0 = dst_buf->pa();
-  xts_out->l0 = last_encrypt_output_data_len;
-  xts_out_aol->write_thru();
-
-  // Set up XTS decrypt descriptor
-  xts_ctx.cmd_eval_seq_xts(cmd);
-  xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
-  xts_desc_addr->in_aol = xts_in_aol->pa();
-  xts_desc_addr->out_aol = xts_out_aol->pa();
-  xts_desc_addr->cmd = cmd;
-  xts_desc_addr->status = xts_status_buf->pa();
-
-  // Chain XTS decrypt to XTS status sequencer 
-  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
-                             xts_ctx.seq_xts_status_q, 0,
-                             chain_params.ret_seq_status_index, 
-                             &xts_desc_addr->db_addr, &xts_desc_addr->db_data);
-  xts_desc_buf->write_thru();
-  xts_ctx.desc_write_seq_xts(xts_desc_buf);
-}
-
-int _decrypt_output_decompress(uint32_t app_blk_size,
-                               uint32_t seq_xts_qid,
-                               uint32_t seq_xts_status_qid,
-                               uint32_t seq_comp_status_qid) {
-  XtsCtx                xts_ctx;
-  cp_desc_t             d;
-  acc_chain_params_t    chain_params = {0};
-
-  printf("Starting testcase %s seq_xts_qid %u "
-         "seq_xts_status_qid %u seq_comp_status_qid %u\n", __func__,
-         seq_xts_qid, seq_xts_status_qid, seq_comp_status_qid);
-  status_host_buf->clear_thru();
-  decompress_cp_desc_template_fill(d, compressed_buf, uncompressed_host_buf,
-                                   status_host_buf, last_cp_output_data_len,
-                                   kUncompressedDataSize);
-  chain_params.desc_format_fn = test_setup_post_xts_seq_status_entry;
-  chain_params.seq_q = seq_xts_qid;
-  chain_params.seq_status_q = seq_xts_status_qid;
-
-  // Decompression will use direct barco push action
-  chain_params.chain_ent.next_doorbell_en = 1;
-  chain_params.chain_ent.next_db_action_barco_push = 1;
-  chain_params.chain_ent.push_entry.barco_ring_addr = dc_queue.q_base_mem_pa;
-  chain_params.chain_ent.push_entry.barco_pndx_addr = dc_queue.cfg_q_pd_idx;
-  chain_params.chain_ent.push_entry.barco_desc_addr = xts_decomp_cp_desc->pa();
-  chain_params.chain_ent.push_entry.barco_desc_size = 
-                         (uint8_t)log2(xts_decomp_cp_desc->line_size_get());
-  chain_params.chain_ent.push_entry.barco_pndx_size = 
-                         (uint8_t)log2(sizeof(uint32_t));
-  memset(xts_status_host_buf->read(), 0xff,
-         xts_status_host_buf->line_size_get());
-  chain_params.chain_ent.status_hbm_pa = xts_status_buf->pa();
-  chain_params.chain_ent.status_host_pa = xts_status_host_buf->pa();
-  chain_params.chain_ent.status_len = xts_status_buf->line_size_get();
-  chain_params.chain_ent.status_dma_en = 1;
-  chain_params.chain_ent.stop_chain_on_error = 1;
-
-  // Enable interrupt in case decryption fails
-  xts_opaque_host_buf->clear_thru();
-  chain_params.chain_ent.intr_pa = xts_opaque_host_buf->pa();
-  chain_params.chain_ent.intr_data = kSeqIntrData;
-  chain_params.chain_ent.intr_en = 1;
-
-  if (test_setup_seq_acc_chain_entry(chain_params) != 0) {
-    printf("test_setup_seq_acc_chain_entry failed\n");
-    return -1;
-  }
-
-  // Set up decryption
-  xts_decrypt_decompress_setup(d, xts_ctx, chain_params, xts_encrypt_host_buf,
-                               compressed_buf);
-
-  // Barco push action will operate on the following descriptor
-  memcpy(xts_decomp_cp_desc->read(), &d,
-         xts_decomp_cp_desc->line_size_get());
-  xts_decomp_cp_desc->write_thru();
-
-  // Initiate the test starting with XTS decryption
-  xts_ctx.ring_doorbell();
-
-  // Don't call xts_ctx.verify_doorbell() as XTS completion would go
-  // to XTS status sequenceer in the decrypt chaining case.
-
-  // Poll for XTS status
-  auto xts_status_poll_func = [] () -> int {
-    uint32_t curr_xts_status = *((uint32_t *)xts_status_host_buf->read_thru());
-    if (!curr_xts_status)
-      return 0;
-    return 1;
-  };
-
-  tests::Poller xts_poll;
-  if (xts_poll(xts_status_poll_func) != 0) {
-    uint32_t curr_xts_status = *((uint32_t *)xts_status_host_buf->read());
-    printf("ERROR: XTS decrypt error 0x%x\n", curr_xts_status);
-    return -1;
-  }
-
-  // Poll for decomp status
-  if (!status_poll(status_host_buf)) {
-    printf("ERROR: decompression status never came\n");
-    return -1;
-  }
-
-  // Validate decomp status
-  if (decompress_status_verify(status_host_buf, d, app_blk_size)) {
-    printf("ERROR: decompression failed\n");
-    return -1;
-  }
-
-  // Validate data
-  if (data_verify_and_dump(uncompressed_data,
-                           uncompressed_host_buf->read_thru(),
-                           app_blk_size)) {
-      printf("ERROR: data verification failed\n");
-      return -1;
-  }
-  
-  printf("Testcase %s passed\n", __func__);
-  return 0;
-}
-
-
-int seq_decrypt_output_decompress_app_min_size() {
-
-    // This test is always initiated from XTS sequencer queue, with chaining
-    // to decomp from P4+.
-    return _decrypt_output_decompress(kCompAppMinSize,
-                                      queues::get_seq_xts_sq(0),
-                                      queues::get_seq_xts_status_sq(0),
-                                      queues::get_seq_comp_status_sq(0));
-}
-
-int seq_decrypt_output_decompress_app_max_size() {
-
-    // This test is always initiated from XTS sequencer queue, with chaining
-    // to decomp from P4+.
-    return _decrypt_output_decompress(kCompAppMaxSize,
-                                      queues::get_seq_xts_sq(0),
-                                      queues::get_seq_xts_status_sq(0),
-                                      queues::get_seq_comp_status_sq(0));
-}
-
-int seq_decrypt_output_decompress_app_nominal_size() {
-
-    // This test is always initiated from XTS sequencer queue, with chaining
-    // to decomp from P4+.
-    return _decrypt_output_decompress(kCompAppNominalSize,
-                                      queues::get_seq_xts_sq(0),
-                                      queues::get_seq_xts_status_sq(0),
-                                      queues::get_seq_comp_status_sq(0));
 }
 
 // Verify integrity of >64K buffer
@@ -1571,8 +1133,7 @@ int _max_data_rate(comp_queue_push_t push_type,
   dp_mem_t *max_dc_opaque_host_buf = new dp_mem_t(1, MAX_DC_REQ * sizeof(uint32_t),
                                                   DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
   uint32_t exp_opaque_data = 0xa5a5a5a5;
-  memset(exp_opaque_data_buf->read(), 0xa5, exp_opaque_data_buf->line_size_get());
-  exp_opaque_data_buf->write_thru();
+  exp_opaque_data_buf->fill_thru(0xa5);
 
   // allocate and fill descriptors to load compression engine with requests
   for (i = 0, d = &comp_cp_desc[0];
@@ -1589,7 +1150,7 @@ int _max_data_rate(comp_queue_push_t push_type,
     d->cmd_bits.opaque_tag_on = 1;
     d->opaque_tag_addr = max_cp_opaque_host_buf->pa() + (i * sizeof(uint32_t));
     d->opaque_tag_data = exp_opaque_data;
-    comp_queue_push(*d, cp_queue, 
+    cp_queue->push(*d, 
                     i == (MAX_CP_REQ - 1) ? last_push_type : push_type,
                     seq_comp_qid_cp);
   }
@@ -1610,14 +1171,14 @@ int _max_data_rate(comp_queue_push_t push_type,
     d->cmd_bits.opaque_tag_on = 1;
     d->opaque_tag_addr = max_dc_opaque_host_buf->pa() + (i * sizeof(uint32_t));
     d->opaque_tag_data = exp_opaque_data;
-    comp_queue_push(*d, dc_queue, 
-                    i == (MAX_DC_REQ - 1) ? last_push_type : push_type,
-                    seq_comp_qid_dc);
+    dc_queue->push(*d,
+                   i == (MAX_DC_REQ - 1) ? last_push_type : push_type,
+                   seq_comp_qid_dc);
   }
 
   // Now ring doorbells
-  comp_queue_post_push(cp_queue);
-  comp_queue_post_push(dc_queue);
+  cp_queue->post_push();
+  dc_queue->post_push();
 
   // Wait for all the interrupts
   auto func = [max_cp_opaque_host_buf, max_dc_opaque_host_buf,
@@ -1739,14 +1300,14 @@ static int cp_dualq_flat_4K_buf(dp_mem_t *comp_buf,
   status_buf2->clear_thru();
 
   // Add descriptor for both high and low priority queues
-  comp_queue_push(lq_desc, cp_queue, push_type, seq_comp_qid_cp);
+  cp_queue->push(lq_desc, push_type, seq_comp_qid_cp);
 
   // Dont ring the doorbell yet
-  comp_queue_push(hq_desc, cp_hotq, push_type, seq_comp_qid_hotq);
+  cp_hotq->push(hq_desc, push_type, seq_comp_qid_hotq);
 
   // Now ring door bells for both high and low queues
-  comp_queue_post_push(cp_queue);
-  comp_queue_post_push(cp_hotq);
+  cp_queue->post_push();
+  cp_hotq->post_push();
 
   // Check status update to both the descriptors
   auto func = [status_buf1, status_buf2,
@@ -1838,6 +1399,97 @@ int seq_compress_dualq_flat_4K_buf_in_hbm() {
     printf("Testcase %s failed\n", __func__);
 
   return rc;
+}
+
+// Accelerator compression to XTS-encrypt chaining DOLs.
+int compress_output_encrypt_app_min_size() {
+    comp_encrypt_chain_push_params_t    params;
+    comp_encrypt_chain->push(params.app_blk_size(kCompAppMinSize).
+                                    comp_queue(cp_queue).
+                                    push_type(COMP_QUEUE_PUSH_HW_DIRECT).
+                                    seq_comp_qid(0).
+                                    seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                    seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
+    comp_encrypt_chain->post_push();
+    return comp_encrypt_chain->verify();
+}
+
+int seq_compress_output_encrypt_app_min_size() {
+    comp_encrypt_chain_push_params_t    params;
+    comp_encrypt_chain->push(params.app_blk_size(kCompAppMinSize).
+                                    comp_queue(cp_queue).
+                                    push_type(COMP_QUEUE_PUSH_SEQUENCER).
+                                    seq_comp_qid(queues::get_seq_comp_sq(0)).
+                                    seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                    seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
+    comp_encrypt_chain->post_push();
+    return comp_encrypt_chain->verify();
+}
+
+int compress_output_encrypt_app_max_size() {
+    comp_encrypt_chain_push_params_t    params;
+    comp_encrypt_chain->push(params.app_blk_size(kCompAppMaxSize).
+                                    comp_queue(cp_queue).
+                                    push_type(COMP_QUEUE_PUSH_HW_DIRECT).
+                                    seq_comp_qid(0).
+                                    seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                    seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
+    comp_encrypt_chain->post_push();
+    return comp_encrypt_chain->verify();
+}
+
+int seq_compress_output_encrypt_app_max_size() {
+    comp_encrypt_chain_push_params_t    params;
+    comp_encrypt_chain->push(params.app_blk_size(kCompAppMaxSize).
+                                    comp_queue(cp_queue).
+                                    push_type(COMP_QUEUE_PUSH_SEQUENCER).
+                                    seq_comp_qid(queues::get_seq_comp_sq(0)).
+                                    seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                    seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
+    comp_encrypt_chain->post_push();
+    return comp_encrypt_chain->verify();
+}
+
+int compress_output_encrypt_app_nominal_size() {
+    comp_encrypt_chain_push_params_t    params;
+    comp_encrypt_chain->push(params.app_blk_size(kCompAppNominalSize).
+                                    comp_queue(cp_queue).
+                                    push_type(COMP_QUEUE_PUSH_HW_DIRECT).
+                                    seq_comp_qid(0).
+                                    seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                    seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
+    comp_encrypt_chain->post_push();
+    return comp_encrypt_chain->verify();
+}
+
+int seq_compress_output_encrypt_app_nominal_size() {
+    comp_encrypt_chain_push_params_t    params;
+    comp_encrypt_chain->push(params.app_blk_size(kCompAppNominalSize).
+                                    comp_queue(cp_queue).
+                                    push_type(COMP_QUEUE_PUSH_SEQUENCER).
+                                    seq_comp_qid(queues::get_seq_comp_sq(0)).
+                                    seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
+                                    seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
+    comp_encrypt_chain->post_push();
+    return comp_encrypt_chain->verify();
+}
+
+// Accelerator XTS-decrypt to decompression chaining DOLs.
+int seq_decrypt_output_decompress_last_app_blk() {
+
+    // Execute decrypt-decompression on the last compress-pad-encrypted block,
+    // i.e., the block size is whatever was last compressed and padded.
+    // 
+    // Use the xts_ctx default mode of XTS sequencer queue, with chaining
+    // to decompression initiated from P4+ handling of XTS status sequencer.
+    decrypt_decomp_chain_push_params_t  params;
+    decrypt_decomp_chain->push(params.comp_encrypt_chain(comp_encrypt_chain).
+                                      decomp_queue(dc_queue).
+                                      seq_xts_qid(queues::get_seq_xts_sq(0)).
+                                      seq_xts_status_qid(queues::get_seq_xts_status_sq(0)).
+                                      seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
+    decrypt_decomp_chain->post_push();
+    return decrypt_decomp_chain->verify();
 }
 
 }  // namespace tests
