@@ -5,6 +5,7 @@
 #include <linux/netdevice.h>
 #include <rdma/ib_umem.h>
 #include <rdma/ib_verbs.h>
+#include <rdma/ib_pack.h>
 
 #include <rdma/ionic-abi.h>
 #include <ionic_api.h>

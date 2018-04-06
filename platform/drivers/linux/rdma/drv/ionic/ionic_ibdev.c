@@ -5,7 +5,6 @@
 #include <linux/printk.h>
 #include <linux/rculist.h>
 #include <linux/spinlock.h>
-#include <net/addrconf.h>
 #include <net/dcbnl.h>
 #include <net/ipv6.h>
 #include <rdma/ib_umem.h>
@@ -16,6 +15,7 @@
 #include <linux/interrupt.h>
 #include <linux/module.h>
 #include <linux/mman.h>
+#include <net/addrconf.h>
 #include <rdma/ib_addr.h>
 #include <rdma/ib_cache.h>
 #include <rdma/ib_mad.h>
@@ -381,14 +381,7 @@ static struct net_device *ionic_get_netdev(struct ib_device *ibdev, u8 port)
 static int ionic_query_gid(struct ib_device *ibdev, u8 port, int index,
 			   union ib_gid *gid)
 {
-	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
 	int rc;
-
-	if (port != 1)
-		return -EINVAL;
-
-	if (index < 0 || index >= dev->port_attr.gid_tbl_len)
-		return -EINVAL;
 
 	rc = ib_get_cached_gid(ibdev, port, index, gid, NULL);
 	if (rc == -EAGAIN) {
@@ -403,9 +396,11 @@ static int ionic_add_gid(struct ib_device *ibdev, u8 port, unsigned int index,
 			 const union ib_gid *gid,
 			 const struct ib_gid_attr *attr, void **context)
 {
-	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
+	enum rdma_network_type net;
 
-	if (index < 0 || index >= dev->port_attr.gid_tbl_len)
+	/* XXX const cast */
+	net = ib_gid_to_network_type(attr->gid_type, (union ib_gid *)gid);
+	if (net != RDMA_NETWORK_IPV4 && net != RDMA_NETWORK_IPV6)
 		return -EINVAL;
 
         return 0;
@@ -414,11 +409,6 @@ static int ionic_add_gid(struct ib_device *ibdev, u8 port, unsigned int index,
 static int ionic_del_gid(struct ib_device *ibdev, u8 port, unsigned int index,
 			 void **context)
 {
-	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
-
-	if (index < 0 || index >= dev->port_attr.gid_tbl_len)
-		return -EINVAL;
-
         return 0;
 }
 
@@ -1212,6 +1202,89 @@ err_cmd:
 	return rc;
 }
 
+static int ionic_build_hdr(struct ionic_ibdev *dev,
+			   struct ib_ud_header *hdr,
+			   const struct rdma_ah_attr *attr)
+{
+	const struct ib_global_route *grh;
+	struct ib_gid_attr sgid_attr;
+	union ib_gid sgid;
+	u8 smac[ETH_ALEN];
+	u16 vlan;
+	enum rdma_network_type net;
+	int rc;
+
+	if (attr->ah_flags != IB_AH_GRH)
+		return -EINVAL;
+
+	if (attr->type != RDMA_AH_ATTR_TYPE_ROCE)
+		return -EINVAL;
+
+	grh = rdma_ah_read_grh(attr);
+
+	rc = ib_get_cached_gid(&dev->ibdev, 1, grh->sgid_index,
+			       &sgid, &sgid_attr);
+	if (rc)
+		return rc;
+
+	if (!sgid_attr.ndev)
+		return -ENXIO;
+
+	ether_addr_copy(smac, sgid_attr.ndev->dev_addr);
+	vlan = rdma_vlan_dev_vlan_id(sgid_attr.ndev);
+	net = ib_gid_to_network_type(sgid_attr.gid_type, &sgid);
+
+	dev_put(sgid_attr.ndev); /* hold from ib_get_cached_gid */
+	sgid_attr.ndev = NULL;
+
+	/* XXX const cast */
+	if (net != ib_gid_to_network_type(sgid_attr.gid_type,
+					  (union ib_gid *)&grh->dgid))
+		return -EINVAL;
+
+	rc = ib_ud_header_init(0,	/* no payload */
+			       0,	/* no lrh */
+			       1,	/* yes eth */
+			       vlan != 0xffff,
+			       0,	/* no grh */
+			       net == RDMA_NETWORK_IPV4 ? 4 : 6,
+			       1,	/* yes udp */
+			       0,	/* no imm */
+			       hdr);
+	if (rc)
+		return rc;
+
+	ether_addr_copy(hdr->eth.smac_h, smac);
+	ether_addr_copy(hdr->eth.dmac_h, attr->roce.dmac);
+
+	if (vlan == 0xffff) {
+		hdr->eth.type = cpu_to_be16(ETH_P_IP);
+	} else {
+		hdr->vlan.tag = vlan;
+		hdr->vlan.type = cpu_to_be16(ETH_P_IP);
+		hdr->vlan.type = cpu_to_be16(ETH_P_8021Q);
+	}
+
+	if (net == RDMA_NETWORK_IPV4) {
+		hdr->ip4.tos = grh->traffic_class;
+		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
+		hdr->ip4.ttl = grh->hop_limit;
+		hdr->ip4.saddr = *(__be32 *)(sgid.raw + 12);
+		hdr->ip4.daddr = *(__be32 *)(grh->dgid.raw + 12);
+	} else {
+		hdr->grh.traffic_class = grh->traffic_class;
+		hdr->grh.flow_label = cpu_to_be32(grh->flow_label);
+		hdr->grh.hop_limit = grh->hop_limit;
+		hdr->grh.source_gid = sgid;
+		hdr->grh.destination_gid = grh->dgid;
+	}
+
+	hdr->udp.sport = cpu_to_be16(49152); /* XXX hardcode val */
+	hdr->udp.dport = cpu_to_be16(ROCE_V2_UDP_DPORT);
+
+	return 0;
+}
+
 static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 			       struct ionic_qp *qp,
 			       struct ib_qp_attr *attr,
@@ -1230,65 +1303,33 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 			.sq_psn = attr->sq_psn,
 		},
 	};
-	union {
-		struct ethhdr *eth;
-		//struct vlan_hdr *vlan;
-		//struct ipv6hdr *ipv6;
-		struct iphdr *ip;
-		struct udphdr *udp;
-	} hdr;
-	const struct ib_global_route *grh;
-	union ib_gid sgid;
-	struct ib_gid_attr sgid_attr;
+	struct ib_ud_header *hdr;
 	void *hdr_buf = NULL;
 	dma_addr_t hdr_dma = 0;
 	int rc, hdr_len = 0;
 
 	if (mask & IB_QP_AV) {
-		grh = rdma_ah_read_grh(&attr->ah_attr);
-		rc = ib_get_cached_gid(&dev->ibdev, 1, grh->sgid_index,
-				       &sgid, &sgid_attr);
+		hdr = kmalloc(sizeof(*hdr), GFP_KERNEL);
+		if (!hdr) {
+			rc = -ENOMEM;
+			goto err_hdr;
+		}
+
+		rc = ionic_build_hdr(dev, hdr, &attr->ah_attr);
 		if (rc)
 			goto err_buf;
 
-
-		/* XXX s/PAGE_SIZE/MAX_HDR_LEN */
-		hdr_buf = kzalloc(PAGE_SIZE, GFP_KERNEL);
+		hdr_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
 		if (!hdr_buf) {
 			rc = -ENOMEM;
 			goto err_buf;
 		}
 
-		/* XXX hardcoded header template: non-vlan eth + ipv4 + udp */
+		hdr_len = ib_ud_header_pack(hdr, hdr_buf);
+		hdr_len -= IB_BTH_BYTES;
+		hdr_len -= IB_DETH_BYTES;
 
-		hdr.eth = hdr_buf + hdr_len;
-		hdr_len += sizeof(*hdr.eth);
-
-		ether_addr_copy(hdr.eth->h_dest, attr->ah_attr.roce.dmac);
-		ether_addr_copy(hdr.eth->h_source, dev->ndev->dev_addr);
-		hdr.eth->h_proto = cpu_to_be16(ETH_P_IP); /* XXX hardcode ipv4 */
-
-		hdr.ip = hdr_buf + hdr_len;
-		hdr_len += sizeof(*hdr.ip);
-
-		hdr.ip->version = 4;
-		hdr.ip->ihl = 5;
-		hdr.ip->tos = 0;
-		hdr.ip->tot_len = 0;
-		hdr.ip->id = cpu_to_be16(1); /* XXX hardcode val id */
-		hdr.ip->frag_off = cpu_to_be16(0x4000); /* XXX spec says frag_off should be zero */
-		hdr.ip->ttl = 64;
-		hdr.ip->protocol = 17;
-		hdr.ip->saddr = *(__be32 *)(sgid.raw + 12);
-		hdr.ip->daddr = *(__be32 *)(grh->dgid.raw + 12);
-
-		hdr.udp = hdr_buf + hdr_len;
-		hdr_len += sizeof(*hdr.udp);
-
-		hdr.udp->dest = cpu_to_be16(ROCE_V2_UDP_DPORT);
-		hdr.udp->source = cpu_to_be16(49152); /* XXX hardcode val, could be qpid */
-
-		dev_dbg(&dev->ibdev.dev, "roce packet header template:\n");
+		dev_dbg(&dev->ibdev.dev, "roce packet header template\n");
 		dynamic_hex_dump("hdr ", DUMP_PREFIX_OFFSET, 16, 1,
 				 hdr_buf, hdr_len, true);
 
@@ -1324,6 +1365,9 @@ err_dma:
 	if (mask & IB_QP_AV)
 		kfree(hdr_buf);
 err_buf:
+	if (mask & IB_QP_AV)
+		kfree(hdr);
+err_hdr:
 	return rc;
 }
 
@@ -1721,20 +1765,6 @@ static int ionic_dealloc_xrcd(struct ib_xrcd *xrcd)
 	return -ENOSYS;
 }
 
-static int ionic_process_mad(struct ib_device *ibdev,
-			     int flags,
-			     u8 port,
-			     const struct ib_wc *in_wc,
-			     const struct ib_grh *in_grh,
-			     const struct ib_mad_hdr *in_mad,
-			     size_t in_mad_size,
-			     struct ib_mad_hdr *out_mad,
-			     size_t *out_mad_size,
-			     u16 *out_mad_pkey_index)
-{
-	return -ENOSYS;
-}
-
 static int ionic_get_port_immutable(struct ib_device *ibdev, u8 port,
 				    struct ib_port_immutable *attr)
 {
@@ -1743,8 +1773,7 @@ static int ionic_get_port_immutable(struct ib_device *ibdev, u8 port,
 	if (port != 1)
 		return -EINVAL;
 
-	attr->core_cap_flags = RDMA_CORE_PORT_IBA_ROCE |
-		RDMA_CORE_CAP_PROT_ROCE_UDP_ENCAP;
+	attr->core_cap_flags = RDMA_CORE_PORT_IBA_ROCE_UDP_ENCAP;
 
 	attr->pkey_tbl_len = dev->port_attr.pkey_tbl_len;
 	attr->gid_tbl_len = dev->port_attr.gid_tbl_len;
@@ -2340,6 +2369,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	ibdev->num_comp_vectors = max(1, dev->eq_count);
 	/* XXX should not use max, but count may be zero: see ionic_create_eqvec */
 
+	addrconf_ifid_eui48((u8 *)&ibdev->node_guid, ndev);
+
 	ibdev->uverbs_abi_ver = IONIC_ABI_VERSION;
 	ibdev->uverbs_cmd_mask =
 		BIT_ULL(IB_USER_VERBS_CMD_GET_CONTEXT)		|
@@ -2443,8 +2474,6 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 
 	dev->ibdev.alloc_xrcd		= ionic_alloc_xrcd;
 	dev->ibdev.dealloc_xrcd		= ionic_dealloc_xrcd;
-
-	dev->ibdev.process_mad		= ionic_process_mad;
 
 	dev->ibdev.get_port_immutable	= ionic_get_port_immutable;
 	dev->ibdev.get_dev_fw_str	= ionic_get_dev_fw_str;
