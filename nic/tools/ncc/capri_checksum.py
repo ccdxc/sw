@@ -1694,16 +1694,23 @@ class Checksum:
         csum_profile_obj = calfldobj.DeParserCsumProfileObjGet()
         csum_profile_obj.CsumProfileNumSet(csum_profile)
         csum_profile_obj.CsumProfilePhvLenSelSet(0,0)
-        #TODO use p4field hlir-offset to set checksum location
-        # 10th byte in ipv4 header is checksum
-        csum_profile_obj.CsumProfileCsumLocSet(10)
+        csum_field_offset = -1
+        for field in hdr.fields:
+            if field.name == calfldobj.dstField.split(".")[1]:
+                csum_field_offset = field.offset/8 #bit to byte offset
+                break
+        assert csum_field_offset != -1, pdb.set_trace()
+        csum_profile_obj.CsumProfileCsumLocSet(csum_field_offset)
         if calfldobj.option_checksum:
             csum_profile_obj.CsumProfileCsumLocSet(1)
             csum_profile_obj.CsumEightBitSet(1)
             dprsr_payload_len_slot = \
                     self.DeParserPayLoadLenSlotGet(calfldobj, parser)
             csum_profile_obj.CsumProfilePhvLenSelSet(1,dprsr_payload_len_slot)
-
+        if calfldobj.no_phdr_in_checksum:
+            dprsr_payload_len_slot = \
+                    self.DeParserPayLoadLenSlotGet(calfldobj, parser)
+            csum_profile_obj.CsumProfilePhvLenSelSet(1,dprsr_payload_len_slot)
         self.csum_compute_logger.debug("%s" % csum_obj.LogGenerate(hdr.name))
         self.csum_compute_logger.debug(" %s" %
                          csum_profile_obj.LogGenerate())

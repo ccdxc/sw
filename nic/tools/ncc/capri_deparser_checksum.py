@@ -479,6 +479,14 @@ class DeParserCalField:
                                        else\
                                            False
 
+        self.no_phdr_in_checksum      = True\
+                                        if isinstance(self.P4FieldListCalculation.\
+                                                      input[0].fields[0], \
+                                                      p4.p4_header_keywords)\
+                                        else\
+                                           False
+        self.payload_checksum = False if self.no_phdr_in_checksum else self.payload_checksum
+
         #Find pseudo header associated with payload checksum
         if self.payload_checksum and 'checksum' in \
             self.P4FieldListCalculation._parsed_pragmas.keys():
@@ -501,6 +509,12 @@ class DeParserCalField:
             self.payload_hdr_type = ''
             self.phdr_fields = None
             self.payload_update_len_field = ''
+            if self.no_phdr_in_checksum and 'checksum' in \
+                self.P4FieldListCalculation._parsed_pragmas.keys():
+                if 'update_len' in \
+                    self.P4FieldListCalculation._parsed_pragmas['checksum']:
+                    self.payload_update_len_field = self.P4FieldListCalculation._parsed_pragmas\
+                                   ['checksum']['update_len'].keys()[0]
 
         if 'checksum' in self.P4FieldListCalculation._parsed_pragmas.keys() and \
            'udp_option' in self.P4FieldListCalculation._parsed_pragmas['checksum']:

@@ -56,6 +56,7 @@ header_type parser_ohi_t {
         tcp___start_off             : 16;
         udp_opt_ocs___start_off     : 16;
         roce_bth___start_off        : 16; // ohi allocated to store hdr offset
+        icmp___start_off            : 16;
         // Write only variable to capture length value from pkt for csum puporses into OHI.
         ipv4_options_blob___hdr_len : 16;
         inner_ipv4_options_blob___hdr_len : 16;
@@ -2014,6 +2015,7 @@ field_list_calculation complete_checksum_ipv4 {
    output_width : 16;
 }
 
+
 @pragma checksum update_len capri_deparser_len.udp_opt_l2_checksum_len
 //Share checksum engine among udp-option csum computation and l2_checksum
 //as one is used in packet towards uplink and other in packet towards host.
@@ -2029,4 +2031,23 @@ field_list_calculation complete_checksum_ipv6 {
 calculated_field p4_to_p4plus_classic_nic.csum {
    update complete_checksum_ipv4 if (valid(ipv4));
    update complete_checksum_ipv6 if (valid(ipv6));
+}
+
+field_list icmp_checksum_list {
+   payload;
+}
+
+//Instead of allocating another 16b phv to store icmp payload len, reuse l4_payload_len phv bits.
+@pragma checksum update_len capri_deparser_len.inner_l4_payload_len
+@pragma checksum update_share icmp.hdrChecksum inner_udp.checksum
+field_list_calculation icmp_checksum {
+   input {
+       icmp_checksum_list;
+   }
+   algorithm : csum16;
+   output_width : 16;
+}
+
+calculated_field icmp.hdrChecksum {
+   update icmp_checksum if (valid(icmp));
 }
