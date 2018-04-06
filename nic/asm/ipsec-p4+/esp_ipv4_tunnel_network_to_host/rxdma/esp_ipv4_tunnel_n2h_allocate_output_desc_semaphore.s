@@ -15,7 +15,8 @@ esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore:
     phvwri p.app_header_table1_valid, 1
     phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_output_desc_index[33:6] 
     phvwri p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, 11 
-    sll r1, d.{out_desc_ring_index}.dx, 3 
+    and r1, d.{out_desc_ring_index}.dx, 0x3FF
+    sll r1, r1, 3 
     addui r1, r1, hiword(TNMDR_TABLE_BASE)
     addi r1, r1, loword(TNMDR_TABLE_BASE)
     phvwr p.common_te1_phv_table_addr, r1

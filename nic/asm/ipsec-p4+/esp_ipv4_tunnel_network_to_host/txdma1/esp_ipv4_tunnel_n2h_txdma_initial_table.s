@@ -14,6 +14,9 @@ struct phv_ p;
         .param  TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
         .align
 esp_ipv4_tunnel_n2h_txdma_initial_table:
+    sub r1, d.{barco_ring_cindex}.hx, 1
+    seq c5, d.{barco_ring_pindex}.hx, r1
+    bcf [c5], esp_ipv4_tunnel_n2h_txdma_initial_table_drop_pkt
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
     b.c1 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing
     phvwri.c1 p.p4_intr_global_drop, 1
@@ -26,16 +29,14 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
     phvwri p.{app_header_table0_valid...app_header_table2_valid}, 7 
     phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex[33:6] 
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 11 
-    sll r2, d.{rxdma_ring_cindex}.hx, 3
+    and r2, d.cb_cindex, 0xFF
+    sll r2, r2, 3
     add r2, r2, d.cb_ring_base_addr
-    tbladd d.{rxdma_ring_cindex}.hx, 1
-    nop
+    add r7, d.cb_cindex, 1
+    tblwr d.cb_cindex, r7
+    tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
     phvwr p.common_te0_phv_table_addr, r2
-    addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 1, LIF_IPSEC_ESP)
-    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 0, d.{rxdma_ring_cindex}.hx)
-    memwr.dx  r4, r3
-    tbladd d.cb_cindex, 1
- 
+
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
     addi        r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_allocate_barco_req_pindex, r5, TABLE_SIZE_16_BITS)
@@ -45,11 +46,19 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
     add r4, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}, 64
     phvwr p.common_te2_phv_table_addr, r4 
 
-    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, d.barco_pindex)
-    phvwr p.barco_req_doorbell_data, r3.dx
+    seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
+    b.!c1 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing 
+    addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 1, LIF_IPSEC_ESP)
+    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 0, 0)
+    memwr.dx  r4, r3
 
 
 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing:
+    nop.e
+    nop
+
+esp_ipv4_tunnel_n2h_txdma_initial_table_drop_pkt:
+    phvwri p.p4_intr_global_drop, 1
     nop.e
     nop
     

@@ -9,6 +9,9 @@ struct phv_ p;
 %%
 .align
 esp_ipv4_tunnel_n2h_rxdma_initial_table:
+    sub r1, d.{rxdma_ring_cindex}.hx, 1
+    seq c5, d.{rxdma_ring_pindex}.hx, r1
+    bcf [c5], esp_ipv4_tunnel_n2h_rxdma_initial_table_drop_pkt
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
     seq c1, d.is_v6, 1
 
@@ -107,6 +110,11 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
     nop
     add r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7...p42p4plus_hdr_seq_no_sbit16_ebit31}, 1
     tblwr d.expected_seq_no, r1 
+    nop.e
+    nop
+
+esp_ipv4_tunnel_n2h_rxdma_initial_table_drop_pkt:
+    phvwri p.p4_intr_global_drop, 1
     nop.e
     nop
  

@@ -24,7 +24,7 @@ packets:
     - packet:
         id          : BASE_PKT_IN1 
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : 1400 
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
@@ -53,7 +53,7 @@ packets:
     - packet:
         id          : BASE_PKT_IN2 
         template    : ref://factory/packets/id=ETH_IPV4_ESP
-        payloadsize : 1480 
+        payloadsize : ref://factory/payloads/id=ESP_PAYLOAD/size
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             eth:
@@ -66,7 +66,7 @@ packets:
                 src     : callback://ipsec/ipsec/GetSIp
                 dst     : callback://ipsec/ipsec/GetDIp 
                 ttl     : 255
-                len     : 1508 
+                len     : 164 
                 id      : 0
                 tos     : 0
             esp:
@@ -84,7 +84,7 @@ trigger:
     packets:
         - packet:
             scale   : True
-            object  : scale-ref://testcase/packets/id=PKT1
+            object  : scale-ref://testcase/packets/id=PKT2
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
@@ -92,6 +92,6 @@ expect:
     packets:
         - packet:
             scale   : True
-            object  : scale-ref://testcase/packets/id=PKT2
+            object  : scale-ref://testcase/packets/id=PKT1
             port    : 2 
 

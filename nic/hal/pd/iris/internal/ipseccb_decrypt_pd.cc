@@ -67,7 +67,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
     common_p4plus_stage0_app_header_table_d     data = {0};
     hal_ret_t                                   ret = HAL_RET_OK;
     uint64_t                                    pc_offset = 0;
-    uint64_t                                    ipsec_cb_ring_base;
+    uint32_t                                    ipsec_cb_ring_base;
     uint64_t                                    ipsec_cb_ring_addr;
     uint64_t                                    ipsec_barco_ring_base;
     uint64_t                                    ipsec_barco_ring_addr;
@@ -109,7 +109,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
         ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_CB_RING_ENTRY_SIZE));
         HAL_TRACE_DEBUG("Ring base in Decrypt 0x{0:x} CB Ring Addr 0x{0:x}", ipsec_cb_ring_base, ipsec_cb_ring_addr);
 
-        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_ring_base_addr = htonll(ipsec_cb_ring_addr);
+        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_ring_base_addr = htonl(ipsec_cb_ring_addr);
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_cindex = 0;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_pindex = 0;
 

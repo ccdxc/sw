@@ -26,11 +26,11 @@ header_type ipsec_cb_metadata_t {
         barco_enc_cmd  : 32;
         ipsec_cb_index : 16;
         block_size     : 8;
-        cb_pindex      : 8;
-        cb_cindex      : 8;
-        barco_pindex   : 8;
-        barco_cindex   : 8;
-        cb_ring_base_addr : 64;
+        cb_pindex      : 16;
+        cb_cindex      : 16;
+        barco_pindex   : 16;
+        barco_cindex   : 16;
+        cb_ring_base_addr : 32;
         barco_ring_base_addr : 64;
         vrf_vlan       : 16;
         is_v6          : 8;
