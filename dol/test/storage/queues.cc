@@ -33,10 +33,10 @@ const static uint32_t	kPvmNumNvmeBeCQs	 = 4;
       static uint32_t	SeqNumSQs;                    // log2(Sum total of all PVM CQs)
       static uint32_t	SeqNumPdmaSQs		 = 3; // pdma test may modify at run time
 const static uint32_t	kSeqNumR2nSQs		 = 3;
-const static uint32_t	kSeqNumXtsSQs		 = 3;
-      static uint32_t	kSeqNumXtsStatusSQs	 = 4;
-const static uint32_t	kSeqNumCompSQs		 = 4;
-      static uint32_t	kSeqNumCompStatusSQs	 = 4;
+      static uint32_t	kSeqNumXtsSQs		 = 3; // acc_scale test may modify at run time
+      static uint32_t	kSeqNumXtsStatusSQs	 = 4; //    "    "
+      static uint32_t	kSeqNumCompSQs		 = 4; // acc_scale test may modify at run time
+      static uint32_t	kSeqNumCompStatusSQs = 4; //    "    "
 const static uint32_t	kSeqNumRoceSQs		 = 3;
 
 // NOTE CAREFULLY: END
@@ -232,33 +232,33 @@ void seq_queue_pdma_num_set(uint64_t& num_pdma_queues) {
     SeqNumPdmaSQs = num_pdma_queues;
 }
 
-bool seq_queue_acc_sub_num_validate(const char *flag_name,
-                                    uint64_t value) {
-   if (value >= 2) {
+bool seq_queue_acc_num_validate(const char *flag_name,
+                                uint64_t value) {
+   if (value) {
        return true;
    }
 
-   printf("Value for --%s (in power of 2) must be a minimum of 2\n", flag_name);
+   printf("Value for --%s must be at least 1\n", flag_name);
    return false;
 }
 
-void seq_queue_acc_sub_num_set(uint64_t& num_acc_queue_submissions) {
+void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
+                               uint64_t& acc_scale_chain_replica) {
+    uint32_t total;
 
     // Make adjustment for the number of seq SQs needed for accelerator
     // scale testing.
-    // Note num_acc_queue_submissions denotes 2 ^ num_acc_queue_submissions
-    if (num_acc_queue_submissions < 1) {
-        num_acc_queue_submissions = 1;
-    }
-
-    kSeqNumAccEntries = std::max(kSeqNumAccEntries, 
-                                 (uint32_t)num_acc_queue_submissions);
-    kSeqNumCompStatusSQs = std::max(kSeqNumCompStatusSQs,
-                                    (uint32_t)num_acc_queue_submissions);
-    kSeqNumXtsStatusSQs = std::max(kSeqNumXtsStatusSQs,
-                                   (uint32_t)num_acc_queue_submissions);
-    kSeqNumEntriesMax = std::max(kSeqNumEntriesMax,
-                                 (uint32_t)num_acc_queue_submissions);
+    // 
+    // Note that both acc_scale_submissions and acc_scale_chain_replica
+    // are in power of 2. Total is bumped up to ensure CI != PI
+    // during submission
+    total = acc_scale_submissions + acc_scale_chain_replica + 1;
+    kSeqNumAccEntries = std::max(kSeqNumAccEntries, total); 
+    kSeqNumCompSQs = std::max(kSeqNumCompSQs, (uint32_t)acc_scale_chain_replica);
+    kSeqNumCompStatusSQs = std::max(kSeqNumCompStatusSQs, total);
+    kSeqNumXtsSQs = std::max(kSeqNumXtsSQs, (uint32_t)acc_scale_chain_replica);
+    kSeqNumXtsStatusSQs = std::max(kSeqNumXtsStatusSQs, total);
+    kSeqNumEntriesMax = std::max(kSeqNumEntriesMax, total);
 }
 
 int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
@@ -1021,7 +1021,7 @@ uint32_t get_seq_r2n_sq(uint32_t offset) {
 }
 
 uint32_t get_seq_xts_sq(uint32_t offset) {
-  assert(offset < NUM_TO_VAL(kSeqNumXtsSQs));
+  assert((int)offset < NUM_TO_VAL(kSeqNumXtsSQs));
   return (pvm_seq_xts_sq_base + offset);
 }
 
@@ -1036,7 +1036,7 @@ uint32_t get_seq_roce_sq(uint32_t offset) {
 }
 
 uint32_t get_seq_comp_sq(uint32_t offset) {
-  assert(offset < NUM_TO_VAL(kSeqNumCompSQs));
+  assert((int)offset < NUM_TO_VAL(kSeqNumCompSQs));
   return (pvm_seq_comp_sq_base + offset);
 }
 

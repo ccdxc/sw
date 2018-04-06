@@ -10,6 +10,7 @@
 DECLARE_uint64(poll_interval);
 DECLARE_uint64(long_poll_interval);
 DECLARE_uint64(num_pdma_queues);
+DECLARE_uint64(acc_scale_chain_replica);
 DECLARE_uint64(acc_scale_submissions);
 DECLARE_uint64(acc_scale_blk_size);
 DECLARE_uint64(acc_scale_iters);

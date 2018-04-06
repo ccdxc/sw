@@ -10,7 +10,7 @@ namespace dp_mem {
  * DataPath memory
  */
 dp_mem_t::dp_mem_t(uint32_t num_lines,
-                   uint32_t line_size,
+                   uint32_t spec_line_size,
                    dp_mem_align_t mem_align,
                    dp_mem_type_t mem_type,
                    uint32_t spec_align_size) :
@@ -18,7 +18,7 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
     cache(nullptr),
     hbm_addr(0),
     num_lines(num_lines),
-    line_size(line_size),
+    line_size(spec_line_size),
     total_size(num_lines * line_size),
     curr_line(0),
     next_line(0),
@@ -34,12 +34,32 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
     if (total_size) {
 
         /*
-         * Validate alignment
+         * ASIC/RTL wants every new line in host memory to be aligned
+         * on at least a 64-byte boundary
          */
         if (mem_align == DP_MEM_ALIGN_PAGE) {
             spec_align_size = utils::kUtilsPageSize;
         }
+        if ((mem_type == DP_MEM_TYPE_HOST_MEM) && 
+            (mem_align != DP_MEM_ALIGN_PAGE)) {
 
+            mem_align = DP_MEM_ALIGN_SPEC;
+            spec_align_size = std::max(kMinHostMemAllocSize,
+                                       spec_align_size);
+            /*
+             * When there's more than one line, dp_mem enforces the same
+             * alignment on every line so the line size must be
+             * rounded up if necessary.
+             */
+            if (num_lines > 1) {
+                line_size = utils::roundup_to_pow_2(spec_line_size);
+                total_size = num_lines * line_size;
+            }
+        }
+
+        /*
+         * Validate alignment
+         */
         if (mem_align != DP_MEM_ALIGN_NONE) {
 
             /*

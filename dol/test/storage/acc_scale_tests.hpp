@@ -27,10 +27,6 @@ public:
     {
     }
 
-    virtual ~acc_scale_tests_t()
-    {
-    }
-
     // Pure virtual functions.
     virtual int push(void) = 0;
     virtual int completion_check(void) = 0;
@@ -105,6 +101,13 @@ public:
     virtual const char *scale_test_name_get(void)
     {
         return scale_test_name;
+    }
+
+    // Return a test instance from comp_encrypt_chain_vec
+    comp_encrypt_chain_t *chain_get(uint32_t inst)
+    {
+        return inst < comp_encrypt_chain_vec.size() ?
+               comp_encrypt_chain_vec[inst] : nullptr;
     }
 
 private:
@@ -185,20 +188,34 @@ public:
         return scale_test_name;
     }
 
+    void comp_encrypt_chain_scale_source_set(comp_encrypt_chain_scale_t *source)
+    {
+        comp_encrypt_chain_scale_source = source;
+    }
+
+    comp_encrypt_chain_scale_t *comp_encrypt_chain_scale_source_get(void)
+    {
+        return comp_encrypt_chain_scale_source;
+    }
+
 private:
     std::vector<decrypt_decomp_chain_t*> decrypt_decomp_chain_vec;
 
-    const char      *scale_test_name;
+    const char          *scale_test_name;
     decrypt_decomp_chain_push_params_t  push_params;
 
-    dp_mem_t        *comp_status_host_buf;
-    dp_mem_t        *comp_opaque_host_buf;
+    // One instance of comp_encrypt_chain_scale test providing
+    // source data for the decrypt operation.
+    comp_encrypt_chain_scale_t          *comp_encrypt_chain_scale_source;
+    
+    dp_mem_t            *comp_status_host_buf;
+    dp_mem_t            *comp_opaque_host_buf;
 
-    dp_mem_t        *exp_opaque_data_buf;
-    uint32_t        exp_opaque_data;
+    dp_mem_t            *exp_opaque_data_buf;
+    uint32_t            exp_opaque_data;
 
-    bool            destructor_free_buffers;
-    bool            success;
+    bool                destructor_free_buffers;
+    bool                success;
 };
 
 

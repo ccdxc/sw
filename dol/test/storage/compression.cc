@@ -140,15 +140,18 @@ int run_dc_test(cp_desc_t& desc,
                 comp_queue_push_t push_type = COMP_QUEUE_PUSH_HW_DIRECT,
                 uint32_t seq_comp_qid = 0);
 
-bool comp_status_poll(dp_mem_t *status) {
-  auto func = [status] () -> int {
+bool comp_status_poll(dp_mem_t *status,
+                      bool suppress_log) {
+  auto func = [status, suppress_log] () -> int {
     cp_status_sha512_t *s = (cp_status_sha512_t *)status->read_thru();
     if (s->valid) {
       if (status->is_mem_type_hbm()) {
         usleep(100);
         s = (cp_status_sha512_t *)status->read_thru();
       }
-      printf("Got status %llx\n", *((unsigned long long *)s));
+      if (!suppress_log) {
+          printf("Got status %llx\n", *((unsigned long long *)s));
+      }
       return 0;
     }
     return 1;
@@ -444,7 +447,7 @@ compression_buf_init()
                              DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     seq_sgl = new dp_mem_t(1, sizeof(cp_sq_ent_sgl_t));
 
-    xts_status_host_buf = new dp_mem_t(1, sizeof(uint32_t),
+    xts_status_host_buf = new dp_mem_t(1, sizeof(uint64_t),
                                        DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     comp_pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
 

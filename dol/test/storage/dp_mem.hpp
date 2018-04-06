@@ -42,7 +42,7 @@ class dp_mem_t
 public:
 
     dp_mem_t(uint32_t num_lines,
-             uint32_t line_size,
+             uint32_t spec_line_size,
              dp_mem_align_t mem_align = DP_MEM_ALIGN_NONE,
              dp_mem_type_t mem_type = DP_MEM_TYPE_HBM,
              uint32_t spec_align_size = 0);

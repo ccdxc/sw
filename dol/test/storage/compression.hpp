@@ -171,7 +171,8 @@ extern comp_queue_t *dc_hotq;
 extern comp_encrypt_chain_t   *comp_encrypt_chain;
 extern decrypt_decomp_chain_t *decrypt_decomp_chain;
 
-bool comp_status_poll(dp_mem_t *status);
+bool comp_status_poll(dp_mem_t *status,
+                      bool suppress_log = false);
 void compress_cp_desc_template_fill(cp_desc_t &d,
                                     dp_mem_t *src_buf,
                                     dp_mem_t *dst_buf,

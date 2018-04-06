@@ -50,10 +50,10 @@ decrypt_decomp_chain_t::decrypt_decomp_chain_t(decrypt_decomp_chain_params_t par
     // for XTS status, caller can elect to have 2 status buffers, e.g.
     // one in HBM for lower latency P4+ processing, and another in host
     // memory which P4+ will copy into for the application.
-    xts_status_buf1 = new dp_mem_t(1, sizeof(uint32_t),
+    xts_status_buf1 = new dp_mem_t(1, sizeof(uint64_t),
                           DP_MEM_ALIGN_NONE, params.xts_status_mem_type1_);
     if (params.xts_status_mem_type2_ != DP_MEM_TYPE_VOID) {
-        xts_status_buf2 = new dp_mem_t(1, sizeof(uint32_t),
+        xts_status_buf2 = new dp_mem_t(1, sizeof(uint64_t),
                               DP_MEM_ALIGN_NONE, params.xts_status_mem_type2_);
     } else {
         xts_status_buf2 = xts_status_buf1;
@@ -167,7 +167,7 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     chain_params.chain_ent.push_entry.barco_pndx_size = 
                            (uint8_t)log2(sizeof(uint32_t));
     if (xts_status_buf1 != xts_status_buf2) {
-        xts_status_buf2->clear_thru();
+        xts_status_buf2->fragment_find(0, sizeof(uint32_t))->fill_thru(0xff);
         chain_params.chain_ent.status_hbm_pa = xts_status_buf1->pa();
         chain_params.chain_ent.status_host_pa = xts_status_buf2->pa();
         chain_params.chain_ent.status_len = xts_status_buf2->line_size_get();
@@ -240,7 +240,7 @@ decrypt_decomp_chain_t::decrypt_setup(acc_chain_params_t& chain_params)
     xts_out_aol->write_thru();
 
     // Set up XTS decrypt descriptor
-    xts_status_buf1->clear_thru();
+    xts_status_buf1->fragment_find(0, sizeof(uint32_t))->fill_thru(0xff);
     xts_ctx.cmd_eval_seq_xts(cmd);
     xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
     xts_desc_addr->in_aol = xts_in_aol->pa();
@@ -268,7 +268,7 @@ decrypt_decomp_chain_t::verify(void)
 
     // Poll for XTS status
     auto xts_status_poll_func = [this] () -> int {
-      uint32_t curr_xts_status = *((uint32_t *)xts_status_buf2->read_thru());
+      uint64_t curr_xts_status = *((uint64_t *)xts_status_buf2->read_thru());
       if (!curr_xts_status)
         return 0;
       return 1;
@@ -276,20 +276,20 @@ decrypt_decomp_chain_t::verify(void)
 
     tests::Poller xts_poll;
     if (xts_poll(xts_status_poll_func) != 0) {
-      uint32_t curr_xts_status = *((uint32_t *)xts_status_buf2->read());
-      printf("ERROR: XTS decrypt error 0x%x\n", curr_xts_status);
+      uint64_t curr_xts_status = *((uint64_t *)xts_status_buf2->read());
+      printf("ERROR: decrypt_decomp_chain XTS decrypt error 0x%lx\n", curr_xts_status);
       return -1;
     }
 
     // Poll for decomp status
-    if (!comp_status_poll(caller_comp_status_buf)) {
-      printf("ERROR: decompression status never came\n");
+    if (!comp_status_poll(caller_comp_status_buf, suppress_info_log)) {
+      printf("ERROR: decrypt_decomp_chain decompression status never came\n");
       return -1;
     }
 
     // Validate decomp status
     if (decompress_status_verify(caller_comp_status_buf, cp_desc, app_blk_size)) {
-      printf("ERROR: decompression failed\n");
+      printf("ERROR: decrypt_decomp_chain decompression failed\n");
       return -1;
     }
     last_dc_output_data_len = comp_status_output_data_len_get(caller_comp_status_buf);
@@ -298,7 +298,7 @@ decrypt_decomp_chain_t::verify(void)
     if (test_data_verify_and_dump(comp_encrypt_chain->uncomp_data_get(),
                                   uncomp_buf->read_thru(),
                                   app_blk_size)) {
-        printf("ERROR: data verification failed\n");
+        printf("ERROR: decrypt_decomp_chain data verification failed\n");
         return -1;
     }
 

@@ -273,7 +273,7 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
     xts_out_aol->write_thru();
 
     // Set up XTS encrypt descriptor
-    caller_xts_status_buf->fill_thru(0xff);
+    caller_xts_status_buf->fragment_find(0, sizeof(uint32_t))->fill_thru(0xff);
     xts_ctx.cmd_eval_seq_xts(cmd);
     xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
     xts_desc_addr->in_aol = xts_in_aol->pa();
@@ -291,21 +291,21 @@ int
 comp_encrypt_chain_t::verify(void)
 {
     if (compress_status_verify(comp_status_buf2, comp_buf, cp_desc)) {
-        printf("ERROR: compression status verification failed\n");
+        printf("ERROR: comp_encrypt_chain compression status verification failed\n");
         return -1;
     }
     last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
 
     // Verify XTS engine doorbell
     if (xts_ctx.verify_doorbell(false)) {
-        printf("ERROR: doorbell from XTS engine never came.\n");
+        printf("ERROR: comp_encrypt_chain doorbell from XTS engine never came\n");
         return -1;
     }
 
     // Validate XTS status
-    uint32_t curr_xts_status = *((uint32_t *)caller_xts_status_buf->read_thru());
+    uint64_t curr_xts_status = *((uint64_t *)caller_xts_status_buf->read_thru());
     if (curr_xts_status) {
-      printf("ERROR: XTS error 0x%x\n", curr_xts_status);
+      printf("ERROR: comp_encrypt_chain XTS error 0x%lx\n", curr_xts_status);
       return -1;
     }
 

@@ -104,5 +104,17 @@ hbm_addr_alloc_page_aligned(uint32_t size, uint64_t *alloc_ptr)
 {
   return hbm_addr_alloc_spec_aligned(size, alloc_ptr, kUtilsPageSize);
 }
+
+// Taken from hal/src/internal/rdma.cc
+uint32_t
+roundup_to_pow_2(uint32_t val)
+{
+    uint32_t roundup = 1;
+
+    while (roundup < val) {
+        roundup <<= 1;
+    }
+    return roundup;
+}
 }  // namespace utils
 

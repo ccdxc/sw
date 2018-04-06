@@ -104,7 +104,8 @@ int test_setup() {
   }
 
   if (run_acc_scale_tests) {
-      queues::seq_queue_acc_sub_num_set(FLAGS_acc_scale_submissions);
+      queues::seq_queue_acc_sub_num_set(FLAGS_acc_scale_submissions,
+                                        FLAGS_acc_scale_chain_replica);
   }
 
   // Initialize resources
