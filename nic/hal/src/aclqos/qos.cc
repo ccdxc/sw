@@ -490,7 +490,7 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
     }
 
     if (spec.sched().has_dwrr() &&
-        (spec.sched().dwrr().bw_percentage() >= 100)) {
+        (spec.sched().dwrr().bw_percentage() > 100)) {
         HAL_TRACE_ERR("bw_percentage {} cannot be more than 100!",
                       spec.sched().dwrr().bw_percentage());
         return HAL_RET_INVALID_ARG;

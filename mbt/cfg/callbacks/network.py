@@ -1,4 +1,10 @@
+import cfg.callbacks.vrf as vrf
+import cfg.callbacks.l2segment as l2segment
+
 def PreCreateCb(data, req_spec, resp_spec):
+    if req_spec.request[0].vrf_key_handle.vrf_id == vrf.infra_vrf_id:
+        if l2segment.current_infra_types == l2segment.max_infra_types:
+            req_spec.request[0].vrf_key_handle.vrf_id = vrf.customer_vrf_id
     req_spec.request[0].gateway_ep_handle = 0
 
 def PostCreateCb(data, req_spec, resp_spec):

@@ -47,6 +47,8 @@ targets:
   e2el7:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --e2e-l7-dol ; ret=$? ; make sanity_logs ; exit $ret" ]
   mbt: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --mbt ; ret=$? ; make sanity_logs ; exit $ret" ]
   mbt_dol: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --topo=up2up --feature=networking --mbt; ret=$? ; make sanity_logs ; exit $ret" ]
+  mbt_firewall:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo firewall --feature firewall --mbt && make sanity_logs" ]
+  mbt_alg: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --topo alg --feature alg --mbt && make sanity_logs" ]
   # configtoggle: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo up2up --feature networking --configtoggle ; ret=$? ; make sanity_logs ; exit $ret" ]
   gft/gtest:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py --gft_gtest && make run-gft-gtests ; ret=$? ; make sanity_logs ; exit $ret" ]
   gft:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py  --topo gft --feature gft --gft ; ret=$? ; make sanity_logs ; exit $ret" ]

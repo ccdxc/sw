@@ -1,6 +1,10 @@
 import types_pb2
 import config_mgr
 import random
+import os
+import sys
+
+import cfg.callbacks.vrf as vrf
 
 max_infra_types = 1
 current_infra_types = 0
@@ -9,6 +13,14 @@ tunnel_encap_type = [types_pb2.ENCAP_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN]
 
 def PreCreateCb(data, req_spec, resp_spec):
     global current_infra_types
+    global max_infra_types
+
+    if req_spec.request[0].vrf_key_handle.vrf_id == vrf.infra_vrf_id:
+        if current_infra_types == max_infra_types:
+            req_spec.request[0].vrf_key_handle.vrf_id = vrf.customer_vrf_id
+        else:
+            current_infra_types += 1
+
     req_spec.request[0].wire_encap.encap_type = random.choice(wire_encap_type)
     req_spec.request[0].tunnel_encap.encap_type = random.choice(tunnel_encap_type)
 
