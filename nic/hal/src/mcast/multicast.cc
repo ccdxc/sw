@@ -146,7 +146,7 @@ mc_entry_add_to_db (mc_entry_t *mc_entry, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:adding to mc_key hash table", __FUNCTION__);
+    HAL_TRACE_DEBUG("Adding to mc_key hash table");
     // allocate an entry to establish mapping from seg id to its handle
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->
              hal_handle_id_ht_entry_slab()->alloc();
@@ -160,8 +160,7 @@ mc_entry_add_to_db (mc_entry_t *mc_entry, hal_handle_t handle)
                                                         &entry->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to add mc key to handle mapping, "
-                      "err : {}", __FUNCTION__, ret);
+        HAL_TRACE_ERR("Failed to add mc key to handle mapping, err : {}", ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
 
@@ -174,17 +173,14 @@ mc_entry_add_to_db (mc_entry_t *mc_entry, hal_handle_t handle)
 static inline hal_ret_t
 mc_entry_del_from_db (mc_entry_t *mc_entry)
 {
-    hal_handle_id_ht_entry_t    *entry;
+    hal_handle_id_ht_entry_t *entry;
 
-    HAL_TRACE_DEBUG("{}:removing from mc key hash table", __FUNCTION__);
-    // remove from hash table
+    HAL_TRACE_DEBUG("Removing from mc key hash table");
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->mc_key_ht()->
             remove(&mc_entry->key);
 
     // free up
-    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
-
-    return HAL_RET_OK;
+    return hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
 }
 
 //------------------------------------------------------------------------------
@@ -205,152 +201,17 @@ mc_entry_prepare_rsp (MulticastEntryResponse *rsp, hal_ret_t ret, mc_entry_t *mc
 }
 
 //------------------------------------------------------------------------------
-// Reads OIFs from spec
+// Creates and programs OIF list for a multicast entry
 //------------------------------------------------------------------------------
 hal_ret_t
-mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
+mc_entry_create_and_program_oifs (mc_entry_t *mc_entry)
 {
-    hal_ret_t               ret = HAL_RET_OK;
-    uint32_t                num_oifs = 0;
-    if_t                    *pi_if = NULL;
-    InterfaceKeyHandle      if_key_handle;
-
-    num_oifs = (uint32_t) spec.oif_key_handles_size();
-
-    HAL_TRACE_DEBUG("{}:adding {} no. of oifs", __FUNCTION__, num_oifs);
-    HAL_TRACE_DEBUG("{}:received {} oifs", __FUNCTION__, num_oifs);
-
-    sdk::lib::dllist_reset(&mc_entry->if_list_head);
-    for (uint32_t i = 0; i < num_oifs; i++) {
-        if_key_handle = spec.oif_key_handles(i);
-        pi_if = if_lookup_key_or_handle(if_key_handle);
-        if (pi_if == NULL) {
-            HAL_TRACE_ERR("{}: pi_if in OIF[{}] not found", __FUNCTION__, i);
-            ret = HAL_RET_IF_NOT_FOUND;
-            goto end;
-        }
-
-        if (!is_forwarding_mode_smart_nic()) {
-            if (pi_if->if_type != intf::IF_TYPE_ENIC) {
-                HAL_TRACE_ERR("{}: Only Enics allowed for OIFs when not "
-                              "in smart nic mode", __FUNCTION__);
-                ret = HAL_RET_INVALID_ARG;
-                goto end;
-            }
-        } else {
-            if (pi_if->if_type != intf::IF_TYPE_ENIC &&
-                pi_if->if_type != intf::IF_TYPE_UPLINK &&
-                pi_if->if_type != intf::IF_TYPE_UPLINK_PC) {
-                HAL_TRACE_ERR("{}: Only Enics/Uplink/UplinkPC allowed for OIFs",
-                               __FUNCTION__);
-                ret = HAL_RET_INVALID_ARG;
-                goto end;
-            }
-        }
-
-        HAL_TRACE_DEBUG("{}:adding if_id:{} type:{} handle:{} to oif.",
-                        __FUNCTION__, pi_if->hal_handle);
-
-        // add if to list
-        hal_add_to_handle_list(&mc_entry->if_list_head, pi_if->hal_handle);
-    }
-
-    HAL_TRACE_DEBUG("{}:oifs added:", __FUNCTION__);
-    hal_print_handles_list(&mc_entry->if_list_head);
-
-end:
-    return ret;
-}
-
-//------------------------------------------------------------------------------
-// validate an incoming Multicast Entry create request
-// 1. check if Multicast Entry exists already
-//------------------------------------------------------------------------------
-static hal_ret_t
-validate_mc_entry_create(MulticastEntrySpec& spec,
-                         MulticastEntryResponse *rsp)
-{
-    // must have meta set
-    if (!spec.has_meta()) {
-        HAL_TRACE_ERR("{}:meta not set in request",
-                      __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    // must have key-handle set
-    if (!spec.has_key_or_handle() || !spec.key_or_handle().has_key()) {
-        HAL_TRACE_ERR("{}:mc_entry key not set in create request",
-                      __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    // must provide valid IP if providing IP based key
-    if (spec.key_or_handle().key().has_ip()) {
-        ip_addr_t ip_addr = {0};
-        ip_addr_spec_to_ip_addr(&ip_addr, spec.key_or_handle().key().ip().group());
-        if (!ip_addr_is_multicast(&ip_addr)){
-            HAL_TRACE_ERR("{}:mc_entry ip not valid in request",
-                          __FUNCTION__);
-            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-            return HAL_RET_INVALID_ARG;
-        }
-    }
-
-    // must provide valid mac if providing mac based key
-    if (spec.key_or_handle().key().has_mac()) {
-        mac_addr_t mac_addr = {0};
-        MAC_UINT64_TO_ADDR(mac_addr, spec.key_or_handle().key().mac().group());
-        if (!IS_MCAST_MAC_ADDR(mac_addr)){
-            HAL_TRACE_ERR("{}:mc_entry mac not valid in request",
-                          __FUNCTION__);
-            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-            return HAL_RET_INVALID_ARG;
-        }
-    }
-
-    // must provide valid l2segment
-    if (!spec.key_or_handle().key().has_l2segment_key_handle()) {
-        HAL_TRACE_ERR("{}:mc_entry l2segment not valid in request",
-                      __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// PD Call to allocate PD resources and HW programming
-//------------------------------------------------------------------------------
-hal_ret_t
-mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
-{
-    hal_ret_t                     ret = HAL_RET_OK;
-    dhl_entry_t                   *dhl_entry = NULL;
-    mc_entry_t                    *mc_entry = NULL;
+    hal_ret_t                     ret;
     hal_handle_id_list_entry_t    *entry = NULL;
     dllist_ctxt_t                 *lnode = NULL;
     l2seg_t                       *l2seg = NULL;
     if_t                          *pi_if = NULL;
     oif_t                         oif = { };
-    pd::pd_mc_entry_create_args_t pd_mc_entry_args = { };
-
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
-    lnode = cfg_ctxt->dhl.next;
-    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    mc_entry = (mc_entry_t *)dhl_entry->obj;
-
-    HAL_ASSERT(mc_entry);
-
-    HAL_TRACE_DEBUG("{}:create add cb {}",__FUNCTION__,
-                    mc_entry->hal_handle);
 
     l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
     HAL_ASSERT(l2seg != NULL);
@@ -378,9 +239,8 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         auto p_hdl_id = (hal_handle_t *)ptr;
         pi_if = find_if_by_handle(*p_hdl_id);
         if (!pi_if) {
-            HAL_TRACE_ERR("mc_entry_create_add_cb:{}:"
-                          "unable to find if with handle:{}",
-                          __FUNCTION__, entry->handle_id);
+            HAL_TRACE_ERR("Unable to find if with handle:{}",
+                          entry->handle_id);
             continue;
         }
 
@@ -399,13 +259,257 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Deprogram and delete OIF list for a multicast entry
+//------------------------------------------------------------------------------
+hal_ret_t
+mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
+{
+    hal_ret_t                     ret;
+    hal_handle_id_list_entry_t    *entry = NULL;
+    dllist_ctxt_t                 *lnode = NULL;
+    l2seg_t                       *l2seg = NULL;
+    if_t                          *pi_if = NULL;
+    oif_t                         oif = { };
+
+    l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
+    if (!l2seg) {
+        HAL_TRACE_ERR("L2segment not found");
+        ret = HAL_RET_L2SEG_NOT_FOUND;
+        goto end;
+    }
+
+    // Now Delete the OIFs
+    dllist_for_each(lnode, &mc_entry->if_list_head) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        pi_if = find_if_by_handle(entry->handle_id);
+        HAL_ASSERT(pi_if != NULL);
+        oif.intf = pi_if;
+        oif.l2seg = l2seg;
+        ret = oif_list_remove_oif(mc_entry->oif_list, &oif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Del OIF failed! if-hndl:{}, l2seg-hndl:{}, ret:{}",
+                          pi_if->hal_handle, l2seg->hal_handle, ret);
+        }
+    }
+
+    // Check all the other Classic Enics on this l2seg and add
+    // them if they have a packet filter of type all-multicast
+    for (const void *ptr : *l2seg->if_list) {
+        auto p_hdl_id = (hal_handle_t *)ptr;
+        pi_if = find_if_by_handle(*p_hdl_id);
+        HAL_ASSERT(pi_if != NULL);
+
+        if (pi_if->if_type == intf::IF_TYPE_ENIC &&
+            pi_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+
+            lif_t *lif = find_lif_by_handle(pi_if->lif_handle);
+            HAL_ASSERT(lif != NULL);
+
+            if (lif->packet_filters.receive_all_multicast) {
+                oif.intf = pi_if;
+                oif.l2seg = l2seg;
+                ret = oif_list_remove_oif(mc_entry->oif_list, &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Del OIF failed! if-hndl:{}, l2seg-hndl:{},"
+                                  " ret:{}",
+                                  pi_if->hal_handle, l2seg->hal_handle, ret);
+                }
+            }
+        }
+    }
+
+    if (!is_forwarding_mode_smart_nic()) {
+        ret = oif_list_clr_honor_ingress(mc_entry->oif_list);
+        HAL_ASSERT(ret == HAL_RET_OK);
+    }
+
+    // Delete the OIF List
+    ret = oif_list_delete(mc_entry->oif_list);
+    HAL_ASSERT(ret == HAL_RET_OK);
+    mc_entry->oif_list = OIF_LIST_ID_INVALID;
+
+end:
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Cleanup and delete a multicast entry
+//------------------------------------------------------------------------------
+hal_ret_t
+mc_entry_cleanup_and_delete(mc_entry_t *mc_entry)
+{
+    hal_ret_t                   ret;
+    dllist_ctxt_t               *lnode = NULL;
+    hal_handle_id_list_entry_t  *entry = NULL;
+    if_t                        *pi_if = NULL;
+
+    // Remove back references from each interface
+    dllist_for_each(lnode, &mc_entry->if_list_head) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        pi_if = find_if_by_handle(entry->handle_id);
+        HAL_ASSERT(pi_if != NULL);
+        hal_remove_from_handle_list(&pi_if->mc_entry_list_head, mc_entry->hal_handle);
+    }
+
+    // Free the outgoing interface handles linked list
+    hal_free_handles_list(&mc_entry->if_list_head);
+
+    // Free the multicast entry
+    ret = mc_entry_free(mc_entry);
+    HAL_ASSERT(ret == HAL_RET_OK);
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Reads OIFs from spec
+//------------------------------------------------------------------------------
+hal_ret_t
+mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    uint32_t                num_oifs = 0;
+    if_t                    *pi_if = NULL;
+    InterfaceKeyHandle      if_key_handle;
+
+    num_oifs = (uint32_t) spec.oif_key_handles_size();
+
+    HAL_TRACE_DEBUG("Received {} no. of oifs", num_oifs);
+
+    sdk::lib::dllist_reset(&mc_entry->if_list_head);
+    for (uint32_t i = 0; i < num_oifs; i++) {
+        if_key_handle = spec.oif_key_handles(i);
+        pi_if = if_lookup_key_or_handle(if_key_handle);
+        if (pi_if == NULL) {
+            HAL_TRACE_ERR("pi_if in OIF[{}] not found", i);
+            ret = HAL_RET_IF_NOT_FOUND;
+            goto end;
+        }
+
+        if (!is_forwarding_mode_smart_nic()) {
+            if (pi_if->if_type != intf::IF_TYPE_ENIC) {
+                HAL_TRACE_ERR("Only Enics allowed for OIFs when not "
+                              "in smart nic mode");
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
+        } else {
+            if (pi_if->if_type != intf::IF_TYPE_ENIC &&
+                pi_if->if_type != intf::IF_TYPE_UPLINK &&
+                pi_if->if_type != intf::IF_TYPE_UPLINK_PC) {
+                HAL_TRACE_ERR("Only Enics/Uplink/UplinkPC allowed for OIFs");
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
+        }
+
+        HAL_TRACE_DEBUG("Adding if_id:{} type:{} handle:{} to oif.",
+                        pi_if->if_id, pi_if->if_type, pi_if->hal_handle);
+
+        // add if to list
+        hal_add_to_handle_list(&mc_entry->if_list_head, pi_if->hal_handle);
+    }
+
+    HAL_TRACE_DEBUG("OIFs added:");
+    hal_print_handles_list(&mc_entry->if_list_head);
+
+end:
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// validate an incoming Multicast Entry create request
+// 1. check if Multicast Entry exists already
+//------------------------------------------------------------------------------
+static hal_ret_t
+validate_mc_entry_create(MulticastEntrySpec& spec,
+                         MulticastEntryResponse *rsp)
+{
+    // must have meta set
+    if (!spec.has_meta()) {
+        HAL_TRACE_ERR("Meta not set in request");
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // must have key-handle set
+    if (!spec.has_key_or_handle() || !spec.key_or_handle().has_key()) {
+        HAL_TRACE_ERR("mc_entry key not set in create request");
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // must provide valid IP if providing IP based key
+    if (spec.key_or_handle().key().has_ip()) {
+        ip_addr_t ip_addr = {0};
+        ip_addr_spec_to_ip_addr(&ip_addr, spec.key_or_handle().key().ip().group());
+        if (!ip_addr_is_multicast(&ip_addr)){
+            HAL_TRACE_ERR("mc_entry ip not valid in request");
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            return HAL_RET_INVALID_ARG;
+        }
+    }
+
+    // must provide valid mac if providing mac based key
+    if (spec.key_or_handle().key().has_mac()) {
+        mac_addr_t mac_addr = {0};
+        MAC_UINT64_TO_ADDR(mac_addr, spec.key_or_handle().key().mac().group());
+        if (!IS_MCAST_MAC_ADDR(mac_addr)){
+            HAL_TRACE_ERR("mc_entry mac not valid in request");
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            return HAL_RET_INVALID_ARG;
+        }
+    }
+
+    // must provide valid l2segment
+    if (!spec.key_or_handle().key().has_l2segment_key_handle()) {
+        HAL_TRACE_ERR("mc_entry l2segment not valid in request");
+        rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// PD Call to allocate PD resources and HW programming
+//------------------------------------------------------------------------------
+hal_ret_t
+mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t                     ret;
+    dhl_entry_t                   *dhl_entry = NULL;
+    mc_entry_t                    *mc_entry = NULL;
+    dllist_ctxt_t                 *lnode = NULL;
+    pd::pd_mc_entry_create_args_t pd_mc_entry_args = { };
+
+    HAL_ASSERT(cfg_ctxt);
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    mc_entry = (mc_entry_t *)dhl_entry->obj;
+
+    HAL_ASSERT(mc_entry);
+
+    HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
+                    mc_key_to_string(&mc_entry->key));
+
+    // Create and Program OIFS
+    ret = mc_entry_create_and_program_oifs(mc_entry);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create OIFs, err : {}", ret);
+        goto end;
+    }
+
     // PD Call to allocate PD resources and HW programming
     pd::pd_mc_entry_create_args_init(&pd_mc_entry_args);
     pd_mc_entry_args.mc_entry = mc_entry;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_CREATE, (void *)&pd_mc_entry_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to create mc_entry pd, err : {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("Failed to create mc_entry pd, err : {}", ret);
     }
 
 end:
@@ -418,17 +522,15 @@ end:
 hal_ret_t
 mc_entry_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
+    hal_ret_t                   ret;
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     mc_entry_t                  *mc_entry = NULL;
     hal_handle_t                hal_handle = 0;
+    hal_handle_id_list_entry_t  *entry = NULL;
+    if_t                        *pi_if = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt);
 
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
@@ -436,15 +538,23 @@ mc_entry_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     mc_entry = (mc_entry_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}: create commit cb {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
                     mc_key_to_string(&mc_entry->key));
 
     // 1. a. Add to mc key hash table
     ret = mc_entry_add_to_db(mc_entry, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to add mc entry {} to db, err : {}",
-                      __FUNCTION__, mc_key_to_string(&mc_entry->key), ret);
+        HAL_TRACE_ERR("Failed to add mc entry {} to db, err : {}",
+                      mc_key_to_string(&mc_entry->key), ret);
         goto end;
+    }
+
+    // 2. Build back references from each interface
+    dllist_for_each(lnode, &mc_entry->if_list_head) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        pi_if = find_if_by_handle(entry->handle_id);
+        HAL_ASSERT(pi_if != NULL);
+        hal_add_to_handle_list(&pi_if->mc_entry_list_head, mc_entry->hal_handle);
     }
 
 end:
@@ -462,26 +572,20 @@ end:
 hal_ret_t
 mc_entry_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                     ret = HAL_RET_OK;
-    hal_handle_t                  hal_handle = 0;
+    hal_ret_t                     ret;
     dllist_ctxt_t                 *lnode = NULL;
     mc_entry_t                    *mc_entry = NULL;
     dhl_entry_t                   *dhl_entry = NULL;
     pd::pd_mc_entry_delete_args_t pd_mc_entry_args = { };
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     mc_entry = (mc_entry_t *)dhl_entry->obj;
-    hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:create abort cb {}",
-                    __FUNCTION__, mc_key_to_string(&mc_entry->key));
+    HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
+                    mc_key_to_string(&mc_entry->key));
 
     // delete call to PD
     if (mc_entry->pd) {
@@ -489,20 +593,16 @@ mc_entry_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_mc_entry_args.mc_entry = mc_entry;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_DELETE, (void *)&pd_mc_entry_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to delete mc_entry pd, err : {}",
-                          __FUNCTION__, ret);
+            HAL_TRACE_ERR("Failed to delete mc_entry pd, err : {}", ret);
         }
     }
 
-    // clean up oifs as these are inserted before callbacks
-    HAL_TRACE_DEBUG("{}:freeing up if list entries", __FUNCTION__);
-    hal_free_handles_list(&mc_entry->if_list_head);
-
-    // remove object from hal_handle id based hash table in infra
-    hal_handle_free(hal_handle);
-
-    // Free mc entry
-    mc_entry_free(mc_entry);
+    // Call deprogram OIF here
+    ret = mc_entry_deprogram_and_delete_oifs(mc_entry);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete OIFs, err : {}", ret);
+        goto end;
+    }
 
 end:
     return ret;
@@ -535,16 +635,14 @@ hal_ret_t multicastentry_create(MulticastEntrySpec& spec,
     // validate the request message
     ret = validate_mc_entry_create(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:validation Failed. ret: {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("Message validation Failed. ret: {}", ret);
         goto end;
     }
 
     // instantiate the mc_entry
     mc_entry = mc_entry_alloc_init();
     if (mc_entry == NULL) {
-        HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("Unable to allocate handle/memory ret: {}", ret);
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         ret = HAL_RET_OOM;
         goto end;
@@ -564,8 +662,7 @@ hal_ret_t multicastentry_create(MulticastEntrySpec& spec,
     // make sure the l2segment is configured
     l2seg = l2seg_lookup_key_or_handle(kh);
     if (l2seg == NULL) {
-        HAL_TRACE_ERR("{}:failed to create a mc_entry, "
-                      "l2seg {} {} doesnt exist", __FUNCTION__,
+        HAL_TRACE_ERR("Failed to create a mc_entry, l2seg {} {} doesnt exist",
                       kh.segment_id(), kh.l2segment_handle());
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         ret = HAL_RET_L2SEG_NOT_FOUND;
@@ -573,13 +670,9 @@ hal_ret_t multicastentry_create(MulticastEntrySpec& spec,
     }
     mc_entry->key.l2seg_handle = l2seg->hal_handle;
 
-    HAL_TRACE_DEBUG("{}:mc_entry create :{}", __FUNCTION__,
-                    mc_key_to_string(&mc_entry->key));
-
     // check if the mc_entry exists already, and reject if one is found
     if (find_mc_entry_by_key(&mc_entry->key) != NULL) {
-        HAL_TRACE_ERR("{}:failed to create a mc_entry, "
-                      "mc_entry {} exists already", __FUNCTION__,
+        HAL_TRACE_ERR("Failed to create a mc_entry, mc_entry {} exists already",
                       mc_key_to_string(&mc_entry->key));
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         ret = HAL_RET_ENTRY_EXISTS;
@@ -591,17 +684,20 @@ hal_ret_t multicastentry_create(MulticastEntrySpec& spec,
     // allocate hal handle id
     mc_entry->hal_handle = hal_handle_alloc(HAL_OBJ_ID_MC_ENTRY);
     if (mc_entry->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}: failed to alloc handle {}",
-                      __FUNCTION__, mc_key_to_string(&mc_entry->key));
+        HAL_TRACE_ERR("Failed to alloc hal handle for mc_entry {}",
+                      mc_key_to_string(&mc_entry->key));
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
 
+    HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
+                    mc_key_to_string(&mc_entry->key));
+
     // read OIFs from spec
     ret = mc_entry_read_oifs(mc_entry, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Reading OIFs failed!", __FUNCTION__);
+        HAL_TRACE_ERR("Reading OIFs failed!");
         goto end;
     }
 
@@ -645,14 +741,14 @@ validate_mc_entry_delete(MulticastEntryDeleteRequest& req,
 {
     // must have meta set
     if (!req.has_meta()) {
-        HAL_TRACE_ERR("{}: meta not set", __FUNCTION__);
+        HAL_TRACE_ERR("Meta not set");
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
 
     // must have key-handle set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}: key_or_handle not set", __FUNCTION__);
+        HAL_TRACE_ERR("Key_or_handle not set");
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
@@ -665,7 +761,7 @@ validate_mc_entry_delete(MulticastEntryDeleteRequest& req,
             ip_addr_spec_to_ip_addr(&ip_addr, req.key_or_handle().key().ip().\
                                     group());
             if (!ip_addr_is_multicast(&ip_addr)){
-                HAL_TRACE_ERR("{}: ip not valid in request", __FUNCTION__);
+                HAL_TRACE_ERR("ip not valid in request");
                 rsp->set_api_status(types::API_STATUS_INVALID_ARG);
                 return HAL_RET_INVALID_ARG;
             }
@@ -674,19 +770,19 @@ validate_mc_entry_delete(MulticastEntryDeleteRequest& req,
             mac_addr_t mac_addr = {0};
             MAC_UINT64_TO_ADDR(mac_addr, req.key_or_handle().key().mac().group());
             if (!IS_MCAST_MAC_ADDR(mac_addr)){
-                HAL_TRACE_ERR("{}: MAC not valid in request", __FUNCTION__);
+                HAL_TRACE_ERR("MAC not valid in request");
                 rsp->set_api_status(types::API_STATUS_INVALID_ARG);
                 return HAL_RET_INVALID_ARG;
             }
         }
         // must provide valid l2segment
         if (!req.key_or_handle().key().has_l2segment_key_handle()) {
-            HAL_TRACE_ERR("{}: l2segment not valid in request", __FUNCTION__);
+            HAL_TRACE_ERR("l2segment not valid in request");
             rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
             return HAL_RET_INVALID_ARG;
         }
     } else if (req.key_or_handle().multicast_handle() == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}: Handle not valid in request", __FUNCTION__);
+        HAL_TRACE_ERR("Handle not valid in request");
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         return HAL_RET_HANDLE_INVALID;
     }
@@ -700,94 +796,30 @@ validate_mc_entry_delete(MulticastEntryDeleteRequest& req,
 hal_ret_t
 mc_entry_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                     ret = HAL_RET_OK;
+    hal_ret_t                     ret;
     dhl_entry_t                   *dhl_entry = NULL;
     mc_entry_t                    *mc_entry = NULL;
-    hal_handle_id_list_entry_t    *entry = NULL;
     dllist_ctxt_t                 *lnode = NULL;
-    l2seg_t                       *l2seg = NULL;
-    if_t                          *pi_if = NULL;
-    oif_t                         oif = { };
     pd::pd_mc_entry_delete_args_s pd_mc_entry_args = { };
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     mc_entry = (mc_entry_t *)dhl_entry->obj;
 
     HAL_ASSERT(mc_entry);
-
-    HAL_TRACE_DEBUG("{}:delete del cb. Handle {}",__FUNCTION__,
-                    mc_entry->hal_handle);
-
-    l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
-    if (!l2seg) {
-        HAL_TRACE_ERR("{}:L2segment not found", __FUNCTION__);
-        goto end;
-    }
+    HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
+                    mc_key_to_string(&mc_entry->key));
 
     // PD Call to allocate PD resources and HW programming
     pd::pd_mc_entry_delete_args_init(&pd_mc_entry_args);
     pd_mc_entry_args.mc_entry = mc_entry;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_DELETE, (void *)&pd_mc_entry_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to delete mc_entry pd, err : {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("Failed to delete mc_entry pd, err : {}", ret);
         goto end;
     }
-
-    // Now Delete the OIFs
-    dllist_for_each(lnode, &mc_entry->if_list_head) {
-        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL);
-        oif.intf = pi_if;
-        oif.l2seg = l2seg;
-        ret = oif_list_remove_oif(mc_entry->oif_list, &oif);
-        HAL_ASSERT(ret == HAL_RET_OK);
-    }
-
-    // Check all the other Classic Enics on this l2seg and add
-    // them if they have a packet filter of type all-multicast
-    for (const void *ptr : *l2seg->if_list) {
-        auto p_hdl_id = (hal_handle_t *)ptr;
-        pi_if = find_if_by_handle(*p_hdl_id);
-        if (!pi_if) {
-            HAL_TRACE_ERR("mc_entry_delete_del_cb:{}:"
-                                  "unable to find if with handle:{}",
-                          __FUNCTION__, entry->handle_id);
-            continue;
-        }
-
-        if (pi_if->if_type == intf::IF_TYPE_ENIC &&
-            pi_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
-
-            lif_t *lif = find_lif_by_handle(pi_if->lif_handle);
-            HAL_ASSERT(lif != NULL);
-
-            if (lif->packet_filters.receive_all_multicast) {
-                oif.intf = pi_if;
-                oif.l2seg = l2seg;
-                ret = oif_list_remove_oif(mc_entry->oif_list, &oif);
-                HAL_ASSERT(ret == HAL_RET_OK);
-            }
-        }
-    }
-
-    if (!is_forwarding_mode_smart_nic()) {
-        ret = oif_list_clr_honor_ingress(mc_entry->oif_list);
-        HAL_ASSERT(ret == HAL_RET_OK);
-    }
-
-    // Delete the OIF List
-    ret = oif_list_delete(mc_entry->oif_list);
-    HAL_ASSERT(ret == HAL_RET_OK);
-    mc_entry->oif_list = OIF_LIST_ID_INVALID;
 
 end:
     return ret;
@@ -802,49 +834,49 @@ end:
 hal_ret_t
 mc_entry_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
+    hal_ret_t                   ret;
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     mc_entry_t                  *mc_entry = NULL;
-    hal_handle_t                hal_handle = 0;
+    hal_handle_t                hal_handle;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     mc_entry = (mc_entry_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:delete commit cb. Handle {}",__FUNCTION__,
-                    mc_entry->hal_handle);
+    HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
+                    mc_key_to_string(&mc_entry->key));
 
-    // Free the outgoing interface handles linked list
-    hal_free_handles_list(&mc_entry->if_list_head);
+    // Call deprogram OIF here
+    ret = mc_entry_deprogram_and_delete_oifs(mc_entry);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete OIFs, err : {}", ret);
+        goto end;
+    }
 
     // Remove the multicast entry from Key based hash table
     ret = mc_entry_del_from_db(mc_entry);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete entry from key ht: ret:{}", ret);
+        HAL_TRACE_ERR("Failed to delete mc_entry from db, err : {}", ret);
+        goto end;
+    }
+
+    // Cleanup and delete the mc_entry
+    ret = mc_entry_cleanup_and_delete(mc_entry);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete entry. ret:{}", ret);
         goto end;
     }
 
     // Free the multicast entry's HAL Handle
     hal_handle_free(hal_handle);
 
-    // Free the multicast entry
-    ret = mc_entry_free(mc_entry);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to free memory for mc_entry: ret:{}", ret);
-        goto end;
-    }
-
 end:
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("commit cbs can't fail: ret:{}", ret);
+        HAL_TRACE_ERR("commit CBs can't fail: ret:{}", ret);
         HAL_ASSERT(0);
     }
     return ret;
@@ -885,7 +917,7 @@ hal_ret_t multicastentry_delete(MulticastEntryDeleteRequest& req,
     // validate the request message
     ret = validate_mc_entry_delete(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Validation Failed. ret: {}", __FUNCTION__, ret);
+        HAL_TRACE_ERR("Validation Failed. ret: {}", ret);
         goto end;
     }
 
@@ -893,14 +925,14 @@ hal_ret_t multicastentry_delete(MulticastEntryDeleteRequest& req,
 
     mc_entry = mc_entry_lookup_key_or_handle(mcastkh);
     if (mc_entry == NULL) {
-        HAL_TRACE_ERR("{}: mc_entry not found: {}", __FUNCTION__,
+        HAL_TRACE_ERR("mc_entry not found: {}",
                       mc_key_handle_spec_to_string(mcastkh));
         ret = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}: key {}", __FUNCTION__,
-                    mc_key_handle_spec_to_string(mcastkh));
+    HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
+                    mc_key_to_string(&mc_entry->key));
 
     memcpy(&mc_key, &mc_entry->key, sizeof(mc_key_t));
 
@@ -938,14 +970,14 @@ validate_mc_entry_update(MulticastEntrySpec& req,
 {
     // must have meta set
     if (!req.has_meta()) {
-        HAL_TRACE_ERR("{}: meta not set", __FUNCTION__);
+        HAL_TRACE_ERR("Meta not set");
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
 
     // must have key-handle set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}: key_or_handle not set", __FUNCTION__);
+        HAL_TRACE_ERR("Key_or_handle not set");
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
@@ -958,7 +990,7 @@ validate_mc_entry_update(MulticastEntrySpec& req,
             ip_addr_spec_to_ip_addr(&ip_addr, req.key_or_handle().key().ip().\
                                 group());
             if (!ip_addr_is_multicast(&ip_addr)){
-                HAL_TRACE_ERR("{}: ip not valid in request", __FUNCTION__);
+                HAL_TRACE_ERR("ip not valid in request");
                 rsp->set_api_status(types::API_STATUS_INVALID_ARG);
                 return HAL_RET_INVALID_ARG;
             }
@@ -967,19 +999,19 @@ validate_mc_entry_update(MulticastEntrySpec& req,
             mac_addr_t mac_addr = {0};
             MAC_UINT64_TO_ADDR(mac_addr, req.key_or_handle().key().mac().group());
             if (!IS_MCAST_MAC_ADDR(mac_addr)){
-                HAL_TRACE_ERR("{}: MAC not valid in request", __FUNCTION__);
+                HAL_TRACE_ERR("MAC not valid in request");
                 rsp->set_api_status(types::API_STATUS_INVALID_ARG);
                 return HAL_RET_INVALID_ARG;
             }
         }
         // must provide valid l2segment
         if (!req.key_or_handle().key().has_l2segment_key_handle()) {
-            HAL_TRACE_ERR("{}: l2segment not valid in request", __FUNCTION__);
+            HAL_TRACE_ERR("l2segment not valid in request");
             rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
             return HAL_RET_INVALID_ARG;
         }
     } else if (req.key_or_handle().multicast_handle() == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}: Handle not valid in request", __FUNCTION__);
+        HAL_TRACE_ERR("Handle not valid in request");
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         return HAL_RET_HANDLE_INVALID;
     }
@@ -993,21 +1025,13 @@ validate_mc_entry_update(MulticastEntrySpec& req,
 hal_ret_t
 mc_entry_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                     ret = HAL_RET_OK;
+    hal_ret_t                     ret;
     dhl_entry_t                   *dhl_entry = NULL;
     mc_entry_t                    *mc_entry, *upd_entry;
-    hal_handle_id_list_entry_t    *entry = NULL;
     dllist_ctxt_t                 *lnode = NULL;
-    l2seg_t                       *l2seg = NULL;
-    if_t                          *pi_if = NULL;
-    oif_t                         oif = { };
     pd::pd_mc_entry_update_args_t pd_mc_entry_args = { };
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1015,12 +1039,14 @@ mc_entry_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     mc_entry = (mc_entry_t *)dhl_entry->obj;
 
     HAL_ASSERT(mc_entry && upd_entry);
-    HAL_TRACE_DEBUG("{}: Handle {}",__FUNCTION__,  mc_entry->hal_handle);
 
-    // Get the L2 Segment
-    l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
-    if (!l2seg) {
-        HAL_TRACE_ERR("{}:L2segment not found", __FUNCTION__);
+    HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
+                    mc_key_to_string(&mc_entry->key));
+
+    // Create and Program OIFS
+    ret = mc_entry_create_and_program_oifs(upd_entry);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create OIFs, err : {}", ret);
         goto end;
     }
 
@@ -1030,31 +1056,8 @@ mc_entry_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_mc_entry_args.upd_entry = upd_entry;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_UPDATE, (void *)&pd_mc_entry_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to update mc_entry pd, err : {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("Failed to update mc_entry pd, err : {}", ret);
         goto end;
-    }
-
-    // Delete the old OIFs
-    dllist_for_each(lnode, &mc_entry->if_list_head) {
-        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL);
-        oif.intf = pi_if;
-        oif.l2seg = l2seg;
-        ret = oif_list_remove_oif(mc_entry->oif_list, &oif);
-        HAL_ASSERT(ret == HAL_RET_OK);
-    }
-
-    // Add the new OIFs
-    dllist_for_each(lnode, &upd_entry->if_list_head) {
-        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL);
-        oif.intf = pi_if;
-        oif.l2seg = l2seg;
-        ret = oif_list_add_oif(upd_entry->oif_list, &oif);
-        HAL_ASSERT(ret == HAL_RET_OK);
     }
 
 end:
@@ -1067,37 +1070,48 @@ end:
 hal_ret_t
 mc_entry_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
+    hal_ret_t                   ret;
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    mc_entry_t                  *mc_entry = NULL;
+    mc_entry_t                  *mc_entry, *upd_entry;
+    hal_handle_id_list_entry_t  *entry = NULL;
+    if_t                        *pi_if = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    upd_entry = (mc_entry_t *)dhl_entry->cloned_obj;
     mc_entry = (mc_entry_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:update commit cb. Handle {}",__FUNCTION__,
-                    mc_entry->hal_handle);
+    HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
+                    mc_key_to_string(&mc_entry->key));
 
-    // Free the old outgoing interface handles linked list
-    hal_free_handles_list(&mc_entry->if_list_head);
-
-    // Free the old mc entry
-    ret = mc_entry_free(mc_entry);
+    // Delete the old OIF lists
+    ret = mc_entry_deprogram_and_delete_oifs(mc_entry);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to free memory for upd_entry: ret:{}", ret);
+        HAL_TRACE_ERR("Failed to delete OIFs, err : {}", ret);
         goto end;
+    }
+
+    // Cleanup and delete the mc_entry
+    ret = mc_entry_cleanup_and_delete(mc_entry);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete old entry. ret:{}", ret);
+        goto end;
+    }
+
+    // Add back references to each interface in the new OIF list
+    dllist_for_each(lnode, &upd_entry->if_list_head) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        pi_if = find_if_by_handle(entry->handle_id);
+        HAL_ASSERT(pi_if != NULL);
+        hal_add_to_handle_list(&pi_if->mc_entry_list_head, upd_entry->hal_handle);
     }
 
 end:
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("commit cbs can't fail: ret:{}", ret);
+        HAL_TRACE_ERR("commit CBs can't fail: ret:{}", ret);
         HAL_ASSERT(0);
     }
     return ret;
@@ -1109,31 +1123,24 @@ end:
 hal_ret_t
 mc_entry_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
+    hal_ret_t                   ret;
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     mc_entry_t                  *upd_entry = NULL;
 
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
+    HAL_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     upd_entry = (mc_entry_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update abort cb. Handle {}",__FUNCTION__,
-                    upd_entry->hal_handle);
+    HAL_TRACE_DEBUG("MC entry {}, key: {}", upd_entry->hal_handle,
+                    mc_key_to_string(&upd_entry->key));
 
-    // Free the old outgoing interface handles linked list
-    hal_free_handles_list(&upd_entry->if_list_head);
-
-    // Free the temporary cloned entry
-    ret = mc_entry_free(upd_entry);
+    // Call deprogram OIF here
+    ret = mc_entry_deprogram_and_delete_oifs(upd_entry);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to free memory for upd_entry: ret:{}", ret);
+        HAL_TRACE_ERR("Failed to delete OIFs, err : {}", ret);
         goto end;
     }
 
@@ -1166,7 +1173,7 @@ hal_ret_t multicastentry_update(MulticastEntrySpec& req,
     // validate the request message
     ret = validate_mc_entry_update(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Validation Failed. ret: {}", __FUNCTION__, ret);
+        HAL_TRACE_ERR("Validation Failed. ret: {}", ret);
         goto end;
     }
 
@@ -1174,31 +1181,31 @@ hal_ret_t multicastentry_update(MulticastEntrySpec& req,
 
     mc_entry = mc_entry_lookup_key_or_handle(mcastkh);
     if (mc_entry == NULL) {
-        HAL_TRACE_ERR("{}: mc_entry not found: {}", __FUNCTION__,
+        HAL_TRACE_ERR("mc_entry not found: {}",
                       mc_key_handle_spec_to_string(mcastkh));
         ret = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}: key {}", __FUNCTION__,
-                    mc_key_handle_spec_to_string(mcastkh));
+    HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
+                    mc_key_to_string(&mc_entry->key));
 
     // instantiate a new mc_entry
     upd_entry = mc_entry_alloc_init();
     if (upd_entry == NULL) {
-        HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("Unable to allocate handle/memory ret: {}", ret);
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         ret = HAL_RET_OOM;
         goto end;
     }
 
     memcpy(upd_entry, mc_entry, sizeof(mc_entry_t));
+    upd_entry->oif_list = OIF_LIST_ID_INVALID;
 
     // Read the new OIFs into upd_entry from spec
     ret = mc_entry_read_oifs(upd_entry, req);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Reading OIFs failed!", __FUNCTION__);
+        HAL_TRACE_ERR("Reading OIFs failed!");
         goto end;
     }
 
@@ -1218,13 +1225,18 @@ hal_ret_t multicastentry_update(MulticastEntrySpec& req,
 
 end:
     if (ret != HAL_RET_OK) {
+        if (upd_entry) {
+            hal_free_handles_list(&upd_entry->if_list_head);
+            mc_entry_free(upd_entry);
+            mc_entry = NULL;
+        }
         HAL_API_STATS_INC(HAL_API_MULTICASTENTRY_UPDATE_FAIL);
     } else {
         HAL_API_STATS_INC(HAL_API_MULTICASTENTRY_UPDATE_SUCCESS);
     }
 
     rsp->set_api_status(hal_prepare_rsp(ret));
-    hal_api_trace(" API End: mc entry delete ");
+    hal_api_trace("API End: mc entry delete ");
     return ret;
 }
 

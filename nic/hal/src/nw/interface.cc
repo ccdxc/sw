@@ -99,6 +99,7 @@ if_init (if_t *hal_if)
     sdk::lib::dllist_reset(&hal_if->enicif_list_head);
     sdk::lib::dllist_reset(&hal_if->mbr_if_list_head);
     sdk::lib::dllist_reset(&hal_if->l2seg_list_clsc_head);
+    sdk::lib::dllist_reset(&hal_if->mc_entry_list_head);
 
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(hal_if->acl_list); i++) {
         hal_if->acl_list[i]= block_list::factory(sizeof(hal_handle_t));
@@ -1042,6 +1043,7 @@ if_make_clone (if_t *hal_if, if_t **if_clone)
     dllist_reset(&(*if_clone)->l2seg_list_clsc_head);
     dllist_reset(&(*if_clone)->l2seg_list_head);
     dllist_reset(&(*if_clone)->enicif_list_head);
+    dllist_reset(&(*if_clone)->mc_entry_list_head);
 
     args.hal_if = hal_if;
     args.clone = *if_clone;
@@ -1578,6 +1580,7 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                     intf->if_id);
     printf("Original: %p, Clone: %p\n", intf, intf_clone);
 
+    dllist_move(&intf_clone->mc_entry_list_head, &intf->mc_entry_list_head);
 
     switch (intf->if_type) {
         case intf::IF_TYPE_ENIC:
@@ -2785,6 +2788,13 @@ validate_uplinkif_delete (if_t *hal_if)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
+    // check for no reference by mc entries
+    if (dllist_count(&hal_if->mc_entry_list_head)) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("multicast entries still referring:");
+        hal_print_handles_list(&hal_if->mc_entry_list_head);
+    }
+
     // check for no presence of l2segs
     if (dllist_count(&hal_if->l2seg_list_head)) {
         ret = HAL_RET_OBJECT_IN_USE;
@@ -2809,6 +2819,13 @@ hal_ret_t
 validate_uplinkpc_delete (if_t *hal_if)
 {
     hal_ret_t   ret = HAL_RET_OK;
+
+    // check for no reference by mc entries
+    if (dllist_count(&hal_if->mc_entry_list_head)) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("multicast entries still referring:");
+        hal_print_handles_list(&hal_if->mc_entry_list_head);
+    }
 
     // check for no presence of l2segs
     if (dllist_count(&hal_if->l2seg_list_head)) {

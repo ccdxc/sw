@@ -114,8 +114,7 @@ static inline mc_entry_t *mc_entry_alloc_init (void)
 static inline hal_ret_t mc_entry_free (mc_entry_t *mc_entry)
 {
     HAL_SPINLOCK_DESTROY(&mc_entry->slock);
-    hal::delay_delete_to_slab(HAL_SLAB_MC_ENTRY, mc_entry);
-    return HAL_RET_OK;
+    return hal::delay_delete_to_slab(HAL_SLAB_MC_ENTRY, mc_entry);
 }
 
 static inline mc_entry_t *

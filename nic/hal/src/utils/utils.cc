@@ -378,6 +378,38 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// Unlinks and frees a handle entry from the handles list
+//-----------------------------------------------------------------------------
+hal_ret_t
+hal_unlink_and_free_from_handle_list (hal_handle_id_list_entry_t *entry)
+{
+    HAL_ASSERT(entry);
+    HAL_TRACE_DEBUG("freeing list handle: {}", entry->handle_id);
+    sdk::lib::dllist_del(&entry->dllist_ctxt);
+    return hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
+}
+
+//-----------------------------------------------------------------------------
+// searches and removes a handle from the handles list
+//-----------------------------------------------------------------------------
+hal_ret_t
+hal_remove_from_handle_list (dllist_ctxt_t *list_head, hal_handle_t handle)
+{
+    hal_ret_t                       ret = HAL_RET_ENTRY_NOT_FOUND;
+    hal_handle_id_list_entry_t      *entry = NULL;
+    dllist_ctxt_t                   *curr, *next;
+
+    dllist_for_each_safe(curr, next, list_head) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        if (entry->handle_id == handle){
+            ret = hal_unlink_and_free_from_handle_list(entry);
+        }
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
 // free handle entries in a list. 
 // please take locks if necessary outside this call.
 //-----------------------------------------------------------------------------
@@ -389,9 +421,7 @@ hal_free_handles_list (dllist_ctxt_t *list)
 
     dllist_for_each_safe(curr, next, list) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        HAL_TRACE_DEBUG("freeing list handle: {}", entry->handle_id);
-        sdk::lib::dllist_del(&entry->dllist_ctxt);
-        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
+        hal_unlink_and_free_from_handle_list(entry);
     }
 }
 

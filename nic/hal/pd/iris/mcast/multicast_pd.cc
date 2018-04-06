@@ -75,12 +75,12 @@ pd_mc_entry_pgm_registered_mac(pd_mc_entry_t *pd_mc_entry, table_oper_t oper)
         sdk_ret = reg_mac_tbl->insert(&key, &data, &hash_idx);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pd-mc_entry:{}:classic: unable to program for :{}",
-                          __FUNCTION__, mc_key_to_string(&pi_mc_entry->key));
+            HAL_TRACE_ERR("Unable to program for :{}",
+                          mc_key_to_string(&pi_mc_entry->key));
             goto end;
         } else {
-            HAL_TRACE_DEBUG("pd-ep:{}:classic: programmed for ep:{} at hash_idx:{}",
-                            __FUNCTION__, mc_key_to_string(&pi_mc_entry->key), hash_idx);
+            HAL_TRACE_DEBUG("Programmed {} at hash_idx:{}",
+                            mc_key_to_string(&pi_mc_entry->key), hash_idx);
         }
 
         pd_mc_entry->reg_mac_tbl_idx = hash_idx;
@@ -90,18 +90,16 @@ pd_mc_entry_pgm_registered_mac(pd_mc_entry_t *pd_mc_entry, table_oper_t oper)
         sdk_ret = reg_mac_tbl->update(hash_idx, &data);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pd-mc_entry:{}:classic: unable to reprogram for "
-                          "mc_entry:{} at: {}",
-                          __FUNCTION__, mc_key_to_string(&pi_mc_entry->key), hash_idx);
+            HAL_TRACE_ERR("Unable to reprogram for {} at hash_idx:{}",
+                          mc_key_to_string(&pi_mc_entry->key), hash_idx);
             goto end;
         } else {
-            HAL_TRACE_DEBUG("pd-mc_entry:{}:classic: reprogrammed for "
-                            "mc_entry:{} at: {}", __FUNCTION__,
+            HAL_TRACE_DEBUG("Reprogrammed for {} at hash_idx:{}",
                             mc_key_to_string(&pi_mc_entry->key), hash_idx);
         }
     }
 
-    end:
+end:
 
     return ret;
 }
@@ -123,13 +121,11 @@ pd_mc_entry_depgm_registered_mac (pd_mc_entry_t *mc_entry_pd)
     sdk_ret = reg_mac_tbl->remove(mc_entry_pd->reg_mac_tbl_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-mc_entry::{}:unable to deprogram from cpu entry "
-                              "input properties for seg_id:{}",
-                      __FUNCTION__, mc_key_to_string(&mc_entry->key));
+        HAL_TRACE_ERR("Unable to deprogram from cpu entry for {}",
+                      mc_key_to_string(&mc_entry->key));
     } else {
-        HAL_TRACE_DEBUG("pd-mc_entry::{}:deprogrammed from_cpu_entry "
-                                "input properties for seg_id:{}",
-                        __FUNCTION__, mc_key_to_string(&mc_entry->key));
+        HAL_TRACE_DEBUG("Deprogrammed from_cpu_entry for {}",
+                        mc_key_to_string(&mc_entry->key));
     }
 
     return ret;
@@ -141,10 +137,25 @@ pd_mc_entry_depgm_registered_mac (pd_mc_entry_t *mc_entry_pd)
 hal_ret_t
 mc_entry_pd_program_hw (pd_mc_entry_t *mc_entry_pd)
 {
-    hal_ret_t            ret;
+    hal_ret_t ret;
 
     // Program Registered Mac Table
     ret = pd_mc_entry_pgm_registered_mac(mc_entry_pd, TABLE_OPER_INSERT);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Update HW
+// ----------------------------------------------------------------------------
+hal_ret_t
+mc_entry_pd_update_hw (pd_mc_entry_t *mc_entry_pd)
+{
+    hal_ret_t ret;
+
+    // Program Registered Mac Table
+    ret = pd_mc_entry_pgm_registered_mac(mc_entry_pd, TABLE_OPER_UPDATE);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     return ret;
@@ -182,8 +193,8 @@ pd_mc_entry_create (pd_mc_entry_create_args_t *args)
     hal_ret_t               ret;
     pd_mc_entry_t           *mc_entry_pd = NULL;
 
-    HAL_TRACE_DEBUG("pd-mc_entry:{}:creating pd state for mc_entry",
-                    __FUNCTION__, mc_key_to_string(&args->mc_entry->key));
+    HAL_TRACE_DEBUG("Creating pd state for mc_entry {}",
+                    mc_key_to_string(&args->mc_entry->key));
 
     // create mc entry PD
     mc_entry_pd = mc_entry_pd_alloc_init();
@@ -197,7 +208,8 @@ pd_mc_entry_create (pd_mc_entry_create_args_t *args)
     // Program HW
     ret = mc_entry_pd_program_hw(mc_entry_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-mc_entry:{}:failed to program hw", __FUNCTION__);
+        HAL_TRACE_ERR("Failed to program hw for mc_entry {}",
+                      mc_key_to_string(&args->mc_entry->key));
         goto end;
     }
 
@@ -222,15 +234,19 @@ pd_mc_entry_update (pd_mc_entry_update_args_t *args)
     HAL_ASSERT_RETURN((args->mc_entry != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->upd_entry != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->mc_entry->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-mc_entry:{}:updating pd state for mc_entry {}",
-                    __FUNCTION__, mc_key_to_string(&args->mc_entry->key));
+    HAL_TRACE_DEBUG("Updating pd state for mc_entry {}",
+                    mc_key_to_string(&args->mc_entry->key));
 
     mc_entry_pd = (pd_mc_entry_t *)args->mc_entry->pd;
 
     // link PI<->PD
     mc_entry_link_pi_pd(mc_entry_pd, args->upd_entry);
 
-    // Nothing to update in the hardware
+    ret = mc_entry_pd_update_hw(mc_entry_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update hw for mc_entry {}",
+                      mc_key_to_string(&args->mc_entry->key));
+    }
 
     return ret;
 }
@@ -247,21 +263,22 @@ pd_mc_entry_delete (pd_mc_entry_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->mc_entry != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->mc_entry->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-mc_entry:{}:deleting pd state for mc_entry {}",
-                    __FUNCTION__, mc_key_to_string(&args->mc_entry->key));
+    HAL_TRACE_DEBUG("Deleting pd state for mc_entry {}",
+                    mc_key_to_string(&args->mc_entry->key));
 
     mc_entry_pd = (pd_mc_entry_t *)args->mc_entry->pd;
 
     // deprogram HW
     ret = mc_entry_pd_deprogram_hw(mc_entry_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-mc_entry:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("Unable to deprogram hw for mc_entry {}",
+                      mc_key_to_string(&args->mc_entry->key));
     }
 
     // dealloc resources and free
     ret = mc_entry_pd_cleanup(mc_entry_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed pd mc_entry delete");
+        HAL_TRACE_ERR("Failed pd mc_entry delete");
     }
 
     return ret;
@@ -278,7 +295,7 @@ mc_entry_pd_deprogram_hw (pd_mc_entry_t *mc_entry_pd)
     // De-program registered Mac Table
     ret = pd_mc_entry_depgm_registered_mac(mc_entry_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-mc_entry:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("Unable to deprogram hw");
     }
 
     return ret;

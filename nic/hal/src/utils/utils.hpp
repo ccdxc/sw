@@ -37,6 +37,10 @@ hal_ret_t hal_add_to_handle_list(dllist_ctxt_t *handle_list,
                                  hal_handle_t handle);
 void hal_free_handles_list(dllist_ctxt_t *list);
 hal_ret_t hal_cleanup_handle_list(dllist_ctxt_t **list);
+hal_ret_t hal_remove_from_handle_list(dllist_ctxt_t *list_head,
+                                      hal_handle_t handle);
+hal_ret_t
+hal_unlink_and_free_from_handle_list (hal_handle_id_list_entry_t *entry);
 
 // handle block list specific APIs
 void hal_print_handles_block_list(block_list *bl);

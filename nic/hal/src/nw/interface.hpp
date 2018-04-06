@@ -158,6 +158,8 @@ typedef struct if_s {
     // dllist_ctxt_t       ep_list_head;       // endpoints behind this interface
     // dllist_ctxt_t       session_list_head;  // session from this
 
+    dllist_ctxt_t       mc_entry_list_head;    // mc_entries that have this if in its OIF list
+
     // PD Uplink/Enic ... Interpret based on type ... Careful!!
     void                *pd_if;
 } __PACK__ if_t;
