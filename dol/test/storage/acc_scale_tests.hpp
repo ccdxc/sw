@@ -219,9 +219,7 @@ public:
 
 private:
     std::list<acc_scale_tests_t*>   tests_list;
-
-    uint32_t        num_tests_completed;
-    uint32_t        num_tests_failed;
+    std::list<acc_scale_tests_t*>   compl_list;
 };
 
 
