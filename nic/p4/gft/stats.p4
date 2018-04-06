@@ -13,7 +13,6 @@ action rx_vport_stats(permit_packets, permit_bytes,
         }
     }
 #endif
-    add_header(capri_p4_intrinsic);
     if (capri_intrinsic.drop == TRUE) {
         modify_field(scratch_metadata.num_packets, drop_packets);
         modify_field(scratch_metadata.num_bytes,

@@ -75,6 +75,70 @@ end:
 }
 
 static hal_ret_t
+pd_enicif_pgm_tx_vport(pd_enicif_t *pd_enicif, table_oper_t oper)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    sdk_ret_t               sdk_ret;
+    tx_vport_swkey_t        key;
+    tx_vport_swkey_mask_t   mask;
+    tx_vport_actiondata     data;
+    mac_addr_t              *mac = NULL;
+    tcam                    *tx_vport_tbl = NULL;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    tx_vport_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_TX_VPORT);
+    HAL_ASSERT_RETURN((tx_vport_tbl != NULL), HAL_RET_ERR);
+
+    // key
+    mac = if_get_mac_addr((if_t*)pd_enicif->pi_if);
+    memcpy(key.flow_action_metadata_tx_ethernet_dst, *mac, 
+           ETHER_ADDR_LEN);
+    memrev(key.flow_action_metadata_tx_ethernet_dst, ETHER_ADDR_LEN);
+
+    // mask
+    memset(mask.flow_action_metadata_tx_ethernet_dst_mask, 0xFF, 6);
+
+
+    // data
+    data.tx_vport_action_u.tx_vport_tx_vport.port = TM_PORT_INGRESS;
+
+    if (oper == TABLE_OPER_INSERT) {
+        sdk_ret = tx_vport_tbl->insert(&key, &mask, &data,
+                                       &pd_enicif->tx_vport_idx);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program tx_vport tbl. ret: {}",
+                          ret);
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("programmed tx_vport tbl at: {}",
+                            pd_enicif->tx_vport_idx);
+        }
+    } else {
+        sdk_ret = tx_vport_tbl->update(pd_enicif->tx_vport_idx, 
+                                       &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program tx_vport tbl. ret: {}",
+                          ret);
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("programmed tx_vport tbl at: {}",
+                            pd_enicif->tx_vport_idx);
+        }
+    }
+
+end:
+
+    return ret;
+}
+
+
+
+static hal_ret_t
 pd_enicif_pgm_rx_vport (pd_enicif_t *pd_enicif, table_oper_t oper)
 {
     hal_ret_t               ret = HAL_RET_OK;
@@ -165,6 +229,13 @@ pd_enicif_program_hw (pd_enicif_t *pd_enicif)
 #endif
 
     ret = pd_enicif_pgm_rx_vport(pd_enicif, TABLE_OPER_INSERT);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed to program rx_vport ret: {}", ret);
+        goto end;
+    }
+
+    // TODO: Temporary change for latency measurements
+    ret = pd_enicif_pgm_tx_vport(pd_enicif, TABLE_OPER_INSERT);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to program rx_vport ret: {}", ret);
         goto end;

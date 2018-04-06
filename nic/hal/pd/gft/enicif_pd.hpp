@@ -15,6 +15,7 @@ namespace pd {
 struct pd_enicif_s {
     // h/w indices
     uint32_t   rx_vport_idx; 
+    uint32_t   tx_vport_idx;
 
     // pi ptr
     void        *pi_if;

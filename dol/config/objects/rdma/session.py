@@ -41,9 +41,20 @@ class RdmaSessionObject(base.ConfigObjectBase):
         self.IsVXLAN = vxlan
 
     def Configure(self):
-        self.lqp.ConfigureHeaderTemplate(self, True, self.session.IsIPV6())
-        #self.rqp.ConfigureHeaderTemplate(self, False)
+        self.lqp.ConfigureHeaderTemplate(self, self.session.initiator,
+                                         self.session.responder,
+                                         self.session.iflow,
+                                         self.session.IsIPV6(), True)
         self.lqp.set_dst_qp(self.rqp.id)
+
+        # For local-local rdma sessions, need to setup reverse direction too
+        if not self.rqp.remote:
+            self.rqp.ConfigureHeaderTemplate(self, self.session.responder,
+                                         self.session.initiator,
+                                         self.session.rflow,
+                                         self.session.IsIPV6(), False)
+            self.rqp.set_dst_qp(self.lqp.id)
+
         if self.lqp.svc == 3:
             self.lqp.set_q_key(self.lqp.id) #we are using q_id as q_key
         #self.lqp.rq.set_dst_qp(self.rqp.id)
@@ -239,10 +250,10 @@ class RdmaSessionObjectHelper:
                            if self.v6_non_vxlan_count > 2: continue
                     elif not ipv6 and vxlan:    # v4 vxlan
                        self.v4_vxlan_count += 1
-                       if self.v4_vxlan_count > 1: continue
+                       if self.v4_vxlan_count > 2: continue
                     else:                       # v6 vxlan
                        self.v6_vxlan_count += 1
-                       if self.v6_vxlan_count > 1: continue
+                       if self.v6_vxlan_count > 2: continue
 
                     self.used_qps.append(lqp)
                     self.used_qps.append(rqp)
@@ -267,7 +278,14 @@ class RdmaSessionObjectHelper:
             ep2 = nw_s.responder.ep
 
             # lqp should come from a local endpoint
-            if ep1.remote or not ep2.remote : continue
+            if ep1.remote: continue
+
+            # rqp should be local end point for local-local tests
+            # rqp should be remote end point for all regular tests
+            if GlobalOptions.l2l:
+                if ep2.remote: continue
+            else:
+                if not ep2.remote: continue
 
             ep1_qps = self.__get_perf_qps_for_ep(ep1)
             ep2_qps = self.__get_perf_qps_for_ep(ep2)
@@ -324,9 +342,16 @@ class RdmaSessionObjectHelper:
         return
 
     def Generate(self):
-        self.RCGenerate()
+        # Local-Local tests are only run with perf RCs - mainly for performance
+        # so for l2l tests, dont create Regular RC and UD sessions
+
+        if not GlobalOptions.l2l:
+            self.RCGenerate()
+
         self.PerfRCGenerate()
-        self.UDGenerate()
+
+        if not GlobalOptions.l2l:
+            self.UDGenerate()
         
     def Configure(self):
         for rdma_s in self.rdma_sessions:

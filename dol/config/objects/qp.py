@@ -273,42 +273,51 @@ class QpObject(base.ConfigObjectBase):
         logger.info("Config Objects for %s" % (self.GID()))
         return
 
-    def ConfigureHeaderTemplate(self, rdma_session, forward, isipv6):
+    def ConfigureHeaderTemplate(self, rdma_session, initiator, responder, flow, isipv6, forward):
         logger.info("rdma_session: %s" % rdma_session.GID())
         logger.info("session: %s" % rdma_session.session.GID())
         logger.info("flow_ep1: %s ep1: %s" \
-            %(rdma_session.session.initiator.GID(), rdma_session.session.initiator.ep.GID()))
+            %(initiator.GID(), initiator.ep.GID()))
         logger.info("flow_ep2: %s ep2: %s" \
-             %(rdma_session.session.responder.GID(), rdma_session.session.responder.ep.GID()))
-        logger.info("src_ip: %s" % rdma_session.session.initiator.addr.get())
-        logger.info("dst_ip: %s" % rdma_session.session.responder.addr.get())
-        logger.info("src_mac: %s" % rdma_session.session.initiator.ep.macaddr.get())
-        logger.info("dst_mac: %s" % rdma_session.session.responder.ep.macaddr.get())
-        logger.info("proto: %s" % rdma_session.session.iflow.proto)
-        logger.info("sport: %s" % rdma_session.session.iflow.sport)
-        logger.info("dport: %s" % rdma_session.session.iflow.dport)
-        logger.info("src_qp: %d pd: %s" % (rdma_session.lqp.id, rdma_session.lqp.pd.GID()))
-        logger.info("dst_qp: %d pd: %s" % (rdma_session.rqp.id, rdma_session.rqp.pd.GID()))
+             %(responder.GID(), responder.ep.GID()))
+        logger.info("src_ip: %s" % initiator.addr.get())
+        logger.info("dst_ip: %s" % responder.addr.get())
+        logger.info("src_mac: %s" % initiator.ep.macaddr.get())
+        logger.info("dst_mac: %s" % responder.ep.macaddr.get())
+        logger.info("proto: %s" % flow.proto)
+        logger.info("sport: %s" % flow.sport)
+        logger.info("dport: %s" % flow.dport)
+        if forward:
+            logger.info("src_qp: %d pd: %s" % (rdma_session.lqp.id, rdma_session.lqp.pd.GID()))
+            logger.info("dst_qp: %d pd: %s" % (rdma_session.rqp.id, rdma_session.rqp.pd.GID()))
+        else:
+            logger.info("src_qp: %d pd: %s" % (rdma_session.rqp.id, rdma_session.rqp.pd.GID()))
+            logger.info("dst_qp: %d pd: %s" % (rdma_session.lqp.id, rdma_session.lqp.pd.GID()))
         logger.info("isipv6: %d" % (isipv6))
         logger.info("isVXLAN: %d" % (rdma_session.IsVXLAN))
 
-        EthHdr = scapy.Ether(src=rdma_session.session.initiator.ep.macaddr.get(),
-                             dst=rdma_session.session.responder.ep.macaddr.get())
-        Dot1qHdr = scapy.Dot1Q(vlan=rdma_session.session.initiator.ep.intf.encap_vlan_id,
-                               prio=rdma_session.session.iflow.txqos.cos)
+        EthHdr = scapy.Ether(src=initiator.ep.macaddr.get(),
+                             dst=responder.ep.macaddr.get())
+        Dot1qHdr = scapy.Dot1Q(vlan=initiator.ep.intf.encap_vlan_id,
+                               prio=flow.txqos.cos)
         if isipv6:
-            IpHdr = scapy.IPv6(src=rdma_session.session.initiator.addr.get(),
-                             dst=rdma_session.session.responder.addr.get(),
-                             tc=rdma_session.session.iflow.txqos.dscp,
+            IpHdr = scapy.IPv6(src=initiator.addr.get(),
+                             dst=responder.addr.get(),
+                             tc=flow.txqos.dscp,
                              plen = 0)
         else:
-            IpHdr = scapy.IP(src=rdma_session.session.initiator.addr.get(),
-                             dst=rdma_session.session.responder.addr.get(),
-                             tos=rdma_session.session.iflow.txqos.dscp,
+            IpHdr = scapy.IP(src=initiator.addr.get(),
+                             dst=responder.addr.get(),
+                             tos=flow.txqos.dscp,
                              len = 0, chksum = 0)
-        UdpHdr = scapy.UDP(sport=rdma_session.session.iflow.sport,
-                           dport=rdma_session.session.iflow.dport,
-                           len = 0, chksum = 0)
+        if forward:
+            UdpHdr = scapy.UDP(sport=flow.sport,
+                               dport=flow.dport,
+                               len = 0, chksum = 0)
+        else:
+            UdpHdr = scapy.UDP(sport=flow.dport,
+                               dport=flow.sport,
+                               len = 0, chksum = 0)
         self.HdrTemplate = EthHdr/Dot1qHdr/IpHdr/UdpHdr
 
         self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE

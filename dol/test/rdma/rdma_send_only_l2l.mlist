@@ -1,0 +1,23 @@
+# Feature Test Modules List
+feature:
+    id          : rdma_send_only_l2l
+    sub         : rdma
+    package     : test.rdma
+    module      : rdma
+    enable      : True
+    ignore      : False
+    #selectors:
+    #    maxrdmasessions: 8
+
+modules:
+    - module:
+        name    : RDMA_TX_SEND_ONLY
+        enable  : True
+        package : test.rdma
+        module  : send_only_l2l
+        spec    : send_only_l2l.testspec
+        ignore  : False
+        iterate:
+           - rdmasession:
+               base : filter://id=1
+

@@ -436,6 +436,8 @@ def run_dol(args):
         cmd.append('--pps')
     if args.lite is True:
         cmd.append('--lite')
+    if args.l2l is True:
+        cmd.append('--l2l')
     if args.gft is True:
         cmd.append('--gft')
     if args.perf is True:
@@ -696,6 +698,8 @@ def main():
                         action='store_true', help='PPS Test.')
     parser.add_argument('--lite', dest='lite', default=None,
                         action='store_true', help='Lite Sanity Test.')
+    parser.add_argument('--l2l', dest='l2l', default=None,
+                        action='store_true', help='Local-2-Local Endpoint RDMA Sanity Run.')
     parser.add_argument('--port_mode', dest='port_mode', default='nomac',
                         help='In RTL mode choose how many ports are active: (nomac/8x25/2x100)')
     parser.add_argument('--perf', dest='perf', default=None,

@@ -54,6 +54,9 @@ control rx_vport {
 action tx_vport(port) {
     modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
     modify_field(capri_intrinsic.tm_oport, port);
+    if (port != TM_PORT_INGRESS) {
+        add_header(capri_p4_intrinsic);
+    }
 }
 
 @pragma stage 4

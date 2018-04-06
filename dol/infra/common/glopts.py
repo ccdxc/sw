@@ -71,6 +71,8 @@ parser.add_argument('--pps', dest='pps', default=False,
                     action='store_true', help='PPS Test.')
 parser.add_argument('--lite', dest='lite', default=False,
                     action='store_true', help='Lite Sanity Test.')
+parser.add_argument('--l2l', dest='l2l', default=False,
+                    action='store_true', help='Local-2-Local Endpoint RDMA Sanity Run.')
 parser.add_argument('--gft', dest='gft', default=False,
                     action='store_true', help='GFT Test.')
 parser.add_argument('--perf', dest='perf', default=False,

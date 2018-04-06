@@ -9,9 +9,10 @@ struct phv_ p;
 %%
 
 tx_vport:
-    phvwr       p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
-    phvwr.f.e   p.capri_intrinsic_tm_oport, d.tx_vport_d.port
-    nop
+    seq         c1, d.tx_vport_d.port, TM_PORT_INGRESS
+    phvwr.!c1   p.capri_p4_intrinsic_valid, TRUE
+    phvwr.e     p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
+    phvwr.f     p.capri_intrinsic_tm_oport, d.tx_vport_d.port
 
 /*****************************************************************************/
 /* error function                                                            */
