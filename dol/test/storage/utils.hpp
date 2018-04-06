@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdio.h>
 
+const static uint32_t kMinHostMemAllocSize = 64;
+
 namespace utils {
 
 extern const uint32_t kUtilsPageSize;

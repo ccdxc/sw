@@ -132,7 +132,7 @@ void XtsCtx::init(uint32_t size, bool chain) {
   if (xts_db) {
     xts_db->clear_thru();
   } else {
-    xts_db = new dp_mem_t(1, sizeof(uint64_t), DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+    xts_db = new dp_mem_t(1, kMinHostMemAllocSize, DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     caller_xts_db_en = false;
   }
   if(!is_src_hbm_buf) {
@@ -285,7 +285,9 @@ XtsCtx::desc_prefill_seq_xts(dp_mem_t *xts_desc) {
   xts::xts_desc_t *xts_desc_addr = (xts::xts_desc_t *)xts_desc->read();
 
   if (!iv) {
-    iv = (unsigned char*)alloc_host_mem(IV_SIZE);
+    uint32_t alloc_size = ((kMinHostMemAllocSize < IV_SIZE) ? kMinHostMemAllocSize : IV_SIZE);
+    iv = (unsigned char*)alloc_host_mem(alloc_size);
+    memset(iv, 0, alloc_size);
     memcpy(iv, iv_src, IV_SIZE);
   }
 
@@ -295,8 +297,8 @@ XtsCtx::desc_prefill_seq_xts(dp_mem_t *xts_desc) {
   if(is_gcm) {
     if(!decr_en) {
       assert(NULL == auth_tag_addr);
-      auth_tag_addr = alloc_host_mem(64);
-      memset(auth_tag_addr, 0, 64);
+      auth_tag_addr = alloc_host_mem(kMinHostMemAllocSize);
+      memset(auth_tag_addr, 0, kMinHostMemAllocSize);
       xts_desc_addr->auth_tag = host_mem_v2p(auth_tag_addr);
     } else {
       assert(NULL != auth_tag_addr);
@@ -474,7 +476,8 @@ int XtsCtx::test_seq_xts() {
   }
 
   if (!status) {
-    status = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
+    status = (uint64_t*)alloc_host_mem(kMinHostMemAllocSize);
+    memset(status, 0, kMinHostMemAllocSize);
   }
   *status = STATUS_DEF_VALUE;
 

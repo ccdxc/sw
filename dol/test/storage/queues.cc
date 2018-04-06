@@ -374,7 +374,8 @@ int resources_init() {
   // R2N/PVM SQ etc.  // This is needed as a dummy for the P4+ program to write 
   // the pndx to a valid host address. The SSD emulation layer implements this 
   // for the E2E cases.
-  pndx_data_va = alloc_host_mem(sizeof(uint32_t));
+  pndx_data_va = alloc_host_mem(kMinHostMemAllocSize);
+  memset(pndx_data_va, 0, kMinHostMemAllocSize);
   if (pndx_data_va == nullptr) {
     printf("Unable to allocate host memory for queue\n");
     return -1;
