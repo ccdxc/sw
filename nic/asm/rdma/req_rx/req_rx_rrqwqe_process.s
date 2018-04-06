@@ -13,7 +13,8 @@ struct req_rx_s1_t0_k k;
 #define IN_P t0_s2s_sqcb1_to_rrqwqe_info
 #define IN_TO_S_P to_s1_to_stage
 
-#define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_sbit0_ebit7, e_rsp_psn_sbit16_ebit23)
+#define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_or_ssn_sbit0_ebit7, e_rsp_psn_or_ssn_sbit16_ebit23)
+#define K_SSN       CAPRI_KEY_RANGE(IN_P, e_rsp_psn_or_ssn_sbit0_ebit7, e_rsp_psn_or_ssn_sbit16_ebit23)
 #define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit7, msn_sbit16_ebit23)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit16_ebit31)
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
@@ -61,11 +62,18 @@ ack:
     // r1 = aeth_syndrome
     add            r1, K_AETH_SYNDROME, r0
 
+    // MSN posted in CQ should be smaller than SSN. In case
+    // of ack drops, response to retried request can have PSN/MSN 
+    // logically greater than PSN/MSN of the retried request but
+    // that should not result in completion of WQEs more than those
+    // that have been retransmitted
+    scwlt24        c3, K_AETH_MSN, K_SSN
+    cmov           r2, c3, K_AETH_MSN, K_SSN
     //phv_p->cqwqe.id.msn = pkt_msn
     //if (sqcb1_to_rrqwqe_info_p->rrq_empty == FALSE)
     //    phv_p->cqwqe.id.msn = min((rrqwqe_p->msn - 1), phv_p->aeth.msn)
     bbeq           CAPRI_KEY_FIELD(IN_P, rrq_empty), 1, p_ack
-    add            r2, K_AETH_MSN, r0 // Branch Delay Slot
+    mincr.!c3      r2, 24, -1 // Branch Delay Slot
     add            r2, d.msn, 0
     mincr          r2, 24, -1
     scwle24        c3, r2, K_AETH_MSN

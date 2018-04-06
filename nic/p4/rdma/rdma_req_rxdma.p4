@@ -155,7 +155,7 @@ header_type req_rx_sqcb1_to_rrqwqe_info_t {
         cur_sge_offset                   :   32;
         cq_id                            :   24;
         cur_sge_id                       :    8;
-        e_rsp_psn                        :   24;
+        e_rsp_psn_or_ssn                 :   24;
         msn                              :   24;
         rrq_in_progress                  :    1;
         rrq_empty                        :    1;
@@ -1182,7 +1182,7 @@ action req_rx_rrqwqe_process () {
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cur_sge_offset, t0_s2s_sqcb1_to_rrqwqe_info.cur_sge_offset);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cq_id, t0_s2s_sqcb1_to_rrqwqe_info.cq_id);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cur_sge_id, t0_s2s_sqcb1_to_rrqwqe_info.cur_sge_id);
-    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.e_rsp_psn, t0_s2s_sqcb1_to_rrqwqe_info.e_rsp_psn);
+    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.e_rsp_psn_or_ssn, t0_s2s_sqcb1_to_rrqwqe_info.e_rsp_psn_or_ssn);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.msn, t0_s2s_sqcb1_to_rrqwqe_info.msn);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.rrq_in_progress, t0_s2s_sqcb1_to_rrqwqe_info.rrq_in_progress);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.rrq_empty, t0_s2s_sqcb1_to_rrqwqe_info.rrq_empty);

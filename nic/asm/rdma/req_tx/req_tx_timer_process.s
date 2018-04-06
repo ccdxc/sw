@@ -30,6 +30,7 @@ struct sqcb2_t d;
     .param req_tx_bktrack_sqwqe_process
     .param req_tx_bktrack_sqpt_process
     .param req_tx_bktrack_write_back_process
+    .param req_tx_bktrack_sqcb1_write_back_process
 
 .align
 req_tx_timer_process:
@@ -60,30 +61,29 @@ retrans_timer_expiry:
     // TODO comment out this check for now as in model cur_timestamp is not populated in r4
     //blt            r1, r2, sqcb_write_back
 
-    CAPRI_SET_FIELD2(TO_S2_P, rexmit_psn, d.rexmit_psn) //BD Slot
+    phvwrpair CAPRI_PHV_FIELD(TO_S2_P, rexmit_psn), d.rexmit_psn, CAPRI_PHV_FIELD(TO_S3_P, rexmit_psn), d.rexmit_psn
 
-    CAPRI_SET_FIELD2(TO_S3_P, rexmit_psn, d.rexmit_psn)
+    phvwrpair CAPRI_PHV_FIELD(TO_S4_P, rexmit_psn), d.rexmit_psn, CAPRI_PHV_FIELD(TO_S5_P, rexmit_psn), d.rexmit_psn
 
-    CAPRI_SET_FIELD2(TO_S4_P, rexmit_psn, d.rexmit_psn)
+    phvwr CAPRI_PHV_FIELD(TO_S6_P, rexmit_psn), d.rexmit_psn
 
-    CAPRI_SET_FIELD2(TO_S5_P, rexmit_psn, d.rexmit_psn)
-
-    CAPRI_SET_FIELD2(TO_S6_P, rexmit_psn, d.rexmit_psn)
+    CAPRI_RESET_TABLE_1_ARG()
+    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), d.tx_psn, CAPRI_PHV_FIELD(SQ_BKTRACK_P, ssn), d.ssn
+    SQCB1_ADDR_GET(r1)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb1_write_back_process, r1)
 
     CAPRI_RESET_TABLE_0_ARG()
 
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, sq_c_index, K_SQ_C_INDEX)
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1, K_SQ_P_INDEX)
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, in_progress, CAPRI_KEY_FIELD(IN_P, in_progress))
-    //CAPRI_SET_FIELD2(SQ_BKTRACK_P, bktrack_in_progress, CAPRI_KEY_FIELD(IN_P, bktrack_in_progress))
+    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_c_index), K_SQ_C_INDEX, CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1), K_SQ_P_INDEX
     //current_sge_offset, current_sge_id, num_sges
-    CAPRI_SET_FIELD_RANGE2(SQ_BKTRACK_P, current_sge_offset, num_sges, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit5, num_sges_sbit6_ebit7))
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, ssn, d.ssn)
+    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, in_progress), CAPRI_KEY_FIELD(IN_P, in_progress), CAPRI_PHV_RANGE(SQ_BKTRACK_P, current_sge_offset, num_sges), CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit5, num_sges_sbit6_ebit7)
+    //phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, bktrack_in_progress), CAPRI_KEY_FIELD(IN_P, bktrack_in_progress)
+    phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, ssn), d.ssn
 
     seq            c2, CAPRI_KEY_FIELD(IN_P, sq_in_hbm), 1 
     seq            c1, CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr), r0
     bcf.!c2        [c1],  bktrack_sqpt
-    CAPRI_SET_FIELD2(SQ_BKTRACK_P, tx_psn, d.tx_psn) // Branch Delay Slot
+    phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), d.tx_psn // Branch Delay Slot
 
     bcf            [c2 & !c1], wqe_bktrack
     add            r2, r0, CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr) // Branch Delay Slot
@@ -94,26 +94,18 @@ retrans_timer_expiry:
     
 wqe_bktrack:
     seq           c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1
-    CAPRI_SET_FIELD2_C(SQ_BKTRACK_P, tx_psn, d.wqe_start_psn, c1)
-    
+    phvwr.c1 CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), d.wqe_start_psn
+
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqwqe_process, r2)
  
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
-    CAPRI_SET_FIELD2(TO_S2_P, wqe_addr, r2)
+    phvwrpair CAPRI_PHV_FIELD(TO_S2_P, wqe_addr), r2, CAPRI_PHV_FIELD(TO_S3_P, wqe_addr), r2
 
-    CAPRI_SET_FIELD2(TO_S3_P, wqe_addr, r2)
+    phvwrpair CAPRI_PHV_FIELD(TO_S4_P, wqe_addr), r2, CAPRI_PHV_FIELD(TO_S5_P, wqe_addr), r2
 
-    CAPRI_SET_FIELD2(TO_S4_P, wqe_addr, r2)
-
-    CAPRI_SET_FIELD2(TO_S5_P, wqe_addr, r2)
-
-    CAPRI_SET_FIELD2(TO_S6_P, wqe_addr, r2)
-
-    CAPRI_SET_FIELD2(TO_S7_P, wqe_addr, r2)
-
-    nop.e
-    nop
+    phvwr.e CAPRI_PHV_FIELD(TO_S6_P, wqe_addr), r2
+    phvwr CAPRI_PHV_FIELD(TO_S7_P, wqe_addr), r2
 
 bktrack_sqpt:
     // log_num_wqe_per_page = (ssqcb0_to_sqcb1_info_p->log_sq_page_size - sqcb0_to_sqcb1_info_p->log_wqe_size) 
@@ -135,19 +127,15 @@ bktrack_sqpt:
 
 sqcb_write_back:
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, in_progress, CAPRI_KEY_FIELD(IN_P, in_progress))
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, empty_rrq_bktrack, 1)
-    //CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, release_cb1_busy, 1)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, num_sges, K_NUM_SGES)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, current_sge_id, K_CURRENT_SGE_ID)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, current_sge_offset, K_CURRENT_SGE_OFFSET)
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, op_type, K_OP_TYPE)
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, in_progress), CAPRI_KEY_FIELD(IN_P, in_progress), CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, empty_rrq_bktrack), 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_id), K_CURRENT_SGE_ID, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, num_sges), K_NUM_SGES
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), K_OP_TYPE, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), K_CURRENT_SGE_OFFSET
     bbeq           CAPRI_KEY_FIELD(IN_P, in_progress), 1, set_pc
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, sq_c_index, K_SQ_C_INDEX) // Branch Delay Slot
+    phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, sq_c_index), K_SQ_C_INDEX // Branch Delay Slot
     
     add            r1, K_SQ_C_INDEX, 1
     mincr          r1, 24, r0
-    CAPRI_SET_FIELD2(SQCB_WRITE_BACK_P, sq_c_index, r1) 
+    phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, sq_c_index), r1
 
 set_pc:
     SQCB0_ADDR_GET(r1)

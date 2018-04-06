@@ -65,6 +65,7 @@
 #define tx_table_s2_t0_action3 req_tx_bktrack_write_back_process_s2
 #define tx_table_s2_t0_action4 req_tx_bktrack_sqpt_process
 #define tx_table_s2_t0_action6 req_tx_dcqcn_cnp_process
+#define tx_table_s2_t1_action  req_tx_bktrack_sqcb1_write_back_process
 
 #define tx_table_s3_t0_action  req_tx_sqsge_process 
 #define tx_table_s3_t0_action1 req_tx_bktrack_sqwqe_process_s3
@@ -227,6 +228,13 @@ header_type req_tx_sq_bktrack_info_t {
         sq_p_index_or_imm_data1_or_inv_key1 : 16;
         imm_data2_or_inv_key2               : 16;
         pad                                 : 11;
+    }
+}
+
+header_type req_tx_bktrack_sqcb1_write_back_info_t {
+    fields {
+        tx_psn                           : 24;
+        ssn                              : 24;
     }
 }
 
@@ -564,11 +572,15 @@ metadata req_tx_lkey_to_ptseg_info_t t0_s2s_lkey_to_ptseg_info;
 metadata req_tx_lkey_to_ptseg_info_t t0_s2s_lkey_to_ptseg_info_scr;
 
 //Table-1
-@pragma pa_header_union ingress common_t1_s2s t1_s2s_bktrack_sqcb2_write_back_info t1_s2s_sge_to_lkey_info t1_s2s_lkey_to_ptseg_info
+@pragma pa_header_union ingress common_t1_s2s t1_s2s_bktrack_sqcb2_write_back_info t1_s2s_sge_to_lkey_info t1_s2s_lkey_to_ptseg_info t1_s2s_bktrack_sqcb1_write_back_info
 
 metadata req_tx_bktrack_sqcb2_write_back_info_t t1_s2s_bktrack_sqcb2_write_back_info;
 @pragma scratch_metadata
 metadata req_tx_bktrack_sqcb2_write_back_info_t t1_s2s_bktrack_sqcb2_write_back_info_scr;
+
+metadata req_tx_bktrack_sqcb1_write_back_info_t t1_s2s_bktrack_sqcb1_write_back_info;
+@pragma scratch_metadata
+metadata req_tx_bktrack_sqcb1_write_back_info_t t1_s2s_bktrack_sqcb1_write_back_info_scr;
 
 metadata req_tx_sge_to_lkey_info_t t1_s2s_sge_to_lkey_info;
 @pragma scratch_metadata
@@ -687,6 +699,16 @@ action req_tx_timer_process () {
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.sq_in_hbm, t0_s2s_sqcb0_to_sqcb2_info.sq_in_hbm);
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.pad, t0_s2s_sqcb0_to_sqcb2_info.pad);
 
+}
+action req_tx_bktrack_sqcb1_write_back_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t1_s2s_bktrack_sqcb1_write_back_info_scr.tx_psn, t1_s2s_bktrack_sqcb1_write_back_info.tx_psn);
+    modify_field(t1_s2s_bktrack_sqcb1_write_back_info_scr.ssn, t1_s2s_bktrack_sqcb1_write_back_info.ssn);
 }
 action req_tx_bktrack_sqcb2_write_back_process () {
     // from ki global

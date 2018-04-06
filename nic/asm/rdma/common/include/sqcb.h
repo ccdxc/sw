@@ -155,13 +155,16 @@ struct sqcb1_t {
     err_retry_ctr                  : 3;  // RW S0
     rsvd1                          : 5;
 
+    max_tx_psn                     : 24; // RW S0
+    max_ssn                        : 24; // RW S0
+
     rrqwqe_num_sges                : 8;  // RW S5
     rrqwqe_cur_sge_id              : 8;  // RW S5
     rrqwqe_cur_sge_offset          : 32; // RW S5
     rrq_in_progress                : 1;  // RW S5
     rsvd2                          : 7;
 
-    pad                            : 112;
+    pad                            : 64;
 };
 
 struct sqcb2_t {

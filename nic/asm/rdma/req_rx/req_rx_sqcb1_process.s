@@ -115,6 +115,17 @@ read:
     nop            // Branch Delay Slot
 
 check_psn:
+    // Update max_tx_psn/ssn to the maximum forward progress
+    // that has been made so that response to retried requests 
+    // that have PSN logically greater than PSN of the retried
+    // request can be accepted. This would happen if receiver
+    // receives all the request but acks sent by receiver
+    // was not received by the requester
+    scwlt24        c1, d.max_tx_psn, d.tx_psn
+    tblwr.c1       d.max_tx_psn, d.tx_psn
+     
+    scwlt24        c1, d.max_ssn, d.ssn
+    tblwr.c1       d.max_ssn, d.ssn
 
     // TODO Check valid PSN
 
@@ -134,7 +145,7 @@ check_psn:
  
 check_ack_sanity:
     // if (msn >= sqcb1_p->ssn) invalid_pkt_msn
-    scwle24        c3, d.ssn, CAPRI_APP_DATA_AETH_MSN
+    scwle24        c3, d.max_ssn, CAPRI_APP_DATA_AETH_MSN
     bcf            [c3], invalid_pkt_msn
 
     add            r3, CAPRI_APP_DATA_AETH_SYNDROME, r0
@@ -214,10 +225,11 @@ set_arg:
     phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cur_sge_id), d.rrqwqe_cur_sge_id, \
               CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_in_progress), d.rrq_in_progress
     phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cq_id), d.cq_id, \
-              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, e_rsp_psn), d.e_rsp_psn
+              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, e_rsp_psn_or_ssn), d.e_rsp_psn
     phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, msn), r3, \
               CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, dma_cmd_start_index), REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START
-    phvwr.c4  CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_empty), 1
+    phvwrpair.c4  CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, e_rsp_psn_or_ssn), d.ssn, \
+              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_empty), 1
     //phvwr CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, timer_active), d.timer_active
     add            r2, RRQ_C_INDEX, r0
     mincr          r2, d.log_rrq_size, 1

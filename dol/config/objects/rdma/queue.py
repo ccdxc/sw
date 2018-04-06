@@ -284,13 +284,16 @@ class RdmaSQstate(Packet):
         BitField("err_retry_ctr", 0, 3),
         BitField("rsvd1", 0, 5),
 
+        X3BytesField("max_tx_psn", 0),
+        X3BytesField("max_ssn", 0),
+
         ByteField("rrqwqe_num_sges", 0),
         ByteField("rrqwqe_cur_sge_id", 0),
         IntField("rrqwqe_cur_sge_offset", 0),
         BitField("rrq_in_progress", 0, 1),
         BitField("rsvd2", 0, 7),
 
-        BitField("pad1", 0, 112),
+        BitField("pad1", 0, 64),
 
         #SQCB2
         X3BytesField("dst_qp", 0),

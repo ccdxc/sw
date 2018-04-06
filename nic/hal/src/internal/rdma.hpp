@@ -951,13 +951,16 @@ typedef struct sqcb0_s {
     
 typedef struct sqcb1_s {
 
-    uint8_t pad[14];
+    uint8_t pad[8];
 
     uint32_t rsvd3: 7;
     uint32_t rrq_in_progress:1;
     uint32_t rrqwqe_cur_sge_offset;
     uint8_t  rrqwqe_cur_sge_id;
     uint8_t  rrqwqe_num_sges;
+
+    uint32_t max_ssn:24;
+    uint32_t max_tx_psn:24;
 
     uint32_t rsvd2: 5;
     uint32_t err_retry_ctr:3;

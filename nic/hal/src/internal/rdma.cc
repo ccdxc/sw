@@ -902,6 +902,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     sqcb_p->sqcb1.lsn = sqcb_p->sqcb2.lsn;
     sqcb_p->sqcb2.ssn = 1;
     sqcb_p->sqcb1.ssn = sqcb_p->sqcb2.ssn;
+    sqcb_p->sqcb1.max_ssn = sqcb_p->sqcb2.ssn;
     sqcb_p->sqcb1.msn = 0;
     sqcb_p->sqcb2.msn = sqcb_p->sqcb1.msn;
     sqcb_p->sqcb1.credits = 0xe; // 0x01110 - 128
@@ -1230,6 +1231,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             sqcb_p->sqcb2.tx_psn = spec.tx_psn();
             sqcb_p->sqcb2.exp_rsp_psn = (sqcb_p->sqcb2.tx_psn - 1);
             sqcb_p->sqcb1.tx_psn = sqcb_p->sqcb2.tx_psn;
+            sqcb_p->sqcb1.max_tx_psn = sqcb_p->sqcb2.tx_psn;
             sqcb_p->sqcb1.rexmit_psn = spec.tx_psn();
             HAL_TRACE_DEBUG("{}: Update: Setting tx_psn to: {}", __FUNCTION__,
                             spec.tx_psn());
