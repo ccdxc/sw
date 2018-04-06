@@ -1227,7 +1227,7 @@ hal_state::preserve_state(void)
 // restore the state from given memory segment
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_state::restore_state(void *mem)
+hal_state::restore_state(void)
 {
     hal_state_hints                *h3s_hints;
     fixed_managed_shared_memory    *fm_shm_mgr;
@@ -1366,7 +1366,8 @@ hal_mem_init (hal_cfg_t *hal_cfg, hal_obj_meta **obj_meta)
                                                             hal_cfg,
                                                             g_h2s_shmmgr);
 
-        // TODO: restore state
+        // restore preserved state
+        g_hal_state->restore_state();
 
         // nuke serialized state store now that we finished restoring all state
         shmmgr::destroy(g_h3s_shmmgr);
