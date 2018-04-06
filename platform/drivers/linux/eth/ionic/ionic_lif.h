@@ -95,6 +95,7 @@ struct lif {
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
 	void *api_private;
+	struct dentry *debugfs;
 };
 
 #define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)

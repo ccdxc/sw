@@ -13,6 +13,7 @@
  */
 #define IONIC_API_VERSION "1"
 
+struct dentry;
 struct lif;
 
 /** get_netdev_ionic_lif - Get the lif if the netdev is ionic.
@@ -66,6 +67,13 @@ void *ionic_api_get_private(struct lif *lif,
  */
 int ionic_api_set_private(struct lif *lif, void *priv,
 			  enum ionic_api_private kind);
+
+/** ionic_api_get_debugfs - Get the debugfs dir (if any) for the lif.
+ * @lif:		Handle to lif.
+ *
+ * Return: debugfs dir for the lif or NULL
+ */
+struct dentry *ionic_api_get_debugfs(struct lif *lif);
 
 /** ionic_api_get_identity - Get result of device identification.
  * @lif:		Handle to lif.
