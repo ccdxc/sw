@@ -1,5 +1,7 @@
 import cfg.callbacks.vrf as vrf
 import cfg.callbacks.l2segment as l2segment
+import grpc_meta.msg as msg
+import types_pb2
 
 def PreCreateCb(data, req_spec, resp_spec):
     if req_spec.request[0].vrf_key_handle.vrf_id == vrf.infra_vrf_id:
@@ -10,6 +12,16 @@ def PreCreateCb(data, req_spec, resp_spec):
 def PostCreateCb(data, req_spec, resp_spec):
     data.exp_data.spec = req_spec.request[0]
     data.exp_data.spec.ClearField("meta")
+    if req_spec.request[0].key_or_handle.ip_prefix.address.ip_af == types_pb2.IP_AF_INET6:
+        if (req_spec.request[0].key_or_handle.ip_prefix.address.v6_addr,
+                req_spec.request[0].key_or_handle.ip_prefix.prefix_len) not in msg.IPv6GenList:
+            msg.IPv6GenList.append((req_spec.request[0].key_or_handle.ip_prefix.address.v6_addr,
+                    req_spec.request[0].key_or_handle.ip_prefix.prefix_len))
+    else:
+        if (req_spec.request[0].key_or_handle.ip_prefix.address.v4_addr,
+                req_spec.request[0].key_or_handle.ip_prefix.prefix_len) not in msg.IPv4GenList:
+            msg.IPv4GenList.append((req_spec.request[0].key_or_handle.ip_prefix.address.v4_addr,
+                    req_spec.request[0].key_or_handle.ip_prefix.prefix_len))
 
 def PostGetCb(data, req_spec, resp_spec):
     data.actual_data.spec = resp_spec.response[0].spec

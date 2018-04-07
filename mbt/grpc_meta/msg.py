@@ -13,6 +13,9 @@ from grpc_meta.utils import ApiStatus
 
 grpc_meta_types.set_random_seed()
 
+IPv4GenList = []
+IPv6GenList = []
+
 class Constraints(Enum):
     Assignment = 1
     Equality = 2
@@ -148,12 +151,28 @@ class GrpcReqRspMsg:
     @staticmethod
     def generate_ip_address(message):
         message.ip_af = random.choice([types_pb2.IP_AF_INET, types_pb2.IP_AF_INET6])
+        global IPv4GenList
+        global IPv6GenList
+
         if message.ip_af == types_pb2.IP_AF_INET:
-            message.v4_addr = IpSubnetAllocator.get().getnum()
-            prefix_len = random.randint(8,32)
+            while True:
+                message.v4_addr = IpSubnetAllocator.get().getnum()
+                prefix_len = random.randint(8,32)
+                if (message.v4_addr, prefix_len) in IPv4GenList:
+                    continue
+                else:
+                    IPv4GenList.append((message.v4_addr, prefix_len))
+                    break
         else:
-            message.v6_addr = Ipv6SubnetAllocator.get().getnum().to_bytes(16, 'big')
-            prefix_len = random.randint(8,128)
+            while True:
+                message.v6_addr = Ipv6SubnetAllocator.get().getnum().to_bytes(16, 'big')
+                prefix_len = random.randint(8,128)
+                if (message.v6_addr, prefix_len) in IPv6GenList:
+                    continue
+                else:
+                    IPv6GenList.append((message.v6_addr, prefix_len))
+                    break
+
         return prefix_len
 
     @staticmethod
