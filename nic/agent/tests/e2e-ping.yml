@@ -1,0 +1,83 @@
+# This is a sample test spec, which declares everything that is needed
+# for an e2e. This can be applied at Venice, Agent or HAL level
+# This file describes only the topology, objects and the bindings between them
+
+# The object types, bindings should match with the entrypoint.
+# Config generator will not auto-validate this.
+# Config generator will ingest this file and generate required objects at the entrypoint respectively
+---
+  kind: testcase
+  name: "e2e-ping"
+  entrypoint: "agent" # could be directly HAL or Venice
+  app: "ping"
+  summary: "This tests a ping between 2 remote endpoints"
+  objects: # Objects should match the objects specified below
+    - tenant1
+    - remoteEP1
+    - remoteEP2
+    - network1
+    - network2
+    - l2Seg1
+    - l2Seg2
+    - uplink1
+    - uplink2
+# Section below describes the objects needed. One yaml section per object type
+---
+  kind: Tenant
+  name: tenant1
+---
+  kind: Endpoint
+  objects:
+    remoteEP1:
+      type: remote
+      bindings:
+        - uplink1
+        - network1
+        - l2Seg1
+    remoteEP2:
+      type: remote
+      bindings:
+        - uplink2
+        - network2
+        - l2Seg2
+---
+    kind: Network
+    objects:
+      network1:
+        type: remote
+        bindings:
+          - l2Seg1
+        network2:
+          type: remote
+          bindings:
+            - l2Seg2
+---
+  kind: L2Segment
+  objects:
+    l2Seg1:
+      bindings:
+        - uplink1
+    l2Seg2:
+      bindings:
+        - uplink2
+---
+  kind: Interfaces
+  objects:
+    uplink1:
+      type: uplink
+      bindings:
+        - l2Seg1
+        - remoteEP1
+    uplink2:
+      type: uplink
+      bindings:
+        - l2Seg2
+        - remoteEP2
+# This section controls the config settings for a particular app
+---
+  kind: app
+  name: ping
+  source:
+    - remoteEP1
+  dest:
+    - remoteEP2
