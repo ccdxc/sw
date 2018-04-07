@@ -84,7 +84,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_ACL_ITREE                       = 70,
     HAL_SLAB_ACL_ITREE_NODE                  = 71,
     HAL_SLAB_NWSEC_RULE                      = 72,
-    HAL_SLAB_RULEDB                          = 73,
+    HAL_SLAB_IPV4_RULE                       = 73,
     HAL_SLAB_RTSP_ALG_APPSESS                = 74,
     HAL_SLAB_RTSP_ALG_L4SESS                 = 75,
     HAL_SLAB_RTSP_ALG_INFO                   = 76,

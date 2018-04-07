@@ -404,16 +404,16 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
 
     // TODO - cleanup !! why same slab id for the 2 slabs below ?
     slabs_[HAL_SLAB_NWSEC_RULE] =
-        slab::factory("ipv4_rule", HAL_SLAB_NWSEC_RULE,
+        slab::factory("nwsec_rule", HAL_SLAB_NWSEC_RULE,
                       sizeof(hal::nwsec_rule_t), 1024,
                       true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_RULE] != NULL), false);
 
-    slabs_[HAL_SLAB_NWSEC_RULE] =
-        slab::factory("ipv4_rule", HAL_SLAB_NWSEC_RULE,
+    slabs_[HAL_SLAB_IPV4_RULE] =
+        slab::factory("ipv4_rule", HAL_SLAB_IPV4_RULE,
                       sizeof(hal::ipv4_rule_t), 1024,
                       true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_RULE] != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPV4_RULE] != NULL), false);
 
     slabs_[HAL_SLAB_PROXY] = slab::factory("proxy", HAL_SLAB_PROXY,
                                            sizeof(hal::proxy_t), HAL_MAX_PROXY,
@@ -1480,8 +1480,8 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->nwsec_rule_slab()->free(elem);
         break;
 
-    case HAL_SLAB_RULEDB:
-        g_hal_state->ruledb_slab()->free(elem);
+    case HAL_SLAB_IPV4_RULE:
+        g_hal_state->ipv4_rule_slab()->free(elem);
         break;
 
     case HAL_SLAB_NWSEC_POLICY_CFG:
