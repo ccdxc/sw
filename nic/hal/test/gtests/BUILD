@@ -327,3 +327,19 @@ cc_test(
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )
+
+cc_test(
+    name = "offload_sim_test",
+    srcs = [
+        "LZR_model.h",
+        "LZR_model.c",
+        "pnso_api.h",
+        "offloader_sim.h",
+        "offloader_sim_algo.c",
+        "offloader_sim.c",
+        "offload_sim_test.cc",
+        ],
+    deps = gl_deps_list + test_deps_list,
+    linkopts = gl_linkopts_list,
+    copts = sdk_copts,
+)
