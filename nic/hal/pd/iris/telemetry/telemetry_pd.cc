@@ -365,6 +365,31 @@ pd_flow_monitor_rule_get(pd_flow_monitor_rule_get_args_t *args)
     return ret;
 }
 
+hal_ret_t
+pd_drop_monitor_rule_create(pd_drop_monitor_rule_create_args_t *args)
+{
+    // TODO: Add rules to itree
+    hal_ret_t ret = HAL_RET_OK;
+
+    return ret;
+}
+
+hal_ret_t
+pd_drop_monitor_rule_delete(pd_drop_monitor_rule_delete_args_t *args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    return ret;
+}
+
+hal_ret_t
+pd_drop_monitor_rule_get(pd_drop_monitor_rule_get_args_t *args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    return ret;
+}
+
 } // namespace pd
 } // namespace hal
 

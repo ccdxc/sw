@@ -17,6 +17,9 @@ using telemetry::ExportControlId;
 using telemetry::FlowMonitorRule;
 using telemetry::FlowMonitorRuleSpec;
 using telemetry::FlowMonitorRuleStatus;
+using telemetry::DropMonitorRule;
+using telemetry::DropMonitorRuleSpec;
+using telemetry::DropMonitorRuleStatus;
 
 namespace hal {
 
@@ -45,6 +48,12 @@ DEFINE_ENUM(export_formats_en, EXPORT_FORMATS)
 #define MIRROR_SESSION_APP_REDIR_VISIB_ID    7
 // Iris pipeline can support upto 8 mirror destinations
 #define MAX_MIRROR_SESSION_DEST     8
+
+typedef struct drop_monitor_rule_s {
+    hal_spinlock_t slock;
+    uint64_t drop_reasons;  // drop reason bitmap
+    uint8_t mirror_destinations[MAX_MIRROR_SESSION_DEST];
+} __PACK__ drop_monitor_rule_t;
 
 typedef struct flow_monitor_rule_s {
     hal_spinlock_t slock;
@@ -126,6 +135,9 @@ hal_ret_t collector_delete(ExportControlId *id, Collector *resp);
 hal_ret_t flow_monitor_rule_create(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
 hal_ret_t flow_monitor_rule_delete(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
 hal_ret_t flow_monitor_rule_get(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
+hal_ret_t drop_monitor_rule_create(DropMonitorRuleSpec *spec, DropMonitorRule *rsp);
+hal_ret_t drop_monitor_rule_delete(DropMonitorRuleSpec *spec, DropMonitorRule *rsp);
+hal_ret_t drop_monitor_rule_get(DropMonitorRuleSpec *spec, DropMonitorRule *rsp);
 
 }    // namespace
 

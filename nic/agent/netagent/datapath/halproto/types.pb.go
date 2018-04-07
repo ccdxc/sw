@@ -796,7 +796,6 @@
 		DropStatsEntry
 		TableStatsEntry
 		TableStats
-		Status
 		SystemResponse
 		Stats
 		DropStats
@@ -836,6 +835,11 @@
 		FlowMonitorRule
 		FlowMonitorRuleConfigMsg
 		FlowMonitorRuleResponseMsg
+		DropMonitorRuleSpec
+		DropMonitorRuleStatus
+		DropMonitorRule
+		DropMonitorRuleConfigMsg
+		DropMonitorRuleResponseMsg
 		RSpanSpec
 		ERSpanSpec
 		MirrorSessionId

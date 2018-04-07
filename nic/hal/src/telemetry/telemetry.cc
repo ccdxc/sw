@@ -16,6 +16,10 @@ using hal::pd::pd_flow_monitor_rule_create_args_t;
 using hal::pd::pd_flow_monitor_rule_delete_args_t;
 using hal::pd::pd_flow_monitor_rule_get_args_t;
 using hal::flow_monitor_rule_t;
+using hal::pd::pd_drop_monitor_rule_create_args_t;
+using hal::pd::pd_drop_monitor_rule_delete_args_t;
+using hal::pd::pd_drop_monitor_rule_get_args_t;
+using hal::drop_monitor_rule_t;
 
 namespace hal {
 
@@ -428,6 +432,59 @@ end:
 
 hal_ret_t
 flow_monitor_rule_get (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    // TODO
+
+    return ret;
+}
+
+hal_ret_t
+drop_monitor_rule_create (DropMonitorRuleSpec *spec, DropMonitorRule *rsp)
+{
+    pd_drop_monitor_rule_create_args_t args = {0};
+    drop_monitor_rule_t rule = {0};
+    hal_ret_t ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("PI-DropMonitorRule create");
+    args.rule = &rule;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_MONITOR_RULE_CREATE, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-DropMonitor create failed {}", ret);
+        goto end;
+    } else {
+        HAL_TRACE_DEBUG("PI-MirrorSession create succeeded");
+    }
+    rsp->mutable_spec()->CopyFrom(*spec);
+
+end:
+    return ret;
+}
+
+hal_ret_t
+drop_monitor_rule_delete (DropMonitorRuleSpec *spec, DropMonitorRule *rsp)
+{
+    pd_drop_monitor_rule_create_args_t args = {0};
+    drop_monitor_rule_t rule = {0};
+    hal_ret_t ret;
+
+    args.rule = &rule;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_MONITOR_RULE_DELETE, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-DropMonitor delete failed {}", ret);
+        goto end;
+    } else {
+        HAL_TRACE_DEBUG("PI-MirrorSession delete succeeded");
+    }
+    rsp->mutable_spec()->CopyFrom(*spec);
+
+end:
+    return ret;
+}
+
+hal_ret_t
+drop_monitor_rule_get (DropMonitorRuleSpec *spec, DropMonitorRule *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
 

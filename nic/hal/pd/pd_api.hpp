@@ -1508,6 +1508,37 @@ pd_flow_monitor_rule_get_args_init(pd_flow_monitor_rule_get_args_t *args)
     args->rule = NULL;
 }
 
+// drop monitoring rule
+typedef struct pd_drop_monitor_rule_create_args_s {
+    drop_monitor_rule_t *rule;
+} __PACK__ pd_drop_monitor_rule_create_args_t;
+
+static inline void
+pd_drop_monitor_rule_create_args_init(pd_drop_monitor_rule_create_args_t *args)
+{
+    args->rule = NULL;
+}
+
+typedef struct pd_drop_monitor_rule_delete_args_s {
+    drop_monitor_rule_t *rule;
+} __PACK__ pd_drop_monitor_rule_delete_args_t;
+
+static inline void
+pd_drop_monitor_rule_delete_args_init(pd_drop_monitor_rule_delete_args_t *args)
+{
+    args->rule = NULL;
+}
+
+typedef struct pd_drop_monitor_rule_get_args_s {
+    drop_monitor_rule_t *rule;
+} __PACK__ pd_drop_monitor_rule_get_args_t;
+
+static inline void
+pd_drop_monitor_rule_get_args_init(pd_drop_monitor_rule_get_args_t *args)
+{
+    args->rule = NULL;
+}
+
 // collector
 typedef struct pd_collector_create_args_s {
     collector_config_t *cfg;
@@ -2483,9 +2514,12 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_FLOW_MONITOR_RULE_CREATE, 211, "PD_FUNC_ID_FLOW_MONITOR_RULE_CREATE")\
     ENTRY(PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE, 212, "PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE")\
     ENTRY(PD_FUNC_ID_FLOW_MONITOR_RULE_GET,    213, "PD_FUNC_ID_FLOW_MONITOR_RULE_GET")\
-    ENTRY(PD_FUNC_ID_VRF_RESTORE,              214, "PD_FUNC_ID_VRF_RESTORE") \
-    ENTRY(PD_FUNC_ID_TABLE_PROPERTIES_GET,     215, "PD_FUNC_ID_TABLE_PROPERTIES_GET") \
-    ENTRY(PD_FUNC_ID_MAX,                      216, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_DROP_MONITOR_RULE_CREATE, 214, "PD_FUNC_ID_DROP_MONITOR_RULE_CREATE")\
+    ENTRY(PD_FUNC_ID_DROP_MONITOR_RULE_DELETE, 215, "PD_FUNC_ID_DROP_MONITOR_RULE_DELETE")\
+    ENTRY(PD_FUNC_ID_DROP_MONITOR_RULE_GET,    216, "PD_FUNC_ID_DROP_MONITOR_RULE_GET")\
+    ENTRY(PD_FUNC_ID_VRF_RESTORE,              217, "PD_FUNC_ID_VRF_RESTORE") \
+    ENTRY(PD_FUNC_ID_TABLE_PROPERTIES_GET,     218, "PD_FUNC_ID_TABLE_PROPERTIES_GET") \
+    ENTRY(PD_FUNC_ID_MAX,                      219, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2666,10 +2700,15 @@ PD_FUNCP_TYPEDEF(pd_mirror_session_create);
 PD_FUNCP_TYPEDEF(pd_mirror_session_delete);
 PD_FUNCP_TYPEDEF(pd_mirror_session_get);
 
-// mirror session
+// flow monitor rule
 PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_create);
 PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_delete);
 PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_get);
+
+// drop monitor rule
+PD_FUNCP_TYPEDEF(pd_drop_monitor_rule_create);
+PD_FUNCP_TYPEDEF(pd_drop_monitor_rule_delete);
+PD_FUNCP_TYPEDEF(pd_drop_monitor_rule_get);
 
 // collector
 PD_FUNCP_TYPEDEF(pd_collector_create);
@@ -3004,6 +3043,11 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_flow_monitor_rule_create);
         PD_UNION_FIELD(pd_flow_monitor_rule_delete);
         PD_UNION_FIELD(pd_flow_monitor_rule_get);
+
+        // drop monitoring rule
+        PD_UNION_FIELD(pd_drop_monitor_rule_create);
+        PD_UNION_FIELD(pd_drop_monitor_rule_delete);
+        PD_UNION_FIELD(pd_drop_monitor_rule_get);
 
         // collector
         PD_UNION_FIELD(pd_collector_create);

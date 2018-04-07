@@ -233,6 +233,11 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE, pd_flow_monitor_rule_delete);
     PD_SYMBOL_LOAD(PD_FUNC_ID_FLOW_MONITOR_RULE_GET, pd_flow_monitor_rule_get);
 
+    // drop monitoring rule
+    PD_SYMBOL_LOAD(PD_FUNC_ID_DROP_MONITOR_RULE_CREATE, pd_drop_monitor_rule_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_DROP_MONITOR_RULE_DELETE, pd_drop_monitor_rule_delete);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_DROP_MONITOR_RULE_GET, pd_drop_monitor_rule_get);
+
     // collector
     PD_SYMBOL_LOAD(PD_FUNC_ID_COLLECTOR_CREATE, pd_collector_create);
 
@@ -576,6 +581,11 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_FLOW_MONITOR_RULE_CREATE, pd_flow_monitor_rule_create);
     PD_SYMBOL_CALL(PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE, pd_flow_monitor_rule_delete);
     PD_SYMBOL_CALL(PD_FUNC_ID_FLOW_MONITOR_RULE_GET, pd_flow_monitor_rule_get);
+
+    // flow monitoring rule
+    PD_SYMBOL_CALL(PD_FUNC_ID_DROP_MONITOR_RULE_CREATE, pd_drop_monitor_rule_create);
+    PD_SYMBOL_CALL(PD_FUNC_ID_DROP_MONITOR_RULE_DELETE, pd_drop_monitor_rule_delete);
+    PD_SYMBOL_CALL(PD_FUNC_ID_DROP_MONITOR_RULE_GET, pd_drop_monitor_rule_get);
 
     // collector
     PD_SYMBOL_CALL(PD_FUNC_ID_COLLECTOR_CREATE, pd_collector_create);

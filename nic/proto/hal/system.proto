@@ -158,17 +158,10 @@ message TableStats {
   repeated TableStatsEntry    table_stats           = 1;
 }
 
-// Status captures the operating status of various components in the HAL
-// including "ready" status, thread health etc.
-message Status {
-  repeated telemetry.MirrorSessionId span_on_drop_sessions  = 1;  // Mirror Sessions to enable for DROP packets
-}
-
 // Global system object
 message SystemResponse {
   types.ApiStatus    api_status      = 1;                  // API status code
   Stats              stats           = 2;                  // Statistics
-  Status             status          = 3;                  // System status
 }
 
 // Stats object

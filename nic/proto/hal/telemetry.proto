@@ -16,7 +16,7 @@ message CollectorSpec {
   types.ObjectMeta  meta              = 1; // Common object meta
   ExportControlId   export_controlId  = 2; // Controller ID that this Collector is attached to
   types.EncapInfo   encap             = 3; // VLAN encap to be applied to traffic
-  fixed64           l2seg_handle  = 4; // Hal Handle for the L2 segment (ideally remove encap)
+  fixed64           l2seg_handle      = 4; // Hal Handle for the L2 segment (ideally remove encap)
   types.IPAddress   dest_ip           = 5; // Destination IP of the Collector
   types.IPAddress   src_ip            = 6; // Source IP to use
   types.IPProtocol  protocol          = 7; // L4 IP Protocol to use
@@ -29,13 +29,13 @@ message CollectorSpec {
 message CollectorStatus {
   // CollectorStatus Codes
   enum CollectorStatusCode {
-    SUCCESS			    = 0;
-    INVALID_CONFIG	= 1;
-    TEMP_FAILURE		= 2;
-    PERM_FAILURE		= 3;
+    SUCCESS             = 0;
+    INVALID_CONFIG      = 1;
+    TEMP_FAILURE        = 2;
+    PERM_FAILURE        = 3;
   }
-  CollectorStatusCode 	code 		= 1; // Status code
-  string 		status 		= 2; // Status of the collector
+  CollectorStatusCode       code        = 1; // Status code
+  string                    status      = 2; // Status of the collector
 }
 
 // Collector is a container that holds both the configuration and the operational 
@@ -53,13 +53,13 @@ message CollectorConfigMsg {
 
 // CollectorConfigsMsg message is used as response for API requests.
 message CollectorResponseMsg {
-  types.ApiStatus     status      = 1; // Status of the API request the resulted in this response
-  repeated Collector  response  = 2; // List of collectors
+  types.ApiStatus     status        = 1; // Status of the API request the resulted in this response
+  repeated Collector  response      = 2; // List of collectors
 }
 
 // ExportFormat is a enumeration of export formats supported
 enum ExportFormat {
-  IPFIX = 0;
+  IPFIX     = 0;
   NETFLOWV9 = 1;
 }
 
@@ -80,13 +80,13 @@ message ExportControlSpec {
 message ExportControlStatus {
   // Export control status codes
   enum ExportControlStatusCode {
-    SUCCESS			= 0;
-    INVALID_CONFIG		= 1;
-    TEMP_FAILURE		= 2;
-    PERM_FAILURE		= 3;
+    SUCCESS             = 0;
+    INVALID_CONFIG      = 1;
+    TEMP_FAILURE        = 2;
+    PERM_FAILURE        = 3;
   }
-  ExportControlStatusCode 	code 	= 1;
-  string 			status 	= 2;
+  ExportControlStatusCode     code      = 1;
+  string                      status    = 2;
 }
 
 // ExportControl is a container for the configuration and the operational status for ExportControl
@@ -156,14 +156,14 @@ message FlowMonitorRuleSpec {
 message FlowMonitorRuleStatus {
   // FlowMonitorRule status codes
   enum FlowMonitorRuleStatusCode {
-    SUCCESS			= 0;
-    INVALID_CONFIG		= 1;
-    TEMP_FAILURE		= 2;
-    PERM_FAILURE		= 3;
+    SUCCESS             = 0;
+    INVALID_CONFIG      = 1;
+    TEMP_FAILURE        = 2;
+    PERM_FAILURE        = 3;
   }
-  FlowMonitorRuleStatusCode 	code 		= 1; // Status code
-  string 			status       	= 2; // Current operational status
-  uint32 			active_flows 	= 3; // Number of active Flows that matched this rule
+  FlowMonitorRuleStatusCode     code    = 1; // Status code
+  string             status             = 2; // Current operational status
+  uint32             active_flows       = 3; // Number of active Flows that matched this rule
 }
 
 // FlowMonitorRule is a container for the configuration and operational status
@@ -184,10 +184,47 @@ message FlowMonitorRuleResponseMsg {
   repeated FlowMonitorRule  response   = 2; // Flow monitor rule responses
 }
 
+// Drop Monitor Rule specification
+message DropMonitorRuleSpec {
+  types.DropReasons   reasons               = 1; // drop reasons
+  repeated uint32     mirror_destinations   = 2; // list of mirror destinations
+}
+
+// DropMonitorRuleStatus is the operational status of the rule
+message DropMonitorRuleStatus {
+  // DropMonitorRule status codes
+  enum DropMonitorRuleStatusCode {
+    SUCCESS             = 0;
+    INVALID_CONFIG      = 1;
+    TEMP_FAILURE        = 2;
+    PERM_FAILURE        = 3;
+  }
+  DropMonitorRuleStatusCode     code    = 1; // Status code
+  string             status             = 2; // Current operational status
+}
+
+// DropMonitorRule is a container for the configuration and operational status
+message DropMonitorRule {
+  types.ApiStatus         api_status  = 1;
+  DropMonitorRuleSpec     spec        = 2;
+  DropMonitorRuleStatus   status      = 3;
+}
+
+// DropMonitorRuleConfigMsg is used in api requests for drop monitor configuration
+message DropMonitorRuleConfigMsg {
+  repeated DropMonitorRuleSpec request = 1;
+}
+
+// DropMonitorRuleResponseMsg is used in responses for drop monitor operations
+message DropMonitorRuleResponseMsg {
+  types.ApiStatus           status     = 1; // Status of the API
+  repeated DropMonitorRule  response   = 2; // Drop monitor rule responses
+}
+
 // RspanSpec is the configuration specification for RSPAN.
 message RSpanSpec {
-  kh.InterfaceKeyHandle 	intf 		= 1; // Interface handle
-  types.EncapInfo		rspan_encap 	= 2; // VLAN encapsulation
+  kh.InterfaceKeyHandle     intf         = 1; // Interface handle
+  types.EncapInfo        rspan_encap     = 2; // VLAN encapsulation
 }
 
 // ERSpanSpec is the configuration specification for ERSPAN 
@@ -206,12 +243,12 @@ message MirrorSessionId {
 // MirrorSessionSpec is the configuration specification for mirror config
 message MirrorSessionSpec {
   types.ObjectMeta  meta            = 1; // Common object meta
-  MirrorSessionId	id              = 2; // Session ID
-  uint32		snaplen		        = 3; // maximum  bytes of packet to mirror.
+  MirrorSessionId   id              = 2; // Session ID
+  uint32            snaplen         = 3; // maximum  bytes of packet to mirror.
   oneof destination {
-    kh.InterfaceKeyHandle	local_span_if  = 4; // Local span destination
-    RSpanSpec   		rspan_spec     = 5; // VLAN encap to use when configuration is for RSPAN
-    ERSpanSpec        		erspan_spec    = 6; // ERSPAN configuration in case of ERSPAN
+    kh.InterfaceKeyHandle   local_span_if  = 4; // Local span destination
+    RSpanSpec               rspan_spec     = 5; // VLAN encap to use when configuration is for RSPAN
+    ERSpanSpec              erspan_spec    = 6; // ERSPAN configuration in case of ERSPAN
   }
 }
 
@@ -219,14 +256,14 @@ message MirrorSessionSpec {
 message MirrorSessionStatus {
   // Mirror Session  status codes
   enum MirrorSessionStatusCode {
-    SUCCESS			= 0;
-    INVALID_CONFIG		= 1;
-    TEMP_FAILURE		= 2;
-    PERM_FAILURE		= 3;
+    SUCCESS             = 0;
+    INVALID_CONFIG      = 1;
+    TEMP_FAILURE        = 2;
+    PERM_FAILURE        = 3;
   }
-  MirrorSessionStatusCode 	code		= 1;
-  string  			status        	= 2;
-  int32   			active_flows  	= 3;
+  MirrorSessionStatusCode   code            = 1;
+  string                    status          = 2;
+  int32                     active_flows    = 3;
 }
 
 // MirrorSession is a container of the configuration and the operational status for mirror sessions.
@@ -249,7 +286,7 @@ message  MirrorSessionDeleteMsg {
 // MirrorSessionResponseMsg is used as responses to the MirrorSession configuration APIs
 message MirrorSessionResponseMsg {
   types.ApiStatus               status    = 1; // Response status of the API
-  repeated MirrorSession    	response  = 2; // Operational status of the mirror session
+  repeated MirrorSession        response  = 2; // Operational status of the mirror session
 }
 
 
@@ -272,6 +309,13 @@ service Telemetry {
   rpc FlowMonitorRuleList(ExportControlId) returns (FlowMonitorRuleResponseMsg)  {}
   rpc FlowMonitorRuleGet(FlowMonitorRuleConfigMsg) returns (FlowMonitorRuleResponseMsg)  {}
   rpc FlowMonitorRuleDelete(FlowMonitorRuleConfigMsg) returns (FlowMonitorRuleResponseMsg) {}
+
+  // DropMonitorRules CRUD Operations
+  rpc DropMonitorRuleCreate(DropMonitorRuleConfigMsg) returns (DropMonitorRuleResponseMsg) {}
+  rpc DropMonitorRuleUpdate(DropMonitorRuleConfigMsg) returns (DropMonitorRuleResponseMsg) {}
+  rpc DropMonitorRuleList(ExportControlId) returns (DropMonitorRuleResponseMsg)  {}
+  rpc DropMonitorRuleGet(DropMonitorRuleConfigMsg) returns (DropMonitorRuleResponseMsg)  {}
+  rpc DropMonitorRuleDelete(DropMonitorRuleConfigMsg) returns (DropMonitorRuleResponseMsg) {}
 
   // MirrorSession CRUD Operations
   rpc MirrorSessionCreate(MirrorSessionConfigMsg) returns (MirrorSessionResponseMsg) {}
