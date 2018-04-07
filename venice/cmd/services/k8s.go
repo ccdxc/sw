@@ -344,6 +344,12 @@ var k8sModules = map[string]protos.Module{
 					HostPath:  globals.ElasticMgmtConfigFile,
 					MountPath: "/usr/share/elasticsearch/mgmt_env.sh",
 				},
+				// Volume definition for Elastic data storage
+				&protos.ModuleSpec_Volume{
+					Name:      "data",
+					HostPath:  globals.ElasticDataVolumeDir,
+					MountPath: "/usr/share/elasticsearch/data",
+				},
 			},
 		},
 	},

@@ -14,6 +14,9 @@ const (
 	// ElasticMgmtConfigFile is used by Elastic for binding to MgmtAddr and publishing to peers
 	ElasticMgmtConfigFile = "/etc/pensando/mgmt_env.sh"
 
+	// ElasticDataVolumeDir is used by Elastic for storing indexed data
+	ElasticDataVolumeDir = "/var/lib/pensando/elasticsearch/data"
+
 	// EtcdConfigFile is written by CMD when starting cluster
 	EtcdConfigFile = "/etc/pensando/etcd.conf"
 
