@@ -14,6 +14,7 @@
 #include "gflags/gflags.h"
 
 DECLARE_uint64(hal_port);
+DECLARE_string(hal_ip);
 
 const static uint32_t  kDefaultQStateSize   = 64;
 
@@ -43,7 +44,7 @@ void init_hal_if() {
     return;
 
   char host_addr[32];
-  sprintf(host_addr, "localhost:%lu", FLAGS_hal_port);
+  sprintf(host_addr, "%s:%lu", FLAGS_hal_ip.c_str(), FLAGS_hal_port);
   hal_channel = std::move(grpc::CreateChannel(
       host_addr, grpc::InsecureChannelCredentials()));
   int i;

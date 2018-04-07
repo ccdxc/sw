@@ -298,14 +298,14 @@ def run_storage_dol(port, args):
     os.chdir(bin_dir)
     if args.rtl:
         if args.storage_test:
-            cmd = ['./storage_test', '--hal_port', str(port), '--test_group', args.storage_test, '--poll_interval', '1800', '--long_poll_interval', '3600']
+            cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.storage_test, '--poll_interval', '1800', '--long_poll_interval', '3600']
         else:
-            cmd = ['./storage_test', '--hal_port', str(port), '--poll_interval', '1800', '--long_poll_interval', '3600']
+            cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--poll_interval', '1800', '--long_poll_interval', '3600']
     else:
         if args.storage_test:
-            cmd = ['./storage_test', '--hal_port', str(port), '--test_group', args.storage_test]
+            cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.storage_test]
         else:
-            cmd = ['./storage_test', '--hal_port', str(port)]
+            cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip)]
     p = Popen(cmd)
     #p.communicate()
     #return p.returncode
@@ -708,7 +708,7 @@ def main():
                         help='Dump DOL configuration to json file')
     parser.add_argument('--zmqtcp', dest='zmqtcp', default=None,
                         action='store_true', help='Run for ZEBU environment.')
-    parser.add_argument('--hal_ip', dest='hal_ip', default=None,
+    parser.add_argument('--hal_ip', dest='hal_ip', default='localhost',
                         help='HAL IP Address.')
     parser.add_argument('--model_ip', dest='model_ip', default=None,
                         help='Model IP Address.')

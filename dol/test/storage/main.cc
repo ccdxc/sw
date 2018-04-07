@@ -24,6 +24,7 @@ void queues_shutdown();
 }
 
 DEFINE_uint64(hal_port, 50054, "TCP port of the HAL's gRPC server");
+DEFINE_string(hal_ip, "localhost", "IP of HAL's gRPC server");
 DEFINE_string(test_group, "", "Test group to run");
 DEFINE_uint64(poll_interval, 60, "Polling interval in seconds");
 DEFINE_uint64(long_poll_interval, 300,
@@ -227,6 +228,7 @@ int main(int argc, char**argv) {
   signal(SIGSEGV, sig_handler);
 
   std::cout << "Input - hal_port: "   << FLAGS_hal_port 
+            << "\nInput - hal_ip: "   << FLAGS_hal_ip 
             << "\nTest group: "       << FLAGS_test_group
             << "\nPolling interval: " << FLAGS_poll_interval 
             << "\n# PDMA queues (power of 2): " << FLAGS_num_pdma_queues 
