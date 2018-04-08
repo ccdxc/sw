@@ -9,11 +9,7 @@ struct req_tx_s3_t2_k k;
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
 // NOTE: Non-RTL - feeding timestamp from dcqcn_cb since model doesn't have timestamps.
 
-#ifdef RTL
-#define CUR_TIMESTAMP r4
-#else
 #define CUR_TIMESTAMP d.cur_timestamp
-#endif
 
 #define TO_S5_P to_s5_sq_to_stage
 
@@ -167,8 +163,6 @@ drop_phv:
     phvwr          p.common.common_t3_s2s_s2s_data, K_S2S_DATA 
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
 
-#ifdef RTL
-#else
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 
      * Below code is for testing on model only since there are no timestamps on model.
@@ -177,6 +171,5 @@ drop_phv:
     add         r1, CUR_TIMESTAMP, 100000
     tblwr       d.cur_timestamp, r1
     tblmincri   d.num_sched_drop, 8, 1 // Increment num_sched_drop by 1
-#endif
     nop.e
     nop

@@ -13,11 +13,7 @@ struct req_rx_s1_t3_k k;
 
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
 // NOTE: Feeding timestamp from dcqcn_cb since model doesn't have timestamps.
-#ifdef RTL
-#define CUR_TIMESTAMP r4
-#else
 #define CUR_TIMESTAMP d.cur_timestamp
-#endif
 
 %%
     .param rdma_num_clock_ticks_per_cnp
