@@ -1,0 +1,125 @@
+# Feature Test Modules List
+feature:
+    id          : ipsg
+    sub         : inv_mac_rx_l3uc
+    package     : test.ipsg.inv_mac
+    module      : ipsg
+    spec        : rx_l3uc.testspec
+    enable      : True
+    ignore      : False
+
+
+modules:
+    - module:
+        name    : IPV4_QTAG_UDP
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg  : filter://native=False
+
+    - module:
+        name    : IPV4_QTAG_TCP
+        iterate :
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg  : filter://native=False
+
+    - module:
+        name    : IPV4_QTAG_ICMP
+        iterate :
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg  : filter://native=False
+
+    - module:
+        name    : IPV6_QTAG_UDP
+        iterate :
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg  : filter://native=False
+
+    - module:
+        name    : IPV6_QTAG_TCP
+        iterate :
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg  : filter://native=False
+
+    - module:
+        name    : IPV6_QTAG_ICMPV6
+        iterate :
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg  : filter://native=False
+
+    - module:
+        name    : IPV4_UTAG_UDP
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg  : filter://native=True
+
+    - module:
+        name    : IPV4_UTAG_TCP
+        iterate :
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg  : filter://native=True
+
+    - module:
+        name    : IPV4_UTAG_ICMP
+        iterate :
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg  : filter://native=True
+
+    - module:
+        name    : IPV6_UTAG_UDP
+        iterate :
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg  : filter://native=True
+
+    - module:
+        name    : IPV6_UTAG_TCP
+        iterate :
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg  : filter://native=True
+
+    - module:
+        name    : IPV6_UTAG_ICMPV6
+        iterate :
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg  : filter://native=True
+
+    - module:
+        name    : IPV4_PTAG_UDP
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg  : filter://native=True
+              priotag : True
+
+    - module:
+        name    : IPV4_PTAG_TCP
+        iterate :
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg  : filter://native=True
+              priotag : True
+
+    - module:
+        name    : IPV4_PTAG_ICMP
+        iterate :
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg  : filter://native=True
+              priotag : True
+
+    - module:
+        name    : IPV6_PTAG_UDP
+        iterate :
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg  : filter://native=True
+              priotag : True
+
+    - module:
+        name    : IPV6_PTAG_TCP
+        iterate :
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg  : filter://native=True
+              priotag : True
+
+    - module:
+        name    : IPV6_PTAG_ICMPV6
+        iterate :
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg  : filter://native=True
+              priotag : True

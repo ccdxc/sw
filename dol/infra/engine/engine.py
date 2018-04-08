@@ -41,8 +41,8 @@ def ExecuteAllModules():
 def GetSummaryAndResult():
     print("\nResult Summary:")
     print("=" * SUMMARY_NCOLS)
-    print("%-16s %-32s %-9s %-6s %-6s %-6s" %\
-          ('Feature/Sub', 'Name', 'Result', 'Passed', 'Failed', ' Total'))
+    print("%-48s %-9s %-6s %-6s %-6s" %\
+          ('Feature::Sub::Module', 'Result', 'Passed', 'Failed', ' Total'))
     print("=" * SUMMARY_NCOLS)
 
     npass = 0
@@ -60,7 +60,7 @@ def GetSummaryAndResult():
     
     print("-" * SUMMARY_NCOLS)
     totstr = 'Total (Num Modules = %d)' % len(ModuleStore)
-    print("%-59s %6d %6d %6d" % (totstr, npass, nfail, ntotal))
+    print("%-58s %6d %6d %6d" % (totstr, npass, nfail, ntotal))
     print("-" * SUMMARY_NCOLS)
 
     #if ntotal == 0:

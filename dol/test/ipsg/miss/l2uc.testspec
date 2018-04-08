@@ -1,30 +1,41 @@
 # Test Spec
 selectors:
     src:
-        tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://any
-        endpoint: filter://remote=True
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
     dst:
-        tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://any
-        endpoint: filter://remote=True
-    flow        : filter://fwtype=L3
-    maxflows    : 8
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow            : filter://fwtype=L2
+    maxflows        : 1
 
 packets:
     - packet:
-        id          : BASE     # Base Packet
+        id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : callback://networking/packets/GetVlanId
             ipv4:
-                src     : ref://testcase/config/flow/sip
+                #src     : ref://testcase/config/flow/sip
+                src     : 10.255.1.1
                 dst     : ref://testcase/config/flow/dip
+                ttl     : 64
             ipv6:
-                src     : ref://testcase/config/flow/sip
+                #src     : ref://testcase/config/flow/sip
+                src     : 2001:FFFF::1
                 dst     : ref://testcase/config/flow/dip
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
@@ -44,38 +55,20 @@ packets:
 
     - packet:
         id          : IN_PKT     # Input packet
-        clone       : ref://testcase/packets/id=BASE
-        encaps      : 
-            - ref://factory/packets/id=ENCAP_QTAG
-        headers     :
-            eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/src/segment/macaddr
-            qtag:
-                #vlan    : callback://networking/packets/GetVlanId
-                vlan    : ref://testcase/config/src/tenant/bhseg/vlan_id
-            ipv4:
-                ttl     : callback://networking/packets/GetTtl
-            ipv6:
-                hlim    : callback://networking/packets/GetTtl
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
 
     - packet:
         id          : EXP_PKT     # Expected packet
-        clone       : ref://testcase/packets/id=BASE
+        clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
-            eth:
-                src     : ref://testcase/config/dst/segment/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                prio    : callback://networking/packets/GetExpectedPacketCos
-                vlan    : ref://testcase/config/dst/segment/vlan_id
+                prio    : ref://testcase/config/flow/txqos/cos
             ipv4:
                 tos     : ref://testcase/config/flow/txqos/dscp
-                ttl     : callback://networking/packets/GetRoutedTtl
             ipv6:
                 tc      : ref://testcase/config/flow/txqos/dscp
-                hlim    : callback://networking/packets/GetRoutedTtl
 
     - packet:
         id          : SPAN_PKT
@@ -109,8 +102,8 @@ expect:
     packets:
         - packet:
             object  : None
-            #object  : callback://networking/packets/GetL3UcExpectedPacket
             port    : ref://testcase/config/dst/endpoint/intf/ports
+
         - packet:
             object  : ref://testcase/packets/id=SPAN_PKT
             port    : callback://networking/packets/GetDropPacketDestPort/session=0

@@ -1,30 +1,39 @@
 # Test Spec
 selectors:
     src:
-        tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://any
-        endpoint: filter://remote=False
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
     dst:
-        tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://any
-        endpoint: filter://remote=True
-    flow        : filter://fwtype=L3
-    maxflows    : 8
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow            : filter://fwtype=L2
+    maxflows        : 1
 
 packets:
     - packet:
-        id          : BASE_PKT # Base Packet
+        id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/tenant/bhseg/vlan_id
             ipv4:
-                src     : 10.255.1.1
+                src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
+                ttl     : 64
             ipv6:
-                src     : 2001:FFFF::1
+                src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
@@ -43,41 +52,26 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : PKT1 # Input packet
+        id          : IN_PKT     # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetPacketEncaps
-        headers     :
-            eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/src/segment/macaddr
-            qtag:
-                vlan    : ref://testcase/config/src/endpoint/intf/encap_vlan_id
-            ipv4:
-                ttl     : callback://networking/packets/GetTtl
-            ipv6:
-                hlim    : callback://networking/packets/GetTtl
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
 
     - packet:
-        id          : EXP_PKT # Expected packet
+        id          : EXP_PKT     # Expected packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
-            eth:
-                src     : ref://testcase/config/dst/segment/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                prio    : callback://networking/packets/GetExpectedPacketCos
-                vlan    : ref://testcase/config/dst/segment/vlan_id
+                prio    : ref://testcase/config/flow/txqos/cos
             ipv4:
                 tos     : ref://testcase/config/flow/txqos/dscp
-                ttl     : callback://networking/packets/GetRoutedTtl
             ipv6:
                 tc      : ref://testcase/config/flow/txqos/dscp
-                hlim    : callback://networking/packets/GetRoutedTtl
 
     - packet:
         id          : SPAN_PKT
-        clone       : ref://testcase/packets/id=PKT1
+        clone       : ref://testcase/packets/id=IN_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers     :
@@ -97,46 +91,17 @@ packets:
                 sessionid: const/0
                 ver     : const/2
 
-
-buffers:
-    - buffer:
-        id      : BUF1    # Input Buffer
-        template: ref://factory/templates/id=ETH_BUFFER
-        fields:
-           bind : True
-           size : ref://testcase/packets/id=PKT1/size
-           data : ref://testcase/packets/id=PKT1/rawbytes
-
-descriptors:
-    - descriptor:
-        id      : DESC1   # Input Descriptor
-        template: ref://factory/templates/id=DESCR_ETH_TX
-        fields:
-            _buf  : ref://testcase/buffers/id=BUF1
-            addr  : ref://testcase/buffers/id=BUF1/addr
-            len   : ref://testcase/buffers/id=BUF1/size
-
-    - descriptor:
-        id      : DESC2   # Expected Descriptor
-        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
-        fields:
-            status     : 0x0
-
 trigger:
-    descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=DESC1
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
-    descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
-
     packets:
         - packet:
             object  : None
+            #object  : callback://networking/packets/GetL2UcExpectedPacket
             port    : ref://testcase/config/dst/endpoint/intf/ports
         - packet:
             object  : ref://testcase/packets/id=SPAN_PKT

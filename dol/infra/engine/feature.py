@@ -61,7 +61,7 @@ class FeatureObject:
             if self.sub is None:
                 mspec.feature = self.id
             else:
-                mspec.feature = "%s/%s" %(self.id, self.sub)
+                mspec.feature = "%s::%s" %(self.id, self.sub)
             mspec.enable    = getattr(mspec, 'enable', self.enable)
             mspec.ignore    = getattr(mspec, 'ignore', self.ignore)
             mspec.module    = getattr(mspec, 'module', self.module)

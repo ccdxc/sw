@@ -202,13 +202,12 @@ class Module(objects.FrameworkObject):
             status = 'Fail'
         else:
             status = 'Pass'
-
-        feature = self.feature[:16]
-        name = self.name[:32]
-        print("%-16s %-32s %-9s %6d %6d %6d" %\
-              (feature, name, status,
-               self.stats.passed, self.stats.failed,
-               self.stats.total))
+        
+        namestr = "%s::%s" % (self.feature, self.name)
+        namestr = namestr[:48]
+        print("%-48s %-9s %6d %6d %6d" %\
+              (namestr, status, self.stats.passed,
+               self.stats.failed, self.stats.total))
         return
 
     def GetNumFailed(self):
@@ -304,7 +303,7 @@ class Module(objects.FrameworkObject):
             return
 
         self.infra_data = infra_data
-        prefix = "%s/%s" % (self.feature, self.name)
+        prefix = "%s::%s" % (self.feature, self.name)
         logger.SetModule(prefix)
         self.__load()
         self.__init_tracker()

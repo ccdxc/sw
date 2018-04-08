@@ -9,7 +9,7 @@ selectors:
         segment : filter://any
         endpoint: filter://remote=True
     flow        : filter://fwtype=L3
-    maxflows    : 8
+    maxflows    : 1
 
 packets:
     - packet:
