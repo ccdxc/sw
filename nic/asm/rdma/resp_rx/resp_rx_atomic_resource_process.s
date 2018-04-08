@@ -23,6 +23,8 @@ struct resp_rx_s1_t1_k k;
 #define IN_P        t1_s2s_rqcb_to_read_atomic_rkey_info
 #define IN_TO_S_P   to_s1_atomic_info
 
+#define K_RSQWQE_PTR CAPRI_KEY_RANGE(IN_TO_S_P, rsqwqe_ptr_sbit0_ebit15, rsqwqe_ptr_sbit16_ebit63)
+
 %%
     .param  resp_rx_rqlkey_process
     .param  rdma_atomic_resource_addr
@@ -125,8 +127,15 @@ loop_exit:
     DMA_HBM_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, 8, r3)
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ATOMIC_RESOURCE_TO_RSQWQE)
-    add     r3, CAPRI_KEY_RANGE(IN_TO_S_P, rsqwqe_ptr_sbit0_ebit15, rsqwqe_ptr_sbit16_ebit63), RSQWQE_ORIG_DATA_OFFSET
+    add     r3, K_RSQWQE_PTR, RSQWQE_ORIG_DATA_OFFSET
     DMA_HBM_MEM2MEM_DST_SETUP(DMA_CMD_BASE, 8, r3)
+
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE)
+    DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, rsqwqe.read_or_atomic, rsqwqe.psn, K_RSQWQE_PTR)
+
+    add     r3, K_RSQWQE_PTR, RSQWQE_R_KEY_OFFSET
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE_R_KEY_VA)
+    DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, rsqwqe.atomic.r_key, rsqwqe.atomic.va, r3)
       
     // DMA for releasing atomic resource
     // atomic_release_byte value is 0 as phv gets initialized to 0.
@@ -165,8 +174,6 @@ loop_exit:
     phvwr   p.db_data1, DB_DATA.dx
 
     // DMA for RSQ DoorBell
-    //TODO: for some reason, rining doorbell using mem2mem_phv2mem is not working.
-    //      check with helen and fix it.
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RSQ_DB)
     DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, db_data1, db_data1, DB_ADDR)
     DMA_SET_WR_FENCE(DMA_CMD_MEM2MEM_T, DMA_CMD_BASE)

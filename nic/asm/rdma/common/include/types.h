@@ -689,6 +689,8 @@ struct rsqwqe_d_t {
 };
 
 #define RSQWQE_ORIG_DATA_OFFSET  24
+#define RSQWQE_R_KEY_OFFSET     12
+#define RSQWQE_VA_OFFSET        16
 
 struct rsqwqe_t {
     read_or_atomic: 1;

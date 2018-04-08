@@ -1,0 +1,42 @@
+# Feature Test Modules List
+# For RDMA RX ATOMIC FETCH ADD SCALE test
+feature:
+    id          : rdma_rx_atomic_fetchadd_scale
+    sub         : rdma
+    package     : test.rdma
+    module      : rdma
+    enable      : True
+    ignore      : False
+    perf        : True
+    rtl         : True
+    pps         : True
+
+modules:
+    - module:
+        name    : RDMA_RX_ATOMIC_FETCHADD_SETUP
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_atomic_fetchadd_scale
+        spec    : resp_rx_atomic_fetchadd_scale_setup.testspec
+        ignore  : False
+        perf    : True
+
+    - module:
+        name    : RDMA_RX_ATOMIC_FETCHADD_SEND_PKTS
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_atomic_fetchadd_scale
+        spec    : resp_rx_atomic_fetchadd_scale_send_pkts.testspec
+        ignore  : False
+        perf    : True
+        modscale: 50
+
+    - module:
+        name    : RDMA_RX_ATOMIC_FETCHADD_VERIFY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_atomic_fetchadd_scale
+        spec    : resp_rx_atomic_fetchadd_scale_verify.testspec
+        ignore  : False
+        perf    : True
+

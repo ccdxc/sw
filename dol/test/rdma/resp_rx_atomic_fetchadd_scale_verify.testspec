@@ -1,0 +1,67 @@
+# Test Spec
+selectors:
+#   src:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=True
+#       interface   : filter://any
+#   dst:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=False
+#       interface   : filter://any
+#   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+#    maxflows    : 1 
+#   maxrdmasessions     : 1 
+
+packets:
+   - packet:
+        id          : FINAL_DATA # Base packet
+        payloadsize : 8
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : 01 01 01 01 01 01 00 C8   # 2 addrs for 400 requests, so 200 is final count for each address
+
+   - packet:
+        id          : FINAL_DATA_LITTLE # Base packet
+        payloadsize : 8
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : C8 00 01 01 01 01 01 01
+
+buffers:
+    - buffer:
+        id      : XFER_BUF
+        template: ref://factory/templates/id=RDMA_XFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           offset  : 0
+           size    : ref://testcase/packets/id=FINAL_DATA_LITTLE/size
+
+    - buffer:
+        id      : EXP_BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : None
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=FINAL_DATA_LITTLE/size
+                 data    : ref://testcase/packets/id=FINAL_DATA_LITTLE/rawbytes
+
+
+descriptors:
+
+trigger:
+
+expect:
+    descriptors:
+        - descriptor:
+            object : ref://testcase/buffers/id=EXP_BUF
+            ring   : ref://testcase/buffers/id=XFER_BUF
+
+

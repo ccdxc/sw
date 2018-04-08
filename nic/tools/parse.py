@@ -86,9 +86,9 @@ def parse_logs():
             print '\n' + line.strip()
         elif 'Ending Testcase TC' in line:
             print '\n' + line.strip()
-        elif re.match("(.*)[sp]g(.*)mpu(.*)load(.*)pc byte addr=0x([0-9a-fA-F]+)(.*)", line, re.I):
-            fields = re.split(r'(.*)[sp]g(.*)mpu(.*)load(.*)pkt_id ([0-9])+ entry pc byte addr=0x([0-9a-fA-F]+)(.*)', line)
-            key = '0xE'+fields[6].upper()
+        elif re.match("(.*)[sp]g(.*)mpu(.*)load(.*)pkt_id ([0-9]*) entry pc byte addr=0x([0-9a-fA-F]+)(.*)", line, re.I):
+            fields = re.split(r'(.*)[sp]g(.*)mpu(.*)load(.*)pkt_id ([0-9]*) entry pc byte addr=0x([0-9a-fA-F]+)(.*)', line)
+            key = '0x10'+fields[6].upper()
             if not key in symbols:
                 print 'RTL ', linenum, 'pkt_id ', fields[5], ' 0x'+fields[6]
                 model1file.write(line)

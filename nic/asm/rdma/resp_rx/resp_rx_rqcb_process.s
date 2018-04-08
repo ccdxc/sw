@@ -56,6 +56,7 @@ resp_rx_rqcb_process:
     // is this a fresh packet ?
     seq     c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
     bcf     [!c1], recirc_pkt
+    nop     //BD Slot
 
     //fresh packet
     // populate global fields
@@ -430,7 +431,6 @@ process_read_atomic:
    
     // DMA for RSQWQE
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE)
-    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, rsqwqe, rsqwqe, RSQWQE_P)
     
     // in case of quiesce mode, only duplicate reqs would move rsq_p_index in a 
     // lock step manner. If we receive non-duplicate, we increment only
@@ -456,6 +456,7 @@ process_read:
     // for read, set the end of commands right here if quiesce is on.
     // for atomic, we have to execute the atomic request and hence
     // end of commands is set in atomic_resource_process function.
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, rsqwqe, rsqwqe, RSQWQE_P)
     DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, c1)
     phvwr       p.rsqwqe.read.len, CAPRI_RXDMA_RETH_DMA_LEN
     CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, len, CAPRI_RXDMA_RETH_DMA_LEN)
@@ -739,7 +740,8 @@ recirc_pkt:
     bcf     [c3], start_recirc_packet
     nop     //BD Slot
 
-    nop.e
+    // For any any known or non-handled recirc reasons, drop the packet
+    phvwr.e     p.common.p4_intr_global_drop, 1
     nop
 
 recirc_sge_work_pending:

@@ -27,13 +27,14 @@
 // one do not want to transfer payload, skip to eop should be marked thru
 // a DMA instruction. Using DMA_CMD 12 for that, as it is mutually exclusive
 // to PYLD transfer
-#define RESP_RX_DMA_CMD_PYLD_BASE   2
-#define RESP_RX_DMA_CMD_RSQWQE      2
-#define RESP_RX_DMA_CMD_ATOMIC_RESOURCE_WR          3
-#define RESP_RX_DMA_CMD_ATOMIC_RESOURCE_RD          4
-#define RESP_RX_DMA_CMD_ATOMIC_RESOURCE_TO_RSQWQE   5
-#define RESP_RX_DMA_CMD_RELEASE_ATOMIC_RESOURCE     6
-#define RESP_RX_DMA_CMD_RSQ_DB                      7
+#define RESP_RX_DMA_CMD_PYLD_BASE                   2
+#define RESP_RX_DMA_CMD_RSQWQE                      2
+#define RESP_RX_DMA_CMD_RSQWQE_R_KEY_VA             3
+#define RESP_RX_DMA_CMD_ATOMIC_RESOURCE_WR          4
+#define RESP_RX_DMA_CMD_ATOMIC_RESOURCE_RD          5
+#define RESP_RX_DMA_CMD_ATOMIC_RESOURCE_TO_RSQWQE   6
+#define RESP_RX_DMA_CMD_RELEASE_ATOMIC_RESOURCE     7
+#define RESP_RX_DMA_CMD_RSQ_DB                      8
 
 #define RESP_RX_DMA_CMD_PYLD_BASE_END 14
 
