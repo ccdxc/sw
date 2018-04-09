@@ -35,14 +35,14 @@ class NS(object):
         run(cmd)
         
 
-    def BindInterface(self, interface, vlan=None):
+    def BindInterface(self, interface, vlan=None, intf_name=None):
         self._intf = interface
         cmd = "ip link set dev %s netns %s" % (self._intf, self._name)
         run(cmd)
         cmd = self._cmd_prefix + " ifconfig %s up" % (self._intf)
         run(cmd)
         if (vlan):
-            self._vlan_intf = self._intf + "_" + str(vlan)
+            self._vlan_intf = intf_name
             cmd =  self._cmd_prefix + \
              " ip link add link %s name %s type vlan id %s" \
              % (self._intf, self._vlan_intf, str(vlan))

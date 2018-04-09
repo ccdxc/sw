@@ -89,6 +89,7 @@ static hal_ret_t validate_arp_packet(const struct ether_arp *arphead,
                                      fte::ctx_t &ctx) {
     hal::ep_t *sep = ctx.sep();
     uint16_t opcode;
+    unsigned char spa[sizeof(arphead->arp_spa)];
 
     opcode = ntohs(arphead->ea_hdr.ar_op);
 
@@ -96,6 +97,15 @@ static hal_ret_t validate_arp_packet(const struct ether_arp *arphead,
             (opcode != ARPOP_REVREQUEST) && (opcode != ARPOP_REVREPLY)) {
         HAL_TRACE_ERR(
             "Invalid ARP Request type {} received from EP"
+            "with hardware address",
+             opcode, macaddr2str(sep->l2_key.mac_addr));
+        return HAL_RET_ERR;
+    }
+
+    memset(spa, 0, sizeof(arphead->arp_spa));
+    if (memcmp(arphead->arp_spa, spa, sizeof(spa)) == 0) {
+        HAL_TRACE_ERR(
+            "Ignoring ARP Request type {} received from EP with protocol address 0 "
             "with hardware address",
              opcode, macaddr2str(sep->l2_key.mac_addr));
         return HAL_RET_ERR;

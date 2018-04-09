@@ -305,13 +305,20 @@ class E2EVerifEngineObject(VerifEngineObject):
         super().__init__()
 
     def __verify_commands(self, step, tc):
+        all_status = []
         for cmd in step.expect.commands:
+            cmd_status = defs.status.SUCCESS
             if not cmd.status:
                 logger.error("Command Failed %s" % cmd.command)
-                return defs.status.ERROR
+                cmd_status = defs.status.SUCCESS if cmd.ignore_error else defs.status.ERROR 
             else:
-                logger.info("Command Success %s" % cmd.command)            
-        return defs.status.SUCCESS        
+                logger.info("Command Success %s" % cmd.command)
+            all_status.append(cmd_status)
+
+        if any(status == defs.status.ERROR for status in all_status):
+            return defs.status.ERROR
+        else:
+             return defs.status.SUCCESS       
     
     def _verify(self, step, tc):
         verify_pass = True

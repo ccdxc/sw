@@ -31,6 +31,11 @@ class EndpointManager(object):
         def Run(self, name, cmd, timeout=None, background=False):
             return self._connector.process_run(name, cmd, timeout, background)
  
+        def CopyFile(self, name, file):
+            with open(file, 'r') as data_file:
+                return self._connector.copy_file(name, 
+                    os.path.basename(file), data_file.read())
+            
         def CleanUp(self, name):
             return self._connector.cleanup(name)
         
@@ -62,7 +67,7 @@ class EndpointManager(object):
     def __configure_endpoint(self, ep_cfg, ep):
         ep._connector.init(ep_cfg["name"], ep_cfg["macaddr"],
                            ep_cfg["ipaddr"], ep_cfg["local"],
-                           ep_cfg["encap_vlan"])
+                           ep_cfg["encap_vlan"], ep_cfg["intf_name"])
         self._ep_map[ep_cfg["name"]] = ep
     
     def __setup_arp_entries(self):
@@ -105,6 +110,15 @@ class EndpointManager(object):
             print (ex)
             return False
 
+    def CopyFile(self, ep_name, file):
+        print ("Copying file to  EP : %s , file: %s" % (ep_name, file))
+        try:
+            return self._ep_map[ep_name].CopyFile(ep_name, file)
+        except Exception as ex:
+            print ("Failed : Copying file to  EP : %s , file: %s" % (ep_name, file))
+            print (ex)
+            return False
+    
     def CleanUp(self, ep_name):
         print ("Running Clean up  Command on EP : %s" % (ep_name))
         try:

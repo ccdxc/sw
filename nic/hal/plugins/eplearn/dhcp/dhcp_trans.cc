@@ -81,6 +81,7 @@ void dhcp_trans_t::dhcp_fsm_t::_init_state_machine() {
         FSM_STATE_BEGIN(DHCP_INIT, INIT_TIMEOUT, NULL, NULL)
             FSM_TRANSITION(DHCP_DISCOVER, SM_FUNC(process_dhcp_discover), DHCP_SELECTING)
             FSM_TRANSITION(DHCP_REQUEST, SM_FUNC(process_dhcp_request), DHCP_REQUESTING)
+            FSM_TRANSITION(DHCP_RELEASE, SM_FUNC(process_dhcp_new_release), DHCP_DONE)
             FSM_TRANSITION(DHCP_INFORM, SM_FUNC(process_dhcp_inform), DHCP_BOUND)
             FSM_TRANSITION(DHCP_ERROR, NULL, DHCP_DONE)
         FSM_STATE_END
@@ -173,40 +174,43 @@ update_flow_fwding(fte::ctx_t *fte_ctx)
     ether_header_t * ethhdr;
     ep_t *dep = nullptr;
     if_t *dif;
-    hal_ret_t ret;
+    hal_ret_t ret = HAL_RET_OK;
     hal::pd::pd_get_object_from_flow_lkupid_args_t args;
     hal::hal_obj_id_t obj_id;
     void *obj;
 
     dep = fte_ctx->dep();
 
-    if (dep == nullptr) {
-#if 0
-#if 0
-        dl2seg =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
-#endif
-        args.hwid = cpu_rxhdr_->lkp_vrf;
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_FIND_L2SEG_BY_HWID, (void *)&args);
-        dl2seg = args.l2seg;
-#endif
-        args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
-        args.obj_id = &obj_id;
-        args.pi_obj = &obj;
-        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
-        if (ret != HAL_RET_OK && obj_id != hal::HAL_OBJ_ID_L2SEG) {
-            HAL_TRACE_ERR("fte: Invalid obj id: {}, ret:{}", obj_id, ret);
-            return HAL_RET_L2SEG_NOT_FOUND;
-        }
-        dl2seg = (hal::l2seg_t *)obj;
+    if (dep != nullptr) {
+        /* Destination EP known already return. */
+        goto out;
+    }
 
-        HAL_ASSERT(dl2seg != nullptr);
-        ethhdr = (ether_header_t *)(fte_ctx->pkt() + cpu_rxhdr_->l2_offset);
-        dep = hal::find_ep_by_l2_key(dl2seg->seg_id, ethhdr->dmac);
-        if (dep == nullptr) {
-            HAL_TRACE_ERR("Destination endpoint not found.");
-            ret = HAL_RET_EP_NOT_FOUND;
-            goto out;
-        }
+#if 0
+#if 0
+    dl2seg =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
+#endif
+    args.hwid = cpu_rxhdr_->lkp_vrf;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_FIND_L2SEG_BY_HWID, (void *)&args);
+    dl2seg = args.l2seg;
+#endif
+    args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
+    args.obj_id = &obj_id;
+    args.pi_obj = &obj;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
+    if (ret != HAL_RET_OK && obj_id != hal::HAL_OBJ_ID_L2SEG) {
+        HAL_TRACE_ERR("fte: Invalid obj id: {}, ret:{}", obj_id, ret);
+        return HAL_RET_L2SEG_NOT_FOUND;
+    }
+    dl2seg = (hal::l2seg_t *)obj;
+
+    HAL_ASSERT(dl2seg != nullptr);
+    ethhdr = (ether_header_t *)(fte_ctx->pkt() + cpu_rxhdr_->l2_offset);
+    dep = hal::find_ep_by_l2_key(dl2seg->seg_id, ethhdr->dmac);
+    if (dep == nullptr) {
+        HAL_TRACE_ERR("Destination endpoint not found.");
+        ret = HAL_RET_EP_NOT_FOUND;
+        goto out;
     }
 
     dif = hal::find_if_by_handle(dep->if_handle);
@@ -259,6 +263,44 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_discover(fsm_state_ctx ctx,
     }
 
     return true;
+}
+
+bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_new_release(fsm_state_ctx ctx,
+                                                    fsm_event_data fsm_data) {
+    bool rc = true;
+    dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
+    dhcp_trans_t *existing_trans;
+    dhcp_event_data *data = reinterpret_cast<dhcp_event_data*>(fsm_data);
+    const struct packet *decoded_packet = data->decoded_packet;
+    struct dhcp_packet *raw = decoded_packet->raw;
+    ip_addr_t ip_addr  = { 0 };
+    trans_ip_entry_key_t ip_entry_key;
+
+    ip_addr.addr.v4_addr = ntohl(raw->ciaddr.s_addr);
+    HAL_TRACE_INFO("Processing DHCP release for new transaction. {} {}",
+            ipaddr2str(&ip_addr), dhcp_trans->trans_key_ptr()->vrf_id);
+
+    init_ip_entry_key((&ip_addr),
+                      dhcp_trans->trans_key_ptr()->vrf_id,
+                      &ip_entry_key);
+
+    existing_trans = reinterpret_cast<dhcp_trans_t *>(
+        dhcp_trans_t::dhcplearn_ip_entry_ht()->lookup(
+                (&ip_entry_key)));
+
+    if ((existing_trans != nullptr) && (existing_trans != dhcp_trans) &&
+            (memcmp(existing_trans->trans_key_ptr()->mac_addr,
+            dhcp_trans->trans_key_ptr()->mac_addr, sizeof(mac_addr_t)) == 0)) {
+        /* We found a transaction with same mac address */
+        HAL_TRACE_INFO("Initiating DHCP release.");
+        dhcp_trans_t::process_transaction(existing_trans, DHCP_RELEASE,
+                fsm_data);
+    } else {
+        HAL_TRACE_INFO("Dhcp transaction not found {}",
+                macaddr2str(dhcp_trans->trans_key_ptr()->mac_addr));
+    }
+
+    return rc;
 }
 
 bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_inform(fsm_state_ctx ctx,
@@ -408,14 +450,17 @@ void dhcp_trans_t::reset() {
     this->stop_lease_timer();
     ep_entry = this->get_ep_entry();
     if (ep_entry != NULL) {
+        this->log_info("Deleting IP entry from EP DB");
         ret = endpoint_update_ip_delete(ep_entry,
                 &this->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_DHCP);
         if (ret != HAL_RET_OK) {
-            this->log_error("IP delete update failed");
+            this->log_error("Failed Deleting IP entry from EP DB");
         }
+        this->log_info("Successfully Deleted IP entry from EP DB");
     }
 
     this->sm_->stop_state_timer();
+    this->log_info("Reset Complete.");
 }
 
 bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_offer(fsm_state_ctx ctx,
@@ -494,11 +539,14 @@ void dhcp_trans_t::start_lease_timer() {
     if (this->lease_timer_ctx) {
         dhcp_timer_->delete_timer(this->lease_timer_ctx);
     }
-    if (this->ctx_.renewal_time_) {
+    if (this->ctx_.lease_time_) {
+        HAL_TRACE_INFO("Starting lease timer of {} seconds",
+                this->ctx_.lease_time_);
         this->lease_timer_ctx  = dhcp_timer_->add_timer_with_custom_handler(
-                this->ctx_.renewal_time_ * TIME_MSECS_PER_SEC,
+                this->ctx_.lease_time_ * TIME_MSECS_PER_SEC,
                 this->sm_, lease_timeout_handler);
     } else {
+        HAL_TRACE_INFO("Lease timer is not set.");
         this->lease_timer_ctx = nullptr;
     }
 }
@@ -562,23 +610,6 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
     }
 
     dhcp_ctx->yiaddr_ = raw->yiaddr;
-    ret = dhcp_lookup_option(decoded_packet, DHO_DHCP_RENEWAL_TIME, &option_data);
-    if (ret != HAL_RET_OK) {
-        dhcp_trans->log_error("Invalid DHCP packet, renewal time not found.");
-        dhcp_trans->sm_->throw_event(DHCP_INVALID_PACKET, NULL);
-        return false;
-    }
-    memcpy(&(dhcp_ctx->renewal_time_), option_data.data,
-           sizeof(dhcp_ctx->renewal_time_));
-
-    ret = dhcp_lookup_option(decoded_packet, DHO_DHCP_REBINDING_TIME, &option_data);
-    if (ret != HAL_RET_OK) {
-        dhcp_trans->log_error("Invalid DHCP packet, rebinding time not found.");
-        dhcp_trans->sm_->throw_event(DHCP_INVALID_PACKET, NULL);
-        return false;
-    }
-    memcpy(&(dhcp_ctx->rebinding_time_), option_data.data,
-           sizeof(dhcp_ctx->rebinding_time_));
 
     ret = dhcp_lookup_option(decoded_packet, DHO_DHCP_LEASE_TIME, &option_data);
     if (ret != HAL_RET_OK) {
@@ -586,8 +617,11 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
         dhcp_trans->sm_->throw_event(DHCP_INVALID_PACKET, NULL);
         return false;
     }
-    memcpy(&(dhcp_ctx->lease_time_), option_data.data,
-           sizeof(dhcp_ctx->lease_time_));
+
+    dhcp_ctx->lease_time_ = *((uint32_t*)(option_data.data));
+    dhcp_ctx->lease_time_  = ntohl(dhcp_ctx->lease_time_);
+    //memcpy(&(dhcp_ctx->lease_time_), option_data.data,
+      //     sizeof(dhcp_ctx->lease_time_));
 
     ret = dhcp_lookup_option(decoded_packet, DHO_ROUTERS, &option_data);
     if (ret == HAL_RET_OK) {
@@ -597,6 +631,7 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
 
     if (memcmp(&(dhcp_trans->ip_entry_key_ptr()->ip_addr),
             &ip_addr, sizeof(ip_addr)) == 0) {
+        dhcp_trans->log_info("Ip address is the same, restarting lease timer.");
         dhcp_trans->start_lease_timer();
     } else {
         if (data->in_fte_pipeline) {
@@ -631,6 +666,7 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_bound_timeout(fsm_state_ctx ctx,
     dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
 
     dhcp_trans->log_info("Bound timed out.");
+    dhcp_trans->lease_timer_ctx = nullptr;
     return true;
 }
 
@@ -668,6 +704,7 @@ void dhcp_trans_t::process_event(dhcp_fsm_event_t event, fsm_event_data data) {
 }
 
 dhcp_trans_t::~dhcp_trans_t() {
+    this->log_info("Deleting transaction..");
     this->reset();
     delete this->sm_;
 }

@@ -28,7 +28,9 @@ extern bool hntap_go_thru_model;
 
 int main(int argv, char *argc[])
 {
-  dev_handle_t* host_tap_hdl;
+  dev_handle_t* host_tap_hdl = nullptr;
+  dev_handle_t *dev_handle_pairs[10][2];
+  uint32_t dev_handle_pair_cnt = 0;
   setlinebuf(stdout);
   setlinebuf(stderr);
   dev_handle_t **dev_handles;
@@ -78,6 +80,7 @@ int main(int argv, char *argc[])
 
   TLOG("Number of devices to create : %d\n", dev_handle_cnt);
   dev_handles = (dev_handle_t**)malloc(sizeof(dev_handle_t) * dev_handle_cnt);
+  uint32_t pair_id = 0;
   for (ptree::value_type &ep_pairs: pt) {
       //std::cout <<ep_pairs.second;
       std::string src_ep_name = ep_pairs.second.get<std::string>("name");
@@ -100,10 +103,23 @@ int main(int argv, char *argc[])
       dev_handles[i++] = host_tap_hdl;
       TLOG("Added configuration for device %s , type : %s\n",
               src_ep_name.c_str(), type == TAP_ENDPOINT_HOST ? "Host" : "Network");
+
+      if (!hntap_go_thru_model) {
+          dev_handle_pairs[dev_handle_pair_cnt][(pair_id) %2] = host_tap_hdl;
+          if (pair_id++) {
+              dev_handle_pair_cnt++;
+              pair_id = 0;
+          }
+      }
   }
 
   TLOG("  Setup done, listening on tap devices..\n");
+  if (!hntap_go_thru_model) {
+      for (uint32_t i = 0; i < dev_handle_pair_cnt; i++) {
+          add_dev_handle_tap_pair(dev_handle_pairs[i][0],
+                  dev_handle_pairs[i][1]);
+      }
+  }
   hntap_work_loop(dev_handles, dev_handle_cnt, true);
-  //add_dev_handle_tap_pair(host_tap_hdl, net_tap_hdl);
   return(0);
 }

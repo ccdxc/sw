@@ -1,0 +1,91 @@
+# Test Spec
+type: ref://factory/templates/id=E2E_TESTCASE
+package  : test.e2e_learn.dhcp
+selectors:
+    root            : ref://store/templates/id=E2E
+    tenant          : filter://overlay=VLAN,type=TENANT
+    segment         : filter://any
+    src_endpoints :
+         type    : filter://remote=True
+         max        : 1
+    dst_endpoints :
+         type    : filter://remote=True
+         max        : 1
+
+session:
+    - step: #Do clean up and release IP address
+        trigger:
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/src_endpoints/0
+                    cmd         : pkill 
+                    args        :
+                        - arg   : "-9 dhcpd"
+                    ignore_error : True
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : pkill 
+                    args        :
+                        - arg   : "-9 dhclient"
+                    ignore_error : True
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : dhclient 
+                    args        :
+                        - arg   : ref://testcase/config/dst_endpoints/0/intf              
+                        - arg   : "0.0.0.0"                        
+                    ignore_error : True
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : sleep
+                    args        :
+                        - arg   : "10"                         
+        expect:                       
+    - step: #Start DHCP server and client.
+        trigger:
+            setups:
+                - setup: #Copy dhcp configi file.
+                    endpoint    : ref://testcase/config/src_endpoints/0
+                    files        :
+                        - file    : dhcpd_lease_timeout.conf
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/src_endpoints/0
+                    cmd         : dhcpd 
+                    args        :
+                        - arg   : "-cf dhcpd_lease_timeout.conf"
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : dhclient
+                    args        :
+                        - arg   : "-v"
+                        - arg   : ref://testcase/config/dst_endpoints/0/intf              
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : sleep
+                    args        :
+                        - arg   : "10"     
+        expect:
+    - step: # Kill the DHCP server in this step.
+        trigger:
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/src_endpoints/0
+                    cmd         : pkill 
+                    args        :
+                        - arg   : "-9 dhcpd"    
+        expect:           
+    - step: #Wait for timeout.
+        trigger:
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : sleep
+                    args        :
+                        - arg   : "120"     
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : pkill 
+                    args        :
+                        - arg   : "-9 dhclient"
+        expect:                       

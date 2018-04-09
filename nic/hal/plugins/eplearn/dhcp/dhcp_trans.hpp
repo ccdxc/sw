@@ -141,6 +141,7 @@ private:
 
         bool process_dhcp_discover(fsm_state_ctx ctx, fsm_event_data data);
         bool process_dhcp_inform(fsm_state_ctx ctx, fsm_event_data data);
+        bool process_dhcp_new_release(fsm_state_ctx ctx, fsm_event_data data);
         bool process_dhcp_request(fsm_state_ctx ctx, fsm_event_data data);
         bool process_dhcp_request_after_bound(fsm_state_ctx ctx,
                                               fsm_event_data data);

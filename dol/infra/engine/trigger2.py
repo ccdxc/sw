@@ -160,12 +160,20 @@ class E2ETriggerEngineObject(TriggerEngineObject):
             cmd.status = E2E.RunCommand(cmd.object.GID(), cmd.command, timeout=cmd.timeout,
                                          background=cmd.background)
         return
+
+    def __trigger_setups(self, step):
+        for setup in getattr(step.trigger, "setups", []):
+            for file in setup.files:
+                logger.info("Running setup %s : %s" % (setup.endpoint.GID(), file))
+                E2E.CopyFile(setup.endpoint.GID(), file)
+        return
     
     def _trigger_step(self, tc, step):
+        self.__trigger_setups(step)
         self.__trigger_commands(step)
         tc.TriggerCallback()
         return
-
+    
 
 DolTriggerEngine = DolTriggerEngineObject()
 E2ETriggerEngine = E2ETriggerEngineObject()

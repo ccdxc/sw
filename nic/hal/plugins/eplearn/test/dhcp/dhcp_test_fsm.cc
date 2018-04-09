@@ -217,7 +217,8 @@ class dhcp_fsm_test : public hal_base_test {
 };
 
 EthernetII *get_default_dhcp_packet(DHCP::Flags type, uint32_t xid,
-                                    unsigned char *chaddr, const char *yiaddr, bool broadcast = false) {
+                                    unsigned char *chaddr, const char *yiaddr, bool broadcast = false,
+                                    const char *ciaddr = nullptr) {
     EthernetII *eth;
     if (broadcast) {
         //HWAddress<6> hw_address((const char*)("ff:ff:ff:ff:ff:ff"));
@@ -243,7 +244,11 @@ EthernetII *get_default_dhcp_packet(DHCP::Flags type, uint32_t xid,
     dhcp->htype(1);
     dhcp->hlen(6);
     dhcp->secs(5);
-    dhcp->ciaddr("1.1.1.1");
+    if (ciaddr) {
+     dhcp->ciaddr(ciaddr);
+    } else {
+        dhcp->ciaddr("1.1.1.1");
+    }
     if (yiaddr) {
         dhcp->yiaddr(yiaddr);
     }
@@ -264,8 +269,9 @@ void dhcp_packet_send(hal_handle_t ep_handle,
                       DHCP::Flags type, uint32_t xid, unsigned char *chaddr,
                       const char *yiaddr = NULL,
                       std::vector<DHCP::option> *options = NULL,
-                      bool broadcast = false) {
-    EthernetII *eth = get_default_dhcp_packet(type, xid, chaddr, yiaddr, broadcast);
+                      bool broadcast = false,
+                      const char *ciaddr = NULL) {
+    EthernetII *eth = get_default_dhcp_packet(type, xid, chaddr, yiaddr, broadcast, ciaddr);
     DHCP *dhcp = eth->find_pdu<DHCP>();
 
     if (options) {
@@ -350,7 +356,9 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
 
     options.clear();
     const char *ip_addr = ip_address;
-    std::vector<uint8_t> lease_time = {3, 0, 0, 0};
+    uint32_t actual_lease_time = 100;
+    std::vector<uint8_t> lease_time = {0, 0, 0, 0};
+    lease_time[3] = (uint8_t)actual_lease_time;
     DHCP::option lease_time_opt(DHCP::DHCP_LEASE_TIME, lease_time.begin(),
                                 lease_time.end());
     options.push_back(lease_time_opt);
@@ -385,12 +393,7 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
     inet_pton(AF_INET, ip_addr, &(yiaddr.s_addr));
     ASSERT_EQ(memcmp(&ctx->yiaddr_, &yiaddr.s_addr, sizeof(yiaddr)), 0);
     ASSERT_EQ(
-        memcmp(&ctx->lease_time_, &lease_time[0], sizeof(ctx->lease_time_)), 0);
-    ASSERT_EQ(
-        memcmp(&ctx->renewal_time_, &lease_time[0], sizeof(ctx->renewal_time_)),
-        0);
-    ASSERT_EQ(memcmp(&ctx->rebinding_time_, &lease_time[0],
-                     sizeof(ctx->rebinding_time_)), 0);
+        memcmp(&ctx->lease_time_, &actual_lease_time, sizeof(ctx->lease_time_)), 0);
 
    ASSERT_EQ(memcmp(&ctx->default_gateway_, &def_router_ip_addr,
                              sizeof(def_router_ip_addr)), 0);
@@ -642,7 +645,9 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew) {
               0);
     options.clear();
     const char *renew_ip_address = "192.168.1.16";
-    std::vector<uint8_t> lease_time = {3, 2, 1, 0};
+    uint32_t actual_lease_time = 100;
+    std::vector<uint8_t> lease_time = {0, 0, 0, 0};
+    lease_time[3] = (uint8_t)actual_lease_time;
     DHCP::option lease_time_opt(DHCP::DHCP_LEASE_TIME, lease_time.begin(),
                                 lease_time.end());
     options.push_back(lease_time_opt);
@@ -746,7 +751,9 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_nack) {
               0);
     options.clear();
     const char *renew_ip_addr = "192.168.1.10";
-    std::vector<uint8_t> lease_time = {3, 2, 1, 0};
+    uint32_t actual_lease_time = 100;
+    std::vector<uint8_t> lease_time = {0, 0, 0, 0};
+    lease_time[3] = (uint8_t)actual_lease_time;
     DHCP::option lease_time_opt(DHCP::DHCP_LEASE_TIME, lease_time.begin(),
                                 lease_time.end());
     options.push_back(lease_time_opt);
@@ -795,7 +802,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_bound_timeout) {
     ASSERT_TRUE(trans != NULL);
 
     sleep(1);
-    hal::periodic::g_twheel->tick(trans->get_ctx()->renewal_time_ * TIME_MSECS_PER_SEC + 100);
+    hal::periodic::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
     sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
@@ -851,7 +858,9 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_after_rebind) {
                      server_identifier.size()), 0);
     options.clear();
     const char *renew_ip_address = "192.168.1.16";
-    std::vector<uint8_t> lease_time = {3, 2, 1, 0};
+    uint32_t actual_lease_time = 100;
+    std::vector<uint8_t> lease_time = {0, 0, 0, 0};
+    lease_time[3] = (uint8_t)actual_lease_time;
     DHCP::option lease_time_opt(DHCP::DHCP_LEASE_TIME, lease_time.begin(),
                                 lease_time.end());
     options.push_back(lease_time_opt);
@@ -954,7 +963,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_rebind_lease_timeout) {
     ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
                      server_identifier.size()), 0);
     sleep(1);
-    hal::periodic::g_twheel->tick(trans->get_ctx()->renewal_time_ * TIME_MSECS_PER_SEC + 100);
+    hal::periodic::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
     sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
@@ -1007,7 +1016,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_lease_timeout) {
     ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
                      server_identifier.size()), 0);
     sleep(1);
-    hal::periodic::g_twheel->tick(trans->get_ctx()->renewal_time_ * TIME_MSECS_PER_SEC + 100);
+    hal::periodic::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
     sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
@@ -1019,4 +1028,42 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_lease_timeout) {
     inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
     ASSERT_TRUE(!ip_in_ep(&ip, ep, NULL));
+}
+
+TEST_F(dhcp_fsm_test, dhcp_basic_release) {
+    const char *ip_address = "192.168.1.15";
+    uint32_t xid = 1234;
+    std::vector<DHCP::option> options;
+    dhcp_trans_t *trans;
+    dhcp_trans_key_t key;
+    ep_t *ep = find_ep_by_handle(ep_handles[1]);
+    dhcp_trans_t::init_dhcp_trans_key(ep->l2_key.mac_addr, xid, ep, &key);
+    ip_addr_t ip = {0};
+
+
+    setup_basic_dhcp_session(ep_handles[1],
+            xid, ep->l2_key.mac_addr, ip_address);
+    /* Check IP in EP */
+    ep = find_ep_by_handle(ep_handles[1]);
+    inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(ip_in_ep(&ip, ep, NULL));
+
+    std::vector<uint8_t> server_identifier = {4, 3, 2, 1};
+    // Create a DHCP::option
+    DHCP::option server_id_opt(DHCP::DHCP_SERVER_IDENTIFIER,
+                               server_identifier.begin(),
+                               server_identifier.end());
+    options.push_back(server_id_opt);
+
+    /* Send with differet transacation ID */
+    xid = 4568;
+    dhcp_packet_send(ep_handles[1],
+            DHCP::Flags::RELEASE, xid, ep->l2_key.mac_addr, NULL, &options, false, ip_address);
+
+    trans = reinterpret_cast<dhcp_trans_t *>(
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(trans == NULL);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
 }

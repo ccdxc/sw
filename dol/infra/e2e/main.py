@@ -24,7 +24,7 @@ def __GenerateEpCfgs(cfg_file):
                 ep_lif , ep_oport = get_lif_oport(ep)
                 cfg = { "name" : ep_name, "local" : not ep["remote"], "port" : ep_oport,
                         "lif_id" : ep_lif, "macaddr" : ep["macaddr"], "ipaddr" : ep["ipaddrs"][0],
-                        "prefix_len" : 24,
+                        "prefix_len" : 24, "intf_name" : ep["intf"],
                          "encap_vlan" : data["EnicObject"][ep["intf"]]["encap_vlan_id"] 
                                         if not ep["remote"] else None}
                 ep_cfgs.append(cfg)
@@ -56,6 +56,9 @@ def Stop():
 
 def RunCommand(ep_name, cmd, background=False, timeout=None):
     return EpMgr.Run(ep_name, cmd, background=background, timeout=timeout)
+
+def CopyFile(ep_name, file):
+    return EpMgr.CopyFile(ep_name, file)
 
 def CleanUp(ep_name):
     return EpMgr.CleanUp(ep_name)

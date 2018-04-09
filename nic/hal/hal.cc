@@ -208,7 +208,15 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                         sdk::lib::THREAD_ROLE_CONTROL,
                         0x0 /* use all control cores */,
                         hal_periodic_loop_start,
-                        thread_prio - 1,
+                        /*
+                         * Giving this thread highest priority for now.
+                         * Periodic thread might trigger an PD update.
+                         * Seems to create starvation as ASIC PD RW thread
+                         * has high priority.
+                         * One solution might be to increase the priority
+                         * dynamically if doing a PD update.
+                         */
+                        sched_get_priority_max(SCHED_RR),
                         gl_super_user ? SCHED_RR : SCHED_OTHER,
                         true);
     HAL_ABORT(g_hal_threads[HAL_THREAD_ID_PERIODIC] != NULL);

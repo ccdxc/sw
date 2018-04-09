@@ -12,18 +12,21 @@ from pip._vendor.colorama.ansi import Back
 class Endpoint:
     
     def __init__(self, name, mac_addr, ip_addr,
-                 local = True, encap_vlan=None):
+                 local = True, encap_vlan=None, intf_name=None):
         self._name = name
         self._mac_addr = mac_addr
         self._ip_address = ip_addr
         self._prefix_len = 24
         self._encap_vlan = encap_vlan
         self._local = local
+        self._intf_name = intf_name
         self._process = {}
+        self._files = []
         
     def Init(self):
         ns = NS(self._name)
-        ns.BindInterface(self._name, self._encap_vlan if self._local else None)
+        ns.BindInterface(self._name, self._encap_vlan if self._local else None,
+                          self._intf_name)
         ns.SetMacAddress(self._mac_addr)
         if self._ip_address:
             ns.SetIpAddress(self._ip_address, self._prefix_len)
@@ -36,7 +39,10 @@ class Endpoint:
     def CleanUp(self):
         for pid in self._process:
             self._process[pid].kill() 
-        self._process = {}       
+        self._process = {}
+        for file in self._files:
+            os.remove(file)
+        self._files = []
         
     def Run(self, cmd, timeout=None, background=False):
         ret = self._ns.Run(cmd, timeout, background)
@@ -44,6 +50,12 @@ class Endpoint:
             self._process[id(ret)] = ret
             ret = id(ret)
         return ret
+    
+    def CopyFile(self, file, file_data):
+        text_file = open(file, "w")
+        text_file.write(file_data)
+        text_file.close()
+        self._files.append(file)
     
     def AddArpEntry(self, ip, mac):
          self._ns.AddArpEntry(ip, mac)
@@ -81,10 +93,11 @@ class EndpointServer(RPCServer):
         return msg
     
     def handle_init_method(self, name, mac_addr, ip_addr,
-                 local = True, encap_vlan=None):
+                 local = True, encap_vlan=None, intf_name=None):
         resp = {}
         self.handle_reset_method(name)
-        self._endpoints[name] = Endpoint(name, mac_addr, ip_addr, local, encap_vlan)
+        self._endpoints[name] = \
+             Endpoint(name, mac_addr, ip_addr, local, encap_vlan, intf_name)
         self._endpoints[name].Init()
         return { "status" : "ok"}
 
@@ -100,6 +113,10 @@ class EndpointServer(RPCServer):
         if self._endpoints.get(name, None):
             return self._endpoints[name].Run(cmd, timeout, background)        
     
+    def handle_copy_file_method(self, name, file, data):
+        if self._endpoints.get(name, None):
+            self._endpoints[name].CopyFile(file, data)
+        
     def handle_process_kill_method(self, name, pid):
         if self._endpoints.get(name, None):
             self._endpoints[name].ProcessKill(pid)
