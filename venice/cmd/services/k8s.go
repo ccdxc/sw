@@ -310,7 +310,7 @@ var k8sModules = map[string]protos.Module{
 			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.ElasticSearch,
-					Image: "$REGISTRY_URL/elasticsearch-cluster:6.2.2",
+					Image: "$REGISTRY_URL/elasticsearch-cluster:v0.1",
 					// TODO
 					// Because of https://github.com/kubernetes/kubernetes/pull/48986
 					// we cant have environment variables with special chars in kube

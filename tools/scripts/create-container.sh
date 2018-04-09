@@ -54,7 +54,7 @@ function createBinContainerTarBall() {
         registry.test.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.7.14 \
         registry.test.pensando.io:5000/coreos/etcd:v3.3.2 registry.test.pensando.io:5000/beats/filebeat:6.2.2 \
         registry.test.pensando.io:5000/pens-ntp:v0.2 registry.test.pensando.io:5000/influxdb:1.4.2 \
-        registry.test.pensando.io:5000/elasticsearch-cluster:6.2.2"
+        registry.test.pensando.io:5000/elasticsearch-cluster:v0.1"
     for i in $staticimages
     do
         if [ "$(docker images -q $i)"  == "" ]

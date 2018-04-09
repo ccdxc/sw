@@ -141,12 +141,12 @@ cluster-restart:
 clean: c-stop
 
 helper-containers:
-	@cd tools/docker-files/ntp; docker buil d-t ${REGISTRY_URL}/pens-ntp:v0.2 .
+	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.2 .
 	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.2 .
 	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/${BUILD_CONTAINER} .
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/pens-dind:v0.2 .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/pens-e2e:v0.2 .
-	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:6.2.2 .
+	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.1 .
 
 container-compile:
 	mkdir -p ${PWD}/bin/cbin
