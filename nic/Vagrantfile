@@ -132,6 +132,7 @@ cd /tmp
 pip3 install --upgrade ruamel.yaml scapy-python3 google-api-python-client Tenjin enum34 protobuf grpcio zmq cmd2 PyOpenSSL pysendfile pyftpdlib jsonrpc2_zeromq
 pip3 install tenjin
 pip3 install click click_repl
+pip3 install docker
 
 # install all python2.7 packages
 pip install --upgrade ply==3.9 cmd2 tftpy

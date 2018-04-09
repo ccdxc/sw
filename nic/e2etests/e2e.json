@@ -1,0 +1,6 @@
+{
+    "App" : {
+        "registry" : "registry.test.pensando.io:5000",
+        "image"    : "/pensando/nic/e2e:1.0"
+    }
+}

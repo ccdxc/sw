@@ -442,7 +442,7 @@ def run_dol(args):
         cmd.append('--gft')
     if args.perf is True:
         cmd.append('--perf')
-    if args.e2e_mode == "auto":
+    if args.e2e_mode == "dol-auto":
         cmd.append("--e2e")
     if args.debug:
         cmd.append("--debug")
@@ -670,7 +670,7 @@ def main():
     parser.add_argument("--e2e-l7-dol", dest='e2el7', action="store_true",
                         default=None, help="Run E2E L7 DOL")
     parser.add_argument('--e2e-mode', dest='e2e_mode', default=None,
-                    choices=["auto", "manual"], help='E2E Test mode.')
+                    choices=["dol-auto", "auto", "manual"], help='E2E Test mode.')
     parser.add_argument('--e2e-spec', dest='e2e_spec', default=None,
                         help='E2E Spec to bring up if manual mode.')
     parser.add_argument("--gft", dest='gft', action="store_true",
@@ -798,7 +798,7 @@ def main():
                 status = run_e2e_l7_dol()
             elif (args.v6e2etls):
                     status = run_v6_e2e_tlsproxy_dol()
-            elif (args.e2e_mode == "manual"):
+            elif (args.e2e_mode and args.e2e_mode != "dol-auto"):
                 status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec)
     else:
         if args.mbt:
@@ -815,7 +815,7 @@ def main():
                 status = run_e2e_l7_dol()
             elif (args.v6e2etls):
                     status = run_v6_e2e_tlsproxy_dol()
-            elif (args.e2e_mode == "manual"):
+            elif (args.e2e_mode and args.e2e_mode != "dol-auto"):
                 status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec)
 
     if args.coveragerun:

@@ -3,9 +3,11 @@ import importlib
 from infra.hntap import Hntap
 from infra.ns import NS
 from infra.endpoint import Endpoint
-import consts
 import json
+import time
 
+
+import consts
 
 def Get_Ep_Pair(eps, src_ep_type, dst_ep_type):
     host_eps = [ (entry[0] , entry[1] ) for entry in eps if not entry[1]["remote"]] 
@@ -69,13 +71,13 @@ class E2eTest(object):
     def __str__(self):
         return "E2E_TEST: %s" % self._name
         
-    def BringUp(self):
+    def BringUp(self, nomodel=False):
         self._ep_pair_cfg = GenerateEpPairCfg(self._src_type,
                                                   self._dst_type)
         with open(consts.HNTAP_CFG_FILE, "w") as fp:
             json.dump(self._ep_pair_cfg, fp)
         self._hntap = Hntap(consts.HNTAP_CFG_FILE)
-        self._hntap.Run()
+        self._hntap.Run(nomodel)
         self.__configure_endpoints()
 
 
@@ -92,10 +94,11 @@ class E2eTest(object):
         self._dst_ep.Init()
             
         #Add Arp entries for now.
-        self._src_ep._ns.AddArpEntry(self._dst_ep.GetIp(), self._dst_ep.GetMac())
-        self._dst_ep._ns.AddArpEntry(self._src_ep.GetIp(), self._src_ep.GetMac())
+        self._src_ep._app.AddArpEntry(self._dst_ep.GetIp(), self._dst_ep.GetMac())
+        self._dst_ep._app.AddArpEntry(self._src_ep.GetIp(), self._src_ep.GetMac())
         
     def __clean_up_endpoints(self):
+        print ("Cleaning up endpoints...")
         self._src_ep.Delete()
         self._dst_ep.Delete()
         
@@ -109,6 +112,8 @@ class E2eTest(object):
             module = module.replace("/", ".")
             module = importlib.import_module(module)        
             print ("Running Test :", module_info["module"]["name"])
+            self.BringUp()
+            self.PrintEnvironmentSummary()
             run = getattr(module, "Run")
             ret = run(self._src_ep, self._dst_ep)
             if (ret):
@@ -116,9 +121,7 @@ class E2eTest(object):
             else:
                 print ("Test Failed")
                 ret_code = False
-                
-            teadown = getattr(module, "Teardown")
-            teadown(self._src_ep, self._dst_ep)
+            self.Teardown()
         return ret_code
         
         
@@ -131,3 +134,4 @@ class E2eTest(object):
     def Teardown(self):
         self.__clean_up_endpoints()
         self._hntap.Stop()
+        time.sleep(2)

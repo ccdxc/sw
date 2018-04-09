@@ -40,6 +40,7 @@ PIP3_PACKAGES = %w[
   setuptools
   pipenv
   pyyaml
+  docker
 ]
 
 PACKAGES = %w[
@@ -275,7 +276,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.21"
+tag "pensando/nic:1.22"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 

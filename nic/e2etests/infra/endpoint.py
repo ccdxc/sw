@@ -1,4 +1,5 @@
 from infra.ns import NS
+from infra.app import AppFactory
 
 
 def SetUpNs(name, ep):
@@ -23,20 +24,25 @@ class Endpoint:
         else:
             self._encap_vlan = None
         self._local = not ep_cfg["remote"]
-        
+
+
     def Init(self):
-        ns = NS(self._name)
-        ns.BindInterface(self._name, self._encap_vlan if self._local else None)
-        ns.SetMacAddress(self._mac_addr)
+        app = AppFactory.Get(self._name)
+        app.AttachInterface(self._name)
+        app.SetMacAddress(self._name, self._mac_addr)
+        if self._local:
+            app.AddVlan(self._name, self._encap_vlan)
+            app.SetMacAddress(self._name, self._mac_addr, self._encap_vlan)
         if self._ip_address:
-            ns.SetIpAddress(self._ip_address, self._prefix_len)
-        self._ns = ns
+            app.SetIpAddress(self._name, self._ip_address, self._prefix_len, self._encap_vlan)
+        self._app = app
     
     def Delete(self):
-        self._ns.Delete()
+        print ("Cleaning up endpoint : %s" % self._name)
+        self._app.Stop()
     
     def Run(self, cmd, timeout=None, background=False):
-        return self._ns.Run(cmd, timeout, background)
+        return self._app.RunCommand(cmd, timeout, background)
         
     def GetIp(self):
         return self._ip_address
@@ -45,13 +51,8 @@ class Endpoint:
         return self._mac_addr
     
     def PrintEpInformation(self):
-        print("\tEP Information   : ", self._name)
-        print("\t Namespace       : ", self._ns._name)
-        print("\t Interface       : ", self._ns.GetInftName())
-        print("\t IP address      : ", self._ip_address)
-        print("\t Mac address     : ", self._mac_addr)
-        print("\t Encap Vlan      : ", self._encap_vlan)
-        print("\t Endpoint Type   : ", "Local" if self._local else "Remote")
+        print("\t Endpoint Type      : ", "Local" if self._local else "Remote")
+        self._app.PrintAppInformation()
         
 if __name__ == "__main__":
     pass

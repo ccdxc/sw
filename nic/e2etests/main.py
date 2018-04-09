@@ -8,6 +8,7 @@ import argparse
 import time
 import atexit
 import signal
+import pdb
 from infra.e2e_test import E2eTest
 
 e2e_test = None
@@ -31,27 +32,27 @@ def run_tests_in_auto_mode(spec=None):
         if not cfg["enabled"]:
             continue
         e2e_test = E2eTest(cfg)
-        e2e_test.BringUp()
-        e2e_test.PrintEnvironmentSummary()
         ret = e2e_test.Run()
-        e2e_test.Teardown()
         if not ret:
             print ("Test %s Failed" % str(e2e_test))
             sys.exit(1)
         print ("Test %s Passed" % str(e2e_test))
 
-def bringup_test_spec_env(spec):
+def bringup_test_spec_env(spec, nomodel):
     test_specs = get_test_specs()
     global e2e_test
     for test_spec in test_specs:
         if test_spec["name"] == spec:
             e2e_test = E2eTest(test_spec)
             print ("Bring up E2E environment for testspec : ",  spec)
-            e2e_test.BringUp()
+            e2e_test.BringUp(nomodel)
             print ("E2E environment up for testspec : ",  spec)
             e2e_test.PrintEnvironmentSummary()
-            while True:
-                time.sleep(10)
+            try:
+                while True:
+                    time.sleep(10)
+            except KeyboardInterrupt:
+                pass
             e2e_test.Teardown()    
 
 
@@ -61,7 +62,7 @@ def cleanup():
         e2e_test.Teardown()
 
 def signal_handler(signal, frame):
-    #print "cleanup from signal_handler"
+    print ("cleanup from signal_handler")
     cleanup()
     sys.exit(1)
 
@@ -72,6 +73,8 @@ def main():
                     help='E2E Test mode.')
     parser.add_argument('--e2e-spec', dest='e2e_spec', default=None,
                     help='E2E spec if running in manual mode.')    
+    parser.add_argument('--nomodel', dest='nomodel', action="store_true",
+                        help='No Model mode, connect each other.')  
     args = parser.parse_args()
 
     os.chdir(consts.nic_e2e_dir)
@@ -79,7 +82,7 @@ def main():
     if args.test_mode == "auto":
         run_tests_in_auto_mode()
     else:
-        bringup_test_spec_env(args.e2e_spec)
+        bringup_test_spec_env(args.e2e_spec, args.nomodel)
     return 
 
 

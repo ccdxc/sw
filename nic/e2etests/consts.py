@@ -17,3 +17,4 @@ if nic_dir is None:
 HNTAP_CFG_FILE = nic_dir + "/conf/hntap.conf"
 DOL_CFG_FILE = nic_dir + "/conf/dol.conf"
 hntap_log = nic_dir + "/hntap.log"
+E2E_APP_CONFIG_FILE = nic_dir + "/e2etests/e2e.json"
