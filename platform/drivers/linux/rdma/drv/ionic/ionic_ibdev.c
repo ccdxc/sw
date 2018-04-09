@@ -31,11 +31,14 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define DEVICE_DESCRIPTION "Pensando Capri RoCE HCA"
 
 /* XXX cleanup */
-#include <ionic_dev.h> /* XXX prereq for include ionic_lif.h */
-#include <ionic_lif.h> /* XXX for lif.index */
 #define IONIC_NUM_RSQ_WQE         4
 #define IONIC_NUM_RRQ_WQE         4
 /* XXX cleanup */
+
+static struct workqueue_struct *ionic_workq;
+
+/* access single-threaded thru ionic_workq cpu 0 */
+static LIST_HEAD(ionic_ibdev_list);
 
 static int ionic_validate_udata(struct ib_udata *udata,
 				size_t inlen, size_t outlen)
@@ -641,7 +644,7 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 			.opcode = CMD_OPCODE_RDMA_CREATE_MR,
 			.pd_num = pd->pdid,
 			/* XXX lif should be dbid */
-			.lif = dev->lif->index,
+			.lif = dev->lif_id,
 			.access_flags = access,
 			.start = start,
 			.length = length,
@@ -873,7 +876,7 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq)
 		.cmd.create_cq = {
 			.opcode = CMD_OPCODE_RDMA_CREATE_CQ,
 			/* XXX lif should be dbid */
-			.lif_id = dev->lif->index,
+			.lif_id = dev->lif_id,
 			.cq_num = cq->cqid,
 			/* XXX may overflow, zero means 2^16 */
 			.num_cq_wqes = cq->q.mask + 1,
@@ -1053,6 +1056,8 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 		goto err_q;
 	}
 
+	spin_lock_init(&cq->lock);
+
 	rc = ionic_create_cq_cmd(dev, cq);
 	if (rc)
 		goto err_cmd;
@@ -1147,7 +1152,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			.num_rrq_wqes = IONIC_NUM_RRQ_WQE,
 			.pd = pd->pdid,
 			/* XXX lif should be dbid */
-			.lif_id = dev->lif->index,
+			.lif_id = dev->lif_id,
 			/* XXX ib_qp_type_to_ionic(init_attr->qp_type) */
 			.service = 0,
 			.pmtu = 1024,
@@ -1444,6 +1449,9 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 
 	/* TODO alloc sq HBM */
 
+	spin_lock_init(&qp->sq_lock);
+	spin_lock_init(&qp->rq_lock);
+
 	rc = ionic_create_qp_cmd(dev, pd,
 				 to_ionic_cq(attr->send_cq),
 				 to_ionic_cq(attr->recv_cq),
@@ -1734,6 +1742,8 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 {
 	struct net_device *ndev = dev->ndev;
 
+	list_del(&dev->driver_ent);
+
 	ib_unregister_device(&dev->ibdev);
 
 	kfree(dev->free_qpid);
@@ -1750,11 +1760,11 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 }
 
 static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
-					      struct net_device *ndev,
-					      struct net_device *real_ndev)
+					      struct net_device *ndev)
 {
 	struct ib_device *ibdev;
 	struct ionic_ibdev *dev;
+	const union identity *ident;
 	size_t size;
 	int rc;
 
@@ -1767,11 +1777,14 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	}
 
 	dev = to_ionic_ibdev(ibdev);
-	dev->lif = lif;
 	dev->ndev = ndev;
+	dev->lif = lif;
+
+	ident = ionic_api_get_identity(lif, &dev->lif_id);
 
 	ionic_api_get_dbpages(lif, &dev->dbid, &dev->dbpage,
-			      &dev->phys_dbpage_base);
+			      &dev->phys_dbpage_base,
+			      &dev->intr_ctrl);
 
 	/* XXX hardcode values, should come from identify */
 	dev->sq_qtype = 3;
@@ -1787,7 +1800,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.vendor_id = 0;
 	dev->dev_attr.vendor_part_id = 0;
 	dev->dev_attr.hw_ver = 0;
-	dev->dev_attr.max_qp = 20;
+	dev->dev_attr.max_qp = 20; /* XXX ident->dev.nrdmasqs_per_lif */
 	dev->dev_attr.max_qp_wr = 0xfff;
 	dev->dev_attr.device_cap_flags =
 		//IB_DEVICE_LOCAL_DMA_LKEY |
@@ -1799,7 +1812,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		0;
 	dev->dev_attr.max_sge = 6;
 	dev->dev_attr.max_sge_rd = 7;
-	dev->dev_attr.max_cq = 40;
+	dev->dev_attr.max_cq = 40; /* XXX ident->dev.ncqs_per_lif */
 	dev->dev_attr.max_cqe = 0xfff;
 	dev->dev_attr.max_mr = 40;
 	dev->dev_attr.max_pd = 40;
@@ -1814,7 +1827,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_mcast_grp = 0;
 	dev->dev_attr.max_mcast_qp_attach = 0;
 	dev->dev_attr.max_ah = 0;
-	dev->dev_attr.max_srq = 40;
+	dev->dev_attr.max_srq = 40; /* XXX ident->dev.nrdmarqs_per_lif */
 	dev->dev_attr.max_srq_wr = 0xfff;
 	dev->dev_attr.max_srq_sge = 7;
 	dev->dev_attr.max_fast_reg_page_list_len = 0;
@@ -1885,7 +1898,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->norder_hbm = 0;
 
 	ibdev->owner = THIS_MODULE;
-	ibdev->dev.parent = real_ndev->dev.parent;
+	ibdev->dev.parent = ndev->dev.parent;
 
 	strlcpy(ibdev->name, "ionic_%d", IB_DEVICE_NAME_MAX);
 	strlcpy(ibdev->node_desc, DEVICE_DESCRIPTION, IB_DEVICE_NODE_DESC_MAX);
@@ -2008,6 +2021,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	if (rc)
 		goto err_register;
 
+	list_add(&dev->driver_ent, &ionic_ibdev_list);
+
 	return dev;
 
 err_register:
@@ -2027,13 +2042,10 @@ err_dev:
 	return ERR_PTR(rc);
 }
 
-static struct workqueue_struct *ionic_workq;
-
 struct ionic_netdev_work {
 	struct work_struct ws;
 	unsigned long event;
 	struct net_device *ndev;
-	struct net_device *real_ndev;
 	struct lif *lif;
 };
 
@@ -2055,7 +2067,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 
 		dev_dbg(&work->ndev->dev, "register ibdev\n");
 
-		dev = ionic_create_ibdev(work->lif, work->ndev, work->real_ndev);
+		dev = ionic_create_ibdev(work->lif, work->ndev);
 		if (IS_ERR(dev)) {
 			dev_dbg(&work->ndev->dev, "error register ibdev %d\n",
 				(int)PTR_ERR(dev));
@@ -2121,21 +2133,20 @@ static int ionic_netdev_event(struct notifier_block *notifier,
 			      unsigned long event, void *ptr)
 {
 	struct ionic_netdev_work *work;
-	struct net_device *ndev, *real_ndev;
+	struct net_device *ndev;
 	struct lif *lif;
 	int rc;
 
 	ndev = netdev_notifier_info_to_dev(ptr);
-	real_ndev = rdma_vlan_dev_real_dev(ndev) ?: ndev;
 
-	lif = get_netdev_ionic_lif(real_ndev, IONIC_API_VERSION);
+	lif = get_netdev_ionic_lif(ndev, IONIC_API_VERSION);
 	if (!lif) {
 		pr_devel("unrecognized netdev: %s (%s)\n",
-			 ndev->name, real_ndev->name);
+			 ndev->name, ndev->name);
 		goto out;
 	}
 
-	pr_devel("ionic netdev: %s (%s)\n", ndev->name, real_ndev->name);
+	pr_devel("ionic netdev: %s\n", ndev->name);
 	dev_dbg(&ndev->dev, "event %lu\n", event);
 
 	if (!try_module_get(THIS_MODULE))
@@ -2152,7 +2163,6 @@ static int ionic_netdev_event(struct notifier_block *notifier,
 	INIT_WORK(&work->ws, ionic_netdev_work);
 	work->event = event;
 	work->ndev = ndev;
-	work->real_ndev = real_ndev;
 	work->lif = lif;
 
 	queue_work(ionic_workq, &work->ws);
@@ -2193,9 +2203,27 @@ err_workq:
 	return rc;
 }
 
+static void __exit ionic_exit_work(struct work_struct *ws)
+{
+	struct ionic_ibdev *dev, *dev_next;
+
+	list_for_each_entry_safe_reverse(dev, dev_next, &ionic_ibdev_list,
+					 driver_ent) {
+		ionic_api_set_private(dev->lif, NULL, IONIC_RDMA_PRIVATE);
+		ionic_destroy_ibdev(dev);
+	}
+}
+
 static void __exit ionic_mod_exit(void)
 {
+	struct work_struct ws;
+
 	unregister_netdevice_notifier(&ionic_netdev_notifier);
+
+	INIT_WORK_ONSTACK(&ws, ionic_exit_work);
+	queue_work_on(0, ionic_workq, &ws);
+	flush_work(&ws);
+	destroy_work_on_stack(&ws);
 
 	destroy_workqueue(ionic_workq);
 }

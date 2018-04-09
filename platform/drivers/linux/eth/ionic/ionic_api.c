@@ -4,6 +4,7 @@
 
 #include "ionic.h"
 #include "ionic_if.h"
+#include "ionic_bus.h"
 #include "ionic_dev.h"
 #include "ionic_lif.h"
 
@@ -47,22 +48,54 @@ int ionic_api_set_private(struct lif *lif, void *priv,
 }
 EXPORT_SYMBOL_GPL(ionic_api_set_private);
 
+const union identity *ionic_api_get_identity(struct lif *lif, int *lif_id)
+{
+	*lif_id = lif->index;
+
+	return lif->ionic->ident;
+}
+EXPORT_SYMBOL_GPL(ionic_api_get_identity);
+
 int ionic_api_get_intr(struct lif *lif, int *irq)
 {
-	/* XXX second intr for rdma driver, eth will use intr zero.
-	 * TODO: actual allocator here. */
-	return 1;
+	struct intr intr_obj = {};
+	int err;
+
+	if (!lif->neqs)
+		return -ENOSPC;
+
+	err = ionic_intr_alloc(lif, &intr_obj);
+	if (err)
+		return err;
+
+	err = ionic_bus_get_irq(lif->ionic, intr_obj.index);
+	if (err < 0) {
+		ionic_intr_free(lif, &intr_obj);
+		return err;
+	}
+
+	--lif->neqs;
+
+	*irq = err;
+	return intr_obj.index;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_intr);
 
 void ionic_api_put_intr(struct lif *lif, int intr)
 {
-	/* TODO: actual allocator here. */
+	struct intr intr_obj = {
+		.index = intr
+	};
+
+	ionic_intr_free(lif, &intr_obj);
+
+	++lif->neqs;
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_intr);
 
 void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
-			  phys_addr_t *phys_dbpage_base)
+			   phys_addr_t *phys_dbpage_base,
+			   u32 __iomem **intr_ctrl)
 {
 	/* XXX dbpage of the eth driver, first page for now */
 	/* XXX kernel should only ioremap one dbpage, not the whole BAR */
@@ -70,6 +103,8 @@ void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
 	*dbpage = (void *)lif->ionic->idev.db_pages;
 
 	*phys_dbpage_base = lif->ionic->idev.phy_db_pages;
+
+	*intr_ctrl = (void *)lif->ionic->idev.intr_ctrl;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_dbpages);
 

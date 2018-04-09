@@ -41,6 +41,7 @@ struct ionic {
 	union identity *ident;
 	dma_addr_t ident_pa;
 	struct list_head lifs;
+	unsigned int neqs_per_lif;
 	unsigned int ntxqs_per_lif;
 	unsigned int nrxqs_per_lif;
 	unsigned int nintrs;

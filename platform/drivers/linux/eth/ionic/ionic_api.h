@@ -67,6 +67,16 @@ void *ionic_api_get_private(struct lif *lif,
 int ionic_api_set_private(struct lif *lif, void *priv,
 			  enum ionic_api_private kind);
 
+/** ionic_api_get_identity - Get result of device identification.
+ * @lif:		Handle to lif.
+ * @lif_id:		This lif id.
+ *
+ * The dev member of the union is valid.
+ *
+ * Return: pointer to result of identification.
+ */
+const union identity *ionic_api_get_identity(struct lif *lif, int *lif_id);
+
 /** ionic_api_get_intr - Reserve a device iterrupt index.
  * @lif:		Handle to lif.
  * @irq:		OS interrupt number returned.
@@ -90,13 +100,15 @@ void ionic_api_put_intr(struct lif *lif, int intr);
  * @dbid:		Doorbell id for use in kernel space.
  * @dbpage:		One ioremapped doorbell page for use in kernel space.
  * @phys_dbpage_base:	Phys base address of doorbell pages for the device.
+ * @intr_ctrl:		Interrupt control registers.
  *
  * The doorbell id and dbpage are special.  Most doorbell ids and pages are for
  * use by user space.  The id and page returned here refer to the one reserved
  * for use in kernel space.
  */
 void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
-			  phys_addr_t *phys_dbpage_base);
+			   phys_addr_t *phys_dbpage_base,
+			   u32 __iomem **intr_ctrl);
 
 /** ionic_api_get_dbid - Reserve a doorbell id.
  * @lif:		Handle to lif.

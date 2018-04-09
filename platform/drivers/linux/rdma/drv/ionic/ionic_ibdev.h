@@ -26,11 +26,17 @@ struct ionic_mmap_info {
 
 struct ionic_ibdev {
 	struct ib_device	ibdev;
+
+	struct list_head	driver_ent;
+
 	struct ib_device_attr	dev_attr;
 	struct ib_port_attr	port_attr;
 
-	struct lif		*lif;
 	struct net_device	*ndev;
+	struct lif		*lif;
+	int			lif_id;
+
+	u32		__iomem *intr_ctrl;
 
 	phys_addr_t		phys_dbpage_base;
 	u64		__iomem *dbpage;
