@@ -1306,8 +1306,6 @@ static int ionic_get_features(struct lif *lif)
 		netdev_info(lif->netdev, "feature ETH_HW_TSO_UDP\n");
 	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
 		netdev_info(lif->netdev, "feature ETH_HW_TSO_UDP_CSUM\n");
-	if (lif->hw_features & ETH_HW_SCTP_CSUM)
-		netdev_info(lif->netdev, "feature ETH_HW_SCTP_CSUM\n");
 
 	return 0;
 }
@@ -1356,8 +1354,6 @@ static int ionic_set_features(struct lif *lif)
 		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL;
 	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
 		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL_CSUM;
-	if (lif->hw_features & ETH_HW_SCTP_CSUM)
-		netdev->hw_enc_features |= NETIF_F_SCTP_CRC;
 
 	netdev->hw_features |= netdev->hw_enc_features;
 	netdev->features |= netdev->hw_features;

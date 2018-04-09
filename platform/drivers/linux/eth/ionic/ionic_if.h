@@ -758,7 +758,6 @@ enum eth_hw_features {
 	ETH_HW_TSO_IPXIP6	= BIT(13),
 	ETH_HW_TSO_UDP		= BIT(14),
 	ETH_HW_TSO_UDP_CSUM	= BIT(15),
-	ETH_HW_SCTP_CSUM	= BIT(16),
 };
 
 /**
