@@ -1404,9 +1404,7 @@ vrf_add_l2seg (vrf_t *vrf, l2seg_t *l2seg)
     }
 
 end:
-
     HAL_TRACE_DEBUG("Added l2seg {} to vrf {}", l2seg->seg_id, vrf->vrf_id);
-
     return ret;
 }
 

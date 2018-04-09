@@ -145,15 +145,24 @@ typedef struct if_s {
     intf::IfStatus      if_op_status;           // operational status
 
     // forward references
-    dllist_ctxt_t       mbr_if_list_head;       // list of member ports for uplink PC
+    block_list          *mbr_if_list;           // list of member ports for uplink PC
     dllist_ctxt_t       l2seg_list_clsc_head;   // l2segments in classic nic
                                                 // mode for enic ifs.
                                                 // l2seg_entry_classic_t
     // back references
-    // Uplinks
-    dllist_ctxt_t       l2seg_list_head;        // l2segments, add_l2seg_on_uplink
-    dllist_ctxt_t       enicif_list_head;       // enicifs, Classic enics
+    block_list          *l2seg_list;            // l2segments, add_l2seg_on_uplink
+    block_list          *enicif_list;           // enicifs, Classic enics
     block_list          *acl_list[IF_ACL_REF_TYPES]; // List of acls matching on src if
+#if 0
+    dllist_ctxt_t       mbr_if_list_head;       // list of member ports for uplink PC
+    dllist_ctxt_t       l2seg_list_clsc_head;   // l2segments in classic nic
+                                                // mode for enic ifs.
+                                                // l2seg_entry_classic_t
+#endif
+    // back references
+    // Uplinks
+    // dllist_ctxt_t       l2seg_list_head;        // l2segments, add_l2seg_on_uplink
+    // dllist_ctxt_t       enicif_list_head;       // enicifs, Classic enics
 
     // dllist_ctxt_t       ep_list_head;       // endpoints behind this interface
     // dllist_ctxt_t       session_list_head;  // session from this
@@ -179,9 +188,14 @@ typedef struct if_update_app_ctxt_s {
 
             // only to PC
             bool            mbrlist_change;
-            dllist_ctxt_t   *add_mbrlist;
-            dllist_ctxt_t   *del_mbrlist;
-            dllist_ctxt_t   *aggr_mbrlist;
+            block_list      *add_mbrlist;
+            block_list      *del_mbrlist;
+            block_list      *aggr_mbrlist;
+
+
+            // dllist_ctxt_t   *add_mbrlist;
+            // dllist_ctxt_t   *del_mbrlist;
+            // dllist_ctxt_t   *aggr_mbrlist;
         } __PACK__;
 
         // enicif interface info
@@ -238,15 +252,15 @@ extern uint32_t if_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool if_id_compare_key_func(void *key1, void *key2);
 hal_ret_t uplinkif_add_uplinkpc(if_t *upif, if_t *uppc);
 hal_ret_t uplinkif_del_uplinkpc(if_t *upif, if_t *uppc);
-hal_ret_t uplinkpc_update_mbrs_relation(dllist_ctxt_t *mbr_list,
+hal_ret_t uplinkpc_update_mbrs_relation(block_list *mbr_list,
                                         if_t *uppc, bool add);
 hal_ret_t uplinkpc_add_uplinkif(if_t *uppc, if_t *upif);
 hal_ret_t uplinkpc_del_uplinkif(if_t *uppc, if_t *upif);
 hal_ret_t uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
                                    bool *mbrlist_change,
-                                   dllist_ctxt_t **add_mbrlist,
-                                   dllist_ctxt_t **del_mbrlist,
-                                   dllist_ctxt_t **aggr_mbrlist);
+                                   block_list **add_mbrlist,
+                                   block_list **del_mbrlist,
+                                   block_list **aggr_mbrlist);
 hal_ret_t interface_cleanup_handle_list(dllist_ctxt_t **list);
 void enicif_print_l2seg_entry_list(dllist_ctxt_t  *list);
 void enicif_free_l2seg_entry_list(dllist_ctxt_t *list);

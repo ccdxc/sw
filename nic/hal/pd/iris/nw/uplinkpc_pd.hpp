@@ -82,7 +82,7 @@ uplinkpc_pd_mem_free (pd_uplinkpc_t *upif)
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static inline void 
+static inline void
 uplinkpc_link_pi_pd(pd_uplinkpc_t *pd_upif, if_t *pi_if)
 {
     pd_upif->pi_if = pi_if;
@@ -92,7 +92,7 @@ uplinkpc_link_pi_pd(pd_uplinkpc_t *pd_upif, if_t *pi_if)
 // ----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static inline void 
+static inline void
 uplinkpc_delink_pi_pd(pd_uplinkpc_t *pd_upif, if_t *pi_if)
 {
     pd_upif->pi_if = NULL;
@@ -102,13 +102,13 @@ uplinkpc_delink_pi_pd(pd_uplinkpc_t *pd_upif, if_t *pi_if)
 hal_ret_t uplinkpc_pd_alloc_res(pd_uplinkpc_t *up_if);
 hal_ret_t uplinkpc_pd_program_hw(pd_uplinkpc_t *up_if);
 hal_ret_t uplinkpc_pd_pgm_tm_register(pd_uplinkpc_t *up_if, bool add);
-hal_ret_t uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppcif, 
-                                                 pd_uplinkif_t *pd_upif, 
+hal_ret_t uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppcif,
+                                                 pd_uplinkif_t *pd_upif,
                                                  bool add);
 hal_ret_t uplinkpc_pd_upd_tm_register (pd_if_update_args_t *args);
 hal_ret_t
 uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif,
-                                   dllist_ctxt_t *mbr_list,
+                                   block_list *mbr_list,
                                    table_oper_t oper);
 hal_ret_t uplinkpc_pd_cleanup(pd_uplinkpc_t *upif_pd);
 hal_ret_t uplinkpc_pd_deprogram_hw (pd_uplinkpc_t *pd_upif);

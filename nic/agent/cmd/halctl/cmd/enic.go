@@ -104,9 +104,10 @@ func enicShowOneResp(resp *halproto.InterfaceGetResponse) {
 	case halproto.IfEnicType_IF_ENIC_TYPE_DIRECT:
 		fallthrough
 	case halproto.IfEnicType_IF_ENIC_TYPE_GFT:
-		fmt.Printf("%-10d%-20x%-10d%-10d",
+		macStr := utils.MactoStr(resp.GetSpec().GetIfEnicInfo().GetEnicInfo().GetMacAddress())
+		fmt.Printf("%-10d%-20s%-10d%-10d",
 			resp.GetSpec().GetIfEnicInfo().GetEnicInfo().GetL2SegmentKeyHandle().GetSegmentId(),
-			resp.GetSpec().GetIfEnicInfo().GetEnicInfo().GetMacAddress(),
+			macStr,
 			resp.GetSpec().GetIfEnicInfo().GetEnicInfo().GetEncapVlanId(),
 			resp.GetSpec().GetIfEnicInfo().GetLifKeyOrHandle().GetLifId())
 	case halproto.IfEnicType_IF_ENIC_TYPE_CLASSIC:

@@ -85,19 +85,20 @@ if_init (if_t *hal_if)
     HAL_SPINLOCK_INIT(&hal_if->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
-    hal_if->num_ep = 0;
-    hal_if->enic_type = intf::IF_ENIC_TYPE_NONE;
-    hal_if->pd_if = NULL;
-    hal_if->hal_handle = HAL_HANDLE_INVALID;
-    hal_if->lif_handle = HAL_HANDLE_INVALID;
-    hal_if->l2seg_handle = HAL_HANDLE_INVALID;
+    hal_if->num_ep            = 0;
+    hal_if->enic_type         = intf::IF_ENIC_TYPE_NONE;
+    hal_if->pd_if             = NULL;
+    hal_if->hal_handle        = HAL_HANDLE_INVALID;
+    hal_if->lif_handle        = HAL_HANDLE_INVALID;
+    hal_if->l2seg_handle      = HAL_HANDLE_INVALID;
     hal_if->native_l2seg_clsc = HAL_HANDLE_INVALID;
-    hal_if->pinned_uplink = HAL_HANDLE_INVALID;
-    hal_if->is_pc_mbr = false;
-    hal_if->uplinkpc_handle = HAL_HANDLE_INVALID;
-    sdk::lib::dllist_reset(&hal_if->l2seg_list_head);
-    sdk::lib::dllist_reset(&hal_if->enicif_list_head);
-    sdk::lib::dllist_reset(&hal_if->mbr_if_list_head);
+    hal_if->pinned_uplink     = HAL_HANDLE_INVALID;
+    hal_if->is_pc_mbr         = false;
+    hal_if->uplinkpc_handle   = HAL_HANDLE_INVALID;
+
+    hal_if->mbr_if_list     = block_list::factory(sizeof(hal_handle_t));
+    hal_if->l2seg_list      = block_list::factory(sizeof(hal_handle_t));
+    hal_if->enicif_list     = block_list::factory(sizeof(hal_handle_t));
     sdk::lib::dllist_reset(&hal_if->l2seg_list_clsc_head);
     sdk::lib::dllist_reset(&hal_if->mc_entry_list_head);
 
@@ -126,6 +127,9 @@ if_free (if_t *hal_if)
 static inline hal_ret_t
 if_cleanup (if_t *hal_if)
 {
+    block_list::destroy(hal_if->mbr_if_list);
+    block_list::destroy(hal_if->l2seg_list);
+    block_list::destroy(hal_if->enicif_list);
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(hal_if->acl_list); i++) {
         block_list::destroy(hal_if->acl_list[i]);
     }
@@ -680,7 +684,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     if (hal_if->if_type == intf::IF_TYPE_UPLINK_PC) {
         // Add relation from mbr uplink if to PC
-        ret = uplinkpc_update_mbrs_relation(&hal_if->mbr_if_list_head,
+        ret = uplinkpc_update_mbrs_relation(hal_if->mbr_if_list,
                                             hal_if, true);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to add uplinkif -> uplinkpc "
@@ -755,31 +759,8 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // members are populated before commit_cb itself. So if it fails, we have to clean
     if (hal_if->if_type == intf::IF_TYPE_UPLINK_PC) {
-        HAL_TRACE_DEBUG("freeing up mbr and l2seg lists");
-        hal_free_handles_list(&hal_if->mbr_if_list_head);
-        hal_free_handles_list(&hal_if->l2seg_list_head);
-
-#if 0
-    // dllist_ctxt_t               *curr, *next;
-    // hal_handle_id_list_entry_t  *entry = NULL;
-        // if uplinkpc, clean up the member ports
-        dllist_for_each_safe(curr, next, &hal_if->mbr_if_list_head) {
-            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            // uplinkpc_del_uplinkif(hal_if, find_if_by_handle(entry->handle_id));
-            // Remove from list
-            sdk::lib::dllist_del(&entry->dllist_ctxt);
-            // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-        }
-        dllist_for_each_safe(curr, next, &hal_if->l2seg_list_head) {
-            entry = dllist_entry(curr, hal_handle_id_list_entry_t,
-                        dllist_ctxt);
-            // Remove from list
-            sdk::lib::dllist_del(&entry->dllist_ctxt);
-            // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-        }
-#endif
+        hal_remove_all_handles_block_list(hal_if->mbr_if_list);
+        // hal_free_handles_list(&hal_if->l2seg_list_head);
     }
 
     if (hal_if->if_type == intf::IF_TYPE_ENIC &&
@@ -1039,10 +1020,6 @@ if_make_clone (if_t *hal_if, if_t **if_clone)
 
     memcpy(*if_clone, hal_if, sizeof(if_t));
 
-    dllist_reset(&(*if_clone)->mbr_if_list_head);
-    dllist_reset(&(*if_clone)->l2seg_list_clsc_head);
-    dllist_reset(&(*if_clone)->l2seg_list_head);
-    dllist_reset(&(*if_clone)->enicif_list_head);
     dllist_reset(&(*if_clone)->mc_entry_list_head);
 
     args.hal_if = hal_if;
@@ -1437,7 +1414,7 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
         entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
         l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
         if (!l2seg) {
-            HAL_TRACE_ERR("Unable to find l2seg with handle : {}",
+            HAL_TRACE_ERR("unable to find l2seg with handle:{}",
                           entry->l2seg_handle);
             ret = HAL_RET_L2SEG_NOT_FOUND;
             goto end;
@@ -1491,6 +1468,74 @@ end:
 
     return ret;
 }
+#if 0
+//----------------------------------------------------------------------------
+// Update l2segs with classic enic PI
+//----------------------------------------------------------------------------
+hal_ret_t
+enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    dllist_ctxt_t                   *curr, *next;
+    if_l2seg_entry_t                *entry = NULL, *del_l2seg_entry = NULL;
+    l2seg_t                         *l2seg = NULL;
+    hal_handle_t                    *p_hdl_id = NULL;
+
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);
+
+    for (const void *ptr : *app_ctxt->add_l2segclsclist) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        l2seg = l2seg_lookup_by_handle(*p_hdl_id);
+        if (!l2seg) {
+            HAL_TRACE_ERR("Unable to find l2seg with handle : {}", *p_hdl_id);
+            ret = HAL_RET_L2SEG_NOT_FOUND;
+            goto end;
+        }
+
+        // Remove entry from temp. list
+        hal_del_from_handle_block_list(app_ctxt->add_l2segclsclist, *p_hdl_id);
+
+        // Add entry in the main list
+        hal_add_to_handle_block_list(app_ctxt->add_l2segclsclist, *p_hdl_id);
+
+        // Add the back reference in l2seg
+        ret = l2seg_add_if(l2seg, hal_if);
+        HAL_ASSERT(ret == HAL_RET_OK);
+    }
+
+    for (const void *ptr : *app_ctxt->del_l2segclsclist) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        l2seg = l2seg_lookup_by_handle(*p_hdl_id);
+        HAL_ASSERT(l2seg != NULL);
+
+        // Remove entry from temp. list
+        hal_del_from_handle_block_list(app_ctxt->del_l2segclsclist, *p_hdl_id);
+
+        if (l2seg_in_classic_enicif(hal_if, entry->l2seg_handle)) {
+            // Remove entry from main list
+            hal_del_from_handle_block_list(hal_if->l2seg_list_clsc, *p_hdl_id);
+
+            // Del the back reference from l2seg
+            ret = l2seg_del_if(l2seg, hal_if);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        }
+    }
+
+end:
+
+    // Free add & del list
+    // enicif_cleanup_l2seg_entry_list(&app_ctxt->add_l2segclsclist);
+    // enicif_cleanup_l2seg_entry_list(&app_ctxt->del_l2segclsclist);
+
+    hal_cleanup_handle_block_list(&app_ctxt->add_l2segclsclist);
+    hal_cleanup_handle_block_list(&app_ctxt->del_l2segclsclist);
+
+    // Unlock if
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);
+
+    return ret;
+}
+#endif
 
 //----------------------------------------------------------------------------
 // Updates Uplink PC's Pi with member list
@@ -1506,12 +1551,17 @@ if_update_pi_with_mbr_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
     // Revisit: this is a clone and may be we dont have to take the lock
     if_lock(hal_if, __FILENAME__, __LINE__, __func__);
 
+    // Copy aggr to clone
+    hal_copy_block_lists(hal_if->mbr_if_list, app_ctxt->aggr_mbrlist);
+
+#if 0
     // Free list in clone
-    hal_free_handles_list(&hal_if->mbr_if_list_head);
+    hal_remove_all_handles_block_list(&hal_if->mbr_if_list);
+    // hal_free_handles_list(&hal_if->mbr_if_list_head);
 
     // Move aggregated list to clone
     dllist_move(&hal_if->mbr_if_list_head, app_ctxt->aggr_mbrlist);
-
+#endif
     // add/del relations from member ports.
     ret = uplinkpc_update_mbrs_relation(app_ctxt->add_mbrlist,
                                         hal_if, true);
@@ -1532,9 +1582,13 @@ if_update_pi_with_mbr_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
 end:
 
     // Free add & del list
-    interface_cleanup_handle_list(&app_ctxt->add_mbrlist);
-    interface_cleanup_handle_list(&app_ctxt->del_mbrlist);
-    interface_cleanup_handle_list(&app_ctxt->aggr_mbrlist);
+    hal_cleanup_handle_block_list(&app_ctxt->add_mbrlist);
+    hal_cleanup_handle_block_list(&app_ctxt->del_mbrlist);
+    hal_cleanup_handle_block_list(&app_ctxt->aggr_mbrlist);
+
+    // interface_cleanup_handle_list(&app_ctxt->add_mbrlist);
+    // interface_cleanup_handle_list(&app_ctxt->del_mbrlist);
+    // interface_cleanup_handle_list(&app_ctxt->aggr_mbrlist);
 
     // Unlock if
     if_unlock(hal_if, __FILENAME__, __LINE__, __func__);
@@ -1644,8 +1698,8 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         case intf::IF_TYPE_UPLINK:
         case intf::IF_TYPE_UPLINK_PC:
             // move lists
-            dllist_move(&intf_clone->l2seg_list_head, &intf->l2seg_list_head);
-            dllist_move(&intf_clone->mbr_if_list_head, &intf->mbr_if_list_head);
+            hal_copy_block_lists(intf_clone->l2seg_list, intf->l2seg_list);
+            hal_copy_block_lists(intf_clone->mbr_if_list, intf->mbr_if_list);
 
             // update clone with new attrs
             if (app_ctxt->native_l2seg_change) {
@@ -1692,6 +1746,7 @@ end:
     return ret;
 }
 
+// TODO: Deprecated
 //----------------------------------------------------------------------------
 // Clean up list
 //----------------------------------------------------------------------------
@@ -1750,15 +1805,20 @@ if_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     if (intf->if_type == intf::IF_TYPE_UPLINK_PC) {
         // Free mbr lists
-        interface_cleanup_handle_list(&app_ctxt->add_mbrlist);
-        interface_cleanup_handle_list(&app_ctxt->del_mbrlist);
-        interface_cleanup_handle_list(&app_ctxt->aggr_mbrlist);
+        // interface_cleanup_handle_list(&app_ctxt->add_mbrlist);
+        // interface_cleanup_handle_list(&app_ctxt->del_mbrlist);
+        // interface_cleanup_handle_list(&app_ctxt->aggr_mbrlist);
+
+        hal_cleanup_handle_block_list(&app_ctxt->add_mbrlist);
+        hal_cleanup_handle_block_list(&app_ctxt->del_mbrlist);
+        hal_cleanup_handle_block_list(&app_ctxt->aggr_mbrlist);
     }
 
     if (intf->if_type == intf::IF_TYPE_ENIC) {
         // Free l2segs lists for classic enic if
         enicif_cleanup_l2seg_entry_list(&app_ctxt->add_l2segclsclist);
         enicif_cleanup_l2seg_entry_list(&app_ctxt->del_l2segclsclist);
+
     }
 
     if_free(intf);
@@ -1854,6 +1914,7 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
     if_t                    *up_if = NULL;
     pd::pd_if_get_args_t    args   = {0};
     lif_t                   *lif;
+    hal_handle_t            *p_hdl_id = NULL;
 
     // fill in the config spec of this interface
     spec = rsp->mutable_spec();
@@ -1890,7 +1951,7 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
         uplink_if_info->set_port_num(hal_if->uplink_port_num + 1);
         uplink_if_info->set_native_l2segment_id(hal_if->native_l2seg);
         rsp->mutable_status()->mutable_uplink_info()->
-            set_num_l2segs(dllist_count(&hal_if->l2seg_list_head));
+            set_num_l2segs(hal_if->l2seg_list->num_elems());
         // TODO: is this populated today ?
         //uplink_if_info->set_l2segment_id();
         // TODO: don't see this info populated in if today
@@ -1903,14 +1964,12 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
         auto uplink_pc_info = spec->mutable_if_uplink_pc_info();
         // uplink_pc_info->set_uplink_pc_num(hal_if->uplink_pc_num);
         uplink_pc_info->set_native_l2segment_id(hal_if->native_l2seg);
-        dllist_ctxt_t *curr, *next;
-        hal_handle_id_list_entry_t *entry;
-        dllist_for_each_safe(curr, next, &hal_if->mbr_if_list_head) {
-            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            up_if = find_if_by_handle(entry->handle_id);
+        for (const void *ptr : *hal_if->mbr_if_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            up_if = find_if_by_handle(*p_hdl_id);
             if (!up_if) {
                 HAL_TRACE_ERR("Unable to find uplinkif with handle  : {}",
-                              entry->handle_id);
+                              *p_hdl_id);
                 continue;
             }
             auto mif_key_handle = uplink_pc_info->add_member_if_key_handle();
@@ -2299,7 +2358,6 @@ app_redir_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     return ret;
 }
 
-
 //------------------------------------------------------------------------------
 // Adds l2seg to the list for classic enicif
 //------------------------------------------------------------------------------
@@ -2313,7 +2371,7 @@ enicif_classic_add_l2seg(if_t *hal_if, l2seg_t *l2seg)
                   enic_l2seg_entry_slab()->alloc();
     if (l2seg_entry  == NULL) {
         ret = HAL_RET_OOM;
-        HAL_TRACE_ERR("Unable to alloc memory");
+        HAL_TRACE_ERR("unable to alloc memory");
         goto end;
     }
     l2seg_entry->l2seg_handle = l2seg->hal_handle;
@@ -2324,7 +2382,6 @@ enicif_classic_add_l2seg(if_t *hal_if, l2seg_t *l2seg)
     enicif_print_l2seg_entry_list(&hal_if->l2seg_list_clsc_head);
 
 end:
-
     return ret;
 }
 
@@ -2362,7 +2419,7 @@ enicif_print_l2seg_entry_list(dllist_ctxt_t  *list)
 
     dllist_for_each(lnode, list) {
         entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
-        HAL_TRACE_DEBUG("l2seg_handle : {}", entry->l2seg_handle);
+        HAL_TRACE_DEBUG("l2seg_handle: {}", entry->l2seg_handle);
     }
 }
 
@@ -2387,7 +2444,6 @@ enicif_add_to_l2seg_entry_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
     sdk::lib::dllist_add(handle_list, &entry->lentry);
 
 end:
-
     return ret;
 }
 
@@ -2403,7 +2459,7 @@ enicif_free_l2seg_entry_list(dllist_ctxt_t *list)
 
     dllist_for_each_safe(curr, next, list) {
         entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
-        HAL_TRACE_DEBUG("freeing l2seg handle : {}",
+        HAL_TRACE_DEBUG("freeing l2seg handle: {}",
                         entry->l2seg_handle);
         // Remove from list
         sdk::lib::dllist_del(&entry->lentry);
@@ -2426,6 +2482,139 @@ enicif_cleanup_l2seg_entry_list(dllist_ctxt_t **list)
 
     return ret;
 }
+#if 0
+//------------------------------------------------------------------------------
+// Adds l2seg to the list for classic enicif
+//------------------------------------------------------------------------------
+hal_ret_t
+enicif_classic_add_l2seg(if_t *hal_if, l2seg_t *l2seg)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+
+    if (hal_if == NULL || l2seg == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
+    ret = hal_if->l2seg_list_clsc->insert(&l2seg->hal_handle);
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add l2seg {} to if {}",
+                        l2seg->seg_id, hal_if->if_id);
+        goto end;
+    }
+
+end:
+    HAL_TRACE_DEBUG("Added l2seg {} to if {}", l2seg->seg_id, hal_if->if_id);
+    return ret;
+}
+
+//----------------------------------------------------------------------------
+// Checks if l2seg is present in classic enicif
+//----------------------------------------------------------------------------
+bool
+l2seg_in_classic_enicif(if_t *hal_if, hal_handle_t l2seg_handle)
+{
+    hal_handle_t    *p_hdl_id = NULL;
+
+    for (const void *ptr : *hal_if->l2seg_list_clsc) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        if (*p_hdl_id == l2seg_handle) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+//----------------------------------------------------------------------------
+// Prints l2seg entries handles from the list
+//----------------------------------------------------------------------------
+void
+enicif_print_l2seg_entry_list(dllist_ctxt_t  *list)
+{
+    dllist_ctxt_t                   *lnode = NULL;
+    if_l2seg_entry_t                *entry = NULL;
+
+    dllist_for_each(lnode, list) {
+        entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
+        HAL_TRACE_DEBUG("l2seg_handle : {}", entry->l2seg_handle);
+    }
+}
+#endif
+
+#if 0
+// TODO: Deprecated
+//----------------------------------------------------------------------------
+// Adds l2seg handle to if_l2seg list
+//----------------------------------------------------------------------------
+hal_ret_t
+enicif_add_to_l2seg_entry_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    if_l2seg_entry_t                *entry = NULL;
+
+    // Allocate the entry
+    entry = (if_l2seg_entry_t *)g_hal_state->
+            enic_l2seg_entry_slab()->alloc();
+    if (entry == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+    entry->l2seg_handle = handle;
+    // Insert into the list
+    sdk::lib::dllist_add(handle_list, &entry->lentry);
+
+end:
+
+    return ret;
+}
+#endif
+
+#if 0
+// TODO: Deprecated
+//----------------------------------------------------------------------------
+// Free l2seg handle entries in a list.
+// - Please take locks if necessary outside this call.
+//----------------------------------------------------------------------------
+void
+enicif_free_l2seg_entry_list(dllist_ctxt_t *list)
+{
+    dllist_ctxt_t                   *curr, *next;
+    if_l2seg_entry_t                *entry = NULL;
+
+    dllist_for_each_safe(curr, next, list) {
+        entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
+        HAL_TRACE_DEBUG("freeing l2seg handle : {}",
+                        entry->l2seg_handle);
+        // Remove from list
+        sdk::lib::dllist_del(&entry->lentry);
+        // Free the entry
+        hal::delay_delete_to_slab(HAL_SLAB_ENIC_L2SEG_ENTRY, entry);
+    }
+}
+#endif
+
+#if 0
+// TODO: Deprecated. Use hal_cleanup_handle_list()
+hal_ret_t
+enicif_cleanup_l2seg_entry_list(block_list **bl_list)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    if (*list == NULL) {
+        return ret;
+    }
+    hal_remove_all_handles_block_list(*bl_list);
+    block_list::destroy((*bl_list);
+    // enicif_free_l2seg_entry_list(*list);
+    // HAL_FREE(HAL_MEM_ALLOC_DLLIST, *list);
+    *list = NULL;
+
+    return ret;
+}
+#endif
 
 //------------------------------------------------------------------------------
 // Enic If Create
@@ -2510,7 +2699,6 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
         // Processing l2segments
         HAL_TRACE_DEBUG("Received {} number of l2segs",
                         clsc_enic_info->l2segment_key_handle_size());
-        sdk::lib::dllist_reset(&hal_if->l2seg_list_clsc_head);
         for (int i = 0; i < clsc_enic_info->l2segment_key_handle_size();
                 i++) {
             l2seg_clsc_key_handle = clsc_enic_info->l2segment_key_handle(i);
@@ -2634,7 +2822,6 @@ uplink_pc_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     HAL_TRACE_DEBUG("adding {} no. of members",
                     spec.if_uplink_pc_info().member_if_key_handle_size());
     // Walk through member uplinks
-    sdk::lib::dllist_reset(&hal_if->mbr_if_list_head);
     for (int i = 0; i < spec.if_uplink_pc_info().member_if_key_handle_size(); i++) {
         mbr_if_key_handle = spec.if_uplink_pc_info().member_if_key_handle(i);
         mbr_if = if_lookup_key_or_handle(mbr_if_key_handle);
@@ -2650,19 +2837,7 @@ uplink_pc_create (InterfaceSpec& spec, InterfaceResponse *rsp,
         uplinkpc_add_uplinkif(hal_if, mbr_if);
     }
 
-#if 0
-    // Walk through l2segments.
-    sdk::lib::dllist_reset(&hal_if->l2seg_list_head);
-    for (int i = 0; i < spec.if_uplink_pc_info().l2segment_id_size(); i++) {
-        l2seg_id = spec.if_uplink_pc_info().l2segment_id(i);
-        l2seg = find_l2seg_by_id(l2seg_id);
-        HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_INVALID_ARG);
-        uplinkpc_add_l2segment(hal_if, l2seg);
-    }
-#endif
-
 end:
-
     return ret;
 }
 
@@ -2796,10 +2971,10 @@ validate_uplinkif_delete (if_t *hal_if)
     }
 
     // check for no presence of l2segs
-    if (dllist_count(&hal_if->l2seg_list_head)) {
+    if (hal_if->l2seg_list->num_elems()) {
         ret = HAL_RET_OBJECT_IN_USE;
         HAL_TRACE_ERR("l2segs still referring:");
-        hal_print_handles_list(&hal_if->l2seg_list_head);
+        hal_print_handles_block_list(hal_if->l2seg_list);
     }
 
     // check if the uplink is not a member of PC
@@ -2828,10 +3003,10 @@ validate_uplinkpc_delete (if_t *hal_if)
     }
 
     // check for no presence of l2segs
-    if (dllist_count(&hal_if->l2seg_list_head)) {
+    if (hal_if->l2seg_list->num_elems()) {
         ret = HAL_RET_OBJECT_IN_USE;
         HAL_TRACE_ERR("Failed to delete uplink PC, l2segs still referring");
-        hal_print_handles_list(&hal_if->l2seg_list_head);
+        hal_print_handles_block_list(hal_if->l2seg_list);
     }
 
     return ret;
@@ -2867,11 +3042,11 @@ validate_if_delete (if_t *hal_if)
         HAL_TRACE_ERR("invalid if type");
     }
 
-    for (unsigned i = 0; 
+    for (unsigned i = 0;
          (ret == HAL_RET_OK) && i < HAL_ARRAY_SIZE(hal_if->acl_list); i++) {
         if (hal_if->acl_list[i]->num_elems()) {
             ret = HAL_RET_OBJECT_IN_USE;
-            HAL_TRACE_ERR("If delete failure, acls still referring {}:", 
+            HAL_TRACE_ERR("If delete failure, acls still referring {}:",
                           static_cast<if_acl_ref_type_t>(i));
             hal_print_handles_block_list(hal_if->acl_list[i]);
         }
@@ -3031,7 +3206,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Uplink PC: Remove relations from mbrs
     if (intf->if_type == intf::IF_TYPE_UPLINK_PC) {
         // Del relation from mbr uplink if to PC
-        ret = uplinkpc_update_mbrs_relation(&intf->mbr_if_list_head,
+        ret = uplinkpc_update_mbrs_relation(intf->mbr_if_list,
                                             intf, false);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to del uplinkif -/-> uplinkpc "
@@ -3042,7 +3217,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
         // clean up mbr if list
         HAL_TRACE_DEBUG("cleaning up mbr list");
-        hal_free_handles_list(&intf->mbr_if_list_head);
+        hal_remove_all_handles_block_list(intf->mbr_if_list);
     }
 
     if (intf->if_type == intf::IF_TYPE_ENIC) {
@@ -3314,17 +3489,13 @@ end:
 }
 
 bool
-mbrif_in_pc (if_t *up_pc, hal_handle_t mbr_handle, hal_handle_id_list_entry_t **handle_entry)
+mbrif_in_pc (if_t *up_pc, hal_handle_t mbr_handle)
 {
-    dllist_ctxt_t                   *lnode = NULL;
-    hal_handle_id_list_entry_t      *entry = NULL;
+    hal_handle_t            *p_hdl_id = NULL;
 
-    dllist_for_each(lnode, &(up_pc->mbr_if_list_head)) {
-        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        if (entry->handle_id == mbr_handle) {
-            if (handle_entry) {
-                *handle_entry = entry;
-            }
+    for (const void *ptr : *up_pc->mbr_if_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        if (*p_hdl_id == mbr_handle) {
             return true;
         }
     }
@@ -3366,7 +3537,7 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
     sdk::lib::dllist_reset(*del_l2seglist);
 
     num_l2segs = clsc_enic_info->l2segment_key_handle_size();
-    HAL_TRACE_DEBUG("number of l2segs  : {}",
+    HAL_TRACE_DEBUG("number of l2segs:{}",
                     num_l2segs);
     for (i = 0; i < num_l2segs; i++) {
         l2seg_key_handle = clsc_enic_info->l2segment_key_handle(i);
@@ -3382,23 +3553,23 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
             // Add to added list
             enicif_add_to_l2seg_entry_list(*add_l2seglist, l2seg->hal_handle);
             *l2seglist_change = true;
-            HAL_TRACE_DEBUG("added to add list hdl : {}",
+            HAL_TRACE_DEBUG("added to add list hdl: {}",
                     l2seg->hal_handle);
         }
     }
 
     HAL_TRACE_DEBUG("Existing l2segs:");
-    enicif_print_l2seg_entry_list(&hal_if->l2seg_list_head);
+    enicif_print_l2seg_entry_list(&hal_if->l2seg_list_clsc_head);
     HAL_TRACE_DEBUG("added l2segs:");
     enicif_print_l2seg_entry_list(*add_l2seglist);
 
     dllist_for_each(lnode, &(hal_if->l2seg_list_clsc_head)) {
         entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
-        HAL_TRACE_DEBUG("Checking for l2seg : {}",
+        HAL_TRACE_DEBUG("Checking for l2seg: {}",
                 entry->l2seg_handle);
         for (i = 0; i < num_l2segs; i++) {
             l2seg_key_handle = clsc_enic_info->l2segment_key_handle(i);
-            HAL_TRACE_DEBUG("grpc l2seg handle : {}", l2seg->hal_handle);
+            HAL_TRACE_DEBUG("grpc l2seg handle: {}", l2seg->hal_handle);
             if (entry->l2seg_handle == l2seg_key_handle.l2segment_handle()) {
                 l2seg_exists = true;
                 break;
@@ -3420,7 +3591,7 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
             // Insert into the list
             sdk::lib::dllist_add(*del_l2seglist, &lentry->lentry);
             *l2seglist_change = true;
-            HAL_TRACE_DEBUG("added to delete list hdl : {}",
+            HAL_TRACE_DEBUG("added to delete list hdl: {}",
                     lentry->l2seg_handle);
         }
         l2seg_exists = false;
@@ -3434,11 +3605,100 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
         enicif_cleanup_l2seg_entry_list(add_l2seglist);
         enicif_cleanup_l2seg_entry_list(del_l2seglist);
     }
-
 end:
-
     return ret;
 }
+#if 0
+//----------------------------------------------------------------------------
+// Handle classic enicif l2seg list change
+//----------------------------------------------------------------------------
+hal_ret_t
+enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
+                              bool *l2seglist_change,
+                              block_list **add_l2seglist,
+                              block_list **del_l2seglist)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    uint16_t                        num_l2segs = 0, i = 0;
+    dllist_ctxt_t                   *lnode = NULL;
+    bool                            l2seg_exists = false;
+    L2SegmentKeyHandle              l2seg_key_handle;
+    l2seg_t                         *l2seg = NULL;
+    if_l2seg_entry_t                *entry = NULL, *lentry = NULL;
+    hal_handle_t                    *p_hdl_id = NULL;
+
+    *l2seglist_change = false;
+
+    auto if_enic_info = spec.if_enic_info();
+    auto clsc_enic_info = if_enic_info.mutable_classic_enic_info();
+
+    *add_l2seglist = block_list::factory(sizeof(hal_handle_t));
+    *del_l2seglist = block_list::factory(sizeof(hal_handle_t));
+
+    num_l2segs = clsc_enic_info->l2segment_key_handle_size();
+    HAL_TRACE_DEBUG("number of l2segs  : {}",
+                    num_l2segs);
+    for (i = 0; i < num_l2segs; i++) {
+        l2seg_key_handle = clsc_enic_info->l2segment_key_handle(i);
+        l2seg = l2seg_lookup_key_or_handle(l2seg_key_handle);
+        if (l2seg == NULL) {
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
+
+        if (l2seg_in_classic_enicif(hal_if, l2seg->hal_handle)) {
+            continue;
+        } else {
+            // add to "add" list
+            hal_add_to_handle_block_list(*add_l2seglist, l2seg->hal_handle);
+            *l2seglist_change = true;
+            HAL_TRACE_DEBUG("added to add list hdl : {}",
+                    l2seg->hal_handle);
+        }
+    }
+
+    HAL_TRACE_DEBUG("Existing l2segs:");
+    hal_print_handles_block_list(hal_if->l2seg_list_clsc);
+    HAL_TRACE_DEBUG("added l2segs:");
+    hal_print_handles_block_list(*add_l2seglist);
+
+    for (const void *ptr : *hal_if->mbr_if_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        HAL_TRACE_DEBUG("Checking for l2seg : {}", *p_hdl_id);
+        for (i = 0; i < num_l2segs; i++) {
+            l2seg_key_handle = clsc_enic_info->l2segment_key_handle(i);
+            HAL_TRACE_DEBUG("grpc l2seg handle : {}", l2seg->hal_handle);
+            if (*p_hdl_id == l2seg_key_handle.l2segment_handle()) {
+                l2seg_exists = true;
+                break;
+            } else {
+                continue;
+            }
+        }
+        if (!l2seg_exists) {
+            // add to delete list
+            hal_add_to_handle_block_list(*del_l2seglist, *p_hdl_id);
+            *l2seglist_change = true;
+            HAL_TRACE_DEBUG("added to delete list hdl : {}", *p_hdl_id);
+        }
+        l2seg_exists = false;
+    }
+
+    HAL_TRACE_DEBUG("deleted l2segs:");
+    hal_print_handles_block_list(*del_l2seglist);
+
+    if (!*l2seglist_change) {
+        // Got same mbrs as existing
+        // enicif_cleanup_l2seg_entry_list(add_l2seglist);
+        // enicif_cleanup_l2seg_entry_list(del_l2seglist);
+        hal_cleanup_handle_block_list(add_l2seglist);
+        hal_cleanup_handle_block_list(del_l2seglist);
+    }
+
+end:
+    return ret;
+}
+#endif
 
 //----------------------------------------------------------------------------
 // Handle uplink pc mbr list update
@@ -3446,34 +3706,22 @@ end:
 hal_ret_t
 uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
                          bool *mbrlist_change,
-                         dllist_ctxt_t **add_mbrlist,
-                         dllist_ctxt_t **del_mbrlist,
-                         dllist_ctxt_t **aggr_mbrlist)
+                         block_list **add_mbrlist,
+                         block_list **del_mbrlist,
+                         block_list **aggr_mbrlist)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     uint16_t                        num_mbrs = 0, i = 0;
-    dllist_ctxt_t                   *lnode = NULL;
-    // ep_ip_entry_t                   *pi_ip_entry = NULL;
     bool                            mbr_exists = false;
     InterfaceKeyHandle              mbr_if_key_handle;
     if_t                            *mbr_if = NULL;
-    hal_handle_id_list_entry_t      *entry = NULL, *lentry = NULL;
+    hal_handle_t                    *p_hdl_id = NULL;
 
     *mbrlist_change = false;
 
-    *add_mbrlist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST,
-                                               sizeof(dllist_ctxt_t));
-    HAL_ABORT(*add_mbrlist != NULL);
-    *del_mbrlist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST,
-                                               sizeof(dllist_ctxt_t));
-    HAL_ABORT(*del_mbrlist != NULL);
-    *aggr_mbrlist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST,
-                                                sizeof(dllist_ctxt_t));
-    HAL_ABORT(*aggr_mbrlist != NULL);
-
-    sdk::lib::dllist_reset(*add_mbrlist);
-    sdk::lib::dllist_reset(*del_mbrlist);
-    sdk::lib::dllist_reset(*aggr_mbrlist);
+    *add_mbrlist = block_list::factory(sizeof(hal_handle_t));
+    *del_mbrlist = block_list::factory(sizeof(hal_handle_t));
+    *aggr_mbrlist = block_list::factory(sizeof(hal_handle_t));
 
     num_mbrs = spec.if_uplink_pc_info().member_if_key_handle_size();
     HAL_TRACE_DEBUG("pc mbrs  : {}",
@@ -3486,19 +3734,19 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
             goto end;
         }
 
-        // Add to aggregated list
-        hal_add_to_handle_list(*aggr_mbrlist, mbr_if->hal_handle);
+        // add to aggr list
+        hal_add_to_handle_block_list(*aggr_mbrlist, mbr_if->hal_handle);
 
         if (mbr_if->if_type != intf::IF_TYPE_UPLINK) {
             HAL_TRACE_ERR("Unable to add non-uplinkif. "
                           "Skipping if id : {}", mbr_if->if_id);
             continue;
         }
-        if (mbrif_in_pc(hal_if, mbr_if->hal_handle, NULL)) {
+        if (mbrif_in_pc(hal_if, mbr_if->hal_handle)) {
             continue;
         } else {
-            // Add to added list
-            hal_add_to_handle_list(*add_mbrlist, mbr_if->hal_handle);
+            // add to "add" list
+            hal_add_to_handle_block_list(*add_mbrlist, mbr_if->hal_handle);
             *mbrlist_change = true;
             HAL_TRACE_DEBUG("added to add list hdl : {}",
                     mbr_if->hal_handle);
@@ -3506,21 +3754,20 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
     }
 
     HAL_TRACE_DEBUG("Existing mbrs:");
-    hal_print_handles_list(&hal_if->mbr_if_list_head);
+    hal_print_handles_block_list(hal_if->mbr_if_list);
     HAL_TRACE_DEBUG("New Aggregated mbrs:");
-    hal_print_handles_list(*aggr_mbrlist);
+    hal_print_handles_block_list(*aggr_mbrlist);
     HAL_TRACE_DEBUG("added mbrs:");
-    hal_print_handles_list(*add_mbrlist);
+    hal_print_handles_block_list(*add_mbrlist);
 
-    dllist_for_each(lnode, &(hal_if->mbr_if_list_head)) {
-        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        HAL_TRACE_DEBUG("Checking for mbr : {}",
-                entry->handle_id);
+    for (const void *ptr : *hal_if->mbr_if_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        HAL_TRACE_DEBUG("Checking for mbr : {}", *p_hdl_id);
         for (i = 0; i < num_mbrs; i++) {
             mbr_if_key_handle = spec.if_uplink_pc_info().member_if_key_handle(i);
             mbr_if = if_lookup_key_or_handle(mbr_if_key_handle);
             HAL_TRACE_DEBUG("grpc mbr handle : {}", mbr_if->hal_handle);
-            if (entry->handle_id == mbr_if->hal_handle) {
+            if (*p_hdl_id == mbr_if->hal_handle) {
                 mbr_exists = true;
                 break;
             } else {
@@ -3528,32 +3775,26 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
             }
         }
         if (!mbr_exists) {
-            // Have to delete the mbr
-            lentry =
-                (hal_handle_id_list_entry_t *)
-                    g_hal_state->hal_handle_id_list_entry_slab()->alloc();
-            if (lentry == NULL) {
-                ret = HAL_RET_OOM;
-                goto end;
-            }
-            lentry->handle_id = entry->handle_id;
-
-            // Insert into the list
-            sdk::lib::dllist_add(*del_mbrlist, &lentry->dllist_ctxt);
+            // add to delete list
+            hal_add_to_handle_block_list(*del_mbrlist, *p_hdl_id);
             *mbrlist_change = true;
-            HAL_TRACE_DEBUG("added to delete list hdl {}", lentry->handle_id);
+            HAL_TRACE_DEBUG("added to delete list hdl {}", *p_hdl_id);
         }
         mbr_exists = false;
     }
 
     HAL_TRACE_DEBUG("deleted mbrs:");
-    hal_print_handles_list(*del_mbrlist);
+    hal_print_handles_block_list(*del_mbrlist);
 
     if (!*mbrlist_change) {
         // Got same mbrs as existing
-        interface_cleanup_handle_list(add_mbrlist);
-        interface_cleanup_handle_list(del_mbrlist);
-        interface_cleanup_handle_list(aggr_mbrlist);
+        // interface_cleanup_handle_list(add_mbrlist);
+        // interface_cleanup_handle_list(del_mbrlist);
+        // interface_cleanup_handle_list(aggr_mbrlist);
+
+        hal_cleanup_handle_block_list(add_mbrlist);
+        hal_cleanup_handle_block_list(del_mbrlist);
+        hal_cleanup_handle_block_list(aggr_mbrlist);
     }
 
 end:
@@ -3589,8 +3830,7 @@ enicif_update_l2segs_oif_lists(if_t *hal_if, lif_t *lif, bool add)
 // Add/Del relation l2seg -> enicif for all l2segs in the list
 //----------------------------------------------------------------------------
 hal_ret_t
-enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list,
-                               if_t *hal_if, bool add)
+enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list, if_t *hal_if, bool add)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     dllist_ctxt_t               *curr, *next;
@@ -3601,7 +3841,7 @@ enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list,
         entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
         l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
         if (!l2seg) {
-            HAL_TRACE_ERR("Unable to find l2seg with handle {}",
+            HAL_TRACE_ERR("unable to find l2seg with handle:{}",
                           entry->l2seg_handle);
             ret = HAL_RET_L2SEG_NOT_FOUND;
             goto end;
@@ -3614,27 +3854,24 @@ enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list,
     }
 
 end:
-
     return ret;
 }
-
 //----------------------------------------------------------------------------
 // Add/Del relation uplinkif -> uplinkpc for all mbrs in the list
 //----------------------------------------------------------------------------
 hal_ret_t
-uplinkpc_update_mbrs_relation (dllist_ctxt_t *mbr_list, if_t *uppc, bool add)
+uplinkpc_update_mbrs_relation (block_list *mbr_list, if_t *uppc, bool add)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *curr, *next;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    if_t                        *up_if = NULL;
+    hal_ret_t       ret = HAL_RET_OK;
+    hal_handle_t    *p_hdl_id = NULL;
+    if_t            *up_if = NULL;
 
-    dllist_for_each_safe(curr, next, mbr_list) {
-        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        up_if = find_if_by_handle(entry->handle_id);
+    for (const void *ptr : *mbr_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        up_if = find_if_by_handle(*p_hdl_id);
         if (!up_if) {
             HAL_TRACE_ERR("Unable to find uplinkif with handle {}",
-                          entry->handle_id);
+                          *p_hdl_id);
             ret = HAL_RET_IF_NOT_FOUND;
             goto end;
         }
@@ -3646,7 +3883,6 @@ uplinkpc_update_mbrs_relation (dllist_ctxt_t *mbr_list, if_t *uppc, bool add)
     }
 
 end:
-
     return ret;
 }
 
@@ -3714,30 +3950,23 @@ hal_ret_t
 uplinkpc_add_uplinkif (if_t *uppc, if_t *upif)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    hal_handle_id_list_entry_t  *entry = NULL;
 
     if (uppc == NULL || upif == NULL) {
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    // Allocate the entry
-    entry = (hal_handle_id_list_entry_t *)g_hal_state->
-        hal_handle_id_list_entry_slab()->alloc();
-    if (entry == NULL) {
-        ret = HAL_RET_OOM;
+    if_lock(uppc, __FILENAME__, __LINE__, __func__);      // lock
+    ret = uppc->mbr_if_list->insert(&upif->hal_handle);
+    if_unlock(uppc, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add upif {} to uppc {}",
+                        upif->if_id, uppc->if_id);
         goto end;
     }
-    entry->handle_id = upif->hal_handle;
-
-    if_lock(uppc, __FILENAME__, __LINE__, __func__);          // lock
-    // Insert into the list
-    sdk::lib::dllist_add(&uppc->mbr_if_list_head, &entry->dllist_ctxt);
-    if_unlock(uppc, __FILENAME__, __LINE__, __func__);      // unlock
 
 end:
-    HAL_TRACE_DEBUG("add uplinkpc => uplinkif, {} => {}, ret : {}",
-                    uppc->if_id, upif->if_id, ret);
+    HAL_TRACE_DEBUG("Added upif {} to uppc {}", upif->if_id, uppc->if_id);
     return ret;
 }
 
@@ -3747,25 +3976,24 @@ end:
 hal_ret_t
 uplinkpc_del_uplinkif (if_t *uppc, if_t *upif)
 {
-    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    dllist_ctxt_t               *curr, *next;
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (uppc == NULL || upif == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
 
     if_lock(uppc, __FILENAME__, __LINE__, __func__);      // lock
-    dllist_for_each_safe(curr, next, &uppc->mbr_if_list_head) {
-        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        if (entry->handle_id == upif->hal_handle) {
-            // Remove from list
-            sdk::lib::dllist_del(&entry->dllist_ctxt);
-            // Free the entry
-            hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
-            ret = HAL_RET_OK;
-        }
-    }
+    ret = uppc->mbr_if_list->remove(&upif->hal_handle);
     if_unlock(uppc, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add upif {} to uppc {}",
+                        upif->if_id, uppc->if_id);
+        goto end;
+    }
 
-    HAL_TRACE_DEBUG("del uplinkpc =/=> uplinkif, {} =/=> {}, ret : {}",
-                    uppc->if_id, upif->if_id, ret);
+end:
+    HAL_TRACE_DEBUG("Delete upif {} from uppc {}", upif->if_id, uppc->if_id);
     return ret;
 }
 
@@ -3776,31 +4004,23 @@ hal_ret_t
 if_add_l2seg (if_t *hal_if, l2seg_t *l2seg)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    hal_handle_id_list_entry_t  *entry = NULL;
 
-    if (l2seg == NULL || hal_if == NULL) {
+    if (hal_if == NULL || l2seg == NULL) {
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    // Allocate the entry
-    entry = (hal_handle_id_list_entry_t *)g_hal_state->
-        hal_handle_id_list_entry_slab()->alloc();
-    if (entry == NULL) {
-        ret = HAL_RET_OOM;
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
+    ret = hal_if->l2seg_list->insert(&l2seg->hal_handle);
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add l2seg {} to if {}",
+                        l2seg->seg_id, hal_if->if_id);
         goto end;
     }
-    entry->handle_id = l2seg->hal_handle;
-
-    if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
-    // Insert into the list
-    sdk::lib::dllist_add(&hal_if->l2seg_list_head, &entry->dllist_ctxt);
-    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-
-    HAL_TRACE_DEBUG(" add if => l2seg, {} => {}, ret : {}",
-                    hal_if->if_id, l2seg->seg_id, ret);
+    HAL_TRACE_DEBUG("Added l2seg {} to if {}", l2seg->seg_id, hal_if->if_id);
     return ret;
 }
 
@@ -3810,26 +4030,25 @@ end:
 hal_ret_t
 if_del_l2seg (if_t *hal_if, l2seg_t *l2seg)
 {
-    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    dllist_ctxt_t               *curr = NULL, *next = NULL;
 
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (hal_if == NULL || l2seg == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
 
     if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
-    dllist_for_each_safe(curr, next, &hal_if->l2seg_list_head) {
-        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        if (entry->handle_id == l2seg->hal_handle) {
-            // Remove from list
-            sdk::lib::dllist_del(&entry->dllist_ctxt);
-            // Free the entry
-            hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
-            ret = HAL_RET_OK;
-        }
-    }
+    ret = hal_if->l2seg_list->remove(&l2seg->hal_handle);
     if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add l2seg {} to vrf {}",
+                        l2seg->seg_id, hal_if->if_id);
+        goto end;
+    }
 
-    HAL_TRACE_DEBUG(" del if =/=> l2seg, {} =/=> {}, ret : {}",
-                    hal_if->if_id, l2seg->seg_id, ret);
+end:
+    HAL_TRACE_DEBUG("Deleted l2seg {} to if {}", l2seg->seg_id, hal_if->if_id);
     return ret;
 }
 
@@ -3840,31 +4059,23 @@ hal_ret_t
 uplink_add_enicif (if_t *uplink, if_t *enic_if)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    hal_handle_id_list_entry_t  *entry = NULL;
 
-    if (uplink == NULL || enic_if == NULL) {
+    if (uplink == NULL || enic_if== NULL) {
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    // Allocate the entry
-    entry = (hal_handle_id_list_entry_t *)g_hal_state->
-        hal_handle_id_list_entry_slab()->alloc();
-    if (entry == NULL) {
-        ret = HAL_RET_OOM;
+    if_lock(uplink, __FILENAME__, __LINE__, __func__);      // lock
+    ret = uplink->enicif_list->insert(&enic_if->hal_handle);
+    if_unlock(uplink, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add l2seg {} to uplink {}",
+                        enic_if->if_id, uplink->if_id);
         goto end;
     }
-    entry->handle_id = enic_if->hal_handle;
-
-    if_lock(enic_if, __FILENAME__, __LINE__, __func__);      // lock
-    // Insert into the list
-    sdk::lib::dllist_add(&uplink->enicif_list_head, &entry->dllist_ctxt);
-    if_unlock(enic_if, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-
-    HAL_TRACE_DEBUG("add uplink => enic_if, {} => {}, ret : {}",
-                    uplink->if_id, enic_if->if_id, ret);
+    HAL_TRACE_DEBUG("Added enicif {} to uplink {}", enic_if->if_id, uplink->if_id);
     return ret;
 }
 
@@ -3874,24 +4085,24 @@ end:
 hal_ret_t
 uplink_del_enicif (if_t *uplink, if_t *enic_if)
 {
-    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    dllist_ctxt_t               *curr = NULL, *next = NULL;
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (uplink == NULL || enic_if== NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
 
     if_lock(uplink, __FILENAME__, __LINE__, __func__);      // lock
-    dllist_for_each_safe(curr, next, &uplink->enicif_list_head) {
-        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        if (entry->handle_id == enic_if->hal_handle) {
-            // remove from list
-            sdk::lib::dllist_del(&entry->dllist_ctxt);
-            // free the entry
-            hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
-            ret = HAL_RET_OK;
-        }
-    }
+    ret = uplink->enicif_list->remove(&enic_if->hal_handle);
     if_unlock(uplink, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add l2seg {} to uplink {}",
+                        enic_if->if_id, uplink->if_id);
+        goto end;
+    }
 
-    HAL_TRACE_DEBUG("{} {}, ret : {}", uplink->if_id, enic_if->if_id, ret);
+end:
+    HAL_TRACE_DEBUG("Deletedenicif {} to uplink {}", enic_if->if_id, uplink->if_id);
     return ret;
 }
 
@@ -3959,7 +4170,7 @@ if_add_acl (if_t *hal_if, acl_t *acl, if_acl_ref_type_t type)
 
 end:
 
-    HAL_TRACE_DEBUG("Added acl {} to hal_if {} type {}", 
+    HAL_TRACE_DEBUG("Added acl {} to hal_if {} type {}",
                     acl->key, hal_if->if_id, type);
 
     return ret;
@@ -3987,7 +4198,7 @@ if_del_acl (if_t *hal_if, acl_t *acl, if_acl_ref_type_t type)
                        acl->key, hal_if->if_id, type, ret);
         goto end;
     }
-    HAL_TRACE_DEBUG("Deleted acl {} from hal_if {} type {}", 
+    HAL_TRACE_DEBUG("Deleted acl {} from hal_if {} type {}",
                     acl->key, hal_if->if_id, type);
 
 end:

@@ -357,22 +357,17 @@ if_get_uplink_lport_id(if_t *pi_if)
 //-----------------------------------------------------------------------------
 // Given a PI If, get its tm_oport
 //-----------------------------------------------------------------------------
-#if 0
-uint32_t
-if_get_tm_oport(if_t *pi_if)
-#endif
 hal_ret_t
 pd_if_get_tm_oport(pd_if_get_tm_oport_args_t *args)
 {
     intf::IfType               if_type;
     // uint32_t                   tm_port = HAL_PORT_INVALID;
-    dllist_ctxt_t              *lnode = NULL;
-    hal_handle_id_list_entry_t *entry = NULL;
     if_t                       *pi_up_if;
     ep_t                       *remote_tep_ep;
     if_t                       *ep_if;
     intf::IfType               tif_type;
     pd_if_get_tm_oport_args_t  tmp_args;
+    hal_handle_t               *p_hdl_id = NULL;
     if_t *pi_if = args->pi_if;
 
     if (pi_if == NULL) {
@@ -388,9 +383,9 @@ pd_if_get_tm_oport(pd_if_get_tm_oport_args_t *args)
             args->tm_oport = uplinkif_get_port_num(pi_if);
             break;
         case intf::IF_TYPE_UPLINK_PC:
-            dllist_for_each(lnode, &(pi_if->mbr_if_list_head)) {
-                entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-                pi_up_if = find_if_by_handle(entry->handle_id);
+            for (const void *ptr : *pi_if->mbr_if_list) {
+                p_hdl_id = (hal_handle_t *)ptr;
+                pi_up_if = find_if_by_handle(*p_hdl_id);
                 // args->tm_oport = if_get_tm_oport(pi_up_if);
                 tmp_args.pi_if = pi_up_if;
                 pd_if_get_tm_oport(&tmp_args);

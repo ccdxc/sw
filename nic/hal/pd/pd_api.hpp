@@ -469,9 +469,9 @@ typedef struct pd_if_update_args_s {
             // uplink pc specific info
             struct {
                 bool            mbrlist_change;
-                dllist_ctxt_t   *add_mbrlist;
-                dllist_ctxt_t   *del_mbrlist;
-                dllist_ctxt_t   *aggr_mbrlist;
+                block_list      *add_mbrlist;
+                block_list      *del_mbrlist;
+                block_list      *aggr_mbrlist;
             } __PACK__;
             // enic if specific info
             struct {
@@ -503,9 +503,9 @@ typedef struct pd_if_delete_args_s {
             // uplink pc specific info
             struct {
                 bool            mbrlist_change;
-                dllist_ctxt_t   *add_mbrlist;
-                dllist_ctxt_t   *del_mbrlist;
-                dllist_ctxt_t   *aggr_mbrlist;
+                block_list      *add_mbrlist;
+                block_list      *del_mbrlist;
+                block_list      *aggr_mbrlist;
             } __PACK__;
             // enic if specific info
             struct {
@@ -517,8 +517,8 @@ typedef struct pd_if_delete_args_s {
                 bool            native_l2seg_clsc_change;
                 hal_handle_t    new_native_l2seg_clsc;
                 bool            l2seg_clsc_change;
-                dllist_ctxt_t   *add_l2seg_clsclist;
-                dllist_ctxt_t   *del_l2seg_clsclist;
+                block_list      *add_l2seg_clsclist;
+                block_list      *del_l2seg_clsclist;
             } __PACK__;
         } __PACK__;
     } __PACK__;
@@ -537,9 +537,9 @@ typedef struct pd_if_mem_free_args_s {
             // uplink pc specific info
             struct {
                 bool            mbrlist_change;
-                dllist_ctxt_t   *add_mbrlist;
-                dllist_ctxt_t   *del_mbrlist;
-                dllist_ctxt_t   *aggr_mbrlist;
+                block_list      *add_mbrlist;
+                block_list      *del_mbrlist;
+                block_list      *aggr_mbrlist;
             } __PACK__;
             // enic if specific info
             struct {
@@ -551,8 +551,8 @@ typedef struct pd_if_mem_free_args_s {
                 bool            native_l2seg_clsc_change;
                 hal_handle_t    new_native_l2seg_clsc;
                 bool            l2seg_clsc_change;
-                dllist_ctxt_t   *add_l2seg_clsclist;
-                dllist_ctxt_t   *del_l2seg_clsclist;
+                block_list      *add_l2seg_clsclist;
+                block_list      *del_l2seg_clsclist;
             } __PACK__;
         } __PACK__;
     } __PACK__;

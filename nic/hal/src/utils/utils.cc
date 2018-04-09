@@ -56,7 +56,7 @@ ip_addr_to_spec (types::IPAddress *ip_addr_spec,
 //----------------------------------------------------------------------------
 hal_ret_t
 ip_pfx_to_spec (types::IPPrefix *ip_pfx_spec,
-                const ip_prefix_t *ip_pfx) 
+                const ip_prefix_t *ip_pfx)
 {
     hal_ret_t ret = HAL_RET_OK;
 
@@ -69,7 +69,7 @@ ip_pfx_to_spec (types::IPPrefix *ip_pfx_spec,
 // convert IP prefix spec in proto to ip_addr used in HAL
 //----------------------------------------------------------------------------
 hal_ret_t
-ip_pfx_spec_to_pfx_spec (ip_prefix_t *ip_pfx, 
+ip_pfx_spec_to_pfx_spec (ip_prefix_t *ip_pfx,
                          const types::IPPrefix& in_ippfx)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -146,7 +146,7 @@ ip_addr_in_ip_pfx (ip_addr_t *ipaddr, ip_prefix_t *ip_pfx)
         }
 
         // compare last byte
-        if (last_byte != -1) { 
+        if (last_byte != -1) {
             num_bits_in_last_byte = ip_pfx->len & 0x7;
             mask = ~((1 << (8 - num_bits_in_last_byte)) - 1);
             if ((*pos1 & mask) != (*pos2 & mask)) {
@@ -155,16 +155,16 @@ ip_addr_in_ip_pfx (ip_addr_t *ipaddr, ip_prefix_t *ip_pfx)
         }
     } else {
         // compare bytes
-        if (memcmp(ipaddr->addr.v6_addr.addr8, 
+        if (memcmp(ipaddr->addr.v6_addr.addr8,
                     ip_pfx->addr.addr.v6_addr.addr8, num_bytes)) {
             return false;
         }
 
         // compare last byte
-        if (last_byte != -1) { 
+        if (last_byte != -1) {
             num_bits_in_last_byte = ip_pfx->len & 0x7;
             unsigned char mask = ~((1 << (8 - num_bits_in_last_byte)) - 1);
-            if ((ipaddr->addr.v6_addr.addr8[last_byte] & mask) != 
+            if ((ipaddr->addr.v6_addr.addr8[last_byte] & mask) !=
                     (ip_pfx->addr.addr.v6_addr.addr8[last_byte] & mask)) {
                 return false;
             }
@@ -410,7 +410,27 @@ hal_remove_from_handle_list (dllist_ctxt_t *list_head, hal_handle_t handle)
 }
 
 //-----------------------------------------------------------------------------
-// free handle entries in a list. 
+// dels handle to the handles block list
+//-----------------------------------------------------------------------------
+hal_ret_t
+hal_del_from_handle_block_list (block_list *bl, hal_handle_t handle)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    if (!bl || handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_ERR("invalid args bl:{:#x}, handle:{}", (uint64_t)bl, handle);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    ret = bl->remove(&handle);
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// free handle entries in a list.
 // please take locks if necessary outside this call.
 //-----------------------------------------------------------------------------
 void
@@ -438,11 +458,10 @@ hal_remove_all_handles_block_list (block_list *bl)
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    
+
     bl->remove_all();
 
 end:
-
     return ret;
 }
 
@@ -465,7 +484,7 @@ hal_cleanup_handle_list (dllist_ctxt_t **list)
 }
 
 //-----------------------------------------------------------------------------
-// free handle entries in a block list. 
+// free handle entries in a block list.
 // please take locks if necessary outside this call.
 //-----------------------------------------------------------------------------
 hal_ret_t
@@ -478,7 +497,7 @@ hal_cleanup_handle_block_list (block_list **bl)
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    
+
 
     block_list::destroy(*bl);
     *bl = NULL;
@@ -486,6 +505,52 @@ hal_cleanup_handle_block_list (block_list **bl)
 end:
 
     return ret;
+}
+
+//-----------------------------------------------------------------------------
+// dst = dst + src
+//-----------------------------------------------------------------------------
+hal_ret_t
+hal_add_block_lists (block_list *dst, block_list *src)
+{
+    hal_handle_t    *p_hdl_id = NULL;
+
+    for (const void *ptr : *src) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        dst->insert(p_hdl_id);
+    }
+
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// dst = dst - src
+//-----------------------------------------------------------------------------
+hal_ret_t
+hal_del_block_lists (block_list *dst, block_list *src)
+{
+    hal_handle_t    *p_hdl_id = NULL;
+
+    for (const void *ptr : *src) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        dst->remove(p_hdl_id);
+    }
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// Copy src to dst
+//-----------------------------------------------------------------------------
+hal_ret_t
+hal_copy_block_lists (block_list *dst, block_list *src)
+{
+    // Clean up dst
+    hal_remove_all_handles_block_list(dst);
+
+    // Add src to empty dst
+    hal_add_block_lists(dst, src);
+
+    return HAL_RET_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -512,7 +577,7 @@ demangle (const char* const symbol)
 void
 custom_backtrace (void)
 {
-    // TODO: replace hardcoded limit?               
+    // TODO: replace hardcoded limit?
     void* addresses[ 256 ];
     const int n = ::backtrace( addresses, std::extent< decltype( addresses ) >::value );
     const std::unique_ptr< char*, decltype( &std::free ) > symbols(
@@ -522,7 +587,7 @@ custom_backtrace (void)
             continue;
         }
         // we parse the symbols retrieved from backtrace_symbols() to
-        // extract the "real" symbols that represent the mangled names.  
+        // extract the "real" symbols that represent the mangled names.
         char* const symbol = symbols.get()[ i ];
         char* end = symbol;
         while( *end ) {
@@ -546,7 +611,7 @@ custom_backtrace (void)
         else {
             std::cout << symbol;
         }
-        // Revisit: Line number not working. 
+        // Revisit: Line number not working.
 #if 0
         // For line number
         size_t p = 0;
