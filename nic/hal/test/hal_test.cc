@@ -16,6 +16,7 @@
 #include "nic/gen/proto/hal/endpoint.grpc.pb.h"
 #include "nic/gen/proto/hal/session.grpc.pb.h"
 #include "nic/gen/proto/hal/gft.grpc.pb.h"
+#include "nic/gen/proto/hal/telemetry.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -132,6 +133,11 @@ using gft::GftExactMatchFlowEntrySpec;
 using gft::GftHeaderGroupExactMatch;
 using gft::GftHeaderGroupTransposition;
 
+using telemetry::Telemetry;
+using telemetry::MirrorSessionSpec;
+using telemetry::MirrorSessionConfigMsg;
+using telemetry::MirrorSessionResponseMsg;
+
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
 
@@ -147,7 +153,8 @@ public:
     event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)),
     debug_stub_(Debug::NewStub(channel)), intf_stub_(Interface::NewStub(channel)),
     sg_stub_(NwSecurity::NewStub(channel)), nw_stub_(Network::NewStub(channel)),
-    ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)) {}
+    ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)),
+    telemetry_stub_(Telemetry::NewStub(channel)) {}
 
     int mpu_trace_enable(int stage_id,
                          int mpu,
@@ -585,7 +592,7 @@ public:
         if (status.ok()) {
             num_rsp = rsp_msg.response_size();
             std::cout << "Num of Rsps: " << num_rsp << std::endl;
-            for (uint32_t i = 0; i < num_rsp; i ++) { 
+            for (uint32_t i = 0; i < num_rsp; i ++) {
                 std::cout << "Lif ID = "
                           << rsp_msg.response(i).spec().key_or_handle().lif_id()
                           << std::endl;
@@ -1077,6 +1084,33 @@ public:
         }
     }
 
+    uint32_t mirror_session_create(uint32_t session_id) {
+        MirrorSessionConfigMsg      req_msg;
+        MirrorSessionSpec           *spec;
+        MirrorSessionResponseMsg    rsp_msg;
+        Status                      status;
+        ClientContext               context;
+
+        spec = req_msg.add_request();
+        spec->mutable_id()->set_session_id(session_id);
+        spec->mutable_erspan_spec()->mutable_dest_ip()->set_ip_af(::types::IP_AF_INET);
+        spec->mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(0x01010101);
+        spec->mutable_erspan_spec()->mutable_src_ip()->set_ip_af(::types::IP_AF_INET);
+        spec->mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(0x02020202);
+        spec->mutable_erspan_spec()->set_span_id(session_id);
+
+        status = telemetry_stub_->MirrorSessionCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.status() == types::API_STATUS_OK);
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            assert(rsp_msg.response(0).status().code() ==
+                       ::telemetry::MirrorSessionStatus_MirrorSessionStatusCode_INVALID_CONFIG);
+            std::cout << "Mirror session ssucceeded, id = " << session_id << std::endl;
+        }
+
+        return 0;
+    }
+
 private:
     std::unique_ptr<Vrf::Stub> vrf_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
@@ -1089,6 +1123,7 @@ private:
     std::unique_ptr<Network::Stub> nw_stub_;
     std::unique_ptr<Endpoint::Stub> ep_stub_;
     std::unique_ptr<Session::Stub> session_stub_;
+    std::unique_ptr<Telemetry::Stub> telemetry_stub_;
 };
 
 int port_enable(hal_client *hclient, int vrf_id, int port)
