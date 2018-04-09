@@ -370,7 +370,11 @@ class CapcovCoverage(CoverageBase):
                 cacov_file = capcov_dir[1][1:]
                 cur_dir = os.getcwd()
                 os.chdir(capcov_dir[0] + "/capcov_out")
-                files =  ('.').join(cacov_file.split('.')[:-1]) + ".*"
+		#Copy all the files here.
+		#First time when we try to merge, there is nothin in destination.
+		# This will copy both cacov files and soruce file.
+		#Cacov files subsequent merges and source file for html generation.
+                files =  ('.').join(cacov_file.split('.')[:-1]) + "*"
                 copy_cmd = "cp  --parents " + files + " " + capcov_dst_dir_name
                 subprocess.call([copy_cmd], shell=True)
                 os.chdir(cur_dir)
