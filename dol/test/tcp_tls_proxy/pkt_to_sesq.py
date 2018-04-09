@@ -111,7 +111,7 @@ def TestCaseVerify(tc):
         print("pre crypto pipeline threading was not ok")
         return False
 
-    if (tlscb_cur.post_debug_stage0_7_thread != 0x3091111):
+    if (tlscb_cur.post_debug_stage0_7_thread != 0x1191111):
         print("post crypto pipeline threading was not ok")
         return False
 

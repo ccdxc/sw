@@ -32,41 +32,20 @@ tls_enc_rx_serq_process:
     phvwr.c1    p.ccm_header_with_aad_B_0_nonce_salt, d.salt
     CAPRI_OPERAND_DEBUG(d.salt)
 
-    /* ENQ_DESC(*etlsp, enc, md->seqe.desc); */
-    /* if (TAIL_DESC(cb,name) == NULL) { */
-    seq                 c1, d.qtail, r0
-    /*    TAIL_DESC(cb, name) = desc; */
-    bcf             [c1], no_dma_cmd_enc
-    nop
-
-dma_cmd_enc_desc_entry_last:
-    /* SET_DESC_ENTRY(TAIL_DESC(cb,name), MAX_ENTRIES_PER_DESC - 1, desc, 0, 0); */
-     
     addi            r5, r0, TLS_PHV_DMA_COMMANDS_START
-    add             r4, r5, r0
-    phvwr           p.p4_txdma_intr_dma_cmd_ptr, r4
+    phvwr           p.p4_txdma_intr_dma_cmd_ptr, r5
 
-    /*
-     * The 'next-descriptor' field in the queue is stored at the
-     * PKT_DESC_AOL_OFFSET_NXT_PKT offset of the descriptor. We'll
-     * setup a DMA to update this field of the current tail with
-     * the new tail descriptor address we're enqueueing here.
-     */
-    addi            r5, r0, PKT_DESC_AOL_OFFSET_NXT_PKT
-    add             r5, r5, d.qtail
+    /* TODO: Verify queue full condition */
 
-    phvwr           p.idesc_next_addr, k.to_s2_idesc
+    add             r5, r0, d.recq_pi
+    sll             r4, r5, CAPRI_BSQ_RING_SLOT_SIZE_SHFT
+    add             r4, r4, d.{recq_base}.wx
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r5, idesc_next_addr, idesc_next_addr)
+    phvwr           p.bsq_slot_desc, k.to_s2_idesc
 
-    tblwr           d.qtail, k.to_s2_idesc
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r4, bsq_slot_desc, bsq_slot_desc)
 
-no_dma_cmd_enc:        
-    /* etlsp->enc_nxt.desc = TAIL_DESC(*etlsp, enc); */
-    tblwr           d.nxt_desc, k.to_s2_idesc
-
-    tblwr.c1        d.qtail, k.to_s2_idesc
-    tblwr.c1        d.qhead, k.to_s2_idesc
+    tblmincri       d.recq_pi, CAPRI_BSQ_RING_SLOTS_SHIFT ,1
 
 
 table_read_serq_consume:

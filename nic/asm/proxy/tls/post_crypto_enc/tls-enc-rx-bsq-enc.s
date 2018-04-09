@@ -17,8 +17,7 @@ struct phv_ p	;
 struct tx_table_s2_t0_tls_rx_bsq_d d	;
 	
 %%
-    .param	tls_enc_read_desc_process
-    .param      tls_enc_post_read_idesc
+    .param  tls_enc_read_recq
 	
 tls_enc_rx_bsq_enc_process:	
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s7_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
@@ -29,11 +28,15 @@ tls_enc_rx_bsq_enc_process:
 	   dtlsp->dec_una.desc = HEAD_DESC(*dtlsp, dec);
 	*/
     phvwri  p.to_s7_enc_completions, 1
-    phvwr   p.to_s6_other_fid, d.other_fid
-    seq		c1, d.qhead, r0
+    phvwr   p.to_s7_other_fid, d.other_fid
+    
+    bbeq        k.tls_global_phv_post_cbc_enc, 1, tls_enc_rx_bsq_enc_process_do_cbc
+    nop
+
+    /* Queue empty */
+    seq     c1, d.recq_pi, d.recq_ci
     bcf		[c1], tls_rx_bsq_enc_process_done
     nop
-table_read_desc:
 
     /*
      * We read the descriptor at the head of the queue we've maintained in the qstate
@@ -44,14 +47,24 @@ table_read_desc:
      * after we read the 'next-desc' field in the descriptor memory with a table
      * read below.
      */
-    add		r3, r0, d.qhead
-    phvwr   p.to_s4_idesc, r3
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_enc_read_desc_process, r3, TABLE_SIZE_512_BITS)
+    add             r3, r0, d.recq_ci
+    sll             r3, r3, CAPRI_BSQ_RING_SLOT_SIZE_SHFT
+    add             r3, r3, d.{recq_base}.wx
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_enc_read_recq, r3, TABLE_SIZE_512_BITS)
+    tblmincri       d.recq_ci, CAPRI_BSQ_RING_SLOTS_SHIFT, 1
 
-    addi    r3, r3, PKT_DESC_AOL_OFFSET
-	CAPRI_NEXT_TABLE_READ(3, TABLE_LOCK_DIS, tls_enc_post_read_idesc,
-	                    r3, TABLE_SIZE_512_BITS)
+tls_enc_rx_bsq_enc_process_do_cbc:
+    seq     c1, d.qhead, r0
+    bcf     [c1], tls_rx_bsq_enc_process_done
+    nop
+
+    add		r3, r0, d.qhead
+    phvwr   p.to_s3_idesc, r3
+    phvwr   p.to_s5_idesc, r3
+    add             r3, r0, d.{recq_base}.wx
+    /* Dummy read */
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_enc_read_recq, r3, TABLE_SIZE_512_BITS)
 
 tls_rx_bsq_enc_process_done:
 	nop.e
-	nop.e
+	nop

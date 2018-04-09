@@ -23,15 +23,14 @@ SRC_FILES := \
     $(SRC_DIR)/tls-enc-read-desc.s \
     $(SRC_DIR)/tls-enc-rx-bsq-enc.s \
     $(SRC_DIR)/tls-enc-rx-bsq-enc-dummy.s \
-    $(SRC_DIR)/tls-enc-rx-bsq-dec.s \
     $(SRC_DIR)/tls-enc-bsq-consume.s \
     $(SRC_DIR)/tls-enc-read-rnmdr-free-idx.s \
     $(SRC_DIR)/tls-enc-read-rnmpr-free-idx.s \
-    $(SRC_DIR)/tls-enc-update-desc-q.s \
     $(SRC_DIR)/tls-enc-post-crypto-stats.s \
     $(SRC_DIR)/tls-enc-read-idesc.s \
     $(SRC_DIR)/tls-enc-read-odesc.s \
-    $(SRC_DIR)/tls-enc-read-aad.s
+    $(SRC_DIR)/tls-enc-read-aad.s \
+	$(SRC_DIR)/tls-enc-read-recq.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

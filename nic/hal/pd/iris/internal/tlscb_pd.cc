@@ -305,6 +305,19 @@ p4pd_add_or_del_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool de
             data.u.read_tls_stg1_7_d.l7q_base = q_base;
         }
 
+        /* record ring */
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_BSQ,
+                                     proxyrcb_id, &q_base);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to retrieve record queue base base for proxyrcb_id: {}",
+                    proxyrcb_id);
+        } else {
+            HAL_TRACE_DEBUG("recqbase id: {:#x}, base: {:#x}", proxyrcb_id, q_base);
+            data.u.read_tls_stg1_7_d.recq_base = (uint32_t) q_base;
+            data.u.read_tls_stg1_7_d.recq_pi = 0;
+            data.u.read_tls_stg1_7_d.recq_ci = 0;
+        }
+
         data.u.read_tls_stg1_7_d.barco_hmac_key_desc_index = tlscb_pd->tlscb->crypto_hmac_key_idx;
         HAL_TRACE_DEBUG("Barco HMAC Key Desc Index = 0x{:x}", data.u.read_tls_stg1_7_d.barco_hmac_key_desc_index);
     }

@@ -1,7 +1,7 @@
 /*
  *	Implements the read tnmpr free idx of the TxDMA P4+ tls  pipeline
  *  Also writes the freed object into the object ring slot
- *  Stage 4, Table 2
+ *  Stage 5, Table 2
  */
 
 #include "tls-phv.h"
@@ -12,9 +12,9 @@
 #include "INGRESS_p.h"
 
                 
-struct tx_table_s4_t2_k k                  ;
+struct tx_table_s5_t2_k k                  ;
 struct phv_ p	;
-struct tx_table_s4_t2_read_rnmpr_free_pi_d d ;
+struct tx_table_s5_t2_read_rnmpr_free_pi_d d ;
 
 %%
 	
@@ -30,7 +30,7 @@ tls_enc_free_rnmpr:
         add         r4, d.rnmpr_free_pi, r0
         sll         r4, r4, RNMPR_TABLE_ENTRY_SIZE_SHFT
         add         r3, r3, r4
-        memwr.wx    r3, k.{to_s4_ipage}.wx
+        memwr.wx    r3, k.{to_s5_ipage}.wx
 
         /* TBD memwr A.CI */
         phvwri      p.to_s7_rnmpr_free, 1

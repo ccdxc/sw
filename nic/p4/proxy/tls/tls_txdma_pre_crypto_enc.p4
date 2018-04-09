@@ -218,9 +218,9 @@ header_type s3_t2_s2s_phv_t {
 #define s2_s5_t0_phv_t  additional_data_t
 #define GENERATE_S2_S5_T0  GENERATE_AAD_FIELDS(s2_s5_t0_scratch, s2_s5_t0_phv)
 
-header_type barco_desc_pad_t {
+header_type bsq_slot_t {
     fields {
-        pad                     : 32;
+        desc                    : 32;
     }
 }
 
@@ -282,7 +282,7 @@ metadata pkt_descr_aol_t odesc;
 @pragma dont_trim
 metadata barco_desc_t barco_desc;
 @pragma dont_trim
-metadata barco_desc_pad_t   barco_desc_pad;
+metadata bsq_slot_t bsq_slot;
 @pragma dont_trim
 metadata barco_dbell_t barco_dbell;
 

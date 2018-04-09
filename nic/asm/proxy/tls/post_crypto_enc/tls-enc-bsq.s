@@ -21,7 +21,7 @@ struct tx_table_s0_t0_d d;
         
 tls_enc_post_crypto_process:
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s7_debug_stage0_3_thread, CAPRI_MPU_STAGE_0, CAPRI_MPU_TABLE_0)
-    phvwr       p.to_s6_debug_dol, d.u.read_tls_stg0_d.debug_dol
+    phvwr       p.to_s7_debug_dol, d.u.read_tls_stg0_d.debug_dol
     phvwr       p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow
 
     /*
@@ -31,9 +31,9 @@ tls_enc_post_crypto_process:
     add         r3, d.u.read_tls_stg0_d.barco_command[7:0], r0
     indexb      r2, r3, [0x73, 0x74, 0x05], 0
     seq.s       c1, 0, r2
-    phvwri.c1   p.to_s5_do_post_ccm_enc, 1
+    phvwri.c1   p.to_s6_do_post_ccm_enc, 1
     slt.s       c2, 0, r2
-    phvwri.c2   p.to_s5_do_post_cbc_enc, 1
+    phvwri.c2   p.tls_global_phv_post_cbc_enc, 1
 
     phvwrpair   p.tls_global_phv_fid, k.p4_txdma_intr_qid[15:0],  \
                 p.tls_global_phv_qstate_addr,               \

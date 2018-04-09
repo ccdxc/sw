@@ -67,7 +67,7 @@ wring_pd_meta_init() {
                            NULL, NULL, false};
 
     g_meta[types::WRING_TYPE_BSQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_BSQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_BSQ, CAPRI_BSQ_RING_SLOTS, CAPRI_BSQ_RING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
 
     g_meta[types::WRING_TYPE_BRQ] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_BRQ, 1024, 128, "", 0, 0, 0, brq_gcm_slot_parser, barco_gcm0_get_hw_meta, false};

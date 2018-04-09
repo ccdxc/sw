@@ -17,6 +17,7 @@ namespace pd {
 #define DEFAULT_WRING_SLOT_SIZE                 8 
 
 #define SERQ_WRING_SLOT_SIZE                    (32)
+#define BSQ_WRING_SLOT_SIZE                     (32)
 
 typedef uint64_t    wring_hw_id_t;
 

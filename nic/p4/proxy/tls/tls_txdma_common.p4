@@ -93,13 +93,12 @@ header_type tlscb_1_t {
         qhead                           : ADDRESS_WIDTH;
         qtail                           : ADDRESS_WIDTH;
         una_desc                        : HBM_ADDRESS_WIDTH;
-        una_desc_idx                    : 8;
-        una_data_offset                 : 16;
-        una_data_len                    : 16;
+        recq_base                       : HBM_ADDRESS_WIDTH;
         nxt_desc                        : ADDRESS_WIDTH;
         nxt_desc_idx                    : 8;
         nxt_data_offset                 : 16;
-        nxt_data_len                    : 16;
+        recq_pi                         : 16;
+        recq_ci                         : 16;
         next_tls_hdr_offset             : 16;
         cur_tls_data_len                : 16;
         other_fid                       : 16;
@@ -107,26 +106,25 @@ header_type tlscb_1_t {
         sw_l7q_pi                       : 16;
         barco_hmac_key_desc_index       : 32;
         salt                            : 32;
-        // Total used   : 496 bits, pending: 16
-        pad                             : 16;
+        // Total used   : 504 bits, pending: 8
+        pad                             : 8;
     }
 }
 
 #define TLSCB_1_PARAMS                                                                                  \
-qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, other_fid, l7q_base, sw_l7q_pi, barco_hmac_key_desc_index, salt
+qhead, qtail, una_desc, recq_base, nxt_desc, nxt_desc_idx, nxt_data_offset, recq_pi, recq_ci, next_tls_hdr_offset, cur_tls_data_len, other_fid, l7q_base, sw_l7q_pi, barco_hmac_key_desc_index, salt
 #
 
 #define GENERATE_TLSCB_1_D                                                                              \
     modify_field(tlscb_1_d.qhead, qhead);                                                               \
     modify_field(tlscb_1_d.qtail, qtail);                                                               \
     modify_field(tlscb_1_d.una_desc, una_desc);                                                         \
-    modify_field(tlscb_1_d.una_desc_idx, una_desc_idx);                                                 \
-    modify_field(tlscb_1_d.una_data_offset, una_data_offset);                                           \
-    modify_field(tlscb_1_d.una_data_len, una_data_len);                                                 \
+    modify_field(tlscb_1_d.recq_base, recq_base);                                                         \
     modify_field(tlscb_1_d.nxt_desc, nxt_desc);                                                         \
     modify_field(tlscb_1_d.nxt_desc_idx, nxt_desc_idx);                                                 \
     modify_field(tlscb_1_d.nxt_data_offset, nxt_data_offset);                                           \
-    modify_field(tlscb_1_d.nxt_data_len, nxt_data_len);                                                 \
+    modify_field(tlscb_1_d.recq_pi, recq_pi);                                                 \
+    modify_field(tlscb_1_d.recq_ci, recq_ci);                                                 \
     modify_field(tlscb_1_d.next_tls_hdr_offset, next_tls_hdr_offset);                                   \
     modify_field(tlscb_1_d.cur_tls_data_len, cur_tls_data_len);                                         \
     modify_field(tlscb_1_d.other_fid, other_fid);                                                       \
