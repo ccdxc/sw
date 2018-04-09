@@ -1334,8 +1334,8 @@
     "tap",
     "transport"
   ]
-  revision = "401e0e00e4bb830a10496d64cd95e068c5bf50de"
-  version = "v1.7.3"
+  revision = "5b3c4e850e90a4cf6a20ebd46c8b32a0a3afcb9e"
+  version = "v1.7.5"
 
 [[projects]]
   name = "gopkg.in/alecthomas/kingpin.v2"

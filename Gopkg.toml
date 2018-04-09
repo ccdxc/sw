@@ -162,7 +162,7 @@ required = ["github.com/GeertJohan/go.rice",
 
 [[constraint]]
   name = "google.golang.org/grpc"
-  version = "=1.7.3"
+  version = "=1.7.5"
 
 [[constraint]]
   branch = "v1"
