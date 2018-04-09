@@ -272,13 +272,12 @@ func (client *CmdClient) Stop() {
 // RegisterSmartNICReq send a register request for SmartNIC to CMD
 func (client *CmdClient) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, error) {
 
-	if client.getRegistrationRPCClient() == nil {
-		// initialize rpc client
-		err := client.initRegistrationRPC()
-		if err != nil {
-			return grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_UNKNOWN.String()}, err
-		}
+	// initialize rpc client
+	err := client.initRegistrationRPC()
+	if err != nil {
+		return grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_UNKNOWN.String()}, err
 	}
+	defer client.closeRegistrationRPC()
 
 	// make an RPC call to controller
 	nicRPCClient := grpc.NewSmartNICRegistrationClient(client.getRegistrationRPCClient().ClientConn)
