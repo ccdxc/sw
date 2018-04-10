@@ -448,10 +448,10 @@ lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     directmap             *tx_policer_tbl = NULL;
     tx_table_s5_t4_lif_rate_limiter_table_actiondata d = {0};
     tx_table_s5_t4_lif_rate_limiter_table_actiondata d_mask = {0};
-    uint64_t                                         refresh_interval_us = 60;
-    uint64_t                                         rate_tokens = 0;
-    uint64_t                                         burst_tokens = 0;
-    uint64_t                                         bps_rate;
+    uint64_t refresh_interval_us = HAL_DEFAULT_POLICER_REFRESH_INTERVAL;
+    uint64_t rate_tokens = 0;
+    uint64_t burst_tokens = 0;
+    uint64_t bps_rate;
 
     tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE);
     HAL_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
@@ -553,7 +553,8 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     directmap             *rx_policer_tbl = NULL;
     rx_policer_actiondata d = {0};
     rx_policer_actiondata d_mask = {0};
-    uint64_t              refresh_interval_us = 60;
+    uint64_t              refresh_interval_us = 
+                                        HAL_DEFAULT_POLICER_REFRESH_INTERVAL;
     uint64_t              rate_tokens = 0;
     uint64_t              burst_tokens = 0;
     uint64_t              bps_rate;

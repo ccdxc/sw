@@ -26,6 +26,7 @@ namespace pd {
 #define HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS  2
 #define HAL_PD_QOS_MAX_QUEUES_PER_CLASS     (1 + HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS)
 
+#define HAL_DEFAULT_POLICER_REFRESH_INTERVAL 4000 // us
 #define HAL_MAX_POLICER_TOKENS_PER_INTERVAL ((1ull<<39)-1)
 
 #define HAL_PD_QOS_IQS(ENTRY)                                        \
@@ -138,13 +139,19 @@ policer_rate_per_sec_to_token_rate (uint64_t rate_per_sec, uint64_t refresh_inte
     *token_rate_p = 0;
 
     if (rate_per_sec > UINT64_MAX/refresh_interval_us) {
-        HAL_TRACE_ERR("policer rate {} is too high", rate_per_sec);
+        HAL_TRACE_ERR("Policer rate {} is too high", rate_per_sec);
         return HAL_RET_INVALID_ARG;
     }
     rate_tokens = (refresh_interval_us * rate_per_sec)/1000000;
 
+    if (!rate_tokens) {
+        HAL_TRACE_ERR("Policer rate {} is too low for the refresh interval {}us",
+                      rate_per_sec, refresh_interval_us);
+        return HAL_RET_INVALID_ARG;
+    }
+
     if ((burst + rate_tokens) > HAL_MAX_POLICER_TOKENS_PER_INTERVAL) {
-        HAL_TRACE_ERR("policer rate {} is too high for the "
+        HAL_TRACE_ERR("Policer rate {} is too high for the "
                       "refresh interval {}us", 
                       rate_per_sec, refresh_interval_us);
         return HAL_RET_INVALID_ARG;
