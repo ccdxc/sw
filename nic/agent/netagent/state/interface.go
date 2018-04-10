@@ -163,3 +163,58 @@ func (na *NetAgent) DeleteInterface(intf *netproto.Interface) error {
 
 	return err
 }
+
+//GetHwInterfaces queries the datapath interface for uplinks and lifs created and populates the interface DB
+func (na *NetAgent) GetHwInterfaces() error {
+	// LIFs and uplinks can be created outside of Agent's context, by nic mgr. We
+	// need the uplinks currently on the HAL to associate with remote EPs
+	lifs, uplinks, err := na.datapath.ListInterfaces()
+	if err != nil {
+		return err
+	}
+	for i, lif := range lifs.Response {
+		l := &netproto.Interface{
+			TypeMeta: api.TypeMeta{
+				Kind: "Interface",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "default",
+				Name:   fmt.Sprintf("default-lif-%d", i),
+			},
+			Spec: netproto.InterfaceSpec{
+				Type: "LIF",
+			},
+			Status: netproto.InterfaceStatus{
+				InterfaceID: lif.Spec.KeyOrHandle.GetLifId(),
+			},
+		}
+		key := objectKey(l.ObjectMeta)
+		na.Lock()
+		na.interfaceDB[key] = l
+		na.Unlock()
+	}
+
+	for i, uplink := range uplinks.Response {
+		l := &netproto.Interface{
+			TypeMeta: api.TypeMeta{
+				Kind: "Interface",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "default",
+				Name:   fmt.Sprintf("default-lif-%d", i),
+			},
+			Spec: netproto.InterfaceSpec{
+				Type: "UPLINK",
+			},
+			Status: netproto.InterfaceStatus{
+				InterfaceID: uplink.Spec.KeyOrHandle.GetInterfaceId(),
+			},
+		}
+		key := objectKey(l.ObjectMeta)
+		na.Lock()
+		na.interfaceDB[key] = l
+		na.Unlock()
+	}
+
+	return nil
+}

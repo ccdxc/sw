@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/emstore"
 )
@@ -70,6 +71,7 @@ type CtrlerIntf interface {
 	UpdateInterface(intf *netproto.Interface) error             // updates an interface
 	DeleteInterface(intf *netproto.Interface) error             // deletes an interface
 	ListInterface() []*netproto.Interface                       // lists all interfaces
+	GetHwInterfaces() error                                     // Gets all the uplinks created on the hal by nic mgr
 }
 
 // PluginIntf is the API provided by the netagent to plugins
@@ -99,6 +101,7 @@ type NetDatapathAPI interface {
 	CreateInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                               // creates an interface
 	UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                               // updates an interface
 	DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                               // deletes an interface
+	ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error)                           // Lists all the lifs and uplinks from the datapath state
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths

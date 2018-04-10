@@ -68,6 +68,11 @@ func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID stri
 		}
 	}
 
+	err = nagent.GetHwInterfaces()
+	if err != nil {
+		return nil, err
+	}
+
 	err = dp.SetAgent(&nagent)
 	if err != nil {
 		// cleanup emstore and return

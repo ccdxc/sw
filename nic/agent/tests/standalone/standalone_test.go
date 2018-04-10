@@ -31,10 +31,11 @@ var _ = Describe("Agent standalone tests", func() {
 			// Allow for testing with HAL in jobd
 			if os.Getenv("E2E_AGENT_DATAPATH") == "HAL" {
 				agentArgs = []string{"-hostif", "lo", "-logtofile", "/tmp/agent.log", "-datapath", "hal", "-rest-url", lis.ListenURL.String()}
+			} else {
+				agentArgs = []string{"-hostif", "lo", "-logtofile", "/tmp/agent.log", "-rest-url", lis.ListenURL.String()}
 			}
 
-			agentArgs = []string{"-hostif", "lo", "-logtofile", "/tmp/agent.log", "-rest-url", lis.ListenURL.String()}
-			fmt.Println("BALERION: Agent CLI: ", agentArgs)
+			fmt.Println("Agent CLI: ", agentArgs)
 			// start as the agent binary needs to run in the background
 			err := exec.Command("netagent", agentArgs...).Start()
 			if err != nil {

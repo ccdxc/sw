@@ -10,6 +10,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -162,9 +163,60 @@ func (dp *mockDatapath) UpdateInterface(intf *netproto.Interface, tn *netproto.T
 	return nil
 }
 
-// CreateInterface lists all interfaces. Stubbed out to satisfy datapath interface.
-func (dp *mockDatapath) ListInterface() []*netproto.Interface {
-	return nil
+func (dp *mockDatapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error) {
+	var lifs halproto.LifGetResponseMsg
+	var uplinks halproto.InterfaceGetResponseMsg
+	mockLifs := []*halproto.LifGetResponse{
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.LifSpec{
+				KeyOrHandle: &halproto.LifKeyHandle{
+					KeyOrHandle: &halproto.LifKeyHandle_LifId{
+						LifId: 1,
+					},
+				},
+			},
+		},
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.LifSpec{
+				KeyOrHandle: &halproto.LifKeyHandle{
+					KeyOrHandle: &halproto.LifKeyHandle_LifId{
+						LifId: 2,
+					},
+				},
+			},
+		},
+	}
+	lifs.Response = append(lifs.Response, mockLifs...)
+
+	mockUplinks := []*halproto.InterfaceGetResponse{
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.InterfaceSpec{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: 3,
+					},
+				},
+				Type: halproto.IfType_IF_TYPE_UPLINK,
+			},
+		},
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.InterfaceSpec{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: 4,
+					},
+				},
+				Type: halproto.IfType_IF_TYPE_UPLINK,
+			},
+		},
+	}
+	uplinks.Response = append(uplinks.Response, mockUplinks...)
+
+	return &lifs, &uplinks, nil
 }
 
 type mockCtrler struct {
@@ -964,6 +1016,7 @@ func TestInterfacesCreateDelete(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	existingIfLen := len(ag.ListInterface())
 	// lif
 	lif := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
@@ -1023,7 +1076,7 @@ func TestInterfacesCreateDelete(t *testing.T) {
 
 	// verify list api works
 	intfList := ag.ListInterface()
-	Assert(t, len(intfList) == 3, "Incorrect number of interfaces")
+	Assert(t, len(intfList) == 3+existingIfLen, "Incorrect number of interfaces")
 
 	// delete lif
 	err = ag.DeleteInterface(lif)
@@ -1045,7 +1098,7 @@ func TestInterfacesCreateDelete(t *testing.T) {
 
 	// verify list api works returns 0.
 	intfList = ag.ListInterface()
-	Assert(t, len(intfList) == 0, "Incorrect number of interfaces")
+	Assert(t, len(intfList) == existingIfLen, "Incorrect number of interfaces")
 }
 
 func TestInterfaceUpdate(t *testing.T) {
@@ -1053,6 +1106,8 @@ func TestInterfaceUpdate(t *testing.T) {
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
+
+	existingIfLen := len(ag.ListInterface())
 
 	// lif
 	lif := &netproto.Interface{
@@ -1180,7 +1235,7 @@ func TestInterfaceUpdate(t *testing.T) {
 
 	// verify list api works.
 	intfList := ag.ListInterface()
-	Assert(t, len(intfList) == 3, "Incorrect number of interfaces")
+	Assert(t, len(intfList) == 3+existingIfLen, "Incorrect number of interfaces")
 }
 
 func TestDuplicateInterfaceCreate(t *testing.T) {

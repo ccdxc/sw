@@ -167,10 +167,12 @@ func (hd *Hal) setExpectations() {
 	hd.MockClients.MockEpclient.EXPECT().EndpointUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockEpclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 
+	hd.MockClients.MockIfclient.EXPECT().InterfaceGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIfclient.EXPECT().InterfaceCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIfclient.EXPECT().InterfaceUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIfclient.EXPECT().InterfaceDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 
+	hd.MockClients.MockIfclient.EXPECT().LifGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIfclient.EXPECT().LifCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIfclient.EXPECT().LifUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIfclient.EXPECT().LifDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
@@ -1342,13 +1344,54 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenan
 	}
 	_, err := hd.Hal.Ifclient.InterfaceUpdate(context.Background(), ifReqMsg)
 	if err != nil {
-		log.Errorf("Error creating inteface. Err: %v", err)
+		log.Errorf("Error updating interface. Err: %v", err)
 		return err
 	}
 	hd.Lock()
 	hd.DB.InterfaceDB[objectKey(&tn.ObjectMeta)] = ifReqMsg
 	hd.Unlock()
 	return nil
+}
+
+// ListInterfaces returns the lisg of lifs and uplinks from the datapath
+func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error) {
+	if hd.Kind == "hal" {
+		lifReq := &halproto.LifGetRequest{}
+		var uplinks halproto.InterfaceGetResponseMsg
+		lifReqMsg := &halproto.LifGetRequestMsg{
+			Request: []*halproto.LifGetRequest{
+				lifReq,
+			},
+		}
+		//var lifs *halproto.LifGetResponseMsg
+		lifs, err := hd.Hal.Ifclient.LifGet(context.Background(), lifReqMsg)
+		if err != nil {
+			log.Errorf("Error getting lifs from the datapath. Err: %v", err)
+			return nil, nil, err
+		}
+
+		// get all interfaces
+		ifReq := &halproto.InterfaceGetRequest{}
+		ifReqMsg := &halproto.InterfaceGetRequestMsg{
+			Request: []*halproto.InterfaceGetRequest{ifReq},
+		}
+		intfs, err := hd.Hal.Ifclient.InterfaceGet(context.Background(), ifReqMsg)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// return only the uplinks
+		for _, intf := range intfs.Response {
+			if intf.Spec.Type == halproto.IfType_IF_TYPE_UPLINK {
+				uplinks.Response = append(uplinks.Response, intf)
+			}
+		}
+		return lifs, &uplinks, err
+	}
+
+	// ToDo Remove the List Mock prior to FCS
+	lifs, uplinks, err := generateMockHwState()
+	return lifs, uplinks, err
 }
 
 func (hd *Datapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule) (*halproto.SecurityGroupPolicySpec, error) {
@@ -1440,6 +1483,64 @@ func (hd *Datapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.Secur
 		PolicyRules: &policyRules,
 	}
 	return &sgPolicy, nil
+}
+
+// ToDo Remove Mock code prior to FCS. This is needed only for UT
+func generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error) {
+	var lifs halproto.LifGetResponseMsg
+	var uplinks halproto.InterfaceGetResponseMsg
+
+	mockLifs := []*halproto.LifGetResponse{
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.LifSpec{
+				KeyOrHandle: &halproto.LifKeyHandle{
+					KeyOrHandle: &halproto.LifKeyHandle_LifId{
+						LifId: 1,
+					},
+				},
+			},
+		},
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.LifSpec{
+				KeyOrHandle: &halproto.LifKeyHandle{
+					KeyOrHandle: &halproto.LifKeyHandle_LifId{
+						LifId: 2,
+					},
+				},
+			},
+		},
+	}
+	lifs.Response = append(lifs.Response, mockLifs...)
+
+	mockUplinks := []*halproto.InterfaceGetResponse{
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.InterfaceSpec{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: 3,
+					},
+				},
+				Type: halproto.IfType_IF_TYPE_UPLINK,
+			},
+		},
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.InterfaceSpec{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: 4,
+					},
+				},
+				Type: halproto.IfType_IF_TYPE_UPLINK,
+			},
+		},
+	}
+	uplinks.Response = append(uplinks.Response, mockUplinks...)
+
+	return &lifs, &uplinks, nil
 }
 
 func ipv4Touint32(ip net.IP) uint32 {

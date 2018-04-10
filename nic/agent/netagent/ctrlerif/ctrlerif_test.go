@@ -176,6 +176,11 @@ func (ag *fakeAgent) UpdateInterface(intf *netproto.Interface) error {
 	return nil
 }
 
+// GetHwInterfaces implements fetching pre created lifs and uplinks from the datapath
+func (ag *fakeAgent) GetHwInterfaces() error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network

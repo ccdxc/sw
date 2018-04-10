@@ -15,6 +15,7 @@ if [ "$1" == "single-threaded" ]; then
   export GOMAXPROCS=1
 fi
 
+bazel run //nic/hal/test:fake_nic_mgr || cleanup $?
 if [ "$1" == "stand-alone" ]; then
   export E2E_AGENT_DATAPATH=HAL
   go test -v ./nic/agent/tests/standalone || cleanup $?

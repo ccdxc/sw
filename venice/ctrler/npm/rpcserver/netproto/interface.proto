@@ -40,6 +40,10 @@ message InterfaceSpec {
                                  (gogoproto.jsontag) = "type,omitempty"];
     string AdminStatus      = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
                                  (gogoproto.jsontag) = "admin-status,omitempty"];
+    // Has the endpoint it is associated to in case of ENIC
+    string EpName                   = 3 [(gogoproto.jsontag) = "ep-name,omitempty"];
+    // Has the L2 Seg it is attached to in case of an Uplink
+    uint64 NetworkID                = 4 [(gogoproto.jsontag) = "network-id,omitempty"];
 }
 
 // Interface object
