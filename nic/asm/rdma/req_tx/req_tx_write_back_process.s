@@ -38,10 +38,7 @@ req_tx_write_back_process:
 
 write_back:
     tblwr         d.busy, CAPRI_KEY_FIELD(IN_P, busy)
-    //seq           c1, k.args.release_cb1_busy, 1
-    //tblwr.c1      d.cb1_busy, 0
     tblwr         d.num_sges, K_NUM_SGES
-    tblwr         d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
     tblwr         d.current_sge_id, K_CURRENT_SGE_ID
     tblwr         d.current_sge_offset, K_CURRENT_SGE_OFFSET
     tblwr         d.curr_wqe_ptr, K_WQE_ADDR
