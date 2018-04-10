@@ -224,6 +224,16 @@ void ionic_rx_empty(struct queue *q)
 	}
 }
 
+void ionic_rx_flush(struct cq *cq)
+{
+	unsigned int work_done;
+
+	work_done = ionic_cq_service(cq, -1, ionic_rx_service, NULL);
+
+	if (work_done > 0)
+		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
+}
+
 int ionic_rx_napi(struct napi_struct *napi, int budget)
 {
 	struct cq *cq = napi_to_cq(napi);

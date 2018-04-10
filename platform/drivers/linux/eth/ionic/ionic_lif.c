@@ -115,6 +115,8 @@ static int ionic_stop(struct net_device *netdev)
 	netif_tx_disable(netdev);
 
 	for (i = 0; i < lif->ntxqcqs; i++) {
+		// TODO post NOP Tx desc and wait for its completion
+		// TODO before disabling Tx queue
 		err = ionic_qcq_disable(lif->txqcqs[i]);
 		if (err)
 			return err;
@@ -124,6 +126,7 @@ static int ionic_stop(struct net_device *netdev)
 		err = ionic_qcq_disable(lif->rxqcqs[i]);
 		if (err)
 			return err;
+		ionic_rx_flush(&lif->rxqcqs[i]->cq);
 	}
 
 	return 0;
