@@ -4,7 +4,7 @@ HAL heap memory usage analysis instructions:
 
 1) build "hal_perf" binary doing "make PROFILING=1 -j8 nic" (under sw/nic)
 
-2) HEAPPROFILE=halperf.hprof PROFILING=1 ./tools/tools/start-hal-mock.sh (from nic/hal directory)
+2) HEAPPROFILE=halperf.hprof PROFILING=1 ./tools/start-hal-mock.sh (from nic/hal directory)
    (for more options, see https://gperftools.github.io/gperftools/heapprofile.html)
    Once HAL is up and running, you should see files prefixed with halperf.hprof like
    halperf.hprof.0001.heap, halperf.hprof2.0002.heap and so on
@@ -15,4 +15,7 @@ HAL heap memory usage analysis instructions:
 
    NOTE:
    once you kill hal, a final .heap file will be generated with all consolidated
-   information, which is helpful as it gives full overview
+   information, which is helpful as it gives full overview ... other files are
+   generated in intermediate stages, but still gives some detail
+
+   To generate, jpeg file from svg, you can install and use inkscape

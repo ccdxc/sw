@@ -95,11 +95,11 @@ enum flow_direction_t {
 #define FLOW_ROLES(ENTRY)                                           \
     ENTRY(FLOW_ROLE_INITIATOR,      0, "iflow")                     \
     ENTRY(FLOW_ROLE_RESPONDER,      1, "rflow")                     \
-    ENTRY(FLOW_ROLE_NONE,           2, "none") 
+    ENTRY(FLOW_ROLE_NONE,           2, "none")
 
 DEFINE_ENUM(flow_role_t, FLOW_ROLES)
 #undef FLOW_ROLES
-    
+
 #define FLOW_END_TYPES(ENTRY)                                       \
     ENTRY(FLOW_END_TYPE_HOST,        0, "FLOW_END_TYPE_HOST")       \
     ENTRY(FLOW_END_TYPE_NETWORK,     1, "FLOW_END_TYPE_NETWORK")    \
@@ -198,7 +198,7 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  ttl_dec:1;           // decrement ttl
     uint64_t                  mcast_en:1;          // mcast enable
     uint64_t                  tunnel_orig:1;       // tunnel originate
-    uint64_t                  lport:11;            // dest lport 
+    uint64_t                  lport:11;            // dest lport
     uint64_t                  qid_en:1;            // qid enabled
     uint64_t                  qtype:3;             // Qtype
     uint64_t                  qid:24;              // Qid
@@ -207,7 +207,7 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  qos_class_en: 1;        // Qos class enable
     uint64_t                  is_proxy_mcast: 1;      // Is mcast ptr proxy ?
     uint64_t                  is_proxy_en: 1;         // Is this flow prxy enabled?
-    
+
     uint32_t                  vrf_hwid;         // source l2seg vrf hwid (lkp_vrf)
     rewrite_actions_en        rw_act;              // rewrite action
     uint32_t                  rw_idx;              // rewrite index
@@ -350,7 +350,7 @@ struct session_s {
     ht_ctxt_t           session_id_ht_ctxt;       // session id based hash table ctxt
     ht_ctxt_t           hal_handle_ht_ctxt;       // hal handle based hash table ctxt
     ht_ctxt_t           hal_iflow_ht_ctxt;        // hal iflow based hash table ctxt
-    ht_ctxt_t           hal_rflow_ht_ctxt;        // hal rflow based hash table ctxt 
+    ht_ctxt_t           hal_rflow_ht_ctxt;        // hal rflow based hash table ctxt
     dllist_ctxt_t       sep_session_lentry;       // source EP's session list context
     dllist_ctxt_t       dep_session_lentry;       // destination EP's session list context
     dllist_ctxt_t       sif_session_lentry;       // source interface's session list context
@@ -387,7 +387,7 @@ extern hal_ret_t ep_get_from_flow_key(const flow_key_t* key,
 bool flow_needs_associate_flow(const flow_key_t *flow_key);
 extern hal_ret_t session_release(session_t *session);
 hal_ret_t extract_flow_key_from_spec(vrf_id_t tid,
-                                     flow_key_t *flow_key, 
+                                     flow_key_t *flow_key,
                                      const FlowKey& flow_spec_key);
 hal_ret_t session_init(void);
 hal_ret_t
@@ -402,7 +402,7 @@ bool session_age_cb(void *entry, void *ctxt);
 hal_ret_t schedule_tcp_close_timer(session_t *session);
 hal_ret_t schedule_tcp_half_closed_timer(session_t *session);
 hal_ret_t schedule_tcp_cxnsetup_timer(session_t *session);
-void session_set_tcp_state(session_t *session, hal::flow_role_t role, 
+void session_set_tcp_state(session_t *session, hal::flow_role_t role,
                            FlowTCPState tcp_state);
 hal_ret_t session_get_all(session::SessionGetResponseMsg *rsp);
 hal_ret_t session_delete_all(session::SessionDeleteResponseMsg *rsp);

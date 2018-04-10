@@ -778,6 +778,9 @@ public:
 
     uint64_t session_create(uint64_t session_id, uint64_t vrf_id, uint32_t sip, uint32_t dip,
                             ::types::IPProtocol proto, uint16_t sport, uint16_t dport,
+                            ::session::NatType nat_type,
+                            uint32_t nat_sip, uint32_t nat_dip,
+                            uint16_t nat_sport, uint16_t nat_dport,
                             ::session::FlowAction action) {
         SessionSpec               *spec;
         SessionRequestMsg         req_msg;
@@ -793,6 +796,8 @@ public:
         spec->set_tcp_ts_option(false);
         spec->set_tcp_sack_perm_option(false);
         spec->set_iflow_syn_ack_delta(0);
+
+        // create initiator flow
         flow = spec->mutable_initiator_flow();
         flow->mutable_flow_key()->mutable_v4_key()->set_sip(sip);
         flow->mutable_flow_key()->mutable_v4_key()->set_dip(dip);
@@ -800,14 +805,57 @@ public:
         flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_sport(sport);
         flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_dport(dport);
         flow->mutable_flow_data()->mutable_flow_info()->set_flow_action(action);
+        switch (nat_type) {
+        case ::session::NAT_TYPE_NONE:
+            break;
+        case ::session::NAT_TYPE_TWICE_NAT:
+            flow->mutable_flow_data()->mutable_flow_info()->set_nat_type(nat_type);
+            flow->mutable_flow_data()->mutable_flow_info()->mutable_nat_sip()->set_ip_af(::types::IP_AF_INET);
+            flow->mutable_flow_data()->mutable_flow_info()->mutable_nat_sip()->set_v4_addr(nat_sip);
+            flow->mutable_flow_data()->mutable_flow_info()->mutable_nat_dip()->set_ip_af(::types::IP_AF_INET);
+            flow->mutable_flow_data()->mutable_flow_info()->mutable_nat_dip()->set_v4_addr(nat_dip);
+            flow->mutable_flow_data()->mutable_flow_info()->set_nat_sport(nat_sport);
+            flow->mutable_flow_data()->mutable_flow_info()->set_nat_dport(nat_dport);
+            break;
+        default:
+            std::cout << "Unsupported NAT Type" << std::endl;
+            return 0;
+            break;
+        }
 
+        // create responder flow
         flow = spec->mutable_responder_flow();
-        flow->mutable_flow_key()->mutable_v4_key()->set_sip(dip);
-        flow->mutable_flow_key()->mutable_v4_key()->set_dip(sip);
-        flow->mutable_flow_key()->mutable_v4_key()->set_ip_proto(proto);
-        flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_sport(dport);
-        flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_dport(sport);
+            flow->mutable_flow_key()->mutable_v4_key()->set_ip_proto(proto);
         flow->mutable_flow_data()->mutable_flow_info()->set_flow_action(action);
+        switch (nat_type) {
+        case ::session::NAT_TYPE_NONE:
+            flow->mutable_flow_key()->mutable_v4_key()->set_sip(dip);
+            flow->mutable_flow_key()->mutable_v4_key()->set_dip(sip);
+            flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_sport(dport);
+            flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_dport(sport);
+            break;
+        case ::session::NAT_TYPE_TWICE_NAT:
+            // fix the key
+            flow->mutable_flow_data()->mutable_flow_info()->set_nat_type(nat_type);
+            flow->mutable_flow_key()->mutable_v4_key()->set_sip(nat_dip);
+            flow->mutable_flow_key()->mutable_v4_key()->set_dip(nat_sip);
+            flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_sport(nat_dport);
+            flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_dport(nat_sport);
+
+            flow->mutable_flow_data()->mutable_flow_info()->mutable_nat_sip()->set_ip_af(::types::IP_AF_INET);
+            flow->mutable_flow_data()->mutable_flow_info()->mutable_nat_sip()->set_v4_addr(dip);
+
+            flow->mutable_flow_data()->mutable_flow_info()->mutable_nat_dip()->set_ip_af(::types::IP_AF_INET);
+            flow->mutable_flow_data()->mutable_flow_info()->mutable_nat_dip()->set_v4_addr(sip);
+
+            flow->mutable_flow_data()->mutable_flow_info()->set_nat_sport(dport);
+            flow->mutable_flow_data()->mutable_flow_info()->set_nat_dport(sport);
+            break;
+        default:
+            std::cout << "Unsupported NAT Type" << std::endl;
+            return 0;
+            break;
+        }
 
         status = session_stub_->SessionCreate(&context, req_msg, &rsp_msg);
         if (status.ok()) {
@@ -1084,7 +1132,44 @@ public:
         }
     }
 
-    uint32_t mirror_session_create(uint32_t session_id) {
+    // create gre tunnel interface
+    uint64_t gre_tunnel_if_create(uint32_t vrf_id, uint64_t tunnel_if_id,
+                                  uint32_t sip, uint32_t dip) {
+        InterfaceSpec           *spec;
+        InterfaceRequestMsg     req_msg;
+        InterfaceResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        spec = req_msg.add_request();
+        spec->mutable_meta()->set_vrf_id(vrf_id);
+        spec->mutable_key_or_handle()->set_interface_id(tunnel_if_id);
+        spec->set_type(::intf::IfType::IF_TYPE_TUNNEL);
+        spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+        spec->mutable_if_tunnel_info()->set_encap_type(::intf::IF_TUNNEL_ENCAP_TYPE_GRE);
+        spec->mutable_if_tunnel_info()->mutable_gre_info()->mutable_source()->set_ip_af(::types::IP_AF_INET);
+        spec->mutable_if_tunnel_info()->mutable_gre_info()->mutable_source()->set_v4_addr(sip);
+        spec->mutable_if_tunnel_info()->mutable_gre_info()->mutable_destination()->set_ip_af(::types::IP_AF_INET);
+        spec->mutable_if_tunnel_info()->mutable_gre_info()->mutable_destination()->set_v4_addr(dip);
+        spec->mutable_if_tunnel_info()->mutable_gre_info()->set_ttl(100);
+        spec->mutable_if_tunnel_info()->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+        status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "GRE tunnel if create succeeded, handle = "
+                      << rsp_msg.response(0).status().if_handle()
+                      << std::endl;
+            return rsp_msg.response(0).status().if_handle();
+        } else {
+            std::cout << "GRE tunnel if create failed, error = "
+                      << rsp_msg.response(0).api_status()
+                      << std::endl;
+        }
+        return 0;
+    }
+
+    uint32_t mirror_session_create(uint32_t vrf_id, uint32_t session_id,
+                                   uint32_t sip, uint32_t dip) {
         MirrorSessionConfigMsg      req_msg;
         MirrorSessionSpec           *spec;
         MirrorSessionResponseMsg    rsp_msg;
@@ -1092,11 +1177,12 @@ public:
         ClientContext               context;
 
         spec = req_msg.add_request();
+        spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->mutable_id()->set_session_id(session_id);
         spec->mutable_erspan_spec()->mutable_dest_ip()->set_ip_af(::types::IP_AF_INET);
-        spec->mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(0x01010101);
+        spec->mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(sip);
         spec->mutable_erspan_spec()->mutable_src_ip()->set_ip_af(::types::IP_AF_INET);
-        spec->mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(0x02020202);
+        spec->mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(dip);
         spec->mutable_erspan_spec()->set_span_id(session_id);
 
         status = telemetry_stub_->MirrorSessionCreate(&context, req_msg, &rsp_msg);
@@ -1104,7 +1190,7 @@ public:
             assert(rsp_msg.status() == types::API_STATUS_OK);
             assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
             assert(rsp_msg.response(0).status().code() ==
-                       ::telemetry::MirrorSessionStatus_MirrorSessionStatusCode_INVALID_CONFIG);
+                       ::telemetry::MirrorSessionStatus_MirrorSessionStatusCode_SUCCESS);
             std::cout << "Mirror session ssucceeded, id = " << session_id << std::endl;
         }
 
@@ -1567,7 +1653,7 @@ int
 main (int argc, char** argv)
 {
     uint64_t     vrf_handle, l2seg_handle, native_l2seg_handle, sg_handle;
-    uint64_t     nw1_handle, nw2_handle, uplink_if_handle; //, session_handle;
+    uint64_t     nw1_handle, nw2_handle, uplink_if_handle, session_handle;
     uint64_t     lif_handle, enic_if_handle;
     uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
     uint64_t     lif_id = 100;
@@ -1714,15 +1800,22 @@ main (int argc, char** argv)
     hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x020a0a0102, 0x0a0a0102);
     hclient.ep_create(vrf_id, dest_l2seg_id, dest_if_id, sg_id, 0x020a0a0202, 0x0a0a0202);
 
-#if 0
-    // NOTE: uncomment this in smart nic mode
-    // create a session
-    session_handle = hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a0202,
-                                            ::types::IPProtocol::IPPROTO_UDP,
-                                            10000, 10001,
+    // create ERSPAN remote EP
+    hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x0cc47a2a7b61, 0x0a0a01FE);
+    hclient.gre_tunnel_if_create(vrf_id, 100, 0x0a0a01FD, 0x0a0a01FE);
+    hclient.mirror_session_create(1, vrf_id,
+                                  0x0a0a01FD, 0x0a0a01FE);  // 10.10.1.253 is our IP
+
+    // create a remote EP for NAT
+    hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x70695a480273, 0x0a0a0104);
+
+    // create a session for NAT case
+    session_handle = hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a01FD,
+                                            ::types::IPProtocol::IPPROTO_TCP, 10000, 11000,
+                                            ::session::NAT_TYPE_TWICE_NAT,
+                                            0x0a0a01FD, 0x0a0a0105, 20000, 22000,
                                             ::session::FlowAction::FLOW_ACTION_ALLOW);
     assert(session_handle != 0);
-#endif
 
     // create a lif
     lif_handle = hclient.lif_create(100, 1);
