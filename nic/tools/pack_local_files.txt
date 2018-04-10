@@ -4,6 +4,7 @@ nic/conf                                                         /nic/conf/
 bazel-bin/nic/hal/hal                                            /nic/bin/
 bazel-bin/nic/linkmgr/linkmgr                                    /nic/bin/
 bazel-bin/nic/hal/test/hal_test                                  /nic/bin/
+nic/sdk/bazel-bin/examples/pal-app/hal_access                    /nic/bin/
 nic/gen/iris/cli/iris_debug_cli.py                               /nic/cli/
 nic/gen/iris/cli/iris.py                                         /nic/cli/
 nic/gen/iris/cli/debugshell.py                                   /nic/cli/

@@ -70,6 +70,12 @@ using session::FlowKey;
 using session::FlowInfo;
 using session::ConnTrackInfo;
 using session::FlowData;
+using session::SessionDeleteRequestMsg;
+using session::SessionDeleteRequest;
+using session::SessionDeleteResponseMsg;
+using session::SessionGetRequestMsg;
+using session::SessionGetRequest;
+using session::SessionGetResponseMsg;
 
 using intf::Interface;
 using intf::InterfaceSpec;
@@ -80,6 +86,9 @@ using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentRequestMsg;
 using intf::InterfaceL2SegmentResponseMsg;
 using intf::InterfaceL2SegmentResponse;
+using intf::InterfaceDeleteRequest;
+using intf::InterfaceDeleteRequestMsg;
+using intf::InterfaceDeleteResponseMsg;
 using intf::LifSpec;
 using intf::LifGetRequestMsg;
 using intf::LifGetResponseMsg;
@@ -670,6 +679,29 @@ public:
         return 0;
     }
 
+    uint64_t enic_if_delete(uint32_t enic_if_id) {
+        InterfaceDeleteRequest     *req;
+        InterfaceDeleteRequestMsg  req_msg;
+        InterfaceDeleteResponseMsg rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        req = req_msg.add_request();
+        req->mutable_key_or_handle()->set_interface_id(enic_if_id);
+
+        status = intf_stub_->InterfaceDelete(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "ENIC if delete succeeded, id = "
+                      << enic_if_id
+                      << std::endl;
+            return 0;
+        }
+        std::cout << "ENIC if delete failed, error = "
+                  << rsp_msg.response(0).api_status() << std::endl;
+        return -1;
+    }
+
     uint64_t enic_if_create(uint32_t enic_if_id, uint32_t lif_id,
                             uint64_t pinned_uplink_if_handle,
                             uint64_t native_l2seg_handle,
@@ -741,7 +773,7 @@ public:
 
     uint64_t ep_create(uint64_t vrf_id, uint64_t l2seg_id,
                        uint64_t if_id, uint64_t sg_id,
-                       uint64_t mac_addr, uint32_t ip_addr) {
+                       uint64_t mac_addr, uint32_t *ip_addr, int num_ips) {
         EndpointSpec              *spec;
         EndpointRequestMsg        req_msg;
         EndpointResponseMsg       rsp_msg;
@@ -756,9 +788,11 @@ public:
         spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
         spec->mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(if_id);
         if (ip_addr) {
-            ip = spec->mutable_endpoint_attrs()->add_ip_address();
-            ip->set_ip_af(types::IPAddressFamily::IP_AF_INET);
-            ip->set_v4_addr(ip_addr);
+            for (int i = 0; i < num_ips; ++i) {
+                ip = spec->mutable_endpoint_attrs()->add_ip_address();
+                ip->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+                ip->set_v4_addr(ip_addr[i]);
+            }
         }
         sg_kh = spec->mutable_endpoint_attrs()->add_sg_key_handle();
         sg_kh->set_security_group_id(sg_id);
@@ -776,12 +810,100 @@ public:
         return 0;
     }
 
+    int session_delete_all (uint64_t session_handle) {
+        SessionDeleteRequestMsg  req_msg;
+        SessionDeleteResponseMsg rsp_msg;
+        ClientContext            context;
+        Status                   status;
+
+        status = session_stub_->SessionDelete(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "Session delete succeeded, handle = "
+                      << session_handle
+                      << std::endl;
+            return 0;
+        }
+        std::cout << "Session delete failed, error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return -1;
+    }
+
+    int session_delete (uint64_t session_handle) {
+        SessionDeleteRequestMsg  req_msg;
+        SessionDeleteRequest     *req;
+        SessionDeleteResponseMsg rsp_msg;
+        ClientContext            context;
+        Status                   status;
+
+        req = req_msg.add_request();
+
+        if (session_handle != 0) {
+            req->set_session_handle(session_handle);
+        }
+
+        status = session_stub_->SessionDelete(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "Session delete succeeded, handle = "
+                      << session_handle
+                      << std::endl;
+            return 0;
+        }
+        std::cout << "Session delete failed, error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return -1;
+    }
+
+    int session_get (uint64_t session_handle,
+                     SessionGetResponseMsg *rsp_msg) {
+        SessionGetRequestMsg req_msg;
+        // SessionGetRequest    *req;
+        ClientContext        context;
+        Status               status;
+
+        // empty request
+        req_msg.add_request();
+
+        status = session_stub_->SessionGet(&context, req_msg, rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg->response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "Session get succeeded, handle = "
+                      << session_handle
+                      << std::endl;
+
+            return 0;
+        }
+        std::cout << "Session get failed, error = "
+                  << rsp_msg->response(0).api_status()
+                  << std::endl;
+        return -1;
+    }
+
+    int session_get_and_delete (uint64_t session_handle) {
+        int ret = 0;
+        SessionGetResponseMsg rsp_msg;
+
+        ret = session_get (session_handle, &rsp_msg);
+
+        if (ret == 0) {
+            for (int i = 0; i < rsp_msg.response_size(); ++i) {
+                session_delete(rsp_msg.response(i).status().session_handle());
+            }
+        }
+
+        return ret;
+    }
+
     uint64_t session_create(uint64_t session_id, uint64_t vrf_id, uint32_t sip, uint32_t dip,
                             ::types::IPProtocol proto, uint16_t sport, uint16_t dport,
                             ::session::NatType nat_type,
                             uint32_t nat_sip, uint32_t nat_dip,
                             uint16_t nat_sport, uint16_t nat_dport,
-                            ::session::FlowAction action) {
+                            ::session::FlowAction action,
+                            uint32_t ing_mirror_session_id) {
         SessionSpec               *spec;
         SessionRequestMsg         req_msg;
         SessionResponseMsg        rsp_msg;
@@ -805,6 +927,10 @@ public:
         flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_sport(sport);
         flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_dport(dport);
         flow->mutable_flow_data()->mutable_flow_info()->set_flow_action(action);
+        if (ing_mirror_session_id) {
+            auto msess = flow->mutable_flow_data()->mutable_flow_info()->add_ing_mirror_sessions();
+            msess->set_session_id(ing_mirror_session_id);
+        }
         switch (nat_type) {
         case ::session::NAT_TYPE_NONE:
             break;
@@ -825,8 +951,12 @@ public:
 
         // create responder flow
         flow = spec->mutable_responder_flow();
-            flow->mutable_flow_key()->mutable_v4_key()->set_ip_proto(proto);
+        flow->mutable_flow_key()->mutable_v4_key()->set_ip_proto(proto);
         flow->mutable_flow_data()->mutable_flow_info()->set_flow_action(action);
+        if (ing_mirror_session_id) {
+            auto msess = flow->mutable_flow_data()->mutable_flow_info()->add_ing_mirror_sessions();
+            msess->set_session_id(ing_mirror_session_id);
+        }
         switch (nat_type) {
         case ::session::NAT_TYPE_NONE:
             flow->mutable_flow_key()->mutable_v4_key()->set_sip(dip);
@@ -1060,6 +1190,38 @@ public:
         }
 
         return 0;
+    }
+
+    void del_l2seg_on_uplinks(uint64_t if_id_start, uint32_t num_uplinks, uint64_t l2seg_id) {
+        InterfaceL2SegmentSpec           *spec;
+        InterfaceL2SegmentRequestMsg     req_msg;
+        InterfaceL2SegmentResponseMsg    rsp_msg;
+        ClientContext                    context;
+        Status                           status;
+
+        for (uint32_t i = 0; i < num_uplinks; i++) {
+            spec = req_msg.add_request();
+            spec->mutable_l2segment_key_or_handle()->set_segment_id(l2seg_id);
+            spec->mutable_if_key_handle()->set_interface_id(if_id_start++);
+        }
+        status = intf_stub_->DelL2SegmentOnUplink(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            for (uint32_t i = 0; i < num_uplinks; i++) {
+                assert(rsp_msg.response(i).api_status() == types::API_STATUS_OK);
+                std::cout << "L2 Segment " << l2seg_id
+                          << " Del on uplink " << i + 1
+                          << " succeeded" << std::endl;
+            }
+        } else {
+            for (uint32_t i = 0; i < num_uplinks; i++) {
+                std::cout << "L2 Segment " << l2seg_id
+                          << " Del on uplink " << i + 1
+                          << " failed, err " << rsp_msg.response(i).api_status()
+                          << std::endl;
+            }
+        }
+
+        return;
     }
 
     void add_l2seg_on_uplinks(uint64_t if_id_start, uint32_t num_uplinks, uint64_t l2seg_id) {
@@ -1666,19 +1828,26 @@ main (int argc, char** argv)
     bool         mpu_trace = false;
     bool         enable = false;
     bool         size_check = false;
-    bool         ep_del_check = false;
+    bool         ep_delete_test = false;
+    bool         session_delete_test = false;
+    bool         session_create = false;
+    bool         system_get = false;
+    bool         ep_create = false;
+    bool         config = false;
     int          stage_id = -1;
     int          mpu = -1;
     char         pipeline_type[32] = {0};
-    int          count = 10;
+    int          count = 1;
 
-    uint64_t num_l2segments = 10;
+    uint64_t num_l2segments = 1;
     uint64_t encap_value    = 100;
     uint64_t num_uplinks    = 4;
 
     uint64_t dest_encap_value = encap_value + num_l2segments;
     uint64_t dest_l2seg_id    = l2seg_id    + num_l2segments;
     uint64_t dest_if_id       = if_id       + 1;
+
+    uint32_t ip_address = 0;
 
     if (argc > 1) {
         if (!strcmp(argv[1], "port_test")) {
@@ -1694,9 +1863,38 @@ main (int argc, char** argv)
             mpu_trace = true;
         } else if (!strcmp(argv[1], "size_check")) {
             size_check = true;
-        } else if (!strcmp(argv[1], "ep_del_check")) {
-            ep_del_check = true;
+        } else if (!strcmp(argv[1], "system_get")) {
+            system_get = true;
+        } else if (!strcmp(argv[1], "ep_create")) {
+            ep_create = true;
+        } else if (!strcmp(argv[1], "ep_delete_test")) {
+            if (argc != 5) {
+                std::cout << "Usage: <pgm> ep_delete_test <uplink_if_handle> <l2seg_handle> <count>"
+                          << std::endl;
+                return 0;
+            }
+            uplink_if_handle = atoi(argv[2]);
+            native_l2seg_handle = atoi(argv[3]);
+            count = atoi(argv[5]);
+            std::cout << "uplink_if_handle: " << uplink_if_handle
+                      << "native_l2seg_handle: " << native_l2seg_handle
+                      << std::endl;
+            ep_delete_test = true;
+        } else if (!strcmp(argv[1], "session_delete_test")) {
+            if (argc != 2) {
+                std::cout << "Usage: <pgm> session_delete_test"
+                          << std::endl;
+                return 0;
+            }
+            session_delete_test = true;
+        } else if (!strcmp(argv[1], "session_create")) {
+            session_create = true;
+        } else if (!strcmp(argv[1], "config")) {
+            config = true;
         }
+    } else {
+        std::cout << "Usage: <pgm> config" << std::endl;
+        return 0;
     }
 
     hal_client hclient(grpc::CreateChannel(svc_endpoint,
@@ -1725,19 +1923,77 @@ main (int argc, char** argv)
     } else if (size_check == true) {
         gft_proto_size_check();
         return 0;
-    } else if (ep_del_check == true) {
-        for (int i = 0; i < count; ++i) {
-            hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0102);
-            hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a0202);
-            hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0103);
+    } else if (system_get == true) {
+        hclient.system_get();
+        return 0;
+    } else if (session_delete_test == true) {
 
+        std::cout << "session_delete_test" << std::endl;
+        hclient.session_delete_all(0);
+
+        return 0;
+
+    } else if (session_create == true) {
+        std::cout << "session_create" << std::endl;
+
+        // create a session
+        session_handle = hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a0104,
+                                                ::types::IPProtocol::IPPROTO_UDP,
+                                                10000, 10001,
+                                                ::session::NAT_TYPE_NONE, 0, 0, 0, 0,
+                                                ::session::FlowAction::FLOW_ACTION_ALLOW,
+                                                1);
+        assert(session_handle != 0);
+
+        return 0;
+
+    } else if (ep_create == true) {
+        ip_address = 0x0a0a0102;
+        hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x0cc47a2a7b61, &ip_address, 1);
+
+        return 0;
+    } else if (ep_delete_test == true) {
+        for (int i = 0; i < count; ++i) {
+            hclient.ep_delete(vrf_id, l2seg_id, 0x0cc47a2a7b61);
+            hclient.ep_delete(vrf_id, l2seg_id, 0x70695a480273);
+            hclient.enic_if_delete(enic_if_id);
+
+            for (uint64_t seg_id = l2seg_id;
+                 seg_id < l2seg_id + num_l2segments;
+                 ++seg_id) {
+                hclient.del_l2seg_on_uplinks(if_id, num_uplinks, seg_id);
+            }
+            hclient.del_l2seg_on_uplinks(if_id, num_uplinks, dest_l2seg_id);
+
+            for (uint64_t seg_id = l2seg_id;
+                 seg_id < l2seg_id + num_l2segments;
+                 ++seg_id) {
+                hclient.add_l2seg_on_uplinks(if_id, num_uplinks, seg_id);
+            }
+            hclient.add_l2seg_on_uplinks(if_id, num_uplinks, dest_l2seg_id);
+
+            // endpoint for PEER00
+            ip_address = 0x0a0a0102;
+            hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x0cc47a2a7b61, &ip_address, 1);
+
+            // endpoint for HOST03
+            ip_address = 0x0a0a0104;
+            hclient.ep_create(vrf_id, l2seg_id, dest_if_id, sg_id, 0x70695a480273, &ip_address, 1);
+
+            // create a ENIC interface
+            enic_if_handle = hclient.enic_if_create(enic_if_id, lif_id,
+                                                    uplink_if_handle,  // pinned uplink
+                                                    native_l2seg_handle,
+                                                    dest_l2seg_id);
+            ip_address = 0x0a0a0103;
             hclient.ep_create(vrf_id, l2seg_id, enic_if_id, sg_id,
-                              0x020a0a0103, 0x0a0a0103);
-            hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id,
-                              0x020a0a0102, 0x0a0a0102);
-            hclient.ep_create(vrf_id, dest_l2seg_id, dest_if_id, sg_id,
-                              0x020a0a0202, 0x0a0a0202);
+                              0x020a0a0103, &ip_address, 1);
+            assert(enic_if_handle != 0);
         }
+
+        return 0;
+    } else if (config == false) {
+        std::cout << "Usage: <pgm> config" << std::endl;
         return 0;
     }
 
@@ -1749,15 +2005,10 @@ main (int argc, char** argv)
     assert(vrf_handle != 0);
     assert(hclient.vrf_get_by_handle(vrf_handle) != 0);
     assert(hclient.vrf_get_by_id(vrf_id) != 0);
-    //hclient.vrf_delete_by_handle(hal_handle);
-    //assert(hclient.vrf_get_by_id(1) == 0);   // should fail
 
     // recreate the vrf
     vrf_handle = hclient.vrf_create(vrf_id);
     assert(vrf_handle != 0);
-
-    // Get slab statistics
-    //hclient.slab_get();
 
     // create a security group
     sg_handle = hclient.sg_create(sg_id);
@@ -1796,25 +2047,28 @@ main (int argc, char** argv)
     // bringup this L2seg on all uplinks
     hclient.add_l2seg_on_uplinks(if_id, 4, dest_l2seg_id);
 
-    // create remote endpoints
-    hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x020a0a0102, 0x0a0a0102);
-    hclient.ep_create(vrf_id, dest_l2seg_id, dest_if_id, sg_id, 0x020a0a0202, 0x0a0a0202);
+    uint32_t ip_addr[2] = { 0x0a0a0102, 0x0a0a01FE };
 
-    // create ERSPAN remote EP
-    hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x0cc47a2a7b61, 0x0a0a01FE);
+    // endpoint for PEER00
+    hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x0cc47a2a7b61, ip_addr, 2);
+
+    ip_addr[0] = 0x0a0a0104;
+    ip_addr[1] = 0x0a0a0105;
+
+    // endpoint for HOST03
+    hclient.ep_create(vrf_id, l2seg_id, dest_if_id, sg_id, 0x70695a480273, ip_addr, 2);
+
     hclient.gre_tunnel_if_create(vrf_id, 100, 0x0a0a01FD, 0x0a0a01FE);
     hclient.mirror_session_create(1, vrf_id,
                                   0x0a0a01FD, 0x0a0a01FE);  // 10.10.1.253 is our IP
-
-    // create a remote EP for NAT
-    hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x70695a480273, 0x0a0a0104);
 
     // create a session for NAT case
     session_handle = hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a01FD,
                                             ::types::IPProtocol::IPPROTO_TCP, 10000, 11000,
                                             ::session::NAT_TYPE_TWICE_NAT,
                                             0x0a0a01FD, 0x0a0a0105, 20000, 22000,
-                                            ::session::FlowAction::FLOW_ACTION_ALLOW);
+                                            ::session::FlowAction::FLOW_ACTION_ALLOW,
+                                            0);   // no mirroring
     assert(session_handle != 0);
 
     // create a lif
@@ -1822,6 +2076,10 @@ main (int argc, char** argv)
     assert(lif_handle != 0);
 
     hclient.lif_get_all();
+
+    std::cout << "ENIC CREATE: uplink_if_handle: " << uplink_if_handle
+              << ", native_l2seg_handle: " << native_l2seg_handle
+              << std::endl;
 
     // create a ENIC interface
     enic_if_handle = hclient.enic_if_create(enic_if_id, lif_id,
@@ -1831,17 +2089,11 @@ main (int argc, char** argv)
     assert(enic_if_handle != 0);
 
     // create EP with this ENIC
-    hclient.ep_create(vrf_id, l2seg_id, enic_if_id, sg_id, 0x020a0a0103, 0x0a0a0103);
-
-    //hclient.vrf_delete_by_id(1);
-
-    // Get system statistics
-    //hclient.system_get();
+    ip_address = 0x0a0a0103;
+    hclient.ep_create(vrf_id, l2seg_id, enic_if_id, sg_id, 0x020a0a0103, &ip_address, 1);
 
     // Get API stats
     hclient.api_stats_get();
 
-    // subscribe and listen to HAL events
-    //hclient.event_test();
     return 0;
 }
