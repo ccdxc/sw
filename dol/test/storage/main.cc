@@ -259,7 +259,7 @@ int main(int argc, char**argv) {
       run_xts_perf_tests = false;
       run_comp_perf_tests = false;
       run_pdma_tests = true;
-      run_acc_scale_tests = false;
+      run_acc_scale_tests = true;
   } else if (FLAGS_test_group == "rtl_sanity") {
       run_unit_tests = true;
       run_nvme_tests = true;

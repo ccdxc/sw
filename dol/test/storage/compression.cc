@@ -435,7 +435,7 @@ compression_buf_init()
                                    DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     status_host_buf2 = new dp_mem_t(1, sizeof(cp_status_sha512_t),
                                     DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-    opaque_host_buf = new dp_mem_t(1, sizeof(uint32_t),
+    opaque_host_buf = new dp_mem_t(1, sizeof(uint64_t),
                                    DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     host_sgl1 = new dp_mem_t(1, sizeof(cp_sgl_t),
                              DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
@@ -1129,14 +1129,21 @@ int _max_data_rate(comp_queue_push_t push_type,
   dp_mem_t *max_dc_status_buf = new dp_mem_t(MAX_DC_REQ, sizeof(cp_status_sha512_t));
 
   // allocate opaque tags as a byte stream for easy memcmp
-  dp_mem_t *max_cp_opaque_host_buf = new dp_mem_t(1, MAX_CP_REQ * sizeof(uint32_t),
+  dp_mem_t *max_cp_opaque_host_buf = new dp_mem_t(1, MAX_CP_REQ * sizeof(uint64_t),
                                                   DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-  dp_mem_t *exp_opaque_data_buf = new dp_mem_t(1, MAX_CP_REQ * sizeof(uint32_t),
+  dp_mem_t *exp_opaque_data_buf = new dp_mem_t(1, MAX_CP_REQ * sizeof(uint64_t),
                                                DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-  dp_mem_t *max_dc_opaque_host_buf = new dp_mem_t(1, MAX_DC_REQ * sizeof(uint32_t),
+  dp_mem_t *max_dc_opaque_host_buf = new dp_mem_t(1, MAX_DC_REQ * sizeof(uint64_t),
                                                   DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
   uint32_t exp_opaque_data = 0xa5a5a5a5;
-  exp_opaque_data_buf->fill_thru(0xa5);
+
+  // Note that RTL expects each opaque tag as uint64_t and writes
+  // exp_opaque_data to the first 4 bytes, followed by 0 in the next 4 bytes
+  for (i = 0; i < MAX_CP_REQ; i++) {
+      memcpy(exp_opaque_data_buf->read() + (i * sizeof(uint64_t)),
+             &exp_opaque_data, sizeof(uint32_t));
+  }
+  exp_opaque_data_buf->write_thru();
 
   // allocate and fill descriptors to load compression engine with requests
   for (i = 0, d = &comp_cp_desc[0];
@@ -1151,7 +1158,7 @@ int _max_data_rate(comp_queue_push_t push_type,
                                    nullptr, kCompAppNominalSize);
     d->status_data += i;
     d->cmd_bits.opaque_tag_on = 1;
-    d->opaque_tag_addr = max_cp_opaque_host_buf->pa() + (i * sizeof(uint32_t));
+    d->opaque_tag_addr = max_cp_opaque_host_buf->pa() + (i * sizeof(uint64_t));
     d->opaque_tag_data = exp_opaque_data;
     cp_queue->push(*d, 
                     i == (MAX_CP_REQ - 1) ? last_push_type : push_type,
@@ -1172,7 +1179,7 @@ int _max_data_rate(comp_queue_push_t push_type,
                                      kCompAppNominalSize);
     d->status_data += i;
     d->cmd_bits.opaque_tag_on = 1;
-    d->opaque_tag_addr = max_dc_opaque_host_buf->pa() + (i * sizeof(uint32_t));
+    d->opaque_tag_addr = max_dc_opaque_host_buf->pa() + (i * sizeof(uint64_t));
     d->opaque_tag_data = exp_opaque_data;
     dc_queue->push(*d,
                    i == (MAX_DC_REQ - 1) ? last_push_type : push_type,

@@ -59,7 +59,7 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     } else {
         comp_status_buf2 = comp_status_buf1;
     }
-    comp_opaque_buf = new dp_mem_t(1, sizeof(uint32_t),
+    comp_opaque_buf = new dp_mem_t(1, sizeof(uint64_t),
                                    DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
 
     // XTS AOL must be 512 byte aligned
@@ -290,6 +290,13 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
 int 
 comp_encrypt_chain_t::verify(void)
 {
+    // Poll for comp status
+    if (!comp_status_poll(comp_status_buf2, suppress_info_log)) {
+      printf("ERROR: comp_encrypt_chain ompression status never came\n");
+      return -1;
+    }
+
+    // Validate comp status
     if (compress_status_verify(comp_status_buf2, comp_buf, cp_desc)) {
         printf("ERROR: comp_encrypt_chain compression status verification failed\n");
         return -1;

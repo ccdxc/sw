@@ -27,6 +27,9 @@ const static uint32_t   kDefaultBufSize       = 4096;
 
 // Accelerator chaining
 
+// Set the following to the scale test with the most number of chains
+const static uint32_t   kAccScaleTestsMaxChains = 2;
+
 typedef struct {
   uint64_t next_doorbell_addr;	// Next capri doorbell address (if chaining)
   uint64_t next_doorbell_data;	// Next capri doorbell data (if chaining)
@@ -61,10 +64,11 @@ typedef struct acc_chain_entry {
   uint16_t status_len;		// Length of the status header
   uint16_t data_len;		// Remaining data length of compression buffer
   uint8_t  pad_len_shift;   // Padding length (power of 2)
+  uint8_t  unused;
   // TODO: These bitfields are interpretted in big endian 
   //       fashion by P4+. For DOL it won't matter as we set bitfields.
   //       For driver, need to define the order properly.
-  uint8_t  data_len_from_desc   :1,	// use desc data_len rather than output_data_len
+  uint16_t data_len_from_desc   :1,	// use desc data_len rather than output_data_len
            status_dma_en        :1,	// enable DMA of status to status_hbm_pa
   // NOTE: intr_en and next_doorbell_en can be enabled together.
   // When comp/decomp succeeds, Order of evaluation: 1. next_doorbell_en 2. intr_en.

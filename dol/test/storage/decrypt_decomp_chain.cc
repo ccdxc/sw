@@ -249,10 +249,8 @@ decrypt_decomp_chain_t::decrypt_setup(acc_chain_params_t& chain_params)
     xts_desc_addr->status = xts_status_buf1->pa();
 
     // Chain XTS decrypt to XTS status sequencer 
-    queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
-                               xts_ctx.seq_xts_status_q, 0,
-                               chain_params.ret_seq_status_index, 
-                               &xts_desc_addr->db_addr, &xts_desc_addr->db_data);
+    xts_desc_addr->db_addr = chain_params.ret_doorbell_addr;
+    xts_desc_addr->db_data = chain_params.ret_doorbell_data;
     xts_desc_buf->write_thru();
     xts_ctx.desc_write_seq_xts(xts_desc_buf);
 }
