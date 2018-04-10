@@ -5947,10 +5947,32 @@ class capri_table_manager:
 
         return table_specs
 
+    def compute_token_refresh_timer_value(self):
+        timers = {'value':[],'scale':[]}
+        timers['value'] = [0 for d in xgress]
+        timers['scale'] = [0 for d in xgress]
+        for d in xgress:
+            num_entries = 0
+            cycles_per_4ms = int(float(capri_model['match_action']['te_consts']['base_clock_freq']) * 0.004)
+            for ctable in self.gress_tm[d].tables.values():
+                if ctable.is_rate_limit_en or ctable.is_policer:
+                    num_entries = num_entries + ctable.num_entries
+            min_cycles_reqd = num_entries * 8
+            assert min_cycles_reqd < cycles_per_4ms, "Too many policer/rate-limiter entries to support 4ms refresh"
+            cycles_per_4ms = cycles_per_4ms >> 1
+            timers['scale'][d] = 0
+            while cycles_per_4ms & 0xFFFFFFFFFFFF0000L:
+                cycles_per_4ms = cycles_per_4ms >> 1
+                timers['scale'][d] = timers['scale'][d] + 1
+            timers['value'][d] = cycles_per_4ms
+
+        return timers
+
     def generate_cap_pic_output(self):
 
         self.logger.info("Generating cap pics ...")
 
+        tmr = self.compute_token_refresh_timer_value()
         pic = capri_pic_csr_load(self) # Load the templates
 
         for mem_type in self.mapper.tables:
@@ -5972,6 +5994,7 @@ class capri_table_manager:
                         profile['log2bkts']['value'] = "0x%x" % capri_get_log2bkts_from_layout(layout, table['width'])
                         profile['start_addr']['value'] = "0x%x" % capri_get_sram_hw_start_address_from_layout(layout)
                         profile['end_addr']['value'] = "0x%x" % capri_get_sram_hw_end_address_from_layout(layout)
+                        profile['rlimit_en']['value'] = "0x%x" % (ctable.is_rate_limit_en)
                         if (ctable.match_type != match_type.EXACT_IDX and \
                             ctable.match_type != match_type.TERNARY and \
                             ctable.match_type != match_type.TERNARY_ONLY) and \
@@ -6021,11 +6044,15 @@ class capri_table_manager:
                             opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_saturate_oprd3']) << 8)
                             opcode |= ((1)  << 10) # Policer or Rate-Limit
                             bg_upd_profile['opcode']['value'] = "0x%x" % (opcode)
+                            bg_upd_profile['timer']['value'] = "0x%x" % (tmr['value'][direction])
+                            bg_upd_profile['scale']['value'] = "0x%x" % (tmr['scale'][direction])
+                            bg_upd_profile['_modified'] = True
 
                             bg_upd_profile_en_name = 'cap_pics_csr_cfg_bg_update_profile_enable'
                             bg_upd_profile_en = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][bg_upd_profile_en_name]
                             vector = (int(bg_upd_profile_en['vector']['value'], 0) | (1 << ctable.token_refresh_profile))
                             bg_upd_profile_en['vector']['value'] = "0x%x" % (vector)
+                            bg_upd_profile_en['_modified'] = True
 
                     elif mem_type == 'tcam':
                         cap_name = 'cap_pict'

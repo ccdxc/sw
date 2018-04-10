@@ -33,6 +33,7 @@ capri_model = {
         'raw_pc_size' : 28, # size of mpu_pc provided to raw table
         'collision_index_sz' : 32,
         'te_consts' : {
+            'base_clock_freq'  : (833000000),
             # hardware constants
             'no_load_byte' : '0x3FF',
             'no_load_bit' : '0x1FFF',
