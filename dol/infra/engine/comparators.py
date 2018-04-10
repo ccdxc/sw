@@ -16,7 +16,7 @@ gl_ignore_fields = {
 #    'IP'    : [ 'chksum' ],
 #    'TCP'   : [ 'chksum' ],
 #    'UDP'   : [ 'chksum' ],
-    'ICMP'  : [ 'chksum' ],
+#    'ICMP'  : [ 'chksum' ],
     'CRC'   : [ 'crc' ],
     'ESP'   : [ 'data'],
 }

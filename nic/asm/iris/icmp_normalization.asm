@@ -25,7 +25,6 @@ lb_icmp_redirect_msg:
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_ICMP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
 
-
 lb_icmp_code_removal:
   nop.c2.e
   seq         c3, r1, 0 // Echo Reply
@@ -39,4 +38,4 @@ lb_icmp_code_removal:
   phvwr.c3    p.capri_intrinsic_drop, 1
   // Edit case is the default option, Make code as zero.
   phvwrmi.e   p.icmp_typeCode, 0x0, 0xff
-  nop
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM], TRUE

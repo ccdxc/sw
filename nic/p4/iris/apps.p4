@@ -701,7 +701,8 @@ action f_p4plus_to_p4_2() {
             bit_or(scratch_metadata.size8, scratch_metadata.size8,
                    (1 << CHECKSUM_CTL_ICRC));
         } else {
-            if ((udp.valid == TRUE) or (tcp.valid == TRUE)) {
+            if ((udp.valid == TRUE) or (tcp.valid == TRUE) or
+                (icmp.valid == TRUE)) {
                 bit_or(scratch_metadata.size8, scratch_metadata.size8,
                         (1 << CHECKSUM_CTL_L4_CHECKSUM));
             }

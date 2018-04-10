@@ -1994,13 +1994,13 @@ parser parse_inner_ethernet {
 }
 
 field_list complete_checksum_ipv4_list {
-   ipv4.srcAddr;
-   payload;
+    ipv4.srcAddr;
+    payload;
 }
 
 field_list complete_checksum_ipv6_list {
-   ipv6.srcAddr;
-   payload;
+    ipv6.srcAddr;
+    payload;
 }
 
 @pragma checksum update_len capri_deparser_len.udp_opt_l2_checksum_len
@@ -2008,46 +2008,74 @@ field_list complete_checksum_ipv6_list {
 //as one is used in packet towards uplink and other in packet towards host.
 @pragma checksum update_share udp_opt_ocs.chksum, p4_to_p4plus_classic_nic.csum
 field_list_calculation complete_checksum_ipv4 {
-   input {
-       complete_checksum_ipv4_list;
-   }
-   algorithm : l2_complete_csum; // Used to indicate L2 Complete Csum
-   output_width : 16;
+    input {
+        complete_checksum_ipv4_list;
+    }
+    algorithm : l2_complete_csum; // Used to indicate L2 Complete Csum
+    output_width : 16;
 }
-
 
 @pragma checksum update_len capri_deparser_len.udp_opt_l2_checksum_len
 //Share checksum engine among udp-option csum computation and l2_checksum
 //as one is used in packet towards uplink and other in packet towards host.
 @pragma checksum update_share udp_opt_ocs.chksum, p4_to_p4plus_classic_nic.csum
 field_list_calculation complete_checksum_ipv6 {
-   input {
-       complete_checksum_ipv6_list;
-   }
-   algorithm : l2_complete_csum; // Used to indicate L2 Complete Csum
-   output_width : 16;
+    input {
+        complete_checksum_ipv6_list;
+    }
+    algorithm : l2_complete_csum; // Used to indicate L2 Complete Csum
+    output_width : 16;
 }
 
 calculated_field p4_to_p4plus_classic_nic.csum {
-   update complete_checksum_ipv4 if (valid(ipv4));
-   update complete_checksum_ipv6 if (valid(ipv6));
+    update complete_checksum_ipv4 if (valid(ipv4));
+    update complete_checksum_ipv6 if (valid(ipv6));
 }
 
 field_list icmp_checksum_list {
-   payload;
+#if 0
+    icmp.typeCode;
+    icmp.hdrChecksum;
+    icmp_echo.identifier;
+    icmp_echo.seqNum;
+#endif
+    payload;
 }
 
 //Instead of allocating another 16b phv to store icmp payload len, reuse l4_payload_len phv bits.
 @pragma checksum update_len capri_deparser_len.inner_l4_payload_len
 @pragma checksum update_share icmp.hdrChecksum inner_udp.checksum
 field_list_calculation icmp_checksum {
-   input {
-       icmp_checksum_list;
-   }
-   algorithm : csum16;
-   output_width : 16;
+    input {
+        icmp_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
 }
 
 calculated_field icmp.hdrChecksum {
-   update icmp_checksum if (valid(icmp));
+    update icmp_checksum if (valid(icmp));
 }
+
+#if 0
+field_list icmpv6_checksum_list {
+    icmpv6.typeCode;
+    icmpv6.hdrChecksum;
+    payload;
+}
+
+//Instead of allocating another 16b phv to store icmp payload len, reuse l4_payload_len phv bits.
+@pragma checksum update_len capri_deparser_len.inner_l4_payload_len
+@pragma checksum update_share icmpv6.hdrChecksum inner_udp.checksum
+field_list_calculation icmpv6_checksum {
+    input {
+        icmpv6_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field icmpv6.hdrChecksum {
+    update icmpv6_checksum if (valid(icmpv6));
+}
+#endif

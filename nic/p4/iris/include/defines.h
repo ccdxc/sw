@@ -8,7 +8,7 @@
 #define ACT_ALLOW                      0
 #define ACT_DROP                       1
 
-#define ASM_INSTRUCTION_OFFSET_MAX     (8 * 256)
+#define ASM_INSTRUCTION_OFFSET_MAX     (64 * 256)
 
 /*****************************************************************************/
 /* Default defines for any feature disable/enable knobs                      */

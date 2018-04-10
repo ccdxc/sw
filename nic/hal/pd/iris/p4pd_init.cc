@@ -1188,47 +1188,58 @@ typedef struct compute_checksum_table_ {
     uint16_t tcp_valid        : 1;
     uint16_t udp_valid        : 1;
     uint16_t inner_udp_valid  : 1;
+    uint16_t icmp_valid       : 1;
     uint8_t  actionid;
 } compute_checksum_table_t;
 
 compute_checksum_table_t compute_checksum_table[] = {
     /*****************************************
-     v4, v6, iv4, iv6, tcp, udp, iudp, action
+     v4, v6, iv4, iv6, tcp, udp, iudp, icmp, action
      *****************************************/
-    { 0,  0,   0,   0,   0,   0,    0, COMPUTE_CHECKSUM_NOP_ID}, // app = rdma
-    { 0,  0,   0,   0,   0,   0,    0, COMPUTE_CHECKSUM_NOP_ID}, // app = tcptls
-    { 0,  0,   0,   0,   0,   0,    0, COMPUTE_CHECKSUM_NOP_ID}, // app = p4pt
-    { 1,  0,   0,   0,   1,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM1_ID},
-    { 1,  0,   0,   0,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM2_ID},
-    { 1,  0,   0,   1,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM2_ID},
-    { 1,  0,   0,   0,   0,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM3_ID},
-    { 1,  0,   1,   0,   1,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM4_ID},
-    { 1,  0,   1,   0,   0,   0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM5_ID},
-    { 1,  0,   1,   0,   0,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM6_ID},
-    { 1,  0,   1,   0,   1,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM7_ID},
-    { 1,  0,   1,   0,   0,   1,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM8_ID},
-    { 1,  0,   1,   0,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM9_ID},
-    { 1,  0,   0,   1,   1,   0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM10_ID},
-    { 1,  0,   0,   1,   0,   0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM11_ID},
-    { 1,  0,   0,   1,   1,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM12_ID},
-    { 1,  0,   0,   1,   0,   1,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM13_ID},
-    { 0,  1,   0,   0,   1,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM14_ID},
-    { 0,  1,   0,   0,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM15_ID},
-    { 0,  1,   0,   1,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM15_ID},
-    { 0,  1,   1,   0,   1,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM16_ID},
-    { 0,  1,   1,   0,   0,   0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM17_ID},
-    { 0,  1,   1,   0,   0,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM18_ID},
-    { 0,  1,   1,   0,   1,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM19_ID},
-    { 0,  1,   1,   0,   0,   1,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM20_ID},
-    { 0,  1,   1,   0,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM21_ID},
-    { 0,  1,   0,   1,   1,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM22_ID},
-    { 0,  1,   0,   1,   0,   1,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM23_ID},
-    { 0,  1,   0,   1,   1,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM24_ID},
-    { 0,  1,   0,   1,   0,   0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM25_ID},
+    { 0,  0,   0,   0,   0,   0,    0,    0, COMPUTE_CHECKSUM_NOP_ID}, // app = rdma
+    { 0,  0,   0,   0,   0,   0,    0,    0, COMPUTE_CHECKSUM_NOP_ID}, // app = tcptls
+    { 0,  0,   0,   0,   0,   0,    0,    0, COMPUTE_CHECKSUM_NOP_ID}, // app = p4pt
+    { 1,  0,   0,   0,   1,   0,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM1_ID},
+    { 1,  0,   0,   0,   0,   1,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM2_ID},
+    { 1,  0,   0,   1,   0,   1,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM2_ID},
+    { 1,  0,   0,   0,   0,   0,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM3_ID},
+    { 1,  0,   1,   0,   1,   0,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM4_ID},
+    { 1,  0,   1,   0,   0,   0,    1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM5_ID},
+    { 1,  0,   1,   0,   0,   0,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM6_ID},
+    { 1,  0,   1,   0,   1,   1,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM7_ID},
+    { 1,  0,   1,   0,   0,   1,    1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM8_ID},
+    { 1,  0,   1,   0,   0,   1,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM9_ID},
+    { 1,  0,   0,   1,   1,   0,    1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM10_ID},
+    { 1,  0,   0,   1,   0,   0,    1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM11_ID},
+    { 1,  0,   0,   1,   1,   1,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM12_ID},
+    { 1,  0,   0,   1,   0,   1,    1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM13_ID},
+    { 0,  1,   0,   0,   1,   0,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM14_ID},
+    { 0,  1,   0,   0,   0,   1,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM15_ID},
+    { 0,  1,   0,   1,   0,   1,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM15_ID},
+    { 0,  1,   1,   0,   1,   0,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM16_ID},
+    { 0,  1,   1,   0,   0,   0,    1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM17_ID},
+    { 0,  1,   1,   0,   0,   0,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM18_ID},
+    { 0,  1,   1,   0,   1,   1,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM19_ID},
+    { 0,  1,   1,   0,   0,   1,    1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM20_ID},
+    { 0,  1,   1,   0,   0,   1,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM21_ID},
+    { 0,  1,   0,   1,   1,   1,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM22_ID},
+    { 0,  1,   0,   1,   0,   1,    1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM23_ID},
+    { 0,  1,   0,   1,   1,   0,    0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM24_ID},
+    { 0,  1,   0,   1,   0,   0,    1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM25_ID},
+    { 1,  0,   1,   0,   0,   1,    0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM26_ID},
+    { 1,  0,   0,   1,   0,   1,    0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM27_ID},
+    { 1,  0,   1,   0,   0,   0,    0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM28_ID},
+    { 1,  0,   0,   1,   0,   0,    0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM29_ID},
+    { 1,  0,   0,   0,   0,   0,    0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM30_ID},
+    { 0,  1,   1,   0,   0,   1,    0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM31_ID},
+    { 0,  1,   0,   1,   0,   1,    0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM32_ID},
+    { 0,  1,   1,   0,   0,   0,    0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM33_ID},
+    { 0,  1,   0,   1,   0,   0,    0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM34_ID},
+    { 0,  1,   0,   0,   0,   0,    0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM35_ID},
 };
 
 static hal_ret_t
-p4pd_compute_checksum_init(void) 
+p4pd_compute_checksum_init(void)
 {
     uint32_t                        idx;
     compute_checksum_swkey_t        key;
@@ -1298,6 +1309,7 @@ p4pd_compute_checksum_init(void)
         key.tcp_valid = compute_checksum_table[idx].tcp_valid;
         key.udp_valid = compute_checksum_table[idx].udp_valid;
         key.inner_udp_valid = compute_checksum_table[idx].inner_udp_valid;
+        key.icmp_valid = compute_checksum_table[idx].icmp_valid;
 
         // action
         data.actionid = compute_checksum_table[idx].actionid;

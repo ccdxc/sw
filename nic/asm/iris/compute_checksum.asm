@@ -253,6 +253,92 @@ compute_checksum25:
   phvwr.e       p.inner_ipv6_udp_csum, COMPUTE_INNER_L4_CSUM
   phvwr         p.inner_udp_csum, COMPUTE_INNER_L4_CSUM
 
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum26:
+  sub           r1, k.inner_ipv4_totalLen, k.inner_ipv4_ihl, 2
+  phvwrpair     p.capri_deparser_len_l4_payload_len, k.udp_len, \
+                    p.capri_deparser_len_inner_l4_payload_len, r1
+  phvwr         p.icmp_csum, COMPUTE_INNER_L4_CSUM
+  phvwrpair.e   p.inner_ipv4_csum, COMPUTE_INNER_IP_CSUM, \
+                    p.ipv4_csum, COMPUTE_IP_CSUM
+  phvwrpair     p.udp_csum, COMPUTE_L4_CSUM, p.ipv4_udp_csum, COMPUTE_L4_CSUM
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum27:
+  phvwrpair     p.capri_deparser_len_l4_payload_len, k.udp_len, \
+                    p.capri_deparser_len_inner_l4_payload_len, \
+                    k.inner_ipv6_payloadLen
+  phvwrpair.e   p.icmp_csum, COMPUTE_INNER_L4_CSUM, \
+                    p.ipv4_csum, COMPUTE_IP_CSUM
+  phvwrpair     p.udp_csum, COMPUTE_L4_CSUM, p.ipv4_udp_csum, COMPUTE_L4_CSUM
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum28:
+  sub           r1, k.inner_ipv4_totalLen, k.inner_ipv4_ihl, 2
+  phvwr         p.capri_deparser_len_inner_l4_payload_len, r1
+  phvwrpair.e   p.inner_ipv4_csum, COMPUTE_INNER_IP_CSUM, \
+                    p.ipv4_csum, COMPUTE_IP_CSUM
+  phvwr         p.icmp_csum, COMPUTE_INNER_L4_CSUM
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum29:
+  phvwr.e       p.capri_deparser_len_inner_l4_payload_len, \
+                    k.inner_ipv6_payloadLen
+  phvwrpair     p.icmp_csum, COMPUTE_INNER_L4_CSUM, \
+                    p.ipv4_csum, COMPUTE_IP_CSUM
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum30:
+  sub           r1, k.ipv4_totalLen, k.ipv4_ihl, 2
+  phvwr.e       p.capri_deparser_len_inner_l4_payload_len, r1
+  phvwrpair     p.icmp_csum, COMPUTE_L4_CSUM, p.ipv4_csum, COMPUTE_IP_CSUM
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum31:
+  sub           r1, k.inner_ipv4_totalLen, k.inner_ipv4_ihl, 2
+  phvwrpair     p.capri_deparser_len_l4_payload_len, k.udp_len, \
+                    p.capri_deparser_len_inner_l4_payload_len, r1
+  phvwrpair.e   p.udp_csum, COMPUTE_L4_CSUM, p.ipv6_udp_csum, COMPUTE_L4_CSUM
+  phvwrpair     p.icmp_csum, COMPUTE_INNER_L4_CSUM, \
+                    p.inner_ipv4_csum, COMPUTE_INNER_IP_CSUM
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum32:
+  phvwrpair     p.capri_deparser_len_l4_payload_len, k.udp_len, \
+                    p.capri_deparser_len_inner_l4_payload_len, \
+                    k.inner_ipv6_payloadLen
+  phvwrpair.e   p.udp_csum, COMPUTE_L4_CSUM, p.ipv6_udp_csum, COMPUTE_L4_CSUM
+  phvwr         p.icmp_csum, COMPUTE_INNER_L4_CSUM
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum33:
+  sub           r1, k.inner_ipv4_totalLen, k.inner_ipv4_ihl, 2
+  phvwr.e       p.capri_deparser_len_inner_l4_payload_len, r1
+  phvwrpair     p.icmp_csum, COMPUTE_INNER_L4_CSUM, \
+                    p.inner_ipv4_csum, COMPUTE_INNER_IP_CSUM
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum34:
+  phvwr.e       p.capri_deparser_len_inner_l4_payload_len, \
+                    k.inner_ipv6_payloadLen
+  phvwr         p.icmp_csum, COMPUTE_INNER_L4_CSUM
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum35:
+  phvwr.e       p.capri_deparser_len_inner_l4_payload_len, \
+                    k.ipv6_payloadLen
+  phvwr         p.icmp_csum, COMPUTE_L4_CSUM
+
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/

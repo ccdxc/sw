@@ -166,9 +166,13 @@ def GetIsTCP(tc, obj, args=None):
 def GetIsUDP(tc, obj, args=None):
     return tc.config.flow.IsUDP()
 
+def GetIsICMP(tc, obj, args=None):
+    return tc.config.flow.IsICMP() or tc.config.flow.IsICMPV6()
 
-def GetIsTCPUDP(tc, obj, args=None):
-    return 1 if GetIsTCP(tc, obj, args) or GetIsUDP(tc, obj, args=None) else 0
+
+def GetIsTCPUDPICMP(tc, obj, args=None):
+    return 1 if GetIsTCP(tc, obj, args) or GetIsUDP(tc, obj, args=None) or \
+            GetIsICMP(tc, obj, args=None) else 0
 
 
 def InitEthTxSgDescriptor(tc, obj, args=None):

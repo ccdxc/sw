@@ -46,7 +46,8 @@ f_p4plus_to_p4_2_other_apps:
   phvwr.c1      p.control_metadata_checksum_ctl[CHECKSUM_CTL_ICRC], TRUE
   seq           c2, k.udp_valid, TRUE
   seq           c3, k.tcp_valid, TRUE
-  setcf.!c1     c1, [!c2 & !c3]
+  seq           c4, k.icmp_valid, TRUE
+  setcf.!c1     c1, [!c2 & !c3 & !c4]
   phvwr.!c1     p.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM], TRUE
 
   // remove the headers

@@ -65,6 +65,10 @@ packets:
                 chksum : 0xdead
             udp:
                 chksum : 0xdead
+            icmp:
+                chksum : 0xdead
+#           icmpv6:
+#               cksum : 0xdead
 
     - packet:
         id          : EXP_PKT # Base packet
@@ -97,7 +101,7 @@ descriptors:
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
             opcode  : callback://eth/callbacks/GetTxOpcodeCalcCsumTcpUdp
-            csum_l4 : callback://eth/callbacks/GetIsTCPUDP
+            csum_l4 : callback://eth/callbacks/GetIsTCPUDPICMP
             csum_l3 : callback://eth/callbacks/GetIsIPV4
 
     - descriptor:
