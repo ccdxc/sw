@@ -126,15 +126,15 @@ metadata dma_cmd_phv2mem_t ringentry1_dma;      // dma cmd 1
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t ci_1_dma;            // dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_mem2mem_t ringentry2_dma;      // dma cmd 3
+metadata dma_cmd_phv2mem_t ringentry2_dma;      // dma cmd 3
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t ci_2_dma;            // dma cmd 4
 @pragma dont_trim
-metadata dma_cmd_mem2mem_t ringentry3_dma;      // dma cmd 5
+metadata dma_cmd_phv2mem_t ringentry3_dma;      // dma cmd 5
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t ci_3_dma;            // dma cmd 6
 @pragma dont_trim
-metadata dma_cmd_mem2mem_t ringentry4_dma;      // dma cmd 7
+metadata dma_cmd_phv2mem_t ringentry4_dma;      // dma cmd 7
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t ci_4_dma;            // dma cmd 8
 

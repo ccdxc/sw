@@ -13,13 +13,15 @@ struct gc_tx_read_descr_addr_read_descr_addr_d d;
 .align
 gc_tx_read_rnmdr_addr:
     phvwr           p.common_phv_desc_addr, d.desc_addr
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, gc_tx_read_rnmdr_descr, d.desc_addr, TABLE_SIZE_512_BITS)
+    add             r3, d.desc_addr, NIC_DESC_ENTRY_0_OFFSET
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, gc_tx_read_rnmdr_descr, r3, TABLE_SIZE_512_BITS)
     nop.e
     nop
 
 .align
 gc_tx_read_tnmdr_addr:
     phvwr           p.common_phv_desc_addr, d.desc_addr
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, gc_tx_read_tnmdr_descr, d.desc_addr, TABLE_SIZE_512_BITS)
+    add             r3, d.desc_addr, NIC_DESC_ENTRY_0_OFFSET
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, gc_tx_read_tnmdr_descr, r3, TABLE_SIZE_512_BITS)
     nop.e
     nop
