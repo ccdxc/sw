@@ -1,6 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include <iostream>
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <string.h>
 #include "sdk/pal.hpp"
