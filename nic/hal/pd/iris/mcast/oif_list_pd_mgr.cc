@@ -88,8 +88,8 @@ hal_ret_t pd_oif_list_add_oif(pd_oif_list_add_oif_args_t *args)
         return ret;
     }
 
-    HAL_TRACE_DEBUG("Replication data add: isTnl: {}; isQid: {}; rw_idx: {}; "
-                    "tnl_idx: {}; lport : {} qtype : {} qid/vni : {}",
+    HAL_TRACE_DEBUG("Replication data add: isTnl: {}; isQid: {}:: rw_idx: {}:: "
+                    "tnl_idx: {}:: lport : {} qtype : {} qid/vni : {}",
                     data.is_tunnel, data.is_qid, data.rewrite_index,
                     data.tunnel_rewrite_index, data.lport, data.qtype,
                     data.qid_or_vnid);
@@ -135,8 +135,8 @@ hal_ret_t pd_oif_list_add_qp_oif(pd_oif_list_add_qp_oif_args_t *args)
                                 (0);
     HAL_TRACE_DEBUG("Replication to Enic: lif_id: {}", lif->lif_id);
 
-    HAL_TRACE_DEBUG("Replication data: isTnl: {}; isQid: {}; rw_idx: {}; "
-                    "tnl_idx: {}; lport : {} qtype : {} qid/vni : {}",
+    HAL_TRACE_DEBUG("Replication data: isTnl: {}:: isQid: {}:: rw_idx: {}:: "
+                    "tnl_idx: {}:: lport : {} qtype : {} qid/vni : {}",
                     data.is_tunnel, data.is_qid, data.rewrite_index,
                     data.tunnel_rewrite_index, data.lport, data.qtype,
                     data.qid_or_vnid);
@@ -163,8 +163,8 @@ hal_ret_t pd_oif_list_remove_oif(pd_oif_list_remove_oif_args_t *args)
         return ret;
     }
 
-    HAL_TRACE_DEBUG("Replication data del: isTnl: {}; isQid: {}; rw_idx: {}; "
-                    "tnl_idx: {}; lport : {} qtype : {} qid/vni : {}",
+    HAL_TRACE_DEBUG("Replication data del: isTnl: {}:: isQid: {}:: rw_idx: {}:: "
+                    "tnl_idx: {}:: lport : {} qtype : {} qid/vni : {}",
                     data.is_tunnel, data.is_qid, data.rewrite_index,
                     data.tunnel_rewrite_index, data.lport, data.qtype,
                     data.qid_or_vnid);

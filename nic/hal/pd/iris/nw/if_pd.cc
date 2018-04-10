@@ -171,7 +171,7 @@ pd_if_get (pd_if_get_args_t *args)
 // ----------------------------------------------------------------------------
 // Lif params update. For enics
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_if_lif_update(pd_if_lif_update_args_t *args)
 {
     HAL_TRACE_DEBUG("{}: if lif update", __FUNCTION__);
@@ -255,7 +255,7 @@ pd_if_make_clone (pd_if_make_clone_args_t *args)
     return ret;
 }
 //-----------------------------------------------------------------------------
-// Nwsec profile update 
+// Nwsec profile update
 //      - Triggered from vrf update
 //-----------------------------------------------------------------------------
 hal_ret_t
@@ -278,7 +278,7 @@ pd_if_nwsec_update(pd_if_nwsec_update_args_t *args)
         case intf::IF_TYPE_UPLINK_PC:
             uplink_args.l2seg = args->l2seg;
             uplink_args.intf = args->intf;
-            ret = l2seg_uplink_upd_input_properties_tbl(&uplink_args, 
+            ret = l2seg_uplink_upd_input_properties_tbl(&uplink_args,
                                                         args->nwsec_prof);
             break;
         default:
@@ -453,8 +453,8 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
                     data->tunnel_rewrite_index = tnnl_rw_idx;
                     data->is_tunnel = 1;
 
-                    HAL_TRACE_DEBUG("Replication to Tunnel: smac: {}; dmac: "
-                                            "{}; vlan: {}; sip: {}; dip: {}; vnid: {}",
+                    HAL_TRACE_DEBUG("Replication to Tunnel: smac: {}:: dmac: "
+                                            "{}:: vlan: {}:: sip: {}:: dip: {}:: vnid: {}",
                                     macaddr2str(tnnl_rw_key.mac_sa),
                                     macaddr2str(tnnl_rw_key.mac_da),
                                     tnnl_rw_key.vlan_id,
