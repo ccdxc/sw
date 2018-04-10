@@ -10,41 +10,121 @@ feature:
 
 modules:
     - module:
-        name    : IP
+        name    : RSVD_FLAGS_ALLOW
         iterate :
-            - profile    : SEC_PROF_IP_RSVD_FLAGS_ACTION_ALLOW
-              flow: filter://type=IPV4
-            - profile    : SEC_PROF_IP_RSVD_FLAGS_ACTION_DROP
-              flow: filter://type=IPV4
-            - profile    : SEC_PROF_IP_RSVD_FLAGS_ACTION_EDIT
-              flow: filter://type=IPV4
-            - profile    : SEC_PROF_IP_DF_ACTION_ALLOW
-              flow: filter://type=IPV4
-            - profile    : SEC_PROF_IP_DF_ACTION_DROP
-              flow: filter://type=IPV4
+            - profile   : SEC_PROF_IP_RSVD_FLAGS_ACTION_ALLOW
+              flow      : filter://type=IPV4
+
+    - module:
+        name    : RSVD_FLAGS_DROP
+        iterate :
+            - profile       : SEC_PROF_IP_RSVD_FLAGS_ACTION_DROP
+              flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_ip_normalization ]
+
+    - module:
+        name    : RSVD_FLAGS_EDIT
+        iterate :
+            - profile   : SEC_PROF_IP_RSVD_FLAGS_ACTION_EDIT
+              flow      : filter://type=IPV4
+
+    - module:
+        name    : DF_ACTION_ALLOW
+        iterate :
+            - profile   : SEC_PROF_IP_DF_ACTION_ALLOW
+              flow      : filter://type=IPV4
+
+    - module:
+        name    : DF_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_IP_DF_ACTION_DROP
+              flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_ip_normalization ]
+
+    - module:
+        name    : DF_ACTION_EDIT
+        iterate :
             - profile    : SEC_PROF_IP_DF_ACTION_EDIT
               flow: filter://type=IPV4
-            - profile    : SEC_PROF_IP_OPTIONS_ACTION_ALLOW
-              flow: filter://type=IPV4
-            - profile    : SEC_PROF_IP_OPTIONS_ACTION_DROP
-              flow: filter://type=IPV4
-            - profile    : SEC_PROF_IP_OPTIONS_ACTION_EDIT
-              flow: filter://type=IPV4
-            - profile    : SEC_PROF_IPV6_OPTIONS_ACTION_ALLOW
-              flow: filter://type=IPV6
-            - profile    : SEC_PROF_IPV6_OPTIONS_ACTION_DROP
-              flow: filter://type=IPV6
-            - profile    : SEC_PROF_IPV6_OPTIONS_ACTION_EDIT
-              flow: filter://type=IPV6
-            - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_ALLOW
-              flow: filter://type=IPV4
+
+    - module:
+        name    : OPTIONS_ACTION_ALLOW
+        iterate :
+            - profile   : SEC_PROF_IP_OPTIONS_ACTION_ALLOW
+              flow      : filter://type=IPV4
+
+    - module:
+        name    : OPTIONS_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_IP_OPTIONS_ACTION_DROP
+              flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_ip_normalization ]
+
+    - module:
+        name    : OPTIONS_ACTION_EDIT
+        iterate :
+            - profile   : SEC_PROF_IP_OPTIONS_ACTION_EDIT
+              flow      : filter://type=IPV4
+
+    - module:
+        name    : IPV6_OPTIONS_ACTION_ALLOW
+        iterate :
+            - profile   : SEC_PROF_IPV6_OPTIONS_ACTION_ALLOW
+              flow      : filter://type=IPV6
+
+    - module:
+        name    : IPV6_OPTIONS_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_IPV6_OPTIONS_ACTION_DROP
+              flow          : filter://type=IPV6
+              drop_stats    : True
+              drop_reasons  : [ drop_ip_normalization ]
+
+    - module:
+        name    : IPV6_OPTIONS_ACTION_EDIT
+        iterate :
+            - profile   : SEC_PROF_IPV6_OPTIONS_ACTION_EDIT
+              flow      : filter://type=IPV6
+
+    - module:
+        name    : INVALID_LEN_ACTION_ALLOW
+        iterate :
+            - profile   : SEC_PROF_IP_INVALID_LEN_ACTION_ALLOW
+              flow      : filter://type=IPV4
+
+    - module:
+        name    : INVALID_LEN_ACTION_DROP
+        iterate :
             - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_DROP
               flow: filter://type=IPV4
-            - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_EDIT
-              flow: filter://type=IPV4
-            - profile    : SEC_PROF_IPV6_INVALID_LEN_ACTION_ALLOW
-              flow: filter://type=IPV6
-            - profile    : SEC_PROF_IPV6_INVALID_LEN_ACTION_DROP
-              flow: filter://type=IPV6
-            - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_EDIT
-              flow: filter://type=IPV6
+              drop_stats    : True
+              drop_reasons  : [ drop_ip_normalization ]
+
+    - module:
+        name    : INVALID_LEN_ACTION_EDIT
+        iterate :
+            - profile   : SEC_PROF_IP_INVALID_LEN_ACTION_EDIT
+              flow      : filter://type=IPV4
+
+    - module:
+        name    : IPV6_INVALID_LEN_ACTION_ALLOW
+        iterate :
+            - profile   : SEC_PROF_IPV6_INVALID_LEN_ACTION_ALLOW
+              flow      : filter://type=IPV6
+
+    - module:
+        name    : IPV6_INVALID_LEN_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_IPV6_INVALID_LEN_ACTION_DROP
+              flow          : filter://type=IPV6
+              drop_stats    : True
+              drop_reasons  : [ drop_ip_normalization ]
+
+    - module:
+        name    : IPV6_INVALID_LEN_ACTION_EDIT 
+        iterate :
+            - profile   : SEC_PROF_IPV6_INVALID_LEN_ACTION_EDIT
+              flow      : filter://type=IPV6

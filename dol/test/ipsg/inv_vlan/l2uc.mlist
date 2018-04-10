@@ -15,6 +15,8 @@ modules:
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=False
+              #drop_stats    : True
+              #drop_reasons  : [ drop_ipsg ]
 
     - module:
         name    : IPV4_QTAG_TCP

@@ -1,0 +1,219 @@
+# For Usage details: Refer <ws>/dol/examples/sample.mlist.example
+feature:
+    id      : norm
+    sub     : stateful
+    package : test.normalization
+    module  : normalization
+    spec    : normalization.testspec
+    enable  : True
+    ignore  : False
+
+modules:
+    #- module:
+    #    name    : SYNCOOKIE_EN_ENABLE
+    #    iterate :
+    #        #- profile    : SEC_PROF_TCP_SYNCOOKIE_EN_ENABLE
+    #- module:
+    #    name    : SYNCOOKIE_EN_DISABLE
+    #    iterate :
+    #        #- profile    : SEC_PROF_TCP_SYNCOOKIE_EN_DISABLE
+    #- module:
+    #    name    : SPLIT_HS_DETECT_EN_ENABLE
+    #    iterate :
+    #        #- profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DETECT_EN_ENABLE
+    #- module:
+    #    name    : SPLIT_HS_DETECT_EN_DISABLE
+    #    iterate :
+    #        #- profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DETECT_EN_DISABLE
+    #        # program iflow in syn_rcvd and rflow in init state. Send packet with syn or ack set from responder
+    - module:
+        name    : SPLIT_HS_DROP_DISABLE
+        iterate :
+            - profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_SPLIT_HANDSHAKE_ALLOW,direction=RFLOW
+
+    - module:
+        name    : SPLIT_HS_DROP_ENABLE
+        iterate :
+            - profile       : SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=TCP,label=NORM_SPLIT_HANDSHAKE_DENY,direction=RFLOW
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_split_handshake ]
+
+    - module:
+        name    : DATA_LEN_GT_MSS_ACTN_ALLOW
+        iterate :
+            # Flow in established state, program iflow mss, send pkt gt mss
+            - profile    : SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_MSS,direction=IFLOW
+
+    - module:
+        name    : DATA_LEN_GT_MSS_ACTN_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_MSS,direction=IFLOW
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : DATA_LEN_GT_MSS_ACTN_EDIT
+        iterate :
+            - profile    : SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_MSS,direction=IFLOW
+
+    - module:
+        name    : DATA_LEN_GT_WIN_SIZE_ACTN_ALLOW
+        iterate :
+            # Flow in established state, program iflow wsize, send pkt gt wsize
+            - profile    : SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_WSIZE,direction=RFLOW
+
+    - module:
+        name    : DATA_LEN_GT_WIN_SIZE_ACTN_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_WSIZE,direction=RFLOW
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : DATA_LEN_GT_WIN_SIZE_ACTN_EDIT
+        iterate :
+            - profile    : SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_WSIZE,direction=RFLOW
+
+    - module:
+        name    : UNEXP_TSOPT_NOT_NEG_ACTN_DROP
+        iterate :
+            # Flow config - unset tcp_ts_option - timestamp not negotiated, send pkt with ts option
+            - profile       : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : UNEXP_TSOPT_NOT_NEG_ACTN_ALLOW
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+
+    - module:
+        name    : UNEXP_TSOPT_NOT_NEG_ACTN_EDIT
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+
+    - module:
+        name    : TS_NOT_PRESENT_DROP_ENABLE
+        iterate :
+            # Flow config - set tcp_ts_option, send pkt without ts option. must drop/not-drop
+            - profile       : SEC_PROF_TCP_TS_NOT_PRESENT_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=TCP,label=NORM_TS,direction=IFLOW
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : TS_NOT_PRESENT_DROP_DISABLE
+        iterate :
+            - profile    : SEC_PROF_TCP_TS_NOT_PRESENT_DROP_DISABLE
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS,direction=IFLOW
+
+    - module:
+        name    : NON_SYN_FIRST_PKT_DROP_ENABLE
+        iterate :
+            # Flow miss case - send new flow tcp pkt with syn unset. verify cpu-rx pkt
+            - profile       : SEC_PROF_TCP_NON_SYN_FIRST_PKT_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=TCP,label=NORM_TCP_NON_SYN,direction=IFLOW
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_non_syn_first_pkt ]
+
+    - module:
+        name    : NON_SYN_FIRST_PKT_DROP_DISABLE
+        iterate :
+            - profile    : SEC_PROF_TCP_NON_SYN_FIRST_PKT_DROP_DISABLE
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TCP_NON_SYN,direction=IFLOW
+
+    - module:
+        name    : UNEXP_TSOPT_NEG_ACTION_ALLOW
+        iterate :
+            # Flow config - set tcp_ts_option - timestamp negotiated, send pkt with ts option
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+    - module:
+        name    : UNEXP_TSOPT_NEG_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP,label=NORM_TS
+
+    - module:
+        name    : UNEXP_TSOPT_NEG_ACTION_EDIT
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+
+    - module:
+        name    : UNEXP_SACK_OPT_NOT_NEG_ACTN_ALLOW
+        iterate :
+            # Flow config - unset tcp_sack_option - sack_perm not negotiated, send pkt with sack option
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_SACK
+
+    - module:
+        name    : UNEXP_SACK_OPT_NOT_NEG_ACTN_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP,label=NORM_NON_SACK
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : UNEXP_SACK_OPT_NOT_NEG_ACTN_EDIT
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_SACK
+
+    - module:
+        name    : UNEXP_SACK_OPT_NEG_ACTN_ALLOW
+        iterate :
+            # Flow config - set tcp_sack_option - sack_perm negotiated, send pkt with sack option
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_SACK
+
+    - module:
+        name    : UNEXP_SACK_OPT_NEG_ACTN_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP,label=NORM_SACK
+
+    - module:
+        name    : UNEXP_SACK_OPT_NEG_ACTN_EDIT
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_SACK
+
+    - module:
+        name    : UNEXP_TSOPT_EDIT_SACK_1
+        iterate :
+            # Test cases to excerize some ASM code where we strip of some options like
+            # timestamp and have to recompute the length for various other options present
+            # and insert the NOP and EOLs as necessary.
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_SACK_1
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+
+    - module:
+        name    : UNEXP_TSOPT_EDIT_SACK_2
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_SACK_2
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+
+    - module:
+        name    : UNEXP_TSOPT_EDIT_SACK_3
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_SACK_3
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+
+    - module:
+        name    : UNEXP_TSOPT_EDIT_WS_SACK_1
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_WS_SACK_1
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS

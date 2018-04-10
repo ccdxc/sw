@@ -10,9 +10,27 @@ def Setup(infra, module):
     return
 
 def TestCaseSetup(tc):
-    iterelem = tc.module.iterator.Get()
-    tc.pvtdata.priotag = False
-    if 'priotag' in iterelem.__dict__:
-        tc.pvtdata.priotag = iterelem.priotag
+    modcbs.TestCaseSetup(tc)
     return
 
+def TestCaseTeardown(tc):
+    modcbs.TestCaseTeardown(tc)
+    return
+
+def TestCasePreTrigger(tc):
+    return modcbs.TestCasePreTrigger(tc)
+
+def TestCaseStepSetup(tc, step):
+    return modcbs.TestCaseStepSetup(tc, step)
+
+def TestCaseStepTrigger(tc, step):
+    return modcbs.TestCaseStepTrigger(tc, step)
+
+def TestCaseStepVerify(tc, step):
+    return modcbs.TestCaseStepVerify(tc, step)
+
+def TestCaseStepTeardown(tc, step):
+    return modcbs.TestCaseStepTeardown(tc, step)
+
+def TestCaseVerify(tc):
+    return modcbs.TestCaseVerify(tc)

@@ -61,7 +61,7 @@ class DropStatsVerifHelper:
         return
 
     def Init(self, tc):
-        if GlobalOptions.skipverify:
+        if GlobalOptions.skipverify or GlobalOptions.rtl:
             return
         resp = self.systemObject.GetDropStats()
         self.__parse_drop_stats_get_response(resp, pre = True)
@@ -94,6 +94,8 @@ class DropStatsVerifHelper:
         return
 
     def Verify(self, tc):
+        if GlobalOptions.skipverify or GlobalOptions.rtl:
+            return True
         resp = self.systemObject.GetDropStats()
         self.__parse_drop_stats_get_response(resp, pre = False)
         self.__prepare_expected(tc)

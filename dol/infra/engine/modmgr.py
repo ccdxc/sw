@@ -204,8 +204,8 @@ class Module(objects.FrameworkObject):
             status = 'Pass'
         
         namestr = "%s::%s" % (self.feature, self.name)
-        namestr = namestr[:48]
-        print("%-48s %-9s %6d %6d %6d" %\
+        namestr = namestr[:58]
+        print("%-58s %-9s %6d %6d %6d" %\
               (namestr, status, self.stats.passed,
                self.stats.failed, self.stats.total))
         return

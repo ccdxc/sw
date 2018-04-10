@@ -1,0 +1,305 @@
+# For Usage details: Refer <ws>/dol/examples/sample.mlist.example
+feature:
+    id      : norm
+    sub     : stateless
+    package : test.normalization
+    module  : normalization
+    spec    : normalization.testspec
+    enable  : True
+    ignore  : False
+
+modules:
+    - module:
+        name    : RSVD_FLAGS_ACTION_ALLOW
+        iterate :
+            - profile   : SEC_PROF_TCP_RSVD_FLAGS_ACTION_ALLOW
+              flow      : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : RSVD_FLAGS_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_RSVD_FLAGS_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : RSVD_FLAGS_ACTION_EDIT
+        iterate :
+            - profile   : SEC_PROF_TCP_RSVD_FLAGS_ACTION_EDIT
+              flow      : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_MSS_ACTION_ALLOW
+        iterate :
+            - profile   : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_ALLOW
+              flow      : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_MSS_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : UNEXP_MSS_ACTION_EDIT
+        iterate :
+            - profile   : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT
+              flow      : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_WIN_SCALE_ACTION_ALLOW
+        iterate :
+            - profile   : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW
+              flow      : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_WIN_SCALE_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : UNEXP_WIN_SCALE_ACTION_EDIT
+        iterate :
+            - profile   : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT
+              flow      : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_SACK_PERM_ACTION_ALLOW
+        iterate :
+            - profile   : SEC_PROF_TCP_UNEXPECTED_SACK_PERM_ACTION_ALLOW
+              flow      : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_SACK_PERM_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_UNEXPECTED_SACK_PERM_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : UNEXP_SACK_PERM_ACTION_EDIT
+        iterate :
+            - profile   : SEC_PROF_TCP_UNEXPECTED_SACK_PERM_ACTION_EDIT
+              flow      : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : URG_FLAG_NOT_SET_ACTION_ALLOW
+        iterate :
+            - profile   : SEC_PROF_TCP_URG_FLAG_NOT_SET_ACTION_ALLOW
+              flow      : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : URG_FLAG_NOT_SET_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_URG_FLAG_NOT_SET_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : URG_FLAG_NOT_SET_ACTION_EDIT
+        iterate :
+            - profile   : SEC_PROF_TCP_URG_FLAG_NOT_SET_ACTION_EDIT
+              flow      : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : URG_PTR_NOT_SET_ACTION_ALLOW
+        iterate :
+            - profile    : SEC_PROF_TCP_URG_PTR_NOT_SET_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : URG_PTR_NOT_SET_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_URG_PTR_NOT_SET_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : URG_PTR_NOT_SET_ACTION_EDIT
+        iterate :
+            - profile    : SEC_PROF_TCP_URG_PTR_NOT_SET_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : URG_PAYLOAD_MISSING_ACTION_ALLOW
+        iterate :
+            - profile    : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : URG_PAYLOAD_MISSING_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : URG_PAYLOAD_MISSING_ACTION_EDIT
+        iterate :
+            - profile    : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : RST_WITH_DATA_ACTION_ALLOW
+        iterate :
+            - profile    : SEC_PROF_TCP_RST_WITH_DATA_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : RST_WITH_DATA_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_RST_WITH_DATA_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : RST_WITH_DATA_ACTION_EDIT
+        iterate :
+            - profile    : SEC_PROF_TCP_RST_WITH_DATA_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : INVALID_FLAGS_1_DROP_ENABLE
+        iterate :
+            - profile       : SEC_PROF_TCP_INVALID_FLAGS_1_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : INVALID_FLAGS_2_DROP_ENABLE
+        iterate :
+            - profile       : SEC_PROF_TCP_INVALID_FLAGS_2_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : INVALID_FLAGS_3_DROP_ENABLE
+        iterate :
+            - profile    : SEC_PROF_TCP_INVALID_FLAGS_3_DROP_ENABLE
+              flow: filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : INVALID_FLAGS_4_DROP_ENABLE
+        iterate :
+            - profile       : SEC_PROF_TCP_INVALID_FLAGS_4_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : INVALID_FLAGS_1_DROP_DISABLE
+        iterate :
+            - profile       : SEC_PROF_TCP_INVALID_FLAGS_1_DROP_DISABLE
+              flow          : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : INVALID_FLAGS_2_DROP_DISABLE
+        iterate :
+            - profile       : SEC_PROF_TCP_INVALID_FLAGS_2_DROP_DISABLE
+              flow          : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : INVALID_FLAGS_3_DROP_DISABLE
+        iterate :
+            - profile       : SEC_PROF_TCP_INVALID_FLAGS_3_DROP_DISABLE
+              flow          : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : INVALID_FLAGS_4_DROP_DISABLE
+        iterate :
+            - profile       : SEC_PROF_TCP_INVALID_FLAGS_4_DROP_DISABLE
+              flow          : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : FLAGS_NONSYN_NOACK_DROP_ENABLE
+        iterate :
+            - profile    : SEC_PROF_TCP_FLAGS_NONSYN_NOACK_DROP_ENABLE
+              flow: filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : FLAGS_NONSYN_NOACK_DROP_DISABLE
+        iterate :
+            - profile       : SEC_PROF_TCP_FLAGS_NONSYN_NOACK_DROP_DISABLE
+              flow          : filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_ECHO_TS_ACTION_ALLOW
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_ECHO_TS_ACTION_DROP
+        iterate :
+            - profile       : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_DROP
+              flow          : filter://type=IPV4,proto=TCP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_normalization ]
+
+    - module:
+        name    : UNEXP_ECHO_TS_ACTION_EDIT
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_WIN_SCALE_ACTION_EDIT_SACK_4
+        iterate :
+            # Test cases to excerize some ASM code where we strip of some options like
+            # Window Scale and have to recompute the length for various other options present
+            # and insert the NOP and EOLs as necessary.
+            - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_SACK_4
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_WIN_SCALE_ACTION_EDIT_MSS_SACK_PERM
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_MSS_SACK_PERM
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_MSS_ACTION_EDIT_WIN_SCALE_SACK_PERM
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT_WIN_SCALE_SACK_PERM
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : UNEXP_MSS_ACTION_EDIT_WIN_SCALE_ONLY
+        iterate :
+            - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT_WIN_SCALE_ONLY
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : NORMALIZE_MSS_WITH_MSS_OPTION
+        iterate :
+            - profile    : SEC_PROF_TCP_NORMALIZE_MSS_WITH_MSS_OPTION
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : NORMALIZE_MSS_WITHOUT_MSS_OPTION
+        iterate :
+            - profile    : SEC_PROF_TCP_NORMALIZE_MSS_WITHOUT_MSS_OPTION
+              flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : NORMALIZE_MSS_WITH_WS_ONLY_OPTION
+        iterate :
+            - profile    : SEC_PROF_TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION
+              flow: filter://type=IPV4,proto=TCP

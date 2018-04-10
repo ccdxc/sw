@@ -18,8 +18,10 @@ modules:
     - module:
         name    : ECHO_REQ_DROP
         iterate :
-            - profile    : SEC_PROF_ICMP_INVALID_CODE_ECHO_REQ_ACTION_DROP
-              flow: filter://type=IPV4,proto=ICMP
+            - profile       : SEC_PROF_ICMP_INVALID_CODE_ECHO_REQ_ACTION_DROP
+              flow          : filter://type=IPV4,proto=ICMP
+              drop_stats    : True
+              drop_reasons  : [ drop_icmp_normalization ]
 
     - module:
         name    : ECHO_REQ_EDIT
@@ -36,8 +38,10 @@ modules:
     - module:
         name    : ECHO_RESP_DROP
         iterate :
-            - profile    : SEC_PROF_ICMP_INVALID_CODE_ECHO_REP_ACTION_DROP
-              flow: filter://type=IPV4,proto=ICMP
+            - profile       : SEC_PROF_ICMP_INVALID_CODE_ECHO_REP_ACTION_DROP
+              flow          : filter://type=IPV4,proto=ICMP
+              drop_stats    : True
+              drop_reasons  : [ drop_icmp_normalization ]
 
     - module:
         name    : ECHO_RESP_EDIT
@@ -48,8 +52,10 @@ modules:
     - module:
         name    : DEPR_MSGS_TYPE4_DROP_ENABLE
         iterate :
-            - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE4_DROP_ENABLE
-              flow: filter://type=IPV4,proto=ICMP
+            - profile       : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE4_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=ICMP
+              drop_stats    : True
+              drop_reasons  : [ drop_icmp_normalization ]
 
     - module:
         name    : DEPR_MSGS_TYPE4_DROP_DISABLE
@@ -60,8 +66,10 @@ modules:
     - module:
         name    : DEPR_MSGS_TYPE6_DROP_ENABLE
         iterate :
-            - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE6_DROP_ENABLE
-              flow: filter://type=IPV4,proto=ICMP
+            - profile       : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE6_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=ICMP
+              drop_stats    : True
+              drop_reasons  : [ drop_icmp_normalization ]
 
     - module:
         name    : DEPR_MSGS_TYPE6_DROP_DISABLE
@@ -72,8 +80,10 @@ modules:
     - module:
         name    : DEPR_MSGS_TYPE15_DROP_ENABLE
         iterate :
-            - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE15_DROP_ENABLE
-              flow: filter://type=IPV4,proto=ICMP
+            - profile       : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE15_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=ICMP
+              drop_stats    : True
+              drop_reasons  : [ drop_icmp_normalization ]
 
     - module:
         name    : DEPR_MSGS_TYPE15_DROP_DISABLE
@@ -84,8 +94,10 @@ modules:
     - module:
         name    : DEPR_MSGS_TYPE39_DROP_ENABLE
         iterate :
-            - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE39_DROP_ENABLE
-              flow: filter://type=IPV4,proto=ICMP
+            - profile       : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE39_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=ICMP
+              drop_stats    : True
+              drop_reasons  : [ drop_icmp_normalization ]
 
     - module:
         name    : DEPR_MSGS_TYPE39_DROP_DISABLE
@@ -96,8 +108,10 @@ modules:
     - module:
         name    : DEPR_MSGS_TYPE27_DROP_ENABLE
         iterate :
-            - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE27_DROP_ENABLE
-              flow: filter://type=IPV4,proto=ICMP
+            - profile       : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE27_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=ICMP
+              drop_stats    : True
+              drop_reasons  : [ drop_icmp_normalization ]
 
     - module:
         name    : DEPR_MSGS_TYPE27_DROP_DISABLE
@@ -108,8 +122,10 @@ modules:
     - module:
         name    : REDIRECT_MSG_DROP_ENABLE
         iterate :
-            - profile    : SEC_PROF_ICMP_REDIRECT_MSG_DROP_ENABLE
-              flow: filter://type=IPV4,proto=ICMP
+            - profile       : SEC_PROF_ICMP_REDIRECT_MSG_DROP_ENABLE
+              flow          : filter://type=IPV4,proto=ICMP
+              drop_stats    : True
+              drop_reasons  : [ drop_icmp_normalization ]
 
     - module:
         name    : REDIRECT_MSG_DROP_DISABLE
