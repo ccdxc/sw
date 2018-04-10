@@ -176,7 +176,6 @@ int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
 		},
 	};
 	unsigned int i;
-	int err;
 
 	if (indir)
 		for (i = 0; i < RSS_IND_TBL_SIZE; i++)
@@ -184,13 +183,7 @@ int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
 
 	netdev_info(lif->netdev, "rss_ind_tbl_set\n");
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		return err;
-
-	wait_for_completion(&ctx.work);
-
-	return ionic_adminq_check_err(lif, &ctx);
+	return ionic_adminq_post_wait(lif, &ctx);
 }
 
 int ionic_rss_hash_key_set(struct lif *lif, const u8 *key)
@@ -210,7 +203,6 @@ int ionic_rss_hash_key_set(struct lif *lif, const u8 *key)
 			       | RSS_TYPE_IPV6_UDP_EX,
 		},
 	};
-	int err;
 
 	memcpy(lif->rss_hash_key, key, RSS_HASH_KEY_SIZE);
 
@@ -219,13 +211,7 @@ int ionic_rss_hash_key_set(struct lif *lif, const u8 *key)
 
 	netdev_info(lif->netdev, "rss_hash_key_set\n");
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		return err;
-
-	wait_for_completion(&ctx.work);
-
-	return ionic_adminq_check_err(lif, &ctx);
+	return ionic_adminq_post_wait(lif, &ctx);
 }
 
 static int ionic_set_rxfh(struct net_device *netdev, const u32 *indir,

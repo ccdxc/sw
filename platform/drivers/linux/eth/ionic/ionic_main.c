@@ -77,6 +77,19 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 	return 0;
 }
 
+int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
+{
+	int err;
+
+	err = ionic_api_adminq_post(lif, ctx);
+	if (err)
+		return err;
+
+	wait_for_completion(&ctx->work);
+
+	return ionic_adminq_check_err(lif, ctx);
+}
+
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	       void *cb_arg)
 {

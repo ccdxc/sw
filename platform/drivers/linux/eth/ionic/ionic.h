@@ -50,6 +50,7 @@ struct ionic {
 };
 
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx);
+int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	       void *cb_arg);
 int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);

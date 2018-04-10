@@ -45,13 +45,7 @@ static int ionic_qcq_enable(struct qcq *qcq)
 	netdev_info(lif->netdev, "q_enable.qid %d\n", ctx.cmd.q_enable.qid);
 	netdev_info(lif->netdev, "q_enable.qtype %d\n", ctx.cmd.q_enable.qtype);
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		return err;
-
-	wait_for_completion(&ctx.work);
-
-	err = ionic_adminq_check_err(lif, &ctx);
+	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
 
@@ -99,7 +93,6 @@ static int ionic_qcq_disable(struct qcq *qcq)
 			.qtype = q->qtype,
 		},
 	};
-	int err;
 
 	netdev_info(lif->netdev, "q_disable.qid %d\n", ctx.cmd.q_disable.qid);
 	netdev_info(lif->netdev, "q_disable.qtype %d\n",
@@ -109,19 +102,7 @@ static int ionic_qcq_disable(struct qcq *qcq)
 	synchronize_irq(qcq->intr.vector);
 	napi_disable(&qcq->napi);
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		return err;
-
-	wait_for_completion(&ctx.work);
-
-	err = ionic_adminq_check_err(lif, &ctx);
-	if (err)
-		return err;
-
-	// XXX cleanup stale work on queue?
-
-	return 0;
+	return ionic_adminq_post_wait(lif, &ctx);
 }
 
 static int ionic_stop(struct net_device *netdev)
@@ -197,24 +178,13 @@ static int _ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 			.match = RX_FILTER_MATCH_MAC,
 		},
 	};
-	int err;
 
 	memcpy(ctx.cmd.rx_filter.addr, addr, ETH_ALEN);
 
 	netdev_info(lif->netdev, "rx_filter %s %pM\n",
 		   add ? "add" : "del", addr);
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		return err;
-
-	wait_for_completion(&ctx.work);
-
-	err = ionic_adminq_check_err(lif, &ctx);
-	if (err)
-		return err;
-
-	return 0;
+	return ionic_adminq_post_wait(lif, &ctx);
 }
 
 struct lif_addr_work {
@@ -289,14 +259,10 @@ static void _ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
 	if (rx_mode & RX_MODE_F_ALLMULTI)
 		netdev_info(lif->netdev, "rx_mode RX_MODE_F_ALLMULTI\n");
 
-	err = ionic_api_adminq_post(lif, &ctx);
+	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err) {
 		// XXX handle err
 	}
-
-	wait_for_completion(&ctx.work);
-
-	ionic_adminq_check_err(lif, &ctx);
 }
 
 struct rx_mode_work {
@@ -383,13 +349,7 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 	if (netif_running(netdev))
 		ionic_stop(netdev);
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		return err;
-
-	wait_for_completion(&ctx.work);
-
-	err = ionic_adminq_check_err(lif, &ctx);
+	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
 
@@ -422,17 +382,10 @@ static int ionic_vlan_rx_filter(struct net_device *netdev, bool add,
 			.vlan = vid,
 		},
 	};
-	int err;
 
 	netdev_info(netdev, "rx_filter %s VLAN %d\n", add ? "add" : "del", vid);
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		return err;
-
-	wait_for_completion(&ctx.work);
-
-	return ionic_adminq_check_err(lif, &ctx);
+	return ionic_adminq_post_wait(lif, &ctx);
 }
 
 static int ionic_vlan_rx_add_vid(struct net_device *netdev,
@@ -792,13 +745,7 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 	netdev_info(netdev, "stats_dump START ver %d addr 0x%llx\n", ver,
 		    lif->stats_dump_pa);
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		goto err_out_free;
-
-	wait_for_completion(&ctx.work);
-
-	err = ionic_adminq_check_err(lif, &ctx);
+	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		goto err_out_free;
 
@@ -824,17 +771,11 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 
 	netdev_info(netdev, "stats_dump STOP\n");
 
-	err = ionic_api_adminq_post(lif, &ctx);
+	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err) {
 		netdev_err(netdev, "stats_dump cmd failed %d\n", err);
 		return;
 	}
-
-	wait_for_completion(&ctx.work);
-
-	err = ionic_adminq_check_err(lif, &ctx);
-	if (err)
-		return;
 
 	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
 			  lif->stats_dump_pa);
@@ -1017,13 +958,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 	netdev_info(lif->netdev, "txq_init.ring_size %d\n",
 		   ctx.cmd.txq_init.ring_size);
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		return err;
-
-	wait_for_completion(&ctx.work);
-
-	err = ionic_adminq_check_err(lif, &ctx);
+	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
 
@@ -1091,13 +1026,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 	netdev_info(lif->netdev, "rxq_init.ring_size %d\n",
 		   ctx.cmd.rxq_init.ring_size);
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		return err;
-
-	wait_for_completion(&ctx.work);
-
-	err = ionic_adminq_check_err(lif, &ctx);
+	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
 
@@ -1148,13 +1077,7 @@ static int ionic_station_set(struct lif *lif)
 	};
 	int err;
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		return err;
-
-	wait_for_completion(&ctx.work);
-
-	err = ionic_adminq_check_err(lif, &ctx);
+	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
 
@@ -1261,13 +1184,7 @@ static int ionic_get_features(struct lif *lif)
 	};
 	int err;
 
-	err = ionic_api_adminq_post(lif, &ctx);
-	if (err)
-		return err;
-
-	wait_for_completion(&ctx.work);
-
-	err = ionic_adminq_check_err(lif, &ctx);
+	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
 
