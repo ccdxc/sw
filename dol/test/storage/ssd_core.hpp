@@ -84,11 +84,16 @@ class NvmeSsdCore {
   bool intr_enabled_ = false;
   dp_mem_t *subq_;
   dp_mem_t *compq_;
+  // Pads are to lineup host_mem access at 64 bytes for RTL simulation checks
   struct ctrl_data {
     uint32_t subq_pi;
+    uint8_t pad0[60];
     uint32_t subq_ci;
+    uint8_t pad1[60];
     uint32_t compq_pi;
+    uint8_t pad2[60];
     uint32_t compq_ci;
+    uint8_t pad3[60];
   } *ctrl_;
 }; 
 

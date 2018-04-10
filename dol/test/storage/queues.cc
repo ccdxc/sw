@@ -375,11 +375,11 @@ int resources_init() {
   // the pndx to a valid host address. The SSD emulation layer implements this 
   // for the E2E cases.
   pndx_data_va = alloc_host_mem(kMinHostMemAllocSize);
-  memset(pndx_data_va, 0, kMinHostMemAllocSize);
   if (pndx_data_va == nullptr) {
     printf("Unable to allocate host memory for queue\n");
     return -1;
   }
+  memset(pndx_data_va, 0, kMinHostMemAllocSize);
   pndx_data_pa = host_mem_v2p(pndx_data_va);
 
   return 0;
