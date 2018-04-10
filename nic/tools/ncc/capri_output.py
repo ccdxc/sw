@@ -2502,10 +2502,15 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             hv_bits[hv_byte] = (1 << (7 - boff))
 
     if nxt_cs.is_end:
-        max_hv_bit_idx = 0 # Use last bit in BE order for payload len hv_en
+        # phv_hv_bits are between 384(hv_location)-511
+        hv_location = parser.be.hw_model['parser']['hv_location']
+        max_hv_bit_idx = hv_location # Use last bit in BE order for payload len hv_en
         hv_byte = max_hv_bit_idx / 8
         boff = max_hv_bit_idx % 8
-        hv_bits[hv_byte] = (1 << (7 - boff))
+        if hv_byte in hv_bits:
+            hv_bits[hv_byte] |= (1 << (7 - boff))
+        else:
+            hv_bits[hv_byte] = (1 << (7 - boff))
 
     mid = 0
     max_mid = len(sram['meta_inst'])

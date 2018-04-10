@@ -2002,7 +2002,6 @@ class capri_parser:
     def assign_hv_bits(self):
         # this function is changed to just follow the hv allocation information created
         # while building each flit. This now only replaces the hv_bits in flit0 with actual names
-        # hdr_hv_bit store relative index within the hv_bits (since parser needs it that way)
         hv_location = self.be.hw_model['parser']['hv_location']
         max_hv_bits = self.be.hw_model['parser']['max_hv_bits']
 
