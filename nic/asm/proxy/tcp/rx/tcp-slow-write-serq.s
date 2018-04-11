@@ -144,6 +144,10 @@ slow_flow_write_serq_drop:
     b.!c1       slow_flow_write_serq_process_done
     nop
     phvwri.c1   p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
+    seq         c2, k.to_s6_payload_len, 0
+    setcf       c3, [c1 & c2]
+    b.c3        dma_slow_cmd_descr
+    nop
     b.c1        dma_slow_cmd_data_skip
     nop
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(rx2tx_or_cpu_hdr_dma_dma_cmd_type) / 16)
