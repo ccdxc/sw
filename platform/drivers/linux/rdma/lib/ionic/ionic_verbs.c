@@ -122,10 +122,23 @@ static uint32_t ionic_cqe_src_qpn(struct cqwqe_be_t *cqe)
 	return ((uint32_t)cqe->src_qp_hi << 16) | be16toh(cqe->src_qp_lo);
 }
 
-static int ionic_poll_recv(struct ionic_qp *qp, struct ibv_wc *wc,
+static int ionic_poll_recv(struct ionic_qp *cqe_qp, struct ibv_wc *wc,
 			   struct cqwqe_be_t *cqe)
 {
+	struct ionic_qp *qp = NULL;
 	struct ionic_rq_meta *meta;
+
+	if (cqe_qp->has_rq) {
+		qp = cqe_qp;
+	} else {
+		if (unlikely(cqe_qp->is_srq))
+			return -EIO;
+
+		if (unlikely(!cqe_qp->vqp.qp.srq))
+			return -EIO;
+
+		qp = to_ionic_srq(cqe_qp->vqp.qp.srq);
+	}
 
 	/* there had better be something in the recv queue to complete */
 	if (ionic_queue_empty(&qp->rq))
@@ -139,7 +152,7 @@ static int ionic_poll_recv(struct ionic_qp *qp, struct ibv_wc *wc,
 	wc->vendor_err = cqe->status;
 
 	wc->wr_id = cqe->id.wrid;
-	wc->qp_num = qp->qpid;
+	wc->qp_num = cqe_qp->qpid;
 
 	if (wc->status != IBV_WC_SUCCESS)
 		goto out;
