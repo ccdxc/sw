@@ -1131,7 +1131,7 @@ static void ionic_post_hbm(struct ionic_ctx *ctx, struct ionic_qp *qp)
 		pos = (pos + 1) & mask;
 
 		ionic_dbell_ring(&ctx->dbpage[ctx->sq_qtype],
-				 ionic_queue_dbell_val(&qp->sq));
+				 qp->sq.dbell | pos);
 	}
 
 	qp->sq_hbm_prod = end;
