@@ -485,7 +485,7 @@ static int ionic_alloc_queues(struct ionic_ctx *ctx, struct ionic_qp *qp,
 	uint16_t min_depth, min_stride;
 	int rc;
 
-	if (ionic_qp_has_sq(qp)) {
+	if (qp->has_sq) {
 		min_depth = cap->max_send_wr;
 		min_stride = ionic_get_sqe_size(cap->max_send_sge,
 						cap->max_inline_data);
@@ -508,7 +508,7 @@ static int ionic_alloc_queues(struct ionic_ctx *ctx, struct ionic_qp *qp,
 		pthread_spin_init(&qp->sq_lock, PTHREAD_PROCESS_PRIVATE);
 	}
 
-	if (ionic_qp_has_rq(qp)) {
+	if (qp->has_rq) {
 		min_depth = cap->max_recv_wr;
 		min_stride = ionic_get_rqe_size(cap->max_recv_sge);
 
@@ -532,7 +532,7 @@ static int ionic_alloc_queues(struct ionic_ctx *ctx, struct ionic_qp *qp,
 err_rq_meta:
 	ionic_queue_destroy(&qp->rq);
 err_rq:
-	if (ionic_qp_has_sq(qp)) {
+	if (qp->has_sq) {
 		pthread_spin_destroy(&qp->sq_lock);
 		free(qp->sq_meta);
 err_sq_meta:
@@ -544,13 +544,13 @@ err_sq:
 
 static void ionic_free_queues(struct ionic_qp *qp)
 {
-	if (ionic_qp_has_rq(qp)) {
+	if (qp->has_rq) {
 		pthread_spin_destroy(&qp->rq_lock);
 		free(qp->rq_meta);
 		ionic_queue_destroy(&qp->rq);
 	}
 
-	if (ionic_qp_has_sq(qp)) {
+	if (qp->has_sq) {
 		pthread_spin_destroy(&qp->sq_lock);
 		free(qp->sq_meta);
 		ionic_queue_destroy(&qp->sq);
@@ -578,6 +578,13 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 
 	qp->vqp.qp.qp_type = ex->qp_type;
 	qp->vqp.qp.srq = ex->srq;
+
+	qp->has_sq = ex->qp_type != IBV_QPT_XRC_RECV;
+
+	qp->has_rq = !ex->srq &&
+		ex->qp_type != IBV_QPT_XRC_SEND &&
+		ex->qp_type != IBV_QPT_XRC_RECV;
+
 	qp->is_srq = false;
 
 	rc = ionic_alloc_queues(ctx, qp, &ex->cap);
@@ -1284,7 +1291,11 @@ static struct ibv_srq *ionic_create_srq_ex(struct ibv_context *ibctx,
 		goto err_qp;
 	}
 
+	qp->has_sq = false;
+	qp->has_rq = true;
 	qp->is_srq = true;
+
+	qp->sig_all = false;
 
 	rc = ionic_alloc_queues(ctx, qp, &cap);
 	if (rc)
