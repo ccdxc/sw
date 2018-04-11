@@ -30,13 +30,13 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata *action_data)
     sdk_ret = session->update(id, action_data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-MIRROR-SESSION::{}: programming sesion {} failed ({})", 
+        HAL_TRACE_ERR("{}: programming sesion {} failed ({})",
                 __FUNCTION__, id, ret);
     } else {
         p4_err =  p4pd_table_ds_decoded_string_get(P4TBL_ID_MIRROR, 0, NULL, NULL,
                 action_data, buff, sizeof(buff));
         HAL_ASSERT(p4_err == P4PD_SUCCESS);
-        HAL_TRACE_DEBUG("PD-MIRROR-SESSION::{}: programmed session {}: {}",
+        HAL_TRACE_DEBUG("{}: programmed session {}: {}",
                 __FUNCTION__, id, buff);
     }
     return ret;
@@ -51,11 +51,11 @@ pd_mirror_session_create(pd_mirror_session_create_args_t *args)
     hal::pd::pd_tunnelif_get_rw_idx_args_t    tif_args = { 0 };
 
     if ((args == NULL) || (args->session == NULL)) {
-        HAL_TRACE_ERR("PD-MIRROR-SESSION:: NULL argument");
+        HAL_TRACE_ERR(" NULL argument");
         return HAL_RET_INVALID_ARG;
     }
 
-    HAL_TRACE_DEBUG("PD-MIRROR-SESSION::{}: Create call for session {}",
+    HAL_TRACE_DEBUG("{}: Create call for session {}",
             __FUNCTION__, args->session->id);
 
     // Add to a PD datastructure instead of stack.
@@ -100,10 +100,10 @@ pd_mirror_session_create(pd_mirror_session_create_args_t *args)
             break;
         }
         default:
-            HAL_TRACE_ERR("PD-MIRROR-SESSION:: unknown session type {}", args->session->type);
+            HAL_TRACE_ERR(" unknown session type {}", args->session->type);
             return HAL_RET_INVALID_ARG;
     }
-    
+
     return pd_mirror_update_hw(args->session->id, &action_data);
 }
 
@@ -112,7 +112,7 @@ pd_mirror_session_delete(pd_mirror_session_delete_args_t *args)
 {
     mirror_actiondata action_data;
     if ((args == NULL) || (args->session == NULL)) {
-        HAL_TRACE_ERR("PD-MIRROR-SESSION:: NULL argument");
+        HAL_TRACE_ERR("NULL argument");
         return HAL_RET_INVALID_ARG;
     }
     memset(&action_data, 0, sizeof(mirror_actiondata));
@@ -127,13 +127,13 @@ pd_mirror_session_get(pd_mirror_session_get_args_t *args)
 {
     mirror_actiondata action_data;
     if ((args == NULL) || (args->session == NULL)) {
-        HAL_TRACE_ERR("PD-MIRROR-SESSION:: NULL argument");
+        HAL_TRACE_ERR("NULL argument");
         return HAL_RET_INVALID_ARG;
     }
     memset(&action_data, 0, sizeof(mirror_actiondata));
     HAL_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
-   
-    p4pd_error_t pdret; 
+
+    p4pd_error_t pdret;
     pdret = p4pd_entry_read(P4TBL_ID_MIRROR, args->session->id, NULL, NULL, (void *)&action_data);
     if (pdret == P4PD_SUCCESS) {
         switch (action_data.actionid) {
@@ -149,7 +149,7 @@ pd_mirror_session_get(pd_mirror_session_get_args_t *args)
                 args->session->type = MIRROR_DEST_ERSPAN;
                 args->session->truncate_len = action_data.mirror_action_u.mirror_erspan_mirror.truncate_len;
                 // Get tunnel if ID - TBD
-                //args->session->mirror_destination_u.r_span_dest.tunnel_if_id = 
+                //args->session->mirror_destination_u.r_span_dest.tunnel_if_id =
             case MIRROR_NOP_ID:
                 args->session->type = MIRROR_DEST_NONE;
             default:
@@ -170,19 +170,19 @@ pd_collector_create(pd_collector_create_args_t *c_args)
 {
     collector_config_t *cfg = c_args->cfg;
     pd_l2seg_get_fromcpu_vlanid_args_t args;
-    HAL_TRACE_DEBUG("PD-ExportControl:{}: ExportID {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("{}: ExportID {}", __FUNCTION__,
     cfg->exporter_id);
     // Id is less than max size allows.
     if (cfg->exporter_id >= (IPFIX_HBM_MEMSIZE/IPFIX_BUFSIZE)) {
-        HAL_TRACE_ERR("PD-COLLECTOR-Create:: invalid Id {}", cfg->exporter_id );
-        return HAL_RET_INVALID_ARG; 
+        HAL_TRACE_ERR(" invalid Id {}", cfg->exporter_id );
+        return HAL_RET_INVALID_ARG;
     }
 
     telemetry_export_dest *d = _export_destinations[cfg->exporter_id];
     if (d != NULL) {
-        HAL_TRACE_ERR("PD-COLLECTOR-Create:: Already exists Id {}", cfg->exporter_id );
-        return HAL_RET_INVALID_ARG; 
-    }    
+        HAL_TRACE_ERR(" Already exists Id {}", cfg->exporter_id );
+        return HAL_RET_INVALID_ARG;
+    }
     d = new(telemetry_export_dest);
     _export_destinations[cfg->exporter_id] = d;
     d->init(cfg->exporter_id);
@@ -191,10 +191,10 @@ pd_collector_create(pd_collector_create_args_t *c_args)
     args.vid = &cfg->vlan;
     // if (pd_l2seg_get_fromcpu_vlanid(cfg->l2seg, &cfg->vlan) != HAL_RET_OK)
     if (hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID, (void *)&args) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("PD-Collector:{}: Could not retrieve CPU VLAN", __FUNCTION__);
+        HAL_TRACE_DEBUG("{}: Could not retrieve CPU VLAN", __FUNCTION__);
         return HAL_RET_INVALID_ARG;
     }
-    HAL_TRACE_DEBUG("PD-Collector:{}: CPU VLAN {}", __FUNCTION__, cfg->vlan);
+    HAL_TRACE_DEBUG("{}: CPU VLAN {}", __FUNCTION__, cfg->vlan);
 
     d->set_vlan(cfg->vlan);
     d->set_dscp(0);
@@ -212,7 +212,7 @@ pd_collector_create(pd_collector_create_args_t *c_args)
 hal_ret_t
 telemetry_export_dest::init(uint16_t id)
 {
-    HAL_TRACE_DEBUG("PD-ExportControl:{}: Export Destination Init {}", __FUNCTION__, id);
+    HAL_TRACE_DEBUG("{}: Export Destination Init {}", __FUNCTION__, id);
     uint64_t hbm_start = get_start_offset(JP4_IPFIX);
     base_addr_ = hbm_start + (id * IPFIX_BUFSIZE);
     buf_hdr_.packet_start = sizeof(telemetry_pd_export_buf_header_t);
@@ -227,7 +227,7 @@ telemetry_export_dest::init(uint16_t id)
     ipfix_hdr_.iphdr.protocol = 17;
     ipfix_init(id, base_addr_ + buf_hdr_.packet_start,
                sizeof(telemetry_pd_ipfix_header_t), buf_hdr_.payload_length);
-    HAL_TRACE_DEBUG("PD-ExportControl:{}: Export Destination Init Done {}", __FUNCTION__, id);
+    HAL_TRACE_DEBUG("{}: Export Destination Init Done {}", __FUNCTION__, id);
     return HAL_RET_OK;
 }
 
@@ -235,7 +235,7 @@ hal_ret_t
 telemetry_export_dest::set_src_mac(mac_addr_t in)
 {
     memcpy(ipfix_hdr_.vlan.smac, in, sizeof(uint8_t) * ETH_ADDR_LEN);
-    return HAL_RET_OK; 
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -259,7 +259,7 @@ telemetry_export_dest::set_dscp(uint8_t in)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 telemetry_export_dest::set_ttl(uint8_t in)
 {
     ipfix_hdr_.iphdr.ttl = in;
@@ -270,7 +270,7 @@ hal_ret_t
 telemetry_export_dest::set_src_ip(ip_addr_t in)
 {
     if (in.af != IP_AF_IPV4) {
-        HAL_TRACE_ERR("PD-EXPORT-CONFIG:: Non IPV4 source");
+        HAL_TRACE_ERR("Non IPV4 source");
         return HAL_RET_INVALID_OP;
     }
     ipfix_hdr_.iphdr.saddr = htonl(in.addr.v4_addr);
@@ -281,7 +281,7 @@ hal_ret_t
 telemetry_export_dest::set_dst_ip(ip_addr_t in)
 {
     if (in.af != IP_AF_IPV4) {
-        HAL_TRACE_ERR("PD-EXPORT-CONFIG:: Non IPV4 destination");
+        HAL_TRACE_ERR("Non IPV4 destination");
         return HAL_RET_INVALID_OP;
     }
     ipfix_hdr_.iphdr.daddr = htonl(in.addr.v4_addr);
@@ -302,7 +302,7 @@ telemetry_export_dest::set_dport(uint16_t in)
     return HAL_RET_OK;
 }
 
-uint16_t 
+uint16_t
 telemetry_export_dest::get_exporter_id()
 {
     return id_;
@@ -310,7 +310,7 @@ telemetry_export_dest::get_exporter_id()
 
 // helper to dump Packet buffer
 void
-print_buffer(char *outbuf, int max_size, uint8_t *inbuf, int size) 
+print_buffer(char *outbuf, int max_size, uint8_t *inbuf, int size)
 {
     int i, ofset = 0;
 
@@ -326,17 +326,17 @@ char _deb_buf[2048];
 hal_ret_t
 telemetry_export_dest::commit()
 {
-    HAL_TRACE_DEBUG("PD-ExportControl:{}: Export Destination commit {}-> {}", __FUNCTION__, id_, base_addr_);
+    HAL_TRACE_DEBUG("{}: Export Destination commit {}-> {}", __FUNCTION__, id_, base_addr_);
     p4plus_hbm_write(base_addr_, (uint8_t*)&buf_hdr_, sizeof(buf_hdr_),
             P4PLUS_CACHE_ACTION_NONE);
     print_buffer(_deb_buf, 2047, (uint8_t*)&buf_hdr_, sizeof(buf_hdr_));
-    HAL_TRACE_DEBUG("PD-ExportControl:{} : Buffer Header: Wrote: {}", __FUNCTION__, _deb_buf);
+    HAL_TRACE_DEBUG("{} : Buffer Header: Wrote: {}", __FUNCTION__, _deb_buf);
     // memcpy(base_addr_, &buf_hdr_, sizeof(buf_hdr_));
     uint64_t hdr = base_addr_ + sizeof(buf_hdr_);
     p4plus_hbm_write(hdr, (uint8_t*)&ipfix_hdr_, sizeof(ipfix_hdr_),
             P4PLUS_CACHE_ACTION_NONE);
     print_buffer(_deb_buf, 2047, (uint8_t*)&ipfix_hdr_, sizeof(ipfix_hdr_));
-    HAL_TRACE_DEBUG("PD-ExportControl:{} : IPFIX-Header: Wrote: {}", __FUNCTION__, _deb_buf);
+    HAL_TRACE_DEBUG("{} : IPFIX-Header: Wrote: {}", __FUNCTION__, _deb_buf);
     return HAL_RET_OK;
 }
 

@@ -230,7 +230,7 @@ collector_create (CollectorSpec *spec, Collector *resp)
     pd::pd_collector_create_args_t args;
     hal_ret_t ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("PI-ExportControl:{}: ExportID {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("{}: ExportID {}", __FUNCTION__,
             spec->export_controlid().id());
 
     cfg.exporter_id = spec->export_controlid().id();
@@ -280,7 +280,7 @@ collector_create (CollectorSpec *spec, Collector *resp)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PI-Collector:{}: PD API failed {}", __FUNCTION__, ret);
     }
-    HAL_TRACE_DEBUG("PI-ExportControl:{}: SUCCESS: ExportID {}, dest {}, source {},  port {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("{}: SUCCESS: ExportID {}, dest {}, source {},  port {}", __FUNCTION__,
     spec->export_controlid().id(), ipaddr2str(&cfg.dst_ip), ipaddr2str(&cfg.src_ip), cfg.dport);
     return ret;
 }

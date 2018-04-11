@@ -146,6 +146,9 @@ using telemetry::Telemetry;
 using telemetry::MirrorSessionSpec;
 using telemetry::MirrorSessionConfigMsg;
 using telemetry::MirrorSessionResponseMsg;
+using telemetry::CollectorSpec;
+using telemetry::CollectorConfigMsg;
+using telemetry::CollectorResponseMsg;
 
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
@@ -1353,9 +1356,52 @@ public:
             assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
             assert(rsp_msg.response(0).status().code() ==
                        ::telemetry::MirrorSessionStatus_MirrorSessionStatusCode_SUCCESS);
-            std::cout << "Mirror session ssucceeded, id = " << session_id << std::endl;
+            std::cout << "Mirror session succeeded, id = " << session_id << std::endl;
         }
 
+        return 0;
+    }
+
+    uint32_t netflow_collector_create(uint32_t vrf_id, uint32_t export_ctrl_id,
+                                      uint64_t l2seg_handle, uint16_t vlan_encap,
+                                      uint32_t sip, uint32_t dip, uint16_t dport,
+                                      uint32_t template_id) {
+        CollectorConfigMsg      req_msg;
+        CollectorSpec           *spec;
+        CollectorResponseMsg    rsp_msg;
+        Status                      status;
+        ClientContext               context;
+
+        spec = req_msg.add_request();
+        spec->mutable_meta()->set_vrf_id(vrf_id);
+        spec->mutable_export_controlid()->set_id(export_ctrl_id);
+        if (vlan_encap) {
+            spec->mutable_encap()->set_encap_type(::types::ENCAP_TYPE_DOT1Q);
+            spec->mutable_encap()->set_encap_value(vlan_encap);
+        } else {
+            spec->mutable_encap()->set_encap_type(::types::ENCAP_TYPE_DOT1Q);
+            spec->mutable_encap()->set_encap_value(0);
+        }
+        spec->set_l2seg_handle(l2seg_handle);
+        spec->mutable_src_ip()->set_ip_af(::types::IP_AF_INET);
+        spec->mutable_src_ip()->set_v4_addr(sip);
+        spec->mutable_dest_ip()->set_ip_af(::types::IP_AF_INET);
+        spec->mutable_dest_ip()->set_v4_addr(dip);
+        spec->set_protocol(::types::IPPROTO_UDP);
+        spec->mutable_dest_port()->set_port(dport);
+        spec->set_format(::telemetry::IPFIX);
+        spec->set_template_id(template_id);
+
+        status = telemetry_stub_->CollectorCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.status() == types::API_STATUS_OK);
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            assert(rsp_msg.response(0).status().code() ==
+                       ::telemetry::CollectorStatus_CollectorStatusCode_SUCCESS);
+            std::cout << "Collector create succeeded" << std::endl;
+        } else {
+            std::cout << "Collector create failed" << std::endl;
+        }
         return 0;
     }
 
@@ -2070,6 +2116,11 @@ main (int argc, char** argv)
                                             ::session::FlowAction::FLOW_ACTION_ALLOW,
                                             0);   // no mirroring
     assert(session_handle != 0);
+
+    // create a netflow collector
+    hclient.netflow_collector_create(vrf_id, 1, native_l2seg_handle,
+                                     encap_value, 0x0a0a01FD,
+                                     0x0a0a0105, 2055, 1);
 
     // create a lif
     lif_handle = hclient.lif_create(100, 1);
