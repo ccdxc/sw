@@ -86,10 +86,13 @@ func TestCrudOps(t *testing.T) {
 
 	// Setup Watcher and slices for validation.
 	// For publisher
+	var pRcvWatchEventsMutex sync.Mutex
 	var pRcvWatchEvents, pExpectWatchEvents []kvstore.WatchEvent
 	// For orders
+	var oRcvWatchEventsMutex sync.Mutex
 	var oRcvWatchEvents, oExpectWatchEvents []kvstore.WatchEvent
 	// For Store
+	var sRcvWatchEventsMutex sync.Mutex
 	var sRcvWatchEvents, sExpectWatchEvents []kvstore.WatchEvent
 	var wg sync.WaitGroup
 	wctx, cancel := context.WithCancel(ctx)
@@ -118,7 +121,9 @@ func TestCrudOps(t *testing.T) {
 				t.Logf("ts[%s] received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
+					pRcvWatchEventsMutex.Lock()
 					pRcvWatchEvents = append(pRcvWatchEvents, *ev)
+					pRcvWatchEventsMutex.Unlock()
 				} else {
 					t.Logf("publisher watcher closed")
 					active = false
@@ -127,7 +132,9 @@ func TestCrudOps(t *testing.T) {
 				t.Logf("ts[%s] received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
+					oRcvWatchEventsMutex.Lock()
 					oRcvWatchEvents = append(oRcvWatchEvents, *ev)
+					oRcvWatchEventsMutex.Unlock()
 				} else {
 					t.Logf("order watcher closed")
 					active = false
@@ -136,7 +143,9 @@ func TestCrudOps(t *testing.T) {
 				t.Logf("ts[%s] received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
+					sRcvWatchEventsMutex.Lock()
 					sRcvWatchEvents = append(sRcvWatchEvents, *ev)
+					sRcvWatchEventsMutex.Unlock()
 				} else {
 					t.Logf("Store watcher closed")
 					active = false
@@ -582,17 +591,29 @@ func TestCrudOps(t *testing.T) {
 
 	// ===== Validate Watch Events received === //
 	AssertEventually(t,
-		func() (bool, interface{}) { return len(pExpectWatchEvents) == len(pRcvWatchEvents), nil },
+		func() (bool, interface{}) {
+			defer pRcvWatchEventsMutex.Unlock()
+			pRcvWatchEventsMutex.Lock()
+			return len(pExpectWatchEvents) == len(pRcvWatchEvents), nil
+		},
 		"failed to receive all watch events",
 		"10ms",
 		"9s")
 	AssertEventually(t,
-		func() (bool, interface{}) { return len(oExpectWatchEvents) == len(oRcvWatchEvents), nil },
+		func() (bool, interface{}) {
+			defer oRcvWatchEventsMutex.Unlock()
+			oRcvWatchEventsMutex.Lock()
+			return len(oExpectWatchEvents) == len(oRcvWatchEvents), nil
+		},
 		"failed to receive all watch events",
 		"10ms",
 		"9s")
 	AssertEventually(t,
-		func() (bool, interface{}) { return len(sExpectWatchEvents) == len(sRcvWatchEvents), nil },
+		func() (bool, interface{}) {
+			defer sRcvWatchEventsMutex.Unlock()
+			sRcvWatchEventsMutex.Lock()
+			return len(sExpectWatchEvents) == len(sRcvWatchEvents), nil
+		},
 		"failed to receive all watch events",
 		"10ms",
 		"9s")

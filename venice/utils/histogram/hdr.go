@@ -4,6 +4,7 @@ import (
 	"expvar"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	hdr "github.com/codahale/hdrhistogram"
@@ -15,26 +16,36 @@ type HistMap struct {
 	histcount sync.Map
 }
 
+type safeHistogram struct {
+	sync.Mutex
+	*hdr.Histogram
+}
+
 // Record records an measurement in the <name> histogram.
 func (m *HistMap) Record(name string, d time.Duration) {
 	if h, ok := m.histmap.Load(name); !ok {
 		h = hdr.New(0, 100000000000, 4)
-		m.histmap.Store(name, h)
-		m.histcount.Store(name, uint64(1))
-		h.(*hdr.Histogram).RecordValue(d.Nanoseconds())
+		sh := &safeHistogram{Histogram: h.(*hdr.Histogram)}
+		sh.RecordValue(d.Nanoseconds())
+		m.histmap.Store(name, sh)
+		var cnt uint64 = 1
+		m.histcount.Store(name, &cnt)
 	} else {
 		if c, ok := m.histcount.Load(name); ok {
-			cnt := c.(uint64) + 1
-			m.histcount.Store(name, cnt)
+			cnt := c.(*uint64)
+			atomic.AddUint64(cnt, 1)
 		}
-		h.(*hdr.Histogram).RecordValue(d.Nanoseconds())
+		sh := h.(*safeHistogram)
+		sh.Lock()
+		sh.RecordValue(d.Nanoseconds())
+		sh.Unlock()
 	}
 }
 
-func (m *HistMap) printone(key string, h *hdr.Histogram) {
+func (m *HistMap) printone(key string, h *safeHistogram) {
 	c, _ := m.histcount.Load(key)
-	cnt := c.(uint64)
-	fmt.Printf("--[ %s ] Total: %d/%d Mean: %.3f Max: %.3f Min: %.3f\n", key, h.TotalCount(), cnt,
+	cnt := c.(*uint64)
+	fmt.Printf("--[ %s ] Total: %d/%d Mean: %.3f Max: %.3f Min: %.3f\n", key, h.TotalCount(), atomic.LoadUint64(cnt),
 		float64(h.Mean())/float64(time.Millisecond),
 		float64(h.Max())/float64(time.Millisecond),
 		float64(h.Min())/float64(time.Millisecond))
@@ -48,8 +59,10 @@ func (m *HistMap) printone(key string, h *hdr.Histogram) {
 // PrintAll prints all the histograms
 func (m *HistMap) PrintAll() {
 	printhdr := func(key, value interface{}) bool {
-		h := value.(*hdr.Histogram)
+		h := value.(*safeHistogram)
+		h.Lock()
 		m.printone(key.(string), h)
+		h.Unlock()
 		return true
 	}
 	m.histmap.Range(printhdr)
@@ -58,8 +71,10 @@ func (m *HistMap) PrintAll() {
 // PrintOne prints one histogram
 func (m *HistMap) PrintOne(key string) {
 	if value, ok := m.histmap.Load(key); ok {
-		h := value.(*hdr.Histogram)
+		h := value.(*safeHistogram)
+		h.Lock()
 		m.printone(key, h)
+		h.Unlock()
 	}
 }
 
@@ -67,8 +82,9 @@ func (m *HistMap) PrintOne(key string) {
 func (m *HistMap) GetStats() map[string]Stats {
 	ret := make(map[string]Stats)
 	fn := func(key, value interface{}) bool {
-		h := value.(*hdr.Histogram)
+		h := value.(*safeHistogram)
 		k := key.(string)
+		h.Lock()
 		stat := Stats{
 			Count:       h.TotalCount(),
 			MinMs:       float64(h.Min()) / float64(time.Millisecond),
@@ -82,6 +98,7 @@ func (m *HistMap) GetStats() map[string]Stats {
 			Perctl99:    float64(h.ValueAtQuantile(99)) / float64(time.Millisecond),
 			Perctl99_99: float64(h.ValueAtQuantile(99.99)) / float64(time.Millisecond),
 		}
+		h.Unlock()
 		ret[k] = stat
 		return true
 	}

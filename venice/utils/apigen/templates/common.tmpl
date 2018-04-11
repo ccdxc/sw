@@ -122,7 +122,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 func errorDecoder(r *http.Response) error {
 	var w errorWrapper
 	if err := json.NewDecoder(r.Body).Decode(&w); err != nil {
-		return err
+		return fmt.Errorf("Status:(%v) Reason:(%s)", r.StatusCode, r.Status)
 	}
 	return fmt.Errorf("Status:(%v) Reason:(%s)", r.StatusCode, w.Error)
 }

@@ -232,6 +232,9 @@ func (s *store) Delete(key string, rev uint64, cb SuccessCbFunc) (obj runtime.Ob
 	if cobj.deleted {
 		return nil, errorNotFound
 	}
+	if rev != 0 {
+		cobj.revision = rev
+	}
 	cobj.lastUpd = time.Now()
 	cobj.deleted = true
 	if !cobj.inDelQ {

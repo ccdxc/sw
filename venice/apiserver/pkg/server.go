@@ -20,6 +20,7 @@ import (
 
 // apiSrv is the container type for the Api Server.
 type apiSrv struct {
+	sync.RWMutex
 	// svcmap is the set of service modules registered.
 	svcmap map[string]apiserver.ServiceBackend
 	// services is the set of services registered with the API server.
@@ -83,6 +84,7 @@ var once sync.Once
 
 // initAPIServer performs all needed initializations.
 func initAPIServer() {
+	// This happens during init(). No lock is needed here
 	singletonAPISrv.svcmap = make(map[string]apiserver.ServiceBackend)
 	singletonAPISrv.services = make(map[string]apiserver.Service)
 	singletonAPISrv.messages = make(map[string]apiserver.Message)
@@ -94,6 +96,8 @@ func initAPIServer() {
 
 // reinitAPIServer performs needed initialization on reinit.
 func reinitAPIServer() {
+	defer singletonAPISrv.Unlock()
+	singletonAPISrv.Lock()
 	singletonAPISrv.services = make(map[string]apiserver.Service)
 	singletonAPISrv.messages = make(map[string]apiserver.Message)
 	singletonAPISrv.hookregs = make(map[string]apiserver.ServiceHookCb)
@@ -110,12 +114,18 @@ func MustGetAPIServer() apiserver.Server {
 
 // insertWatcher adds a new watcher context to the list of active Watchers
 func (a *apiSrv) insertWatcher(ctx context.Context) (handle interface{}) {
+	// We only need a read lock on the activeWatches safelist pointer. The list iteself is thread safe.
+	defer a.RUnlock()
+	a.RLock()
 	handle = a.activeWatches.Insert(ctx)
 	return
 }
 
 // removeWatcher removes a active Watcher from the list of active Watchers
 func (a *apiSrv) removeWatcher(handle interface{}) {
+	// We only need a read lock on the activeWatches safelist pointer. The list iteself is thread safe.
+	defer a.RUnlock()
+	a.RLock()
 	a.activeWatches.Remove(handle)
 }
 
@@ -173,6 +183,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		ctx, cancel = context.WithCancel(ctx)
 		defer cancel()
 	}
+	a.Lock()
 	a.Logger = config.Logger
 	a.version = config.Version
 	a.config = config
@@ -242,6 +253,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		}
 	}
 	a.Logger.Log("msg", "added Kvstore connections to pool", "count", poolSize, "len", len(a.kvPool))
+	a.Unlock()
 	a.runstate.cond.L.Lock()
 	a.Logger.Log("Grpc Listen Start", a.runstate.addr)
 	s.Start()

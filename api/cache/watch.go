@@ -262,6 +262,9 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.O
 	}
 	w.log.InfoLog("oper", "WatchEventQEnqueue", "type", evType, "path", w.path, "version", v)
 	// XXXX-TODO(sanjayt): Use a pool here to reduce garbage collection work.
+	// XXX-TODO(sanjayt): TODO: The API server is done with the object enqueued here.
+	//  so although it is safe to enqueue this object to the eventQ, to keep race detector happy
+	//  we could clone the object here and enqueue the cloned object.
 	i := &watchEvent{
 		version: v,
 		evType:  evType,
