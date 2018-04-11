@@ -116,9 +116,9 @@ int test_run_perf_rdma_e2e_write() {
     rcv_buf = rdma_get_initiator_rcv_buf();
     nvme_status = rcv_buf->fragment_find(kR2nStatusNvmeOffset,
                                                    sizeof(struct NvmeStatus));
-    struct NvmeStatus *status = (struct NvmeStatus *)nvme_status->read_thru();
-    struct NvmeCmd *cmd = (struct NvmeCmd *)nvme_cmd->read_thru();
-    printf("exp: %x rcvd: %x\n", status->dw3.cid, cmd->dw0.cid);
+    //struct NvmeStatus *status = (struct NvmeStatus *)nvme_status->read_thru();
+    //struct NvmeCmd *cmd = (struct NvmeCmd *)nvme_cmd->read_thru();
+    //printf("exp: %x rcvd: %x\n", status->dw3.cid, cmd->dw0.cid);
 
   }
   fflush(stdout);
