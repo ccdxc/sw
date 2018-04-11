@@ -103,6 +103,13 @@ public:
         return scale_test_name;
     }
 
+    // Return a test instance from comp_encrypt_chain_vec
+    comp_encrypt_chain_t *chain_get(uint32_t inst)
+    {
+        return inst < comp_encrypt_chain_vec.size() ?
+               comp_encrypt_chain_vec[inst] : nullptr;
+    }
+
 private:
     std::vector<comp_encrypt_chain_t*>  comp_encrypt_chain_vec;
 
@@ -184,17 +191,17 @@ public:
 private:
     std::vector<decrypt_decomp_chain_t*> decrypt_decomp_chain_vec;
 
-    const char      *scale_test_name;
+    const char          *scale_test_name;
     decrypt_decomp_chain_push_params_t  push_params;
 
-    dp_mem_t        *comp_status_host_buf;
-    dp_mem_t        *comp_opaque_host_buf;
+    dp_mem_t            *comp_status_host_buf;
+    dp_mem_t            *comp_opaque_host_buf;
 
-    dp_mem_t        *exp_opaque_data_buf;
-    uint32_t        exp_opaque_data;
+    dp_mem_t            *exp_opaque_data_buf;
+    uint32_t            exp_opaque_data;
 
-    bool            destructor_free_buffers;
-    bool            success;
+    bool                destructor_free_buffers;
+    bool                success;
 };
 
 
@@ -208,8 +215,8 @@ public:
     acc_scale_tests_list_t();
     ~acc_scale_tests_list_t();
 
-    void add(acc_scale_tests_t *scale_test);
-    int run(const char *test_name);
+    void push(acc_scale_tests_t *scale_test);
+    int post_push(const char *test_name);
     int completion_check(void);
     void outstanding_report(void);
 

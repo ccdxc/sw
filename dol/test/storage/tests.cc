@@ -104,7 +104,9 @@ int test_setup() {
   }
 
   if (run_acc_scale_tests) {
-      queues::seq_queue_acc_sub_num_set(FLAGS_acc_scale_submissions);
+      queues::seq_queue_acc_sub_num_set(FLAGS_acc_scale_submissions,
+                                        FLAGS_acc_scale_chain_replica,
+                                        kAccScaleTestsMaxChains);
   }
 
   // Initialize resources
@@ -2743,13 +2745,14 @@ test_data_verify_and_dump(uint8_t *expected_data,
             cmp_result = -cmp_result;
         }
         printf("Data of length %u mismatch at offset %d\n", len, cmp_result);
+#if 0
         if (cmp_result < (int)len) {
             printf("\nDumping expected data starting at offset %u\n", cmp_result);
             utils::dump(expected_data + cmp_result, len - cmp_result);
             printf("\nDumping actual data starting at offset %u\n", cmp_result);
             utils::dump(actual_data + cmp_result, len - cmp_result);
         }
-
+#endif
         return -1;
     }
 

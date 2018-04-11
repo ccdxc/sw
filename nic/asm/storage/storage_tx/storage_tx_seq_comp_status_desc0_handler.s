@@ -73,14 +73,13 @@ status_dma_setup:
 
    // Set up status xfer if applicable
    bbeq         d.status_dma_en, 0, tbl_load
-   nop
+   add          r3, r0, d.status_len    // delay slot
    
    // Set up the status DMA:
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.status_hbm_addr, 
-                     d.status_len[13:0], 0, 0, dma_m2m_1)
+                     r3, 0, 0, dma_m2m_1)
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.status_host_addr, 
-                     d.status_len[13:0], 0, 0, dma_m2m_2)
-   DMA_MEM2MEM_FENCE(dma_m2m_2)
+                     r3, 0, 0, dma_m2m_2)
    
 tbl_load:
    // Setup the start and end DMA pointers

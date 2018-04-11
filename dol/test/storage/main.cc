@@ -33,10 +33,13 @@ DEFINE_uint64(long_poll_interval, 300,
 DEFINE_uint64(num_pdma_queues, 3,
               "number of queues for PDMA test (in power of 2)");
 
-// Number of accelerator queues for scale testing
+// Replication each accelerator chains this many times
+DEFINE_uint64(acc_scale_chain_replica, 0,
+              "Accelerator chain replication count (in power of 2)");
+
+// Number of accelerator submissions in each chain for scale testing
 DEFINE_uint64(acc_scale_submissions, 2,
               "number of accelerator queue submissions for scale testing (in power of 2)");
-DEFINE_validator(acc_scale_submissions, &queues::seq_queue_acc_sub_num_validate);
 
 // Block size for accelerator scale testing
 DEFINE_uint64(acc_scale_blk_size, 13,
@@ -232,6 +235,7 @@ int main(int argc, char**argv) {
             << "\nTest group: "       << FLAGS_test_group
             << "\nPolling interval: " << FLAGS_poll_interval 
             << "\n# PDMA queues (power of 2): " << FLAGS_num_pdma_queues 
+            << "\n# Accelerator chain replications (power of 2): " << FLAGS_acc_scale_chain_replica 
             << "\n# Accelerator queue submissions (power of 2): " << FLAGS_acc_scale_submissions 
             << "\nBlock size for accelerator scale testing (in power of 2): " << FLAGS_acc_scale_blk_size 
             << "\n# Iterations for accelerator scale testing (0 = infinite): " << FLAGS_acc_scale_iters 
@@ -254,7 +258,7 @@ int main(int argc, char**argv) {
       run_xts_perf_tests = false;
       run_comp_perf_tests = false;
       run_pdma_tests = true;
-      run_acc_scale_tests = false;
+      run_acc_scale_tests = true;
   } else if (FLAGS_test_group == "rtl_sanity") {
       run_unit_tests = true;
       run_nvme_tests = true;

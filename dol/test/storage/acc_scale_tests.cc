@@ -45,9 +45,9 @@ comp_encrypt_chain_scale_t::comp_encrypt_chain_scale_t(comp_encrypt_chain_scale_
     }
 
     // Allocate status and opaque tags as a byte streams for fast memcmp
-    xts_status_host_buf = new dp_mem_t(1,  params.num_chains_ * sizeof(uint32_t),
-                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint32_t));
-    exp_status_data_buf = new dp_mem_t(1, params.num_chains_ * sizeof(uint32_t),
+    xts_status_host_buf = new dp_mem_t(1,  params.num_chains_ * sizeof(uint64_t),
+                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint64_t));
+    exp_status_data_buf = new dp_mem_t(1, params.num_chains_ * sizeof(uint64_t),
                                        DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     xts_opaque_host_buf = new dp_mem_t(1,  params.num_chains_ * sizeof(uint64_t),
                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint64_t));
@@ -61,8 +61,8 @@ comp_encrypt_chain_scale_t::comp_encrypt_chain_scale_t(comp_encrypt_chain_scale_
     comp_pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
 
     for (i = 0; i < comp_encrypt_chain_vec.size(); i++) {
-        xts_status_frag = xts_status_host_buf->fragment_find(i * sizeof(uint32_t),
-                                                             sizeof(uint32_t));
+        xts_status_frag = xts_status_host_buf->fragment_find(i * sizeof(uint64_t),
+                                                             sizeof(uint64_t));
         xts_opaque_frag = xts_opaque_host_buf->fragment_find(i * sizeof(uint64_t),
                                                              sizeof(uint64_t));
         comp_encrypt_chain_vec[i]->pre_push(pre_push.caller_comp_pad_buf(comp_pad_buf).
@@ -120,6 +120,7 @@ comp_encrypt_chain_scale_t::push_params_set(comp_encrypt_chain_push_params_t par
 int 
 comp_encrypt_chain_scale_t::push(void)
 {
+    uint32_t    initial_status_sq = push_params.seq_comp_status_qid_;
     uint32_t    i;
 
     success = false;
@@ -127,21 +128,21 @@ comp_encrypt_chain_scale_t::push(void)
 
     for (i = 0; i < comp_encrypt_chain_vec.size(); i++) {
 
-        // Push all entries on the same compression SQ but each submission 
-        // must be handled with its own comp status SQ since the completion
-        // order will not be known.
-        push_params.seq_comp_status_qid_ = queues::get_seq_comp_status_sq(i);
-
         // Encryption is last in chain so does not require status sequencer
         push_params.seq_xts_status_qid_ = 0;
 
+        // Push all entries on the same compression SQ but each submission 
+        // must be handled with its own comp status SQ since the completion
+        // order will not be known.
         comp_encrypt_chain_vec[i]->push(push_params);
+        push_params.seq_comp_status_qid_++;
     }
 
     // Only need to call post_push() once since all submissions went
     // to the same comp_queue.
     comp_encrypt_chain_vec[i - 1]->post_push();
 
+    push_params.seq_comp_status_qid_ = initial_status_sq;
     run_count++;
     return 0;
 }
@@ -154,12 +155,9 @@ comp_encrypt_chain_scale_t::push(void)
 int 
 comp_encrypt_chain_scale_t::completion_check(void)
 {
-    if (memcmp(xts_opaque_host_buf->read_thru(),
-               exp_opaque_data_buf->read_thru(),
-               xts_opaque_host_buf->line_size_get()) == 0) {
-        success = true;
-    }
-
+    success = memcmp(xts_opaque_host_buf->read_thru(),
+                     exp_opaque_data_buf->read_thru(),
+                     xts_opaque_host_buf->line_size_get()) == 0;
     return success ? 0 : -1;
 }
 
@@ -172,12 +170,9 @@ comp_encrypt_chain_scale_t::completion_check(void)
 int 
 comp_encrypt_chain_scale_t::fast_verify(void)
 {
-    if (memcmp(xts_status_host_buf->read_thru(),
-               exp_status_data_buf->read_thru(),
-               xts_status_host_buf->line_size_get()) == 0) {
-        success = true;
-    }
-
+    success = memcmp(xts_status_host_buf->read_thru(),
+                     exp_status_data_buf->read_thru(),
+                     xts_status_host_buf->line_size_get()) == 0;
     return success ? 0 : -1;
 }
 
@@ -190,6 +185,7 @@ comp_encrypt_chain_scale_t::full_verify(void)
 {
     uint32_t    i;
 
+    success = true;
     for (i = 0; i < comp_encrypt_chain_vec.size(); i++) {
         if (comp_encrypt_chain_vec[i]->verify()) {
             printf("ERROR: %s submission #%u failed\n",
@@ -229,21 +225,27 @@ decrypt_decomp_chain_scale_t::decrypt_decomp_chain_scale_t(decrypt_decomp_chain_
                                DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
 
     // Allocate opaque tags as a byte streams for fast memcmp
-    comp_opaque_host_buf = new dp_mem_t(1,  params.num_chains_ * sizeof(uint32_t),
-                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint32_t));
-    exp_opaque_data_buf = new dp_mem_t(1, params.num_chains_ * sizeof(uint32_t),
+    comp_opaque_host_buf = new dp_mem_t(1,  params.num_chains_ * sizeof(uint64_t),
+                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint64_t));
+    exp_opaque_data_buf = new dp_mem_t(1, params.num_chains_ * sizeof(uint64_t),
                                        DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
 
+    // Note that RTL expects each opaque tag as uint64_t and writes
+    // exp_opaque_data to the first 4 bytes, followed by 0 in the next 4 bytes
     exp_opaque_data = 0xdddddddd;
-    exp_opaque_data_buf->fill_thru(0xdd);
+    for (i = 0; i < decrypt_decomp_chain_vec.size(); i++) {
+        memcpy(exp_opaque_data_buf->read() + (i * sizeof(uint64_t)),
+               &exp_opaque_data, sizeof(uint32_t));
+    }
+    exp_opaque_data_buf->write_thru();
 
     // Other inits
 
     for (i = 0; i < decrypt_decomp_chain_vec.size(); i++) {
         comp_status_host_buf->line_set(i);
         comp_status_frag = comp_status_host_buf->fragment_find(0, sizeof(cp_status_sha512_t));
-        comp_opaque_frag = comp_opaque_host_buf->fragment_find(i * sizeof(uint32_t),
-                                                               sizeof(uint32_t));
+        comp_opaque_frag = comp_opaque_host_buf->fragment_find(i * sizeof(uint64_t),
+                                                               sizeof(uint64_t));
         decrypt_decomp_chain_vec[i]->pre_push(pre_push.caller_comp_status_buf(comp_status_frag).
                                                        caller_comp_opaque_buf(comp_opaque_frag).
                                                        caller_comp_opaque_data(exp_opaque_data));
@@ -295,6 +297,7 @@ decrypt_decomp_chain_scale_t::push_params_set(decrypt_decomp_chain_push_params_t
 int 
 decrypt_decomp_chain_scale_t::push(void)
 {
+    uint32_t    initial_status_sq = push_params.seq_xts_status_qid_;
     uint32_t    i;
 
     success = false;
@@ -302,21 +305,21 @@ decrypt_decomp_chain_scale_t::push(void)
 
     for (i = 0; i < decrypt_decomp_chain_vec.size(); i++) {
 
-        // Push all entries on the same compression SQ but each submission 
-        // must be handled with its own XTS status SQ since the completion
-        // order will not be known.
-        push_params.seq_xts_status_qid_ = queues::get_seq_xts_status_sq(i);
-
         // Decompression is last in chain so does not require status sequencer
         push_params.seq_comp_status_qid_ = 0;
 
+        // Push all entries on the same compression SQ but each submission 
+        // must be handled with its own XTS status SQ since the completion
+        // order will not be known.
         decrypt_decomp_chain_vec[i]->push(push_params);
+        push_params.seq_xts_status_qid_++;
     }
 
     // Only need to call post_push() once since all submissions went
     // to the same XTS sequencer queue.
     decrypt_decomp_chain_vec[i - 1]->post_push();
 
+    push_params.seq_xts_status_qid_ = initial_status_sq;
     run_count++;
     return 0;
 }
@@ -329,12 +332,9 @@ decrypt_decomp_chain_scale_t::push(void)
 int 
 decrypt_decomp_chain_scale_t::completion_check(void)
 {
-    if (memcmp(comp_opaque_host_buf->read_thru(),
-               exp_opaque_data_buf->read_thru(),
-               comp_opaque_host_buf->line_size_get()) == 0) {
-        success = true;
-    }
-
+    success = memcmp(comp_opaque_host_buf->read_thru(),
+                     exp_opaque_data_buf->read_thru(),
+                     comp_opaque_host_buf->line_size_get()) == 0;
     return success ? 0 : -1;
 }
 
@@ -350,6 +350,7 @@ decrypt_decomp_chain_scale_t::fast_verify(void)
     cp_status_sha512_t  *st;
     uint32_t            i;
 
+    success = true;
     for (i = 0; i < decrypt_decomp_chain_vec.size(); i++) {
         comp_status_host_buf->line_set(i);
         st = (cp_status_sha512_t *)comp_status_host_buf->read_thru();
@@ -379,6 +380,7 @@ decrypt_decomp_chain_scale_t::full_verify(void)
 {
     uint32_t    i;
 
+    success = true;
     for (i = 0; i < decrypt_decomp_chain_vec.size(); i++) {
         if (decrypt_decomp_chain_vec[i]->verify()) {
             printf("ERROR: %s submission #%u failed\n",
@@ -396,21 +398,17 @@ decrypt_decomp_chain_scale_t::full_verify(void)
  *   Compression to XTS-encrypt chaining scale
  */
 acc_scale_tests_t * 
-acc_comp_encrypt_chain_scale_create(void)
+acc_comp_encrypt_chain_scale_create(uint32_t num_submissions,
+                                    uint32_t app_blk_size,
+                                    uint32_t sq_idx,
+                                    uint32_t status_sq_start_idx,
+                                    comp_encrypt_chain_t *comp_encrypt_chain_source)
 {
     comp_encrypt_chain_scale_params_t   cec_scale;
     comp_encrypt_chain_params_t         cec_params;
     comp_encrypt_chain_push_params_t    cec_push;
     comp_encrypt_chain_scale_t          *comp_encrypt_chain_scale;
-    uint32_t                            app_blk_size = NUM_TO_VAL(FLAGS_acc_scale_blk_size);
-    uint32_t                            num_submissions = NUM_TO_VAL(FLAGS_acc_scale_submissions);
 
-    /*
-     * Submit one less than queue size potential to ensure CI != PI
-     */
-    if (num_submissions > 1) {
-        num_submissions--;
-    }
     comp_encrypt_chain_scale = 
         new comp_encrypt_chain_scale_t(cec_scale.num_chains(num_submissions).
                                                  cec_params(cec_params.app_max_size(app_blk_size).
@@ -425,8 +423,8 @@ acc_comp_encrypt_chain_scale_create(void)
     comp_encrypt_chain_scale->push_params_set(cec_push.app_blk_size(app_blk_size).
                                                        comp_queue(cp_queue).
                                                        push_type(COMP_QUEUE_PUSH_SEQUENCER_DEFER).
-                                                       seq_comp_qid(queues::get_seq_comp_sq(0)).
-                                                       seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
+                                                       seq_comp_qid(queues::get_seq_comp_sq(sq_idx)).
+                                                       seq_comp_status_qid(queues::get_seq_comp_status_sq(status_sq_start_idx)));
     return comp_encrypt_chain_scale;
 }
 
@@ -436,37 +434,17 @@ acc_comp_encrypt_chain_scale_create(void)
  *   XTS-decrypt to decompression chaining scale
  */
 acc_scale_tests_t * 
-acc_decrypt_decomp_chain_scale_create(void)
+acc_decrypt_decomp_chain_scale_create(uint32_t num_submissions,
+                                      uint32_t app_blk_size,
+                                      uint32_t sq_idx,
+                                      uint32_t status_sq_start_idx,
+                                      comp_encrypt_chain_t *comp_encrypt_chain_source)
 {
     decrypt_decomp_chain_scale_params_t ddc_scale;
     decrypt_decomp_chain_params_t       ddc_params;
     decrypt_decomp_chain_push_params_t  ddc_push;
     decrypt_decomp_chain_scale_t        *decrypt_decomp_chain_scale;
-    uint32_t                            app_blk_size = NUM_TO_VAL(FLAGS_acc_scale_blk_size);
-    uint32_t                            num_submissions = NUM_TO_VAL(FLAGS_acc_scale_submissions);
-    int                                 ret_val = -1;
 
-    /*
-     * First, generate source data by executing one Compression to XTS-encrypt
-     * chaining test.
-     */
-    if (app_blk_size == kCompAppMinSize) {
-        ret_val = seq_compress_output_encrypt_app_min_size();
-    } else if (app_blk_size == kCompAppMaxSize) {
-        ret_val = seq_compress_output_encrypt_app_max_size();
-    } else if (app_blk_size == kCompAppNominalSize) {
-        ret_val = seq_compress_output_encrypt_app_nominal_size();
-    }
-    if (ret_val) {
-        printf("%s source data creation failed\n", __FUNCTION__);
-    }
-
-    /*
-     * Submit one less than queue size potential to ensure CI != PI
-     */
-    if (num_submissions > 1) {
-        num_submissions--;
-    }
     decrypt_decomp_chain_scale = 
         new decrypt_decomp_chain_scale_t(ddc_scale.num_chains(num_submissions).
                                                    ddc_params(ddc_params.app_max_size(app_blk_size).
@@ -477,10 +455,10 @@ acc_decrypt_decomp_chain_scale_create(void)
                                                                          destructor_free_buffers(true).
                                                                          suppress_info_log(true)).
                                                    destructor_free_buffers(true));
-    decrypt_decomp_chain_scale->push_params_set(ddc_push.comp_encrypt_chain(comp_encrypt_chain).
+    decrypt_decomp_chain_scale->push_params_set(ddc_push.comp_encrypt_chain(comp_encrypt_chain_source).
                                                          decomp_queue(dc_queue).
-                                                         seq_xts_qid(queues::get_seq_xts_sq(0)).
-                                                         seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
+                                                         seq_xts_qid(queues::get_seq_xts_sq(sq_idx)).
+                                                         seq_xts_status_qid(queues::get_seq_xts_status_sq(status_sq_start_idx)));
     return decrypt_decomp_chain_scale;
 }
 
@@ -493,21 +471,77 @@ acc_decrypt_decomp_chain_scale_create(void)
 int
 acc_scale_tests_comp_encrypt_decrypt_decomp(void)
 {
-    std::vector<std::function<acc_scale_tests_t*(void)>> tests_vec = { 
+    std::vector<std::function<acc_scale_tests_t*(uint32_t,
+                                                 uint32_t,
+                                                 uint32_t,
+                                                 uint32_t,
+                                                 comp_encrypt_chain_t*)>> tests_vec = { 
         &acc_comp_encrypt_chain_scale_create,
         &acc_decrypt_decomp_chain_scale_create,
     };
 
-    acc_scale_tests_list_t  tests_list;
+    comp_encrypt_chain_scale_t  *comp_encrypt_chain_scale_source;
+    comp_encrypt_chain_t        *comp_encrypt_chain_source;
+    acc_scale_tests_list_t      tests_list;
+    tests::Poller               poll(FLAGS_long_poll_interval);
+    uint32_t                    num_submissions = NUM_TO_VAL(FLAGS_acc_scale_submissions);
+    uint32_t                    num_replicas = NUM_TO_VAL(FLAGS_acc_scale_chain_replica);
+    uint32_t                    app_blk_size = NUM_TO_VAL(FLAGS_acc_scale_blk_size);
+    uint32_t                    sq_idx;
+    uint32_t                    r, v;
+    int                         ret_val;
 
     /*
-     * Create and run test list
+     * For the 2nd test (XTS-decrypt to decompression), generate source data
+     * by executing one Compression to XTS-encrypt chaining test.
      */
-    for (uint32_t i = 0; i < tests_vec.size(); i++) {
-        tests_list.add(tests_vec[i]());
+    comp_encrypt_chain_scale_source = (comp_encrypt_chain_scale_t *)
+                                       acc_comp_encrypt_chain_scale_create(1, app_blk_size,
+                                                                           0, 0, nullptr);
+    comp_encrypt_chain_scale_source->push();
+
+    /*
+     * Poll for completion of source data generation
+     */
+    auto completion_poll = [&comp_encrypt_chain_scale_source] () -> int
+    {
+        return comp_encrypt_chain_scale_source->completion_check();
+    };
+
+    if (poll(completion_poll) || 
+        comp_encrypt_chain_scale_source->full_verify()) {
+
+        printf("%s source data creation failed\n", __FUNCTION__);
+        delete comp_encrypt_chain_scale_source;
+        return -1;
     }
 
-    return tests_list.run(__FUNCTION__);
+    /*
+     * Bump up the global constant below if assert fails
+     */
+    assert(tests_vec.size() <= kAccScaleTestsMaxChains);
+
+    /*
+     * Create and run test list,
+     * each chain is replicated by num_replicas times
+     */
+    comp_encrypt_chain_source = comp_encrypt_chain_scale_source->chain_get(0);
+
+    sq_idx = 0;
+    for (r = 0; r < num_replicas; r++) {
+        for (v = 0; v < tests_vec.size(); v++) {
+            tests_list.push(tests_vec[v](num_submissions, app_blk_size,
+                                         sq_idx, (sq_idx * num_submissions),
+                                         comp_encrypt_chain_source));
+            sq_idx++;
+        }
+    }
+
+    ret_val = tests_list.post_push(__FUNCTION__);
+    if (ret_val == 0) {
+        delete comp_encrypt_chain_scale_source;
+    }
+    return ret_val;
 }
 
 
@@ -550,7 +584,7 @@ acc_scale_tests_list_t::~acc_scale_tests_list_t()
  * Add a test to list
  */
 void 
-acc_scale_tests_list_t::add(acc_scale_tests_t *scale_test)
+acc_scale_tests_list_t::push(acc_scale_tests_t *scale_test)
 {
     tests_list.push_back(scale_test);
 }
@@ -561,7 +595,7 @@ acc_scale_tests_list_t::add(acc_scale_tests_t *scale_test)
  * Execute the test list for the duration configured by FLAGS_acc_scale_iters.
  */
 int
-acc_scale_tests_list_t::run(const char *test_name)
+acc_scale_tests_list_t::post_push(const char *test_name)
 {
     tests::Poller       poll(FLAGS_long_poll_interval);
     acc_scale_tests_t   *scale_test;
@@ -609,7 +643,7 @@ acc_scale_tests_list_t::run(const char *test_name)
             } else {
 
                 // restart the current test
-                add(scale_test);
+                push(scale_test);
                 scale_test->push();
             }
             it = compl_list.erase(it);
@@ -680,10 +714,8 @@ acc_scale_tests_blk_size_validate(const char *flag_name,
 {
     uint64_t    blk_size = NUM_TO_VAL(value);
 
-    if ((blk_size == kCompAppMaxSize)   ||
-        (blk_size == kCompAppMinSize)   ||
-        (blk_size == kCompAppNominalSize)) {
-
+    if ((blk_size >= kCompAppMinSize) &&
+        (blk_size <= kCompEngineMaxSize)) {
         return true;
     }
 

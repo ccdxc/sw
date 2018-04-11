@@ -24,6 +24,7 @@ int hbm_addr_alloc(uint32_t size, uint64_t *alloc_ptr);
 
 int hbm_addr_alloc_page_aligned(uint32_t size, uint64_t *alloc_ptr);
 int hbm_addr_alloc_spec_aligned(uint32_t size, uint64_t *alloc_ptr, uint32_t spec_align_size);
+uint32_t roundup_to_pow_2(uint32_t x);
 
 }  // namespace utils
 

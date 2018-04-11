@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <strings.h>
 #include <byteswap.h>
+#include <math.h>
 
 #include "dol/test/storage/hal_if.hpp"
 #include "dol/test/storage/utils.hpp"
@@ -33,23 +34,23 @@ const static uint32_t	kPvmNumNvmeBeCQs	 = 4;
       static uint32_t	SeqNumSQs;                    // log2(Sum total of all PVM CQs)
       static uint32_t	SeqNumPdmaSQs		 = 3; // pdma test may modify at run time
 const static uint32_t	kSeqNumR2nSQs		 = 3;
-const static uint32_t	kSeqNumXtsSQs		 = 3;
-      static uint32_t	kSeqNumXtsStatusSQs	 = 4;
-const static uint32_t	kSeqNumCompSQs		 = 4;
-      static uint32_t	kSeqNumCompStatusSQs	 = 4;
+      static uint32_t	kSeqNumXtsSQs		 = 3; // acc_scale test may modify at run time
+      static uint32_t	kSeqNumXtsStatusSQs	 = 4; //    "    "
+      static uint32_t	kSeqNumCompSQs		 = 4; // acc_scale test may modify at run time
+      static uint32_t	kSeqNumCompStatusSQs = 4; //    "    "
 const static uint32_t	kSeqNumRoceSQs		 = 3;
 
 // NOTE CAREFULLY: END
 
 
-const static uint32_t	kDefaultEntrySize	 = 6; // Default is 64 bytes
+const static uint32_t	kDefaultQstateEntrySize = 6; // Default qstate is 64 bytes
+const static uint32_t	kDefaultEntrySize	 = 6; // Default desc size is 64 bytes
 const static uint32_t	kSeqCompStatusSQEntrySize = 7; // Seq compression status SQ is 128 bytes
 const static uint32_t	kPvmNvmeSQEntrySize	 = 7; // PVM SQ is 128 bytes (NVME command + PVM header)
 const static uint32_t	kNvmeCQEntrySize	 = 4; // NVME CQ is 16 bytes
 const static uint32_t	kNvmeNumEntries		 = 6;
 const static uint32_t	kPvmNumEntries		 = 6;
 const static uint32_t	kSeqNumEntries	 = 6;
-      static uint32_t	kSeqNumEntriesMax	 = 6; // accelerator scale test may modify at run time
       static uint32_t   kSeqNumAccEntries = 6; // accelerator scale test may modify at run time
 
 const static char	*kNvmeSqHandler		 = "storage_tx_nvme_sq_handler.bin";
@@ -160,6 +161,8 @@ uint64_t pndx_data_pa;
 int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size,
                dp_mem_type_t mem_type = DP_MEM_TYPE_HBM);
 
+static uint32_t log_2(uint32_t x);
+
 void lif_params_init(hal_if::lif_params_t *params, uint16_t type,
                      uint16_t num_entries, uint16_t num_queues) {
   params->type[type].valid = true; 
@@ -232,33 +235,30 @@ void seq_queue_pdma_num_set(uint64_t& num_pdma_queues) {
     SeqNumPdmaSQs = num_pdma_queues;
 }
 
-bool seq_queue_acc_sub_num_validate(const char *flag_name,
-                                    uint64_t value) {
-   if (value >= 2) {
-       return true;
-   }
+void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
+                               uint64_t& acc_scale_chain_replica,
+                               uint32_t acc_scale_tests_max_chains) {
+    uint32_t max_acc_entries;
+    uint32_t max_queues;
+    uint32_t max_status_queues;
 
-   printf("Value for --%s (in power of 2) must be a minimum of 2\n", flag_name);
-   return false;
-}
-
-void seq_queue_acc_sub_num_set(uint64_t& num_acc_queue_submissions) {
+    // acc_scale_tests_max_chains is the only entity not a power of 2.
+    max_queues = log_2(NUM_TO_VAL(acc_scale_chain_replica) * acc_scale_tests_max_chains);
 
     // Make adjustment for the number of seq SQs needed for accelerator
     // scale testing.
-    // Note num_acc_queue_submissions denotes 2 ^ num_acc_queue_submissions
-    if (num_acc_queue_submissions < 1) {
-        num_acc_queue_submissions = 1;
-    }
+    // 
+    // Note that both acc_scale_submissions and acc_scale_chain_replica
+    // are in power of 2. Total is bumped up to ensure CI != PI
+    // during submission
+    max_acc_entries = log_2(NUM_TO_VAL(acc_scale_submissions)) + 1;
+    max_status_queues = log_2(NUM_TO_VAL(acc_scale_submissions) * NUM_TO_VAL(max_queues));
 
-    kSeqNumAccEntries = std::max(kSeqNumAccEntries, 
-                                 (uint32_t)num_acc_queue_submissions);
-    kSeqNumCompStatusSQs = std::max(kSeqNumCompStatusSQs,
-                                    (uint32_t)num_acc_queue_submissions);
-    kSeqNumXtsStatusSQs = std::max(kSeqNumXtsStatusSQs,
-                                   (uint32_t)num_acc_queue_submissions);
-    kSeqNumEntriesMax = std::max(kSeqNumEntriesMax,
-                                 (uint32_t)num_acc_queue_submissions);
+    kSeqNumAccEntries = std::max(kSeqNumAccEntries, max_acc_entries); 
+    kSeqNumCompSQs = std::max(kSeqNumCompSQs, max_queues);
+    kSeqNumCompStatusSQs = std::max(kSeqNumCompStatusSQs, max_status_queues);
+    kSeqNumXtsSQs = std::max(kSeqNumXtsSQs, max_queues);
+    kSeqNumXtsStatusSQs = std::max(kSeqNumXtsStatusSQs, max_status_queues);
 }
 
 int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
@@ -303,6 +303,7 @@ calc_total_queues()
 
   // Get the total count and log2 to nearest power of 2
   count = NUM_TO_VAL(kPvmNumNvmeSQs) + 
+          NUM_TO_VAL(kPvmNumR2nSQs) + 
           NUM_TO_VAL(kPvmNumR2nSQs) + 
           NUM_TO_VAL(kPvmNumNvmeBeSQs) + 
           NUM_TO_VAL(kPvmNumSsdSQs);
@@ -392,8 +393,8 @@ int lifs_setup() {
   hal_if::lif_params_t nvme_lif_params, seq_lif_params, pvm_lif_params;
 
   bzero(&nvme_lif_params, sizeof(nvme_lif_params));
-  lif_params_init(&nvme_lif_params, SQ_TYPE, kNvmeNumEntries, NvmeNumSQs);
-  lif_params_init(&nvme_lif_params, CQ_TYPE, kNvmeNumEntries, NvmeNumCQs);
+  lif_params_init(&nvme_lif_params, SQ_TYPE, kDefaultQstateEntrySize, NvmeNumSQs);
+  lif_params_init(&nvme_lif_params, CQ_TYPE, kDefaultQstateEntrySize, NvmeNumCQs);
 
   if (hal_if::create_lif(&nvme_lif_params, &nvme_lif) < 0) {
     printf("can't create nvme lif \n");
@@ -408,8 +409,8 @@ int lifs_setup() {
   printf("Successfully set NVME LIF %lu BDF %u \n", nvme_lif, kNvmeLifBdf);
   
   bzero(&pvm_lif_params, sizeof(pvm_lif_params));
-  lif_params_init(&pvm_lif_params, SQ_TYPE, kPvmNumEntries, PvmNumSQs);
-  lif_params_init(&pvm_lif_params, CQ_TYPE, kPvmNumEntries, PvmNumCQs);
+  lif_params_init(&pvm_lif_params, SQ_TYPE, kDefaultQstateEntrySize, PvmNumSQs);
+  lif_params_init(&pvm_lif_params, CQ_TYPE, kDefaultQstateEntrySize, PvmNumCQs);
 
   if (hal_if::create_lif(&pvm_lif_params, &pvm_lif) < 0) {
     printf("can't create PVM lif \n");
@@ -424,7 +425,7 @@ int lifs_setup() {
   printf("Successfully set PVM LIF %lu BDF %u \n", pvm_lif, kPvmLifBdf);
   
   bzero(&seq_lif_params, sizeof(seq_lif_params));
-  lif_params_init(&seq_lif_params, SQ_TYPE, kSeqNumEntriesMax, SeqNumSQs);
+  lif_params_init(&seq_lif_params, SQ_TYPE, kDefaultQstateEntrySize, SeqNumSQs);
 
   if (hal_if::create_lif(&seq_lif_params, &seq_lif) < 0) {
     printf("can't create Sequencer lif \n");
@@ -1021,7 +1022,7 @@ uint32_t get_seq_r2n_sq(uint32_t offset) {
 }
 
 uint32_t get_seq_xts_sq(uint32_t offset) {
-  assert(offset < NUM_TO_VAL(kSeqNumXtsSQs));
+  assert((int)offset < NUM_TO_VAL(kSeqNumXtsSQs));
   return (pvm_seq_xts_sq_base + offset);
 }
 
@@ -1036,7 +1037,7 @@ uint32_t get_seq_roce_sq(uint32_t offset) {
 }
 
 uint32_t get_seq_comp_sq(uint32_t offset) {
-  assert(offset < NUM_TO_VAL(kSeqNumCompSQs));
+  assert((int)offset < NUM_TO_VAL(kSeqNumCompSQs));
   return (pvm_seq_comp_sq_base + offset);
 }
 

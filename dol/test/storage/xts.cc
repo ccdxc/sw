@@ -132,7 +132,7 @@ void XtsCtx::init(uint32_t size, bool chain) {
   if (xts_db) {
     xts_db->clear_thru();
   } else {
-    xts_db = new dp_mem_t(1, kMinHostMemAllocSize, DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+    xts_db = new dp_mem_t(1, sizeof(uint64_t), DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     caller_xts_db_en = false;
   }
   if(!is_src_hbm_buf) {

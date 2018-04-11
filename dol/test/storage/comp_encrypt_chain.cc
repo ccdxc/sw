@@ -59,7 +59,7 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     } else {
         comp_status_buf2 = comp_status_buf1;
     }
-    comp_opaque_buf = new dp_mem_t(1, sizeof(uint32_t),
+    comp_opaque_buf = new dp_mem_t(1, sizeof(uint64_t),
                                    DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
 
     // XTS AOL must be 512 byte aligned
@@ -153,7 +153,6 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     compress_cp_desc_template_fill(cp_desc, uncomp_buf, comp_buf,
                      comp_status_buf1, comp_buf, app_blk_size);
 
-
     // XTS chaining will use direct Barco push action from
     // comp status queue handler. Hence, no XTS seq queue needed.
     chain_params.desc_format_fn = test_setup_post_comp_seq_status_entry;
@@ -240,6 +239,8 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
         xts_ctx.exp_db_data = caller_xts_opaque_data;
         xts_ctx.caller_xts_db_en = true;
     }
+    xts_ctx.copy_desc = false;
+    xts_ctx.ring_db = false;
 
     // Calling xts_ctx init only to get its xts_db initialized
     xts_ctx.init(0, false);
@@ -272,7 +273,7 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
     xts_out_aol->write_thru();
 
     // Set up XTS encrypt descriptor
-    caller_xts_status_buf->fill_thru(0xff);
+    caller_xts_status_buf->fragment_find(0, sizeof(uint32_t))->fill_thru(0xff);
     xts_ctx.cmd_eval_seq_xts(cmd);
     xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
     xts_desc_addr->in_aol = xts_in_aol->pa();
@@ -289,22 +290,33 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
 int 
 comp_encrypt_chain_t::verify(void)
 {
+    // Poll for comp status
+    if (!comp_status_poll(comp_status_buf2, suppress_info_log)) {
+      printf("ERROR: comp_encrypt_chain ompression status never came\n");
+      return -1;
+    }
+
+    // Validate comp status
     if (compress_status_verify(comp_status_buf2, comp_buf, cp_desc)) {
-        printf("ERROR: compression status verification failed\n");
+        printf("ERROR: comp_encrypt_chain compression status verification failed\n");
         return -1;
     }
     last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
+    if (!suppress_info_log) {
+        printf("comp_encrypt_chain: last_cp_output_data_len %u\n",
+               last_cp_output_data_len);
+    }
 
     // Verify XTS engine doorbell
     if (xts_ctx.verify_doorbell(false)) {
-        printf("ERROR: doorbell from XTS engine never came.\n");
+        printf("ERROR: comp_encrypt_chain doorbell from XTS engine never came\n");
         return -1;
     }
 
     // Validate XTS status
-    uint32_t curr_xts_status = *((uint32_t *)caller_xts_status_buf->read_thru());
+    uint64_t curr_xts_status = *((uint64_t *)caller_xts_status_buf->read_thru());
     if (curr_xts_status) {
-      printf("ERROR: XTS error 0x%x\n", curr_xts_status);
+      printf("ERROR: comp_encrypt_chain XTS error 0x%lx\n", curr_xts_status);
       return -1;
     }
 

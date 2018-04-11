@@ -78,15 +78,18 @@ static const uint64_t dc_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
 // compression/decompression blocks initialized by HAL
 // or by this DOL module.
 static const bool comp_inited_by_hal = true;
-
-static const uint32_t kNumSubqEntries = 1024;
-static const uint32_t kQueueMemSize = sizeof(cp_desc_t) * kNumSubqEntries;
+const static uint32_t kMaxSubqEntries = 4096;
 
 comp_queue_t *cp_queue;
 comp_queue_t *dc_queue;
 
 comp_queue_t *cp_hotq;
 comp_queue_t *dc_hotq;
+
+static uint32_t cp_queue_size;
+static uint32_t cp_hotq_size;
+static uint32_t dc_queue_size;
+static uint32_t dc_hotq_size;
 
 // These constants equate to the number of 
 // hardware compression/decompression engines.
@@ -123,8 +126,8 @@ static dp_mem_t *seq_sgl;
 
 static dp_mem_t *xts_status_host_buf;
 
-comp_encrypt_chain_t   *comp_encrypt_chain;
-decrypt_decomp_chain_t *decrypt_decomp_chain;
+static comp_encrypt_chain_t   *comp_encrypt_chain;
+static decrypt_decomp_chain_t *decrypt_decomp_chain;
 
 static dp_mem_t *comp_pad_buf;
 
@@ -140,20 +143,23 @@ int run_dc_test(cp_desc_t& desc,
                 comp_queue_push_t push_type = COMP_QUEUE_PUSH_HW_DIRECT,
                 uint32_t seq_comp_qid = 0);
 
-bool comp_status_poll(dp_mem_t *status) {
-  auto func = [status] () -> int {
+bool comp_status_poll(dp_mem_t *status,
+                      bool suppress_log) {
+  auto func = [status, suppress_log] () -> int {
     cp_status_sha512_t *s = (cp_status_sha512_t *)status->read_thru();
     if (s->valid) {
       if (status->is_mem_type_hbm()) {
         usleep(100);
         s = (cp_status_sha512_t *)status->read_thru();
       }
-      printf("Got status %llx\n", *((unsigned long long *)s));
+      if (!suppress_log) {
+          printf("Got status %llx\n", *((unsigned long long *)s));
+      }
       return 0;
     }
     return 1;
   };
-  tests::Poller poll;
+  tests::Poller poll(FLAGS_long_poll_interval);
   if (poll(func) == 0)
     return true;
   return false;
@@ -285,7 +291,8 @@ queue_mem_pa_get(uint64_t reg_addr)
 
 
 comp_queue_t::comp_queue_t(uint64_t cfg_q_base,
-                           uint64_t cfg_q_pd_idx) :
+                           uint64_t cfg_q_pd_idx,
+                           uint32_t size) :
     cfg_q_base(cfg_q_base),
     cfg_q_pd_idx(cfg_q_pd_idx),
     curr_seq_comp_qid(0),
@@ -293,9 +300,11 @@ comp_queue_t::comp_queue_t(uint64_t cfg_q_base,
     curr_pd_idx(0),
     curr_push_type(COMP_QUEUE_PUSH_INVALID)
 {
+    q_size = size == 0 ? kMaxSubqEntries : size;
+
     // If comp was initialized by HAL, q_base_mem below would be used
     // as descriptor cache for sequencer submission.
-    q_base_mem = (cp_desc_t *)alloc_page_aligned_host_mem(kQueueMemSize);
+    q_base_mem = (cp_desc_t *)alloc_page_aligned_host_mem(sizeof(cp_desc_t) * q_size);
     assert(q_base_mem != nullptr);
 
     if (comp_inited_by_hal) {
@@ -321,7 +330,7 @@ comp_queue_t::push(const cp_desc_t& src_desc,
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH:
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST:
         pd_idx = curr_pd_idx;
-        curr_pd_idx = (curr_pd_idx + 1) % kNumSubqEntries;
+        curr_pd_idx = (curr_pd_idx + 1) % q_size;
 
         dst_desc = &q_base_mem[pd_idx];
         memcpy(dst_desc, &src_desc, sizeof(*dst_desc));
@@ -368,7 +377,7 @@ comp_queue_t::push(const cp_desc_t& src_desc,
     case COMP_QUEUE_PUSH_HW_DIRECT_BATCH:
         write_mem(q_base_mem_pa + (curr_pd_idx * sizeof(cp_desc_t)),
                   (uint8_t *)&src_desc, sizeof(cp_desc_t));
-        curr_pd_idx = (curr_pd_idx + 1) % kNumSubqEntries;
+        curr_pd_idx = (curr_pd_idx + 1) % q_size;
         if (push_type == COMP_QUEUE_PUSH_HW_DIRECT) {
             write_reg(cfg_q_pd_idx, curr_pd_idx);
             curr_push_type = COMP_QUEUE_PUSH_INVALID;
@@ -432,7 +441,7 @@ compression_buf_init()
                                    DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     status_host_buf2 = new dp_mem_t(1, sizeof(cp_status_sha512_t),
                                     DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-    opaque_host_buf = new dp_mem_t(1, sizeof(uint32_t),
+    opaque_host_buf = new dp_mem_t(1, sizeof(uint64_t),
                                    DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     host_sgl1 = new dp_mem_t(1, sizeof(cp_sgl_t),
                              DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
@@ -444,7 +453,7 @@ compression_buf_init()
                              DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     seq_sgl = new dp_mem_t(1, sizeof(cp_sq_ent_sgl_t));
 
-    xts_status_host_buf = new dp_mem_t(1, sizeof(uint32_t),
+    xts_status_host_buf = new dp_mem_t(1, sizeof(uint64_t),
                                        DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     comp_pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
 
@@ -494,21 +503,31 @@ compression_buf_init()
 void
 compression_init()
 {
-  cp_queue = new comp_queue_t(cp_cfg_q_base, cp_cfg_q_pd_idx);
-  cp_hotq = new comp_queue_t(cp_cfg_hotq_base, cp_cfg_hotq_pd_idx);
-  dc_queue = new comp_queue_t(dc_cfg_q_base, dc_cfg_q_pd_idx);
-  dc_hotq = new comp_queue_t(dc_cfg_hotq_base, dc_cfg_hotq_base);
-
-  compression_buf_init();
-
   uint32_t lo_reg, hi_reg;
-  read_reg(cp_cfg_glob, lo_reg);
 
+  read_reg(cp_cfg_glob, lo_reg);
   if (comp_inited_by_hal) {
       kCPVersion = lo_reg & 0xffff;
       printf("Comp version is 0x%x\n", kCPVersion);
 
-  } else {
+      read_reg(cp_cfg_dist, lo_reg);
+      cp_queue_size = (lo_reg >> 2) & 0xfff;
+      cp_hotq_size = (lo_reg >> 14) & 0xfff;
+      read_reg(dc_cfg_dist, lo_reg);
+      dc_queue_size = (lo_reg >> 2) & 0xfff;
+      dc_hotq_size = (lo_reg >> 14) & 0xfff;
+      printf("cp_queue_size %u cp_hotq_size %u dc_queue_size %u dc_hotq_size %u\n",
+             cp_queue_size, cp_hotq_size, dc_queue_size, dc_hotq_size);
+  }
+
+  cp_queue = new comp_queue_t(cp_cfg_q_base, cp_cfg_q_pd_idx, cp_queue_size);
+  cp_hotq = new comp_queue_t(cp_cfg_hotq_base, cp_cfg_hotq_pd_idx, cp_hotq_size);
+  dc_queue = new comp_queue_t(dc_cfg_q_base, dc_cfg_q_pd_idx, dc_queue_size);
+  dc_hotq = new comp_queue_t(dc_cfg_hotq_base, dc_cfg_hotq_base, dc_hotq_size);
+
+  compression_buf_init();
+
+  if (!comp_inited_by_hal) {
 
       // Write cp queue base.
       write_reg(cp_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
@@ -604,7 +623,6 @@ void compress_cp_desc_template_fill(cp_desc_t &d,
     memset(&d, 0, sizeof(d));
     d.cmd_bits.comp_decomp_en = 1;
     d.cmd_bits.insert_header = 1;
-    d.cmd_bits.sha_en = 1;
     d.src = src_buf->pa();
     d.dst = dst_buf->pa();
     d.status_addr = status_buf->pa();
@@ -1126,14 +1144,21 @@ int _max_data_rate(comp_queue_push_t push_type,
   dp_mem_t *max_dc_status_buf = new dp_mem_t(MAX_DC_REQ, sizeof(cp_status_sha512_t));
 
   // allocate opaque tags as a byte stream for easy memcmp
-  dp_mem_t *max_cp_opaque_host_buf = new dp_mem_t(1, MAX_CP_REQ * sizeof(uint32_t),
+  dp_mem_t *max_cp_opaque_host_buf = new dp_mem_t(1, MAX_CP_REQ * sizeof(uint64_t),
                                                   DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-  dp_mem_t *exp_opaque_data_buf = new dp_mem_t(1, MAX_CP_REQ * sizeof(uint32_t),
+  dp_mem_t *exp_opaque_data_buf = new dp_mem_t(1, MAX_CP_REQ * sizeof(uint64_t),
                                                DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-  dp_mem_t *max_dc_opaque_host_buf = new dp_mem_t(1, MAX_DC_REQ * sizeof(uint32_t),
+  dp_mem_t *max_dc_opaque_host_buf = new dp_mem_t(1, MAX_DC_REQ * sizeof(uint64_t),
                                                   DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
   uint32_t exp_opaque_data = 0xa5a5a5a5;
-  exp_opaque_data_buf->fill_thru(0xa5);
+
+  // Note that RTL expects each opaque tag as uint64_t and writes
+  // exp_opaque_data to the first 4 bytes, followed by 0 in the next 4 bytes
+  for (i = 0; i < MAX_CP_REQ; i++) {
+      memcpy(exp_opaque_data_buf->read() + (i * sizeof(uint64_t)),
+             &exp_opaque_data, sizeof(uint32_t));
+  }
+  exp_opaque_data_buf->write_thru();
 
   // allocate and fill descriptors to load compression engine with requests
   for (i = 0, d = &comp_cp_desc[0];
@@ -1148,7 +1173,7 @@ int _max_data_rate(comp_queue_push_t push_type,
                                    nullptr, kCompAppNominalSize);
     d->status_data += i;
     d->cmd_bits.opaque_tag_on = 1;
-    d->opaque_tag_addr = max_cp_opaque_host_buf->pa() + (i * sizeof(uint32_t));
+    d->opaque_tag_addr = max_cp_opaque_host_buf->pa() + (i * sizeof(uint64_t));
     d->opaque_tag_data = exp_opaque_data;
     cp_queue->push(*d, 
                     i == (MAX_CP_REQ - 1) ? last_push_type : push_type,
@@ -1169,7 +1194,7 @@ int _max_data_rate(comp_queue_push_t push_type,
                                      kCompAppNominalSize);
     d->status_data += i;
     d->cmd_bits.opaque_tag_on = 1;
-    d->opaque_tag_addr = max_dc_opaque_host_buf->pa() + (i * sizeof(uint32_t));
+    d->opaque_tag_addr = max_dc_opaque_host_buf->pa() + (i * sizeof(uint64_t));
     d->opaque_tag_data = exp_opaque_data;
     dc_queue->push(*d,
                    i == (MAX_DC_REQ - 1) ? last_push_type : push_type,
@@ -1227,7 +1252,7 @@ int _max_data_rate(comp_queue_push_t push_type,
       return 0;
   };
 
-  tests::Poller poll;
+  tests::Poller poll(FLAGS_long_poll_interval);
   if (poll(func) == 0) {
     printf("Testcase %s passed\n", __func__);
 
@@ -1324,7 +1349,7 @@ static int cp_dualq_flat_4K_buf(dp_mem_t *comp_buf,
     return 0;
   };
 
-  tests::Poller poll;
+  tests::Poller poll(FLAGS_long_poll_interval);
   if (poll(func) == 0) {
     printf("Testcase %s passed\n", __func__);
     return 0;
