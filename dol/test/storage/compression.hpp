@@ -123,7 +123,8 @@ class comp_queue_t
 {
 public:
     comp_queue_t(uint64_t cfg_q_base,
-                 uint64_t cfg_q_pd_idx);
+                 uint64_t cfg_q_pd_idx,
+                 uint32_t size);
     void push(const cp_desc_t& src_desc,
               comp_queue_push_t push_type,
               uint32_t seq_comp_qid);
@@ -145,6 +146,7 @@ private:
     cp_desc_t   *q_base_mem;
     uint64_t    q_base_mem_pa;
 
+    uint32_t    q_size;
     uint32_t    curr_seq_comp_qid;
     uint16_t    curr_seq_comp_pd_idx;
     uint16_t    curr_pd_idx;
@@ -167,9 +169,6 @@ extern comp_queue_t *dc_queue;
 
 extern comp_queue_t *cp_hotq;
 extern comp_queue_t *dc_hotq;
-
-extern comp_encrypt_chain_t   *comp_encrypt_chain;
-extern decrypt_decomp_chain_t *decrypt_decomp_chain;
 
 bool comp_status_poll(dp_mem_t *status,
                       bool suppress_log = false);

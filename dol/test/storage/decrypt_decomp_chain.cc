@@ -291,6 +291,10 @@ decrypt_decomp_chain_t::verify(void)
       return -1;
     }
     last_dc_output_data_len = comp_status_output_data_len_get(caller_comp_status_buf);
+    if (!suppress_info_log) {
+        printf("decrypt_decomp_chain: last_dc_output_data_len %u\n",
+               last_dc_output_data_len);
+    }
 
     // Validate data
     if (test_data_verify_and_dump(comp_encrypt_chain->uncomp_data_get(),
@@ -305,7 +309,8 @@ decrypt_decomp_chain_t::verify(void)
     last_decrypt_output_data_len = xts_out->l0;
 
     if (!suppress_info_log) {
-        printf("Testcase decrypt_decomp_chain passed\n");
+        printf("Testcase decrypt_decomp_chain passed: "
+               "last_decrypt_output_data_len %u\n", last_decrypt_output_data_len);
     }
     success = true;
     return 0;

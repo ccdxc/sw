@@ -78,15 +78,18 @@ static const uint64_t dc_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
 // compression/decompression blocks initialized by HAL
 // or by this DOL module.
 static const bool comp_inited_by_hal = true;
-
-static const uint32_t kNumSubqEntries = 1024;
-static const uint32_t kQueueMemSize = sizeof(cp_desc_t) * kNumSubqEntries;
+const static uint32_t kMaxSubqEntries = 4096;
 
 comp_queue_t *cp_queue;
 comp_queue_t *dc_queue;
 
 comp_queue_t *cp_hotq;
 comp_queue_t *dc_hotq;
+
+static uint32_t cp_queue_size;
+static uint32_t cp_hotq_size;
+static uint32_t dc_queue_size;
+static uint32_t dc_hotq_size;
 
 // These constants equate to the number of 
 // hardware compression/decompression engines.
@@ -123,8 +126,8 @@ static dp_mem_t *seq_sgl;
 
 static dp_mem_t *xts_status_host_buf;
 
-comp_encrypt_chain_t   *comp_encrypt_chain;
-decrypt_decomp_chain_t *decrypt_decomp_chain;
+static comp_encrypt_chain_t   *comp_encrypt_chain;
+static decrypt_decomp_chain_t *decrypt_decomp_chain;
 
 static dp_mem_t *comp_pad_buf;
 
@@ -288,7 +291,8 @@ queue_mem_pa_get(uint64_t reg_addr)
 
 
 comp_queue_t::comp_queue_t(uint64_t cfg_q_base,
-                           uint64_t cfg_q_pd_idx) :
+                           uint64_t cfg_q_pd_idx,
+                           uint32_t size) :
     cfg_q_base(cfg_q_base),
     cfg_q_pd_idx(cfg_q_pd_idx),
     curr_seq_comp_qid(0),
@@ -296,9 +300,11 @@ comp_queue_t::comp_queue_t(uint64_t cfg_q_base,
     curr_pd_idx(0),
     curr_push_type(COMP_QUEUE_PUSH_INVALID)
 {
+    q_size = size == 0 ? kMaxSubqEntries : size;
+
     // If comp was initialized by HAL, q_base_mem below would be used
     // as descriptor cache for sequencer submission.
-    q_base_mem = (cp_desc_t *)alloc_page_aligned_host_mem(kQueueMemSize);
+    q_base_mem = (cp_desc_t *)alloc_page_aligned_host_mem(sizeof(cp_desc_t) * q_size);
     assert(q_base_mem != nullptr);
 
     if (comp_inited_by_hal) {
@@ -324,7 +330,7 @@ comp_queue_t::push(const cp_desc_t& src_desc,
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH:
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST:
         pd_idx = curr_pd_idx;
-        curr_pd_idx = (curr_pd_idx + 1) % kNumSubqEntries;
+        curr_pd_idx = (curr_pd_idx + 1) % q_size;
 
         dst_desc = &q_base_mem[pd_idx];
         memcpy(dst_desc, &src_desc, sizeof(*dst_desc));
@@ -371,7 +377,7 @@ comp_queue_t::push(const cp_desc_t& src_desc,
     case COMP_QUEUE_PUSH_HW_DIRECT_BATCH:
         write_mem(q_base_mem_pa + (curr_pd_idx * sizeof(cp_desc_t)),
                   (uint8_t *)&src_desc, sizeof(cp_desc_t));
-        curr_pd_idx = (curr_pd_idx + 1) % kNumSubqEntries;
+        curr_pd_idx = (curr_pd_idx + 1) % q_size;
         if (push_type == COMP_QUEUE_PUSH_HW_DIRECT) {
             write_reg(cfg_q_pd_idx, curr_pd_idx);
             curr_push_type = COMP_QUEUE_PUSH_INVALID;
@@ -497,21 +503,31 @@ compression_buf_init()
 void
 compression_init()
 {
-  cp_queue = new comp_queue_t(cp_cfg_q_base, cp_cfg_q_pd_idx);
-  cp_hotq = new comp_queue_t(cp_cfg_hotq_base, cp_cfg_hotq_pd_idx);
-  dc_queue = new comp_queue_t(dc_cfg_q_base, dc_cfg_q_pd_idx);
-  dc_hotq = new comp_queue_t(dc_cfg_hotq_base, dc_cfg_hotq_base);
-
-  compression_buf_init();
-
   uint32_t lo_reg, hi_reg;
-  read_reg(cp_cfg_glob, lo_reg);
 
+  read_reg(cp_cfg_glob, lo_reg);
   if (comp_inited_by_hal) {
       kCPVersion = lo_reg & 0xffff;
       printf("Comp version is 0x%x\n", kCPVersion);
 
-  } else {
+      read_reg(cp_cfg_dist, lo_reg);
+      cp_queue_size = (lo_reg >> 2) & 0xfff;
+      cp_hotq_size = (lo_reg >> 14) & 0xfff;
+      read_reg(dc_cfg_dist, lo_reg);
+      dc_queue_size = (lo_reg >> 2) & 0xfff;
+      dc_hotq_size = (lo_reg >> 14) & 0xfff;
+      printf("cp_queue_size %u cp_hotq_size %u dc_queue_size %u dc_hotq_size %u\n",
+             cp_queue_size, cp_hotq_size, dc_queue_size, dc_hotq_size);
+  }
+
+  cp_queue = new comp_queue_t(cp_cfg_q_base, cp_cfg_q_pd_idx, cp_queue_size);
+  cp_hotq = new comp_queue_t(cp_cfg_hotq_base, cp_cfg_hotq_pd_idx, cp_hotq_size);
+  dc_queue = new comp_queue_t(dc_cfg_q_base, dc_cfg_q_pd_idx, dc_queue_size);
+  dc_hotq = new comp_queue_t(dc_cfg_hotq_base, dc_cfg_hotq_base, dc_hotq_size);
+
+  compression_buf_init();
+
+  if (!comp_inited_by_hal) {
 
       // Write cp queue base.
       write_reg(cp_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);

@@ -49,6 +49,7 @@ storage_tx_seq_xts_status_desc_handler_start:
    // in K+I vector.
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
                             d.barco_pndx_addr, dma_p2m_11)
+   DMA_PHV2MEM_FENCE(dma_p2m_11)
    b            status_dma_setup
    
    // Note that d.next_db_addr in this case is really d.barco_ring_addr
@@ -65,14 +66,13 @@ status_dma_setup:
 
    // Set up further status xfer if applicable
    bbeq         d.status_dma_en, 0, tbl_load
-   nop
+   add          r3, r0, d.status_len    // delay slot
    
    // Set up the status DMA:
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.status_hbm_addr, 
-                     d.status_len[13:0], 0, 0, dma_m2m_1)
+                     r3, 0, 0, dma_m2m_1)
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.status_host_addr, 
-                     d.status_len[13:0], 0, 0, dma_m2m_2)
-   DMA_MEM2MEM_FENCE(dma_m2m_2)
+                     r3, 0, 0, dma_m2m_2)
 
 tbl_load:
 

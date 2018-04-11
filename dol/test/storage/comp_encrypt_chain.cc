@@ -302,6 +302,10 @@ comp_encrypt_chain_t::verify(void)
         return -1;
     }
     last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
+    if (!suppress_info_log) {
+        printf("comp_encrypt_chain: last_encrypt_output_data_len %u\n",
+               last_encrypt_output_data_len);
+    }
 
     // Verify XTS engine doorbell
     if (xts_ctx.verify_doorbell(false)) {
