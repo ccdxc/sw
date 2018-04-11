@@ -763,7 +763,7 @@ static int ionic_destroy_qp(struct ibv_qp *ibqp)
 }
 
 static int64_t ionic_prep_inline(void *data, size_t max_data,
-				 struct ibv_sge *ibv_sgl, uint32_t num_sge)
+				 struct ibv_sge *ibv_sgl, int num_sge)
 {
 	static const int64_t bit_31 = 1u << 31;
 	int64_t len = 0, sg_len;
@@ -789,13 +789,13 @@ static int64_t ionic_prep_inline(void *data, size_t max_data,
 }
 
 static int64_t ionic_prep_sgl(struct sge_t *sgl, uint32_t max_sge,
-			      struct ibv_sge *ibv_sgl, uint32_t num_sge)
+			      struct ibv_sge *ibv_sgl, int num_sge)
 {
 	static const int64_t bit_31 = 1l << 31;
 	int64_t len = 0, sg_len;
 	int sg_i;
 
-	if (unlikely(num_sge > max_sge))
+	if (unlikely(num_sge < 0 || (uint32_t)num_sge > max_sge))
 		return -EINVAL;
 
 	for (sg_i = 0; sg_i < num_sge; ++sg_i) {
@@ -810,8 +810,8 @@ static int64_t ionic_prep_sgl(struct sge_t *sgl, uint32_t max_sge,
 			return -EINVAL;
 
 		sgl[sg_i].va = htobe64(ibv_sgl[sg_i].addr);
-		sgl[sg_i].lkey = htobe32(ibv_sgl[sg_i].lkey);
 		sgl[sg_i].len = htobe32(sg_len);
+		sgl[sg_i].lkey = htobe32(ibv_sgl[sg_i].lkey);
 
 		len += sg_len;
 	}
