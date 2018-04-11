@@ -27,8 +27,6 @@ int pvm_queues_setup();
 
 int seq_queues_setup();
 
-bool seq_queue_acc_num_validate(const char *flag_name,
-                                uint64_t value);
 void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
                                uint64_t& acc_scale_chain_replica,
                                uint32_t acc_scale_tests_max_chains);

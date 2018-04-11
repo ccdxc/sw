@@ -10,6 +10,7 @@ import signal
 import atexit
 import pdb
 import glob
+import shlex
 
 from subprocess import Popen, PIPE, call
 
@@ -306,6 +307,12 @@ def run_storage_dol(port, args):
             cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.storage_test]
         else:
             cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip)]
+
+        #pass additional arguments to storage_test
+        if args.storage_runargs:
+            cmd.extend(shlex.split(args.storage_runargs))
+            print 'Executing command [%s]' % ', '.join(map(str, cmd))
+
     p = Popen(cmd)
     #p.communicate()
     #return p.returncode
@@ -687,6 +694,8 @@ def main():
                         help='Modify DOL config testre starting packet tests')
     parser.add_argument('--storage_test', dest='storage_test', default=None,
                         help='Run only a subtest of storage test suite')
+    parser.add_argument('--storage_runargs', dest='storage_runargs', default='',
+                        help='any extra options that should be passed to storage as run_args.')
     parser.add_argument('--no_error_check', dest='no_error_check', default=None,
                         action='store_true',
                         help='Disable model error checking')

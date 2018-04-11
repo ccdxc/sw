@@ -40,7 +40,6 @@ DEFINE_uint64(acc_scale_chain_replica, 0,
 // Number of accelerator submissions in each chain for scale testing
 DEFINE_uint64(acc_scale_submissions, 2,
               "number of accelerator queue submissions for scale testing (in power of 2)");
-DEFINE_validator(acc_scale_submissions, &queues::seq_queue_acc_num_validate);
 
 // Block size for accelerator scale testing
 DEFINE_uint64(acc_scale_blk_size, 13,

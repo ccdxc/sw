@@ -483,7 +483,7 @@ acc_scale_tests_comp_encrypt_decrypt_decomp(void)
     comp_encrypt_chain_scale_t  *comp_encrypt_chain_scale_source;
     comp_encrypt_chain_t        *comp_encrypt_chain_source;
     acc_scale_tests_list_t      tests_list;
-    tests::Poller               poll;
+    tests::Poller               poll(FLAGS_long_poll_interval);
     uint32_t                    num_submissions = NUM_TO_VAL(FLAGS_acc_scale_submissions);
     uint32_t                    num_replicas = NUM_TO_VAL(FLAGS_acc_scale_chain_replica);
     uint32_t                    app_blk_size = NUM_TO_VAL(FLAGS_acc_scale_blk_size);

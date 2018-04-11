@@ -159,7 +159,7 @@ bool comp_status_poll(dp_mem_t *status,
     }
     return 1;
   };
-  tests::Poller poll;
+  tests::Poller poll(FLAGS_long_poll_interval);
   if (poll(func) == 0)
     return true;
   return false;
@@ -623,7 +623,6 @@ void compress_cp_desc_template_fill(cp_desc_t &d,
     memset(&d, 0, sizeof(d));
     d.cmd_bits.comp_decomp_en = 1;
     d.cmd_bits.insert_header = 1;
-    d.cmd_bits.sha_en = 1;
     d.src = src_buf->pa();
     d.dst = dst_buf->pa();
     d.status_addr = status_buf->pa();
@@ -1253,7 +1252,7 @@ int _max_data_rate(comp_queue_push_t push_type,
       return 0;
   };
 
-  tests::Poller poll;
+  tests::Poller poll(FLAGS_long_poll_interval);
   if (poll(func) == 0) {
     printf("Testcase %s passed\n", __func__);
 
@@ -1350,7 +1349,7 @@ static int cp_dualq_flat_4K_buf(dp_mem_t *comp_buf,
     return 0;
   };
 
-  tests::Poller poll;
+  tests::Poller poll(FLAGS_long_poll_interval);
   if (poll(func) == 0) {
     printf("Testcase %s passed\n", __func__);
     return 0;

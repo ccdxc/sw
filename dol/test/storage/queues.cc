@@ -235,16 +235,6 @@ void seq_queue_pdma_num_set(uint64_t& num_pdma_queues) {
     SeqNumPdmaSQs = num_pdma_queues;
 }
 
-bool seq_queue_acc_num_validate(const char *flag_name,
-                                uint64_t value) {
-   if (value) {
-       return true;
-   }
-
-   printf("Value for --%s must be at least 1\n", flag_name);
-   return false;
-}
-
 void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
                                uint64_t& acc_scale_chain_replica,
                                uint32_t acc_scale_tests_max_chains) {
