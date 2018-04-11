@@ -25,14 +25,11 @@ packets:
         id          : BASE_PKT_IN1 
         template    : callback://networking/packets/GetPacketTemplateByFlow
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        encaps      : callback://networking/packets/GetPacketEncaps
+        #encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
-                prio    : 0
+                src     : callback://ipsec/ipsec/GetSMac 
+                dst     : callback://ipsec/ipsec/GetDMac 
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -63,8 +60,8 @@ packets:
                 vlan    : callback://ipsec/ipsec/GetEncapVlan
                 prio    : 0
             ipv4:
-                src     : callback://ipsec/ipsec/GetSIp
-                dst     : callback://ipsec/ipsec/GetDIp 
+                src     : callback://ipsec/ipsec/GetDIp
+                dst     : callback://ipsec/ipsec/GetSIp 
                 ttl     : 255
                 len     : 164 
                 id      : 0
@@ -93,5 +90,5 @@ expect:
         - packet:
             scale   : True
             object  : scale-ref://testcase/packets/id=PKT1
-            port    : 2 
+            port    : 2
 
