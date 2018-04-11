@@ -1408,6 +1408,7 @@ main (int argc, char** argv)
     uint32_t     src_ip[15], dst_ip[15];
     EncapInfo    l2seg_encap;
     bool         system_get = false, random = true, send = false;
+    bool         no_delete = false;
     std::string  svc_endpoint = hal_svc_endpoint_;
     uint32_t     num_sessions = 10, batch_size = 1;
     timespec_t   start_ts, end_ts;
@@ -1423,6 +1424,7 @@ main (int argc, char** argv)
        { "mode",          required_argument,  NULL, 'm' },
        { "num-sessions",  required_argument,  NULL, 'n' },
        { "batch-size",    required_argument,  NULL, 'b' },
+       { "no-delete",     no_argument,        NULL, 'd' },
        { 0,               0,                  0,    0 }
     };
 
@@ -1444,6 +1446,9 @@ main (int argc, char** argv)
             break;
         case 'b':
             batch_size = atoi(optarg);
+            break;
+        case 'd':
+            no_delete = true;
             break;
         case ':':
             break;
@@ -1602,6 +1607,10 @@ done:
     std::cout << "Time to create " << num_sessions << " sessions is "
               << time << " secs" << std::endl;
     std::cout << "Session/sec is " << num_sessions/time << std::endl;
+
+    if (no_delete) {
+        return 0;
+    }
 
     // Delete EPs
     hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0102);

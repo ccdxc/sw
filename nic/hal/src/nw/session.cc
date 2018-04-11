@@ -568,27 +568,13 @@ session_state_to_session_get_response (session_state_t *session_state,
          response->mutable_stats()->mutable_responder_flow_stats());
     return;
 }
-    
+
 hal_ret_t
-session_get (SessionGetRequest& req, SessionGetResponse *response)
+system_get_fill_rsp (session_t *session, SessionGetResponse *response)
 {
-    session_t                   *session;
     pd::pd_session_get_args_t   args;
     session_state_t             session_state;
     hal_ret_t                   ret = HAL_RET_OK;
-
-    if (!req.has_meta() ||
-        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
-        response->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    session = find_session_by_handle(req.session_handle());
-
-    if (session == NULL) {
-        response->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_SESSION_NOT_FOUND;
-    }
 
     args.session = session;
     args.session_state = &session_state;
@@ -602,7 +588,28 @@ session_get (SessionGetRequest& req, SessionGetResponse *response)
     session_to_session_get_response(session, response);
     session_state_to_session_get_response(&session_state, response);
     response->set_api_status(types::API_STATUS_OK);
+
     return HAL_RET_OK;
+}
+    
+hal_ret_t
+session_get (SessionGetRequest& req, SessionGetResponse *response)
+{
+    session_t                   *session;
+
+    if (!req.has_meta() ||
+        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        response->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    session = find_session_by_handle(req.session_handle());
+    if (session == NULL) {
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_SESSION_NOT_FOUND;
+    }
+
+    return system_get_fill_rsp(session, response);
 }
 
 
@@ -1298,12 +1305,13 @@ hal_walkall_session(void *entry, void *ctxt)
 {
     session_t                *session = (session_t *)entry;
     session_walkall_args_t   *args = (session_walkall_args_t *)ctxt;
-    
+
     if (args->is_del) {
         SessionDeleteResponseMsg *rsp = (SessionDeleteResponseMsg *)args->rsp;
         SessionDeleteResponse    *response;
         SessionDeleteRequest      req;
 
+        req.mutable_meta()->set_vrf_id(vrf_lookup_by_handle(session->vrf_handle)->vrf_id);
         req.set_session_handle(session->hal_handle);
         response = rsp->add_response();
         fte::session_delete(req, response);
@@ -1312,9 +1320,8 @@ hal_walkall_session(void *entry, void *ctxt)
         SessionGetResponse    *response;
         SessionGetRequest      req;
 
-        req.set_session_handle(session->hal_handle);
         response = rsp->add_response();
-        hal::session_get(req, response);
+        system_get_fill_rsp(session, response);
     }
 
     return false;
