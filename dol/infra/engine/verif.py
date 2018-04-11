@@ -15,7 +15,7 @@ from infra.common.glopts    import GlobalOptions
 from infra.common.logging   import logger as logger
 from infra.asic.model       import ModelConnector
 
-RTL_RETRY_SCALE     = 5
+RTL_RETRY_SCALE     = 20
 MAX_RETRIES         = 10
 MAX_DROP_RETRIES    = 1
 
