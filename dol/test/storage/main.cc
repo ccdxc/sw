@@ -197,9 +197,9 @@ std::vector<tests::TestEntry> pdma_tests = {
 
 std::vector<tests::TestEntry> noc_perf_tests = {
   {&tests::xts_multi_blk_noc_stress_from_hbm_hw_chain, "NOC Perf with buffers on hbm HW chain", false},
-  //{&tests::xts_multi_blk_noc_stress_from_host_hw_chain, "NOC Perf with buffers on host HW chain", false},
-  //{&tests::xts_multi_blk_noc_stress_from_hbm, "NOC Perf with buffers on hbm", false},
-  //{&tests::xts_multi_blk_noc_stress_from_host, "NOC Perf with buffers on host", false},
+  {&tests::xts_multi_blk_noc_stress_from_host_hw_chain, "NOC Perf with buffers on host HW chain", false},
+  {&tests::xts_multi_blk_noc_stress_from_hbm, "NOC Perf with buffers on hbm", false},
+  {&tests::xts_multi_blk_noc_stress_from_host, "NOC Perf with buffers on host", false},
 };
 
 std::vector<tests::TestEntry> rdma_perf_tests = {
@@ -305,6 +305,11 @@ int main(int argc, char**argv) {
       run_rdma_perf_tests = true;
   } else if (FLAGS_test_group == "acc_scale") {
       run_acc_scale_tests = true;
+  } else if (FLAGS_test_group == "perf") {
+      run_xts_perf_tests = true;
+      run_noc_perf_tests = true;
+      run_comp_perf_tests = true;
+      run_rdma_perf_tests = true;
   } else {
     printf("Usage: ./storage_test [--hal_port <xxx>] "
            "[--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma|acc_scale|rtl_sanity] "
