@@ -37,9 +37,9 @@
 
 // name of the HAL state store segment
 #define HAL_STATE_STORE                         "h2s"
-#define HAL_STATE_STORE_SIZE                    0x80000000     // 2G
+#define HAL_STATE_STORE_SIZE                    0x20000000     // 500 MB
 #define HAL_SERIALIZED_STATE_STORE              "h3s"
-#define HAL_SERIALIZED_STATE_STORE_SIZE         0x80000000     // 2G
+#define HAL_SERIALIZED_STATE_STORE_SIZE         0x20000000     // 500 MB
 #define HAL_STATE_STORE_VADDR                   0x400000000    // starting from 16G
 #define HAL_SERIALIZED_STATE_STORE_VADDR        0x480000000    // starting from 18G
 #define HAL_STATE_OBJ                           "halstate"
@@ -1160,15 +1160,19 @@ hal_obj_marshall (void *obj, void *ctxt)
     tlv->type = mctxt->obj_id;
     ret = mctxt->marshall_cb(obj, tlv->val,
                              mctxt->len - sizeof(tlv_t), &tlv->len);
-    if (ret != HAL_RET_OK) {
+    // tlv->len == 0: Marshall CB may not have been implemented. So skip
+    //                adding to the persistent memory
+    if (ret != HAL_RET_OK || tlv->len == 0) {
         HAL_TRACE_ERR("Marshalling failed for obj id {}, buf len available {}",
                       tlv->type, mctxt->len);
         // TODO: abort ??
+        goto end;
     }
     mctxt->mem += sizeof(tlv_t) + tlv->len;
     mctxt->len -= sizeof(tlv_t) + tlv->len;
 
-     return false;    // don't stop the walk
+end:
+    return false;    // don't stop the walk
 }
 
 //------------------------------------------------------------------------------
@@ -1221,7 +1225,8 @@ hal_state::preserve_state(void)
     // walk all objects and preserve the state, if needed
     for (obj_id = (uint32_t)HAL_OBJ_ID_MIN;
          obj_id < (uint32_t)HAL_OBJ_ID_MAX; obj_id++) {
-        if (obj_meta_[obj_id] == NULL) {
+        if (obj_meta_[obj_id] == NULL ||
+            obj_meta_[obj_id]->marshall_cb() == NULL) {
             continue;
         }
         mctxt.obj_id = (uint32_t)obj_id;
@@ -1285,7 +1290,7 @@ hal_state::restore_state(void)
 #endif
         // now unmarshall this object
         umctxt.obj_id = obj_id;
-        umctxt.obj = state;
+        umctxt.obj = tlv->val;
         umctxt.len = tlv->len;
         umctxt.unmarshall_cb = obj_meta_[obj_id]->unmarshall_cb();
         hal_obj_unmarshall(&umctxt);

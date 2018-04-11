@@ -21,7 +21,7 @@ enum shm_mode_e {
 //------------------------------------------------------------------------------
 // shmmgr is the shared memory and it expected to be instantiated once
 // on each core in process/core's private heap memory, this will manage all the
-// shared memory between 
+// shared memory between
 // name - name of the shared memory segment being created
 // size - size of the shared memory segment being instantiated/opened
 // mode - mode in which shared memory segment is being opened/created

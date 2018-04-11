@@ -1077,7 +1077,9 @@ end:
 static void
 vrf_process_get (vrf_t *vrf, VrfGetResponse *rsp)
 {
-    nwsec_profile_t *sec_prof = NULL;
+    hal_ret_t               ret    = HAL_RET_OK;
+    pd::pd_vrf_get_args_t   args   = {0};
+    nwsec_profile_t         *sec_prof = NULL;
 
     // fill config spec of this vrf
     rsp->mutable_spec()->mutable_key_or_handle()->set_vrf_id(vrf->vrf_id);
@@ -1096,6 +1098,16 @@ vrf_process_get (vrf_t *vrf, VrfGetResponse *rsp)
     rsp->mutable_stats()->set_num_l4lb_services(vrf->num_l4lb_svc);
     rsp->mutable_stats()->set_num_endpoints(vrf->num_ep);
     rsp->mutable_spec()->set_vrf_type(vrf->vrf_type);
+
+
+    // Getting PD information
+    args.vrf = vrf;
+    args.rsp = rsp;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_GET, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to do PD get for vrf id : {}. ret : {}",
+                      vrf->vrf_id, ret);
+    }
 
     rsp->set_api_status(types::API_STATUS_OK);
 }
@@ -1502,7 +1514,7 @@ end:
 // mlen is to be filled by this function with marshalled state length
 //-----------------------------------------------------------------------------
 hal_ret_t
-vrf_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
+vrf_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
 {
     VrfGetResponse    vrf_info;
     uint32_t          serialized_state_sz;
@@ -1577,6 +1589,10 @@ vrf_restore_abort (vrf_t *vrf, const VrfGetResponse& vrf_info)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// vrf's restore cb.
+//  - restores vrf to the PI and PD state before the upgrade
+//------------------------------------------------------------------------------
 uint32_t
 vrf_restore_cb (void *obj, uint32_t len)
 {
@@ -1587,6 +1603,7 @@ vrf_restore_cb (void *obj, uint32_t len)
     // de-serialize the object
     if (vrf_info.ParseFromArray(obj, len) == false) {
         HAL_TRACE_ERR("Failed to de-serialize a serialized vrf obj");
+        HAL_ASSERT(0);
         return 0;
     }
 
@@ -1603,7 +1620,7 @@ vrf_restore_cb (void *obj, uint32_t len)
     vrf_init_from_stats(vrf, vrf_info.stats());
 
     // repopulate handle db
-    hal_handle_alloc(HAL_OBJ_ID_VRF, vrf->hal_handle);
+    hal_handle_insert(HAL_OBJ_ID_VRF, vrf->hal_handle, (void *)vrf);
 
     ret = vrf_restore_add(vrf, vrf_info);
     if (ret != HAL_RET_OK) {

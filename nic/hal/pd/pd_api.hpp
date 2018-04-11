@@ -94,6 +94,11 @@ typedef struct pd_vrf_make_clone_args_s {
     vrf_t *clone;
 } __PACK__ pd_vrf_make_clone_args_t;
 
+typedef struct pd_vrf_get_args_s {
+    vrf_t *vrf;
+    VrfGetResponse *rsp;
+} __PACK__ pd_vrf_get_args_t;
+
 static inline void
 pd_vrf_create_args_init (pd_vrf_create_args_t *args)
 {
@@ -2187,14 +2192,14 @@ typedef struct pd_capri_barco_asym_rsa2k_crt_decrypt_args_s {
 } __PACK__ pd_capri_barco_asym_rsa2k_crt_decrypt_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_setup_private_key_args_s {
-    uint8_t *n; 
+    uint8_t *n;
     uint8_t *d;
     int32_t *key_idx;
 } __PACK__ pd_capri_barco_asym_rsa2k_setup_private_key_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_sig_gen_args_s {
     int32_t key_idx;
-    uint8_t *n; 
+    uint8_t *n;
     uint8_t *d;
     uint8_t *h;
     uint8_t *s;
@@ -2527,7 +2532,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_VRF_RESTORE,              217, "PD_FUNC_ID_VRF_RESTORE") \
     ENTRY(PD_FUNC_ID_TABLE_PROPERTIES_GET,     218, "PD_FUNC_ID_TABLE_PROPERTIES_GET") \
     ENTRY(PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY, 219, "PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY")\
-    ENTRY(PD_FUNC_ID_MAX,                      220, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_VRF_GET,                  220, "PD_FUNC_ID_VRF_GET") \
+    ENTRY(PD_FUNC_ID_MAX,                      221, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2557,6 +2563,7 @@ PD_FUNCP_TYPEDEF(pd_vrf_delete);
 PD_FUNCP_TYPEDEF(pd_vrf_update);
 PD_FUNCP_TYPEDEF(pd_vrf_mem_free);
 PD_FUNCP_TYPEDEF(pd_vrf_make_clone);
+PD_FUNCP_TYPEDEF(pd_vrf_get);
 
 // l2seg pd calls
 PD_FUNCP_TYPEDEF(pd_l2seg_create);
@@ -2898,6 +2905,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_vrf_update);
         PD_UNION_FIELD(pd_vrf_mem_free);
         PD_UNION_FIELD(pd_vrf_make_clone);
+        PD_UNION_FIELD(pd_vrf_get);
 
         // l2seg pd calls
         PD_UNION_FIELD(pd_l2seg_create);

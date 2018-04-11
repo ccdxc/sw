@@ -50,7 +50,7 @@ shmmgr::shmmgr()
 }
 
 //------------------------------------------------------------------------------
-// destructor 
+// destructor
 //------------------------------------------------------------------------------
 shmmgr::~shmmgr()
 {
@@ -149,7 +149,7 @@ void *
 shmmgr::alloc(const std::size_t size, const std::size_t alignment,
               bool reset)
 {
-    void    *ptr;
+    void    *ptr = NULL;
 
     if (alignment == 0) {
         ptr = TO_FM_SHM(mmgr_)->allocate(size);

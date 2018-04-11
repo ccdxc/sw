@@ -18,6 +18,7 @@ namespace pd {
 #define HAL_PD_L2SEG_MASK       0xFFF
 #define HAL_PD_VRF_MASK         0xF000
 #define HAL_PD_VRF_SHIFT        12
+#define HAL_PD_INP_MAP_ENTRIES  3        /* Mac, IPv4, IPv6 */
 
 typedef uint32_t    vrf_hw_id_t;
 

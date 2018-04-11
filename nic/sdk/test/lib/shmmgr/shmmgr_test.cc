@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include "gtest/gtest.h"
 #include "sdk/shmmgr.hpp"
+#include <boost/interprocess/managed_shared_memory.hpp>
 
 using namespace sdk::lib;
+using namespace boost::interprocess;
 
 class shmmgr_test : public ::testing::Test {
 protected:
@@ -59,6 +61,14 @@ TEST_F(shmmgr_test, alloc_dealloc_ok) {
     test_shmmgr->free(ptr2);
     ASSERT_TRUE(test_shmmgr->free_size() == free_size);
     shmmgr::destroy(test_shmmgr);
+}
+
+TEST_F(shmmgr_test, remove_h2s) {
+    shared_memory_object::remove("h2s");
+}
+
+TEST_F(shmmgr_test, remove_h3s) {
+    shared_memory_object::remove("h3s");
 }
 
 int main(int argc, char **argv) {

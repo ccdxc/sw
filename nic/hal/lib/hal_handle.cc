@@ -227,7 +227,8 @@ hal_handle::del_obj(cfg_op_ctxt_t *ctxt, hal_cfg_op_cb_t del_cb,
 // else allocate one
 //------------------------------------------------------------------------------
 hal_handle_t
-hal_handle_alloc (hal_obj_id_t obj_id, hal_handle_t handle_id)
+hal_handle_alloc (hal_obj_id_t obj_id, hal_handle_t handle_id,
+                  hal_handle **handle_ret)
 {
     sdk_ret_t                sdk_ret;
     hal_handle               *handle;
@@ -248,6 +249,9 @@ hal_handle_alloc (hal_obj_id_t obj_id, hal_handle_t handle_id)
         HAL_TRACE_ERR("Failed to allocate handle, obj id {}", obj_id);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_HT_ENTRY, entry);
         return HAL_HANDLE_INVALID;
+    }
+    if (handle_ret) {
+        *handle_ret = handle;
     }
     // allocate unique handle id, if not provided
     if (handle_id == HAL_HANDLE_INVALID) {
@@ -271,6 +275,22 @@ hal_handle_alloc (hal_obj_id_t obj_id, hal_handle_t handle_id)
 
     HAL_TRACE_DEBUG("Assigned hal_handle {} for obj id {}", handle_id, obj_id);
     return handle_id;
+}
+
+//------------------------------------------------------------------------------
+// allocates the handle object instance, populates the obj in that instance
+// and insert into hash-table
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_handle_insert (hal_obj_id_t obj_id, hal_handle_t handle_id, void *obj)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    hal_handle  *handle = NULL;
+
+    hal_handle_alloc(obj_id, handle_id, &handle);
+    handle->set_obj(obj);
+
+    return ret;
 }
 
 //------------------------------------------------------------------------------

@@ -13,28 +13,25 @@ import (
 )
 
 var (
-	vrfID uint64
-	brief bool
+	pdVrfID uint64
+	pdBrief bool
 )
 
-var vrfShowCmd = &cobra.Command{
-	Use:   "vrf",
-	Short: "vrf",
-	Long:  "shows vrf",
-	// Run: func(cmd *cobra.Command, args []string) {
-	// 	fmt.Println("show vrf called")
-	// },
-	Run: vrfShowCmdHandler,
+var vrfPdShowCmd = &cobra.Command{
+	Use:   "pd",
+	Short: "pd",
+	Long:  "shows vrf pd",
+	Run:   vrfPdShowCmdHandler,
 }
 
 func init() {
-	showCmd.AddCommand(vrfShowCmd)
+	vrfShowCmd.AddCommand(vrfPdShowCmd)
 
-	vrfShowCmd.Flags().Uint64Var(&vrfID, "id", 1, "Specify vrf-id")
-	vrfShowCmd.Flags().BoolVar(&brief, "brief", false, "Display briefly")
+	vrfPdShowCmd.Flags().Uint64Var(&pdVrfID, "id", 1, "Specify vrf-id")
+	vrfPdShowCmd.Flags().BoolVar(&pdBrief, "brief", false, "Display briefly")
 }
 
-func vrfShowCmdHandler(cmd *cobra.Command, args []string) {
+func vrfPdShowCmdHandler(cmd *cobra.Command, args []string) {
 	// check if vrf id is specified
 	// if cmd.Flags().Changed("brief") {
 	// 	fmt.Println("brief set", brief)
@@ -73,36 +70,77 @@ func vrfShowCmdHandler(cmd *cobra.Command, args []string) {
 		log.Errorf("Getting VRF failed. %v", err)
 	}
 
-	// Print Header
-	vrfShowHeader()
-
 	// Print VRFs
-	for _, resp := range respMsg.Response {
+	for i, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
 			continue
 		}
-		vrfShowOneResp(resp)
+		if i == 0 {
+			// Print Header
+			vrfPdShowHeader(resp)
+		}
+		vrfPdShowOneResp(resp)
 	}
 }
 
-func vrfShowHeader() {
-	hdrLine := strings.Repeat("-", 70)
+func vrfPdShowHeader(resp *halproto.VrfGetResponse) {
+	if resp.GetStatus().GetEpdStatus() != nil {
+		vrfEPdShowHeader()
+	}
+}
+
+func vrfEPdShowHeader() {
+	hdrLine := strings.Repeat("-", 90)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
-		"VrfId", "VrfHandle", "VrfType", "NumL2Segs", "NumSGs", "NumEPs", "NumLBSvcs")
+	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
+		"Id", "Handle", "Type", "HwId", "FlowLkupId", "CPUVlan", "InpProp", "GIPoIMN", "GIPoIMT")
 	fmt.Println(hdrLine)
 }
 
-func vrfShowOneResp(resp *halproto.VrfGetResponse) {
-	fmt.Printf("%-10d%-10d%-10s%-10d%-10d%-10d%-10d\n",
+// shows vrf's PD state
+func vrfPdShowOneResp(resp *halproto.VrfGetResponse) {
+	if resp.GetStatus().GetEpdStatus() != nil {
+		vrfEPdShowOneResp(resp)
+	}
+}
+
+func vrfEPdShowOneResp(resp *halproto.VrfGetResponse) {
+	imnStr := ""
+	imtStr := ""
+	imnIndices := resp.GetStatus().GetEpdStatus().GetGipoInpMapNatIdx()
+	imtIndices := resp.GetStatus().GetEpdStatus().GetGipoInpMapTnlIdx()
+	for i := 0; i < 3; i++ {
+		if imnIndices[i] == 0xFFFFFFFF {
+			imnStr += fmt.Sprintf("-")
+		} else {
+			if i == 0 {
+				imnStr += fmt.Sprintf("%d,", imnIndices[i])
+			} else {
+				imnStr += fmt.Sprintf("%d", imnIndices[i])
+			}
+		}
+		if imtIndices[i] == 0xFFFFFFFF {
+			imtStr += fmt.Sprintf("-")
+		} else {
+			if i == 0 {
+				imtStr += fmt.Sprintf("%d,", imtIndices[i])
+			} else {
+				imtStr += fmt.Sprintf("%d", imtIndices[i])
+			}
+		}
+	}
+
+	epdStatus := resp.GetStatus().GetEpdStatus()
+	fmt.Printf("%-10d%-10d%-10s%-10d%-10d%-10d%-10d%-10s%-10s\n",
 		resp.GetSpec().GetKeyOrHandle().GetVrfId(),
 		resp.GetStatus().GetVrfHandle(),
 		utils.VrfTypeToStr(resp.GetSpec().GetVrfType()),
-		resp.GetStats().GetNumL2Segments(),
-		resp.GetStats().GetNumSecurityGroups(),
-		resp.GetStats().GetNumEndpoints(),
-		resp.GetStats().GetNumL4LbServices())
+		epdStatus.GetHwVrfId(),
+		epdStatus.GetVrfLookupId(),
+		epdStatus.GetVrfVlanIdCpu(),
+		epdStatus.GetInpPropCpuIdx(),
+		imnStr, imtStr)
 }
 
 // var vrfID int64

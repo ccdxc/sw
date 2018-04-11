@@ -147,6 +147,53 @@ end:
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// pd vrf get
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_vrf_get (pd_vrf_get_args_t *args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    vrf_t           *vrf = args->vrf;
+    pd_vrf_t        *vrf_pd = (pd_vrf_t *)vrf->pd;
+    VrfGetResponse  *rsp = args->rsp;
+
+    auto vrf_info = rsp->mutable_status()->mutable_epd_status();
+    vrf_info->set_hw_vrf_id(vrf_pd->vrf_hw_id);
+    vrf_info->set_vrf_lookup_id(vrf_pd->vrf_fl_lkup_id);
+    vrf_info->set_vrf_vlan_id_cpu(vrf_pd->vrf_fromcpu_vlan_id);
+    vrf_info->set_inp_prop_cpu_idx(vrf_pd->inp_prop_tbl_cpu_idx);
+    for (int i = 0; i < HAL_PD_INP_MAP_ENTRIES; i++) {
+        vrf_info->add_gipo_inp_map_nat_idx(vrf_pd->gipo_imn_idx[i]);
+        vrf_info->add_gipo_inp_map_tnl_idx(vrf_pd->gipo_imt_idx[i]);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// pd vrf restore from response
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_vrf_restore_data (pd_vrf_restore_args_t *args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    vrf_t           *vrf = args->vrf;
+    pd_vrf_t        *vrf_pd = (pd_vrf_t *)vrf->pd;
+
+    auto vrf_info = args->vrf_status->epd_status();
+    vrf_pd->vrf_hw_id = vrf_info.hw_vrf_id();
+    vrf_pd->vrf_fl_lkup_id = vrf_info.vrf_lookup_id();
+    vrf_pd->vrf_fromcpu_vlan_id = vrf_info.vrf_vlan_id_cpu();
+    vrf_pd->inp_prop_tbl_cpu_idx = vrf_info.inp_prop_cpu_idx();
+    for (int i = 0; i < HAL_PD_INP_MAP_ENTRIES; i++) {
+        vrf_pd->gipo_imn_idx[i] = vrf_info.gipo_inp_map_tnl_idx(i);
+        vrf_pd->gipo_imt_idx[i] = vrf_info.gipo_inp_map_tnl_idx(i);
+    }
+
+    return ret;
+}
+
 //-----------------------------------------------------------------------------
 // pd vrf restore
 //-----------------------------------------------------------------------------
@@ -157,7 +204,7 @@ pd_vrf_restore (pd_vrf_restore_args_t *args)
     pd_vrf_t    *vrf_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("Creating pd state for vrf {}", args->vrf->vrf_id);
+    HAL_TRACE_DEBUG("Restoring pd state for vrf {}", args->vrf->vrf_id);
 
     // allocate PD vrf state
     vrf_pd = vrf_pd_alloc_init();
@@ -169,14 +216,17 @@ pd_vrf_restore (pd_vrf_restore_args_t *args)
     // link pi & pd
     link_pi_pd(vrf_pd, args->vrf);
 
-#if 0
-    // allocate resources
-    ret = vrf_pd_alloc_res(vrf_pd);
+    ret = pd_vrf_restore_data(args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to allocated resources");
+        HAL_TRACE_ERR("Unable to restore pd data for vrf: {}, err: {}",
+                      args->vrf->vrf_id, ret);
         goto end;
     }
 
+
+    // TODO: Eventually call table program hw and hw calls will be
+    //       a NOOP in p4pd code
+#if 0
     // program hw
     ret = vrf_pd_program_hw(vrf_pd);
     if (ret != HAL_RET_OK) {

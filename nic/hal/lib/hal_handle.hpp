@@ -55,6 +55,7 @@ public:
                       hal_cfg_cleanup_cb_t cleanup_cb);
 
     void *obj(void) const { return obj_; }
+    void set_obj(void *obj) { obj_ = obj; }
     void set_handle_id(hal_handle_t handle) { handle_id_ = handle; }
 
     hal_obj_id_t obj_id(void) const { return obj_id_; }
@@ -75,7 +76,10 @@ private:
 
 #define HAL_MAX_HANDLES                              8192
 hal_handle_t hal_handle_alloc(hal_obj_id_t obj_id,
-                              hal_handle_t handle_id = HAL_HANDLE_INVALID);
+                              hal_handle_t handle_id = HAL_HANDLE_INVALID,
+                              hal_handle **handle = NULL);
+hal_ret_t hal_handle_insert (hal_obj_id_t obj_id, hal_handle_t handle_id,
+                             void *obj);
 void hal_handle_free(hal_handle_t handle_id);
 hal_ret_t hal_handle_add_obj(hal_handle_t handle_id, cfg_op_ctxt_t *ctxt,
                              hal_cfg_op_cb_t add_cb,

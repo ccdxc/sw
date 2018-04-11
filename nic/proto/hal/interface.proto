@@ -465,8 +465,8 @@ message InterfaceSpec {
     IfUplinkInfo     if_uplink_info    = 7 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK}"];     // uplink port number if interface type is IF_TYPE_UPLINK
     IfUplinkPCInfo   if_uplink_pc_info = 8 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK_PC}"];     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
     IfTunnelInfo     if_tunnel_info    = 9 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_TUNNEL}"];     // tunnel interface information
-    IfCPUInfo        if_cpu_info       = 10 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_CPU}"];     // cpu interface informaton 
-    IfAppRedirInfo   if_app_redir_info = 11 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_APP_REDIR}"];     // app redirect interface informaton 
+    IfCPUInfo        if_cpu_info       = 10 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_CPU}"];     // cpu interface informaton
+    IfAppRedirInfo   if_app_redir_info = 11 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_APP_REDIR}"];     // app redirect interface informaton
   }
 }
 
@@ -503,7 +503,7 @@ message EnicResponseInfo {
 message CpuIfResponseInfo {
     uint32  cpu_lport_id = 1;   // CPU Lport id
 }
-    
+
 // Tunnel If's response
 message TunnelIfResponseInfo {
   repeated uint32   inp_map_nat_idx = 1;    // GIPo termination entries in Input Mappnig Native table
@@ -559,7 +559,7 @@ message InterfaceDeleteRequestMsg {
 
 // InterfaceDeleteResponse is batched response to InterfaceDeleteRequest
 message InterfaceDeleteResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];      // API status code 
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];      // API status code
 }
 
 // InterfaceDeleteResponseMsg is batched response to InterfaceDeleteRequestMsg
