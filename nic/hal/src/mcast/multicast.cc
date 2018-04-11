@@ -218,7 +218,8 @@ mc_entry_create_and_program_oifs (mc_entry_t *mc_entry)
 
     ret = oif_list_create(&mc_entry->oif_list);
     HAL_ASSERT(ret == HAL_RET_OK);
-    if (!is_forwarding_mode_smart_nic()) {
+
+    if (is_forwarding_mode_host_pinned()) {
         ret = oif_list_set_honor_ingress(mc_entry->oif_list);
         HAL_ASSERT(ret == HAL_RET_OK);
     }
@@ -233,30 +234,9 @@ mc_entry_create_and_program_oifs (mc_entry_t *mc_entry)
         HAL_ASSERT(ret == HAL_RET_OK);
     }
 
-    // Check all the other Classic Enics on this l2seg and add
-    // them if they have a packet filter of type all-multicast
-    for (const void *ptr : *l2seg->if_list) {
-        auto p_hdl_id = (hal_handle_t *)ptr;
-        pi_if = find_if_by_handle(*p_hdl_id);
-        if (!pi_if) {
-            HAL_TRACE_ERR("Unable to find if with handle:{}",
-                          entry->handle_id);
-            continue;
-        }
-
-        if (pi_if->if_type == intf::IF_TYPE_ENIC &&
-            pi_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
-
-            lif_t *lif = find_lif_by_handle(pi_if->lif_handle);
-            HAL_ASSERT(lif != NULL);
-
-            if (lif->packet_filters.receive_all_multicast) {
-                oif.intf = pi_if;
-                oif.l2seg = l2seg;
-                ret = oif_list_add_oif(mc_entry->oif_list, &oif);
-                HAL_ASSERT(ret == HAL_RET_OK);
-            }
-        }
+    if (is_forwarding_mode_classic_nic()) {
+        ret = oif_list_attach(mc_entry->oif_list, l2seg_get_mcast_oif_list(l2seg));
+        HAL_ASSERT(ret == HAL_RET_OK);
     }
 
     return ret;
@@ -282,6 +262,11 @@ mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
         goto end;
     }
 
+    if (is_forwarding_mode_classic_nic()) {
+        ret = oif_list_detach(mc_entry->oif_list);
+        HAL_ASSERT(ret == HAL_RET_OK);
+    }
+
     // Now Delete the OIFs
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
@@ -296,33 +281,7 @@ mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
         }
     }
 
-    // Check all the other Classic Enics on this l2seg and add
-    // them if they have a packet filter of type all-multicast
-    for (const void *ptr : *l2seg->if_list) {
-        auto p_hdl_id = (hal_handle_t *)ptr;
-        pi_if = find_if_by_handle(*p_hdl_id);
-        HAL_ASSERT(pi_if != NULL);
-
-        if (pi_if->if_type == intf::IF_TYPE_ENIC &&
-            pi_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
-
-            lif_t *lif = find_lif_by_handle(pi_if->lif_handle);
-            HAL_ASSERT(lif != NULL);
-
-            if (lif->packet_filters.receive_all_multicast) {
-                oif.intf = pi_if;
-                oif.l2seg = l2seg;
-                ret = oif_list_remove_oif(mc_entry->oif_list, &oif);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Del OIF failed! if-hndl:{}, l2seg-hndl:{},"
-                                  " ret:{}",
-                                  pi_if->hal_handle, l2seg->hal_handle, ret);
-                }
-            }
-        }
-    }
-
-    if (!is_forwarding_mode_smart_nic()) {
+    if (is_forwarding_mode_host_pinned()) {
         ret = oif_list_clr_honor_ingress(mc_entry->oif_list);
         HAL_ASSERT(ret == HAL_RET_OK);
     }

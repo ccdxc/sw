@@ -30,6 +30,8 @@ namespace hal {
     hal_ret_t oif_list_delete(oif_list_id_t list);
     // Takes an oiflis_handle and deletes a block starting from it
     hal_ret_t oif_list_delete_block(oif_list_id_t list, uint32_t size);
+    hal_ret_t oif_list_attach(oif_list_id_t frm, oif_list_id_t to);;
+    hal_ret_t oif_list_detach(oif_list_id_t frm);;
     // Adds an oif to list
     hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif);
     // Adds an QP based oif to list
