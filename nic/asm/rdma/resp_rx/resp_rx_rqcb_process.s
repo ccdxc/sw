@@ -87,7 +87,8 @@ skip_roce_opt_parsing:
 #   CAPRI_SET_FIELD(r4, TO_S_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
 start_recirc_packet:
-    add     REM_PYLD_BYTES, r0, CAPRI_APP_DATA_PAYLOAD_LEN
+    # subtract the pad bytes from the payload length.
+    sub     REM_PYLD_BYTES, CAPRI_APP_DATA_PAYLOAD_LEN, CAPRI_APP_DATA_BTH_PAD
     crestore [c7, c6, c5, c4, c3, c2, c1], r7, (RESP_RX_FLAG_UD | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_WRITE | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_SEND | RESP_RX_FLAG_ONLY)
     // c7: UD, c6: cswap, c5: fna, c4: write, c3: read, c2: send, c1: only
 

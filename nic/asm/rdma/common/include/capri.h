@@ -59,6 +59,7 @@
 
 //BTH header fields
 #define CAPRI_APP_DATA_BTH_OPCODE k.rdma_bth_bth_opcode
+#define CAPRI_APP_DATA_BTH_PAD k.rdma_bth_bth_pad
 #define CAPRI_APP_DATA_BTH_PSN k.{rdma_bth_bth_psn_sbit0_ebit7...rdma_bth_bth_psn_sbit16_ebit23}
 #define CAPRI_APP_DATA_AETH_MSN k.rdma_bth_aeth_aeth_msn
 #define CAPRI_APP_DATA_AETH_SYNDROME k.rdma_bth_aeth_aeth_syndrome
@@ -889,6 +890,11 @@ addi._cf _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
     phvwrpi       _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2PKT_T, phv_start, cmdtype), (PHV_FIELD_START_OFFSET(_start) << PHV2PKT_PHV_START_OFFSET) | (DMA_CMD_TYPE_PHV2PKT << PHV2PKT_CMDTYPE_OFFSET); \
     add          _tmp_r, PHV_FIELD_START_OFFSET(_start)-1, _len; \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_end), sizeof(DMA_CMD_PHV2PKT_T.phv_end), _tmp_r; \
+
+#define DMA_PHV2PKT_END_LEN_SETUP(_base_r, _tmp_r, _end, _len) \
+    phvwrpi       _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2PKT_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end)-1) << PHV2PKT_PHV_END_OFFSET) | (DMA_CMD_TYPE_PHV2PKT << PHV2PKT_CMDTYPE_OFFSET); \
+    sub          _tmp_r, PHV_FIELD_END_OFFSET(_end), _len; \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_start), sizeof(DMA_CMD_PHV2PKT_T.phv_start), _tmp_r; \
 
 #define DMA_PHV2PKT_SETUP_C(_base_r, _start, _end, _cf)         \
     phvwrpi._cf       _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2PKT_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << PHV2PKT_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << PHV2PKT_PHV_START_OFFSET) | (DMA_CMD_TYPE_PHV2PKT << PHV2PKT_CMDTYPE_OFFSET); \

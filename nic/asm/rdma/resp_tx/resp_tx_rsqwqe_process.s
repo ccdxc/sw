@@ -13,6 +13,7 @@ struct resp_tx_s2_t0_k k;
 #define CURR_PSN            r1
 #define BYTES_SENT          r2
 #define XFER_BYTES          r3
+#define PAD                 r4
 
 #define BTH_OPCODE          r5
 #define XFER_VA             r6
@@ -23,7 +24,7 @@ struct resp_tx_s2_t0_k k;
 #define KEY_ADDR            r2
 
 #define RQCB1_ADDR          r2
-#define DMA_CMD_BASE        r1
+#define DMA_CMD_BASE        r6
 
 #define IN_P t0_s2s_rqcb2_to_rsqwqe_info
 
@@ -64,7 +65,7 @@ process_atomic:
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_ATOMICAETH)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, atomicaeth, atomicaeth)
 
-    // For PAD and ICRC
+    // For ICRC. PAD is always 0 for atomic.
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_PAD_ICRC)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, icrc, icrc)
 
@@ -107,37 +108,59 @@ process_read:
     // 00
     // transfer_bytes > pmtu &&  curr_psn != rsqwqe_p->psn
     .brcase 0
-    or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_MID
+    // mid packet doesn't have pad
+    CAPRI_SET_FIELD2(RKEY_INFO_P, transfer_bytes, PMTU)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_PAD_ICRC)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, icrc, icrc)
     b           next
-    CAPRI_SET_FIELD2(RKEY_INFO_P, transfer_bytes, PMTU) //BD Slot
+    or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_MID //BD Slot
 
     // 01
     // transfer_bytes > pmtu &&  curr_psn == rsqwqe_p->psn
     .brcase 1
-    or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_FIRST
-    b           next
+    // first packet doesn't have pad
     phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, send_aeth), 1, \
                 CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_bytes), PMTU //BD Slot
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_PAD_ICRC)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, icrc, icrc)
+    b           next
+    or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_FIRST //BD Slot
 
     // 10
     // transfer_bytes <= pmtu &&  curr_psn != rsqwqe_p->psn
     .brcase 2
-    or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_LAST
-    b           next
+    // calculate pad
+    sub         PAD, 4, XFER_BYTES[1:0]
+    phvwr       p.bth.pad, PAD[1:0]
+    add         PAD, PAD[1:0], 4
+    // add crc bytes to pad bytes
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_PAD_ICRC)
+    DMA_PHV2PKT_END_LEN_SETUP(DMA_CMD_BASE, r7, icrc, PAD)
     phvwrpair   CAPRI_PHV_RANGE(RKEY_INFO_P, send_aeth, last_or_only), (1<<1)|1, \
-                CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_bytes), XFER_BYTES //BD Slot
+                CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_bytes), XFER_BYTES
+    b           next
+    or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_LAST //BD Slot
 
     // 11
     // transfer_bytes <= pmtu &&  curr_psn == rsqwqe_p->psn
     .brcase 3
-    or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_ONLY
-    b           next
+    // calculate pad
+    sub         PAD, 4, XFER_BYTES[1:0]
+    phvwr       p.bth.pad, PAD[1:0]
+    // add crc bytes to pad bytes
+    add         PAD, PAD[1:0], 4
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_PAD_ICRC)
+    DMA_PHV2PKT_END_LEN_SETUP(DMA_CMD_BASE, r7, icrc, PAD)
     phvwrpair   CAPRI_PHV_RANGE(RKEY_INFO_P, send_aeth, last_or_only), (1<<1)|1, \
-                CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_bytes), XFER_BYTES //BD Slot
+                CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_bytes), XFER_BYTES
+    b           next
+    or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_ONLY //BD Slot
     
     .csend
 
 next:
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
 
     // phv_p->bth.pkey = 0xffff
     phvwr       p.bth.pkey, 0xffff  
