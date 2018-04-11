@@ -237,4 +237,8 @@ iperf -u -c 10.10.1.2 -i 1 -l 64 -t 28800 -b1G -e 2>&1 > client.log &
 
 # Copyout server.log and client.log after test is completed
 
+*************************
+***** HAPS CHEAT SHEET *****
+*************************
+https://docs.google.com/document/d/11atOGWkLxmu5qaLq1CzTrnp9oftib2wWzFgsVTWWxSg/edit#heading=h.ss00tdkauvy8
 
