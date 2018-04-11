@@ -261,22 +261,6 @@ typedef struct flow_state_s {
     uint8_t         tcp_ts_option_sent : 1;
     uint8_t         tcp_sack_perm_option_sent : 1;
 } __PACK__ flow_state_t;
-
-inline std::ostream& operator<<(std::ostream& os, const FlowTCPState& val)
-{
-    switch (val) {
-        case session::FLOW_TCP_STATE_INIT: return os << "init";
-        case session::FLOW_TCP_STATE_SYN_RCVD: return os << "syn rcvd";
-        case session::FLOW_TCP_STATE_ACK_RCVD: return os << "ack rcvd";
-        case session::FLOW_TCP_STATE_SYN_ACK_RCVD: return os << "syn ack rcvd";
-        case session::FLOW_TCP_STATE_ESTABLISHED: return os << "established";
-        case session::FLOW_TCP_STATE_FIN_RCVD: return os << "fin rcvd";
-        case session::FLOW_TCP_STATE_BIDIR_FIN_RCVD: return os << "bidir fin rcvd";
-        case session::FLOW_TCP_STATE_RESET: return os << "rst rcvd";
-        default: return os;
-    }
-}
-
 inline std::ostream& operator<<(std::ostream& os, const flow_state_t& val)
 {
     os << "{state=" << val.state;

@@ -5,6 +5,23 @@
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/p4/iris/include/defines.h"
 
+namespace session {
+std::ostream& operator<<(std::ostream& os, const session::FlowTCPState& val)
+{
+    switch (val) {
+        case session::FLOW_TCP_STATE_INIT: return os << "INIT";
+        case session::FLOW_TCP_STATE_SYN_RCVD: return os << "SYN RCVD";
+        case session::FLOW_TCP_STATE_ACK_RCVD: return os << "ACK RCVD";
+        case session::FLOW_TCP_STATE_SYN_ACK_RCVD: return os << "SYN ACK RCVD";
+        case session::FLOW_TCP_STATE_ESTABLISHED: return os << "ESTABLISHED";
+        case session::FLOW_TCP_STATE_FIN_RCVD: return os << "FIN RCVD";
+        case session::FLOW_TCP_STATE_BIDIR_FIN_RCVD: return os << "BIDIR FIN RCVD";
+        case session::FLOW_TCP_STATE_RESET: return os << "RST RCVD";
+        default: return os;
+    }
+}
+}
+
 namespace hal {
 namespace plugins {
 namespace sfw {
@@ -150,7 +167,6 @@ process_tcp_close(fte::ctx_t& ctx)
               * timer is still pending and we received a FIN/RST now. So, we can go 
               * ahead and delete the half closed timer and start the TCP close timer
               */
-             hal::periodic::timer_delete(ctx.session()->tcp_cxntrack_timer);
              state = session::FLOW_TCP_STATE_BIDIR_FIN_RCVD;
         } 
     }

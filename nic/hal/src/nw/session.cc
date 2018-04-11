@@ -27,9 +27,9 @@ namespace hal {
 thread_local void *g_session_timer;
 
 #define SESSION_SW_DEFAULT_TIMEOUT (3600 * TIME_NSECS_PER_SEC)
-#define SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT (120 * TIME_NSECS_PER_SEC)
-#define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT (15 * TIME_NSECS_PER_SEC)
-#define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT (15 * TIME_NSECS_PER_SEC)
+#define SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT (120 * TIME_MSECS_PER_SEC)
+#define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT (15 * TIME_MSECS_PER_SEC)
+#define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT (15 * TIME_MSECS_PER_SEC)
 
 void *
 session_get_key_func (void *entry)
@@ -1079,6 +1079,9 @@ tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
     hal_ret_t  ret; 
     session_t *session = (session_t *)ctxt;
 
+    HAL_TRACE_DEBUG("TCP close timer callback -- deleting session with id {}", 
+                    session->config.session_id);
+
     // time to clean up the session
     ret = fte::session_delete(session);
     if (ret != HAL_RET_OK) {
@@ -1110,7 +1113,7 @@ get_tcp_timeout (session_t *session, timeout_type_t timeout)
         case TCP_CXNSETUP_TIMEOUT: 
         {
             if (nwsec_prof != NULL) {
-                return ((uint64_t)(nwsec_prof->tcp_cnxn_setup_timeout * TIME_NSECS_PER_SEC));
+                return ((uint64_t)(nwsec_prof->tcp_cnxn_setup_timeout * TIME_MSECS_PER_SEC));
             } else {
                 return (SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT);
             } 
@@ -1120,7 +1123,7 @@ get_tcp_timeout (session_t *session, timeout_type_t timeout)
         case TCP_HALF_CLOSED_TIMEOUT:
         {
             if (nwsec_prof != NULL) {
-                return ((uint64_t)(nwsec_prof->tcp_half_closed_timeout * TIME_NSECS_PER_SEC));
+                return ((uint64_t)(nwsec_prof->tcp_half_closed_timeout * TIME_MSECS_PER_SEC));
             } else {
                 return (SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT);
             }    
@@ -1130,7 +1133,7 @@ get_tcp_timeout (session_t *session, timeout_type_t timeout)
         case TCP_CLOSE_TIMEOUT:
         {
             if (nwsec_prof != NULL) {
-                return ((uint64_t)(nwsec_prof->tcp_close_timeout * TIME_NSECS_PER_SEC));
+                return ((uint64_t)(nwsec_prof->tcp_close_timeout * TIME_MSECS_PER_SEC));
             } else {
                 return (SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT);
             }
@@ -1150,8 +1153,17 @@ get_tcp_timeout (session_t *session, timeout_type_t timeout)
 hal_ret_t
 schedule_tcp_close_timer (session_t *session)
 {
+    flow_key_t  key = {};
+
+
     if (getenv("DISABLE_AGING")) {
         return HAL_RET_OK;
+    }
+
+    // Delete the previous timers if any and start a new one
+    if (session->tcp_cxntrack_timer != NULL) {
+        periodic::timer_delete(session->tcp_cxntrack_timer);
+        session->tcp_cxntrack_timer = NULL;
     }
 
     session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
@@ -1162,7 +1174,7 @@ schedule_tcp_close_timer (session_t *session)
         return HAL_RET_ERR;
     }
     HAL_TRACE_DEBUG("TCP Close timer started for session {}",
-                     session->config.session_id);
+                    (session->iflow)?session->iflow->config.key:key);
 
     return HAL_RET_OK;
 }
@@ -1175,11 +1187,28 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     hal_ret_t  ret;
     session_t *session = (session_t *)ctxt;
+    pd::pd_session_get_args_t args;
+    session_state_t           state;
 
-    ret = schedule_tcp_close_timer(session);
+    args.session = session;
+    args.session_state = &state;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Couldnt start TCP close timer for session: {}",
-                      session->config.session_id);
+        HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
+                       session->config.session_id);
+    }
+
+    HAL_TRACE_DEBUG("IFlow State: {}", state.iflow_state.state);
+
+    if (session->iflow)
+        session->iflow->state = state.iflow_state.state;
+    if (session->rflow)
+        session->rflow->state = state.rflow_state.state;
+   
+    // If we havent received bidir FIN by now then we go ahead and cleanup 
+    // the session 
+    if (state.iflow_state.state != session::FLOW_TCP_STATE_BIDIR_FIN_RCVD) {
+        tcp_close_cb(timer, timer_id, session); 
     }
 }
 
@@ -1192,6 +1221,12 @@ schedule_tcp_half_closed_timer (session_t *session)
 {
     if (getenv("DISABLE_AGING")) {
         return HAL_RET_OK;
+    }
+
+    // Delete the previous timers if any and start a new one
+    if (session->tcp_cxntrack_timer != NULL) {
+        periodic::timer_delete(session->tcp_cxntrack_timer);
+        session->tcp_cxntrack_timer = NULL;
     }
 
     session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
