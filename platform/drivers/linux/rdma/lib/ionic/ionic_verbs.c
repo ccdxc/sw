@@ -142,7 +142,7 @@ static int ionic_poll_recv(struct ionic_qp *qp, struct ibv_wc *wc,
 	wc->qp_num = qp->qpid;
 
 	if (wc->status != IBV_WC_SUCCESS)
-		return 0;
+		goto out;
 
 	if (cqe->op_type == OP_TYPE_RDMA_OPER_WITH_IMM) {
 		wc->opcode = IBV_WC_RECV_RDMA_WITH_IMM;
@@ -164,15 +164,17 @@ static int ionic_poll_recv(struct ionic_qp *qp, struct ibv_wc *wc,
 
 	/* XXX: also need from cqe... pkey_index, slid, sl, dlid_path_bits */
 
+out:
 	ionic_queue_consume(&qp->rq);
 
-	return 0;
+	return 1;
 }
 
 static int ionic_poll_send(struct ionic_qp *qp, struct ibv_wc *wc,
 			   struct cqwqe_be_t *cqe)
 {
 	struct ionic_sq_meta *meta;
+	int npolled = 1;
 
 	/* there had better be something in the send queue to complete */
 	if (ionic_queue_empty(&qp->sq))
@@ -189,7 +191,12 @@ static int ionic_poll_send(struct ionic_qp *qp, struct ibv_wc *wc,
 	wc->qp_num = qp->qpid;
 
 	if (wc->status != IBV_WC_SUCCESS)
-		return 0;
+		goto out;
+
+	if (!meta->signal) {
+		npolled = 0;
+		goto out;
+	}
 
 	wc->opcode = ionic_to_ibv_wc_opcd(cqe->op_type);
 	wc->byte_len = meta->len; /* XXX byte_len should come from cqe */
@@ -199,20 +206,27 @@ static int ionic_poll_send(struct ionic_qp *qp, struct ibv_wc *wc,
 	else
 		qp->sq_msn = (qp->sq_msn + 1) & 0xffffff;
 
+out:
 	ionic_queue_consume(&qp->sq);
 
-	return 0;
+	return npolled;
 }
 
 static int ionic_poll_send_ok(struct ionic_qp *qp, struct ibv_wc *wc)
 {
 	struct ionic_sq_meta *meta;
+	int npolled = 1;
 
 	/* there had better be something in the send queue to complete OK */
 	if (ionic_queue_empty(&qp->sq))
 		return -EIO;
 
 	meta = &qp->sq_meta[qp->sq.cons];
+
+	if (!meta->signal) {
+		npolled = 0;
+		goto out;
+	}
 
 	wc->status = IBV_WC_SUCCESS;
 	wc->vendor_err = 0;
@@ -229,7 +243,8 @@ static int ionic_poll_send_ok(struct ionic_qp *qp, struct ibv_wc *wc)
 
 	ionic_queue_consume(&qp->sq);
 
-	return 0;
+out:
+	return npolled;
 }
 
 static int ionic_poll_send_local_ok(struct ionic_qp *qp, struct ibv_wc *wc,
@@ -245,11 +260,11 @@ static int ionic_poll_send_local_ok(struct ionic_qp *qp, struct ibv_wc *wc,
 			break;
 
 		rc = ionic_poll_send_ok(qp, wc);
-		if (rc)
+		if (rc < 0)
 			break;
 
-		++npolled;
-		++wc;
+		npolled += rc;
+		wc += rc;
 	}
 
 	return npolled ?: rc;
@@ -268,11 +283,11 @@ static int ionic_poll_send_msn_ok(struct ionic_qp *qp, struct ibv_wc *wc,
 			break;
 
 		rc = ionic_poll_send_ok(qp, wc);
-		if (rc)
+		if (rc < 0)
 			break;
 
-		++npolled;
-		++wc;
+		npolled += rc;
+		wc += rc;
 	}
 
 	return npolled ?: rc;
@@ -387,11 +402,12 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 
 			/* poll the current work completion */
 			rc = ionic_poll_send(qp, wc + npolled, &cqe);
-			if (rc) {
+			if (rc < 0) {
 				pthread_spin_unlock(&qp->sq_lock);
 				goto out;
 			}
-			++npolled;
+
+			npolled += rc;
 
 			pthread_spin_unlock(&qp->sq_lock);
 			break;
@@ -407,7 +423,7 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 				goto out;
 			}
 
-			++npolled;
+			npolled += rc;
 
 			pthread_spin_unlock(&qp->rq_lock);
 			break;
@@ -586,6 +602,8 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 		ex->qp_type != IBV_QPT_XRC_RECV;
 
 	qp->is_srq = false;
+
+	qp->sig_all = ex->sq_sig_all;
 
 	rc = ionic_alloc_queues(ctx, qp, &ex->cap);
 	if (rc)
@@ -794,6 +812,7 @@ static void ionic_prep_base(struct ionic_qp *qp,
 			    struct sqwqe_t *wqe)
 {
 	meta->wrid = wr->wr_id;
+	meta->signal = false;
 
 	/* XXX wqe wrid can be removed */
 	wqe->base.wrid = 0;
@@ -804,9 +823,9 @@ static void ionic_prep_base(struct ionic_qp *qp,
 	if (wr->send_flags & IBV_SEND_SOLICITED)
 		wqe->base.solicited_event = 1;
 
-	if (wr->send_flags & IBV_SEND_SIGNALED) {
-		/* TODO meta->signaled if completion should produce wc */
+	if (qp->sig_all || wr->send_flags & IBV_SEND_SIGNALED) {
 		wqe->base.complete_notify = 1;
+		meta->signal = true;
 	}
 }
 

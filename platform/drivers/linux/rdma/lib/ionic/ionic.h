@@ -64,6 +64,7 @@ struct ionic_sq_meta {
 	uint64_t		wrid;
 	uint32_t		len;
 	uint8_t			op;
+	bool			signal;
 };
 
 /* XXX this rq_meta will go away */
@@ -81,6 +82,8 @@ struct ionic_qp {
 	bool			has_sq;
 	bool			has_rq;
 	bool			is_srq;
+
+	bool			sig_all;
 
 	pthread_spinlock_t	sq_lock;
 	struct ionic_queue	sq;
