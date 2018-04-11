@@ -914,17 +914,20 @@ static int ionic_prep_send(struct ionic_qp *qp,
 				 &wqe->u.non_atomic.wqe.send.length);
 }
 
-/* XXX duplicated code.
- *
- * This can be cleaned up by making sqwqe_rc_send_t and sqwqe_ud_send_t the
- * same descriptor format, deleting this function, and using ionic_prep_send()
- * for both rc and ud.
- */
-static int ionic_prep_send_duplicated_code_ud(struct ionic_qp *qp,
+static int ionic_prep_send_ud(struct ionic_qp *qp,
 					      struct ibv_send_wr *wr)
 {
 	struct ionic_sq_meta *meta;
 	struct sqwqe_t *wqe;
+	struct ionic_ah *ah;
+	int rc;
+
+	/* XXX duplicated code.
+	 *
+	 * This can be cleaned up by making sqwqe_rc_send_t and sqwqe_ud_send_t
+	 * the same descriptor format, and replacing following dup'd code with
+	 * call to ionic_prep_send().
+	 */
 
 	meta = &qp->sq_meta[qp->sq.prod];
 	wqe = ionic_queue_at_prod(&qp->sq);
@@ -945,15 +948,13 @@ static int ionic_prep_send_duplicated_code_ud(struct ionic_qp *qp,
 		return EINVAL;
 	}
 
-	return ionic_prep_common(qp, wr, meta, wqe,
-				 &wqe->u.non_atomic.wqe.ud_send.length);
-}
+	rc = ionic_prep_common(qp, wr, meta, wqe,
+			       &wqe->u.non_atomic.wqe.ud_send.length);
 
-static int ionic_prep_send_ah(struct ionic_qp *qp,
-			      struct ibv_send_wr *wr)
-{
-	struct ionic_ah *ah;
-	struct sqwqe_t *wqe;
+	/* XXX replace duplicated code with ionic_prep_send: */
+	// rc = ionic_prep_send(qp, wr);
+	if (rc)
+		return rc;
 
 	if (unlikely(!wr->wr.ud.ah))
 		return EINVAL;
@@ -1099,11 +1100,7 @@ static int ionic_prep_one_ud(struct ionic_qp *qp,
 	switch (wr->opcode) {
 	case IBV_WR_SEND:
 	case IBV_WR_SEND_WITH_IMM:
-		rc = ionic_prep_send_duplicated_code_ud(qp, wr);
-		if (rc)
-			break;
-		rc = ionic_prep_send_ah(qp, wr);
-		break;
+		rc = ionic_prep_send_ud(qp, wr);
 	default:
 		ionic_dbg(ctx, "invalid opcode %d", wr->opcode);
 		rc = EINVAL;
