@@ -1,6 +1,6 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_VXLAN_FTE
+    id: SEGMENT_VXLAN_EPLEARN
 
 type        : tenant
 native      : False

@@ -25,10 +25,10 @@ security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 security_policy: ref://store/specs/id=SECURITY_POLICY_DEFAULT
 
 tenants:
-    -   spec    : ref://store/specs/id=TENANT_INFRA_FTE
+    -   spec    : ref://store/specs/id=TENANT_INFRA_EPLEARN
         count   : 1
         lifns   : range/101/101
-    -   spec    : ref://store/specs/id=TENANT_FTE
+    -   spec    : ref://store/specs/id=TENANT_EPLEARN
         count   : 1
         lifns   : range/121/136
 

@@ -41,6 +41,7 @@ extern twheel *g_twheel;
 
 vrf_t *dummy_ten;
 #define MAX_ENDPOINTS 8
+#define ARP_ENTRY_TIMEOUT 5
 hal_handle_t ep_handles[MAX_ENDPOINTS];
 string mac_addr_base = "12345";
 #define GET_MAC_ADDR(_ep) ((unsigned char*)((mac_addr_base + std::to_string(_ep)).c_str()))
@@ -105,6 +106,7 @@ void arp_topo_setup()
    l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
    l2seg_spec.mutable_wire_encap()->set_encap_value(11);
+   l2seg_spec.mutable_eplearn_cfg()->mutable_arp()->set_entry_timeout(ARP_ENTRY_TIMEOUT);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
    hal::hal_cfg_db_close();
@@ -426,9 +428,7 @@ TEST_F(arp_fsm_test, arp6_entry_timeout) {
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
 
-    auto timeout = entry->get_current_state_timeout();
-    hal::periodic::g_twheel->tick(timeout + 100);
-    sleep(5);
+    sleep(ARP_ENTRY_TIMEOUT + 1);
     ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 0);
     ASSERT_EQ(g_hal_state->ep_l3_entry_ht()->num_entries(), 0);
 }
@@ -536,9 +536,7 @@ TEST_F(arp_fsm_test, arp_entry_timeout) {
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
 
-    auto timeout = entry->get_current_state_timeout();
-    hal::periodic::g_twheel->tick(timeout + 100);
-    sleep(5);
+    sleep(ARP_ENTRY_TIMEOUT + 1);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry == NULL);

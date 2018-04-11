@@ -1,12 +1,12 @@
 # Configuration Template.
 meta:
-    id: TENANT_FTE
+    id: TENANT_EPLEARN
 
 type    : tenant
 overlay : vlan
 
 segments:
-    - spec  : ref://store/specs/id=SEGMENT_NATIVE_FTE
+    - spec  : ref://store/specs/id=SEGMENT_NATIVE_EPLEARN
       count : 1
 
 # NFV Endpoints:

@@ -20,6 +20,7 @@
 #include "nic/gen/proto/hal/nw.pb.h"
 // clang-format on
 
+#include "nic/include/pd_api.hpp"
 #include <tins/tins.h>
 
 using namespace Tins;
@@ -48,6 +49,7 @@ string mac_addr_base = "12345";
 #define GET_MAC_ADDR(_ep) ((unsigned char*)((mac_addr_base + std::to_string(_ep)).c_str()))
 
 hal_handle_t *dhcp_server_ep = &ep_handles[MAX_ENDPOINTS - 1];
+hal::pd::l2seg_hw_id_t lkup_vrf;
 
 void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
         hal::ep_t *dep, fte::cpu_rxhdr_t *cpu_rxhdr,
@@ -133,6 +135,13 @@ void dhcp_topo_setup()
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+
+    hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(l2seg_hdl);
+    hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
+    args.l2seg = l2seg;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
+    lkup_vrf = args.hwid;
+
 
     // Create an uplink
     up_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -236,6 +245,11 @@ EthernetII *get_default_dhcp_packet(DHCP::Flags type, uint32_t xid,
     ip->inner_pdu(udp);
     eth->inner_pdu(ip);
 
+    uint8_t addr[] = {chaddr[0], chaddr[1], chaddr[2],
+            chaddr[3], chaddr[4], chaddr[5], 0};
+    HWAddress<6> src_address(addr);
+    eth->src_addr(src_address);
+
     // Retrieve a pointer to the stored TCP PDU
     dhcp = eth->find_pdu<DHCP>();
 
@@ -287,6 +301,8 @@ void dhcp_packet_send(hal_handle_t ep_handle,
     fte::cpu_rxhdr_t cpu_hdr;
     cpu_hdr.flags = 0;
     cpu_hdr.l3_offset = L2_ETH_HDR_LEN;
+    cpu_hdr.lkp_vrf = lkup_vrf;
+    cpu_hdr.l2_offset = 0;
 
     fte::feature_state_t feature_state[100];
     eplearn_info_t info;

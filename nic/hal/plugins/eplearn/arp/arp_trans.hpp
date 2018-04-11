@@ -80,6 +80,7 @@ public:
 
 private:
     arp_trans_key_t trans_key_;
+    fsm_state_timer_ctx arp_timer_ctx;
     uint8_t hw_addr_[ETHER_ADDR_LEN]; /* hardware address */
     ip_addr_t ip_addr_;
 
@@ -105,6 +106,7 @@ private:
         bool process_rarp_request(fsm_state_ctx ctx, fsm_event_data data);
         bool process_rarp_reply(fsm_state_ctx ctx, fsm_event_data data);
         bool process_arp_renewal_request(fsm_state_ctx ctx, fsm_event_data data);
+        bool process_arp_timeout(fsm_state_ctx ctx, fsm_event_data data);
         bool reset_and_add_new_ip(fsm_state_ctx ctx, fsm_event_data data);
         bool add_ip_entry(fsm_state_ctx ctx, fsm_event_data data);
         bool del_ip_entry(fsm_state_ctx ctx, fsm_event_data data);
@@ -155,6 +157,8 @@ private:
     static fsm_timer_t *get_timer_func() { return arp_timer_; }
     void process_event(arp_fsm_event_t event, fsm_event_data data);
     ep_t* get_ep_entry();
+    void start_arp_timer();
+    void stop_arp_timer();
 
    public:
     arp_trans_key_t *trans_key_ptr() { return &trans_key_; }

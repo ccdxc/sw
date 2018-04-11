@@ -31,3 +31,14 @@ modules:
               dst_endpoints : 
                     type : filter://remote=False
                     max  : 1
+     #Placing it after previous test case makes sure we IP is unlearnt      
+    - module:
+        name    : DHCP_BASIC_LOCAL_REMOTE
+        spec    : dhcp_basic.testspec
+        selectors :
+              src_endpoints :
+                    type : filter://remote=True
+                    max  : 1
+              dst_endpoints : 
+                    type : filter://remote=False
+                    max  : 1                                        

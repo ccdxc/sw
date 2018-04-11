@@ -1,12 +1,12 @@
 # Configuration Template.
 meta:
-    id: TENANT_INFRA_FTE
+    id: TENANT_INFRA_EPLEARN
 
 type    : infra
 overlay : vlan
 
 segments:
-    - spec  : ref://store/specs/id=SEGMENT_INFRA_FTE
+    - spec  : ref://store/specs/id=SEGMENT_INFRA_EPLEARN
       count : 1
 
 tunnels:

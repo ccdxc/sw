@@ -9,6 +9,7 @@
 // clang-format off
 #include "dhcp_trans.hpp"
 #include "dhcp_packet.hpp"
+#include "nic/include/pd_api.hpp"
 // clang-format on
 
 // using namespace DHCP_EP_LEARN;
@@ -25,6 +26,49 @@ void dhcp_init()
     register_dhcp_ep_status_callback(get_dhcp_status);
 }
 
+/*
+ * Check whether we have to do DHCP based EP learning.
+ */
+static bool is_dhcp_learning_required(fte::ctx_t &ctx)
+{
+    const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
+    hal::pd::pd_get_object_from_flow_lkupid_args_t args;
+    hal::hal_obj_id_t obj_id;
+    void *obj;
+    hal_ret_t ret = HAL_RET_OK;
+    hal::l2seg_t *l2seg;
+    ether_header_t * ethhdr;
+    ep_t *sep = nullptr;
+    if_t *sif;
+
+    args.flow_lkupid = cpu_hdr->lkp_vrf;
+    args.obj_id = &obj_id;
+    args.pi_obj = &obj;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
+    if (ret != HAL_RET_OK && obj_id != hal::HAL_OBJ_ID_L2SEG) {
+        HAL_TRACE_ERR("fte: Invalid obj id: {}, ret:{}", obj_id, ret);
+        return false;
+    }
+    l2seg = (hal::l2seg_t *)obj;
+
+    ethhdr = (ether_header_t *)(ctx.pkt() + cpu_hdr->l2_offset);
+    sep = hal::find_ep_by_l2_key(l2seg->seg_id, ethhdr->smac);
+    if (sep == nullptr) {
+        /* Probably remote endpoint */
+        HAL_TRACE_INFO("Source endpoint not found.");
+        return false;
+    }
+
+
+    sif = hal::find_if_by_handle(sep->if_handle);
+    if (!sif || sif->if_type != intf::IF_TYPE_ENIC) {
+        HAL_TRACE_INFO("Source endpoint interface is not of type ENIC.");
+        return false;
+    }
+
+    return true;
+}
+
 static hal_ret_t dhcp_process_request_internal(struct packet *decoded_packet,
                                                fte::ctx_t &ctx,
                                                dhcp_fsm_event_t event,
@@ -34,6 +78,12 @@ static hal_ret_t dhcp_process_request_internal(struct packet *decoded_packet,
     dhcp_trans_t *trans;
     dhcp_trans_key_t trans_key;
     dhcp_event_data event_data;
+
+
+    if (IS_CLIENT_EVENT(event) && !is_dhcp_learning_required(ctx)) {
+        HAL_TRACE_INFO("Skipping DHCP EP learning.");
+        goto out;
+    }
 
     HAL_TRACE_DEBUG("Processing DHCP event {} : ", event);
     dhcp_trans_t::init_dhcp_trans_key(raw_pkt->chaddr, xid,
@@ -57,6 +107,7 @@ static hal_ret_t dhcp_process_request_internal(struct packet *decoded_packet,
     event_data.event = event;
     dhcp_trans_t::process_transaction(trans, event,
                                          (fsm_event_data)(&event_data));
+out:
     return HAL_RET_OK;
 }
 

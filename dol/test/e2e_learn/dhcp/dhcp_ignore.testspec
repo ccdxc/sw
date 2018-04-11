@@ -73,23 +73,6 @@ session:
                     args        :
                         - arg   : "10"     
         expect:
-    - step: # Assign ARP entry manually to avoid delay in resolution.
-        trigger:
-            commands:
-                - command:
-                    endpoint    : ref://testcase/config/dst_endpoints/0
-                    cmd         : arp
-                    args        :
-                        - arg   : "-s"
-                        - arg   : "169.0.0.1"
-                        - arg   : ref://testcase/config/src_endpoints/0/macaddr
-                    ignore_error : True
-                - command:
-                    endpoint    : ref://testcase/config/dst_endpoints/0
-                    cmd         : sleep
-                    args        :
-                        - arg   : "10"     
-        expect:           
     - step: #Do clean and release IP address
         trigger:
             commands:

@@ -240,6 +240,7 @@ update_flow_fwding(fte::ctx_t *fte_ctx)
         flowupd.action = session::FLOW_ACTION_ALLOW;
         ret = fte_ctx->update_flow(flowupd);
     } else {
+        HAL_TRACE_ERR("Destination endpoint not found.");
         ret = HAL_RET_IF_NOT_FOUND;
     }
 

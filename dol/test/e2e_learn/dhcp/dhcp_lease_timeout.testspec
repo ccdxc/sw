@@ -36,6 +36,13 @@ session:
                         - arg   : "0.0.0.0"                        
                     ignore_error : True
                 - command:
+                    endpoint    : ref://testcase/config/src_endpoints/0
+                    cmd         : ifconfig
+                    args        :
+                        - arg   : ref://testcase/config/src_endpoints/0/intf              
+                        - arg   : "169.0.0.1"
+                        - arg   : "netmask 255.255.255.0"                        
+                - command:
                     endpoint    : ref://testcase/config/dst_endpoints/0
                     cmd         : sleep
                     args        :

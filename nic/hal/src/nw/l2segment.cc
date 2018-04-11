@@ -2058,6 +2058,8 @@ l2seg_ep_learning_update (L2SegmentSpec& spec, l2seg_t *l2seg)
         if (spec.eplearn_cfg().has_arp()) {
             if (spec.eplearn_cfg().arp().entry_timeout()) {
                 l2seg->eplearn_cfg.arp_cfg.enabled = true;
+                l2seg->eplearn_cfg.arp_cfg.entry_timeout = \
+                        spec.eplearn_cfg().arp().entry_timeout();
             } else {
                 l2seg->eplearn_cfg.arp_cfg.enabled = false;
             }

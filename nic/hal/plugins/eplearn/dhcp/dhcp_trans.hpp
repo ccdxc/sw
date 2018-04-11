@@ -87,6 +87,11 @@ static std::map<dhcp_fsm_state_t, DhcpTransactionState> dhcp_trans_state_map = {
 
 DEFINE_ENUM(dhcp_fsm_event_t, DHCP_FSM_EVENT_ENTRIES)
 
+#define IS_CLIENT_EVENT(event)                              \
+    (event == DHCP_DISCOVER || event == DHCP_REQUEST ||     \
+     event == DHCP_RELEASE || event == DHCP_INFORM ||       \
+     event == DHCP_RENEWAL || event == DHCP_REBIND )
+
 class dhcp_ctx {
    public:
     uint32_t xid_;

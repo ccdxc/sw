@@ -49,6 +49,14 @@ class NS(object):
             run(cmd)
             cmd = self._cmd_prefix + " ifconfig %s up" % (self._vlan_intf)
             run(cmd)
+        else:
+            cmd = self._cmd_prefix  + " ip link set %s down" % (self._intf)
+            run(cmd)
+            cmd = self._cmd_prefix +  " ip link set %s name %s" % (interface, intf_name)
+            run(cmd)
+            self._intf = intf_name
+            cmd = self._cmd_prefix + " ifconfig %s up" % (self._intf)
+            run(cmd)
             
     
     def UnBindInterface(self):

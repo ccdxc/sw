@@ -333,7 +333,7 @@ class SegmentObject(base.ConfigObjectBase):
         
         if self.eplearn:
             if self.eplearn.arp_entry_timeout:
-                req_spec.eplearn_cfg.arp.entry_timeout = 9999999
+                req_spec.eplearn_cfg.arp.entry_timeout =  int(self.eplearn.arp_entry_timeout)
             if self.eplearn.dhcp:
                 dhcp_server = req_spec.eplearn_cfg.dhcp.trusted_servers.add()
                 dhcp_server = self.ipv4_pool.GetLast()

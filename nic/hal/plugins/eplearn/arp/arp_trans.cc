@@ -31,7 +31,6 @@ bool arptrans_compare_key_func(void *key1, void *key2) {
     return false;
 }
 
-
 /* Make sure only one instance of State machine is present and all transactions
  * should use the same state machine */
 arp_trans_t::arp_fsm_t *arp_trans_t::arp_fsm_ = new arp_fsm_t();
@@ -68,15 +67,15 @@ void arp_trans_t::arp_fsm_t::_init_state_machine() {
         FSM_STATE_BEGIN(RARP_INIT, 0, NULL, NULL)
             FSM_TRANSITION(RARP_REPLY, SM_FUNC(process_rarp_reply),
                            ARP_BOUND)
-            FSM_TRANSITION(ARP_TIMEOUT, NULL, ARP_DONE)
+            FSM_TRANSITION(ARP_TIMEOUT, SM_FUNC(process_arp_timeout), ARP_DONE)
         FSM_STATE_END
-        FSM_STATE_BEGIN(ARP_BOUND, BOUND_TIMEOUT, NULL, NULL)
+        FSM_STATE_BEGIN(ARP_BOUND, 0, NULL, NULL)
             FSM_TRANSITION(ARP_ADD, SM_FUNC(process_arp_renewal_request),
                            ARP_BOUND)
             FSM_TRANSITION(ARP_IP_RESET_ADD, SM_FUNC(reset_and_add_new_ip),
                            ARP_BOUND)
             FSM_TRANSITION(ARP_IP_ADD, SM_FUNC(add_ip_entry), ARP_BOUND)
-            FSM_TRANSITION(ARP_TIMEOUT, NULL, ARP_DONE)
+            FSM_TRANSITION(ARP_TIMEOUT, SM_FUNC(process_arp_timeout), ARP_DONE)
             FSM_TRANSITION(ARP_REMOVE, NULL, ARP_DONE)
         FSM_STATE_END
         FSM_STATE_BEGIN(ARP_DONE, 0, NULL, NULL)
@@ -85,6 +84,15 @@ void arp_trans_t::arp_fsm_t::_init_state_machine() {
     this->set_state_machine(sm_def);
 }
 // clang-format on
+
+
+static void arp_timeout_handler(void *timer, uint32_t timer_id, void *ctxt) {
+    fsm_state_machine_t* sm_ = reinterpret_cast<fsm_state_machine_t*>(ctxt);
+    sm_->reset_timer();
+    trans_t* trans =
+        reinterpret_cast<trans_t*>(sm_->get_ctx());
+    trans_t::process_transaction(trans, ARP_TIMEOUT, NULL);
+}
 
 #define ADD_COMPLETION_HANDLER(__trans, __event, __ep_handle, __ip_addr)     \
     uint32_t __trans_cnt = eplearn_info->trans_ctx_cnt;                      \
@@ -150,6 +158,8 @@ bool arp_trans_t::arp_fsm_t::add_ip_entry(fsm_state_ctx ctx,
     arp_trans_t::arplearn_key_ht()->insert((void *)trans, &trans->ht_ctxt_);
     arp_trans_t::arplearn_ip_entry_ht()->insert((void *)trans,
                                                 &trans->ip_entry_ht_ctxt_);
+
+    trans->start_arp_timer();
 
     return true;
 }
@@ -280,6 +290,16 @@ bool arp_trans_t::arp_fsm_t::process_rarp_request(fsm_state_ctx ctx,
     return true;
 }
 
+bool arp_trans_t::arp_fsm_t::process_arp_timeout(fsm_state_ctx ctx,
+                                               fsm_event_data fsm_data)
+{
+    arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
+
+    trans->arp_timer_ctx = nullptr;
+
+    return true;
+}
+
 bool arp_trans_t::arp_fsm_t::process_arp_renewal_request(fsm_state_ctx ctx,
                                                fsm_event_data fsm_data) {
     arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
@@ -303,6 +323,7 @@ bool arp_trans_t::arp_fsm_t::process_arp_renewal_request(fsm_state_ctx ctx,
     if (trans->protocol_address_match(ip_addr)) {
         /* Just a renewal, nothing to do, timeout will be updated. */
         trans->log_info("Protocol address same, nothing to do.");
+        trans->start_arp_timer();
         return true;
     }
 
@@ -371,6 +392,7 @@ void arp_trans_t::reset() {
     hal_ret_t ret;
     ep_t * ep_entry;
 
+    this->stop_arp_timer();
     arp_trans_t::arplearn_key_ht()->remove(&this->trans_key_);
     arp_trans_t::arplearn_ip_entry_ht()->remove(this->ip_entry_key_ptr());
     /*
@@ -387,6 +409,37 @@ void arp_trans_t::reset() {
     }
 
     this->sm_->stop_state_timer();
+}
+
+
+void arp_trans_t::start_arp_timer() {
+
+    hal::l2seg_t *l2seg;
+    uint32_t timeout;
+
+    this->stop_arp_timer();
+
+    l2seg = find_l2seg_by_id(this->trans_key_ptr()->l2_segid);
+    if (l2seg != nullptr) {
+        timeout = l2seg->eplearn_cfg.arp_cfg.entry_timeout;
+    } else {
+        HAL_TRACE_ERR("L2 segment look up failed, starting ARP timer with default time");
+        timeout = BOUND_TIMEOUT;
+    }
+
+
+    HAL_TRACE_INFO("Starting ARP timer of {} seconds", timeout);
+    this->arp_timer_ctx = arp_timer_->add_timer_with_custom_handler(
+            timeout * TIME_MSECS_PER_SEC,
+            this->sm_, arp_timeout_handler);
+}
+
+void arp_trans_t::stop_arp_timer() {
+
+    if (this->arp_timer_ctx) {
+        arp_timer_->delete_timer(this->arp_timer_ctx);
+    }
+    this->arp_timer_ctx = nullptr;
 }
 
 void arp_trans_t::init_arp_trans_key(const uint8_t *hw_addr, const ep_t *ep,

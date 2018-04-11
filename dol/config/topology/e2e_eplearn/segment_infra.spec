@@ -1,6 +1,6 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_INFRA_FTE
+    id: SEGMENT_INFRA_EPLEARN
 
 type        : infra
 native      : False
