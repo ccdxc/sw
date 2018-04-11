@@ -1155,13 +1155,6 @@ static int ionic_post_send(struct ibv_qp *ibqp,
 
 	old_prod = qp->sq.prod;
 
-	if (ibqp->state != IBV_QPS_RTS &&
-	    ibqp->state != IBV_QPS_SQD) {
-		ionic_dbg(ctx, "invalid qp state %d", ibqp->state);
-		rc = EINVAL;
-		goto out;
-	}
-
 	if (ibqp->qp_type == IBV_QPT_UD) {
 		while (wr) {
 			if (ionic_queue_full(&qp->sq)) {
@@ -1262,13 +1255,6 @@ static int ionic_post_recv(struct ibv_qp *ibqp,
 	pthread_spin_lock(&qp->rq_lock);
 
 	old_prod = qp->rq.prod;
-
-	if (ibqp->state == IBV_QPS_RESET ||
-	    ibqp->state == IBV_QPS_ERR) {
-		ionic_dbg(ctx, "invalid qp state %d", ibqp->state);
-		rc = EINVAL;
-		goto out;
-	}
 
 	while (wr) {
 		if (ionic_queue_full(&qp->rq)) {
