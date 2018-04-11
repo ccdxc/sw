@@ -430,8 +430,24 @@ class RdmaQstateObject(object):
         if (GlobalOptions.dryrun): return
         logger.info("Writing Qstate @0x%x Type: %s size: %d with delay" % (self.addr, self.queue_type, self.size))
         model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
+        # On RTL, write is asyncronous and taking long time to complete
+        # Wait until the write succeed otherwise tests may fail in RTL (timing)
+        # Read(synchrouns) in loop and wait until the read data is same as what was inteded to write
+        # Be aware this logic would break if there is continous change to QStata data in hardware 
+        # like spruious schdule count in qstate, etc.
+        # Check only 256 bytes for Q state - data in use (no need to check entire Qstata/1024 bytes)
+        wdata = self.data[0:256]
         if GlobalOptions.rtl:
-            time.sleep(10)
+            count = 1
+            while True:
+                self.data = qt_params[self.queue_type]['state'](model_wrap.read_mem(self.addr, self.size))
+                rdata = self.data[0:256]
+                if rdata == wdata:
+                    break
+                # Read data is not same as we wrote, so sleep for 1 sec and try again
+                time.sleep(1)
+                count = count + 1
+            logger.info("Qstate Write @0x%x Type: %s size: %d completed after %d secs" % (self.addr, self.queue_type, self.size, count))
 
     def Read(self):
         if (GlobalOptions.dryrun):
@@ -543,9 +559,10 @@ class RdmaQueueObject(QueueObject):
     def ConfigureRings(self):
         self.obj_helper_ring.Configure()
         if not ( GlobalOptions.dryrun or GlobalOptions.cfgonly):
-            # Ignore spurious ring_empty_counter memory comparison b/w RTL and SW model
-            if self.queue_type.GID() == 'RDMA_RQ':
-                model_wrap.eos_ignore_addr(self.GetQstateAddr() + 44, 1)
+            # Ignore time stamp memory comparison b/w RTL and SW model as that woudl differ
+            # Timestamp in SQCB2 at offset of 21 bytes for 6B long
+            if self.queue_type.GID() == 'RDMA_SQ':
+                model_wrap.eos_ignore_addr(self.GetQstateAddr() + 64 + 64 + 21, 6)
 
     def Show(self):
         logger.info('Queue: %s' % self.GID())

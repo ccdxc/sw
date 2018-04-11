@@ -43,9 +43,23 @@ class RdmaKeyTableEntryObject(object):
         if (GlobalOptions.dryrun): return
         logger.info("Writing KeyTableEntry @0x%x size: %d with delay" % (self.addr, self.size))
         model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
+        # On RTL, write is asyncronous and taking long time to complete
+        # Wait until the write succeed otherwise tests may fail in RTL (timing)
+        # Read(synchrouns) in loop and wait until the read data is same as what was inteded to write
+        wdata = self.data[0:len(self.data)]
         if GlobalOptions.rtl:
-            time.sleep(10)
-        self.Read()
+            count = 1
+            while True:
+                self.Read()
+                rdata = self.data[0:len(self.data)]
+                if rdata == wdata:
+                    break
+                # Read data is not same as we wrote, so sleep for 1 sec and try again
+                time.sleep(1)
+                count = count + 1
+            logger.info("KeyTableEntry Write @0x%x size: %d completed after %d secs" % (self.addr, self.size, count))
+        else:
+            self.Read()
 
     def Read(self):
         if (GlobalOptions.dryrun):
