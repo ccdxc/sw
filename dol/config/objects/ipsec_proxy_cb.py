@@ -12,6 +12,7 @@ from config.objects.swdr        import SwDscrRingHelper
 from config.objects.crypto_keys        import CryptoKeyHelper
 import config.objects.endpoint  as endpoint
 import config.objects.segment   as segment 
+import types_pb2                as types_pb2
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -34,6 +35,32 @@ class IpsecCbObject(base.ConfigObjectBase):
         self.dip6 = resmgr.TepIpv6SubnetAllocator.get()
         self.sip6.v6_addr = self.sip6.getnum().to_bytes(16, 'big')
         self.dip6.v6_addr = self.dip6.getnum().to_bytes(16, 'big')
+
+        key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
+        key_size = 16
+        key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        sip6 = b'\x20\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xaa\xaa'
+        dip6 = b'\x20\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xbb\xbb'
+        self.crypto_key.Update(key_type, key_size, key)
+
+        self.tunnel_sip4               = 0x0A010001
+        self.tunnel_dip4               = 0x0A010002
+        self.iv_size                   = 8
+        self.icv_size                  = 16
+        self.block_size                = 16
+        self.key_index                 = 0
+        self.barco_enc_cmd             = 0x30000000
+        self.iv                        = 0xaaaaaaaaaaaaaaaa
+        self.iv_salt                   = 0xbbbbbbbb
+        self.esn_hi                    = 0
+        self.esn_lo                    = 0
+        self.spi                       = 0
+        self.key_index                 = self.crypto_key.keyindex
+        self.sip6.ip_af                = 2
+        self.sip6.v6_addr              = sip6 
+        self.dip6.ip_af                = 2
+        self.dip6.v6_addr              = dip6 
+
         return
 
 
