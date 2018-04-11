@@ -330,15 +330,25 @@ hal_ret_t
 mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    uint64_t                index = 0;
     uint32_t                num_oifs = 0;
     if_t                    *pi_if = NULL;
+    hal_handle_t            hash_table[HAL_MAX_OIF_PER_MC_ENTRY];
     InterfaceKeyHandle      if_key_handle;
 
     num_oifs = (uint32_t) spec.oif_key_handles_size();
+    if (num_oifs > HAL_MAX_OIF_PER_MC_ENTRY) {
+        HAL_TRACE_ERR("Too many OIFs! Only {} supported per mc_entry",
+                      HAL_MAX_OIF_PER_MC_ENTRY);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
 
     HAL_TRACE_DEBUG("Received {} no. of oifs", num_oifs);
 
+    memset(hash_table, 0x00, sizeof(hash_table));
     sdk::lib::dllist_reset(&mc_entry->if_list_head);
+
     for (uint32_t i = 0; i < num_oifs; i++) {
         if_key_handle = spec.oif_key_handles(i);
         pi_if = if_lookup_key_or_handle(if_key_handle);
@@ -347,6 +357,23 @@ mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
             ret = HAL_RET_IF_NOT_FOUND;
             goto end;
         }
+
+        for(index = pi_if->hal_handle % HAL_MAX_OIF_PER_MC_ENTRY;
+            hash_table[index];
+            index = ((index + 1) % HAL_MAX_OIF_PER_MC_ENTRY)) {
+            if (hash_table[index] == pi_if->hal_handle) {
+                HAL_TRACE_ERR("Duplicate OIF in request! if_handle {}",
+                              pi_if->hal_handle);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
+            // Can not be an infinite loop since the table is as big as
+            // the max number of OIFs allowed per entry, which was validated
+            // above for this request. Every OIF will eventually find a
+            // free slot.
+        }
+
+        hash_table[index] = pi_if->hal_handle;
 
         if (!is_forwarding_mode_smart_nic()) {
             if (pi_if->if_type != intf::IF_TYPE_ENIC) {

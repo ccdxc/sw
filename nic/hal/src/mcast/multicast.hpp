@@ -28,6 +28,9 @@ using multicast::MulticastEntryGetResponseMsg;
 
 namespace hal {
 
+#define HAL_MAX_MC_ENTRIES            2048
+#define HAL_MAX_OIF_PER_MC_ENTRY       256
+
 typedef enum mc_key_type {
     MC_KEY_TYPE_NONE = 0,
     MC_KEY_TYPE_IP = 1,
@@ -62,8 +65,6 @@ typedef struct mc_entry_s {
 typedef struct mc_entry_create_app_ctxt_s {
     mc_key_t   key;
 } __PACK__ mc_entry_create_app_ctxt_t;
-
-#define HAL_MAX_MC_ENTRIES                         2048
 
 static inline void multicast_entry_lock(mc_entry_t *mc_entry, const char *fname,
                                         int lineno, const char *fxname)
