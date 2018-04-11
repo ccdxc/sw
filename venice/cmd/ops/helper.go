@@ -3,7 +3,9 @@ package ops
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
@@ -18,18 +20,27 @@ import (
 	"github.com/pensando/sw/venice/utils/version"
 )
 
-// makeNode creates a new Node object.
-func makeNode(name string) *cmd.Node {
+// makeQuorumNode creates a new Quorum Node object to be stored directly into kvstore
+func makeQuorumNode(name string) *cmd.Node {
 	ret := &cmd.Node{
 		TypeMeta: api.TypeMeta{
-			Kind: "Node",
+			Kind:       "Node",
+			APIVersion: "v1",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: name,
 			UUID: uuid.NewV4().String(),
 		},
 	}
+
+	ts, err := types.TimestampProto(time.Now())
+	if err == nil {
+		ret.CreationTime.Timestamp = *ts
+		ret.ModTime.Timestamp = *ts
+	}
 	ret.SelfLink = ret.MakeKey("cmd")
+	ret.Spec.Roles = append(ret.Spec.Roles, cmd.NodeSpec_CONTROLLER.String(), cmd.NodeSpec_QUORUM.String())
+	ret.Status.Phase = cmd.NodeStatus_JOINED.String()
 	return ret
 }
 

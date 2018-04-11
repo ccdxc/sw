@@ -151,7 +151,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 
 	for ii := range o.cluster.Spec.QuorumNodes {
 		name := o.cluster.Spec.QuorumNodes[ii]
-		node := makeNode(name)
+		node := makeQuorumNode(name)
 		err = txn.Create(path.Join(globals.NodesKey, name), node)
 		if err != nil {
 			log.Errorf("Failed to add node %v to txn, error: %v", name, err)
