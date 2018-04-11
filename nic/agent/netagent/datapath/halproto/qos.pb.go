@@ -21,6 +21,30 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+type PortTypeNum_PortType int32
+
+const (
+	PortTypeNum_PORT_TYPE_DMA  PortTypeNum_PortType = 0
+	PortTypeNum_PORT_TYPE_P4IG PortTypeNum_PortType = 1
+	PortTypeNum_PORT_TYPE_P4EG PortTypeNum_PortType = 2
+)
+
+var PortTypeNum_PortType_name = map[int32]string{
+	0: "PORT_TYPE_DMA",
+	1: "PORT_TYPE_P4IG",
+	2: "PORT_TYPE_P4EG",
+}
+var PortTypeNum_PortType_value = map[string]int32{
+	"PORT_TYPE_DMA":  0,
+	"PORT_TYPE_P4IG": 1,
+	"PORT_TYPE_P4EG": 2,
+}
+
+func (x PortTypeNum_PortType) String() string {
+	return proto.EnumName(PortTypeNum_PortType_name, int32(x))
+}
+func (PortTypeNum_PortType) EnumDescriptor() ([]byte, []int) { return fileDescriptorQos, []int{8, 0} }
+
 // Specifications of a policer
 type PolicerSpec struct {
 	BpsRate   uint64 `protobuf:"varint,1,opt,name=bps_rate,json=bpsRate,proto3" json:"bps_rate,omitempty"`
@@ -430,21 +454,331 @@ func (m *QosClassRequestMsg) GetRequest() []*QosClassSpec {
 	return nil
 }
 
+type PortTypeNum struct {
+	// Types that are valid to be assigned to PortTypeOrNum:
+	//	*PortTypeNum_PortType_
+	//	*PortTypeNum_UplinkPortNum
+	PortTypeOrNum isPortTypeNum_PortTypeOrNum `protobuf_oneof:"port_type_or_num"`
+}
+
+func (m *PortTypeNum) Reset()                    { *m = PortTypeNum{} }
+func (m *PortTypeNum) String() string            { return proto.CompactTextString(m) }
+func (*PortTypeNum) ProtoMessage()               {}
+func (*PortTypeNum) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{8} }
+
+type isPortTypeNum_PortTypeOrNum interface {
+	isPortTypeNum_PortTypeOrNum()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type PortTypeNum_PortType_ struct {
+	PortType PortTypeNum_PortType `protobuf:"varint,1,opt,name=port_type,json=portType,proto3,enum=qos.PortTypeNum_PortType,oneof"`
+}
+type PortTypeNum_UplinkPortNum struct {
+	UplinkPortNum uint32 `protobuf:"varint,2,opt,name=uplink_port_num,json=uplinkPortNum,proto3,oneof"`
+}
+
+func (*PortTypeNum_PortType_) isPortTypeNum_PortTypeOrNum()     {}
+func (*PortTypeNum_UplinkPortNum) isPortTypeNum_PortTypeOrNum() {}
+
+func (m *PortTypeNum) GetPortTypeOrNum() isPortTypeNum_PortTypeOrNum {
+	if m != nil {
+		return m.PortTypeOrNum
+	}
+	return nil
+}
+
+func (m *PortTypeNum) GetPortType() PortTypeNum_PortType {
+	if x, ok := m.GetPortTypeOrNum().(*PortTypeNum_PortType_); ok {
+		return x.PortType
+	}
+	return PortTypeNum_PORT_TYPE_DMA
+}
+
+func (m *PortTypeNum) GetUplinkPortNum() uint32 {
+	if x, ok := m.GetPortTypeOrNum().(*PortTypeNum_UplinkPortNum); ok {
+		return x.UplinkPortNum
+	}
+	return 0
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*PortTypeNum) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _PortTypeNum_OneofMarshaler, _PortTypeNum_OneofUnmarshaler, _PortTypeNum_OneofSizer, []interface{}{
+		(*PortTypeNum_PortType_)(nil),
+		(*PortTypeNum_UplinkPortNum)(nil),
+	}
+}
+
+func _PortTypeNum_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*PortTypeNum)
+	// port_type_or_num
+	switch x := m.PortTypeOrNum.(type) {
+	case *PortTypeNum_PortType_:
+		_ = b.EncodeVarint(1<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.PortType))
+	case *PortTypeNum_UplinkPortNum:
+		_ = b.EncodeVarint(2<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.UplinkPortNum))
+	case nil:
+	default:
+		return fmt.Errorf("PortTypeNum.PortTypeOrNum has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _PortTypeNum_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*PortTypeNum)
+	switch tag {
+	case 1: // port_type_or_num.port_type
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.PortTypeOrNum = &PortTypeNum_PortType_{PortTypeNum_PortType(x)}
+		return true, err
+	case 2: // port_type_or_num.uplink_port_num
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.PortTypeOrNum = &PortTypeNum_UplinkPortNum{uint32(x)}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _PortTypeNum_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*PortTypeNum)
+	// port_type_or_num
+	switch x := m.PortTypeOrNum.(type) {
+	case *PortTypeNum_PortType_:
+		n += proto.SizeVarint(1<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.PortType))
+	case *PortTypeNum_UplinkPortNum:
+		n += proto.SizeVarint(2<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.UplinkPortNum))
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type QosClassInputQueue struct {
+	PortTypeNum   *PortTypeNum `protobuf:"bytes,1,opt,name=port_type_num,json=portTypeNum" json:"port_type_num,omitempty"`
+	InputQueueIdx uint32       `protobuf:"varint,2,opt,name=input_queue_idx,json=inputQueueIdx,proto3" json:"input_queue_idx,omitempty"`
+}
+
+func (m *QosClassInputQueue) Reset()                    { *m = QosClassInputQueue{} }
+func (m *QosClassInputQueue) String() string            { return proto.CompactTextString(m) }
+func (*QosClassInputQueue) ProtoMessage()               {}
+func (*QosClassInputQueue) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{9} }
+
+func (m *QosClassInputQueue) GetPortTypeNum() *PortTypeNum {
+	if m != nil {
+		return m.PortTypeNum
+	}
+	return nil
+}
+
+func (m *QosClassInputQueue) GetInputQueueIdx() uint32 {
+	if m != nil {
+		return m.InputQueueIdx
+	}
+	return 0
+}
+
+type QosClassOutputQueue struct {
+	PortTypeNum    *PortTypeNum `protobuf:"bytes,1,opt,name=port_type_num,json=portTypeNum" json:"port_type_num,omitempty"`
+	OutputQueueIdx uint32       `protobuf:"varint,2,opt,name=output_queue_idx,json=outputQueueIdx,proto3" json:"output_queue_idx,omitempty"`
+}
+
+func (m *QosClassOutputQueue) Reset()                    { *m = QosClassOutputQueue{} }
+func (m *QosClassOutputQueue) String() string            { return proto.CompactTextString(m) }
+func (*QosClassOutputQueue) ProtoMessage()               {}
+func (*QosClassOutputQueue) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{10} }
+
+func (m *QosClassOutputQueue) GetPortTypeNum() *PortTypeNum {
+	if m != nil {
+		return m.PortTypeNum
+	}
+	return nil
+}
+
+func (m *QosClassOutputQueue) GetOutputQueueIdx() uint32 {
+	if m != nil {
+		return m.OutputQueueIdx
+	}
+	return 0
+}
+
+// QosClass oper state for enterprise pipeline
+type QosClassStatusEpd struct {
+	InputQueues  []*QosClassInputQueue  `protobuf:"bytes,1,rep,name=input_queues,json=inputQueues" json:"input_queues,omitempty"`
+	OutputQueues []*QosClassOutputQueue `protobuf:"bytes,2,rep,name=output_queues,json=outputQueues" json:"output_queues,omitempty"`
+}
+
+func (m *QosClassStatusEpd) Reset()                    { *m = QosClassStatusEpd{} }
+func (m *QosClassStatusEpd) String() string            { return proto.CompactTextString(m) }
+func (*QosClassStatusEpd) ProtoMessage()               {}
+func (*QosClassStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{11} }
+
+func (m *QosClassStatusEpd) GetInputQueues() []*QosClassInputQueue {
+	if m != nil {
+		return m.InputQueues
+	}
+	return nil
+}
+
+func (m *QosClassStatusEpd) GetOutputQueues() []*QosClassOutputQueue {
+	if m != nil {
+		return m.OutputQueues
+	}
+	return nil
+}
+
+// QosClass oper state for cloud pipeline
+type QosClassStatusCpd struct {
+}
+
+func (m *QosClassStatusCpd) Reset()                    { *m = QosClassStatusCpd{} }
+func (m *QosClassStatusCpd) String() string            { return proto.CompactTextString(m) }
+func (*QosClassStatusCpd) ProtoMessage()               {}
+func (*QosClassStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{12} }
+
 // QosClassStatus represents the operational status of QosClass
 type QosClassStatus struct {
 	QosClassHandle uint64 `protobuf:"fixed64,1,opt,name=qos_class_handle,json=qosClassHandle,proto3" json:"qos_class_handle,omitempty"`
+	// Types that are valid to be assigned to QosClassPdStatus:
+	//	*QosClassStatus_EpdStatus
+	//	*QosClassStatus_CpdStatus
+	QosClassPdStatus isQosClassStatus_QosClassPdStatus `protobuf_oneof:"qos_class_pd_status"`
 }
 
 func (m *QosClassStatus) Reset()                    { *m = QosClassStatus{} }
 func (m *QosClassStatus) String() string            { return proto.CompactTextString(m) }
 func (*QosClassStatus) ProtoMessage()               {}
-func (*QosClassStatus) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{8} }
+func (*QosClassStatus) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{13} }
+
+type isQosClassStatus_QosClassPdStatus interface {
+	isQosClassStatus_QosClassPdStatus()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type QosClassStatus_EpdStatus struct {
+	EpdStatus *QosClassStatusEpd `protobuf:"bytes,2,opt,name=epd_status,json=epdStatus,oneof"`
+}
+type QosClassStatus_CpdStatus struct {
+	CpdStatus *QosClassStatusCpd `protobuf:"bytes,3,opt,name=cpd_status,json=cpdStatus,oneof"`
+}
+
+func (*QosClassStatus_EpdStatus) isQosClassStatus_QosClassPdStatus() {}
+func (*QosClassStatus_CpdStatus) isQosClassStatus_QosClassPdStatus() {}
+
+func (m *QosClassStatus) GetQosClassPdStatus() isQosClassStatus_QosClassPdStatus {
+	if m != nil {
+		return m.QosClassPdStatus
+	}
+	return nil
+}
 
 func (m *QosClassStatus) GetQosClassHandle() uint64 {
 	if m != nil {
 		return m.QosClassHandle
 	}
 	return 0
+}
+
+func (m *QosClassStatus) GetEpdStatus() *QosClassStatusEpd {
+	if x, ok := m.GetQosClassPdStatus().(*QosClassStatus_EpdStatus); ok {
+		return x.EpdStatus
+	}
+	return nil
+}
+
+func (m *QosClassStatus) GetCpdStatus() *QosClassStatusCpd {
+	if x, ok := m.GetQosClassPdStatus().(*QosClassStatus_CpdStatus); ok {
+		return x.CpdStatus
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*QosClassStatus) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _QosClassStatus_OneofMarshaler, _QosClassStatus_OneofUnmarshaler, _QosClassStatus_OneofSizer, []interface{}{
+		(*QosClassStatus_EpdStatus)(nil),
+		(*QosClassStatus_CpdStatus)(nil),
+	}
+}
+
+func _QosClassStatus_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*QosClassStatus)
+	// qos_class_pd_status
+	switch x := m.QosClassPdStatus.(type) {
+	case *QosClassStatus_EpdStatus:
+		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.EpdStatus); err != nil {
+			return err
+		}
+	case *QosClassStatus_CpdStatus:
+		_ = b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.CpdStatus); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("QosClassStatus.QosClassPdStatus has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _QosClassStatus_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*QosClassStatus)
+	switch tag {
+	case 2: // qos_class_pd_status.epd_status
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(QosClassStatusEpd)
+		err := b.DecodeMessage(msg)
+		m.QosClassPdStatus = &QosClassStatus_EpdStatus{msg}
+		return true, err
+	case 3: // qos_class_pd_status.cpd_status
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(QosClassStatusCpd)
+		err := b.DecodeMessage(msg)
+		m.QosClassPdStatus = &QosClassStatus_CpdStatus{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _QosClassStatus_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*QosClassStatus)
+	// qos_class_pd_status
+	switch x := m.QosClassPdStatus.(type) {
+	case *QosClassStatus_EpdStatus:
+		s := proto.Size(x.EpdStatus)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *QosClassStatus_CpdStatus:
+		s := proto.Size(x.CpdStatus)
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
 }
 
 // QosClassResponse is response to one QosClassSpec
@@ -456,7 +790,7 @@ type QosClassResponse struct {
 func (m *QosClassResponse) Reset()                    { *m = QosClassResponse{} }
 func (m *QosClassResponse) String() string            { return proto.CompactTextString(m) }
 func (*QosClassResponse) ProtoMessage()               {}
-func (*QosClassResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{9} }
+func (*QosClassResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{14} }
 
 func (m *QosClassResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -480,7 +814,7 @@ type QosClassResponseMsg struct {
 func (m *QosClassResponseMsg) Reset()                    { *m = QosClassResponseMsg{} }
 func (m *QosClassResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*QosClassResponseMsg) ProtoMessage()               {}
-func (*QosClassResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{10} }
+func (*QosClassResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{15} }
 
 func (m *QosClassResponseMsg) GetResponse() []*QosClassResponse {
 	if m != nil {
@@ -499,7 +833,7 @@ type QosClassDeleteRequest struct {
 func (m *QosClassDeleteRequest) Reset()                    { *m = QosClassDeleteRequest{} }
 func (m *QosClassDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*QosClassDeleteRequest) ProtoMessage()               {}
-func (*QosClassDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{11} }
+func (*QosClassDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{16} }
 
 func (m *QosClassDeleteRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -523,7 +857,7 @@ type QosClassDeleteRequestMsg struct {
 func (m *QosClassDeleteRequestMsg) Reset()                    { *m = QosClassDeleteRequestMsg{} }
 func (m *QosClassDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*QosClassDeleteRequestMsg) ProtoMessage()               {}
-func (*QosClassDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{12} }
+func (*QosClassDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{17} }
 
 func (m *QosClassDeleteRequestMsg) GetRequest() []*QosClassDeleteRequest {
 	if m != nil {
@@ -540,7 +874,7 @@ type QosClassDeleteResponse struct {
 func (m *QosClassDeleteResponse) Reset()                    { *m = QosClassDeleteResponse{} }
 func (m *QosClassDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*QosClassDeleteResponse) ProtoMessage()               {}
-func (*QosClassDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{13} }
+func (*QosClassDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{18} }
 
 func (m *QosClassDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -557,7 +891,7 @@ type QosClassDeleteResponseMsg struct {
 func (m *QosClassDeleteResponseMsg) Reset()                    { *m = QosClassDeleteResponseMsg{} }
 func (m *QosClassDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*QosClassDeleteResponseMsg) ProtoMessage()               {}
-func (*QosClassDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{14} }
+func (*QosClassDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{19} }
 
 func (m *QosClassDeleteResponseMsg) GetResponse() []*QosClassDeleteResponse {
 	if m != nil {
@@ -566,14 +900,134 @@ func (m *QosClassDeleteResponseMsg) GetResponse() []*QosClassDeleteResponse {
 	return nil
 }
 
+type QosClassInputQueueStats struct {
+	InputQueue      *QosClassInputQueue `protobuf:"bytes,1,opt,name=input_queue,json=inputQueue" json:"input_queue,omitempty"`
+	GoodPktsIn      uint64              `protobuf:"varint,2,opt,name=good_pkts_in,json=goodPktsIn,proto3" json:"good_pkts_in,omitempty"`
+	GoodPktsOut     uint64              `protobuf:"varint,3,opt,name=good_pkts_out,json=goodPktsOut,proto3" json:"good_pkts_out,omitempty"`
+	ErroredPktsIn   uint64              `protobuf:"varint,4,opt,name=errored_pkts_in,json=erroredPktsIn,proto3" json:"errored_pkts_in,omitempty"`
+	HbmFifoDepth    uint32              `protobuf:"varint,5,opt,name=hbm_fifo_depth,json=hbmFifoDepth,proto3" json:"hbm_fifo_depth,omitempty"`
+	MaxFifoDepth    uint32              `protobuf:"varint,6,opt,name=max_fifo_depth,json=maxFifoDepth,proto3" json:"max_fifo_depth,omitempty"`
+	BufferOccupancy uint32              `protobuf:"varint,7,opt,name=buffer_occupancy,json=bufferOccupancy,proto3" json:"buffer_occupancy,omitempty"`
+}
+
+func (m *QosClassInputQueueStats) Reset()                    { *m = QosClassInputQueueStats{} }
+func (m *QosClassInputQueueStats) String() string            { return proto.CompactTextString(m) }
+func (*QosClassInputQueueStats) ProtoMessage()               {}
+func (*QosClassInputQueueStats) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{20} }
+
+func (m *QosClassInputQueueStats) GetInputQueue() *QosClassInputQueue {
+	if m != nil {
+		return m.InputQueue
+	}
+	return nil
+}
+
+func (m *QosClassInputQueueStats) GetGoodPktsIn() uint64 {
+	if m != nil {
+		return m.GoodPktsIn
+	}
+	return 0
+}
+
+func (m *QosClassInputQueueStats) GetGoodPktsOut() uint64 {
+	if m != nil {
+		return m.GoodPktsOut
+	}
+	return 0
+}
+
+func (m *QosClassInputQueueStats) GetErroredPktsIn() uint64 {
+	if m != nil {
+		return m.ErroredPktsIn
+	}
+	return 0
+}
+
+func (m *QosClassInputQueueStats) GetHbmFifoDepth() uint32 {
+	if m != nil {
+		return m.HbmFifoDepth
+	}
+	return 0
+}
+
+func (m *QosClassInputQueueStats) GetMaxFifoDepth() uint32 {
+	if m != nil {
+		return m.MaxFifoDepth
+	}
+	return 0
+}
+
+func (m *QosClassInputQueueStats) GetBufferOccupancy() uint32 {
+	if m != nil {
+		return m.BufferOccupancy
+	}
+	return 0
+}
+
+type QosClassOutputQueueStats struct {
+	OutputQueue *QosClassOutputQueue `protobuf:"bytes,1,opt,name=output_queue,json=outputQueue" json:"output_queue,omitempty"`
+	QueueDepth  uint32               `protobuf:"varint,2,opt,name=queue_depth,json=queueDepth,proto3" json:"queue_depth,omitempty"`
+}
+
+func (m *QosClassOutputQueueStats) Reset()                    { *m = QosClassOutputQueueStats{} }
+func (m *QosClassOutputQueueStats) String() string            { return proto.CompactTextString(m) }
+func (*QosClassOutputQueueStats) ProtoMessage()               {}
+func (*QosClassOutputQueueStats) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{21} }
+
+func (m *QosClassOutputQueueStats) GetOutputQueue() *QosClassOutputQueue {
+	if m != nil {
+		return m.OutputQueue
+	}
+	return nil
+}
+
+func (m *QosClassOutputQueueStats) GetQueueDepth() uint32 {
+	if m != nil {
+		return m.QueueDepth
+	}
+	return 0
+}
+
 // QosClassStats captures all the statistics of given QosClass
 type QosClassStats struct {
+	NumLifsTx        uint32                      `protobuf:"varint,1,opt,name=num_lifs_tx,json=numLifsTx,proto3" json:"num_lifs_tx,omitempty"`
+	NumLifsRx        uint32                      `protobuf:"varint,2,opt,name=num_lifs_rx,json=numLifsRx,proto3" json:"num_lifs_rx,omitempty"`
+	InputQueueStats  []*QosClassInputQueueStats  `protobuf:"bytes,3,rep,name=input_queue_stats,json=inputQueueStats" json:"input_queue_stats,omitempty"`
+	OutputQueueStats []*QosClassOutputQueueStats `protobuf:"bytes,4,rep,name=output_queue_stats,json=outputQueueStats" json:"output_queue_stats,omitempty"`
 }
 
 func (m *QosClassStats) Reset()                    { *m = QosClassStats{} }
 func (m *QosClassStats) String() string            { return proto.CompactTextString(m) }
 func (*QosClassStats) ProtoMessage()               {}
-func (*QosClassStats) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{15} }
+func (*QosClassStats) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{22} }
+
+func (m *QosClassStats) GetNumLifsTx() uint32 {
+	if m != nil {
+		return m.NumLifsTx
+	}
+	return 0
+}
+
+func (m *QosClassStats) GetNumLifsRx() uint32 {
+	if m != nil {
+		return m.NumLifsRx
+	}
+	return 0
+}
+
+func (m *QosClassStats) GetInputQueueStats() []*QosClassInputQueueStats {
+	if m != nil {
+		return m.InputQueueStats
+	}
+	return nil
+}
+
+func (m *QosClassStats) GetOutputQueueStats() []*QosClassOutputQueueStats {
+	if m != nil {
+		return m.OutputQueueStats
+	}
+	return nil
+}
 
 // QosClassGetRequest is used to get information about a QosClass
 type QosClassGetRequest struct {
@@ -585,7 +1039,7 @@ type QosClassGetRequest struct {
 func (m *QosClassGetRequest) Reset()                    { *m = QosClassGetRequest{} }
 func (m *QosClassGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*QosClassGetRequest) ProtoMessage()               {}
-func (*QosClassGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{16} }
+func (*QosClassGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{23} }
 
 func (m *QosClassGetRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -609,7 +1063,7 @@ type QosClassGetRequestMsg struct {
 func (m *QosClassGetRequestMsg) Reset()                    { *m = QosClassGetRequestMsg{} }
 func (m *QosClassGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*QosClassGetRequestMsg) ProtoMessage()               {}
-func (*QosClassGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{17} }
+func (*QosClassGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{24} }
 
 func (m *QosClassGetRequestMsg) GetRequest() []*QosClassGetRequest {
 	if m != nil {
@@ -629,7 +1083,7 @@ type QosClassGetResponse struct {
 func (m *QosClassGetResponse) Reset()                    { *m = QosClassGetResponse{} }
 func (m *QosClassGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*QosClassGetResponse) ProtoMessage()               {}
-func (*QosClassGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{18} }
+func (*QosClassGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{25} }
 
 func (m *QosClassGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -667,7 +1121,7 @@ type QosClassGetResponseMsg struct {
 func (m *QosClassGetResponseMsg) Reset()                    { *m = QosClassGetResponseMsg{} }
 func (m *QosClassGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*QosClassGetResponseMsg) ProtoMessage()               {}
-func (*QosClassGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{19} }
+func (*QosClassGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{26} }
 
 func (m *QosClassGetResponseMsg) GetResponse() []*QosClassGetResponse {
 	if m != nil {
@@ -687,7 +1141,7 @@ type CoppSpec struct {
 func (m *CoppSpec) Reset()                    { *m = CoppSpec{} }
 func (m *CoppSpec) String() string            { return proto.CompactTextString(m) }
 func (*CoppSpec) ProtoMessage()               {}
-func (*CoppSpec) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{20} }
+func (*CoppSpec) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{27} }
 
 func (m *CoppSpec) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -718,7 +1172,7 @@ type CoppRequestMsg struct {
 func (m *CoppRequestMsg) Reset()                    { *m = CoppRequestMsg{} }
 func (m *CoppRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CoppRequestMsg) ProtoMessage()               {}
-func (*CoppRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{21} }
+func (*CoppRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{28} }
 
 func (m *CoppRequestMsg) GetRequest() []*CoppSpec {
 	if m != nil {
@@ -734,7 +1188,7 @@ type CoppStatus struct {
 func (m *CoppStatus) Reset()                    { *m = CoppStatus{} }
 func (m *CoppStatus) String() string            { return proto.CompactTextString(m) }
 func (*CoppStatus) ProtoMessage()               {}
-func (*CoppStatus) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{22} }
+func (*CoppStatus) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{29} }
 
 func (m *CoppStatus) GetCoppHandle() uint64 {
 	if m != nil {
@@ -752,7 +1206,7 @@ type CoppResponse struct {
 func (m *CoppResponse) Reset()                    { *m = CoppResponse{} }
 func (m *CoppResponse) String() string            { return proto.CompactTextString(m) }
 func (*CoppResponse) ProtoMessage()               {}
-func (*CoppResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{23} }
+func (*CoppResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{30} }
 
 func (m *CoppResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -776,7 +1230,7 @@ type CoppResponseMsg struct {
 func (m *CoppResponseMsg) Reset()                    { *m = CoppResponseMsg{} }
 func (m *CoppResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CoppResponseMsg) ProtoMessage()               {}
-func (*CoppResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{24} }
+func (*CoppResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{31} }
 
 func (m *CoppResponseMsg) GetResponse() []*CoppResponse {
 	if m != nil {
@@ -795,7 +1249,7 @@ type CoppGetRequest struct {
 func (m *CoppGetRequest) Reset()                    { *m = CoppGetRequest{} }
 func (m *CoppGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*CoppGetRequest) ProtoMessage()               {}
-func (*CoppGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{25} }
+func (*CoppGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{32} }
 
 func (m *CoppGetRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -818,7 +1272,7 @@ type CoppGetRequestMsg struct {
 func (m *CoppGetRequestMsg) Reset()                    { *m = CoppGetRequestMsg{} }
 func (m *CoppGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CoppGetRequestMsg) ProtoMessage()               {}
-func (*CoppGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{26} }
+func (*CoppGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{33} }
 
 func (m *CoppGetRequestMsg) GetRequest() []*CoppGetRequest {
 	if m != nil {
@@ -838,7 +1292,7 @@ type CoppGetResponse struct {
 func (m *CoppGetResponse) Reset()                    { *m = CoppGetResponse{} }
 func (m *CoppGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*CoppGetResponse) ProtoMessage()               {}
-func (*CoppGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{27} }
+func (*CoppGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{34} }
 
 func (m *CoppGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -876,7 +1330,7 @@ type CoppGetResponseMsg struct {
 func (m *CoppGetResponseMsg) Reset()                    { *m = CoppGetResponseMsg{} }
 func (m *CoppGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CoppGetResponseMsg) ProtoMessage()               {}
-func (*CoppGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{28} }
+func (*CoppGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{35} }
 
 func (m *CoppGetResponseMsg) GetResponse() []*CoppGetResponse {
 	if m != nil {
@@ -896,6 +1350,11 @@ func init() {
 	proto.RegisterType((*QosMarking)(nil), "qos.QosMarking")
 	proto.RegisterType((*QosClassSpec)(nil), "qos.QosClassSpec")
 	proto.RegisterType((*QosClassRequestMsg)(nil), "qos.QosClassRequestMsg")
+	proto.RegisterType((*PortTypeNum)(nil), "qos.PortTypeNum")
+	proto.RegisterType((*QosClassInputQueue)(nil), "qos.QosClassInputQueue")
+	proto.RegisterType((*QosClassOutputQueue)(nil), "qos.QosClassOutputQueue")
+	proto.RegisterType((*QosClassStatusEpd)(nil), "qos.QosClassStatusEpd")
+	proto.RegisterType((*QosClassStatusCpd)(nil), "qos.QosClassStatusCpd")
 	proto.RegisterType((*QosClassStatus)(nil), "qos.QosClassStatus")
 	proto.RegisterType((*QosClassResponse)(nil), "qos.QosClassResponse")
 	proto.RegisterType((*QosClassResponseMsg)(nil), "qos.QosClassResponseMsg")
@@ -903,6 +1362,8 @@ func init() {
 	proto.RegisterType((*QosClassDeleteRequestMsg)(nil), "qos.QosClassDeleteRequestMsg")
 	proto.RegisterType((*QosClassDeleteResponse)(nil), "qos.QosClassDeleteResponse")
 	proto.RegisterType((*QosClassDeleteResponseMsg)(nil), "qos.QosClassDeleteResponseMsg")
+	proto.RegisterType((*QosClassInputQueueStats)(nil), "qos.QosClassInputQueueStats")
+	proto.RegisterType((*QosClassOutputQueueStats)(nil), "qos.QosClassOutputQueueStats")
 	proto.RegisterType((*QosClassStats)(nil), "qos.QosClassStats")
 	proto.RegisterType((*QosClassGetRequest)(nil), "qos.QosClassGetRequest")
 	proto.RegisterType((*QosClassGetRequestMsg)(nil), "qos.QosClassGetRequestMsg")
@@ -917,6 +1378,7 @@ func init() {
 	proto.RegisterType((*CoppGetRequestMsg)(nil), "qos.CoppGetRequestMsg")
 	proto.RegisterType((*CoppGetResponse)(nil), "qos.CoppGetResponse")
 	proto.RegisterType((*CoppGetResponseMsg)(nil), "qos.CoppGetResponseMsg")
+	proto.RegisterEnum("qos.PortTypeNum_PortType", PortTypeNum_PortType_name, PortTypeNum_PortType_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1559,6 +2021,171 @@ func (m *QosClassRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *PortTypeNum) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PortTypeNum) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.PortTypeOrNum != nil {
+		nn12, err := m.PortTypeOrNum.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn12
+	}
+	return i, nil
+}
+
+func (m *PortTypeNum_PortType_) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintQos(dAtA, i, uint64(m.PortType))
+	return i, nil
+}
+func (m *PortTypeNum_UplinkPortNum) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x10
+	i++
+	i = encodeVarintQos(dAtA, i, uint64(m.UplinkPortNum))
+	return i, nil
+}
+func (m *QosClassInputQueue) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassInputQueue) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.PortTypeNum != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.PortTypeNum.Size()))
+		n13, err := m.PortTypeNum.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n13
+	}
+	if m.InputQueueIdx != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.InputQueueIdx))
+	}
+	return i, nil
+}
+
+func (m *QosClassOutputQueue) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassOutputQueue) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.PortTypeNum != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.PortTypeNum.Size()))
+		n14, err := m.PortTypeNum.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n14
+	}
+	if m.OutputQueueIdx != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.OutputQueueIdx))
+	}
+	return i, nil
+}
+
+func (m *QosClassStatusEpd) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassStatusEpd) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.InputQueues) > 0 {
+		for _, msg := range m.InputQueues {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.OutputQueues) > 0 {
+		for _, msg := range m.OutputQueues {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *QosClassStatusCpd) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassStatusCpd) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
 func (m *QosClassStatus) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1580,9 +2207,44 @@ func (m *QosClassStatus) MarshalTo(dAtA []byte) (int, error) {
 		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.QosClassHandle))
 		i += 8
 	}
+	if m.QosClassPdStatus != nil {
+		nn15, err := m.QosClassPdStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn15
+	}
 	return i, nil
 }
 
+func (m *QosClassStatus_EpdStatus) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.EpdStatus != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.EpdStatus.Size()))
+		n16, err := m.EpdStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n16
+	}
+	return i, nil
+}
+func (m *QosClassStatus_CpdStatus) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.CpdStatus != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.CpdStatus.Size()))
+		n17, err := m.CpdStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n17
+	}
+	return i, nil
+}
 func (m *QosClassResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1607,11 +2269,11 @@ func (m *QosClassResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
-		n12, err := m.Status.MarshalTo(dAtA[i:])
+		n18, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n18
 	}
 	return i, nil
 }
@@ -1665,21 +2327,21 @@ func (m *QosClassDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n13, err := m.Meta.MarshalTo(dAtA[i:])
+		n19, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n19
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n14, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n20, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n20
 	}
 	return i, nil
 }
@@ -1767,6 +2429,97 @@ func (m *QosClassDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *QosClassInputQueueStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassInputQueueStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.InputQueue != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.InputQueue.Size()))
+		n21, err := m.InputQueue.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n21
+	}
+	if m.GoodPktsIn != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.GoodPktsIn))
+	}
+	if m.GoodPktsOut != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.GoodPktsOut))
+	}
+	if m.ErroredPktsIn != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.ErroredPktsIn))
+	}
+	if m.HbmFifoDepth != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.HbmFifoDepth))
+	}
+	if m.MaxFifoDepth != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.MaxFifoDepth))
+	}
+	if m.BufferOccupancy != 0 {
+		dAtA[i] = 0x38
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.BufferOccupancy))
+	}
+	return i, nil
+}
+
+func (m *QosClassOutputQueueStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassOutputQueueStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.OutputQueue != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.OutputQueue.Size()))
+		n22, err := m.OutputQueue.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n22
+	}
+	if m.QueueDepth != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.QueueDepth))
+	}
+	return i, nil
+}
+
 func (m *QosClassStats) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1782,6 +2535,40 @@ func (m *QosClassStats) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.NumLifsTx != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.NumLifsTx))
+	}
+	if m.NumLifsRx != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.NumLifsRx))
+	}
+	if len(m.InputQueueStats) > 0 {
+		for _, msg := range m.InputQueueStats {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.OutputQueueStats) > 0 {
+		for _, msg := range m.OutputQueueStats {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -1804,21 +2591,21 @@ func (m *QosClassGetRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n15, err := m.Meta.MarshalTo(dAtA[i:])
+		n23, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n15
+		i += n23
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n16, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n24, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n16
+		i += n24
 	}
 	return i, nil
 }
@@ -1877,31 +2664,31 @@ func (m *QosClassGetResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Spec.Size()))
-		n17, err := m.Spec.MarshalTo(dAtA[i:])
+		n25, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n17
+		i += n25
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
-		n18, err := m.Status.MarshalTo(dAtA[i:])
+		n26, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n18
+		i += n26
 	}
 	if m.Stats != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Stats.Size()))
-		n19, err := m.Stats.MarshalTo(dAtA[i:])
+		n27, err := m.Stats.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n19
+		i += n27
 	}
 	return i, nil
 }
@@ -1955,31 +2742,31 @@ func (m *CoppSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n20, err := m.Meta.MarshalTo(dAtA[i:])
+		n28, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n20
+		i += n28
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n21, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n29, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n21
+		i += n29
 	}
 	if m.Policer != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Policer.Size()))
-		n22, err := m.Policer.MarshalTo(dAtA[i:])
+		n30, err := m.Policer.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n22
+		i += n30
 	}
 	return i, nil
 }
@@ -2062,11 +2849,11 @@ func (m *CoppResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
-		n23, err := m.Status.MarshalTo(dAtA[i:])
+		n31, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n23
+		i += n31
 	}
 	return i, nil
 }
@@ -2120,21 +2907,21 @@ func (m *CoppGetRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n24, err := m.Meta.MarshalTo(dAtA[i:])
+		n32, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n24
+		i += n32
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n25, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n33, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n25
+		i += n33
 	}
 	return i, nil
 }
@@ -2193,31 +2980,31 @@ func (m *CoppGetResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Spec.Size()))
-		n26, err := m.Spec.MarshalTo(dAtA[i:])
+		n34, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n26
+		i += n34
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
-		n27, err := m.Status.MarshalTo(dAtA[i:])
+		n35, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n27
+		i += n35
 	}
 	if m.Stats != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Stats.Size()))
-		n28, err := m.Stats.MarshalTo(dAtA[i:])
+		n36, err := m.Stats.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n28
+		i += n36
 	}
 	return i, nil
 }
@@ -2430,15 +3217,107 @@ func (m *QosClassRequestMsg) Size() (n int) {
 	return n
 }
 
+func (m *PortTypeNum) Size() (n int) {
+	var l int
+	_ = l
+	if m.PortTypeOrNum != nil {
+		n += m.PortTypeOrNum.Size()
+	}
+	return n
+}
+
+func (m *PortTypeNum_PortType_) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovQos(uint64(m.PortType))
+	return n
+}
+func (m *PortTypeNum_UplinkPortNum) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovQos(uint64(m.UplinkPortNum))
+	return n
+}
+func (m *QosClassInputQueue) Size() (n int) {
+	var l int
+	_ = l
+	if m.PortTypeNum != nil {
+		l = m.PortTypeNum.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.InputQueueIdx != 0 {
+		n += 1 + sovQos(uint64(m.InputQueueIdx))
+	}
+	return n
+}
+
+func (m *QosClassOutputQueue) Size() (n int) {
+	var l int
+	_ = l
+	if m.PortTypeNum != nil {
+		l = m.PortTypeNum.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.OutputQueueIdx != 0 {
+		n += 1 + sovQos(uint64(m.OutputQueueIdx))
+	}
+	return n
+}
+
+func (m *QosClassStatusEpd) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.InputQueues) > 0 {
+		for _, e := range m.InputQueues {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
+	if len(m.OutputQueues) > 0 {
+		for _, e := range m.OutputQueues {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QosClassStatusCpd) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
 func (m *QosClassStatus) Size() (n int) {
 	var l int
 	_ = l
 	if m.QosClassHandle != 0 {
 		n += 9
 	}
+	if m.QosClassPdStatus != nil {
+		n += m.QosClassPdStatus.Size()
+	}
 	return n
 }
 
+func (m *QosClassStatus_EpdStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.EpdStatus != nil {
+		l = m.EpdStatus.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
+func (m *QosClassStatus_CpdStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.CpdStatus != nil {
+		l = m.CpdStatus.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
 func (m *QosClassResponse) Size() (n int) {
 	var l int
 	_ = l
@@ -2511,9 +3390,68 @@ func (m *QosClassDeleteResponseMsg) Size() (n int) {
 	return n
 }
 
+func (m *QosClassInputQueueStats) Size() (n int) {
+	var l int
+	_ = l
+	if m.InputQueue != nil {
+		l = m.InputQueue.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.GoodPktsIn != 0 {
+		n += 1 + sovQos(uint64(m.GoodPktsIn))
+	}
+	if m.GoodPktsOut != 0 {
+		n += 1 + sovQos(uint64(m.GoodPktsOut))
+	}
+	if m.ErroredPktsIn != 0 {
+		n += 1 + sovQos(uint64(m.ErroredPktsIn))
+	}
+	if m.HbmFifoDepth != 0 {
+		n += 1 + sovQos(uint64(m.HbmFifoDepth))
+	}
+	if m.MaxFifoDepth != 0 {
+		n += 1 + sovQos(uint64(m.MaxFifoDepth))
+	}
+	if m.BufferOccupancy != 0 {
+		n += 1 + sovQos(uint64(m.BufferOccupancy))
+	}
+	return n
+}
+
+func (m *QosClassOutputQueueStats) Size() (n int) {
+	var l int
+	_ = l
+	if m.OutputQueue != nil {
+		l = m.OutputQueue.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.QueueDepth != 0 {
+		n += 1 + sovQos(uint64(m.QueueDepth))
+	}
+	return n
+}
+
 func (m *QosClassStats) Size() (n int) {
 	var l int
 	_ = l
+	if m.NumLifsTx != 0 {
+		n += 1 + sovQos(uint64(m.NumLifsTx))
+	}
+	if m.NumLifsRx != 0 {
+		n += 1 + sovQos(uint64(m.NumLifsRx))
+	}
+	if len(m.InputQueueStats) > 0 {
+		for _, e := range m.InputQueueStats {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
+	if len(m.OutputQueueStats) > 0 {
+		for _, e := range m.OutputQueueStats {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -3892,6 +4830,462 @@ func (m *QosClassRequestMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *PortTypeNum) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PortTypeNum: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PortTypeNum: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PortType", wireType)
+			}
+			var v PortTypeNum_PortType
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (PortTypeNum_PortType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.PortTypeOrNum = &PortTypeNum_PortType_{v}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UplinkPortNum", wireType)
+			}
+			var v uint32
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.PortTypeOrNum = &PortTypeNum_UplinkPortNum{v}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassInputQueue) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassInputQueue: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassInputQueue: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PortTypeNum", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.PortTypeNum == nil {
+				m.PortTypeNum = &PortTypeNum{}
+			}
+			if err := m.PortTypeNum.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InputQueueIdx", wireType)
+			}
+			m.InputQueueIdx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InputQueueIdx |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassOutputQueue) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassOutputQueue: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassOutputQueue: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PortTypeNum", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.PortTypeNum == nil {
+				m.PortTypeNum = &PortTypeNum{}
+			}
+			if err := m.PortTypeNum.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OutputQueueIdx", wireType)
+			}
+			m.OutputQueueIdx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OutputQueueIdx |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassStatusEpd) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassStatusEpd: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassStatusEpd: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InputQueues", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InputQueues = append(m.InputQueues, &QosClassInputQueue{})
+			if err := m.InputQueues[len(m.InputQueues)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OutputQueues", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OutputQueues = append(m.OutputQueues, &QosClassOutputQueue{})
+			if err := m.OutputQueues[len(m.OutputQueues)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassStatusCpd) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassStatusCpd: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassStatusCpd: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *QosClassStatus) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3931,6 +5325,70 @@ func (m *QosClassStatus) Unmarshal(dAtA []byte) error {
 			}
 			m.QosClassHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpdStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &QosClassStatusEpd{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.QosClassPdStatus = &QosClassStatus_EpdStatus{v}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CpdStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &QosClassStatusCpd{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.QosClassPdStatus = &QosClassStatus_CpdStatus{v}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQos(dAtA[iNdEx:])
@@ -4482,6 +5940,305 @@ func (m *QosClassDeleteResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *QosClassInputQueueStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassInputQueueStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassInputQueueStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InputQueue", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.InputQueue == nil {
+				m.InputQueue = &QosClassInputQueue{}
+			}
+			if err := m.InputQueue.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GoodPktsIn", wireType)
+			}
+			m.GoodPktsIn = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GoodPktsIn |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GoodPktsOut", wireType)
+			}
+			m.GoodPktsOut = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GoodPktsOut |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ErroredPktsIn", wireType)
+			}
+			m.ErroredPktsIn = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ErroredPktsIn |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HbmFifoDepth", wireType)
+			}
+			m.HbmFifoDepth = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.HbmFifoDepth |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxFifoDepth", wireType)
+			}
+			m.MaxFifoDepth = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxFifoDepth |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BufferOccupancy", wireType)
+			}
+			m.BufferOccupancy = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BufferOccupancy |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassOutputQueueStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassOutputQueueStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassOutputQueueStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OutputQueue", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.OutputQueue == nil {
+				m.OutputQueue = &QosClassOutputQueue{}
+			}
+			if err := m.OutputQueue.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueueDepth", wireType)
+			}
+			m.QueueDepth = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.QueueDepth |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *QosClassStats) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4511,6 +6268,106 @@ func (m *QosClassStats) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: QosClassStats: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NumLifsTx", wireType)
+			}
+			m.NumLifsTx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NumLifsTx |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NumLifsRx", wireType)
+			}
+			m.NumLifsRx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NumLifsRx |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InputQueueStats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InputQueueStats = append(m.InputQueueStats, &QosClassInputQueueStats{})
+			if err := m.InputQueueStats[len(m.InputQueueStats)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OutputQueueStats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OutputQueueStats = append(m.OutputQueueStats, &QosClassOutputQueueStats{})
+			if err := m.OutputQueueStats[len(m.OutputQueueStats)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQos(dAtA[iNdEx:])
@@ -6005,95 +7862,128 @@ var (
 func init() { proto.RegisterFile("qos.proto", fileDescriptorQos) }
 
 var fileDescriptorQos = []byte{
-	// 1438 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x58, 0xcf, 0x4f, 0x1b, 0x47,
-	0x1b, 0xce, 0xb2, 0x04, 0xcc, 0x6b, 0x0c, 0xf6, 0x00, 0x89, 0xe3, 0x28, 0x98, 0x6f, 0xf3, 0xe5,
-	0x83, 0x4f, 0x04, 0x62, 0x20, 0x81, 0x80, 0x52, 0x35, 0x31, 0x09, 0x21, 0x8d, 0x68, 0xcc, 0x92,
-	0xa8, 0x52, 0x2f, 0xdb, 0xf5, 0x7a, 0x80, 0xad, 0x61, 0x77, 0xd8, 0x19, 0x4a, 0x9c, 0x0a, 0x35,
-	0xb7, 0x56, 0xea, 0xb1, 0x52, 0xd5, 0x7b, 0x4f, 0xbd, 0xf6, 0xdc, 0x3f, 0xa0, 0xa7, 0xaa, 0xf7,
-	0x4a, 0x56, 0x95, 0x9e, 0x7a, 0xf5, 0x5f, 0x50, 0xed, 0xcc, 0xac, 0xf7, 0x87, 0x4d, 0x1a, 0x52,
-	0xaa, 0x9c, 0x62, 0xcf, 0xfb, 0xbe, 0xcf, 0xfb, 0xe3, 0x79, 0xde, 0x19, 0x07, 0x18, 0x38, 0x70,
-	0xe9, 0x2c, 0xf1, 0x5c, 0xe6, 0x22, 0xf5, 0xc0, 0xa5, 0x85, 0x34, 0x6b, 0x10, 0x2c, 0x4f, 0x0a,
-	0xa9, 0xfa, 0xae, 0xf8, 0xa4, 0x3d, 0x84, 0x74, 0xc5, 0xdd, 0xb3, 0x2d, 0xec, 0x6d, 0x11, 0x6c,
-	0xa1, 0x4b, 0x90, 0xaa, 0x12, 0x6a, 0x78, 0x26, 0xc3, 0x79, 0x65, 0x42, 0x99, 0xea, 0xd5, 0xfb,
-	0xab, 0x84, 0xea, 0x26, 0xc3, 0xe8, 0x0a, 0x40, 0xf5, 0xd0, 0xa3, 0xcc, 0xa0, 0xf6, 0x0b, 0x9c,
-	0xef, 0xe1, 0xc6, 0x01, 0x7e, 0xb2, 0x65, 0xbf, 0xc0, 0xda, 0x8f, 0x0a, 0x0c, 0x06, 0x48, 0xcc,
-	0x64, 0x14, 0x4d, 0x43, 0x8e, 0x60, 0x6f, 0xdf, 0x66, 0x0c, 0xd7, 0x0c, 0x62, 0x5a, 0x75, 0xcc,
-	0xa8, 0xc4, 0xcc, 0xb6, 0x0d, 0x15, 0x71, 0x8e, 0x26, 0x61, 0x38, 0x74, 0xae, 0x36, 0x18, 0xa6,
-	0x32, 0xc3, 0x50, 0xfb, 0xb8, 0xec, 0x9f, 0xfa, 0x8e, 0x35, 0xcf, 0x25, 0x24, 0x82, 0xa9, 0x0a,
-	0x47, 0x79, 0x1c, 0x20, 0x5e, 0x85, 0x4c, 0xe0, 0x28, 0xf0, 0x7a, 0xb9, 0xdb, 0xa0, 0x3c, 0xe4,
-	0x68, 0xda, 0x37, 0x3d, 0xd0, 0xb7, 0xe9, 0xd2, 0xca, 0xda, 0x2a, 0x7a, 0x00, 0xaa, 0xe5, 0x8a,
-	0x02, 0x33, 0xe5, 0x85, 0x56, 0xb3, 0x78, 0xe3, 0x33, 0xec, 0xd8, 0x16, 0x5e, 0xd9, 0x37, 0x9d,
-	0x9a, 0xc9, 0x5c, 0xaf, 0x71, 0x5d, 0x1e, 0x58, 0xae, 0x43, 0x99, 0x67, 0xda, 0x0e, 0xa3, 0xef,
-	0x7d, 0xee, 0x99, 0xce, 0x0e, 0x5e, 0x29, 0xcd, 0x2c, 0x1d, 0xeb, 0x7e, 0x3c, 0x32, 0x20, 0xf3,
-	0xdc, 0x75, 0x0c, 0xb6, 0xeb, 0x61, 0xba, 0xeb, 0xee, 0xd5, 0x78, 0x1b, 0x99, 0xf2, 0x4a, 0xab,
-	0x59, 0x5c, 0x3c, 0x05, 0xe0, 0x42, 0xa9, 0x54, 0x9a, 0x59, 0x58, 0xbc, 0xbd, 0x78, 0xf3, 0x58,
-	0x1f, 0x7c, 0xee, 0x3a, 0x4f, 0x03, 0x3c, 0x64, 0xc2, 0xd0, 0x73, 0x77, 0x7b, 0x3b, 0x92, 0x41,
-	0x7d, 0xfb, 0x0c, 0x4b, 0x0b, 0x4b, 0xf3, 0xb7, 0x8f, 0xf5, 0x8c, 0x8f, 0xd8, 0x4e, 0xa1, 0xbd,
-	0xec, 0x81, 0xd4, 0xa6, 0x4b, 0xb7, 0xac, 0x5d, 0x5c, 0x43, 0xd7, 0xa1, 0xb7, 0x76, 0xe4, 0x79,
-	0x7c, 0x30, 0xe9, 0xf9, 0x0b, 0xb3, 0xbe, 0xac, 0x02, 0xe3, 0xec, 0xfd, 0x8f, 0x74, 0xfd, 0x91,
-	0xb3, 0xed, 0xae, 0x9f, 0xd3, 0xb9, 0x17, 0x5a, 0x81, 0x3e, 0xca, 0x3c, 0xdb, 0x62, 0xbc, 0xef,
-	0xf4, 0xfc, 0x44, 0xdc, 0x7f, 0x8b, 0xdb, 0x2a, 0x9e, 0xed, 0x7a, 0x36, 0x6b, 0xc8, 0x48, 0x19,
-	0x51, 0x78, 0x06, 0xa9, 0x00, 0x0f, 0x3d, 0x82, 0x4c, 0xf5, 0xc8, 0x20, 0xd8, 0xb3, 0xb0, 0xc3,
-	0xcc, 0x1d, 0x2c, 0x79, 0xf9, 0x6f, 0xab, 0x59, 0x9c, 0x78, 0x1d, 0x0d, 0x73, 0xa5, 0xd2, 0xb1,
-	0x3e, 0x58, 0x3d, 0xaa, 0xb4, 0x23, 0x0b, 0xff, 0x03, 0xd4, 0x99, 0x16, 0x65, 0x41, 0xad, 0x12,
-	0x49, 0xb7, 0xee, 0x7f, 0x2c, 0xa7, 0x61, 0x80, 0x17, 0xf9, 0xb4, 0x41, 0xb0, 0xf6, 0xbd, 0x02,
-	0xb9, 0x4d, 0x97, 0x3e, 0x23, 0x7b, 0xb6, 0x53, 0x5f, 0xdd, 0x33, 0x29, 0xdd, 0x30, 0x09, 0xaa,
-	0xc0, 0x40, 0xcd, 0x65, 0x73, 0x07, 0x06, 0xb1, 0xc8, 0x3f, 0x51, 0x4a, 0x8a, 0xa3, 0x54, 0x2c,
-	0x82, 0xee, 0x40, 0xbf, 0x4d, 0x8c, 0x1a, 0xb5, 0x48, 0xbe, 0x67, 0x42, 0x9d, 0xca, 0x94, 0xaf,
-	0xb6, 0x9a, 0xc5, 0xe2, 0xeb, 0xc2, 0x17, 0x17, 0x8e, 0xf5, 0x3e, 0x9b, 0xdc, 0xa7, 0x16, 0xd1,
-	0xfe, 0x54, 0x00, 0x36, 0x5d, 0xba, 0x61, 0x7a, 0x75, 0xdb, 0xd9, 0x41, 0x37, 0x60, 0xb4, 0x5d,
-	0x9e, 0xe1, 0xe1, 0x23, 0xcf, 0x66, 0xd8, 0xc0, 0x0e, 0xaf, 0x34, 0xa5, 0xe7, 0x82, 0xa4, 0xba,
-	0xb0, 0x3c, 0x70, 0xd0, 0xfb, 0xd1, 0x7e, 0x84, 0x50, 0xb5, 0x56, 0xb3, 0x38, 0xfe, 0xc6, 0xe5,
-	0x4f, 0x03, 0x92, 0xe5, 0x47, 0xf3, 0xa9, 0x3c, 0xdf, 0xb0, 0x28, 0x32, 0xcc, 0x16, 0xe9, 0xb5,
-	0x97, 0xe7, 0x3a, 0x55, 0xaf, 0xdf, 0xaa, 0x30, 0xb8, 0xe9, 0x52, 0xce, 0x05, 0xbf, 0xaa, 0xae,
-	0x41, 0xef, 0x3e, 0x66, 0xa6, 0x14, 0x66, 0x6e, 0x56, 0xdc, 0x6f, 0x4f, 0xaa, 0x9f, 0x62, 0x8b,
-	0x6d, 0x60, 0x66, 0xea, 0xdc, 0x8c, 0x1e, 0x43, 0xa6, 0x8e, 0x1b, 0x86, 0xeb, 0x19, 0xbb, 0xa6,
-	0x53, 0xdb, 0xc3, 0x52, 0x98, 0x63, 0xb3, 0xf5, 0xdd, 0xd9, 0x00, 0xef, 0x31, 0x6e, 0xac, 0x73,
-	0x63, 0x39, 0xdb, 0x6a, 0x16, 0x07, 0x65, 0x49, 0x5a, 0x1d, 0x37, 0x34, 0x3d, 0x5d, 0xc7, 0x8d,
-	0x27, 0x9e, 0x30, 0xa3, 0xc7, 0xa0, 0xee, 0xb3, 0x43, 0xb9, 0x71, 0xcb, 0xad, 0x66, 0xf1, 0xd6,
-	0x29, 0xa8, 0x9f, 0xbb, 0x55, 0x2a, 0xcd, 0x2c, 0xcf, 0xcf, 0x2d, 0x1e, 0xeb, 0x3e, 0x0a, 0xba,
-	0x02, 0x2a, 0xd9, 0xb6, 0xf8, 0x2c, 0xd2, 0xf3, 0xe9, 0x60, 0x51, 0x2a, 0x6b, 0xab, 0xba, 0x7f,
-	0x8e, 0x96, 0xe1, 0x3c, 0xf5, 0xf5, 0x98, 0x3f, 0xcf, 0x1d, 0x32, 0xb1, 0x4d, 0x2a, 0x8f, 0xb6,
-	0x9a, 0xc5, 0x6c, 0x32, 0xb9, 0x2e, 0x22, 0xd0, 0x5d, 0xc8, 0x1e, 0x72, 0xe5, 0x1a, 0x96, 0xdf,
-	0x9e, 0xb1, 0x6f, 0x92, 0x7c, 0x5f, 0x7c, 0x7f, 0xe3, 0xca, 0xd6, 0x87, 0x0e, 0xe3, 0x4a, 0xff,
-	0x3f, 0xf4, 0xef, 0x0b, 0x55, 0xe5, 0xfb, 0x79, 0xe0, 0x70, 0x10, 0x28, 0xc5, 0xa6, 0x07, 0x76,
-	0xed, 0x1e, 0xa0, 0x60, 0x8e, 0x3a, 0x3e, 0x38, 0xc4, 0x94, 0x6d, 0xd0, 0x1d, 0x34, 0x0d, 0xfd,
-	0x9e, 0xf8, 0x96, 0x57, 0x26, 0x54, 0x4e, 0x90, 0x04, 0x68, 0x33, 0xa8, 0x07, 0x1e, 0xda, 0x0a,
-	0x0c, 0xb5, 0x0d, 0xcc, 0x64, 0x87, 0x14, 0x4d, 0x41, 0xf6, 0xc0, 0xa5, 0xb2, 0x7c, 0x49, 0x9c,
-	0x4f, 0x74, 0x9f, 0x3e, 0x74, 0x20, 0x3d, 0x05, 0x25, 0xda, 0x97, 0x0a, 0x64, 0xc3, 0xfc, 0x94,
-	0xb8, 0x0e, 0xc5, 0x68, 0x0d, 0xc0, 0x24, 0xb6, 0x41, 0x39, 0x18, 0x0f, 0x1c, 0x9a, 0xcf, 0x4a,
-	0x85, 0xdc, 0x23, 0xb6, 0x48, 0x52, 0x1e, 0x6b, 0x35, 0x8b, 0x39, 0x39, 0xc3, 0xd0, 0x5d, 0x1f,
-	0x30, 0x03, 0x0f, 0x34, 0xed, 0x5f, 0x67, 0x1c, 0x43, 0xa8, 0x66, 0x24, 0xde, 0x84, 0xf0, 0x97,
-	0x2e, 0xda, 0x3a, 0x8c, 0x24, 0x0b, 0xf1, 0x27, 0x31, 0x07, 0x29, 0x4f, 0x7e, 0x95, 0xa3, 0x18,
-	0x8b, 0xa1, 0x04, 0xbe, 0x7a, 0xdb, 0x4d, 0xfb, 0x5a, 0x81, 0xb1, 0xc0, 0x7c, 0x1f, 0xef, 0x61,
-	0x86, 0xe5, 0x64, 0xdf, 0x85, 0xe8, 0xb5, 0x0a, 0xe4, 0xbb, 0x16, 0xe3, 0x37, 0x77, 0x33, 0x49,
-	0x73, 0x21, 0xd6, 0x5b, 0xcc, 0x3f, 0xe4, 0xfb, 0x13, 0xb8, 0x90, 0xf4, 0x38, 0x5b, 0xe2, 0xb4,
-	0xa7, 0x70, 0xa9, 0x7b, 0x06, 0xbf, 0xe8, 0xa5, 0x0e, 0x46, 0x2e, 0x77, 0xad, 0xba, 0x83, 0x97,
-	0x61, 0xc8, 0x44, 0xb9, 0xa7, 0xda, 0x57, 0x4a, 0x28, 0xfe, 0x87, 0x98, 0xbd, 0x4b, 0x96, 0x3e,
-	0x08, 0x25, 0x13, 0x56, 0x22, 0xf4, 0x97, 0xa0, 0xe8, 0x62, 0xac, 0xd9, 0xd0, 0x39, 0xe4, 0xe7,
-	0x37, 0x25, 0x94, 0x32, 0xb7, 0x9f, 0xf1, 0x5a, 0x5d, 0x83, 0x5e, 0x4a, 0xb0, 0x25, 0xfb, 0xed,
-	0x72, 0x33, 0x70, 0x73, 0x64, 0xfb, 0xd4, 0xbf, 0xdd, 0x3e, 0x34, 0x05, 0xe7, 0xfd, 0x4f, 0x54,
-	0xde, 0xa7, 0xa8, 0xc3, 0x97, 0xea, 0xc2, 0x41, 0xfb, 0x30, 0x54, 0x5f, 0xa4, 0x39, 0xa1, 0xe6,
-	0xa4, 0x30, 0xf2, 0x9d, 0xb3, 0xea, 0x50, 0xc5, 0x4f, 0x0a, 0xa4, 0x56, 0x5d, 0x42, 0x4e, 0xf3,
-	0x2a, 0x3d, 0xec, 0x4e, 0x7d, 0xce, 0xa7, 0xde, 0xc7, 0x7a, 0xe3, 0x17, 0xe9, 0x2e, 0xf4, 0x13,
-	0xf1, 0xab, 0x5b, 0x0e, 0x29, 0xcb, 0x2b, 0x8e, 0xfc, 0xa6, 0x3f, 0xe1, 0xa9, 0x08, 0xc2, 0xb4,
-	0x65, 0x18, 0xf2, 0x33, 0x46, 0x14, 0x33, 0x99, 0x54, 0x8c, 0x78, 0x7b, 0x82, 0x1e, 0x43, 0x9d,
-	0xcc, 0x00, 0xf0, 0x43, 0xc1, 0x40, 0x11, 0xd2, 0x96, 0x4b, 0x48, 0xfc, 0xba, 0x06, 0xff, 0x48,
-	0x4a, 0xf4, 0x0b, 0x18, 0x14, 0x99, 0xce, 0x58, 0x4e, 0x93, 0x89, 0x5b, 0x7a, 0x38, 0x2c, 0x37,
-	0x7e, 0x43, 0xdf, 0x85, 0xe1, 0x68, 0x01, 0x7e, 0xaf, 0x33, 0x1d, 0x94, 0xe7, 0xda, 0xd1, 0x5d,
-	0xb8, 0x7e, 0xa9, 0x88, 0x69, 0x9d, 0x7e, 0xd9, 0xcf, 0x8a, 0x71, 0xad, 0x0c, 0xb9, 0x78, 0x05,
-	0xa2, 0x8d, 0x04, 0x65, 0x23, 0xed, 0x2e, 0xba, 0x2d, 0xf8, 0x2f, 0x8a, 0x98, 0xc4, 0xbf, 0xb1,
-	0xdc, 0xff, 0x89, 0x2d, 0x77, 0x42, 0x3a, 0x62, 0xb1, 0x27, 0x13, 0x8b, 0x7d, 0x12, 0x61, 0x68,
-	0x32, 0xbe, 0xd4, 0xb9, 0x98, 0xb6, 0xa3, 0x3b, 0xbd, 0x06, 0x28, 0xd1, 0x8f, 0x3f, 0x95, 0x52,
-	0x07, 0xb9, 0xa3, 0xf1, 0xb1, 0x24, 0xf9, 0x9d, 0xff, 0x41, 0x05, 0x75, 0xf3, 0xc9, 0x16, 0x7a,
-	0x10, 0xfe, 0x22, 0x59, 0xf5, 0xb0, 0xff, 0xdf, 0xdf, 0x8b, 0x89, 0x47, 0x3b, 0x18, 0x7d, 0x21,
-	0xdf, 0xf5, 0x35, 0xdf, 0xa0, 0x3b, 0xda, 0xb9, 0x28, 0xcc, 0x33, 0x52, 0x7b, 0x6b, 0x98, 0xcd,
-	0x10, 0x46, 0xbc, 0x4d, 0xe8, 0xca, 0xc9, 0xcf, 0xac, 0x0f, 0x36, 0xfe, 0x9a, 0xf7, 0x4c, 0x40,
-	0xae, 0x43, 0x3a, 0x72, 0xab, 0xa1, 0xc2, 0x09, 0x6f, 0x82, 0x0f, 0x76, 0xf9, 0xa4, 0x3b, 0x50,
-	0x20, 0x2d, 0x8b, 0x4b, 0x40, 0xf6, 0x37, 0x12, 0xd9, 0x9e, 0x36, 0xc2, 0x68, 0xc7, 0x4a, 0x89,
-	0xd0, 0x3b, 0xd0, 0x2f, 0xa9, 0x40, 0x17, 0xba, 0xe8, 0xd5, 0x0f, 0xbd, 0xd8, 0x8d, 0x30, 0x1e,
-	0x5d, 0x2e, 0xfc, 0xfc, 0x6a, 0x5c, 0xf9, 0xf5, 0xd5, 0xb8, 0xf2, 0xfb, 0xab, 0x71, 0xe5, 0xbb,
-	0x3f, 0xc6, 0xcf, 0x7d, 0x9c, 0xda, 0x35, 0xf7, 0xf8, 0x9f, 0x35, 0xaa, 0x7d, 0xfc, 0x9f, 0x85,
-	0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0xee, 0x6e, 0xa9, 0xb5, 0x06, 0x11, 0x00, 0x00,
+	// 1967 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x58, 0xcb, 0x6f, 0x1b, 0xc9,
+	0xd1, 0xd7, 0x88, 0xb2, 0x44, 0x15, 0x1f, 0x22, 0x5b, 0x7e, 0xd0, 0xda, 0xcf, 0xa2, 0xbe, 0xd9,
+	0x87, 0xbd, 0xf0, 0x5a, 0x2b, 0x4b, 0x5e, 0xcb, 0x52, 0x76, 0x11, 0x9b, 0x7a, 0xc7, 0x91, 0x45,
+	0x8d, 0x64, 0x04, 0xc9, 0x65, 0x32, 0x1c, 0x36, 0xc5, 0x09, 0xc5, 0x99, 0xd6, 0x74, 0x4f, 0x4c,
+	0x6e, 0x20, 0x64, 0x6f, 0x09, 0x10, 0x20, 0x97, 0x00, 0x41, 0xee, 0x39, 0xe5, 0x9a, 0x53, 0x0e,
+	0xb9, 0xe5, 0x92, 0x43, 0x10, 0xe4, 0x1e, 0x40, 0x08, 0x1c, 0x20, 0x40, 0xae, 0xfa, 0x0b, 0x82,
+	0x7e, 0x0c, 0x67, 0x86, 0x0f, 0x67, 0xb5, 0xeb, 0x60, 0x4f, 0xa2, 0xaa, 0xab, 0x7e, 0x55, 0xd5,
+	0x55, 0xf5, 0xeb, 0x22, 0x61, 0xfa, 0xcc, 0xa3, 0x8b, 0xc4, 0xf7, 0x98, 0x87, 0x52, 0x67, 0x1e,
+	0x9d, 0xcb, 0xb0, 0x2e, 0xc1, 0x4a, 0x32, 0x97, 0x6e, 0x35, 0xe5, 0x27, 0x7d, 0x07, 0x32, 0x55,
+	0xef, 0xd4, 0xb1, 0xb1, 0x7f, 0x44, 0xb0, 0x8d, 0x6e, 0x43, 0xba, 0x46, 0xa8, 0xe9, 0x5b, 0x0c,
+	0x97, 0xb4, 0x05, 0xed, 0xde, 0x84, 0x31, 0x55, 0x23, 0xd4, 0xb0, 0x18, 0x46, 0x77, 0x00, 0x6a,
+	0x81, 0x4f, 0x99, 0x49, 0x9d, 0xcf, 0x71, 0x69, 0x5c, 0x1c, 0x4e, 0x0b, 0xc9, 0x91, 0xf3, 0x39,
+	0xd6, 0x7f, 0xaf, 0x41, 0x36, 0x44, 0x62, 0x16, 0xa3, 0xe8, 0x3e, 0x14, 0x09, 0xf6, 0xdb, 0x0e,
+	0x63, 0xb8, 0x6e, 0x12, 0xcb, 0x6e, 0x61, 0x46, 0x15, 0x66, 0xa1, 0x77, 0x50, 0x95, 0x72, 0x74,
+	0x17, 0x66, 0x22, 0xe5, 0x5a, 0x97, 0x61, 0xaa, 0x3c, 0xe4, 0x7b, 0xe2, 0x0a, 0x97, 0x72, 0xc5,
+	0xba, 0xef, 0x11, 0x12, 0xc3, 0x4c, 0x49, 0x45, 0x25, 0x0e, 0x11, 0xdf, 0x85, 0x5c, 0xa8, 0x28,
+	0xf1, 0x26, 0x84, 0x5a, 0x56, 0x09, 0x05, 0x9a, 0xfe, 0xab, 0x71, 0x98, 0x3c, 0xf4, 0x68, 0x75,
+	0x7b, 0x03, 0x6d, 0x41, 0xca, 0xf6, 0x64, 0x80, 0xb9, 0xca, 0xca, 0xe5, 0x45, 0xf9, 0xe3, 0x1f,
+	0x63, 0xd7, 0xb1, 0xf1, 0x7a, 0xdb, 0x72, 0xeb, 0x16, 0xf3, 0xfc, 0xee, 0x47, 0x4a, 0x60, 0x7b,
+	0x2e, 0x65, 0xbe, 0xe5, 0xb8, 0x8c, 0x7e, 0xf6, 0x13, 0xdf, 0x72, 0x4f, 0xf0, 0xfa, 0xd2, 0x83,
+	0xd5, 0x73, 0x83, 0xdb, 0x23, 0x13, 0x72, 0x1d, 0xcf, 0x35, 0x59, 0xd3, 0xc7, 0xb4, 0xe9, 0x9d,
+	0xd6, 0x45, 0x1a, 0xb9, 0xca, 0xfa, 0xe5, 0x45, 0xf9, 0xf1, 0x15, 0x00, 0x57, 0x96, 0x96, 0x96,
+	0x1e, 0xac, 0x3c, 0x7e, 0xf2, 0xf8, 0xd1, 0xb9, 0x91, 0xed, 0x78, 0xee, 0x71, 0x88, 0x87, 0x2c,
+	0xc8, 0x77, 0xbc, 0x46, 0x23, 0xe6, 0x21, 0xf5, 0xd5, 0x3d, 0xac, 0xae, 0xac, 0x2e, 0x3f, 0x39,
+	0x37, 0x72, 0x1c, 0xb1, 0xe7, 0x42, 0xff, 0x62, 0x1c, 0xd2, 0x87, 0x1e, 0x3d, 0xb2, 0x9b, 0xb8,
+	0x8e, 0x3e, 0x82, 0x89, 0xfa, 0x2b, 0xdf, 0x17, 0x17, 0x93, 0x59, 0xbe, 0xb9, 0xc8, 0xdb, 0x2a,
+	0x3c, 0x5c, 0xdc, 0xfc, 0x9e, 0x61, 0xec, 0xb9, 0x0d, 0x6f, 0x77, 0xcc, 0x10, 0x5a, 0x68, 0x1d,
+	0x26, 0x29, 0xf3, 0x1d, 0x9b, 0x89, 0xbc, 0x33, 0xcb, 0x0b, 0x49, 0xfd, 0x23, 0x71, 0x56, 0xf5,
+	0x1d, 0xcf, 0x77, 0x58, 0x57, 0x59, 0x2a, 0x8b, 0xb9, 0x97, 0x90, 0x0e, 0xf1, 0xd0, 0x1e, 0xe4,
+	0x6a, 0xaf, 0x4c, 0x82, 0x7d, 0x1b, 0xbb, 0xcc, 0x3a, 0xc1, 0xaa, 0x2e, 0xef, 0x5d, 0x5e, 0x94,
+	0x17, 0xde, 0x54, 0x86, 0x87, 0x4b, 0x4b, 0xe7, 0x46, 0xb6, 0xf6, 0xaa, 0xda, 0xb3, 0x9c, 0xfb,
+	0x00, 0xd0, 0xa0, 0x5b, 0x54, 0x80, 0x54, 0x8d, 0xa8, 0x72, 0x1b, 0xfc, 0x63, 0x25, 0x03, 0xd3,
+	0x22, 0xc8, 0xe3, 0x2e, 0xc1, 0xfa, 0x6f, 0x35, 0x28, 0x1e, 0x7a, 0xf4, 0x25, 0x39, 0x75, 0xdc,
+	0xd6, 0xc6, 0xa9, 0x45, 0xe9, 0xbe, 0x45, 0x50, 0x15, 0xa6, 0xeb, 0x1e, 0x7b, 0x78, 0x66, 0x12,
+	0x9b, 0x7c, 0x9d, 0x4e, 0x49, 0x0b, 0x94, 0xaa, 0x4d, 0xd0, 0xa7, 0x30, 0xe5, 0x10, 0xb3, 0x4e,
+	0x6d, 0x52, 0x1a, 0x5f, 0x48, 0xdd, 0xcb, 0x55, 0xde, 0xbd, 0xbc, 0x28, 0x97, 0xdf, 0x64, 0xfe,
+	0x78, 0xe5, 0xdc, 0x98, 0x74, 0xc8, 0x26, 0xb5, 0x89, 0xfe, 0x6f, 0x0d, 0xe0, 0xd0, 0xa3, 0xfb,
+	0x96, 0xdf, 0x72, 0xdc, 0x13, 0xf4, 0x31, 0x5c, 0xef, 0x85, 0x67, 0xfa, 0xf8, 0x95, 0xef, 0x30,
+	0x6c, 0x62, 0x57, 0x44, 0x9a, 0x36, 0x8a, 0xa1, 0x53, 0x43, 0x9e, 0x6c, 0xb9, 0xe8, 0xdb, 0xf1,
+	0x7c, 0x64, 0xa3, 0xea, 0x97, 0x17, 0xe5, 0xf9, 0x2f, 0x1d, 0xfe, 0x7d, 0x40, 0x2a, 0xfc, 0xb8,
+	0xbf, 0x94, 0xf0, 0x37, 0x23, 0x83, 0x8c, 0xbc, 0xc5, 0x72, 0x9d, 0x10, 0xbe, 0xae, 0x94, 0xeb,
+	0xaf, 0x53, 0x90, 0x3d, 0xf4, 0xa8, 0xa8, 0x85, 0xa0, 0xaa, 0xf7, 0x61, 0xa2, 0x8d, 0x99, 0xa5,
+	0x1a, 0xb3, 0xb8, 0x28, 0xf9, 0xed, 0xa0, 0xf6, 0x23, 0x6c, 0xb3, 0x7d, 0xcc, 0x2c, 0x43, 0x1c,
+	0xa3, 0xe7, 0x90, 0x6b, 0xe1, 0xae, 0xe9, 0xf9, 0x66, 0xd3, 0x72, 0xeb, 0xa7, 0x58, 0x35, 0xe6,
+	0x8d, 0xc5, 0x56, 0x73, 0x31, 0xc4, 0x7b, 0x8e, 0xbb, 0xbb, 0xe2, 0xb0, 0x52, 0xb8, 0xbc, 0x28,
+	0x67, 0x55, 0x48, 0x7a, 0x0b, 0x77, 0x75, 0x23, 0xd3, 0xc2, 0xdd, 0x03, 0x5f, 0x1e, 0xa3, 0xe7,
+	0x90, 0x6a, 0xb3, 0x40, 0x4d, 0xdc, 0xda, 0xe5, 0x45, 0xf9, 0x93, 0x2b, 0x94, 0xfe, 0xe1, 0x27,
+	0x4b, 0x4b, 0x0f, 0xd6, 0x96, 0x1f, 0x3e, 0x3e, 0x37, 0x38, 0x0a, 0xba, 0x03, 0x29, 0xd2, 0xb0,
+	0xc5, 0x5d, 0x64, 0x96, 0x33, 0xe1, 0xa0, 0x54, 0xb7, 0x37, 0x0c, 0x2e, 0x47, 0x6b, 0x70, 0x8d,
+	0xf2, 0x7e, 0x2c, 0x5d, 0x13, 0x0a, 0xb9, 0xc4, 0x24, 0x55, 0xae, 0x5f, 0x5e, 0x94, 0x0b, 0xfd,
+	0xce, 0x0d, 0x69, 0x81, 0x9e, 0x42, 0x21, 0x10, 0x9d, 0x6b, 0xda, 0x3c, 0x3d, 0xb3, 0x6d, 0x91,
+	0xd2, 0x64, 0x72, 0x7e, 0x93, 0x9d, 0x6d, 0xe4, 0x83, 0x64, 0xa7, 0x7f, 0x08, 0x53, 0x6d, 0xd9,
+	0x55, 0xa5, 0x29, 0x61, 0x38, 0x13, 0x1a, 0xaa, 0x66, 0x33, 0xc2, 0x73, 0xfd, 0x19, 0xa0, 0xf0,
+	0x1e, 0x0d, 0x7c, 0x16, 0x60, 0xca, 0xf6, 0xe9, 0x09, 0xba, 0x0f, 0x53, 0xbe, 0xfc, 0xaf, 0xa4,
+	0x2d, 0xa4, 0x44, 0x81, 0x14, 0x40, 0xaf, 0x82, 0x46, 0xa8, 0xa1, 0xff, 0x45, 0xe3, 0xaf, 0x90,
+	0xcf, 0xf8, 0xe8, 0xbd, 0x08, 0xda, 0xe8, 0x09, 0x4c, 0x13, 0xcf, 0x67, 0x26, 0x2f, 0xa9, 0xa8,
+	0x6f, 0x7e, 0xf9, 0xb6, 0x30, 0x8f, 0x29, 0xf5, 0x3e, 0xef, 0x8e, 0x19, 0x69, 0xa2, 0x3e, 0xa3,
+	0x7b, 0x30, 0xa3, 0x32, 0x17, 0x00, 0x6e, 0xd0, 0x96, 0x7d, 0xbd, 0x3b, 0x66, 0xe4, 0xe4, 0x01,
+	0x37, 0x7b, 0x11, 0xb4, 0xf5, 0x2d, 0x48, 0x87, 0x08, 0xa8, 0x08, 0xb9, 0xea, 0x81, 0x71, 0x6c,
+	0x1e, 0x7f, 0xbf, 0xba, 0x65, 0x6e, 0xee, 0x3f, 0x2b, 0x8c, 0x21, 0x04, 0xf9, 0x48, 0x54, 0x7d,
+	0xb4, 0xb7, 0x53, 0xd0, 0xfa, 0x65, 0x5b, 0x3b, 0x85, 0xf1, 0x0a, 0x82, 0x42, 0x2f, 0x54, 0xde,
+	0x64, 0x6e, 0xd0, 0xd6, 0xfd, 0xe8, 0x46, 0xf6, 0x5c, 0x12, 0xb0, 0xc3, 0x00, 0x07, 0x18, 0x3d,
+	0x82, 0x5c, 0xa4, 0xc9, 0x03, 0x93, 0x8d, 0x5b, 0xe8, 0x4f, 0xcc, 0xc8, 0x90, 0xd8, 0x55, 0x7c,
+	0x00, 0x33, 0x0e, 0xc7, 0x30, 0xcf, 0x38, 0x88, 0xe9, 0xd4, 0x3b, 0x32, 0x21, 0x23, 0xe7, 0xf4,
+	0xa0, 0xf7, 0xea, 0x1d, 0x3d, 0x80, 0xd9, 0xd0, 0xe7, 0x41, 0xc0, 0xbe, 0xa6, 0xd3, 0x7b, 0x50,
+	0xf0, 0x04, 0xc8, 0x80, 0xd7, 0xbc, 0x17, 0x81, 0x73, 0xb7, 0xbf, 0x94, 0x3c, 0x29, 0x6b, 0xca,
+	0x2c, 0x16, 0xd0, 0x2d, 0x52, 0x47, 0xeb, 0x90, 0x8d, 0x05, 0x4d, 0x55, 0x07, 0xdc, 0x4a, 0x74,
+	0x40, 0x74, 0x33, 0x46, 0x26, 0x4a, 0x85, 0xa2, 0xcf, 0x20, 0x17, 0xf7, 0x4d, 0x05, 0x2f, 0x66,
+	0x96, 0x4b, 0x09, 0xe3, 0x58, 0x8a, 0x46, 0x36, 0x16, 0x12, 0xd5, 0x67, 0xfb, 0xe3, 0xd9, 0x20,
+	0x75, 0xfd, 0x4f, 0x1a, 0xe4, 0x93, 0x52, 0x9e, 0xe2, 0x99, 0x47, 0xd5, 0x7c, 0x28, 0x66, 0xe0,
+	0x77, 0x33, 0x69, 0xe4, 0xcf, 0x94, 0xa6, 0x9a, 0xf9, 0x55, 0x00, 0x4c, 0xea, 0x26, 0x15, 0x76,
+	0x8a, 0x3d, 0x6e, 0x26, 0x9b, 0x39, 0x4c, 0x7c, 0x77, 0xcc, 0x98, 0xc6, 0xa4, 0xae, 0x5c, 0xac,
+	0x02, 0xd8, 0x91, 0x61, 0x6a, 0xa4, 0xe1, 0x86, 0x34, 0xb4, 0x43, 0xc3, 0xca, 0x0d, 0x98, 0x8d,
+	0x62, 0xeb, 0x21, 0xe8, 0x3f, 0xd3, 0xa0, 0x10, 0x4d, 0x1a, 0x25, 0x9e, 0x4b, 0x31, 0xda, 0x06,
+	0xb0, 0x88, 0x13, 0x3a, 0x91, 0xb3, 0x52, 0x50, 0x5c, 0xf8, 0x8c, 0x38, 0x21, 0xe2, 0xe5, 0x45,
+	0xb9, 0xa8, 0xd8, 0x22, 0x52, 0x37, 0xa6, 0xad, 0x50, 0x03, 0xdd, 0xe7, 0x0f, 0x77, 0x2c, 0xc3,
+	0xd9, 0x21, 0x81, 0x1a, 0x4a, 0x45, 0xdf, 0x8d, 0x9a, 0x2d, 0x0c, 0x84, 0xcf, 0xfc, 0x43, 0x48,
+	0xfb, 0xea, 0x5f, 0x55, 0xf2, 0x1b, 0x09, 0x94, 0x50, 0xd7, 0xe8, 0xa9, 0xe9, 0xbf, 0xd0, 0xe0,
+	0x46, 0x78, 0xbc, 0x89, 0x4f, 0x31, 0xc3, 0x8a, 0x43, 0xbe, 0x09, 0x7a, 0xd7, 0xab, 0x50, 0x1a,
+	0x1a, 0x0c, 0x4f, 0xee, 0x51, 0x3f, 0xa1, 0xcd, 0x25, 0x72, 0x4b, 0xe8, 0x47, 0xcc, 0xf6, 0x43,
+	0xb8, 0xd9, 0xaf, 0xf1, 0x76, 0x0b, 0xa7, 0x1f, 0xc3, 0xed, 0xe1, 0x1e, 0x78, 0xd0, 0xab, 0x03,
+	0x15, 0x79, 0x67, 0x68, 0xd4, 0x03, 0x75, 0xf9, 0xc3, 0x38, 0xdc, 0x1a, 0x9c, 0x54, 0xb9, 0xd8,
+	0x3f, 0x81, 0x4c, 0x6c, 0xba, 0x55, 0x81, 0x46, 0x0e, 0x37, 0x44, 0xc3, 0x8d, 0x16, 0x20, 0x7b,
+	0xe2, 0x79, 0x75, 0x93, 0xb4, 0x18, 0x35, 0x1d, 0x57, 0xad, 0xf8, 0xc0, 0x65, 0xd5, 0x16, 0xa3,
+	0x7b, 0x2e, 0xd2, 0x21, 0x17, 0x69, 0x78, 0x01, 0x53, 0xcb, 0x7d, 0x26, 0x54, 0x39, 0x08, 0x18,
+	0xa7, 0x44, 0xec, 0xfb, 0x9e, 0x8f, 0x23, 0x20, 0xb9, 0xdb, 0xe7, 0x94, 0x58, 0x61, 0xbd, 0x07,
+	0xf9, 0x66, 0xad, 0x6d, 0x36, 0x9c, 0x86, 0x67, 0xd6, 0x31, 0x61, 0x4d, 0xf1, 0x92, 0xe6, 0x8c,
+	0x6c, 0xb3, 0xd6, 0xde, 0x76, 0x1a, 0xde, 0x26, 0x97, 0x71, 0xad, 0xb6, 0xd5, 0x89, 0x6b, 0x4d,
+	0x4a, 0xad, 0xb6, 0xd5, 0x89, 0xb4, 0x3e, 0x84, 0x42, 0x2d, 0x68, 0x34, 0xb0, 0x6f, 0x7a, 0xb6,
+	0x1d, 0x10, 0xcb, 0xb5, 0xbb, 0xe2, 0x61, 0xcc, 0x19, 0x33, 0x52, 0x7e, 0x10, 0x8a, 0xf5, 0x4e,
+	0xd4, 0x44, 0x31, 0x9a, 0x92, 0x57, 0xf7, 0x2d, 0xc8, 0xc6, 0xc9, 0x4d, 0xdd, 0xdd, 0x68, 0x6e,
+	0xcb, 0xc4, 0xb8, 0x0d, 0x95, 0x21, 0x23, 0xe9, 0x58, 0x86, 0x29, 0x09, 0x19, 0x84, 0x48, 0x04,
+	0xa9, 0xff, 0x4b, 0x83, 0x5c, 0x7c, 0x62, 0x29, 0x9a, 0x87, 0x8c, 0x1b, 0xb4, 0xcd, 0x53, 0xa7,
+	0x41, 0x4d, 0xd6, 0x51, 0xdb, 0xee, 0xb4, 0x1b, 0xb4, 0xbf, 0xeb, 0x34, 0xe8, 0x71, 0x27, 0x71,
+	0xee, 0x87, 0x1c, 0x1f, 0x9e, 0x1b, 0x1d, 0xb4, 0x0b, 0xc5, 0xf8, 0xeb, 0xc3, 0xbb, 0x8f, 0x33,
+	0x19, 0x6f, 0xa4, 0xff, 0x1b, 0x51, 0x70, 0xe1, 0xd8, 0x98, 0x71, 0xfa, 0x9a, 0xe6, 0x39, 0xa0,
+	0xc4, 0x93, 0x22, 0xa1, 0x26, 0x04, 0xd4, 0x9d, 0x51, 0xf9, 0x4b, 0xac, 0x82, 0xd7, 0x27, 0xd1,
+	0x7f, 0xae, 0x45, 0x2f, 0xec, 0x0e, 0x66, 0xdf, 0x24, 0x65, 0x7c, 0x27, 0xe2, 0xaf, 0x28, 0x12,
+	0x49, 0x86, 0x7d, 0x7c, 0x91, 0x9c, 0x90, 0x48, 0x39, 0x22, 0x8b, 0xbf, 0x6b, 0x11, 0xaf, 0x8a,
+	0xf3, 0xb7, 0xcc, 0xf1, 0xef, 0xc3, 0x04, 0x25, 0xd8, 0x56, 0xf9, 0x0e, 0x59, 0xc8, 0xc4, 0x71,
+	0xec, 0x29, 0x48, 0xfd, 0xd7, 0xa7, 0x00, 0xdd, 0x83, 0x6b, 0x61, 0x29, 0xb9, 0x2e, 0x1a, 0xd0,
+	0xa5, 0x86, 0x54, 0xd0, 0x5f, 0x44, 0x54, 0x18, 0x4b, 0x4e, 0x52, 0x6b, 0x3f, 0x4b, 0x95, 0x06,
+	0xef, 0x6a, 0x80, 0xa2, 0xfe, 0xa8, 0x41, 0x7a, 0xc3, 0x23, 0xe4, 0x2a, 0x5f, 0x06, 0x76, 0x86,
+	0x97, 0xbe, 0xc8, 0x4b, 0xcf, 0xb1, 0xbe, 0xf4, 0x17, 0x81, 0xa7, 0x30, 0x45, 0xe4, 0x8f, 0x1d,
+	0xea, 0x92, 0xc2, 0x8d, 0xaa, 0xf7, 0x53, 0xca, 0x88, 0x0d, 0x3d, 0x34, 0xd3, 0xd7, 0x20, 0xcf,
+	0x3d, 0xc6, 0x3a, 0xe6, 0x6e, 0x7f, 0xc7, 0xc8, 0x95, 0x3f, 0xcc, 0x31, 0xea, 0x93, 0x07, 0x00,
+	0x42, 0x28, 0x2b, 0x50, 0x86, 0x8c, 0xed, 0x11, 0x92, 0x5c, 0x62, 0x80, 0x8b, 0x54, 0x8b, 0xfe,
+	0x14, 0xb2, 0xd2, 0xd3, 0x5b, 0x6e, 0xa7, 0xbb, 0x7d, 0x2b, 0xc3, 0x4c, 0x14, 0x6e, 0x72, 0x5d,
+	0x78, 0x0a, 0x33, 0xf1, 0x00, 0x78, 0xae, 0x0f, 0x06, 0x4a, 0x5e, 0xec, 0x59, 0x0f, 0xa9, 0xf5,
+	0x17, 0x9a, 0xbc, 0xad, 0xab, 0x0f, 0xfb, 0xdb, 0xaa, 0xb8, 0x5e, 0x81, 0x62, 0x32, 0x02, 0x99,
+	0x46, 0x5f, 0xc9, 0x66, 0x7b, 0x59, 0x0c, 0x1b, 0xf0, 0xbf, 0x6a, 0xf2, 0x26, 0xfe, 0x17, 0xc3,
+	0xfd, 0xff, 0x89, 0xe1, 0xee, 0x6b, 0x1d, 0x39, 0xd8, 0x77, 0xfb, 0x06, 0x7b, 0x54, 0xc1, 0xd0,
+	0xdd, 0xe4, 0x50, 0x17, 0x13, 0xbd, 0x1d, 0x9f, 0xe9, 0x6d, 0x40, 0x7d, 0xf9, 0xf0, 0x5b, 0x59,
+	0x1a, 0x28, 0xee, 0xf5, 0xe4, 0xb5, 0xf4, 0xd7, 0x77, 0xf9, 0x77, 0x29, 0x48, 0x1d, 0x1e, 0x1c,
+	0xa1, 0xad, 0x68, 0x4f, 0xdf, 0xf0, 0xb1, 0xc5, 0x30, 0xba, 0xd5, 0xb7, 0x41, 0x86, 0x57, 0x3f,
+	0x57, 0x1a, 0xba, 0x5a, 0xee, 0xd3, 0x13, 0x7d, 0x2c, 0x0e, 0xf3, 0x92, 0xd4, 0xbf, 0x32, 0xcc,
+	0x61, 0x04, 0x23, 0x17, 0x25, 0x74, 0x67, 0xf4, 0xce, 0xc7, 0xc1, 0xe6, 0xdf, 0xb0, 0x5c, 0x49,
+	0xc8, 0x5d, 0xc8, 0xc4, 0x58, 0x0d, 0xcd, 0x8d, 0x78, 0x13, 0x38, 0xd8, 0x3b, 0xa3, 0x38, 0x50,
+	0x22, 0xad, 0x49, 0x12, 0x50, 0xf9, 0xcd, 0xc6, 0xa6, 0xa7, 0x87, 0x70, 0x7d, 0x60, 0xa4, 0xa4,
+	0xe9, 0xa7, 0x30, 0xa5, 0x4a, 0x81, 0x6e, 0x0e, 0xe9, 0x57, 0x6e, 0x7a, 0x6b, 0x58, 0xc1, 0x84,
+	0x75, 0x65, 0xee, 0xcf, 0xaf, 0xe7, 0xb5, 0xbf, 0xbd, 0x9e, 0xd7, 0xfe, 0xf1, 0x7a, 0x5e, 0xfb,
+	0xcd, 0x3f, 0xe7, 0xc7, 0x7e, 0x90, 0x6e, 0x5a, 0xa7, 0xe2, 0xd7, 0xe4, 0xda, 0xa4, 0xf8, 0xb3,
+	0xf2, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x7c, 0x37, 0x17, 0x43, 0x7d, 0x16, 0x00, 0x00,
 }

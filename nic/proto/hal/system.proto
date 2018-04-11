@@ -13,6 +13,7 @@ syntax = "proto3";
 
 import "types.proto";
 import "telemetry.proto";
+import "qos.proto";
 option go_package="halproto";
 
 package sys;
@@ -158,6 +159,65 @@ message TableStats {
   repeated TableStatsEntry    table_stats           = 1;
 }
 
+// BufferDropStats captures instantaneous drop counts due to buffering drops
+message BufferDropStats {
+  uint32 intrinsic_drop_count            = 1;     // Pkts dropped due to intrinsic drop bit being set
+  uint32 discarded_count                 = 2;     // Pkts dropped due to error
+  uint32 admitted_count                  = 3;     // Errored pkts admitted to buffering
+  uint32 out_of_cells_drop_count         = 4;     // Pkts dropped due to cell exhaustion (first cell)
+  uint32 out_of_cells_drop_count_2       = 5;     // Pkts dropped due to cell exhaustion (subsequent cell)
+  uint32 out_of_credit_drop_count        = 6;     // Pkts dropped due to cell-credits exhaustion
+  uint32 truncation_drop_count           = 7;     // Pkts dropped due to size bigger than the configured MTU
+  uint32 port_disabled_drop_count        = 8;     // Pkts dropped due to port disable
+  uint32 copy_to_cpu_tail_drop_count     = 9;     // Copy-to-cpu pkts tail dropped
+  uint32 span_tail_drop_count            = 10;    // Span pkts tail dropped
+  uint32 min_size_violation_drop_count   = 11;    // Pkts dropped due to lesser than min size
+  uint32 enqueue_error_drop_count        = 12;    // Pkts dropped due to enqueue to reserved queues
+  uint32 invalid_port_drop_count         = 13;    // Pkts dropped due to destined to invalid ports
+  uint32 invalid_output_queue_drop_count = 14;    // Pkts dropped due to destined to invalid output queues
+}
+
+// BufferStats captures instantaneous counters of the buffering module
+message BufferStats {
+  uint32          sop_count_in  = 1;    // Count of start-of-packets in
+  uint32          eop_count_in  = 2;    // Count of end-of-packets in
+  uint32          sop_count_out = 3;    // Count of start-of-packets out
+  uint32          eop_count_out = 4;    // Count of end-of-packets out
+  BufferDropStats drop_counts   = 5;    // Drop counts 
+}
+
+// HBMFifoDropStats captures instantaneous drop counts at the HBM fifo interface
+message HBMFifoDropStats {
+  uint32 occupancy_drop_count                = 1;    // Pkts dropped due to fifo full
+  uint32 emergency_stop_drop_count           = 2;    // Pkts dropped due to emergency condition hit due to slow HBM to write-buffer communication
+  uint32 write_buffer_ack_fill_up_drop_count = 3;    // Pkts dropped due to write buffer's ack fifo filling up
+  uint32 write_buffer_ack_full_drop_count    = 4;    // Pkts dropped due to write buffer's ack fifo full
+  uint32 write_buffer_full_drop_count        = 5;    // Pkts dropped due to write buffer filling up
+  uint32 control_fifo_full_drop_count        = 6;    // Pkts dropped due to control fifo full
+}
+
+// HBMFifoStats captures instantaneous counters at the HBM fifo interface
+message HBMFifoStats {
+  uint32           sop_count_in  = 1;    // Count of start-of-packets in
+  uint32           eop_count_in  = 2;    // Count of end-of-packets in
+  uint32           sop_count_out = 3;    // Count of start-of-packets out
+  uint32           eop_count_out = 4;    // Count of end-of-packets out
+  HBMFifoDropStats drop_counts   = 5;    // Drop counts 
+}
+
+// PortBufferStats is container to capture all counters exposed by the buffering
+// module at the port level
+message PortBufferStats {
+  qos.PortTypeNum port_type_num  = 1;    // Port identifier
+  BufferStats     buffer_stats   = 2;    // PBC block statistics
+  HBMFifoStats    hbm_fifo_stats = 3;    // HBM overflow fifo statistics
+}
+
+// PacketBufferStats captures all the statistics of the packet buffering module
+message PacketBufferStats {
+  repeated PortBufferStats port_buffer_stats = 1;
+}
+
 // Global system object
 message SystemResponse {
   types.ApiStatus    api_status      = 1;                  // API status code
@@ -166,8 +226,9 @@ message SystemResponse {
 
 // Stats object
 message Stats {
-  DropStats     drop_stats          = 1;                   // Drop statistics
-  TableStats    table_stats         = 2;                   // Table statistics
+  DropStats         drop_stats          = 1;    // Drop statistics
+  TableStats        table_stats         = 2;    // Table statistics
+  PacketBufferStats packet_buffer_stats = 3;    // Packet buffer block statistics
 }
 
 // Drop Stats object

@@ -686,6 +686,11 @@
 		QosMarking
 		QosClassSpec
 		QosClassRequestMsg
+		PortTypeNum
+		QosClassInputQueue
+		QosClassOutputQueue
+		QosClassStatusEpd
+		QosClassStatusCpd
 		QosClassStatus
 		QosClassResponse
 		QosClassResponseMsg
@@ -693,6 +698,8 @@
 		QosClassDeleteRequestMsg
 		QosClassDeleteResponse
 		QosClassDeleteResponseMsg
+		QosClassInputQueueStats
+		QosClassOutputQueueStats
 		QosClassStats
 		QosClassGetRequest
 		QosClassGetRequestMsg
@@ -796,6 +803,12 @@
 		DropStatsEntry
 		TableStatsEntry
 		TableStats
+		BufferDropStats
+		BufferStats
+		HBMFifoDropStats
+		HBMFifoStats
+		PortBufferStats
+		PacketBufferStats
 		SystemResponse
 		Stats
 		DropStats

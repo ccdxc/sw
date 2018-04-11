@@ -95,9 +95,45 @@ message QosClassRequestMsg {
   repeated QosClassSpec request = 1;    // batch of requests
 }
 
+message PortTypeNum {
+  enum PortType {
+    PORT_TYPE_DMA  = 0;
+    PORT_TYPE_P4IG = 1;
+    PORT_TYPE_P4EG = 2;
+  }
+  oneof port_type_or_num {
+    PortType port_type       = 1;
+    uint32   uplink_port_num = 2;
+  }
+}
+
+message QosClassInputQueue {
+  PortTypeNum port_type_num   = 1;
+  uint32      input_queue_idx = 2;
+}
+
+message QosClassOutputQueue {
+  PortTypeNum port_type_num    = 1;
+  uint32      output_queue_idx = 2;
+}
+
+// QosClass oper state for enterprise pipeline
+message QosClassStatusEpd {
+  repeated QosClassInputQueue  input_queues  = 1;
+  repeated QosClassOutputQueue output_queues = 2;
+}
+
+// QosClass oper state for cloud pipeline
+message QosClassStatusCpd {
+}
+
 // QosClassStatus represents the operational status of QosClass
 message QosClassStatus {
-  fixed64 qos_class_handle = 1;    // Handle for the QosClass
+  fixed64             qos_class_handle = 1;    // Handle for the QosClass
+  oneof qos_class_pd_status {
+    QosClassStatusEpd epd_status       = 2;    // QosClass oper state for enterprise pipeline
+    QosClassStatusCpd cpd_status       = 3;    // QosClass oper state for cloud pipeline
+  }
 }
 
 // QosClassResponse is response to one QosClassSpec
@@ -133,8 +169,27 @@ message QosClassDeleteResponseMsg {
   repeated QosClassDeleteResponse response = 1;    // batched responses
 }
 
+message QosClassInputQueueStats {
+  QosClassInputQueue input_queue      = 1;    // Input queue identifier
+  uint64             good_pkts_in     = 2;    // Cumulative count of good packets in
+  uint64             good_pkts_out    = 3;    // Cumulative count of good packets out
+  uint64             errored_pkts_in  = 4;    // Cumulative count of errored packets in
+  uint32             hbm_fifo_depth   = 5;    // Instantaneous HBM fifo depth in bytes
+  uint32             max_fifo_depth   = 6;    // Maximum HBM fifo depth observed in bytes
+  uint32             buffer_occupancy = 7;    // Instantaneous buffer occupancy in bytes
+}
+
+message QosClassOutputQueueStats {
+  QosClassOutputQueue output_queue = 1;    // Output queue identifier
+  uint32              queue_depth  = 2;    // Instantaneous output queue depth in pkts
+}
+
 // QosClassStats captures all the statistics of given QosClass
 message QosClassStats {
+  uint32                            num_lifs_tx        = 1;    // Number of lifs referencing this class in tx
+  uint32                            num_lifs_rx        = 2;    // Number of lifs referencing this class in rx
+  repeated QosClassInputQueueStats  input_queue_stats  = 3;    // Input queue statistics
+  repeated QosClassOutputQueueStats output_queue_stats = 4;    // Output queue statistics
 }
 
 // QosClassGetRequest is used to get information about a QosClass
