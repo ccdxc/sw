@@ -712,8 +712,20 @@ vrf_nwsec_update (VrfSpec& spec, vrf_t *vrf, bool *nwsec_change,
                   hal_handle_t *new_nwsec_handle)
 {
     *nwsec_change = false;
+    hal_handle_t handle = HAL_HANDLE_INVALID;
 
-    if (vrf->nwsec_profile_handle != spec.security_key_handle().profile_handle()) {
+    auto nwsec_kh = spec.security_key_handle();
+
+    if (nwsec_kh.key_or_handle_case() == SecurityProfileKeyHandle::kProfileId) {
+        nwsec_profile_t *nwsec = find_nwsec_profile_by_id(nwsec_kh.profile_id());
+        if (nwsec) {
+            handle = nwsec->hal_handle;
+        }
+    } else {
+        handle = nwsec_kh.profile_handle();
+    }
+
+    if (vrf->nwsec_profile_handle != handle) {
         *nwsec_change = true;
         *new_nwsec_handle = spec.security_key_handle().profile_handle();
         HAL_TRACE_DEBUG("Updated nwsec profile to {}", *new_nwsec_handle);

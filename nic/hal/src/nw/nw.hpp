@@ -161,7 +161,7 @@ network_get_ht_cb (void *ht_entry, void *ctxt)
     nw = (network_t *)hal_handle_get_obj(entry->handle_id);
     rsp = response->add_response();
     // fill config spec of this vrf
-    rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
+    rsp->mutable_spec()->mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
     rsp->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
     rsp->set_api_status(types::API_STATUS_OK);
 
@@ -228,7 +228,7 @@ hal_ret_t network_delete(nw::NetworkDeleteRequest& req,
                          nw::NetworkDeleteResponse *rsp);
 hal_ret_t network_get(nw::NetworkGetRequest& req,
                       nw::NetworkGetResponseMsg *rsp);
-network_t *network_lookup_key_or_handle(NetworkKeyHandle& kh, vrf_id_t tid);
+network_t *network_lookup_key_or_handle(NetworkKeyHandle& kh);
 
 }    // namespace hal
 

@@ -112,11 +112,11 @@ protected:
         ASSERT_TRUE(ret == HAL_RET_OK);
 
         // Create network
-        nw_spec.mutable_vrf_key_handle()->set_vrf_id(VRF_ID1);
         nw_spec.set_rmac(RTR_MAC_ADDRESS);
-        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(NETWORK_IP_MASK);
-        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
-        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(NETWORK_IP_ADDR);
+        nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(NETWORK_IP_MASK);
+        nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+        nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_v4_addr(NETWORK_IP_ADDR);
+        nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(VRF_ID1);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_create(nw_spec, &nw_rsp);
         hal::hal_cfg_db_close();

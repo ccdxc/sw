@@ -656,7 +656,7 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
 
     for (i = 0; i < num_nws; i++) {
         nw_key_handle = spec.network_key_handle(i);
-        nw = network_lookup_key_or_handle(nw_key_handle, spec.vrf_key_handle().vrf_id());
+        nw = network_lookup_key_or_handle(nw_key_handle);
         if (nw == NULL) {
             ret = HAL_RET_NETWORK_NOT_FOUND;
             goto end;
@@ -674,7 +674,7 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
     sdk::lib::dllist_reset(&l2seg->nw_list_head);
     for (i = 0; i < num_nws; i++) {
         nw_key_handle = spec.network_key_handle(i);
-        nw = network_lookup_key_or_handle(nw_key_handle, spec.vrf_key_handle().vrf_id());
+        nw = network_lookup_key_or_handle(nw_key_handle);
         if (nw == NULL) {
             ret = HAL_RET_NETWORK_NOT_FOUND;
             goto end;
@@ -767,7 +767,7 @@ is_l2seg_same (l2seg_t *l2seg, L2SegmentSpec& spec, l2seg_create_app_ctxt_t &app
 
     for (i = 0; i < num_nws; i++) {
         nw_key_handle = spec.network_key_handle(i);
-        auto nw = network_lookup_key_or_handle(nw_key_handle, app_ctxt.vrf->vrf_id);
+        auto nw = network_lookup_key_or_handle(nw_key_handle);
         if (nw == NULL) {
             return false;
         }
@@ -1233,8 +1233,7 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     HAL_TRACE_DEBUG("num. of nws : {}", num_nws);
     for (i = 0; i < num_nws; i++) {
         nw_key_handle = spec.network_key_handle(i);
-        nw = network_lookup_key_or_handle(nw_key_handle,
-                                          spec.vrf_key_handle().vrf_id());
+        nw = network_lookup_key_or_handle(nw_key_handle);
         if (nw == NULL ) {
             ret = HAL_RET_INVALID_ARG;
             goto end;

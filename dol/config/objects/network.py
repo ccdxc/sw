@@ -83,18 +83,18 @@ class NetworkObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.vrf_id = self.segment.tenant.id
-        req_spec.vrf_key_handle.vrf_id = self.segment.tenant.id
         req_spec.rmac = self.rmac.getnum()
+        req_spec.key_or_handle.nw_key.vrf_key_handle.vrf_id = self.segment.tenant.id
         if self.IsIpv4():
-            req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET
-            req_spec.key_or_handle.ip_prefix.address.v4_addr = self.prefix.getnum()
-            req_spec.key_or_handle.ip_prefix.prefix_len = self.prefix_len
+            req_spec.key_or_handle.nw_key.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET
+            req_spec.key_or_handle.nw_key.ip_prefix.address.v4_addr = self.prefix.getnum()
+            req_spec.key_or_handle.nw_key.ip_prefix.prefix_len = self.prefix_len
         else:
-            req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET6
-            req_spec.key_or_handle.ip_prefix.address.v6_addr = self.prefix.getnum().to_bytes(16, 'big')
-            req_spec.key_or_handle.ip_prefix.prefix_len = self.prefix_len
+            req_spec.key_or_handle.nw_key.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET6
+            req_spec.key_or_handle.nw_key.ip_prefix.address.v6_addr = self.prefix.getnum().to_bytes(16, 'big')
+            req_spec.key_or_handle.nw_key.ip_prefix.prefix_len = self.prefix_len
         # Store the key generated.
-        self.ip_prefix = req_spec.key_or_handle.ip_prefix
+        self.ip_prefix = req_spec.key_or_handle.nw_key.ip_prefix
         for sg in self.security_groups:
             key_handle = req_spec.sg_key_handle.add()
             key_handle.security_group_id = sg.id
@@ -108,14 +108,15 @@ class NetworkObject(base.ConfigObjectBase):
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
         get_req_spec.meta.vrf_id = self.tenant.id
+        req_spec.key_or_handle.nw_key.vrf_key_handle.vrf_id = self.tenant.id
         if self.IsIpv4():
-            get_req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET
-            get_req_spec.key_or_handle.ip_prefix.address.v4_addr = self.prefix.getnum()
-            get_req_spec.key_or_handle.ip_prefix.prefix_len = self.prefix_len
+            get_req_spec.key_or_handle.nw_key.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET
+            get_req_spec.key_or_handle.nw_key.ip_prefix.address.v4_addr = self.prefix.getnum()
+            get_req_spec.key_or_handle.nw_key.ip_prefix.prefix_len = self.prefix_len
         else:
-            get_req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET6
-            get_req_spec.key_or_handle.ip_prefix.address.v6_addr = self.prefix.getnum().to_bytes(16, 'big')
-            get_req_spec.key_or_handle.ip_prefix.prefix_len = self.prefix_len
+            get_req_spec.key_or_handle.nw_key.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET6
+            get_req_spec.key_or_handle.nw_key.ip_prefix.address.v6_addr = self.prefix.getnum().to_bytes(16, 'big')
+            get_req_spec.key_or_handle.nw_key.ip_prefix.prefix_len = self.prefix_len
         return
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp_spec):

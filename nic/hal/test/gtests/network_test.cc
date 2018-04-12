@@ -127,12 +127,11 @@ TEST_F(nw_test, test1)
 
     for (int i = 0; i < 10; i++) {
         // Create network
-        nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
-        nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
         nw_spec.set_rmac(0x0000DEADBEEF);
-        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
-        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
-        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000 + i);
+        nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(32);
+        nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+        nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000 + i);
+        nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(1);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_create(nw_spec, &nw_rsp);
         hal::hal_cfg_db_close();
@@ -140,12 +139,11 @@ TEST_F(nw_test, test1)
         nw_v4handles[i] = nw_rsp.mutable_status()->nw_handle();
 
         // Create v6 network
-        nw_spec_v6.mutable_vrf_key_handle()->set_vrf_id(1);
-        nw_spec_v6.mutable_vrf_key_handle()->set_vrf_id(1);
         nw_spec_v6.set_rmac(0x0000DEADBEEF);
-        nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
-        nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
-        nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr(ipv6_ip1);
+        nw_spec_v6.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(32);
+        nw_spec_v6.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
+        nw_spec_v6.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_v6_addr(ipv6_ip1);
+        nw_spec_v6.mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(1);
         ipv6_ip1.replace(i, 5, v6_pattern);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_create(nw_spec_v6, &nw_rsp_v6);
@@ -157,24 +155,22 @@ TEST_F(nw_test, test1)
 
     // Duplicate create
     // Create network
-    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
-    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec.set_rmac(0x0000DEADBEEF);
-    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
-    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
-    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
 
     // Create v6 network
-    nw_spec_v6.mutable_vrf_key_handle()->set_vrf_id(1);
-    nw_spec_v6.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec_v6.set_rmac(0x0000DEADBEEF);
-    nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
-    nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
-    nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr(ipv6_ip2);
+    nw_spec_v6.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec_v6.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
+    nw_spec_v6.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_v6_addr(ipv6_ip2);
+    nw_spec_v6.mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec_v6, &nw_rsp_v6);
     hal::hal_cfg_db_close();

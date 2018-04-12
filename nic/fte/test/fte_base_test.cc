@@ -48,11 +48,11 @@ hal_handle_t fte_base_test::add_network(hal_handle_t vrfh, uint32_t v4_addr, uin
     hal::vrf_t *vrf = hal::vrf_lookup_by_handle(vrfh);
     EXPECT_NE(vrf, nullptr);
 
-    spec.mutable_vrf_key_handle()->set_vrf_id(vrf->vrf_id);
     spec.set_rmac(rmac);
-    spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
-    spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(v4_addr);
-    spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(prefix_len);
+    spec.mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(vrf->vrf_id);
+    spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_v4_addr(v4_addr);
+    spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(prefix_len);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(spec, &resp);

@@ -368,6 +368,7 @@
 		IpsecCbGetResponseMsg
 		SecurityProfileKeyHandle
 		VrfKeyHandle
+		NetworkKey
 		NetworkKeyHandle
 		NexthopKeyHandle
 		RouteKey

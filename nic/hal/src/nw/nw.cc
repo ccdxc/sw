@@ -136,14 +136,15 @@ static hal_ret_t
 validate_network_create (NetworkSpec& spec, NetworkResponse *rsp)
 {
     // key-handle field must be set
-    if (!spec.has_key_or_handle()) {
+    if (!spec.has_key_or_handle() ||
+        !spec.key_or_handle().has_nw_key() ||
+        !spec.key_or_handle().nw_key().has_vrf_key_handle()) {
         HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
 
-    if (!spec.has_vrf_key_handle() ||
-        spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
+    if (spec.key_or_handle().nw_key().vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         HAL_TRACE_ERR("{}:vrf not found", __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -331,7 +332,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     hal_api_trace(" API Begin: network create ");
 
     auto kh = spec.key_or_handle();
-    auto nw_pfx = kh.ip_prefix();
+    auto nw_pfx = kh.nw_key().ip_prefix();
 
     // validate the request message
     ret = validate_network_create(spec, rsp);
@@ -340,7 +341,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     }
 
     // fetch the vrf information
-    tid = spec.vrf_key_handle().vrf_id();
+    tid = spec.key_or_handle().nw_key().vrf_key_handle().vrf_id();
     vrf = vrf_lookup_by_id(tid);
     if (vrf == NULL) {
         HAL_TRACE_ERR("{}: unable to retrieve vrf_id:{}",
@@ -457,22 +458,20 @@ validate_network_update (NetworkSpec& spec, NetworkResponse *rsp)
 // Lookup network from key or handle
 //------------------------------------------------------------------------------
 network_t *
-network_lookup_key_or_handle (NetworkKeyHandle& kh, vrf_id_t tid)
+network_lookup_key_or_handle (NetworkKeyHandle& kh)
 {
-    // vrf_id_t                     tid;
+    vrf_id_t                        tid;
     network_t                       *nw = NULL;
     ip_prefix_t                     ip_pfx;
     hal_ret_t                       ret = HAL_RET_OK;
 
-
-    // tid = req.meta().vrf_id();
-
-    if (kh.key_or_handle_case() == NetworkKeyHandle::kIpPrefix) {
-        ret = ip_pfx_spec_to_pfx_spec(&ip_pfx, kh.ip_prefix());
+    if (kh.key_or_handle_case() == NetworkKeyHandle::kNwKey) {
+        ret = ip_pfx_spec_to_pfx_spec(&ip_pfx, kh.nw_key().ip_prefix());
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key", __FUNCTION__);
             return NULL;
         }
+        tid = kh.nw_key().vrf_key_handle().vrf_id();
         nw = find_network_by_key(tid, &ip_pfx);
     } else if (kh.key_or_handle_case() == NetworkKeyHandle::kNwHandle) {
         nw = find_network_by_handle(kh.nw_handle());
@@ -952,7 +951,6 @@ network_update (NetworkSpec& spec, NetworkResponse *rsp)
     hal_api_trace(" API Begin: network update ");
 
     auto kh = spec.key_or_handle();
-    auto nw_pfx = kh.ip_prefix();
 
     // validate the request message
     ret = validate_network_update(spec, rsp);
@@ -963,7 +961,7 @@ network_update (NetworkSpec& spec, NetworkResponse *rsp)
     }
 
     // retrieve network object
-    nw = network_lookup_key_or_handle(kh, spec.vrf_key_handle().vrf_id());
+    nw = network_lookup_key_or_handle(kh);
     if (nw == NULL) {
         HAL_TRACE_ERR("{}:failed to find nw handle {}",
                       __FUNCTION__, kh.nw_handle());
@@ -1029,21 +1027,20 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
     NetworkGetResponse    *response;
     hal_ret_t             ret = HAL_RET_OK;
 
-    if (!req.has_vrf_key_handle() ||
-        req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
-        g_hal_state->network_key_ht()->walk(network_get_ht_cb, rsp);
-	    HAL_API_STATS_INC(HAL_API_NETWORK_GET_SUCCESS);
-        return HAL_RET_OK;
-    }
-
     response = rsp->add_response();
 
     if (req.has_key_or_handle()) {
         auto kh = req.key_or_handle();
-        if (kh.key_or_handle_case() == NetworkKeyHandle::kIpPrefix) {
-            auto nw_pfx = kh.ip_prefix();
+        if (kh.key_or_handle_case() == NetworkKeyHandle::kNwKey) {
+            auto nw_pfx = kh.nw_key().ip_prefix();
+            
+            nw_key.vrf_id = kh.nw_key().vrf_key_handle().vrf_id();
+            if (nw_key.vrf_id == HAL_VRF_ID_INVALID) {
+                g_hal_state->network_key_ht()->walk(network_get_ht_cb, rsp);
+                HAL_API_STATS_INC(HAL_API_NETWORK_GET_SUCCESS);
+                return HAL_RET_OK;
+            }
 
-            nw_key.vrf_id = req.vrf_key_handle().vrf_id();
             ret = ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key",
@@ -1062,9 +1059,9 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
             return HAL_RET_INVALID_ARG;
         }
     } else {
-        response->set_api_status(types::API_STATUS_INVALID_ARG);
-	    HAL_API_STATS_INC(HAL_API_NETWORK_GET_FAIL);
-        return HAL_RET_INVALID_ARG;
+        g_hal_state->network_key_ht()->walk(network_get_ht_cb, rsp);
+        HAL_API_STATS_INC(HAL_API_NETWORK_GET_SUCCESS);
+        return HAL_RET_OK;
     }
 
     if (nw == NULL) {
@@ -1074,7 +1071,6 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
     }
 
     // fill config spec of this vrf
-    response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
     response->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
 
     response->set_api_status(types::API_STATUS_OK);
@@ -1248,7 +1244,6 @@ network_delete (NetworkDeleteRequest& req, NetworkDeleteResponse *rsp)
     hal_api_trace(" API Begin: network delete ");
 
     auto kh = req.key_or_handle();
-    auto nw_pfx = kh.ip_prefix();
 
     // validate the request message
     ret = validate_network_delete_req(req, rsp);
@@ -1258,7 +1253,7 @@ network_delete (NetworkDeleteRequest& req, NetworkDeleteResponse *rsp)
         goto end;
     }
 
-    nw = network_lookup_key_or_handle(kh, req.vrf_key_handle().vrf_id());
+    nw = network_lookup_key_or_handle(kh);
     if (nw == NULL) {
         HAL_TRACE_ERR("{}:failed to find nw handle {}",
                       __FUNCTION__, kh.nw_handle());

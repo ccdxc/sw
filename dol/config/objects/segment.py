@@ -344,7 +344,8 @@ class SegmentObject(base.ConfigObjectBase):
         for nw in self.obj_helper_nw.nws:
             if nw.ip_prefix:
                 nkh = req_spec.network_key_handle.add()
-                nkh.ip_prefix.CopyFrom(nw.ip_prefix)
+                nkh.nw_key.ip_prefix.CopyFrom(nw.ip_prefix)
+                nkh.nw_key.vrf_key_handle.vrf_id = self.tenant.id
                 self.nw_ids.append(nw.ip_prefix)
         return
 
@@ -380,7 +381,7 @@ class SegmentObject(base.ConfigObjectBase):
             self.broadcast_policy = get_resp_spec.spec.bcast_fwd_policy
 
             self.nw_ids = []
-            for nw_id in get_req_spec.spec.network_key_handle.ip_prefix:
+            for nw_id in get_req_spec.spec.network_key_handle.nw_key.ip_prefix:
                 self.nw_ids.append(nw_id)
 
         else:

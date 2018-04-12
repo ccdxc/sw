@@ -749,22 +749,24 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) err
 		prefixLen, _ := net.Mask.Size()
 
 		nwKey := &halproto.NetworkKeyHandle{
-			KeyOrHandle: &halproto.NetworkKeyHandle_IpPrefix{
-				IpPrefix: &halproto.IPPrefix{
-					Address: &halproto.IPAddress{
-						IpAf: halproto.IPAddressFamily_IP_AF_INET,
-						V4OrV6: &halproto.IPAddress_V4Addr{
-							V4Addr: ipv4Touint32(ip),
+			KeyOrHandle: &halproto.NetworkKeyHandle_NwKey{
+				NwKey: &halproto.NetworkKey{
+					IpPrefix: &halproto.IPPrefix{
+						Address: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: ipv4Touint32(ip),
+							},
 						},
+						PrefixLen: uint32(prefixLen),
 					},
-					PrefixLen: uint32(prefixLen),
+					VrfKeyHandle: vrfKey,
 				},
 			},
 		}
 
 		halNw := halproto.NetworkSpec{
-			VrfKeyHandle: vrfKey,
-			KeyOrHandle:  nwKey,
+			KeyOrHandle: nwKey,
 		}
 
 		halNwReq := halproto.NetworkRequestMsg{

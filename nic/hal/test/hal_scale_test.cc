@@ -796,10 +796,10 @@ public:
 
         // now create network
         spec = req_msg.add_request();
-        spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
-        spec->mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
-        spec->mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(ip_pfx);
-        spec->mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(pfx_len);
+        spec->mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+        spec->mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+        spec->mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_v4_addr(ip_pfx);
+        spec->mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(pfx_len);
         spec->set_rmac(rmac);
         //spec->set_gateway_ep_handle(gw_ep_handle);
         sg_kh = spec->add_sg_key_handle();

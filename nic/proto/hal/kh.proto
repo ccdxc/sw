@@ -28,10 +28,16 @@ message VrfKeyHandle {
   }
 }
 
+// NetworkKey uniquely identifies a network by its key
+message NetworkKey {
+  VrfKeyHandle      vrf_key_handle = 1 [(gogoproto.moretags) = "venice:ref"];;    // VRF key or handle
+  types.IPPrefix    ip_prefix      = 2;    // IP prefix
+}
+
 // NetworkKeyHandle uniquely identifies a Network
 message NetworkKeyHandle {
   oneof key_or_handle {
-    types.IPPrefix     ip_prefix    = 1;    // IP prefix
+    NetworkKey         nw_key       = 1;    // network's key
     fixed64            nw_handle    = 2;    // network's handle returned by HAL
   }
 }
