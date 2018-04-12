@@ -14,7 +14,6 @@ esp_ipv4_tunnel_h2n_update_input_desc_aol2:
 
 dma_cmd_to_move_input_pkt_to_mem:
     phvwri p.app_header_table3_valid, 0
-    phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
     add r1, k.ipsec_to_stage3_iv_size, IPSEC_SALT_HEADROOM+ESP_FIXED_HDR_SIZE
     add r1, r1, k.ipsec_to_stage3_iv_size
     add r1, r1, k.t3_s2s_in_page_addr 
@@ -34,17 +33,11 @@ dma_cmd_to_write_pad_bytes:
     phvwr p.dma_cmd_pad_byte_dst_dma_cmd_size, k.ipsec_to_stage3_pad_size
 
 dma_cmd_to_write_pad_size_l4_proto:
-    phvwri p.tail_2_bytes_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     add r2, r2, k.ipsec_to_stage3_pad_size
     phvwr p.tail_2_bytes_dma_cmd_addr, r2
-    phvwri p.tail_2_bytes_dma_cmd_phv_start_addr, IPSEC_TAIL_2_BYTES_PHV_START
-    phvwr p.tail_2_bytes_dma_cmd_phv_end_addr, IPSEC_TAIL_2_BYTES_PHV_END 
 
 dma_cmd_write_salt_to_in_desc:
-    phvwri p.dma_cmd_iv_salt_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.dma_cmd_iv_salt_dma_cmd_addr, k.t3_s2s_in_page_addr[51:0]
-    phvwri p.dma_cmd_iv_salt_dma_cmd_phv_start_addr, IPSEC_IN_DESC_IV_SALT_START
-    phvwri.f p.dma_cmd_iv_salt_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV_SALT_END  
     nop.e 
     nop
 
