@@ -15,13 +15,13 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // CPU If Create
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_cpuif_create(pd_if_create_args_t *args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;;
     pd_cpuif_t           *pd_cpuif;
 
-    HAL_TRACE_DEBUG("PD-CPUif::{}: Creating pd state for CPUif: {}", 
+    HAL_TRACE_DEBUG("PD-CPUif::{}: Creating pd state for CPUif: {}",
                     __FUNCTION__, if_get_if_id(args->intf));
 
     // Create CPU If PD
@@ -116,7 +116,7 @@ pd_cpuif_get (pd_if_get_args_t *args)
 // ----------------------------------------------------------------------------
 // Allocate resources for PD CPU if
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_cpuif_alloc_res(pd_cpuif_t *pd_cpuif)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -129,8 +129,8 @@ pd_cpuif_alloc_res(pd_cpuif_t *pd_cpuif)
     //if (rs != indexer::SUCCESS) {
     //    return HAL_RET_NO_RESOURCE;
     //}
-    HAL_TRACE_DEBUG("PD-CPUIf:{}: if_id:{} Allocated lport_id:{}", 
-                    __FUNCTION__, 
+    HAL_TRACE_DEBUG("PD-CPUIf:{}: if_id:{} Allocated lport_id:{}",
+                    __FUNCTION__,
                     if_get_if_id((if_t *)pd_cpuif->pi_if),
                     pd_cpuif->cpu_lport_id);
 
@@ -140,7 +140,7 @@ pd_cpuif_alloc_res(pd_cpuif_t *pd_cpuif)
 // ----------------------------------------------------------------------------
 // De-Allocate resources for PD CPU if
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_cpuif_dealloc_res(pd_cpuif_t *pd_cpuif)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -152,9 +152,9 @@ pd_cpuif_dealloc_res(pd_cpuif_t *pd_cpuif)
 // PD cpuif Cleanup
 //  - Release all resources
 //  - Delink PI <-> PD
-//  - Free PD If 
+//  - Free PD If
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -171,8 +171,8 @@ pd_cpuif_cleanup(pd_cpuif_t *upif_pd)
     // Releasing resources
     ret = pd_cpuif_dealloc_res(upif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-cpuif:{}: unable to dealloc res for cpuif: {}", 
-                      __FUNCTION__, 
+        HAL_TRACE_ERR("pd-cpuif:{}: unable to dealloc res for cpuif: {}",
+                      __FUNCTION__,
                       ((if_t *)(upif_pd->pi_if))->if_id);
         goto end;
     }
@@ -215,15 +215,15 @@ pd_cpuif_pd_depgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif)
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
-    
+
     sdk_ret = dm_omap->remove(pd_cpuif->cpu_lport_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-cpuif:{}:unable to deprogram omapping table",
-                __FUNCTION__, pd_cpuif->cpu_lport_id);
+        HAL_TRACE_ERR("unable to deprogram omapping table at: {}",
+                      pd_cpuif->cpu_lport_id);
     } else {
-        HAL_TRACE_ERR("pd-cpuif:{}:deprogrammed omapping table",
-                __FUNCTION__, pd_cpuif->cpu_lport_id);
+        HAL_TRACE_ERR("deprogrammed omapping table at: {}",
+                      pd_cpuif->cpu_lport_id);
     }
 
     return ret;
@@ -237,7 +237,7 @@ pd_cpuif_program_hw(pd_cpuif_t *pd_cpuif)
 {
     hal_ret_t            ret;
 
-    // Program Output Mapping 
+    // Program Output Mapping
     ret = pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif);
 
     return ret;
@@ -261,7 +261,7 @@ pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif)
     pd_lif = pd_cpuif_get_pd_lif(pd_cpuif);
 
     data.actionid = OUTPUT_MAPPING_REDIRECT_TO_CPU_ID;
-    om_cpu.dst_lif = pd_lif->hw_lif_id; // 1023 
+    om_cpu.dst_lif = pd_lif->hw_lif_id; // 1023
     // TODO: Fix this
     om_cpu.egress_mirror_en = 0;
     om_cpu.control_tm_oq = 0;

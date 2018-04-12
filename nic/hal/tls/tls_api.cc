@@ -27,8 +27,8 @@ static int port = 56789;
  */
 bool proxy_tls_bypass_mode = true;
 
-#define TLS_DDOL_BYPASS_BARCO           1    /* Enqueue the request to BRQ, but bypass updating the PI of barco and 
-                                              * ring BSQ doorbell 
+#define TLS_DDOL_BYPASS_BARCO           1    /* Enqueue the request to BRQ, but bypass updating the PI of barco and
+                                              * ring BSQ doorbell
                                               */
 
 /**********************************************************'
@@ -175,7 +175,7 @@ tls_api_update_cb(uint32_t id,
                      id, key_index, command, salt, explicit_iv, is_decrypt_flow);
     ret = tlscb_update(spec, &resp);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to update tlscb for id: {}, ret: ", id, ret);
+        HAL_TRACE_ERR("Failed to update tlscb for id: {}, ret: {}", id, ret);
         return ret;
     }
     return HAL_RET_OK;
@@ -188,7 +188,7 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* 
         HAL_TRACE_ERR("SSL Handshake failed, err: {}", ret);
         return ret;
     }
-    
+
     // program tlscb for decr
     ret = tls_api_update_cb(id,
                             args->read_key_index,
@@ -214,8 +214,8 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* 
         HAL_TRACE_ERR("tls: Failed to program TLSCB for id: {}, ret: {}", oflowid, ret);
         return ret;
     }
-      
-    // Inform LKL  
+
+    // Inform LKL
     if (is_v4_flow)
         lklshim_release_client_syn(id);
     else
@@ -225,11 +225,11 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* 
 }
 
 hal_ret_t
-tls_api_key_prog_cb(uint32_t id, const uint8_t* key, size_t key_len, uint32_t* key_hw_index) 
+tls_api_key_prog_cb(uint32_t id, const uint8_t* key, size_t key_len, uint32_t* key_hw_index)
 {
     hal_ret_t ret = HAL_RET_OK;
     if(!key) {
-        return HAL_RET_INVALID_ARG;    
+        return HAL_RET_INVALID_ARG;
     }
     //HAL_TRACE_DEBUG("Programming key for id: {}, key: {}", id, key);
     ret = tls_api_program_crypto_key(key, key_hw_index);
@@ -248,7 +248,7 @@ tls_api_createcb(uint32_t qid, bool is_decrypt_flow, uint32_t other_fid,
     TlsCbSpec            spec;
     TlsCbResponse        rsp;
 
-    HAL_TRACE_DEBUG("Creating TLS Cb with for qid: {}, is_decrypt: ", qid, is_decrypt_flow);
+    HAL_TRACE_DEBUG("Creating TLS Cb with for qid: {}, is_decrypt: {}", qid, is_decrypt_flow);
     spec.mutable_key_or_handle()->set_tlscb_id(qid);
     spec.set_is_decrypt_flow(is_decrypt_flow);
 
@@ -347,7 +347,7 @@ tls_api_start_handshake(uint32_t enc_qid,
     conn_args.oflow_id = enc_qid;
     conn_args.is_v4_flow = is_v4_flow;
     if(pfi && pfi->u.tlsproxy.is_valid) {
-        conn_args.tls_flow_cfg = 
+        conn_args.tls_flow_cfg =
             &pfi->u.tlsproxy;
     }
     return g_ssl_helper.start_connection(conn_args);

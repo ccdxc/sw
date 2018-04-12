@@ -12,10 +12,10 @@ namespace pd {
 //-----------------------------------------------------------------------------
 // uplink if create
 //-----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_uplinkif_create (pd_if_create_args_t *args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;;
     pd_uplinkif_t        *pd_upif;
 
     HAL_TRACE_DEBUG("creating pd state for if_id: {}",
@@ -95,7 +95,7 @@ pd_uplinkif_delete (pd_if_delete_args_t *args)
 //-----------------------------------------------------------------------------
 // allocate resources for PD uplink if
 //-----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 uplinkif_pd_alloc_res (pd_uplinkif_t *pd_upif)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -107,7 +107,7 @@ uplinkif_pd_alloc_res (pd_uplinkif_t *pd_upif)
         HAL_TRACE_ERR("failed to alloc hw_lif_id err: {}", rs);
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("if_id:{} allocated hw_lif_id: {}", 
+    HAL_TRACE_DEBUG("if_id:{} allocated hw_lif_id: {}",
                     if_get_if_id((if_t *)pd_upif->pi_if),
                     pd_upif->hw_lif_id);
 
@@ -135,9 +135,9 @@ uplinkif_pd_dealloc_res (pd_uplinkif_t *upif_pd)
 // pd uplinkif cleanup
 //  - release all resources
 //  - delink PI <-> PD
-//  - free pd if 
+//  - free pd if
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -154,7 +154,7 @@ uplinkif_pd_cleanup (pd_uplinkif_t *upif_pd)
     // releasing resources
     ret = uplinkif_pd_dealloc_res(upif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to dealloc res for uplinkif: {}", 
+        HAL_TRACE_ERR("Failed to dealloc res for uplinkif: {}",
                       ((if_t *)(upif_pd->pi_if))->if_id);
         goto end;
     }
@@ -196,13 +196,13 @@ uplinkif_pd_depgm_tm_register (pd_uplinkif_t *pd_upif)
     hal_ret_t                   ret = HAL_RET_OK;
     uint8_t                     tm_oport = 0;
 
-    tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if)); 
+    tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if));
     ret = capri_tm_uplink_lif_set(tm_oport, 0);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to deprogram for if_id: {}",
                       if_get_if_id((if_t *)pd_upif->pi_if));
     } else {
-        HAL_TRACE_DEBUG("{}:deprogrammed for if_id: {} "
+        HAL_TRACE_DEBUG("deprogrammed for if_id: {} "
                         "iport:{} => hwlif: {}",
                         if_get_if_id((if_t *)pd_upif->pi_if),
                         tm_oport, 0);
@@ -235,7 +235,7 @@ uplinkif_pd_pgm_tm_register(pd_uplinkif_t *pd_upif)
     hal_ret_t                   ret = HAL_RET_OK;
     uint8_t                     tm_oport = 0;
 
-    tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if)); 
+    tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if));
 
     ret = capri_tm_uplink_lif_set(tm_oport, pd_upif->hw_lif_id);
     if (ret != HAL_RET_OK) {

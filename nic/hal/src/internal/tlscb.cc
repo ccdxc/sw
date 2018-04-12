@@ -99,7 +99,7 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
 
     // validate the request message
     ret = validate_tlscb_create(spec, rsp);
-    
+
     // instantiate TLS CB
     tlscb = tlscb_alloc_init();
     if (tlscb == NULL) {
@@ -108,7 +108,7 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
     }
 
     tlscb->cb_id = spec.key_or_handle().tlscb_id();
-    tlscb->command = spec.command(); 
+    tlscb->command = spec.command();
     tlscb->crypto_key_idx = spec.crypto_key_idx();
     tlscb->crypto_hmac_key_idx = spec.crypto_hmac_key_idx();
     tlscb->debug_dol = spec.debug_dol();
@@ -153,7 +153,7 @@ cleanup:
 hal_ret_t
 tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
 {
-    hal_ret_t              ret = HAL_RET_OK; 
+    hal_ret_t              ret = HAL_RET_OK;
     tlscb_t*               tlscb;
     pd::pd_tlscb_update_args_t    pd_tlscb_args;
     bool                   is_decrypt_flow = false;
@@ -165,7 +165,7 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_TLS_CB_NOT_FOUND;
     }
-    
+
     tlscb->command = spec.command();
     tlscb->crypto_key_idx = spec.crypto_key_idx();
     tlscb->crypto_hmac_key_idx = spec.crypto_hmac_key_idx();
@@ -185,14 +185,14 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
 
     pd::pd_tlscb_update_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_UPDATE, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD TLSCB: Update Failed, err: ", ret);
+        HAL_TRACE_ERR("PD TLSCB: Update Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
+
     // fill stats of this TLS CB
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
@@ -204,7 +204,7 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
 hal_ret_t
 tlscb_get (TlsCbGetRequest& req, TlsCbGetResponseMsg *resp)
 {
-    hal_ret_t              ret = HAL_RET_OK; 
+    hal_ret_t              ret = HAL_RET_OK;
     tlscb_t                rtlscb;
     tlscb_t*               tlscb;
     pd::pd_tlscb_get_args_t    pd_tlscb_args;
@@ -217,12 +217,12 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponseMsg *resp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_TLS_CB_NOT_FOUND;
     }
-    
+
     tlscb_init(&rtlscb);
     rtlscb.cb_id = tlscb->cb_id;
     pd::pd_tlscb_get_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = &rtlscb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_GET, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLSCB: Failed to get, err: {}", ret);
@@ -230,9 +230,9 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponseMsg *resp)
         return HAL_RET_HW_FAIL;
     }
 
-    // fill config spec of this TLS CB 
+    // fill config spec of this TLS CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_tlscb_id(rtlscb.cb_id);
-    
+
     rsp->mutable_spec()->set_command(rtlscb.command);
     rsp->mutable_spec()->set_serq_pi(rtlscb.serq_pi);
     rsp->mutable_spec()->set_serq_ci(rtlscb.serq_ci);
@@ -279,7 +279,7 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponseMsg *resp)
 hal_ret_t
 tlscb_delete (tlscb::TlsCbDeleteRequest& req, tlscb::TlsCbDeleteResponseMsg *rsp)
 {
-    hal_ret_t              ret = HAL_RET_OK; 
+    hal_ret_t              ret = HAL_RET_OK;
     tlscb_t*               tlscb;
     pd::pd_tlscb_delete_args_t    pd_tlscb_args;
 
@@ -289,17 +289,17 @@ tlscb_delete (tlscb::TlsCbDeleteRequest& req, tlscb::TlsCbDeleteResponseMsg *rsp
         rsp->add_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;
     }
- 
+
     pd::pd_tlscb_delete_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_DELETE, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLSCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
+
     // fill stats of this TLS CB
     rsp->add_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

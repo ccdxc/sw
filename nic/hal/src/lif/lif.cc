@@ -740,7 +740,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
                              lif_create_cleanup_cb);
 
     if (ret != HAL_RET_OK && lif != NULL) {
-        HAL_TRACE_ERR("{}:error in creating lif with id ", __FUNCTION__, lif->lif_id);
+        HAL_TRACE_ERR("error in creating lif: {} ", lif->lif_id);
         // if there is an error, lif will be freed in abort cb
         lif_prepare_rsp(rsp, ret, HAL_HANDLE_INVALID);
         return ret;

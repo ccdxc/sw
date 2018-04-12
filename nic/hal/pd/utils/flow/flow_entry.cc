@@ -36,7 +36,7 @@ FlowEntry::factory(void *key, uint32_t key_len, void *data, uint32_t data_len,
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-FlowEntry::destroy(FlowEntry *re, uint32_t mtrack_id) 
+FlowEntry::destroy(FlowEntry *re, uint32_t mtrack_id)
 {
     if (re) {
         re->~FlowEntry();
@@ -47,7 +47,7 @@ FlowEntry::destroy(FlowEntry *re, uint32_t mtrack_id)
 // ---------------------------------------------------------------------------
 // Constructor - Flow Entry
 // ---------------------------------------------------------------------------
-FlowEntry::FlowEntry(void *key, uint32_t key_len, 
+FlowEntry::FlowEntry(void *key, uint32_t key_len,
                      void *data, uint32_t data_len,
                      uint32_t hwkey_len, bool log)
 {
@@ -101,7 +101,7 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
         // Case 1: First Entry in Flow Table Entry. Anchor Entry
         HAL_TRACE_DEBUG("FlowE::{}: Insert:Anchor ...", __FUNCTION__);
         // Install FSE in FT.
-    
+
         // Set fields in FlowEntry
         is_anchor_entry_ = TRUE;
         spine_entry_ = fse;
@@ -112,11 +112,11 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
         // Set Fields in FlowSpineEntry
         fse->set_anchor_entry(this);
 
-        // Program HW: FT 
+        // Program HW: FT
         fse->program_table();
 
     } else if (!fhg->get_fs_entry()) {
-        // Case 2: Hint group doesnt have a spine. 
+        // Case 2: Hint group doesnt have a spine.
         //       - HG has only anchors.
         //       - HG doesnt have anchor and this is first entry.
         // Install FEntry in FHCT
@@ -128,7 +128,7 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
         if (rs != HAL_RET_OK) {
             HAL_TRACE_DEBUG("FlowE::{}: Failed to alloc fhct idx", __FUNCTION__);
             return rs;
-        } 
+        }
 
         // once the index is alloced successfully ... it should not ideally fail...
         // so setting up connections.
@@ -143,9 +143,9 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
         fse->add_fhg(fhg);
 
         // Write the flow entry in FHCT
-        // P4-PI: fhct_index_ => [hw_key_, data_,] 
+        // P4-PI: fhct_index_ => [hw_key_, data_,]
         rs = program_table_non_anchor_entry(NULL);
-        HAL_TRACE_DEBUG("FlowE::{}: {} Done Programming non-anchor entry", 
+        HAL_TRACE_DEBUG("FlowE::{}: {} Done Programming non-anchor entry",
                 __FUNCTION__, rs);
         if (rs != HAL_RET_OK) {
             free_fhct_index(fse, fhct_index_);
@@ -159,7 +159,7 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
         // Have to check if this is the first entry in spine then reprogram prev as well
         // Prevent for first spine entry
         if (fse->get_num_hgs() == 1 && fse->get_prev()) {
-            HAL_TRACE_DEBUG("FlowE::{}: FSE being programmed for first time...");
+            HAL_TRACE_DEBUG("FlowE:: FSE being programmed for first time...");
             // Link prev to this
             fse->get_prev()->set_next(fse);
             // Reprogram prev FSE
@@ -167,7 +167,7 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
         }
 
     } else {
-        // Case 3: FHG has spine. 
+        // Case 3: FHG has spine.
         //      - FEntry will be installed at the end of HG.
         // Install FEntry in FHCT.
         // Re-Install last entry in the FHG to point to the above entry.
@@ -177,7 +177,7 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
         rs = alloc_fhct_index(fse, &fhct_index_);
         if (rs != HAL_RET_OK) {
             return rs;
-        } 
+        }
 
         // storing the last entry which has to be re-programmed
         FlowEntry * fhg_last_entry = fhg->get_last_flow_entry();
@@ -189,7 +189,7 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
         fhg->add_flow_entry(this);
 
         // Write the flow entry in FHCT
-        // P4-PI: FHCT Write fhct_index_ => [hw_key_, data_] 
+        // P4-PI: FHCT Write fhct_index_ => [hw_key_, data_]
         rs = program_table_non_anchor_entry(NULL);
         if (rs != HAL_RET_OK) {
             free_fhct_index(fse, fhct_index_);
@@ -198,7 +198,7 @@ FlowEntry::insert(FlowHintGroup *fhg, FlowSpineEntry *fse)
 
         // fhct_index_ = fhg_last_entry->get_fhct_index();
         // P4-PI: FHCT Write
-        //      fhg_last_entry->hw_key_, fhg_last_entry->data, 
+        //      fhg_last_entry->hw_key_, fhg_last_entry->data,
         //        fhg->get_hint_bits(), this->fhct_index_
         rs = fhg_last_entry->program_table_non_anchor_entry(this);
         if (rs != HAL_RET_OK) {
@@ -226,13 +226,13 @@ FlowEntry::update(void *data)
     if (is_anchor_entry_) { // Case 1: FT Entry Re-Install
 
         HAL_TRACE_DEBUG("FlowE::{}: Update anchor", __FUNCTION__);
-        
+
         // Program FT/FHCT Spine entry.
         spine_entry_->program_table();
 
     } else { // Case 2: FHCT Single Flow Entry Rewrite
 
-        HAL_TRACE_DEBUG("FlowE::{}: Update FHCT: {}", 
+        HAL_TRACE_DEBUG("FlowE::{}: Update FHCT: {}",
                 __FUNCTION__, fhct_index_);
         // P4-PI: FHCT Table Write
         FlowEntry *next_fe = fh_group_->get_next_flow_entry(this);
@@ -268,7 +268,7 @@ FlowEntry::remove()
             // No need to move.
             // This is the last entry in the spine entry.
             HAL_TRACE_DEBUG("FlowE:{} Removing the only existing entry", __FUNCTION__);
-            
+
             // Program previous spine entry as this spine entry is going away
             // May not happen as anchor is only in FT's spine entry
             fse_prev = eff_spine_entry->get_prev();
@@ -307,7 +307,7 @@ FlowEntry::remove()
                 //      - Reprogram last_entry->eff_spine.
                 // else:
                 //      - Get Prev flow entry in FHG chain.
-                //      - Program the prev_flow_entry 
+                //      - Program the prev_flow_entry
 
                 // Reset anchor entry in spine entry
                 eff_spine_entry->set_anchor_entry(last_flow_entry);
@@ -316,7 +316,7 @@ FlowEntry::remove()
                 // Program spine entry.
                 eff_spine_entry->program_table();
 
-                // Removing Last Flow Entry 
+                // Removing Last Flow Entry
                 FlowHintGroup *last_fhg = last_flow_entry->get_fh_group();
                 FlowSpineEntry *last_fse = last_fhg->get_fs_entry();
                 HAL_TRACE_DEBUG("last_fhg:");
@@ -398,7 +398,7 @@ FlowEntry::remove()
 
                 // Replace last_flow_entry with new_last_flow_entry in global map
                 eff_spine_entry->get_ft_entry()->get_flow()->
-                    add_flow_entry_global_map(new_last_flow_entry, 
+                    add_flow_entry_global_map(new_last_flow_entry,
                             last_flow_entry->get_global_index());
 
 
@@ -409,16 +409,16 @@ FlowEntry::remove()
         }
     } else if (fh_group_->get_first_flow_entry() == this) {
         // Case 2: Flow entry is attached to spine entry.
-        HAL_TRACE_DEBUG("FlowE:{} Removing flow attached to spine entry", 
+        HAL_TRACE_DEBUG("FlowE:{} Removing flow attached to spine entry",
                 __FUNCTION__);
 
         if (fh_group_->get_num_flow_entries() > 1) {
             // ----------
             // No need to move
             // At fhct_index_ program all 0s
-            //    TODO-P4-PI: fhct_index_ => [hw_key_, data_,] 
+            //    TODO-P4-PI: fhct_index_ => [hw_key_, data_,]
             HAL_TRACE_DEBUG("FlowE:{} HS has extra entries..."
-                    "just reprogram spine entry", 
+                    "just reprogram spine entry",
                     __FUNCTION__);
 
             // Remove flow entry from FHG flow_entry_list_
@@ -449,7 +449,7 @@ FlowEntry::remove()
                 eff_spine_entry->del_fhg(fh_group_);
                 // Re-program FSE
                 eff_spine_entry->program_table();
-                if (!eff_spine_entry->get_anchor_entry() && 
+                if (!eff_spine_entry->get_anchor_entry() &&
                         !eff_spine_entry->get_num_hgs()) {
                 HAL_TRACE_DEBUG("FlowE:{} Current is last FHG: Last Spine entry is removed."
                         "Reprogram last prev. spine entry",
@@ -468,7 +468,7 @@ FlowEntry::remove()
 
 #if 0
                     if (fse_last == eff_spine_entry) {
-                        // Remove last fhg 
+                        // Remove last fhg
                         fse_last->del_fhg(last_fhg);
                     }
 #endif
@@ -532,7 +532,7 @@ FlowEntry::remove()
     } else {
         // ----------
         // Case 3: Flow entry is in FHG list, and its not attached to Spine.
-        
+
         // Re-program prev. FHCT entry to point to next FHCT entry.
         FlowEntry *prev_fe = fh_group_->get_prev_flow_entry(this);
         // FlowEntry *next_fe = fh_group_->get_next_flow_entry(this);
@@ -578,7 +578,7 @@ FlowEntry *
 FlowEntry::create_new_flow_entry(FlowEntry *fe)
 {
     // FlowEntry *new_fe = new FlowEntry(fe->get_key(), fe->get_key_len(),
-    //                                   fe->get_data(), fe->get_data_len(), 
+    //                                   fe->get_data(), fe->get_data_len(),
     //                                   hwkey_len_, true);
     FlowEntry *new_fe = FlowEntry::factory(fe->get_key(), fe->get_key_len(),
                                            fe->get_data(), fe->get_data_len(),
@@ -634,7 +634,7 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
     uint8_t         *more_hashs;
     void            *more_hints;
     uint32_t        hint_bits = 0;
-    uint32_t        fhct_idx = 0; 
+    uint32_t        fhct_idx = 0;
     uint32_t        hint_mem_len_B = 0;
 
     oflow_table_id = get_flow_table_entry()->get_flow()->get_oflow_table_id();
@@ -642,7 +642,7 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
                       get_flow_entire_data_len();
     hint_mem_len_B = get_flow_table_entry()->get_flow()->get_hint_mem_len_B();
 
-    swdata = HAL_CALLOC(HAL_MEM_ALLOC_ENTIRE_FLOW_ENTRY_DATA, 
+    swdata = HAL_CALLOC(HAL_MEM_ALLOC_ENTIRE_FLOW_ENTRY_DATA,
                         entire_data_len);
     get_flow_table_entry()->get_flow()->
         flow_action_data_offsets(swdata,
@@ -667,9 +667,9 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
         memcpy(loc + 2, &fhct_idx, hint_mem_len_B);
     }
 
-    HAL_TRACE_DEBUG("FE::{}: OflowTID: {} P4 FHCT Write: {}", 
+    HAL_TRACE_DEBUG("FE::{}: OflowTID: {} P4 FHCT Write: {}",
                     __FUNCTION__, oflow_table_id, fhct_index_);
-    
+
     hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_ENTRY_HW_KEY, hwkey_len_);
     p4pd_hwkey_hwmask_build(oflow_table_id, key_,
                             NULL, (uint8_t *)hwkey, NULL);
@@ -699,12 +699,12 @@ FlowEntry::deprogram_table_non_anchor_entry()
     uint32_t                        entire_data_len = 0;
     void                            *swdata = NULL;
 
-    HAL_TRACE_DEBUG("{}: Deprogram Coll. Table idx: {}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}: Deprogram Coll. Table idx: {}", __FUNCTION__,
             fhct_index_);
 
     entire_data_len = get_flow_table_entry()->get_flow()->
                       get_flow_entire_data_len();
-    swdata = HAL_CALLOC(HAL_MEM_ALLOC_ENTIRE_FLOW_ENTRY_DATA, 
+    swdata = HAL_CALLOC(HAL_MEM_ALLOC_ENTIRE_FLOW_ENTRY_DATA,
                         entire_data_len);
 
     oflow_table_id = get_flow_table_entry()->get_flow()->get_oflow_table_id();
@@ -824,7 +824,7 @@ FlowEntry::form_hw_key(uint32_t table_id, void *hwkey)
     hal_ret_t                       rs = HAL_RET_OK;
     p4pd_error_t                    pd_err = P4PD_SUCCESS;
 
-    pd_err = p4pd_hwkey_hwmask_build(table_id, key_, NULL, 
+    pd_err = p4pd_hwkey_hwmask_build(table_id, key_, NULL,
                                      (uint8_t *)hwkey, NULL);
 
     return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : rs;
@@ -834,13 +834,13 @@ FlowEntry::form_hw_key(uint32_t table_id, void *hwkey)
 // P4Pd trace of the entry
 // ---------------------------------------------------------------------------
 hal_ret_t
-FlowEntry::entry_trace(uint32_t table_id, uint32_t index, 
+FlowEntry::entry_trace(uint32_t table_id, uint32_t index,
                              void *data)
 {
     char            buff[4096] = {0};
     p4pd_error_t    p4_err;
 
-    p4_err = p4pd_table_ds_decoded_string_get(table_id, index, key_, NULL, 
+    p4_err = p4pd_table_ds_decoded_string_get(table_id, index, key_, NULL,
                                               data, buff, sizeof(buff));
     HAL_ASSERT(p4_err == P4PD_SUCCESS);
 
@@ -853,10 +853,10 @@ FlowEntry::entry_trace(uint32_t table_id, uint32_t index,
 // Prints Flow Entry
 // ---------------------------------------------------------------------------
 void
-FlowEntry::print_fe() 
+FlowEntry::print_fe()
 {
     HAL_TRACE_DEBUG("      flow_entry: fe_idx: {}, is_anchor: {}, "
-            "fhct_index: {}, fhg_bits: {:#x}", 
-            gl_index_, is_anchor_entry_, 
+            "fhct_index: {}, fhg_bits: {:#x}",
+            gl_index_, is_anchor_entry_,
             fhct_index_, fh_group_->get_hint_bits());
 }

@@ -216,7 +216,7 @@ pd_l2seg_create (pd_l2seg_create_args_t *args)
     hal_ret_t     ret;
     pd_l2seg_t    *l2seg_pd = NULL;
 
-    HAL_TRACE_DEBUG("Creating pd state for l2seg", args->l2seg->seg_id);
+    HAL_TRACE_DEBUG("Creating pd state for l2seg {}", args->l2seg->seg_id);
 
     // create l2seg PD
     l2seg_pd = l2seg_pd_alloc_init();

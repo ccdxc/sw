@@ -200,7 +200,7 @@ proxyccb_create (ProxycCbSpec& spec, ProxycCbResponse *rsp)
     if (ret != HAL_RET_OK) {
         goto cleanup;
     }
-    
+
     // instantiate PROXYC CB
     proxyccb = proxyccb_alloc_init();
     if (proxyccb == NULL) {
@@ -210,13 +210,13 @@ proxyccb_create (ProxycCbSpec& spec, ProxycCbResponse *rsp)
     }
 
     proxyccb->cb_id = spec.key_or_handle().proxyccb_id();
-    proxyccb->proxyccb_flags = spec.proxyccb_flags(); 
-    proxyccb->my_txq_base = spec.my_txq_base(); 
+    proxyccb->proxyccb_flags = spec.proxyccb_flags();
+    proxyccb->my_txq_base = spec.my_txq_base();
     proxyccb->my_txq_ring_size_shift = spec.my_txq_ring_size_shift();
     proxyccb->my_txq_entry_size_shift = spec.my_txq_entry_size_shift();
 
-    proxyccb->chain_txq_base = spec.chain_txq_base(); 
-    proxyccb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr(); 
+    proxyccb->chain_txq_base = spec.chain_txq_base();
+    proxyccb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr();
     proxyccb->chain_txq_ring_size_shift = spec.chain_txq_ring_size_shift();
     proxyccb->chain_txq_entry_size_shift = spec.chain_txq_entry_size_shift();
     proxyccb->chain_txq_lif = spec.chain_txq_lif();
@@ -260,7 +260,7 @@ cleanup:
 hal_ret_t
 proxyccb_update (ProxycCbSpec& spec, ProxycCbResponse *rsp)
 {
-    hal_ret_t               ret = HAL_RET_OK; 
+    hal_ret_t               ret = HAL_RET_OK;
     proxyccb_t              *proxyccb;
     pd::pd_proxyccb_update_args_t  pd_proxyccb_args;
 
@@ -271,14 +271,14 @@ proxyccb_update (ProxycCbSpec& spec, ProxycCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_PROXYC_CB_NOT_FOUND;
     }
-    
-    proxyccb->my_txq_base = spec.my_txq_base(); 
+
+    proxyccb->my_txq_base = spec.my_txq_base();
     proxyccb->my_txq_ring_size_shift = spec.my_txq_ring_size_shift();
     proxyccb->my_txq_entry_size_shift = spec.my_txq_entry_size_shift();
 
-    proxyccb->proxyccb_flags = spec.proxyccb_flags(); 
-    proxyccb->chain_txq_base = spec.chain_txq_base(); 
-    proxyccb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr(); 
+    proxyccb->proxyccb_flags = spec.proxyccb_flags();
+    proxyccb->chain_txq_base = spec.chain_txq_base();
+    proxyccb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr();
     proxyccb->chain_txq_ring_size_shift = spec.chain_txq_ring_size_shift();
     proxyccb->chain_txq_entry_size_shift = spec.chain_txq_entry_size_shift();
     proxyccb->chain_txq_lif = spec.chain_txq_lif();
@@ -289,17 +289,17 @@ proxyccb_update (ProxycCbSpec& spec, ProxycCbResponse *rsp)
 
     pd::pd_proxyccb_update_args_init(&pd_proxyccb_args);
     pd_proxyccb_args.proxyccb = proxyccb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROXYCCB_UPDATE, (void *)&pd_proxyccb_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD PROXYCCB: Update Failed, err: ", ret);
+        HAL_TRACE_ERR("PD PROXYCCB: Update Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
+
     // fill stats of this PROXYC CB
     rsp->set_api_status(types::API_STATUS_OK);
- 
+
     return HAL_RET_OK;
 }
 
@@ -309,7 +309,7 @@ proxyccb_update (ProxycCbSpec& spec, ProxycCbResponse *rsp)
 hal_ret_t
 proxyccb_get (ProxycCbGetRequest& req, ProxycCbGetResponseMsg *resp)
 {
-    hal_ret_t               ret = HAL_RET_OK; 
+    hal_ret_t               ret = HAL_RET_OK;
     proxyccb_t              rproxyccb;
     proxyccb_t              *proxyccb;
     pd::pd_proxyccb_get_args_t  pd_proxyccb_args;
@@ -322,12 +322,12 @@ proxyccb_get (ProxycCbGetRequest& req, ProxycCbGetResponseMsg *resp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_PROXYC_CB_NOT_FOUND;
     }
-    
+
     proxyccb_init(&rproxyccb);
     rproxyccb.cb_id = proxyccb->cb_id;
     pd::pd_proxyccb_get_args_init(&pd_proxyccb_args);
     pd_proxyccb_args.proxyccb = &rproxyccb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROXYCCB_GET, (void *)&pd_proxyccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD PROXYCCB: Failed to get, err: {}", ret);
@@ -335,9 +335,9 @@ proxyccb_get (ProxycCbGetRequest& req, ProxycCbGetResponseMsg *resp)
         return HAL_RET_HW_FAIL;
     }
 
-    // fill config spec of this PROXYC CB 
+    // fill config spec of this PROXYC CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_proxyccb_id(rproxyccb.cb_id);
-    
+
     rsp->mutable_spec()->set_proxyccb_flags(rproxyccb.proxyccb_flags);
     rsp->mutable_spec()->set_my_txq_base(rproxyccb.my_txq_base);
     rsp->mutable_spec()->set_my_txq_ring_size_shift(rproxyccb.my_txq_ring_size_shift);
@@ -379,7 +379,7 @@ proxyccb_get (ProxycCbGetRequest& req, ProxycCbGetResponseMsg *resp)
 hal_ret_t
 proxyccb_delete (proxyccb::ProxycCbDeleteRequest& req, proxyccb::ProxycCbDeleteResponseMsg *rsp)
 {
-    hal_ret_t               ret = HAL_RET_OK; 
+    hal_ret_t               ret = HAL_RET_OK;
     proxyccb_t              *proxyccb;
     pd::pd_proxyccb_args_t  pd_proxyccb_args;
     pd::pd_proxyccb_delete_args_t  del_args;
@@ -390,21 +390,21 @@ proxyccb_delete (proxyccb::ProxycCbDeleteRequest& req, proxyccb::ProxycCbDeleteR
         rsp->add_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;
     }
- 
+
     pd::pd_proxyccb_delete_args_init(&del_args);
     del_args.r_args = &pd_proxyccb_args;
     pd_proxyccb_args.proxyccb = proxyccb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROXYCCB_DELETE, (void *)&del_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD PROXYCCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
+
     // fill stats of this PROXYC CB
     rsp->add_api_status(types::API_STATUS_OK);
- 
+
     return HAL_RET_OK;
 }
 

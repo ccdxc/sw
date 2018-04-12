@@ -354,12 +354,12 @@ capri_tm_get_island_for_port_type (tm_port_type_e port_type)
 //::     port_info[p] = pinfo
 //:: #endfor
 //::
-//:: hbm_fifo_info = { 
+//:: hbm_fifo_info = {
 //::                'TM_HBM_FIFO_TYPE_UPLINK': {'reg_name' : 'eth', 'count' : 32 },
 //::                'TM_HBM_FIFO_TYPE_TXDMA': {'reg_name' : 'tx', 'count' : 16}
 //::                 }
 //::
-//:: import yaml 
+//:: import yaml
 //:: def get_reg_instances(regs, types):
 //:: import re
 //:: instances = []
@@ -378,7 +378,7 @@ capri_tm_get_island_for_port_type (tm_port_type_e port_type)
 //::     block_type = data[block]['type']
 //::     if block_type == type:
 //::        regs.append(path)
-//::        return 
+//::        return
 //::     #endif
 //::     if block_type != 'block':
 //::         return
@@ -410,7 +410,7 @@ capri_tm_get_island_for_port_type (tm_port_type_e port_type)
 //::    #endfor
 //::    return d
 //:: #enddef
-//::    
+//::
 //:: with open(_context['args']) as data_file:
 //::    data = yaml.load(data_file)
 //:: #endwith
@@ -559,7 +559,7 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                     hbm_context = iq + (num_hbm_contexts_per_port * ${pinfo["enum"]});
 
                     payload_occupancy = pbc_csr.hlp.get_slc(
-                        port_payload_occupancy_val, 
+                        port_payload_occupancy_val,
                         iq*19, ((iq + 1) * 19) - 1).convert_to<uint32_t>();
 
                     payload_occupancy_bytes = payload_occupancy << 10;
@@ -728,7 +728,7 @@ capri_tm_uplink_oq_update(tm_port_t port,
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     uint32_t xoff_enable_val;
     cpp_int xoff2oq_map_val;
-    cap_pbc_eth_oq_xoff_map_t xoff2oq_map_decoder; 
+    cap_pbc_eth_oq_xoff_map_t xoff2oq_map_decoder;
     xoff2oq_map_decoder.init();
 
     if (!capri_tm_port_is_uplink_port(port)) {
@@ -860,7 +860,7 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
         pbc_csr.cfg_dhs_mem.write();
     }
 
-    uint32_t quota = (node_params->sched_type == TM_SCHED_TYPE_STRICT ? 
+    uint32_t quota = (node_params->sched_type == TM_SCHED_TYPE_STRICT ?
                       node_params->strict.rate : node_params->dwrr.weight);
 
     pbc_csr.dhs_sched.entry[0].command(1);   //1: overwrite quota and credits
@@ -972,7 +972,7 @@ capri_tm_get_hbm_occupancy(tm_hbm_fifo_type_e fifo_type, uint32_t context)
                     {
                         hbm_csr.sta_hbm_${finfo["reg_name"]}_context_${context}.read();
                         hbm_csr.sta_hbm_${finfo["reg_name"]}_context_${context}.show();
-                        occupancy = 
+                        occupancy =
                             hbm_csr.sta_hbm_${finfo["reg_name"]}_context_${context}.depth().convert_to<uint32_t>();
                     }
                     break;
@@ -983,8 +983,8 @@ capri_tm_get_hbm_occupancy(tm_hbm_fifo_type_e fifo_type, uint32_t context)
         default:
             return occupancy;
     }
-   
-    return occupancy; 
+
+    return occupancy;
 }
 
 static hal_ret_t
@@ -1015,7 +1015,7 @@ capri_tm_drain_uplink_port (tm_port_t port)
     }
 
     if (!all_zeroes && port_supports_hbm_contexts(port)) {
-        HAL_TRACE_ERR("Port {} hbm queues not drained completely after {} tries", 
+        HAL_TRACE_ERR("Port {} hbm queues not drained completely after {} tries",
                       port, tries);
         return HAL_RET_RETRY;
     }
@@ -1083,7 +1083,7 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
         }
     }
 
-    HAL_TRACE_DEBUG("{}d uplink port {}", 
+    HAL_TRACE_DEBUG("{}d uplink port {}",
                     enable ? "Enable" : "Disable", port);
     return HAL_RET_OK;
 }
@@ -1157,7 +1157,7 @@ alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
         if (chunks_per_q < headroom_chunks) {
             HAL_TRACE_ERR("Error allocating remaining pbc chunks "
                           "island {} port_type {} num_qs {} "
-                          "headroom_cells {} available {} per_q available",
+                          "headroom_cells {} available {} per_q available {}",
                           island, port_type, num_qs,
                           headroom_cells,
                           chunks_to_cells(pbc_cell_chunks[island]),
@@ -1605,7 +1605,7 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
                             q * 23, ((q + 1) * 23) - 1);
 
         // Global registers
-        
+
         // 27 bits per hbm_q
         pbc_csr.hlp.set_slc(payload_base_val[fifo_type], payload_offset,
                             context * 27, ((context + 1) * 27) - 1);
@@ -1640,7 +1640,7 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
 
         hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload_occupancy.show();
         hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload_occupancy.write();
-        
+
 //::        if pinfo["type"] == "uplink":
         hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_ctrl.show();
         hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_ctrl.write();
@@ -1733,7 +1733,7 @@ capri_tm_port_program_defaults (void)
 
     mtu_cells = bytes_to_cells(tm_cfg_profile()->jumbo_mtu);
     if (port_type == TM_PORT_TYPE_UPLINK) {
-        mtu_cells--; 
+        mtu_cells--;
     }
 //::    nbits = int(math.log(pinfo["pgs"], 2))
 //::    for pg in range(pinfo["pgs"]):
@@ -2032,7 +2032,7 @@ capri_tm_global_init (void)
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
-    
+
 //:: for fifo_type, finfo in hbm_fifo_info.items():
 //::    reg_name = finfo["reg_name"]
     hbm_csr.cfg_hbm_${reg_name}_ctrl_init.head_start(1);

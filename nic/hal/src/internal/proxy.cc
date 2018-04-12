@@ -61,7 +61,7 @@ proxy_meta_init() {
                         (uint8_t)log2(RAWRCB_NUM_ENTRIES_MAX)},
              {APP_REDIR_RAWC_QTYPE, RAWCCB_TABLE_ENTRY_MULTIPLE,
                         (uint8_t)log2(RAWCCB_NUM_ENTRIES_MAX)},
-             {APP_REDIR_PROXYR_QTYPE, PROXYRCB_TABLE_ENTRY_MULTIPLE, 
+             {APP_REDIR_PROXYR_QTYPE, PROXYRCB_TABLE_ENTRY_MULTIPLE,
                         (uint8_t)log2(PROXYRCB_NUM_ENTRIES_MAX)},
              {APP_REDIR_PROXYC_QTYPE, PROXYCCB_TABLE_ENTRY_MULTIPLE,
                         (uint8_t)log2(PROXYCCB_NUM_ENTRIES_MAX)}}},
@@ -201,7 +201,7 @@ proxy_flow_info_alloc (void)
     pfi = (proxy_flow_info_t *)g_hal_state->proxy_flow_info_slab()->alloc();
     if(pfi == NULL) {
         return NULL;
-    } 
+    }
     return pfi;
 }
 
@@ -298,22 +298,22 @@ proxy_program_lif(proxy_t* proxy)
         lif_hal_info.with_hw_lif_id = true;
         lif_hal_info.hw_lif_id = meta_lif_info->lif_id;
         lif_hal_info.dont_zero_qstate_mem = true;
-        
+
         for(uint j = 0; j < meta_lif_info->num_qtype; j++) {
             meta_qtype_info = &(meta_lif_info->qtype_info[j]);
             lif_spec.add_lif_qstate_map();
             lif_spec.mutable_lif_qstate_map(j)->set_type_num(meta_qtype_info->qtype_val);
             lif_spec.mutable_lif_qstate_map(j)->set_size(meta_qtype_info->qstate_size);
             lif_spec.mutable_lif_qstate_map(j)->set_entries(meta_qtype_info->qstate_entries);
-            
+
             //qstate_params.dont_zero_memory = true;
             HAL_TRACE_DEBUG("Added LIF: {}, entries: {}, size: {}",
                     meta_lif_info->lif_id,
                     meta_qtype_info->qstate_entries,
                     meta_qtype_info->qstate_size);
         }
-       
-        HAL_TRACE_DEBUG("Calling lif create with id: {}", 
+
+        HAL_TRACE_DEBUG("Calling lif create with id: {}",
                     lif_hal_info.hw_lif_id);
 
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -437,7 +437,7 @@ proxy_post_lif_program_init(proxy_t* proxy)
     case types::PROXY_TYPE_P4PT:
 #ifndef GFT
         // TODO: how is this code supposed to run with another P4 program?
-        //       the only interface between PI and PD is via p4pd_api.hpp 
+        //       the only interface between PI and PD is via p4pd_api.hpp
         //       can't directly go to iris !!!
         pd::p4pt_pd_init_args_t args;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_P4PT_INIT, (void *)&args);
@@ -635,7 +635,7 @@ proxy_get (ProxyGetRequest& req, ProxyGetResponse *rsp)
 
     ret = pd::pd_proxy_get(&pd_proxy_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD PROXY: Failed to get, err: ", ret);
+        HAL_TRACE_ERR("PD PROXY: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
@@ -659,13 +659,13 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
 {
     vrf_t*       vrf = NULL;
     vrf_id_t     tid = 0;
-    
+
     if(!req.has_meta()){
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         HAL_TRACE_ERR("no meta found");
         return HAL_RET_INVALID_ARG;
     }
- 
+
     if (req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         HAL_TRACE_ERR("vrf {}", req.meta().vrf_id());
@@ -673,11 +673,11 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
     }
 
     tid = req.meta().vrf_id();
-    vrf = vrf_lookup_by_id(tid); 
+    vrf = vrf_lookup_by_id(tid);
     if(vrf == NULL) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         HAL_TRACE_ERR("{}: vrf {} not found", __func__, tid);
-        return HAL_RET_INVALID_ARG;    
+        return HAL_RET_INVALID_ARG;
     }
 
     if(!req.has_spec() ||
@@ -691,7 +691,7 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
 }
 
 hal_ret_t
-proxy_flow_handle_tls_config(types::ProxyType proxy_type, 
+proxy_flow_handle_tls_config(types::ProxyType proxy_type,
                              const flow_key_t &flow_key,
                              const proxy::TlsProxyFlowConfig &tls_flow_config,
                              proxy::ProxyResponse *rsp)
@@ -714,17 +714,17 @@ proxy_flow_handle_tls_config(types::ProxyType proxy_type,
             rsp->set_api_status(types::API_STATUS_FLOW_INFO_INVALID);
         return HAL_RET_FLOW_NOT_FOUND;
     }
-    
+
     pfi->u.tlsproxy.cert_id = tls_flow_config.cert_id();
     pfi->u.tlsproxy.key_id = tls_flow_config.key_id();
     pfi->u.tlsproxy.is_valid = true;
 
-    HAL_TRACE_DEBUG("TLS proxy config for qid: {}, cert: {}, key: {}", 
+    HAL_TRACE_DEBUG("TLS proxy config for qid: {}, cert: {}, key: {}",
                     pfi->qid1,
                     pfi->u.tlsproxy.cert_id,
                     pfi->u.tlsproxy.key_id);
- 
-    return HAL_RET_OK;    
+
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -815,7 +815,7 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
         HAL_TRACE_ERR("proxy: flow config request validation failed: {}", ret);
         return ret;
     }
-  
+
     tid = req.meta().vrf_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
 
@@ -866,19 +866,19 @@ validate_proxy_get_flow_info_request(proxy::ProxyGetFlowInfoRequest& req,
 {
     vrf_t*       vrf = NULL;
     vrf_id_t     tid = 0;
-    
+
     if(!req.has_meta() ||
         req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
- 
+
     tid = req.meta().vrf_id();
-    vrf = vrf_lookup_by_id(tid); 
+    vrf = vrf_lookup_by_id(tid);
     if(vrf == NULL) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         HAL_TRACE_ERR("{}: vrf {} not found", __func__, tid);
-        return HAL_RET_INVALID_ARG;    
+        return HAL_RET_INVALID_ARG;
     }
 
     if(!req.has_spec() ||
@@ -924,7 +924,7 @@ proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
         HAL_TRACE_ERR("proxy: get flow info requestvalidation failed: {}", ret);
         return ret;
     }
-    
+
     tid = req.meta().vrf_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
 

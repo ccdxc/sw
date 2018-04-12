@@ -353,13 +353,12 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     if (spec.gateway_ep_handle() != HAL_HANDLE_INVALID) {
         gw_ep = find_ep_by_handle(spec.gateway_ep_handle());
         if (gw_ep == NULL) {
-            HAL_TRACE_ERR("{}: unable to retrieve gateway endpoint:{}",
-                    __FUNCTION__);
+            HAL_TRACE_ERR("unable to retrieve gateway endpoint");
             ret = HAL_RET_EP_NOT_FOUND;
             goto end;
         }
     } else {
-        HAL_TRACE_DEBUG("{}:gateway way ep is not present."
+        HAL_TRACE_DEBUG("gateway way ep is not present."
                         " flows using this network will not have reachability info.");
     }
 
@@ -380,8 +379,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     nw = network_alloc_init();
     if (nw == NULL) {
         ret = HAL_RET_OOM;
-        HAL_TRACE_ERR("{}: out of memory. err: {}",
-                      ret);
+        HAL_TRACE_ERR("out of memory. err: {}", ret);
         goto end;
     }
 
@@ -1352,7 +1350,7 @@ network_del_l2seg (network_t *nw, l2seg_t *l2seg)
     network_lock(nw, __FILENAME__, __LINE__, __func__);      // lock
     dllist_for_each_safe(curr, next, &nw->l2seg_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        HAL_TRACE_DEBUG("pi-nw:{}:checking l2seg_hdl:{}", entry->handle_id);
+        HAL_TRACE_DEBUG("checking l2seg_hdl:{}", entry->handle_id);
         if (entry->handle_id == l2seg->hal_handle) {
             // Remove from list
             sdk::lib::dllist_del(&entry->dllist_ctxt);

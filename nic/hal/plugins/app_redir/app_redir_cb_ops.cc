@@ -7,7 +7,7 @@ namespace app_redir {
 
 /*
  * Build a raw redirect control block for interfacing with rawrcb_create().
- */     
+ */
 static void
 app_redir_rawrcb_spec_build(const rawrcb_t& rawrcb,
                             RawrCbSpec& spec)
@@ -45,7 +45,7 @@ app_redir_rawrcb_spec_build(const rawrcb_t& rawrcb,
 
 /*
  * Wrapper for creating a raw redirect control block.
- */     
+ */
 hal_ret_t
 app_redir_rawrcb_create(const rawrcb_t& rawrcb)
 {
@@ -58,7 +58,7 @@ app_redir_rawrcb_create(const rawrcb_t& rawrcb)
 
     ret = rawrcb_create(spec, &rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: ",
+        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: {}",
                       __FUNCTION__, rawrcb.cb_id, ret, rsp.api_status());
     }
 
@@ -68,7 +68,7 @@ app_redir_rawrcb_create(const rawrcb_t& rawrcb)
 
 /*
  * Wrapper for updating a raw redirect control block.
- */     
+ */
 hal_ret_t
 app_redir_rawrcb_update(const rawrcb_t& rawrcb)
 {
@@ -81,7 +81,7 @@ app_redir_rawrcb_update(const rawrcb_t& rawrcb)
 
     ret = rawrcb_update(spec, &rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: ",
+        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: {}",
                       __FUNCTION__, rawrcb.cb_id, ret, rsp.api_status());
     }
 
@@ -91,7 +91,7 @@ app_redir_rawrcb_update(const rawrcb_t& rawrcb)
 
 /*
  * Build a raw chain control block for interfacing with rawccb_create().
- */     
+ */
 static void
 app_redir_rawccb_spec_build(const rawccb_t& rawccb,
                             RawcCbSpec& spec)
@@ -117,7 +117,7 @@ app_redir_rawccb_spec_build(const rawccb_t& rawccb,
 
 /*
  * Wrapper for creating a raw chain control block.
- */     
+ */
 hal_ret_t
 app_redir_rawccb_create(const rawccb_t& rawccb)
 {
@@ -130,7 +130,7 @@ app_redir_rawccb_create(const rawccb_t& rawccb)
 
     ret = rawccb_create(spec, &rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: ",
+        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: {}",
                       __FUNCTION__, rawccb.cb_id, ret, rsp.api_status());
     }
 
@@ -140,7 +140,7 @@ app_redir_rawccb_create(const rawccb_t& rawccb)
 
 /*
  * Wrapper for updating a raw chain control block.
- */     
+ */
 hal_ret_t
 app_redir_rawccb_update(const rawccb_t& rawccb)
 {
@@ -153,7 +153,7 @@ app_redir_rawccb_update(const rawccb_t& rawccb)
 
     ret = rawccb_update(spec, &rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: ",
+        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: {}",
                       __FUNCTION__, rawccb.cb_id, ret, rsp.api_status());
     }
 
@@ -163,7 +163,7 @@ app_redir_rawccb_update(const rawccb_t& rawccb)
 
 /*
  * Build a proxy redirect control block for interfacing with proxyrcb_create().
- */     
+ */
 static void
 app_redir_proxyrcb_spec_build(const proxyrcb_t& proxyrcb,
                               ProxyrCbSpec& spec)
@@ -209,9 +209,9 @@ app_redir_proxyrcb_spec_build(const proxyrcb_t& proxyrcb,
 
 /*
  * Incorporate flow_key to the argument proxy redirect control block.
- * The control block itself isn't programmed to HW until 
+ * The control block itself isn't programmed to HW until
  * app_redir_proxyrcb_create() is called.
- */     
+ */
 hal_ret_t
 app_redir_proxyrcb_flow_key_build(proxyrcb_t& proxyrcb,
                                   const flow_key_t& flow_key)
@@ -248,7 +248,7 @@ app_redir_proxyrcb_flow_key_build(proxyrcb_t& proxyrcb,
 
 /*
  * Wrapper for creating a proxy redirect control block.
- */     
+ */
 hal_ret_t
 app_redir_proxyrcb_create(const proxyrcb_t& proxyrcb)
 {
@@ -261,7 +261,7 @@ app_redir_proxyrcb_create(const proxyrcb_t& proxyrcb)
 
     ret = proxyrcb_create(spec, &rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: ",
+        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: {}",
                       __FUNCTION__, proxyrcb.cb_id, ret, rsp.api_status());
     }
 
@@ -271,7 +271,7 @@ app_redir_proxyrcb_create(const proxyrcb_t& proxyrcb)
 
 /*
  * Wrapper for updating a proxy redirect control block.
- */     
+ */
 hal_ret_t
 app_redir_proxyrcb_update(const proxyrcb_t& proxyrcb)
 {
@@ -284,7 +284,7 @@ app_redir_proxyrcb_update(const proxyrcb_t& proxyrcb)
 
     ret = proxyrcb_update(spec, &rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: ",
+        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: {}",
                       __FUNCTION__, proxyrcb.cb_id, ret, rsp.api_status());
     }
 
@@ -294,7 +294,7 @@ app_redir_proxyrcb_update(const proxyrcb_t& proxyrcb)
 
 /*
  * Build a proxy chain control block for interfacing with proxyccb_create().
- */     
+ */
 static void
 app_redir_proxyccb_spec_build(const proxyccb_t& proxyccb,
                               ProxycCbSpec& spec)
@@ -323,7 +323,7 @@ app_redir_proxyccb_spec_build(const proxyccb_t& proxyccb,
  * Incorporate next service chain's TxQ info to the argument proxy chain
  * control block. The control block itself isn't programmed to HW until
  * app_redir_proxyccb_create() is called.
- */     
+ */
 hal_ret_t
 app_redir_proxyccb_chain_txq_build(proxyccb_t& proxyccb,
                                    uint16_t chain_txq_lif,
@@ -358,7 +358,7 @@ app_redir_proxyccb_chain_txq_build(proxyccb_t& proxyccb,
 
 /*
  * Wrapper for creating a proxy chain control block.
- */     
+ */
 hal_ret_t
 app_redir_proxyccb_create(const proxyccb_t& proxyccb)
 {
@@ -371,7 +371,7 @@ app_redir_proxyccb_create(const proxyccb_t& proxyccb)
 
     ret = proxyccb_create(spec, &rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: ",
+        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: {}",
                       __FUNCTION__, proxyccb.cb_id, ret, rsp.api_status());
     }
 
@@ -381,7 +381,7 @@ app_redir_proxyccb_create(const proxyccb_t& proxyccb)
 
 /*
  * Wrapper for updating a proxy chain control block.
- */     
+ */
 hal_ret_t
 app_redir_proxyccb_update(const proxyccb_t& proxyccb)
 {
@@ -394,7 +394,7 @@ app_redir_proxyccb_update(const proxyccb_t& proxyccb)
 
     ret = proxyccb_update(spec, &rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: ",
+        HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: {}",
                       __FUNCTION__, proxyccb.cb_id, ret, rsp.api_status());
     }
 
@@ -404,7 +404,7 @@ app_redir_proxyccb_update(const proxyccb_t& proxyccb)
 
 /*
  * Build a mirror session spec for interfacing with mirror_session_create()
- */     
+ */
 static void
 app_redir_mirror_session_spec_build(MirrorSessionSpec& spec)
 {
@@ -420,7 +420,7 @@ app_redir_mirror_session_spec_build(MirrorSessionSpec& spec)
 
 /*
  * Wrapper for creating a mirror session for app redirect
- */     
+ */
 hal_ret_t
 app_redir_mirror_session_create(mirror_session_id_t &ret_id)
 {
@@ -433,7 +433,7 @@ app_redir_mirror_session_create(mirror_session_id_t &ret_id)
 
     ret = mirror_session_create(&spec, &rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} failed ret {} rsp: ",
+        HAL_TRACE_ERR("{} failed ret {} rsp: {}",
                       __FUNCTION__, ret, rsp.api_status());
     }
 
@@ -472,7 +472,7 @@ app_redir_ing_replication_create(oif_list_id_t &ret_id)
     }
 
     if (ret == HAL_RET_OK) {
-        HAL_TRACE_DEBUG("{} successful for if_id {} list_id {}", __FUNCTION__, 
+        HAL_TRACE_DEBUG("{} successful for if_id {} list_id {}", __FUNCTION__,
                         app_redir_if_id, ret_id);
     } else {
         HAL_TRACE_ERR("{} failed for if_id {}", __FUNCTION__, app_redir_if_id);

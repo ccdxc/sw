@@ -20,7 +20,7 @@ static void incr_parse_error (l4_alg_status_t *sess)
 
 /*
  * DNS info cleanup handler
- */ 
+ */
 void dnsinfo_cleanup_hdlr (l4_alg_status_t *l4_sess)
 {
     if (l4_sess->info != NULL)
@@ -35,7 +35,7 @@ static void dns_completion_hdlr (fte::ctx_t& ctx, bool status) {
     return;
 }
 
-bool check_dnsid_exists (dns_info_t *head, uint16_t dnsid, dns_info_t **out) 
+bool check_dnsid_exists (dns_info_t *head, uint16_t dnsid, dns_info_t **out)
 {
     dllist_ctxt_t   *next, *entry;
 
@@ -43,7 +43,7 @@ bool check_dnsid_exists (dns_info_t *head, uint16_t dnsid, dns_info_t **out)
     dllist_for_each_safe(entry, next, &head->lentry)
     {
         dns_info_t *dentry = dllist_entry(entry, dns_info_t, lentry);
-        HAL_TRACE_DEBUG("DNS ALG - Got DNS id: %d", dentry->dnsid);
+        HAL_TRACE_DEBUG("DNS ALG - Got DNS id: {}", dentry->dnsid);
         if (dentry->dnsid == dnsid) {
             *out = dentry;
             return (TRUE);
@@ -78,7 +78,7 @@ hal_ret_t get_dnsid_pkt (fte::ctx_t& ctx, l4_alg_status_t *sess,
 }
 
 /*
- * DNS Exec 
+ * DNS Exec
  */
 fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
 {
@@ -92,18 +92,18 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
     dllist_ctxt_t                   *head = NULL;
 
     sfw_info = (sfw_info_t *) ctx.feature_state(FTE_FEATURE_SFW);
-    if (ctx.protobuf_request() || 
+    if (ctx.protobuf_request() ||
         ctx.role() == hal::FLOW_ROLE_RESPONDER) {
         return fte::PIPELINE_CONTINUE;
     }
     if (sfw_info->alg_proto != nwsec::APP_SVC_DNS) {
         return fte::PIPELINE_CONTINUE;
     }
- 
+
     alg_state = ctx.feature_session_state();
     if (alg_state != NULL) {
         /* Session already exists - DNS response packet */
-        l4_sess = (l4_alg_status_t *) alg_status(alg_state); 
+        l4_sess = (l4_alg_status_t *) alg_status(alg_state);
         if (!l4_sess) {
             HAL_TRACE_DEBUG("DNS ALG - L4 session is NULL");
             return fte::PIPELINE_CONTINUE;

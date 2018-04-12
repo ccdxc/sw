@@ -11,14 +11,14 @@
 namespace hal {
 
 static inline void
-qos_class_lock (qos_class_t *qos_class, 
+qos_class_lock (qos_class_t *qos_class,
                 const char *fname, int lineno, const char *fxname)
 {
     HAL_SPINLOCK_LOCK(&qos_class->slock);
 }
 
 static inline void
-qos_class_unlock (qos_class_t *qos_class, 
+qos_class_unlock (qos_class_t *qos_class,
                   const char *fname, int lineno, const char *fxname)
 {
     HAL_SPINLOCK_UNLOCK(&qos_class->slock);
@@ -708,7 +708,7 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create abort cb {}");
+    HAL_TRACE_DEBUG("create abort cb");
 
     // 1. delete call to PD
     if (qos_class->pd) {
@@ -1478,7 +1478,7 @@ qosclass_delete (QosClassDeleteRequest& req, QosClassDeleteResponse *rsp)
     HAL_TRACE_DEBUG("deleting qos_class {} handle {}",
                     qos_class->key, qos_class->hal_handle);
 
-    // validate if there no objects referring this qos-class 
+    // validate if there no objects referring this qos-class
     ret = validate_qos_class_delete(qos_class);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("qos_class delete validation failed, err : {}", ret);
@@ -2029,7 +2029,7 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp = (copp_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create abort cb {}");
+    HAL_TRACE_DEBUG("create abort cb");
 
     // 1. delete call to PD
     if (copp->pd) {

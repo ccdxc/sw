@@ -160,7 +160,7 @@ rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
     if (ret != HAL_RET_OK) {
         goto cleanup;
     }
-    
+
     // instantiate RAWR CB
     rawrcb = rawrcb_alloc_init();
     if (rawrcb == NULL) {
@@ -170,15 +170,15 @@ rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
     }
 
     rawrcb->cb_id = spec.key_or_handle().rawrcb_id();
-    rawrcb->rawrcb_flags = spec.rawrcb_flags(); 
-    rawrcb->chain_rxq_base = spec.chain_rxq_base(); 
-    rawrcb->chain_rxq_ring_indices_addr = spec.chain_rxq_ring_indices_addr(); 
+    rawrcb->rawrcb_flags = spec.rawrcb_flags();
+    rawrcb->chain_rxq_base = spec.chain_rxq_base();
+    rawrcb->chain_rxq_ring_indices_addr = spec.chain_rxq_ring_indices_addr();
     rawrcb->chain_rxq_ring_size_shift = spec.chain_rxq_ring_size_shift();
     rawrcb->chain_rxq_entry_size_shift = spec.chain_rxq_entry_size_shift();
     rawrcb->chain_rxq_ring_index_select = spec.chain_rxq_ring_index_select();
 
-    rawrcb->chain_txq_base = spec.chain_txq_base(); 
-    rawrcb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr(); 
+    rawrcb->chain_txq_base = spec.chain_txq_base();
+    rawrcb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr();
     rawrcb->chain_txq_ring_size_shift = spec.chain_txq_ring_size_shift();
     rawrcb->chain_txq_entry_size_shift = spec.chain_txq_entry_size_shift();
     rawrcb->chain_txq_ring_index_select = spec.chain_txq_ring_index_select();
@@ -221,7 +221,7 @@ cleanup:
 hal_ret_t
 rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
 {
-    hal_ret_t               ret = HAL_RET_OK; 
+    hal_ret_t               ret = HAL_RET_OK;
     rawrcb_t*               rawrcb;
     pd::pd_rawrcb_update_args_t    pd_rawrcb_args;
 
@@ -232,16 +232,16 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_RAWR_CB_NOT_FOUND;
     }
-    
-    rawrcb->rawrcb_flags = spec.rawrcb_flags(); 
-    rawrcb->chain_rxq_base = spec.chain_rxq_base(); 
-    rawrcb->chain_rxq_ring_indices_addr = spec.chain_rxq_ring_indices_addr(); 
+
+    rawrcb->rawrcb_flags = spec.rawrcb_flags();
+    rawrcb->chain_rxq_base = spec.chain_rxq_base();
+    rawrcb->chain_rxq_ring_indices_addr = spec.chain_rxq_ring_indices_addr();
     rawrcb->chain_rxq_ring_size_shift = spec.chain_rxq_ring_size_shift();
     rawrcb->chain_rxq_entry_size_shift = spec.chain_rxq_entry_size_shift();
     rawrcb->chain_rxq_ring_index_select = spec.chain_rxq_ring_index_select();
 
-    rawrcb->chain_txq_base = spec.chain_txq_base(); 
-    rawrcb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr(); 
+    rawrcb->chain_txq_base = spec.chain_txq_base();
+    rawrcb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr();
     rawrcb->chain_txq_ring_size_shift = spec.chain_txq_ring_size_shift();
     rawrcb->chain_txq_entry_size_shift = spec.chain_txq_entry_size_shift();
     rawrcb->chain_txq_ring_index_select = spec.chain_txq_ring_index_select();
@@ -251,17 +251,17 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
 
     pd::pd_rawrcb_update_args_init(&pd_rawrcb_args);
     pd_rawrcb_args.rawrcb = rawrcb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWRCB_UPDATE, (void *)&pd_rawrcb_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD RAWRCB: Update Failed, err: ", ret);
+        HAL_TRACE_ERR("PD RAWRCB: Update Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
+
     // fill stats of this RAWR CB
     rsp->set_api_status(types::API_STATUS_OK);
- 
+
     return HAL_RET_OK;
 }
 
@@ -271,7 +271,7 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
 hal_ret_t
 rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
 {
-    hal_ret_t               ret = HAL_RET_OK; 
+    hal_ret_t               ret = HAL_RET_OK;
     rawrcb_t                rrawrcb;
     rawrcb_t*               rawrcb;
     pd::pd_rawrcb_get_args_t    pd_rawrcb_args;
@@ -283,12 +283,12 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_RAWR_CB_NOT_FOUND;
     }
-    
+
     rawrcb_init(&rrawrcb);
     rrawrcb.cb_id = rawrcb->cb_id;
     pd::pd_rawrcb_get_args_init(&pd_rawrcb_args);
     pd_rawrcb_args.rawrcb = &rrawrcb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWRCB_GET, (void *)&pd_rawrcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWRCB: Failed to get, err: {}", ret);
@@ -296,9 +296,9 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
         return HAL_RET_HW_FAIL;
     }
 
-    // fill config spec of this RAWR CB 
+    // fill config spec of this RAWR CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_rawrcb_id(rrawrcb.cb_id);
-    
+
     rsp->mutable_spec()->set_rawrcb_flags(rrawrcb.rawrcb_flags);
     rsp->mutable_spec()->set_chain_rxq_base(rrawrcb.chain_rxq_base);
     rsp->mutable_spec()->set_chain_rxq_ring_indices_addr(rrawrcb.chain_rxq_ring_indices_addr);
@@ -341,7 +341,7 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
 hal_ret_t
 rawrcb_delete (rawrcb::RawrCbDeleteRequest& req, rawrcb::RawrCbDeleteResponseMsg *rsp)
 {
-    hal_ret_t               ret = HAL_RET_OK; 
+    hal_ret_t               ret = HAL_RET_OK;
     rawrcb_t*               rawrcb;
     pd::pd_rawrcb_args_t    pd_rawrcb_args;
     pd::pd_rawrcb_delete_args_t    del_args;
@@ -352,22 +352,22 @@ rawrcb_delete (rawrcb::RawrCbDeleteRequest& req, rawrcb::RawrCbDeleteResponseMsg
         rsp->add_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;
     }
- 
+
     pd::pd_rawrcb_delete_args_init(&del_args);
     del_args.r_args = &pd_rawrcb_args;
 
     pd_rawrcb_args.rawrcb = rawrcb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWRCB_DELETE, (void *)&del_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWRCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
+
     // fill stats of this RAWR CB
     rsp->add_api_status(types::API_STATUS_OK);
- 
+
     return HAL_RET_OK;
 }
 

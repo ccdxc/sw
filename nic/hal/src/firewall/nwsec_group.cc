@@ -171,7 +171,7 @@ nwsec_policy_cfg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_plcy_cfg = (nwsec_policy_cfg_t *) dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:sg_id {} handle {}",
+    HAL_TRACE_DEBUG("{}:sg_id {} peer_sg_id: {} handle {}",
                     __FUNCTION__,
                     nwsec_plcy_cfg->plcy_key.sg_id,
                     nwsec_plcy_cfg->plcy_key.peer_sg_id,
@@ -726,7 +726,7 @@ add_nw_to_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
 
     nwsec_grp = nwsec_group_lookup_by_key(sg_id);
     if (nwsec_grp == NULL) {
-        HAL_TRACE_DEBUG("segment id {} not found");
+        HAL_TRACE_DEBUG("segment id {} not found", sg_id);
         return HAL_RET_SG_NOT_FOUND;
     }
 
@@ -760,7 +760,7 @@ del_nw_from_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
 
     nwsec_grp = nwsec_group_lookup_by_key(sg_id);
     if (nwsec_grp == NULL) {
-        HAL_TRACE_DEBUG("segment id {} not found");
+        HAL_TRACE_DEBUG("segment id {} not found", sg_id);
         return HAL_RET_SG_NOT_FOUND;
     }
     HAL_SPINLOCK_LOCK(&nwsec_grp->slock);
@@ -806,7 +806,7 @@ add_ep_to_security_group(uint32_t sg_id, hal_handle_t ep_handle_id)
 
     nwsec_grp  = nwsec_group_lookup_by_key(sg_id);
     if (nwsec_grp == NULL) {
-        HAL_TRACE_DEBUG("segment id {} not found");
+        HAL_TRACE_DEBUG("segment id {} not found", sg_id);
         return HAL_RET_SG_NOT_FOUND;
     }
 
@@ -838,7 +838,7 @@ del_ep_from_security_group(uint32_t sg_id, hal_handle_t ep_handle_id)
 
     nwsec_grp = nwsec_group_lookup_by_key(sg_id);
     if (nwsec_grp == NULL) {
-        HAL_TRACE_DEBUG("segment id {} not found");
+        HAL_TRACE_DEBUG("segment id {} not found", sg_id);
         return HAL_RET_SG_NOT_FOUND;
     }
 
@@ -1527,7 +1527,7 @@ nwsec_policy_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t     hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }

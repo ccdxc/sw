@@ -105,7 +105,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 
     // validate the request message
     ret = validate_ipseccb_create(spec, rsp);
-    
+
     ipseccb = ipseccb_alloc_init();
     if (ipseccb == NULL) {
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
@@ -140,7 +140,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         smac = ep_get_mac_addr(sep);
         if (smac) {
             memcpy(ipseccb->smac, smac, ETH_ADDR_LEN);
-        } 
+        }
     } else {
         HAL_TRACE_DEBUG("Src EP Lookup failed \n");
     }
@@ -149,21 +149,21 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         dmac = ep_get_mac_addr(dep);
         if (dmac) {
             memcpy(ipseccb->dmac, dmac, ETH_ADDR_LEN);
-        } 
+        }
     } else {
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
-    
+
     ipseccb->vrf_vlan = (int16_t)spec.vrf_vlan();
     ipseccb->is_v6 = spec.is_v6();
     ipseccb->is_nat_t = spec.is_nat_t();
     ipseccb->is_random = spec.is_random();
     ipseccb->extra_pad = spec.extra_pad();
-    ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6()); 
+    ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6());
     ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
-     
-    HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {} \n", ipaddr2str(&ipseccb->sip6), ipaddr2str(&ipseccb->dip6)); 
-     
+
+    HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {} \n", ipaddr2str(&ipseccb->sip6), ipaddr2str(&ipseccb->dip6));
+
     ipseccb->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming
@@ -175,7 +175,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
         goto cleanup;
     }
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_CREATE, 
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_CREATE,
                           (void *)&pd_ipseccb_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSEC CB decrypt create failure, err : {}", ret);
@@ -204,7 +204,7 @@ cleanup:
 hal_ret_t
 ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 {
-    hal_ret_t              ret = HAL_RET_OK; 
+    hal_ret_t              ret = HAL_RET_OK;
     ipseccb_t*               ipseccb;
     pd::pd_ipseccb_update_args_t    pd_ipseccb_args;
     ep_t *sep, *dep;
@@ -219,10 +219,10 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_IPSEC_CB_NOT_FOUND;
     }
- 
+
     pd::pd_ipseccb_update_args_init(&pd_ipseccb_args);
     pd_ipseccb_args.ipseccb = ipseccb;
-    
+
     ipseccb->iv_size = spec.iv_size();
     ipseccb->icv_size = spec.icv_size();
     ipseccb->block_size = spec.block_size();
@@ -238,16 +238,16 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 
     ipseccb->tunnel_sip4 = spec.tunnel_sip4();
     ipseccb->tunnel_dip4 = spec.tunnel_dip4();
-   
-    ipseccb->vrf_vlan = (uint16_t)spec.vrf_vlan(); 
+
+    ipseccb->vrf_vlan = (uint16_t)spec.vrf_vlan();
     ipseccb->is_v6 = spec.is_v6();
     ipseccb->is_nat_t = spec.is_nat_t();
     ipseccb->is_random = spec.is_random();
     ipseccb->extra_pad = spec.extra_pad();
-    ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6()); 
+    ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6());
     ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
-     
-    HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {}\n", ipaddr2str(&ipseccb->sip6), ipaddr2str(&ipseccb->dip6)); 
+
+    HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {}\n", ipaddr2str(&ipseccb->sip6), ipaddr2str(&ipseccb->dip6));
     vrf = vrf_get_infra_vrf();
     if (vrf) {
         tid = vrf->vrf_id;
@@ -259,7 +259,7 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         smac = ep_get_mac_addr(sep);
         if (smac) {
             memcpy(ipseccb->smac, smac, ETH_ADDR_LEN);
-        } 
+        }
     } else {
         HAL_TRACE_DEBUG("Src EP Lookup failed \n");
     }
@@ -268,26 +268,26 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         dmac = ep_get_mac_addr(dep);
         if (dmac) {
             memcpy(ipseccb->dmac, dmac, ETH_ADDR_LEN);
-        } 
+        }
     } else {
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_UPDATE, (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: ", ret);
+        HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_UPDATE, 
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_UPDATE,
                           (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: ", ret);
+        HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
+
     rsp->set_api_status(types::API_STATUS_OK);
- 
+
     return HAL_RET_OK;
 }
 
@@ -297,7 +297,7 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 hal_ret_t
 ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
 {
-    hal_ret_t              ret = HAL_RET_OK; 
+    hal_ret_t              ret = HAL_RET_OK;
     ipseccb_t                ripseccb;
     ipseccb_t*               ipseccb;
     pd::pd_ipseccb_get_args_t    pd_ipseccb_args;
@@ -310,12 +310,12 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_IPSEC_CB_NOT_FOUND;
     }
-    
+
     ipseccb_init(&ripseccb);
     ripseccb.cb_id = ipseccb->cb_id;
     pd::pd_ipseccb_get_args_init(&pd_ipseccb_args);
     pd_ipseccb_args.ipseccb = &ripseccb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_GET, (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: Failed to get, err: {}", ret);
@@ -323,7 +323,7 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
         return HAL_RET_HW_FAIL;
     }
 
-    // fill config spec of this IPSEC CB 
+    // fill config spec of this IPSEC CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_ipseccb_id(ripseccb.cb_id);
 
     rsp->mutable_spec()->set_iv_size(ripseccb.iv_size);
@@ -338,7 +338,7 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_spi(ripseccb.spi);
     rsp->mutable_spec()->set_new_spi(ripseccb.new_spi);
     rsp->mutable_spec()->set_barco_enc_cmd(ripseccb.barco_enc_cmd);
-    
+
     rsp->mutable_spec()->set_tunnel_sip4(ripseccb.tunnel_sip4);
     rsp->mutable_spec()->set_tunnel_dip4(ripseccb.tunnel_dip4);
 
@@ -355,7 +355,7 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
 
     // fill stats of this IPSEC CB
     rsp->set_api_status(types::API_STATUS_OK);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_GET, 
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_GET,
                           (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Decrypt IPSECCB: Failed to get, err: {}", ret);
@@ -375,7 +375,7 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
 hal_ret_t
 ipseccb_delete (ipseccb::IpsecCbDeleteRequest& req, ipseccb::IpsecCbDeleteResponseMsg *rsp)
 {
-    hal_ret_t              ret = HAL_RET_OK; 
+    hal_ret_t              ret = HAL_RET_OK;
     ipseccb_t*               ipseccb;
     pd::pd_ipseccb_delete_args_t    pd_ipseccb_args;
 
@@ -385,25 +385,25 @@ ipseccb_delete (ipseccb::IpsecCbDeleteRequest& req, ipseccb::IpsecCbDeleteRespon
         rsp->add_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;
     }
- 
+
     pd::pd_ipseccb_delete_args_init(&pd_ipseccb_args);
     pd_ipseccb_args.ipseccb = ipseccb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DELETE, (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_DELETE, 
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_DELETE,
                           (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
-    
+
+
     // fill stats of this IPSEC CB
     rsp->add_api_status(types::API_STATUS_OK);
 

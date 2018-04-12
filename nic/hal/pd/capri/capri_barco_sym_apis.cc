@@ -57,7 +57,7 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
     }
     HAL_TRACE_DEBUG("SYM Hash {}-{}: Allocated memory for input mem @ {:x}",
 		    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
-		    ilist_mem_addr); 
+		    ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
 				NULL, &auth_tag_mem_addr);
@@ -68,7 +68,7 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
     }
     HAL_TRACE_DEBUG("SYM Hash {}-{}: Allocated memory for auth-tag mem @ {:x}",
 		    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
-		    auth_tag_mem_addr); 
+		    auth_tag_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
 				NULL, &status_addr);
@@ -110,7 +110,7 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
 
     /* Copy the data input to the ilist memory */
     curr_ptr = ilist_mem_addr;
-    
+
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)data, data_len)) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write data bytes into ilist memory @ {:x}",
 		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
@@ -223,7 +223,7 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
         HAL_TRACE_ERR("SYM Hash {}-{}: Invalid Hash request",
 		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         ret = HAL_RET_INVALID_ARG;
-        goto cleanup;      
+        goto cleanup;
     }
 
     sym_req_descr.key_descr_idx = hmac_key_descr_idx;
@@ -322,6 +322,7 @@ cleanup:
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_FREE_KEY, (void *)&args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to free key descriptor @ {:x}",
+			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  hmac_key_descr_idx);
         }
     }
@@ -382,7 +383,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
     }
     HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for input mem @ {:x}",
 		    capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
-		    ilist_mem_addr); 
+		    ilist_mem_addr);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_SYM_MSG_DESCR,
@@ -427,7 +428,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
     }
     HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for auth-tag mem @ {:x}",
 		    capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
-		    auth_tag_mem_addr); 
+		    auth_tag_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
 				NULL, &status_addr);
@@ -670,7 +671,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
         HAL_TRACE_ERR("SYMM Encrypt {}-{}: Invalid Hash request",
 		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         ret = HAL_RET_INVALID_ARG;
-        goto cleanup;      
+        goto cleanup;
     }
 
     sym_req_descr.key_descr_idx = aes_key_descr_idx;
@@ -838,7 +839,9 @@ cleanup:
         // ret = pd_crypto_free_key(aes_key_descr_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free key descriptor @ {:x}",
-			  aes_key_descr_idx);
+                          capri_barco_symm_enctype_name(enc_type),
+                          encrypt ? "encrypt" : "decrypt",
+                          aes_key_descr_idx);
         }
     }
 

@@ -381,7 +381,7 @@ validate_port_create (PortSpec& spec, PortResponse *rsp)
     // port type
     str = "port type";
     if (spec.port_type() == ::port::PORT_TYPE_NONE) {
-        HAL_TRACE_ERR("not set in request",
+        HAL_TRACE_ERR("not set in request {}",
                        str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_TYPE_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -390,7 +390,7 @@ validate_port_create (PortSpec& spec, PortResponse *rsp)
     // port speed
     str = "port speed";
     if (spec.port_speed() == ::port::PORT_SPEED_NONE) {
-        HAL_TRACE_ERR("not set in request",
+        HAL_TRACE_ERR("not set in request {}",
                        str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_SPEED_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -399,7 +399,7 @@ validate_port_create (PortSpec& spec, PortResponse *rsp)
     // number of lanes for the port
     str = "number of lanes";
     if (spec.num_lanes() == 0) {
-        HAL_TRACE_ERR("not set in request",
+        HAL_TRACE_ERR("not set in request {}",
                        str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_NUM_LANES_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -702,7 +702,7 @@ validate_port_update (PortSpec& spec, PortResponse*rsp)
     // must have key-handle set
     str = "key_or_handle";
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("not set in update request",
+        HAL_TRACE_ERR("{} not set in update request",
                        str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_ID_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -711,7 +711,7 @@ validate_port_update (PortSpec& spec, PortResponse*rsp)
     // port type must not be set in update
     str = "port type";
     if (spec.port_type() != ::port::PORT_TYPE_NONE) {
-        HAL_TRACE_ERR("set in update request",
+        HAL_TRACE_ERR("{} set in update request",
                        str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_TYPE_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -720,7 +720,7 @@ validate_port_update (PortSpec& spec, PortResponse*rsp)
     // number of lanes must not be set in update
     str = "number of lanes";
     if (spec.num_lanes() != 0) {
-        HAL_TRACE_ERR("set in update request",
+        HAL_TRACE_ERR("{} set in update request",
                        str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_NUM_LANES_INVALID);
         return HAL_RET_INVALID_ARG;

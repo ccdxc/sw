@@ -16,13 +16,13 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // Tunnel If Create
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_tunnelif_create(pd_if_create_args_t *args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;;
     pd_tunnelif_t        *pd_tunnelif;
 
-    HAL_TRACE_DEBUG(":{}: Creating pd state for Tunnelif: {}", 
+    HAL_TRACE_DEBUG(":{}: Creating pd state for Tunnelif: {}",
                     __FUNCTION__, if_get_if_id(args->intf));
 
     // Create Tunnel If PD
@@ -120,7 +120,7 @@ pd_tunnelif_get (pd_if_get_args_t *args)
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Tunnel IF
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_tunnelif_alloc_res(pd_tunnelif_t *pd_tunnelif)
 {
     /*
@@ -133,7 +133,7 @@ pd_tunnelif_alloc_res(pd_tunnelif_t *pd_tunnelif)
 // ----------------------------------------------------------------------------
 // De-Allocate resources for PD Tunnel IF
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_tunnelif_dealloc_res(pd_tunnelif_t *pd_tunnelif)
 {
     /*
@@ -147,9 +147,9 @@ pd_tunnelif_dealloc_res(pd_tunnelif_t *pd_tunnelif)
 // PD TunnelIf Cleanup
 //  - Release all resources
 //  - Delink PI <-> PD
-//  - Free PD If 
+//  - Free PD If
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -166,8 +166,8 @@ pd_tunnelif_cleanup(pd_tunnelif_t *pd_tunnelif)
     // Releasing resources
     ret = pd_tunnelif_dealloc_res(pd_tunnelif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}: unable to dealloc res for enicif: {}", 
-                      __FUNCTION__, 
+        HAL_TRACE_ERR("pd-enicif:{}: unable to dealloc res for enicif: {}",
+                      __FUNCTION__,
                       ((if_t *)(pd_tunnelif->pi_if))->if_id);
         goto end;
     }
@@ -189,14 +189,14 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif)
 {
     hal_ret_t            ret;
     if_t                 *hal_if;
-    
+
     hal_if = (if_t *) pd_tunnelif->pi_if;
     HAL_ASSERT(hal_if != NULL);
-    
+
     ret = pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif);
     if (ret != HAL_RET_OK)
         goto fail_flag;
-    
+
     /* Tunnel termination required only for vxlan */
     if (hal_if->encap_type ==
             intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
@@ -209,11 +209,11 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif)
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
             goto fail_flag;
     }
-    
+
     return HAL_RET_OK;
 
 fail_flag:
-    HAL_TRACE_ERR("{}:unable to program hw");
+    HAL_TRACE_ERR("unable to program hw");
     return ret;
     // return (pd_tunnelif_deprogram_hw(pd_tunnelif));
 }
@@ -343,7 +343,7 @@ pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif)
     if (pi_if->vxlan_ltep.af == IP_AF_IPV4) {
         v4_tep = true;
     }
-    
+
     /* We program 3 entries for every MyTEP */
     /* Entry 1 */
     ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
@@ -390,7 +390,7 @@ pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif)
     if (pi_if->vxlan_ltep.af == IP_AF_IPV4) {
         v4_tep = true;
     }
-    
+
     /* We program 3 entries for every MyTEP */
     /* Entry 1 */
     ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
@@ -434,14 +434,14 @@ pd_tunnelif_add_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif, uint8_t actionid,
     directmap                   *dm;
     tunnel_rewrite_actiondata   d = { 0 };
     uint32_t                    idx;
-    
+
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
     HAL_ASSERT(dm != NULL);
     HAL_ASSERT(pd_tif != NULL);
-    
+
     d.actionid = actionid;
     d.tunnel_rewrite_action_u = *act;
-    
+
     // insert the entry
     sdk_ret = dm->insert(&d, &idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -485,7 +485,7 @@ pd_tunnelif_del_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif)
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
     HAL_ASSERT(dm != NULL);
     HAL_ASSERT(pd_tif != NULL);
-    
+
     // remove the entry
     if (pd_tif->tunnel_rw_idx != -1) {
         sdk_ret = dm->remove(pd_tif->tunnel_rw_idx);
@@ -514,7 +514,7 @@ pd_tunnelif_get_p4pd_encap_action_id (intf::IfTunnelEncapType encap_type)
 }
 
 hal_ret_t
-pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key, 
+pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
                        pd_tunnelif_t *pd_tif)
 {
     hal_ret_t   ret            = HAL_RET_OK;
@@ -538,15 +538,15 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     rtep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
     HAL_ABORT_TRACE(rtep_ep, "ABORT:{}: should have caught in PI",
                     __FUNCTION__);
-    
+
     l2seg = l2seg_lookup_by_handle(rtep_ep->l2seg_handle);
     HAL_ABORT_TRACE(l2seg, "ABORT:{}: EP should not exist with no l2seg",
                     __FUNCTION__);
-    
+
     ep_if = find_if_by_handle(rtep_ep->if_handle);
     HAL_ABORT_TRACE(ep_if, "ABORT:{}: EP should not exist with no IF",
                     __FUNCTION__);
-    
+
     ret = if_l2seg_get_encap(ep_if, l2seg, &vlan_v, &vlan_id);
     HAL_ABORT_TRACE(ret == HAL_RET_OK, "ABORT:{}: EP presence means "
                     "l2seg should be UP on IF",
@@ -628,21 +628,21 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
     memset(&act, 0, sizeof(tunnel_rewrite_action_union_t));
     pi_if = (if_t *) pd_tif->pi_if;
     HAL_ASSERT(pi_if);
-    
+
     actionid = pd_tunnelif_get_p4pd_encap_action_id (pi_if->encap_type);
-    
+
     remote_tep_ep = if_get_tunnelif_remote_tep_ep(pi_if, &v4_valid);
     HAL_ASSERT(remote_tep_ep);
-    
+
     l2seg = l2seg_lookup_by_handle(remote_tep_ep->l2seg_handle);
     HAL_ASSERT(l2seg);
-    
+
     ep_if = find_if_by_handle(remote_tep_ep->if_handle);
     HAL_ASSERT(ep_if);
-    
+
     ret = if_l2seg_get_encap(ep_if, l2seg, &vlan_v, &vlan_id);
     HAL_ASSERT(ret == HAL_RET_OK);
-    
+
     if (actionid == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
         /* Populate vxlan encap params */
         /* MAC DA */
@@ -680,7 +680,7 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
     ret = pd_tunnelif_add_tunnel_rw_table_entry (pd_tif, actionid, &act);
     if (ret != HAL_RET_OK)
         goto fail_flag;
-    
+
     return ret;
 
 fail_flag:

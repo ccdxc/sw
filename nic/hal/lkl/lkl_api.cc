@@ -15,7 +15,7 @@ struct lkl_netdev *lkl_register_netdev_fd(int fd);
 namespace hal {
 namespace pd {
 
-static void lkl_printk(const char *str, int len) 
+static void lkl_printk(const char *str, int len)
 {
     char* mystr = (char*) str;
     mystr[len-1]='\0';
@@ -36,15 +36,15 @@ int lkl_init(void) {
     lkl_host_ops.print = lkl_printk;
     ret = lkl_start_kernel(&lkl_host_ops, "mem=16M loglevel=8");
     if (ret) {
-        HAL_TRACE_DEBUG("LKL could not be started: %s\n", lkl_strerror(ret));
+        HAL_TRACE_DEBUG("LKL could not be started: {}", lkl_strerror(ret));
         return HAL_RET_ERR;
     }
     host_dev = lkl_dev_get_by_name("eth0");
     net_dev = lkl_dev_get_by_name("eth1");
     host_ns = lkl_create_net_ns();
     net_ns = lkl_create_net_ns();
-    lkl_dev_net_set(host_dev, host_ns); 
-    lkl_dev_net_set(net_dev, net_ns); 
+    lkl_dev_net_set(host_dev, host_ns);
+    lkl_dev_net_set(net_dev, net_ns);
 
     lkl_skb_init();
     hal::lklshim_flowdb_init();
@@ -55,7 +55,7 @@ int lkl_init(void) {
 
 void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, size_t pkt_len, hal::flow_direction_t direction) {
     if (rxhdr == NULL) {
-        HAL_TRACE_DEBUG("LKL call!"); 
+        HAL_TRACE_DEBUG("LKL call!");
         return NULL;
     }
     HAL_TRACE_DEBUG("Allocating SKBUFF direction {} host_dev {} net_dev {}\n",
@@ -96,7 +96,7 @@ void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, 
     if (skb) {
         lkl_skb_reserve(skb);
         lkl_skb_set_mac_header(skb, rxhdr->l2_offset);
-        HAL_TRACE_DEBUG("lkl_alloc_skbuff : l3 offset = {} l4 offset = {}", 
+        HAL_TRACE_DEBUG("lkl_alloc_skbuff : l3 offset = {} l4 offset = {}",
                         rxhdr->l3_offset, rxhdr->l4_offset);
         if (rxhdr->l4_offset == -1) {
             lkl_skb_set_transport_header(skb, tpt_offset);
@@ -155,7 +155,7 @@ uint32_t lkl_get_tcpcb_snd_una(void *tcpcb)
     return lkl_tcpcb_snd_una(tcpcb);
 }
 
-uint32_t lkl_get_tcpcb_rcv_tsval(void *tcpcb) 
+uint32_t lkl_get_tcpcb_rcv_tsval(void *tcpcb)
 {
     HAL_TRACE_DEBUG("lkl_get_tcpcb_rcv_tsval : tcpcb = {}", tcpcb);
     return lkl_tcpcb_rcv_tsval(tcpcb);

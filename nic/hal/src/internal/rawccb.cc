@@ -160,7 +160,7 @@ rawccb_create (RawcCbSpec& spec, RawcCbResponse *rsp)
     if (ret != HAL_RET_OK) {
         goto cleanup;
     }
-    
+
     // instantiate RAWC CB
     rawccb = rawccb_alloc_init();
     if (rawccb == NULL) {
@@ -170,13 +170,13 @@ rawccb_create (RawcCbSpec& spec, RawcCbResponse *rsp)
     }
 
     rawccb->cb_id = spec.key_or_handle().rawccb_id();
-    rawccb->rawccb_flags = spec.rawccb_flags(); 
-    rawccb->my_txq_base = spec.my_txq_base(); 
+    rawccb->rawccb_flags = spec.rawccb_flags();
+    rawccb->my_txq_base = spec.my_txq_base();
     rawccb->my_txq_ring_size_shift = spec.my_txq_ring_size_shift();
     rawccb->my_txq_entry_size_shift = spec.my_txq_entry_size_shift();
 
-    rawccb->chain_txq_base = spec.chain_txq_base(); 
-    rawccb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr(); 
+    rawccb->chain_txq_base = spec.chain_txq_base();
+    rawccb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr();
     rawccb->chain_txq_ring_size_shift = spec.chain_txq_ring_size_shift();
     rawccb->chain_txq_entry_size_shift = spec.chain_txq_entry_size_shift();
     rawccb->chain_txq_lif = spec.chain_txq_lif();
@@ -219,7 +219,7 @@ cleanup:
 hal_ret_t
 rawccb_update (RawcCbSpec& spec, RawcCbResponse *rsp)
 {
-    hal_ret_t               ret = HAL_RET_OK; 
+    hal_ret_t               ret = HAL_RET_OK;
     rawccb_t*               rawccb;
     pd::pd_rawccb_update_args_t    pd_rawccb_args;
 
@@ -230,14 +230,14 @@ rawccb_update (RawcCbSpec& spec, RawcCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_RAWC_CB_NOT_FOUND;
     }
-    
-    rawccb->my_txq_base = spec.my_txq_base(); 
+
+    rawccb->my_txq_base = spec.my_txq_base();
     rawccb->my_txq_ring_size_shift = spec.my_txq_ring_size_shift();
     rawccb->my_txq_entry_size_shift = spec.my_txq_entry_size_shift();
 
-    rawccb->rawccb_flags = spec.rawccb_flags(); 
-    rawccb->chain_txq_base = spec.chain_txq_base(); 
-    rawccb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr(); 
+    rawccb->rawccb_flags = spec.rawccb_flags();
+    rawccb->chain_txq_base = spec.chain_txq_base();
+    rawccb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr();
     rawccb->chain_txq_ring_size_shift = spec.chain_txq_ring_size_shift();
     rawccb->chain_txq_entry_size_shift = spec.chain_txq_entry_size_shift();
     rawccb->chain_txq_lif = spec.chain_txq_lif();
@@ -247,14 +247,14 @@ rawccb_update (RawcCbSpec& spec, RawcCbResponse *rsp)
 
     pd::pd_rawccb_update_args_init(&pd_rawccb_args);
     pd_rawccb_args.rawccb = rawccb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWCCB_UPDATE, (void *)&pd_rawccb_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD RAWCCB: Update Failed, err: ", ret);
+        HAL_TRACE_ERR("PD RAWCCB: Update Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
+
     // fill stats of this RAWC CB
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
@@ -266,7 +266,7 @@ rawccb_update (RawcCbSpec& spec, RawcCbResponse *rsp)
 hal_ret_t
 rawccb_get (RawcCbGetRequest& req, RawcCbGetResponseMsg *resp)
 {
-    hal_ret_t               ret = HAL_RET_OK; 
+    hal_ret_t               ret = HAL_RET_OK;
     rawccb_t                rrawccb;
     rawccb_t*               rawccb;
     pd::pd_rawccb_get_args_t    pd_rawccb_args;
@@ -279,12 +279,12 @@ rawccb_get (RawcCbGetRequest& req, RawcCbGetResponseMsg *resp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_RAWC_CB_NOT_FOUND;
     }
-    
+
     rawccb_init(&rrawccb);
     rrawccb.cb_id = rawccb->cb_id;
     pd::pd_rawccb_get_args_init(&pd_rawccb_args);
     pd_rawccb_args.rawccb = &rrawccb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWCCB_GET, (void *)&pd_rawccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWCCB: Failed to get, err: {}", ret);
@@ -292,9 +292,9 @@ rawccb_get (RawcCbGetRequest& req, RawcCbGetResponseMsg *resp)
         return HAL_RET_HW_FAIL;
     }
 
-    // fill config spec of this RAWC CB 
+    // fill config spec of this RAWC CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_rawccb_id(rrawccb.cb_id);
-    
+
     rsp->mutable_spec()->set_rawccb_flags(rrawccb.rawccb_flags);
     rsp->mutable_spec()->set_my_txq_base(rrawccb.my_txq_base);
     rsp->mutable_spec()->set_my_txq_ring_size_shift(rrawccb.my_txq_ring_size_shift);
@@ -335,7 +335,7 @@ rawccb_get (RawcCbGetRequest& req, RawcCbGetResponseMsg *resp)
 hal_ret_t
 rawccb_delete (rawccb::RawcCbDeleteRequest& req, rawccb::RawcCbDeleteResponse *rsp)
 {
-    hal_ret_t               ret = HAL_RET_OK; 
+    hal_ret_t               ret = HAL_RET_OK;
     rawccb_t*               rawccb;
     pd::pd_rawccb_args_t    pd_rawccb_args;
     pd::pd_rawccb_delete_args_t    del_args;
@@ -346,18 +346,18 @@ rawccb_delete (rawccb::RawcCbDeleteRequest& req, rawccb::RawcCbDeleteResponse *r
         rsp->set_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;
     }
- 
+
     pd::pd_rawccb_delete_args_init(&del_args);
     del_args.r_args = &pd_rawccb_args;
     pd_rawccb_args.rawccb = rawccb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWCCB_DELETE, (void *)&del_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWCCB: delete Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
+
     // fill stats of this RAWC CB
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

@@ -2190,7 +2190,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ADD_L2SEG_UPLINK,
                           (void *)&pd_l2seg_uplink_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Failed in pd, ret : {}", ret);
+        HAL_TRACE_ERR("Failed in pd, ret : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
         goto end;
     }
@@ -2268,7 +2268,7 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_DEL_L2SEG_UPLINK,
                           (void *)&pd_l2seg_uplink_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Failed in pd, ret : {}", ret);
+        HAL_TRACE_ERR("Failed in pd, ret {}:", ret);
         goto end;
     }
 
@@ -3910,7 +3910,7 @@ uplinkif_add_uplinkpc (if_t *upif, if_t *uppc)
 
 end:
 
-    HAL_TRACE_DEBUG("{}: add uplinkif => uplinkpc , {} => {}",
+    HAL_TRACE_DEBUG("add uplinkif => uplinkpc , {} => {}",
                     upif->if_id, uppc->if_id);
     return ret;
 }

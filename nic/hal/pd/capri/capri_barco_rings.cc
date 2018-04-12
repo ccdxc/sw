@@ -264,7 +264,7 @@ hal_ret_t capri_barco_ring_common_init(capri_barco_ring_t *barco_ring)
         HAL_TRACE_ERR("Failed to retrieve aligned Barco Ring memory region for {}", barco_ring->ring_name);
         return HAL_RET_ERR;
     }
-    
+
     ring_size = get_size_kb(barco_ring->hbm_region) * 1024;
     if (ring_size < (uint32_t)(barco_ring->ring_size * barco_ring->descriptor_size)) {
         HAL_TRACE_ERR("Not enough memory for Barco Ring memory region {}", barco_ring->ring_name);
@@ -289,7 +289,7 @@ hal_ret_t capri_barco_asym_key_array_init(void)
         HAL_TRACE_ERR("Could not retrieve the Asym Crypto Key Descr region");
         return ret;
     }
-    
+
     ret = capri_barco_res_obj_count_get(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, &asym_key_array_key_count);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Could not retrieve the Asym Crypto Key Descr count");
@@ -363,7 +363,7 @@ bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 
     if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag, sizeof(curr_opaque_tag))) {
         HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr); 
+                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
@@ -391,11 +391,11 @@ hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
     asym_req_descr->opage_tag_wr_en = 1;
 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
-    
+
     if (capri_hbm_write_mem(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
         HAL_TRACE_ERR("Failed to write descriptor entry for {}  @ {:x}",
                 barco_ring->ring_name,
-                (uint64_t) slot_addr); 
+                (uint64_t) slot_addr);
         ret = HAL_RET_INVALID_ARG;
     }
     else {
@@ -669,7 +669,7 @@ bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
 			   sizeof(curr_opaque_tag))) {
         HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr); 
+                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
@@ -724,11 +724,11 @@ hal_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring, v
 #endif
 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
-    
+
     if (capri_hbm_write_mem(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
         HAL_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
                 barco_ring->ring_name,
-                (uint64_t) slot_addr); 
+                (uint64_t) slot_addr);
         ret = HAL_RET_INVALID_ARG;
     }
     else {
@@ -1057,7 +1057,7 @@ bool capri_barco_gcm0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
 			   sizeof(curr_opaque_tag))) {
         HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr); 
+                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
@@ -1112,11 +1112,11 @@ hal_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring, 
 #endif
 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
-    
+
     if (capri_hbm_write_mem(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
         HAL_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
                 barco_ring->ring_name,
-                (uint64_t) slot_addr); 
+                (uint64_t) slot_addr);
         ret = HAL_RET_INVALID_ARG;
     }
 
@@ -1221,8 +1221,8 @@ hal_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
         return ret;
     }
 
-    /* 
-     * Soft reset entire compression block; 
+    /*
+     * Soft reset entire compression block;
      * also set the header version
      */
     hens.dhs_crypto_ctl.cp_cfg_glb.read();
@@ -1263,7 +1263,7 @@ hal_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
      * Enable warm queue
      */
     hens.dhs_crypto_ctl.cp_cfg_dist.read();
-    reg_lo = (hens.dhs_crypto_ctl.cp_cfg_dist.fld().convert_to<uint32_t>()  & 
+    reg_lo = (hens.dhs_crypto_ctl.cp_cfg_dist.fld().convert_to<uint32_t>()  &
               ~BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE(BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_MASK)) |
              BARCO_CRYPTO_CP_DIST_DESC_Q_EN                                             |
              BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE(BARCO_CRYPTO_CP_RING_SIZE);
@@ -1348,8 +1348,8 @@ hal_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring)
         return ret;
     }
 
-    /* 
-     * Soft reset entire decompression block; 
+    /*
+     * Soft reset entire decompression block;
      * also set the header version
      */
     hens.dhs_crypto_ctl.dc_cfg_glb.read();
@@ -1470,7 +1470,7 @@ bool capri_barco_gcm1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
 			   sizeof(curr_opaque_tag))) {
         HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr); 
+                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
@@ -1525,11 +1525,11 @@ hal_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring, 
 #endif
 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
-    
+
     if (capri_hbm_write_mem(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
         HAL_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
                 barco_ring->ring_name,
-                (uint64_t) slot_addr); 
+                (uint64_t) slot_addr);
         ret = HAL_RET_INVALID_ARG;
     }
 
@@ -1554,7 +1554,7 @@ bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag)
     if (barco_ring->poller) {
         return barco_ring->poller(barco_ring, req_tag);
     }
-    
+
     return FALSE;
 }
 
@@ -1634,7 +1634,7 @@ hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t s
     barco_symm_req_descriptor_t *req_descr;
     capri_barco_ring_t          *barco_ring;
     uint64_t                    slot_addr;
-   
+
     barco_ring = &barco_rings[ring_type];
     if (!barco_ring->ring_size || !barco_ring->ring_base) return(HAL_RET_OK);
 
@@ -1642,9 +1642,10 @@ hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t s
     uint32_t index = (slot_index % barco_ring->ring_size);
     slot_addr = barco_ring->ring_base + (index * barco_ring->descriptor_size);
     HAL_TRACE_DEBUG("{}@{:x}: Ring base {:x}, slot_addr {:x}, read size {:x}",
-		    barco_ring->ring_name, (uint64_t) slot_addr,
+		    barco_ring->ring_name, barco_ring->ring_size,
+            barco_ring->ring_base, (uint64_t) slot_addr,
 		    barco_ring->descriptor_size);
-    
+
     if (capri_hbm_read_mem(slot_addr, value, sizeof(value))) {
         HAL_TRACE_ERR("{}@{:x}: Failed to read Symmetric request descriptor entry",
                 barco_ring->ring_name,
@@ -1667,24 +1668,24 @@ hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t s
     symm_req_descr->second_key_desc_index = req_descr->second_key_descr_idx;
 
     /* IV is not directly located in the ring, hence dereference it */
-    
+
     if (req_descr->iv_address) {
-        if(capri_hbm_read_mem(req_descr->iv_address, 
+        if(capri_hbm_read_mem(req_descr->iv_address,
 	    		   (uint8_t*)&symm_req_descr->salt,
 	    		   sizeof(symm_req_descr->salt))) {
            HAL_TRACE_ERR("{}@{:x}: Failed to read the Salt information from HBM",
-	    	     barco_ring->ring_name, (uint64_t) req_descr->iv_address);  
+	    	     barco_ring->ring_name, (uint64_t) req_descr->iv_address);
         }
-        if(capri_hbm_read_mem(req_descr->iv_address + 4, 
-	    		   (uint8_t*)&symm_req_descr->explicit_iv, 
+        if(capri_hbm_read_mem(req_descr->iv_address + 4,
+	    		   (uint8_t*)&symm_req_descr->explicit_iv,
 	    		   sizeof(symm_req_descr->explicit_iv))) {
             HAL_TRACE_ERR("{}@{:x}: Failed to read the explicit IV information from HBM",
-	    	      barco_ring->ring_name, (uint64_t) (req_descr->iv_address + 4));  
+	    	      barco_ring->ring_name, (uint64_t) (req_descr->iv_address + 4));
         }
     }
     if (req_descr->status_addr) {
-        if(capri_hbm_read_mem(req_descr->status_addr, 
-	    		   (uint8_t*)&symm_req_descr->barco_status, 
+        if(capri_hbm_read_mem(req_descr->status_addr,
+	    		   (uint8_t*)&symm_req_descr->barco_status,
 	   		   sizeof(symm_req_descr->barco_status))) {
            HAL_TRACE_ERR("{}@{:x}: Failed to read the Barco Status information from HBM",
 	    	     barco_ring->ring_name, (uint64_t) req_descr->status_addr);
@@ -1733,7 +1734,7 @@ hal_ret_t capri_barco_ring_meta_get(types::BarcoRings ring_type, uint32_t *pi, u
       break;
     }
     HAL_TRACE_DEBUG("{}: PI {:x}, CI {:x}",
-		    barco_rings[ring_type].ring_name, *pi, *ci);  
+		    barco_rings[ring_type].ring_name, *pi, *ci);
     return HAL_RET_OK;
 }
 

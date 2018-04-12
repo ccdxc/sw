@@ -1336,7 +1336,7 @@ l2seg_check_update (L2SegmentSpec& spec, l2seg_t *l2seg,
                                app_ctxt->del_nwlist,
                                app_ctxt->aggr_nwlist);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to check nw list change. ret : {}");
+        HAL_TRACE_ERR("Failed to check nw list change. ret : {}", ret);
         goto end;
     }
 

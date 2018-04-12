@@ -350,11 +350,11 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
         if (key == "forwarding_mode") {
             hal_cfg->forwarding_mode = hal_get_forwarding_mode(val);
             if (hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_NONE) {
-                HAL_TRACE_ERR("Invalid forwarding mode : %u, aborting ...\n",
+                HAL_TRACE_ERR("Invalid forwarding mode : {}, aborting ...\n",
                               val);
                 HAL_ABORT(0);
             }
-            HAL_TRACE_DEBUG("NIC forwarding mode : %u\n",
+            HAL_TRACE_DEBUG("NIC forwarding mode : {}\n",
                             hal_cfg->forwarding_mode);
         }
     }

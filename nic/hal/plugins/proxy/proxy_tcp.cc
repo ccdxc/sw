@@ -252,7 +252,7 @@ tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* v
     spec.set_l7_proxy_type(l7_proxy_type);
     ret = tcpcb_create(spec, &rsp);
     if(ret != HAL_RET_OK || rsp.api_status() != types::API_STATUS_OK) {
-        HAL_TRACE_ERR("Failed to create TCP cb for id: {}, ret: {}, rsp: ",
+        HAL_TRACE_ERR("Failed to create TCP cb for id: {}, ret: {}, rsp: {}",
                         qid, ret, rsp.api_status());
         return ret;
     }
@@ -295,7 +295,7 @@ tcp_create_cb_v6(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t
     spec.set_l7_proxy_type(l7_proxy_type);
     ret = tcpcb_create(spec, &rsp);
     if(ret != HAL_RET_OK || rsp.api_status() != types::API_STATUS_OK) {
-        HAL_TRACE_ERR("Failed to create TCP cb for id: {}, ret: {}, rsp: ",
+        HAL_TRACE_ERR("Failed to create TCP cb for id: {}, ret: {}, rsp: {}",
                         qid, ret, rsp.api_status());
         return ret;
     }
@@ -402,7 +402,7 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
 
     spec->set_allocated_key_or_handle(&kh);
     if (tcp != NULL) {
-      
+
       spec->set_rcv_nxt(ntohl(tcp->seq)+1);
       HAL_TRACE_DEBUG("lkl_trigger_ack_send: rcv_nxt=0x{0:x}", ntohl(tcp->seq));
     } else {
@@ -424,9 +424,9 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
     spec->set_dest_port(get_rsp.mutable_spec()->dest_port());
     spec->set_header_len(get_rsp.mutable_spec()->header_len());
     spec->set_l7_proxy_type(get_rsp.mutable_spec()->l7_proxy_type());
-    
+
     memcpy(data,
-           get_rsp.mutable_spec()->header_template().c_str(), 
+           get_rsp.mutable_spec()->header_template().c_str(),
            std::max(get_rsp.mutable_spec()->header_template().size(), sizeof(data)));
 
     spec->set_header_template(data, sizeof(data));
@@ -551,7 +551,7 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
         return fte::PIPELINE_END;
     }
 
-    // get the flow info for the tcp proxy service 
+    // get the flow info for the tcp proxy service
     pfi = tcp_proxy_get_flow_info(flow_key);
 
     if(!pfi) {
@@ -571,7 +571,7 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
 
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
-        return fte::PIPELINE_END; 
+        return fte::PIPELINE_END;
     }
 
     return fte::PIPELINE_CONTINUE;
@@ -595,7 +595,7 @@ tcp_exec_trigger_connection(fte::ctx_t& ctx)
         // Ignore direction. Always set it to 0
         flow_key.dir = 0;
 
-        // get the flow info for the tcp proxy service 
+        // get the flow info for the tcp proxy service
         pfi = tcp_proxy_get_flow_info(flow_key);
         if (pfi) {
             args.l2seg = ctx.sl2seg();
@@ -689,12 +689,12 @@ tcp_exec(fte::ctx_t& ctx)
 }
 
 void
-tcp_transmit_pkt(unsigned char* pkt, 
-                 unsigned int len, 
-                 bool is_connect_req, 
-                 uint16_t dst_lif, 
-                 uint16_t src_lif, 
-                 hal::flow_direction_t dir, 
+tcp_transmit_pkt(unsigned char* pkt,
+                 unsigned int len,
+                 bool is_connect_req,
+                 uint16_t dst_lif,
+                 uint16_t src_lif,
+                 hal::flow_direction_t dir,
                  uint16_t hw_vlan_id)
 {
     if (gl_ctx) {

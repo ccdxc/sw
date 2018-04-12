@@ -99,7 +99,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
 
     // validate the request message
     ret = validate_tcpcb_create(spec, rsp);
-    
+
     // instantiate TCP CB
     tcpcb = tcpcb_alloc_init();
     if (tcpcb == NULL) {
@@ -130,7 +130,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->l7_proxy_type = spec.l7_proxy_type();
     tcpcb->serq_pi = spec.serq_pi();
     tcpcb->rto = spec.rto();
-    
+
     tcpcb->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming
@@ -164,7 +164,7 @@ cleanup:
 hal_ret_t
 tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
 {
-    hal_ret_t              ret = HAL_RET_OK; 
+    hal_ret_t              ret = HAL_RET_OK;
     tcpcb_t*               tcpcb;
     pd::pd_tcpcb_update_args_t    pd_tcpcb_args;
 
@@ -176,7 +176,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
     }
- 
+
     pd::pd_tcpcb_update_args_init(&pd_tcpcb_args);
     HAL_TRACE_DEBUG("rcv_nxt: 0x{0:x}", spec.rcv_nxt());
     tcpcb->rcv_nxt = spec.rcv_nxt();
@@ -202,14 +202,14 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TCPCB_UPDATE, (void *)&pd_tcpcb_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD TCPCB: Update Failed, err: ", ret);
+        HAL_TRACE_ERR("PD TCPCB: Update Failed, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
+
     // fill stats of this TCP CB
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
@@ -221,7 +221,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
 hal_ret_t
 tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
 {
-    hal_ret_t              ret = HAL_RET_OK; 
+    hal_ret_t              ret = HAL_RET_OK;
     tcpcb_t                rtcpcb;
     tcpcb_t*               tcpcb;
     pd::pd_tcpcb_get_args_t    pd_tcpcb_args;
@@ -235,12 +235,12 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
 	    rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
     }
-    
+
     tcpcb_init(&rtcpcb);
     rtcpcb.cb_id = tcpcb->cb_id;
     pd::pd_tcpcb_get_args_init(&pd_tcpcb_args);
     pd_tcpcb_args.tcpcb = &rtcpcb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TCPCB_GET, (void *)&pd_tcpcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TCPCB: Failed to get, err: {}", ret);
@@ -250,7 +250,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
 
     HAL_TRACE_DEBUG("cb_id: 0x{0:x}, rcv_nxt: 0x{0:x}", rtcpcb.cb_id, rtcpcb.rcv_nxt);
 
-    // fill config spec of this TCP CB 
+    // fill config spec of this TCP CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_tcpcb_id(rtcpcb.cb_id);
     rsp->mutable_spec()->set_rcv_nxt(rtcpcb.rcv_nxt);
     rsp->mutable_spec()->set_rx_ts(rtcpcb.rx_ts);
@@ -323,7 +323,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
 hal_ret_t
 tcpcb_delete (tcpcb::TcpCbDeleteRequest& req, tcpcb::TcpCbDeleteResponseMsg *rsp)
 {
-    hal_ret_t              ret = HAL_RET_OK; 
+    hal_ret_t              ret = HAL_RET_OK;
     tcpcb_t*               tcpcb;
     pd::pd_tcpcb_delete_args_t    pd_tcpcb_args;
 
@@ -333,17 +333,17 @@ tcpcb_delete (tcpcb::TcpCbDeleteRequest& req, tcpcb::TcpCbDeleteResponseMsg *rsp
         rsp->add_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;
     }
- 
+
     pd::pd_tcpcb_delete_args_init(&pd_tcpcb_args);
     pd_tcpcb_args.tcpcb = tcpcb;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TCPCB_DELETE, (void *)&pd_tcpcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TCPCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    
+
     // fill stats of this TCP CB
     rsp->add_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

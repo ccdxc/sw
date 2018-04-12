@@ -125,7 +125,7 @@ decode_udp_ip_header(struct interface_info *interface,
     if (((udp_packets_length_checked > 4) &&
          (udp_packets_length_overflow != 0)) &&
         ((udp_packets_length_checked / udp_packets_length_overflow) < 2)) {
-        HAL_TRACE_INFO("%u udp packets in %u too long - dropped",
+        HAL_TRACE_INFO("{} udp packets in {} too long - dropped",
                        udp_packets_length_overflow, udp_packets_length_checked);
         udp_packets_length_overflow = 0;
         udp_packets_length_checked = 0;
@@ -139,7 +139,7 @@ decode_udp_ip_header(struct interface_info *interface,
       ++ip_packets_bad_checksum;
       if (((ip_packets_seen > 4) && (ip_packets_bad_checksum != 0)) &&
           ((ip_packets_seen / ip_packets_bad_checksum) < 2)) {
-          HAL_TRACE_INFO("%u bad IP checksums seen in %u packets",
+          HAL_TRACE_INFO("{} bad IP checksums seen in {} packets",
                          ip_packets_bad_checksum, ip_packets_seen);
           ip_packets_seen = ip_packets_bad_checksum = 0;
       }
@@ -168,7 +168,7 @@ decode_udp_ip_header(struct interface_info *interface,
         udp_packets_bad_checksum++;
         if (((udp_packets_seen > 4) && (udp_packets_bad_checksum != 0))
             && ((udp_packets_seen / udp_packets_bad_checksum) < 2)) {
-            HAL_TRACE_INFO("%u bad udp checksums in %u packets",
+            HAL_TRACE_INFO("{} bad udp checksums in {} packets",
                            udp_packets_bad_checksum, udp_packets_seen);
             udp_packets_seen = udp_packets_bad_checksum = 0;
         }

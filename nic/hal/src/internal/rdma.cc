@@ -96,7 +96,7 @@ roundup_to_pow_2(uint32_t x)
 
     if (x == 1)
         return (power << 1);
-    
+
     while(power < x)
         power*=2;
     return power;
@@ -210,14 +210,14 @@ uint64_t rdma_lif_pt_base_addr(uint32_t lif)
 {
     sram_lif_entry_t    sram_lif_entry = {0};
     uint64_t            pt_table_base_addr;
-    hal_ret_t           rc;  
+    hal_ret_t           rc;
 
     rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
     HAL_ASSERT(rc == HAL_RET_OK);
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
-                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n", 
+                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n",
                     __FUNCTION__, __LINE__, lif,
-                    sram_lif_entry.pt_base_addr_page_id, 
+                    sram_lif_entry.pt_base_addr_page_id,
                     sram_lif_entry.log_num_pt_entries,
                     sram_lif_entry.rdma_en_qtype_mask);
 
@@ -231,14 +231,14 @@ uint64_t rdma_lif_kt_base_addr(uint32_t lif)
     sram_lif_entry_t    sram_lif_entry = {0};
     uint64_t            pt_table_base_addr;
     uint64_t            key_table_base_addr;
-    hal_ret_t           rc;  
+    hal_ret_t           rc;
 
     rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
     HAL_ASSERT(rc == HAL_RET_OK);
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
-                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n", 
+                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n",
                     __FUNCTION__, __LINE__, lif,
-                    sram_lif_entry.pt_base_addr_page_id, 
+                    sram_lif_entry.pt_base_addr_page_id,
                     sram_lif_entry.log_num_pt_entries,
                     sram_lif_entry.rdma_en_qtype_mask);
 
@@ -278,7 +278,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
            max_keys, max_pt_entries, g_pt_base[lif]);
 
     memset(&sram_lif_entry, 0, sizeof(sram_lif_entry_t));
-    
+
     // Some one in HAL is corruptimg and causing writting junk value to this address
     // so rest the address to zero.
     g_pt_base[lif] = 0;
@@ -313,7 +313,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     total_size = pt_size + key_table_size + HBM_PAGE_SIZE;
 
     base_addr = g_rdma_manager->HbmAlloc(total_size);
-    
+
     HAL_TRACE_DEBUG("{}: pt_size: {}, key_table_size: {}, total_size: {}, base_addr: {:#x}\n",
            __FUNCTION__, pt_size, key_table_size, total_size, base_addr);
 
@@ -322,7 +322,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
 
     // TODO: Fill prefetch data and add corresponding code
 
-    sram_lif_entry.rdma_en_qtype_mask = 
+    sram_lif_entry.rdma_en_qtype_mask =
         ((1 << Q_TYPE_RDMA_SQ) | (1 << Q_TYPE_RDMA_RQ) | (1 << Q_TYPE_RDMA_CQ) | (1 << Q_TYPE_RDMA_EQ));
     sram_lif_entry.sq_qtype = Q_TYPE_RDMA_SQ;
     sram_lif_entry.rq_qtype = Q_TYPE_RDMA_RQ;
@@ -332,10 +332,10 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
            __FUNCTION__, __LINE__,
            sram_lif_entry.pt_base_addr_page_id,
            sram_lif_entry.log_num_pt_entries,
-           sram_lif_entry.rdma_en_qtype_mask, 
+           sram_lif_entry.rdma_en_qtype_mask,
            sram_lif_entry.sq_qtype,
            sram_lif_entry.rq_qtype);
-           
+
     rc = rdma_sram_lif_init(lif, &sram_lif_entry);
     HAL_ASSERT(rc == HAL_RET_OK);
     HAL_TRACE_DEBUG("({},{}): Lif: {}: SRAM LIF INIT successful\n", __FUNCTION__, __LINE__, lif);
@@ -352,23 +352,23 @@ rdma_key_entry_read (uint16_t lif, uint32_t key, key_entry_t *entry_p)
     sram_lif_entry_t    tx_sram_lif_entry = {0};
     uint64_t            pt_table_base_addr;
     uint64_t            key_table_base_addr;
-    hal_ret_t           rc;  
+    hal_ret_t           rc;
 
     rc = rdma_tx_sram_lif_entry_get(lif, &tx_sram_lif_entry);
     HAL_ASSERT(rc == HAL_RET_OK);
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Tx LIF params - pt_base_addr_page_id {} "
-                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n", 
+                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n",
                     __FUNCTION__, __LINE__, lif,
-                    tx_sram_lif_entry.pt_base_addr_page_id, 
+                    tx_sram_lif_entry.pt_base_addr_page_id,
                     tx_sram_lif_entry.log_num_pt_entries,
                     tx_sram_lif_entry.rdma_en_qtype_mask);
 
     rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
     HAL_ASSERT(rc == HAL_RET_OK);
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
-                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n", 
+                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n",
                     __FUNCTION__, __LINE__, lif,
-                    sram_lif_entry.pt_base_addr_page_id, 
+                    sram_lif_entry.pt_base_addr_page_id,
                     sram_lif_entry.log_num_pt_entries,
                     sram_lif_entry.rdma_en_qtype_mask);
 
@@ -430,7 +430,7 @@ rdma_pt_entry_write (uint16_t lif, uint32_t offset, uint64_t pg_ptr)
 
     // Don't use capri apis
 #if 0
-    capri_hbm_write_mem((uint64_t)(pt_table_base_addr + 
+    capri_hbm_write_mem((uint64_t)(pt_table_base_addr +
         (offset * sizeof(uint64_t))), (uint8_t*)&pg_ptr, sizeof(pg_ptr));
 #endif
     pd::pd_capri_hbm_write_mem_args_t args = {0};
@@ -487,7 +487,7 @@ rdma_mr_pt_base_get (uint16_t lif, uint32_t key)
     pt_seg_offset = key_entry.base_va % pt_seg_size;
     pt_start_page_id = pt_seg_offset / HOSTMEM_PAGE_SIZE;
     //HAL_TRACE_DEBUG("{}: pt_start_page_id: {}\n", __FUNCTION__, pt_start_page_id);
-    
+
     return (key_entry.pt_base + pt_start_page_id);
 }
 
@@ -498,7 +498,7 @@ is_rkey_valid (uint16_t lif, uint32_t rkey)
 
     if (rkey == INVALID_KEY) {
         return (FALSE);
-    }   
+    }
 
     rdma_key_entry_read(lif, rkey, &rkey_entry);
 
@@ -512,7 +512,7 @@ is_lkey_valid (uint16_t lif, uint32_t lkey)
 
     if (lkey == INVALID_KEY) {
         return (FALSE);
-    }   
+    }
 
     rdma_key_entry_read(lif, lkey, &lkey_entry);
 
@@ -523,11 +523,11 @@ hal_ret_t
 rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
 {
     hal_ret_t        ret = HAL_RET_OK;
-    uint32_t         lif = spec.hw_lif_id(); 
+    uint32_t         lif = spec.hw_lif_id();
     uint32_t         num_pages, num_pt_entries;
     uint32_t         lkey, rkey;
     key_entry_t      lkey_entry = {0} , rkey_entry = {0};
-    key_entry_t      *lkey_entry_p = &lkey_entry , *rkey_entry_p = &rkey_entry; 
+    key_entry_t      *lkey_entry_p = &lkey_entry , *rkey_entry_p = &rkey_entry;
     uint32_t         pt_seg_size = HBM_NUM_PT_ENTRIES_PER_CACHE_LINE *
                               spec.hostmem_pg_size();
     uint32_t         pt_seg_offset, pt_page_offset;
@@ -535,8 +535,8 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     uint32_t         transfer_bytes, pt_page_offset2;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("{}: RdmaMemReg for HW LIF {} PD {} LKEY {} RKEY {} VA {} LEN {}", 
-                    __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}: RdmaMemReg for HW LIF {} PD {} LKEY {} RKEY {} VA {} LEN {}",
+                    __FUNCTION__,
                     spec.hw_lif_id(),
                     spec.pd(),
                     spec.lkey(),
@@ -548,14 +548,14 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
         HAL_TRACE_DEBUG("requesting remote write without requesting "
                "local write permission is not allowed !!\n");
         return (HAL_RET_ERR);
-    }   
+    }
 
     if (spec.ac_remote_atomic() && !spec.ac_local_wr()) {
         HAL_TRACE_DEBUG("requesting remote atomic without requesting "
                "local write permission is not allowed !!\n");
         return (HAL_RET_ERR);
     }
-    
+
 #if 0
     //TODO: enable this check later
     if (attr_p->flags & MR_FLAG_INV_EN) {
@@ -587,8 +587,8 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
 
     lkey_entry_p->type = MR_TYPE_MR;
     rdma_key_entry_write(lif, lkey, lkey_entry_p);
-    HAL_TRACE_DEBUG("{}: lif_id: {} lkey: {}  acc_ctrl: {:#x}, flags: {:#x}, override_lif: {}", 
-                    __FUNCTION__, lif, lkey, lkey_entry_p->acc_ctrl, 
+    HAL_TRACE_DEBUG("{}: lif_id: {} lkey: {}  acc_ctrl: {:#x}, flags: {:#x}, override_lif: {}",
+                    __FUNCTION__, lif, lkey, lkey_entry_p->acc_ctrl,
                     lkey_entry_p->flags, lkey_entry_p->override_lif);
 
     if (spec.ac_remote_rd() || spec.ac_remote_wr() || spec.ac_remote_atomic()) {
@@ -605,13 +605,13 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
         if (spec.ac_remote_atomic())
             rkey_entry_p->acc_ctrl |= ACC_CTRL_REMOTE_ATOMIC;
         rdma_key_entry_write(lif, rkey, rkey_entry_p);
-        HAL_TRACE_DEBUG("{}: lif_id: {} rkey: {}  acc_ctrl: {:#x}", 
+        HAL_TRACE_DEBUG("{}: lif_id: {} rkey: {}  acc_ctrl: {:#x}",
                     __FUNCTION__, lif, rkey, rkey_entry_p->acc_ctrl);
     } else {
         rkey = INVALID_KEY;
     }
-    
-    HAL_TRACE_DEBUG("{}: lif_id: {}  g_pt_base: {:#x}, lkey_entry_p->pt_base: {:#x}\n", 
+
+    HAL_TRACE_DEBUG("{}: lif_id: {}  g_pt_base: {:#x}, lkey_entry_p->pt_base: {:#x}\n",
                     __FUNCTION__, lif, g_pt_base[lif], lkey_entry_p->pt_base);
     HAL_ASSERT(lkey_entry_p->pt_base % HBM_NUM_PT_ENTRIES_PER_CACHE_LINE == 0);
 
@@ -624,7 +624,7 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
         num_pages++;
         transfer_bytes -= (spec.hostmem_pg_size()-pt_page_offset);
     }
-    pt_page_offset2 = 
+    pt_page_offset2 =
         (pt_page_offset + lkey_entry_p->len) % spec.hostmem_pg_size();
     if (pt_page_offset2) {
         num_pages++;
@@ -688,12 +688,12 @@ stage0_resp_rx_prog_addr(uint64_t* offset)
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET,
                               (void *)&args);
-    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n", 
+    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
     //                __FUNCTION__, ret, offset);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: ret: []\n", __FUNCTION__, ret);
+        HAL_TRACE_ERR("ret: {}\n", ret);
         return HAL_RET_HW_FAIL;
     }
     return HAL_RET_OK;
@@ -711,12 +711,12 @@ stage0_resp_tx_prog_addr(uint64_t* offset)
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET,
                                     (void *)&args);
-    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n", 
+    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
     //                __FUNCTION__, ret, offset);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: ret: []\n", __FUNCTION__, ret);
+        HAL_TRACE_ERR("{}: ret: {}", __FUNCTION__, ret);
         return HAL_RET_HW_FAIL;
     }
     return HAL_RET_OK;
@@ -735,14 +735,14 @@ stage0_req_rx_prog_addr(uint64_t* offset)
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET,
                                     (void *)&args);
 
-    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n", 
+    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
     //                __FUNCTION__, ret, offset);
     // if(ret < 0) {
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: ret: []\n", __FUNCTION__, ret);
+        HAL_TRACE_ERR("{}: ret: {}\n", __FUNCTION__, ret);
         return HAL_RET_HW_FAIL;
     }
     return HAL_RET_OK;
@@ -760,13 +760,13 @@ stage0_req_tx_prog_addr(uint64_t* offset)
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET,
                                     (void *)&args);
 
-    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n", 
+    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
     //                __FUNCTION__, ret, offset);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: ret: []\n", __FUNCTION__, ret);
+        HAL_TRACE_ERR("{}: ret: {}\n", __FUNCTION__, ret);
         return HAL_RET_HW_FAIL;
     }
     return HAL_RET_OK;
@@ -811,7 +811,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
                     spec.sq_cq_num(), spec.rq_cq_num());
     HAL_TRACE_DEBUG("{}: Inputs: atomic_enabled: {} immdt_as_dbell: {}, "
                     "sq_in_nic: {}, rq_in_nic: {}", __FUNCTION__,
-                    spec.atomic_enabled(), spec.immdt_as_dbell(), 
+                    spec.atomic_enabled(), spec.immdt_as_dbell(),
                     spec.sq_in_nic_memory(), spec.rq_in_nic_memory());
 
     // allocate sq and rq
@@ -827,8 +827,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
     HAL_TRACE_DEBUG("sqwqe_size: {} rqwqe_size: {}",
                     sqwqe_size, rqwqe_size);
-   
-    // DCQCN related info is stored after header-template info 
+
+    // DCQCN related info is stored after header-template info
     header_template_addr = g_rdma_manager->HbmAlloc(sizeof(header_template_t) + sizeof(dcqcn_cb_t));
     HAL_ASSERT(header_template_addr);
     HAL_ASSERT(header_template_addr != (uint32_t)-ENOMEM);
@@ -868,7 +868,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
                     rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey())),
                     rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey())) >> PT_BASE_ADDR_SHIFT,
                     sqcb_p->sqcb0.pt_base_addr);
-    sqcb_p->sqcb0.header_template_addr = 
+    sqcb_p->sqcb0.header_template_addr =
                             header_template_addr >> HDR_TEMP_ADDR_SHIFT;
     sqcb_p->sqcb1.header_template_addr = sqcb_p->sqcb0.header_template_addr;
     sqcb_p->sqcb2.header_template_addr = sqcb_p->sqcb0.header_template_addr;
@@ -878,7 +878,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     sqcb_p->sqcb1.log_rrq_size = log2(num_rrq_wqes);
     sqcb_p->sqcb2.log_rrq_size = sqcb_p->sqcb1.log_rrq_size;
 
-    rrq_base_addr = 
+    rrq_base_addr =
         g_rdma_manager->HbmAlloc(sizeof(rrqwqe_t) << sqcb_p->sqcb1.log_rrq_size);
     HAL_ASSERT(rrq_base_addr);
     HAL_ASSERT(rrq_base_addr != (uint32_t)-ENOMEM);
@@ -892,8 +892,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     sqcb_p->sqcb2.log_sq_size = sqcb_p->sqcb0.log_num_wqes;
     sqcb_p->sqcb0.log_pmtu = log2(spec.pmtu());
     sqcb_p->sqcb1.log_pmtu = sqcb_p->sqcb0.log_pmtu;
-    sqcb_p->sqcb0.congestion_mgmt_enable = FALSE;  
-    sqcb_p->sqcb1.congestion_mgmt_enable = sqcb_p->sqcb0.congestion_mgmt_enable;  
+    sqcb_p->sqcb0.congestion_mgmt_enable = FALSE;
+    sqcb_p->sqcb1.congestion_mgmt_enable = sqcb_p->sqcb0.congestion_mgmt_enable;
     sqcb_p->sqcb1.cq_id = spec.sq_cq_num();
     sqcb_p->sqcb0.service = spec.svc();
     sqcb_p->sqcb1.service = sqcb_p->sqcb0.service;
@@ -929,7 +929,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     HAL_TRACE_DEBUG("SQCB Log WQE size: {}\n", sqcb_p->sqcb0.log_wqe_size);
 
     // write to hardware
-    HAL_TRACE_DEBUG("{}: LIF: {}: Writing initial SQCB State, SQCB->PT: {}", 
+    HAL_TRACE_DEBUG("{}: LIF: {}: Writing initial SQCB State, SQCB->PT: {}",
                     __FUNCTION__, lif, sqcb_p->sqcb0.pt_base_addr);
     // Convert data before writting to HBM
     memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
@@ -967,7 +967,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.log_rsq_size = log2(num_rsq_wqes);
     rqcb.rqcb1.log_rsq_size = rqcb.rqcb0.log_rsq_size;
 
-    rsq_base_addr = 
+    rsq_base_addr =
         g_rdma_manager->HbmAlloc(sizeof(rsqwqe_t) << rqcb.rqcb0.log_rsq_size);
     HAL_ASSERT(rsq_base_addr);
     HAL_ASSERT(rsq_base_addr  != (uint32_t)-ENOMEM);
@@ -994,7 +994,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.pd = spec.pd();
     rqcb.rqcb1.pd = rqcb.rqcb0.pd;
     rqcb.rqcb1.cq_id = spec.rq_cq_num();
-    rqcb.rqcb0.header_template_addr = 
+    rqcb.rqcb0.header_template_addr =
                             header_template_addr >> HDR_TEMP_ADDR_SHIFT;
     rqcb.rqcb0.header_template_size = sizeof(header_template_v4_t);
     rqcb.rqcb1.header_template_addr = rqcb.rqcb0.header_template_addr;
@@ -1012,7 +1012,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
     HAL_TRACE_DEBUG("RQCB Header Template Size: {}\n", rqcb.rqcb1.header_template_size);
 
-    HAL_TRACE_DEBUG("{}: Create QP successful for LIF: {}  RQCB->PT: {}", 
+    HAL_TRACE_DEBUG("{}: Create QP successful for LIF: {}  RQCB->PT: {}",
                     __FUNCTION__, lif, rqcb.rqcb0.pt_base_addr);
 
     // Convert data before writting to HBM
@@ -1024,7 +1024,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial RQCB State", __FUNCTION__, lif);
     g_lif_manager->WriteQState(lif, Q_TYPE_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
 
- 
+
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->set_rsq_base_addr(rsq_base_addr);
     rsp->set_rrq_base_addr(rrq_base_addr);
@@ -1069,20 +1069,20 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
     uint8_t      smac[ETH_ADDR_LEN], dmac[ETH_ADDR_LEN];
     header_template_t temp;
     ip_addr_t    ip_addr;
-    
+
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA AH Create", __FUNCTION__);
 
     memcpy(smac, spec.smac().c_str(), spec.smac().size());
     memcpy(dmac, spec.dmac().c_str(), spec.dmac().size());
-    
+
     // HAL_TRACE_DEBUG("{}: Inputs: smac: {} dmac: {} ethtype: {} vlan: {} "
     //                 "vlan_pri: {} vlan_cfi: {} ip_ver: {} ip_tos: {} "
     //                 "ip_ttl: {} ip_saddr: {} ip_daddr: {} "
     //                 "udp_sport: {} udp_dport: {}",
     //                 __FUNCTION__, (struct ether_addr*)smac,
     //                 (struct ether_addr*)spec.dmac().c_str(),
-    //                 (struct ether_addr*)spec.smac().c_str(), 
+    //                 (struct ether_addr*)spec.smac().c_str(),
     //                 spec.vlan(), spec.vlan_pri(), spec.vlan_cfi(),
     //                 spec.ip_ver(), spec.ip_tos(), spec.ip_ttl(),
     //                 spec.ip_saddr(), spec.ip_daddr(),
@@ -1095,7 +1095,6 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
                     __FUNCTION__, spec.ethtype(),
                     spec.vlan(), spec.vlan_pri(), spec.vlan_cfi(),
                     spec.ip_ver(), spec.ip_tos(), spec.ip_ttl(), 0, 0,
-                    //spec.ip_saddr(), spec.ip_daddr(),
                     spec.udp_sport(), spec.udp_dport());
 
     memset(&temp, 0, sizeof(temp));
@@ -1111,10 +1110,10 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
         temp.v6.ip.tc = spec.ip_tos();
         temp.v6.ip.hop_limit = spec.ip_ttl();
         temp.v6.ip.nh = 17;
-        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_saddr()); 
+        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_saddr());
         memrev((uint8_t*)&ip_addr.addr.v6_addr, sizeof(ip_addr.addr.v6_addr));
         temp.v6.ip.saddr = ip_addr.addr.v6_addr;
-        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_daddr()); 
+        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_daddr());
         memrev((uint8_t*)&ip_addr.addr.v6_addr, sizeof(ip_addr.addr.v6_addr));
         temp.v6.ip.daddr = ip_addr.addr.v6_addr;
         temp.v6.ip.flow_label = 0;
@@ -1136,9 +1135,9 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
         temp.v4.ip.tos = spec.ip_tos();
         temp.v4.ip.ttl = spec.ip_ttl();
         temp.v4.ip.protocol = 17;
-        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_saddr()); 
+        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_saddr());
         temp.v4.ip.saddr = ip_addr.addr.v4_addr;
-        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_daddr()); 
+        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_daddr());
         temp.v4.ip.daddr = ip_addr.addr.v4_addr;
         temp.v4.ip.id = 1;
         temp.v4.udp.sport = spec.udp_sport();
@@ -1148,7 +1147,7 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
 
     }
     header_template_addr = g_rdma_manager->HbmAlloc(header_template_size);
-    HAL_TRACE_DEBUG("{} header_template_addr: {} Header Template Size: {}\n", 
+    HAL_TRACE_DEBUG("{} header_template_addr: {} Header Template Size: {}\n",
                     __FUNCTION__, header_template_addr, header_template_size);
 
     HAL_ASSERT(header_template_addr);
@@ -1186,7 +1185,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     pd::pd_capri_hbm_write_mem_args_t args = {0};
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-LIF:{}: RDMA QP Update for lif {} QID {} oper type {}", 
+    HAL_TRACE_DEBUG("PI-LIF:{}: RDMA QP Update for lif {} QID {} oper type {}",
                     __FUNCTION__, lif, qp_num, oper);
 
     HAL_TRACE_DEBUG("{}: Inputs: dst_qp: {}", __FUNCTION__,
@@ -1216,17 +1215,17 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
         case rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QP:
             rqcb_p->rqcb0.dst_qp = spec.dst_qp_num();
             sqcb_p->sqcb2.dst_qp = spec.dst_qp_num();
- 
+
             HAL_TRACE_DEBUG("{}: Update: Setting dst_qp to: {}", __FUNCTION__,
                     spec.dst_qp_num());
         break;
-        
+
         case rdma::RDMA_UPDATE_QP_OPER_SET_E_PSN:
             rqcb_p->rqcb1.e_psn = spec.e_psn();
             HAL_TRACE_DEBUG("{}: Update: Setting e_psn to: {}", __FUNCTION__,
                             spec.e_psn());
             break;
-        
+
         case rdma::RDMA_UPDATE_QP_OPER_SET_TX_PSN:
             sqcb_p->sqcb2.tx_psn = spec.tx_psn();
             sqcb_p->sqcb2.exp_rsp_psn = (sqcb_p->sqcb2.tx_psn - 1);
@@ -1236,7 +1235,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             HAL_TRACE_DEBUG("{}: Update: Setting tx_psn to: {}", __FUNCTION__,
                             spec.tx_psn());
             break;
-        
+
         case rdma::RDMA_UPDATE_QP_OPER_SET_Q_KEY:
             rqcb_p->rqcb0.q_key = spec.q_key();
             rqcb_p->rqcb1.q_key = rqcb_p->rqcb0.q_key;
@@ -1244,7 +1243,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             HAL_TRACE_DEBUG("{}: Update: Setting q_key to: {}", __FUNCTION__,
                             spec.q_key());
             break;
-        
+
         case rdma::RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
 
             sqcb_p->sqcb1.header_template_size = spec.header_template().size();
@@ -1258,23 +1257,23 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
 
             memcpy(&header_template, (uint8_t *)spec.header_template().c_str(),
                    std::min(sizeof(header_template_t), spec.header_template().size()));
-        
+
             args.addr = (uint64_t)header_template_addr;
             args.buf = (uint8_t *)&header_template;
             args.size =  sizeof(header_template_t);
             pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, (void *)&args);
 
-            HAL_TRACE_DEBUG("{}: Update: Setting header_template content @addr: {} to: {}", 
+            HAL_TRACE_DEBUG("{}: Update: Setting header_template content @addr: {} to: {}",
                             __FUNCTION__, header_template_addr, spec.header_template());
 
             HAL_TRACE_DEBUG("{}: Update: Setting rqcb/sqcb header_template_size to {}, {}",
-                            __FUNCTION__, rqcb_p->rqcb1.header_template_size, sqcb_p->sqcb1.header_template_size);  
+                            __FUNCTION__, rqcb_p->rqcb1.header_template_size, sqcb_p->sqcb1.header_template_size);
         break;
 
         default:
         break;
     }
-    
+
     // Convert and write SQCB to HBM
     memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
     memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
@@ -1285,7 +1284,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     memrev((uint8_t*)&rqcb_p->rqcb0, sizeof(rqcb0_t));
     memrev((uint8_t*)&rqcb_p->rqcb1, sizeof(rqcb1_t));
     g_lif_manager->WriteQState(lif, Q_TYPE_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
-    
+
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
 
     return (HAL_RET_OK);
@@ -1308,7 +1307,7 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
                     spec.cq_lkey(), spec.wakeup_dpath());
 
     if (spec.wakeup_dpath()) {
-        HAL_TRACE_DEBUG("{}: Inputs - Wakeup LIF: {}, QTYPE: {}, QID: {}, RING_ID: {}", 
+        HAL_TRACE_DEBUG("Inputs - Wakeup LIF: {}, QTYPE: {}, QID: {}, RING_ID: {}",
                         spec.wakeup_lif(), spec.wakeup_qtype(), spec.wakeup_qid(), spec.wakeup_ring_id());
     }
 
@@ -1316,7 +1315,7 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     num_cq_wqes = roundup_to_pow_2(spec.num_cq_wqes());
 
     HAL_TRACE_DEBUG("cqwqe_size: {} num_cq_wqes: {}", cqwqe_size, num_cq_wqes);
-    
+
     memset(&cqcb, 0, sizeof(cqcb_t));
     // EQ does not need scheduling, so set one less (meaning #rings as zero)
     cqcb.ring_header.total_rings = MAX_CQ_RINGS - 1;
@@ -1339,14 +1338,14 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     cqcb.wakeup_ring_id = spec.wakeup_ring_id();
 
     rdma_pt_entry_read(lif, cq_pt_base, &cqcb.pt_pa);
-    rdma_pt_entry_read(lif, cq_pt_base+1, &cqcb.pt_next_pa);    
+    rdma_pt_entry_read(lif, cq_pt_base+1, &cqcb.pt_next_pa);
     cqcb.pt_pa_index = 1 << (cqcb.log_cq_page_size - cqcb.log_wqe_size);
     cqcb.pt_next_pa_index = 2 << (cqcb.log_cq_page_size - cqcb.log_wqe_size);
 
     HAL_TRACE_DEBUG("{}: LIF: {}: pt_pa: {:#x}: pt_next_pa: {:#x}: pt_pa_index: {}: pt_next_pa_index: {}:", __FUNCTION__, lif, cqcb.pt_pa, cqcb.pt_next_pa, cqcb.pt_pa_index, cqcb.pt_next_pa_index);
-    
+
     // write to hardware
-    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial CQCB State, CQCB->PT: {:#x} cqcb_size: {}", 
+    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial CQCB State, CQCB->PT: {:#x} cqcb_size: {}",
                     __FUNCTION__, lif, cqcb.pt_base_addr, sizeof(cqcb_t));
     // Convert data before writting to HBM
     memrev((uint8_t*)&cqcb, sizeof(cqcb_t));
@@ -1382,7 +1381,7 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
 
     HAL_TRACE_DEBUG("eqwqe_size: {} num_eq_wqes: {}", eqwqe_size, num_eq_wqes);
 
-    
+
     memset(&eqcb, 0, sizeof(eqcb_t));
     // EQ does not need scheduling, so set one less (meaning #rings as zero)
     eqcb.ring_header.total_rings = MAX_EQ_RINGS - 1;
@@ -1395,7 +1394,7 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
     eqcb.color = 0;
 
     // write to hardware
-    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial EQCB State, eqcb_size: {}", 
+    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial EQCB State, eqcb_size: {}",
                     __FUNCTION__, lif, sizeof(eqcb_t));
     // Convert data before writting to HBM
     memrev((uint8_t*)&eqcb, sizeof(eqcb_t));

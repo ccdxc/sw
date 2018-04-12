@@ -761,7 +761,7 @@ securityprofile_create (SecurityProfileSpec& spec,
     ret = validate_nwsec_create(spec, rsp);
     if (ret != HAL_RET_OK) {
         // api_status already set, just return
-        HAL_TRACE_ERR("validation failed. ret: {}");
+        HAL_TRACE_ERR("validation failed. ret: {}", ret);
         goto end;
     }
 

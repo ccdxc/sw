@@ -421,7 +421,7 @@ vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
         goto end;
     } else {
         HAL_TRACE_DEBUG("Programmed from_cpu_entry input properties at:{}",
-                        __FUNCTION__, vrf_pd->inp_prop_tbl_cpu_idx);
+                        vrf_pd->inp_prop_tbl_cpu_idx);
     }
 
 end:

@@ -13,13 +13,13 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // Uplink If Create
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_uplinkif_create(pd_if_create_args_t *args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;;
     pd_uplinkif_t        *pd_upif;
 
-    HAL_TRACE_DEBUG("{}:creating pd state for if_id: {}", 
+    HAL_TRACE_DEBUG("{}:creating pd state for if_id: {}",
                     __FUNCTION__, if_get_if_id(args->intf));
 
     // Create lif PD
@@ -116,7 +116,7 @@ pd_uplinkif_get (pd_if_get_args_t *args)
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Uplink if
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -127,7 +127,7 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
     rs = g_hal_state_pd->lif_hwid_idxr()->
         alloc((uint32_t *)&pd_upif->hw_lif_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("{}:failed to alloc hw_lif_id err: {}", 
+        HAL_TRACE_ERR("{}:failed to alloc hw_lif_id err: {}",
                       __FUNCTION__, rs);
         pd_upif->hw_lif_id = INVALID_INDEXER_INDEX;
         return HAL_RET_NO_RESOURCE;
@@ -135,12 +135,12 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
 #endif
     pd_upif->hw_lif_id = if_allocate_hwlif_id();
     if (pd_upif->hw_lif_id == INVALID_INDEXER_INDEX) {
-        HAL_TRACE_ERR("{}:failed to alloc hw_lif_id err: {}", 
+        HAL_TRACE_ERR("{}:failed to alloc hw_lif_id err: {}",
                       __FUNCTION__, rs);
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("{}:if_id:{} allocated hw_lif_id: {}", 
-                    __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}:if_id:{} allocated hw_lif_id: {}",
+                    __FUNCTION__,
                     if_get_if_id((if_t *)pd_upif->pi_if),
                     pd_upif->hw_lif_id);
 
@@ -148,13 +148,13 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
     rs = g_hal_state_pd->uplinkifpc_hwid_idxr()->
         alloc((uint32_t *)&pd_upif->up_ifpc_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("{}:failed to alloc uplink_ifpc_id err: {}", 
+        HAL_TRACE_ERR("{}:failed to alloc uplink_ifpc_id err: {}",
                       __FUNCTION__, rs);
         pd_upif->up_ifpc_id = INVALID_INDEXER_INDEX;
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("{}:if_id:{} allocated uplink_ifpc_id: {}", 
-                    __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}:if_id:{} allocated uplink_ifpc_id: {}",
+                    __FUNCTION__,
                     if_get_if_id((if_t *)pd_upif->pi_if),
                     pd_upif->up_ifpc_id);
 
@@ -162,20 +162,20 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
     rs = g_hal_state_pd->lport_idxr()->alloc((uint32_t *)&pd_upif->
             upif_lport_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("{}:failed to alloc uplink_ifpc_id err: {}", 
+        HAL_TRACE_ERR("{}:failed to alloc uplink_ifpc_id err: {}",
                       __FUNCTION__, rs);
         pd_upif->upif_lport_id = INVALID_INDEXER_INDEX;
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("{}:if_id:{} allocated lport_id:{}", 
-                    __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}:if_id:{} allocated lport_id:{}",
+                    __FUNCTION__,
                     if_get_if_id((if_t *)pd_upif->pi_if),
                     pd_upif->upif_lport_id);
     return ret;
 }
 
 //-----------------------------------------------------------------------------
-// De-Allocate resources. 
+// De-Allocate resources.
 //-----------------------------------------------------------------------------
 hal_ret_t
 uplinkif_pd_dealloc_res(pd_uplinkif_t *upif_pd)
@@ -187,7 +187,7 @@ uplinkif_pd_dealloc_res(pd_uplinkif_t *upif_pd)
 #if 0
         rs = g_hal_state_pd->lif_hwid_idxr()->free(upif_pd->hw_lif_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("{}:failed to free hw_lif_id err: {}", 
+            HAL_TRACE_ERR("{}:failed to free hw_lif_id err: {}",
                           __FUNCTION__, upif_pd->hw_lif_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
@@ -195,33 +195,33 @@ uplinkif_pd_dealloc_res(pd_uplinkif_t *upif_pd)
 #endif
         // TODO: Have to free up the index from lif manager
 
-        HAL_TRACE_DEBUG("{}:freed hw_lif_id: {}", 
+        HAL_TRACE_DEBUG("{}:freed hw_lif_id: {}",
                         __FUNCTION__, upif_pd->hw_lif_id);
     }
 
     if (upif_pd->up_ifpc_id != INVALID_INDEXER_INDEX) {
         rs = g_hal_state_pd->uplinkifpc_hwid_idxr()->free(upif_pd->up_ifpc_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("{}:failed to free uplink_ifpc_id err: {}", 
+            HAL_TRACE_ERR("{}:failed to free uplink_ifpc_id err: {}",
                           __FUNCTION__, upif_pd->up_ifpc_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("{}:freed uplink_ifpc_id: {}", 
+        HAL_TRACE_DEBUG("{}:freed uplink_ifpc_id: {}",
                         __FUNCTION__, upif_pd->up_ifpc_id);
     }
 
     if (upif_pd->upif_lport_id != INVALID_INDEXER_INDEX) {
         rs = g_hal_state_pd->lport_idxr()->free(upif_pd->upif_lport_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("{}:failed to free lport_id err: {}", 
+            HAL_TRACE_ERR("{}:failed to free lport_id err: {}",
                           __FUNCTION__, upif_pd->upif_lport_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("{}:freed lport_id: {}", 
+        HAL_TRACE_DEBUG("{}:freed lport_id: {}",
                         __FUNCTION__, upif_pd->upif_lport_id);
     }
 
@@ -233,9 +233,9 @@ end:
 // PD Uplinkif Cleanup
 //  - Release all resources
 //  - Delink PI <-> PD
-//  - Free PD If 
+//  - Free PD If
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -252,8 +252,8 @@ uplinkif_pd_cleanup(pd_uplinkif_t *upif_pd)
     // Releasing resources
     ret = uplinkif_pd_dealloc_res(upif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for uplinkif: {}", 
-                      __FUNCTION__, 
+        HAL_TRACE_ERR("{}: unable to dealloc res for uplinkif: {}",
+                      __FUNCTION__,
                       ((if_t *)(upif_pd->pi_if))->if_id);
         goto end;
     }
@@ -298,7 +298,7 @@ uplinkif_pd_depgm_tm_register(pd_uplinkif_t *pd_upif)
     hal_ret_t                   ret = HAL_RET_OK;
     uint8_t                     tm_oport = 0;
 
-    tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if)); 
+    tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if));
 
     ret = capri_tm_uplink_lif_set(tm_oport, 0);
     if (ret != HAL_RET_OK) {
@@ -326,15 +326,15 @@ uplinkif_pd_depgm_output_mapping_tbl (pd_uplinkif_t *pd_upif)
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
-    
+
     sdk_ret = dm_omap->remove(pd_upif->upif_lport_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram omapping table",
-                __FUNCTION__, pd_upif->upif_lport_id);
+        HAL_TRACE_ERR("unable to deprogram omapping table at: {}",
+                      pd_upif->upif_lport_id);
     } else {
-        HAL_TRACE_ERR("{}:deprogrammed omapping table",
-                __FUNCTION__, pd_upif->upif_lport_id);
+        HAL_TRACE_ERR("deprogrammed omapping table at: {}",
+                      pd_upif->upif_lport_id);
     }
 
     return ret;
@@ -368,7 +368,7 @@ uplinkif_pd_pgm_tm_register(pd_uplinkif_t *pd_upif)
     hal_ret_t                   ret = HAL_RET_OK;
     uint8_t                     tm_oport = 0;
 
-    tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if)); 
+    tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if));
 
     ret = capri_tm_uplink_lif_set(tm_oport, pd_upif->hw_lif_id);
     if (ret != HAL_RET_OK) {
@@ -399,7 +399,7 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
 
     memset(&data, 0, sizeof(data));
 
-    tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if)); 
+    tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if));
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 1;

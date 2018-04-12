@@ -676,7 +676,7 @@ dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
     dosp = (dos_policy_t *) pd_dosp->pi_dos_policy;
     HAL_ASSERT(dosp != NULL);
     if (!dosp->ingr_pol_valid) {
-        HAL_TRACE_DEBUG("{}: DoS ingress policy is not valid. ",
+        HAL_TRACE_DEBUG("{}: DoS ingress policy is not valid. "
                         "Skip service table programming",
                         __FUNCTION__);
         return HAL_RET_OK;

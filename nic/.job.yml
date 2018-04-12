@@ -1,6 +1,6 @@
 ---
 targets:
-  main: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make -j4 all && make run-gtests && make clean ; ret=$? ; make sanity_logs ; exit $ret" ]
+  main: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make -j4 all && make run-gtests && make clean && make check_traces ; ret=$? ; make sanity_logs ; exit $ret" ]
   halctl: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make -j4 all &&  cd $GOPATH/src/github.com/pensando/sw/nic/agent/cmd/halctl && go test" ]
   arm_build: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make ARCH=aarch64 nic && make ARCH=aarch64 sanity-tests && make ARCH=aarch64 gtests && make clean ; ret=$? ; make sanity_logs ; exit $ret" ]
   arm_haps_build: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make PLATFORM=haps ARCH=aarch64 nic && make PLATFORM=haps ARCH=aarch64 sanity-tests && make PLATFORM=haps ARCH=aarch64 gtests && make clean ; ret=$? ; make sanity_logs ; exit $ret" ]
@@ -55,7 +55,7 @@ targets:
   gft/gtest:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py --gft_gtest && make run-gft-gtests ; ret=$? ; make sanity_logs ; exit $ret" ]
   gft:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py  --topo gft --feature gft --gft ; ret=$? ; make sanity_logs ; exit $ret" ]
   base:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo base --feature eth_base,nw_base,rdma_base,proxy_base --lite ; ret=$? ; make sanity_logs ; exit $ret" ]
-  gft_rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py  --topo rdma_gft --feature rdma_perf --gft ; ret=$? ; make sanity_logs ; exit $ret" ] 
+  gft_rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py  --topo rdma_gft --feature rdma_perf --gft ; ret=$? ; make sanity_logs ; exit $ret" ]
   swphv:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature swphv" ]
   proto-sync: ["sh", "-c", "cd /sw && make pull-assets && cd $GOPATH/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto && make proto-sync" ]
   hal-rtl/parser:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make hal-rtl && ./run.py  --topo parser --feature parser ; ret=$? ; make sanity_logs ; exit $ret" ]

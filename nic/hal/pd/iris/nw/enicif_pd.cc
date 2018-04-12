@@ -602,11 +602,11 @@ pd_enicif_pd_depgm_output_mapping_tbl (pd_enicif_t *pd_enicif)
     sdk_ret = dm_omap->remove(pd_enicif->enic_lport_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram omapping table",
-                __FUNCTION__, pd_enicif->enic_lport_id);
+        HAL_TRACE_ERR("unable to deprogram omapping table at {}",
+                      pd_enicif->enic_lport_id);
     } else {
-        HAL_TRACE_ERR("{}:deprogrammed omapping table",
-                __FUNCTION__, pd_enicif->enic_lport_id);
+        HAL_TRACE_ERR("deprogrammed omapping table at {}",
+                      pd_enicif->enic_lport_id);
     }
 
 
@@ -691,7 +691,7 @@ pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif,
                                               pi_l2seg_entry->pd,
                                               args, lif_args, oper);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:unable to pgm for l2seg:{}, if{}",
+            HAL_TRACE_ERR("unable to pgm for l2seg:{}, if{}",
                            l2seg->seg_id,
                            if_get_if_id((if_t *)pd_enicif->pi_if));
         }
@@ -720,7 +720,7 @@ pd_enicif_pd_depgm_inp_prop(pd_enicif_t *pd_enicif, dllist_ctxt_t *l2sege_list)
 
         ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_l2seg_entry->inp_prop_idx);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:unable to depgm input properties for "
+            HAL_TRACE_ERR("unable to depgm input properties for "
                           "l2seg:{}, if{}",
                           l2seg ? l2seg->seg_id : HAL_L2SEGMENT_ID_INVALID,
                           if_get_if_id((if_t *)pd_enicif->pi_if));

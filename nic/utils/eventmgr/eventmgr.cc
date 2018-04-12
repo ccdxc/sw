@@ -413,7 +413,7 @@ eventmgr::unsubscribe(event_id_t event_id, void *lctxt)
 
     event_state = (event_state_t *)event_map_->lookup(&event_id);
     if (event_state == NULL) {
-        HAL_TRACE_DEBUG("No subscribers for event {}");
+        HAL_TRACE_DEBUG("No subscribers for event {}", event_id);
         return HAL_RET_OK;
     }
 

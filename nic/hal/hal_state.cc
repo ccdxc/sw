@@ -1210,7 +1210,8 @@ static hal_ret_t
 hal_obj_unmarshall (hal_state_umctxt_t *umctxt)
 {
     HAL_ASSERT((umctxt != NULL) && (umctxt->obj != NULL) && (umctxt->len > 0));
-    HAL_TRACE_DEBUG("Unmarshalling obj id {}, len {}");
+    HAL_TRACE_DEBUG("Unmarshalling obj id {}, len {}",
+                    umctxt->obj_id, umctxt->len);
     umctxt->unmarshall_cb(umctxt->obj, umctxt->len);
     return HAL_RET_OK;
 }
@@ -1550,7 +1551,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
     case HAL_SLAB_CRYPTO_CERT_STORE:
         g_hal_state->crypto_cert_store_slab()->free(elem);
         break;
-    
+
     case HAL_SLAB_TLSCB:
         g_hal_state->tlscb_slab()->free(elem);
         break;

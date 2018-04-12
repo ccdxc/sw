@@ -321,7 +321,7 @@ hal_handle_in_block_list (block_list *bl, hal_handle_t handle)
     bool            is_present = false;
 
     if (!bl || handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}:invalid args. bl:{:#x}, handle:{}",
+        HAL_TRACE_ERR("invalid args. bl:{:#x}, handle:{}",
                       (uint64_t)bl, handle);
         goto end;
     }

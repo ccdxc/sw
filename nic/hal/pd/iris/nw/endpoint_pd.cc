@@ -24,18 +24,18 @@ hal_ret_t ep_pd_depgm_registered_mac(pd_ep_t *pd_ep);
 // ----------------------------------------------------------------------------
 // EP Create
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_ep_create(pd_ep_create_args_t *args)
 {
-    hal_ret_t            ret = HAL_RET_OK;; 
+    hal_ret_t            ret = HAL_RET_OK;;
     pd_ep_t             *pd_ep;
     mac_addr_t           *mac;
 
     mac = ep_get_mac_addr(args->ep);
 
-    HAL_TRACE_DEBUG("{}: creating pd state for ep: {}", 
+    HAL_TRACE_DEBUG("{}: creating pd state for ep: {}",
                     __FUNCTION__, ep_l2_key_to_str(args->ep));
-                    
+
     // Create ep PD
     pd_ep = ep_pd_alloc_init();
     if (pd_ep == NULL) {
@@ -58,8 +58,8 @@ pd_ep_create(pd_ep_create_args_t *args)
     ret = ep_pd_alloc_res(pd_ep);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-EP::{}: Unable to alloc. resources for EP: {}:{}", 
-                      __FUNCTION__, ep_get_l2segid(args->ep), 
+        HAL_TRACE_ERR("PD-EP::{}: Unable to alloc. resources for EP: {}:{}",
+                      __FUNCTION__, ep_get_l2segid(args->ep),
                 ether_ntoa((struct ether_addr*)*mac));
         goto end;
     }
@@ -78,14 +78,14 @@ end:
 }
 
 // ----------------------------------------------------------------------------
-// EP Update 
+// EP Update
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 pd_ep_update (pd_ep_update_args_t *pd_ep_upd_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG(":{}: updating pd state for ep:{}", 
+    HAL_TRACE_DEBUG(":{}: updating pd state for ep:{}",
                     __FUNCTION__,
                     ep_l2_key_to_str(pd_ep_upd_args->ep));
 
@@ -146,7 +146,7 @@ end:
 //  - Delink PI <-> PD
 //  - Free PD Endpoint
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -163,8 +163,8 @@ ep_pd_cleanup(pd_ep_t *ep_pd)
     // Releasing resources
     ret = ep_pd_dealloc_res(ep_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for ep: {}", 
-                      __FUNCTION__, 
+        HAL_TRACE_ERR("{}: unable to dealloc res for ep: {}",
+                      __FUNCTION__,
                       (ep_l2_key_to_str((ep_t *)(ep_pd->pi_ep))));
         goto end;
     }
@@ -288,7 +288,7 @@ end:
 // ----------------------------------------------------------------------------
 // Allocate and Initialize EP L3 entries
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 ep_pd_alloc_ip_entries(pd_ep_create_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
@@ -304,7 +304,7 @@ ep_pd_alloc_ip_entries(pd_ep_create_args_t *args)
 #if 0
     // Walk through ip entries
     dllist_for_each(lnode, &(pi_ep->ip_list_head)) {
-        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode - 
+        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode -
             offsetof(ep_ip_entry_t, ep_ip_lentry));
 
         pi_ip_entry->pd = (pd_ep_ip_entry_t *)g_hal_state_pd->
@@ -318,7 +318,7 @@ ep_pd_alloc_ip_entries(pd_ep_create_args_t *args)
         pi_ip_entry->pd->pi_ep_ip_entry = pi_ip_entry;
 
     }
-    
+
 end:
 
     if (ret != HAL_RET_OK) {
@@ -326,7 +326,7 @@ end:
 
         // Walk through ip entries
         dllist_for_each(lnode, &(pi_ep->ip_list_head)) {
-            pi_ip_entry = (ep_ip_entry_t *)lnode - 
+            pi_ip_entry = (ep_ip_entry_t *)lnode -
                 offsetof(ep_ip_entry_t, ep_ip_lentry);
             if (pi_ip_entry->pd) {
                 // Free PD IP entry
@@ -373,7 +373,7 @@ ep_pd_delete_pd_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
 // ----------------------------------------------------------------------------
 // Allocate resources for PD EP
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 ep_pd_alloc_res(pd_ep_t *pd_ep)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -393,7 +393,7 @@ ep_pd_alloc_res(pd_ep_t *pd_ep)
 // ----------------------------------------------------------------------------
 // De-Allocate resources for PD EP
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 ep_pd_dealloc_res(pd_ep_t *pd_ep)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -412,7 +412,7 @@ ep_pd_program_hw(pd_ep_t *pd_ep)
     // Program IPSG Table
     ret = ep_pd_pgm_ipsg_tbl(pd_ep);
 
-    // Classic mode: 
+    // Classic mode:
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
         ret = pd_ep_pgm_registered_mac(pd_ep, TABLE_OPER_INSERT);
     }
@@ -447,7 +447,7 @@ end:
 // ----------------------------------------------------------------------------
 // Program IPSG table for every IP entry
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 ep_pd_pgm_ipsg_tbl (pd_ep_t *pd_ep)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -458,7 +458,7 @@ ep_pd_pgm_ipsg_tbl (pd_ep_t *pd_ep)
 
     ret = ep_pd_pgm_ipsg_tbl_ip_entries(pi_ep, &(pi_ep->ip_list_head));
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-EP:{}: Failed to program IPSG entries", 
+        HAL_TRACE_ERR("PD-EP:{}: Failed to program IPSG entries",
                 __FUNCTION__);
         goto end;
     }
@@ -467,7 +467,7 @@ ep_pd_pgm_ipsg_tbl (pd_ep_t *pd_ep)
 #if 0
     // Walk through ip entries
     dllist_for_each(lnode, &(pi_ep->ip_list_head)) {
-        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode - 
+        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode -
             offsetof(ep_ip_entry_t, ep_ip_lentry));
         pd_ip_entry = pi_ip_entry->pd;
 
@@ -496,7 +496,7 @@ ep_pd_depgm_ipsg_tbl_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
     // Walk through ip entries
     dllist_for_each(lnode, pi_ep_list) {
         /*
-        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode - 
+        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode -
             offsetof(ep_ip_entry_t, ep_ip_lentry));
             */
         pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
@@ -516,7 +516,7 @@ end:
 // ----------------------------------------------------------------------------
 // DeProgram IPSG table for IP entry
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 ep_pd_depgm_ipsg_tble_per_ip(pd_ep_ip_entry_t *pd_ip_entry)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -553,7 +553,7 @@ end:
 // ----------------------------------------------------------------------------
 // Program IPSG table for IP entry
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -562,15 +562,15 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     ipsg_swkey_mask     key_mask;
     ipsg_actiondata     data;
     ep_t                *pi_ep = (ep_t *)pd_ep->pi_ep;
-    ep_ip_entry_t       *pi_ip_entry = 
+    ep_ip_entry_t       *pi_ip_entry =
                           (ep_ip_entry_t *)pd_ip_entry->pi_ep_ip_entry;
     l2seg_t             *l2seg = NULL;
     if_t                *pi_if = NULL;
     // uint64_t            mac_int = 0;
     mac_addr_t          *mac = NULL;
     tcam                *ipsg_tbl = NULL;
-    
-    
+
+
     pi_if = find_if_by_handle(pi_ep->if_handle);
     if (pi_if->if_type == intf::IF_TYPE_TUNNEL)
         return HAL_RET_OK;
@@ -586,22 +586,22 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     l2seg = l2seg_lookup_by_handle(pi_ep->l2seg_handle);
     HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
     key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
-    memcpy(key.flow_lkp_metadata_lkp_src, 
+    memcpy(key.flow_lkp_metadata_lkp_src,
            pi_ip_entry->ip_addr.addr.v6_addr.addr8,
            IP6_ADDR8_LEN);
     if (pi_ip_entry->ip_addr.af == IP_AF_IPV6) {
         memrev(key.flow_lkp_metadata_lkp_src, sizeof(key.flow_lkp_metadata_lkp_src));
     }
-    key.flow_lkp_metadata_lkp_type = 
+    key.flow_lkp_metadata_lkp_type =
         (pi_ip_entry->ip_addr.af == IP_AF_IPV4) ? FLOW_KEY_LOOKUP_TYPE_IPV4 :
         FLOW_KEY_LOOKUP_TYPE_IPV6;
 
     key_mask.entry_inactive_ipsg_mask = 0x1;
-    key_mask.flow_lkp_metadata_lkp_vrf_mask = 
+    key_mask.flow_lkp_metadata_lkp_vrf_mask =
         ~(key_mask.flow_lkp_metadata_lkp_vrf_mask & 0);
-    key_mask.flow_lkp_metadata_lkp_type_mask = 
+    key_mask.flow_lkp_metadata_lkp_type_mask =
         ~(key_mask.flow_lkp_metadata_lkp_type_mask & 0);
-    memset(key_mask.flow_lkp_metadata_lkp_src_mask, ~0, 
+    memset(key_mask.flow_lkp_metadata_lkp_src_mask, ~0,
             sizeof(key_mask.flow_lkp_metadata_lkp_src_mask));
 
     HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_IF_NOT_FOUND);
@@ -630,7 +630,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
                          pd_ip_entry->ipsg_tbl_idx,
                          key.flow_lkp_metadata_lkp_vrf,
                          ipaddr2str(&(pi_ip_entry->ip_addr)),
-                         data.actionid, 
+                         data.actionid,
                          data.ipsg_action_u.ipsg_ipsg_hit.src_lif,
                          data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
                          data.ipsg_action_u.ipsg_ipsg_hit.vlan_id,
@@ -674,7 +674,7 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
     // dst_lport
     pi_if = find_if_by_handle(pi_ep->if_handle);
     data.actionid = REGISTERED_MACS_REGISTERED_MACS_ID;
-    data.registered_macs_action_u.registered_macs_registered_macs.dst_lport = 
+    data.registered_macs_action_u.registered_macs_registered_macs.dst_lport =
         if_get_lport_id(pi_if);
 
     if (oper == TABLE_OPER_INSERT) {
@@ -712,7 +712,7 @@ end:
 // ----------------------------------------------------------------------------
 // DeProgram registered mac
 // ----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 ep_pd_depgm_registered_mac(pd_ep_t *pd_ep)
 {
     hal_ret_t                   ret = HAL_RET_OK;
@@ -736,11 +736,11 @@ ep_pd_depgm_registered_mac(pd_ep_t *pd_ep)
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("classic: Unable to deprogram for: {}. ret:{}",
-                __FUNCTION__, pd_ep->reg_mac_tbl_idx, ret);
+                      pd_ep->reg_mac_tbl_idx, ret);
         goto end;
     } else {
         HAL_TRACE_DEBUG("classic: DeProgrammed at: {} ",
-                __FUNCTION__, pd_ep->reg_mac_tbl_idx);
+                        pd_ep->reg_mac_tbl_idx);
     }
 
 end:
@@ -750,7 +750,7 @@ end:
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 ep_link_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 {
     pd_ep->pi_ep = pi_ep;
@@ -760,7 +760,7 @@ ep_link_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 // ----------------------------------------------------------------------------
 // De-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-void 
+void
 ep_delink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 {
     pd_ep->pi_ep = NULL;
@@ -811,7 +811,7 @@ pd_ep_mem_free(pd_ep_mem_free_args_t *args)
 // Gets hw lif id from the interface
 // ----------------------------------------------------------------------------
 uint32_t
-ep_pd_get_hw_lif_id(ep_t *pi_ep) 
+ep_pd_get_hw_lif_id(ep_t *pi_ep)
 {
     if_t            *pi_if;
     lif_t           *pi_lif;
@@ -860,7 +860,7 @@ ep_pd_get_hw_lif_id(ep_t *pi_ep)
 // Gets interface type
 // ----------------------------------------------------------------------------
 intf::IfType
-ep_pd_get_if_type(ep_t *pi_ep) 
+ep_pd_get_if_type(ep_t *pi_ep)
 {
     if_t            *pi_if;
 
@@ -870,7 +870,7 @@ ep_pd_get_if_type(ep_t *pi_ep)
     return intf_get_if_type(pi_if);
 }
 
-uint32_t 
+uint32_t
 ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, rewrite_actions_en rw_act)
 {
     pd_ep_t *pd_ep = NULL;
@@ -893,8 +893,8 @@ ep_pd_get_rw_tbl_idx(pd_ep_t *pd_ep, rewrite_actions_en rw_act)
 }
 
 uint32_t
-ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, 
-                                     tunnel_rewrite_actions_en tnnl_rw_act) 
+ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(ep_t *pi_ep,
+                                     tunnel_rewrite_actions_en tnnl_rw_act)
 {
     pd_ep_t *pd_ep = NULL;
 
@@ -908,7 +908,7 @@ ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(ep_t *pi_ep,
 // Retuns: Tunnel RW idx in flow table
 // ----------------------------------------------------------------------------
 uint32_t
-ep_pd_get_tnnl_rw_tbl_idx(pd_ep_t *pd_ep, 
+ep_pd_get_tnnl_rw_tbl_idx(pd_ep_t *pd_ep,
                           tunnel_rewrite_actions_en tnnl_rw_act) {
 
     HAL_ASSERT(tnnl_rw_act < TUNNEL_REWRITE_MAX_ID);

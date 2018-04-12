@@ -17,7 +17,7 @@ include $(TOPDIR)/make/Makefile.jobs
 ############## VALGRIND #########################
 #################################################
 
-VAL_CMD = valgrind --xml=yes 
+VAL_CMD = valgrind --xml=yes
 VAL_CMD_OPTS = $(CMD_OPTS) $(VAL_CMD)
 VALGRIND_DIR= $(TOPDIR_ABS)/gen/valgrind
 VAL_TR = $(VALGRIND_DIR)/test_results
@@ -25,12 +25,12 @@ VAL_INFO = $(VALGRIND_DIR)/info
 run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 	# PI gtests
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/uplinkif_val.xml ./nic/hal/test/gtests/uplinkif_test --gtest_output="xml:$(VAL_TR)/uplinkif_test.xml"
-	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/uplinkpc_val.xml ./nic/hal/test/gtests/uplinkpc_test --gtest_output="xml:$(VAL_TR)/uplinkpc_test.xml" 
-	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/vrf_val.xml ./nic/hal/test/gtests/vrf_test --gtest_output="xml:$(VAL_TR)/vrf_test.xml" 
+	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/uplinkpc_val.xml ./nic/hal/test/gtests/uplinkpc_test --gtest_output="xml:$(VAL_TR)/uplinkpc_test.xml"
+	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/vrf_val.xml ./nic/hal/test/gtests/vrf_test --gtest_output="xml:$(VAL_TR)/vrf_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/acl_val.xml ./nic/hal/test/gtests/acl_test --gtest_output="xml:$(VAL_TR)/acl_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/bm_allocator_val.xml ./nic/hal/test/gtests/bm_allocator_test --gtest_output="xml:$(VAL_TR)/bm_allocator_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/enicif_val.xml ./nic/hal/test/gtests/enicif_test --gtest_output="xml:$(VAL_TR)/enicif_test.xml"
-	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/lif_manager_val.xml ./nic/hal/test/gtests/lif_manager_test --gtest_output="xml:$(VAL_TR)/lif_manager_test.xml" 
+	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/lif_manager_val.xml ./nic/hal/test/gtests/lif_manager_test --gtest_output="xml:$(VAL_TR)/lif_manager_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/lif_val.xml ./nic/hal/test/gtests/lif_test --gtest_output="xml:$(VAL_TR)/lif_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/session_val.xml ./nic/hal/test/gtests/session_test --gtest_output="xml:$(VAL_TR)/session_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/tlscb_val.xml ./nic/hal/test/gtests/tlscb_test --gtest_output="xml:$(VAL_TR)/tlscb_test.xml"
@@ -69,7 +69,7 @@ hal-rtl: p4 platform capsim-master
 
 swig-cli-gft: swig-cli-clean
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli gft
-	
+
 gft: platform capsim-master go-proto
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C p4 msft_gft
@@ -168,8 +168,8 @@ sdk:
 	$(MAKE) -C sdk lib
 
 DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj
-#SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function 
-SDK_OPTS = --copt=-Wno-unused-function 
+#SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function
+SDK_OPTS = --copt=-Wno-unused-function
 
 pd_iris:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
@@ -292,6 +292,9 @@ clean: platform-clean capsim-master-clean
 
 check_clean:
 	@tools/check_clean.sh gen
+
+check_traces:
+	@./tools/trace_valid.py
 
 sanity_logs:
 	tar cvzf nic_sanity_logs.tar.gz -T /dev/null  \

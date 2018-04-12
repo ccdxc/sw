@@ -157,11 +157,11 @@ end:
 //-----------------------------------------------------------------------------
 // Allocate resources for PD Lif
 //-----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_create_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;
-    
+
     if (args->with_hw_lif_id) {
         pd_lif->hw_lif_id = args->hw_lif_id;
     } else {
@@ -170,8 +170,8 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_create_args_t *args)
         HAL_ASSERT(0);
     }
 
-    HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{} allocated hw_lif_id:{}", 
-                    __FUNCTION__, 
+    HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{} allocated hw_lif_id:{}",
+                    __FUNCTION__,
                     lif_get_lif_id((lif_t *)pd_lif->pi_lif),
                     pd_lif->hw_lif_id);
 
@@ -193,14 +193,14 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// De-Allocate resources. 
+// De-Allocate resources.
 //-----------------------------------------------------------------------------
 hal_ret_t
 lif_pd_dealloc_res(pd_lif_t *lif_pd)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     asicpd_scheduler_lif_params_t   apd_lif;
-    
+
     pd_lif_copy_asicpd_params(&apd_lif, lif_pd);
     if (lif_pd->tx_sched_table_offset != INVALID_INDEXER_INDEX) {
         ret = asicpd_scheduler_tx_pd_dealloc(&apd_lif);
@@ -220,7 +220,7 @@ end:
 //  - Delink PI <-> PD
 //  - Free PD lif
 //  Note:
-//      - Just free up whatever PD has. 
+//      - Just free up whatever PD has.
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
@@ -304,7 +304,7 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
         HAL_TRACE_ERR("unable to program hw for rx policer");
         goto end;
     }
-    
+
     ret = lif_pd_tx_policer_program_hw(pd_lif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to program hw for tx policer");
@@ -323,7 +323,7 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
     ret = eth_rss_init(pd_lif->hw_lif_id, &lif->rss,
                        (lif_queue_info_t *)&lif->qinfo);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to program hw for RSS", ret);
+        HAL_TRACE_ERR("unable to program hw for RSS err: {}", ret);
         ret = HAL_RET_ERR;
         goto end;
     }
@@ -340,7 +340,7 @@ lif_pd_deprogram_hw (pd_lif_t *pd_lif)
 {
     hal_ret_t            ret = HAL_RET_OK;
     asicpd_scheduler_lif_params_t   apd_lif;
-    
+
     pd_lif_copy_asicpd_params(&apd_lif, pd_lif);
     ret = asicpd_scheduler_tx_pd_deprogram_hw(&apd_lif);
     if (ret != HAL_RET_OK) {
@@ -414,7 +414,7 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
         RX_POLICER_ACTION(pkt_rate) = 0;
         //TODO does this need memrev ?
         memcpy(RX_POLICER_ACTION(burst), &pi_lif->qos_info.rx_policer.burst_size, sizeof(uint32_t));
-        // TODO convert the rate into token-rate 
+        // TODO convert the rate into token-rate
         memcpy(RX_POLICER_ACTION(rate), &pi_lif->qos_info.rx_policer.bps_rate, sizeof(uint32_t));
     }
 
@@ -430,7 +430,7 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
         return ret;
     }
     HAL_TRACE_DEBUG("lif {} hw_lif_id {} rate {} burst {} programmed",
-                    lif_get_lif_id(pi_lif), 
+                    lif_get_lif_id(pi_lif),
                     pd_lif->hw_lif_id, pi_lif->qos_info.rx_policer.bps_rate,
                     pi_lif->qos_info.rx_policer.burst_size);
 #endif
@@ -486,7 +486,7 @@ lif_pd_mem_free (pd_lif_t *lif)
 //-----------------------------------------------------------------------------
 // Linking PI <-> PD
 //-----------------------------------------------------------------------------
-void 
+void
 link_pi_pd(pd_lif_t *pd_lif, lif_t *pi_lif)
 {
     pd_lif->pi_lif = pi_lif;
@@ -496,7 +496,7 @@ link_pi_pd(pd_lif_t *pd_lif, lif_t *pi_lif)
 //-----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 //-----------------------------------------------------------------------------
-void 
+void
 delink_pi_pd(pd_lif_t *pd_lif, lif_t *pi_lif)
 {
     pd_lif->pi_lif = NULL;
