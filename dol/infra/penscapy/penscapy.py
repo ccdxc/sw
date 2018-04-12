@@ -10,7 +10,7 @@ class PAYLOAD(Packet):
         FieldListField("data", [], ByteField("", 0))
     ]
     def show(self, indent=3, lvl="", label_lvl=""):
-        logger.print("%s###[ PAYLOAD ]###" % label_lvl)
+        print("%s###[ %s ]###" % (label_lvl, self.name))
         self.__print_payload(prefix=label_lvl + " ")
         self.payload.show(indent, lvl, label_lvl)
         return
@@ -18,13 +18,13 @@ class PAYLOAD(Packet):
     def __print_payload(self, prefix):
         size = len(self.data)
         i = 0
-        logger.print("%s" % prefix, end='')
+        print("%s" % prefix, end='')
         while i < size:
             if i != 0 and i % 16 == 0:
-                logger.print("\n%s" % prefix, end='')
-            logger.print("%02X " % self.data[i], end='')
+                print("\n%s" % prefix, end='')
+            print("%02X " % self.data[i], end='')
             i += 1
-        logger.print("", flush=True)
+        print("", flush=True)
         return
 
     def guess_payload_class(self, payload):
@@ -36,11 +36,8 @@ class PAYLOAD(Packet):
         return super().guess_payload_class()
 
     
-class PADDING(Packet):
+class PADDING(PAYLOAD):
     name = "PADDING"
-    fields_desc = [
-        StrLenField("data", "")
-    ]
 
 class ROCE_UD_IPV4_PAD(Packet):
     name = "ROCE_UD_IPV4_PAD"
@@ -58,8 +55,8 @@ class CRC(Packet):
         IntField("crc", 0)
     ]
     def show(self, indent=3, lvl="", label_lvl=""):
-        logger.print("%s###[ CRC ]###" % label_lvl)
-        logger.print("%s  crc      = 0x%x" % (label_lvl, self.crc))
+        print("%s###[ CRC ]###" % label_lvl)
+        print("%s  crc      = 0x%x" % (label_lvl, self.crc))
         self.payload.show(indent, lvl, label_lvl)
         return
 CRC_LENGTH = len(CRC())
@@ -70,8 +67,8 @@ class ICRC(CRC):
         IntField("icrc", 0)
     ]
     def show(self, indent=3, lvl="", label_lvl=""):
-        logger.print("%s###[ ICRC ]###" % label_lvl)
-        logger.print("%s  icrc      = 0x%x" % (label_lvl, self.crc))
+        print("%s###[ ICRC ]###" % label_lvl)
+        print("%s  icrc      = 0x%x" % (label_lvl, self.crc))
         self.payload.show(indent, lvl, label_lvl)
         return
 ICRC_LENGTH = len(ICRC())
@@ -90,15 +87,15 @@ class PENDOL(Packet):
         #BitField("rsvd",        0,      14),
     ]
     def show(self, indent=3, lvl="", label_lvl=""):
-        logger.print("%s###[ PENDOL ]###" % label_lvl)
-        logger.print("%s  sig      = 0x%X" % (label_lvl, self.sig))
-        logger.print("%s  step_id  = %d" % (label_lvl, self.step_id))
-        logger.print("%s  tcid     = %d" % (label_lvl, self.tcid))
-        #logger.print("%s  ts       = %d" % (label_lvl, self.ts))
-        #logger.print("%s  opcode   = %d" % (label_lvl, self.opcode))
-        #logger.print("%s  log      = %d" % (label_lvl, self.log))
-        #logger.print("%s  logdrop  = %d" % (label_lvl, self.logdrop))
-        #logger.print("%s  rsvd     = %d" % (label_lvl, self.rsvd))
+        print("%s###[ PENDOL ]###" % label_lvl)
+        print("%s  sig      = 0x%X" % (label_lvl, self.sig))
+        print("%s  step_id  = %d" % (label_lvl, self.step_id))
+        print("%s  tcid     = %d" % (label_lvl, self.tcid))
+        #print("%s  ts       = %d" % (label_lvl, self.ts))
+        #print("%s  opcode   = %d" % (label_lvl, self.opcode))
+        #print("%s  log      = %d" % (label_lvl, self.log))
+        #print("%s  logdrop  = %d" % (label_lvl, self.logdrop))
+        #print("%s  rsvd     = %d" % (label_lvl, self.rsvd))
         self.payload.show(indent, lvl, label_lvl)
         return
 

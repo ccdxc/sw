@@ -13,7 +13,9 @@ modules:
         name    : ACL_NONIP_DROP
         spec    : acl_nonip_drop.testspec
         iterate:
-            - id        : ACL_SMAC_DMAC_ETYPE_ACTION_DROP
+            - id            : ACL_SMAC_DMAC_ETYPE_ACTION_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_nacl ]
             - id        : ACL_TENANT_ACTION_DROP
             - id        : ACL_SEGMENT_ACTION_DROP
               srcseg    : filter://native=False
@@ -27,7 +29,9 @@ modules:
         name    : ACL_NONIP_VXLAN_DROP
         spec    : acl_nonip_vxlan_drop.testspec
         iterate:
-            - id        : ACL_TENANT_ACTION_DROP
+            - id            : ACL_TENANT_ACTION_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_nacl ]
             - id        : ACL_VNID_ACTION_DROP
             - id        : ACL_DIF_ACTION_DROP
             - id        : ACL_SIF_ACTION_DROP
@@ -37,13 +41,17 @@ modules:
         name    : ACL_NONIP_FLOW_MISS_DROP
         spec    : acl_nonip_flow_miss_drop.testspec
         iterate:
-            - id        : ACL_SMAC_DMAC_ETYPE_FLOW_MISS_ACTION_DROP
+            - id            : ACL_SMAC_DMAC_ETYPE_FLOW_MISS_ACTION_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_nacl ]
 
     - module:
         name    : ACL_NONIP_FROM_ENIC_DROP
         spec    : acl_nonip_from_enic_drop.testspec
         iterate:
-            - id        : ACL_FROM_ENIC_DMAC_ACTION_DROP 
+            - id            : ACL_FROM_ENIC_DMAC_ACTION_DROP 
+              drop_stats    : True
+              drop_reasons  : [ drop_nacl ]
 
     # ACL IP Tests
     - module:
@@ -51,8 +59,10 @@ modules:
         spec    : acl_ip_drop.testspec
         iterate:
             # IPV4 specific cases
-            - id        : ACL_IPV4_SIP_DIP_ACTION_DROP
-              flow      : filter://type=IPV4
+            - id            : ACL_IPV4_SIP_DIP_ACTION_DROP
+              flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_nacl ]
             - id        : ACL_IPV4_DIP_TCP_DPORT_ACTION_DROP
               flow      : filter://type=IPV4,proto=TCP
             - id        : ACL_IPV4_DIP_UDP_DPORT_ACTION_DROP
@@ -147,8 +157,10 @@ modules:
         name    : ACL_IP_VXLAN_DROP
         spec    : acl_ip_vxlan_drop.testspec
         iterate:
-            - id        : ACL_IPV4_OPTIONS_ACTION_DROP
-              flow      : filter://type=IPV4
+            - id            : ACL_IPV4_OPTIONS_ACTION_DROP
+              flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_nacl ]
             - id        : ACL_IPV4_FRAGMENT_ACTION_DROP
               flow      : filter://type=IPV4
               scenario  : FIRST_FRAGMENT
@@ -183,8 +195,10 @@ modules:
         name    : ACL_IP_FLOW_MISS_DROP
         spec    : acl_ip_flow_miss_drop.testspec
         iterate:
-            - id        : ACL_IPV4_SIP_DIP_FLOW_MISS_ACTION_DROP
-              flow      : filter://type=IPV4
+            - id            : ACL_IPV4_SIP_DIP_FLOW_MISS_ACTION_DROP
+              flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_nacl ]
             - id        : ACL_IPV6_SIP_DIP_FLOW_MISS_ACTION_DROP
               flow      : filter://type=IPV6
 
@@ -192,7 +206,9 @@ modules:
         name    : ACL_IP_FROM_ENIC_DROP
         spec    : acl_ip_from_enic_drop.testspec
         iterate:
-            - id        : ACL_FROM_ENIC_IPV4_DIP_ACTION_DROP 
-              flow      : filter://type=IPV4
+            - id            : ACL_FROM_ENIC_IPV4_DIP_ACTION_DROP 
+              flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_nacl ]
             - id        : ACL_FROM_ENIC_IPV6_DIP_ACTION_DROP 
               flow      : filter://type=IPV6

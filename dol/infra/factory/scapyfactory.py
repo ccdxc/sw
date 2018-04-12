@@ -510,7 +510,7 @@ class ScapyPacketObject:
         spktobj = Parse(rawbytes)
         spkt = spktobj.spkt
         logger.info("------------------- SCAPY PACKET ---------------------")
-        logger.ShowScapyObject(spkt)
+        logger.ShowScapyObject(spkt, build=False)
         return
 
     def Show(self):
@@ -534,18 +534,21 @@ class RawPacketParser:
         return None
 
     def __process_pendol(self, rawbytes):
-        if len(rawbytes) < penscapy.PENDOL_LENGTH:
+        if rawbytes is None:
             return None
+
+        if len(rawbytes) < penscapy.PENDOL_LENGTH:
+            return penscapy.PAYLOAD(rawbytes)
 
         pdoffset = len(rawbytes) - penscapy.PENDOL_LENGTH
         pdbytes = rawbytes[pdoffset:]
+        rawbytes = rawbytes[:pdoffset]
         pen = penscapy.PENDOL(pdbytes)
         if pen.sig != penscapy.PENDOL_SIGNATURE:
-            return None
-        return pen
+            return penscapy.PAYLOAD(rawbytes)
+        return penscapy.PAYLOAD(rawbytes) / pen
 
-    def __process_nxthdrs(self, rawbytes):
-        nxthdrs = None
+    def __process_crc(self, rawbytes):
         '''
         length = len(rawbytes)
         if length < penscapy.CRC_LENGTH:
@@ -561,29 +564,34 @@ class RawPacketParser:
             # Only CRC is present in payload.
             return nxthdrs
         '''
+        return
+
+    def __process_nxthdrs(self, rawhdr, padding):
+        raw_bytes = bytes(rawhdr) if rawhdr else None
         # Lets check if PENDOL header is present.
-        pen = self.__process_pendol(rawbytes)
-        if pen is not None:
-            pyldbytes = rawbytes[:len(rawbytes) - penscapy.PENDOL_LENGTH]
-            nxthdrs = pen / nxthdrs
-        else:
-            pyldbytes = rawbytes
-
-        # If any bytes are remaining, treat them as payload.
-        if len(pyldbytes) > 0:
-            nxthdrs = penscapy.PAYLOAD(pyldbytes) / nxthdrs
-
-        return nxthdrs
+        nxthdrs = self.__process_pendol(raw_bytes)
+        padding = penscapy.PADDING(bytes(padding)) if padding else padding
+        if nxthdrs:
+            nxthdrs = nxthdrs / padding if padding else nxthdrs
+            return nxthdrs
+        return padding
 
     def __process_raw_bytes(self, pkt):
-        rawhdr = self.__get_raw_hdr(pkt)
-        if rawhdr is None:
+        rawhdr = pkt[penscapy.Raw] if penscapy.Raw in pkt else None
+        padding = pkt[penscapy.Padding] if penscapy.Padding in pkt else None
+        if rawhdr is None and padding is None:
             return pkt
-        if rawhdr.underlayer == None:
-           pdb.set_trace()
-        rawhdr.underlayer.remove_payload()
 
-        nxthdrs = self.__process_nxthdrs(bytes(rawhdr))
+        if rawhdr:
+            rawhdr.underlayer.remove_payload()
+            rawhdr.remove_payload()
+
+        if padding:
+            padding.remove_payload()
+            if padding.underlayer:
+                padding.underlayer.remove_payload()
+
+        nxthdrs = self.__process_nxthdrs(rawhdr, padding)
         pkt = pkt / nxthdrs
         return pkt
 

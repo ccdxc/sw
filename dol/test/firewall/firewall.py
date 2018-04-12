@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import test.firewall.tracker.tracker as trackermod
+import test.callbacks.networking.modcbs as modcbs
 
 from test.firewall.tracker.store import TrackerStore
 def InitTracker(infra, module):
@@ -24,13 +25,17 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
+    modcbs.TestCaseSetup(tc)
     stepspec = tc.module.iterator.Get()
     tc.tracker.SetStep(stepspec, tc)
     tc.tracker.SetupTestcaseConfig(tc)
     return
 
+def TestCasePreTrigger(tc):
+    return modcbs.TestCasePreTrigger(tc)
+
 def TestCaseVerify(tc):
-    return True
+    return modcbs.TestCaseVerify(tc)
 
 def TestCaseTeardown(tc):
     tc.tracker.Advance()

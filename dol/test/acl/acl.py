@@ -4,6 +4,7 @@
 import pdb
 import infra.api.api as InfraApi
 import test.telemetry.telemetry as telemetry
+import test.callbacks.networking.modcbs as modcbs
 
 from infra.common.logging import logger as logger
 
@@ -26,6 +27,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
+    modcbs.TestCaseSetup(tc)
     iterelem = tc.module.iterator.Get()
 
     acl = tc.infra_data.ConfigStore.objects.Get(iterelem.id)
@@ -48,8 +50,11 @@ def TestCaseSetup(tc):
     acl.Update()
     return
 
+def TestCasePreTrigger(tc):
+    return modcbs.TestCasePreTrigger(tc)
+
 def TestCaseVerify(tc):
-    return True
+    return modcbs.TestCaseVerify(tc)
 
 def TestCaseTeardown(tc):
     return

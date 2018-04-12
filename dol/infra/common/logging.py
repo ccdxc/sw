@@ -190,9 +190,12 @@ class Logger:
     def GetLogPrefix(self):
         return self.__get_log_prefix()
 
-    def ShowScapyObject(self, scapyobj):
-        scapyobj.show2(indent = 0,
-                        label_lvl = self.GetLogPrefix())
+    def ShowScapyObject(self, scapyobj, build = True):
+        if build:
+            scapyobj.show2(indent = 0, label_lvl = self.GetLogPrefix())
+        else:
+            scapyobj.show(indent = 0, label_lvl = self.GetLogPrefix())
+        return
 
     def LogFunctionBegin(self):
         logger.debug("BEG: %s()" % inspect.stack()[1][3])

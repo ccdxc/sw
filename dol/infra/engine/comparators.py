@@ -46,12 +46,14 @@ class CrPacket:
         return hdr.__class__.__name__
 
     def __build_hdr_stack(self):
+        logger.debug("Building HDR stack.")
         hdr = self.spkt.copy()
         pyld = hdr.payload
         hdr.remove_payload()
         while hdr.name != 'NoPayload':
             self.hdrs.append(hdr)
             hdrname = self.__get_hdr_name(hdr)
+            logger.debug(" - Adding hdr:%s to stack" % hdrname)
             self.hdrnames.append(hdrname)
             hdr = pyld
             pyld = hdr.payload

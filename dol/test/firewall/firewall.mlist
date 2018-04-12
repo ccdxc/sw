@@ -314,6 +314,8 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_SYN_WIN_ZERO
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_out_of_window ]
 
     - module:
         name    : FULL
@@ -353,6 +355,8 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_DATA
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_SHRINK_WINDOW
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_out_of_window ]
 
     - module:
         name    : RES_WINDOW_SHRINK_DROP_PKT
@@ -369,6 +373,8 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_SHRINK_WINDOW
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_out_of_window ]
 
     - module:
         name    : INIT_WINDOW_SHRINK_AND_GROW
@@ -385,6 +391,8 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_DATA
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_SHRINK_WINDOW
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_out_of_window ]
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_SMALL_PKT
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             - step  : ref://trackerstore/steps/id=IFLOW_DATA
@@ -404,6 +412,8 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_SHRINK_WINDOW
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_out_of_window ]
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_SMALL_PKT
             - step  : ref://trackerstore/steps/id=IFLOW_DATA
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
@@ -1263,6 +1273,8 @@ modules:
             # Send updated window from Responder side
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_WIN_ZERO
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_RCV_NEXT_MINUS_1_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_win_zero_drop ]
 
     # TCP Data Len != 0, rcvr_win_sz = 0, send packet
     - module:
@@ -1287,6 +1299,8 @@ modules:
             # Send updated window from Responder side
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_WIN_ZERO
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_RCV_NEXT_MINUS_1_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_win_zero_drop ]
 
     # TCP Data Len != 0, rcvr_win_sz = 0, send packet
     - module:
@@ -1311,6 +1325,8 @@ modules:
             # Send updated window from Responder side
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_WIN_ZERO
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_win_zero_drop ]
 
     # TCP Data Len != 0, rcvr_win_sz = 0, send packet
     - module:
@@ -1335,6 +1351,8 @@ modules:
             # Send updated window from Responder side
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_WIN_ZERO
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_win_zero_drop ]
 
     # TCP Data Len != 0, rcvr_win_sz = 0, send packet
     - module:
@@ -1359,6 +1377,8 @@ modules:
             # Send updated window from Responder side
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_WIN_ZERO
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_RCV_NEXT_PLUS_1_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_win_zero_drop ]
 
     # TCP Data Len != 0, rcvr_win_sz = 0, send packet
     - module:
@@ -1383,6 +1403,8 @@ modules:
             # Send updated window from Responder side
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_WIN_ZERO
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_RCV_NEXT_PLUS_1_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_win_zero_drop ]
 
 
     # Test targetting state machine trasnsition related code.
@@ -1480,6 +1502,8 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
               cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_data_after_fin ]
 
     - module:
         name    : RES_DATA_AFTER_RES_FIN
@@ -1499,6 +1523,8 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_data_after_fin ]
 
     - module:
         name    : INIT_RETRANSMIT_DATA_AFTER_INIT_FIN
@@ -1598,6 +1624,8 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
               cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_data_after_fin ]
 
     - module:
         name    : RES_DATA_AFTER_BIDIR_FIN
@@ -1619,6 +1647,8 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_data_after_fin ]
 
     - module:
         name    : INIT_RETRANSMIT_DATA_AFTER_BIDIR_FIN
@@ -1672,6 +1702,8 @@ modules:
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_FIN_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_unexpected_pkt ]
 
     - module:
         name    : RES_FIN_BEFORE_CONN_SETUP
@@ -1683,6 +1715,8 @@ modules:
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=RFLOW_FIN_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_unexpected_pkt ]
 
 
     - module:
@@ -1820,6 +1854,8 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_RST
               cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_non_rst_pkt_after_rst ]
 
     - module:
         name    : RES_DATA_ON_INIT_RST_CONN
@@ -1839,6 +1875,8 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_RST
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_non_rst_pkt_after_rst ]
 
     - module:
         name    : INIT_DATA_ON_RES_RST_CONN
@@ -1858,6 +1896,8 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_RST
               cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_non_rst_pkt_after_rst ]
 
     - module:
         name    : RES_DATA_ON_RES_RST_CONN
@@ -1877,6 +1917,8 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_RST
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_non_rst_pkt_after_rst ]
 
     - module:
         name    : INIT_SYN_ON_ESTAB_CONN
@@ -1894,6 +1936,8 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=IFLOW_SYN_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_unexpected_pkt ]
 
     - module:
         name    : RESP_SYN_ON_ESTAB_CONN
@@ -1911,6 +1955,8 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_DROP
+              drop_stats    : True
+              drop_reasons  : [ drop_tcp_unexpected_pkt ]
 
     - module:
         name    : ABS_STEP_TEST
