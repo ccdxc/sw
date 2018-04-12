@@ -1073,8 +1073,8 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
     hal_ret_t ret   = HAL_RET_OK;
     LifSpec   *spec = app_ctxt->spec;
     int cmp;
-    policer_t new_rx_policer = {0};
-    policer_t new_tx_policer = {0};
+    policer_t new_rx_policer = { POLICER_TYPE_PPS };
+    policer_t new_tx_policer = { POLICER_TYPE_PPS };
 
     // Handle vlan_strip_en change
     if (lif->vlan_strip_en != spec->vlan_strip_en()) {

@@ -24,10 +24,22 @@ service QOS {
 
 }
 
+message PolicerPPSSpec {
+  uint32 packets_per_sec = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:250-2000000000}"];    // Packets-per-second rate (range max is about 1Tbps)
+  uint32 burst_packets   = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:0-2000000000}"];    // Packet burst to absorb
+}
+
+message PolicerBPSSpec {
+  uint64 bytes_per_sec = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:250-125000000000}"];    // rate for this policer in bytes-per-second (range max is about 1Tbps)
+  uint64 burst_bytes   = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:0-125000000000}"];    // Burst size allowed for the policer in bytes
+}
+
 // Specifications of a policer
 message PolicerSpec {
-  uint64 bps_rate   = 1;    // rate for this policer in bytes-per-second
-  uint64 burst_size = 2;    // Burst size allowed for the policer in bytes
+  oneof policer_type {
+    PolicerPPSSpec pps_policer = 1;
+    PolicerBPSSpec bps_policer = 2;
+  }
 }
 
 // PolicerStats captures all the statistics of a policer
@@ -95,32 +107,32 @@ message QosClassRequestMsg {
   repeated QosClassSpec request = 1;    // batch of requests
 }
 
-message PortTypeNum {
-  enum PortType {
-    PORT_TYPE_DMA  = 0;
-    PORT_TYPE_P4IG = 1;
-    PORT_TYPE_P4EG = 2;
-  }
-  oneof port_type_or_num {
-    PortType port_type       = 1;
-    uint32   uplink_port_num = 2;
-  }
+enum PacketBufferPortType {
+  PACKET_BUFFER_PORT_TYPE_DMA    = 0;
+  PACKET_BUFFER_PORT_TYPE_P4IG   = 1;
+  PACKET_BUFFER_PORT_TYPE_P4EG   = 2;
+  PACKET_BUFFER_PORT_TYPE_UPLINK = 3;
+}
+
+message PacketBufferPort {
+  PacketBufferPortType port_type = 1;
+  uint32               port_num  = 2;
 }
 
 message QosClassInputQueue {
-  PortTypeNum port_type_num   = 1;
-  uint32      input_queue_idx = 2;
+  PacketBufferPort packet_buffer_port = 1;
+  uint32           input_queue_idx    = 2;
 }
 
 message QosClassOutputQueue {
-  PortTypeNum port_type_num    = 1;
-  uint32      output_queue_idx = 2;
+  PacketBufferPort packet_buffer_port = 1;
+  uint32           output_queue_idx   = 2;
 }
 
 // QosClass oper state for enterprise pipeline
 message QosClassStatusEpd {
-  repeated QosClassInputQueue  input_queues  = 1;
-  repeated QosClassOutputQueue output_queues = 2;
+  repeated QosClassInputQueue  input_queues  = 1; // List of input queues
+  repeated QosClassOutputQueue output_queues = 2; // List of output queues
 }
 
 // QosClass oper state for cloud pipeline
@@ -188,8 +200,8 @@ message QosClassOutputQueueStats {
 message QosClassStats {
   uint32                            num_lifs_tx        = 1;    // Number of lifs referencing this class in tx
   uint32                            num_lifs_rx        = 2;    // Number of lifs referencing this class in rx
-  repeated QosClassInputQueueStats  input_queue_stats  = 3;    // Input queue statistics
-  repeated QosClassOutputQueueStats output_queue_stats = 4;    // Output queue statistics
+  repeated QosClassInputQueueStats  input_queue_stats  = 3;    // List of input queue statistics per each input queue
+  repeated QosClassOutputQueueStats output_queue_stats = 4;    // List of output queue statistics per each output queue
 }
 
 // QosClassGetRequest is used to get information about a QosClass

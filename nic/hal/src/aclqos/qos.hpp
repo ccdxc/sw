@@ -239,16 +239,50 @@ hal_ret_t qosclass_delete(qos::QosClassDeleteRequest& req,
 hal_ret_t qosclass_get(qos::QosClassGetRequest& req,
                        qos::QosClassGetResponseMsg *rsp);
 
+#define POLICER_TYPES(ENTRY) \
+    ENTRY(POLICER_TYPE_PPS,                 0, "pps") \
+    ENTRY(POLICER_TYPE_BPS,                 1, "bps") 
+
+DEFINE_ENUM(policer_type_t, POLICER_TYPES)
+#undef POLICER_TYPES
+
 typedef struct policer_s {
-    uint64_t bps_rate; // rate in bytes-per-sec
-    uint64_t burst_size; // Burst size in bytes
+    policer_type_t type;
+    uint64_t rate; // rate in bytes-per-sec or packets-per-sec
+    uint64_t burst; // burst size in bytes or packets
 } __PACK__ policer_t;
+
+inline std::ostream& operator<<(std::ostream& os, const policer_t& p)
+{
+    return os << fmt::format("{{type: {}, rate: {}, burst: {}}}",
+                             p.type, p.rate, p.burst); 
+}
+
 
 static inline void
 qos_policer_update_from_spec(const qos::PolicerSpec &spec, policer_t *policer)
 {
-    policer->bps_rate = spec.bps_rate();
-    policer->burst_size = spec.burst_size();
+    if (spec.has_pps_policer()) {
+        policer->type = POLICER_TYPE_PPS;
+        policer->rate = spec.pps_policer().packets_per_sec();
+        policer->burst = spec.pps_policer().burst_packets();
+    } else {
+        policer->type = POLICER_TYPE_BPS;
+        policer->rate = spec.bps_policer().bytes_per_sec();
+        policer->burst = spec.bps_policer().burst_bytes();
+    }
+}
+
+static inline void
+qos_policer_to_spec (policer_t *policer, qos::PolicerSpec *spec)
+{
+    if (policer->type == POLICER_TYPE_PPS) {
+        spec->mutable_pps_policer()->set_packets_per_sec(policer->rate);
+        spec->mutable_pps_policer()->set_burst_packets(policer->burst);
+    } else {
+        spec->mutable_bps_policer()->set_bytes_per_sec(policer->rate);
+        spec->mutable_bps_policer()->set_burst_bytes(policer->burst);
+    }
 }
 
 static inline bool

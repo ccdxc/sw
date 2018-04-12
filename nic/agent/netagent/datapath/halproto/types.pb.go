@@ -683,6 +683,8 @@
 		ProxyrCbStats
 		ProxyrCbGetResponse
 		ProxyrCbGetResponseMsg
+		PolicerPPSSpec
+		PolicerBPSSpec
 		PolicerSpec
 		PolicerStats
 		QosPFC
@@ -691,7 +693,7 @@
 		QosMarking
 		QosClassSpec
 		QosClassRequestMsg
-		PortTypeNum
+		PacketBufferPort
 		QosClassInputQueue
 		QosClassOutputQueue
 		QosClassStatusEpd
@@ -810,9 +812,9 @@
 		TableStats
 		BufferDropStats
 		BufferStats
-		HBMFifoDropStats
-		HBMFifoStats
-		PortBufferStats
+		OflowFifoDropStats
+		OflowFifoStats
+		PacketBufferPortStats
 		PacketBufferStats
 		SystemResponse
 		Stats

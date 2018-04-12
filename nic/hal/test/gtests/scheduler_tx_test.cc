@@ -96,8 +96,8 @@ TEST_F(scheduler_tx_test, test1)
     lif_spec.mutable_lif_qstate_map(0)->set_type_num(0);
     lif_spec.mutable_lif_qstate_map(0)->set_size(1);
     lif_spec.mutable_lif_qstate_map(0)->set_entries(15);
-    lif_spec.mutable_tx_policer()->set_bps_rate(10000);
-    lif_spec.mutable_tx_policer()->set_burst_size(200);
+    lif_spec.mutable_tx_policer()->mutable_bps_policer()->set_bytes_per_sec(10000);
+    lif_spec.mutable_tx_policer()->mutable_bps_policer()->set_burst_bytes(200);
 
     lif_spec.add_lif_qstate_map();
     lif_spec.mutable_lif_qstate_map(1)->set_type_num(1);
@@ -182,8 +182,8 @@ TEST_F(scheduler_tx_test, test3)
     lif_spec.mutable_lif_qstate_map(1)->set_size(1);
     lif_spec.mutable_lif_qstate_map(1)->set_entries(4);
 
-    lif_spec.mutable_tx_policer()->set_bps_rate(20000);
-    lif_spec.mutable_tx_policer()->set_burst_size(400);
+    lif_spec.mutable_tx_policer()->mutable_bps_policer()->set_bytes_per_sec(20000);
+    lif_spec.mutable_tx_policer()->mutable_bps_policer()->set_burst_bytes(400);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_update(lif_spec, &lif_rsp);
@@ -215,8 +215,8 @@ TEST_F(scheduler_tx_test, test4)
     spec.mutable_lif_qstate_map(0)->set_type_num(1);
     spec.mutable_lif_qstate_map(0)->set_size(1);
     spec.mutable_lif_qstate_map(0)->set_entries(13);
-    spec.mutable_tx_policer()->set_bps_rate(10000);
-    spec.mutable_tx_policer()->set_burst_size(200);
+    spec.mutable_tx_policer()->mutable_bps_policer()->set_bytes_per_sec(10000);
+    spec.mutable_tx_policer()->mutable_bps_policer()->set_burst_bytes(200);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(spec, &rsp, NULL);

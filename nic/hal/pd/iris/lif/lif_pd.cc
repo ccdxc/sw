@@ -451,24 +451,25 @@ lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     uint64_t refresh_interval_us = HAL_DEFAULT_POLICER_REFRESH_INTERVAL;
     uint64_t rate_tokens = 0;
     uint64_t burst_tokens = 0;
-    uint64_t bps_rate;
+    uint64_t rate;
 
     tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE);
     HAL_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
 
     d.actionid = TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE_TX_STAGE5_LIF_EGRESS_RL_PARAMS_ID;
 
-    bps_rate = pi_lif->qos_info.tx_policer.bps_rate;
-    burst_tokens = pi_lif->qos_info.tx_policer.burst_size;
+    rate = pi_lif->qos_info.tx_policer.rate;
 
-    if (bps_rate == 0) {
+    if (rate == 0) {
         TX_POLICER_ACTION(d, entry_valid) = 0;
     } else {
         TX_POLICER_ACTION(d, entry_valid) = 1;
-        TX_POLICER_ACTION(d, pkt_rate) = 0;
+        TX_POLICER_ACTION(d, pkt_rate) =
+            pi_lif->qos_info.tx_policer.type == POLICER_TYPE_PPS ? 1 : 0;
 
-        ret = policer_rate_per_sec_to_token_rate(bps_rate, refresh_interval_us,
-                                                 &rate_tokens, burst_tokens);
+        ret = policer_to_token_rate(&pi_lif->qos_info.tx_policer,
+                                    refresh_interval_us,
+                                    &rate_tokens, &burst_tokens);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error converting rate to token rate ret {}", ret);
             return ret;
@@ -512,10 +513,10 @@ lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pd-lif:{}: lif {} hw_lif_id {} rate {} burst {} programmed",
-                    __FUNCTION__, lif_get_lif_id(pi_lif),
-                    pd_lif->hw_lif_id, pi_lif->qos_info.tx_policer.bps_rate,
-                    pi_lif->qos_info.tx_policer.burst_size);
+    HAL_TRACE_DEBUG("Lif: {} hw_lif_id: {} policer: {} programmed",
+                    lif_get_lif_id(pi_lif),
+                    pd_lif->hw_lif_id,
+                    pi_lif->qos_info.tx_policer);
 end:
     return ret;
 }
@@ -557,30 +558,29 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
                                         HAL_DEFAULT_POLICER_REFRESH_INTERVAL;
     uint64_t              rate_tokens = 0;
     uint64_t              burst_tokens = 0;
-    uint64_t              bps_rate;
+    uint64_t              rate;
 
     rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
     HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
 
     d.actionid = RX_POLICER_EXECUTE_RX_POLICER_ID;
 
-    bps_rate = pi_lif->qos_info.rx_policer.bps_rate;
-    burst_tokens = pi_lif->qos_info.rx_policer.burst_size;
+    rate = pi_lif->qos_info.rx_policer.rate;
 
-    if (bps_rate == 0) {
+    if (rate == 0) {
         RX_POLICER_ACTION(d, entry_valid) = 0;
     } else {
         RX_POLICER_ACTION(d, entry_valid) = 1;
-        RX_POLICER_ACTION(d, pkt_rate) = 0;
+        RX_POLICER_ACTION(d, pkt_rate) =
+            pi_lif->qos_info.rx_policer.type == POLICER_TYPE_PPS ? 1 : 0;
 
-        ret = policer_rate_per_sec_to_token_rate(bps_rate, refresh_interval_us,
-                                                 &rate_tokens, burst_tokens);
+        ret = policer_to_token_rate(&pi_lif->qos_info.rx_policer,
+                                    refresh_interval_us,
+                                    &rate_tokens, &burst_tokens);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error converting rate to token rate ret {}", ret);
             return ret;
         }
-
-        burst_tokens += rate_tokens;
 
         memcpy(RX_POLICER_ACTION(d, burst), &burst_tokens,
                std::min(sizeof(RX_POLICER_ACTION(d, burst)),
@@ -614,11 +614,11 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
                       lif_get_lif_id(pi_lif), ret);
         return ret;
     }
-    HAL_TRACE_DEBUG("lif {} hw_lif_id {} rate {} burst {} "
+    HAL_TRACE_DEBUG("lif {} hw_lif_id {} rx_policer {}"
                     "rate_tokens {} burst_tokens {} programmed",
                     lif_get_lif_id(pi_lif),
-                    pd_lif->hw_lif_id, pi_lif->qos_info.rx_policer.bps_rate,
-                    pi_lif->qos_info.rx_policer.burst_size,
+                    pd_lif->hw_lif_id,
+                    pi_lif->qos_info.rx_policer,
                     rate_tokens, burst_tokens);
     return ret;
 }

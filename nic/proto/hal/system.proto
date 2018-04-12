@@ -186,36 +186,36 @@ message BufferStats {
   BufferDropStats drop_counts   = 5;    // Drop counts 
 }
 
-// HBMFifoDropStats captures instantaneous drop counts at the HBM fifo interface
-message HBMFifoDropStats {
+// OflowFifoDropStats captures instantaneous drop counts at the overflow fifo interface
+message OflowFifoDropStats {
   uint32 occupancy_drop_count                = 1;    // Pkts dropped due to fifo full
-  uint32 emergency_stop_drop_count           = 2;    // Pkts dropped due to emergency condition hit due to slow HBM to write-buffer communication
+  uint32 emergency_stop_drop_count           = 2;    // Pkts dropped due to emergency condition hit due to slow oflow memory to write-buffer communication
   uint32 write_buffer_ack_fill_up_drop_count = 3;    // Pkts dropped due to write buffer's ack fifo filling up
   uint32 write_buffer_ack_full_drop_count    = 4;    // Pkts dropped due to write buffer's ack fifo full
   uint32 write_buffer_full_drop_count        = 5;    // Pkts dropped due to write buffer filling up
   uint32 control_fifo_full_drop_count        = 6;    // Pkts dropped due to control fifo full
 }
 
-// HBMFifoStats captures instantaneous counters at the HBM fifo interface
-message HBMFifoStats {
-  uint32           sop_count_in  = 1;    // Count of start-of-packets in
-  uint32           eop_count_in  = 2;    // Count of end-of-packets in
-  uint32           sop_count_out = 3;    // Count of start-of-packets out
-  uint32           eop_count_out = 4;    // Count of end-of-packets out
-  HBMFifoDropStats drop_counts   = 5;    // Drop counts 
+// OflowFifoStats captures instantaneous counters at the overflow fifo interface
+message OflowFifoStats {
+  uint32             sop_count_in  = 1;    // Count of start-of-packets in
+  uint32             eop_count_in  = 2;    // Count of end-of-packets in
+  uint32             sop_count_out = 3;    // Count of start-of-packets out
+  uint32             eop_count_out = 4;    // Count of end-of-packets out
+  OflowFifoDropStats drop_counts   = 5;    // Drop counts
 }
 
-// PortBufferStats is container to capture all counters exposed by the buffering
+// PacketBufferPortStats is container to capture all counters exposed by the buffering
 // module at the port level
-message PortBufferStats {
-  qos.PortTypeNum port_type_num  = 1;    // Port identifier
-  BufferStats     buffer_stats   = 2;    // PBC block statistics
-  HBMFifoStats    hbm_fifo_stats = 3;    // HBM overflow fifo statistics
+message PacketBufferPortStats {
+  qos.PacketBufferPort packet_buffer_port = 1;    // Port identifier
+  BufferStats          buffer_stats       = 2;    // PBC block statistics
+  OflowFifoStats       oflow_fifo_stats   = 3;    // Overflow fifo statistics
 }
 
 // PacketBufferStats captures all the statistics of the packet buffering module
 message PacketBufferStats {
-  repeated PortBufferStats port_buffer_stats = 1;
+  repeated PacketBufferPortStats port_stats = 1; // list of stats, one per packet buffer port
 }
 
 // Global system object

@@ -1871,9 +1871,15 @@ copp_spec_dump (CoppSpec& spec)
     }
 
     if (spec.has_policer()) {
-        buf.write("bps_rate: {}, burst_size: {}, ",
-                  spec.policer().bps_rate(),
-                  spec.policer().burst_size());
+        if (spec.policer().has_pps_policer()) {
+            buf.write("PPS : {}, burst: {}, ",
+                      spec.policer().pps_policer().packets_per_sec(),
+                      spec.policer().pps_policer().burst_packets());
+        } else {
+            buf.write("Bytes-per-sec: {}, burst: {}, ",
+                      spec.policer().bps_policer().bytes_per_sec(),
+                      spec.policer().bps_policer().burst_bytes());
+        }
     }
 
     HAL_TRACE_DEBUG("{}", buf.c_str());
@@ -1884,8 +1890,16 @@ static hal_ret_t
 validate_copp_spec (CoppSpec& spec)
 {
     // Copp policer rate cannot be zero
-    if (!spec.has_policer() || !spec.policer().bps_rate()) {
+    if (!spec.has_policer()) {
         HAL_TRACE_ERR("policer spec not set in request");
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if ((spec.policer().has_pps_policer() && 
+         !spec.policer().pps_policer().packets_per_sec()) ||
+        (spec.policer().has_bps_policer() && 
+         !spec.policer().bps_policer().bytes_per_sec())) {
+        HAL_TRACE_ERR("Copp policer rate not set in request");
         return HAL_RET_INVALID_ARG;
     }
     return HAL_RET_OK;
@@ -2335,7 +2349,7 @@ static inline hal_ret_t
 copp_handle_update (CoppSpec& spec, copp_t *copp,
                     copp_update_app_ctxt_t *app_ctxt)
 {
-    policer_t policer = {0};
+    policer_t policer = { POLICER_TYPE_PPS };
 
     qos_policer_update_from_spec(spec.policer(), &policer);
     if (!qos_policer_spec_same(&copp->policer, &policer)) {
@@ -2433,8 +2447,7 @@ copp_get_fill_rsp (qos::CoppGetResponse *rsp,
     spec = rsp->mutable_spec();
     spec->mutable_key_or_handle()->set_copp_type(
         copp_type_to_spec_type(copp->key.copp_type));
-    spec->mutable_policer()->set_bps_rate(copp->policer.bps_rate);
-    spec->mutable_policer()->set_burst_size(copp->policer.burst_size);
+    qos_policer_to_spec(&copp->policer, spec->mutable_policer());
 
     // fill operational state of this copp
     rsp->mutable_status()->set_copp_handle(copp->hal_handle);

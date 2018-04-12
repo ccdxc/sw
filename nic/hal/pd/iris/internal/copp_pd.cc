@@ -95,7 +95,7 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
     uint64_t        refresh_interval_us = HAL_DEFAULT_POLICER_REFRESH_INTERVAL;
     uint64_t        rate_tokens = 0;
     uint64_t        burst_tokens = 0;
-    uint64_t        bps_rate;
+    uint64_t        rate;
 
 
     copp_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP);
@@ -103,23 +103,22 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
 
     d.actionid = COPP_EXECUTE_COPP_ID;
 
-    bps_rate = pi_copp->policer.bps_rate;
-    burst_tokens = pi_copp->policer.burst_size;
+    rate = pi_copp->policer.rate;
 
-    if (bps_rate == 0) {
+    if (rate == 0) {
         COPP_ACTION(d, entry_valid) = 0;
     } else {
         COPP_ACTION(d, entry_valid) = 1;
-        COPP_ACTION(d, pkt_rate) = 0;
+        COPP_ACTION(d, pkt_rate) =
+            pi_copp->policer.type == POLICER_TYPE_PPS ? 1 : 0;
 
-        ret = policer_rate_per_sec_to_token_rate(bps_rate, refresh_interval_us, 
-                                                 &rate_tokens, burst_tokens);
+        ret = policer_to_token_rate(&pi_copp->policer, 
+                                    refresh_interval_us, 
+                                    &rate_tokens, &burst_tokens);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error converting rate to token rate ret {}", ret);
             return ret;
         }
-
-        burst_tokens += rate_tokens;
 
         memcpy(COPP_ACTION(d, burst), &burst_tokens,
                std::min(sizeof(COPP_ACTION(d, burst)), 
@@ -156,10 +155,12 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
                       pi_copp->key, ret);
         return ret;
     }
-    HAL_TRACE_DEBUG("copp {} hw_policer_id {} rate {} burst {} programmed",
+    HAL_TRACE_DEBUG("Copp: {} hw_policer_id: {} policer: {} "
+                    "rate_tokens: {} burst_tokens: {} programmed",
                     pi_copp->key,
-                    pd_copp->hw_policer_id, pi_copp->policer.bps_rate,
-                    pi_copp->policer.burst_size);
+                    pd_copp->hw_policer_id, 
+                    pi_copp->policer,
+                    rate_tokens, burst_tokens);
     return HAL_RET_OK;
 }
 #undef COPP_ACTION

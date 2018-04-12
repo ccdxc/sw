@@ -107,15 +107,15 @@
                 [
                     {
                         "keyOrHandle" : { "coppType" : "COPP_TYPE_FLOW_MISS" },
-                        "policer" : { "bpsRate" : 10000, "burstSize" : 10000 }
+                        "policer" : { "bpsPolicer" : { "bytesPerSec" : 10000, "burstBytes" : 1000 } }
                     },
                     {
                         "keyOrHandle" : { "coppType" : "COPP_TYPE_ARP" },
-                        "policer" : { "bpsRate" : 10000, "burstSize" : 10000 }
+                        "policer" : { "ppsPolicer" : { "packetsPerSec" : 250, "burstPackets" : 25} }
                     },
                     {
                         "keyOrHandle" : { "coppType" : "COPP_TYPE_DHCP" },
-                        "policer" : { "bpsRate" : 10000, "burstSize" : 10000 }
+                        "policer" : { "ppsPolicer" : { "packetsPerSec" : 250, "burstPackets" : 25} }
                     }
                 ]
             }

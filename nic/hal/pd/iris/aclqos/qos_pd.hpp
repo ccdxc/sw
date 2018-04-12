@@ -130,13 +130,13 @@ qos_class_pd_free (pd_qos_class_t *pd_qos_class)
 }
 
 
-static hal_ret_t
-policer_rate_per_sec_to_token_rate (uint64_t rate_per_sec, uint64_t refresh_interval_us, 
-                                    uint64_t *token_rate_p, uint64_t burst)
+static inline hal_ret_t
+policer_to_token_rate (policer_t *policer, uint64_t refresh_interval_us, 
+                       uint64_t *token_rate_p, uint64_t *token_burst_p)
 {
+    uint64_t rate_per_sec = policer->rate;
+    uint64_t burst = policer->burst;
     uint64_t rate_tokens;
-
-    *token_rate_p = 0;
 
     if (rate_per_sec > UINT64_MAX/refresh_interval_us) {
         HAL_TRACE_ERR("Policer rate {} is too high", rate_per_sec);
@@ -158,6 +158,7 @@ policer_rate_per_sec_to_token_rate (uint64_t rate_per_sec, uint64_t refresh_inte
     }
 
     *token_rate_p = rate_tokens;
+    *token_burst_p = rate_tokens + burst;
 
     return HAL_RET_OK;
 }

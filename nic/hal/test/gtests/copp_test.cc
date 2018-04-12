@@ -45,8 +45,8 @@ TEST_F(copp_test, test1)
     spec.Clear();
 
     spec.mutable_key_or_handle()->set_copp_type(kh::COPP_TYPE_FLOW_MISS);
-    spec.mutable_policer()->set_bps_rate(10000);
-    spec.mutable_policer()->set_burst_size(1000);
+    spec.mutable_policer()->mutable_bps_policer()->set_bytes_per_sec(10000);
+    spec.mutable_policer()->mutable_bps_policer()->set_burst_bytes(1000);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_create(spec, &rsp);
@@ -56,8 +56,8 @@ TEST_F(copp_test, test1)
 
     spec.Clear();
     spec.mutable_key_or_handle()->set_copp_type(kh::COPP_TYPE_ARP);
-    spec.mutable_policer()->set_bps_rate(10000);
-    spec.mutable_policer()->set_burst_size(1000);
+    spec.mutable_policer()->mutable_bps_policer()->set_bytes_per_sec(10000);
+    spec.mutable_policer()->mutable_bps_policer()->set_burst_bytes(1000);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_create(spec, &rsp);
@@ -76,7 +76,7 @@ TEST_F(copp_test, test2)
 
     spec.mutable_key_or_handle()->set_copp_type(kh::COPP_TYPE_DHCP);
     // rate is 0
-    spec.mutable_policer()->set_burst_size(1000);
+    spec.mutable_policer()->mutable_bps_policer()->set_burst_bytes(1000);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_create(spec, &rsp);
@@ -85,8 +85,8 @@ TEST_F(copp_test, test2)
 
     spec.Clear();
     // copp type not set
-    spec.mutable_policer()->set_bps_rate(10000);
-    spec.mutable_policer()->set_burst_size(1000);
+    spec.mutable_policer()->mutable_bps_policer()->set_bytes_per_sec(10000);
+    spec.mutable_policer()->mutable_bps_policer()->set_burst_bytes(1000);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_create(spec, &rsp);
@@ -96,8 +96,8 @@ TEST_F(copp_test, test2)
     spec.Clear();
     // Re-create already created copp
     spec.mutable_key_or_handle()->set_copp_type(kh::COPP_TYPE_ARP);
-    spec.mutable_policer()->set_bps_rate(10000);
-    spec.mutable_policer()->set_burst_size(1000);
+    spec.mutable_policer()->mutable_bps_policer()->set_bytes_per_sec(10000);
+    spec.mutable_policer()->mutable_bps_policer()->set_burst_bytes(1000);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_create(spec, &rsp);
@@ -129,8 +129,8 @@ TEST_F(copp_test, test3)
 
     spec.Clear();
     spec.mutable_key_or_handle()->set_copp_type(copp_type);
-    spec.mutable_policer()->set_bps_rate(10000);
-    spec.mutable_policer()->set_burst_size(1000);
+    spec.mutable_policer()->mutable_bps_policer()->set_bytes_per_sec(10000);
+    spec.mutable_policer()->mutable_bps_policer()->set_burst_bytes(1000);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_update(spec, &rsp);
@@ -139,8 +139,8 @@ TEST_F(copp_test, test3)
 
     spec.Clear();
     spec.mutable_key_or_handle()->set_copp_type(copp_type);
-    spec.mutable_policer()->set_bps_rate(10000);
-    spec.mutable_policer()->set_burst_size(1000);
+    spec.mutable_policer()->mutable_bps_policer()->set_bytes_per_sec(10000);
+    spec.mutable_policer()->mutable_bps_policer()->set_burst_bytes(1000);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_update(spec, &rsp);
@@ -150,8 +150,8 @@ TEST_F(copp_test, test3)
     spec.Clear();
     spec.mutable_key_or_handle()->set_copp_type(copp_type);
     // Update fail due to bps_rate is zero
-    spec.mutable_policer()->set_bps_rate(0);
-    spec.mutable_policer()->set_burst_size(0);
+    spec.mutable_policer()->mutable_bps_policer()->set_bytes_per_sec(0);
+    spec.mutable_policer()->mutable_bps_policer()->set_burst_bytes(0);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_update(spec, &rsp);
@@ -160,9 +160,9 @@ TEST_F(copp_test, test3)
 
     spec.Clear();
     spec.mutable_key_or_handle()->set_copp_type(copp_type);
-    // Update fail due to bps_rate is zero
-    spec.mutable_policer()->set_bps_rate(500);
-    spec.mutable_policer()->set_burst_size(20);
+    // Update to a PPS policer
+    spec.mutable_policer()->mutable_pps_policer()->set_packets_per_sec(500);
+    spec.mutable_policer()->mutable_pps_policer()->set_burst_packets(20);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_update(spec, &rsp);
