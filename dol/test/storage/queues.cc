@@ -1079,9 +1079,9 @@ void get_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
 
   if (!db_addr || !db_data) return;
 
-  *db_data = (qid << kNvmeDbQidShift) | index;
-  *db_addr = kDbAddrNvme |  (kDbAddrUpdate << kNvmeDbUpdateShift) | 
-             (lif << kNvmeDbLifShift) | (qtype << kNvmeDbTypeShift);
+  *db_data = ((uint64_t)qid << kNvmeDbQidShift) | index;
+  *db_addr = kDbAddrNvme |  ((uint64_t)kDbAddrUpdate << kNvmeDbUpdateShift) | 
+             ((uint64_t)lif << kNvmeDbLifShift) | ((uint64_t)qtype << kNvmeDbTypeShift);
 }
 
 void get_host_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
@@ -1090,9 +1090,9 @@ void get_host_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
 
   if (!db_addr || !db_data) return;
 
-  *db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | index;
-  *db_addr = kDbAddrHost |  (kDbAddrUpdate << kDbUpdateShift) | 
-             (lif << kDbLifShift) | (qtype << kDbTypeShift);
+  *db_data = ((uint64_t)qid << kDbQidShift) | ((uint64_t)ring << kDbRingShift) | index;
+  *db_addr = kDbAddrHost |  ((uint64_t)kDbAddrUpdate << kDbUpdateShift) | 
+             ((uint64_t)lif << kDbLifShift) | ((uint64_t)qtype << kDbTypeShift);
 }
 
 void get_capri_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
@@ -1101,9 +1101,9 @@ void get_capri_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
 
   if (!db_addr || !db_data) return;
 
-  *db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | index;
-  *db_addr = kDbAddrCapri |  (kDbAddrUpdate << kDbUpdateShift) | 
-             (lif << kDbLifShift) | (qtype << kDbTypeShift);
+  *db_data = ((uint64_t)qid << kDbQidShift) | ((uint64_t)ring << kDbRingShift) | index;
+  *db_addr = kDbAddrCapri |  ((uint64_t)kDbAddrUpdate << kDbUpdateShift) | 
+             ((uint64_t)lif << kDbLifShift) | ((uint64_t)qtype << kDbTypeShift);
 }
 
 void get_capri_doorbell_with_pndx_inc(uint16_t lif, uint8_t qtype, uint32_t qid, 
@@ -1111,9 +1111,9 @@ void get_capri_doorbell_with_pndx_inc(uint16_t lif, uint8_t qtype, uint32_t qid,
 
   if (!db_addr || !db_data) return;
 
-  *db_data = (qid << kDbQidShift) | (ring << kDbRingShift);
-  *db_addr = kDbAddrCapri |  (kDbAddrInc << kDbUpdateShift) | 
-             (lif << kDbLifShift) | (qtype << kDbTypeShift);
+  *db_data = ((uint64_t)qid << kDbQidShift) | ((uint64_t)ring << kDbRingShift);
+  *db_addr = kDbAddrCapri |  ((uint64_t)kDbAddrInc << kDbUpdateShift) | 
+             ((uint64_t)lif << kDbLifShift) | ((uint64_t)qtype << kDbTypeShift);
 }
 
 void queues_shutdown() {
