@@ -22,21 +22,29 @@ type ElasticMgmtParams struct {
 	// MgmtAddr is the IP/hostname for binding and publishing
 	// This is used to set the network.host parameter in elastic.
 	MgmtAddr string
+
+	// Min master node count for Elastic cluster
+	ElasticMinMasters int
 }
 
 const elasticMgmtTemplate = `
 export PENS_MGMT_IP={{.MgmtAddr}}
+export ELASTIC_MIN_MASTERS={{.ElasticMinMasters}}
 `
 
 // GenerateElasticMgmtConfig generates mgmt configuration file for elastic service
-func GenerateElasticMgmtConfig(mgmtAddr string) error {
+func GenerateElasticMgmtConfig(mgmtAddr string, quorumSize int) error {
 
 	var err error
 	var f *os.File
 
-	log.Debugf("Generating elastic-mgmt config, mgmt-addr: %s", mgmtAddr)
+	log.Debugf("Generating elastic-mgmt config, mgmt-addr: %s min-masters: %d",
+		mgmtAddr,
+		quorumSize/2+1)
+
 	fbParams := ElasticMgmtParams{
-		MgmtAddr: mgmtAddr,
+		MgmtAddr:          mgmtAddr,
+		ElasticMinMasters: (quorumSize/2 + 1),
 	}
 
 	t := template.New("elastic-mgmt config template")

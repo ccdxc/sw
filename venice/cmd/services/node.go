@@ -72,7 +72,7 @@ func (s *nodeService) Start() error {
 
 	s.configs.GenerateFilebeatConfig([]string{})
 	s.configs.GenerateElasticDiscoveryConfig([]string{})
-	s.configs.GenerateElasticMgmtConfig("")
+	s.configs.GenerateElasticMgmtConfig("", len(env.QuorumNodes))
 
 	for ii := range nodeServices {
 		if err := s.sysSvc.StartUnit(fmt.Sprintf("%s.service", nodeServices[ii])); err != nil {
@@ -144,7 +144,7 @@ func (s *nodeService) ElasticMgmtConfig() error {
 		return nil
 	}
 
-	if err := s.configs.GenerateElasticMgmtConfig(s.nodeID); err != nil {
+	if err := s.configs.GenerateElasticMgmtConfig(s.nodeID, len(env.QuorumNodes)); err != nil {
 		log.Errorf("Failed to generate elastic-mgmt config with error: %v", err)
 		return err
 	}

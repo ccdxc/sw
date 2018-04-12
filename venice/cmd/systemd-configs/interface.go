@@ -12,7 +12,7 @@ type Interface interface {
 	RemoveKubeMasterConfig()
 	GenerateElasticDiscoveryConfig(elasticServerAddrs []string) error
 	RemoveElasticDiscoveryConfig()
-	GenerateElasticMgmtConfig(mgmtAddr string) error
+	GenerateElasticMgmtConfig(mgmtAddr string, quorumSize int) error
 	RemoveElasticMgmtConfig()
 }
 
@@ -48,8 +48,8 @@ func (c *configs) GenerateElasticDiscoveryConfig(elasticServerAddrs []string) er
 func (c *configs) RemoveElasticDiscoveryConfig() {
 	RemoveElasticDiscoveryConfig()
 }
-func (c *configs) GenerateElasticMgmtConfig(mgmtAddr string) error {
-	return GenerateElasticMgmtConfig(mgmtAddr)
+func (c *configs) GenerateElasticMgmtConfig(mgmtAddr string, quorumSize int) error {
+	return GenerateElasticMgmtConfig(mgmtAddr, quorumSize)
 }
 func (c *configs) RemoveElasticMgmtConfig() {
 	RemoveElasticMgmtConfig()

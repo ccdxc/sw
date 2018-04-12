@@ -284,7 +284,7 @@ func (c *Configs) RemoveElasticDiscoveryConfig() {
 }
 
 // GenerateElasticMgmtConfig is a mock implementation for Elastic-Mgmt config generation.
-func (c *Configs) GenerateElasticMgmtConfig(mgmtAddr string) error {
+func (c *Configs) GenerateElasticMgmtConfig(mgmtAddr string, quorumSize int) error {
 	return nil
 }
 
