@@ -72,7 +72,7 @@ rx_roce_udp_options_done:
                         p.{capri_rxdma_intrinsic_qtype...p4_to_p4plus_roce_payload_len}, r7
 
     // remove all headers, and set p4_to_p4plus_roce and capri_rxdma_intrinsic
-    .assert(offsetof(p, udp_2_valid) - offsetof(p, capri_rxdma_intrinsic_valid) == 39)
+    .assert(offsetof(p, udp_2_valid) - offsetof(p, capri_rxdma_intrinsic_valid) == 31)
     phvwrpair       p.ipv6_1_valid, 0, p.{udp_2_valid...capri_rxdma_intrinsic_valid}, 0x3
 
     nop.!c1.e

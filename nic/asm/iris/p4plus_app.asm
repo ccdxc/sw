@@ -283,8 +283,7 @@ f_p4plus_cpu_pkt:
   b.c1        lb_cpu_pkt_tcp
   or          r6, k.udp_valid, k.esp_valid
   seq         c2, r6, 1
-  or          r6, k.icmp_valid, k.icmpv6_valid
-  seq         c3, r6, 1
+  seq         c3, k.icmp_valid, 1
   seq         c4, k.ah_valid, 1
   setcf       c5, [c2|c3|c4]
   phvwr.c5    p.p4_to_p4plus_cpu_pkt_l4_offset, r1.hx

@@ -85,7 +85,6 @@ action drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
     modify_field(scratch_metadata.flag, inner_udp.valid);
     modify_field(scratch_metadata.flag, inner_ipv4_options_blob.valid);
     modify_field(scratch_metadata.flag, inner_ipv4.valid);
-    modify_field(scratch_metadata.flag, icmpv6.valid);
     modify_field(scratch_metadata.flag, inner_v6_generic.valid);
     modify_field(scratch_metadata.flag, inner_ipv6_options_blob.valid);
     modify_field(scratch_metadata.flag, inner_ipv6.valid);

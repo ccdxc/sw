@@ -809,6 +809,7 @@ class capri_table:
                 continue
 
             # add to last chunk (merge contiguous/overlapping chunks)
+            if len(new_phv_chunks) == 0: pdb.set_trace()
             (l_cs, l_cw) = new_phv_chunks.pop()
             add_w = (cs+cw) - c_offset
             new_phv_chunks.append((l_cs, l_cw+add_w))
@@ -818,7 +819,17 @@ class capri_table:
     def ct_update_table_config(self):
         # sort the keys based on phv position
         sorted_keys = sorted(self.keys, key=lambda k: k[0].phv_bit)
-        self.keys = sorted_keys
+        # Remove the invalid k fields (no phv allocated to it)
+        # This happens due to mistakes in dummy P4 action routines
+        valid_keys = []
+        for k in sorted_keys:
+            if k[0].phv_bit == -1:
+                self.gtm.tm.logger.warning("%s:%s:Removing unused key field %s" % \
+                    (self.gtm.d.name, self.p4_table.name, k[0].hfname))
+                continue
+            valid_keys.append(k)
+        
+        self.keys = valid_keys
         # fix k-i sizes based on unions
         key_cfs = [cf for cf,_,_ in self.keys]
         if self.key_size < 0:
@@ -826,7 +837,15 @@ class capri_table:
 
         # sort the input flds based on phv position
         sorted_i = sorted(self.input_fields, key=lambda k: k.phv_bit)
-        self.input_fields = sorted_i
+        valid_i = []
+        for k in sorted_i:
+            if k.phv_bit == -1:
+                self.gtm.tm.logger.warning("%s:%s:Removing unused input field %s" % \
+                    (self.gtm.d.name, self.p4_table.name, k.hfname))
+                continue
+            valid_i.append(k)
+        
+        self.input_fields = valid_i
         if self.i_size < 0:
             self.i_size = self.ct_compute_phv_size(self.input_fields)
 

@@ -67,8 +67,8 @@ packets:
                 chksum : 0xdead
             icmp:
                 chksum : 0xdead
-#           icmpv6:
-#               cksum : 0xdead
+            icmpv6:
+                cksum : 0xdead
 
     - packet:
         id          : EXP_PKT # Base packet

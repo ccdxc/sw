@@ -401,7 +401,7 @@ action f_p4plus_cpu_pkt(offset) {
             }
         }
     }
-    if ((icmp.valid == TRUE) or (icmpv6.valid == TRUE)) {
+    if (icmp.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu_pkt.l4_offset, scratch_metadata.offset);
         add_to_field(scratch_metadata.offset, 4);
     }
@@ -446,9 +446,6 @@ action p4plus_app_cpu() {
     if (icmp.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu.l4_sport, icmp.typeCode);
     }
-    if (icmpv6.valid == TRUE) {
-        modify_field(p4_to_p4plus_cpu.l4_sport, icmpv6.typeCode);
-    }
 
     f_p4plus_cpu_pkt(0);
 
@@ -492,9 +489,6 @@ action p4plus_app_raw_redir() {
     }
     if (icmp.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu.l4_sport, icmp.typeCode);
-    }
-    if (icmpv6.valid == TRUE) {
-        modify_field(p4_to_p4plus_cpu.l4_sport, icmpv6.typeCode);
     }
 
     f_p4plus_cpu_pkt(P4PLUS_RAW_REDIR_HDR_SZ);

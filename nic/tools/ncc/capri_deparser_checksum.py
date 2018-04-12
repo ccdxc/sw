@@ -104,7 +104,7 @@ class DeParserPhdrProfile:
     '''
     Csum Pseudo header field profile. 
     '''
-    def __init__(self, phdr_profile, phdr_type, phdr_fields, add_len):
+    def __init__(self, phdr_profile, phdr_type, phdr_fields, add_len, use_payload_len_from_l3_hdr):
         self.phdr_profile   = phdr_profile
         self.phdr_type      = phdr_type
         if not isinstance(phdr_fields[0], int):
@@ -134,6 +134,17 @@ class DeParserPhdrProfile:
             self.fld2_add_len  = 0
             self.fld2_align    = 0 if (phdr_field.offset % 16 == 0 and \
                                        (phdr_field.offset + phdr_field.width) % 16 == 0) else 1
+
+        self.fld3_en       = 0
+        if use_payload_len_from_l3_hdr:
+            if not isinstance(phdr_fields[3], int):
+                phdr_field         = phdr_fields[3]
+                self.fld3_en       = 1
+                self.fld3_start    = (phdr_field.offset  + 7) / 8
+                self.fld3_end      = ((phdr_field.offset + phdr_field.width + 7) / 8) - 1
+                self.fld3_add_len  = 0
+                self.fld3_align    = 0 if (phdr_field.offset % 16 == 0 and \
+                                       (phdr_field.offset + phdr_field.width) % 16 == 0) else 1
         self.add_len       = add_len
 
     def CsumPhdrProfileUnitNumGet(self):
@@ -155,6 +166,11 @@ class DeParserPhdrProfile:
             phdr_profile['fld_align_2']['value']=str(self.fld2_align)
             phdr_profile['fld_start_2']['value']=str(self.fld2_start)
             phdr_profile['fld_end_2']  ['value']=str(self.fld2_end)
+        if self.fld3_en:
+            phdr_profile['fld_en_3']   ['value']=str(self.fld3_en)
+            phdr_profile['fld_align_3']['value']=str(self.fld3_align)
+            phdr_profile['fld_start_3']['value']=str(self.fld3_start)
+            phdr_profile['fld_end_3']  ['value']=str(self.fld3_end)
         phdr_profile['add_len']    ['value']=str(self.add_len)
         phdr_profile['_modified']           = True
 

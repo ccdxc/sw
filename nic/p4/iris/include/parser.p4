@@ -123,7 +123,6 @@ header mpls_t mpls[MPLS_DEPTH];
 header ipv4_t ipv4;
 header ipv6_t ipv6;
 header icmp_t icmp;
-header icmp_t icmpv6;
 header ah_t ah;
 header esp_t esp;
 
@@ -146,7 +145,7 @@ header gre_t gre;
 header nvgre_t nvgre;
 header erspan_header_t3_t erspan_t3;
 
-@pragma pa_header_union ingress inner_udp icmp icmpv6
+@pragma pa_header_union ingress inner_udp icmp
 header tcp_t tcp;
 
 header icmp_echo_req_reply_t icmp_echo;
@@ -1024,7 +1023,7 @@ parser parse_icmp {
 }
 
 parser parse_icmpv6 {
-    extract(icmpv6);
+    extract(icmp);
     set_metadata(flow_lkp_metadata.lkp_dport, latest.typeCode);
     return select(latest.typeCode) {
         ICMPV6_ECHO_REQ_TYPE_CODE : parse_icmp_echo_req_reply;
@@ -1879,8 +1878,9 @@ parser parse_dummy {
         0x1 mask 0x0000 : parse_ipsec_esp;
         0x2 mask 0x0000 : parse_ipsec_ah;
         0x3 mask 0x0000 : parse_icmp;
-        0x4 mask 0x0000 : parse_ipv6_tcp;
-        0x5 mask 0x0000 : parse_ipv4_tcp;
+        0x4 mask 0x0000 : parse_icmpv6;
+        0x5 mask 0x0000 : parse_ipv6_tcp;
+        0x6 mask 0x0000 : parse_ipv4_tcp;
     }
 }
 
@@ -2042,7 +2042,6 @@ field_list icmp_checksum_list {
     payload;
 }
 
-//Instead of allocating another 16b phv to store icmp payload len, reuse l4_payload_len phv bits.
 @pragma checksum update_len capri_deparser_len.inner_l4_payload_len
 @pragma checksum update_share icmp.hdrChecksum inner_udp.checksum
 field_list_calculation icmp_checksum {
@@ -2053,29 +2052,52 @@ field_list_calculation icmp_checksum {
     output_width : 16;
 }
 
-calculated_field icmp.hdrChecksum {
-    update icmp_checksum if (valid(icmp));
-}
-
-#if 0
-field_list icmpv6_checksum_list {
-    icmpv6.typeCode;
-    icmpv6.hdrChecksum;
+field_list icmp_v6_checksum_list {
+    ipv6.srcAddr;
+    ipv6.dstAddr;
+    // Since nextHdr is listed here as pseudo
+    // header field, it has to appear at fixed
+    // offset within ipv6 header. Hence ipv6
+    // options are not supported with icmp pkt.
+    ipv6.nextHdr;
+    ipv6.payloadLen;
     payload;
 }
 
-//Instead of allocating another 16b phv to store icmp payload len, reuse l4_payload_len phv bits.
 @pragma checksum update_len capri_deparser_len.inner_l4_payload_len
-@pragma checksum update_share icmpv6.hdrChecksum inner_udp.checksum
-field_list_calculation icmpv6_checksum {
+@pragma checksum update_share icmp.hdrChecksum inner_udp.checksum
+field_list_calculation icmp_v6_checksum {
     input {
-        icmpv6_checksum_list;
+        icmp_v6_checksum_list;
     }
     algorithm : csum16;
     output_width : 16;
 }
 
-calculated_field icmpv6.hdrChecksum {
-    update icmpv6_checksum if (valid(icmpv6));
+field_list icmp_inner_v6_checksum_list {
+    inner_ipv6.srcAddr;
+    inner_ipv6.dstAddr;
+    // Since nextHdr is listed here as pseudo
+    // header field, it has to appear at fixed
+    // offset within ipv6 header. Hence ipv6
+    // options are not supported with icmp pkt.
+    inner_ipv6.nextHdr;
+    inner_ipv6.payloadLen;
+    payload;
 }
-#endif
+
+@pragma checksum update_len capri_deparser_len.inner_l4_payload_len
+@pragma checksum update_share icmp.hdrChecksum inner_udp.checksum
+field_list_calculation icmp_inner_v6_checksum {
+    input {
+        icmp_inner_v6_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field icmp.hdrChecksum {
+    update icmp_checksum if (valid(icmp));
+    update icmp_v6_checksum if (valid(icmp));
+    update icmp_inner_v6_checksum if (valid(icmp));
+}

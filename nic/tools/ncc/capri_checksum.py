@@ -403,7 +403,14 @@ class Checksum:
                 csum_p4_field = field
                 break
         assert csum_p4_field != None , pdb.set_trace()
-        payload_hdr_type = 'tcp' if csum_p4_field.offset == 128 else 'udp'
+        if csum_p4_field.offset == 128:
+            payload_hdr_type = 'tcp'
+        elif csum_p4_field.offset == 48:
+            payload_hdr_type = 'udp'
+        elif csum_p4_field.offset == 16:
+            payload_hdr_type = 'icmp'
+        else:
+            payload_hdr_type = ''
 
         return phdr_name, phdr_type, payload_hdr_type, phdr_fields 
 
@@ -1599,6 +1606,27 @@ class Checksum:
                 return True
         return False
 
+    #If checksum header is computed over payload, and without pseudo hdr fiedls
+    #return TRUE;  case: ICMP header and with ipv4
+    def IsPayloadCsumComputeWithNoPhdr(self, hdrname, d):
+        update_cal_fieldlist = self.update_cal_fieldlist if d == xgress.INGRESS \
+                                              else self.eg_update_cal_fieldlist
+        for calfldobj in update_cal_fieldlist:
+            if calfldobj.CalculatedFieldHdrGet() == hdrname and \
+               calfldobj.no_phdr_in_checksum:
+                return True
+        return False
+
+    #Return count of the L3 hdr as pseudo hdr in payload checksum.
+    def L3HdrAsPseudoHdr(self, hdrname, d):
+        update_cal_fieldlist = self.update_cal_fieldlist if d == xgress.INGRESS \
+                                              else self.eg_update_cal_fieldlist
+        count = 0
+        for calfldobj in update_cal_fieldlist:
+            if calfldobj.CsumPhdrNameGet() == hdrname:
+                count += 1
+        return count
+
     def DeParserPayLoadLenSlotGet(self, calfldobj, parser):
         assert calfldobj.payload_update_len_field != '', pdb.set_trace()
         cf_pl_update_len = self.be.pa.get_field(calfldobj.payload_update_len_field, parser.d)
@@ -1617,14 +1645,14 @@ class Checksum:
         self.csum_compute_logger.debug('    Including Csum result of %s in '\
                                        'computation of following headers' % \
                                        (csum_hdr))
-        #pdb.set_trace()
         #Include csum_unit in all outer payload checksum computation.
         #This is provided in csum_profile as csum-engine bit mask
         for outer_csum_obj, _csum_hdr in outer_csum_objs:
-            outer_csum_obj.CsumInnerCsumResultInclude(csum_unit)
-            self.csum_compute_logger.debug('    Payload Csum %s value includes '\
-                                           ' payload csum result of %s' % \
-                                           (_csum_hdr, csum_hdr))
+            if outer_csum_obj.CsumUnitNumGet() != csum_unit:
+                outer_csum_obj.CsumInnerCsumResultInclude(csum_unit)
+                self.csum_compute_logger.debug('    Payload Csum %s value includes '\
+                                               ' payload csum result of %s' % \
+                                               (_csum_hdr, csum_hdr))
 
     def ProcessUpdateCalFldList(self, d):
         '''
@@ -1760,6 +1788,16 @@ class Checksum:
             csum_profile_obj.CsumProfileCsumLocSet(6)
             csum_profile_obj.CsumProfilePhdrNextHdrSet(17)
             add_len = 1
+        elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'icmp':
+            csum_profile_obj.CsumProfileCsumLocSet(2)
+            #next header field is used from p4 code (listed as part
+            #of field-list.)Hence icmp csum with ipv6 can be supported
+            #without ipv6 option fields. When ipv6 options also
+            #supported in icmp packet, then NextHdr should be set to 58 
+            csum_profile_obj.CsumProfilePhdrNextHdrSet(0)
+            #For icmp csum w/ v6, ipv6.payloadLenis specified in p4 as
+            #pseudo hdr field. Hence do not specify add-len
+            add_len = 0
         csum_profile_obj.CsumProfileAddLenSet(add_len)
 
         if self.DeParserPhdrCsumObjGet(phdr, csum_unit,hdr.name, parser.d) == None:
@@ -1791,6 +1829,17 @@ class Checksum:
                 assert csumhv != -1, pdb.set_trace()
                 phdr_csum_obj.CsumHvBitNumSet(csumhv)
                 phdr_csum_obj.CsumHvBitStrSet(l3hf_name)
+            elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'icmp':
+                #pdb.set_trace()
+                csumhv = -1
+                l3hf_name = pl_calfldobj.phdr_name + '.icmp_csum'
+                for elem in parser.csum_hdr_hv_bit[phdr_inst]:
+                    if elem[2] == l3hf_name:
+                        csumhv = elem[0]
+                        break
+                assert csumhv != -1, pdb.set_trace()
+                phdr_csum_obj.CsumHvBitNumSet(csumhv)
+                phdr_csum_obj.CsumHvBitStrSet(l3hf_name)
             else:
                 pdb.set_trace()
 
@@ -1799,10 +1848,12 @@ class Checksum:
             self.DeParserPhdrCsumObjSet(phdr, phdr_csum_obj, csum_unit, hdr.name, parser.d)
             pl_calfldobj.DeParserPhdrCsumObjSet(phdr_csum_obj)
             assert pl_calfldobj.DeParserPhdrProfileObjGet() == None, pdb.set_trace()
+            use_payload_len_from_l3_hdr = 1 if pl_calfldobj.CsumPayloadHdrTypeGet() == 'icmp' else 0
             pl_calfldobj.DeParserPhdrProfileObjSet(\
                           DeParserPhdrProfile(phdr_profile,  \
                                               pl_calfldobj.CsumPhdrTypeGet(), \
-                                              pl_calfldobj.phdr_fields, 0))
+                                              pl_calfldobj.phdr_fields, 0, \
+                                              use_payload_len_from_l3_hdr))
         else:
             assert(0), pdb.set_trace()
 
@@ -1889,49 +1940,44 @@ class Checksum:
                         #CsumHV bit for phdrs that are not calfldobjs (ipv6) is
                         #same as HV bit.
                         continue
+                    for calfldobj in calfldobjlist:
+                        if not calfldobj.payload_checksum and calfldobj in csum_objects:
+                            self.csum_compute_logger.debug(\
+                            '%s: Checksum Assignment along path %s' % (xgress_to_string(parser.d), str(parse_path)))
+                            self.BuildDeParserCsumNonPayloadObject(parser, hdr, calfldobj)
+                            csum_objects.remove(calfldobj)
 
-                    #Pick first calfldobj from the list is fine. In case of hdr
-                    #checksum only one elem will be in the list. In case of
-                    #payload checksum elem# = #phdrs. For payload checksum
-                    #calfldobjlist is not used.
-                    calfldobj = calfldobjlist[0]
-                    if not calfldobj.payload_checksum and calfldobj in csum_objects:
-                        self.csum_compute_logger.debug(\
-                        '%s: Checksum Assignment along path %s' % (xgress_to_string(parser.d), str(parse_path)))
-                        self.BuildDeParserCsumNonPayloadObject(parser, hdr, calfldobj)
-                        csum_objects.remove(calfldobj)
+                        elif calfldobj.payload_checksum:
+                            #In order to associate right phdr, maintain
+                            #phdrs in the same order as they are in parse path.
+                            #This is needed is because in case of v4, v6, tcp pkt
+                            #phdr of tcp is v6 not v4.
+                            topo_phdrs_in_parse_path = []
+                            for _hdr in parse_path:
+                                if _hdr.name in pseudo_hdrs:
+                                    topo_phdrs_in_parse_path.append(_hdr.name)
+                                # Collect phdrs until payload hdr only.
+                                if _hdr.name == hdr.name: break
+                            topo_phdrs_in_parse_path.reverse()
+                            phdr = topo_phdrs_in_parse_path[0]
+                            pl_calfldobj = self.UpdateCalFieldObjGet(parser.d, hdr.name,\
+                                                                     phdr)
+                            if pl_calfldobj and pl_calfldobj not in csum_objects:
+                                # This payload object hash already been processed.
+                                # However to include result of inner csum into
+                                # outer csum, process it.
+                                _csum_obj = pl_calfldobj.DeParserCsumObjGet()
+                                self.DeParserInnerPayLoadCsumInclude(\
+                                            payload_csum_obj_list, hdr.name, _csum_obj)
+                                payload_csum_obj_list.append((_csum_obj, hdr.name))
 
-                    elif calfldobj.payload_checksum:
-                        #In order to associate right phdr, maintain
-                        #phdrs in the same order as they are in parse path.
-                        #This is needed is because in case of v4, v6, tcp pkt
-                        #phdr of tcp is v6 not v4.
-                        topo_phdrs_in_parse_path = []
-                        for _hdr in parse_path:
-                            if _hdr.name in pseudo_hdrs:
-                                topo_phdrs_in_parse_path.append(_hdr.name)
-                            # Collect phdrs until payload hdr only.
-                            if _hdr.name == hdr.name: break
-                        topo_phdrs_in_parse_path.reverse()
-                        phdr = topo_phdrs_in_parse_path[0]
-                        pl_calfldobj = self.UpdateCalFieldObjGet(parser.d, hdr.name,\
-                                                                 phdr)
-                        if pl_calfldobj and pl_calfldobj not in csum_objects:
-                            # This payload object hash already been processed.
-                            # However to include result of inner csum into
-                            # outer csum, process it.
-                            _csum_obj = pl_calfldobj.DeParserCsumObjGet()
-                            self.DeParserInnerPayLoadCsumInclude(\
-                                        payload_csum_obj_list, hdr.name, _csum_obj)
-                            payload_csum_obj_list.append((_csum_obj, hdr.name))
-
-                        if pl_calfldobj and pl_calfldobj in csum_objects:
-                            self.csum_compute_logger.debug('%s Checksum Assignment'\
-                                                           ' along path %s' %
-                                                           (xgress_to_string(parser.d), str(parse_path)))
-                            #Inner L4 csum result is included in outer L4 csum
-                            self.BuildDeParserCsumPayloadObject(parser, hdr, phdr, pl_calfldobj, payload_csum_obj_list)
-                            csum_objects.remove(pl_calfldobj)
+                            if pl_calfldobj and pl_calfldobj in csum_objects:
+                                self.csum_compute_logger.debug('%s Checksum Assignment'\
+                                                               ' along path %s' %
+                                                               (xgress_to_string(parser.d), str(parse_path)))
+                                #Inner L4 csum result is included in outer L4 csum
+                                self.BuildDeParserCsumPayloadObject(parser, hdr, phdr, pl_calfldobj, payload_csum_obj_list)
+                                csum_objects.remove(pl_calfldobj)
 
                     #Include inner L3 csum result into outer L4 csum
                     if not calfldobj.payload_checksum and not calfldobj.option_checksum:

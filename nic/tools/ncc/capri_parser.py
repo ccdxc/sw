@@ -2046,16 +2046,21 @@ class capri_parser:
                     csum_hv_names.append(hfname)
                 if not self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name, self.d) and \
                    not self.be.checksum.IsHdrInPayLoadCsumCompute(h.name, self.d) and \
-                   not self.be.checksum.IsHdrInOptionCsumCompute(h.name, self.d):
+                   not self.be.checksum.IsHdrInOptionCsumCompute(h.name, self.d) and \
+                   not self.be.checksum.IsPayloadCsumComputeWithNoPhdr(h.name, self.d):
                     hfname = h.name + '.tcp_csum'
                     csum_hv_names.append(hfname)
                     hfname = h.name + '.udp_csum'
                     csum_hv_names.append(hfname)
+                    if self.be.checksum.L3HdrAsPseudoHdr(h.name, self.d) == 3:
+                        hfname = h.name + '.icmp_csum'
+                        csum_hv_names.append(hfname)
                     #start HV bit at byte boundary so that parser-meta instuction
                     #can be used optimally.
-                    byte_align_hv_skip = 8 - (hidx % 8)
-                    hidx += byte_align_hv_skip
-                    hv_bit -= byte_align_hv_skip
+                    if hidx % 8:
+                        byte_align_hv_skip = 8 - (hidx % 8)
+                        hidx += byte_align_hv_skip
+                        hv_bit -= byte_align_hv_skip
                 if self.be.checksum.IsL2HdrInL2CompleteCsumCompute(h.name, self.d) \
                    or self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name, self.d):
                     #allocates hv bit for ethernet.l2_csum
@@ -2080,9 +2085,10 @@ class capri_parser:
                 if self.be.icrc.IsHdrRoceV2(h.name, self.d):
                     #start HV bit at byte boundary so that parser-meta instuction
                     #can be used optimally.
-                    byte_align_hv_skip = 8 - (hidx % 8)
-                    hidx += byte_align_hv_skip
-                    hv_bit -= byte_align_hv_skip
+                    if hidx % 8:
+                        byte_align_hv_skip = 8 - (hidx % 8)
+                        hidx += byte_align_hv_skip
+                        hv_bit -= byte_align_hv_skip
                 icrc_hv_bit_and_hf = []
                 hf_name = h.name + '.icrc'
                 icrc_cf = self.be.pa.get_field(hf_name, self.d)

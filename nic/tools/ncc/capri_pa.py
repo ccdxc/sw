@@ -1229,11 +1229,15 @@ class capri_gress_pa:
             csum_hv_names.append(hfname)
         if not self.pa.be.checksum.IsHdrInL2CompleteCsumCompute(hdr_name, self.d) and \
            not self.pa.be.checksum.IsHdrInPayLoadCsumCompute(hdr_name, self.d) and \
-           not self.pa.be.checksum.IsHdrInOptionCsumCompute(hdr_name, self.d):
+           not self.pa.be.checksum.IsHdrInOptionCsumCompute(hdr_name, self.d) and \
+           not self.pa.be.checksum.IsPayloadCsumComputeWithNoPhdr(hdr_name, self.d):
             hfname = hdr_name + '.tcp_csum'
             csum_hv_names.append(hfname)
             hfname = hdr_name + '.udp_csum'
             csum_hv_names.append(hfname)
+            if self.pa.be.checksum.L3HdrAsPseudoHdr(hdr_name, self.d) == 3:
+                hfname = hdr_name + '.icmp_csum'
+                csum_hv_names.append(hfname)
         if self.pa.be.checksum.IsL2HdrInL2CompleteCsumCompute(hdr_name, self.d) \
            or self.pa.be.checksum.IsHdrInL2CompleteCsumCompute(hdr_name, self.d):
             hfname = hdr_name + '.l2csum'
