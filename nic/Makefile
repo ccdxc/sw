@@ -187,24 +187,49 @@ asm:
 	$(MAKE) -C asm
 
 gen-clean:
-	rm -rf gen/hal
-	rm -rf gen/x86_64
-	rm -rf gen/aarch64
+	@rm -rf gen/x86_64
+	@rm -rf gen/aarch64
+	$(MAKE) clean-svc
 	$(MAKE) clean-csrlite
 
 gen-proto:
 	$(MAKE) -C proto
-	python3 ./tools/hal/hal_svc_generator.py
+	$(MAKE) gen-svc
 
 build-proto:
 	$(PATH_OPTS) $(MAKE) -j8 $(BUILD_OPTS) -C gen/proto/hal
 
-clean-csrlite:
-	rm -rf gen/csrlite
+##### HAL SVC #####
 
-gen-csrlite:
-	cd tools && python gen_cap_csrlite.py
-	cp asic/capri/model/cap_top/cap_top_csr_defines.h sdk/include/sdk/asic/capri/csrlite/
+PROTOSRCDIR := proto/hal
+HALGENDIR   := gen/hal
+SVCGENDIR   := $(HALGENDIR)/svc
+
+$(SVCGENDIR)/.dir: $(PROTOSRCDIR)/*.proto
+	@mkdir -p $(SVCGENDIR)
+	@touch $@
+	@python3 ./tools/hal/hal_svc_generator.py
+
+gen-svc: $(SVCGENDIR)/.dir
+
+clean-svc:
+	@rm -rf $(HALGENDIR)
+
+##### CSRLITE #####
+
+CSRLITESRCDIR := asic/capri/verif/common/csr_gen
+CSRLITEGENDIR := gen/csrlite
+
+$(CSRLITEGENDIR)/.dir: $(CSRLITESRCDIR)/*.yaml
+	@mkdir -p $(CSRLITEGENDIR)
+	@touch $@
+	@cd tools && python gen_cap_csrlite.py
+	@cp asic/capri/model/cap_top/cap_top_csr_defines.h sdk/include/sdk/asic/capri/csrlite/
+
+gen-csrlite: $(CSRLITEGENDIR)/.dir
+
+clean-csrlite:
+	@rm -rf $(CSRLITEGENDIR)
 
 build-csrlite:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/capri/csrlite:libcsrlite.so
