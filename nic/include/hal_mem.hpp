@@ -89,7 +89,8 @@ typedef enum hal_slab_e {
     HAL_SLAB_RTSP_ALG_L4SESS                 = 75,
     HAL_SLAB_RTSP_ALG_INFO                   = 76,
     HAL_SLAB_CRYPTO_CERT_STORE               = 77,
-    HAL_SLAB_PI_MAX                          = 78,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_TCP_REASSEMBLY_BUFF             = 78,
+    HAL_SLAB_PI_MAX                          = 79,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,
@@ -215,6 +216,7 @@ enum {
     HAL_MEM_ALLOC_API_STATS,
     HAL_MEM_ALLOC_OTHER,
     HAL_MEM_ALLOC_LIB_SHM,
+    HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF,
     HAL_MEM_ALLOC_ALL = 0xFFFFFFFF,    // reserved and shouldn't be used
 };
 
