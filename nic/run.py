@@ -143,9 +143,12 @@ def run_rtl(args):
     one_pkt_mode = ""
     if args.model_test:
         model_test = args.model_test
+    flow_stat_tbl_base = 0x108fcf800
+    if args.storage:
+        flow_stat_tbl_base += 0x4
     if not args.skipverify:
         one_pkt_mode = "+dol_one_pkt_mode=1 +save_rtl_pkts=1"
-    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-run_args', ' %s  +flow_stat_tbl_base=0x107fce800 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_MEDIUM +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=100 +top_sb/initial_timeout_ns=60000 %s ' % (one_pkt_mode, args.runtest_runargs), '-cfg_args', 'core/axi_master/<0:3>/max_read_latency=3000 core/axi_master/<0:3>/avg_max_read_latency=3000 core/axi_master/<0:3>/max_write_latency=3000 core/axi_master/<0:3>/avg_max_write_latency=3000' ] + coverage_opts
+    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-run_args', ' %s  +flow_stat_tbl_base=%s +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_MEDIUM +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=100 +top_sb/initial_timeout_ns=60000 %s ' % (one_pkt_mode, flow_stat_tbl_base, args.runtest_runargs), '-cfg_args', 'core/axi_master/<0:3>/max_read_latency=3000 core/axi_master/<0:3>/avg_max_read_latency=3000 core/axi_master/<0:3>/max_write_latency=3000 core/axi_master/<0:3>/avg_max_write_latency=3000' ] + coverage_opts
     if args.noverilog:
         model_cmd = model_cmd + ['-ro']
     if not args.no_asic_dump:
