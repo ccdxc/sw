@@ -44,7 +44,7 @@ comp_encrypt_chain_scale_t::comp_encrypt_chain_scale_t(comp_encrypt_chain_scale_
         comp_encrypt_chain_vec.push_back(new comp_encrypt_chain_t(params.cec_params_));
     }
 
-    // Allocate status and opaque tags as a byte streams for fast memcmp
+    // Allocate status and opaque tags as a byte streams for fast memcmp.
     xts_status_host_buf = new dp_mem_t(1,  params.num_chains_ * sizeof(uint64_t),
                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint64_t));
     exp_status_data_buf = new dp_mem_t(1, params.num_chains_ * sizeof(uint64_t),
@@ -476,8 +476,8 @@ acc_scale_tests_comp_encrypt_decrypt_decomp(void)
                                                  uint32_t,
                                                  uint32_t,
                                                  comp_encrypt_chain_t*)>> tests_vec = { 
-        &acc_comp_encrypt_chain_scale_create,
         &acc_decrypt_decomp_chain_scale_create,
+        &acc_comp_encrypt_chain_scale_create,
     };
 
     comp_encrypt_chain_scale_t  *comp_encrypt_chain_scale_source;

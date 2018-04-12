@@ -232,17 +232,21 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
     xts::xts_desc_t *xts_desc_addr;
     uint32_t datain_len;
 
-    // Use caller's XTS opaque info, if any
+    // Use caller's XTS opaque info and status, if any
     if (caller_xts_opaque_buf) {
         xts_ctx.xts_db = caller_xts_opaque_buf;
         xts_ctx.xts_db_addr = 0;
         xts_ctx.exp_db_data = caller_xts_opaque_data;
         xts_ctx.caller_xts_db_en = true;
     }
+    if (caller_xts_status_buf) {
+        xts_ctx.status = caller_xts_status_buf;
+        xts_ctx.caller_status_en = true;
+    }
     xts_ctx.copy_desc = false;
     xts_ctx.ring_db = false;
 
-    // Calling xts_ctx init only to get its xts_db initialized
+    // Calling xts_ctx init only to get its xts_db/status initialized
     xts_ctx.init(0, false);
     xts_ctx.op = xts::AES_ENCR_ONLY;
     xts_ctx.use_seq = false;
@@ -273,13 +277,11 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
     xts_out_aol->write_thru();
 
     // Set up XTS encrypt descriptor
-    caller_xts_status_buf->fragment_find(0, sizeof(uint32_t))->fill_thru(0xff);
     xts_ctx.cmd_eval_seq_xts(cmd);
     xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
     xts_desc_addr->in_aol = xts_in_aol->pa();
     xts_desc_addr->out_aol = xts_out_aol->pa();
     xts_desc_addr->cmd = cmd;
-    xts_desc_addr->status = caller_xts_status_buf->pa();
     xts_desc_buf->write_thru();
     xts_ctx.desc_write_seq_xts(xts_desc_buf);
 }

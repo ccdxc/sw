@@ -167,7 +167,10 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     chain_params.chain_ent.push_entry.barco_pndx_size = 
                            (uint8_t)log2(sizeof(uint32_t));
     if (xts_status_buf1 != xts_status_buf2) {
-        xts_status_buf2->fragment_find(0, sizeof(uint32_t))->fill_thru(0xff);
+
+        // xts_status_buf2 will receive the content of xts_status_buf1
+        // so we can freely initialize it with any non-zero (invalid) value.
+        xts_status_buf2->fill_thru(0xff);
         chain_params.chain_ent.status_hbm_pa = xts_status_buf1->pa();
         chain_params.chain_ent.status_host_pa = xts_status_buf2->pa();
         chain_params.chain_ent.status_len = xts_status_buf2->line_size_get();
@@ -217,7 +220,10 @@ decrypt_decomp_chain_t::decrypt_setup(acc_chain_params_t& chain_params)
     xts::xts_cmd_t  cmd;
     xts::xts_desc_t *xts_desc_addr;
 
-    // Calling xts_ctx init only to get its xts_db initialized
+    xts_ctx.status = xts_status_buf1;
+    xts_ctx.caller_status_en = true;
+
+    // Calling xts_ctx init only to get its xts_db/status initialized
     xts_ctx.init(0, false);
     xts_ctx.op = xts::AES_DECR_ONLY;
     xts_ctx.use_seq = true;
@@ -240,13 +246,11 @@ decrypt_decomp_chain_t::decrypt_setup(acc_chain_params_t& chain_params)
     xts_out_aol->write_thru();
 
     // Set up XTS decrypt descriptor
-    xts_status_buf1->fragment_find(0, sizeof(uint32_t))->fill_thru(0xff);
     xts_ctx.cmd_eval_seq_xts(cmd);
     xts_desc_addr = xts_ctx.desc_prefill_seq_xts(xts_desc_buf);
     xts_desc_addr->in_aol = xts_in_aol->pa();
     xts_desc_addr->out_aol = xts_out_aol->pa();
     xts_desc_addr->cmd = cmd;
-    xts_desc_addr->status = xts_status_buf1->pa();
 
     // Chain XTS decrypt to XTS status sequencer 
     xts_desc_addr->db_addr = chain_params.ret_doorbell_addr;
