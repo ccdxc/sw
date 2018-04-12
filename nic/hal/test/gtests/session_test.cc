@@ -478,8 +478,10 @@ TEST_F(session_test, test2)
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
     ctime_ns += 1000000000ULL;
-    hal::session_age_cb((void *)hal::find_session_by_id(3), (void *)&ctime_ns);
-    ASSERT_TRUE(hal::find_session_by_id(3) == NULL);
+    hal::session_age_cb(
+        (void *)hal::find_session_by_handle(sess_rsp2.status().session_handle()),
+        (void *)&ctime_ns);
+    ASSERT_TRUE(hal::find_session_by_handle(sess_rsp2.status().session_handle()) == NULL);
 }
 
 // ----------------------------------------------------------------------------
@@ -1903,7 +1905,7 @@ TEST_F(session_test, test10)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete Session
-    ret = fte::session_delete(hal::find_session_by_id(10));
+    ret = fte::session_delete(hal::find_session_by_handle(sess_rsp.status().session_handle()));
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 

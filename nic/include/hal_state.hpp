@@ -26,6 +26,12 @@
 #define TO_SLAB_PTR(x)    x
 #endif
 
+#define HAL_HT_CREATE(name, htable, table_sz, ...)                             \
+do {                                                                           \
+    HAL_TRACE_DEBUG("Creating {} hash table with size {}", (name), (table_sz));\
+    (htable) = sdk::lib::ht::factory((table_sz), __VA_ARGS__);                 \
+} while (0)
+
 namespace hal {
 
 using sdk::lib::slab;
@@ -175,7 +181,6 @@ public:
     ht *lif_id_ht(void) const { return lif_id_ht_; }
     ht *if_id_ht(void) const { return if_id_ht_; }
     ht *l4lb_ht(void) const { return l4lb_ht_; }
-    ht *session_id_ht(void) const { return session_id_ht_; }
     ht *session_hal_handle_ht(void) const { return session_hal_handle_ht_; }
     ht *session_hal_iflow_ht(void)  const { return session_hal_iflow_ht_; }
     ht *session_hal_rflow_ht(void)  const { return session_hal_rflow_ht_; }
@@ -232,7 +237,6 @@ private:
     ht    *mc_key_ht_;
     ht    *lif_id_ht_;
     ht    *if_id_ht_;
-    ht    *session_id_ht_;
     ht    *session_hal_handle_ht_;
     ht    *session_hal_iflow_ht_;
     ht    *session_hal_rflow_ht_;
@@ -365,7 +369,7 @@ public:
     // get APIs for flow/session state
     slab *flow_slab(void) const { return cfg_db_->flow_slab(); }
     slab *session_slab(void) const { return cfg_db_->session_slab(); }
-    ht *session_id_ht(void) const { return oper_db_->session_id_ht(); }
+    //ht *session_id_ht(void) const { return oper_db_->session_id_ht(); }
     ht *session_hal_handle_ht(void) const { return oper_db_->session_hal_handle_ht(); }
     ht *session_hal_iflow_ht(void) const { return oper_db_->session_hal_iflow_ht(); }
     ht *session_hal_rflow_ht(void) const { return oper_db_->session_hal_rflow_ht(); }

@@ -166,5 +166,13 @@ private:
 }    // namespace lib
 }    // namespace sdk
 
+#if 0
+#define SDK_HT_CREATE(name, htable, table_sz, ...)                             \
+do {                                                                           \
+    SDK_TRACE_DEBUG("Creating %s hash table with size %u", (name), (table_sz));\
+    (htable) = ht::factory((table_sz), __VA_ARGS__);                           \
+} while (0)
+#endif
+
 #endif    // __SDK_HT_HPP__
 

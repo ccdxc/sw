@@ -61,17 +61,11 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     size_t           fstate_size = feature_state_size(&num_features);
     feature_state_t *feature_state;
     SessionStatus    status;
-    hal::session_t  *session;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("fte::{}: Session id {} Create in Vrf id {}", __FUNCTION__, 
                     spec.session_id(), spec.meta().vrf_id());
 
-    session = hal::find_session_by_id(spec.session_id());
-    if (session != NULL) {
-        goto end; 
-    }
-    
     feature_state = (feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
     if (!feature_state) {
         ret = HAL_RET_OOM;
@@ -88,6 +82,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     ret = ctx.process();
 
  end:
+
     if (feature_state) {
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
     }

@@ -31,6 +31,7 @@ thread_local void *g_session_timer;
 #define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT (15 * TIME_MSECS_PER_SEC)
 #define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT (15 * TIME_MSECS_PER_SEC)
 
+#if 0
 void *
 session_get_key_func (void *entry)
 {
@@ -53,6 +54,7 @@ session_compare_key_func (void *key1, void *key2)
     }
     return false;
 }
+#endif
 
 void *
 session_get_handle_key_func(void *entry)
@@ -152,11 +154,13 @@ find_session_by_handle (hal_handle_t handle)
     return (session_t *)g_hal_state->session_hal_handle_ht()->lookup(&handle);
 }
 
+#if 0
 session_t *
 find_session_by_id (session_id_t session_id)
 {
     return (session_t *)g_hal_state->session_id_ht()->lookup(&session_id);
 }
+#endif
 
 //------------------------------------------------------------------------------
 // thread safe helper to stringify flow_key_t
@@ -376,9 +380,9 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
                    ep_t *sep, ep_t *dep, if_t *sif, if_t *dif,
                    session_t *session)
 {
-    session->session_id_ht_ctxt.reset();
-    g_hal_state->session_id_ht()->insert(session,
-                                         &session->session_id_ht_ctxt);
+    //session->session_id_ht_ctxt.reset();
+    //g_hal_state->session_id_ht()->insert(session,
+                                         //&session->session_id_ht_ctxt);
     session->hal_handle_ht_ctxt.reset();
     g_hal_state->session_hal_handle_ht()->insert(session,
                                                  &session->hal_handle_ht_ctxt);
@@ -439,9 +443,9 @@ del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
     // All the sessions are supposed to have session id
     // Need to remove this check once the session id allocation
     // happens for flow-miss
-    if (session->config.session_id)
-        g_hal_state->session_id_ht()->remove_entry(session,
-                                         &session->session_id_ht_ctxt);
+    //if (session->config.session_id)
+        //g_hal_state->session_id_ht()->remove_entry(session,
+                                         //&session->session_id_ht_ctxt);
 
     g_hal_state->session_hal_handle_ht()->remove_entry(session,
                                                  &session->hal_handle_ht_ctxt);
@@ -539,7 +543,7 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
     vrf_t   *vrf = vrf_lookup_by_handle(session->vrf_handle);
 
     response->mutable_spec()->mutable_meta()->set_vrf_id(vrf->vrf_id);
-    response->mutable_spec()->set_session_id(session->config.session_id);
+    //response->mutable_spec()->set_session_id(session->config.session_id);
     response->mutable_spec()->set_conn_track_en(session->config.conn_track_en);
     response->mutable_spec()->set_tcp_ts_option(session->config.tcp_ts_option);
 
@@ -581,7 +585,7 @@ system_get_fill_rsp (session_t *session, SessionGetResponse *response)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch session state for session {}",
-                       session->config.session_id);
+                      session->hal_handle);
         return HAL_RET_ERR;
     }
 
@@ -954,7 +958,7 @@ session_age_cb (void *entry, void *ctxt)
         session->config.conn_track_en &&
         session->tcp_cxntrack_timer != NULL) {
         HAL_TRACE_DEBUG("Session connection tracking timer is on -- bailing aging", 
-                        session->config.session_id);
+                        session->hal_handle);
         return false;
     }
 
@@ -962,7 +966,7 @@ session_age_cb (void *entry, void *ctxt)
     iflow = session->iflow;
     if (!iflow) {
         HAL_TRACE_ERR("session {} has no iflow, ignoring ...",
-                      session->config.session_id);
+                      session->hal_handle);
         return false;
     }
 
@@ -972,7 +976,7 @@ session_age_cb (void *entry, void *ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch session state for session {}",
-                       session->config.session_id);
+                      session->hal_handle);
         return false;
     }
 
@@ -1008,7 +1012,7 @@ session_age_cb (void *entry, void *ctxt)
         ret = fte::session_delete(session);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delte aged session {}",
-                          session->config.session_id);
+                          session->hal_handle);
             return false;
         }
     }
@@ -1086,7 +1090,7 @@ tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
     ret = fte::session_delete(session);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delte aged session {}",
-                      session->config.session_id);
+                      session->hal_handle);
     }    
 }
 
@@ -1239,7 +1243,7 @@ schedule_tcp_half_closed_timer (session_t *session)
         return HAL_RET_ERR;
     }
     HAL_TRACE_DEBUG("TCP Half Closed timer started for session {}",
-                     session->config.session_id);
+                     session->hal_handle);
 
     return HAL_RET_OK;
 }
@@ -1261,7 +1265,7 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
-                       session->config.session_id);
+                       session->hal_handle);
     }
 
     HAL_TRACE_DEBUG("IFlow State: {}", state.iflow_state.state);
@@ -1278,7 +1282,7 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
         ret = fte::session_delete(session);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete session {}",
-                          session->config.session_id);
+                          session->hal_handle);
         }
     }    
 }
@@ -1304,7 +1308,7 @@ schedule_tcp_cxnsetup_timer (session_t *session)
         return HAL_RET_ERR;
     }
     HAL_TRACE_DEBUG("TCP Cxn Setup timer started for session {}",
-                     session->config.session_id);
+                     session->hal_handle);
 
     return HAL_RET_OK;
 }

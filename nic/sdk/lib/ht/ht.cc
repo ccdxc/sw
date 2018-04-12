@@ -103,6 +103,7 @@ ht::factory(uint32_t ht_size, ht_get_key_func_t get_key_func,
     if (hash_table->ht_buckets_ == NULL) {
         goto cleanup;
     }
+    SDK_TRACE_DEBUG("Allocated %u bytes for ht", ht_size * sizeof(ht_bucket_t));
 
     if (hash_table->init(ht_size, get_key_func, hash_func,
                          compare_func, thread_safe,
