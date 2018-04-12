@@ -42,12 +42,15 @@ using hal::utils::eventmgr;
 using sdk::lib::dllist_ctxt_t;
 
 typedef enum hal_timer_id_s {
-    HAL_TIMER_ID_CLOCK_SYNC               = 0,
-    HAL_TIMER_ID_SESSION_AGEOUT           = 1,
-    HAL_TIMER_ID_TCP_CLOSE_WAIT           = 2,
-    HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT     = 3,
-    HAL_TIMER_ID_TCP_CXNSETUP_WAIT        = 4,
-    HAL_TIMER_ID_MAX                      = 5,
+    HAL_TIMER_ID_NONE                     = 0,
+    HAL_TIMER_ID_MIN                      = 1,
+    HAL_TIMER_ID_CLOCK_SYNC               = HAL_TIMER_ID_MIN,
+    HAL_TIMER_ID_SESSION_AGEOUT           = 2,
+    HAL_TIMER_ID_TCP_CLOSE_WAIT           = 3,
+    HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT     = 4,
+    HAL_TIMER_ID_TCP_CXNSETUP_WAIT        = 5,
+    HAL_TIMER_ID_STATS                    = 6,
+    HAL_TIMER_ID_MAX                      = 7,
 } hal_timer_id_t;
 
 #define HAL_HANDLE_HT_SZ                             (16 << 10)

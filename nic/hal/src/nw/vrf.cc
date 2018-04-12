@@ -349,7 +349,7 @@ validate_vrf_create (VrfSpec& spec, VrfResponse *rsp)
 //------------------------------------------------------------------------------
 // PD Call to allocate PD resources and HW programming
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 vrf_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
@@ -379,7 +379,7 @@ vrf_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 // 1. Update PI DBs as vrf_create_add_cb() was a success
 //      a. Add to vrf id hash table
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret        = HAL_RET_OK;
@@ -444,7 +444,7 @@ vrf_create_abort_cleanup (vrf_t *vrf, hal_handle_t hal_handle)
 // 2. Remove object from hal_handle id based hash table in infra
 // 3. Free PI vrf
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t ret                        = HAL_RET_OK;
@@ -468,7 +468,7 @@ vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 // ----------------------------------------------------------------------------
 // Dummy create cleanup callback
 // ----------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 vrf_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t   ret = HAL_RET_OK;

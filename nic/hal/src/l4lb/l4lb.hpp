@@ -66,7 +66,7 @@ bool l4lb_compare_key_func(void *key1, void *key2);
 void *l4lb_get_handle_key_func(void *entry);
 uint32_t l4lb_compute_handle_hash_func(void *key, uint32_t ht_size);
 bool l4lb_compare_handle_key_func(void *key1, void *key2);
-hal_ret_t hal_l4lb_init_cb(void);
+hal_ret_t hal_l4lb_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_l4lb_cleanup_cb(void);
 
 hal_ret_t l4lbservice_create(l4lb::L4LbServiceSpec& spec,

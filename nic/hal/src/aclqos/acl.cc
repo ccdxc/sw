@@ -2074,7 +2074,7 @@ end:
 }
 
 hal_ret_t
-hal_aclqos_init_cb (void)
+hal_aclqos_init_cb (hal_cfg_t *hal_cfg)
 {
     return HAL_RET_OK;
 }

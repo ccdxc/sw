@@ -488,7 +488,7 @@ drop_monitor_rule_get (DropMonitorRuleSpec *spec, DropMonitorRule *rsp)
 }
 
 hal_ret_t
-hal_telemetry_init_cb (void)
+hal_telemetry_init_cb (hal_cfg_t *hal_cfg)
 {
     return HAL_RET_OK;
 }

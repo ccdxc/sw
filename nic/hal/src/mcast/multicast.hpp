@@ -162,7 +162,7 @@ uint32_t mc_entry_compute_hash_func(void *key, uint32_t ht_size);
 bool mc_entry_compare_key_func(void *key1, void *key2);
 mc_entry_t *mc_entry_lookup_key_or_handle (const MulticastEntryKeyHandle& kh);
 char *mc_key_to_string (mc_key_t *key);
-hal_ret_t hal_mcast_init_cb(void);
+hal_ret_t hal_mcast_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_mcast_cleanup_cb(void);
 
 // SVC CRUD APIs

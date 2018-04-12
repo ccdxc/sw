@@ -199,7 +199,7 @@ l4lb_to_str (l4lb_service_entry_t *l4lb)
 }
 
 hal_ret_t
-hal_l4lb_init_cb (void)
+hal_l4lb_init_cb (hal_cfg_t *hal_cfg)
 {
     return HAL_RET_OK;
 }

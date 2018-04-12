@@ -48,7 +48,7 @@ hal_module_meta_init (void)
 // ideally we should avoid such dependencies at this stage
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_module_init (void)
+hal_module_init (hal_cfg_t *hal_cfg)
 {
     hal_ret_t           ret;
     uint32_t            module_id;
@@ -63,7 +63,7 @@ hal_module_init (void)
         if (g_module_meta[module_id] &&
             (init_cb = g_module_meta[module_id]->init_cb())) {
             HAL_TRACE_DEBUG("Initializing module {}", module_id);
-            ret = init_cb();
+            ret = init_cb(hal_cfg);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Failed to initialize module {}, err {}",
                               module_id, ret);

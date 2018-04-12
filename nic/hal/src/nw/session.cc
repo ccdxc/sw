@@ -1023,7 +1023,7 @@ session_age_cb (void *entry, void *ctxt)
 //------------------------------------------------------------------------------
 // callback invoked by the HAL periodic thread for session aging
 //------------------------------------------------------------------------------
-void
+static void
 session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     uint32_t      i, bucket = *((uint32_t *)(&ctxt));
@@ -1070,14 +1070,15 @@ session_init (void)
     if (!g_session_timer) {
         return HAL_RET_ERR;
     }
-    HAL_TRACE_DEBUG("session timer: {:p}", g_session_timer);
+    HAL_TRACE_DEBUG("Started session aging periodic timer with {} ms invl",
+                    HAL_SESSION_AGE_SCAN_INTVL);
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
 // callback invoked by the Session TCP close timer to cleanup session state
 //------------------------------------------------------------------------------
-void
+static void
 tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     hal_ret_t  ret;
@@ -1252,7 +1253,7 @@ schedule_tcp_half_closed_timer (session_t *session)
 // callback invoked by the Session TCP CXN setup timer. If the session is not
 // in established state then cleanup the session
 //------------------------------------------------------------------------------
-void
+static void
 tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     hal_ret_t                 ret;
@@ -1337,10 +1338,10 @@ session_set_tcp_state (session_t *session, hal::flow_role_t role,
 typedef struct session_walkall_args {
     void   *rsp;
     bool    is_del;
-} session_walkall_args_t;
+} __PACK__ session_walkall_args_t;
 
-bool
-hal_walkall_session(void *entry, void *ctxt)
+static bool
+hal_walkall_session (void *entry, void *ctxt)
 {
     session_t                *session = (session_t *)entry;
     session_walkall_args_t   *args = (session_walkall_args_t *)ctxt;
@@ -1367,7 +1368,7 @@ hal_walkall_session(void *entry, void *ctxt)
 }
 
 hal_ret_t
-session_get_all(SessionGetResponseMsg *rsp)
+session_get_all (SessionGetResponseMsg *rsp)
 {
     session_walkall_args_t args;
 
@@ -1379,7 +1380,7 @@ session_get_all(SessionGetResponseMsg *rsp)
 }
 
 hal_ret_t
-session_delete_all(SessionDeleteResponseMsg *rsp)
+session_delete_all (SessionDeleteResponseMsg *rsp)
 {
     session_walkall_args_t args;
 
@@ -1389,4 +1390,5 @@ session_delete_all(SessionDeleteResponseMsg *rsp)
     return (hal_sdk_ret_to_hal_ret(g_hal_state->session_hal_handle_ht()->\
             walk(hal_walkall_session, (void *)&args)));
 }
+
 }    // namespace hal

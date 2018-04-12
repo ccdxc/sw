@@ -1481,7 +1481,7 @@ nwsec_prof_del_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
 }
 
 hal_ret_t
-hal_fw_init_cb (void)
+hal_fw_init_cb (hal_cfg_t *hal_cfg)
 {
     return HAL_RET_OK;
 }

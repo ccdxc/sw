@@ -289,7 +289,7 @@ acl_lookup_by_key_or_handle (const AclKeyHandle& kh)
 void *acl_get_key_func(void *entry);
 uint32_t acl_compute_hash_func(void *key, uint32_t ht_size);
 bool acl_compare_key_func(void *key1, void *key2);
-hal_ret_t hal_aclqos_init_cb(void);
+hal_ret_t hal_aclqos_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_aclqos_cleanup_cb(void);
 
 hal_ret_t acl_create(acl::AclSpec& spec,

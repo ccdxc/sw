@@ -961,7 +961,7 @@ dospolicy_get (nwsec::DoSPolicyGetRequest& req,
 }
 
 hal_ret_t
-hal_dos_init_cb (void)
+hal_dos_init_cb (hal_cfg_t *hal_cfg)
 {
     return HAL_RET_OK;
 }

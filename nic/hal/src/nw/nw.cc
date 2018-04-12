@@ -1452,7 +1452,7 @@ network_to_str (network_t *nw)
 }
 
 hal_ret_t
-hal_nw_init_cb (void)
+hal_nw_init_cb (hal_cfg_t *hal_cfg)
 {
     return HAL_RET_OK;
 }

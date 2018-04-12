@@ -124,7 +124,7 @@ typedef struct collector_config_s {
     export_formats_en   format;
 } collector_config_t;
 
-hal_ret_t hal_telemetry_init_cb(void);
+hal_ret_t hal_telemetry_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_telemetry_cleanup_cb(void);
 hal_ret_t mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp);
 hal_ret_t mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp);

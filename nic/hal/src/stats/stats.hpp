@@ -6,10 +6,11 @@
 #define __STATS_HPP__
 
 #include "nic/include/base.h"
+#include "nic/include/hal_cfg.hpp"
 
 namespace hal {
 
-hal_ret_t hal_stats_init_cb(void);
+hal_ret_t hal_stats_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_stats_cleanup_cb(void);
 
 }    // namespace

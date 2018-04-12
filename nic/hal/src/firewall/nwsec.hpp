@@ -290,7 +290,7 @@ extern uint32_t dos_policy_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool dos_policy_id_compare_key_func(void *key1, void *key2);
 dos_policy_t *dos_policy_lookup_handle(const nwsec::DoSPolicySpec& dp);
 dos_policy_t *find_dos_policy_by_handle(hal_handle_t handle);
-hal_ret_t hal_dos_init_cb(void);
+hal_ret_t hal_dos_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_dos_cleanup_cb(void);
 hal_ret_t dospolicy_create(nwsec::DoSPolicySpec& spec,
                            nwsec::DoSPolicyResponse *rsp);
@@ -318,32 +318,23 @@ using nwsec::SecurityGroupPolicyGetResponse;
 
 hal_ret_t securitygroup_create(nwsec::SecurityGroupSpec& req,
                                nwsec::SecurityGroupResponse *rsp);
-
 hal_ret_t securitygroup_update(nwsec::SecurityGroupSpec& req,
                                nwsec::SecurityGroupResponse *rsp);
-
 hal_ret_t securitygroup_delete(nwsec::SecurityGroupDeleteRequest& req,
                                nwsec::SecurityGroupDeleteResponseMsg *rsp);
-
 hal_ret_t securitygroup_get(nwsec::SecurityGroupGetRequest& req,
                            nwsec::SecurityGroupGetResponseMsg *rsp);
-
 hal_ret_t securitygrouppolicy_create(nwsec::SecurityGroupPolicySpec& req,
                                      nwsec::SecurityGroupPolicyResponse *rsp);
-
 hal_ret_t securitygrouppolicy_update(nwsec::SecurityGroupPolicySpec& req,
                                      nwsec::SecurityGroupPolicyResponse *rsp);
-
 hal_ret_t securitygrouppolicy_delete(nwsec::SecurityGroupPolicyDeleteRequest& req,
                                      nwsec::SecurityGroupPolicyDeleteResponse *rsp);
-
 hal_ret_t securitygrouppolicy_get(nwsec::SecurityGroupPolicyGetRequest& req,
                                   nwsec::SecurityGroupPolicyGetResponseMsg *rsp);
 
-hal_ret_t hal_fw_init_cb(void);
-
+hal_ret_t hal_fw_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_fw_cleanup_cb(void);
-
 hal_ret_t
 securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
                       nwsec::SecurityPolicyResponse   *res);

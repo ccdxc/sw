@@ -127,8 +127,7 @@ hal_ret_t vrf_update(vrf::VrfSpec& spec, vrf::VrfResponse *rsp);
 hal_ret_t vrf_delete(vrf::VrfDeleteRequest& req, vrf::VrfDeleteResponse *rsp);
 hal_ret_t vrf_get(vrf::VrfGetRequest& req, vrf::VrfGetResponseMsg *rsp);
 
-hal_ret_t vrf_store_cb(void *obj, uint8_t *mem,
-                          uint32_t len, uint32_t *mlen);
+hal_ret_t vrf_store_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
 uint32_t vrf_restore_cb(void *obj, uint32_t len);
 
 }    // namespace hal

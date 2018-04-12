@@ -217,7 +217,7 @@ uint32_t network_compute_hash_func(void *key, uint32_t ht_size);
 bool network_compare_key_func(void *key1, void *key2);
 hal_ret_t network_update_sg_relation(dllist_ctxt_t *sg_list,
                                      network_t *nw, bool add);
-hal_ret_t hal_nw_init_cb(void);
+hal_ret_t hal_nw_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_nw_cleanup_cb(void);
 
 hal_ret_t network_create(nw::NetworkSpec& spec,

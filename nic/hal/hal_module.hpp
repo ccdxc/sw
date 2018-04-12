@@ -4,6 +4,7 @@
 #define __HAL_MODULE_HPP__
 
 #include "nic/include/base.h"
+#include "nic/include/hal_cfg.hpp"
 
 namespace hal {
 
@@ -16,6 +17,7 @@ typedef enum {
     HAL_MODULE_ID_ACLQOS,
     HAL_MODULE_ID_FIREWALL,
     HAL_MODULE_ID_DOS,
+    HAL_MODULE_ID_NAT,
     HAL_MODULE_ID_L4LB,
     HAL_MODULE_ID_TELEMETRY,
     HAL_MODULE_ID_STATS,
@@ -24,7 +26,7 @@ typedef enum {
 } hal_module_id_t;
 
 // per module information that HAL infra needs to maintain
-typedef hal_ret_t (*module_init_cb_t)(void);
+typedef hal_ret_t (*module_init_cb_t)(hal_cfg_t *hal_cfg);
 typedef hal_ret_t (*module_cleanup_cb_t)(void);
 class hal_module_meta {
 public:
@@ -40,7 +42,7 @@ private:
     module_init_cb_t    init_cb_;
     module_cleanup_cb_t cleanup_cb_;
 };
-hal_ret_t hal_module_init(void);
+hal_ret_t hal_module_init(hal_cfg_t *hal_cfg);
 extern hal_module_meta *g_module_meta[HAL_MODULE_ID_MAX];
 
 }    // namespace hal

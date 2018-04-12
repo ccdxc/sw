@@ -621,7 +621,7 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Spawned all HAL threads");
 
     // do module initialization
-    hal_module_init();
+    hal_module_init(hal_cfg);
 
     // do platform dependent init
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
