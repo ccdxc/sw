@@ -11,9 +11,9 @@
 struct p4plus_to_p4_header_t {
     p4plus_app_id      : 4;
     pad                : 4;
+    flow_index         : 24;
     flags              : 8;
     udp_opt_bytes      : 8;  // exclude these bytes from udp payload_len
-    flow_index         : 24;
     dst_lport          : 11;
     dst_lport_valid    : 1;
     pad1               : 4;

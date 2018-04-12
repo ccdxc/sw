@@ -159,6 +159,7 @@ flow_hit_drop:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 flow_info_from_cpu:
+  phvwr         p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   seq.e         c1, k.p4plus_to_p4_dst_lport_valid, TRUE
   phvwr.c1      p.control_metadata_dst_lport, \
                     k.{p4plus_to_p4_dst_lport_sbit0_ebit7, p4plus_to_p4_dst_lport_sbit8_ebit10}

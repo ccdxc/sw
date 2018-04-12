@@ -594,6 +594,19 @@ pd_cpupkt_program_send_ring_doorbell(pd_cpupkt_program_send_ring_doorbell_args_t
     return HAL_RET_OK;
 }
 
+void
+pd_swizzle_header (uint8_t *hdr, uint32_t hdr_len)
+{
+#if __BYTE_ORDER == __BIG_ENDIAN
+
+#else /* __BYTE_ORDER == __BIG_ENDIAN */
+    for (uint32_t i = 0; i < (hdr_len >> 1); i++) {
+        uint8_t temp = hdr[i];
+        hdr[i] = hdr[hdr_len - i - 1];
+        hdr[hdr_len - i - 1] = temp;
+    }
+#endif /* __BYTE_ORDER == __BIG_ENDIAN */
+}
 
 hal_ret_t
 pd_cpupkt_send(pd_cpupkt_send_args_t *s_args)
@@ -653,6 +666,7 @@ pd_cpupkt_send(pd_cpupkt_send_args_t *s_args)
         // P4plus_to_p4_header_t
         write_addr += write_len; // shift address
         write_len = sizeof(p4plus_to_p4_header_t);
+        pd_swizzle_header ((uint8_t *)p4_header, sizeof(p4plus_to_p4_header_t));
         total_len += write_len;
         HAL_TRACE_DEBUG("Copying P4Plus to P4 header of len: {} to addr: {:#x}",
                         write_len, write_addr);

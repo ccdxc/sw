@@ -61,29 +61,42 @@ typedef struct p4_to_p4plus_cpu_pkt_s {
 
 typedef struct p4plus_to_p4_header_s {
 #if __BYTE_ORDER == __BIG_ENDIAN
-    uint8_t     p4plus_app_id   : 4;
-    uint8_t     pad             : 4;
+    uint32_t    p4plus_app_id   : 4;
+    uint32_t    pad             : 4;
+    uint32_t    flow_index      :24;
+    uint32_t    flags           :8;
+    uint32_t    udp_opt_bytes   :8;
+    uint32_t    dst_lport       :11;
+    uint32_t    dst_lport_valid :1;
+    uint32_t    pad1            :4;
+    uint32_t    ip_id_delta     :16;
+    uint32_t    tcp_seq_delta   :32;
+    uint32_t    gso_start       :14;
+    uint32_t    byte_align_pad0 :2;
+    uint32_t    gso_offset      :14;
+    uint32_t    flow_index_valid:1;
+    uint32_t    gso_valid       :1;
+    uint32_t    vlan_tag        :16;
 #else
-    uint8_t     pad             : 4;
-    uint8_t     p4plus_app_id   : 4;
+    uint32_t    vlan_tag        :16;
+    uint32_t    gso_valid       :1;
+    uint32_t    flow_index_valid:1;
+    uint32_t    gso_offset      :14;
+    uint32_t    byte_align_pad0 :2;
+    uint32_t    gso_start       :14;
+    uint32_t    tcp_seq_delta   :32;
+    uint32_t    ip_id_delta     :16;
+    uint32_t    pad1            :4;
+    uint32_t    dst_lport_valid :1;
+    uint32_t    dst_lport       :11;
+    uint32_t    udp_opt_bytes   :8;
+    uint32_t    flags           :8;
+    uint32_t    flow_index      :24;
+    uint32_t    pad             : 4;
+    uint32_t    p4plus_app_id   : 4;
 #endif
-
-    uint8_t     flags;
-    uint8_t     udp_opt_bytes;
-    uint8_t     rsvd[3];
-    uint16_t    dst_lport:11;
-    uint16_t    dst_lport_valid:1;
-    uint16_t    pad1:4;
-    uint16_t    ip_id_delta;
-    uint32_t    tcp_seq_delta;
-    uint32_t    gso_start:14;
-    uint32_t    byte_align_pad0:2;
-    uint32_t    gso_offset:14;
-    uint32_t    byte_align_pad1:1;
-    uint32_t    gso_valid:1;
-    uint16_t    vlan_tag;
 } __attribute__ ((__packed__)) p4plus_to_p4_header_t;
-    
+
 typedef struct cpu_to_p4plus_header_s {
     uint16_t    flags;
     uint16_t    src_lif;

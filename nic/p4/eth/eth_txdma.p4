@@ -13,6 +13,7 @@ header_type p4plus_to_p4_classic_header_t {
     fields {
         p4plus_app_id           : 4;
         pad                     : 4;
+        flow_index              : 24;
         lkp_inst                : 1;
         compute_inner_l4_csum   : 1;
         compute_l4_csum         : 1;
@@ -22,7 +23,6 @@ header_type p4plus_to_p4_classic_header_t {
         update_ip_len           : 1;
         update_ip_id            : 1;
         udp_opt_bytes           : 8;
-        flow_index              : 24;
         dst_lport               : 11;
         dst_lport_valid         : 1;
         pad1                    : 4;

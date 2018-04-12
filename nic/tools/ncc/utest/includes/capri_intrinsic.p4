@@ -266,9 +266,9 @@ header_type p4plus_to_p4_header_t {
     fields {
         p4plus_app_id       : 4;
         pad                 : 4;
+        flow_index          : 24;
         flags               : 8;
         udp_opt_bytes       : 8;  // exclude these bytes from udp payload_len
-        rsvd                : 24;
         dst_lport           : 11;
         dst_lport_valid     : 1;
         pad1                : 4; 
@@ -277,9 +277,10 @@ header_type p4plus_to_p4_header_t {
         vlan_tag            : 16;
         gso_start           : 14; // Should be adjusted to include size of all intrinsic hdrs
                                   // that appear before L2 hdr
+        byte_align_pad0     : 2;
         gso_offset          : 14; // should be adjusted to include size of all intrinsic hdrs
                                   // that appear before L2 hdr
-        byte_align_pad      : 3;
+        flow_index_valid    : 1;
         gso_valid           : 1;
     }
 }
