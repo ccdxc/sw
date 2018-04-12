@@ -65,6 +65,7 @@ cc_library(
     glob(["src/nw/*.cc"]) +
     glob(["src/aclqos/*.cc"]) +
     glob(["src/telemetry/*.cc"]) +
+    glob(["src/stats/*.cc"]) +
     glob(["src/debug/*.cc"]) +
     glob(["src/internal/*.cc"]) +
     glob(["src/l4lb/*.cc"]) +
@@ -81,6 +82,7 @@ cc_library(
     glob(["src/nw/*.hpp"]) +
     glob(["src/aclqos/*.hpp"]) +
     glob(["src/telemetry/*.hpp"]) +
+    glob(["src/stats/*.hpp"]) +
     glob(["src/debug/*.hpp"]) +
     glob(["src/internal/*.hpp"]) + glob(["src/internal/*.h"]) +
     glob(["src/l4lb/*.hpp"]) +
@@ -140,6 +142,7 @@ cc_library(
         glob(["src/nw/*.hpp"]) +
         glob(["src/aclqos/*.hpp"]) +
         glob(["src/telemetry/*.hpp"]) +
+        glob(["src/stats/*.hpp"]) +
         glob(["src/debug/*.hpp"]) +
         glob(["src/internal/*.hpp"]) +
         glob(["src/l4lb/*.hpp"]) +

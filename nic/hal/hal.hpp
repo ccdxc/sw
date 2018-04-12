@@ -80,9 +80,9 @@ void hal_obj_meta_init(void);
 extern hal_obj_meta *g_obj_meta[HAL_OBJ_ID_MAX];
 
 //------------------------------------------------------------------------------
-// one time memory related initializatino for HAL
+// initialize HAL state
 //------------------------------------------------------------------------------
-hal_ret_t hal_mem_init(hal_cfg_t *hal_cfg, hal_obj_meta **obj_meta);
+hal_ret_t hal_state_init(hal_cfg_t *hal_cfg);
 
 }    // namespace hal
 

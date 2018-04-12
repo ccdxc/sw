@@ -141,7 +141,7 @@ pd_system_drop_stats_set (int id, drop_stats_actiondata *data)
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
-    
+
     data->actionid = DROP_STATS_DROP_STATS_ID;
     sdk_ret = tcam->update(id, data);
     if (sdk_ret != sdk::SDK_RET_OK) {
@@ -442,7 +442,7 @@ hal_ret_t
 pd_conv_hw_clock_to_sw_clock (pd_conv_hw_clock_to_sw_clock_args_t *args)
 {
     if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
-        HAL_TRACE_DEBUG("hw tick: {} sw_ns: {}", HW_CLOCK_TICK_TO_NS(args->hw_tick), 
+        HAL_TRACE_DEBUG("hw tick: {} sw_ns: {}", HW_CLOCK_TICK_TO_NS(args->hw_tick),
                          (HW_CLOCK_TICK_TO_NS(args->hw_tick) + g_hal_state_pd->clock_delta()));
         *args->sw_ns = HW_CLOCK_TICK_TO_NS(args->hw_tick) + g_hal_state_pd->clock_delta();
     } else {
@@ -459,7 +459,7 @@ hal_ret_t
 pd_conv_sw_clock_to_hw_clock (pd_conv_sw_clock_to_hw_clock_args_t *args)
 {
     if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
-        *args->hw_tick = NS_TO_HW_CLOCK_TICK((args->sw_ns - g_hal_state_pd->clock_delta())); 
+        *args->hw_tick = NS_TO_HW_CLOCK_TICK((args->sw_ns - g_hal_state_pd->clock_delta()));
     } else {
         *args->hw_tick = NS_TO_HW_CLOCK_TICK((args->sw_ns + g_hal_state_pd->clock_delta()));
     }
@@ -511,7 +511,7 @@ pd_clock_delta_comp (pd_clock_delta_comp_args_t *args)
     while (!hal::periodic::periodic_thread_is_running()) {
         pthread_yield();
     }
- 
+
     clock_delta_comp_cb(NULL, HAL_TIMER_ID_CLOCK_SYNC, NULL);
     g_clock_delta_timer =
         hal::periodic::timer_schedule(HAL_TIMER_ID_CLOCK_SYNC,            // timer_id

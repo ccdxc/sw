@@ -18,6 +18,7 @@ typedef enum {
     HAL_MODULE_ID_DOS,
     HAL_MODULE_ID_L4LB,
     HAL_MODULE_ID_TELEMETRY,
+    HAL_MODULE_ID_STATS,
     HAL_MODULE_ID_FTE,
     HAL_MODULE_ID_MAX,
 } hal_module_id_t;
@@ -39,7 +40,7 @@ private:
     module_init_cb_t    init_cb_;
     module_cleanup_cb_t cleanup_cb_;
 };
-void hal_module_meta_init(void);
+hal_ret_t hal_module_init(void);
 extern hal_module_meta *g_module_meta[HAL_MODULE_ID_MAX];
 
 }    // namespace hal

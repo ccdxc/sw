@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "nic/hal/hal.hpp"
+#include "nic/hal/hal_module.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
@@ -104,7 +105,6 @@ static void
 hal_sig_handler (int sig, siginfo_t *info, void *ptr)
 {
     HAL_TRACE_DEBUG("HAL received signal {}", sig);
-
     if (utils::hal_logger()) {
         utils::hal_logger()->flush();
     }
@@ -620,19 +620,21 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal_thread_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Spawned all HAL threads");
 
+    // do module initialization
+    hal_module_init();
+
     // do platform dependent init
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Platform initialization done");
 
-    // do memory related initialization
-    hal_obj_meta_init();
-    HAL_ABORT(hal_mem_init(hal_cfg, g_obj_meta) == HAL_RET_OK);
+    // do HAL state initialization
+    HAL_ABORT(hal_state_init(hal_cfg) == HAL_RET_OK);
     g_hal_state->set_catalog(catalog);
 
     // set the forwarding mode
     g_hal_state->set_forwarding_mode(hal_cfg->forwarding_mode);
 
-    // do per module initialization
+    // do per module initialization (TODO: this should move to module inits)
     // TODO: needed only in smart nic mode
     HAL_ABORT(hal::session_init() == HAL_RET_OK);
 

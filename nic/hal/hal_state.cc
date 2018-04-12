@@ -1336,13 +1336,16 @@ skip:
 }
 
 //------------------------------------------------------------------------------
-// one time memory related initialization for HAL
+// initialize HAL state
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_mem_init (hal_cfg_t *hal_cfg, hal_obj_meta **obj_meta)
+hal_state_init (hal_cfg_t *hal_cfg)
 {
     bool    h2s_exists = false, h3s_exists = false;
     bool    shm_mode = hal_cfg->shm_mode;
+
+    // do object meta initialization
+    hal_obj_meta_init();
 
     // check if memory segments of interest exist
     h2s_exists = shmmgr::exists(HAL_STATE_STORE,
@@ -1365,7 +1368,7 @@ hal_mem_init (hal_cfg_t *hal_cfg, hal_obj_meta **obj_meta)
             shmmgr::remove(HAL_SERIALIZED_STATE_STORE);
         }
         // instantiate HAL state in regular linux memory
-        g_hal_state = new hal_state(obj_meta, hal_cfg, nullptr);
+        g_hal_state = new hal_state(g_obj_meta, hal_cfg, nullptr);
     } else if (h2s_exists) {
         // stateful restart case
         HAL_TRACE_DEBUG("Stateful restart detected, restoring state");
@@ -1414,7 +1417,7 @@ hal_mem_init (hal_cfg_t *hal_cfg, hal_obj_meta **obj_meta)
         fixed_managed_shared_memory    *fm_shm_mgr;
         fm_shm_mgr = (fixed_managed_shared_memory *)g_h2s_shmmgr->mmgr();
         g_hal_state =
-            fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(obj_meta,
+            fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(g_obj_meta,
                                                             hal_cfg,
                                                             g_h2s_shmmgr);
 
@@ -1436,7 +1439,7 @@ hal_mem_init (hal_cfg_t *hal_cfg, hal_obj_meta **obj_meta)
         fixed_managed_shared_memory    *fm_shm_mgr;
         fm_shm_mgr = (fixed_managed_shared_memory *)g_h2s_shmmgr->mmgr();
         g_hal_state =
-            fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(obj_meta, hal_cfg,
+            fm_shm_mgr->construct<hal_state>(HAL_STATE_OBJ)(g_obj_meta, hal_cfg,
                                                             g_h2s_shmmgr);
     }
 
