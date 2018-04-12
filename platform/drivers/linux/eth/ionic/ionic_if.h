@@ -41,6 +41,8 @@ enum cmd_opcode {
 	CMD_OPCODE_RX_FILTER_DEL		= 19,
 	CMD_OPCODE_STATS_DUMP_START		= 20,
 	CMD_OPCODE_STATS_DUMP_STOP		= 21,
+	CMD_OPCODE_RSS_HASH_SET			= 22,
+	CMD_OPCODE_RSS_INDIR_SET		= 23,
 
 	CMD_OPCODE_RDMA_FIRST_CMD		= 50, //Keep this as first rdma cmd
 	CMD_OPCODE_RDMA_QUERY_PKEY		= 51,
@@ -1006,6 +1008,50 @@ union stats_dump {
 	u32 words[1024];
 };
 
+#define RSS_HASH_KEY_SIZE	40
+
+enum rss_hash_types {
+	RSS_TYPE_IPV4		= BIT(0),
+	RSS_TYPE_IPV4_TCP	= BIT(1),
+	RSS_TYPE_IPV4_UDP	= BIT(2),
+	RSS_TYPE_IPV6		= BIT(3),
+	RSS_TYPE_IPV6_TCP	= BIT(4),
+	RSS_TYPE_IPV6_UDP	= BIT(5),
+	RSS_TYPE_IPV6_EX	= BIT(6),
+	RSS_TYPE_IPV6_TCP_EX	= BIT(7),
+	RSS_TYPE_IPV6_UDP_EX	= BIT(8),
+};
+
+/**
+ * struct rss_hash_set_cmd - Set the RSS hash types and the secret key
+ * @opcode:    opcode = 22
+ * @types:     The hash types to enable (see rss_hash_types).
+ * @key:       The hash secret key.
+ */
+struct rss_hash_set_cmd {
+	u16 opcode;
+	u16 types;
+	u8 key[RSS_HASH_KEY_SIZE];
+	u32 rsvd[5];
+};
+
+typedef struct admin_comp rss_hash_set_comp;
+
+#define RSS_IND_TBL_SIZE	128
+
+/**
+ * struct rss_indir_set_cmd - Set the RSS indirection table values
+ * @opcode:    opcode = 23
+ * @addr:      Address for RSS indirection table shared memory.
+*/
+struct rss_indir_set_cmd {
+	u16 opcode;
+	dma_addr_t addr;
+	u16 rsvd[27];
+};
+
+typedef struct admin_comp rss_indir_set_comp;
+
 /**
  * struct debug_q_dump_cmd - Debug queue dump command
  * @opcode:     opcode = 0xf0
@@ -1259,6 +1305,8 @@ union adminq_cmd {
 	struct rx_mode_set_cmd rx_mode_set;
 	struct rx_filter_cmd rx_filter;
 	struct stats_dump_cmd stats_dump;
+	struct rss_hash_set_cmd rss_hash_set;
+	struct rss_indir_set_cmd rss_indir_set;
 	struct debug_q_dump_cmd debug_q_dump;
 	struct create_mr_cmd create_mr;
 	struct create_cq_cmd create_cq;
