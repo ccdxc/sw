@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/pensando/sw/api"
@@ -23,6 +24,7 @@ const (
 type globalInfo struct {
 	opts          Opts                   // user options
 	sync.Mutex                           // global lock
+	wg            sync.WaitGroup         // waitgroup for threads
 	rpcClient     *rpckit.RPCClient      // rpc connection to collector
 	mc            metric.MetricApiClient // metric client object (to write points)
 	context       context.Context        // global context (used for cancellation)
@@ -65,7 +67,8 @@ func Init(ctx context.Context, opts *Opts) {
 	global.context, global.cancelFunc = context.WithCancel(ctx)
 
 	go periodicTransmit()
-	go startLocalRESTServer()
+	global.wg.Add(1)
+	go startLocalRESTServer(global)
 }
 
 // Cleanup could be called for ephemeral processes using tsdb
@@ -114,7 +117,7 @@ type iTable struct {
 	keys       map[string]string
 	fields     map[string]interface{}
 	timeFields []*timeField
-	dirty      bool
+	dirty      int32
 }
 
 // NewTable creates a freeform table that can be used to record arbitrary fields
@@ -181,11 +184,12 @@ func (c *iCounter) Add(inc int64) {
 	defer table.Unlock()
 
 	c.value += inc
-	tf := &timeField{ts: time.Now(), field: c}
+	//	var cntr = (*c)
+	tf := &timeField{ts: time.Now(), field: c /* &cntr */}
 	table.timeFields = append(table.timeFields, tf)
 	c.nextIdx++
 
-	table.dirty = true
+	atomic.StoreInt32(&table.dirty, 1)
 }
 
 // Add increments the counter by one
@@ -199,7 +203,7 @@ func (c *iCounter) Inc() {
 	table.timeFields = append(table.timeFields, tf)
 	c.nextIdx++
 
-	table.dirty = true
+	atomic.StoreInt32(&table.dirty, 1)
 }
 
 // Counter function creates and returns a new counter metric
@@ -238,7 +242,7 @@ func (g *iGauge) Set(val float64, ts time.Time) {
 	table.timeFields = append(table.timeFields, tf)
 	g.nextIdx++
 
-	table.dirty = true
+	atomic.StoreInt32(&table.dirty, 1)
 }
 
 // Gauge creates a gauge metric
@@ -276,7 +280,7 @@ func (b *iBool) Set(val bool, ts time.Time) {
 	table.timeFields = append(table.timeFields, tf)
 	b.nextIdx++
 
-	table.dirty = true
+	atomic.StoreInt32(&table.dirty, 1)
 }
 
 // Bool creates a boolean metric
@@ -314,7 +318,7 @@ func (s *iString) Set(val string, ts time.Time) {
 	table.timeFields = append(table.timeFields, tf)
 	s.nextIdx++
 
-	table.dirty = true
+	atomic.StoreInt32(&table.dirty, 1)
 }
 
 // String creates a string metric
@@ -409,7 +413,7 @@ func (h *iHistogram) AddSample(value int64) {
 	h.nextIdx++
 
 	h.dirty[key] = true
-	table.dirty = true
+	atomic.StoreInt32(&table.dirty, 1)
 }
 
 // Summary
@@ -447,7 +451,7 @@ func (s *iSummary) AddSample(value float64) {
 	table.timeFields = append(table.timeFields, tf)
 	s.nextIdx++
 
-	table.dirty = true
+	atomic.StoreInt32(&table.dirty, 1)
 }
 
 // Point
@@ -470,5 +474,5 @@ func (table *iTable) Point(keys map[string]string, fields map[string]interface{}
 	tf := &timeField{ts: ts, field: p}
 	table.timeFields = append(table.timeFields, tf)
 
-	table.dirty = true
+	atomic.StoreInt32(&table.dirty, 1)
 }

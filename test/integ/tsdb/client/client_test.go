@@ -71,7 +71,7 @@ func TestRegression(t *testing.T) {
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 	epm.RxPacketSize.SetRanges([]int64{10, 100, 1000, 10000})
-	intSamples := []int64{9, 99, 999, 9999}
+	// intSamples := []int64{9, 99, 999, 9999}
 
 	nIters := 1000
 	for i := 0; i < nIters; i++ {
@@ -82,9 +82,13 @@ func TestRegression(t *testing.T) {
 		epm.Bandwidth.Set(float64(i*2), ts1)
 		epm.LinkUp.Set(true, ts1)
 		epm.WorkloadName.Set(fmt.Sprintf("test-%d", i), ts1)
+
+		/* TODO: Fix after discussing with vipin. The following are coalesced in a sendInterval.
+			So there is no guarantee that number of metricPoints will match the iters
 		epm.OutgoingConns.Inc()
 		epm.RxPacketSize.AddSample(intSamples[i%4])
 		epm.RxBandwidth.AddSample(rand.Float64())
+		*/
 	}
 
 	f := func() (bool, interface{}) {

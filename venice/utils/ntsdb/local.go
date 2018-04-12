@@ -5,19 +5,23 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/pensando/sw/venice/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-func startLocalRESTServer() {
+func startLocalRESTServer(global *globalInfo) {
 	if global.opts.LocalPort == 0 {
+		global.wg.Done()
 		return
 	}
 	http.HandleFunc("/", localMetricsHandler)
 
 	global.httpServer = &http.Server{Addr: fmt.Sprintf("localhost:%d", global.opts.LocalPort)}
+	global.wg.Done()
+
 	err := global.httpServer.ListenAndServe()
 	if err != nil {
 		panic(fmt.Sprintf("unable to start local server at url '%s'", global.httpServer.Addr))
@@ -28,6 +32,8 @@ func stopLocalRESTServer() {
 	if global.opts.LocalPort == 0 {
 		return
 	}
+	global.wg.Wait() // Wait for startLocalRESTServer to complete
+
 	global.httpServer.Shutdown(nil)
 }
 
@@ -58,7 +64,7 @@ func localMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	tables := []*iTable{}
 	global.Lock()
 	for _, table := range global.tables {
-		if (tableName == "" || tableName == table.name) && table.dirty {
+		if (tableName == "" || tableName == table.name) && atomic.LoadInt32(&table.dirty) != 0 {
 			tables = append(tables, table)
 		}
 	}
