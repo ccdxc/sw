@@ -34,6 +34,7 @@ using acl::AclGetRequest;
 using acl::AclGetRequestMsg;
 using acl::AclGetResponse;
 using acl::AclGetResponseMsg;
+using acl::AclStats;
 
 namespace hal {
 

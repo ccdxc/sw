@@ -156,24 +156,30 @@ PD_FUNC_STUB(pd_proxyccb_get);
 
 // qos clas
 PD_FUNC_STUB(pd_qos_class_create);
+PD_FUNC_STUB(pd_qos_class_restore);
 PD_FUNC_STUB(pd_qos_class_delete);
 PD_FUNC_STUB(pd_qos_class_update);
 PD_FUNC_STUB(pd_qos_class_make_clone);
 PD_FUNC_STUB(pd_qos_class_mem_free);
+PD_FUNC_STUB(pd_qos_class_get);
 
 // copp
 PD_FUNC_STUB(pd_copp_create);
+PD_FUNC_STUB(pd_copp_restore);
 PD_FUNC_STUB(pd_copp_delete);
 PD_FUNC_STUB(pd_copp_update);
 PD_FUNC_STUB(pd_copp_make_clone);
 PD_FUNC_STUB(pd_copp_mem_free);
+PD_FUNC_STUB(pd_copp_get);
 
 // acl pd calls
 PD_FUNC_STUB(pd_acl_create);
+PD_FUNC_STUB(pd_acl_restore);
 PD_FUNC_STUB(pd_acl_delete);
 PD_FUNC_STUB(pd_acl_update);
 PD_FUNC_STUB(pd_acl_mem_free);
 PD_FUNC_STUB(pd_acl_make_clone);
+PD_FUNC_STUB(pd_acl_get);
 
 // wring
 PD_FUNC_STUB(pd_wring_create);

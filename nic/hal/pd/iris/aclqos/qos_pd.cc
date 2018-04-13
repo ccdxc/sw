@@ -820,6 +820,90 @@ end:
 }
 
 // ----------------------------------------------------------------------------
+// pd qos_class get
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_qos_class_get (pd_qos_class_get_args_t *args)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+#if 0
+    qos_class_t         *qos_class = args->qos_class;
+    pd_qos_class_t      *qos_class_pd = (pd_qos_class_t *)qos_class->pd;
+    QosClassGetResponse *rsp = args->rsp;
+
+    auto qos_class_info = rsp->mutable_status()->mutable_epd_status();
+#endif
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// pd qos_class restore from response
+// ----------------------------------------------------------------------------
+static hal_ret_t
+qos_class_pd_restore_data (pd_qos_class_restore_args_t *args)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+#if 0
+    qos_class_t    *qos_class = args->qos_class;
+    pd_qos_class_t *qos_class_pd = (pd_qos_class_t *)qos_class->pd;
+
+    auto qos_class_info = args->qos_class_status->epd_status();
+#endif
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// pd qos_class restore
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_qos_class_restore (pd_qos_class_restore_args_t *args)
+{
+    hal_ret_t      ret;
+    pd_qos_class_t *qos_class_pd;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("Restoring pd state for qos_class {}", args->qos_class->key);
+
+    // allocate PD qos_class state
+    qos_class_pd = qos_class_pd_alloc_init();
+    if (qos_class_pd == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // link pi & pd
+    qos_class_pd_link_pi_pd(qos_class_pd, args->qos_class);
+
+    ret = qos_class_pd_restore_data(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to restore pd data for qos_class: {}, err: {}",
+                      args->qos_class->key, ret);
+        goto end;
+    }
+
+    // TODO: Eventually call table program hw and hw calls will be
+    //       a NOOP in p4pd code
+#if 0
+    // program hw
+    ret = qos_class_pd_program_hw(qos_class_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:failed to program hw", __FUNCTION__);
+        goto end;
+    }
+#endif
+
+end:
+
+    if (ret != HAL_RET_OK) {
+        qos_class_pd_cleanup(qos_class_pd);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t

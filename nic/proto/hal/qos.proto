@@ -257,6 +257,11 @@ message CoppResponseMsg {
   repeated CoppResponse response = 1;    // batched responses
 }
 
+// CoppStats captures all the statistics of given Copp
+message CoppStats {
+  PolicerStats    policer_stats = 1;    // Policer statistics
+}
+
 // CoppGetRequest is used to get information about a Copp
 message CoppGetRequest {
   types.ObjectMeta meta          = 1;    // object meta
@@ -273,7 +278,7 @@ message CoppGetResponse {
   types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   CoppSpec        spec       = 2;    // Copp configuration
   CoppStatus      status     = 3;    // Copp operational status
-  PolicerStats    stats      = 4;    // Copp statistics
+  CoppStats       stats      = 4;    // Copp statistics
 }
 
 // CoppGetResponseMsg is response to CoppGetRequestMsg

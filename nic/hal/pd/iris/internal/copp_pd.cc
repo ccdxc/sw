@@ -362,6 +362,90 @@ end:
 }
 
 // ----------------------------------------------------------------------------
+// pd copp get
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_copp_get (pd_copp_get_args_t *args)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+#if 0
+    copp_t         *copp = args->copp;
+    pd_copp_t      *copp_pd = (pd_copp_t *)copp->pd;
+    CoppGetResponse *rsp = args->rsp;
+
+    auto copp_info = rsp->mutable_status()->mutable_epd_status();
+#endif
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// pd copp restore from response
+// ----------------------------------------------------------------------------
+static hal_ret_t
+copp_pd_restore_data (pd_copp_restore_args_t *args)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+#if 0
+    copp_t    *copp = args->copp;
+    pd_copp_t *copp_pd = (pd_copp_t *)copp->pd;
+
+    auto copp_info = args->copp_status->epd_status();
+#endif
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// pd copp restore
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_copp_restore (pd_copp_restore_args_t *args)
+{
+    hal_ret_t      ret;
+    pd_copp_t *copp_pd;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("Restoring pd state for copp {}", args->copp->key);
+
+    // allocate PD copp state
+    copp_pd = copp_pd_alloc_init();
+    if (copp_pd == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // link pi & pd
+    copp_pd_link_pi_pd(copp_pd, args->copp);
+
+    ret = copp_pd_restore_data(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to restore pd data for copp: {}, err: {}",
+                      args->copp->key, ret);
+        goto end;
+    }
+
+    // TODO: Eventually call table program hw and hw calls will be
+    //       a NOOP in p4pd code
+#if 0
+    // program hw
+    ret = copp_pd_program_hw(copp_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:failed to program hw", __FUNCTION__);
+        goto end;
+    }
+#endif
+
+end:
+
+    if (ret != HAL_RET_OK) {
+        copp_pd_cleanup(copp_pd);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t

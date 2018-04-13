@@ -513,6 +513,35 @@ end:
 }
 
 //------------------------------------------------------------------------------
+// helper function to cleanup all the acl related state during abort operation
+// when create failed
+//------------------------------------------------------------------------------
+static hal_ret_t
+acl_create_abort_cleanup (acl_t *acl, hal_handle_t hal_handle)
+{
+    hal_ret_t                   ret;
+    pd::pd_acl_delete_args_t    pd_acl_args = { 0 };
+
+    // 1. delete call to PD
+    if (acl->pd) {
+        pd::pd_acl_delete_args_init(&pd_acl_args);
+        pd_acl_args.acl = acl;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_DELETE, (void *)&pd_acl_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete acl {} pd, err : {}", acl->key, ret);
+        }
+    }
+
+    // 2. remove object from hal_handle id based hash table in infra
+    hal_handle_free(hal_handle);
+
+    // 3. free acl
+    acl_free(acl, false);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // acl_create_add_cb was a failure
 // 1. call delete to PD
 //      a. Deprogram HW
@@ -524,12 +553,11 @@ end:
 hal_ret_t
 acl_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t          ret = HAL_RET_OK;
-    pd::pd_acl_delete_args_t pd_acl_args = { 0 };
-    dllist_ctxt_t      *lnode = NULL;
-    dhl_entry_t        *dhl_entry = NULL;
-    acl_t             *acl = NULL;
-    hal_handle_t       hal_handle = 0;
+    hal_ret_t     ret = HAL_RET_OK;
+    dllist_ctxt_t *lnode = NULL;
+    dhl_entry_t   *dhl_entry = NULL;
+    acl_t         *acl = NULL;
+    hal_handle_t  hal_handle = 0;
 
     HAL_ASSERT(cfg_ctxt != NULL);
 
@@ -539,24 +567,9 @@ acl_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl = (acl_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create abort cb");
+    HAL_TRACE_DEBUG("Acl {} create abort cb", acl->key);
+    ret = acl_create_abort_cleanup(acl, hal_handle);
 
-    // 1. delete call to PD
-    if (acl->pd) {
-        pd::pd_acl_delete_args_init(&pd_acl_args);
-        pd_acl_args.acl = acl;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_DELETE, (void *)&pd_acl_args);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to delete acl pd, err : {}",
-                          ret);
-        }
-    }
-
-    // 2. remove object from hal_handle id based hash table in infra
-    hal_handle_free(hal_handle);
-
-    // 3. Free PI acl
-    acl_free(acl, false);
     return ret;
 }
 
@@ -1429,7 +1442,7 @@ populate_action_spec (acl_action_spec_t *as,
 }
 
 static hal_ret_t
-acl_populate_from_spec (acl_t *acl, AclSpec& spec)
+acl_init_from_spec (acl_t *acl, const AclSpec& spec)
 {
     hal_ret_t ret = HAL_RET_OK;
     // save the configs from the spec
@@ -1459,12 +1472,32 @@ end:
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// initialize a acl's oper status from its status object
+//------------------------------------------------------------------------------
+static hal_ret_t
+acl_init_from_status (acl_t *acl, const AclStatus& status)
+{
+    acl->hal_handle = status.acl_handle();
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize a acl's oper stats from its stats object
+//------------------------------------------------------------------------------
+static hal_ret_t
+acl_init_from_stats (acl_t *acl, const AclStats& stats)
+{
+    return HAL_RET_OK;
+}
+
 // Function to fill AclGetResponse
 static hal_ret_t
-acl_fill_rsp (AclGetResponse *rsp, acl_t *acl)
+acl_process_get (acl_t *acl, AclGetResponse *rsp)
 {
-    AclSpec      *spec;
-    hal_ret_t    ret = HAL_RET_OK;
+    AclSpec               *spec;
+    hal_ret_t             ret = HAL_RET_OK;
+    pd::pd_acl_get_args_t args   = {0};
 
     // fill config spec of this acl
     spec = rsp->mutable_spec();
@@ -1489,6 +1522,15 @@ acl_fill_rsp (AclGetResponse *rsp, acl_t *acl)
     // fill stats of this acl
     rsp->set_api_status(types::API_STATUS_OK);
 
+    // Getting PD information
+    args.acl = acl;
+    args.rsp = rsp;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_GET, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to do PD get for acl : {}. ret : {}",
+                      acl->key, ret);
+    }
+
     return ret;
 }
 
@@ -1502,7 +1544,7 @@ acl_get_ht_cb(void *ht_entry, void *ctxt)
     acl_t                    *acl    = NULL;
 
     acl = (acl_t *)find_acl_by_handle(entry->handle_id);
-    acl_fill_rsp(response, acl);
+    acl_process_get(acl, response);
 
     // Always return false here, so that we walk through all hash table
     // entries.
@@ -1543,7 +1585,7 @@ acl_create (AclSpec& spec, AclResponse *rsp)
 
     // initialize the acl record
     // populate from the spec
-    ret = acl_populate_from_spec(acl, spec);
+    ret = acl_init_from_spec(acl, spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("error in populating acl from spec");
         goto end;
@@ -1670,7 +1712,7 @@ acl_make_clone (acl_t *acl, acl_t **acl_clone_p, AclSpec& spec)
     pd::hal_pd_call(pd::PD_FUNC_ID_ACL_MAKE_CLONE, (void *)&args);
 
     // Update with the new spec
-    ret = acl_populate_from_spec(acl_clone, spec);
+    ret = acl_init_from_spec(acl_clone, spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("error in populating acl from spec");
         goto end;
@@ -1879,7 +1921,7 @@ acl_get (AclGetRequest& req, AclGetResponseMsg *rsp)
         return HAL_RET_ACL_NOT_FOUND;
     }
 
-    acl_fill_rsp(response, acl);
+    acl_process_get(acl, response);
 
     hal_api_trace(" API End: acl get ");
     HAL_API_STATS_INC (HAL_API_ACL_GET_SUCCESS);
@@ -2071,6 +2113,127 @@ end:
     rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: acl delete ");
     return ret;
+}
+
+//-----------------------------------------------------------------------------
+// given a acl, marshall it for persisting the acl state (spec, status, stats)
+//
+// obj points to acl object i.e., acl_t
+// mem is the memory buffer to serialize the state into
+// len is the length of the buffer provided
+// mlen is to be filled by this function with marshalled state length
+//-----------------------------------------------------------------------------
+hal_ret_t
+acl_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
+{
+    AclGetResponse acl_info;
+    uint32_t       serialized_state_sz;
+    acl_t          *acl = (acl_t *)obj;
+
+    HAL_ASSERT((acl != NULL) && (mlen != NULL));
+    *mlen = 0;
+
+    // get all information about this acl (includes spec, status & stats)
+    acl_process_get(acl, &acl_info);
+    serialized_state_sz = acl_info.ByteSizeLong();
+    if (serialized_state_sz > len) {
+        HAL_TRACE_ERR("Failed to marshall ACL {}, not enough room, "
+                      "required size {}, available size {}",
+                      acl->key, serialized_state_sz, len);
+        return HAL_RET_OOM;
+    }
+
+    // serialize all the state
+    if (acl_info.SerializeToArray(mem, serialized_state_sz) == false) {
+        HAL_TRACE_ERR("Failed to serialize acl {}", acl->key);
+        return HAL_RET_OOM;
+    }
+    *mlen = serialized_state_sz;
+    HAL_TRACE_DEBUG("Marshalled acl {}, len {}",
+                    acl->key, serialized_state_sz);
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+acl_restore_add (acl_t *acl, const AclGetResponse& acl_info)
+{
+    hal_ret_t                 ret;
+    pd::pd_acl_restore_args_t pd_acl_args = { 0 };
+
+    // restore pd state
+    pd::pd_acl_restore_args_init(&pd_acl_args);
+    pd_acl_args.acl = acl;
+    pd_acl_args.acl_status = &acl_info.status();
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_RESTORE, &pd_acl_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to restore acl {} pd, err : {}",
+                      acl->key, ret);
+    }
+    return ret;
+}
+
+static hal_ret_t
+acl_restore_commit (acl_t *acl, const AclGetResponse& acl_info)
+{
+    hal_ret_t          ret;
+
+    HAL_TRACE_DEBUG("Committing acl {} restore", acl->key);
+
+    ret = acl_add_to_db(acl, acl->hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to restore acl {} to db, err : {}",
+                      acl->key, ret);
+    }
+    return ret;
+}
+
+static hal_ret_t
+acl_restore_abort (acl_t *acl, const AclGetResponse& acl_info)
+{
+    HAL_TRACE_ERR("Aborting acl {} restore", acl->key);
+    acl_create_abort_cleanup(acl, acl->hal_handle);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// acl's restore cb.
+//  - restores acl to the PI and PD state before the upgrade
+//------------------------------------------------------------------------------
+uint32_t
+acl_restore_cb (void *obj, uint32_t len)
+{
+    hal_ret_t      ret;
+    AclGetResponse acl_info;
+    acl_t          *acl;
+
+    // de-serialize the object
+    if (acl_info.ParseFromArray(obj, len) == false) {
+        HAL_TRACE_ERR("Failed to de-serialize a serialized acl obj");
+        HAL_ASSERT(0);
+        return 0;
+    }
+
+    // allocate ACL obj from slab
+    acl = acl_alloc_init();
+    if (acl == NULL) {
+        HAL_TRACE_ERR("Failed to alloc/init acl, err : {}", ret);
+        return 0;
+    }
+
+    // initialize acl attrs from its spec
+    acl_init_from_spec(acl, acl_info.spec());
+    acl_init_from_status(acl, acl_info.status());
+    acl_init_from_stats(acl, acl_info.stats());
+
+    // repopulate handle db
+    hal_handle_insert(HAL_OBJ_ID_ACL, acl->hal_handle, (void *)acl);
+
+    ret = acl_restore_add(acl, acl_info);
+    if (ret != HAL_RET_OK) {
+        acl_restore_abort(acl, acl_info);
+    }
+    acl_restore_commit(acl, acl_info);
+    return 0;    // TODO: fix me
 }
 
 hal_ret_t

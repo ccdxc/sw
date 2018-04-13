@@ -1237,6 +1237,19 @@ pd_qos_class_create_args_init (pd_qos_class_create_args_t *args)
     return;
 }
 
+typedef struct pd_qos_class_restore_args_s {
+    qos_class_t              *qos_class;
+    const QosClassStatus    *qos_class_status;
+} __PACK__ pd_qos_class_restore_args_t;
+
+static inline void
+pd_qos_class_restore_args_init (pd_qos_class_restore_args_t *args)
+{
+    args->qos_class = NULL;
+    args->qos_class_status = NULL;
+    return;
+}
+
 typedef struct pd_qos_class_delete_args_s {
     qos_class_t    *qos_class;
 } __PACK__ pd_qos_class_delete_args_t;
@@ -1284,6 +1297,11 @@ typedef struct pd_qos_class_make_clone_args_s {
     qos_class_t *clone;
 } __PACK__ pd_qos_class_make_clone_args_t;
 
+typedef struct pd_qos_class_get_args_s {
+    qos_class_t *qos_class;
+    QosClassGetResponse *rsp;
+} __PACK__ pd_qos_class_get_args_t;
+
 // copp
 typedef struct pd_copp_create_args_s {
     copp_t    *copp;
@@ -1293,6 +1311,19 @@ static inline void
 pd_copp_create_args_init (pd_copp_create_args_t *args)
 {
     args->copp = NULL;
+    return;
+}
+
+typedef struct pd_copp_restore_args_s {
+    copp_t              *copp;
+    const CoppStatus    *copp_status;
+} __PACK__ pd_copp_restore_args_t;
+
+static inline void
+pd_copp_restore_args_init (pd_copp_restore_args_t *args)
+{
+    args->copp = NULL;
+    args->copp_status = NULL;
     return;
 }
 
@@ -1334,6 +1365,11 @@ typedef struct pd_copp_make_clone_args_s {
     copp_t *clone;
 } __PACK__ pd_copp_make_clone_args_t;
 
+typedef struct pd_copp_get_args_s {
+    copp_t *copp;
+    CoppGetResponse *rsp;
+} __PACK__ pd_copp_get_args_t;
+
 // acl
 typedef struct pd_acl_create_args_s {
     acl_t    *acl;
@@ -1343,6 +1379,19 @@ static inline void
 pd_acl_create_args_init (pd_acl_create_args_t *args)
 {
     args->acl = NULL;
+    return;
+}
+
+typedef struct pd_acl_restore_args_s {
+    acl_t              *acl;
+    const AclStatus    *acl_status;
+} __PACK__ pd_acl_restore_args_t;
+
+static inline void
+pd_acl_restore_args_init (pd_acl_restore_args_t *args)
+{
+    args->acl = NULL;
+    args->acl_status = NULL;
     return;
 }
 
@@ -1383,6 +1432,11 @@ typedef struct pd_acl_make_clone_args_s {
     acl_t *acl;
     acl_t *clone;
 } __PACK__ pd_acl_make_clone_args_t;
+
+typedef struct pd_acl_get_args_s {
+    acl_t *acl;
+    AclGetResponse *rsp;
+} __PACK__ pd_acl_get_args_t;
 
 // wring
 typedef struct pd_wring_create_args_s {
@@ -2553,7 +2607,13 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_TABLE_PROPERTIES_GET,     218, "PD_FUNC_ID_TABLE_PROPERTIES_GET") \
     ENTRY(PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY, 219, "PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY")\
     ENTRY(PD_FUNC_ID_VRF_GET,                  220, "PD_FUNC_ID_VRF_GET") \
-    ENTRY(PD_FUNC_ID_MAX,                      221, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_QOS_CLASS_GET,            221, "PD_FUNC_ID_QOS_CLASS_GET") \
+    ENTRY(PD_FUNC_ID_QOS_CLASS_RESTORE,        222, "PD_FUNC_ID_QOS_CLASS_RESTORE") \
+    ENTRY(PD_FUNC_ID_COPP_GET,                 223, "PD_FUNC_ID_COPP_GET") \
+    ENTRY(PD_FUNC_ID_COPP_RESTORE,             224, "PD_FUNC_ID_COPP_RESTORE") \
+    ENTRY(PD_FUNC_ID_ACL_GET,                  225, "PD_FUNC_ID_ACL_GET") \
+    ENTRY(PD_FUNC_ID_ACL_RESTORE,              226, "PD_FUNC_ID_ACL_RESTORE") \
+    ENTRY(PD_FUNC_ID_MAX,                      227, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2703,24 +2763,30 @@ PD_FUNCP_TYPEDEF(pd_proxyccb_get);
 
 // qos clas
 PD_FUNCP_TYPEDEF(pd_qos_class_create);
+PD_FUNCP_TYPEDEF(pd_qos_class_restore);
 PD_FUNCP_TYPEDEF(pd_qos_class_delete);
 PD_FUNCP_TYPEDEF(pd_qos_class_update);
 PD_FUNCP_TYPEDEF(pd_qos_class_mem_free);
 PD_FUNCP_TYPEDEF(pd_qos_class_make_clone);
+PD_FUNCP_TYPEDEF(pd_qos_class_get);
 
 // copp
 PD_FUNCP_TYPEDEF(pd_copp_create);
+PD_FUNCP_TYPEDEF(pd_copp_restore);
 PD_FUNCP_TYPEDEF(pd_copp_delete);
 PD_FUNCP_TYPEDEF(pd_copp_update);
 PD_FUNCP_TYPEDEF(pd_copp_mem_free);
 PD_FUNCP_TYPEDEF(pd_copp_make_clone);
+PD_FUNCP_TYPEDEF(pd_copp_get);
 
 // acl pd calls
 PD_FUNCP_TYPEDEF(pd_acl_create);
+PD_FUNCP_TYPEDEF(pd_acl_restore);
 PD_FUNCP_TYPEDEF(pd_acl_delete);
 PD_FUNCP_TYPEDEF(pd_acl_update);
 PD_FUNCP_TYPEDEF(pd_acl_mem_free);
 PD_FUNCP_TYPEDEF(pd_acl_make_clone);
+PD_FUNCP_TYPEDEF(pd_acl_get);
 
 // wring
 PD_FUNCP_TYPEDEF(pd_wring_create);
@@ -3045,23 +3111,30 @@ typedef struct pd_call_s {
 
         // qos clas
         PD_UNION_FIELD(pd_qos_class_create);
+        PD_UNION_FIELD(pd_qos_class_restore);
         PD_UNION_FIELD(pd_qos_class_delete);
         PD_UNION_FIELD(pd_qos_class_update);
         PD_UNION_FIELD(pd_qos_class_make_clone);
         PD_UNION_FIELD(pd_qos_class_mem_free);
+        PD_UNION_FIELD(pd_qos_class_get);
+
         // copp
         PD_UNION_FIELD(pd_copp_create);
+        PD_UNION_FIELD(pd_copp_restore);
         PD_UNION_FIELD(pd_copp_delete);
         PD_UNION_FIELD(pd_copp_update);
         PD_UNION_FIELD(pd_copp_make_clone);
         PD_UNION_FIELD(pd_copp_mem_free);
+        PD_UNION_FIELD(pd_copp_get);
 
         // acl
         PD_UNION_FIELD(pd_acl_create);
+        PD_UNION_FIELD(pd_acl_restore);
         PD_UNION_FIELD(pd_acl_delete);
         PD_UNION_FIELD(pd_acl_update);
         PD_UNION_FIELD(pd_acl_mem_free);
         PD_UNION_FIELD(pd_acl_make_clone);
+        PD_UNION_FIELD(pd_acl_get);
 
         // wring
         PD_UNION_FIELD(pd_wring_create);

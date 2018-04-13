@@ -259,10 +259,11 @@ qos_class_update_db (qos_class_t *qos_class, qos_class_t *qos_class_clone)
 }
 
 static void
-qos_class_get_fill_rsp (qos::QosClassGetResponse *rsp,
-                        qos_class_t *qos_class)
+qos_class_process_get (qos_class_t *qos_class, qos::QosClassGetResponse *rsp)
 {
-    QosClassSpec    *spec;
+    hal_ret_t                   ret    = HAL_RET_OK;
+    pd::pd_qos_class_get_args_t args   = {0};
+    QosClassSpec                *spec;
 
     spec = rsp->mutable_spec();
     spec->mutable_key_or_handle()->set_qos_class_handle(qos_class->hal_handle);
@@ -289,6 +290,19 @@ qos_class_get_fill_rsp (qos::QosClassGetResponse *rsp,
     // fill operational state of this qos_class
     rsp->mutable_status()->set_qos_class_handle(qos_class->hal_handle);
 
+    // fill stats of this qos_class
+    rsp->mutable_stats()->set_num_lifs_tx(qos_class->lif_list_tx->num_elems());
+    rsp->mutable_stats()->set_num_lifs_rx(qos_class->lif_list_rx->num_elems());
+
+    // Getting PD information
+    args.qos_class = qos_class;
+    args.rsp = rsp;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_GET, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to do PD get for qos_class : {}. ret : {}",
+                      qos_class->key, ret);
+    }
+
     rsp->set_api_status(types::API_STATUS_OK);
 }
 
@@ -301,7 +315,7 @@ qos_class_get_ht_cb(void *ht_entry, void *ctxt)
     qos_class_t                 *qos_class  = NULL;
 
     qos_class = (qos_class_t *)find_qos_class_by_handle(entry->handle_id);
-    qos_class_get_fill_rsp(response, qos_class);
+    qos_class_process_get(qos_class, response);
 
     // Always return false here, so that we walk through all hash table
     // entries.
@@ -329,7 +343,7 @@ qosclass_get (qos::QosClassGetRequest& req,
         return HAL_RET_QOS_CLASS_NOT_FOUND;
     }
 
-    qos_class_get_fill_rsp(response, qos_class);
+    qos_class_process_get(qos_class, response);
     HAL_API_STATS_INC(HAL_API_QOSCLASS_GET_SUCCESS);
     return HAL_RET_OK;
 }
@@ -682,6 +696,35 @@ end:
 }
 
 //------------------------------------------------------------------------------
+// helper function to cleanup all the qos_class related state during abort operation
+// when create failed
+//------------------------------------------------------------------------------
+static hal_ret_t
+qos_class_create_abort_cleanup (qos_class_t *qos_class, hal_handle_t hal_handle)
+{
+    hal_ret_t                   ret;
+    pd::pd_qos_class_delete_args_t    pd_qos_class_args = { 0 };
+
+    // 1. delete call to PD
+    if (qos_class->pd) {
+        pd::pd_qos_class_delete_args_init(&pd_qos_class_args);
+        pd_qos_class_args.qos_class = qos_class;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_DELETE, (void *)&pd_qos_class_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete qos_class {} pd, err : {}", qos_class->key, ret);
+        }
+    }
+
+    // 2. remove object from hal_handle id based hash table in infra
+    hal_handle_free(hal_handle);
+
+    // 3. free qos_class
+    qos_class_cleanup(qos_class, false);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // qos_class_create_add_cb was a failure
 // 1. call delete to PD
 //      a. Deprogram HW
@@ -694,7 +737,6 @@ hal_ret_t
 qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    pd::pd_qos_class_delete_args_t pd_qos_class_args = { 0 };
     dllist_ctxt_t           *lnode = NULL;
     dhl_entry_t             *dhl_entry = NULL;
     qos_class_t             *qos_class = NULL;
@@ -708,25 +750,9 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create abort cb");
+    HAL_TRACE_DEBUG("QosClass {} create abort cb", qos_class->key);
+    ret = qos_class_create_abort_cleanup(qos_class, hal_handle);
 
-    // 1. delete call to PD
-    if (qos_class->pd) {
-        pd::pd_qos_class_delete_args_init(&pd_qos_class_args);
-        pd_qos_class_args.qos_class = qos_class;
-        // ret = pd::pd_qos_class_delete(&pd_qos_class_args);
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_DELETE, (void *)&pd_qos_class_args);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to delete qos_class pd, err : {}",
-                          ret);
-        }
-    }
-
-    // 2. remove object from hal_handle id based hash table in infra
-    hal_handle_free(hal_handle);
-
-    // 3. Free PI qos class
-    qos_class_cleanup(qos_class, false);
     return ret;
 }
 
@@ -756,7 +782,7 @@ qos_class_prepare_rsp (QosClassResponse *rsp, hal_ret_t ret,
 }
 
 static hal_ret_t
-update_pfc_params (QosClassSpec& spec, qos_class_t *qos_class)
+update_pfc_params (const QosClassSpec& spec, qos_class_t *qos_class)
 {
     if (spec.has_pfc()) {
         qos_class->pfc.cos = spec.pfc().cos();
@@ -775,7 +801,7 @@ update_pfc_params (QosClassSpec& spec, qos_class_t *qos_class)
 }
 
 static hal_ret_t
-update_sched_params (QosClassSpec& spec, qos_class_t *qos_class)
+update_sched_params (const QosClassSpec& spec, qos_class_t *qos_class)
 {
     qos_sched_t *sched = &qos_class->sched;
     if (!spec.has_sched()) {
@@ -796,7 +822,7 @@ update_sched_params (QosClassSpec& spec, qos_class_t *qos_class)
 }
 
 static hal_ret_t
-update_cmap_params (QosClassSpec& spec, qos_class_t *qos_class)
+update_cmap_params (const QosClassSpec& spec, qos_class_t *qos_class)
 {
     qos_uplink_cmap_t *cmap = &qos_class->uplink_cmap;
 
@@ -819,7 +845,7 @@ update_cmap_params (QosClassSpec& spec, qos_class_t *qos_class)
 }
 
 static hal_ret_t
-update_marking_params (QosClassSpec& spec, qos_class_t *qos_class)
+update_marking_params (const QosClassSpec& spec, qos_class_t *qos_class)
 {
     qos_marking_action_t *marking = &qos_class->marking;
 
@@ -834,7 +860,7 @@ update_marking_params (QosClassSpec& spec, qos_class_t *qos_class)
 }
 
 static hal_ret_t
-qos_class_populate_from_spec (qos_class_t *qos_class, QosClassSpec& spec)
+qos_class_init_from_spec (qos_class_t *qos_class, const QosClassSpec& spec)
 {
     hal_ret_t ret;
 
@@ -866,6 +892,25 @@ qos_class_populate_from_spec (qos_class_t *qos_class, QosClassSpec& spec)
         return ret;
     }
 
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize a qos_class's oper status from its status object
+//------------------------------------------------------------------------------
+static hal_ret_t
+qos_class_init_from_status (qos_class_t *qos_class, const QosClassStatus& status)
+{
+    qos_class->hal_handle = status.qos_class_handle();
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize a qos_class's oper stats from its stats object
+//------------------------------------------------------------------------------
+static hal_ret_t
+qos_class_init_from_stats (qos_class_t *qos_class, const QosClassStats& stats)
+{
     return HAL_RET_OK;
 }
 
@@ -904,7 +949,7 @@ qosclass_create (QosClassSpec& spec, QosClassResponse *rsp)
     }
 
     // populate from the spec
-    ret = qos_class_populate_from_spec(qos_class, spec);
+    ret = qos_class_init_from_spec(qos_class, spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("error in populating qos-class from spec");
         goto end;
@@ -1063,7 +1108,7 @@ qos_class_make_clone (qos_class_t *qos_class,
     pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, (void *)&args);
 
     // Update with the new spec
-    ret = qos_class_populate_from_spec(qos_class_clone, spec);
+    ret = qos_class_init_from_spec(qos_class_clone, spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("error in populating qos_class from spec");
         goto end;
@@ -1639,6 +1684,127 @@ qos_class_del_lif_tx (qos_class_t *qos_class, lif_t *lif)
     return qos_class_del_lif(qos_class, lif, false);
 }
 
+//-----------------------------------------------------------------------------
+// given a qos_class, marshall it for persisting the qos_class state (spec, status, stats)
+//
+// obj points to qos_class object i.e., qos_class_t
+// mem is the memory buffer to serialize the state into
+// len is the length of the buffer provided
+// mlen is to be filled by this function with marshalled state length
+//-----------------------------------------------------------------------------
+hal_ret_t
+qos_class_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
+{
+    QosClassGetResponse qos_class_info;
+    uint32_t            serialized_state_sz;
+    qos_class_t         *qos_class = (qos_class_t *)obj;
+
+    HAL_ASSERT((qos_class != NULL) && (mlen != NULL));
+    *mlen = 0;
+
+    // get all information about this qos_class (includes spec, status & stats)
+    qos_class_process_get(qos_class, &qos_class_info);
+    serialized_state_sz = qos_class_info.ByteSizeLong();
+    if (serialized_state_sz > len) {
+        HAL_TRACE_ERR("Failed to marshall QOS_CLASS {}, not enough room, "
+                      "required size {}, available size {}",
+                      qos_class->key, serialized_state_sz, len);
+        return HAL_RET_OOM;
+    }
+
+    // serialize all the state
+    if (qos_class_info.SerializeToArray(mem, serialized_state_sz) == false) {
+        HAL_TRACE_ERR("Failed to serialize qos_class {}", qos_class->key);
+        return HAL_RET_OOM;
+    }
+    *mlen = serialized_state_sz;
+    HAL_TRACE_DEBUG("Marshalled qos_class {}, len {}",
+                    qos_class->key, serialized_state_sz);
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+qos_class_restore_add (qos_class_t *qos_class, const QosClassGetResponse& qos_class_info)
+{
+    hal_ret_t                       ret;
+    pd::pd_qos_class_restore_args_t pd_qos_class_args = { 0 };
+
+    // restore pd state
+    pd::pd_qos_class_restore_args_init(&pd_qos_class_args);
+    pd_qos_class_args.qos_class = qos_class;
+    pd_qos_class_args.qos_class_status = &qos_class_info.status();
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_RESTORE, &pd_qos_class_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to restore qos_class {} pd, err : {}",
+                      qos_class->key, ret);
+    }
+    return ret;
+}
+
+static hal_ret_t
+qos_class_restore_commit (qos_class_t *qos_class, const QosClassGetResponse& qos_class_info)
+{
+    hal_ret_t          ret;
+
+    HAL_TRACE_DEBUG("Committing qos_class {} restore", qos_class->key);
+
+    ret = qos_class_add_to_db(qos_class, qos_class->hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to restore qos_class {} to db, err : {}",
+                      qos_class->key, ret);
+    }
+    return ret;
+}
+
+static hal_ret_t
+qos_class_restore_abort (qos_class_t *qos_class, const QosClassGetResponse& qos_class_info)
+{
+    HAL_TRACE_ERR("Aborting qos_class {} restore", qos_class->key);
+    qos_class_create_abort_cleanup(qos_class, qos_class->hal_handle);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// qos_class's restore cb.
+//  - restores qos_class to the PI and PD state before the upgrade
+//------------------------------------------------------------------------------
+uint32_t
+qos_class_restore_cb (void *obj, uint32_t len)
+{
+    hal_ret_t           ret;
+    QosClassGetResponse qos_class_info;
+    qos_class_t         *qos_class;
+
+    // de-serialize the object
+    if (qos_class_info.ParseFromArray(obj, len) == false) {
+        HAL_TRACE_ERR("Failed to de-serialize a serialized qos_class obj");
+        HAL_ASSERT(0);
+        return 0;
+    }
+
+    // allocate QOS_CLASS obj from slab
+    qos_class = qos_class_alloc_init();
+    if (qos_class == NULL) {
+        HAL_TRACE_ERR("Failed to alloc/init qos_class, err : {}", ret);
+        return 0;
+    }
+
+    // initialize qos_class attrs from its spec
+    qos_class_init_from_spec(qos_class, qos_class_info.spec());
+    qos_class_init_from_status(qos_class, qos_class_info.status());
+    qos_class_init_from_stats(qos_class, qos_class_info.stats());
+
+    // repopulate handle db
+    hal_handle_insert(HAL_OBJ_ID_QOS_CLASS, qos_class->hal_handle, (void *)qos_class);
+
+    ret = qos_class_restore_add(qos_class, qos_class_info);
+    if (ret != HAL_RET_OK) {
+        qos_class_restore_abort(qos_class, qos_class_info);
+    }
+    qos_class_restore_commit(qos_class, qos_class_info);
+    return 0;    // TODO: fix me
+}
+
 // Copp
 // ----------------------------------------------------------------------------
 // hash table copp_type => ht_entry
@@ -2017,6 +2183,35 @@ end:
 }
 
 //------------------------------------------------------------------------------
+// helper function to cleanup all the copp related state during abort operation
+// when create failed
+//------------------------------------------------------------------------------
+static hal_ret_t
+copp_create_abort_cleanup (copp_t *copp, hal_handle_t hal_handle)
+{
+    hal_ret_t                   ret;
+    pd::pd_copp_delete_args_t    pd_copp_args = { 0 };
+
+    // 1. delete call to PD
+    if (copp->pd) {
+        pd::pd_copp_delete_args_init(&pd_copp_args);
+        pd_copp_args.copp = copp;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_DELETE, (void *)&pd_copp_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete copp {} pd, err : {}", copp->key, ret);
+        }
+    }
+
+    // 2. remove object from hal_handle id based hash table in infra
+    hal_handle_free(hal_handle);
+
+    // 3. free copp
+    copp_free(copp, false);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // copp_create_add_cb was a failure
 // 1. call delete to PD
 //      a. Deprogram HW
@@ -2029,7 +2224,6 @@ hal_ret_t
 copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t          ret = HAL_RET_OK;
-    pd::pd_copp_delete_args_t pd_copp_args = { 0 };
     dllist_ctxt_t      *lnode = NULL;
     dhl_entry_t        *dhl_entry = NULL;
     copp_t             *copp = NULL;
@@ -2043,25 +2237,9 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp = (copp_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create abort cb");
+    HAL_TRACE_DEBUG("Copp {} create abort cb", copp->key);
+    ret = copp_create_abort_cleanup(copp, hal_handle);
 
-    // 1. delete call to PD
-    if (copp->pd) {
-        pd::pd_copp_delete_args_init(&pd_copp_args);
-        pd_copp_args.copp = copp;
-        // ret = pd::pd_copp_delete(&pd_copp_args);
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_DELETE, (void *)&pd_copp_args);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to delete copp pd, err : {}",
-                          ret);
-        }
-    }
-
-    // 2. remove object from hal_handle id based hash table in infra
-    hal_handle_free(hal_handle);
-
-    // 3. Free PI copp
-    copp_free(copp, false);
     return ret;
 }
 
@@ -2091,12 +2269,31 @@ copp_prepare_rsp (CoppResponse *rsp, hal_ret_t ret,
 }
 
 static hal_ret_t
-copp_populate_from_spec (copp_t *copp, CoppSpec& spec)
+copp_init_from_spec (copp_t *copp, const CoppSpec& spec)
 {
     copp->key.copp_type =
         copp_spec_copp_type_to_copp_type(spec.key_or_handle().copp_type());
     qos_policer_update_from_spec(spec.policer(), &copp->policer);
 
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize a copp's oper status from its status object
+//------------------------------------------------------------------------------
+static hal_ret_t
+copp_init_from_status (copp_t *copp, const CoppStatus& status)
+{
+    copp->hal_handle = status.copp_handle();
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize a copp's oper stats from its stats object
+//------------------------------------------------------------------------------
+static hal_ret_t
+copp_init_from_stats (copp_t *copp, const CoppStats& stats)
+{
     return HAL_RET_OK;
 }
 
@@ -2138,7 +2335,7 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
     HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_SHARED);
 
     // populate from the spec
-    ret = copp_populate_from_spec(copp, spec);
+    ret = copp_init_from_spec(copp, spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("error in populating copp from spec");
         goto end;
@@ -2267,7 +2464,7 @@ copp_make_clone (copp_t *copp, copp_t **copp_clone_p, CoppSpec& spec)
     pd::hal_pd_call(pd::PD_FUNC_ID_COPP_MAKE_CLONE, (void *)&args);
 
     // Update with the new spec
-    ret = copp_populate_from_spec(copp_clone, spec);
+    ret = copp_init_from_spec(copp_clone, spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("error in populating copp from spec");
         goto end;
@@ -2436,10 +2633,11 @@ end:
 }
 
 static void
-copp_get_fill_rsp (qos::CoppGetResponse *rsp,
-                   copp_t *copp)
+copp_process_get (copp_t *copp, qos::CoppGetResponse *rsp)
 {
-    CoppSpec    *spec;
+    hal_ret_t              ret    = HAL_RET_OK;
+    pd::pd_copp_get_args_t args   = {0};
+    CoppSpec               *spec;
 
     spec = rsp->mutable_spec();
 
@@ -2453,6 +2651,17 @@ copp_get_fill_rsp (qos::CoppGetResponse *rsp,
     rsp->mutable_status()->set_copp_handle(copp->hal_handle);
 
     // TODO: fill stats of this copp
+    
+    
+    // Getting PD information
+    args.copp = copp;
+    args.rsp = rsp;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_GET, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to do PD get for copp : {}. ret : {}",
+                      copp->key, ret);
+    }
+
     rsp->set_api_status(types::API_STATUS_OK);
 }
 
@@ -2465,7 +2674,7 @@ copp_get_ht_cb(void *ht_entry, void *ctxt)
     copp_t                   *copp       = NULL;
 
     copp = (copp_t *)find_copp_by_handle(entry->handle_id);
-    copp_get_fill_rsp(response, copp);
+    copp_process_get(copp, response);
 
     // Always return false here, so that we walk through all hash table
     // entries.
@@ -2496,10 +2705,132 @@ copp_get (CoppGetRequest& req, CoppGetResponseMsg *rsp)
         return HAL_RET_QOS_CLASS_NOT_FOUND;
     }
 
-    copp_get_fill_rsp(response, copp);
+    copp_process_get(copp, response);
     HAL_API_STATS_INC(HAL_API_COPP_GET_SUCCESS);
     return HAL_RET_OK;
 }
 
 // copp_delete is not supported
+//
+
+//-----------------------------------------------------------------------------
+// given a copp, marshall it for persisting the copp state (spec, status, stats)
+//
+// obj points to copp object i.e., copp_t
+// mem is the memory buffer to serialize the state into
+// len is the length of the buffer provided
+// mlen is to be filled by this function with marshalled state length
+//-----------------------------------------------------------------------------
+hal_ret_t
+copp_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
+{
+    CoppGetResponse copp_info;
+    uint32_t        serialized_state_sz;
+    copp_t          *copp = (copp_t *)obj;
+
+    HAL_ASSERT((copp != NULL) && (mlen != NULL));
+    *mlen = 0;
+
+    // get all information about this copp (includes spec, status & stats)
+    copp_process_get(copp, &copp_info);
+    serialized_state_sz = copp_info.ByteSizeLong();
+    if (serialized_state_sz > len) {
+        HAL_TRACE_ERR("Failed to marshall COPP {}, not enough room, "
+                      "required size {}, available size {}",
+                      copp->key, serialized_state_sz, len);
+        return HAL_RET_OOM;
+    }
+
+    // serialize all the state
+    if (copp_info.SerializeToArray(mem, serialized_state_sz) == false) {
+        HAL_TRACE_ERR("Failed to serialize copp {}", copp->key);
+        return HAL_RET_OOM;
+    }
+    *mlen = serialized_state_sz;
+    HAL_TRACE_DEBUG("Marshalled copp {}, len {}",
+                    copp->key, serialized_state_sz);
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+copp_restore_add (copp_t *copp, const CoppGetResponse& copp_info)
+{
+    hal_ret_t                  ret;
+    pd::pd_copp_restore_args_t pd_copp_args = { 0 };
+
+    // restore pd state
+    pd::pd_copp_restore_args_init(&pd_copp_args);
+    pd_copp_args.copp = copp;
+    pd_copp_args.copp_status = &copp_info.status();
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_RESTORE, &pd_copp_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to restore copp {} pd, err : {}",
+                      copp->key, ret);
+    }
+    return ret;
+}
+
+static hal_ret_t
+copp_restore_commit (copp_t *copp, const CoppGetResponse& copp_info)
+{
+    hal_ret_t          ret;
+
+    HAL_TRACE_DEBUG("Committing copp {} restore", copp->key);
+
+    ret = copp_add_to_db(copp, copp->hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to restore copp {} to db, err : {}",
+                      copp->key, ret);
+    }
+    return ret;
+}
+
+static hal_ret_t
+copp_restore_abort (copp_t *copp, const CoppGetResponse& copp_info)
+{
+    HAL_TRACE_ERR("Aborting copp {} restore", copp->key);
+    copp_create_abort_cleanup(copp, copp->hal_handle);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// copp's restore cb.
+//  - restores copp to the PI and PD state before the upgrade
+//------------------------------------------------------------------------------
+uint32_t
+copp_restore_cb (void *obj, uint32_t len)
+{
+    hal_ret_t       ret;
+    CoppGetResponse copp_info;
+    copp_t          *copp;
+
+    // de-serialize the object
+    if (copp_info.ParseFromArray(obj, len) == false) {
+        HAL_TRACE_ERR("Failed to de-serialize a serialized copp obj");
+        HAL_ASSERT(0);
+        return 0;
+    }
+
+    // allocate COPP obj from slab
+    copp = copp_alloc_init();
+    if (copp == NULL) {
+        HAL_TRACE_ERR("Failed to alloc/init copp, err : {}", ret);
+        return 0;
+    }
+
+    // initialize copp attrs from its spec
+    copp_init_from_spec(copp, copp_info.spec());
+    copp_init_from_status(copp, copp_info.status());
+    copp_init_from_stats(copp, copp_info.stats());
+
+    // repopulate handle db
+    hal_handle_insert(HAL_OBJ_ID_COPP, copp->hal_handle, (void *)copp);
+
+    ret = copp_restore_add(copp, copp_info);
+    if (ret != HAL_RET_OK) {
+        copp_restore_abort(copp, copp_info);
+    }
+    copp_restore_commit(copp, copp_info);
+    return 0;    // TODO: fix me
+}
 }    // namespace hal

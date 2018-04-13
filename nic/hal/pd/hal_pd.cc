@@ -197,24 +197,30 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
 
     // qos class
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_CREATE, pd_qos_class_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_RESTORE, pd_qos_class_restore);
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_DELETE, pd_qos_class_delete);
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_UPDATE, pd_qos_class_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, pd_qos_class_make_clone);
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_MEM_FREE, pd_qos_class_mem_free);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_GET, pd_qos_class_get);
 
     // copp
     PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_CREATE, pd_copp_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_RESTORE, pd_copp_restore);
     PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_DELETE, pd_copp_delete);
     PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_UPDATE, pd_copp_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_MAKE_CLONE, pd_copp_make_clone);
     PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_MEM_FREE, pd_copp_mem_free);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_GET, pd_copp_get);
 
     // acl
     PD_SYMBOL_LOAD(PD_FUNC_ID_ACL_CREATE, pd_acl_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_ACL_RESTORE, pd_acl_restore);
     PD_SYMBOL_LOAD(PD_FUNC_ID_ACL_DELETE, pd_acl_delete);
     PD_SYMBOL_LOAD(PD_FUNC_ID_ACL_UPDATE, pd_acl_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_ACL_MEM_FREE, pd_acl_mem_free);
     PD_SYMBOL_LOAD(PD_FUNC_ID_ACL_MAKE_CLONE, pd_acl_make_clone);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_ACL_GET, pd_acl_get);
 
     // wring
     PD_SYMBOL_LOAD(PD_FUNC_ID_WRING_CREATE, pd_wring_create);
@@ -549,24 +555,30 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
 
     // qos class
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_CREATE, pd_qos_class_create);
+    PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_RESTORE, pd_qos_class_restore);
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_DELETE, pd_qos_class_delete);
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_UPDATE, pd_qos_class_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, pd_qos_class_make_clone);
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_MEM_FREE, pd_qos_class_mem_free);
+    PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_GET, pd_qos_class_get);
 
     // copp
     PD_SYMBOL_CALL(PD_FUNC_ID_COPP_CREATE, pd_copp_create);
+    PD_SYMBOL_CALL(PD_FUNC_ID_COPP_RESTORE, pd_copp_restore);
     PD_SYMBOL_CALL(PD_FUNC_ID_COPP_DELETE, pd_copp_delete);
     PD_SYMBOL_CALL(PD_FUNC_ID_COPP_UPDATE, pd_copp_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_COPP_MAKE_CLONE, pd_copp_make_clone);
     PD_SYMBOL_CALL(PD_FUNC_ID_COPP_MEM_FREE, pd_copp_mem_free);
+    PD_SYMBOL_CALL(PD_FUNC_ID_COPP_GET, pd_copp_get);
 
     // acl
     PD_SYMBOL_CALL(PD_FUNC_ID_ACL_CREATE, pd_acl_create);
+    PD_SYMBOL_CALL(PD_FUNC_ID_ACL_RESTORE, pd_acl_restore);
     PD_SYMBOL_CALL(PD_FUNC_ID_ACL_DELETE, pd_acl_delete);
     PD_SYMBOL_CALL(PD_FUNC_ID_ACL_UPDATE, pd_acl_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_ACL_MEM_FREE, pd_acl_mem_free);
     PD_SYMBOL_CALL(PD_FUNC_ID_ACL_MAKE_CLONE, pd_acl_make_clone);
+    PD_SYMBOL_CALL(PD_FUNC_ID_ACL_GET, pd_acl_get);
 
     // wring
     PD_SYMBOL_CALL(PD_FUNC_ID_WRING_CREATE, pd_wring_create);

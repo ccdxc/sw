@@ -27,6 +27,7 @@ using qos::QosClassGetRequest;
 using qos::QosClassGetRequestMsg;
 using qos::QosClassGetResponse;
 using qos::QosClassGetResponseMsg;
+using qos::QosClassStats;
 using kh::CoppKeyHandle;
 using qos::CoppSpec;
 using qos::CoppStatus;
@@ -37,6 +38,7 @@ using qos::CoppGetRequest;
 using qos::CoppGetRequestMsg;
 using qos::CoppGetResponse;
 using qos::CoppGetResponseMsg;
+using qos::CoppStats;
 
 namespace hal {
 

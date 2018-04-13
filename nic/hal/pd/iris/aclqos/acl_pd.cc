@@ -737,5 +737,89 @@ pd_acl_mem_free (pd_acl_mem_free_args_t *args)
     return HAL_RET_OK;
 }
 
+// ----------------------------------------------------------------------------
+// pd acl get
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_acl_get (pd_acl_get_args_t *args)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+#if 0
+    acl_t         *acl = args->acl;
+    pd_acl_t      *acl_pd = (pd_acl_t *)acl->pd;
+    AclGetResponse *rsp = args->rsp;
+
+    auto acl_info = rsp->mutable_status()->mutable_epd_status();
+#endif
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// pd acl restore from response
+// ----------------------------------------------------------------------------
+static hal_ret_t
+acl_pd_restore_data (pd_acl_restore_args_t *args)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+#if 0
+    acl_t    *acl = args->acl;
+    pd_acl_t *acl_pd = (pd_acl_t *)acl->pd;
+
+    auto acl_info = args->acl_status->epd_status();
+#endif
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// pd acl restore
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_acl_restore (pd_acl_restore_args_t *args)
+{
+    hal_ret_t      ret;
+    pd_acl_t *acl_pd;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("Restoring pd state for acl {}", args->acl->key);
+
+    // allocate PD acl state
+    acl_pd = acl_pd_alloc_init();
+    if (acl_pd == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // link pi & pd
+    acl_pd_link_pi_pd(acl_pd, args->acl);
+
+    ret = acl_pd_restore_data(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to restore pd data for acl: {}, err: {}",
+                      args->acl->key, ret);
+        goto end;
+    }
+
+    // TODO: Eventually call table program hw and hw calls will be
+    //       a NOOP in p4pd code
+#if 0
+    // program hw
+    ret = acl_pd_program_hw(acl_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:failed to program hw", __FUNCTION__);
+        goto end;
+    }
+#endif
+
+end:
+
+    if (ret != HAL_RET_OK) {
+        acl_pd_cleanup(acl_pd);
+    }
+
+    return ret;
+}
+
 }    // namespace pd
 }    // namespace hal

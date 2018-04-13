@@ -718,6 +718,7 @@
 		CoppStatus
 		CoppResponse
 		CoppResponseMsg
+		CoppStats
 		CoppGetRequest
 		CoppGetRequestMsg
 		CoppGetResponse
