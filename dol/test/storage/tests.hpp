@@ -23,7 +23,9 @@ using namespace dp_mem;
 
 namespace tests {
 
-const static uint32_t   kDefaultBufSize       = 4096;
+const static uint32_t  kDefaultNlb           = 0;
+const static uint32_t  kDefaultNsid          = 1;
+const static uint32_t  kDefaultBufSize       = 4096;
 
 // Accelerator chaining
 
@@ -262,6 +264,12 @@ int xts_multi_blk_noc_stress_from_hbm();
 int xts_multi_blk_noc_stress_from_host_hw_chain();
 int xts_multi_blk_noc_stress_from_hbm_hw_chain();
 int test_run_perf_rdma_e2e_write();
+
+uint8_t get_next_byte();
+uint16_t get_next_cid();
+uint64_t get_next_slba();
+void test_ring_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
+                             uint8_t ring, uint16_t index);
 
 }  // namespace tests
 

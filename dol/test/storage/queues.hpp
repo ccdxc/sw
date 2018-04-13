@@ -23,6 +23,8 @@ int lifs_setup();
 
 int nvme_pvm_queues_setup();
 
+int nvme_dp_queues_setup();
+
 int pvm_queues_setup();
 
 int seq_queues_setup();
@@ -30,6 +32,7 @@ int seq_queues_setup();
 void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
                                uint64_t& acc_scale_chain_replica,
                                uint32_t acc_scale_tests_max_chains);
+int arm_queues_setup();
 
 int pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, 
                      uint32_t roce_qid, dp_mem_t *mem, 
@@ -54,6 +57,8 @@ uint16_t get_nvme_lif();
 uint16_t get_pvm_lif();
 
 uint16_t get_seq_lif();
+
+uint16_t get_arm_lif();
 
 uint32_t get_nvme_bdf();
 

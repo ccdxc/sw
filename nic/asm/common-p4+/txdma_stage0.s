@@ -36,6 +36,8 @@
     .param      proxyr_s0_tx_start
     .param      proxyc_s0_tx_start
     .param      virtio_tx_read_qstate_start
+    .param      storage_nvme_check_sq_state_start
+    .param      storage_nvme_pop_r2n_sq_start
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -159,4 +161,14 @@ proxyc_tx_stage0:
 .align
 virtio_tx_stage0:
     j virtio_tx_read_qstate_start
+    nop
+
+.align
+storage_nvme_sq_stage0:
+    j storage_nvme_check_sq_state_start
+    nop
+
+.align
+storage_nvme_armq_stage0:
+    j storage_nvme_pop_r2n_sq_start
     nop

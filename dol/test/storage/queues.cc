@@ -7,6 +7,7 @@
 #include "dol/test/storage/utils.hpp"
 #include "dol/test/storage/qstate_if.hpp"
 #include "dol/test/storage/nvme.hpp"
+#include "dol/test/storage/nvme_dp.hpp"
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/ssd.hpp"
 #include "nic/utils/host_mem/c_if.h"
@@ -40,6 +41,10 @@ const static uint32_t	kSeqNumR2nSQs		 = 3;
       static uint32_t	kSeqNumCompStatusSQs = 4; //    "    "
 const static uint32_t	kSeqNumRoceSQs		 = 3;
 
+
+      static uint32_t	ArmNumQs;                    // log2(Sum total of all ARM Qs)
+const static uint32_t	kArmTotalQs		 = 6; // absolute value and not log2 value
+
 // NOTE CAREFULLY: END
 
 
@@ -50,10 +55,11 @@ const static uint32_t	kPvmNvmeSQEntrySize	 = 7; // PVM SQ is 128 bytes (NVME com
 const static uint32_t	kNvmeCQEntrySize	 = 4; // NVME CQ is 16 bytes
 const static uint32_t	kNvmeNumEntries		 = 6;
 const static uint32_t	kPvmNumEntries		 = 6;
-const static uint32_t	kSeqNumEntries	 = 6;
       static uint32_t   kSeqNumAccEntries = 6; // accelerator scale test may modify at run time
+const static uint32_t	kSeqNumEntries	 	 = 6;
+const static uint32_t	kArmNumEntries		 = 6;
 
-const static char	*kNvmeSqHandler		 = "storage_tx_nvme_sq_handler.bin";
+const static char	*kNvmePvmSqHandler	 = "storage_tx_nvme_sq_handler.bin";
 const static char	*kPvmCqHandler		 = "storage_tx_pvm_cq_handler.bin";
 const static char	*kR2nSqHandler		 = "storage_tx_r2n_sq_handler.bin";
 const static char	*kNvmeBeSqHandler	 = "storage_tx_nvme_be_sq_handler.bin";
@@ -67,6 +73,7 @@ const static char	*kPvmRoceCqHandler	 = "storage_tx_roce_cq_handler.bin";
 const static char	*kSeqCompSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
 const static char	*kSeqCompStatusDesc0SqHandler = "storage_tx_seq_comp_status_desc0_handler.bin";
 const static char	*kSeqCompStatusDesc1SqHandler = "storage_tx_seq_comp_status_desc1_handler.bin";
+const static char	*kArmQHandler		 = "storage_nvme_pop_arm_q.bin";
 
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
@@ -103,6 +110,7 @@ const static uint32_t	kHbmSsdBitmapSize	 = (16 * 4096);
 const static uint32_t	kNvmeLifBdf		= 0xA;
 const static uint32_t	kPvmLifBdf		= 0xB;
 const static uint32_t	kSeqLifBdf		= 0xC;
+const static uint32_t	kArmLifBdf		= 0xD;
 
 namespace queues {
 
@@ -134,7 +142,10 @@ queues_t *seq_sqs = NULL;
 queues_t *pvm_sqs = NULL;
 queues_t *pvm_cqs = NULL;
 
-uint64_t nvme_lif, seq_lif, pvm_lif;
+// ARM queues
+queues_t *arm_qs = NULL;
+
+uint64_t nvme_lif, seq_lif, pvm_lif, arm_lif;
 
 uint32_t host_nvme_sq_base;
 uint32_t pvm_nvme_sq_base;
@@ -153,6 +164,12 @@ uint32_t host_nvme_cq_base;
 uint32_t pvm_nvme_cq_base;
 uint32_t pvm_r2n_cq_base;
 uint32_t pvm_nvme_be_cq_base;
+
+uint32_t arm_q_base;
+uint32_t arm_sq;
+uint32_t arm_cq;
+uint32_t arm_timeout_q;
+uint32_t arm_free_iob_q[3];
 
 void *pndx_data_va;
 uint64_t pndx_data_pa;
@@ -327,6 +344,9 @@ calc_total_queues()
           NUM_TO_VAL(kSeqNumRoceSQs);
   SeqNumSQs = log_2(count); 
   printf("Seq SQS %u \n", SeqNumSQs);
+
+  ArmNumQs = log_2(kArmTotalQs);
+  printf("ARM QS %u \n", ArmNumQs);
 }
 
 static void
@@ -350,6 +370,10 @@ alloc_queues()
   }
   if ((seq_sqs = (queues_t *) malloc(sizeof(queues_t) * NUM_TO_VAL(SeqNumSQs))) == NULL) {
     printf("can't allocate seq_sqs n");
+    exit(1);
+  }
+  if ((arm_qs = (queues_t *) malloc(sizeof(queues_t) * NUM_TO_VAL(ArmNumQs))) == NULL) {
+    printf("can't allocate arm_qs n");
     exit(1);
   }
 }
@@ -439,6 +463,24 @@ int lifs_setup() {
   }
   printf("Successfully set Sequencer LIF %lu BDF %u \n", seq_lif, kSeqLifBdf);
 
+  // Create ARM LIF
+  hal_if::lif_params_t arm_lif_params;
+
+  bzero(&arm_lif_params, sizeof(arm_lif_params));
+  lif_params_init(&arm_lif_params, SQ_TYPE, kArmNumEntries, ArmNumQs);
+
+  if (hal_if::create_lif(&arm_lif_params, &arm_lif) < 0) {
+    printf("can't create arm lif \n");
+    return -1;
+  }
+  printf("ARM LIF created\n");
+
+  if (hal_if::set_lif_bdf(arm_lif, kArmLifBdf) < 0) {
+    printf("Can't set ARM LIF %lu BDF %u \n", arm_lif, kArmLifBdf);
+    return -1;
+  }
+  printf("Successfully set ARM LIF %lu BDF %u \n", arm_lif, kArmLifBdf);
+
   return 0;
 }
   
@@ -459,7 +501,7 @@ nvme_pvm_queues_setup() {
     printf("Initialized NVME SQ %d \n", i);
 
     // Setup the queue state in Capri
-    if (qstate_if::setup_q_state(nvme_lif, SQ_TYPE, i, (char *) kNvmeSqHandler, 
+    if (qstate_if::setup_q_state(nvme_lif, SQ_TYPE, i, (char *) kNvmePvmSqHandler, 
                                  kDefaultTotalRings, kDefaultHostRings, 
                                  kNvmeNumEntries, nvme_sqs[i].mem->pa(),
                                  kDefaultEntrySize, true, pvm_lif, SQ_TYPE, 
@@ -497,7 +539,61 @@ nvme_pvm_queues_setup() {
   return 0;
 }
 
+int
+nvme_dp_queues_setup() {
+  int i;
 
+  // Initialize NVME CQs first
+  host_nvme_cq_base = 0; // first queue
+  for (i = 0; i < (int) NUM_TO_VAL(NvmeNumCQs); i++) {
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&nvme_cqs[i], NUM_TO_VAL(kNvmeNumEntries),
+                   NUM_TO_VAL(kNvmeCQEntrySize)) < 0) {
+      printf("Unable to allocate host memory for NVME CQ %d\n", i);
+      return -1;
+    }
+    printf("Initialized NVME CQ %d \n", i);
+
+    // Setup the queue state in Capri:
+    // 1. no dst queues for these as these are in host
+    // 2. no program address for these as these are in host
+    // 3. The push address is that of the SSD's SQ's PI 
+    if (qstate_if::setup_nvme_cq_state(nvme_lif, CQ_TYPE, i,
+                                       kDefaultTotalRings, kDefaultHostRings, 
+                                       kNvmeNumEntries, nvme_cqs[i].mem->pa(),
+                                       kNvmeCQEntrySize, 0, 0, 0, 0) < 0) {
+      printf("Failed to setup NVME CQ %d state \n", i);
+      return -1;
+    }
+  }
+
+  // Initialize NVME SQs
+  host_nvme_sq_base = 0; // first queue
+  for (i = 0; i < (int) NUM_TO_VAL(NvmeNumSQs); i++) {
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&nvme_sqs[i], NUM_TO_VAL(kNvmeNumEntries),
+                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+      printf("Unable to allocate host memory for NVME SQ %d\n", i);
+      return -1;
+    }
+    printf("Initialized NVME SQ %d \n", i);
+
+    // Setup the queue state in Capri
+    if (qstate_if::setup_nvme_sq_state(nvme_lif, SQ_TYPE, i, NULL,
+                                       kDefaultTotalRings, kDefaultHostRings, 
+                                       kNvmeNumEntries, nvme_sqs[i].mem->pa(),
+                                       kDefaultEntrySize, 0, i, nvme_lif, CQ_TYPE, 
+                                       i, arm_lif, SQ_TYPE, arm_q_base, 
+                                       nvme_dp::get_io_map_base_addr(),
+                                       nvme_dp::get_io_map_num_entries(), 
+                                       nvme_dp::get_iob_ring_base_addr()) < 0) {
+      printf("Failed to setup NVME SQ %d state \n", i);
+      return -1;
+    }
+  }
+
+  return 0;
+}
 
 int
 pvm_queues_setup() {
@@ -884,9 +980,63 @@ seq_queues_setup() {
     printf("Setup PVM Seq Compression Status queue %d \n", i);
   }
 
-
   return 0;
 }
+
+int
+arm_queue_init(int qid, char *pgm_bin, bool dst_valid, uint16_t dst_lif, 
+               uint8_t dst_qtype, uint32_t dst_qid) {
+
+  // Validate the qid passed in
+  if (qid >= (int) kArmTotalQs) {
+    printf("qid passed in %d >= Total Arm qs %d \n", qid, kArmTotalQs);
+    return -1;
+  }
+
+  // Initialize the queue in the DOL enviroment
+  if (queue_init(&arm_qs[qid], NUM_TO_VAL(kArmNumEntries),
+                 NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+    printf("Unable to allocate memory for ARM Q %d\n", qid);
+    return -1;
+  }
+  printf("Initialized ARM Q %d \n", qid);
+
+  // Setup the queue state in Capri
+  if (qstate_if::setup_arm_q_state(arm_lif, SQ_TYPE, qid, pgm_bin,
+                                   kDefaultTotalRings, kDefaultHostRings, 
+                                   kArmNumEntries, arm_qs[qid].mem->pa(),
+                                   kDefaultEntrySize, dst_valid, dst_lif,
+                                   dst_qtype, dst_qid, 0, 0, 0, 0, 
+                                   nvme_dp::get_iob_ring_base_addr()) < 0) {
+    printf("Failed to setup ARM Q %d state \n", qid);
+    return -1;
+  }
+  return 0;
+}
+
+int
+arm_queues_setup() {
+
+  arm_q_base = 0;
+
+  arm_sq = 0;
+  arm_cq = 1;
+  arm_timeout_q = 2;
+  arm_free_iob_q[0] = 3;
+  arm_free_iob_q[1] = 4;
+  arm_free_iob_q[2] = 5;
+
+  if (arm_queue_init(arm_sq, NULL, false, 0, 0, 0) < 0) {
+    printf("Failed to setup ARM SQ \n");
+    return -1;
+  }
+  if (arm_queue_init(arm_cq, (char *) kArmQHandler, false, 0, 0, 0) < 0) {
+    printf("Failed to setup ARM CQ \n");
+    return -1;
+  }
+  return 0;
+}
+
 
 int
 pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid, 
@@ -975,6 +1125,10 @@ uint16_t get_pvm_lif() {
 
 uint16_t get_seq_lif() {
   return (uint16_t) seq_lif;
+}
+
+uint16_t get_arm_lif() {
+  return (uint16_t) arm_lif;
 }
 
 uint32_t get_nvme_bdf() {
@@ -1117,7 +1271,7 @@ void get_capri_doorbell_with_pndx_inc(uint16_t lif, uint8_t qtype, uint32_t qid,
 }
 
 void queues_shutdown() {
-  nvme_e2e_ssd.reset();
+  nvme_e2e_ssd.release();
   exit_simulation();
 }
 

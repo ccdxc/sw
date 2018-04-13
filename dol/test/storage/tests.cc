@@ -17,13 +17,10 @@
 #include "dol/test/storage/r2n.hpp"
 #include "dol/test/storage/rdma.hpp"
 #include "dol/test/storage/xts.hpp"
-#include "nic/utils/host_mem/c_if.h"
-#include "nic/model_sim/include/lib_model_client.h"
 #include "dol/test/storage/tests.hpp"
+#include "nic/model_sim/include/lib_model_client.h"
 
 
-const static uint32_t  kDefaultNlb           = 0;
-const static uint32_t  kDefaultNsid          = 1;
 const static uint32_t  kR2nWqeSize           = 64;
 const static uint32_t  kR2nStatusSize        = 64;
 const static uint32_t  kR2nStatusNvmeOffset  = 16;
@@ -74,31 +71,6 @@ int Poller::operator()(std::function<int(void)> poll_func) {
 }
 
 int test_setup() {
-  // Initialize hal interface
-  hal_if::init_hal_if();
-  printf("HAL client initialized\n");
-
-  // Initialize host memory
-  if (init_host_mem() < 0) {
-    printf("Host mem init failed (is model running?)\n");
-    return -1;
-  }
-  printf("Host mem initialized\n");
-
-  // Initialize storage hbm memory
-  if (utils::hbm_buf_init() < 0) {
-    printf("HBM buf init failed is \n");
-    return -1;
-  }
-  printf("HBM buf initialized\n");
-
-  // Initialize model client
-  if (lib_model_connect() < 0) {
-    printf("Failed to connect with model (is model running?)\n");
-    return -1;
-  }
-  printf("Model client initialized\n");
-
   if (run_pdma_tests) {
       queues::seq_queue_pdma_num_set(FLAGS_num_pdma_queues);
   }
