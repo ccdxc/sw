@@ -5,10 +5,12 @@ nic/asic/capri/model/capsim-master/gen/x86_64/lib/libcapisa.so   /nic/lib/
 nic/asic/capri/model/capsim-master/gen/x86_64/lib/libisa.so      /nic/lib/
 nic/hal/third-party/openssl/x86_64/lib/libssl.so.1.1             /nic/lib/
 nic/hal/third-party/openssl/x86_64/lib/libcrypto.so.1.1          /nic/lib/
+nic/hal/third-party/google/x86_64/lib/libprotobuf.so.14          /nic/lib/
 platform/gen/x86_64/bin                                          /platform/bin/
 platform/gen/x86_64/lib                                          /platform/lib/
 nic/tools/start-hal-zebu.sh                                      /nic/tools/
 nic/tools/start-model-zebu.sh                                    /nic/tools/
+/lib64/libstdc++.so.6                                            /lib64/
 bazel-bin/nic/model_sim/cap_model                                /nic/bin/
 bazel-bin/nic/model_sim/libmodel_client.so                       /nic/lib/
 nic/model_sim/libs/*.so                                          /nic/lib/

@@ -3,12 +3,8 @@ from subprocess import call
 import pdb
 import sys
 
-output_dir          = 'fake_root_target/'
-arm_server          = '192.168.75.242'
-arm_server_username = 'root'
-arm_server_passwd   = 'pen123'
-
-arm_pkg = 1
+output_dir = 'fake_root_target'
+arm_pkg    = 1
 
 files = [ 'nic/tools/pack_local_files.txt' ]
 
@@ -30,7 +26,7 @@ for input_file in files:
 
     for line in f:
         items = line.split()
-        directory = output_dir + items[1]
+        directory = output_dir + '/' + items[1]
         if not os.path.exists(directory):
             print ('Creating dir: ' + directory)
             os.makedirs(directory)
@@ -42,23 +38,6 @@ for input_file in files:
             cmd = 'cp ' + items[0] + ' ' + directory
             print (cmd)
             call(cmd, shell=True)
-
-'''
-input_file = 'nic/tools/pack_arm_server_binaries_runtime.txt'
-f          = open(input_file, 'r')
-
-for line in f:
-    line = line.rstrip()
-    paths = line.split('/')[:-1]
-    line1 = '/'.join(paths)
-    directory = output_dir + line1
-    if not os.path.exists(directory):
-        print 'Creating dir: ' + directory
-        os.makedirs(directory)
-    cmd = 'sshpass -p ' + arm_server_passwd + ' scp ' + arm_server_username + '@' +  arm_server + ':' + line + ' ' + directory
-    print cmd
-    # call(cmd, shell=True)
-'''
 
 for root, dirs, files in os.walk(output_dir):
     for file in files:
@@ -74,46 +53,37 @@ for root, dirs, files in os.walk(output_dir):
                 call(['/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-strip', non_stripped])
                 call(['/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objcopy', '--add-gnu-debuglink=' + non_stripped + '.debug', non_stripped])
 
-cmd = 'mkdir -p fake_root_target/nic/lib'
+cmd = 'mkdir -p ' + output_dir + '/nic/lib'
 call(cmd, shell=True)
 
 # remove dol plugin for aarch64
-cmd = 'rm -rf fake_root_target/nic/conf/plugins/dol'
+if arm_pkg == 1:
+    cmd = 'rm -rf ' + output_dir + '/nic/conf/plugins/dol'
+    call(cmd, shell=True)
+
+# remove *.log from nic/conf/init_bins libs
+cmd = 'find ' + output_dir + '/nic/conf/init_bins -name "*.log" | xargs rm -f'
 call(cmd, shell=True)
 
+##### TODO REVERT LATER #####
+
 # remove *.a from platform libs
-cmd = 'rm -f fake_root_target/platform/lib/*.a'
+cmd = 'rm -f ' + output_dir + '/platform/lib/*.a'
 call(cmd, shell=True)
 
 # remove csrlite until main csr lib is not removed
-cmd = 'rm -f fake_root_target/nic/lib/libcsrlite.so'
+cmd = 'rm -f ' + output_dir + '/nic/lib/libcsrlite.so'
 call(cmd, shell=True)
 
-# remove *.log from nic/conf/init_bins libs
-cmd = 'find fake_root_target/nic/conf/init_bins -name "*.log" | xargs rm -f'
-call(cmd, shell=True)
-
-cmd = 'tar --exclude=*.debug -cvzf hal.tgz ' + output_dir
-call(cmd, shell=True)
-
-cmd = 'tar --exclude=*.debug -cvf hal.tar '  + output_dir
-call(cmd, shell=True)
-
-'''
-output_dir = 'fake_root_host/'
-
-input_file = 'nic/tools/pack_arm_server_hdr_files.txt'
-f = open(input_file, 'r')
-
-for line in f:
-    line = line.rstrip()
-    paths = line.split('/')[:-1]
-    line1 = '/'.join(paths)
-    directory = output_dir + line1
-    if not os.path.exists(directory):
-        print 'Creating dir: ' + directory
-        os.makedirs(directory)
-    cmd = 'sshpass -p pen123 scp root@192.168.75.242:' + line + ' ' + directory
-    print cmd
+# rename libzmq.so to libzmq.so.3
+if arm_pkg == 0:
+    cmd = 'mv ' + output_dir + '/nic/lib/libzmq.so ' + output_dir + '/nic/lib/libzmq.so.3'
     call(cmd, shell=True)
-'''
+
+cmd = 'tar --exclude=*.debug -cf hal.tar '  + output_dir
+call(cmd, shell=True)
+
+# create tar.gz
+cmd = 'tar --exclude=*.debug -czf hal.tgz ' + output_dir
+call(cmd, shell=True)
+
