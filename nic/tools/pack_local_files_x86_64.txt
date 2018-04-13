@@ -10,9 +10,12 @@ platform/gen/x86_64/bin                                          /platform/bin/
 platform/gen/x86_64/lib                                          /platform/lib/
 nic/tools/start-hal-zebu.sh                                      /nic/tools/
 nic/tools/start-model-zebu.sh                                    /nic/tools/
-/lib64/libstdc++.so.6                                            /lib64/
+/lib64/libstdc++.so.6                                            /nic/lib64/
+/usr/lib64/libltdl.so.7                                          /nic/lib64/
+/usr/lib64/libJudy.so.1                                          /nic/lib64/
 bazel-bin/nic/model_sim/cap_model                                /nic/bin/
 bazel-bin/nic/model_sim/libmodel_client.so                       /nic/lib/
 nic/model_sim/libs/*.so                                          /nic/lib/
 nic/hal/third-party/zmq/x86_64/libzmq.so                         /nic/lib/
 nic/gen/iris/dbg_out/model_debug.json                            /nic/conf/
+nic/obj/agent/netagent                                           /nic/bin/

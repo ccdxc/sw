@@ -80,10 +80,10 @@ if arm_pkg == 0:
     cmd = 'mv ' + output_dir + '/nic/lib/libzmq.so ' + output_dir + '/nic/lib/libzmq.so.3'
     call(cmd, shell=True)
 
-cmd = 'tar --exclude=*.debug -cf hal.tar '  + output_dir
+cmd = 'tar --exclude=*.debug -cf nic.tar '  + output_dir
 call(cmd, shell=True)
 
 # create tar.gz
-cmd = 'tar --exclude=*.debug -czf hal.tgz ' + output_dir
+cmd = 'tar --exclude=*.debug -czf nic.tgz ' + output_dir
 call(cmd, shell=True)
 

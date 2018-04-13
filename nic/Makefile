@@ -1,4 +1,4 @@
-.PHONY: p4 asm hal utils linkmgr sdk third-party
+.PHONY: p4 asm hal utils linkmgr sdk third-party agent
 
 default: all
 
@@ -118,7 +118,7 @@ swig-cli: swig-cli-clean
 
 package-size-check:
     ifeq ($(ARCH),aarch64)
-	$(eval FILE_NAME = ../hal.tar)
+	$(eval FILE_NAME = ../nic.tar)
 	# max file size is 108MB
 	$(eval MAX_FILE_SIZE = 113246208)
 	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
@@ -130,7 +130,7 @@ package-size-check:
     endif
 
 package-clean:
-	cd ../ && rm -rf fake_root_target && rm -f hal.tgz && rm -f hal.tar
+	cd ../ && rm -rf fake_root_target && rm -f nic.tgz && rm -f nic.tar
 
 package: swig-cli package-clean
     ifeq ($(ARCH),aarch64)
@@ -280,8 +280,14 @@ halctl:
 
 pd: pd_iris pd_stub
 
+agent:
+    ifneq ($(ARCH),aarch64)
+	@cd ../ && mkdir -p nic/obj/agent
+	@cd ../ && go build -o nic/obj/agent/netagent github.com/pensando/sw/nic/agent/cmd/netagent
+    endif
+
 # code generation stage
-stage0: p4 gen-proto csrlite go-proto utils capsim-master
+stage0: p4 gen-proto csrlite go-proto utils capsim-master agent
 
 # lib building stage
 stage1: asm capmodel build-proto sdk third-party
