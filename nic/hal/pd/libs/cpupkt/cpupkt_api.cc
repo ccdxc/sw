@@ -471,8 +471,8 @@ pd_cpupkt_descr_alloc(pd_cpupkt_descr_alloc_args_t *args)
         HAL_TRACE_ERR("Failed to get the base addr for the page region");
         return HAL_RET_ERR;
     }
-    
-    /* 
+
+    /*
     rs = g_hal_state_pd->cpupkt_descr_hw_id_idxr()->alloc(&descr_index);
     if(rs != indexer::SUCCESS) {
         HAL_TRACE_ERR("Failed to allocate descr index, err {}", rs);
@@ -504,7 +504,7 @@ pd_cpupkt_page_alloc(pd_cpupkt_page_alloc_args_t *args)
         HAL_TRACE_ERR("Failed to get the base addr for the page region");
         return HAL_RET_ERR;
     }
-    
+
     /*
     rs = g_hal_state_pd->cpupkt_page_hw_id_idxr()->alloc(&page_index);
     if(rs != indexer::SUCCESS) {

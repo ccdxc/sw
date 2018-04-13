@@ -1451,13 +1451,33 @@ pd_wring_set_meta_args_init (pd_wring_set_meta_args_t *args)
     return;
 }
 
+// telemetry module's PD init
+typedef struct pd_telemetry_init_args_s {
+    hal_cfg_t    *hal_cfg;
+} __PACK__ pd_telemetry_init_args_t;
+
+static inline void
+pd_telemetry_init_args_init (pd_telemetry_init_args_t *args)
+{
+    args->hal_cfg = NULL;
+}
+
+// telemetry module's PD cleanup
+typedef struct pd_telemetry_cleanup_args_s {
+} __PACK__ pd_telemetry_cleanup_args_t;
+
+static inline void
+pd_telemetry_cleanup_args_init (pd_telemetry_cleanup_args_t *args)
+{
+}
+
 // mirror session
 typedef struct pd_mirror_session_create_args_s {
     mirror_session_t *session;
 } __PACK__ pd_mirror_session_create_args_t;
 
 static inline void
-pd_mirror_session_create_args_init(pd_mirror_session_create_args_t *args)
+pd_mirror_session_create_args_init (pd_mirror_session_create_args_t *args)
 {
     args->session = NULL;
 }
@@ -1467,7 +1487,7 @@ typedef struct pd_mirror_session_delete_args_s {
 } __PACK__ pd_mirror_session_delete_args_t;
 
 static inline void
-pd_mirror_session_delete_args_init(pd_mirror_session_delete_args_t *args)
+pd_mirror_session_delete_args_init (pd_mirror_session_delete_args_t *args)
 {
     args->session = NULL;
 }
@@ -1488,7 +1508,7 @@ typedef struct pd_flow_monitor_rule_create_args_s {
 } __PACK__ pd_flow_monitor_rule_create_args_t;
 
 static inline void
-pd_flow_monitor_rule_create_args_init(pd_flow_monitor_rule_create_args_t *args)
+pd_flow_monitor_rule_create_args_init (pd_flow_monitor_rule_create_args_t *args)
 {
     args->rule = NULL;
 }
@@ -1498,7 +1518,7 @@ typedef struct pd_flow_monitor_rule_delete_args_s {
 } __PACK__ pd_flow_monitor_rule_delete_args_t;
 
 static inline void
-pd_flow_monitor_rule_delete_args_init(pd_flow_monitor_rule_delete_args_t *args)
+pd_flow_monitor_rule_delete_args_init (pd_flow_monitor_rule_delete_args_t *args)
 {
     args->rule = NULL;
 }
@@ -1508,7 +1528,7 @@ typedef struct pd_flow_monitor_rule_get_args_s {
 } __PACK__ pd_flow_monitor_rule_get_args_t;
 
 static inline void
-pd_flow_monitor_rule_get_args_init(pd_flow_monitor_rule_get_args_t *args)
+pd_flow_monitor_rule_get_args_init (pd_flow_monitor_rule_get_args_t *args)
 {
     args->rule = NULL;
 }
@@ -1519,7 +1539,7 @@ typedef struct pd_drop_monitor_rule_create_args_s {
 } __PACK__ pd_drop_monitor_rule_create_args_t;
 
 static inline void
-pd_drop_monitor_rule_create_args_init(pd_drop_monitor_rule_create_args_t *args)
+pd_drop_monitor_rule_create_args_init (pd_drop_monitor_rule_create_args_t *args)
 {
     args->rule = NULL;
 }
@@ -1529,7 +1549,7 @@ typedef struct pd_drop_monitor_rule_delete_args_s {
 } __PACK__ pd_drop_monitor_rule_delete_args_t;
 
 static inline void
-pd_drop_monitor_rule_delete_args_init(pd_drop_monitor_rule_delete_args_t *args)
+pd_drop_monitor_rule_delete_args_init (pd_drop_monitor_rule_delete_args_t *args)
 {
     args->rule = NULL;
 }
@@ -1539,7 +1559,7 @@ typedef struct pd_drop_monitor_rule_get_args_s {
 } __PACK__ pd_drop_monitor_rule_get_args_t;
 
 static inline void
-pd_drop_monitor_rule_get_args_init(pd_drop_monitor_rule_get_args_t *args)
+pd_drop_monitor_rule_get_args_init (pd_drop_monitor_rule_get_args_t *args)
 {
     args->rule = NULL;
 }
@@ -1550,7 +1570,7 @@ typedef struct pd_collector_create_args_s {
 } __PACK__ pd_collector_create_args_t;
 
 static inline void
-pd_collector_create_args_init(pd_collector_create_args_t *args)
+pd_collector_create_args_init (pd_collector_create_args_t *args)
 {
     args->cfg = NULL;
 }

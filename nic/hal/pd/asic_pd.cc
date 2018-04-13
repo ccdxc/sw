@@ -545,8 +545,6 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     asic_cfg.loader_info_file = hal_cfg->loader_info_file;
     asic_cfg.default_config_dir = hal_cfg->default_config_dir;
 
-    // TODO: Introduce a PD call to retrieve admin cos from PD
-    // asic_cfg.admin_cos = qos_class_get_admin_cos();
     asic_cfg.admin_cos = 1;
     asic_cfg.cfg_path = hal_cfg->cfg_path;
     asic_cfg.catalog = hal_cfg->catalog;
@@ -586,7 +584,7 @@ asic_rw_start (void *ctxt)
 std::string
 asic_pd_csr_dump (char *csr_str)
 {
-    HAL_TRACE_DEBUG("{} csr string {}", __FUNCTION__, csr_str);
+    HAL_TRACE_DEBUG("csr string {}", csr_str);
     // PD-Cleanup: Dont use capri apis
     // return asic_csr_dump(csr_str);
     std::string val = "";

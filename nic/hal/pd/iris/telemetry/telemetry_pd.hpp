@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __HAL_TELEMETRY_PD_HPP__
 #define __HAL_TELEMETRY_PD_HPP__
 
@@ -50,7 +52,8 @@ private:
     // IPFix Header defined and maintained
 };
 
-}
-}
+}    // namespace pd
+}    // namespace hal
 
-#endif //__HAL_TELEMETRY_PD_HPP__
+#endif    //__HAL_TELEMETRY_PD_HPP__
+

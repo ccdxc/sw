@@ -43,9 +43,10 @@ hal_stats_init_cb (hal_cfg_t *hal_cfg)
                                                   (void *)0,    // ctxt
                                                   stats_timer_cb, true);
     if (!t_stats_timer) {
+        HAL_TRACE_ERR("Failed to start periodic stats timer");
         return HAL_RET_ERR;
     }
-    HAL_TRACE_DEBUG("Started stats periodic timer with {} ms intvl",
+    HAL_TRACE_DEBUG("Started periodic stats timer with {} ms interval",
                     HAL_STATS_COLLECTION_INTVL);
 
     return HAL_RET_OK;

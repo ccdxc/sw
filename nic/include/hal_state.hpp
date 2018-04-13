@@ -50,7 +50,8 @@ typedef enum hal_timer_id_s {
     HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT     = 4,
     HAL_TIMER_ID_TCP_CXNSETUP_WAIT        = 5,
     HAL_TIMER_ID_STATS                    = 6,
-    HAL_TIMER_ID_MAX                      = 7,
+    HAL_TIMER_ID_IPFIX                    = 7,
+    HAL_TIMER_ID_MAX                      = 8,
 } hal_timer_id_t;
 
 #define HAL_HANDLE_HT_SZ                             (16 << 10)

@@ -25,7 +25,7 @@ namespace pd {
 #define CPU_SCHED_RING_ASQ              0
 
 
-#define DB_ADDR_BASE                   0x800000 
+#define DB_ADDR_BASE                   0x800000
 #define DB_ADDR_BASE_HOST              0x8400000
 #define DB_UPD_SHFT                    17
 #define DB_LIF_SHFT                    6
@@ -57,14 +57,14 @@ typedef struct cpupkt_qinst_info_s {
     cpupkt_hw_id_t          base_addr;
     uint32_t                pc_index;
     cpupkt_hw_id_t          pc_index_addr;
-    cpupkt_queue_info_t*    queue_info;
+    cpupkt_queue_info_t     *queue_info;
 } cpupkt_qinst_info_t;
 
 typedef struct cpupkt_queue_info_s {
     types::WRingType        type;
-    pd_wring_meta_t*        wring_meta;
+    pd_wring_meta_t         *wring_meta;
     uint32_t                num_qinst;
-    cpupkt_qinst_info_t*    qinst_info[MAX_CPU_PKT_QUEUE_INST_INFO];
+    cpupkt_qinst_info_t     *qinst_info[MAX_CPU_PKT_QUEUE_INST_INFO];
 } cpupkt_queue_info_t;
 
 typedef struct cpupkt_rx_ctxt_s {
@@ -82,15 +82,16 @@ typedef struct cpupkt_ctxt_s {
 } __PACK__ cpupkt_ctxt_t;
 
 static inline cpupkt_ctxt_t *
-cpupkt_ctxt_init(cpupkt_ctxt_t* ctxt)
+cpupkt_ctxt_init (cpupkt_ctxt_t *ctxt)
 {
-    if(!ctxt) {
-        return NULL;    
+    if (!ctxt) {
+        return NULL;
     }
-    
+
     memset(ctxt, 0, sizeof(cpupkt_ctxt_t));
     return ctxt;
 }
+
 #if 0
 cpupkt_ctxt_t* cpupkt_ctxt_alloc_init(void);
 hal_ret_t cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id=0);
@@ -100,7 +101,7 @@ hal_ret_t cpupkt_unregister_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type,
 // receive
 hal_ret_t cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
                               p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
-                              uint8_t** data, 
+                              uint8_t** data,
                               size_t* data_len);
 hal_ret_t cpupkt_free(p4_to_p4plus_cpu_pkt_t* flow_miss_hdr, uint8_t* data);
 
@@ -128,5 +129,6 @@ cpupkt_program_send_ring_doorbell(uint16_t dest_lif,
                                   uint8_t  ring_number);
 
 #endif
-} // namespace pd
-} // namespace hal
+
+}    // namespace pd
+}    // namespace hal

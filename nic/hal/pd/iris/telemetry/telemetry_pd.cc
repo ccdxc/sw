@@ -1,4 +1,5 @@
-// #include <stddef>
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/lif/lif_pd.hpp"
@@ -10,7 +11,7 @@
 #include "nic/hal/pd/iris/telemetry/telemetry_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
-#include "nic/hal/pd/iris/internal/ipfix_pd.hpp"
+#include "nic/hal/pd/iris/telemetry/ipfix_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -75,33 +76,33 @@ pd_mirror_session_create(pd_mirror_session_create_args_t *args)
     }
 
     switch (args->session->type) {
-        case MIRROR_DEST_LOCAL: {
-            action_data.actionid = MIRROR_LOCAL_SPAN_ID;
-            action_data.mirror_action_u.mirror_local_span.truncate_len = args->session->truncate_len;
-            action_data.mirror_action_u.mirror_local_span.dst_lport = dst_lport;
-            break;
-        }
-        case MIRROR_DEST_RSPAN: {
-            action_data.actionid = MIRROR_REMOTE_SPAN_ID;
-            action_data.mirror_action_u.mirror_remote_span.truncate_len = args->session->truncate_len;
-            action_data.mirror_action_u.mirror_remote_span.dst_lport = dst_lport;
-            action_data.mirror_action_u.mirror_remote_span.vlan = args->session->mirror_destination_u.r_span_dest.vlan;
-            action_data.mirror_action_u.mirror_remote_span.tunnel_rewrite_index = g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
-            break;
-        }
-        case MIRROR_DEST_ERSPAN: {
-            action_data.actionid = MIRROR_ERSPAN_MIRROR_ID;
-            action_data.mirror_action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
-            action_data.mirror_action_u.mirror_erspan_mirror.dst_lport = dst_lport;
-            tif_args.hal_if = args->session->mirror_destination_u.er_span_dest.tunnel_if;
-            hal::pd::pd_tunnelif_get_rw_idx(&tif_args);
-            action_data.mirror_action_u.mirror_erspan_mirror.tunnel_rewrite_index =
-                tif_args.tnnl_rw_idx;
-            break;
-        }
-        default:
-            HAL_TRACE_ERR(" unknown session type {}", args->session->type);
-            return HAL_RET_INVALID_ARG;
+    case MIRROR_DEST_LOCAL: {
+        action_data.actionid = MIRROR_LOCAL_SPAN_ID;
+        action_data.mirror_action_u.mirror_local_span.truncate_len = args->session->truncate_len;
+        action_data.mirror_action_u.mirror_local_span.dst_lport = dst_lport;
+        break;
+    }
+    case MIRROR_DEST_RSPAN: {
+        action_data.actionid = MIRROR_REMOTE_SPAN_ID;
+        action_data.mirror_action_u.mirror_remote_span.truncate_len = args->session->truncate_len;
+        action_data.mirror_action_u.mirror_remote_span.dst_lport = dst_lport;
+        action_data.mirror_action_u.mirror_remote_span.vlan = args->session->mirror_destination_u.r_span_dest.vlan;
+        action_data.mirror_action_u.mirror_remote_span.tunnel_rewrite_index = g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
+        break;
+    }
+    case MIRROR_DEST_ERSPAN: {
+        action_data.actionid = MIRROR_ERSPAN_MIRROR_ID;
+        action_data.mirror_action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
+        action_data.mirror_action_u.mirror_erspan_mirror.dst_lport = dst_lport;
+        tif_args.hal_if = args->session->mirror_destination_u.er_span_dest.tunnel_if;
+        hal::pd::pd_tunnelif_get_rw_idx(&tif_args);
+        action_data.mirror_action_u.mirror_erspan_mirror.tunnel_rewrite_index =
+            tif_args.tnnl_rw_idx;
+        break;
+    }
+    default:
+        HAL_TRACE_ERR(" unknown session type {}", args->session->type);
+        return HAL_RET_INVALID_ARG;
     }
 
     return pd_mirror_update_hw(args->session->id, &action_data);
@@ -137,23 +138,23 @@ pd_mirror_session_get(pd_mirror_session_get_args_t *args)
     pdret = p4pd_entry_read(P4TBL_ID_MIRROR, args->session->id, NULL, NULL, (void *)&action_data);
     if (pdret == P4PD_SUCCESS) {
         switch (action_data.actionid) {
-            case MIRROR_LOCAL_SPAN_ID:
-                args->session->type = MIRROR_DEST_LOCAL;
-                args->session->truncate_len = action_data.mirror_action_u.mirror_local_span.truncate_len;
-                // args-> dst_if // TBD
-            case MIRROR_REMOTE_SPAN_ID:
-                args->session->type = MIRROR_DEST_RSPAN;
-                args->session->truncate_len = action_data.mirror_action_u.mirror_remote_span.truncate_len;
-                args->session->mirror_destination_u.r_span_dest.vlan = action_data.mirror_action_u.mirror_remote_span.vlan;
-            case MIRROR_ERSPAN_MIRROR_ID:
-                args->session->type = MIRROR_DEST_ERSPAN;
-                args->session->truncate_len = action_data.mirror_action_u.mirror_erspan_mirror.truncate_len;
-                // Get tunnel if ID - TBD
-                //args->session->mirror_destination_u.r_span_dest.tunnel_if_id =
-            case MIRROR_NOP_ID:
-                args->session->type = MIRROR_DEST_NONE;
-            default:
-                return HAL_RET_INVALID_OP;
+        case MIRROR_LOCAL_SPAN_ID:
+            args->session->type = MIRROR_DEST_LOCAL;
+            args->session->truncate_len = action_data.mirror_action_u.mirror_local_span.truncate_len;
+            // args-> dst_if // TBD
+        case MIRROR_REMOTE_SPAN_ID:
+            args->session->type = MIRROR_DEST_RSPAN;
+            args->session->truncate_len = action_data.mirror_action_u.mirror_remote_span.truncate_len;
+            args->session->mirror_destination_u.r_span_dest.vlan = action_data.mirror_action_u.mirror_remote_span.vlan;
+        case MIRROR_ERSPAN_MIRROR_ID:
+            args->session->type = MIRROR_DEST_ERSPAN;
+            args->session->truncate_len = action_data.mirror_action_u.mirror_erspan_mirror.truncate_len;
+            // Get tunnel if ID - TBD
+            //args->session->mirror_destination_u.r_span_dest.tunnel_if_id =
+        case MIRROR_NOP_ID:
+            args->session->type = MIRROR_DEST_NONE;
+        default:
+            return HAL_RET_INVALID_OP;
         }
     } else {
         return HAL_RET_HW_PROG_ERR;
@@ -390,6 +391,6 @@ pd_drop_monitor_rule_get(pd_drop_monitor_rule_get_args_t *args)
     return ret;
 }
 
-} // namespace pd
-} // namespace hal
+}    // namespace pd
+}    // namespace hal
 

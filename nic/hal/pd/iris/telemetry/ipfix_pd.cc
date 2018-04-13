@@ -1,17 +1,24 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
 #include "nic/hal/src/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
-
 #include "nic/p4/iris/include/defines.h"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/periodic/periodic.hpp"
 
 namespace hal {
 namespace pd {
+
+#define HAL_IPFIX_DOORBELL_TIMER_INTVL        (1 * TIME_MSECS_PER_SEC)
+
+thread_local void *t_ipfix_doorbell_timer;
 
 typedef struct __attribute__((__packed__)) ipfix_qstate_  {
     uint64_t pc : 8;
@@ -161,6 +168,46 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
                                (uint8_t *)&qstate, sizeof(qstate));
     g_lif_manager->WriteQState(lif_id, 0, qid + 16,
                                (uint8_t *)&qstate, sizeof(qstate));
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// timer callback to ring doorbell to trigger ipfix p4+ program
+//------------------------------------------------------------------------------
+static void
+ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    return;
+}
+
+//------------------------------------------------------------------------------
+// ipfix module initialization
+//------------------------------------------------------------------------------
+hal_ret_t
+ipfix_module_init (hal_cfg_t *hal_cfg)
+{
+    // wait until the periodic thread is ready
+    while (!hal::periodic::periodic_thread_is_running()) {
+        pthread_yield();
+    }
+
+    // no periodic doorbell in sim mode
+    if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM) {
+        return HAL_RET_OK;
+    }
+
+    t_ipfix_doorbell_timer =
+        hal::periodic::timer_schedule(HAL_TIMER_ID_IPFIX,
+                                      HAL_IPFIX_DOORBELL_TIMER_INTVL,
+                                      (void *)0,    // ctxt
+                                      ipfix_doorbell_ring_cb,
+                                      true);
+    if (!t_ipfix_doorbell_timer) {
+        HAL_TRACE_ERR("Failed to start periodic ipfix doorbell ring timer");
+        return HAL_RET_ERR;
+    }
+    HAL_TRACE_DEBUG("Started periodic ipfix doorbell ring timer with "
+                    "{} ms interval", HAL_IPFIX_DOORBELL_TIMER_INTVL);
     return HAL_RET_OK;
 }
 
