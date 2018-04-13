@@ -74,7 +74,8 @@ cpupkt_update_slot_addr(cpupkt_qinst_info_t* qinst_info)
     cpupkt_hw_id_t hw_id = qinst_info->base_addr +
             (slot_index * qinst_info->queue_info->wring_meta->slot_size_in_bytes);
     qinst_info->pc_index_addr = hw_id;
-    HAL_TRACE_DEBUG("Updated pc_index addr: {:#x}", hw_id);
+    HAL_TRACE_DEBUG("Updated pc_index queue: {} index: {} addr: {:#x}",
+                        qinst_info->queue_id,  qinst_info->pc_index, hw_id);
     return;
 }
 
@@ -83,6 +84,8 @@ cpupkt_inc_queue_index(cpupkt_qinst_info_t& qinst_info)
 {
     qinst_info.pc_index++;
     cpupkt_update_slot_addr(&qinst_info);
+    HAL_TRACE_DEBUG("Incremented  pc_index queue: {} to index: {} addr: {:#x}",
+                        qinst_info.queue_id,  qinst_info.pc_index, qinst_info.pc_index_addr);
 }
 
 static inline hal_ret_t
@@ -97,6 +100,9 @@ cpupkt_free_and_inc_queue_index(cpupkt_qinst_info_t& qinst_info)
         return HAL_RET_HW_FAIL;
     }
     cpupkt_inc_queue_index(qinst_info);
+    HAL_TRACE_DEBUG("Freed and inc pc_index queue: {} index: {} addr: {:#x}",
+                        qinst_info.queue_id,  qinst_info.pc_index, qinst_info.pc_index_addr);
+
     return HAL_RET_OK;
 }
 
@@ -368,6 +374,8 @@ pd_cpupkt_poll_receive(pd_cpupkt_poll_receive_args_t *args)
             if(value > 0) {
                 // With DEBUG DOL, P4+ writes the queue without setting VALID BIT.
                 // Increase CI to keep it in sync with hw
+                HAL_TRACE_DEBUG("Received in-valid data at queue: {}, qid: {}, index: {}, addr: {:#x}, value: {:#x}",
+                        ctxt->rx.queue[i].type, qinst_info->queue_id, qinst_info->pc_index, qinst_info->pc_index_addr, value);
                 cpupkt_inc_queue_index(*qinst_info);
             }
             continue;
