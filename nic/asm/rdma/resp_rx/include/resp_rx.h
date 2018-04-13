@@ -10,10 +10,10 @@
 #define RESP_RX_MAX_DMA_CMDS        16
 
 #define RESP_RX_CQCB_ADDR_GET(_r, _cqid) \
-    CQCB_ADDR_GET(_r, _cqid, CAPRI_KEY_RANGE(to_s3_wb1_info, cqcb_base_addr_page_id_sbit0_ebit15, cqcb_base_addr_page_id_sbit16_ebit21));
+    CQCB_ADDR_GET(_r, _cqid, CAPRI_KEY_FIELD(to_s3_wb1_info, cqcb_base_addr_hi));
 
 #define RESP_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid) \
-    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.{to_s5_cqpt_info_cqcb_base_addr_page_id_sbit0_ebit15...to_s5_cqpt_info_cqcb_base_addr_page_id_sbit16_ebit21}, k.{to_s5_cqpt_info_log_num_cq_entries_sbit0_ebit1...to_s5_cqpt_info_log_num_cq_entries_sbit2_ebit3});
+    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.{to_s5_cqpt_info_cqcb_base_addr_hi}, k.{to_s5_cqpt_info_log_num_cq_entries});
 
 // currently PYLD_BASE starts at 2, each PTSEG can generate upto 3
 // dma instructions. so, (2,3,4),(5,6,7),(8,9,10),(11,12,13) will

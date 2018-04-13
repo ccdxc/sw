@@ -71,42 +71,44 @@ int32_t LIFManagerBase::InitLIFQState(uint32_t lif_id,
   uint32_t cur_size;
   uint32_t num_entries;
   uint32_t i;
-  for (i = 0; i < (kNumQTypes - 1); i++) {
+  uint32_t max_size = params->type[0].size;
+  // Find the max_size of any Qstate, and make sure 
+  // beg of every qstate region is aligned to this
+  // max size. It means we might allocate more Qs
+  // (entries) for a qtype than what is spec'ed in
+  // the params 
+  for (i = 1; i < kNumQTypes; i++) {
+       if (params->type[i].size > max_size) {
+           max_size = params->type[i].size;
+       }
+  }
+  max_size = 1 << (max_size + 5);
+
+  for (i = 0; i < kNumQTypes ; i++) {
     cur_size = params->type[i].size;
     cur_size = 1 << (cur_size + 5);
     qstate->type[i].hbm_offset = running_offset;
     qstate->type[i].qsize = cur_size;
 
-    uint32_t next_size = params->type[i+1].size;
-    next_size = 1 << (next_size + 5);
-    uint32_t align = next_size - 1;
     num_entries = params->type[i].entries;
     num_entries = 1 << num_entries;
-    running_offset += (num_entries * cur_size);
-    while ((running_offset & align) != 0) {
-      num_entries++;
-      running_offset += cur_size;
-      assert(num_entries <= (16 * 1024 * 1024));
+
+    // Total memory for any Qstate region should be
+    // minimum of max qsize among all qtypes. 
+    if (num_entries * cur_size < max_size) {
+        num_entries = max_size / cur_size;
     }
-    // Make sure num entries is a power of 2.
+    running_offset += (num_entries * cur_size);
+    // Make sure num entries is a power of 2 and less than 16Mil
     assert((num_entries & (num_entries - 1)) == 0);
+    assert(num_entries <= (16 * 1024 * 1024));
+
     // Update what was passed in.
     params->type[i].entries = __builtin_ffs(num_entries) - 1;
     qstate->type[i].num_queues = num_entries;
     qstate->type[i].coses = ((params->type[i].cosA & 0x0f) |      
                              ((params->type[i].cosB << 4) & 0xf0));
   }
-  // Now put in the last entry. There is no align requirement.
-  cur_size = params->type[i].size;
-  cur_size = 1 << (cur_size + 5);
-  qstate->type[i].hbm_offset = running_offset;
-  qstate->type[i].qsize = cur_size;
-  num_entries = params->type[i].entries;
-  num_entries = 1 << num_entries;
-  qstate->type[i].num_queues = num_entries;
-  qstate->type[i].coses = ((params->type[i].cosA & 0x0f) | 
-                           ((params->type[i].cosB << 4) & 0xf0));
-  running_offset += (num_entries * cur_size);
   qstate->allocation_size = running_offset;
   // Cache the params.
   qstate->params_in = *params;

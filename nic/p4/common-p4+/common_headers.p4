@@ -496,6 +496,8 @@ header_type rdma_scratch_metadata_t {
         // All the page-ids are encoded as 22-bit, assuming HBM page
         // size is 4K, with appropriate shift it would form 22+12=34-bit
         // hbm address.
+        // Where as CQCB base addr is encoded as 24-bit, so to get 1K alignment,
+        // with appropriate shift it would form 24+10=34-bit hbm address.
         //QTYPEs on LIF can be allocated differently on different LIFs
         //This mask will have the respective bit set for all qtype values
         //where RDMA is enabled (if enabled)
@@ -512,10 +514,8 @@ header_type rdma_scratch_metadata_t {
 
         //Per LIF CQCB and EQCB tables
         //are allocated adjacent to each other in HBM in that order.
-        //This is the base page_id of that allocation.
-        //Assumption is that it is 4K Byte(page) aligned and
-        //number of PT entries are in power of 2s.
-        cqcb_base_addr_page_id: 22;
+        //CQCB address is 1K aligned, so store only 24 bits
+        cqcb_base_addr_hi: 24;
         log_num_cq_entries: 5;
 
         //RQCB prefetch uses per LIF global ring
@@ -525,7 +525,7 @@ header_type rdma_scratch_metadata_t {
         sq_qtype: 3;
         rq_qtype: 3;
 
-        reserved: 103;
+        reserved: 101;
 
     }
 }

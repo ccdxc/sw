@@ -1005,7 +1005,7 @@ parser start {
 action rx_stage0_load_rdma_params(rdma_en_qtype_mask, 
                                   pt_base_addr_page_id, 
                                   log_num_pt_entries, 
-                                  cqcb_base_addr_page_id, 
+                                  cqcb_base_addr_hi, 
                                   log_num_cq_entries,
                                   prefetch_pool_base_addr_page_id,
                                   log_num_prefetch_pool_entries,
@@ -1022,7 +1022,7 @@ action rx_stage0_load_rdma_params(rdma_en_qtype_mask,
             modify_field(scratch_rdma.rdma_en_qtype_mask, rdma_en_qtype_mask);
             modify_field(scratch_rdma.pt_base_addr_page_id, pt_base_addr_page_id);
             modify_field(scratch_rdma.log_num_pt_entries, log_num_pt_entries);
-            modify_field(scratch_rdma.cqcb_base_addr_page_id, cqcb_base_addr_page_id);
+            modify_field(scratch_rdma.cqcb_base_addr_hi, cqcb_base_addr_hi);
             modify_field(scratch_rdma.log_num_cq_entries, log_num_cq_entries);
             modify_field(scratch_rdma.prefetch_pool_base_addr_page_id, 
                          prefetch_pool_base_addr_page_id);

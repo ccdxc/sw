@@ -373,9 +373,9 @@ header_type resp_rx_to_stage_stats_info_t {
 
 header_type resp_rx_to_stage_cqpt_info_t {
     fields {
-        cqcb_base_addr_page_id           :   22;
+        cqcb_base_addr_hi                :   24;
         log_num_cq_entries               :    4;
-        pad                              :  102;
+        pad                              :  100;
     }
 }
 
@@ -389,9 +389,9 @@ header_type resp_rx_to_stage_wb1_info_t {
     fields {
         my_token_id                      :    8;
         inv_r_key                        :   32;
-        cqcb_base_addr_page_id           :   22;
+        cqcb_base_addr_hi                :   24;
         log_num_cq_entries               :    4;
-        pad                              :   62;
+        pad                              :   60;
     }
 }
 
@@ -1457,7 +1457,7 @@ action resp_rx_cqpt_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s5_cqpt_info_scr.cqcb_base_addr_page_id, to_s5_cqpt_info.cqcb_base_addr_page_id);
+    modify_field(to_s5_cqpt_info_scr.cqcb_base_addr_hi, to_s5_cqpt_info.cqcb_base_addr_hi);
     modify_field(to_s5_cqpt_info_scr.log_num_cq_entries, to_s5_cqpt_info.log_num_cq_entries);
     modify_field(to_s5_cqpt_info_scr.pad, to_s5_cqpt_info.pad);
 
@@ -1527,7 +1527,7 @@ action resp_rx_rqcb1_write_back_process () {
     // to stage
     modify_field(to_s3_wb1_info_scr.my_token_id, to_s3_wb1_info.my_token_id);
     modify_field(to_s3_wb1_info_scr.inv_r_key, to_s3_wb1_info.inv_r_key);
-    modify_field(to_s3_wb1_info_scr.cqcb_base_addr_page_id, to_s3_wb1_info.cqcb_base_addr_page_id);
+    modify_field(to_s3_wb1_info_scr.cqcb_base_addr_hi, to_s3_wb1_info.cqcb_base_addr_hi);
     modify_field(to_s3_wb1_info_scr.log_num_cq_entries, to_s3_wb1_info.log_num_cq_entries);
     modify_field(to_s3_wb1_info_scr.pad, to_s3_wb1_info.pad);
 

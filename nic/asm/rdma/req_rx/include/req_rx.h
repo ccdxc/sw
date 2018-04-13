@@ -7,11 +7,11 @@
 #include "ingress.h"
 #include "common_phv.h"
 
-#define REQ_RX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_page_id) \
-    CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_page_id);
+#define REQ_RX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi) \
+    CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
 
-#define REQ_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid, _cqcb_base_addr_page_id, _log_num_cq_entries) \
-    EQCB_ADDR_GET(_r, _tmp_r, _eqid, _cqcb_base_addr_page_id, _log_num_cq_entries);
+#define REQ_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid, _cqcb_base_addr_hi, _log_num_cq_entries) \
+    EQCB_ADDR_GET(_r, _tmp_r, _eqid, _cqcb_base_addr_hi, _log_num_cq_entries);
 
 #define REQ_RX_DMA_CMD_START_FLIT_ID       8 // flits 8-11 are used for dma cmds
 #define REQ_RX_DMA_CMD_START               0

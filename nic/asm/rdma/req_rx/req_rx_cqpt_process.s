@@ -25,8 +25,8 @@ struct req_rx_s5_t2_k k;
 #define K_EQ_ID           CAPRI_KEY_FIELD(IN_P, eq_id)
 #define K_CQ_ID           CAPRI_KEY_FIELD(IN_P, cq_id)
 
-#define K_CQCB_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, cqcb_base_addr_page_id_sbit0_ebit15, cqcb_base_addr_page_id_sbit16_ebit21)
-#define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_RANGE(IN_TO_S_P, log_num_cq_entries_sbit0_ebit1, log_num_cq_entries_sbit2_ebit3)
+#define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
+#define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
 
 %%
     .param  req_rx_eqcb_process
@@ -67,7 +67,7 @@ fire_eqcb:
     crestore        [c2, c1], CAPRI_KEY_RANGE(IN_P, arm, wakeup_dpath), 0x3
     bcf             [c1 | !c2], cqpt_exit
     
-    REQ_RX_EQCB_ADDR_GET(r5, TMP, K_EQ_ID, K_CQCB_BASE_ADDR_PAGE_ID, K_LOG_NUM_CQ_ENTRIES) // BD Slot
+    REQ_RX_EQCB_ADDR_GET(r5, TMP, K_EQ_ID, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES) // BD Slot
 
     CAPRI_RESET_TABLE_2_ARG()
 

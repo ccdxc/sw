@@ -107,6 +107,7 @@ class RDMAManager {
 #define RSQ_BASE_ADDR_SHIFT 3
 #define HBM_SQ_BASE_ADDR_SHIFT 3
 #define HBM_RQ_BASE_ADDR_SHIFT 3
+#define CQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
 
 // all the page_ids are encoded as 22-bits, assuming 4K page size (12-bits)
 // appropriate shift will make 34-bit (22+12) hbm address.
@@ -115,7 +116,7 @@ typedef struct sram_lif_entry_s {
     uint32_t pt_base_addr_page_id:22;
     uint32_t log_num_pt_entries:7;
 
-    uint32_t cqcb_base_addr_page_id:22;
+    uint32_t cqcb_base_addr_hi:24;
     uint32_t log_num_cq_entries:5;
 
     uint32_t prefetch_pool_base_addr_page_id:22;

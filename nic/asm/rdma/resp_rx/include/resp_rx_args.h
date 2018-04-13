@@ -7,15 +7,15 @@
 struct resp_rx_to_stage_wb1_info_t {
     my_token_id: 8;
     inv_r_key: 32;
-    cqcb_base_addr_page_id  : 22;
+    cqcb_base_addr_hi       : 24;
     log_num_cq_entries      : 4;
-    pad: 62;
+    pad: 60;
 };
 
 struct resp_rx_to_stage_cqpt_info_t {
-    cqcb_base_addr_page_id  : 22;
+    cqcb_base_addr_hi       : 24;
     log_num_cq_entries      : 4;
-    pad                     : 102;
+    pad                     : 100;
 };
 
 #if 0

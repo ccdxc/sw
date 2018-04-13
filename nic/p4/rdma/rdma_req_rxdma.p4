@@ -199,10 +199,10 @@ header_type req_rx_to_stage_t {
         aeth_msn                         :   24;
         bth_psn                          :   24;
         aeth_syndrome                    :    8;
-        cqcb_base_addr_page_id           :   22;
+        cqcb_base_addr_hi                :   24;
         log_num_cq_entries               :    4;
         remaining_payload_bytes          :   14;
-        pad                              :   32;
+        pad                              :   30;
     }
 }
 
@@ -1015,7 +1015,7 @@ action req_rx_cqcb_process () {
     modify_field(to_s4_to_stage_scr.aeth_msn, to_s4_to_stage.aeth_msn);
     modify_field(to_s4_to_stage_scr.bth_psn, to_s4_to_stage.bth_psn);
     modify_field(to_s4_to_stage_scr.aeth_syndrome, to_s4_to_stage.aeth_syndrome);
-    modify_field(to_s4_to_stage_scr.cqcb_base_addr_page_id, to_s4_to_stage.cqcb_base_addr_page_id);
+    modify_field(to_s4_to_stage_scr.cqcb_base_addr_hi, to_s4_to_stage.cqcb_base_addr_hi);
     modify_field(to_s4_to_stage_scr.log_num_cq_entries, to_s4_to_stage.log_num_cq_entries);
 
 
@@ -1031,7 +1031,7 @@ action req_rx_cqpt_process () {
     modify_field(to_s5_to_stage_scr.aeth_msn, to_s5_to_stage.aeth_msn);
     modify_field(to_s5_to_stage_scr.bth_psn, to_s5_to_stage.bth_psn);
     modify_field(to_s5_to_stage_scr.aeth_syndrome, to_s5_to_stage.aeth_syndrome);
-    modify_field(to_s5_to_stage_scr.cqcb_base_addr_page_id, to_s5_to_stage.cqcb_base_addr_page_id);
+    modify_field(to_s5_to_stage_scr.cqcb_base_addr_hi, to_s5_to_stage.cqcb_base_addr_hi);
     modify_field(to_s5_to_stage_scr.log_num_cq_entries, to_s5_to_stage.log_num_cq_entries);
 
 
@@ -1173,7 +1173,7 @@ action req_rx_rrqwqe_process () {
     modify_field(to_s1_to_stage_scr.aeth_msn, to_s1_to_stage.aeth_msn);
     modify_field(to_s1_to_stage_scr.bth_psn, to_s1_to_stage.bth_psn);
     modify_field(to_s1_to_stage_scr.aeth_syndrome, to_s1_to_stage.aeth_syndrome);
-    modify_field(to_s1_to_stage_scr.cqcb_base_addr_page_id, to_s1_to_stage.cqcb_base_addr_page_id);
+    modify_field(to_s1_to_stage_scr.cqcb_base_addr_hi, to_s1_to_stage.cqcb_base_addr_hi);
     modify_field(to_s1_to_stage_scr.log_num_cq_entries, to_s1_to_stage.log_num_cq_entries);
     modify_field(to_s1_to_stage_scr.remaining_payload_bytes, to_s1_to_stage.remaining_payload_bytes);
     modify_field(to_s1_to_stage_scr.pad, to_s1_to_stage.pad);

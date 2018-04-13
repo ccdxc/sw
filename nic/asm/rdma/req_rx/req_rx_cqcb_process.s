@@ -18,7 +18,7 @@ struct cqcb_t d;
 
 #define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
 
-#define K_CQCB_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, cqcb_base_addr_page_id_sbit0_ebit15, cqcb_base_addr_page_id_sbit16_ebit21)
+#define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit15, cq_id_sbit16_ebit23)
     
 %%
@@ -148,7 +148,7 @@ bubble_to_next_stage:
 
     //invoke the same routine, but with valid d[]
     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
-    REQ_RX_CQCB_ADDR_GET(r1, K_CQ_ID, K_CQCB_BASE_ADDR_PAGE_ID)
+    REQ_RX_CQCB_ADDR_GET(r1, K_CQ_ID, K_CQCB_BASE_ADDR_HI)
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
 
 skip_wakeup:

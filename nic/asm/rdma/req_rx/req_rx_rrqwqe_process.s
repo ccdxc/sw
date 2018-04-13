@@ -26,7 +26,7 @@ struct req_rx_s1_t0_k k;
 #define K_AETH_SYNDROME CAPRI_KEY_FIELD(IN_TO_S_P, aeth_syndrome)
 #define K_AETH_MSN      CAPRI_KEY_FIELD(IN_TO_S_P, aeth_msn)
 #define K_BTH_PSN  CAPRI_KEY_FIELD(IN_TO_S_P, bth_psn)
-#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit5, remaining_payload_bytes_sbit6_ebit13)
+#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit3, remaining_payload_bytes_sbit12_ebit13)
 
 %%
     .param    req_rx_rrqsge_process

@@ -13,7 +13,7 @@ queue_types:
         type        : 0
         purpose     : LIF_QUEUE_PURPOSE_RX
         size        : 64    # Size of Qstate
-        count       : 16    # Number of queues of this type
+        count       : 1     # Number of queues of this type
         queues:
             - queue:
                 size        : 256    # Number of descriptors in each ring
@@ -32,7 +32,7 @@ queue_types:
         type        : 1
         purpose     : LIF_QUEUE_PURPOSE_TX
         size        : 64    # Size of Qstate
-        count       : 16    # Number of queues of this type
+        count       : 1     # Number of queues of this type
         queues:
             - queue:
                 size        : 256    # Number of descriptors in each ring
@@ -51,7 +51,7 @@ queue_types:
         type        : 2
         purpose     : LIF_QUEUE_PURPOSE_ADMIN
         size        : 64    # Size of Qstate
-        count       : 32    # Number of queues of this type
+        count       : 1     # Number of queues of this type
         queues:
             - queue:
                 size        : 256    # Number of descriptors in each ring
