@@ -215,6 +215,10 @@
     ((((_pid_chk) | (_idx_upd) | (_sched_upd)) << DB_UPD_SHFT) + \
      DB_ADDR_BASE_HOST)
 
+#define CAPRI_DOORBELL_ADDR_LOCAL(_pid_chk, _idx_upd, _sched_upd, _type) \
+    ((((_pid_chk) | (_idx_upd) | (_sched_upd)) << DB_UPD_SHFT) + \
+     DB_ADDR_BASE)
+
 #define CAPRI_RING_DOORBELL_ADDR2(_pid_chk, _idx_upd, _sched_upd, _type, _lif) \
        addi            r5, r0, _pid_chk | _idx_upd | _sched_upd;\
        sll             r5, r5, DB_UPD_SHFT;\
@@ -229,6 +233,12 @@
         addi            r4, r0, CAPRI_DOORBELL_ADDR_HOST(_pid_chk, _idx_upd, _sched_upd, _type); \
         add             r4, r4, _lif, DB_LIF_SHFT; \
         add             r4, r4, _type, DB_TYPE_SHFT;
+
+#define CAPRI_RING_DOORBELL_ADDR(_pid_chk, _idx_upd, _sched_upd, _type, _lif) \
+        addi            r4, r0, CAPRI_DOORBELL_ADDR_LOCAL(_pid_chk, _idx_upd, _sched_upd, _type); \
+        add             r4, r4, _lif, DB_LIF_SHFT; \
+        add             r4, r4, _type, DB_TYPE_SHFT;
+
 
 #define DB_PID_SHFT                    48
 #define DB_QID_SHFT                    24
