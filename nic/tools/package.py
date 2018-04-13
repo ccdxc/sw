@@ -8,35 +8,40 @@ arm_server          = '192.168.75.242'
 arm_server_username = 'root'
 arm_server_passwd   = 'pen123'
 
-input_file = 'nic/tools/pack_local_files.txt'
 arm_pkg = 1
+
+files = [ 'nic/tools/pack_local_files.txt' ]
 
 if len(sys.argv) == 2:
     if sys.argv[1] == 'x86_64':
         arm_pkg = 0
-        input_file = 'nic/tools/pack_local_files_x86_64.txt'
+        files.append('nic/tools/pack_local_files_x86_64.txt')
         print ("packaging x86_64")
     else:
         print ("packaging aarch64")
+        files.append('nic/tools/pack_local_files_aarch64.txt')
 else:
     print ("packaging aarch64")
+    files.append('nic/tools/pack_local_files_aarch64.txt')
 
-f          = open(input_file, 'r')
+for input_file in files:
+    print ("Processing input file: " + input_file)
+    f  = open(input_file, 'r')
 
-for line in f:
-    items = line.split()
-    directory = output_dir + items[1]
-    if not os.path.exists(directory):
-        print ('Creating dir: ' + directory)
-        os.makedirs(directory)
+    for line in f:
+        items = line.split()
+        directory = output_dir + items[1]
+        if not os.path.exists(directory):
+            print ('Creating dir: ' + directory)
+            os.makedirs(directory)
 
-    if (os.path.isdir(items[0])):
-        cmd = 'cp -rL ' + items[0] + '/* ' + directory
-        call(cmd, shell=True)
-    else:
-        cmd = 'cp ' + items[0] + ' ' + directory
-        print (cmd)
-        call(cmd, shell=True)
+        if (os.path.isdir(items[0])):
+            cmd = 'cp -rL ' + items[0] + '/* ' + directory
+            call(cmd, shell=True)
+        else:
+            cmd = 'cp ' + items[0] + ' ' + directory
+            print (cmd)
+            call(cmd, shell=True)
 
 '''
 input_file = 'nic/tools/pack_arm_server_binaries_runtime.txt'

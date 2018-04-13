@@ -1,5 +1,3 @@
-nic/tools/start-hal-haps.sh                                      /nic/tools/
-nic/tools/start-linkmgr-haps.sh                                  /nic/tools/
 nic/conf                                                         /nic/conf/
 bazel-bin/nic/hal/hal                                            /nic/bin/
 bazel-bin/nic/linkmgr/linkmgr                                    /nic/bin/
@@ -11,12 +9,4 @@ nic/gen/iris/cli/debugshell.py                                   /nic/cli/
 nic/gen/iris/cli/_iris.so                                        /nic/cli/
 nic/sdk/obj/lib/*.so                                             /nic/lib/
 nic/sdk/obj/lib/external/*.so                                    /nic/lib/
-nic/gen/aarch64/lib/libhalproto.so                               /nic/lib/
-nic/hal/third-party/lkl/export/aarch64/bin/liblkl.so             /nic/lib/
-nic/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so  /nic/lib/
-nic/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so  /nic/lib/
-nic/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so     /nic/lib/
-nic/hal/third-party/openssl/aarch64/lib/libssl.so.1.1            /nic/lib/
-nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1         /nic/lib/
-platform/gen/aarch64/bin                                         /platform/bin/
-platform/gen/aarch64/lib                                         /platform/lib/
+bazel-bin/nic/hal/third-party/isc-dhcp/libisc-dhcp.so            /nic/lib/
