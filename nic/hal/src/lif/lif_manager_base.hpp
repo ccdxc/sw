@@ -60,7 +60,7 @@ class LIFManagerBase {
   // Returns
   //   0 -      In case of success.
   //   -errno - In case of failure.
-  int32_t InitLIFQState(uint32_t lif_id, LIFQStateParams *params);
+  int32_t InitLIFQState(uint32_t lif_id, LIFQStateParams *params, uint8_t hint_cos);
 
   int64_t GetLIFQStateBaseAddr(uint32_t, uint32_t);
 

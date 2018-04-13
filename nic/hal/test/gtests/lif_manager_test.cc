@@ -52,14 +52,14 @@ TEST(LIFManagerTest, TestALL)
 
   bzero(&params, sizeof(params));
   ASSERT_TRUE(lm.LIFRangeAlloc(1, 1) == 1);
-  ASSERT_TRUE(lm.InitLIFQState(1, &params) == 0);
+  ASSERT_TRUE(lm.InitLIFQState(1, &params, 0) == 0);
   lm.DeleteLIF(1);
   ASSERT_TRUE(lm.GetLIFQState(1) == nullptr);
-  ASSERT_TRUE(lm.InitLIFQState(0, &params) < 0);
-  ASSERT_TRUE(lm.InitLIFQState(30000, &params) < 0);
+  ASSERT_TRUE(lm.InitLIFQState(0, &params, 0) < 0);
+  ASSERT_TRUE(lm.InitLIFQState(30000, &params, 0) < 0);
   ASSERT_TRUE(lm.LIFRangeAlloc(1, 10) == 1);
   ASSERT_TRUE(lm.LIFRangeAlloc(-1, 1) == 0);
-  ASSERT_TRUE(lm.InitLIFQState(0, &params) == 0);
+  ASSERT_TRUE(lm.InitLIFQState(0, &params, 0) == 0);
   ASSERT_TRUE(lm.LIFRangeAlloc(2044, 10) < 0);
   ASSERT_TRUE(lm.LIFRangeAlloc(2044, 2) == 2044);
 
@@ -67,7 +67,7 @@ TEST(LIFManagerTest, TestALL)
   params.type[1].entries = 10;
   params.type[3].size = 2;
   params.type[3].entries = 10;
-  ASSERT_TRUE(lm.InitLIFQState(2044, &params) == 0);
+  ASSERT_TRUE(lm.InitLIFQState(2044, &params, 0) == 0);
 
   hal::LIFQState *qstate = lm.get_qs(2044);
   ASSERT_TRUE(qstate != nullptr);

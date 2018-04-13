@@ -59,7 +59,7 @@ LIFQState *LIFManagerBase::GetLIFQState(uint32_t lif_id) {
 }
 
 int32_t LIFManagerBase::InitLIFQState(uint32_t lif_id,
-                                      LIFQStateParams *params) {
+                                      LIFQStateParams *params, uint8_t hint_cos) {
   if (lif_id >= kNumMaxLIFs)
     return -EINVAL;
   std::lock_guard<std::mutex> lk(lk_);
@@ -113,7 +113,7 @@ int32_t LIFManagerBase::InitLIFQState(uint32_t lif_id,
   // Cache the params.
   qstate->params_in = *params;
   
-  int32_t ret = InitLIFQStateImpl(qstate, params->type[i].cosA);
+  int32_t ret = InitLIFQStateImpl(qstate, hint_cos);
   if (ret < 0)
     return ret;
 

@@ -215,6 +215,7 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
 {
     LIFQStateParams qs_params = { 0 };
     int32_t         ec        = 0;
+    uint8_t         hint_cos = 0;
 
     for (int i = 0; i < spec.lif_qstate_map_size(); i++) {
         const auto &ent = spec.lif_qstate_map(i);
@@ -250,9 +251,11 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
     }
 
     qs_params.dont_zero_memory = dont_zero_qstate_mem;
+    // cosB (default cos) will be the hint_cos for the lif.
+    hint_cos = (lif->qos_info.coses & 0xf0) >> 4;
     // make sure that when you are creating with hw_lif_id the lif is alloced
     // already, otherwise this call may return an error
-    if ((ec = g_lif_manager->InitLIFQState(hw_lif_id, &qs_params)) < 0) {
+    if ((ec = g_lif_manager->InitLIFQState(hw_lif_id, &qs_params, hint_cos)) < 0) {
         HAL_TRACE_ERR("Failed to initialize LIFQState: err_code : {}", ec);
         return HAL_RET_INVALID_ARG;
     }
