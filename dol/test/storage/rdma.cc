@@ -80,6 +80,10 @@ uint32_t g_rdma_pvm_roce_tgt_cq;
 
 }  // anonymous namespace
 
+namespace qstate_if {
+	extern int get_qstate_addr(int lif, int qtype, int qid, uint64_t *qaddr);
+}
+
 uint32_t rdma_r2n_data_size(void)
 {
     return kR2NDataSize;
@@ -1047,6 +1051,16 @@ void rdma_queues_init2() {
   ConnectInitiatorAndTarget(1, 0, kMACAddr2, kMACAddr1, kIPAddr2, kIPAddr1);
 }
 
+int set_rtl_qstate_cmp_ignore(int src_lif, int src_qtype, int src_qid) {
+  uint64_t qaddr;
+  if (qstate_if::get_qstate_addr(src_lif, src_qtype, src_qid, &qaddr) < 0) {
+    printf("Failed to get q state address \n");
+    return -1;
+  }
+	eos_ignore_addr(qaddr + 64 + 64 + 21, 6);
+	return 0;
+}
+
 int rdma_pvm_qs_init() {
   int rc;
   // Init the initiator SQ 
@@ -1086,6 +1100,15 @@ int rdma_pvm_qs_init() {
   }
   printf("RDMA PVM Target ROCE CQ init success\n");
 
+	rc = set_rtl_qstate_cmp_ignore(g_rdma_hw_lif_id, kSQType, 0);
+	if(rc < 0) return rc;
+	rc = set_rtl_qstate_cmp_ignore(g_rdma_hw_lif_id, kSQType, 1);
+	if(rc < 0) return rc;
+	rc = set_rtl_qstate_cmp_ignore(g_rdma_hw_lif_id, kCQType, 0);
+	if(rc < 0) return rc;
+	rc = set_rtl_qstate_cmp_ignore(g_rdma_hw_lif_id, kCQType, 1);
+	if(rc < 0) return rc;
+
   // Target SQ Xlate
   qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
                                 g_rdma_pvm_roce_tgt_sq, 
@@ -1097,7 +1120,6 @@ int rdma_pvm_qs_init() {
                                 pvm_roce_sq_xlate_addr, NULL);
   return 0;
 }
-
 
 int rdma_init() {
   uint8_t ent[64];

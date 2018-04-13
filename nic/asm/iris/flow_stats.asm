@@ -17,7 +17,11 @@ flow_stats:
   b.c1.e      flow_stats_index_zero
   seq         c1, k.capri_intrinsic_drop, TRUE
   bcf         [c1], flow_stats_dropped
+#ifndef CAPRI_IGNORE_TIMESTAMP
   tblwr       d.flow_stats_d.last_seen_timestamp, r6
+#else
+  tblwr       d.flow_stats_d.last_seen_timestamp, r0
+#endif
   seq         c1, d.flow_stats_d.permit_packets, 0xF
   bcf         [c1], flow_stats_permitted_overflow
   tbladd      d.flow_stats_d.permit_packets, 1
