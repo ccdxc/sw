@@ -8,6 +8,7 @@ import { PlotlyComponent } from './plotlychart/plotly/plotly.component';
 import { ModuleUtility} from './ModuleUtility';
 import { RecursivelistComponent } from './recursivelist/recursivelist/recursivelist.component';
 import { PlotlyimageComponent } from './plotlychart/plotlyimage/plotlyimage.component';
+import * as d3 from 'd3';
 
 @NgModule({
   imports: [

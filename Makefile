@@ -40,7 +40,8 @@ SHELL := /bin/bash
 GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
-BUILD_CONTAINER ?= pens-bld:v0.11
+BUILD_CONTAINER ?= pens-bld:v0.12
+UI_BUILD_CONTAINER ?= pens-ui-bld:v0.1
 
 default:
 	$(MAKE) ws-tools
@@ -144,6 +145,7 @@ helper-containers:
 	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.2 .
 	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.2 .
 	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/${BUILD_CONTAINER} .
+	@cd tools/docker-files/ui-container; docker build -t ${REGISTRY_URL}/${UI_BUILD_CONTAINER} .
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/pens-dind:v0.2 .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/pens-e2e:v0.2 .
 	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.2 .
@@ -151,6 +153,8 @@ helper-containers:
 container-compile:
 	mkdir -p ${PWD}/bin/cbin
 	mkdir -p ${PWD}/bin/pkg
+	@echo "+++ building ui sources"; docker run -t --rm -v ${PWD}:/import/src/github.com/pensando/sw:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER};
+	@cp -r venice/ui/webapp/dist tools/docker-files/apigw
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
 		echo "+++ building go sources"; docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw:cached -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash -c "make ws-tools gen build"; \
 	else \
@@ -272,8 +276,27 @@ e2e-sanities:
 	#./test/e2e/dind/do.py -delete
 
 ui:
-	@cd venice/ui/web-app-framework; npm version; npm install; npm install ng-packagr; node node_modules/node-sass/scripts/install.js; node node_modules/node-sass/scripts/build.js; npm run packagr
-	@cd venice/ui/web-app-framework/dist; npm pack .
-	@cd venice/ui/webapp; npm install ../web-app-framework/dist/web-app-framework-0.0.0.tgz
-	@cd venice/ui/webapp; npm install; ng build
-	@cp -r venice/ui/webapp/dist tools/docker-files/apigw
+	npm version;
+	cd venice/ui/web-app-framework && node node_modules/node-sass/scripts/install.js;
+	cd venice/ui/web-app-framework && node node_modules/node-sass/scripts/build.js;
+	@echo "+++ building web-app-framework";
+	cd venice/ui/web-app-framework && npm run packagr
+	cd venice/ui/web-app-framework/dist && npm pack .
+	@echo "+++ installing web-app-framework";
+	cd venice/ui/webapp && npm install ../web-app-framework/dist/web-app-framework-0.0.0.tgz;
+	cd venice/ui/webapp && node node_modules/node-sass/scripts/install.js;
+	cd venice/ui/webapp && node node_modules/node-sass/scripts/build.js;
+	@echo "+++ building webapp";
+	cd venice/ui/webapp && ng build
+
+# Target invoked from ui build container, which contains node_modules
+ui-cached:
+	@echo "+++ copying node_modules to web-app-framework";
+	cd venice/ui/web-app-framework && mkdir -p node_modules;
+	cd venice/ui/web-app-framework && cp -rf /usr/local/lib/web-app-framework/node_modules/* node_modules;
+	cd venice/ui/web-app-framework && npm cache add .
+	@echo "+++ copying node_modules to webapp";
+	cd venice/ui/webapp && mkdir -p node_modules;
+	cd venice/ui/webapp && cp -rf /usr/local/lib/webapp/node_modules/* node_modules;
+	cd venice/ui/webapp && npm cache add .
+	$(MAKE) ui
