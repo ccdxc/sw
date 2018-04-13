@@ -89,6 +89,9 @@ struct lif {
 	u32 hw_features;
 	union stats_dump *stats_dump;
 	dma_addr_t stats_dump_pa;
+	u8 rss_hash_key[RSS_HASH_KEY_SIZE];
+	u8 *rss_ind_tbl;
+	dma_addr_t rss_ind_tbl_pa;
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
 	void *api_private;

@@ -525,6 +525,20 @@ devcmd_stats_dump_stop(struct admin_cmd *acmd, struct admin_comp *acomp)
 }
 
 static void
+devcmd_rss_hash_set(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    simdev_log("devcmd_rss_hash_set:\n");
+    /* XXX */
+}
+
+static void
+devcmd_rss_indir_set(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    simdev_log("devcmd_rss_indir_set:\n");
+    /* XXX */
+}
+
+static void
 devcmd_debug_q_dump(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
     struct debug_q_dump_cmd *cmd = (void *)acmd;
@@ -659,6 +673,12 @@ devcmd(struct dev_cmd_regs *dc)
         break;
     case CMD_OPCODE_STATS_DUMP_STOP:
         devcmd_stats_dump_stop(cmd, comp);
+        break;
+    case CMD_OPCODE_RSS_HASH_SET:
+        devcmd_rss_hash_set(cmd, comp);
+        break;
+    case CMD_OPCODE_RSS_INDIR_SET:
+        devcmd_rss_indir_set(cmd, comp);
         break;
     case CMD_OPCODE_DEBUG_Q_DUMP:
         devcmd_debug_q_dump(cmd, comp);

@@ -21,6 +21,7 @@
 
 #include "ionic.h"
 #include "ionic_if.h"
+#include "ionic_api.h"
 #include "ionic_bus.h"
 #include "ionic_lif.h"
 #include "ionic_ethtool.h"
@@ -117,12 +118,151 @@ static void ionic_get_ringparam(struct net_device *netdev,
 	ring->rx_pending = nrxq_descs;
 }
 
+static int ionic_get_rxnfc(struct net_device *netdev,
+			   struct ethtool_rxnfc *info, u32 *rules)
+{
+	struct lif *lif = netdev_priv(netdev);
+	int err = 0;
+
+	switch (info->cmd) {
+	case ETHTOOL_GRXRINGS:
+		info->data = lif->nrxqcqs;
+		break;
+	default:
+		netdev_err(netdev, "Command parameter %d is not supported\n",
+			   info->cmd);
+		err = -EOPNOTSUPP;
+	}
+
+	return err;
+}
+
+static u32 ionic_get_rxfh_indir_size(struct net_device *netdev)
+{
+	return RSS_IND_TBL_SIZE;
+}
+
+static u32 ionic_get_rxfh_key_size(struct net_device *netdev)
+{
+	return RSS_HASH_KEY_SIZE;
+}
+
+static int ionic_get_rxfh(struct net_device *netdev, u32 *indir, u8 *key,
+			  u8 *hfunc)
+{
+	struct lif *lif = netdev_priv(netdev);
+	unsigned int i;
+
+	if (indir)
+		for (i = 0; i < RSS_IND_TBL_SIZE; i++)
+			indir[i] = lif->rss_ind_tbl[i];
+
+	if (key)
+		memcpy(key, lif->rss_hash_key, RSS_HASH_KEY_SIZE);
+
+	if (hfunc)
+		*hfunc = ETH_RSS_HASH_TOP;
+
+	return 0;
+}
+
+int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
+{
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.rss_indir_set = {
+			.opcode = CMD_OPCODE_RSS_INDIR_SET,
+			.addr = lif->rss_ind_tbl_pa,
+		},
+	};
+	unsigned int i;
+	int err;
+
+	if (indir)
+		for (i = 0; i < RSS_IND_TBL_SIZE; i++)
+			lif->rss_ind_tbl[i] = indir[i];
+
+	netdev_info(lif->netdev, "rss_ind_tbl_set\n");
+
+	err = ionic_api_adminq_post(lif, &ctx);
+	if (err)
+		return err;
+
+	wait_for_completion(&ctx.work);
+
+	return ionic_adminq_check_err(lif, &ctx);
+}
+
+int ionic_rss_hash_key_set(struct lif *lif, const u8 *key)
+{
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.rss_hash_set = {
+			.opcode = CMD_OPCODE_RSS_HASH_SET,
+			.types = RSS_TYPE_IPV4
+			       | RSS_TYPE_IPV4_TCP
+			       | RSS_TYPE_IPV4_UDP
+			       | RSS_TYPE_IPV6
+			       | RSS_TYPE_IPV6_TCP
+			       | RSS_TYPE_IPV6_UDP
+			       | RSS_TYPE_IPV6_EX
+			       | RSS_TYPE_IPV6_TCP_EX
+			       | RSS_TYPE_IPV6_UDP_EX,
+		},
+	};
+	int err;
+
+	memcpy(lif->rss_hash_key, key, RSS_HASH_KEY_SIZE);
+
+	memcpy(ctx.cmd.rss_hash_set.key, lif->rss_hash_key,
+	       RSS_HASH_KEY_SIZE);
+
+	netdev_info(lif->netdev, "rss_hash_key_set\n");
+
+	err = ionic_api_adminq_post(lif, &ctx);
+	if (err)
+		return err;
+
+	wait_for_completion(&ctx.work);
+
+	return ionic_adminq_check_err(lif, &ctx);
+}
+
+static int ionic_set_rxfh(struct net_device *netdev, const u32 *indir,
+			  const u8 *key, const u8 hfunc)
+{
+	struct lif *lif = netdev_priv(netdev);
+	int err;
+
+	if (hfunc != ETH_RSS_HASH_NO_CHANGE && hfunc != ETH_RSS_HASH_TOP)
+		return -EOPNOTSUPP;
+
+	if (indir) {
+		err = ionic_rss_ind_tbl_set(lif, indir);
+		if (err)
+			return err;
+	}
+
+	if (key) {
+		err = ionic_rss_hash_key_set(lif, key);
+		if (err)
+			return err;
+	}
+
+	return 0;
+}
+
 static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_drvinfo		= ionic_get_drvinfo,
 	.get_link		= ethtool_op_get_link,
 	.get_coalesce		= ionic_get_coalesce,
 	.set_coalesce		= ionic_set_coalesce,
 	.get_ringparam		= ionic_get_ringparam,
+	.get_rxnfc		= ionic_get_rxnfc,
+	.get_rxfh_indir_size    = ionic_get_rxfh_indir_size,
+	.get_rxfh_key_size	= ionic_get_rxfh_key_size,
+	.get_rxfh		= ionic_get_rxfh,
+	.set_rxfh		= ionic_set_rxfh,
 };
 
 void ionic_ethtool_set_ops(struct net_device *netdev)

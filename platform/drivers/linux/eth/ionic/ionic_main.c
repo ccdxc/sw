@@ -38,6 +38,45 @@ module_param(nrxq_descs, uint, 0);
 MODULE_PARM_DESC(ntxq_descs, "Descriptors per Tx queue, must be power of 2");
 MODULE_PARM_DESC(nrxq_descs, "Descriptors per Rx queue, must be power of 2");
 
+int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
+{
+	struct net_device *netdev = lif->netdev;
+	static struct cmds {
+		unsigned int cmd;
+		char *name;
+	} cmds[] = {
+		{ CMD_OPCODE_TXQ_INIT, "CMD_OPCODE_TXQ_INIT" },
+		{ CMD_OPCODE_RXQ_INIT, "CMD_OPCODE_RXQ_INIT" },
+		{ CMD_OPCODE_FEATURES, "CMD_OPCODE_FEATURES" },
+		{ CMD_OPCODE_Q_ENABLE, "CMD_OPCODE_Q_ENABLE" },
+		{ CMD_OPCODE_Q_DISABLE, "CMD_OPCODE_Q_DISABLE" },
+		{ CMD_OPCODE_STATION_MAC_ADDR_GET,
+			"CMD_OPCODE_STATION_MAC_ADDR_GET" },
+		{ CMD_OPCODE_MTU_SET, "CMD_OPCODE_MTU_SET" },
+		{ CMD_OPCODE_RX_MODE_SET, "CMD_OPCODE_RX_MODE_SET" },
+		{ CMD_OPCODE_RX_FILTER_ADD, "CMD_OPCODE_RX_FILTER_ADD" },
+		{ CMD_OPCODE_RX_FILTER_DEL, "CMD_OPCODE_RX_FILTER_DEL" },
+		{ CMD_OPCODE_RSS_HASH_SET, "CMD_OPCODE_RSS_HASH_SET" },
+		{ CMD_OPCODE_RSS_INDIR_SET, "CMD_OPCODE_RSS_INDIR_SET" },
+		{ CMD_OPCODE_STATS_DUMP_START, "CMD_OPCODE_STATS_DUMP_START" },
+		{ CMD_OPCODE_STATS_DUMP_STOP, "CMD_OPCODE_STATS_DUMP_STOP" },
+		{ 0, 0 }, /* keep last */
+	};
+	struct cmds *cmd = cmds;
+	char *name = "UNKNOWN";
+
+	if (ctx->comp.comp.status) {
+		while ((++cmd)->cmd)
+			if (cmd->cmd == ctx->cmd.cmd.opcode)
+				name = cmd->name;
+		netdev_err(netdev, "(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
+			   name, ctx->comp.comp.status);
+		return -EIO;
+	}
+
+	return 0;
+}
+
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	       void *cb_arg)
 {

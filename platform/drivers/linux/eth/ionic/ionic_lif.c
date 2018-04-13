@@ -28,43 +28,6 @@
 #include "ionic_ethtool.h"
 #include "ionic_debugfs.h"
 
-static int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
-{
-	struct net_device *netdev = lif->netdev;
-	static struct cmds {
-		unsigned int cmd;
-		char *name;
-	} cmds[] = {
-		{ CMD_OPCODE_TXQ_INIT, "CMD_OPCODE_TXQ_INIT" },
-		{ CMD_OPCODE_RXQ_INIT, "CMD_OPCODE_RXQ_INIT" },
-		{ CMD_OPCODE_FEATURES, "CMD_OPCODE_FEATURES" },
-		{ CMD_OPCODE_Q_ENABLE, "CMD_OPCODE_Q_ENABLE" },
-		{ CMD_OPCODE_Q_DISABLE, "CMD_OPCODE_Q_DISABLE" },
-		{ CMD_OPCODE_STATION_MAC_ADDR_GET,
-			"CMD_OPCODE_STATION_MAC_ADDR_GET" },
-		{ CMD_OPCODE_MTU_SET, "CMD_OPCODE_MTU_SET" },
-		{ CMD_OPCODE_RX_MODE_SET, "CMD_OPCODE_RX_MODE_SET" },
-		{ CMD_OPCODE_RX_FILTER_ADD, "CMD_OPCODE_RX_FILTER_ADD" },
-		{ CMD_OPCODE_RX_FILTER_DEL, "CMD_OPCODE_RX_FILTER_DEL" },
-		{ CMD_OPCODE_STATS_DUMP_START, "CMD_OPCODE_STATS_DUMP_START" },
-		{ CMD_OPCODE_STATS_DUMP_STOP, "CMD_OPCODE_STATS_DUMP_STOP" },
-		{ 0, 0 }, /* keep last */
-	};
-	struct cmds *cmd = cmds;
-	char *name = "UNKNOWN";
-
-	if (ctx->comp.comp.status) {
-		while ((++cmd)->cmd)
-			if (cmd->cmd == ctx->cmd.cmd.opcode)
-				name = cmd->name;
-		netdev_err(netdev, "(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
-			   name, ctx->comp.comp.status);
-		return -EIO;
-	}
-
-	return 0;
-}
-
 static int ionic_qcq_enable(struct qcq *qcq)
 {
 	struct queue *q = &qcq->q;
@@ -877,6 +840,60 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 			  lif->stats_dump_pa);
 }
 
+static int ionic_lif_rss_setup(struct lif *lif)
+{
+	struct net_device *netdev = lif->netdev;
+	struct device *dev = lif->ionic->dev;
+	size_t tbl_size = sizeof(*lif->rss_ind_tbl) * RSS_IND_TBL_SIZE;
+	static const u8 toeplitz_symmetric_key[] = {
+		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+	};
+	unsigned int i;
+	int err;
+
+	lif->rss_ind_tbl = dma_alloc_coherent(dev, tbl_size,
+					      &lif->rss_ind_tbl_pa,
+					      GFP_KERNEL);
+
+	if (!lif->rss_ind_tbl) {
+		netdev_err(netdev, "%s OOM\n", __func__);
+		return -ENOMEM;
+	}
+
+	/* Fill indirection table with 'default' values */
+
+	for (i = 0; i < RSS_IND_TBL_SIZE; i++)
+		lif->rss_ind_tbl[i] = i % lif->nrxqcqs;
+
+	err = ionic_rss_ind_tbl_set(lif, NULL);
+	if (err)
+		goto err_out_free;
+
+	err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key);
+	if (err)
+		goto err_out_free;
+
+	return 0;
+
+err_out_free:
+	dma_free_coherent(dev, tbl_size, lif->rss_ind_tbl,
+			  lif->rss_ind_tbl_pa);
+	return err;
+}
+
+static void ionic_lif_rss_teardown(struct lif *lif)
+{
+	struct device *dev = lif->ionic->dev;
+	size_t tbl_size = sizeof(*lif->rss_ind_tbl) * RSS_IND_TBL_SIZE;
+
+	dma_free_coherent(dev, tbl_size, lif->rss_ind_tbl,
+			  lif->rss_ind_tbl_pa);
+}
+
 static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 {
 	struct device *dev = lif->ionic->dev;
@@ -908,6 +925,7 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 static void ionic_lif_deinit(struct lif *lif)
 {
 	ionic_lif_stats_dump_stop(lif);
+	ionic_lif_rss_teardown(lif);
 	ionic_lif_qcq_deinit(lif, lif->adminqcq);
 	ionic_lif_txqs_deinit(lif);
 	ionic_lif_rxqs_deinit(lif);
@@ -1183,9 +1201,13 @@ static int ionic_lif_init(struct lif *lif)
 	if (err)
 		goto err_out_rxqs_deinit;
 
-	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
+	err = ionic_lif_rss_setup(lif);
 	if (err)
 		goto err_out_rxqs_deinit;
+
+	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
+	if (err)
+		goto err_out_rss_teardown;
 
 	ionic_set_rx_mode(lif->netdev);
 
@@ -1193,6 +1215,8 @@ static int ionic_lif_init(struct lif *lif)
 
 	return 0;
 
+err_out_rss_teardown:
+	ionic_lif_rss_teardown(lif);
 err_out_rxqs_deinit:
 	ionic_lif_rxqs_deinit(lif);
 err_out_txqs_deinit:
