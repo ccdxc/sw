@@ -533,12 +533,6 @@ def ConfigureCollectors(objlist):
              stub.CollectorCreate)
     return
 
-def ConfigureSystem(objlist):
-    if not IsConfigAllowed(objlist): return
-    stub = system_pb2.SystemStub(HalChannel)
-    __config(objlist, system_pb2.SystemConfigMsg, stub.SystemConfig)
-    return
-
 def ConfigureNetworks(objlist):
     if not IsConfigAllowed(objlist): return
     stub = nw_pb2.NetworkStub(HalChannel)
@@ -752,5 +746,12 @@ def GetSystem(objlist):
     if not IsConfigAllowed(objlist): return
     stub = system_pb2.SystemStub(HalChannel)
     __get(objlist, None, stub.SystemGet)
+    return
+
+def ConfigureDropMonitorRules(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = telemetry_pb2.TelemetryStub(HalChannel)
+    __config(objlist, telemetry_pb2.DropMonitorRuleConfigMsg,
+             stub.DropMonitorRuleCreate)
     return
 

@@ -48,11 +48,40 @@ DEFINE_ENUM(export_formats_en, EXPORT_FORMATS)
 #define MIRROR_SESSION_APP_REDIR_VISIB_ID    7
 // Iris pipeline can support upto 8 mirror destinations
 #define MAX_MIRROR_SESSION_DEST     8
+#define MAX_DROP_REASON             128
+
+// New reason codes must be added here and in the corresponding PD
+typedef struct drop_reason_codes_s {
+    bool    drop_malformed_pkt;
+    bool    drop_input_mapping;
+    bool    drop_input_mapping_dejavu;
+    bool    drop_flow_hit;
+    bool    drop_flow_miss;
+    bool    drop_nacl;
+    bool    drop_ipsg;
+    bool    drop_ip_normalization;
+    bool    drop_tcp_normalization;
+    bool    drop_tcp_rst_with_invalid_ack_num;
+    bool    drop_tcp_non_syn_first_pkt;
+    bool    drop_icmp_normalization;
+    bool    drop_input_properties_miss;
+    bool    drop_tcp_out_of_window;
+    bool    drop_tcp_split_handshake;
+    bool    drop_tcp_win_zero_drop;
+    bool    drop_tcp_data_after_fin;
+    bool    drop_tcp_non_rst_pkt_after_rst;
+    bool    drop_tcp_invalid_responder_first_pkt;
+    bool    drop_tcp_unexpected_pkt;
+    bool    drop_src_lif_mismatch;
+    bool    drop_parser_icrc_error;
+    bool    drop_parse_len_error;
+    bool    drop_hardware_error;
+} __PACK__ drop_reason_codes_t;
 
 typedef struct drop_monitor_rule_s {
     hal_spinlock_t slock;
-    uint64_t drop_reasons;  // drop reason bitmap
-    uint8_t mirror_destinations[MAX_MIRROR_SESSION_DEST];
+    drop_reason_codes_t codes;
+    bool mirror_destinations[MAX_MIRROR_SESSION_DEST];
 } __PACK__ drop_monitor_rule_t;
 
 typedef struct flow_monitor_rule_s {

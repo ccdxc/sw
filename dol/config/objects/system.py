@@ -35,9 +35,32 @@ class SystemObject(base.ConfigObjectBase):
             logger.info("    Session ID  : %d" % sess.id)
 
     def PrepareHALRequestSpec(self, reqspec):
+        reqspec.reasons.drop_malformed_pkt = True
+        reqspec.reasons.drop_input_mapping = True
+        reqspec.reasons.drop_input_mapping_dejavu = True
+        reqspec.reasons.drop_flow_hit = True
+        reqspec.reasons.drop_flow_miss = True
+        reqspec.reasons.drop_nacl = True
+        reqspec.reasons.drop_ipsg = True
+        reqspec.reasons.drop_ip_normalization = True
+        reqspec.reasons.drop_tcp_normalization = True
+        reqspec.reasons.drop_tcp_rst_with_invalid_ack_num = True
+        reqspec.reasons.drop_tcp_non_syn_first_pkt = True
+        reqspec.reasons.drop_icmp_normalization = True
+        reqspec.reasons.drop_input_properties_miss = True
+        reqspec.reasons.drop_tcp_out_of_window = True
+        reqspec.reasons.drop_tcp_split_handshake = True
+        reqspec.reasons.drop_tcp_win_zero_drop = True
+        reqspec.reasons.drop_tcp_data_after_fin = True
+        reqspec.reasons.drop_tcp_non_rst_pkt_after_rst = True
+        reqspec.reasons.drop_tcp_invalid_responder_first_pkt = True
+        reqspec.reasons.drop_tcp_unexpected_pkt = True
+        reqspec.reasons.drop_src_lif_mismatch = True
+        reqspec.reasons.drop_parser_icrc_error = True
+        reqspec.reasons.drop_parse_len_error = True
+        reqspec.reasons.drop_hardware_error = True
         for sess in self.mirror_sessions:
-            s = reqspec.span_on_drop_sessions.add()
-            s.session_id = sess.id
+            reqspec.mirror_destinations.append(sess.id)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -70,9 +93,10 @@ class SystemObjectHelper:
         return
 
     def Configure(self):
-        if self.systemObject:
+        if self.systemObject and self.systemObject.mirror_sessions:
             logger.info("Configuring System Object")
-            halapi.ConfigureSystem([self.systemObject])
+            self.systemObject.Show()
+            halapi.ConfigureDropMonitorRules([self.systemObject])
         return
 
     def Generate(self, topospec):

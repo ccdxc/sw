@@ -24,6 +24,9 @@ using telemetry::MirrorSession;
 using telemetry::FlowMonitorRule;
 using telemetry::FlowMonitorRuleConfigMsg;
 using telemetry::FlowMonitorRuleResponseMsg;
+using telemetry::DropMonitorRule;
+using telemetry::DropMonitorRuleConfigMsg;
+using telemetry::DropMonitorRuleResponseMsg;
 using types::Empty;
 
 class TelemetryServiceImpl final : public Telemetry::Service {
@@ -62,7 +65,7 @@ class TelemetryServiceImpl final : public Telemetry::Service {
                                 const ExportControlId* request,
                                 ExportControlResponseMsg* response) override;
 
-     // FlowMonitorRules CRUD Operations
+    // FlowMonitorRules CRUD Operations
     Status FlowMonitorRuleCreate(ServerContext* context,
                                 const FlowMonitorRuleConfigMsg* request,
                                 FlowMonitorRuleResponseMsg* response) override;
@@ -102,6 +105,26 @@ class TelemetryServiceImpl final : public Telemetry::Service {
     Status MirrorSessionDelete(ServerContext* context,
                                 const MirrorSessionDeleteMsg* request,
                                 MirrorSessionResponseMsg* response) override;
+
+    // DropMonitorRules CRUD Operations
+    Status DropMonitorRuleCreate(ServerContext* context,
+                                const DropMonitorRuleConfigMsg* request,
+                                DropMonitorRuleResponseMsg* response) override;
+
+    Status DropMonitorRuleUpdate(ServerContext* context,
+                                const DropMonitorRuleConfigMsg* request,
+                                DropMonitorRuleResponseMsg* response) override;
+
+    Status DropMonitorRuleList(ServerContext* context,
+                                const ExportControlId* request,
+                                DropMonitorRuleResponseMsg* response) override;
+
+    Status DropMonitorRuleGet(ServerContext* context,
+                                const DropMonitorRuleConfigMsg* request,
+                                DropMonitorRuleResponseMsg* response) override;
+    Status DropMonitorRuleDelete(ServerContext* context,
+                                const DropMonitorRuleConfigMsg* request,
+                                DropMonitorRuleResponseMsg* response) override;
 };
 
 

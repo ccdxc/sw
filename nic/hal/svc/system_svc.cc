@@ -36,20 +36,3 @@ SystemServiceImpl::SystemGet(ServerContext *context,
     return Status::OK;
 }
 
-
-Status
-SystemServiceImpl::SystemConfig(ServerContext *context,
-                             const  SystemConfigMsg *request,
-                             SystemConfigResponseMsg *rsp)
-{
-    hal_ret_t    ret;
-
-    HAL_TRACE_DEBUG("Rcvd System Config Request");
-    ret = hal::system_set(request);
-    rsp->add_response();
-    if (ret != HAL_RET_OK) {
-        rsp->set_status(types::API_STATUS_HW_WRITE_ERROR);
-        return Status::OK;
-    }
-    return Status::OK;
-}

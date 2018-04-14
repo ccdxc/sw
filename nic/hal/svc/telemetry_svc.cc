@@ -221,3 +221,71 @@ TelemetryServiceImpl::MirrorSessionDelete(ServerContext* context,
     }
     return Status::OK;
 }
+
+Status
+TelemetryServiceImpl::DropMonitorRuleCreate(ServerContext* context,
+                            const DropMonitorRuleConfigMsg* request,
+                            DropMonitorRuleResponseMsg* response)
+{
+    HAL_TRACE_DEBUG("Rcvd DropMonitorRuleCreate Request");
+    DropMonitorRule *resp;
+    uint32_t i, nreqs = request->request_size();
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+    for (i = 0; i < nreqs; ++i) {
+        resp = response->add_response();
+        auto spec = request->request(i);
+        hal::drop_monitor_rule_create(&spec, resp);
+    }
+    return Status::OK;
+}
+
+Status
+TelemetryServiceImpl::DropMonitorRuleDelete(ServerContext* context,
+                            const DropMonitorRuleConfigMsg* request,
+                            DropMonitorRuleResponseMsg* response)
+{
+    HAL_TRACE_DEBUG("Rcvd DropMonitorRuleDelete Request");
+    DropMonitorRule *resp;
+    uint32_t i, nreqs = request->request_size();
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+    for (i = 0; i < nreqs; ++i) {
+        resp = response->add_response();
+        auto spec = request->request(i);
+        hal::drop_monitor_rule_delete(&spec, resp);
+    }
+    return Status::OK;
+}
+
+Status
+TelemetryServiceImpl::DropMonitorRuleUpdate(ServerContext* context,
+                            const DropMonitorRuleConfigMsg* request,
+                            DropMonitorRuleResponseMsg* response)
+{
+    HAL_TRACE_DEBUG("Rcvd DropMonitorRuleUpdate Request");
+    return Status::OK;
+}
+
+Status
+TelemetryServiceImpl::DropMonitorRuleList(ServerContext* context,
+                            const ExportControlId* request,
+                            DropMonitorRuleResponseMsg* response)
+{
+    HAL_TRACE_DEBUG("Rcvd DropMonitorRuleList Request");
+    return Status::OK;
+}
+
+Status
+TelemetryServiceImpl::DropMonitorRuleGet(ServerContext* context,
+                            const DropMonitorRuleConfigMsg* request,
+                            DropMonitorRuleResponseMsg* response)
+{
+    HAL_TRACE_DEBUG("Rcvd DropMonitorRuleGet Request");
+    return Status::OK;
+}
+

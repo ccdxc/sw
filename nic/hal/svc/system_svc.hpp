@@ -13,9 +13,6 @@ using sys::System;
 using sys::SystemResponse;
 using sys::ApiStatsResponse;
 using types::Empty;
-using sys::SystemConfigMsg;
-using sys::SystemConfigResponseMsg;
-
 
 class SystemServiceImpl final : public System::Service {
 public:
@@ -25,9 +22,6 @@ public:
     Status SystemGet(ServerContext *context,
                      const Empty *request,
                      SystemResponse *rsp) override;
-    Status SystemConfig(ServerContext *context,
-                        const  SystemConfigMsg *request,
-                        SystemConfigResponseMsg *rsp) override;
 };
 #endif    // __SYSTEM_SVC_HPP__
 

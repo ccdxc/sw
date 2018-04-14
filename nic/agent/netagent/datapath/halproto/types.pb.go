@@ -818,13 +818,10 @@
 		OflowFifoStats
 		PacketBufferPortStats
 		PacketBufferStats
+		Status
 		SystemResponse
 		Stats
 		DropStats
-		SystemConfigSpec
-		SystemConfigMsg
-		SystemConfigResponse
-		SystemConfigResponseMsg
 		TcpCbKeyHandle
 		TcpCbSpec
 		TcpCbRequestMsg

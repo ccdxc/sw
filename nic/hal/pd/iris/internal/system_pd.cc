@@ -9,7 +9,6 @@
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
-using sys::SystemConfigSpec;
 namespace hal {
 namespace pd {
 
@@ -153,32 +152,6 @@ pd_system_drop_stats_set (int id, drop_stats_actiondata *data)
     return HAL_RET_OK;
 }
 
-hal_ret_t
-pd_system_drop_action (pd_system_drop_action_args_t *args)
-{
-    SystemConfigSpec *spec = args->spec;
-    uint8_t sessns = 0;
-    drop_stats_actiondata    data = { 0 };
-
-    for (int i = 0; i < spec->span_on_drop_sessions().size(); i++) {
-        auto sess = spec->span_on_drop_sessions(i).session_id();
-        if (sess > 7) {
-            return HAL_RET_INVALID_ARG;
-        }
-        sessns = 1 << sess;
-    }
-    if (sessns > 0) {
-        data.drop_stats_action_u.drop_stats_drop_stats.mirror_en = 1;
-        data.drop_stats_action_u.drop_stats_drop_stats.mirror_session_id = sessns;
-    } else {
-        data.drop_stats_action_u.drop_stats_drop_stats.mirror_en = 0;
-        data.drop_stats_action_u.drop_stats_drop_stats.mirror_session_id = sessns;
-    }
-    for (int i = DROP_MIN; i <= DROP_MAX; i++) {
-        pd_system_drop_stats_set(i, &data);
-    }
-    return HAL_RET_OK;
-}
 
 hal_ret_t
 pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,

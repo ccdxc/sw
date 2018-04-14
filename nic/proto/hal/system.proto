@@ -23,7 +23,6 @@ service System {
   // System related APIs
   rpc ApiStatsGet(types.Empty) returns (ApiStatsResponse) {}
   rpc SystemGet(types.Empty) returns (SystemResponse) {}
-  rpc SystemConfig(SystemConfigMsg) returns (SystemConfigResponseMsg) {}
 }
 
 enum ApiCounter {
@@ -218,10 +217,16 @@ message PacketBufferStats {
   repeated PacketBufferPortStats port_stats = 1; // list of stats, one per packet buffer port
 }
 
+// Status captures the operating status of various components in the HAL
+// including "ready" status, thread health etc.
+message Status {
+}
+
 // Global system object
 message SystemResponse {
   types.ApiStatus    api_status      = 1;                  // API status code
   Stats              stats           = 2;                  // Statistics
+  Status             status          = 3;                  // System status
 }
 
 // Stats object
@@ -234,21 +239,4 @@ message Stats {
 // Drop Stats object
 message DropStats {
   repeated DropStatsEntry drop_entries  = 1;               // list of drop statistics
-}
-
-message SystemConfigSpec {
-  repeated telemetry.MirrorSessionId span_on_drop_sessions  = 1;  // Mirror Sessions to enable for DROP packets
-}
-
-message SystemConfigMsg {
-  repeated SystemConfigSpec request = 1;
-}
-
-message SystemConfigResponse {
-  types.ApiStatus   api_status  = 1;
-}
-
-message SystemConfigResponseMsg {
-  types.ApiStatus                       status      = 1; // Response status of the API
-  repeated SystemConfigResponse         response    = 2; // Empty Response for now
 }

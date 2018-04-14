@@ -11,6 +11,7 @@
 #include "nic/hal/pd/iris/telemetry/telemetry_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/hal/pd/iris/telemetry/ipfix_pd.hpp"
 
 namespace hal {
@@ -366,12 +367,72 @@ pd_flow_monitor_rule_get(pd_flow_monitor_rule_get_args_t *args)
     return ret;
 }
 
+static hal_ret_t
+program_drop_stats_actiondata_table (drop_stats_actiondata *data,
+                                     uint8_t sessid_bitmap, bool reason, int code)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    sdk_ret_t   sdk_ret;
+    tcam        *tcam;
+    
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
+    HAL_ASSERT(tcam != NULL);
+    
+    data->drop_stats_action_u.drop_stats_drop_stats.mirror_en = reason;
+    data->drop_stats_action_u.drop_stats_drop_stats.mirror_session_id = sessid_bitmap;
+    data->actionid = DROP_STATS_DROP_STATS_ID;
+    sdk_ret = tcam->update(code, data);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        HAL_TRACE_ERR("drop stats table write failure, idx : {}, err : {}",
+                       code, ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+#define PROGRAM_DROP_STATS_TABLE(arg1, arg2) \
+    ret = program_drop_stats_actiondata_table(&data, sessid_bitmap, arg1, arg2); \
+    if (ret != HAL_RET_OK) goto end;
+
 hal_ret_t
 pd_drop_monitor_rule_create(pd_drop_monitor_rule_create_args_t *args)
 {
-    // TODO: Add rules to itree
-    hal_ret_t ret = HAL_RET_OK;
+    hal_ret_t               ret = HAL_RET_OK;
+    uint8_t                 sessid_bitmap = 0;
+    drop_stats_actiondata   data = { 0 };
+    
+    for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
+        sessid_bitmap |= args->rule->mirror_destinations[i] ? (1 << i) : 0;
+    }
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_malformed_pkt, DROP_MALFORMED_PKT);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_input_mapping, DROP_INPUT_MAPPING);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_input_mapping_dejavu, DROP_INPUT_MAPPING_DEJAVU);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_flow_hit, DROP_FLOW_HIT);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_flow_miss, DROP_FLOW_MISS);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_nacl, DROP_NACL);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_ipsg, DROP_IPSG);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_ip_normalization, DROP_IP_NORMALIZATION);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_tcp_normalization, DROP_TCP_NORMALIZATION);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_tcp_rst_with_invalid_ack_num, DROP_TCP_RST_WITH_INVALID_ACK_NUM);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_tcp_non_syn_first_pkt, DROP_TCP_NON_SYN_FIRST_PKT);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_icmp_normalization, DROP_ICMP_NORMALIZATION);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_input_properties_miss, DROP_INPUT_PROPERTIES_MISS);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_tcp_out_of_window, DROP_TCP_OUT_OF_WINDOW);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_tcp_split_handshake, DROP_TCP_SPLIT_HANDSHAKE);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_tcp_win_zero_drop, DROP_TCP_WIN_ZERO_DROP);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_tcp_data_after_fin, DROP_TCP_DATA_AFTER_FIN);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_tcp_non_rst_pkt_after_rst, DROP_TCP_NON_RST_PKT_AFTER_RST);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_tcp_invalid_responder_first_pkt, DROP_TCP_INVALID_RESPONDER_FIRST_PKT);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_tcp_unexpected_pkt, DROP_TCP_UNEXPECTED_PKT);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_src_lif_mismatch, DROP_SRC_LIF_MISMATCH);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_parser_icrc_error, DROP_PARSER_ICRC_ERR);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_parse_len_error, DROP_PARSER_LEN_ERR);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_hardware_error, DROP_HARDWARE_ERR);
 
+end:
     return ret;
 }
 

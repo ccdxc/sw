@@ -224,7 +224,7 @@ message DropMonitorRuleResponseMsg {
 // RspanSpec is the configuration specification for RSPAN.
 message RSpanSpec {
   kh.InterfaceKeyHandle     intf         = 1; // Interface handle
-  types.EncapInfo        rspan_encap     = 2; // VLAN encapsulation
+  types.EncapInfo           rspan_encap  = 2; // VLAN encapsulation
 }
 
 // ERSpanSpec is the configuration specification for ERSPAN 

@@ -434,14 +434,56 @@ flow_monitor_rule_get (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp)
     return ret;
 }
 
+static void
+populate_drop_monitor_rule (DropMonitorRuleSpec *spec,
+                            drop_monitor_rule_t *rule)
+{
+    rule->codes.drop_input_mapping = spec->reasons().drop_input_mapping();
+    rule->codes.drop_input_mapping_dejavu = spec->reasons().drop_input_mapping_dejavu();
+    rule->codes.drop_flow_hit = spec->reasons().drop_flow_hit();
+    rule->codes.drop_flow_miss = spec->reasons().drop_flow_miss();
+    rule->codes.drop_ipsg = spec->reasons().drop_ipsg();
+    rule->codes.drop_nacl = spec->reasons().drop_nacl();
+    rule->codes.drop_malformed_pkt = spec->reasons().drop_malformed_pkt();
+    rule->codes.drop_ip_normalization = spec->reasons().drop_ip_normalization();
+    rule->codes.drop_tcp_normalization = spec->reasons().drop_tcp_normalization();
+    rule->codes.drop_tcp_non_syn_first_pkt = spec->reasons().drop_tcp_non_syn_first_pkt();
+    rule->codes.drop_icmp_normalization = spec->reasons().drop_icmp_normalization();
+    rule->codes.drop_input_properties_miss = spec->reasons().drop_input_properties_miss();
+    rule->codes.drop_tcp_out_of_window = spec->reasons().drop_tcp_out_of_window();
+    rule->codes.drop_tcp_split_handshake = spec->reasons().drop_tcp_split_handshake();
+    rule->codes.drop_tcp_win_zero_drop = spec->reasons().drop_tcp_win_zero_drop();
+    rule->codes.drop_tcp_data_after_fin = spec->reasons().drop_tcp_data_after_fin();
+    rule->codes.drop_tcp_non_rst_pkt_after_rst = spec->reasons().drop_tcp_non_rst_pkt_after_rst();
+    rule->codes.drop_tcp_invalid_responder_first_pkt = spec->reasons().drop_tcp_invalid_responder_first_pkt();
+    rule->codes.drop_tcp_unexpected_pkt = spec->reasons().drop_tcp_unexpected_pkt();
+    rule->codes.drop_src_lif_mismatch = spec->reasons().drop_src_lif_mismatch();
+    rule->codes.drop_parser_icrc_error = spec->reasons().drop_parser_icrc_error();
+    rule->codes.drop_parse_len_error = spec->reasons().drop_parse_len_error();
+    rule->codes.drop_hardware_error = spec->reasons().drop_hardware_error();
+    return;
+}
+
 hal_ret_t
 drop_monitor_rule_create (DropMonitorRuleSpec *spec, DropMonitorRule *rsp)
 {
     pd_drop_monitor_rule_create_args_t args = {0};
     drop_monitor_rule_t rule = {0};
     hal_ret_t ret = HAL_RET_OK;
+    int idx;
 
-    HAL_TRACE_DEBUG("PI-DropMonitorRule create");
+    populate_drop_monitor_rule(spec, &rule);
+    int n = spec->mirror_destinations_size();
+    for (int i = 0; i < n; i++) {
+        if (spec->mirror_destinations(i) >= MAX_MIRROR_SESSION_DEST) {
+            ret = HAL_RET_INVALID_ARG;
+            HAL_TRACE_ERR("PI-DropMonitor create failed {} mirror_dest_id: {}",
+                           ret, spec->mirror_destinations(i));
+            goto end;
+        }
+        idx = spec->mirror_destinations(i);
+        rule.mirror_destinations[idx] = true;
+    }
     args.rule = &rule;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_MONITOR_RULE_CREATE, (void *)&args);
     if (ret != HAL_RET_OK) {
@@ -463,6 +505,7 @@ drop_monitor_rule_delete (DropMonitorRuleSpec *spec, DropMonitorRule *rsp)
     drop_monitor_rule_t rule = {0};
     hal_ret_t ret;
 
+    populate_drop_monitor_rule(spec, &rule);
     args.rule = &rule;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_MONITOR_RULE_DELETE, (void *)&args);
     if (ret != HAL_RET_OK) {
