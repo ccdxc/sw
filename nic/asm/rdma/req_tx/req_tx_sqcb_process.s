@@ -129,6 +129,8 @@ poll_for_work:
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, log_pmtu), d.log_pmtu, CAPRI_PHV_FIELD(SQCB_TO_WQE_P, poll_in_progress), d.poll_in_progress
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, remaining_payload_bytes), r4, CAPRI_PHV_FIELD(SQCB_TO_WQE_P, color), d.color
 
+        phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), d.read_req_adjust
+
         phvwr CAPRI_PHV_FIELD(TO_S4_P, spec_cindex), SPEC_SQ_C_INDEX
         
         phvwrpair CAPRI_PHV_FIELD(TO_S5_P, wqe_addr), r2, CAPRI_PHV_FIELD(TO_S5_P, spec_cindex), SPEC_SQ_C_INDEX
@@ -176,7 +178,7 @@ pt_process:
         //write pd, log_pmtu together
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_PT_P, page_seg_offset), r2, CAPRI_PHV_RANGE(SQCB_TO_PT_P, pd, log_pmtu), d.{pd...log_pmtu}
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_PT_P, poll_in_progress), d.poll_in_progress, CAPRI_PHV_FIELD(SQCB_TO_PT_P, color), d.color
-        
+        phvwr     CAPRI_PHV_FIELD(SQCB_TO_PT_P, read_req_adjust), d.read_req_adjust
         // populate t0 PC and table address
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqpt_process, r3)
 

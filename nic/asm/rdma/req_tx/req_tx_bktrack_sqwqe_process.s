@@ -72,7 +72,8 @@ wqe_bktrack:
     slt            c2, K_REXMIT_PSN, r1
     bcf            [!c2], wqe_match
     // set empty_rrq to false as bktracking is in progress
-    setcf          c7, [!c0] // Branch Delay Slot
+    // set is_op_type_read to false
+    crestore       [c7, c5], r0, 0xa0 // Branch Delay Slot
 
     // rexmit psn range is lower than current wqe's start psn. Need to go to
     // previous wqe. Compute page_index for (cindex - 1) and see if its
@@ -138,8 +139,8 @@ calculate_raw_table_pc_1:
     nop 
 
 read_or_sge_bktrack:
-    seq            c2, d.base.op_type, OP_TYPE_READ
-    bcf            [!c2], sge_bktrack
+    seq            c5, d.base.op_type, OP_TYPE_READ
+    bcf            [!c5], sge_bktrack
     nop            // Branch Delay Slot
     
     // num_pkts = rexmit_psn - wqe_start_psn
@@ -148,8 +149,6 @@ read_or_sge_bktrack:
     // wqe_p->read.len -= (num_pkts << log_pmtu)
     add           r3, CAPRI_KEY_FIELD(IN_TO_S_P, log_pmtu), r0
     sllv          r2, r2, r3
-    tbladd        d.read.va, r2
-    tblsub        d.read.length, r2
 
     // wqe_start_psn and tx_psn set to rexmit_psn as wqe's va
     // is modified to start from the rexmit_psn. if there's retransmission
@@ -228,8 +227,8 @@ sqcb_writeback:
 
     CAPRI_RESET_TABLE_0_ARG()
     phvwr.c6 CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, bktrack_in_progress), 1
-    phvwrpair CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_offset), K_CURRENT_SGE_OFFSET, CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_id), K_CURRENT_SGE_ID
-    phvwrpair CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, num_sges), K_NUM_SGES, CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, sq_c_index), r4
+    phvwr.c5 CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_offset), r2
+    phvwr    CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, sq_c_index), r4
     phvwr.c7 CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, empty_rrq_bktrack), 1
 
     SQCB0_ADDR_GET(r5)

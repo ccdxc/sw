@@ -340,6 +340,9 @@ op_type_end:
     // Store cur tx_psn as exp_rsp_psn, if rsp is expected for this psn
     add            r7, d.tx_psn, r0
 
+    // store wqe_start_psn for backtrack from middle of multi-packet msg
+    tblwr.c2       d.wqe_start_psn, d.tx_psn
+
     b.!c6          inc_psn
     // phv_p->bth.psn = sqcb1_p->tx_psn
     phvwrpair      BTH_OPCODE, r2, BTH_PSN, d.tx_psn // Branch Delay Slot

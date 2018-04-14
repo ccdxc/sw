@@ -97,7 +97,10 @@ struct sqcb0_t {
     spec_sq_cindex                : 16; // RW S0
 
     curr_wqe_ptr                  : 64; // WO S5, RO S0
-    current_sge_offset            : 32; // WO S5, RO S0
+    union {
+        current_sge_offset        : 32; // WO S5, RO S0
+        read_req_adjust           : 32; // RO S0
+    };
     current_sge_id                : 8;  // WO S5, RO S0
     num_sges                      : 8;  // WO S5, RO S0
 

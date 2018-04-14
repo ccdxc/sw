@@ -388,13 +388,14 @@ header_type req_tx_sqcb_to_pt_info_t {
     fields {
         page_offset                      :   16;
         page_seg_offset                  :    3;
-        remaining_payload_bytes          :   32;
+        remaining_payload_bytes          :   16;
         rrq_p_index                      :    8;
         pd                               :   32;
         log_pmtu                         :    5;
         poll_in_progress                 :    1;
         color                            :    1;
-        pad                              :   62;
+        read_req_adjust                  :   32;
+        pad                              :   46;
     }
 }
 
@@ -1286,6 +1287,7 @@ action req_tx_sqpt_process () {
     modify_field(t0_s2s_sqcb_to_pt_info_scr.log_pmtu, t0_s2s_sqcb_to_pt_info.log_pmtu);
     modify_field(t0_s2s_sqcb_to_pt_info_scr.poll_in_progress, t0_s2s_sqcb_to_pt_info.poll_in_progress);
     modify_field(t0_s2s_sqcb_to_pt_info_scr.color, t0_s2s_sqcb_to_pt_info.color);
+    modify_field(t0_s2s_sqcb_to_pt_info_scr.read_req_adjust, t0_s2s_sqcb_to_pt_info.read_req_adjust);
     modify_field(t0_s2s_sqcb_to_pt_info_scr.pad, t0_s2s_sqcb_to_pt_info.pad);
 
 }

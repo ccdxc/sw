@@ -19,6 +19,7 @@ struct req_tx_s2_t0_k k;
 #define K_LOG_PMTU CAPRI_KEY_FIELD(IN_P, log_pmtu)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit0, remaining_payload_bytes_sbit9_ebit15)
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
+#define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit0, current_sge_offset_sbit25_ebit31)
 
 %%
     .param    req_tx_sqsge_process
@@ -121,8 +122,10 @@ set_sge_arg:
 read:
     // prepare atomic header
     #phvwr           RETH_VA_RKEY_LEN, d.{read.va...read.length}
-    phvwrpair      RETH_VA, d.read.va, RETH_RKEY, d.read.r_key
-    phvwr          RETH_LEN, d.read.length
+    add            r4, d.read.va, K_READ_REQ_ADJUST
+    sub            r5, d.read.length, K_READ_REQ_ADJUST
+    phvwrpair      RETH_VA, r4, RETH_RKEY, d.read.r_key
+    phvwr          RETH_LEN, r5
 
     // prepare RRQWQE descriptor
     phvwrpair      RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_READ, RRQWQE_NUM_SGES, d.base.num_sges
@@ -133,7 +136,7 @@ read:
     CAPRI_RESET_TABLE_2_ARG()
     //set first = 1, last_pkt = 1
     phvwrpair CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_RD_P, op_rd_log_pmtu), K_LOG_PMTU
-    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_RD_P, op_rd_read_len), d.read.length
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_RD_P, op_rd_read_len), r5
     // leave rest of variables to FALSE
 
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
