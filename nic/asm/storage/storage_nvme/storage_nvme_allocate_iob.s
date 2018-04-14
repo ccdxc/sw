@@ -17,6 +17,7 @@ struct phv_ p;
 
 %%
    .param storage_nvme_pop_sq_start
+   .param storage_nvme_save_iob_addr_start
 
 storage_nvme_allocate_iob_start:
    // Is ring empty
@@ -29,12 +30,12 @@ storage_nvme_allocate_iob_start:
    // Macro stores return value in GPR: r7
    TABLE_ADDR_FOR_INDEX(d.base_addr, d.c_ndx, d.entry_size)
 
-   // Store the address of the IOB in both K+I vector and the IO context in PHV
-   phvwr	p.nvme_kivec_t0_s2s_iob_addr, r7	
-   phvwr	p.io_ctx_iob_addr, r7	
-
-   // Consume the IOB at the c_ndx in the ring
+   // Consume the IOB free list entry at the c_ndx in the ring
    QUEUE_POP(d.c_ndx, d.num_entries)
+
+   // Load the table for the IOB free list entry to derive the IOB 
+   LOAD_TABLE1_FOR_ADDR34_PC_IMM(r7, d.entry_size[2:0],
+                                 storage_nvme_save_iob_addr_start)
 
 tbl_load:
    // Set the table and program address to pop the sq entry in the next stage

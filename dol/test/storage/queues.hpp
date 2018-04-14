@@ -11,8 +11,6 @@ using namespace dp_mem;
 #define HQ_TYPE		2
 #define EQ_TYPE		3
 
-#define	NUM_TO_VAL(num)		(1 << (num))
-
 namespace queues {
 
 void seq_queue_pdma_num_set(uint64_t& num_pdma_queues);

@@ -53,6 +53,7 @@ dp_mem_t* form_nvme_dp_read_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
   // TODO: PRP list based on size
   read_cmd->prp.prp1 = read_buf->pa();
+  printf("Read buffer PA %lx \n", read_buf->pa());
   read_cmd->dw0.cid = cid; 
   read_cmd->nsid = kDefaultNsid; 
   read_cmd->slba = slba;
@@ -75,6 +76,7 @@ dp_mem_t* form_nvme_dp_write_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uin
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
   // TODO: PRP list based on size
   write_cmd->prp.prp1 = write_buf->pa();
+  printf("Write buffer PA %lx \n", write_buf->pa());
   write_cmd->dw0.cid = cid; 
   write_cmd->nsid = kDefaultNsid; 
   write_cmd->slba = slba;
@@ -109,8 +111,9 @@ int test_run_nvme_dp_write_cmd() {
   uint16_t cmd_index, status_index;
   dp_mem_t *nvme_cmd, *nvme_status, *write_buf;
 
-  uint16_t nvme_sq = queues::get_host_nvme_sq(0);
-  uint16_t nvme_cq = queues::get_host_nvme_cq(0);
+  // Use non-zero queue (0 is Admin Q)
+  uint16_t nvme_sq = queues::get_host_nvme_sq(1);
+  uint16_t nvme_cq = queues::get_host_nvme_cq(1);
 
   if (consume_nvme_sq_cq_entries(nvme_sq, nvme_cq, &nvme_cmd, &nvme_status, 
                                  &cmd_index, &status_index) < 0) {

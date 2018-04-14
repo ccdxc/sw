@@ -35,6 +35,10 @@ storage_nvme_check_sq_state_start:
 
    // Store the I/O mapping table's base address in K+I vector
    phvwr	p.nvme_kivec_t0_s2s_io_map_base_addr, d.io_map_base_addr
+
+   // Store the admin queue information in K+I vector
+   seq		c1, STAGE0_KIVEC_QID, 0
+   phvwr.c1	p.nvme_kivec_sq_info_is_admin_q, 1
    
    // Set the table and program address to allocate the IO buffer in the
    // next stage

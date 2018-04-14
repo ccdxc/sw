@@ -7,8 +7,10 @@ const static uint32_t	kIOMapEntrySize		 = 1024;
 const static uint32_t	kIOMapNumEntries	 = 8;
 const static uint32_t	kIOBufEntrySize		 = 8192;
 const static uint32_t	kIOBufNumEntries	 = 8;
-const static uint32_t	kIOBFreeListEntrySize	 = 64;
-const static uint32_t	kIOBRingStateSize	 = 64;
+const static uint32_t	kIOBFreeListEntrySizeLog2	 = 6;
+const static uint32_t	kIOBFreeListEntrySize	 	 = NUM_TO_VAL(kIOBFreeListEntrySizeLog2);
+const static uint32_t	kIOBRingStateSizeLog2	 	 = 6;
+const static uint32_t	kIOBRingStateSize	 	 = NUM_TO_VAL(kIOBRingStateSizeLog2);
 
 dp_mem_t *io_map_base_addr;
 uint32_t io_map_num_entries;
@@ -72,9 +74,6 @@ uint64_t get_iob_ring_base_addr() {
   return iob_ring_base_addr->pa();
 }
 
-#define IOB_FREE_LIST_ADDR(i)	\
-    ((uint64_t *) (iob_free_list_base_addr->read() + ((i) * kIOBFreeListEntrySize)))
-
 #define IO_BUF_ADDR(i)		\
     (io_buf_base_addr->pa() + ((i) * kIOBufEntrySize))
 
@@ -82,9 +81,12 @@ int init_iob_ring() {
 
   // Allocate the I/O buffers to the IOB free list
   for (int i = 0; i < (int) iob_free_list_num_entries-1; i++) {
-    *IOB_FREE_LIST_ADDR(i) = IO_BUF_ADDR(i);
+    iob_free_list_base_addr->write_bit_fields(0, 34, IO_BUF_ADDR(i));
+    iob_free_list_base_addr->write_thru();
+    iob_free_list_base_addr->line_advance();
   }
-  iob_free_list_base_addr->write_thru();
+  // Reset the line to 0 to get to the start
+  iob_free_list_base_addr->line_set(0);
 
   // Form the IOB ring state pointing to th e IOB free list
   iob_ring_base_addr->write_bit_fields(0, 16, (uint16_t) (iob_free_list_num_entries-1));
@@ -92,7 +94,7 @@ int init_iob_ring() {
   iob_ring_base_addr->write_bit_fields(32, 16, (uint16_t) (iob_free_list_num_entries-1));
   iob_ring_base_addr->write_bit_fields(48, 16, (uint16_t) iob_free_list_num_entries);
   iob_ring_base_addr->write_bit_fields(64, 64, iob_free_list_base_addr->pa());
-  iob_ring_base_addr->write_bit_fields(128, 16, kIOBFreeListEntrySize);
+  iob_ring_base_addr->write_bit_fields(128, 16, kIOBFreeListEntrySizeLog2);
   iob_ring_base_addr->write_thru();
   printf("IOB Ring Base PA: %lx \n", iob_ring_base_addr->pa());
 

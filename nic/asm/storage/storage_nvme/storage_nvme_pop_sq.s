@@ -16,7 +16,6 @@ struct phv_ p;
 
 %%
    .param storage_nvme_handle_cmd_start
-   .param storage_nvme_save_io_ctx_start
    .param storage_nvme_send_cmd_free_iob_start
 
 storage_nvme_pop_sq_start:
@@ -81,6 +80,9 @@ iob_free:
    phvwrpair	p.nvme_kivec_t0_s2s_dst_qid, r1, p.nvme_kivec_t0_s2s_dst_qaddr, r2
    phvwr	p.nvme_kivec_t0_s2s_w_ndx, d.w_ndx
 
+   // Table 1 was set in the previous stage, clear it
+   CLEAR_TABLE1
+
    // Set table 0 and program address for the next stage to read the ARM queue
    // state entry to send a posted free of the IOB
    LOAD_TABLE_FOR_ADDR34_PC_IMM(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE,
@@ -107,11 +109,9 @@ process_sq_entry:
    phvwrpair	p.nvme_kivec_arm_dst7_arm_qid, r1, p.nvme_kivec_arm_dst7_arm_qaddr, r2
    phvwr	p.nvme_kivec_t0_s2s_w_ndx, d.w_ndx
    
-   // Set table 1 and program address for next stage to save the oper_status in 
-   // the I/O context. This CANNOT be the last table config in this path.
-   add		r7, NVME_KIVEC_T0_S2S_IOB_ADDR, IO_BUF_IO_CTX_OFFSET
-   LOAD_TABLE1_FOR_ADDR34_PC_IMM(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE,
-                                 storage_nvme_save_io_ctx_start)
+   // Set table 1 to be valid. The address, PC, table load size is populated by the 
+   // save_iob_addr program.
+   SET_TABLE1
 
    // Set table 0 and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).

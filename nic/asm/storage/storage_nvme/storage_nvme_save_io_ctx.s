@@ -21,4 +21,4 @@ storage_nvme_save_io_ctx_start:
    tblwr	d.oper_status, IO_CTX_OPER_STATUS_IN_PROGRESS
 
    // Table 1 is not used in the next stage
-   CLEAR_TABLE1
+   CLEAR_TABLE1_e
