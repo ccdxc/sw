@@ -87,3 +87,10 @@ call(cmd, shell=True)
 cmd = 'tar --exclude=*.debug -czf nic.tgz ' + output_dir
 call(cmd, shell=True)
 
+# create naples.tgz
+cmd = 'cd nic/sim/naples/ && tar -cf ../../../naples.tar README install.sh uninstall.sh'
+call(cmd, shell=True)
+cmd = 'tar -uf naples.tar nic.tgz'
+call(cmd, shell=True)
+cmd = 'gzip naples.tar && mv naples.tar.gz naples.tgz'
+call(cmd, shell=True)

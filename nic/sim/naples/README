@@ -1,0 +1,3 @@
+In your Vagrant VM, do:
+1. run install.sh in current directory to install NAPLES packages
+2. run run.sh from NAPLES installed directory to bringup NAPLES container
