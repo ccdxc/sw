@@ -42,49 +42,84 @@ func (m *AutoMsgCertificateWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
-func (m *AutoMsgCertificateWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgCertificateWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgCertificateWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgCertificateWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgCertificateWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgCertificateWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Certificate) Clone(into interface{}) error {
-	out, ok := into.(*Certificate)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Certificate) Clone(into interface{}) (interface{}, error) {
+	var out *Certificate
+	var ok bool
+	if into == nil {
+		out = &Certificate{}
+	} else {
+		out, ok = into.(*Certificate)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *CertificateList) Clone(into interface{}) error {
-	out, ok := into.(*CertificateList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *CertificateList) Clone(into interface{}) (interface{}, error) {
+	var out *CertificateList
+	var ok bool
+	if into == nil {
+		out = &CertificateList{}
+	} else {
+		out, ok = into.(*CertificateList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *CertificateSpec) Clone(into interface{}) error {
-	out, ok := into.(*CertificateSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *CertificateSpec) Clone(into interface{}) (interface{}, error) {
+	var out *CertificateSpec
+	var ok bool
+	if into == nil {
+		out = &CertificateSpec{}
+	} else {
+		out, ok = into.(*CertificateSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *CertificateStatus) Clone(into interface{}) error {
-	out, ok := into.(*CertificateStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *CertificateStatus) Clone(into interface{}) (interface{}, error) {
+	var out *CertificateStatus
+	var ok bool
+	if into == nil {
+		out = &CertificateStatus{}
+	} else {
+		out, ok = into.(*CertificateStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
 // Validators

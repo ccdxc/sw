@@ -43,13 +43,20 @@ func (m *{{.Name}})  MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 } {{end}} {{end}}
 {{range .Messages}}{{if isNestedMessage .}}{{else}}
-func (m *{{.Name}}) Clone(into interface{}) error {
-	out, ok := into.(*{{.Name}})
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *{{.Name}}) Clone(into interface{}) (interface{}, error) {
+	var out *{{.Name}}
+	var ok bool
+	if into == nil {
+		out = &{{.Name}}{}
+	} else {
+		out, ok = into.(*{{.Name}})
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 {{end}}{{end}}
 // Validators

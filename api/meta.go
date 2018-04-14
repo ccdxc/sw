@@ -20,8 +20,8 @@ func (o *ObjectMeta) GetObjectMeta() *ObjectMeta {
 }
 
 // Clone clones the object into into
-func (o *ObjectMeta) Clone(into interface{}) error {
-	return fmt.Errorf("not defined")
+func (o *ObjectMeta) Clone(into interface{}) (interface{}, error) {
+	return nil, fmt.Errorf("not defined")
 }
 
 // GetListMeta returns the ListMeta of a list object.
@@ -30,16 +30,19 @@ func (l *ListMeta) GetListMeta() *ListMeta {
 }
 
 // Clone clones the object into into
-func (l *ListMeta) Clone(into interface{}) error {
-	return fmt.Errorf("not defined")
+func (l *ListMeta) Clone(into interface{}) (interface{}, error) {
+	return nil, fmt.Errorf("not defined")
 }
 
 // Clone clones the object into into
-func (m *Status) Clone(into interface{}) error {
+func (m *Status) Clone(into interface{}) (interface{}, error) {
+	if into == nil {
+		into = &Status{}
+	}
 	out, ok := into.(*Status)
 	if !ok {
-		return fmt.Errorf("mismatched types")
+		return nil, fmt.Errorf("mismatched types")
 	}
 	*out = *m
-	return nil
+	return out, nil
 }

@@ -38,8 +38,8 @@ func (provider *RsrcProvider) GetObjectMeta() *api.ObjectMeta {
 }
 
 // Clone clones the object into into
-func (provider *RsrcProvider) Clone(into interface{}) error {
-	return fmt.Errorf("not implemented")
+func (provider *RsrcProvider) Clone(into interface{}) (interface{}, error) {
+	return nil, fmt.Errorf("not implemented")
 }
 
 // getProviderKey returns the kvstore key for the provider

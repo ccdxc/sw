@@ -23,10 +23,58 @@ type testObj struct {
 	Status string
 }
 
+func (t *testObj) MakeKey(prefix string) string {
+	return "/test/" + prefix + "/" + t.Name
+}
+
+func (t *testObj) Clone(into interface{}) (interface{}, error) {
+	var out *testObj
+	if into == nil {
+		out = &testObj{}
+	} else {
+		out = into.(*testObj)
+	}
+	*out = *t
+	return out, nil
+}
+
+type testObj2 struct {
+	api.TypeMeta
+	api.ObjectMeta
+	Spec   string
+	Status int
+}
+
+func (t *testObj2) MakeKey(prefix string) string {
+	return "/test2/" + prefix + "/" + t.Name
+}
+
+func (t *testObj2) Clone(into interface{}) (interface{}, error) {
+	var out *testObj2
+	if into == nil {
+		out = &testObj2{}
+	} else {
+		out = into.(*testObj2)
+	}
+	*out = *t
+	return out, nil
+}
+
 type testObjList struct {
 	api.TypeMeta
 	api.ListMeta
 	Items []*testObj
+}
+
+func (t *testObjList) Clone(into interface{}) (interface{}, error) {
+	var out *testObjList
+	if into == nil {
+		out = &testObjList{}
+	} else {
+		out = into.(*testObjList)
+	}
+	*out = *t
+	return out, nil
 }
 
 type fakeKvStore struct {

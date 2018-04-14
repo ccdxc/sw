@@ -4,6 +4,7 @@ package testutils
 
 import (
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -37,18 +38,20 @@ func Assert(tb TBApi, condition bool, msg string, v ...interface{}) {
 }
 
 // AssertOk fails the test if an err is not nil.
-func AssertOk(tb TBApi, err error, msg string) {
+func AssertOk(tb TBApi, err error, format string, args ...interface{}) {
 	if err != nil {
 		_, file, line, _ := runtime.Caller(1)
+		msg := fmt.Sprintf(format, args...)
 		tb.Fatalf("\033[31m%s:%d: %s. unexpected error: %s\033[39m\n\n", filepath.Base(file), line, msg, err.Error())
 		tb.FailNow()
 	}
 }
 
 // AssertEquals fails the test if exp is not equal to act.
-func AssertEquals(tb TBApi, exp, act interface{}, msg string) {
+func AssertEquals(tb TBApi, exp, act interface{}, format string, args ...interface{}) {
 	if !reflect.DeepEqual(exp, act) {
 		_, file, line, _ := runtime.Caller(1)
+		msg := fmt.Sprintf(format, args...)
 		tb.Fatalf("\033[31m%s:%d:\n\n\texp: %#v\n\n\tgot: %#v\n\n\tmsg: %#v\n\n\033[39m", filepath.Base(file), line, exp, act, msg)
 	}
 }

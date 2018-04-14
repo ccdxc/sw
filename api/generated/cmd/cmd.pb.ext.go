@@ -76,184 +76,324 @@ func (m *AutoMsgSmartNICWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
-func (m *AutoMsgClusterWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgClusterWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgClusterWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgClusterWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgClusterWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgClusterWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgNodeWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgNodeWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgNodeWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgNodeWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgNodeWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgNodeWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgSmartNICWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgSmartNICWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgSmartNICWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgSmartNICWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgSmartNICWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgSmartNICWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Cluster) Clone(into interface{}) error {
-	out, ok := into.(*Cluster)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Cluster) Clone(into interface{}) (interface{}, error) {
+	var out *Cluster
+	var ok bool
+	if into == nil {
+		out = &Cluster{}
+	} else {
+		out, ok = into.(*Cluster)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *ClusterList) Clone(into interface{}) error {
-	out, ok := into.(*ClusterList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *ClusterList) Clone(into interface{}) (interface{}, error) {
+	var out *ClusterList
+	var ok bool
+	if into == nil {
+		out = &ClusterList{}
+	} else {
+		out, ok = into.(*ClusterList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *ClusterSpec) Clone(into interface{}) error {
-	out, ok := into.(*ClusterSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *ClusterSpec) Clone(into interface{}) (interface{}, error) {
+	var out *ClusterSpec
+	var ok bool
+	if into == nil {
+		out = &ClusterSpec{}
+	} else {
+		out, ok = into.(*ClusterSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *ClusterStatus) Clone(into interface{}) error {
-	out, ok := into.(*ClusterStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *ClusterStatus) Clone(into interface{}) (interface{}, error) {
+	var out *ClusterStatus
+	var ok bool
+	if into == nil {
+		out = &ClusterStatus{}
+	} else {
+		out, ok = into.(*ClusterStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Node) Clone(into interface{}) error {
-	out, ok := into.(*Node)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Node) Clone(into interface{}) (interface{}, error) {
+	var out *Node
+	var ok bool
+	if into == nil {
+		out = &Node{}
+	} else {
+		out, ok = into.(*Node)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *NodeCondition) Clone(into interface{}) error {
-	out, ok := into.(*NodeCondition)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *NodeCondition) Clone(into interface{}) (interface{}, error) {
+	var out *NodeCondition
+	var ok bool
+	if into == nil {
+		out = &NodeCondition{}
+	} else {
+		out, ok = into.(*NodeCondition)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *NodeList) Clone(into interface{}) error {
-	out, ok := into.(*NodeList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *NodeList) Clone(into interface{}) (interface{}, error) {
+	var out *NodeList
+	var ok bool
+	if into == nil {
+		out = &NodeList{}
+	} else {
+		out, ok = into.(*NodeList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *NodeSpec) Clone(into interface{}) error {
-	out, ok := into.(*NodeSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *NodeSpec) Clone(into interface{}) (interface{}, error) {
+	var out *NodeSpec
+	var ok bool
+	if into == nil {
+		out = &NodeSpec{}
+	} else {
+		out, ok = into.(*NodeSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *NodeStatus) Clone(into interface{}) error {
-	out, ok := into.(*NodeStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *NodeStatus) Clone(into interface{}) (interface{}, error) {
+	var out *NodeStatus
+	var ok bool
+	if into == nil {
+		out = &NodeStatus{}
+	} else {
+		out, ok = into.(*NodeStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *PortCondition) Clone(into interface{}) error {
-	out, ok := into.(*PortCondition)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *PortCondition) Clone(into interface{}) (interface{}, error) {
+	var out *PortCondition
+	var ok bool
+	if into == nil {
+		out = &PortCondition{}
+	} else {
+		out, ok = into.(*PortCondition)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *PortSpec) Clone(into interface{}) error {
-	out, ok := into.(*PortSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *PortSpec) Clone(into interface{}) (interface{}, error) {
+	var out *PortSpec
+	var ok bool
+	if into == nil {
+		out = &PortSpec{}
+	} else {
+		out, ok = into.(*PortSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *PortStatus) Clone(into interface{}) error {
-	out, ok := into.(*PortStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *PortStatus) Clone(into interface{}) (interface{}, error) {
+	var out *PortStatus
+	var ok bool
+	if into == nil {
+		out = &PortStatus{}
+	} else {
+		out, ok = into.(*PortStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *SmartNIC) Clone(into interface{}) error {
-	out, ok := into.(*SmartNIC)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *SmartNIC) Clone(into interface{}) (interface{}, error) {
+	var out *SmartNIC
+	var ok bool
+	if into == nil {
+		out = &SmartNIC{}
+	} else {
+		out, ok = into.(*SmartNIC)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *SmartNICCondition) Clone(into interface{}) error {
-	out, ok := into.(*SmartNICCondition)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *SmartNICCondition) Clone(into interface{}) (interface{}, error) {
+	var out *SmartNICCondition
+	var ok bool
+	if into == nil {
+		out = &SmartNICCondition{}
+	} else {
+		out, ok = into.(*SmartNICCondition)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *SmartNICList) Clone(into interface{}) error {
-	out, ok := into.(*SmartNICList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *SmartNICList) Clone(into interface{}) (interface{}, error) {
+	var out *SmartNICList
+	var ok bool
+	if into == nil {
+		out = &SmartNICList{}
+	} else {
+		out, ok = into.(*SmartNICList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *SmartNICSpec) Clone(into interface{}) error {
-	out, ok := into.(*SmartNICSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *SmartNICSpec) Clone(into interface{}) (interface{}, error) {
+	var out *SmartNICSpec
+	var ok bool
+	if into == nil {
+		out = &SmartNICSpec{}
+	} else {
+		out, ok = into.(*SmartNICSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *SmartNICStatus) Clone(into interface{}) error {
-	out, ok := into.(*SmartNICStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *SmartNICStatus) Clone(into interface{}) (interface{}, error) {
+	var out *SmartNICStatus
+	var ok bool
+	if into == nil {
+		out = &SmartNICStatus{}
+	} else {
+		out, ok = into.(*SmartNICStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
 // Validators

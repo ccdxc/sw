@@ -76,157 +76,276 @@ func (m *AutoMsgStatsPolicyWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
-func (m *AutoMsgFlowExportPolicyWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgFlowExportPolicyWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgFlowExportPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgFlowExportPolicyWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgFlowExportPolicyWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgFlowExportPolicyWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgFwlogPolicyWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgFwlogPolicyWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgFwlogPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgFwlogPolicyWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgFwlogPolicyWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgFwlogPolicyWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgStatsPolicyWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgStatsPolicyWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgStatsPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgStatsPolicyWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgStatsPolicyWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgStatsPolicyWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *FlowExportPolicy) Clone(into interface{}) error {
-	out, ok := into.(*FlowExportPolicy)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *FlowExportPolicy) Clone(into interface{}) (interface{}, error) {
+	var out *FlowExportPolicy
+	var ok bool
+	if into == nil {
+		out = &FlowExportPolicy{}
+	} else {
+		out, ok = into.(*FlowExportPolicy)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *FlowExportPolicyList) Clone(into interface{}) error {
-	out, ok := into.(*FlowExportPolicyList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *FlowExportPolicyList) Clone(into interface{}) (interface{}, error) {
+	var out *FlowExportPolicyList
+	var ok bool
+	if into == nil {
+		out = &FlowExportPolicyList{}
+	} else {
+		out, ok = into.(*FlowExportPolicyList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *FlowExportSpec) Clone(into interface{}) error {
-	out, ok := into.(*FlowExportSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *FlowExportSpec) Clone(into interface{}) (interface{}, error) {
+	var out *FlowExportSpec
+	var ok bool
+	if into == nil {
+		out = &FlowExportSpec{}
+	} else {
+		out, ok = into.(*FlowExportSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *FlowExportStatus) Clone(into interface{}) error {
-	out, ok := into.(*FlowExportStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *FlowExportStatus) Clone(into interface{}) (interface{}, error) {
+	var out *FlowExportStatus
+	var ok bool
+	if into == nil {
+		out = &FlowExportStatus{}
+	} else {
+		out, ok = into.(*FlowExportStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *FlowExportTarget) Clone(into interface{}) error {
-	out, ok := into.(*FlowExportTarget)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *FlowExportTarget) Clone(into interface{}) (interface{}, error) {
+	var out *FlowExportTarget
+	var ok bool
+	if into == nil {
+		out = &FlowExportTarget{}
+	} else {
+		out, ok = into.(*FlowExportTarget)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *FwlogExport) Clone(into interface{}) error {
-	out, ok := into.(*FwlogExport)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *FwlogExport) Clone(into interface{}) (interface{}, error) {
+	var out *FwlogExport
+	var ok bool
+	if into == nil {
+		out = &FwlogExport{}
+	} else {
+		out, ok = into.(*FwlogExport)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *FwlogPolicy) Clone(into interface{}) error {
-	out, ok := into.(*FwlogPolicy)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *FwlogPolicy) Clone(into interface{}) (interface{}, error) {
+	var out *FwlogPolicy
+	var ok bool
+	if into == nil {
+		out = &FwlogPolicy{}
+	} else {
+		out, ok = into.(*FwlogPolicy)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *FwlogPolicyList) Clone(into interface{}) error {
-	out, ok := into.(*FwlogPolicyList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *FwlogPolicyList) Clone(into interface{}) (interface{}, error) {
+	var out *FwlogPolicyList
+	var ok bool
+	if into == nil {
+		out = &FwlogPolicyList{}
+	} else {
+		out, ok = into.(*FwlogPolicyList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *FwlogSpec) Clone(into interface{}) error {
-	out, ok := into.(*FwlogSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *FwlogSpec) Clone(into interface{}) (interface{}, error) {
+	var out *FwlogSpec
+	var ok bool
+	if into == nil {
+		out = &FwlogSpec{}
+	} else {
+		out, ok = into.(*FwlogSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *FwlogStatus) Clone(into interface{}) error {
-	out, ok := into.(*FwlogStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *FwlogStatus) Clone(into interface{}) (interface{}, error) {
+	var out *FwlogStatus
+	var ok bool
+	if into == nil {
+		out = &FwlogStatus{}
+	} else {
+		out, ok = into.(*FwlogStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *StatsPolicy) Clone(into interface{}) error {
-	out, ok := into.(*StatsPolicy)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *StatsPolicy) Clone(into interface{}) (interface{}, error) {
+	var out *StatsPolicy
+	var ok bool
+	if into == nil {
+		out = &StatsPolicy{}
+	} else {
+		out, ok = into.(*StatsPolicy)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *StatsPolicyList) Clone(into interface{}) error {
-	out, ok := into.(*StatsPolicyList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *StatsPolicyList) Clone(into interface{}) (interface{}, error) {
+	var out *StatsPolicyList
+	var ok bool
+	if into == nil {
+		out = &StatsPolicyList{}
+	} else {
+		out, ok = into.(*StatsPolicyList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *StatsSpec) Clone(into interface{}) error {
-	out, ok := into.(*StatsSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *StatsSpec) Clone(into interface{}) (interface{}, error) {
+	var out *StatsSpec
+	var ok bool
+	if into == nil {
+		out = &StatsSpec{}
+	} else {
+		out, ok = into.(*StatsSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *StatsStatus) Clone(into interface{}) error {
-	out, ok := into.(*StatsStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *StatsStatus) Clone(into interface{}) (interface{}, error) {
+	var out *StatsStatus
+	var ok bool
+	if into == nil {
+		out = &StatsStatus{}
+	} else {
+		out, ok = into.(*StatsStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
 // Validators

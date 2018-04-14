@@ -38,67 +38,116 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) MakeKey(prefix string) strin
 	return obj.MakeKey(prefix)
 }
 
-func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgTrafficEncryptionPolicyWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgTrafficEncryptionPolicyWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgTrafficEncryptionPolicyWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgTrafficEncryptionPolicyWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *IPsecProtocolSpec) Clone(into interface{}) error {
-	out, ok := into.(*IPsecProtocolSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *IPsecProtocolSpec) Clone(into interface{}) (interface{}, error) {
+	var out *IPsecProtocolSpec
+	var ok bool
+	if into == nil {
+		out = &IPsecProtocolSpec{}
+	} else {
+		out, ok = into.(*IPsecProtocolSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *TLSProtocolSpec) Clone(into interface{}) error {
-	out, ok := into.(*TLSProtocolSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *TLSProtocolSpec) Clone(into interface{}) (interface{}, error) {
+	var out *TLSProtocolSpec
+	var ok bool
+	if into == nil {
+		out = &TLSProtocolSpec{}
+	} else {
+		out, ok = into.(*TLSProtocolSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *TrafficEncryptionPolicy) Clone(into interface{}) error {
-	out, ok := into.(*TrafficEncryptionPolicy)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *TrafficEncryptionPolicy) Clone(into interface{}) (interface{}, error) {
+	var out *TrafficEncryptionPolicy
+	var ok bool
+	if into == nil {
+		out = &TrafficEncryptionPolicy{}
+	} else {
+		out, ok = into.(*TrafficEncryptionPolicy)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *TrafficEncryptionPolicyList) Clone(into interface{}) error {
-	out, ok := into.(*TrafficEncryptionPolicyList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *TrafficEncryptionPolicyList) Clone(into interface{}) (interface{}, error) {
+	var out *TrafficEncryptionPolicyList
+	var ok bool
+	if into == nil {
+		out = &TrafficEncryptionPolicyList{}
+	} else {
+		out, ok = into.(*TrafficEncryptionPolicyList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *TrafficEncryptionPolicySpec) Clone(into interface{}) error {
-	out, ok := into.(*TrafficEncryptionPolicySpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *TrafficEncryptionPolicySpec) Clone(into interface{}) (interface{}, error) {
+	var out *TrafficEncryptionPolicySpec
+	var ok bool
+	if into == nil {
+		out = &TrafficEncryptionPolicySpec{}
+	} else {
+		out, ok = into.(*TrafficEncryptionPolicySpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *TrafficEncryptionPolicyStatus) Clone(into interface{}) error {
-	out, ok := into.(*TrafficEncryptionPolicyStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *TrafficEncryptionPolicyStatus) Clone(into interface{}) (interface{}, error) {
+	var out *TrafficEncryptionPolicyStatus
+	var ok bool
+	if into == nil {
+		out = &TrafficEncryptionPolicyStatus{}
+	} else {
+		out, ok = into.(*TrafficEncryptionPolicyStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
 // Validators

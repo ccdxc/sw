@@ -130,247 +130,436 @@ func (m *AutoMsgStoreWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
-func (m *ApplyDiscountReq) Clone(into interface{}) error {
-	out, ok := into.(*ApplyDiscountReq)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *ApplyDiscountReq) Clone(into interface{}) (interface{}, error) {
+	var out *ApplyDiscountReq
+	var ok bool
+	if into == nil {
+		out = &ApplyDiscountReq{}
+	} else {
+		out, ok = into.(*ApplyDiscountReq)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgBookWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgBookWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgBookWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgBookWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgBookWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgBookWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgCouponWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgCouponWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgCouponWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgCouponWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgCouponWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgCouponWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgOrderWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgOrderWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgOrderWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgOrderWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgOrderWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgOrderWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgPublisherWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgPublisherWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgPublisherWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgPublisherWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgPublisherWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgPublisherWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgStoreWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgStoreWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgStoreWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgStoreWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgStoreWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgStoreWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Book) Clone(into interface{}) error {
-	out, ok := into.(*Book)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Book) Clone(into interface{}) (interface{}, error) {
+	var out *Book
+	var ok bool
+	if into == nil {
+		out = &Book{}
+	} else {
+		out, ok = into.(*Book)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *BookList) Clone(into interface{}) error {
-	out, ok := into.(*BookList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *BookList) Clone(into interface{}) (interface{}, error) {
+	var out *BookList
+	var ok bool
+	if into == nil {
+		out = &BookList{}
+	} else {
+		out, ok = into.(*BookList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *BookSpec) Clone(into interface{}) error {
-	out, ok := into.(*BookSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *BookSpec) Clone(into interface{}) (interface{}, error) {
+	var out *BookSpec
+	var ok bool
+	if into == nil {
+		out = &BookSpec{}
+	} else {
+		out, ok = into.(*BookSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *BookStatus) Clone(into interface{}) error {
-	out, ok := into.(*BookStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *BookStatus) Clone(into interface{}) (interface{}, error) {
+	var out *BookStatus
+	var ok bool
+	if into == nil {
+		out = &BookStatus{}
+	} else {
+		out, ok = into.(*BookStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Coupon) Clone(into interface{}) error {
-	out, ok := into.(*Coupon)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Coupon) Clone(into interface{}) (interface{}, error) {
+	var out *Coupon
+	var ok bool
+	if into == nil {
+		out = &Coupon{}
+	} else {
+		out, ok = into.(*Coupon)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *CouponList) Clone(into interface{}) error {
-	out, ok := into.(*CouponList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *CouponList) Clone(into interface{}) (interface{}, error) {
+	var out *CouponList
+	var ok bool
+	if into == nil {
+		out = &CouponList{}
+	} else {
+		out, ok = into.(*CouponList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Order) Clone(into interface{}) error {
-	out, ok := into.(*Order)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Order) Clone(into interface{}) (interface{}, error) {
+	var out *Order
+	var ok bool
+	if into == nil {
+		out = &Order{}
+	} else {
+		out, ok = into.(*Order)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *OrderItem) Clone(into interface{}) error {
-	out, ok := into.(*OrderItem)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *OrderItem) Clone(into interface{}) (interface{}, error) {
+	var out *OrderItem
+	var ok bool
+	if into == nil {
+		out = &OrderItem{}
+	} else {
+		out, ok = into.(*OrderItem)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *OrderList) Clone(into interface{}) error {
-	out, ok := into.(*OrderList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *OrderList) Clone(into interface{}) (interface{}, error) {
+	var out *OrderList
+	var ok bool
+	if into == nil {
+		out = &OrderList{}
+	} else {
+		out, ok = into.(*OrderList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *OrderSpec) Clone(into interface{}) error {
-	out, ok := into.(*OrderSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *OrderSpec) Clone(into interface{}) (interface{}, error) {
+	var out *OrderSpec
+	var ok bool
+	if into == nil {
+		out = &OrderSpec{}
+	} else {
+		out, ok = into.(*OrderSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *OrderStatus) Clone(into interface{}) error {
-	out, ok := into.(*OrderStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *OrderStatus) Clone(into interface{}) (interface{}, error) {
+	var out *OrderStatus
+	var ok bool
+	if into == nil {
+		out = &OrderStatus{}
+	} else {
+		out, ok = into.(*OrderStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *OutageRequest) Clone(into interface{}) error {
-	out, ok := into.(*OutageRequest)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *OutageRequest) Clone(into interface{}) (interface{}, error) {
+	var out *OutageRequest
+	var ok bool
+	if into == nil {
+		out = &OutageRequest{}
+	} else {
+		out, ok = into.(*OutageRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Publisher) Clone(into interface{}) error {
-	out, ok := into.(*Publisher)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Publisher) Clone(into interface{}) (interface{}, error) {
+	var out *Publisher
+	var ok bool
+	if into == nil {
+		out = &Publisher{}
+	} else {
+		out, ok = into.(*Publisher)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *PublisherList) Clone(into interface{}) error {
-	out, ok := into.(*PublisherList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *PublisherList) Clone(into interface{}) (interface{}, error) {
+	var out *PublisherList
+	var ok bool
+	if into == nil {
+		out = &PublisherList{}
+	} else {
+		out, ok = into.(*PublisherList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *PublisherSpec) Clone(into interface{}) error {
-	out, ok := into.(*PublisherSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *PublisherSpec) Clone(into interface{}) (interface{}, error) {
+	var out *PublisherSpec
+	var ok bool
+	if into == nil {
+		out = &PublisherSpec{}
+	} else {
+		out, ok = into.(*PublisherSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *RestockRequest) Clone(into interface{}) error {
-	out, ok := into.(*RestockRequest)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *RestockRequest) Clone(into interface{}) (interface{}, error) {
+	var out *RestockRequest
+	var ok bool
+	if into == nil {
+		out = &RestockRequest{}
+	} else {
+		out, ok = into.(*RestockRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *RestockResponse) Clone(into interface{}) error {
-	out, ok := into.(*RestockResponse)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *RestockResponse) Clone(into interface{}) (interface{}, error) {
+	var out *RestockResponse
+	var ok bool
+	if into == nil {
+		out = &RestockResponse{}
+	} else {
+		out, ok = into.(*RestockResponse)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Store) Clone(into interface{}) error {
-	out, ok := into.(*Store)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Store) Clone(into interface{}) (interface{}, error) {
+	var out *Store
+	var ok bool
+	if into == nil {
+		out = &Store{}
+	} else {
+		out, ok = into.(*Store)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *StoreList) Clone(into interface{}) error {
-	out, ok := into.(*StoreList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *StoreList) Clone(into interface{}) (interface{}, error) {
+	var out *StoreList
+	var ok bool
+	if into == nil {
+		out = &StoreList{}
+	} else {
+		out, ok = into.(*StoreList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *StoreSpec) Clone(into interface{}) error {
-	out, ok := into.(*StoreSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *StoreSpec) Clone(into interface{}) (interface{}, error) {
+	var out *StoreSpec
+	var ok bool
+	if into == nil {
+		out = &StoreSpec{}
+	} else {
+		out, ok = into.(*StoreSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *StoreStatus) Clone(into interface{}) error {
-	out, ok := into.(*StoreStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *StoreStatus) Clone(into interface{}) (interface{}, error) {
+	var out *StoreStatus
+	var ok bool
+	if into == nil {
+		out = &StoreStatus{}
+	} else {
+		out, ok = into.(*StoreStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
 // Validators

@@ -17,15 +17,15 @@ type TestObj struct {
 }
 
 // Clone clones the object
-func (m *TestObj) Clone(interface{}) error { return nil }
+func (m *TestObj) Clone(interface{}) (interface{}, error) { return nil, nil }
 
 type NonProtoObj struct {
 	Bar string
 }
 
-func (n *NonProtoObj) GetObjectKind() string       { return "NonProtoObj" }
-func (n *NonProtoObj) GetObjectAPIVersion() string { return "v1" }
-func (n *NonProtoObj) Clone(interface{}) error     { return nil }
+func (n *NonProtoObj) GetObjectKind() string                  { return "NonProtoObj" }
+func (n *NonProtoObj) GetObjectAPIVersion() string            { return "v1" }
+func (n *NonProtoObj) Clone(interface{}) (interface{}, error) { return nil, nil }
 
 func newCodec(codec string) Codec {
 	s := NewScheme()

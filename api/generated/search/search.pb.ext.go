@@ -19,94 +19,164 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
-func (m *Aggregation) Clone(into interface{}) error {
-	out, ok := into.(*Aggregation)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Aggregation) Clone(into interface{}) (interface{}, error) {
+	var out *Aggregation
+	var ok bool
+	if into == nil {
+		out = &Aggregation{}
+	} else {
+		out, ok = into.(*Aggregation)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Entry) Clone(into interface{}) error {
-	out, ok := into.(*Entry)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Entry) Clone(into interface{}) (interface{}, error) {
+	var out *Entry
+	var ok bool
+	if into == nil {
+		out = &Entry{}
+	} else {
+		out, ok = into.(*Entry)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *EntryList) Clone(into interface{}) error {
-	out, ok := into.(*EntryList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *EntryList) Clone(into interface{}) (interface{}, error) {
+	var out *EntryList
+	var ok bool
+	if into == nil {
+		out = &EntryList{}
+	} else {
+		out, ok = into.(*EntryList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Error) Clone(into interface{}) error {
-	out, ok := into.(*Error)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Error) Clone(into interface{}) (interface{}, error) {
+	var out *Error
+	var ok bool
+	if into == nil {
+		out = &Error{}
+	} else {
+		out, ok = into.(*Error)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *NestedAggregation) Clone(into interface{}) error {
-	out, ok := into.(*NestedAggregation)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *NestedAggregation) Clone(into interface{}) (interface{}, error) {
+	var out *NestedAggregation
+	var ok bool
+	if into == nil {
+		out = &NestedAggregation{}
+	} else {
+		out, ok = into.(*NestedAggregation)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Requirement) Clone(into interface{}) error {
-	out, ok := into.(*Requirement)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Requirement) Clone(into interface{}) (interface{}, error) {
+	var out *Requirement
+	var ok bool
+	if into == nil {
+		out = &Requirement{}
+	} else {
+		out, ok = into.(*Requirement)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *SearchCriteria) Clone(into interface{}) error {
-	out, ok := into.(*SearchCriteria)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *SearchCriteria) Clone(into interface{}) (interface{}, error) {
+	var out *SearchCriteria
+	var ok bool
+	if into == nil {
+		out = &SearchCriteria{}
+	} else {
+		out, ok = into.(*SearchCriteria)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *SearchRequest) Clone(into interface{}) error {
-	out, ok := into.(*SearchRequest)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *SearchRequest) Clone(into interface{}) (interface{}, error) {
+	var out *SearchRequest
+	var ok bool
+	if into == nil {
+		out = &SearchRequest{}
+	} else {
+		out, ok = into.(*SearchRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *SearchResponse) Clone(into interface{}) error {
-	out, ok := into.(*SearchResponse)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *SearchResponse) Clone(into interface{}) (interface{}, error) {
+	var out *SearchResponse
+	var ok bool
+	if into == nil {
+		out = &SearchResponse{}
+	} else {
+		out, ok = into.(*SearchResponse)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *SearchResult) Clone(into interface{}) error {
-	out, ok := into.(*SearchResult)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *SearchResult) Clone(into interface{}) (interface{}, error) {
+	var out *SearchResult
+	var ok bool
+	if into == nil {
+		out = &SearchResult{}
+	} else {
+		out, ok = into.(*SearchResult)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
 // Validators

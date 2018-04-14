@@ -47,85 +47,148 @@ func (m *AutoMsgEventPolicyWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
-func (m *AutoMsgEventPolicyWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgEventPolicyWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgEventPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgEventPolicyWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgEventPolicyWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgEventPolicyWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *Event) Clone(into interface{}) error {
-	out, ok := into.(*Event)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *Event) Clone(into interface{}) (interface{}, error) {
+	var out *Event
+	var ok bool
+	if into == nil {
+		out = &Event{}
+	} else {
+		out, ok = into.(*Event)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *EventAttributes) Clone(into interface{}) error {
-	out, ok := into.(*EventAttributes)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *EventAttributes) Clone(into interface{}) (interface{}, error) {
+	var out *EventAttributes
+	var ok bool
+	if into == nil {
+		out = &EventAttributes{}
+	} else {
+		out, ok = into.(*EventAttributes)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *EventExport) Clone(into interface{}) error {
-	out, ok := into.(*EventExport)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *EventExport) Clone(into interface{}) (interface{}, error) {
+	var out *EventExport
+	var ok bool
+	if into == nil {
+		out = &EventExport{}
+	} else {
+		out, ok = into.(*EventExport)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *EventPolicy) Clone(into interface{}) error {
-	out, ok := into.(*EventPolicy)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *EventPolicy) Clone(into interface{}) (interface{}, error) {
+	var out *EventPolicy
+	var ok bool
+	if into == nil {
+		out = &EventPolicy{}
+	} else {
+		out, ok = into.(*EventPolicy)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *EventPolicyList) Clone(into interface{}) error {
-	out, ok := into.(*EventPolicyList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *EventPolicyList) Clone(into interface{}) (interface{}, error) {
+	var out *EventPolicyList
+	var ok bool
+	if into == nil {
+		out = &EventPolicyList{}
+	} else {
+		out, ok = into.(*EventPolicyList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *EventPolicySpec) Clone(into interface{}) error {
-	out, ok := into.(*EventPolicySpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *EventPolicySpec) Clone(into interface{}) (interface{}, error) {
+	var out *EventPolicySpec
+	var ok bool
+	if into == nil {
+		out = &EventPolicySpec{}
+	} else {
+		out, ok = into.(*EventPolicySpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *EventPolicyStatus) Clone(into interface{}) error {
-	out, ok := into.(*EventPolicyStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *EventPolicyStatus) Clone(into interface{}) (interface{}, error) {
+	var out *EventPolicyStatus
+	var ok bool
+	if into == nil {
+		out = &EventPolicyStatus{}
+	} else {
+		out, ok = into.(*EventPolicyStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *EventSource) Clone(into interface{}) error {
-	out, ok := into.(*EventSource)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *EventSource) Clone(into interface{}) (interface{}, error) {
+	var out *EventSource
+	var ok bool
+	if into == nil {
+		out = &EventSource{}
+	} else {
+		out, ok = into.(*EventSource)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
 // Validators

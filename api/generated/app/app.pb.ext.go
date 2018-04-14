@@ -72,139 +72,244 @@ func (m *AutoMsgAppWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
-func (m *App) Clone(into interface{}) error {
-	out, ok := into.(*App)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *App) Clone(into interface{}) (interface{}, error) {
+	var out *App
+	var ok bool
+	if into == nil {
+		out = &App{}
+	} else {
+		out, ok = into.(*App)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AppList) Clone(into interface{}) error {
-	out, ok := into.(*AppList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AppList) Clone(into interface{}) (interface{}, error) {
+	var out *AppList
+	var ok bool
+	if into == nil {
+		out = &AppList{}
+	} else {
+		out, ok = into.(*AppList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AppSpec) Clone(into interface{}) error {
-	out, ok := into.(*AppSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AppSpec) Clone(into interface{}) (interface{}, error) {
+	var out *AppSpec
+	var ok bool
+	if into == nil {
+		out = &AppSpec{}
+	} else {
+		out, ok = into.(*AppSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AppStatus) Clone(into interface{}) error {
-	out, ok := into.(*AppStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AppStatus) Clone(into interface{}) (interface{}, error) {
+	var out *AppStatus
+	var ok bool
+	if into == nil {
+		out = &AppStatus{}
+	} else {
+		out, ok = into.(*AppStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AppUser) Clone(into interface{}) error {
-	out, ok := into.(*AppUser)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AppUser) Clone(into interface{}) (interface{}, error) {
+	var out *AppUser
+	var ok bool
+	if into == nil {
+		out = &AppUser{}
+	} else {
+		out, ok = into.(*AppUser)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AppUserGrp) Clone(into interface{}) error {
-	out, ok := into.(*AppUserGrp)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AppUserGrp) Clone(into interface{}) (interface{}, error) {
+	var out *AppUserGrp
+	var ok bool
+	if into == nil {
+		out = &AppUserGrp{}
+	} else {
+		out, ok = into.(*AppUserGrp)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AppUserGrpList) Clone(into interface{}) error {
-	out, ok := into.(*AppUserGrpList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AppUserGrpList) Clone(into interface{}) (interface{}, error) {
+	var out *AppUserGrpList
+	var ok bool
+	if into == nil {
+		out = &AppUserGrpList{}
+	} else {
+		out, ok = into.(*AppUserGrpList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AppUserGrpSpec) Clone(into interface{}) error {
-	out, ok := into.(*AppUserGrpSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AppUserGrpSpec) Clone(into interface{}) (interface{}, error) {
+	var out *AppUserGrpSpec
+	var ok bool
+	if into == nil {
+		out = &AppUserGrpSpec{}
+	} else {
+		out, ok = into.(*AppUserGrpSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AppUserGrpStatus) Clone(into interface{}) error {
-	out, ok := into.(*AppUserGrpStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AppUserGrpStatus) Clone(into interface{}) (interface{}, error) {
+	var out *AppUserGrpStatus
+	var ok bool
+	if into == nil {
+		out = &AppUserGrpStatus{}
+	} else {
+		out, ok = into.(*AppUserGrpStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AppUserList) Clone(into interface{}) error {
-	out, ok := into.(*AppUserList)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AppUserList) Clone(into interface{}) (interface{}, error) {
+	var out *AppUserList
+	var ok bool
+	if into == nil {
+		out = &AppUserList{}
+	} else {
+		out, ok = into.(*AppUserList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AppUserSpec) Clone(into interface{}) error {
-	out, ok := into.(*AppUserSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AppUserSpec) Clone(into interface{}) (interface{}, error) {
+	var out *AppUserSpec
+	var ok bool
+	if into == nil {
+		out = &AppUserSpec{}
+	} else {
+		out, ok = into.(*AppUserSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AppUserStatus) Clone(into interface{}) error {
-	out, ok := into.(*AppUserStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AppUserStatus) Clone(into interface{}) (interface{}, error) {
+	var out *AppUserStatus
+	var ok bool
+	if into == nil {
+		out = &AppUserStatus{}
+	} else {
+		out, ok = into.(*AppUserStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgAppUserGrpWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgAppUserGrpWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgAppUserGrpWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgAppUserGrpWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgAppUserGrpWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgAppUserGrpWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgAppUserWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgAppUserWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgAppUserWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgAppUserWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgAppUserWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgAppUserWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
-func (m *AutoMsgAppWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgAppWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgAppWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgAppWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgAppWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgAppWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
 	}
 	*out = *m
-	return nil
+	return out, nil
 }
 
 // Validators

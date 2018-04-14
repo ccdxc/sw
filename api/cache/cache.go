@@ -37,6 +37,14 @@ var (
 	delayedDelPurgeQuanta              = 100
 )
 
+type apiOper string
+
+const (
+	operCreate apiOper = "create"
+	operUpdate apiOper = "update"
+	operDelete apiOper = "delete"
+)
+
 // Interface is the cache interface exposed by the cache implementation. It provides a few additional operations
 //   on top of standard KV Store operations.
 type Interface interface {
@@ -543,7 +551,6 @@ func (c *cache) ListFiltered(ctx context.Context, prefix string, into runtime.Ob
 	elem := v.Type().Elem()
 	if elem.Kind() == reflect.Ptr {
 		ptr = true
-		elem = elem.Elem()
 	}
 	items, err := c.store.List(prefix, opts)
 	if err != nil {
