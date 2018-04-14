@@ -13,3 +13,5 @@ RUN yum install -y \
     python36u \
     python36u-pip \
 &&  yum clean all
+
+CMD ["/naples/v1/nic/tools/start-naples-sim.sh"]

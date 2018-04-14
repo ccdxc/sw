@@ -18,3 +18,8 @@ echo "Starting Agent ..."
 LD_LIBRARY_PATH=lib64:$LD_LIBRARY_PATH $NIC_DIR/bin/netagent -hostif lo -logtofile agent.log -datapath mock &
 
 echo "NAPLES up and running ..."
+
+# keep the container running
+while :; do
+      sleep 300
+done

@@ -80,17 +80,17 @@ if arm_pkg == 0:
     cmd = 'mv ' + output_dir + '/nic/lib/libzmq.so ' + output_dir + '/nic/lib/libzmq.so.3'
     call(cmd, shell=True)
 
-cmd = 'tar --exclude=*.debug -cf nic.tar '  + output_dir
+cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -cf ../nic/nic.tar *'
 call(cmd, shell=True)
 
 # create tar.gz
-cmd = 'tar --exclude=*.debug -czf nic.tgz ' + output_dir
+cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -czf ../nic/nic.tgz *'
 call(cmd, shell=True)
 
 # create naples.tgz
-cmd = 'cd nic/sim/naples/ && tar -cf ../../../naples.tar README install.sh uninstall.sh'
+cmd = 'cd nic/sim/naples/ && tar -cf ../../naples.tar README install.sh uninstall.sh'
 call(cmd, shell=True)
-cmd = 'tar -uf naples.tar nic.tgz'
+cmd = 'cd nic && tar -uf naples.tar nic.tgz'
 call(cmd, shell=True)
-cmd = 'gzip naples.tar && mv naples.tar.gz naples.tgz'
+cmd = 'gzip nic/naples.tar && mv nic/naples.tar.gz nic/naples.tgz'
 call(cmd, shell=True)
