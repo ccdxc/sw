@@ -190,6 +190,7 @@ public:
   int desc_write_seq_xts(dp_mem_t *xts_desc);
   int desc_write_seq_xts_status(dp_mem_t *xts_status_desc);
   int test_seq_xts();
+  void status_invalidate(void);
   int ring_doorbell();
   int verify_doorbell(bool verify_pi=true);
   int queue_req_n_ring_db_from_host();
@@ -225,8 +226,9 @@ public:
   uint64_t xts_db_addr = 0;
   dp_mem_t* xts_db = NULL;
   uint64_t exp_db_data = 0xdeadbeefdeadbeef;
-  uint64_t* status = NULL;
+  dp_mem_t* status = NULL;
   uint32_t opaque_tag = 0;
+  bool caller_status_en = false;
   bool caller_xts_db_en = false;
   bool opa_tag_en = true;
   bool t10_en = false;

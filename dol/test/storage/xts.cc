@@ -135,6 +135,7 @@ void XtsCtx::init(uint32_t size, bool chain) {
     xts_db = new dp_mem_t(1, sizeof(uint64_t), DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
     caller_xts_db_en = false;
   }
+
   if(!is_src_hbm_buf) {
     if(!chain) {
       srand(time(NULL));
@@ -211,7 +212,7 @@ XtsCtx::~XtsCtx() {
     return;
   }
   if(xts_desc) delete xts_desc;
-  if(status) free_host_mem(status);
+  if(status && !caller_status_en) delete status;
   // TODO: This seems to be crashing - needs investigation
   //if(xts_db && !caller_xts_db_en) delete xts_db;
   if(iv) free_host_mem(iv);
@@ -278,7 +279,7 @@ XtsCtx::cmd_eval_seq_xts(xts::xts_cmd_t& cmd) {
 
 // Prefill an XTS descriptor as much as possible.
 // Unfilled that are left for the caller are: 
-//    in_aol, out_aol, db_addr, db_data, cmd, and status
+//    in_aol, out_aol, db_addr, db_data, and cmd
 xts::xts_desc_t * 
 XtsCtx::desc_prefill_seq_xts(dp_mem_t *xts_desc) {
 
@@ -347,6 +348,9 @@ XtsCtx::desc_prefill_seq_xts(dp_mem_t *xts_desc) {
     xts_desc_addr->key_desc_idx = key128_desc_idx;
   else
     xts_desc_addr->key_desc_idx = key256_desc_idx;
+
+  status_invalidate();
+  xts_desc_addr->status = status->pa();
 
   return xts_desc_addr;
 }
@@ -476,17 +480,15 @@ int XtsCtx::test_seq_xts() {
   }
 
   if (!status) {
-    status = (uint64_t*)alloc_host_mem(kMinHostMemAllocSize);
-    memset(status, 0, kMinHostMemAllocSize);
+    status = new dp_mem_t(1, sizeof(uint64_t), DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+    caller_status_en = false;
   }
-  *status = STATUS_DEF_VALUE;
 
   // Fill the XTS ring descriptor
   xts_desc_addr = desc_prefill_seq_xts(xts_desc);
   xts_desc_addr->in_aol = host_mem_v2p(in_aol[0]);
   xts_desc_addr->out_aol = host_mem_v2p(out_aol[0]);
   xts_desc_addr->cmd = cmd;
-  xts_desc_addr->status = host_mem_v2p(status);
   xts_desc->write_thru();
 
   desc_write_seq_xts(xts_desc);
@@ -525,6 +527,20 @@ int XtsCtx::ring_doorbell() {
   return 0;
 }
 
+void XtsCtx::status_invalidate(void) {
+
+    uint8_t inval_byte;
+
+    // Set up XTS encrypt descriptor
+    // Note: RTL does not write status for encrypt/decrypt in non-sectorizer mode
+    // so it's best to leave the initial status data at 0.
+    //
+    // To ensure other RTL sanity tests don't break, use 0 always
+    //inval_byte = t10_en ? 0xff : 0;
+    inval_byte = 0;
+    status->fragment_find(0, sizeof(uint32_t))->fill_thru(inval_byte);
+}
+
 int XtsCtx::verify_doorbell(bool verify_pi) {
 
   // Poll for doorbell data as XTS which runs in a different thread
@@ -551,8 +567,9 @@ int XtsCtx::verify_doorbell(bool verify_pi) {
       rv = verify_prot_info((char *)dst_buf, num_aols, out_aol, sector_size, start_sec_num, app_tag);
 
     if(0 == rv) {
-      if(STATUS_DEF_VALUE != *status) {
-        printf(" status check failed - status value %lu\n", *status);
+      uint64_t status_data = *((uint64_t *)status->read_thru());
+      if(STATUS_DEF_VALUE != status_data) {
+        printf(" status check failed - status value %lu\n", status_data);
         rv = -1;
       }
     }
