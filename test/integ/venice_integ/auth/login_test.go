@@ -35,9 +35,16 @@ func TestLogin(t *testing.T) {
 		Password: testPassword,
 		Tenant:   "default",
 	}
-	resp, err := Login("http://localhost:"+tinfo.apigwport, in)
-	AssertOk(t, err, "login request failed")
-	Assert(t, resp.StatusCode == http.StatusOK, fmt.Sprintf("incorrect status code returned: %d", resp.StatusCode))
+	var resp *http.Response
+	var statusCode int
+	AssertEventually(t, func() (bool, interface{}) {
+		resp, err = Login("http://localhost:"+tinfo.apigwport, in)
+		if err == nil {
+			statusCode = resp.StatusCode
+		}
+		return err == nil && statusCode == http.StatusOK, nil
+	}, fmt.Sprintf("login request failed: Err: %v, Status code: %d", err, statusCode))
+
 	// verify cookie
 	cookies := resp.Cookies()
 	Assert(t, len(cookies) == 1, "cookie not set in response")
@@ -107,11 +114,18 @@ func TestLoginFailures(t *testing.T) {
 	defer DeleteUser(apicl, testUser, "default")
 
 	for _, test := range tests {
-		resp, err := Login("http://localhost:"+tinfo.apigwport, test.cred)
-		Assert(t, resp.StatusCode == test.expected, fmt.Sprintf("[%v] test failed, incorrect status code returned [%d], expected [%d]", test.name, resp.StatusCode, test.expected))
+		var resp *http.Response
+		var statusCode int
+		AssertEventually(t, func() (bool, interface{}) {
+			resp, err = Login("http://localhost:"+tinfo.apigwport, test.cred)
+			if err == nil {
+				statusCode = resp.StatusCode
+			}
+			return err == nil && statusCode == test.expected, nil
+		}, fmt.Sprintf("[%v] test failed, Err: %v, returned status code [%d], expected [%d]", test.name, err, statusCode, test.expected))
+
 		cookies := resp.Cookies()
 		Assert(t, len(cookies) == 0, fmt.Sprintf("[%v] test failed, cookie should not be set in response", test.name))
-		AssertOk(t, err, fmt.Sprintf("[%v] test failed, error returned in login request", test.name))
 		Assert(t, resp.Header.Get(svc.CsrfHeader) == "", fmt.Sprintf("[%v] test failed, CSRF token is present", test.name))
 	}
 }
