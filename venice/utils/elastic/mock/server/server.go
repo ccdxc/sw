@@ -32,6 +32,23 @@ type MQuery struct {
 	}
 }
 
+// ElasticNodeList minimal representation of elastic nodes to be used for health checks response
+type ElasticNodeList struct {
+	ClusterName string                  `json:"cluster_name"`
+	Nodes       map[string]*ElasticNode `json:"nodes"`
+}
+
+// ElasticNode represents the single minimal elastic node
+type ElasticNode struct {
+	Name string       `json:"name"`
+	HTTP *ElasticHTTP `json:"http"`
+}
+
+// ElasticHTTP represents the elastic HTTP response of a node
+type ElasticHTTP struct {
+	PublichAddress string `json:"publish_address"`
+}
+
 // NewElasticServer returns the instance of elastic mock server
 func NewElasticServer() *ElasticServer {
 	e := &ElasticServer{
@@ -78,9 +95,39 @@ func (e *ElasticServer) Stop() {
 
 // addHandlers adds all the dummy handlers for elastic functions we use
 func (e *ElasticServer) addHandlers() {
-	e.ms.AddHandler("/", "HEAD", func(w http.ResponseWriter, r *http.Request) {})
+	e.ms.AddHandler("/", "HEAD", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 
-	// for ping and version calls
+	// for elastic health checks
+	e.ms.AddHandler("/_nodes/http", "GET", func(w http.ResponseWriter, r *http.Request) {
+		nodes := &ElasticNodeList{
+			ClusterName: "test",
+			Nodes: map[string]*ElasticNode{
+				"testnode": {
+					Name: "node1",
+					HTTP: &ElasticHTTP{PublichAddress: e.ms.URL()},
+				}},
+		}
+
+		resp, _ := json.Marshal(nodes)
+		w.Write([]byte(resp))
+	})
+
+	// for cluster health
+	e.ms.AddHandler("/_cluster/health", "GET", func(w http.ResponseWriter, r *http.Request) {
+		resp := `{
+	   "cluster_name":"test",
+	   "status":"green",
+	   "timed_out":false,
+	   "number_of_nodes":1,
+	   "number_of_data_nodes":1
+	 }`
+
+		w.Write([]byte(resp))
+	})
+
+	// for version call
 	e.ms.AddHandler("/", "GET", func(w http.ResponseWriter, r *http.Request) {
 		resp := `{
 			"name": "mock-elastic-server",

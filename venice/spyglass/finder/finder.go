@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"strings"
 	"sync"
 	"time"
 
@@ -15,10 +14,11 @@ import (
 
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/spyglass/utils"
+	"github.com/pensando/sw/venice/utils"
 	venutils "github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -35,26 +35,22 @@ type Finder struct {
 	sync.WaitGroup
 	ctx           context.Context
 	logger        log.Logger
-	elasticAddr   string
 	elasticClient elastic.ESClient
+	rsr           resolver.Interface
 	finderAddr    string
 	rpcServer     *rpckit.RPCServer
 }
 
 // NewFinder instantiates a new finder instance
-func NewFinder(ctx context.Context, elasticAddr, finderAddr string, logger log.Logger) (Interface, error) {
+func NewFinder(ctx context.Context, finderAddr string, rsr resolver.Interface, logger log.Logger) (Interface, error) {
 
-	log.Debugf("Creating Finder, elastic-addr: %s", elasticAddr)
-	// Validate elasticAddr
-	if len(strings.TrimSpace(elasticAddr)) == 0 {
-		return nil, errors.New("Empty elastic address")
-	}
+	log.Debug("Creating Finder")
 
 	fdr := Finder{
-		ctx:         ctx,
-		elasticAddr: elasticAddr,
-		finderAddr:  finderAddr,
-		logger:      logger,
+		ctx:        ctx,
+		finderAddr: finderAddr,
+		rsr:        rsr,
+		logger:     logger,
 	}
 
 	return &fdr, nil
@@ -73,11 +69,10 @@ func (fdr *Finder) Start() error {
 
 	// Initialize elastic client
 	result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-		return elastic.NewClient(fdr.elasticAddr, fdr.logger.WithContext("submodule", "elastic"))
+		return elastic.NewClient("", fdr.rsr, fdr.logger.WithContext("submodule", "elastic"))
 	}, elasticWaitIntvl, maxElasticRetries)
 	if err != nil {
-		fdr.logger.Errorf("Failed to create elastic client, addr: %s err: %v",
-			fdr.elasticAddr, err)
+		fdr.logger.Errorf("Failed to create elastic client, err: %v", err)
 		return err
 	}
 	fdr.logger.Debugf("Created Elastic client")

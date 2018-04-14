@@ -9,15 +9,19 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
+	"github.com/pensando/sw/api"
 	apicache "github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/trace"
 
@@ -47,9 +51,24 @@ func startSpyglass() finder.Interface {
 	tinfo.esServer = esmock.NewElasticServer()
 	tinfo.esServer.Start()
 
+	// create mock resolver
+	rsr := mockresolver.New()
+	si := &types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.ElasticSearch,
+		},
+		Service: globals.ElasticSearch,
+		URL:     tinfo.esServer.GetElasticURL(),
+	}
+	// add mock elastic service to mock resolver
+	rsr.AddServiceInstance(si)
+
 	fdr, err := finder.NewFinder(context.Background(),
-		fmt.Sprintf("http://%s", tinfo.esServer.GetElasticURL()),
 		"localhost:0",
+		rsr,
 		tinfo.l)
 	if err != nil {
 		log.Errorf("Error creating finder: %+v", err)

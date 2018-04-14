@@ -9,7 +9,7 @@ import (
 
 	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/spyglass/utils"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"

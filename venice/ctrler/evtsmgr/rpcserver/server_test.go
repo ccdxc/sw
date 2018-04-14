@@ -33,10 +33,8 @@ func setup(t *testing.T) (*mock.ElasticServer, *RPCServer, *rpckit.RPCClient) {
 	ms := mock.NewElasticServer()
 	ms.Start()
 
-	elasticURL := fmt.Sprintf("http://%s", ms.GetElasticURL())
-
 	// create elastic client
-	esClient, err := elastic.NewClient(elasticURL, logger)
+	esClient, err := elastic.NewClient(ms.GetElasticURL(), nil, logger)
 	tu.AssertOk(t, err, "failed to create elastic client")
 
 	// create grpc server

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 const (
@@ -27,6 +29,13 @@ const (
 
 	// TopHitsKey is the Aggregation key for top search hits
 	TopHitsKey = "top_agg"
+
+	// maxRetries maximum number of retries for fetching elasticsearch URLs
+	// and creating client.
+	maxRetries = 60
+
+	// delay between retries
+	retryDelay = 2 * time.Second
 )
 
 // GetIndex returns the Elastic Index based on the data type & tenant name
@@ -82,4 +91,20 @@ func GetDocType(dtype globals.DataType) string {
 	}
 
 	return ""
+}
+
+// getElasticSearchAddrs helper function to get the elasticsearch addresses using the resolver
+func getElasticSearchAddrs(resolverClient resolver.Interface) ([]string, error) {
+	for i := 0; i < maxRetries; i++ {
+		elasticURLs := resolverClient.GetURLs(globals.ElasticSearch)
+		if len(elasticURLs) > 0 {
+			log.Debugf("list of elastic URLs found %v", elasticURLs)
+			return elasticURLs, nil
+		}
+
+		time.Sleep(retryDelay)
+		log.Debug("couldn't find elasticsearch. retrying.")
+	}
+
+	return []string{}, fmt.Errorf("failed to get `%v` URLs using the resolver", globals.ElasticSearch)
 }

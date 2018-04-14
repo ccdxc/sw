@@ -1,34 +1,29 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package veniceinteg
+package elastic
 
 import (
 	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"os/exec"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/types"
 	uuid "github.com/satori/go.uuid"
+	. "gopkg.in/check.v1"
 	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/events"
+	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
 	mapper "github.com/pensando/sw/venice/utils/elastic/mapper"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
-)
-
-const (
-	elasticURL   = "http://127.0.0.1:9200"
-	registryURL  = "registry.test.pensando.io:5000"
-	elasticImage = "elasticsearch/elasticsearch:6.2.2"
 )
 
 // sub-objects (e.g. ObjectMeta) needs to be nested only if they are slices. If not, it need
@@ -53,40 +48,11 @@ var (
 	cTime           = time.Now()
 	creationTime, _ = types.TimestampProto(cTime)
 	event           = events.Event{}
-)
 
-func TestElastic(t *testing.T) {
-	var esClient elastic.ESClient
-	var err error
+	logConfig = log.GetDefaultConfig("elastic-client-test")
 
-	//context must be passed for each elastic call
-	ctx := context.Background()
-
-	setup(t)
-	defer teardown(ctx, esClient, t)
-
-	// Create a client
-	AssertEventually(t,
-		func() (bool, interface{}) {
-			esClient, err = elastic.NewClient(elasticURL, log.GetNewLogger(log.GetDefaultConfig("events")))
-			if err != nil {
-				t.Logf("error creating client: %v", err)
-				return false, nil
-			}
-			return true, nil
-		}, "failed to create elastic client", "20ms", "2m")
-
-	ping(ctx, esClient, t)
-
-	// Getting the ES version number is quite common, so there's a shortcut
-	esversion, err := esClient.Version()
-	if err != nil {
-		t.Fatal("failed to get elasticsearch version")
-	}
-	t.Logf("Elasticsearch version %s", esversion)
-
-	// Generate Elastic mapping and settings for event
-	eventObj := events.Event{
+	// generate elastic mapping and settings for event
+	eventObj = events.Event{
 		EventAttributes: events.EventAttributes{
 			// Need to make sure pointer fields are valid to
 			// generate right mappings using reflect
@@ -94,38 +60,83 @@ func TestElastic(t *testing.T) {
 			Source:    &events.EventSource{},
 		},
 	}
-	mapping, err := mapper.ElasticMapper(eventObj,
-		indexType,
-		mapper.WithShardCount(1),
-		mapper.WithReplicaCount(0))
-	AssertOk(t, err, "Failed to generate elastic mapping for events")
+
+	elasticAddr = ""
+)
+
+// Hook up gocheck into the "go test" runner.
+func Test(t *testing.T) {
+	var _ = Suite(&elasticsearchTestSuite{})
+	TestingT(t)
+}
+
+func (e *elasticsearchTestSuite) TestElastic(c *C) {
+	var esClient elastic.ESClient
+	var err error
+
+	elasticsearchName := c.TestName()
+
+	//context must be passed for each elastic call
+	ctx := context.Background()
+	logConfig.Debug = true
+
+	setup(c, elasticsearchName)
+	defer teardown(ctx, esClient, c, elasticsearchName)
+
+	// Create a client
+	AssertEventually(c,
+		func() (bool, interface{}) {
+			esClient, err = elastic.NewClient(elasticAddr, nil, log.GetNewLogger(logConfig))
+			if err != nil {
+				log.Errorf("error creating client: %v", err)
+				return false, nil
+			}
+			return true, nil
+		}, "failed to create elastic client", "20ms", "2m")
+
+	// check elasticsearch cluster health
+	AssertEventually(c,
+		func() (bool, interface{}) {
+			healthy, er := esClient.IsClusterHealthy(ctx)
+			return healthy, er
+		}, "failed to get elasticsearch cluster health")
+
+	// Getting the ES version number is quite common, so there's a shortcut
+	esversion, err := esClient.Version()
+	if err != nil {
+		log.Fatal("failed to get elasticsearch version")
+	}
+	log.Infof("Elasticsearch version %s", esversion)
+
+	mapping, err := mapper.ElasticMapper(eventObj, indexType, mapper.WithShardCount(1), mapper.WithReplicaCount(0))
+	AssertOk(c, err, "Failed to generate elastic mapping for events")
 
 	// Generate JSON string for the mapping
 	configs, err := mapping.JSONString()
-	AssertOk(t, err, "Failed to get JSONString from elastic mapper")
+	AssertOk(c, err, "Failed to get JSONString from elastic mapper")
 
 	// Create elastic index with event mapping and settings
 	if err := esClient.CreateIndex(ctx, indexName, configs); err != nil && !elastic.IsIndexExists(err) {
-		t.Fatalf("failed to create index: %v, %v", err, elastic.IsIndexExists(err))
+		log.Fatalf("failed to create index: %v, %v", err, elastic.IsIndexExists(err))
 	}
 
 	// index events
-	indexEventsSequential(ctx, esClient, t)
-	indexEventsBulk(ctx, esClient, t)
+	indexEventsSequential(ctx, esClient, c)
+	indexEventsBulk(ctx, esClient, c)
 	// index a nil document
-	Assert(t, esClient.Index(ctx, indexName, indexType, "dummy-id", nil) != nil,
+	Assert(c, esClient.Index(ctx, indexName, indexType, "dummy-id", nil) != nil,
 		"Cannot index a nil document; expected failure")
 
 	// search events
-	searchEvents(ctx, esClient, t)
+	searchEvents(ctx, esClient, c)
 
 	// TODO: update events
 }
 
 // searchEvents runs a couple of queries on the elastic cluster
-func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
-	t.Logf("performing search queries on the index: %v", indexName)
-	Assert(t, client.FlushIndex(ctx, indexName) == nil,
+func searchEvents(ctx context.Context, client elastic.ESClient, c *C) {
+	log.Infof("performing search queries on the index: %v", indexName)
+	Assert(c, client.FlushIndex(ctx, indexName) == nil,
 		"Flush operation failed, cannot perform search")
 
 	// Query 1: date range; search for events with events.ObjectMeta.ModTime falls in last 60 seconds
@@ -134,12 +145,12 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	query1 := es.NewRangeQuery("meta.mod-time").Gte(now.Add(-30 * time.Second)).Lte(now)
 	result, err := client.Search(ctx, indexName, indexType, query1, nil, from, maxResults)
 	if err != nil {
-		t.Fatalf("failed to search events for query: %v, err:%v", query1, err)
+		log.Fatalf("failed to search events for query: %v, err:%v", query1, err)
 	}
 
 	src, _ := query1.Source()
 	jsonQuery, _ := json.Marshal(src)
-	Assert(t, result.TotalHits() > 0,
+	Assert(c, result.TotalHits() > 0,
 		fmt.Sprintf("Something wrong, atleast few events should match the query: %s", jsonQuery))
 
 	// Query 2: term query; look for events with severity == event.Severity
@@ -148,12 +159,12 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	query2 := es.NewTermQuery("severity", event.Severity)
 	result, err = client.Search(ctx, indexName, indexType, query2, nil, from, maxResults)
 	if err != nil {
-		t.Fatalf("failed to search events for query: %v, err:%v", query2, err)
+		log.Fatalf("failed to search events for query: %v, err:%v", query2, err)
 	}
 
 	src, _ = query2.Source()
 	jsonQuery, _ = json.Marshal(src)
-	Assert(t, result.TotalHits() > 0,
+	Assert(c, result.TotalHits() > 0,
 		fmt.Sprintf("Something wrong, atleast few events should match the query: %s", jsonQuery))
 
 	// Query 3: match all the events;
@@ -161,12 +172,12 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	query3 := es.NewMatchQuery("meta.creation-time", cTime)
 	result, err = client.Search(ctx, indexName, indexType, query3, nil, from, maxResults)
 	if err != nil {
-		t.Fatalf("failed to search events for query: %v, err:%v", query3, err)
+		log.Fatalf("failed to search events for query: %v, err:%v", query3, err)
 	}
 
 	src, _ = query3.Source()
 	jsonQuery, _ = json.Marshal(src)
-	Assert(t, result.TotalHits() == int64(2*(*numEvents)), // sequential + bulk indexing (2*numEvents)
+	Assert(c, result.TotalHits() == int64(2*(*numEvents)), // sequential + bulk indexing (2*numEvents)
 		fmt.Sprintf("Something wrong, all the events should match the query: %s", jsonQuery))
 
 	// Query 4: combine queries 1 & 2;
@@ -174,12 +185,12 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	query4 := es.NewBoolQuery().Must(query1, query2)
 	result, err = client.Search(ctx, indexName, indexType, query4, nil, from, maxResults)
 	if err != nil {
-		t.Fatalf("failed to search events for query: %v, err:%v", query4, err)
+		log.Fatalf("failed to search events for query: %v, err:%v", query4, err)
 	}
 
 	src, _ = query4.Source()
 	jsonQuery, _ = json.Marshal(src)
-	Assert(t, result.TotalHits() > 0,
+	Assert(c, result.TotalHits() > 0,
 		fmt.Sprintf("Something wrong, atleast few events should match the query: %s", jsonQuery))
 
 	// query 5: combine 2 & 3;
@@ -187,12 +198,12 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	query5 := es.NewBoolQuery().Must(query2, query3)
 	result, err = client.Search(ctx, indexName, indexType, query5, nil, from, maxResults)
 	if err != nil {
-		t.Fatalf("failed to search events for query: %v, err:%v", query5, err)
+		log.Fatalf("failed to search events for query: %v, err:%v", query5, err)
 	}
 
 	src, _ = query5.Source()
 	jsonQuery, _ = json.Marshal(src)
-	Assert(t, result.TotalHits() == int64(2*(*numEvents)),
+	Assert(c, result.TotalHits() == int64(2*(*numEvents)),
 		fmt.Sprintf("Something wrong, all the events should match the query: %s", jsonQuery))
 
 	// full-text search queries
@@ -202,12 +213,12 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	query6 := es.NewQueryStringQuery(infraNamespace)
 	result, err = client.Search(ctx, indexName, indexType, query6, nil, from, maxResults)
 	if err != nil {
-		t.Fatalf("failed to search events for query: %v, err:%v", query6, err)
+		log.Fatalf("failed to search events for query: %v, err:%v", query6, err)
 	}
 
 	src, _ = query6.Source()
 	jsonQuery, _ = json.Marshal(src)
-	Assert(t, result.TotalHits() >= int64(*numEvents),
+	Assert(c, result.TotalHits() >= int64(*numEvents),
 		fmt.Sprintf("Something wrong, half the total events indexed should match the query: %s", jsonQuery))
 
 	// query 7: find events by `ObjectMeta.Namespace: string`
@@ -215,29 +226,29 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	query7 := es.NewQueryStringQuery(fmt.Sprintf("%s:%s", "meta.namespace", infraNamespace))
 	result, err = client.Search(ctx, indexName, indexType, query7, nil, from, maxResults)
 	if err != nil {
-		t.Fatalf("failed to search events for query: %v, err:%v", query7, err)
+		log.Fatalf("failed to search events for query: %v, err:%v", query7, err)
 	}
 
 	src, _ = query7.Source()
 	jsonQuery, _ = json.Marshal(src)
-	Assert(t, result.TotalHits() >= int64(*numEvents),
+	Assert(c, result.TotalHits() >= int64(*numEvents),
 		fmt.Sprintf("Something wrong, half the total events indexed should match the query: %s", jsonQuery))
 
 	// query 8: find all the event that has string "honda"
 	query8 := es.NewQueryStringQuery(string("honda"))
 	result, err = client.Search(ctx, indexName, indexType, query8, nil, from, maxResults)
 	if err != nil {
-		t.Fatalf("failed to search events for query: %v, err:%v", query8, err)
+		log.Fatalf("failed to search events for query: %v, err:%v", query8, err)
 	}
 
 	src, _ = query8.Source()
 	jsonQuery, _ = json.Marshal(src)
-	Assert(t, result.TotalHits() == 0,
+	Assert(c, result.TotalHits() == 0,
 		fmt.Sprintf("Something wrong, none of the event should match the query: %s", jsonQuery))
 }
 
 // indexEventsBulk performs the bulk indexing
-func indexEventsBulk(ctx context.Context, client elastic.ESClient, t *testing.T) {
+func indexEventsBulk(ctx context.Context, client elastic.ESClient, c *C) {
 	requests := make([]*elastic.BulkRequest, *numEvents)
 	// add requests for the bulk operation
 	for i := 0; i < *numEvents; i++ {
@@ -265,22 +276,22 @@ func indexEventsBulk(ctx context.Context, client elastic.ESClient, t *testing.T)
 	// perform bulk operation
 	bulkResp, err := client.Bulk(ctx, requests)
 	if err != nil {
-		t.Fatalf("failed to perform bulk indexing, err: %v", err)
+		log.Fatalf("failed to perform bulk indexing, err: %v", err)
 	}
 
 	// check the number of succeeded operation
-	AssertEquals(t, *numEvents, len(bulkResp.Succeeded()),
+	AssertEquals(c, *numEvents, len(bulkResp.Succeeded()),
 		fmt.Sprintf("requests succeeded - expected: %v, got: %v", *numEvents, len(bulkResp.Succeeded())))
 
 	// make sure there are 0 failed operation
-	AssertEquals(t, 0, len(bulkResp.Failed()),
+	AssertEquals(c, 0, len(bulkResp.Failed()),
 		fmt.Sprintf("requests failed - expected: %v, got: %v", 0, len(bulkResp.Failed())))
 
-	t.Logf("total time taken for bulk indexing: %v\n", time.Since(start))
+	log.Infof("total time taken for bulk indexing: %v\n", time.Since(start))
 }
 
 // indexEventsSequential indexs events in a sequential manner
-func indexEventsSequential(ctx context.Context, client elastic.ESClient, t *testing.T) {
+func indexEventsSequential(ctx context.Context, client elastic.ESClient, c *C) {
 	start := time.Now()
 
 	// index events one by one
@@ -295,45 +306,33 @@ func indexEventsSequential(ctx context.Context, client elastic.ESClient, t *test
 
 		// log failure and continue
 		if err := client.Index(ctx, indexName, indexType, event.ObjectMeta.UUID, event); err != nil {
-			t.Logf("failed to index event %s err:%v", event.ObjectMeta.Name, err)
+			log.Infof("failed to index event %s err:%v", event.ObjectMeta.Name, err)
 			continue
 		}
 	}
 
-	t.Logf("total time taken for sequential indexing: %v\n", time.Since(start))
-}
-
-// ping - helper function to test the connection with elasticsearch
-func ping(ctx context.Context, client elastic.ESClient, t *testing.T) {
-	// ping the elastic server to get version details
-	AssertEventually(t,
-		func() (bool, interface{}) {
-			if err := client.Ping(ctx); err != nil {
-				return false, nil
-			}
-			return true, nil
-		}, "failed to ping elastic cluster")
-
+	log.Infof("total time taken for sequential indexing: %v\n", time.Since(start))
 }
 
 // teardown elasticsearch cluster
-func teardown(ctx context.Context, client elastic.ESClient, t *testing.T) {
+func teardown(ctx context.Context, client elastic.ESClient, c *C, name string) {
 	// arg -preserve-events will prevent deleting elasticsearch container
 	if *preserveEvents {
 		return
 	}
 
 	if client != nil {
-		Assert(t, client.DeleteIndex(ctx, indexName) == nil,
+		Assert(c, client.DeleteIndex(ctx, indexName) == nil,
 			fmt.Sprintf("failed to delete index: %v", indexName))
 	}
 
-	err := setupElasticsearch(t, "stop")
-	Assert(t, err == nil, fmt.Sprintf("failed to stop elasticsearch container, err: %v", err))
+	err := testutils.StopElasticsearch(name)
+	Assert(c, err == nil || (err != nil && strings.Contains(err.Error(), "is already in progress")),
+		fmt.Sprintf("failed to stop elasticsearch container, err: %v", err))
 }
 
 // setup spins a elasticsearch cluster if requested
-func setup(t *testing.T) {
+func setup(c *C, name string) {
 	// construct event object to be indexed
 	constructEvent()
 
@@ -342,46 +341,12 @@ func setup(t *testing.T) {
 		return
 	}
 
-	// spin up a single node elasticsearch
-	err := setupElasticsearch(t, "start")
-	Assert(t, err == nil, fmt.Sprintf("failed to start elasticsearch container, err: %v", err))
-}
+	var err error
 
-// setupElasticsearch helper function to start/stop elasticsearch container
-func setupElasticsearch(t *testing.T, action string) error {
-	var cmd []string
-	switch action {
-	case "start":
-		t.Log("starting elasticsearch container")
-
-		// set max_map_count; this is a must requirement to run elasticsearch
-		// https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
-		if out, err := exec.Command("sysctl", "-w", "vm.max_map_count=262144").CombinedOutput(); err != nil {
-			t.Logf("failed to set max_map_count %s", out)
-		}
-
-		cmd = []string{
-			"run", "--rm", "-d", "-p", "9200:9200", "--name=pen-test-elasticsearch",
-			"-e", "cluster.name=pen-test-elasticcluster", "-e", "xpack.security.enabled=false",
-			"-e", "ES_JAVA_OPTS=-Xms512m -Xmx512m",
-			fmt.Sprintf("%s/%s", registryURL, elasticImage)}
-	case "stop":
-		t.Log("stopping elasticsearch container")
-		cmd = []string{"rm", "-f", "pen-test-elasticsearch"}
-	default:
-		return fmt.Errorf("requested action not supported: %v", action)
-	}
-
-	// run the command
-	if out, err := exec.Command("docker", cmd...).CombinedOutput(); err != nil &&
-		!strings.Contains(string(out), "No such container") {
-		return fmt.Errorf("%s, err: %v", out, err)
-	}
-
-	// buffer to let the container go way or start completely
-	time.Sleep(2 * time.Second)
-
-	return nil
+	// spin up a single node elasticsearch with the given name; running separate elasticsearch for
+	// each test helps to run the tests in parallel.
+	elasticAddr, err = testutils.StartElasticsearch(name)
+	Assert(c, err == nil, fmt.Sprintf("failed to start elasticsearch container, err: %v", err))
 }
 
 // constructEvent helper function to create event object

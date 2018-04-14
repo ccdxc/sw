@@ -8,21 +8,23 @@ import (
 	"net"
 	"net/url"
 	"os"
-	"os/exec"
 	"strings"
 	"testing"
 
+	api "github.com/pensando/sw/api"
 	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/search"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
+	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
@@ -31,6 +33,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -69,108 +72,12 @@ type testInfo struct {
 
 var tInfo testInfo
 
-// Start elasticsearch service
-func startElasticsearch(t *testing.T) error {
-
-	t.Logf("Starting elastic search ..")
-	err := setupElasticsearch(t, "start")
-	if err != nil {
-		t.Errorf("failed to start elasticsearch container, err: %v", err)
-	}
-
-	return err
-}
-
-// Stop elasticsearch service
-func stopElasticsearch(t *testing.T) error {
-
-	err := setupElasticsearch(t, "stop")
-	if err != nil {
-		t.Fatalf("failed to stop elasticsearch container, err: %v", err)
-	}
-
-	return err
-}
-
-// setupElasticsearch is helper function to start/stop elasticsearch container
-func setupElasticsearch(t *testing.T, action string) error {
-
-	// spin up a new 1 node elastic cluster
-	if len(strings.TrimSpace(os.Getenv("SKIP_ELASTIC_SETUP"))) != 0 {
-		return nil
-	}
-
-	var cmd []string
-	switch action {
-	case "start":
-		t.Logf("starting elasticsearch container")
-
-		// set max_map_count; this is a must requirement to run elasticsearch
-		// https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
-		if out, err := exec.Command("sysctl", "-w", "vm.max_map_count=262144").CombinedOutput(); err != nil {
-			log.Errorf("failed to set max_map_count %s", out)
-		}
-
-		cmd = []string{
-			"run", "--rm", "-d", "-p",
-			// Let docker pick the exposed host port to be any port
-			// in the range 7000-8000
-			fmt.Sprintf("7000-8000:%s", globals.ElasticsearchRESTPort),
-			"--name=pen-test-elasticsearch",
-			"-e", "cluster.name=pen-test-elasticcluster",
-			"-e", "xpack.security.enabled=false",
-			"-e", "xpack.monitoring.enabled=false",
-			"-e", "xpack.graph.enabled=false",
-			"-e", "xpack.watcher.enabled=false",
-			"-e", "xpack.logstash.enabled=false",
-			"-e", "xpack.ml.enabled=false",
-			"-e", "ES_JAVA_OPTS=-Xms512m -Xmx512m",
-			fmt.Sprintf("%s/%s", registryURL, elasticImage)}
-	case "stop":
-		t.Logf("stopping elasticsearch container")
-		cmd = []string{"rm", "-f", "pen-test-elasticsearch"}
-	default:
-		return fmt.Errorf("requested action not supported: %v", action)
-	}
-
-	// run the command
-	var out []byte
-	var err error
-	if out, err = exec.Command("docker", cmd...).CombinedOutput(); err != nil &&
-		!strings.Contains(string(out), "No such container") {
-		t.Logf("Dccker run cmd failed, err: %+v", err)
-		return fmt.Errorf("%s, err: %v", out, err)
-	}
-
-	if action == "stop" {
-		return nil
-	}
-
-	// find the exposed addr:port
-	params := []string{"port", "pen-test-elasticsearch", globals.ElasticsearchRESTPort}
-	if out, err = exec.Command("docker", params...).CombinedOutput(); err != nil &&
-		!strings.Contains(string(out), "No such container") {
-		t.Logf("Docker port cmd failed, err: %+v", err)
-		return fmt.Errorf("%s, err: %v", out, err)
-	}
-
-	t.Logf("Docker port output: %s", string(out))
-	strs := strings.Split(string(out), ":")
-	t.Logf("Docker port: %s", string(strs[1]))
-	// Save the elastic Addr
-	tInfo.elasticURL = fmt.Sprintf("http://127.0.0.1:%s", strings.TrimSpace(string(strs[1])))
-	t.Logf("Elastic Addr: %s", tInfo.elasticURL)
-
-	return nil
-}
-
 func getSearchURL(query string, from, maxResults int32) string {
 
 	// convert to query-string to url-encoded string
 	// to escape special characters like space, comma, braces.
 	u := url.URL{Path: query}
-	urlQuery := u.String()
-	urlQuery = url.QueryEscape(query)
+	urlQuery := url.QueryEscape(query)
 	log.Debugf("Query: %s Encoded: %s Escaped: %s", query, u.String(), urlQuery)
 	return fmt.Sprintf("http://127.0.0.1:%s/v1/search/query?QueryString=%s&From=%d&MaxResults=%d",
 		tInfo.apiGwPort, urlQuery, from, maxResults)
@@ -183,7 +90,7 @@ func validateElasticsearch(t *testing.T) {
 	// Create a client
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			tInfo.esClient, err = elastic.NewClient(tInfo.elasticURL, tInfo.l)
+			tInfo.esClient, err = elastic.NewClient(tInfo.elasticURL, nil, tInfo.l)
 			if err != nil {
 				t.Logf("error creating client: %v", err)
 				log.Errorf("error creating client: %v", err)
@@ -195,10 +102,7 @@ func validateElasticsearch(t *testing.T) {
 	// ping the elastic server to get version details
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			if err := tInfo.esClient.Ping(context.Background()); err != nil {
-				return false, nil
-			}
-			return true, nil
+			return tInfo.esClient.IsClusterHealthy(context.Background())
 		}, "failed to ping elastic cluster")
 
 	// Getting the ES version number is quite common, so there's a shortcut
@@ -227,23 +131,39 @@ func TestSpyglass(t *testing.T) {
 
 	ctx := context.Background()
 
+	elasticSearchName := t.Name()
 	// Start Elasticsearch service
-	stopElasticsearch(t)
-	err = startElasticsearch(t)
+	testutils.StopElasticsearch(elasticSearchName)
+	tInfo.elasticURL, err = testutils.StartElasticsearch(elasticSearchName)
 	if err != nil {
 		t.Errorf("Cannot start Elasticsearch service - %v", err)
 	}
-	defer stopElasticsearch(t)
+	defer testutils.StopElasticsearch(elasticSearchName)
 
 	// validate elasticsearch service is up
 	t.Logf("Validating Elasticsearch ...")
 	validateElasticsearch(t)
 
+	// create mock resolver
+	rsr := mockresolver.New()
+	si := &types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.ElasticSearch,
+		},
+		Service: globals.ElasticSearch,
+		URL:     tInfo.elasticURL,
+	}
+	// add mock elastic service to mock resolver
+	rsr.AddServiceInstance(si)
+
 	// create the finder
 	t.Logf("Starting finder ...")
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			fdr, err = finder.NewFinder(ctx, tInfo.elasticURL, "localhost:0", tInfo.l)
+			fdr, err = finder.NewFinder(ctx, "localhost:0", rsr, tInfo.l)
 			if err != nil {
 				t.Logf("Error creating finder: %v", err)
 				return false, nil
@@ -254,7 +174,7 @@ func TestSpyglass(t *testing.T) {
 	// start the finder
 	err = fdr.Start()
 	if err != nil {
-		t.Fatal("failed to get start finder")
+		t.Fatal("failed to start finder")
 	}
 	defer fdr.Stop()
 	log.Infof("Finder search endpoint addr: %s", fdr.GetListenURL())
@@ -274,7 +194,7 @@ func TestSpyglass(t *testing.T) {
 	t.Logf("Starting indexer ...")
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.elasticURL, nil, tInfo.l)
+			idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, rsr, tInfo.l)
 			if err != nil {
 				t.Logf("Error creating indexer: %v", err)
 				return false, nil
@@ -311,7 +231,7 @@ func TestSpyglass(t *testing.T) {
 	AssertEventually(t,
 		func() (bool, interface{}) {
 
-			err := netutils.HTTPGet(getSearchURL("tesla", 0, 10), &resp)
+			err = netutils.HTTPGet(getSearchURL("tesla", 0, 10), &resp)
 			if err != nil {
 				log.Errorf("GET on search REST endpoint: %s failed, err:%+v",
 					getSearchURL("tesla", 0, 10), err)
@@ -331,7 +251,7 @@ func TestSpyglass(t *testing.T) {
 	t.Logf("Creating and starting new indexer instance")
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.elasticURL, nil, tInfo.l)
+			idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, rsr, tInfo.l)
 			if err != nil {
 				t.Logf("Error creating indexer: %v", err)
 				return false, nil

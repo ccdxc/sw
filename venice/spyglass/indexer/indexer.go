@@ -10,7 +10,7 @@ import (
 
 	apiservice "github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/spyglass/utils"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/balancer"
 	elastic "github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -94,18 +94,16 @@ type indexRequest struct {
 }
 
 // NewIndexer instantiates a new indexer
-func NewIndexer(ctx context.Context, apiServerAddr, elasticAddr string, rsr resolver.Interface, logger log.Logger) (Interface, error) {
+func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interface, logger log.Logger) (Interface, error) {
 
-	log.Debugf("Creating Indexer, apiserver-addr: %s elastic-addr: %s",
-		apiServerAddr, elasticAddr)
+	log.Debugf("Creating Indexer, apiserver-addr: %s", apiServerAddr)
 
 	// Initialize elastic client
 	result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-		return elastic.NewClient(elasticAddr, logger.WithContext("submodule", "elastic"))
+		return elastic.NewClient("", rsr, logger.WithContext("submodule", "elastic"))
 	}, elasticWaitIntvl, maxElasticRetries)
 	if err != nil {
-		logger.Errorf("Failed to create elastic client, addr: %s err: %v",
-			elasticAddr, err)
+		logger.Errorf("Failed to create elastic client, err: %v", err)
 		return nil, err
 	}
 	logger.Debugf("Created elastic client")

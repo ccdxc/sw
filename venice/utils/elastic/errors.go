@@ -2,7 +2,10 @@
 
 package elastic
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // error codes
 const (
@@ -59,6 +62,15 @@ func IsIndexExists(err error) bool {
 	return false
 }
 
+// IsIndexNotExists returns true if the error code is ErrIndexExists.
+func IsIndexNotExists(err error) bool {
+	if cErr, ok := err.(*Error); ok {
+		return cErr.Code == ErrIndexNotExist
+	}
+
+	return false
+}
+
 // IsBulkRequestFailed returns true if the error code is ErrBulkRequestFailed.
 func IsBulkRequestFailed(err error) bool {
 	if cErr, ok := err.(*Error); ok {
@@ -72,6 +84,20 @@ func IsBulkRequestFailed(err error) bool {
 func IsInvalidSearchQuery(err error) bool {
 	if cErr, ok := err.(*Error); ok {
 		return cErr.Code == ErrInvalidSearchQuery
+	}
+
+	return false
+}
+
+// IsConnRefused returns true if the error contains "connection refused" or "EOF" or any error strings
+func IsConnRefused(err error) bool {
+	errStr := err.Error()
+	if strings.Contains(errStr, "connection refused") ||
+		strings.Contains(errStr, "EOF") ||
+		strings.Contains(errStr, "connection reset") ||
+		strings.Contains(errStr, "server closed") ||
+		strings.Contains(errStr, "no available connection") {
+		return true
 	}
 
 	return false

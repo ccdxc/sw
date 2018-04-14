@@ -63,7 +63,8 @@ func TestEventsManagerInstantiation(t *testing.T) {
 	maxRetries = 2
 	retryDelay = 20 * time.Millisecond
 
-	mockResolver := mockresolver.New()
+	mockElasticsearchServer, mockResolver := setup()
+	defer mockElasticsearchServer.Stop()
 
 	// no server name
 	_, err := NewEventsManager("", "listen-url", mockResolver, logger)
@@ -85,7 +86,7 @@ func TestEventsManagerInstantiation(t *testing.T) {
 	_, err = NewEventsManager("server-name", "listen-url", mockResolver, logger)
 	tu.Assert(t, err != nil, "expected failure, EventsManager init succeeded")
 
-	// add dummy elastic URL to make client creation fail
+	// update the elasticsearch entry with dummy elastic URL to make client creation fail
 	mockResolver.AddServiceInstance(&types.ServiceInstance{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstance",

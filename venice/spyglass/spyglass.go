@@ -5,7 +5,6 @@ package main
 import (
 	"context"
 	"flag"
-	"os"
 	"strings"
 
 	"github.com/pensando/sw/venice/globals"
@@ -20,7 +19,6 @@ func main() {
 	var (
 		debugflag     = flag.Bool("debug", false, "Enable debug mode")
 		logToFile     = flag.String("logtofile", "/var/log/pensando/spyglass.log", "Redirect logs to file")
-		elasticURL    = flag.String("elastic-url", "http://"+os.Getenv("HOSTNAME")+":"+globals.ElasticsearchRESTPort, "Elastic REST endpoint")
 		apiServerAddr = flag.String("api-server-addr", globals.APIServer, "ApiServer gRPC endpoint")
 		finderAddr    = flag.String("finder-addr", ":"+globals.SpyglassRPCPort, "Finder search gRPC endpoint")
 		resolverAddrs = flag.String("resolver-addrs", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
@@ -52,17 +50,17 @@ func main() {
 	waitCh := make(chan bool)
 	ctx := context.Background()
 
+	rslr := resolver.New(&resolver.Config{Name: "spyglass",
+		Servers: strings.Split(*resolverAddrs, ",")})
+
 	// Create the finder and associated search endpoint
 	fdr, err := finder.NewFinder(ctx,
-		*elasticURL,
 		*finderAddr,
+		rslr,
 		logger)
 	if err != nil || fdr == nil {
 		log.Fatalf("Failed to create finder, err: %v", err)
 	}
-
-	rslr := resolver.New(&resolver.Config{Name: "spyglass",
-		Servers: strings.Split(*resolverAddrs, ",")})
 
 	// Start finder service
 	err = fdr.Start()
@@ -73,7 +71,6 @@ func main() {
 	// Create the indexer
 	idxer, err := indexer.NewIndexer(ctx,
 		*apiServerAddr,
-		*elasticURL,
 		rslr,
 		logger)
 

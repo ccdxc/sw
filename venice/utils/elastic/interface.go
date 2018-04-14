@@ -10,9 +10,8 @@ import (
 
 // ESClient interface for elasticsearch client.
 type ESClient interface {
-	// Ping connects to the elasticsearch instance and fetches info. about the cluster.
-	// equivalent to curl http://elasticIP:9200
-	Ping(ctx context.Context) error
+	// IsClusterHealthy checks the health of the elasticsearch cluster.
+	IsClusterHealthy(ctx context.Context) (bool, error)
 
 	// Version returns the version of the running elasticsearch instance.
 	Version() (string, error)
@@ -45,4 +44,7 @@ type ESClient interface {
 
 	// Close the elastic client
 	Close() error
+
+	// returns the number of times the underlying elastic client is reset
+	GetResetCount() int
 }

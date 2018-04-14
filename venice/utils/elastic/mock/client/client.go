@@ -39,9 +39,9 @@ func newMockClient() elastic.ESClient {
 	}
 }
 
-// Ping - mock implementation
-func (e *mockClient) Ping(ctx context.Context) error {
-	return nil
+// IsClusterHealthy - mock implementation
+func (e *mockClient) IsClusterHealthy(ctx context.Context) (bool, error) {
+	return true, nil
 }
 
 // Version - mock implementation
@@ -149,9 +149,14 @@ func (e *mockClient) Search(ctx context.Context, index, iType string, query inte
 	return &es.SearchResult{Hits: &es.SearchHits{TotalHits: totalHits}}, nil
 }
 
-// Close the mock client
+// Close - mock client implementation
 func (e *mockClient) Close() error {
 	e.indexes = nil
 	e.docs = nil
 	return nil
+}
+
+// GetResetCount - mock client implementation
+func (e *mockClient) GetResetCount() int {
+	return 0
 }
