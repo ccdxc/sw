@@ -14,4 +14,6 @@ RUN yum install -y \
     python36u-pip \
 &&  yum clean all
 
-CMD ["/naples/v1/nic/tools/start-naples-sim.sh"]
+ADD nic.tgz /naples/
+
+CMD ["/naples/nic/tools/start-naples-sim.sh"]

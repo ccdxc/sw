@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Bringing up NAPLES processes ..."
-NIC_DIR=/naples/v1/nic
+NIC_DIR=/naples/nic
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:/usr/local/lib:$LD_LIBRARY_PATH
 export MODEL_ZMQ_TYPE_TCP=1
