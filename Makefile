@@ -41,7 +41,7 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.12
-UI_BUILD_CONTAINER ?= pens-ui-bld:v0.1
+UI_BUILD_CONTAINER ?= pens-ui-bld:v0.2
 
 default:
 	$(MAKE) ws-tools

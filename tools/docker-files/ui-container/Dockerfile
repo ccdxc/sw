@@ -26,5 +26,5 @@ RUN ng -v
 
 USER root
 WORKDIR /import/src/github.com/pensando/sw
-ENV PATH=/usr/local/go/bin:/opt/bin:/import/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/node/.npm-global/bin
+ENV PATH=/usr/local/go/bin:/opt/bin:/import/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/node/.npm-global/bin:/usr/local/lib/web-app-framework/node_modules/.bin
 CMD make ui-cached
