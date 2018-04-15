@@ -7,7 +7,6 @@ import docker
 import json
 import pdb
 import consts
-from pip._vendor.colorama.ansi import Back
 
 DockerEnvClient = docker.from_env()
 DockerApiClient = docker.APIClient(base_url='unix://var/run/docker.sock')
@@ -102,10 +101,12 @@ class Interface(object):
         
 class NS(AppEngine):
     
-    def __init__(self, name):
+    def __init__(self, name, config_file=None, id=None, skip_init=False):
         self._name = name
         self._cmd_prefix = "ip netns exec %s" % self._name
         self._interfaces = {}
+        if not skip_init:
+            self.Init()
     
     def Init(self):
         #Create name space
@@ -170,6 +171,7 @@ class NS(AppEngine):
                 raise("Vlan Interface not found")
             
         cmd =  self._cmd_prefix + " ifconfig %s hw ether %s" % (intf._name, mac_address)
+        intf._mac_address = mac_address
         run(cmd)
  
     def SetIpAddress(self, interface, ipaddress, prefixlen, vlan=None):
@@ -223,38 +225,32 @@ class NS(AppEngine):
 
 class Container(NS):
     
-    class CommandHandler:
-        
-        def __init__(self, container_id, pid):
-            self._container_id = container_id
-            self.pid = str(pid)
-        
-        def kill(self):
-            cmd = "docker exec " + self._container_id + " kill -9 " + self.pid
-            run(cmd)
-            
-        
-    def __init__(self, name, config_file):
+    def __init__(self, name, config_file, container_id=None):
         data = json.load(open(config_file))
-        self._container_name = name
-        self._image = data["App"]["registry"] + data["App"]["image"]
-        print("Trying to stop previously running container")
-        try:
-            DockerApiClient.stop(name)
-            print("Stopped previously running container")
-        except:
-            print("Container was not running before.")
-        self._container_obj = DockerEnvClient.containers.run(self._image,
-                                           name = name,
-                                           detach=True,
-                                           auto_remove=True,
-                                           stdin_open=True,
-                                           tty=True,
-                                           network_disabled=True)
+        if not container_id:
+            self._container_name = name
+            self._image = data["App"]["registry"] + data["App"]["image"]
+            print("Trying to stop previously running container")
+            try:
+                DockerApiClient.stop(name)
+                print("Stopped previously running container")
+            except:
+                print("Container was not running before.")
+            self._container_obj = DockerEnvClient.containers.run(self._image,
+                                               name = name,
+                                               detach=True,
+                                               auto_remove=True,
+                                               stdin_open=True,
+                                               tty=True,
+                                               network_disabled=True)
+        else:
+            #Container is already running
+            self._container_obj = DockerEnvClient.containers.get(container_id)
+            self._container_name = container_id
         self._pid = str(DockerApiClient.inspect_container(self._container_obj.id)["State"]["Pid"])
         cmd = "ln -s " + "/proc/" + self._pid + "/ns/net /var/run/netns/" + self._pid
         run(cmd)
-        super().__init__(self._pid)
+        super().__init__(self._pid, skip_init=True)
         
     def BringUp(self):
         pass
@@ -271,7 +267,7 @@ class Container(NS):
         self.DetachInterfaces()
         print ("Stopping container %s please wait....." % self._container_name)
         self._container_obj.stop()
-        time.sleep(0.5)
+        time.sleep(2)
         if self._pid:
             run("rm -f /var/run/netns/" + self._pid)
 
@@ -285,8 +281,8 @@ AppTypeNameSpace = NS
 class AppFactory():
     
     @staticmethod
-    def Get(name, config_file = consts.E2E_APP_CONFIG_FILE, app_type=AppTypeContainer):
-        return app_type(name, config_file)
+    def Get(name, config_file = consts.E2E_APP_CONFIG_FILE, id=None, app_type=AppTypeContainer):
+        return app_type(name, config_file, id)
              
     
 if __name__ == "__main__":

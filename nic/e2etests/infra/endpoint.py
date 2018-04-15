@@ -19,15 +19,19 @@ class Endpoint:
         self._mac_addr = ep_cfg["macaddr"]
         self._ip_address = ep_cfg["ipaddrs"][0]
         self._prefix_len = 24
+        self._lif_id = 0
+        self._port = 0
         if not ep_cfg["remote"]:
             self._encap_vlan = data["EnicObject"][ep_cfg["intf"]]["encap_vlan_id"]
+            self._lif_id = data["EnicObject"][ep_cfg["intf"]]["lif_id"]
         else:
             self._encap_vlan = None
+            self._port = data["UplinkObject"][ep_cfg["intf"]]["port"]
         self._local = not ep_cfg["remote"]
 
 
-    def Init(self):
-        app = AppFactory.Get(self._name)
+    def Init(self, id=None):
+        app = AppFactory.Get(self._name, id=id)
         app.AttachInterface(self._name)
         app.SetMacAddress(self._name, self._mac_addr)
         if self._local:

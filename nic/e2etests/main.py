@@ -9,7 +9,7 @@ import time
 import atexit
 import signal
 import pdb
-from infra.e2e_test import E2eTest
+from infra.e2e_test import E2eTest, E2eEnv
 
 e2e_test = None
 
@@ -55,7 +55,18 @@ def bringup_test_spec_env(spec, nomodel):
                 pass
             e2e_test.Teardown()    
 
-
+def setup_cfg_env(e2e_cfg, nomodel):
+    print ("Setting up E2E Environment for config : ",  e2e_cfg)
+    env = E2eEnv(e2e_cfg)
+    env.BringUp(nomodel)
+    env.PrintEnvironmentSummary()
+    try:
+        while True:
+            time.sleep(10)
+    except KeyboardInterrupt:
+        pass
+    env.Teardown()    
+    
 def cleanup():
     #Clean up environment if process is cancelled.
     if e2e_test:
@@ -69,10 +80,12 @@ def signal_handler(signal, frame):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--e2e-mode', dest='test_mode', default="auto",
-                    choices=["auto", "manual"],
+                    choices=["auto", "manual", "setup"],
                     help='E2E Test mode.')
     parser.add_argument('--e2e-spec', dest='e2e_spec', default=None,
                     help='E2E spec if running in manual mode.')    
+    parser.add_argument('--e2e-cfg', dest='e2e_cfg', default=None,
+                    help='E2E Configuration file if running in setup mode.')    
     parser.add_argument('--nomodel', dest='nomodel', action="store_true",
                         help='No Model mode, connect each other.')  
     args = parser.parse_args()
@@ -81,8 +94,11 @@ def main():
 
     if args.test_mode == "auto":
         run_tests_in_auto_mode()
-    else:
+    elif args.test_mode == "manual":
         bringup_test_spec_env(args.e2e_spec, args.nomodel)
+    elif args.test_mode == "setup":
+        setup_cfg_env(args.e2e_cfg, args.nomodel)
+        
     return 
 
 

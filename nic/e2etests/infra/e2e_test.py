@@ -46,7 +46,7 @@ def GenerateEpPairCfg(src_ep_type="host", dst_ep_type="remote"):
             #ep_pair_cfg.append(cfg)
             #For now, returning after 1 pair creation.
             return ep_pair_cfg
-        
+
 def SetUpNs(name, ep):
     namespace_name = "_".join([name, "NET" if ep["remote"] else "HOST"])
     print ("Bringing up namespace for EP %s %s %s" % (name, ep["macaddr"], ep["ipaddrs"][0]))
@@ -130,6 +130,94 @@ class E2eTest(object):
         self._src_ep.PrintEpInformation()
         print ("************ Destination EP information *******")
         self._dst_ep.PrintEpInformation()
+        
+    def Teardown(self):
+        self.__clean_up_endpoints()
+        self._hntap.Stop()
+        time.sleep(2)
+
+class E2eEnv(object):
+
+    def __init__(self, cfg_file):
+        self._cfg = json.load(open(cfg_file))
+        self._eps = []
+        self.__parse_endpoints()
+    
+    def __get_lif_oport(self, intf_name):
+        for intf in self._cfg["Interfaces"]:
+            if intf["meta"]["name"] == intf_name:
+                if intf["spec"]["type"] == "UPLINK":
+                    for uplink_intf in self._cfg["HalInterfaces"]:
+                        if uplink_intf["spec"]["key_or_handle"]["KeyOrHandle"]["InterfaceId"] == intf["status"]["id"]:
+                            return 0, uplink_intf["spec"]["IfInfo"]["IfUplinkInfo"]["port_num"], uplink_intf["status"].get("encap_vlan", 0)
+                elif intf["spec"]["type"] == "ENIC":
+                    for lif in self._cfg["HalLifs"]:
+                        if lif["spec"]["key_or_handle"]["KeyOrHandle"]["LifId"] == intf["status"]["id"]:
+                            return lif["status"]["hw_lif_id"], 0, intf["status"].get("encap_vlan", 0)
+                else:
+                    assert(0)
+        print ("Interface information not found for ", intf_name)
+        assert(0)
+        
+        
+    def __parse_endpoints(self):
+        for endpoint in self._cfg["Endpoints"]:
+            name = endpoint["meta"]["Name"]
+            lif, oport, encap_vlan = self.__get_lif_oport(endpoint["status"]["Interface"])
+            ep_cfg = { "EndpointObject" : { name : {"remote" : lif <= 0 , "intf" : endpoint["status"]["Interface"]} },
+                       "UplinkObject" : { endpoint["status"]["Interface"] : { "port" : oport }}, 
+                       "EnicObject" : { endpoint["status"]["Interface"] :
+                                        { "lif_id" : lif ,
+                                          "encap_vlan_id" : encap_vlan
+                                         } },   }
+            ep_cfg_data = ep_cfg["EndpointObject"][name]
+            ep_cfg_data["macaddr"] = endpoint["status"]["MacAddress"]
+            ip_addr, prefix_len = endpoint["status"]["IPv4Address"].split("/")
+            ep_cfg_data["ipaddrs"] = [ ip_addr ]
+            ep = Endpoint(name, ep_cfg)
+            self._eps.append(ep)
+    
+    def __get_hntap_configuration(self):
+        ep_cfgs = []
+        for ep in self._eps:
+            ep_cfg = { "name" : ep._name,  "local" : ep._local,  "port" : ep._port, "lif_id" : int(ep._lif_id)}
+            ep_cfgs.append(ep_cfg)
+        return ep_cfgs
+    
+    def BringUp(self, nomodel=False):
+        self._ep_cfgs = self.__get_hntap_configuration()
+        with open(consts.HNTAP_CFG_FILE, "w") as fp:
+            json.dump(self._ep_cfgs, fp)
+        self._hntap = Hntap(consts.HNTAP_CFG_FILE)
+        self._hntap.Run(nomodel)
+        self.__configure_endpoints()
+
+
+    def __setup_arp_entries(self):
+        print ("Adding ARP entries for endpoints...")
+        #TODO , this should be smarter.
+        for ep in self._eps:
+            for other_ep in self._eps:
+                if other_ep == ep:
+                    continue
+                ep._app.AddArpEntry(other_ep.GetIp(), other_ep.GetMac())
+                
+    def __configure_endpoints(self):
+        for ep  in self._eps:
+            ep.Init()
+        #Add Arp entries for now.
+        self.__setup_arp_entries()
+        
+    def __clean_up_endpoints(self):
+        print ("Cleaning up endpoints...")
+        for ep in self._eps:
+            ep.Delete()
+        
+        
+    def PrintEnvironmentSummary(self):
+        for ep in self._eps:
+            print ("***********  EP information ********")
+            ep.PrintEpInformation()
         
     def Teardown(self):
         self.__clean_up_endpoints()
