@@ -53,6 +53,9 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 	idev->dev_cmd_db = bar->vaddr + BAR0_DEV_CMD_DB_OFFSET;
 	idev->intr_ctrl = bar->vaddr + BAR0_INTR_CTRL_OFFSET;
 	idev->intr_status = bar->vaddr + BAR0_INTR_STATUS_OFFSET;
+#ifdef HAPS
+	idev->ident = bar->vaddr + 0x800;
+#endif
 
 	sig = ioread32(&idev->dev_cmd->signature);
 	if (sig != DEV_CMD_SIGNATURE)

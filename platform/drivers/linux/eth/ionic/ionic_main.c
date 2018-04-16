@@ -121,6 +121,11 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 	do {
 
 		done = ionic_dev_cmd_done(idev);
+#ifdef HAPS
+		if (done)
+			printk(KERN_ERR "DEVCMD done took %ld secs (%ld jiffies)\n",
+			       (jiffies + max_wait - time)/HZ, jiffies + max_wait - time);
+#endif
 		if (done)
 			return 0;
 
@@ -128,6 +133,9 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 
 	} while (time_after(time, jiffies));
 
+#ifdef HAPS
+	printk(KERN_ERR "DEVCMD timeout after %ld secs\n", max_wait/HZ);
+#endif
 	return -ETIMEDOUT;
 }
 
@@ -194,6 +202,9 @@ int ionic_identify(struct ionic *ionic)
 	union identity *ident;
 	dma_addr_t ident_pa;
 	int err;
+#ifdef HAPS
+	unsigned int i;
+#endif
 
 	ident = devm_kzalloc(dev, sizeof(*ident), GFP_KERNEL | GFP_DMA);
 	if (!ident)
@@ -213,11 +224,21 @@ int ionic_identify(struct ionic *ionic)
 	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
 		sizeof(ident->drv.driver_ver_str) - 1);
 
+#ifdef HAPS
+	for (i = 0; i < 512; i++)
+		iowrite32(idev->ident->words[i], &ident->words[i]);
+#endif
+
 	ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
 
-	err = ionic_dev_cmd_wait_check(idev, HZ * 2);
+	err = ionic_dev_cmd_wait_check(idev, IONIC_DEVCMD_TIMEOUT);
 	if (err)
 		goto err_out_unmap;
+
+#ifdef HAPS
+	for (i = 0; i < 512; i++)
+		ident->words[i] = ioread32(&idev->ident->words[i]);
+#endif
 
 	ionic->ident = ident;
 	ionic->ident_pa = ident_pa;
@@ -244,7 +265,7 @@ int ionic_reset(struct ionic *ionic)
 	struct ionic_dev *idev = &ionic->idev;
 
 	ionic_dev_cmd_reset(idev);
-	return ionic_dev_cmd_wait_check(idev, HZ * 2);
+	return ionic_dev_cmd_wait_check(idev, IONIC_DEVCMD_TIMEOUT);
 }
 
 static int __init ionic_init_module(void)
