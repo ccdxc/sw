@@ -116,7 +116,7 @@ swig-cli-clean:
 swig-cli: swig-cli-clean
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli
 
-package-size-check:
+package-size-check: package
     ifeq ($(ARCH),aarch64)
 	$(eval FILE_NAME = ../nic.tar)
 	# max file size is 108MB

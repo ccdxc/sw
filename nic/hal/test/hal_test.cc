@@ -158,6 +158,11 @@ port::PortType       port_type        = port::PORT_TYPE_NONE;
 port::PortAdminState port_admin_state = port::PORT_ADMIN_STATE_NONE;
 port::PortSpeed      port_speed       = port::PORT_SPEED_NONE;
 
+static inline uint64_t
+min(uint64_t a, uint64_t b) {
+    return a < b ? a : b;
+}
+
 class hal_client {
 public:
     hal_client(std::shared_ptr<Channel> channel) : vrf_stub_(Vrf::NewStub(channel)),
@@ -900,19 +905,16 @@ public:
         return ret;
     }
 
-    uint64_t session_create(uint64_t session_id, uint64_t vrf_id, uint32_t sip, uint32_t dip,
-                            ::types::IPProtocol proto, uint16_t sport, uint16_t dport,
-                            ::session::NatType nat_type,
-                            uint32_t nat_sip, uint32_t nat_dip,
-                            uint16_t nat_sport, uint16_t nat_dport,
-                            ::session::FlowAction action,
-                            uint32_t ing_mirror_session_id) {
-        SessionSpec               *spec;
-        SessionRequestMsg         req_msg;
-        SessionResponseMsg        rsp_msg;
-        FlowSpec                  *flow;
-        ClientContext             context;
-        Status                    status;
+    int session_populate(uint64_t session_id, uint64_t vrf_id, uint32_t sip, uint32_t dip,
+                         ::types::IPProtocol proto, uint16_t sport, uint16_t dport,
+                         ::session::NatType nat_type,
+                         uint32_t nat_sip, uint32_t nat_dip,
+                         uint16_t nat_sport, uint16_t nat_dport,
+                         ::session::FlowAction action,
+                         uint32_t ing_mirror_session_id,
+                         SessionRequestMsg &req_msg) {
+        SessionSpec  *spec;
+        FlowSpec     *flow;
 
         spec = req_msg.add_request();
         spec->mutable_meta()->set_vrf_id(vrf_id);
@@ -989,18 +991,69 @@ public:
             return 0;
             break;
         }
+        return 0;
+    }
 
-        status = session_stub_->SessionCreate(&context, req_msg, &rsp_msg);
-        if (status.ok()) {
-            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
-            std::cout << "Session create succeeded, handle = "
-                      << rsp_msg.response(0).status().session_handle()
-                      << std::endl;
-            return rsp_msg.response(0).status().session_handle();
+    int session_create(uint64_t session_id, uint64_t vrf_id,
+                       uint32_t sip, uint32_t dip,
+                       ::types::IPProtocol proto,
+                       uint16_t sport,
+                       uint16_t dport_start, uint64_t num_dports,
+                       ::session::NatType nat_type,
+                       uint32_t nat_sip, uint32_t nat_dip,
+                       uint16_t nat_sport, uint16_t nat_dport,
+                       ::session::FlowAction action,
+                       uint32_t ing_mirror_session_id) {
+        uint64_t max_batch_req = 500;
+        if (num_dports < max_batch_req) {
+            max_batch_req = num_dports;
         }
-        std::cout << "Session create failed, error = "
-                  << rsp_msg.response(0).api_status()
-                  << std::endl;
+
+        for (uint64_t dport_batch_start = dport_start;
+             dport_batch_start < dport_start + num_dports;
+             dport_batch_start += max_batch_req) {
+
+            SessionRequestMsg   req_msg;
+            SessionResponseMsg  rsp_msg;
+            ClientContext       context;
+            Status              status;
+
+            std::cout << __func__ << ": Start batching: " << dport_batch_start << std::endl;
+
+            for (uint64_t dport = dport_batch_start;
+                 dport < min(dport_batch_start + max_batch_req, dport_start + num_dports);
+                 ++dport) {
+
+                std::cout << __func__ << ": dport: " << dport << std::endl;
+
+                session_populate(session_id, vrf_id,
+                                 sip, dip,
+                                 proto,
+                                 sport, dport,
+                                 nat_type,
+                                 nat_sip, nat_dip,
+                                 nat_sport, nat_dport,
+                                 action,
+                                 ing_mirror_session_id,
+                                 req_msg);
+            }
+
+            status = session_stub_->SessionCreate(&context, req_msg, &rsp_msg);
+            if (status.ok()) {
+                for (int i = 0; i < rsp_msg.response_size(); ++i) {
+                    assert(rsp_msg.response(i).api_status() == types::API_STATUS_OK);
+                    std::cout << "Session create succeeded, handle = "
+                              << rsp_msg.response(i).status().session_handle()
+                              << std::endl;
+                }
+            } else {
+                std::cout << "Session create failed, error = "
+                          << rsp_msg.response(0).api_status()
+                          << std::endl;
+                return -1;
+            }
+        }
+
         return 0;
     }
 
@@ -1861,7 +1914,7 @@ int
 main (int argc, char** argv)
 {
     uint64_t     vrf_handle, l2seg_handle, native_l2seg_handle, sg_handle;
-    uint64_t     nw1_handle, nw2_handle, uplink_if_handle, session_handle;
+    uint64_t     nw1_handle, nw2_handle, uplink_if_handle;
     uint64_t     lif_handle, enic_if_handle;
     uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
     uint64_t     lif_id = 100;
@@ -1877,6 +1930,7 @@ main (int argc, char** argv)
     bool         ep_delete_test = false;
     bool         session_delete_test = false;
     bool         session_create = false;
+    bool         session_create_cache_test = false;
     bool         system_get = false;
     bool         ep_create = false;
     bool         config = false;
@@ -1935,6 +1989,8 @@ main (int argc, char** argv)
             session_delete_test = true;
         } else if (!strcmp(argv[1], "session_create")) {
             session_create = true;
+        } else if (!strcmp(argv[1], "session_create_cache_test")) {
+            session_create_cache_test = true;
         } else if (!strcmp(argv[1], "config")) {
             config = true;
         }
@@ -1983,16 +2039,13 @@ main (int argc, char** argv)
         std::cout << "session_create" << std::endl;
 
         // create a session
-        session_handle = hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a0104,
-                                                ::types::IPProtocol::IPPROTO_UDP,
-                                                10000, 10001,
-                                                ::session::NAT_TYPE_NONE, 0, 0, 0, 0,
-                                                ::session::FlowAction::FLOW_ACTION_ALLOW,
-                                                1);
-        assert(session_handle != 0);
-
+        hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a0104,
+                               ::types::IPProtocol::IPPROTO_UDP,
+                               10000, 10001, 1,
+                               ::session::NAT_TYPE_NONE, 0, 0, 0, 0,
+                               ::session::FlowAction::FLOW_ACTION_ALLOW,
+                               1);
         return 0;
-
     } else if (ep_create == true) {
         ip_address = 0x0a0a0102;
         hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x0cc47a2a7b61, &ip_address, 1);
@@ -2037,6 +2090,15 @@ main (int argc, char** argv)
             assert(enic_if_handle != 0);
         }
 
+        return 0;
+    } else if (session_create_cache_test == true) {
+        // create a session
+        hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a0104,
+                               ::types::IPProtocol::IPPROTO_UDP,
+                               10000, 10002, 2500,
+                               ::session::NAT_TYPE_NONE, 0, 0, 0, 0,
+                               ::session::FlowAction::FLOW_ACTION_ALLOW,
+                               0);
         return 0;
     } else if (config == false) {
         std::cout << "Usage: <pgm> config" << std::endl;
@@ -2109,13 +2171,12 @@ main (int argc, char** argv)
                                   0x0a0a01FD, 0x0a0a01FE);  // 10.10.1.253 is our IP
 
     // create a session for NAT case
-    session_handle = hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a01FD,
-                                            ::types::IPProtocol::IPPROTO_TCP, 10000, 11000,
-                                            ::session::NAT_TYPE_TWICE_NAT,
-                                            0x0a0a01FD, 0x0a0a0105, 20000, 22000,
-                                            ::session::FlowAction::FLOW_ACTION_ALLOW,
-                                            0);   // no mirroring
-    assert(session_handle != 0);
+    hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a01FD,
+                           ::types::IPProtocol::IPPROTO_TCP, 10000, 11000, 1,
+                           ::session::NAT_TYPE_TWICE_NAT,
+                           0x0a0a01FD, 0x0a0a0105, 20000, 22000,
+                           ::session::FlowAction::FLOW_ACTION_ALLOW,
+                           0);   // no mirroring
 
     // create a netflow collector
     hclient.netflow_collector_create(vrf_id, 1, native_l2seg_handle,
