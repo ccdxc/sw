@@ -1,7 +1,8 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # compiled output
-/dist
+dist/*
+!dist/web-app-framework-0.0.0.tgz #for better performance allow checkin of this binary
 /tmp
 /out-tsc
 
