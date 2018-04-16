@@ -305,10 +305,10 @@ agent:
     endif
 
 # code generation stage
-stage0: p4 gen-proto csrlite go-proto utils capsim-master agent
+stage0: p4 gen-proto csrlite go-proto utils capsim-master
 
 # lib building stage
-stage1: asm capmodel build-proto sdk third-party
+stage1: asm capmodel build-proto sdk third-party agent
 
 # app building stage
 stage2: plugins linkmgr platform pd hal
