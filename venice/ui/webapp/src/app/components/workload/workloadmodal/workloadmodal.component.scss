@@ -1,0 +1,35 @@
+.workloadmodal-first-item {
+    margin-top: 22px;
+}
+
+$button-height: 30px;
+
+.workloadmodal-buttons {
+    height: $button-height;
+}
+
+.workloadmodal-button {
+    margin-left: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+    line-height: $button-height;
+}
+
+.workloadmodal-item-subtext {
+    font-style: italic;
+    color: #484848;
+    font-weight: 400;
+    font-size: 16px;
+}
+
+.workloadmodal-item {
+    width: 160px;
+}
+
+
+.workloadmodal-labelholder {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    margin-top: 15px;
+}

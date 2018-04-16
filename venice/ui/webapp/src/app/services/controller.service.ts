@@ -93,6 +93,7 @@ export class ControllerService {
     this.matIconRegistry.addSvgIcon('menu-collapse', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-collapse-menu.svg'));
     this.matIconRegistry.addSvgIcon('venice', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-venice.svg'));
     this.matIconRegistry.addSvgIcon('policy-health', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-policyhealth.svg'));
+    this.matIconRegistry.addSvgIcon('security-policy', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-security-policy.svg'));
 
     // Workload icons
     this.matIconRegistry.addSvgIcon('workloads-alert', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/workload/icon-workloads-alert.svg'));

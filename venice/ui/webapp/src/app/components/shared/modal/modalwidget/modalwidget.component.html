@@ -1,0 +1,11 @@
+<div fxLayout="column" class="modalwidget">
+    <div fxFlex="80px" fxLayout="row">
+        <ng-content select="[modal-header]"></ng-content>
+    </div>
+    <div fxFlex fxLayout="column" class="modalwidget-body">
+        <ng-content select="[modal-body]"></ng-content>
+    </div>
+    <div fxFlex="30px" class="modalwidget-footer">
+        <ng-content  select="[modal-footer]"></ng-content>
+    </div>
+</div>

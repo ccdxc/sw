@@ -29,19 +29,8 @@
 }
 
 .workload-button {
-	font-family: fira sans;
-	font-size: 16px;
-	font-weight: 500;
-	font-stretch: condensed;
-	text-align: center;
-	color: #ffffff;
     padding-left: 10px;
     padding-right: 10px;
-    cursor: pointer; 
-}
-
-.workload-toolbar-button {
-    background-color: #97b8df;
 }
 
 /** TABLE RELATED CSS **/
@@ -52,7 +41,7 @@ $table-headercontentheight: 25px;
     width: 100%;
     height: $table-headerheight;
     font-size: 18px;
-    font-family: Fira Sans;
+    font-family: 'Fira Sans Condensed';
     font-stretch: condensed;
     font-weight: 500;
 }
@@ -75,7 +64,6 @@ $table-headercontentheight: 25px;
     font-size: 14px;
     line-height: $table-headercontentheight;
     margin: 19px 5px 11px 5px;
-    background-color: #97b8df;
 }
 
 .workload-table-moreactions {
@@ -86,6 +74,12 @@ $table-headercontentheight: 25px;
 
 .workload-table-toggle {
     margin: 20px 5px 15px 5px;
+}
+
+.workload-table-toggle .mat-slide-toggle-content {
+    font-family: "Fira Sans Condensed";
+    font-size: 14px;
+    color: #676763;
 }
 
 .workload-table-toggle.mat-slide-toggle.mat-accent .mat-slide-toggle-bar {
@@ -241,4 +235,13 @@ $table-headercontentheight: 25px;
 .workload-item-changed.ui-state-highlight .ui-chkbox-box.ui-state-active {
     background-color: #77a746 !important;
     border-color: #77a746 !important;
+}
+
+.workload-modal .mat-dialog-container {
+    padding: 0px;
+    border-radius: 1px;
+    box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.5);
+    background-color: white;
+    border: solid 1px #97b8df;
+    height: 60vh;
 }

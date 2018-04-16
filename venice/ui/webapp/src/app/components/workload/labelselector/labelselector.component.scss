@@ -1,0 +1,59 @@
+.labelselector-expanded {
+    height: 35px;
+    width: 175px;
+    margin: 5px 5px 10px 5px;
+    background: url("/assets/images/labelselector/labelselector-expanded-blue.svg") center center no-repeat;
+}
+
+.labelselector-collapsed {
+    height: 35px;
+    width: 50px;
+    margin: 5px 5px 10px 5px;
+    background: url("/assets/images/labelselector/labelselector-collapsed-blue.svg") center center no-repeat;
+}
+
+.labelselector-inputcontainer {
+    width: 120px;
+}
+
+
+.labelselector-modal-option {
+    height: 25px !important;
+    font-family: "Fira Sans Condensed" !important;
+    font-size: 16px !important;
+    color: #676763 !important;
+}
+
+.labelselector-label-and {
+    font-family: Roboto;
+	font-size: 13px;
+	font-stretch: condensed;
+	text-align: left;
+	color: #484848;
+
+    margin-right: 3px;
+    margin-left: 5px;
+}
+
+%label-icon {
+    width: 24px;
+    height: 30px;
+    background-color: transparent;
+    border-left: solid 1px #97b8df;
+    margin-right: 5px;
+    font-size: 18px;
+    color: #97b8df;
+    cursor: pointer;
+    &:hover {
+        color: #484848;
+    }
+}
+
+.labelselector-add {
+    @extend %label-icon;
+    border-left: none;
+}
+
+.labelselector-cancel {
+    @extend %label-icon;
+}

@@ -4,10 +4,9 @@
 
 .systemCapacity-nodecount {
   text-align: center;
-  font-family: Fira Sans;
+  font-family: 'Fira Sans Condensed';
   font-size: 100px;
   font-stretch: condensed;
-  // text-align: right;
   color: #b592e3;
 }
 
@@ -21,4 +20,6 @@
 .systemCapacity-right{
   padding-top:20px;
   overflow: hidden;
+  height:250px;
+  width:335px;
 }

@@ -1,20 +1,21 @@
 <app-pagebody [icon]="bodyicon" title="Workloads">
+    <div fxFlex fxLayout="row" fxLayoutAlign="center center" pagebody-options>
+      <div fxFlex></div>
+      <mat-icon (click)="toggleHeroStats()">expand_more</mat-icon>
+    </div>
     <div fxLayout="row wrap" fxLayoutAlign="start" class="workload-widgetcontainer">
         <div *ngFor="let widget of widgets">
-            <ng-container *ngTemplateOutlet="workloadCard; context:{item:widget}" ></ng-container>
+          <app-workloadwidget
+                              [id]="widget"
+                              [selected]="selectedWorkloadWidget"
+                              [collapsedView]="!heroStatsToggled"
+                              (workloadWidgetClick)="workloadClickHandler($event)"
+                              > 
+          </app-workloadwidget>
         </div>
     </div>
     <ng-container *ngTemplateOutlet="DataTable" ></ng-container>
 </app-pagebody>
-
-<ng-template #workloadCard let-item="item" >
-    <app-workloadwidget
-                        [id]="item"
-                        [selected]="selectedWorkloadWidget"
-                        (workloadWidgetClick)="workloadClickHandler($event)"
-                        > 
-    </app-workloadwidget>
-</ng-template>
 
 <ng-template #DataTable>
   <!-- Table Caption -->
@@ -23,10 +24,10 @@
     <div fxFlex='nogrow' class="workload-table-headercontent">
         Total Workloads (Showing <strong>{{workloadtable?.totalRecords | number}}</strong> of {{workloadCount.total | number}})
     </div>
-    <span fxFlex='nogrow' (click)="workloadTableAddToGroup()" class="workload-button workload-table-button workload-table-button-addtogroup">ADD TO GROUP</span>
-    <span fxFlex='nogrow' (click)="workloadTableAddLabel()" class="workload-button workload-table-button workload-table-button-addlabel">ADD LABEL</span>
-    <span fxFlex='nogrow' (click)="workloadTableDeleteWorkload()" class="workload-button workload-table-button workload-table-button-deleteworkload">DELETE WORKLOADS</span>
-    <div fxFlex='nogrow' (click)="workloadTableMoreActions()" class="workload-table-moreactions">
+    <span fxFlex='none' [ngClass]="!hasWorkloadsSelected() ? 'global-button-disabled':''" (click)="workloadTableAddToGroup()" class="global-button-primary workload-button workload-table-button workload-table-button-addtogroup">ADD TO GROUP</span>
+    <span fxFlex='none' [ngClass]="!hasWorkloadsSelected() ? 'global-button-disabled':''" (click)="workloadTableAddLabel()" class="global-button-primary workload-button workload-table-button workload-table-button-addlabel">ADD LABEL</span>
+    <span fxFlex='none' [ngClass]="!hasWorkloadsSelected() ? 'global-button-disabled':''" (click)="workloadTableDeleteWorkload()" class="global-button-primary workload-button workload-table-button workload-table-button-deleteworkload">DELETE WORKLOADS</span>
+    <div fxFlex='none' [ngClass]="!hasWorkloadsSelected() ? 'global-button-disabled':''" (click)="workloadTableMoreActions()" class="workload-table-moreactions">
       <span >More actions...</span>
     </div>
     <span fxFlex></span>

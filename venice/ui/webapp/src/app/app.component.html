@@ -19,19 +19,24 @@
                         </button>
                     </div>
                     <div class="app-shell-header-search-div">
-                        <button type="button" class="btn btn-link app-search-button" (click)="onAppHeaderSearchClick($event)" title="Seach">
+                        <!-- <button type="button" class="btn btn-link app-search-button" (click)="onAppHeaderSearchClick($event)" title="Seach">
                             <i class="fa fa-search app-header-search-icon"></i>
-                        </button>
-                        <p-autoComplete styleClass="app-header-search-autocomplete-widget" [(ngModel)]="searchVeniceApplication" [suggestions]="searchVeniceApplicationsSuggestions"
+                        </button> -->
+                        
+                        <pw-searchbox styleClass="app-header-search-autocomplete-widget" [(ngModel)]="searchVeniceApplication" [suggestions]="searchVeniceApplicationsSuggestions"
                             (completeMethod)="filterVeniceApplicationSearchSuggestions($event)" [minLength]="1" placeholder="Search"
-                            field="name" (onSelect)="onSearchVeniceApplicationSelect($event)" emptyMessage="{{noSearchSuggestion}}">
+                            field="name" (onSelect)="onSearchVeniceApplicationSelect($event)" emptyMessage="{{noSearchSuggestion}}" [multiple]="true" dataKey="code" (invokeSearch)="onInvokeSearch($event)">
                             <ng-template let-item pTemplate="item">
                                 <div class="row ui-helper-clearfix app-search-autocomplete-suggestion-div" *ngIf="item.description">
                                     <div class="col-md-6 app-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-name">{{item.name}}</div>
                                     <div class="col-md-6 app-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-desc">{{item.description}}</div>
+                                    <input matInput [placeholder]="envPort">
                                 </div>
                             </ng-template>
-                        </p-autoComplete>
+                            <ng-template let-item pTemplate="selectedItem">                               
+                                <span style="font-size:14px; margin-right:18px">{{item.seachType? item.seachType + ":" + item.selectedOption : item.code + "-" + item.name}}</span>
+                             </ng-template>
+                        </pw-searchbox>
                     </div>
 
                     <span class="app-shell-spacer"></span>

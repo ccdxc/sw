@@ -74,8 +74,8 @@ export class PlotlyimageComponent implements OnInit, OnChanges {
     if (this.fillcolor) {
       this.fillcolorOption = this.fillcolor;
     }
-    //If passed in data is an array,
-    //we assume it is in the data format for plotly
+    // If passed in data is an array,
+    // we assume it is in the data format for plotly
     if (!this.dataset) {
       this.dataset = [];
     }
@@ -84,7 +84,7 @@ export class PlotlyimageComponent implements OnInit, OnChanges {
       this.dataset = this.data;
     } else {
       this.dataset = [
-        //passed in graph data
+        // passed in graph data
         {
           x: this.data.x,
           y: this.data.y,

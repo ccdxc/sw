@@ -3,7 +3,7 @@
 	"response": {
 		"context": {
 			"requestId": "aa9246d9-abd8-e646-1169-96fa3b3b1251",
-			"initiatedBy": "PensendoLoginUI",
+			"initiatedBy": "PensandoLoginUI",
 			"timestamp": "2017-03-15T18:16Z",
 			"requestName": "PENSANDO_USERR_SIGNIN_REQUEST",
 			"servicedBy": "DataAccessPlatform,RESTService",

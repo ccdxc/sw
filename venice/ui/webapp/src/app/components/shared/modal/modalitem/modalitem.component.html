@@ -1,0 +1,7 @@
+<div fxflex fxLayout="row" class="modalitem-container">
+    <div fxFlex="none" [style.border-color]="iconStyle" fxLayout="row" fxLayoutAlign="center center" class="modalitem-icon">
+        <mat-icon *ngIf="icon.url" fxFlex="13px" [style.color]="iconStyle" [svgIcon]="icon.url" class="modalitem-maticon"></mat-icon>
+        <mat-icon *ngIf="icon.name" fxFlex="13px" [style.color]="iconStyle" class="modalitem-maticon">{{icon.name}}</mat-icon>
+    </div>
+    <ng-content fxFlex></ng-content>
+</div>

@@ -1,0 +1,84 @@
+
+
+<span class="pw-searchbox" [ngClass]="{'ui-autocomplete ui-widget':true,'ui-autocomplete-dd':dropdown,'ui-autocomplete-multiple':multiple}" [ngStyle]="style" [class]="styleClass">
+  <input *ngIf="!multiple" #in [attr.type]="type" [attr.id]="inputId" [ngStyle]="inputStyle" [class]="inputStyleClass" autocomplete="off" [attr.required]="required"
+  [ngClass]="'ui-inputtext ui-widget ui-state-default ui-corner-all ui-autocomplete-input'" [value]="inputFieldValue"
+  (click)="onInputClick($event)" (input)="onInput($event)" (keydown)="onKeydown($event)" (keyup)="onKeyup($event)" (focus)="onInputFocus($event)" (blur)="onInputBlur($event)" (change)="onInputChange($event)"
+  [attr.placeholder]="placeholder" [attr.size]="size" [attr.maxlength]="maxlength" [attr.tabindex]="tabindex" [readonly]="readonly" [disabled]="disabled"
+  ><ul *ngIf="multiple" #multiContainer class="ui-autocomplete-multiple-container ui-widget ui-inputtext ui-state-default ui-corner-all" [ngClass]="{'ui-state-disabled':disabled,'ui-state-focus':focus}" (click)="multiIn.focus()">
+      <li #token *ngFor="let val of value" class="ui-autocomplete-token ui-state-highlight ui-corner-all">
+          <span class="ui-autocomplete-token-icon fa fa-fw fa-close" (click)="removeItem(token)" *ngIf="!disabled"></span>
+          <span *ngIf="!selectedItemTemplate" class="ui-autocomplete-token-label">{{field ? objectUtils.resolveFieldData(val, field): val}}</span>
+          <ng-container *ngTemplateOutlet="selectedItemTemplate; context: {$implicit: val}"></ng-container>
+      </li>
+      <li class="ui-autocomplete-input-token">
+          <input #multiIn [attr.type]="type" [attr.id]="inputId" [disabled]="disabled" [attr.placeholder]="(value&&value.length ? null : placeholder)" [attr.tabindex]="tabindex" (input)="onInput($event)"  (click)="onInputClick($event)"
+                  (keydown)="onKeydown($event)" (keyup)="onKeyup($event)" (focus)="onInputFocus($event)" (blur)="onInputBlur($event)" autocomplete="off" [ngStyle]="inputStyle" [class]="inputStyleClass">
+      </li>
+  </ul
+  ><i *ngIf="loading" class="ui-autocomplete-loader fa fa-circle-o-notch fa-spin fa-fw"></i><button #ddBtn type="button" pButton icon="fa-fw fa-caret-down" class="ui-autocomplete-dropdown" [disabled]="disabled"
+      (click)="handleDropdownClick($event)" *ngIf="dropdown"></button>
+  <div #panel class="ui-autocomplete-panel ui-widget-content ui-corner-all ui-shadow" [style.display]="panelVisible ? 'block' : 'none'" [style.width]="appendTo ? 'auto' : '100%'" [style.max-height]="scrollHeight">
+      <ul class="ui-autocomplete-items ui-autocomplete-list ui-widget-content ui-widget ui-corner-all ui-helper-reset" *ngIf="panelVisible">
+          <li *ngFor="let option of suggestions; let idx = index" [ngClass]="{'ui-autocomplete-list-item ui-corner-all':true,'ui-state-highlight':(highlightOption==option && option.indicator)}"
+              (mouseenter)="option.indicator? highlightOption=null : highlightOption=option" (mouseleave)="highlightOption=null" (click)="selectItem(option)"
+              [ngSwitch]="option.indicator"
+              >
+              <div class="searchbox-panel-div" *ngSwitchCase="templateSwitchIndicator">
+                  <ng-container *ngTemplateOutlet="searchboxPensando; context:{item:option, index:idx}"></ng-container>
+              </div>
+              <div class="searchbox-panel-div" *ngSwitchDefault>
+                  <span *ngIf="!itemTemplate">{{field ? objectUtils.resolveFieldData(option, field) : option}}</span>
+                  <ng-container *ngTemplateOutlet="itemTemplate; context: {$implicit: option, index: idx}"></ng-container>
+              </div>
+          </li>
+          <li *ngIf="noResults && emptyMessage" class="ui-autocomplete-list-item ui-corner-all">{{emptyMessage}}</li>
+      </ul>
+  </div>
+  <span class="ui-autocomplete-token-icon searchbox-autocomplete-token-icon-rmAll fa fa-fw fa-close" (click)="removeAllItem($event)" *ngIf="!disabled && multiple && value && value.length>0"></span>
+  <span class="ui-autocomplete-token-icon searchbox-autocomplete-token-icon-seach fa fa-fw fa-search" (click)="onInvokeSearch($event)" *ngIf="!disabled && multiple && value && value.length>0"></span>
+</span>
+
+<ng-template #searchboxPensando let-item="item">
+  <div id="{{id}}_pensandoSearchBox" [ngSwitch]="true">
+      
+       <div class="searchbox-panel-div" *ngSwitchCase="item.seachType === 'in' || item.seachType === 'is'">
+          <ng-container *ngTemplateOutlet="searchboxInCategory; context:{item:item}"></ng-container>
+      </div> 
+      <div class="searchbox-panel-div searchbox-panel-div-has" *ngSwitchCase="item.seachType === 'has'">
+          <ng-container *ngTemplateOutlet="searchboxInContent; context:{item:item}"></ng-container>
+      </div>
+      <div class="searchbox-panel-div searchbox-panel-div-has" *ngSwitchCase="item.seachType === 'date'">
+          <ng-container *ngTemplateOutlet="searchboxDate; context:{item:item}"></ng-container>
+      </div>
+      <div class="searchbox-panel-div searchbox-panel-div-default" *ngSwitchDefault>
+          {{item.name}} {{item.seachType}}
+      </div>      
+  </div>
+</ng-template>
+
+<ng-template #searchboxInCategory let-item="item">
+  <div class="searchbox-select-panel-template-item searchbox-select-panel-template-item-inCategory">
+    {{item.name}}
+  </div>
+  <div class="searchbox-select-panel-template-item-options" *ngFor="let option of item.options" >
+      <span (click)="item.selectedOption=option" class="searchbox-select-panel-template-item-options-item">{{option}}</span>
+  </div>
+</ng-template>
+
+<ng-template #searchboxInContent let-item="item">
+    <div class="searchbox-select-panel-template-item searchbox-select-panel-template-item-inCategory">
+      {{item.name}}
+    </div>
+    <div class="searchbox-select-panel-template-item-options" *ngFor="let option of item.options" >
+        <span (click)="item.selectedOption=option" class="searchbox-select-panel-template-item-options-item">{{option}}</span>
+    </div>
+</ng-template>
+
+<ng-template #searchboxDate let-item="item">
+    <div class="searchbox-select-panel-template-item searchbox-select-panel-template-item-inCategory">
+      {{item.name}}
+    </div>
+    <input id="datetime" type="datetime-local">
+    
+</ng-template>

@@ -1,0 +1,20 @@
+<div fxLayout="row" class="modalheader-container">
+    <div fxFlex="70px" fxLayout="row" fxLayoutAlign="space-around center">
+        <mat-icon *ngIf="icon.url" [svgIcon]="icon.url" class="modalheader-icon">
+        </mat-icon>
+        <mat-icon *ngIf="icon.name" class="modalheader-icon modalheader-icon-byname">
+            {{icon.name}}
+        </mat-icon>
+    </div>
+    <div fxFlex  fxLayout="column" fxLayoutAlign="center start" class="modalheader-titlecontainer">
+        <div class="modalheader-title">
+            {{title}}
+        </div>
+        <div fxFlex class="modalheader-subtitle">
+            {{subtitle}}
+        </div>
+    </div>
+    <div fxFlex="46px" fxLayout="column" fxLayoutAlign="start end" class="modalheader-cancel">
+        <mat-icon (click)="onHeaderCancelClick($event)" class="modalheader-cancel-icon">clear</mat-icon>
+    </div>
+</div>

@@ -46,6 +46,7 @@ export class WorkloadwidgetComponent extends BaseComponent implements OnInit, On
 
   @Input() id: string;
   @Input() selected: string;
+  @Input() collapsedView: boolean;
 
   @Output() workloadWidgetClick: EventEmitter<any> = new EventEmitter();
   constructor(private _workloadService: WorkloadService,

@@ -6,6 +6,8 @@ import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs/Subscription';
 
 import { BaseComponent } from '../base/base.component';
+import { WorkloadModalComponent } from '@app/components/workload/workloadmodal/workloadmodal.component';
+import { MatDialog} from '@angular/material';
 
 /**
  * Creates the workload page. Uses workload widget for the hero stats
@@ -22,14 +24,16 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
 
   private subscription: Subscription;
   // Workload Widget vars
+  heroStatsToggled = true;
+
   totalworkloadsWidget: any;
   newworkloadsWidget: any;
   unprotectedworkloadsWidget: any;
   workloadalertsWidget: any;
   widgets: string[] = ['totalworkloads',
-  'newworkloads',
-  'unprotectedworkloads',
-  'workloadalerts'];
+                        'newworkloads',
+                        'unprotectedworkloads',
+                        'workloadalerts'];
   totalworkload: any;
   selectedWorkloadWidget: string;
   bodyicon: any = {
@@ -53,7 +57,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     workloadalerts: 'alert',
     savedChangesToggle: 'changed',
   };
-  selectedWorkloads: any[];
+  selectedWorkloads: any[] = [];
   loading = false;
 
   workloads: any;
@@ -66,9 +70,16 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     { field: 'appId', header: 'App ID' },
   ];
 
+  // Modal vars
+  dialogRef: any;
+  securityGroups: string[] = ['SG1', 'SG2'];
+  labels: any = {'Loc': ['NL', 'AMS'], 'Env' : ['test', 'prod']};
+
   constructor(
     private _workloadService: WorkloadService,
-    protected _controllerService: ControllerService) {
+    protected _controllerService: ControllerService,
+    protected dialog: MatDialog,
+  ) {
     super(_controllerService);
   }
 
@@ -84,12 +95,12 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
       this._controllerService.setToolbarData({
         buttons: [
           {
-            cssClass: 'workload-button workload-toolbar-button',
+            cssClass: 'global-button-primary workload-button',
             text: 'NEW WORKLOAD',
             callback: () => {this.buttoncallback('new workload'); }
           },
           {
-            cssClass: 'workload-button workload-toolbar-button',
+            cssClass: 'global-button-primary workload-button workload-toolbar-button',
             text: 'COMMIT CHANGES',
             callback: () => {this.buttoncallback('commit changes'); }
           }],
@@ -106,6 +117,17 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     console.log(text);
   }
 
+  generateModalAddToGroup() {
+    this.dialogRef = this.dialog.open(WorkloadModalComponent, {
+      panelClass: 'workload-modal',
+      width: '898px',
+      hasBackdrop: true,
+      data: {securityGroups: this.securityGroups,
+             selectedWorkloads: this.selectedWorkloads,
+             labels: this.labels}
+    });
+  }
+
   ngOnDestroy() {
     if (this.subscription != null) {
       this.subscription.unsubscribe();
@@ -118,6 +140,10 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
 
 
   ngOnChanges() {
+  }
+
+  hasWorkloadsSelected() {
+    return this.selectedWorkloads.length > 0;
   }
 
   workloadTableRowStyle(rowData) {
@@ -167,19 +193,27 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   }
 
   workloadTableAddToGroup($event) {
-    console.log('add to group');
+    if (this.selectedWorkloads.length !== 0) {
+      this.generateModalAddToGroup();
+    }
   }
 
   workloadTableAddLabel($event) {
-    console.log('add label');
+    if (this.selectedWorkloads.length !== 0) {
+      console.log('add label');
+    }
   }
 
   workloadTableDeleteWorkload($event) {
-    console.log('add label');
+    if (this.selectedWorkloads.length !== 0) {
+      console.log('add label');
+    }
   }
 
   workloadTableMoreActions($event) {
-    console.log('more actions clicked', $event);
+    if (this.selectedWorkloads.length !== 0) {
+      console.log('more actions clicked', $event);
+    }
   }
 
   onWorkloadTableArchiveRecord($event) {
@@ -188,6 +222,10 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
 
   onWorkloadTableDeleteRecord($event) {
     console.log('delete', $event);
+  }
+
+  toggleHeroStats() {
+    this.heroStatsToggled = !this.heroStatsToggled;
   }
 
 }

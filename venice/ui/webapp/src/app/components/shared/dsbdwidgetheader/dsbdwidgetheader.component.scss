@@ -1,5 +1,5 @@
 .dsbd-widgetheader{
-  font-family: Fira Sans;
+  font-family: 'Fira Sans Condensed';
 }
 .dsbd-widgetheader-icon {
   opacity: 0.3;
@@ -18,9 +18,8 @@
 }
 
 .dsbd-widgetheader-update-text {
-  font-family: Fira Sans;
+  font-family: 'Fira Sans Condensed';
   font-size: 12px;
-  font-stretch: condensed;
   text-align: right;
   color: #cccccc;
 }
@@ -52,7 +51,7 @@
 }
 
 /* override the */
-.pensendo-ui  .mat-menu-panel {
+.pensando-ui  .mat-menu-panel {
   background: #fff !important;
 }
 

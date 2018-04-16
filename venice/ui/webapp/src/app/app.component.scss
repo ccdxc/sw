@@ -3,7 +3,7 @@
   height: 100vh;
   padding: 0px;
   margin: 0px;
-  font-family: "Fira Sans" !important;
+  font-family: "Fira Sans Condensed" !important;
 }
 
 .app-shell-tool-bar-row.mat-toolbar-row {
@@ -174,7 +174,7 @@ $sidenavWidth: 200px;
   bottom: 0;
   left: 0;
   right: 0;
-  font-family: "Fira Sans" !important;
+  font-family: "Fira Sans Condensed" !important;
 }
 
 .app-shell-sideNav-right-Settings {
@@ -206,7 +206,7 @@ $sidenavWidth: 200px;
   color: #222222;
   transition: .2s;
   width: 570px;
-  text-indent: 30px;
+  /* text-indent: 30px; */
   margin-top: 1px;
   border: 0px;
 }

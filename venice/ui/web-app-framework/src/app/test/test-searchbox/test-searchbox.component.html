@@ -1,0 +1,52 @@
+<!-- 
+<h3 class="first">Basic</h3>
+<pw-searchbox [(ngModel)]="country" [suggestions]="filteredCountriesSingle" (completeMethod)="filterCountrySingle($event)" field="name" [size]="30"
+    placeholder="Countries" [minLength]="1"></pw-searchbox>
+<span style="margin-left:10px">Country: {{country ? country.name||country : 'none'}}</span> 
+-->
+
+<br/>
+<h3 class="first">PW Template Single-Select</h3>
+<pw-searchbox [(ngModel)]="country" [suggestions]="filteredCountriesSingle" (completeMethod)="filterCountrySingle($event)"
+  field="name" [size]="30" placeholder="Countries" [minLength]="1">
+  <ng-template let-item pTemplate="item">
+    <div class="ui-helper-clearfix" style="border-bottom:1px solid #D5D5D5">
+      <div style="font-size:18px;float:right;margin:10px 10px 0 0">{{item.code}}</div>
+      <div style="font-size:18px;float:right;margin:10px 10px 0 0">{{item.name}}</div>
+      <!-- <input matInput [placeholder]="in"> -->
+    </div>
+  </ng-template>
+</pw-searchbox>
+<span style="margin-left:10px">Country: {{country ? country.name||country : 'none'}}</span>
+
+<h3>PW Template Multiple-Select</h3>
+<span class="ui-fluid">
+  <pw-searchbox [(ngModel)]="countries" [suggestions]="filteredCountriesMultiple" (completeMethod)="filterCountryMultiple($event)"
+    styleClass="wid100" [minLength]="1" placeholder="Countries" field="name" [multiple]="true" dataKey="code"	(invokeSearch)="onInvokeSearch($event)">
+    <ng-template let-item pTemplate="item" >
+      <div class="ui-helper-clearfix" style="border-bottom:1px solid #D5D5D5">
+        <div style="font-size:18px;float:right;margin:10px 10px 0 0">{{item.name}}</div>
+        <!-- <input style="font-size:18px;float:right;margin:10px 10px 0 0" matInput [placeholder]="in"> -->
+      </div>
+    </ng-template>
+    <ng-template let-item pTemplate="selectedItem">
+      <!-- <span style="font-size:12px; margin-right:12px">{{item.code}}-{{item.name}}</span> -->
+      <span style="font-size:12px; margin-right:12px">{{item.seachType? item.seachType + ":" + item.selectedOption : item.code + "-" + item.name}}</span>
+    </ng-template>
+  </pw-searchbox>
+</span>
+<ul>
+  <li *ngFor="let c of countries">{{c.name}}</li>
+</ul>
+<!-- 
+<h3 class="first">PrimeNG Template</h3>
+<p-autoComplete [(ngModel)]="country" [suggestions]="filteredCountriesSingle" (completeMethod)="filterCountrySingle($event)" field="name" [size]="30"
+    placeholder="Countries" [minLength]="1">
+    <ng-template let-item pTemplate="item">
+      <div class="ui-helper-clearfix" style="border-bottom:1px solid #D5D5D5">
+          <div style="font-size:18px;float:right;margin:10px 10px 0 0">{{item.code}}</div>
+          <div style="font-size:18px;float:right;margin:10px 10px 0 0">{{item.name}}</div>
+      </div>
+  </ng-template>
+</p-autoComplete>
+ -->

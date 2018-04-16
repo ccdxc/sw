@@ -1,5 +1,5 @@
 <!-- HTML for if this widget is pinned to the dashboard homepage -->
-<div *ngIf="onDashboard;else widgetContent"  fxLayout="column" [id]="id" (mouseenter)="widgetHover=true" (mouseleave)="widgetHover=false" (click)="itemClick($event)" class="wlWidgetDsbd">
+<div *ngIf="onDashboard"  fxLayout="column" [id]="id" (mouseenter)="widgetHover=true" (mouseleave)="widgetHover=false" (click)="itemClick($event)" class="wlWidgetDsbd">
   <app-dsbdwidgetheader [@loaded]="isReady" fxFlex="36px" fxLayout="row" [title]="title" [icon]="icon" [id]="id + '_header'">
   </app-dsbdwidgetheader>
   <div [@loaded]="isReady" [@fade] *ngIf="isReady" [ngClass]="style_class" fxFlex fxLayout="row" fxLayoutAlign="center" class="wlWidgetDsbd-content">
@@ -20,12 +20,20 @@
   </div>
 </div>
 
+<div  *ngIf="collapsedView" class="wlWidget-collapsed-container">
+  <div class="wlWidget-collapsed" (click)="itemClick($event)" [ngClass]="selected==id ? 'wlWidget-collapsed-selected' : ''">
+    {{title}} ({{label}})
+  </div>
+</div>
+
+
+
 <!-- HTML for the widget on the workloads page -->
-<ng-template #widgetContent>
+<div *ngIf="!onDashboard && !collapsedView">
   <div class="wlWidget" [ngClass]="selected==id ? (style_class + ' wlWidget-selected'): style_class" [id]="id" (mouseenter)="widgetHover=true" (mouseleave)="widgetHover=false" (click)="itemClick($event)" fxLayout='column'>
     <div [@loaded]="isReady" fxLayout="column" fxFlex="71.43" class="wlWidget-north">
       <div fxFlex="34" class="wlWidget-title">{{title}}</div>
-      <mat-icon [@fade] *ngIf="isReady" class="wlWidget-icon" [svgIcon]="icon.svgIcon"></mat-icon>
+      <mat-icon [@fade] *ngIf="isReady" class="wlWidget-icon" [ngStyle]="_iconStyles" [svgIcon]="icon.svgIcon"></mat-icon>
       <div [@fade] *ngIf="isReady" fxFlex [ngClass]="style_class" class="wlWidget-label">{{label}}</div>
     </div>
     <ng-container *ngTemplateOutlet="south"></ng-container>
@@ -33,13 +41,12 @@
       <app-spinner></app-spinner>
     </div>
   </div>
-</ng-template>
+</div>
 
 <!-- Creates the arrow/pin icon and the graph -->
 <ng-template #south>
   <div [@loaded]="isReady" fxFlex fxLayout="row" class="wlWidget-south">
-    <!-- <div fxFlex="17.09" class="wlWidget-mat-icon-container" [ngStyle]="isPinned && widgetHover ? _iconPinnedStyles: ''" (mouseenter)="pinHover=true" (mouseleave)="pinHover=false"> -->
-    <div fxFlex="17.09" class="wlWidget-mat-icon-container" (mouseenter)="pinHover=true" (mouseleave)="pinHover=false">
+    <div fxFlex="17.09" class="wlWidget-mat-icon-container" [ngStyle]="isPinned && widgetHover ? _iconPinnedStyles: ''" (mouseenter)="pinHover=true" (mouseleave)="pinHover=false">
         <mat-icon [@fade] *ngIf="isReady && !widgetHover" class="wlWidget-mat-icon" [ngClass]="arrowDir=='down' ? 'mat-icon-rotate': ''">
             arrow_upward 
         </mat-icon>

@@ -1,0 +1,96 @@
+<app-modalwidget>
+  <app-modalheader modal-header fxFlex [icon]='icon' title="Create or Join a Security Group" 
+          subtitle="Create or join a security group containing {{data.selectedWorkloads.length}} workloads"
+          (cancelClick)="onNoClick()">
+  </app-modalheader>
+  <app-modalbody fxFlex modal-body>
+    <div fxLayout="column">
+      <app-modalcontent>
+        Choose one of the following options
+        <app-modalcontent>
+            <mat-radio-group [(ngModel)]="newSecurityGroup">
+                <mat-radio-button color="primary" checked="true" value="new">Add to a new security group</mat-radio-button>
+                <mat-radio-button color="primary" value="existing">Add to an existing security group</mat-radio-button>
+              </mat-radio-group>
+        </app-modalcontent>
+      </app-modalcontent>
+
+      <!-- Existing Security Group options -->
+      <app-modalitem *ngIf="newSecurityGroup == 'existing'; else newSecurityItems" 
+            [observer]="errorStateMatcherExisting.errorStateObserver()"        
+            class="modalwidget-input workloadmodal-first-item">
+        <div class="workloadmodal-item">Security Group Name: 
+        </div>
+          <mat-form-field floatLabel="never">
+            <input matInput placeholder="Search for Security Group name" [errorStateMatcher]="errorStateMatcherExisting"
+                  [formControl]="existingSecurityGroupFormControl" [matAutocomplete]="auto">
+            <mat-error *ngIf="existingSecurityGroupFormControl.hasError('required')">
+              {{ emptyFieldErrorMessage }}
+            </mat-error>
+            <mat-error *ngIf="existingSecurityGroupFormControl.hasError('notExistingName') 
+                                  && !existingSecurityGroupFormControl.hasError('required')">
+              {{ notExistingSecurityGroupErrorMessage }}
+            </mat-error>
+            <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
+              <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+                {{ option }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+      </app-modalitem>
+    </div>
+  </app-modalbody>
+  <div modal-footer fxLayout="row" class="workloadmodal-buttons">
+    <div fxFlex></div>
+    <span class="workload-button workloadmodal-button global-button-primary" 
+            (click)="submitClick()" [ngClass]="!formValid() ? 'global-button-disabled':''">CREATE GROUP</span>
+    <span class="workload-button workloadmodal-button global-button-neutral" 
+            (click)="onNoClick()">CANCEL</span>
+  </div>
+</app-modalwidget>  
+
+<!-- New Security Group options -->
+<ng-template #newSecurityItems>
+  <app-modalitem [observer]="errorStateMatcherName.errorStateObserver()" 
+              class="modalwidget-input workloadmodal-first-item">
+    <div class="workloadmodal-item">Security Group Name: 
+    </div>
+      <mat-form-field floatLabel="never">
+        <input matInput placeholder="Must be a unique group name" [errorStateMatcher]="errorStateMatcherName" 
+              [formControl]="newSecurityGroupFormControl">
+        <mat-error *ngIf="newSecurityGroupFormControl.hasError('required')">
+          This field cannot be blank.
+        </mat-error>
+        <mat-error *ngIf="newSecurityGroupFormControl.hasError('takenName')">
+          This security group already exists.
+        </mat-error>
+      </mat-form-field>
+  </app-modalitem>
+  <app-modalitem class="modalwidget-textarea" [observer]="errorStateMatcherDescription.errorStateObserver()">
+    <div class="workloadmodal-item"> Brief Description: 
+    </div>
+        <mat-form-field floatLabel="never">
+          <textarea #message matInput maxlength="100" placeholder="Max 100 Characters" [errorStateMatcher]="errorStateMatcherDescription" [formControl]="notEmptyFormControl" 
+                    matTextareaAutosize matAutosizeMinRows="4" matAutosizeMaxRows="4">
+          </textarea>
+          <mat-error *ngIf="notEmptyFormControl.hasError('required')">
+            This field cannot be blank.
+          </mat-error>
+          <mat-hint align="end">{{message.value.length}} / 100</mat-hint>
+        </mat-form-field>
+  </app-modalitem>
+  <app-modalitem status="valid" [status]="labelSelectorValidationStatus">
+    <div [style.width]="'100%'" fxLayout="column">
+      <div fxFlex class="workloadmodal-item">
+        Add Grouping Labels:
+      </div>
+      <div fxFlex class="workloadmodal-item-subtext">
+        Add one or more grouping labels to the workload
+      </div>
+      <div fxLayout="row wrap" class="workloadmodal-labelholder">
+        <app-labelselector fxFlex [labels]="data.labels" (validationObservable)="setValidationObservable($event)"></app-labelselector>
+      </div>
+    </div>
+  </app-modalitem>
+</ng-template>
+

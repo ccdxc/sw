@@ -1,0 +1,73 @@
+.modalwidget {
+    height: 100%;
+    width: 100%;
+    background-color: white;
+    overflow: auto;
+}
+
+.modalwidget-body {
+    overflow: auto;
+}
+
+.modalwidget-footer {
+    margin-bottom: 25px;
+    margin-right: 25px;
+}
+
+// TODO: Extend the material design widget instead of overwriting css
+
+.modalwidget-input {
+    position: relative;
+    width: 80%;
+
+    .mat-input-infix.mat-form-field-infix {
+        border-top: 0px;
+    }
+
+    .mat-input-flex.mat-form-field-flex {
+        padding: 0px 5px;
+    }
+}
+
+/* Mat Radio Buttons */
+.modalwidget .mat-radio-button {
+    margin-right: 30px;
+}
+
+.modalwidget .mat-radio-label-content {
+    font-size: 16px;
+    font-family: 'Fira Sans Condensed' !important;
+    color: #676763;
+    font-weight: 400 !important;
+}
+
+.modalwidget .mat-radio-checked .mat-radio-label-content {
+    font-weight: bold !important; 
+}
+
+/* Mat Input */
+.modalwidget .mat-input-underline.mat-form-field-underline {
+    background-color: #dddddd; 
+}
+
+.modalwidget .mat-form-field {
+    font-size: 16px;
+    margin-left: 12px;
+    top: -3px;
+    width: 55%;
+}
+
+/* Mat text area */
+.modalwidget-textarea {
+    position: relative;
+    width: 80%;
+
+    .mat-input-infix.mat-form-field-infix {
+        border-top: 0px;
+    }
+
+    .mat-input-flex.mat-form-field-flex {
+        border: 1px solid #dddddd;
+        padding: 0px 5px;
+    }
+}

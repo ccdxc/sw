@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  isRESTAPIReady: false,
+  isRESTAPIReady: true,
 
   log_format: 'JSON',
   log_level : 0,

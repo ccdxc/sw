@@ -62,9 +62,8 @@
 
 .wlWidget-title {
   padding: 10px 0px 2px 10px;
-  font-family: Fira Sans;
+  font-family: 'Fira Sans Condensed';
   font-size: 18px;
-  font-stretch: condensed;
   text-align: left;
   color: #000000;
 }
@@ -83,9 +82,8 @@
 
 .wlWidget-label {
   padding-left: 7px;
-  font-family: Fira Sans;
+  font-family: 'Fira Sans Condensed';
   font-size: 48px;
-  font-stretch: condensed;
   text-align: left;
 }
 
@@ -164,4 +162,28 @@
   top: 0;
   left: 0;
   z-index: 10;
+}
+
+.wlWidget-collapsed {
+  font-family: "Fira Sans condensed";
+	font-size: 18px;
+	text-align: left;
+  color: #676763;
+  width: 234px;
+  height: 24px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  margin-left: 20px;
+  margin-right: 10px;
+  &:hover {
+    color: #6ba0e5;
+  }
+}
+
+.wlWidget-collapsed-container.ng-leave.ng-leave-active{
+  height: 0px;
+}
+
+.wlWidget-collapsed-selected {
+  color: #6ba0e5;
 }

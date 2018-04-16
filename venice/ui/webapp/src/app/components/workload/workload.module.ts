@@ -3,7 +3,7 @@
  ------------------*/
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Routes, RouterModule } from '@angular/router';
 /**-----
@@ -24,12 +24,16 @@ import { WidgetsModule } from 'web-app-framework';
 import { WorkloadComponent } from './workload.component';
 import { workloadRouter } from './workload.router';
 import { WorkloadwidgetComponent } from './workloadwidget/workloadwidget.component';
+import { WorkloadModalComponent } from './workloadmodal/workloadmodal.component';
 import { SharedModule } from '@app/components/shared//shared.module';
+import { LabelselectorComponent } from '@app/components/workload/labelselector/labelselector.component';
+
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
 
     MomentModule,
     GridsterModule,
@@ -43,10 +47,11 @@ import { SharedModule } from '@app/components/shared//shared.module';
     SharedModule
 
   ],
-  declarations: [WorkloadComponent, WorkloadwidgetComponent],
+  declarations: [WorkloadComponent, WorkloadwidgetComponent, WorkloadModalComponent, LabelselectorComponent],
   exports: [WorkloadComponent, WorkloadwidgetComponent],
   entryComponents: [
-    WorkloadwidgetComponent
+    WorkloadwidgetComponent,
+    WorkloadModalComponent
   ],
 })
 export class WorkloadModule { }

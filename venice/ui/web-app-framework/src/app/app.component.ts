@@ -26,6 +26,10 @@ export class AppComponent {
       title: 'menu',
       children: []
     },
+    {
+      title: 'searchbox',
+      children: []
+    },
 
   ];
 

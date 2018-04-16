@@ -1,0 +1,17 @@
+.searchbox-select-panel-template-item-options-item{
+    cursor: pointer
+
+}
+
+span.searchbox-select-panel-template-item-options-item:hover{
+    background-color:#186ba0;
+    color:#ffffff
+}
+
+.searchbox-select-panel-template-item{
+    cursor: default
+}
+
+.searchbox-autocomplete-token-icon-rmAll {
+    right: 1.4em;
+}

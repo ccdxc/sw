@@ -15,9 +15,43 @@ export class MockDataUtil {
     return this.instance;
   }
 
-  public static getGlobalSearchResult(searched, data): any {
-    const suggestions = [];
-    // const eLen = 5;
+  public static getGlobalSearchResult(query, data): any {
+    const filtered: any[] = [];
+    const obj = {
+      'indicator': 'pensando',
+      'query': query,
+      'code': query,
+     };
+    if (query === 'in') {
+      obj['name'] = 'Search By Category - ' + query;
+      obj['seachType'] = 'in';
+      obj['options'] = ['cluster', 'node', 'workload', 'naples'];
+      filtered.push(obj);
+    } else if (query === 'is') {
+      obj['name'] = 'Search By Type - ' + query;
+      obj['seachType'] = 'is';
+      obj['options'] = ['workload', 'alert', 'event', 'security'];
+      filtered.push(obj);
+    } else if (query === 'has') {
+      obj['name'] = 'Search By Content - ' + query;
+      obj['seachType'] = 'has';
+      obj['options'] = ['owner', 'label', 'meta', 'role'];
+      filtered.push(obj);
+    } else {
+       // filtered = this.filterCountry(query, this.countriesJSON);
+       if ( filtered.length === 0) {
+        const objMisc = {
+          'indicator': 'pensando',
+          'name': 'Free Form search - ' + query,
+          'query': query,
+          'code': query,
+         };
+         filtered.push(objMisc);
+       }
+    }
+    return filtered;
+   /*  const suggestions = [];
+    const eLen = 5;
     const hLen = Utility.getRandomInt(10, 25);
     for (let i = 0; i < hLen; i++) {
       const obj = {};
@@ -25,7 +59,7 @@ export class MockDataUtil {
       obj['description'] = 'desc-' + i;
       suggestions.push(obj);
     }
-    return suggestions;
+    return suggestions; */
   }
 
   public static getWorkloadItems(count): any {
@@ -148,7 +182,7 @@ export class MockDataUtil {
         'response': {
           'context': {
             'requestId': 'aa9246d9-abd8-e646-1169-96fa3b3b1251',
-            'initiatedBy': 'PensendoLoginUI',
+            'initiatedBy': 'PensandoLoginUI',
             'timestamp': '2017-03-15T18:16Z',
             'requestName': 'PENSANDO_USERR_SIGNIN_REQUEST',
             'servicedBy': 'DataAccessPlatform,RESTService',

@@ -3,7 +3,11 @@
   "lib": {
     "entryFile": "public_api.ts",
     "externals": {
-      "@angular/material": "ng.material"
+      "@angular/material": "ng.material",
+      "primeng/primeng": "primeng",
+      "primeng/table"  :"primeng/components/table/table",
+      "primeng/autocomplete"  :"primeng/components/autocomplete",
+      "primeng/components/utils/objectutils":"primeng/components/utils/objectutils"
     }
   }
 }

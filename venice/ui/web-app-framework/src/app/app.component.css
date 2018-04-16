@@ -49,3 +49,7 @@
     right: 0;
     background: #5C6BC0;
   }
+
+  .app-fw-sidenav-content{
+    padding: 10px;
+  }

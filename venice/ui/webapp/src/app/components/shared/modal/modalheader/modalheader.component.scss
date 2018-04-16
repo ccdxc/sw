@@ -1,0 +1,39 @@
+.modalheader-container {
+    background-color: #97b8df;
+    font-family: 'Fira Sans Condensed';
+    height: 80px;
+    width: 100%;
+    font-size: 36px;
+}
+
+:host {
+    width: 100%;
+}
+
+.modalheader-title{
+    font-size: 24px;
+    color: #484848;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.modalheader-subtitle {
+    font-size: 18px;
+    color: white;
+}
+
+.modalheader-icon {
+    height: 45px;
+    width: 45px;
+    color: white;
+}
+
+.modalheader-cancel-icon {
+    color: white;
+    height: 30px;
+    width: 30px;
+    margin-top: 10px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+

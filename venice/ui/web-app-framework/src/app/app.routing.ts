@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { TestbarchartComponent } from './test/testbarchart/testbarchart.component';
 import { TestplotlyComponent } from './test/testplotly/testplotly.component';
 import { TestRecursiveListComponent } from './test/test-recursive-list/test-recursive-list.component';
+import { TestSearchboxComponent } from './test/test-searchbox/test-searchbox.component';
 
 /**
  * This is the application route configuration file.
@@ -31,7 +32,11 @@ export const routes: Routes = [
   },
   {
     path: 'menu',
-    component: TestRecursiveListComponent
+    component:  TestRecursiveListComponent
+  },
+  {
+    path: 'searchbox',
+    component: TestSearchboxComponent
   }
 
 ];

@@ -88,7 +88,7 @@ export class TestplotlyComponent implements OnInit {
   }
   _testPlotlyToImageWidgetOptions() {
     this.plotlyDataToImageWidgetOption = [
-      //passed in graph data
+      // passed in graph data
       {
         x: [1, 2, 5, 6],
         y: [2, 5, 3, 7],
@@ -100,7 +100,7 @@ export class TestplotlyComponent implements OnInit {
           color: '#7db1ea'
         }
       },
-      //second trace to add marker on last point
+      // second trace to add marker on last point
       {
         x: [6],
         y: [7],
@@ -113,8 +113,8 @@ export class TestplotlyComponent implements OnInit {
     ];
     this.plotlyLayoutToImageWidgetOptions = {
       showlegend: false,
-      paper_bgcolor:'rgba(0,0,0,0)',
-      plot_bgcolor:'rgba(0,0,0,0)',
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)',
       autosize: true,
       margin: {
         t: 7,
@@ -145,12 +145,12 @@ export class TestplotlyComponent implements OnInit {
       displayModeBar: false
     };
   }
- _testPlotlyToImageWidget() {
+  _testPlotlyToImageWidget() {
     this.plotlyDataToImageWidget = {
-        x: [1, 2, 5, 6],
-        y: [2, 5, 3, 7],
+      x: [1, 2, 5, 6],
+      y: [2, 5, 3, 7],
     };
- }
+  }
 
   _testPlotlyToImage() {
     this.plotlyDataToImage = [
@@ -195,18 +195,18 @@ export class TestplotlyComponent implements OnInit {
       }
     };
 
-    this.plotlyOptionsToImage = {  displayModeBar: false };
+    this.plotlyOptionsToImage = { displayModeBar: false };
     const self = this;
     this.plotlyCallbackToImage = function (Plotly, element) {
       const d3 = Plotly.d3;
 
       const img_png = d3.select('#png-export');
-        Plotly.toImage(element, {height: 60, width: 150})
-          .then(function(url){
-            self.plotlyToImageSrc = url;
-            self.plotlyChartToImageShow = false;
-          });
-        };
+      Plotly.toImage(element, { height: 60, width: 150 })
+        .then(function (url) {
+          self.plotlyToImageSrc = url;
+          self.plotlyChartToImageShow = false;
+        });
+    };
 
   }
 

@@ -1,0 +1,35 @@
+
+
+<div [style.height]="'100%'" fxLayout="row wrap" [style.width]="'100%'">
+  <div fxLayout="row" fxLayoutAlign="start center" *ngFor="let labelObj of labelSelectorIds">
+    <ng-container  *ngTemplateOutlet="labelselector; context:{state:'open', labelObj: labelObj}" ></ng-container>
+    <div fxFlex="nogrow" class="labelselector-label-and">AND</div>
+  </div>
+  <ng-container *ngTemplateOutlet="labelselector; context:{state:'closed'}" ></ng-container>
+</div>
+
+<ng-template #labelselector let-state="state" let-labelObj="labelObj">
+  <!-- Open Labelselector -->
+  <div fxLayout="row" fxLayoutAlign="start center" *ngIf="state == 'open'" class="labelselector-expanded">
+    <div fxFlex="20px"></div>
+    <div fxFlex='120px' class="labelselector-inputcontainer">
+      <input matInput spellcheck="false" placeholder="Object : Label" aria-label="Object : Label" [matAutocomplete]="autoLabel" [errorStateMatcher]="labelObj.errorStateMatcher"
+               [formControl]="labelObj.formControl">
+      <mat-autocomplete #autoLabel="matAutocomplete" class="labelselector-autocomplete-holder">
+      <mat-option class="modal-option" *ngFor="let label of labelObj.filteredLabels | async" [value]="label">
+          <span>{{ label }}</span>
+      </mat-option>
+      </mat-autocomplete>
+    </div>
+    <div fxFlex></div>
+    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="center center" class="labelselector-cancel" (click)="removeLabel(labelObj.id)">
+      <mat-icon fxFlex>clear</mat-icon>
+    </div>
+  </div>
+  <!-- Closed Labelselector -->
+  <div fxLayout="row" fxLayoutAlign="end center" *ngIf="state == 'closed'" class="labelselector-collapsed">
+    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="center center" class="labelselector-add" (click)="addNewLabel()">
+    <mat-icon fxFlex>add</mat-icon>
+    </div> 
+  </div>
+</ng-template>
