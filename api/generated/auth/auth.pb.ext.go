@@ -109,6 +109,13 @@ func (m *AuthenticationPolicy) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AuthenticationPolicy) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AuthenticationPolicyList) Clone(into interface{}) (interface{}, error) {
 	var out *AuthenticationPolicyList
@@ -123,6 +130,17 @@ func (m *AuthenticationPolicyList) Clone(into interface{}) (interface{}, error) 
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AuthenticationPolicyList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -141,6 +159,13 @@ func (m *AuthenticationPolicySpec) Clone(into interface{}) (interface{}, error) 
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AuthenticationPolicySpec) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Authenticators.Defaults(ver)
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AuthenticationPolicyStatus) Clone(into interface{}) (interface{}, error) {
 	var out *AuthenticationPolicyStatus
@@ -155,6 +180,11 @@ func (m *AuthenticationPolicyStatus) Clone(into interface{}) (interface{}, error
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AuthenticationPolicyStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -173,6 +203,19 @@ func (m *Authenticators) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *Authenticators) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		for k := range m.AuthenticatorOrder {
+			m.AuthenticatorOrder[k] = Authenticators_AuthenticatorType_name[0]
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgAuthenticationPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgAuthenticationPolicyWatchHelper
@@ -187,6 +230,15 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper) Clone(into interface{}) (interf
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgAuthenticationPolicyWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -205,6 +257,11 @@ func (m *AutoMsgRoleBindingWatchHelper) Clone(into interface{}) (interface{}, er
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgRoleBindingWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgRoleWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgRoleWatchHelper
@@ -219,6 +276,15 @@ func (m *AutoMsgRoleWatchHelper) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgRoleWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -237,6 +303,15 @@ func (m *AutoMsgUserWatchHelper) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgUserWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Ldap) Clone(into interface{}) (interface{}, error) {
 	var out *Ldap
@@ -251,6 +326,11 @@ func (m *Ldap) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Ldap) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -269,6 +349,11 @@ func (m *LdapAttributeMapping) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *LdapAttributeMapping) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Local) Clone(into interface{}) (interface{}, error) {
 	var out *Local
@@ -283,6 +368,11 @@ func (m *Local) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Local) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -301,6 +391,20 @@ func (m *Permission) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *Permission) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		for k := range m.Actions {
+			m.Actions[k] = Permission_ActionType_name[0]
+		}
+		m.ResourceKind = Permission_ResrcKind_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Radius) Clone(into interface{}) (interface{}, error) {
 	var out *Radius
@@ -315,6 +419,11 @@ func (m *Radius) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Radius) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -333,6 +442,13 @@ func (m *Role) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *Role) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *RoleBinding) Clone(into interface{}) (interface{}, error) {
 	var out *RoleBinding
@@ -347,6 +463,11 @@ func (m *RoleBinding) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *RoleBinding) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -365,6 +486,11 @@ func (m *RoleBindingList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *RoleBindingList) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *RoleBindingSpec) Clone(into interface{}) (interface{}, error) {
 	var out *RoleBindingSpec
@@ -379,6 +505,11 @@ func (m *RoleBindingSpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *RoleBindingSpec) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -397,6 +528,11 @@ func (m *RoleBindingStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *RoleBindingStatus) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *RoleList) Clone(into interface{}) (interface{}, error) {
 	var out *RoleList
@@ -411,6 +547,17 @@ func (m *RoleList) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *RoleList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -429,6 +576,15 @@ func (m *RoleSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *RoleSpec) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Permissions {
+		ret = ret || m.Permissions[k].Defaults(ver)
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *RoleStatus) Clone(into interface{}) (interface{}, error) {
 	var out *RoleStatus
@@ -443,6 +599,11 @@ func (m *RoleStatus) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *RoleStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -461,6 +622,11 @@ func (m *TLSOptions) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *TLSOptions) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *User) Clone(into interface{}) (interface{}, error) {
 	var out *User
@@ -475,6 +641,13 @@ func (m *User) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *User) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -493,6 +666,17 @@ func (m *UserList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *UserList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *UserSpec) Clone(into interface{}) (interface{}, error) {
 	var out *UserSpec
@@ -509,6 +693,17 @@ func (m *UserSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *UserSpec) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Type = UserSpec_UserType_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *UserStatus) Clone(into interface{}) (interface{}, error) {
 	var out *UserStatus
@@ -523,6 +718,11 @@ func (m *UserStatus) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *UserStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Validators

@@ -95,5 +95,8 @@ extend google.protobuf.MessageOptions {
 extend google.protobuf.FieldOptions {
   // Relation definition between a field and an object.
   ObjectRln objRelation = 51300;
+  // check defines a validation rule.
   repeated string check = 51301;
+  // default defines a defaulting rule for the field. Limited to scalar fields.
+  repeated string default = 51302;
 };

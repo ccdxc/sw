@@ -268,6 +268,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return nil
 		}),
+		"bookstore.BookEdition": apisrvpkg.NewMessage("bookstore.BookEdition"),
 		"bookstore.BookList": apisrvpkg.NewMessage("bookstore.BookList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := bookstore.BookList{}

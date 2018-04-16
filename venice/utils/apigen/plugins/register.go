@@ -777,11 +777,259 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 	return ret, nil
 }
 
+// Defaults is defaults specified by field.
+type Defaults struct {
+	Repeated bool
+	Pointer  bool
+	Nested   bool
+	// Map is map[version]defaultValue
+	Map map[string]string
+}
+
+// VerDefaults is defaults for a field by version
+type VerDefaults struct {
+	Repeated bool
+	Pointer  bool
+	Nested   bool
+	Val      string
+}
+
+type msgDefaults struct {
+	Fields   map[string]Defaults
+	Versions map[string]map[string]VerDefaults
+}
+
+type fileDefaults struct {
+	Fmap bool
+	Map  map[string]msgDefaults
+}
+
+func parseDefault(in string) (string, string, error) {
+	index := strings.Index(in, ":")
+	ver := "all"
+	val := in
+	// We want version to be specified as "<ver>:" so event "^:..." is no version hence the check against 1 instead of 0
+	if index < 1 {
+		glog.V(1).Infof("parseDefaulter - No version specified [%s]", in)
+	} else {
+		if in[index-1] == '\\' {
+			glog.V(1).Info("parseDefaulter - escaped : ignoring.. [%s]", in)
+		} else {
+			ver = in[:index]
+			val = in[index+1:]
+			if ver == "*" {
+				ver = "all"
+			}
+		}
+	}
+	return ver, val, nil
+}
+
+func implicitDefaults(file *descriptor.File, f *descriptor.Field) (Defaults, bool) {
+	ret := Defaults{Map: make(map[string]string)}
+	if f.GetType() == gogoproto.FieldDescriptorProto_TYPE_STRING {
+		r, err := reg.GetExtension("venice.check", f)
+		if err != nil {
+			return ret, false
+		}
+		if f.Label != nil && *f.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
+			ret.Repeated = true
+		}
+		for _, v := range r.([]string) {
+			validator, err := parseValidator(v)
+			if err != nil || validator.Fn != "StrEnum" {
+				continue
+			}
+			vin := []string{validator.Args[0]}
+			ver := validator.Ver
+			en, err := getEnumStr(file, vin, "name")
+			if err != nil {
+				continue
+			}
+			ret.Map[ver] = fmt.Sprintf("%s[0]", en)
+		}
+		return ret, true
+	}
+	return ret, false
+}
+
+func parseDefaults(file *descriptor.File, f *descriptor.Field) (Defaults, bool, error) {
+	iret, found := implicitDefaults(file, f)
+	ret := Defaults{Map: make(map[string]string)}
+	if found {
+		for k, v := range iret.Map {
+			ret.Map[k] = v
+		}
+	}
+	r, err := reg.GetExtension("venice.default", f)
+	ds := []string{}
+	if f.Label != nil && *f.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
+		ret.Repeated = true
+	}
+	if err == nil {
+		ds = r.([]string)
+	}
+	for _, d := range ds {
+		found = true
+		ver, val, err := parseDefault(d)
+		if err != nil {
+			return ret, true, err
+		}
+		switch f.GetType() {
+		case gogoproto.FieldDescriptorProto_TYPE_GROUP, gogoproto.FieldDescriptorProto_TYPE_MESSAGE, gogoproto.FieldDescriptorProto_TYPE_BYTES:
+			// Aggregate types are not allowed to have defaults. Only scalar values
+			return ret, true, fmt.Errorf("[%s]not allowed", *f.Name)
+		case gogoproto.FieldDescriptorProto_TYPE_BOOL:
+			if _, err := strconv.ParseBool(val); err != nil {
+				return ret, false, fmt.Errorf("[%s]cound not parse bool (%s)", *f.Name, err)
+			}
+		case gogoproto.FieldDescriptorProto_TYPE_ENUM:
+			// not validate yet - TBD
+		case gogoproto.FieldDescriptorProto_TYPE_INT32, gogoproto.FieldDescriptorProto_TYPE_SFIXED32, gogoproto.FieldDescriptorProto_TYPE_SINT32:
+			if _, err := strconv.ParseInt(val, 10, 32); err != nil {
+				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
+			}
+		case gogoproto.FieldDescriptorProto_TYPE_INT64, gogoproto.FieldDescriptorProto_TYPE_SFIXED64, gogoproto.FieldDescriptorProto_TYPE_SINT64:
+			if _, err := strconv.ParseInt(val, 10, 64); err != nil {
+				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
+			}
+		case gogoproto.FieldDescriptorProto_TYPE_UINT32, gogoproto.FieldDescriptorProto_TYPE_FIXED32:
+			if _, err := strconv.ParseUint(val, 10, 32); err != nil {
+				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
+			}
+		case gogoproto.FieldDescriptorProto_TYPE_UINT64, gogoproto.FieldDescriptorProto_TYPE_FIXED64:
+			if _, err := strconv.ParseUint(val, 10, 64); err != nil {
+				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
+			}
+		case gogoproto.FieldDescriptorProto_TYPE_FLOAT:
+			if _, err := strconv.ParseFloat(val, 32); err != nil {
+				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
+			}
+		case gogoproto.FieldDescriptorProto_TYPE_DOUBLE:
+			if _, err := strconv.ParseFloat(val, 64); err != nil {
+				return ret, true, fmt.Errorf("[%s]cound not parse int (%s)", *f.Name, err)
+			}
+		case gogoproto.FieldDescriptorProto_TYPE_STRING:
+			val = "\"" + val + "\""
+		default:
+			return ret, true, fmt.Errorf(" [%s]unknown type", *f.Name)
+		}
+		if ev, eok := ret.Map[ver]; eok {
+			iv, iok := iret.Map[ver]
+			if !iok || iv != ev {
+				return ret, true, fmt.Errorf("[%s] got duplicate default for version %s", *f.Name, ver)
+			}
+		}
+		ret.Map[ver] = val
+	}
+	return ret, found, nil
+}
+
+func checkDefaults(file *descriptor.File, msgmap map[string]bool, name string, ret *fileDefaults) (bool, error) {
+	if _, ok := msgmap[name]; ok {
+		return msgmap[name], nil
+	}
+	defaulted := false
+	msg, err := file.Reg.LookupMsg("", name)
+	if err != nil {
+		// must be a internal type generated like map entry
+		glog.Infof("Failed to retrieve message %s", name)
+		return false, nil
+	}
+	if msg.File != file {
+		glog.V(1).Infof("from a different file [%s]", *msg.File.Name)
+		if strings.HasPrefix(*msg.File.Name, "github.com/pensando/sw/api/protos/") {
+			return true, nil
+		}
+		return false, nil
+	}
+	for _, fld := range msg.Fields {
+		r, found, err := parseDefaults(file, fld)
+		if err != nil {
+			glog.V(1).Infof("[%v.%v]got error parsing defaulters (%s)", *msg.Name, *fld.Name, err)
+			return false, err
+		}
+		if found {
+			if _, ok := ret.Map[*msg.Name]; !ok {
+				glog.V(1).Infof("Creating a new map for [%s]", *msg.Name)
+				ret.Map[*msg.Name] = msgDefaults{
+					Fields:   make(map[string]Defaults),
+					Versions: make(map[string]map[string]VerDefaults),
+				}
+			} else {
+				glog.V(1).Infof("Found Existing map for [%s][%+v]", *msg.Name, ret.Map[*msg.Name])
+			}
+
+			fldName := *fld.Name
+			if fld.Embedded {
+				temp := strings.Split(fld.GetTypeName(), ".")
+				fldName = temp[len(temp)-1]
+			}
+			ret.Map[*msg.Name].Fields[fldName] = r
+			for fv, fd := range r.Map {
+				glog.V(1).Infof("RetMap is [%s][%+v]", *msg.Name, ret.Map[*msg.Name])
+				if _, ok := ret.Map[*msg.Name].Versions[fv]; !ok {
+					ret.Map[*msg.Name].Versions[fv] = make(map[string]VerDefaults)
+				}
+				verDef := VerDefaults{
+					Repeated: r.Repeated,
+					Pointer:  r.Pointer,
+					Nested:   r.Nested,
+					Val:      fd,
+				}
+				ret.Map[*msg.Name].Versions[fv][fldName] = verDef
+			}
+			defaulted = true
+		}
+		if *fld.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+			found, err = checkDefaults(file, msgmap, *fld.TypeName, ret)
+			if found {
+				defaulted = true
+				repeated := false
+				pointer := true
+				if _, ok := ret.Map[*msg.Name]; !ok {
+					ret.Map[*msg.Name] = msgDefaults{Fields: make(map[string]Defaults), Versions: make(map[string]map[string]VerDefaults)}
+				}
+				fldName := *fld.Name
+				if fld.Embedded {
+					temp := strings.Split(fld.GetTypeName(), ".")
+					fldName = temp[len(temp)-1]
+				}
+				if *fld.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
+					repeated = true
+				}
+				if r, err := reg.GetExtension("gogoproto.nullable", fld); err == nil {
+					glog.Infof("setting pointer found nullable [%v] for %s]", r, *msg.Name+"/"+*fld.Name)
+					pointer = r.(bool)
+				}
+
+				ret.Map[*msg.Name].Fields[fldName] = Defaults{Pointer: pointer, Repeated: repeated, Nested: true}
+			}
+		}
+	}
+
+	return defaulted, nil
+}
+
+func getDefaulterManifest(file *descriptor.File) (fileDefaults, error) {
+	ret := fileDefaults{Map: make(map[string]msgDefaults)}
+	msgmap := make(map[string]bool)
+	for _, msg := range file.Messages {
+		var found bool
+		var err error
+		name := "." + file.GoPkg.Name + "." + *msg.Name
+		if found, err = checkDefaults(file, msgmap, name, &ret); err != nil {
+			return ret, err
+		}
+		ret.Fmap = ret.Fmap || found
+	}
+	return ret, nil
+}
+
 func derefStr(in *string) string {
 	return *in
 }
-
-func getEnumStrMap(file *descriptor.File, in []string) (string, error) {
+func getEnumStr(file *descriptor.File, in []string, suffix string) (string, error) {
 	if len(in) != 1 {
 		return "", fmt.Errorf("incorrect number of arguments")
 	}
@@ -798,7 +1046,7 @@ func getEnumStrMap(file *descriptor.File, in []string) (string, error) {
 	}
 	parts = parts[2:]
 
-	ret := "value"
+	ret := suffix
 	for i := len(parts) - 1; i >= 0; i-- {
 		ret = parts[i] + "_" + ret
 	}
@@ -807,6 +1055,10 @@ func getEnumStrMap(file *descriptor.File, in []string) (string, error) {
 	}
 	glog.V(1).Infof("Ret:Working on enum string %s", ret)
 	return ret, nil
+}
+
+func getEnumStrMap(file *descriptor.File, in []string) (string, error) {
+	return getEnumStr(file, in, "value")
 }
 
 // relationRef is reference to relations
@@ -1151,6 +1403,7 @@ func init() {
 	reg.RegisterOptionParser("venice.naplesRestService", parseNaplesRestService)
 	reg.RegisterOptionParser("venice.fileApiServerBacked", parseBoolOptions)
 	reg.RegisterOptionParser("venice.apiAction", parseAPIActions)
+	reg.RegisterOptionParser("venice.default", parseStringSliceOptions)
 
 	// Register Functions
 	reg.RegisterFunc("getDbKey", getDbKey)
@@ -1195,6 +1448,7 @@ func init() {
 	reg.RegisterFunc("getInt", scratch.getInt)
 	reg.RegisterFunc("isAPIServerServed", isAPIServerServed)
 	reg.RegisterFunc("getSvcActionEndpoints", getSvcActionEndpoints)
+	reg.RegisterFunc("getDefaulterManifest", getDefaulterManifest)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

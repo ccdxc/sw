@@ -10,6 +10,7 @@ It translates gRPC into RESTful JSON APIs.
 package auth
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 
@@ -30,24 +31,48 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
 func request_AuthV1_AutoAddAuthenticationPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AuthenticationPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &AuthenticationPolicy{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
-	msg, err := client.AutoAddAuthenticationPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoAddAuthenticationPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_AuthV1_AutoAddRole_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Role
-	var metadata runtime.ServerMetadata
+	protoReq := &Role{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -59,26 +84,38 @@ func request_AuthV1_AutoAddRole_0(ctx context.Context, marshaler runtime.Marshal
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoAddRole(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoAddRole(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_AuthV1_AutoAddRoleBinding_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RoleBinding
-	var metadata runtime.ServerMetadata
+	protoReq := &RoleBinding{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -90,26 +127,38 @@ func request_AuthV1_AutoAddRoleBinding_0(ctx context.Context, marshaler runtime.
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoAddRoleBinding(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoAddRoleBinding(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_AuthV1_AutoAddUser_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq User
-	var metadata runtime.ServerMetadata
+	protoReq := &User{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -121,17 +170,17 @@ func request_AuthV1_AutoAddUser_0(ctx context.Context, marshaler runtime.Marshal
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoAddUser(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoAddUser(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -140,8 +189,8 @@ var (
 )
 
 func request_AuthV1_AutoDeleteAuthenticationPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AuthenticationPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &AuthenticationPolicy{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -152,21 +201,21 @@ func request_AuthV1_AutoDeleteAuthenticationPolicy_0(ctx context.Context, marsha
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteAuthenticationPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteAuthenticationPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteAuthenticationPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoDeleteAuthenticationPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -175,8 +224,8 @@ var (
 )
 
 func request_AuthV1_AutoDeleteRole_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Role
-	var metadata runtime.ServerMetadata
+	protoReq := &Role{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -187,32 +236,32 @@ func request_AuthV1_AutoDeleteRole_0(ctx context.Context, marshaler runtime.Mars
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteRole_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteRole_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteRole(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoDeleteRole(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -221,8 +270,8 @@ var (
 )
 
 func request_AuthV1_AutoDeleteRoleBinding_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RoleBinding
-	var metadata runtime.ServerMetadata
+	protoReq := &RoleBinding{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -233,32 +282,32 @@ func request_AuthV1_AutoDeleteRoleBinding_0(ctx context.Context, marshaler runti
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteRoleBinding_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteRoleBinding_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteRoleBinding(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoDeleteRoleBinding(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -267,8 +316,8 @@ var (
 )
 
 func request_AuthV1_AutoDeleteUser_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq User
-	var metadata runtime.ServerMetadata
+	protoReq := &User{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -279,32 +328,32 @@ func request_AuthV1_AutoDeleteUser_0(ctx context.Context, marshaler runtime.Mars
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteUser_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteUser_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteUser(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoDeleteUser(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -313,8 +362,8 @@ var (
 )
 
 func request_AuthV1_AutoGetAuthenticationPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AuthenticationPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &AuthenticationPolicy{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -325,21 +374,21 @@ func request_AuthV1_AutoGetAuthenticationPolicy_0(ctx context.Context, marshaler
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AuthV1_AutoGetAuthenticationPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoGetAuthenticationPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetAuthenticationPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoGetAuthenticationPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -348,8 +397,8 @@ var (
 )
 
 func request_AuthV1_AutoGetRole_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Role
-	var metadata runtime.ServerMetadata
+	protoReq := &Role{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -360,32 +409,32 @@ func request_AuthV1_AutoGetRole_0(ctx context.Context, marshaler runtime.Marshal
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AuthV1_AutoGetRole_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoGetRole_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetRole(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoGetRole(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -394,8 +443,8 @@ var (
 )
 
 func request_AuthV1_AutoGetRoleBinding_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RoleBinding
-	var metadata runtime.ServerMetadata
+	protoReq := &RoleBinding{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -406,32 +455,32 @@ func request_AuthV1_AutoGetRoleBinding_0(ctx context.Context, marshaler runtime.
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AuthV1_AutoGetRoleBinding_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoGetRoleBinding_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetRoleBinding(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoGetRoleBinding(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -440,8 +489,8 @@ var (
 )
 
 func request_AuthV1_AutoGetUser_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq User
-	var metadata runtime.ServerMetadata
+	protoReq := &User{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -452,32 +501,32 @@ func request_AuthV1_AutoGetUser_0(ctx context.Context, marshaler runtime.Marshal
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AuthV1_AutoGetUser_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoGetUser_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetUser(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoGetUser(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -486,8 +535,8 @@ var (
 )
 
 func request_AuthV1_AutoListRole_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.ListWatchOptions
-	var metadata runtime.ServerMetadata
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -498,21 +547,21 @@ func request_AuthV1_AutoListRole_0(ctx context.Context, marshaler runtime.Marsha
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AuthV1_AutoListRole_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoListRole_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoListRole(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoListRole(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -521,8 +570,8 @@ var (
 )
 
 func request_AuthV1_AutoListRoleBinding_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.ListWatchOptions
-	var metadata runtime.ServerMetadata
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -533,21 +582,21 @@ func request_AuthV1_AutoListRoleBinding_0(ctx context.Context, marshaler runtime
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AuthV1_AutoListRoleBinding_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoListRoleBinding_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoListRoleBinding(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoListRoleBinding(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -556,8 +605,8 @@ var (
 )
 
 func request_AuthV1_AutoListUser_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.ListWatchOptions
-	var metadata runtime.ServerMetadata
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -568,30 +617,42 @@ func request_AuthV1_AutoListUser_0(ctx context.Context, marshaler runtime.Marsha
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AuthV1_AutoListUser_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoListUser_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoListUser(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoListUser(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_AuthV1_AutoUpdateAuthenticationPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AuthenticationPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &AuthenticationPolicy{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -603,26 +664,38 @@ func request_AuthV1_AutoUpdateAuthenticationPolicy_0(ctx context.Context, marsha
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoUpdateAuthenticationPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoUpdateAuthenticationPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_AuthV1_AutoUpdateRole_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Role
-	var metadata runtime.ServerMetadata
+	protoReq := &Role{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -634,37 +707,49 @@ func request_AuthV1_AutoUpdateRole_0(ctx context.Context, marshaler runtime.Mars
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoUpdateRole(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoUpdateRole(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_AuthV1_AutoUpdateRoleBinding_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RoleBinding
-	var metadata runtime.ServerMetadata
+	protoReq := &RoleBinding{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -676,37 +761,49 @@ func request_AuthV1_AutoUpdateRoleBinding_0(ctx context.Context, marshaler runti
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoUpdateRoleBinding(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoUpdateRoleBinding(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_AuthV1_AutoUpdateUser_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq User
-	var metadata runtime.ServerMetadata
+	protoReq := &User{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -718,28 +815,28 @@ func request_AuthV1_AutoUpdateUser_0(ctx context.Context, marshaler runtime.Mars
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoUpdateUser(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoUpdateUser(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 

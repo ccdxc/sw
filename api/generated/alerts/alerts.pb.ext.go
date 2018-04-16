@@ -80,6 +80,14 @@ func (m *Alert) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *Alert) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	ret = ret || m.Status.Defaults(ver)
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AlertDestination) Clone(into interface{}) (interface{}, error) {
 	var out *AlertDestination
@@ -94,6 +102,13 @@ func (m *AlertDestination) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AlertDestination) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -112,6 +127,17 @@ func (m *AlertDestinationList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AlertDestinationList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AlertDestinationSpec) Clone(into interface{}) (interface{}, error) {
 	var out *AlertDestinationSpec
@@ -126,6 +152,17 @@ func (m *AlertDestinationSpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AlertDestinationSpec) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.SNMPTrapServers {
+		if m.SNMPTrapServers[k] != nil {
+			ret = ret || m.SNMPTrapServers[k].Defaults(ver)
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -144,6 +181,11 @@ func (m *AlertDestinationStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AlertDestinationStatus) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AlertPolicy) Clone(into interface{}) (interface{}, error) {
 	var out *AlertPolicy
@@ -158,6 +200,13 @@ func (m *AlertPolicy) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AlertPolicy) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -176,6 +225,17 @@ func (m *AlertPolicyList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AlertPolicyList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AlertPolicySpec) Clone(into interface{}) (interface{}, error) {
 	var out *AlertPolicySpec
@@ -190,6 +250,20 @@ func (m *AlertPolicySpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AlertPolicySpec) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Requirements {
+		ret = ret || m.Requirements[k].Defaults(ver)
+	}
+	ret = true
+	switch ver {
+	default:
+		m.Severity = AlertSeverity_name[0]
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -208,6 +282,11 @@ func (m *AlertPolicyStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AlertPolicyStatus) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AlertReason) Clone(into interface{}) (interface{}, error) {
 	var out *AlertReason
@@ -222,6 +301,17 @@ func (m *AlertReason) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AlertReason) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.MatchedRequirements {
+		if m.MatchedRequirements[k] != nil {
+			ret = ret || m.MatchedRequirements[k].Defaults(ver)
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -240,6 +330,11 @@ func (m *AlertSource) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AlertSource) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AlertSpec) Clone(into interface{}) (interface{}, error) {
 	var out *AlertSpec
@@ -254,6 +349,17 @@ func (m *AlertSpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AlertSpec) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.State = AlertSpec_AlertState_name[0]
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -272,6 +378,18 @@ func (m *AlertStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AlertStatus) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Reason.Defaults(ver)
+	ret = true
+	switch ver {
+	default:
+		m.Severity = AlertSeverity_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AuditInfo) Clone(into interface{}) (interface{}, error) {
 	var out *AuditInfo
@@ -286,6 +404,11 @@ func (m *AuditInfo) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AuditInfo) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -304,6 +427,17 @@ func (m *AuthConfig) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AuthConfig) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Algo = AuthConfig_Algos_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgAlertDestinationWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgAlertDestinationWatchHelper
@@ -318,6 +452,15 @@ func (m *AutoMsgAlertDestinationWatchHelper) Clone(into interface{}) (interface{
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgAlertDestinationWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -336,6 +479,15 @@ func (m *AutoMsgAlertPolicyWatchHelper) Clone(into interface{}) (interface{}, er
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgAlertPolicyWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *MatchedRequirement) Clone(into interface{}) (interface{}, error) {
 	var out *MatchedRequirement
@@ -350,6 +502,13 @@ func (m *MatchedRequirement) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *MatchedRequirement) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Requirement.Defaults(ver)
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -368,6 +527,17 @@ func (m *PrivacyConfig) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *PrivacyConfig) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Algo = PrivacyConfig_Algos_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Requirement) Clone(into interface{}) (interface{}, error) {
 	var out *Requirement
@@ -384,6 +554,17 @@ func (m *Requirement) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *Requirement) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Operator = Requirement_AllowedOperators_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *SNMPTrapServer) Clone(into interface{}) (interface{}, error) {
 	var out *SNMPTrapServer
@@ -398,6 +579,23 @@ func (m *SNMPTrapServer) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SNMPTrapServer) Defaults(ver string) bool {
+	var ret bool
+	for m.AuthConfig != nil {
+		ret = ret || m.AuthConfig.Defaults(ver)
+	}
+	for m.PrivacyConfig != nil {
+		ret = ret || m.PrivacyConfig.Defaults(ver)
+	}
+	ret = true
+	switch ver {
+	default:
+		m.Version = SNMPTrapServer_SNMPVersions_name[0]
+	}
+	return ret
 }
 
 // Validators

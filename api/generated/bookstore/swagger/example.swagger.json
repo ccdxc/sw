@@ -933,6 +933,17 @@
         }
       }
     },
+    "bookstoreBookEdition": {
+      "type": "object",
+      "properties": {
+        "Errata": {
+          "type": "string"
+        },
+        "Year": {
+          "type": "string"
+        }
+      }
+    },
     "bookstoreBookList": {
       "type": "object",
       "properties": {
@@ -972,6 +983,12 @@
         "Terminate": {
           "type": "boolean",
           "format": "boolean"
+        },
+        "Editions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/bookstoreBookEdition"
+          }
         }
       }
     },

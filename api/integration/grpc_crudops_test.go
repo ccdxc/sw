@@ -301,6 +301,23 @@ func TestCrudOps(t *testing.T) {
 	}
 
 	t.Logf("test REST crud operations")
+	{ // Test defaulters //}
+		order := &bookstore.Order{}
+		if !order.Defaults("v1") {
+			t.Errorf("expecting Defaults to return true")
+		}
+		if order.Spec.Id != "unknown order" {
+			t.Fatalf("Not defaulted[%+v]", order)
+		}
+		t.Logf("received object is [%+v]", order)
+		order.Spec.Id = "NonDefault Val"
+		if !order.Defaults("v1") {
+			t.Errorf("expecting Defaults to return true")
+		}
+		if order.Spec.Id != "unknown order" {
+			t.Fatalf("Not defaulted[%+v]", order)
+		}
+	}
 	{ // ---  POST of the object via REST --- //
 		retorder, err := restcl.BookstoreV1().Order().Create(ctx, &order1)
 		if err != nil {
@@ -426,7 +443,7 @@ func TestCrudOps(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Book create expected to fail due to validation")
 		}
-		book1.Spec.Category = "ChildrensLit"
+		book1.Spec.Defaults("v1")
 		retbook, err := apicl.BookstoreV1().Book().Create(ctx, &book1)
 		if err != nil {
 			t.Fatalf("Book create failed [%s]", err)

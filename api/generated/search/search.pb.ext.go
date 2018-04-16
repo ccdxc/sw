@@ -35,6 +35,11 @@ func (m *Aggregation) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *Aggregation) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Entry) Clone(into interface{}) (interface{}, error) {
 	var out *Entry
@@ -49,6 +54,11 @@ func (m *Entry) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Entry) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -67,6 +77,11 @@ func (m *EntryList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *EntryList) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Error) Clone(into interface{}) (interface{}, error) {
 	var out *Error
@@ -81,6 +96,11 @@ func (m *Error) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Error) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -99,6 +119,11 @@ func (m *NestedAggregation) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *NestedAggregation) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Requirement) Clone(into interface{}) (interface{}, error) {
 	var out *Requirement
@@ -113,6 +138,11 @@ func (m *Requirement) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Requirement) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -131,6 +161,11 @@ func (m *SearchCriteria) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *SearchCriteria) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *SearchRequest) Clone(into interface{}) (interface{}, error) {
 	var out *SearchRequest
@@ -145,6 +180,11 @@ func (m *SearchRequest) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SearchRequest) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -163,6 +203,11 @@ func (m *SearchResponse) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *SearchResponse) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *SearchResult) Clone(into interface{}) (interface{}, error) {
 	var out *SearchResult
@@ -177,6 +222,11 @@ func (m *SearchResult) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SearchResult) Defaults(ver string) bool {
+	return false
 }
 
 // Validators
@@ -219,4 +269,7 @@ func (m *SearchResponse) Validate(ver string, ignoreStatus bool) bool {
 
 func (m *SearchResult) Validate(ver string, ignoreStatus bool) bool {
 	return true
+}
+
+func init() {
 }

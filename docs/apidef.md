@@ -131,6 +131,13 @@ Examples:
 	IPAddr()
 	*:UUID()
 
+Defaults can be applied to fields in an object by specifying a "venice.default" annotation to a field. This annotation is allowed on scalar fields. The annotation takes a form similar to the validator annotation. A version may be specified to override the default for a specific version. Multiple defaults pertaining to different versions can be specified. Defaults for all unspecified versions can be specified by either omitting the version or "all" or "*". The value is always specified as a string and the infra validates and converts the string to appropriate type depending on the type of the field. Some examples are show below.
+  (venice.default) = "String default"
+  (venice.default) = "10", (venice.default) = "V2:10"
+
+For fields with a default specification, it is recommended to also add the json omitempty annotation. This annotation is used when marshaling the object at the client end. This ensures that the golang "zero" values are not marshaled for unspecified fields.
+
+A Defaults() method to all API objects. This applies specified defaults on the object (recursively). For all REST calls, the API gateway un-marshals into an object with defaults applied. For gRPC calls the application is expected use Defaults() method explicitly before setting values in the object.
 
 ## Code Generation
 Three code generation plugins are invoked by the Makefile.
@@ -187,7 +194,7 @@ The API server allows the registering of the following hooks. All hooks are regi
 Messages can be transformed from the request version to the native version of the API server and vice-versa by registered TransformFuncs. Transformation functions are registered by specifying the from and to versions. Each registration is unidirectional. For example if a service creates a new version of the API, "v2" due to an incompatible change ("v1" being the original version), the service registers a transform function for ("v1" -> "v2") and a transform function for ("v2" -> "v1").
 
 #### Defaulting
-If non-standard defaults are to be applied then a Defaulter function registered can mutate the object as desired.
+If non-standard defaults are to be applied then a Defaulter function registered can mutate the object as desired. This is in addition to the scalar defaults described above.
 
 #### Validation Function
 If semantic validations are desired then a validation hook can be registered. The Validate function returns nil when validation passes and an error when validation fails. If message validation fails the API request fails.

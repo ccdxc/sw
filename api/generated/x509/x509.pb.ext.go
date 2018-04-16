@@ -58,6 +58,15 @@ func (m *AutoMsgCertificateWatchHelper) Clone(into interface{}) (interface{}, er
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgCertificateWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Certificate) Clone(into interface{}) (interface{}, error) {
 	var out *Certificate
@@ -72,6 +81,14 @@ func (m *Certificate) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Certificate) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	ret = ret || m.Status.Defaults(ver)
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -90,6 +107,17 @@ func (m *CertificateList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *CertificateList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *CertificateSpec) Clone(into interface{}) (interface{}, error) {
 	var out *CertificateSpec
@@ -106,6 +134,19 @@ func (m *CertificateSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *CertificateSpec) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		for k := range m.Usages {
+			m.Usages[k] = CertificateSpec_UsageValues_name[0]
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *CertificateStatus) Clone(into interface{}) (interface{}, error) {
 	var out *CertificateStatus
@@ -120,6 +161,17 @@ func (m *CertificateStatus) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CertificateStatus) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Validity = CertificateStatus_ValidityValues_name[0]
+	}
+	return ret
 }
 
 // Validators

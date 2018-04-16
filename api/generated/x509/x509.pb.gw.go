@@ -10,6 +10,7 @@ It translates gRPC into RESTful JSON APIs.
 package x509
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 
@@ -30,11 +31,23 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
 func request_CertificateV1_AutoAddCertificate_0(ctx context.Context, marshaler runtime.Marshaler, client CertificateV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Certificate
-	var metadata runtime.ServerMetadata
+	protoReq := &Certificate{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -46,17 +59,17 @@ func request_CertificateV1_AutoAddCertificate_0(ctx context.Context, marshaler r
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoAddCertificate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoAddCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -65,8 +78,8 @@ var (
 )
 
 func request_CertificateV1_AutoDeleteCertificate_0(ctx context.Context, marshaler runtime.Marshaler, client CertificateV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Certificate
-	var metadata runtime.ServerMetadata
+	protoReq := &Certificate{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -77,32 +90,32 @@ func request_CertificateV1_AutoDeleteCertificate_0(ctx context.Context, marshale
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CertificateV1_AutoDeleteCertificate_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_CertificateV1_AutoDeleteCertificate_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteCertificate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoDeleteCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -111,8 +124,8 @@ var (
 )
 
 func request_CertificateV1_AutoGetCertificate_0(ctx context.Context, marshaler runtime.Marshaler, client CertificateV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Certificate
-	var metadata runtime.ServerMetadata
+	protoReq := &Certificate{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -123,32 +136,32 @@ func request_CertificateV1_AutoGetCertificate_0(ctx context.Context, marshaler r
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CertificateV1_AutoGetCertificate_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_CertificateV1_AutoGetCertificate_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetCertificate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoGetCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -157,8 +170,8 @@ var (
 )
 
 func request_CertificateV1_AutoListCertificate_0(ctx context.Context, marshaler runtime.Marshaler, client CertificateV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.ListWatchOptions
-	var metadata runtime.ServerMetadata
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -169,30 +182,42 @@ func request_CertificateV1_AutoListCertificate_0(ctx context.Context, marshaler 
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CertificateV1_AutoListCertificate_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_CertificateV1_AutoListCertificate_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoListCertificate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoListCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_CertificateV1_AutoUpdateCertificate_0(ctx context.Context, marshaler runtime.Marshaler, client CertificateV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Certificate
-	var metadata runtime.ServerMetadata
+	protoReq := &Certificate{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -204,28 +229,28 @@ func request_CertificateV1_AutoUpdateCertificate_0(ctx context.Context, marshale
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoUpdateCertificate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoUpdateCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 

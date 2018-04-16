@@ -10,6 +10,7 @@ It translates gRPC into RESTful JSON APIs.
 package telemetry
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 
@@ -30,11 +31,23 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
 func request_FlowExportPolicyV1_AutoAddFlowExportPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FlowExportPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq FlowExportPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &FlowExportPolicy{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -46,17 +59,17 @@ func request_FlowExportPolicyV1_AutoAddFlowExportPolicy_0(ctx context.Context, m
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoAddFlowExportPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoAddFlowExportPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -65,8 +78,8 @@ var (
 )
 
 func request_FlowExportPolicyV1_AutoDeleteFlowExportPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FlowExportPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq FlowExportPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &FlowExportPolicy{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -77,32 +90,32 @@ func request_FlowExportPolicyV1_AutoDeleteFlowExportPolicy_0(ctx context.Context
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_FlowExportPolicyV1_AutoDeleteFlowExportPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_FlowExportPolicyV1_AutoDeleteFlowExportPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteFlowExportPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoDeleteFlowExportPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -111,8 +124,8 @@ var (
 )
 
 func request_FlowExportPolicyV1_AutoGetFlowExportPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FlowExportPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq FlowExportPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &FlowExportPolicy{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -123,32 +136,32 @@ func request_FlowExportPolicyV1_AutoGetFlowExportPolicy_0(ctx context.Context, m
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_FlowExportPolicyV1_AutoGetFlowExportPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_FlowExportPolicyV1_AutoGetFlowExportPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetFlowExportPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoGetFlowExportPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -157,8 +170,8 @@ var (
 )
 
 func request_FlowExportPolicyV1_AutoListFlowExportPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FlowExportPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.ListWatchOptions
-	var metadata runtime.ServerMetadata
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -169,30 +182,42 @@ func request_FlowExportPolicyV1_AutoListFlowExportPolicy_0(ctx context.Context, 
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_FlowExportPolicyV1_AutoListFlowExportPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_FlowExportPolicyV1_AutoListFlowExportPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoListFlowExportPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoListFlowExportPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_FlowExportPolicyV1_AutoUpdateFlowExportPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FlowExportPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq FlowExportPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &FlowExportPolicy{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -204,37 +229,49 @@ func request_FlowExportPolicyV1_AutoUpdateFlowExportPolicy_0(ctx context.Context
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoUpdateFlowExportPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoUpdateFlowExportPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_FwlogPolicyV1_AutoAddFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FwlogPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq FwlogPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &FwlogPolicy{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -246,17 +283,17 @@ func request_FwlogPolicyV1_AutoAddFwlogPolicy_0(ctx context.Context, marshaler r
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoAddFwlogPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoAddFwlogPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -265,8 +302,8 @@ var (
 )
 
 func request_FwlogPolicyV1_AutoDeleteFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FwlogPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq FwlogPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &FwlogPolicy{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -277,32 +314,32 @@ func request_FwlogPolicyV1_AutoDeleteFwlogPolicy_0(ctx context.Context, marshale
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_FwlogPolicyV1_AutoDeleteFwlogPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_FwlogPolicyV1_AutoDeleteFwlogPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteFwlogPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoDeleteFwlogPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -311,8 +348,8 @@ var (
 )
 
 func request_FwlogPolicyV1_AutoGetFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FwlogPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq FwlogPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &FwlogPolicy{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -323,32 +360,32 @@ func request_FwlogPolicyV1_AutoGetFwlogPolicy_0(ctx context.Context, marshaler r
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_FwlogPolicyV1_AutoGetFwlogPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_FwlogPolicyV1_AutoGetFwlogPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetFwlogPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoGetFwlogPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -357,8 +394,8 @@ var (
 )
 
 func request_FwlogPolicyV1_AutoListFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FwlogPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.ListWatchOptions
-	var metadata runtime.ServerMetadata
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -369,30 +406,42 @@ func request_FwlogPolicyV1_AutoListFwlogPolicy_0(ctx context.Context, marshaler 
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_FwlogPolicyV1_AutoListFwlogPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_FwlogPolicyV1_AutoListFwlogPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoListFwlogPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoListFwlogPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_FwlogPolicyV1_AutoUpdateFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FwlogPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq FwlogPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &FwlogPolicy{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -404,37 +453,49 @@ func request_FwlogPolicyV1_AutoUpdateFwlogPolicy_0(ctx context.Context, marshale
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoUpdateFwlogPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoUpdateFwlogPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_StatsPolicyV1_AutoAddStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client StatsPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq StatsPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &StatsPolicy{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -446,17 +507,17 @@ func request_StatsPolicyV1_AutoAddStatsPolicy_0(ctx context.Context, marshaler r
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoAddStatsPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoAddStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -465,8 +526,8 @@ var (
 )
 
 func request_StatsPolicyV1_AutoDeleteStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client StatsPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq StatsPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &StatsPolicy{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -477,32 +538,32 @@ func request_StatsPolicyV1_AutoDeleteStatsPolicy_0(ctx context.Context, marshale
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_StatsPolicyV1_AutoDeleteStatsPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_StatsPolicyV1_AutoDeleteStatsPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteStatsPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoDeleteStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -511,8 +572,8 @@ var (
 )
 
 func request_StatsPolicyV1_AutoGetStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client StatsPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq StatsPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &StatsPolicy{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -523,32 +584,32 @@ func request_StatsPolicyV1_AutoGetStatsPolicy_0(ctx context.Context, marshaler r
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_StatsPolicyV1_AutoGetStatsPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_StatsPolicyV1_AutoGetStatsPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetStatsPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoGetStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -557,8 +618,8 @@ var (
 )
 
 func request_StatsPolicyV1_AutoListStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client StatsPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.ListWatchOptions
-	var metadata runtime.ServerMetadata
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -569,30 +630,42 @@ func request_StatsPolicyV1_AutoListStatsPolicy_0(ctx context.Context, marshaler 
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_StatsPolicyV1_AutoListStatsPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_StatsPolicyV1_AutoListStatsPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoListStatsPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoListStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_StatsPolicyV1_AutoUpdateStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client StatsPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq StatsPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &StatsPolicy{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -604,28 +677,28 @@ func request_StatsPolicyV1_AutoUpdateStatsPolicy_0(ctx context.Context, marshale
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoUpdateStatsPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoUpdateStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 

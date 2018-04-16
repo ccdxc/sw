@@ -10,6 +10,7 @@ It translates gRPC into RESTful JSON APIs.
 package alerts
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 
@@ -30,11 +31,23 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
 func request_AlertDestinationV1_AutoAddAlertDestination_0(ctx context.Context, marshaler runtime.Marshaler, client AlertDestinationV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AlertDestination
-	var metadata runtime.ServerMetadata
+	protoReq := &AlertDestination{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -46,17 +59,17 @@ func request_AlertDestinationV1_AutoAddAlertDestination_0(ctx context.Context, m
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoAddAlertDestination(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoAddAlertDestination(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -65,8 +78,8 @@ var (
 )
 
 func request_AlertDestinationV1_AutoDeleteAlertDestination_0(ctx context.Context, marshaler runtime.Marshaler, client AlertDestinationV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AlertDestination
-	var metadata runtime.ServerMetadata
+	protoReq := &AlertDestination{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -77,32 +90,32 @@ func request_AlertDestinationV1_AutoDeleteAlertDestination_0(ctx context.Context
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AlertDestinationV1_AutoDeleteAlertDestination_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AlertDestinationV1_AutoDeleteAlertDestination_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteAlertDestination(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoDeleteAlertDestination(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -111,8 +124,8 @@ var (
 )
 
 func request_AlertDestinationV1_AutoGetAlertDestination_0(ctx context.Context, marshaler runtime.Marshaler, client AlertDestinationV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AlertDestination
-	var metadata runtime.ServerMetadata
+	protoReq := &AlertDestination{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -123,32 +136,32 @@ func request_AlertDestinationV1_AutoGetAlertDestination_0(ctx context.Context, m
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AlertDestinationV1_AutoGetAlertDestination_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AlertDestinationV1_AutoGetAlertDestination_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetAlertDestination(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoGetAlertDestination(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -157,8 +170,8 @@ var (
 )
 
 func request_AlertDestinationV1_AutoListAlertDestination_0(ctx context.Context, marshaler runtime.Marshaler, client AlertDestinationV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.ListWatchOptions
-	var metadata runtime.ServerMetadata
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -169,30 +182,42 @@ func request_AlertDestinationV1_AutoListAlertDestination_0(ctx context.Context, 
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AlertDestinationV1_AutoListAlertDestination_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AlertDestinationV1_AutoListAlertDestination_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoListAlertDestination(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoListAlertDestination(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_AlertDestinationV1_AutoUpdateAlertDestination_0(ctx context.Context, marshaler runtime.Marshaler, client AlertDestinationV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AlertDestination
-	var metadata runtime.ServerMetadata
+	protoReq := &AlertDestination{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -204,37 +229,49 @@ func request_AlertDestinationV1_AutoUpdateAlertDestination_0(ctx context.Context
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoUpdateAlertDestination(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoUpdateAlertDestination(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_AlertPolicyV1_AutoAddAlertPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AlertPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AlertPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &AlertPolicy{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -246,17 +283,17 @@ func request_AlertPolicyV1_AutoAddAlertPolicy_0(ctx context.Context, marshaler r
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoAddAlertPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoAddAlertPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -265,8 +302,8 @@ var (
 )
 
 func request_AlertPolicyV1_AutoDeleteAlertPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AlertPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AlertPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &AlertPolicy{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -277,32 +314,32 @@ func request_AlertPolicyV1_AutoDeleteAlertPolicy_0(ctx context.Context, marshale
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AlertPolicyV1_AutoDeleteAlertPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AlertPolicyV1_AutoDeleteAlertPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteAlertPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoDeleteAlertPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -311,8 +348,8 @@ var (
 )
 
 func request_AlertPolicyV1_AutoGetAlertPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AlertPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AlertPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &AlertPolicy{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -323,32 +360,32 @@ func request_AlertPolicyV1_AutoGetAlertPolicy_0(ctx context.Context, marshaler r
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AlertPolicyV1_AutoGetAlertPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AlertPolicyV1_AutoGetAlertPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetAlertPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoGetAlertPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
@@ -357,8 +394,8 @@ var (
 )
 
 func request_AlertPolicyV1_AutoListAlertPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AlertPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.ListWatchOptions
-	var metadata runtime.ServerMetadata
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
 
 	var (
 		val string
@@ -369,30 +406,42 @@ func request_AlertPolicyV1_AutoListAlertPolicy_0(ctx context.Context, marshaler 
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_AlertPolicyV1_AutoListAlertPolicy_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AlertPolicyV1_AutoListAlertPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoListAlertPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoListAlertPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 
 func request_AlertPolicyV1_AutoUpdateAlertPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AlertPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AlertPolicy
-	var metadata runtime.ServerMetadata
+	protoReq := &AlertPolicy{}
+	var smetadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 
 	var (
@@ -404,28 +453,28 @@ func request_AlertPolicyV1_AutoUpdateAlertPolicy_0(ctx context.Context, marshale
 
 	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
 
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 
-	msg, err := client.AutoUpdateAlertPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.AutoUpdateAlertPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 
 }
 

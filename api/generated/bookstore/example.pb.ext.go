@@ -146,6 +146,11 @@ func (m *ApplyDiscountReq) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *ApplyDiscountReq) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgBookWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgBookWatchHelper
@@ -160,6 +165,15 @@ func (m *AutoMsgBookWatchHelper) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgBookWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -178,6 +192,11 @@ func (m *AutoMsgCouponWatchHelper) Clone(into interface{}) (interface{}, error) 
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgCouponWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgOrderWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgOrderWatchHelper
@@ -192,6 +211,15 @@ func (m *AutoMsgOrderWatchHelper) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgOrderWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -210,6 +238,15 @@ func (m *AutoMsgPublisherWatchHelper) Clone(into interface{}) (interface{}, erro
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgPublisherWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgStoreWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgStoreWatchHelper
@@ -224,6 +261,11 @@ func (m *AutoMsgStoreWatchHelper) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgStoreWatchHelper) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -242,6 +284,40 @@ func (m *Book) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *Book) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *BookEdition) Clone(into interface{}) (interface{}, error) {
+	var out *BookEdition
+	var ok bool
+	if into == nil {
+		out = &BookEdition{}
+	} else {
+		out, ok = into.(*BookEdition)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *BookEdition) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Errata = "None"
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *BookList) Clone(into interface{}) (interface{}, error) {
 	var out *BookList
@@ -256,6 +332,17 @@ func (m *BookList) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *BookList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -274,6 +361,26 @@ func (m *BookSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *BookSpec) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Editions {
+		if m.Editions[k] != nil {
+			ret = ret || m.Editions[k].Defaults(ver)
+		}
+	}
+	ret = true
+	switch ver {
+	default:
+		m.Category = "YoungAdult"
+
+	case "v1":
+		m.Category = "ChildrensLit"
+		m.IdProvider = "TestProvider"
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *BookStatus) Clone(into interface{}) (interface{}, error) {
 	var out *BookStatus
@@ -288,6 +395,11 @@ func (m *BookStatus) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *BookStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -306,6 +418,11 @@ func (m *Coupon) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *Coupon) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *CouponList) Clone(into interface{}) (interface{}, error) {
 	var out *CouponList
@@ -320,6 +437,11 @@ func (m *CouponList) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CouponList) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -338,6 +460,14 @@ func (m *Order) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *Order) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	ret = ret || m.Status.Defaults(ver)
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *OrderItem) Clone(into interface{}) (interface{}, error) {
 	var out *OrderItem
@@ -352,6 +482,12 @@ func (m *OrderItem) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *OrderItem) Defaults(ver string) bool {
+	var ret bool
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -370,6 +506,17 @@ func (m *OrderList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *OrderList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *OrderSpec) Clone(into interface{}) (interface{}, error) {
 	var out *OrderSpec
@@ -384,6 +531,22 @@ func (m *OrderSpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *OrderSpec) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Order {
+		if m.Order[k] != nil {
+			ret = ret || m.Order[k].Defaults(ver)
+		}
+	}
+	ret = true
+	switch ver {
+	default:
+		m.Id = "unknown order"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -402,6 +565,22 @@ func (m *OrderStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *OrderStatus) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Filled {
+		if m.Filled[k] != nil {
+			ret = ret || m.Filled[k].Defaults(ver)
+		}
+	}
+	ret = true
+	switch ver {
+	default:
+		m.Status = OrderStatus_OrderStatus_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *OutageRequest) Clone(into interface{}) (interface{}, error) {
 	var out *OutageRequest
@@ -416,6 +595,11 @@ func (m *OutageRequest) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *OutageRequest) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -434,6 +618,13 @@ func (m *Publisher) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *Publisher) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *PublisherList) Clone(into interface{}) (interface{}, error) {
 	var out *PublisherList
@@ -448,6 +639,17 @@ func (m *PublisherList) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PublisherList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -466,6 +668,12 @@ func (m *PublisherSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *PublisherSpec) Defaults(ver string) bool {
+	var ret bool
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *RestockRequest) Clone(into interface{}) (interface{}, error) {
 	var out *RestockRequest
@@ -480,6 +688,11 @@ func (m *RestockRequest) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *RestockRequest) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -498,6 +711,11 @@ func (m *RestockResponse) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *RestockResponse) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Store) Clone(into interface{}) (interface{}, error) {
 	var out *Store
@@ -512,6 +730,11 @@ func (m *Store) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Store) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -530,6 +753,11 @@ func (m *StoreList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *StoreList) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *StoreSpec) Clone(into interface{}) (interface{}, error) {
 	var out *StoreSpec
@@ -546,6 +774,11 @@ func (m *StoreSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *StoreSpec) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *StoreStatus) Clone(into interface{}) (interface{}, error) {
 	var out *StoreStatus
@@ -560,6 +793,11 @@ func (m *StoreStatus) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *StoreStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Validators
@@ -601,6 +839,10 @@ func (m *Book) Validate(ver string, ignoreStatus bool) bool {
 	if !m.Spec.Validate(ver, ignoreStatus) {
 		return false
 	}
+	return true
+}
+
+func (m *BookEdition) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 

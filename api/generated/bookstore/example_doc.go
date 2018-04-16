@@ -14,6 +14,7 @@ The following Messages are defined.
   AutoMsgPublisherWatchHelper
   AutoMsgStoreWatchHelper
   Book
+  BookEdition
   BookList
   BookSpec
   BookStatus

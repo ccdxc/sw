@@ -158,10 +158,18 @@ func request_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}(ctx cont
 		grpclog.Printf("Failed to start streaming: %v", err)
 		return nil, metadata, err
 	}
-	dec := marshaler.NewDecoder(req.Body)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	dec := marshaler.NewDecoder(tee)
+	dec2 := marshaler.NewDecoder(&buf)
 	for {
-		var protoReq {{.Method.RequestType.GoType .Method.Service.File.GoPkg.Path}}
-		err = dec.Decode(&protoReq)
+		protoReq := &{{.Method.RequestType.GoType .Method.Service.File.GoPkg.Path}}{}
+		buf.Reset()
+		err = dec.Decode(protoReq)
 		if err == io.EOF {
 			break
 		}
@@ -169,7 +177,18 @@ func request_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}(ctx cont
 			grpclog.Printf("Failed to decode request: %v", err)
 			return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 		}
-		if err = stream.Send(&protoReq); err != nil {
+		changed := protoReq.Defaults(ver)
+		if changed {
+			err = dec2.Decode(protoReq)
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				grpclog.Printf("Failed to decode request: %v", err)
+				return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+		if err = stream.Send(protoReq); err != nil {
 			grpclog.Printf("Failed to send request: %v", err)
 			return nil, metadata, err
 		}
@@ -202,13 +221,27 @@ var (
 )
 {{end}}
 {{template "request-func-signature" .}} {
-	var protoReq {{.Method.RequestType.GoType .Method.Service.File.GoPkg.Path}}
-	var metadata runtime.ServerMetadata
+	protoReq := &{{.Method.RequestType.GoType .Method.Service.File.GoPkg.Path}}{}
+	var smetadata runtime.ServerMetadata
+
 {{if .Body}}
-	if err := marshaler.NewDecoder(req.Body).Decode(&{{.Body.RHS "protoReq"}}); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	changed := protoReq.Defaults(ver)
+	if changed {
+		if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
 	}
 {{end}}
+
 {{if .PathParams}}
 	var (
 		val string
@@ -219,37 +252,37 @@ var (
 	{{range $param := .PathParams}}
 	val, ok = pathParams[{{$param | printf "%q"}}]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", {{$param | printf "%q"}})
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", {{$param | printf "%q"}})
 	}
 {{if $param.IsNestedProto3 }}
-	err = runtime.PopulateFieldFromPath(&protoReq, {{$param | printf "%q"}}, val)
+	err = runtime.PopulateFieldFromPath(protoReq, {{$param | printf "%q"}}, val)
 {{else}}
 	{{$param.RHS "protoReq"}}, err = {{$param.ConvertFuncExpr}}(val)
 {{end}}
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 	{{end}}
 {{end}}
 {{if .HasQueryParam}}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 {{end}}
 {{if .Method.GetServerStreaming}}
-	stream, err := client.{{.Method.GetName}}(ctx, &protoReq)
+	stream, err := client.{{.Method.GetName}}(ctx, protoReq)
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
 	header, err := stream.Header()
 	if err != nil {
-		return nil, metadata, err
+		return nil, smetadata, err
 	}
-	metadata.HeaderMD = header
+	smetadata.HeaderMD = header
 	return stream, metadata, nil
 {{else}}
-	msg, err := client.{{.Method.GetName}}(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	msg, err := client.{{.Method.GetName}}(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
 {{end}}
 }`))
 
@@ -261,18 +294,38 @@ var (
 		grpclog.Printf("Failed to start streaming: %v", err)
 		return nil, metadata, err
 	}
-	dec := marshaler.NewDecoder(req.Body)
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	var buf bytes.Buffer
+	tee := io.TeeReader(req.Body, &buf)
+	dec := marshaler.NewDecoder(tee)
+	dec2 := marshaler.NewDecoder(&buf)
 	handleSend := func() error {
-		var protoReq {{.Method.RequestType.GoType .Method.Service.File.GoPkg.Path}}
-		err = dec.Decode(&protoReq)
+		protoReq := &{{.Method.RequestType.GoType .Method.Service.File.GoPkg.Path}}{}
+		buf.Reset()
+		err = dec.Decode(protoReq)
 		if err == io.EOF {
 			return err
 		}
+
 		if err != nil {
 			grpclog.Printf("Failed to decode request: %v", err)
 			return err
 		}
-		if err = stream.Send(&protoReq); err != nil {
+		changed := protoReq.Defaults(ver)
+		if changed {
+			err = dec2.Decode(protoReq)
+			if err == io.EOF {
+				return err
+			}
+			if err != nil {
+				grpclog.Printf("Failed to decode request: %v", err)
+				return err
+			}
+		}
+		if err = stream.Send(protoReq); err != nil {
 			grpclog.Printf("Failed to send request: %v", err)
 			return err
 		}

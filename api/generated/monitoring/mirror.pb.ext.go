@@ -58,6 +58,11 @@ func (m *AppProtoSelector) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AppProtoSelector) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgMirrorSessionWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgMirrorSessionWatchHelper
@@ -72,6 +77,15 @@ func (m *AutoMsgMirrorSessionWatchHelper) Clone(into interface{}) (interface{}, 
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgMirrorSessionWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -90,6 +104,11 @@ func (m *MatchRule) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *MatchRule) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *MatchSelector) Clone(into interface{}) (interface{}, error) {
 	var out *MatchSelector
@@ -104,6 +123,11 @@ func (m *MatchSelector) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *MatchSelector) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -122,6 +146,17 @@ func (m *MirrorCollector) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *MirrorCollector) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Type = MirrorCollector_PacketCollectorType_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *MirrorSession) Clone(into interface{}) (interface{}, error) {
 	var out *MirrorSession
@@ -136,6 +171,14 @@ func (m *MirrorSession) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *MirrorSession) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	ret = ret || m.Status.Defaults(ver)
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -154,6 +197,17 @@ func (m *MirrorSessionList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *MirrorSessionList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *MirrorSessionSpec) Clone(into interface{}) (interface{}, error) {
 	var out *MirrorSessionSpec
@@ -168,6 +222,22 @@ func (m *MirrorSessionSpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *MirrorSessionSpec) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Collectors {
+		ret = ret || m.Collectors[k].Defaults(ver)
+	}
+	ret = true
+	switch ver {
+	default:
+		for k := range m.PacketFilters {
+			m.PacketFilters[k] = MirrorSessionSpec_MirrorPacketFilter_name[0]
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -186,6 +256,17 @@ func (m *MirrorSessionStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *MirrorSessionStatus) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.State = MirrorSessionState_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *MirrorStartConditions) Clone(into interface{}) (interface{}, error) {
 	var out *MirrorStartConditions
@@ -200,6 +281,11 @@ func (m *MirrorStartConditions) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *MirrorStartConditions) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -218,6 +304,11 @@ func (m *MirrorStopConditions) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *MirrorStopConditions) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *SmartNICMirrorSessionStatus) Clone(into interface{}) (interface{}, error) {
 	var out *SmartNICMirrorSessionStatus
@@ -232,6 +323,11 @@ func (m *SmartNICMirrorSessionStatus) Clone(into interface{}) (interface{}, erro
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SmartNICMirrorSessionStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Validators

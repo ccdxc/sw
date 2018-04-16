@@ -4,7 +4,7 @@
 Package {{.GoPkg.Name}} is a auto generated package.
 Input file: {{.Name}} {{$file := .}}
 */
-package {{.GoPkg.Name}}{{$validators := getValidatorManifest .}}
+package {{.GoPkg.Name}}{{$validators := getValidatorManifest .}}{{$defaults := getDefaulterManifest .}}
 
 import (
 	fmt "fmt"
@@ -58,7 +58,39 @@ func (m *{{.Name}}) Clone(into interface{}) (interface{}, error) {
 	*out = *m
 	return out, nil
 }
-{{end}}{{end}}
+
+// Default sets up the defaults for the object
+func (m *{{.Name}}) Defaults(ver string) bool { {{with index $defaults.Map (derefStr .Name)}}{{if eq (len .Fields) 0}}
+	return false {{else}}
+	var ret bool {{range $fldk, $defval := .Fields}}{{if $defval.Nested}}{{if $defval.Repeated}}
+	for k := range m.{{$fldk}} { {{if $defval.Pointer}}
+		if m.{{$fldk}}[k] != nil {
+			ret = ret || m.{{$fldk}}[k].Defaults(ver)
+		}{{else}}
+		ret = ret || m.{{$fldk}}[k].Defaults(ver) {{end}}
+	}{{else}}{{if $defval.Pointer}}
+	for m.{{$fldk}} != nil {
+		ret = ret || m.{{$fldk}}.Defaults(ver)
+	}{{else}}
+	ret = ret || m.{{$fldk}}.Defaults(ver){{end}}{{end}}{{end}}{{end}}{{if eq (len .Versions) 0}}{{else}}
+	ret = true
+	switch ver { {{range $ver, $verdef := .Versions}}{{if eq $ver "all"}}
+	default: {{else}}
+	case "{{$ver}}": {{end}}{{range $fldk, $def := $verdef}}{{/*<0>*/}}{{if $def.Repeated}}{{/*<1>*/}}
+	for k := range m.{{$fldk}} { {{if $def.Pointer}}{{/*<2>*/}}
+		if m.{{$fldk}}[k] != nil {
+			*m.{{$fldk}}[k] = {{$def.Val}}
+		} {{else}}
+		m.{{$fldk}}[k] = {{$def.Val}}{{end}}{{/*<2>*/}}
+	}{{else}}{{if $def.Pointer}}{{/*<3>*/}}
+	if m.{{$fldk}} != nil {
+		m.{{$fldk}} = {{$def.Val}}
+	}{{else}}
+	m.{{$fldk}} = {{$def.Val}}{{end}}{{/*<3>*/}}{{end}}{{/*<1>*/}}{{end}}{{/*<0>*/}}
+	{{end}} }{{/*<lenVer!=0>*/}}{{end}}{{/*<rangeVersion>*/}}
+	return ret{{end}}
+} {{end}}{{end}}
+{{end}}
 // Validators
 {{range .Messages}}{{if isNestedMessage .}}{{else}}{{$msg := .}}{{$msgname := .Name}}
 func (m *{{.Name}}) Validate(ver string, ignoreStatus bool) bool { {{with (index $validators.Map (derefStr .Name))}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{if $fldv.Repeated}}
@@ -95,8 +127,8 @@ func (m *{{.Name}}) Validate(ver string, ignoreStatus bool) bool { {{with (index
 }
 {{end}}{{end}}
 
-{{if $validators.Fmap}}
-func init() {
+
+func init() { {{if $validators.Fmap}}
 	funcMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool){{range .Messages}}{{$msgName := .Name}}{{with (index $validators.Map (derefStr .Name))}}
 	{{$_ := saveBool true 1}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}{{if getBool 1}}
 	funcMap{{getFileName $file.Name}}["{{$msgName}}"] = make(map[string][]func(interface{})bool){{$_ := saveBool false 1}}{{end}}{{end}}{{end}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}
@@ -131,6 +163,5 @@ func init() {
 		}{{end}}{{end}}
 		return true
 	})
-	{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}
-
-}{{end}}
+	{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}
+}

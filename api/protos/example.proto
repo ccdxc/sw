@@ -64,11 +64,17 @@ message BookSpec {
   string ISBNId = 2;
   string Author = 3;
   // Added in  version 2 of the API.
-  string IdProvider = 4;
-  string Category = 5 [(venice.check) = "StrEnum(BookSpec.BookCategories)"];
+  string IdProvider = 4[(venice.default) = "v1:TestProvider"];
+  string Category = 5 [(venice.check) = "StrEnum(BookSpec.BookCategories)", (venice.default) = "v1:ChildrensLit", (venice.default) = "YoungAdult"];
   // Used for performance monitoring tests
   api.Timestamp UpdateTimestamp = 6;
   bool Terminate = 7;
+  map<string, BookEdition> Editions = 8 [(gogoproto.nullable) = true];
+}
+
+message BookEdition {
+  string Errata = 1[(venice.default) = "None"];
+  string Year = 2;
 }
 
 message BookStatus {
@@ -87,7 +93,7 @@ message Order {
 }
 
 message OrderSpec {
-  string Id = 1;
+  string Id = 1 [(venice.default) = "unknown order", (gogoproto.jsontag) = ",omitempty"];
   repeated OrderItem Order = 2;
 }
 

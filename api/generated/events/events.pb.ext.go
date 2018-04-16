@@ -63,6 +63,15 @@ func (m *AutoMsgEventPolicyWatchHelper) Clone(into interface{}) (interface{}, er
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgEventPolicyWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Event) Clone(into interface{}) (interface{}, error) {
 	var out *Event
@@ -77,6 +86,13 @@ func (m *Event) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Event) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.EventAttributes.Defaults(ver)
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -95,6 +111,17 @@ func (m *EventAttributes) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *EventAttributes) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Severity = SeverityLevel_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *EventExport) Clone(into interface{}) (interface{}, error) {
 	var out *EventExport
@@ -109,6 +136,17 @@ func (m *EventExport) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *EventExport) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Format = EventExportFormat_name[0]
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -127,6 +165,13 @@ func (m *EventPolicy) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *EventPolicy) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *EventPolicyList) Clone(into interface{}) (interface{}, error) {
 	var out *EventPolicyList
@@ -141,6 +186,17 @@ func (m *EventPolicyList) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *EventPolicyList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -159,6 +215,17 @@ func (m *EventPolicySpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *EventPolicySpec) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Exports {
+		if m.Exports[k] != nil {
+			ret = ret || m.Exports[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *EventPolicyStatus) Clone(into interface{}) (interface{}, error) {
 	var out *EventPolicyStatus
@@ -175,6 +242,11 @@ func (m *EventPolicyStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *EventPolicyStatus) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *EventSource) Clone(into interface{}) (interface{}, error) {
 	var out *EventSource
@@ -189,6 +261,11 @@ func (m *EventSource) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *EventSource) Defaults(ver string) bool {
+	return false
 }
 
 // Validators

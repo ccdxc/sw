@@ -88,6 +88,11 @@ func (m *App) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *App) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AppList) Clone(into interface{}) (interface{}, error) {
 	var out *AppList
@@ -102,6 +107,11 @@ func (m *AppList) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AppList) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -120,6 +130,11 @@ func (m *AppSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AppSpec) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AppStatus) Clone(into interface{}) (interface{}, error) {
 	var out *AppStatus
@@ -134,6 +149,11 @@ func (m *AppStatus) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AppStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -152,6 +172,11 @@ func (m *AppUser) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AppUser) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AppUserGrp) Clone(into interface{}) (interface{}, error) {
 	var out *AppUserGrp
@@ -166,6 +191,11 @@ func (m *AppUserGrp) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AppUserGrp) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -184,6 +214,11 @@ func (m *AppUserGrpList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AppUserGrpList) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AppUserGrpSpec) Clone(into interface{}) (interface{}, error) {
 	var out *AppUserGrpSpec
@@ -198,6 +233,11 @@ func (m *AppUserGrpSpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AppUserGrpSpec) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -216,6 +256,11 @@ func (m *AppUserGrpStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AppUserGrpStatus) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AppUserList) Clone(into interface{}) (interface{}, error) {
 	var out *AppUserList
@@ -230,6 +275,11 @@ func (m *AppUserList) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AppUserList) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -248,6 +298,11 @@ func (m *AppUserSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AppUserSpec) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AppUserStatus) Clone(into interface{}) (interface{}, error) {
 	var out *AppUserStatus
@@ -262,6 +317,11 @@ func (m *AppUserStatus) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AppUserStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -280,6 +340,11 @@ func (m *AutoMsgAppUserGrpWatchHelper) Clone(into interface{}) (interface{}, err
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgAppUserGrpWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgAppUserWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgAppUserWatchHelper
@@ -296,6 +361,11 @@ func (m *AutoMsgAppUserWatchHelper) Clone(into interface{}) (interface{}, error)
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgAppUserWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgAppWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgAppWatchHelper
@@ -310,6 +380,11 @@ func (m *AutoMsgAppWatchHelper) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgAppWatchHelper) Defaults(ver string) bool {
+	return false
 }
 
 // Validators
@@ -372,4 +447,7 @@ func (m *AutoMsgAppUserWatchHelper) Validate(ver string, ignoreStatus bool) bool
 
 func (m *AutoMsgAppWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 	return true
+}
+
+func init() {
 }

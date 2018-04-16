@@ -92,6 +92,11 @@ func (m *AutoMsgClusterWatchHelper) Clone(into interface{}) (interface{}, error)
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgClusterWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgNodeWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgNodeWatchHelper
@@ -106,6 +111,15 @@ func (m *AutoMsgNodeWatchHelper) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgNodeWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -124,6 +138,15 @@ func (m *AutoMsgSmartNICWatchHelper) Clone(into interface{}) (interface{}, error
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgSmartNICWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Cluster) Clone(into interface{}) (interface{}, error) {
 	var out *Cluster
@@ -138,6 +161,11 @@ func (m *Cluster) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Cluster) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -156,6 +184,11 @@ func (m *ClusterList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *ClusterList) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *ClusterSpec) Clone(into interface{}) (interface{}, error) {
 	var out *ClusterSpec
@@ -170,6 +203,11 @@ func (m *ClusterSpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *ClusterSpec) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -188,6 +226,11 @@ func (m *ClusterStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *ClusterStatus) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *Node) Clone(into interface{}) (interface{}, error) {
 	var out *Node
@@ -202,6 +245,14 @@ func (m *Node) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Node) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	ret = ret || m.Status.Defaults(ver)
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -220,6 +271,18 @@ func (m *NodeCondition) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *NodeCondition) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Status = ConditionStatus_name[0]
+		m.Type = NodeCondition_ConditionType_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *NodeList) Clone(into interface{}) (interface{}, error) {
 	var out *NodeList
@@ -234,6 +297,17 @@ func (m *NodeList) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *NodeList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -252,6 +326,19 @@ func (m *NodeSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *NodeSpec) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		for k := range m.Roles {
+			m.Roles[k] = NodeSpec_NodeRole_name[0]
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *NodeStatus) Clone(into interface{}) (interface{}, error) {
 	var out *NodeStatus
@@ -266,6 +353,22 @@ func (m *NodeStatus) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *NodeStatus) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Conditions {
+		if m.Conditions[k] != nil {
+			ret = ret || m.Conditions[k].Defaults(ver)
+		}
+	}
+	ret = true
+	switch ver {
+	default:
+		m.Phase = NodeStatus_NodePhase_name[0]
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -284,6 +387,18 @@ func (m *PortCondition) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *PortCondition) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Status = ConditionStatus_name[0]
+		m.Type = PortCondition_ConditionType_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *PortSpec) Clone(into interface{}) (interface{}, error) {
 	var out *PortSpec
@@ -298,6 +413,11 @@ func (m *PortSpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PortSpec) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -316,6 +436,17 @@ func (m *PortStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *PortStatus) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Conditions {
+		if m.Conditions[k] != nil {
+			ret = ret || m.Conditions[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *SmartNIC) Clone(into interface{}) (interface{}, error) {
 	var out *SmartNIC
@@ -330,6 +461,14 @@ func (m *SmartNIC) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SmartNIC) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	ret = ret || m.Status.Defaults(ver)
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -348,6 +487,18 @@ func (m *SmartNICCondition) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *SmartNICCondition) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Status = ConditionStatus_name[0]
+		m.Type = SmartNICCondition_ConditionType_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *SmartNICList) Clone(into interface{}) (interface{}, error) {
 	var out *SmartNICList
@@ -362,6 +513,17 @@ func (m *SmartNICList) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SmartNICList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -380,6 +542,17 @@ func (m *SmartNICSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *SmartNICSpec) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Phase = SmartNICSpec_SmartNICPhase_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *SmartNICStatus) Clone(into interface{}) (interface{}, error) {
 	var out *SmartNICStatus
@@ -394,6 +567,22 @@ func (m *SmartNICStatus) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SmartNICStatus) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Conditions {
+		if m.Conditions[k] != nil {
+			ret = ret || m.Conditions[k].Defaults(ver)
+		}
+	}
+	for k := range m.Ports {
+		if m.Ports[k] != nil {
+			ret = ret || m.Ports[k].Defaults(ver)
+		}
+	}
+	return ret
 }
 
 // Validators

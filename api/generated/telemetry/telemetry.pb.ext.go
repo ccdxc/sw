@@ -92,6 +92,15 @@ func (m *AutoMsgFlowExportPolicyWatchHelper) Clone(into interface{}) (interface{
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgFlowExportPolicyWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgFwlogPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgFwlogPolicyWatchHelper
@@ -106,6 +115,15 @@ func (m *AutoMsgFwlogPolicyWatchHelper) Clone(into interface{}) (interface{}, er
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgFwlogPolicyWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -124,6 +142,11 @@ func (m *AutoMsgStatsPolicyWatchHelper) Clone(into interface{}) (interface{}, er
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgStatsPolicyWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *FlowExportPolicy) Clone(into interface{}) (interface{}, error) {
 	var out *FlowExportPolicy
@@ -138,6 +161,13 @@ func (m *FlowExportPolicy) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *FlowExportPolicy) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -156,6 +186,17 @@ func (m *FlowExportPolicyList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *FlowExportPolicyList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *FlowExportSpec) Clone(into interface{}) (interface{}, error) {
 	var out *FlowExportSpec
@@ -170,6 +211,15 @@ func (m *FlowExportSpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *FlowExportSpec) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Targets {
+		ret = ret || m.Targets[k].Defaults(ver)
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -188,6 +238,11 @@ func (m *FlowExportStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *FlowExportStatus) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *FlowExportTarget) Clone(into interface{}) (interface{}, error) {
 	var out *FlowExportTarget
@@ -202,6 +257,17 @@ func (m *FlowExportTarget) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *FlowExportTarget) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Format = FlowExportTarget_Formats_name[0]
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -220,6 +286,20 @@ func (m *FwlogExport) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *FwlogExport) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		for k := range m.Filter {
+			m.Filter[k] = FwlogFilter_name[0]
+		}
+		m.Format = FwlogExportFormat_name[0]
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *FwlogPolicy) Clone(into interface{}) (interface{}, error) {
 	var out *FwlogPolicy
@@ -234,6 +314,13 @@ func (m *FwlogPolicy) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *FwlogPolicy) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -252,6 +339,17 @@ func (m *FwlogPolicyList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *FwlogPolicyList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *FwlogSpec) Clone(into interface{}) (interface{}, error) {
 	var out *FwlogSpec
@@ -266,6 +364,24 @@ func (m *FwlogSpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *FwlogSpec) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Exports {
+		if m.Exports[k] != nil {
+			ret = ret || m.Exports[k].Defaults(ver)
+		}
+	}
+	ret = true
+	switch ver {
+	default:
+		for k := range m.Filter {
+			m.Filter[k] = FwlogFilter_name[0]
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -284,6 +400,11 @@ func (m *FwlogStatus) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *FwlogStatus) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *StatsPolicy) Clone(into interface{}) (interface{}, error) {
 	var out *StatsPolicy
@@ -298,6 +419,11 @@ func (m *StatsPolicy) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *StatsPolicy) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -316,6 +442,11 @@ func (m *StatsPolicyList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *StatsPolicyList) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *StatsSpec) Clone(into interface{}) (interface{}, error) {
 	var out *StatsSpec
@@ -332,6 +463,11 @@ func (m *StatsSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *StatsSpec) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *StatsStatus) Clone(into interface{}) (interface{}, error) {
 	var out *StatsStatus
@@ -346,6 +482,11 @@ func (m *StatsStatus) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *StatsStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Validators

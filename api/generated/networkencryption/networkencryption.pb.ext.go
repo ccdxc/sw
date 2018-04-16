@@ -54,6 +54,11 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Clone(into interface{}) (int
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *IPsecProtocolSpec) Clone(into interface{}) (interface{}, error) {
 	var out *IPsecProtocolSpec
@@ -68,6 +73,11 @@ func (m *IPsecProtocolSpec) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *IPsecProtocolSpec) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -86,6 +96,11 @@ func (m *TLSProtocolSpec) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *TLSProtocolSpec) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *TrafficEncryptionPolicy) Clone(into interface{}) (interface{}, error) {
 	var out *TrafficEncryptionPolicy
@@ -100,6 +115,11 @@ func (m *TrafficEncryptionPolicy) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *TrafficEncryptionPolicy) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -118,6 +138,11 @@ func (m *TrafficEncryptionPolicyList) Clone(into interface{}) (interface{}, erro
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *TrafficEncryptionPolicyList) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *TrafficEncryptionPolicySpec) Clone(into interface{}) (interface{}, error) {
 	var out *TrafficEncryptionPolicySpec
@@ -134,6 +159,11 @@ func (m *TrafficEncryptionPolicySpec) Clone(into interface{}) (interface{}, erro
 	return out, nil
 }
 
+// Default sets up the defaults for the object
+func (m *TrafficEncryptionPolicySpec) Defaults(ver string) bool {
+	return false
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *TrafficEncryptionPolicyStatus) Clone(into interface{}) (interface{}, error) {
 	var out *TrafficEncryptionPolicyStatus
@@ -148,6 +178,11 @@ func (m *TrafficEncryptionPolicyStatus) Clone(into interface{}) (interface{}, er
 	}
 	*out = *m
 	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *TrafficEncryptionPolicyStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Validators
@@ -178,4 +213,7 @@ func (m *TrafficEncryptionPolicySpec) Validate(ver string, ignoreStatus bool) bo
 
 func (m *TrafficEncryptionPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
 	return true
+}
+
+func init() {
 }
