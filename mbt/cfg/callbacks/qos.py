@@ -35,7 +35,7 @@ def PreCreateCb(data, req_spec, resp_spec):
 
     req_spec.request[0].pfc.cos = random.randint(1,7)
 
-    mtu = random.randint(1500, 9217)
+    mtu = random.randint(1500, 9216)
     req_spec.request[0].key_or_handle.qos_group = key_choice
     req_spec.request[0].uplink_class_map.dot1q_pcp = dot1q_pcp_choice
     req_spec.request[0].uplink_class_map.ip_dscp[0] = ip_dscp_choice
@@ -129,7 +129,7 @@ def PreUpdateCb(data, req_spec, resp_spec):
     config_object = config_mgr.GetConfigObjectFromKey(req_spec.request[0].key_or_handle)
     cache_create_msg = config_object._msg_cache[config_mgr.ConfigObjectMeta.CREATE]
 
-    mtu = random.randint(1500, 9217)
+    mtu = random.randint(1500, 9216)
 
     if (cache_create_msg.request[0].pfc.cos == 0):
         req_spec.request[0].ClearField("pfc")

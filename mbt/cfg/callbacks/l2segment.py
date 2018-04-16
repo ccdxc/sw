@@ -3,23 +3,16 @@ import config_mgr
 import random
 
 import cfg.callbacks.vrf as vrf
+import cfg.callbacks.network as network
 
 # Infra VRF can have only one L2 segment
 # So when a second L2 segment is being created for an Infra VRF
-# we modify the VRF ID in the callback to a customer VRF ID
-# We also need to modify the VRF ID for the network object because
-# L2Segment object refers to network object and both need to have
-# the same VRF ID.
-# This caused an issue though. When we update an Infra L2segment
-# we sometimes create a new network object to update the network
-# object reference in the L2segment object. But because of the
-# earlier fix we would have changed the VRF ID for the network
-# object. The fix to this issue is to only modify the VRF ID for
-# the network object when L2Segment update is completed
+# we modify the VRF ID in the callback to a customer VRF.
+# We also make sure the network object referenced also belongs
+# to a customer VRF
 
 max_infra_types = 1
 current_infra_types = 0
-infra_update_done = 0
 wire_encap_type = [types_pb2.ENCAP_TYPE_NONE, types_pb2.ENCAP_TYPE_DOT1Q, types_pb2.ENCAP_TYPE_VXLAN]
 tunnel_encap_type = [types_pb2.ENCAP_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN]
 
@@ -29,7 +22,15 @@ def PreCreateCb(data, req_spec, resp_spec):
 
     if req_spec.request[0].vrf_key_handle.vrf_id == vrf.infra_vrf_id:
         if current_infra_types == max_infra_types:
-            req_spec.request[0].vrf_key_handle.vrf_id = vrf.customer_vrf_id
+            # Modify to be a customer vrf L2seg
+            req_spec.request[0].vrf_key_handle.vrf_id = network.nw_cust_obj["vrf_id"]
+            req_spec.request[0].network_key_handle[0].nw_key.vrf_key_handle.vrf_id = network.nw_cust_obj["vrf_id"]
+            req_spec.request[0].network_key_handle[0].nw_key.ip_prefix.address.ip_af = network.nw_cust_obj["ip_af"]
+            req_spec.request[0].network_key_handle[0].nw_key.ip_prefix.prefix_len = network.nw_cust_obj["prefix_len"]
+            if network.nw_cust_obj["ip_af"] == types_pb2.IP_AF_INET6:
+                req_spec.request[0].network_key_handle[0].nw_key.ip_prefix.address.v6_addr = network.nw_cust_obj["ipv6"]
+            else:
+                req_spec.request[0].network_key_handle[0].nw_key.ip_prefix.address.v4_addr = network.nw_cust_obj["ipv4"]
         else:
             current_infra_types += 1
 
@@ -44,8 +45,20 @@ def PostGetCb(data, req_spec, resp_spec):
     data.actual_data.spec = resp_spec.response[0].spec
 
 def PreUpdateCb(data, req_spec, resp_spec):
-    if req_spec.request[0].vrf_key_handle.vrf_id == vrf.infra_vrf_id:
-        infra_update_done = 1
+    nw_vrf_id = req_spec.request[0].network_key_handle[0].nw_key.vrf_key_handle.vrf_id
+    l2seg_vrf_id = req_spec.request[0].vrf_key_handle.vrf_id
+
+    if l2seg_vrf_id != nw_vrf_id:
+        # Modify to be a customer vrf L2seg
+        req_spec.request[0].vrf_key_handle.vrf_id = network.nw_cust_obj["vrf_id"]
+        req_spec.request[0].network_key_handle[0].nw_key.vrf_key_handle.vrf_id = network.nw_cust_obj["vrf_id"]
+        req_spec.request[0].network_key_handle[0].nw_key.ip_prefix.address.ip_af = network.nw_cust_obj["ip_af"]
+        req_spec.request[0].network_key_handle[0].nw_key.ip_prefix.prefix_len = network.nw_cust_obj["prefix_len"]
+        if network.nw_cust_obj["ip_af"] == types_pb2.IP_AF_INET6:
+            req_spec.request[0].network_key_handle[0].nw_key.ip_prefix.address.v6_addr = network.nw_cust_obj["ipv6"]
+        else:
+            req_spec.request[0].network_key_handle[0].nw_key.ip_prefix.address.v4_addr = network.nw_cust_obj["ipv4"]
+
     req_spec.request[0].wire_encap.encap_type = random.choice(wire_encap_type)
     req_spec.request[0].tunnel_encap.encap_type = random.choice(tunnel_encap_type)
 
