@@ -30,10 +30,12 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 # Lists the binaries to be containerized
 TO_DOCKERIZE := apigw apiserver vchub pen-npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr
 
+ifneq ($(NOGOLANG),1)
 # Install gopkgs
 INSTALL := $(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
 # Lists all go packages. Auto ignores vendor
 GO_PKG := $(shell ${GOPATH}/bin/gopkgs -short | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS})
+endif
 
 GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash
@@ -41,7 +43,8 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.12
-UI_BUILD_CONTAINER ?= pens-ui-bld:v0.2
+UI_BUILD_CONTAINER ?= pens-ui-bld:v0.3
+TARGETS ?= ws-tools gen build
 
 default:
 	$(MAKE) ws-tools
@@ -153,21 +156,33 @@ helper-containers:
 container-compile:
 	mkdir -p ${PWD}/bin/cbin
 	mkdir -p ${PWD}/bin/pkg
-	@echo "+++ building ui sources"; docker run -t --rm -v ${PWD}:/import/src/github.com/pensando/sw:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER};
+	@echo "+++ building ui sources"
+	@if [ ! -f bin/webapp-node-modules.tgz ]; then \
+		@echo "+++ populating node_modules from cache";\
+		echo docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+		docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+		cd venice/ui/web-app-framework && tar zxf ../../../bin/web-app-framework-node-modules.tgz ;\
+		cd ../webapp && tar zxf ../../../bin/webapp-node-modules.tgz ;\
+	fi
+	docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER}
 	@cp -r venice/ui/webapp/dist tools/docker-files/apigw
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
-		echo "+++ building go sources"; docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw:cached -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash -c "make ws-tools gen build"; \
+		echo "+++ building go sources"; docker run -t --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw:cached -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash -c "make ${TARGETS}" ; \
 	else \
-		echo "+++ rebuilding all go sources"; docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash -c "make ws-tools gen build";\
+		echo "+++ rebuilding all go sources"; docker run -t --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash -c "make ${TARGETS}";\
 	fi
 
 container-qcompile:
 	mkdir -p ${PWD}/bin/cbin
 	mkdir -p ${PWD}/bin/pkg
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
-		echo "+++ building go sources"; docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER}; \
+		echo "+++ building go sources";
+		echo docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER}; \
+		docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER}; \
 	else \
-		echo "+++ rebuilding all go sources"; docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER};\
+		echo "+++ rebuilding all go sources";
+		echo docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER};\
+		docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER};\
 	fi
 
 
@@ -277,26 +292,7 @@ e2e-sanities:
 
 ui:
 	npm version;
-	cd venice/ui/web-app-framework && node node_modules/node-sass/scripts/install.js;
-	cd venice/ui/web-app-framework && node node_modules/node-sass/scripts/build.js;
-	@echo "+++ building web-app-framework";
 	cd venice/ui/web-app-framework && npm run packagr
 	cd venice/ui/web-app-framework/dist && npm pack .
-	@echo "+++ installing web-app-framework";
-	cd venice/ui/webapp && npm install ../web-app-framework/dist/web-app-framework-0.0.0.tgz;
-	cd venice/ui/webapp && node node_modules/node-sass/scripts/install.js;
-	cd venice/ui/webapp && node node_modules/node-sass/scripts/build.js;
-	@echo "+++ building webapp";
+	cd venice/ui/webapp && npm install --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz;
 	cd venice/ui/webapp && ng build
-
-# Target invoked from ui build container, which contains node_modules
-ui-cached:
-	@echo "+++ copying node_modules to web-app-framework";
-	cd venice/ui/web-app-framework && mkdir -p node_modules;
-	cd venice/ui/web-app-framework && cp -rf /usr/local/lib/web-app-framework/node_modules/* node_modules;
-	cd venice/ui/web-app-framework && npm cache add .
-	@echo "+++ copying node_modules to webapp";
-	cd venice/ui/webapp && mkdir -p node_modules;
-	cd venice/ui/webapp && cp -rf /usr/local/lib/webapp/node_modules/* node_modules;
-	cd venice/ui/webapp && npm cache add .
-	$(MAKE) ui
