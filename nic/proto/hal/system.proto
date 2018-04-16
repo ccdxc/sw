@@ -12,7 +12,6 @@
 syntax = "proto3";
 
 import "types.proto";
-import "telemetry.proto";
 import "qos.proto";
 option go_package="halproto";
 

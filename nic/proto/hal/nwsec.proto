@@ -298,13 +298,12 @@ enum FirewallAction {
 // in most cases. This object also can specify blanket apps like all TCP or
 // UDP traffic, all IP traffic, ICMP type/code combinations etc.
 message Service {
-    types.IPProtocol           ip_protocol   = 1;    // IP protocol
-    oneof l4_info {
-        uint32                 dst_port      = 2;    // TCP or UDP port, 
-                                                     // 0 for other protocols
-        types.ICMPMsgType      icmp_msg_type = 3;
-    }
-    ALGName                    alg           = 4;                //  Identifies ALG name
+  types.IPProtocol           ip_protocol   = 1;    // IP protocol
+  oneof l4_info {
+    uint32                 dst_port      = 2;    // TCP or UDP port, 
+    types.ICMPMsgType      icmp_msg_type = 3;
+  }
+  ALGName                    alg           = 4;                //  Identifies ALG name
 }
 
 // Applicaion Layer Gateway (ALG) names for invoking appropriate ALG
@@ -338,7 +337,6 @@ message SGPolicy {
 //message EgressSGPolicy {
   //repeated FirewallRuleSpec    fw_rules       = 1;    // egress firewall rules
 //}
-
 
 
 // SecurityGroupPolicySpec captures the policy for a security group pair (aka. group of

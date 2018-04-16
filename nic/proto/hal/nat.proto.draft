@@ -115,9 +115,6 @@ message NatRuleGetResponseMsg {
 message NatVpnMappingSpec {
   types.ObjectMeta             meta            = 1;    // common object meta
   kh.NatVpnMappingKeyHandle    key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
-  types.IPAddress              service_ip      = 3;  // public/external IP of the service
-  types.IPAddress              mapped_ip       = 4;  // private/internal IP address of the server
-  kh.VrfKeyHandle              vrf_key_handle  = 5 [(gogoproto.moretags) = "venice:ref"];  // internal VRF
 }
 
 // NatVpnMappingRequestMsg is the batched add or modify of NAT VPN mapping request
@@ -127,7 +124,8 @@ message NatVpnMappingRequestMsg {
 
 // NatVpnMappingStatus reflects the current operational status of a NAT VPN mapping
 message NatVpnMappingStatus  {
-  fixed64    handle  = 1;    // id of the NAT VPN mapping returned by HAL
+  fixed64    handle      = 1;    // id of the NAT VPN mapping returned by HAL
+  kh.Svc     svc_mapping = 2;    // NAT VPN mapping allocated for the service
 }
 
 // NatVpnMappingResponse is the response to NatVpnMappingSpec

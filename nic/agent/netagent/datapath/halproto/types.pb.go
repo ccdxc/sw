@@ -396,6 +396,7 @@
 		GftHeaderTranspositionProfileKeyHandle
 		GftExactMatchFlowEntryKeyHandle
 		NatRuleKeyHandle
+		Svc
 		NatVpnMappingKeyHandle
 		IpsecRuleKeyHandle
 		QosClassKeyHandle

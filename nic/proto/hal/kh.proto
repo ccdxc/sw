@@ -79,28 +79,29 @@ message L2SegmentKeyHandle {
 // SecurityRuleKeyHandle uniquely identifies a security rule and is used
 // to create/update/delete/get secutiry rules
 message SecurityRuleKeyHandle {
-    oneof rule_key_or_handle {
-        uint64              security_rule_id     = 1;  // rule id idenfied by a number
-        fixed64             security_rule_handle = 2;  // handle for security rule returned by 
-    }
+  oneof rule_key_or_handle {
+    uint64              security_rule_id     = 1;  // rule id idenfied by a number
+    fixed64             security_rule_handle = 2;  // handle for security rule returned by 
+  }
 }
 
 message SecurityPolicyKey {
-    uint64       security_policy_id  = 1;
-    VrfKeyHandle vrf_id_or_handle    = 2;
+  uint64       security_policy_id  = 1;
+  VrfKeyHandle vrf_id_or_handle    = 2;
 }
+
 // SecurityPolicyKeyHandle uniquely identifies a security rule and is used
 // to create/update/delete/get secutiry rules
 message SecurityPolicyKeyHandle {
-    oneof policy_key_or_handle {
-        SecurityPolicyKey   security_policy_key    = 1;  // rule id idenfied by a number
-        fixed64             security_policy_handle = 2;  // handle for security policy returned by hal 
-    }
+  oneof policy_key_or_handle {
+    SecurityPolicyKey   security_policy_key    = 1;  // rule id idenfied by a number
+    fixed64             security_policy_handle = 2;  // handle for security policy returned by hal 
+  }
 }
 
 message SecurityGroupPolicyId {
-    uint64     security_group_id         = 1;    // security group id or label
-    uint64     peer_security_group_id    = 2;    // peer security group id
+  uint64     security_group_id         = 1;    // security group id or label
+  uint64     peer_security_group_id    = 2;    // peer security group id
 }
 
 // SecurityGroupKeyPolicyHandle uniquely identifies a security group and is used
@@ -239,28 +240,39 @@ message GftExactMatchFlowEntryKeyHandle {
 // NatRuleKeyHandle uniquely identifies a NAT rule and is used
 // to create/update/delete/get NAT rules
 message NatRuleKeyHandle {
-    oneof key_or_handle {
-        uint64     rule_id     = 1;  // rule id idenfied by a number
-        fixed64    rule_handle = 2;  // handle for NAT rule returned by HAL
-    }
+  oneof key_or_handle {
+    uint64     rule_id     = 1;  // rule id idenfied by a number
+    fixed64    rule_handle = 2;  // handle for NAT rule returned by HAL
+  }
+}
+
+// Svc object identies an app, while a service can run on multiple IPs
+// in general case where the service is spread out, an optional IP address
+// specified explicitly to nail a service to particular IP where a single
+// instance of service is run. Similarlt, port is not mandatory when only
+// single instance of service is running on a given IP and nothing else
+message Svc {
+  uint32             port    = 1;    // L4 port on which the service runs on
+  kh.VrfKeyHandle    vrf_kh  = 2;    // VRF key or handle
+  types.IPAddress    ip_addr = 3;    // IP address on which service is running
 }
 
 // NatVpnMappingKeyHandle uniquely identifies a NAT VPN mapping and is used
 // to create/update/delete/get NAT VPN mappings
 message NatVpnMappingKeyHandle {
-    oneof key_or_handle {
-        uint64     mapping_id     = 1;  // mapping id idenfied by a number
-        fixed64    mapping_handle = 2;  // handle for NAT VPN mapping returned by HAL
-    }
+  oneof key_or_handle {
+    Svc        svc_key        = 1;  // service key
+    fixed64    mapping_handle = 2;  // handle for NAT VPN mapping returned by HAL
+  }
 }
 
 // IpsecRuleKeyHandle uniquely identifies a IPSec rule and is used
 // to create/update/delete/get IPSec rules
 message IpsecRuleKeyHandle {
-    oneof key_or_handle {
-        uint64     rule_id     = 1;  // rule id idenfied by a number
-        fixed64    rule_handle = 2;  // handle for IPSec rule returned by HAL
-    }
+  oneof key_or_handle {
+    uint64     rule_id     = 1;  // rule id idenfied by a number
+    fixed64    rule_handle = 2;  // handle for IPSec rule returned by HAL
+  }
 }
 
 // QosGroup identifier
