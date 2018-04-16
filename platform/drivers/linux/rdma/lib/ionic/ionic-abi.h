@@ -201,7 +201,10 @@ enum ionic_shpg_offt {
 struct cqwqe_be_t {
     union {
         __u64 wrid;
-        __u32 msn;
+	struct {
+		__u32 rsvd;
+		__u32 msn;
+	};
     } id;
     __u8  op_type;
     __u8  status;

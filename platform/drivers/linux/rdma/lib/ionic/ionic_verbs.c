@@ -265,9 +265,6 @@ static int ionic_poll_send_local_ok(struct ionic_qp *qp, struct ibv_wc *wc,
 {
 	int rc = 0, npolled = 0;
 
-	// XXX disable cqe coalescing for now
-	return 0;
-
 	while (npolled < nwc) {
 		if (qp->sq_local == stop_local)
 			break;
@@ -287,9 +284,6 @@ static int ionic_poll_send_msn_ok(struct ionic_qp *qp, struct ibv_wc *wc,
 				  int nwc, uint32_t stop_msn)
 {
 	int rc = 0, npolled = 0;
-
-	// XXX disable cqe coalescing for now
-	return 0;
 
 	while (npolled < nwc) {
 		if (qp->sq_msn == stop_msn)
@@ -347,6 +341,7 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
 	struct ionic_qp *qp;
 	struct cqwqe_be_t cqe;
+	uint32_t cqe_msn;
 	uint16_t old_prod;
 	int rc = 0, npolled = 0;
 
@@ -390,15 +385,17 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 		case OP_TYPE_BIND_MW:
 			pthread_spin_lock(&qp->sq_lock);
 
+			cqe_msn = be32toh(cqe.id.msn);
+
 			/* combined work completions are successful */
 			if (ionic_op_is_local(cqe.op_type))
 				rc = ionic_poll_send_local_ok(qp, wc + npolled,
 							      nwc - npolled,
-							      be32toh(cqe.id.msn));
+							      cqe_msn);
 			else
 				rc = ionic_poll_send_msn_ok(qp, wc + npolled,
 							    nwc - npolled,
-							    be32toh(cqe.id.msn));
+							    cqe_msn);
 
 			if (rc < 0) {
 				pthread_spin_unlock(&qp->sq_lock);
@@ -621,6 +618,9 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 	rc = ionic_alloc_queues(ctx, qp, &ex->cap);
 	if (rc)
 		goto err_queues;
+
+	qp->sq_msn = 1;
+	qp->sq_local = 1;
 
 	req.sq.addr = (uintptr_t)qp->sq.ptr;
 	req.sq.size = qp->sq.size;
