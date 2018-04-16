@@ -46,6 +46,8 @@ func periodicTransmit() {
 		return
 	}
 
+	global.wg.Add(1)
+	defer global.wg.Done()
 	for {
 		select {
 		case <-time.After(global.opts.SendInterval):

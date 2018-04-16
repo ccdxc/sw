@@ -32,7 +32,6 @@ func stopLocalRESTServer() {
 	if global.opts.LocalPort == 0 {
 		return
 	}
-	global.wg.Wait() // Wait for startLocalRESTServer to complete
 
 	global.httpServer.Shutdown(nil)
 }
