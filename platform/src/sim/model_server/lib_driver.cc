@@ -178,6 +178,43 @@ int simdev_read_host_mem(u_int64_t addr, void *buf, size_t size);
 int simdev_write_host_mem(u_int64_t addr, void *buf, size_t size);
 } /* extern "c" */
 
+void hal_create_eq (struct create_eq_cmd  *cmd,
+                    struct admin_comp     *comp,
+                    hal_req_resp_t        *item)
+{
+    shared_ptr<Rdma::Stub> rdma_svc = GetRdmaStub();
+
+    ClientContext context;
+    RdmaEqRequestMsg request;
+    RdmaEqResponseMsg response;
+
+    RdmaEqSpec *spec = request.add_request();
+    spec->set_eq_id(cmd->intr);
+    spec->set_hw_lif_id(cmd->lif_id+lif_base);
+    spec->set_num_eq_wqes(1u << cmd->log_depth);
+    spec->set_eq_wqe_size(1u << cmd->log_stride);
+    spec->set_eqe_base_addr_phy(cmd->dma_addr);
+    spec->set_int_num(cmd->intr);
+
+    Status status = rdma_svc->RdmaEqCreate(&context, request, &response);
+    if (!status.ok()) {
+        cout << "lib_driver.cc: hal_create_eq error: "
+            << status.error_code() << ": " << status.error_message() << endl;
+
+        comp->status = status.error_code();
+        *item->done = 1;
+        return;
+    }
+
+    RdmaEqResponse eq_response = response.response(0);
+    comp->status = eq_response.api_status();
+
+    cout << "lib_driver.cc: hal_create_eq comp status: " << comp->status << endl;
+
+    *item->done = 1;
+    return;
+}
+
 void hal_create_mr (struct create_mr_cmd  *cmd,
                     struct create_mr_comp *comp,
                     hal_req_resp_t        *item)
@@ -211,24 +248,22 @@ void hal_create_mr (struct create_mr_cmd  *cmd,
     }
 
     Status status = rdma_svc->RdmaMemReg(&context, request, &response);
-    if (status.ok()) {
-        //This loop gets executed only once.
-        for (int i = 0; i < response.response().size(); i++) {
-            RdmaMemRegResponse mr_response = response.response(i);
-            comp->status = mr_response.api_status();
-            cout << "lib_driver.cc: hal_create_mr SUCCESS\n" << endl;
-        }
-    } else {
-        cout << "lib_driver.cc: " << status.error_code() << ": " << status.error_message() << endl;
+    if (!status.ok()) {
+        cout << "lib_driver.cc: hal_create_mr error: "
+            << status.error_code() << ": " << status.error_message() << endl;
+
         comp->status = status.error_code();
-        // Set done bit before returning
         *item->done = 1;
         return;
     }
 
-    // Set done bit before returning
-    *item->done = 1;
+    RdmaMemRegResponse mr_response = response.response(0);
+    comp->status = mr_response.api_status();
 
+    cout << "lib_driver.cc: hal_create_mr comp status: "
+        << comp->status << endl;
+
+    *item->done = 1;
     return;
 }
 
@@ -270,15 +305,14 @@ void hal_create_cq (struct create_cq_cmd  *cmd,
 
     Status status = rdma_svc->RdmaMemReg(&context1, request, &response);
     if (!status.ok()) {
-        cout << "lib_driver.cc: " << status.error_code() << ": " << status.error_message() << endl;
+        cout << "lib_driver.cc: hal_create_cq MemReg error: "
+            << status.error_code() << ": " << status.error_message() << endl;
+
         comp->status = status.error_code();
-        // Set done bit before returning
         *item->done = 1;
         return;
     }
 
-    cout << "lib_driver.cc: hal_create_mr SUCCESS\n" << endl;
- 
     /*
      * create CQ
      */
@@ -296,20 +330,22 @@ void hal_create_cq (struct create_cq_cmd  *cmd,
     cq_spec->set_cq_lkey(cmd->cq_lkey);
 
     status = rdma_svc->RdmaCqCreate(&context2, cq_request, &cq_response);
-    if (status.ok()) {
-        RdmaCqResponse cq_resp = cq_response.response(0);
-        comp->status = cq_resp.api_status();
-        cout << "lib_driver.cc: hal_create_cq SUCCESS\n" << endl;
-    } else {
-        cout << "lib_driver.cc: " << status.error_code() << ": " << status.error_message() << endl;
+    if (!status.ok()) {
+        cout << "lib_driver.cc: hal_create_cq error: "
+            << status.error_code() << ": " << status.error_message() << endl;
+
         comp->status = status.error_code();
+        *item->done = 1;
+        return;
     }
 
+    RdmaCqResponse cq_resp = cq_response.response(0);
+    comp->status = cq_resp.api_status();
     comp->qtype = Q_TYPE_RDMA_CQ;
 
-    // Set done bit before returning
+    cout << "lib_driver.cc: hal_create_cq comp status: " << comp->status << endl;
+
     *item->done = 1;
-    
     return;
 }
 
@@ -319,9 +355,6 @@ void hal_create_qp (struct create_qp_cmd *cmd,
 {
     shared_ptr<Rdma::Stub> rdma_svc = GetRdmaStub();
 
-    /*
-     * create CQ
-     */
     ClientContext context;
     RdmaQpRequestMsg request;
     RdmaQpResponseMsg response;
@@ -347,23 +380,23 @@ void hal_create_qp (struct create_qp_cmd *cmd,
     spec->set_rq_cq_num(cmd->rq_cq_num);
 
     Status status = rdma_svc->RdmaQpCreate(&context, request, &response);
-    if (status.ok()) {
-        RdmaQpResponse resp = response.response(0);
-        comp->status = resp.api_status();
-        comp->sq_qtype = Q_TYPE_RDMA_SQ;
-        comp->rq_qtype = Q_TYPE_RDMA_RQ;
-        cout << "lib_driver.cc: hal_create_qp SUCCESS\n" << endl;
-    } else {
-        cout << "lib_driver.cc: " << status.error_code() << ": " << status.error_message() << endl;
+    if (!status.ok()) {
+        cout << "lib_driver.cc: hal_create_qp error: "
+            << status.error_code() << ": " << status.error_message() << endl;
+
         comp->status = status.error_code() ;
-        // Set done bit before returning
         *item->done = 1;
         return;
     }
 
-    // Set done bit before returning
-    *item->done = 1;
+    RdmaQpResponse resp = response.response(0);
+    comp->status = resp.api_status();
+    comp->sq_qtype = Q_TYPE_RDMA_SQ;
+    comp->rq_qtype = Q_TYPE_RDMA_RQ;
 
+    cout << "lib_driver.cc: hal_create_qp comp status: " << comp->status << endl;
+
+    *item->done = 1;
     return;
 }
 
@@ -378,9 +411,7 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
 {
     shared_ptr<Rdma::Stub> rdma_svc = GetRdmaStub();
 
-    /*
-     * Update QP
-     */
+    comp->status = 0;
 
     if (cmd->attr_mask & IB_QP_AV) {
         ClientContext context;
@@ -400,20 +431,21 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
             printf("%x ", item->header[i]);
         }
         cout << endl;
-        Status status = rdma_svc->RdmaQpUpdate(&context, request, &response);
-        if (status.ok()) {
-            RdmaQpUpdateResponse resp = response.response(0);
-            comp->status = resp.api_status();
-            cout << "lib_driver.cc: hal_modify_qp AV SUCCESS\n" << endl;
-        } else {
-            cout << "lib_driver.cc: " << status.error_code() << ": " << status.error_message() << endl;
-            comp->status = status.error_code();
 
-            // Set done bit before returning
+        Status status = rdma_svc->RdmaQpUpdate(&context, request, &response);
+        if (!status.ok()) {
+            cout << "lib_driver.cc: hal_create_qp AV error: "
+                << status.error_code() << ": " << status.error_message() << endl;
+
+            comp->status = status.error_code();
             *item->done = 1;
-            
             return;
         }
+
+        RdmaQpUpdateResponse resp = response.response(0);
+        comp->status = resp.api_status();
+
+        cout << "lib_driver.cc: hal_create_qp AV comp status: " << comp->status << endl;
     }
 
     if (cmd->attr_mask & IB_QP_DEST_QPN) {
@@ -428,19 +460,19 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
         spec->set_oper(RDMA_UPDATE_QP_OPER_SET_DEST_QP);
         spec->set_dst_qp_num(cmd->dest_qp_num);
         Status status = rdma_svc->RdmaQpUpdate(&context, request, &response);
-        if (status.ok()) {
-            RdmaQpUpdateResponse resp = response.response(0);
-            comp->status = resp.api_status();
-            cout << "lib_driver.cc: hal_modify_qp Dest QPN SUCCESS\n" << endl;
-        } else {
-            cout << "lib_driver.cc: " << status.error_code() << ": " << status.error_message() << endl;
-            comp->status = status.error_code();
+        if (!status.ok()) {
+            cout << "lib_driver.cc: hal_create_qp Dest QPN error: "
+                << status.error_code() << ": " << status.error_message() << endl;
 
-            // Set done bit before returning
+            comp->status = status.error_code();
             *item->done = 1;
-            
             return;
         }
+
+        RdmaQpUpdateResponse resp = response.response(0);
+        comp->status = resp.api_status();
+
+        cout << "lib_driver.cc: hal_create_qp Dest QPN comp status: " << comp->status << endl;
     }
 
     if (cmd->attr_mask & IB_QP_RQ_PSN) {
@@ -455,19 +487,19 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
         spec->set_oper(RDMA_UPDATE_QP_OPER_SET_E_PSN);
         spec->set_e_psn(cmd->e_psn);
         Status status = rdma_svc->RdmaQpUpdate(&context, request, &response);
-        if (status.ok()) {
-            RdmaQpUpdateResponse resp = response.response(0);
-            comp->status = resp.api_status();
-            cout << "lib_driver.cc: hal_modify_qp E_PSN SUCCESS\n" << endl;
-        } else {
-            cout << "lib_driver.cc: " << status.error_code() << ": " << status.error_message() << endl;
-            comp->status = status.error_code();
+        if (!status.ok()) {
+            cout << "lib_driver.cc: hal_create_qp RQ PSN error: "
+                << status.error_code() << ": " << status.error_message() << endl;
 
-            // Set done bit before returning
+            comp->status = status.error_code();
             *item->done = 1;
-            
             return;
         }
+
+        RdmaQpUpdateResponse resp = response.response(0);
+        comp->status = resp.api_status();
+
+        cout << "lib_driver.cc: hal_create_qp RQ PSN comp status: " << comp->status << endl;
     }
 
     if (cmd->attr_mask & IB_QP_SQ_PSN) {
@@ -482,24 +514,22 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
         spec->set_oper(RDMA_UPDATE_QP_OPER_SET_TX_PSN);
         spec->set_tx_psn(cmd->sq_psn);
         Status status = rdma_svc->RdmaQpUpdate(&context, request, &response);
-        if (status.ok()) {
-            RdmaQpUpdateResponse resp = response.response(0);
-            comp->status = resp.api_status();
-            cout << "lib_driver.cc: hal_modify_qp TX_PSN SUCCESS\n" << endl;
-        } else {
-            cout << "lib_driver.cc: " << status.error_code() << ": " << status.error_message() << endl;
-            comp->status = status.error_code();
+        if (!status.ok()) {
+            cout << "lib_driver.cc: hal_create_qp SQ PSN error: "
+                << status.error_code() << ": " << status.error_message() << endl;
 
-            // Set done bit before returning
+            comp->status = status.error_code();
             *item->done = 1;
-            
             return;
         }
-    }
-    
-    // Set done bit before returning
-    *item->done = 1;
 
+        RdmaQpUpdateResponse resp = response.response(0);
+        comp->status = resp.api_status();
+
+        cout << "lib_driver.cc: hal_create_qp SQ PSN comp status: " << comp->status << endl;
+    }
+
+    *item->done = 1;
     return;
 }
 
@@ -518,6 +548,12 @@ public:
 
             switch(req.cmd.opcode)
             {
+            case CMD_OPCODE_RDMA_CREATE_EQ:
+                hal_create_eq((struct create_eq_cmd *)&req.cmd,
+                              (struct admin_comp *)&req.comp,
+                              &req);
+                break;
+
             case CMD_OPCODE_RDMA_CREATE_MR:
                 hal_create_mr((struct create_mr_cmd *)&req.cmd,
                               (struct create_mr_comp *)&req.comp,
@@ -543,6 +579,7 @@ public:
                 break;
 
             default:
+                std::cout << "HalReqThread: default case... missing something?" << std::endl;
                 break;
             }
         }
@@ -567,6 +604,23 @@ extern "C" void init_lib_driver (void)
      * Lets create the thread that interacts with HAL in asynchronous fashion
      */
     consumer_thread = new std::thread(&HalReqThread::run, &reqThr);
+}
+
+extern "C" void hal_create_eq_wrapper (struct create_eq_cmd  *cmd,
+                                       struct admin_comp     *comp,
+                                       u_int32_t             *done)
+{
+    hal_req_resp_t item;
+
+    memset(&item, 0, sizeof(item));
+    std::cout << "Queing Req with opcode %d: " << cmd->opcode << std::endl;
+    memcpy(&item.cmd, cmd, sizeof(*cmd));
+    memcpy(&item.comp, comp, sizeof(*comp));
+
+    item.done = done;
+
+    reqBuf.add(item);
+    comp->status = 0;
 }
 
 extern "C" void hal_create_mr_wrapper (struct create_mr_cmd  *cmd,

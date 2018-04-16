@@ -541,6 +541,7 @@ int ionic_debugfs_add_lif(struct lif *lif)
 	int err;
 
 	lif_dentry = debugfs_create_dir(lif->name, lif->ionic->dentry);
+	lif->debugfs = lif_dentry;
 	if (IS_ERR_OR_NULL(lif_dentry))
 		return PTR_ERR(lif_dentry);
 

@@ -222,7 +222,7 @@ start_model_how() {
 }
 
 start_model_rdma() {
-    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=8,qstate_addr=0xc0004000:0xc0004400:0xc0004800:0xc0005000:0xc000d000:0xc0015000:0xc0015400,qstate_size=64:64:64:1024:1024:32:32,mac=00:ee:00:00:00:02
+    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,eq_type=6,eq_count=1,intr_count=8,qstate_addr=0xc0004000:0xc0004400:0xc0004800:0xc0005000:0xc000d000:0xc0015000:0xc0015400,qstate_size=64:64:64:1024:1024:32:32,mac=00:ee:00:00:00:02
 }
 
 start_model() {

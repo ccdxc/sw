@@ -48,6 +48,12 @@ int ionic_api_set_private(struct lif *lif, void *priv,
 }
 EXPORT_SYMBOL_GPL(ionic_api_set_private);
 
+struct dentry *ionic_api_get_debugfs(struct lif *lif)
+{
+	return lif->debugfs;
+}
+EXPORT_SYMBOL_GPL(ionic_api_get_debugfs);
+
 const union identity *ionic_api_get_identity(struct lif *lif, int *lif_id)
 {
 	*lif_id = lif->index;

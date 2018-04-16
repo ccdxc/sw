@@ -46,8 +46,8 @@ enum cmd_opcode {
 
 	CMD_OPCODE_RDMA_FIRST_CMD		= 50, //Keep this as first rdma cmd
 	CMD_OPCODE_RDMA_QUERY_PKEY		= 51,
-	CMD_OPCODE_RDMA_CREATE_PD		= 52,
-	CMD_OPCODE_RDMA_DESTROY_PD		= 53,
+	CMD_OPCODE_RDMA_CREATE_EQ		= 52,
+	CMD_OPCODE_RDMA_DESTROY_EQ		= 53,
 	CMD_OPCODE_RDMA_CREATE_MR		= 54,
 	CMD_OPCODE_RDMA_DESTROY_MR		= 55,
 	CMD_OPCODE_RDMA_CREATE_CQ		= 56,
@@ -1094,6 +1094,28 @@ struct debug_q_dump_comp {
  ******************************************************************/
 
 /**
+ * struct rdma_create_eq_cmd - Create Event Queue command
+ * @opcode:        opcode = 52
+ * @intr:          intr number (also eq id)
+ * @lif:           hardware lif id
+ * @log_depth:     log-base-two size of queue
+ * @log_stride:    log-base-two size of queue element
+ * @dma_addr:      dma address base of queue memory
+ *
+ * There is no eq-specific completion struct.  Only status is indicated.
+ * Completion uses the common struct admin_comp.
+ **/
+struct create_eq_cmd {
+	u16 opcode;
+	u16 intr;
+	u16 lif_id;
+	u8  log_depth;
+	u8  log_stride;
+	u64 dma_addr;
+	u8 rsvd[48];
+};
+
+/**
  * struct rdma_create_mr_cmd - Create Memory registration command
  * @opcode:        opcode = 54
  * @pd_num:        id of the pd
@@ -1307,6 +1329,7 @@ union adminq_cmd {
 	struct rss_hash_set_cmd rss_hash_set;
 	struct rss_indir_set_cmd rss_indir_set;
 	struct debug_q_dump_cmd debug_q_dump;
+	struct create_eq_cmd create_eq;
 	struct create_mr_cmd create_mr;
 	struct create_cq_cmd create_cq;
 	struct create_qp_cmd create_qp;
