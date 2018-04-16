@@ -11,6 +11,7 @@
 		service.proto
 		tenant.proto
 		interface.proto
+		nat.proto
 
 	It has these top-level messages:
 		NetworkSpec
@@ -47,6 +48,17 @@
 		Interface
 		InterfaceList
 		InterfaceEvent
+		NatPoolSpec
+		NatPoolStatus
+		NatPool
+		NatPoolList
+		NatPoolEvent
+		NatRule
+		NatPolicySpec
+		NatPolicyStatus
+		NatPolicy
+		NatPolicyList
+		NatPolicyEvent
 */
 package netproto
 

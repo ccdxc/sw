@@ -1,0 +1,144 @@
+// NAT model
+
+syntax = "proto3";
+
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+
+// nat pool
+message NatPoolSpec {
+    string NetworkName   = 1;
+}
+
+// nat pool status
+message NatPoolStatus {
+    uint64 NatPoolID = 1  [(gogoproto.jsontag) = "id,omitempty"];
+    message NatBinding {
+        string LocalAddress = 1;
+        uint32 LocalPort = 2;
+        string GlobalAddress = 3;  
+        uint32 GlobalPort = 4;
+        uint32 Protocol = 5;
+    }
+    repeated NatBinding NatBindings = 2;
+}
+
+// nat pool object
+message NatPool {
+    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    NatPoolSpec   Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    NatPoolStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of nat pools
+message NatPoolList {
+    repeated NatPool NatPools = 1;
+}
+
+// nat pool watch event
+message NatPoolEvent {
+    api.EventType EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    NatPool NatPool   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "natpool,omitempty"];
+}
+
+// Nat pool rpc service
+service NatPoolApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "NatPool",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}//{ObjectMeta.NameSpaceName}/{ObjectMeta.Name}"
+    };
+
+    rpc GetNatPool (api.ObjectMeta) returns (NatPool) {};
+    rpc ListNatPools (api.ObjectMeta) returns (NatPoolList) {};
+    rpc WatchNatPools (api.ObjectMeta) returns (stream NatPoolEvent) {};
+}
+
+// nat rule
+message NatRule {
+    enum NatAction 
+    {
+        SNAT = 0;  // source address translation
+        DNAT = 1;  // destination address translation
+        SPAT = 2;  // source port address translation
+        DPAT = 3;  // destination port address translation
+    }
+    
+    // From ip/ip-prefix/ip-range/security-group
+    string From     = 1;
+    
+    // To ip/ip-prefix/ip-range/security-group
+    string To       = 2;
+    
+    // IP Protocol
+    string Protocol = 3;
+
+    // From tcp/udp port
+    string FromPort = 4;
+
+    // To tcp/udp port
+    string ToPort   = 5;
+
+    // NAT pool to use
+    string NatPool  = 6;
+    
+    // Nat action 
+    string Action   = 7 [(venice.check) = "StrEnum(NatRule.NatAction)",
+                         (gogoproto.jsontag) = "action"];
+}
+
+message NatPolicySpec {
+    repeated NatRule rules = 1   [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
+}
+
+message NatPolicyStatus {
+}
+
+// nat policy object
+message NatPolicy {
+    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    NatPolicySpec   Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    NatPolicyStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of nat policies
+message NatPolicyList {
+    repeated NatPolicy NatPolicies = 1;
+}
+
+// security group watch event
+message NatPolicyEvent {
+    api.EventType EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    NatPolicy NatPolicy   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nat-policy,omitempty"];
+}
+
+// Nat policy rpc service
+service NatPolicyApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "NatPolicy",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}//{ObjectMeta.NameSpaceName}/{ObjectMeta.Name}"
+    };
+
+    rpc GetNatPolicy (api.ObjectMeta) returns (NatPolicy) {};
+    rpc ListNatPolicies (api.ObjectMeta) returns (NatPolicyList) {};
+    rpc WatchNatPolicies (api.ObjectMeta) returns (stream NatPolicyEvent) {};
+}
+
+
+
+
+
+
+
+
