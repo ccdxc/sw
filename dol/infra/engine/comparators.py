@@ -17,8 +17,9 @@ gl_ignore_fields = {
 #    'TCP'   : [ 'chksum' ],
 #    'UDP'   : [ 'chksum' ],
 #    'ICMP'  : [ 'chksum' ],
-    'CRC'   : [ 'crc' ],
-    'ESP'   : [ 'data'],
+    'CRC'       : [ 'crc' ],
+    'ESP'       : [ 'data' ],
+    'PADDING'   : [ 'data' ],
 }
 
 MIN_PACKET_SIZE = 60 # excluding CRC
