@@ -24,6 +24,12 @@
 #define IONIC_MIN_MTU		ETH_MIN_MTU
 #define IONIC_MAX_MTU		9200
 
+#ifdef HAPS
+#define IONIC_DEVCMD_TIMEOUT	(HZ * 10)
+#else
+#define IONIC_DEVCMD_TIMEOUT	(HZ * 2)
+#endif
+
 #pragma pack(push, 1)
 
 union dev_cmd {
@@ -246,6 +252,9 @@ struct ionic_dev {
 	dma_addr_t phy_db_pages;
 	struct intr_ctrl __iomem *intr_ctrl;
 	struct intr_status __iomem *intr_status;
+#ifdef HAPS
+	union identity __iomem *ident;
+#endif
 };
 
 struct cq_info {

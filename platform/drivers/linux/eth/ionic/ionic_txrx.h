@@ -24,6 +24,7 @@
 void ionic_rx_refill(struct queue *q);
 void ionic_rx_fill(struct queue *q);
 void ionic_rx_empty(struct queue *q);
+void ionic_rx_flush(struct cq *cq);
 int ionic_tx_napi(struct napi_struct *napi, int budget);
 int ionic_rx_napi(struct napi_struct *napi, int budget);
 netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev);

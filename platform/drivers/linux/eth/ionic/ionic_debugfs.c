@@ -23,6 +23,14 @@
 #include "ionic_bus.h"
 #include "ionic_lif.h"
 
+/*
+ * The debugfs contents are an informative resoure for debugging, only.  They
+ * should not be relied on as a stable api from user space.  The location,
+ * arrangement, names, internal formats and structures of these files may
+ * change without warning.  Any documentation, including this, is very likely
+ * to be incorrect or incomplete.  You have been warned.
+ */
+
 #ifdef CONFIG_DEBUG_FS
 
 #ifdef DEBUGFS_TEST_API

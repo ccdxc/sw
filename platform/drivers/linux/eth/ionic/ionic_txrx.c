@@ -50,6 +50,9 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	struct qcq *qcq = q_to_qcq(q);
 	struct rx_stats *stats = q_to_rx_stats(q);
 	dma_addr_t dma_addr;
+#ifdef HAPS
+	__sum16 csum;
+#endif
 
 	if (comp->status) {
 		// TODO record errors
@@ -68,6 +71,9 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	//prefetch(skb->data - NET_IP_ALIGN);
 	skb_put(skb, comp->len);
 	skb->protocol = eth_type_trans(skb, netdev);
+#ifdef HAPS
+	csum = ip_compute_csum(skb->data, skb->len);
+#endif
 	skb_record_rx_queue(skb, q->index);
 
 	if (netdev->features & NETIF_F_RXHASH) {
@@ -91,6 +97,10 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	if (netdev->features & NETIF_F_RXCSUM) {
 		skb->ip_summed = CHECKSUM_COMPLETE;
 		skb->csum = comp->csum;
+#ifdef HAPS
+		if (skb->csum != (u16)~csum)
+			printk(KERN_ERR "Rx CSUM incorrect.  Want 0x%04x got 0x%04x, protocol 0x%04x\n", (u16)~csum, skb->csum, htons(skb->protocol));
+#endif
 	}
 
 	if (netdev->features & NETIF_F_HW_VLAN_CTAG_RX) {
@@ -222,6 +232,16 @@ void ionic_rx_empty(struct queue *q)
 		ionic_rx_skb_free(q, cur->cb_arg, desc->len, desc->addr);
 		cur = cur->next;
 	}
+}
+
+void ionic_rx_flush(struct cq *cq)
+{
+	unsigned int work_done;
+
+	work_done = ionic_cq_service(cq, -1, ionic_rx_service, NULL);
+
+	if (work_done > 0)
+		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
 }
 
 int ionic_rx_napi(struct napi_struct *napi, int budget)
