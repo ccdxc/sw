@@ -722,6 +722,14 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 	admin.cmd.create_mr.nchunks = npages;
 	admin.cmd.create_mr.pt_dma = pagedma;
 
+	/* XXX for HAPS: side-data */
+	if (ionic_xxx_haps) {
+#ifndef ADMINQ
+		admin.side_data = pagedir;
+		admin.side_data_len = pagedir_size;
+#endif
+	}
+
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)
 		goto err_cmd;
