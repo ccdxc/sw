@@ -1,0 +1,723 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Service name",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/{O.Tenant}/MirrorSession": {
+      "get": {
+        "operationId": "AutoListMirrorSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSessionList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "MirrorSessionV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddMirrorSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        ],
+        "tags": [
+          "MirrorSessionV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/MirrorSession/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetMirrorSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.PacketSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Spec.StartConditions.ScheduleTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "Spec.StopConditions.MaxPacketCount",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Spec.StopConditions.ExpiryDuration",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.PacketFilters",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.State",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.PacketCaptureFileURL",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MirrorSessionV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteMirrorSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MirrorSessionV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateMirrorSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        ],
+        "tags": [
+          "MirrorSessionV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiExportConfig": {
+      "type": "object",
+      "properties": {
+        "Destination": {
+          "type": "string",
+          "title": "IP address or URL of the collector/entity to which the data is to be exported"
+        },
+        "Transport": {
+          "type": "string",
+          "title": "protocol and Port number where an external collector is gathering the data\nexample \"TCP/2055\""
+        },
+        "Credentials": {
+          "$ref": "#/definitions/apiExternalCred",
+          "title": "Credentials provide secure access to the collector"
+        }
+      },
+      "title": "----------------------------- Export Config -----------------------------\nExport Config specifies server address and user credentials"
+    },
+    "apiExternalCred": {
+      "type": "object",
+      "properties": {
+        "UserName": {
+          "type": "string",
+          "title": "UserName is the login id to be used towards the external entity"
+        },
+        "Password": {
+          "type": "string",
+          "title": "Password is one time specified, not visibile on read operations\nOnly valid when UserName is defined\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "BearerToken": {
+          "type": "string",
+          "title": "External entity supports bearer tokens for authentication and authorization\nToken refresh is not supported using OAuth2\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "CertData": {
+          "type": "string",
+          "format": "byte",
+          "description": "CertData holds PEM-encoded bytes (typically read from a client certificate file)."
+        },
+        "KeyData": {
+          "type": "string",
+          "format": "byte",
+          "title": "KeyData holds PEM-encoded bytes (typically read from a client certificate key file).\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "CaData": {
+          "type": "string",
+          "format": "byte",
+          "description": "CaData holds PEM-encoded bytes (typically read from a root certificates bundle)."
+        }
+      },
+      "title": "------------------------ ExternalCred Object ----------------------------\nExternalCred defines credentials required to access an external entity, such as\na stats collector, compute orchestration entity, or a syslog server.\nExternal entity may support a variety of methods, like username/password,\nTLS Client authentication, or Bearer Token based authentication. User is\nexpected to configure one of the methods"
+    },
+    "apiListMeta": {
+      "type": "object",
+      "properties": {
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version of object store at the time of list generation."
+        }
+      },
+      "description": "ListMeta contains the metadata for list of objects."
+    },
+    "apiListWatchOptions": {
+      "type": "object",
+      "properties": {
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "LabelSelector": {
+          "type": "string"
+        },
+        "FieldSelector": {
+          "type": "string"
+        },
+        "PrefixWatch": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "FieldChangeSelector": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "UUID": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+        },
+        "CreationTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "CreationTime is the creation time of Object"
+        },
+        "ModTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "ModTime is the Last Modification time of Object"
+        },
+        "SelfLink": {
+          "type": "string",
+          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiTimestamp": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "APIVersion": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "monitoringAppProtoSelector": {
+      "type": "object",
+      "properties": {
+        "Ports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "PacketSize: Max size of a mirrored packet.\nPacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. \nFor packets mirrored to Venice, max mirror packet size allowed is 256 B"
+        },
+        "Apps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "StartConditions"
+        }
+      },
+      "title": "========================================================================================\nPacket Mirroring\n========================================================================================\n-----------------------\n---- MirrorSessionSpec\n-----------------------"
+    },
+    "monitoringAutoMsgMirrorSessionWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/monitoringMirrorSession"
+        }
+      },
+      "title": "Conditions to start mirroring"
+    },
+    "monitoringMatchRule": {
+      "type": "object",
+      "properties": {
+        "Src": {
+          "$ref": "#/definitions/monitoringMatchSelector",
+          "title": "Stop after capturing specified number of packets"
+        },
+        "Dst": {
+          "$ref": "#/definitions/monitoringMatchSelector",
+          "title": "Stop after specified amount of time. E.g. 1h, 20min\nWhen ExpiryDuration is not specified, Default is \"2h\""
+        },
+        "AppProtoSel": {
+          "$ref": "#/definitions/monitoringAppProtoSelector"
+        }
+      },
+      "title": "A MirrorSession will stop mirroring after this condition is met"
+    },
+    "monitoringMatchSelector": {
+      "type": "object",
+      "properties": {
+        "Endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "IPAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "When collector type is Venice, collector export information is not required"
+        },
+        "MACAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)"
+    },
+    "monitoringMirrorCollector": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "title": "Any of the following match selector can be specified to select a packet from mirroring"
+        },
+        "ExportCfg": {
+          "$ref": "#/definitions/apiExportConfig",
+          "title": "Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16)"
+        }
+      },
+      "title": "Traffic Selection Rules\nTraffic can be matched using EP names or IPv4/v6 addresses/ranges/prefixes or MAC addresses"
+    },
+    "monitoringMirrorSession": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "Apps - E.g. [\"Redis\"]"
+        },
+        "Spec": {
+          "$ref": "#/definitions/monitoringMirrorSessionSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/monitoringMirrorSessionStatus"
+        }
+      },
+      "title": "Application/protocol selector"
+    },
+    "monitoringMirrorSessionList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "Either Src or Dst or both must be specified, both cannot be *\nSrc = * when not specified\nWhen Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta",
+          "title": "Dst = * when not specified\nWhen Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringMirrorSession"
+          },
+          "title": "App = * when not specified"
+        }
+      },
+      "title": "MatchRule : This is used to select packets that need to be monitored (mirrored)"
+    },
+    "monitoringMirrorSessionSpec": {
+      "type": "object",
+      "properties": {
+        "PacketSize": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "StartConditions": {
+          "$ref": "#/definitions/monitoringMirrorStartConditions"
+        },
+        "StopConditions": {
+          "$ref": "#/definitions/monitoringMirrorStopConditions"
+        },
+        "Collectors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringMirrorCollector"
+          }
+        },
+        "MatchRules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringMatchRule"
+          }
+        },
+        "PacketFilters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "monitoringMirrorSessionStatus": {
+      "type": "object",
+      "properties": {
+        "State": {
+          "type": "string"
+        },
+        "NICStatus": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringSmartNICMirrorSessionStatus"
+          }
+        },
+        "PacketCaptureFileURL": {
+          "type": "string"
+        }
+      }
+    },
+    "monitoringMirrorStartConditions": {
+      "type": "object",
+      "properties": {
+        "ScheduleTime": {
+          "$ref": "#/definitions/apiTimestamp"
+        }
+      },
+      "title": "------------------\n---- MirrorSession\n------------------"
+    },
+    "monitoringMirrorStopConditions": {
+      "type": "object",
+      "properties": {
+        "MaxPacketCount": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "ExpiryDuration": {
+          "type": "string"
+        }
+      }
+    },
+    "monitoringSmartNICMirrorSessionStatus": {
+      "type": "object",
+      "properties": {
+        "SmartNIC": {
+          "type": "string"
+        },
+        "NumIngressPackets": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "NumEgressPackets": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "SessionId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    }
+  }
+}

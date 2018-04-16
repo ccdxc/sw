@@ -14,6 +14,7 @@ import (
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
 	cmd "github.com/pensando/sw/api/generated/cmd"
 	events "github.com/pensando/sw/api/generated/events"
+	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	network "github.com/pensando/sw/api/generated/network"
 	networkencryption "github.com/pensando/sw/api/generated/networkencryption"
 	telemetry "github.com/pensando/sw/api/generated/telemetry"
@@ -137,6 +138,18 @@ func (_m *MockServices) EventPolicyV1() events.EventPolicyV1Interface {
 // EventPolicyV1 indicates an expected call of EventPolicyV1
 func (_mr *MockServicesMockRecorder) EventPolicyV1() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "EventPolicyV1", reflect.TypeOf((*MockServices)(nil).EventPolicyV1))
+}
+
+// MirrorSessionV1 mocks base method
+func (_m *MockServices) MirrorSessionV1() monitoring.MirrorSessionV1Interface {
+	ret := _m.ctrl.Call(_m, "MirrorSessionV1")
+	ret0, _ := ret[0].(monitoring.MirrorSessionV1Interface)
+	return ret0
+}
+
+// MirrorSessionV1 indicates an expected call of MirrorSessionV1
+func (_mr *MockServicesMockRecorder) MirrorSessionV1() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MirrorSessionV1", reflect.TypeOf((*MockServices)(nil).MirrorSessionV1))
 }
 
 // EndpointV1 mocks base method

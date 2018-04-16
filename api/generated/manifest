@@ -5,6 +5,7 @@ auth.proto auth true
 cmd.proto cmd true
 events.proto events true
 example.proto bookstore true
+mirror.proto monitoring true
 network.proto network true
 networkencryption.proto networkencryption true
 search.proto search false

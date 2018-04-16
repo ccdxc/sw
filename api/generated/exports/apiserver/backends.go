@@ -18,6 +18,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/events/grpc/server"
 	// blank import to pull in bookstore service into api server
 	_ "github.com/pensando/sw/api/generated/bookstore/grpc/server"
+	// blank import to pull in monitoring service into api server
+	_ "github.com/pensando/sw/api/generated/monitoring/grpc/server"
 	// blank import to pull in network service into api server
 	_ "github.com/pensando/sw/api/generated/network/grpc/server"
 	// blank import to pull in networkencryption service into api server

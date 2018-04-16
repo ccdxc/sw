@@ -94,6 +94,19 @@
       "protos/events.proto"
     ]
   },
+  "monitoring": {
+    "Svcs": {
+      "MirrorSessionV1": {
+        "Version": "v1",
+        "Messages": [
+          "MirrorSession"
+        ]
+      }
+    },
+    "Files": [
+      "protos/mirror.proto"
+    ]
+  },
   "network": {
     "Svcs": {
       "EndpointV1": {

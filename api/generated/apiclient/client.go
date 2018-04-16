@@ -15,6 +15,8 @@ import (
 	cmdClient "github.com/pensando/sw/api/generated/cmd/grpc/client"
 	events "github.com/pensando/sw/api/generated/events"
 	eventsClient "github.com/pensando/sw/api/generated/events/grpc/client"
+	monitoring "github.com/pensando/sw/api/generated/monitoring"
+	monitoringClient "github.com/pensando/sw/api/generated/monitoring/grpc/client"
 	network "github.com/pensando/sw/api/generated/network"
 	networkClient "github.com/pensando/sw/api/generated/network/grpc/client"
 	networkencryption "github.com/pensando/sw/api/generated/networkencryption"
@@ -45,6 +47,8 @@ type Services interface {
 	CmdV1() cmd.CmdV1Interface
 	// Package is events and len of messages is 1
 	EventPolicyV1() events.EventPolicyV1Interface
+	// Package is monitoring and len of messages is 1
+	MirrorSessionV1() monitoring.MirrorSessionV1Interface
 	// Package is network and len of messages is 1
 	EndpointV1() network.EndpointV1Interface
 	// Package is network and len of messages is 1
@@ -83,6 +87,7 @@ type apiGrpcServerClient struct {
 	aBookstoreV1               bookstore.BookstoreV1Interface
 	aCmdV1                     cmd.CmdV1Interface
 	aEventPolicyV1             events.EventPolicyV1Interface
+	aMirrorSessionV1           monitoring.MirrorSessionV1Interface
 	aEndpointV1                network.EndpointV1Interface
 	aLbPolicyV1                network.LbPolicyV1Interface
 	aNetworkV1                 network.NetworkV1Interface
@@ -128,6 +133,10 @@ func (a *apiGrpcServerClient) CmdV1() cmd.CmdV1Interface {
 
 func (a *apiGrpcServerClient) EventPolicyV1() events.EventPolicyV1Interface {
 	return a.aEventPolicyV1
+}
+
+func (a *apiGrpcServerClient) MirrorSessionV1() monitoring.MirrorSessionV1Interface {
+	return a.aMirrorSessionV1
 }
 
 func (a *apiGrpcServerClient) EndpointV1() network.EndpointV1Interface {
@@ -197,6 +206,7 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 		aBookstoreV1:               bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
 		aCmdV1:                     cmdClient.NewGrpcCrudClientCmdV1(client.ClientConn, logger),
 		aEventPolicyV1:             eventsClient.NewGrpcCrudClientEventPolicyV1(client.ClientConn, logger),
+		aMirrorSessionV1:           monitoringClient.NewGrpcCrudClientMirrorSessionV1(client.ClientConn, logger),
 		aEndpointV1:                networkClient.NewGrpcCrudClientEndpointV1(client.ClientConn, logger),
 		aLbPolicyV1:                networkClient.NewGrpcCrudClientLbPolicyV1(client.ClientConn, logger),
 		aNetworkV1:                 networkClient.NewGrpcCrudClientNetworkV1(client.ClientConn, logger),
@@ -222,6 +232,7 @@ type apiRestServerClient struct {
 	aBookstoreV1               bookstore.BookstoreV1Interface
 	aCmdV1                     cmd.CmdV1Interface
 	aEventPolicyV1             events.EventPolicyV1Interface
+	aMirrorSessionV1           monitoring.MirrorSessionV1Interface
 	aEndpointV1                network.EndpointV1Interface
 	aLbPolicyV1                network.LbPolicyV1Interface
 	aNetworkV1                 network.NetworkV1Interface
@@ -267,6 +278,10 @@ func (a *apiRestServerClient) CmdV1() cmd.CmdV1Interface {
 
 func (a *apiRestServerClient) EventPolicyV1() events.EventPolicyV1Interface {
 	return a.aEventPolicyV1
+}
+
+func (a *apiRestServerClient) MirrorSessionV1() monitoring.MirrorSessionV1Interface {
+	return a.aMirrorSessionV1
 }
 
 func (a *apiRestServerClient) EndpointV1() network.EndpointV1Interface {
@@ -329,6 +344,7 @@ func NewRestAPIClient(url string) (Services, error) {
 		aBookstoreV1:               bookstoreClient.NewRestCrudClientBookstoreV1(url),
 		aCmdV1:                     cmdClient.NewRestCrudClientCmdV1(url),
 		aEventPolicyV1:             eventsClient.NewRestCrudClientEventPolicyV1(url),
+		aMirrorSessionV1:           monitoringClient.NewRestCrudClientMirrorSessionV1(url),
 		aEndpointV1:                networkClient.NewRestCrudClientEndpointV1(url),
 		aLbPolicyV1:                networkClient.NewRestCrudClientLbPolicyV1(url),
 		aNetworkV1:                 networkClient.NewRestCrudClientNetworkV1(url),
