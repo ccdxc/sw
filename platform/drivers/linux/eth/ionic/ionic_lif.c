@@ -733,9 +733,7 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 			.ver = ver,
 		},
 	};
-#ifndef HAPS
 	int err;
-#endif
 
 	lif->stats_dump = dma_alloc_coherent(dev, sizeof(*lif->stats_dump),
 					     &lif->stats_dump_pa, GFP_KERNEL);
@@ -750,9 +748,7 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 	netdev_info(netdev, "stats_dump START ver %d addr 0x%llx\n", ver,
 		    lif->stats_dump_pa);
 
-#ifdef HAPS
 	return 0;
-#else
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		goto err_out_free;
@@ -763,14 +759,11 @@ err_out_free:
 	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
 			  lif->stats_dump_pa);
 	return err;
-#endif
 }
 
 static void ionic_lif_stats_dump_stop(struct lif *lif)
 {
-#ifndef HAPS
 	struct net_device *netdev = lif->netdev;
-#endif
 	struct device *dev = lif->ionic->dev;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
@@ -778,7 +771,6 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 			.opcode = CMD_OPCODE_STATS_DUMP_STOP,
 		},
 	};
-#ifndef HAPS
 	int err;
 
 	netdev_info(netdev, "stats_dump STOP\n");
@@ -788,7 +780,6 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 		netdev_err(netdev, "stats_dump cmd failed %d\n", err);
 		return;
 	}
-#endif
 
 	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
 			  lif->stats_dump_pa);
