@@ -279,7 +279,8 @@ int pse_ecdsa_verify(int type, const unsigned char *dgst,
     /* Ensure signature uses DER and doesn't have trailing garbage */
     derlen = i2d_ECDSA_SIG(dsig, &der);
     if(derlen != sig_len) {
-        WARN("Failure: ECDSA_SIG length mismatch: derlen %d, sig_len: %d",            derlen, sig_len);
+        WARN("Failure: ECDSA_SIG length mismatch: derlen %d, sig_len: %d",
+             derlen, sig_len);
         goto cleanup;
     }
 
@@ -296,19 +297,20 @@ int pse_ecdsa_verify_sig(const unsigned char *dgst,
                          EC_KEY *eckey)
 {
     INFO("Inside");
-    int ret = -1;
-    BN_CTX *ctx = NULL;
-    BIGNUM *order = NULL;
-    const EC_GROUP *group = NULL;
-    const EC_POINT *pub_key;
-    BIGNUM *p = NULL, *a = NULL, *b = NULL;
-    BIGNUM *xg = NULL, *yg = NULL, *xp = NULL, *yp = NULL;
-    const EC_POINT *ec_point;
-    const BIGNUM *sig_r = NULL, *sig_s = NULL;
-
-    pse_buffer_t bp, bn, bxg,byg;
-    pse_buffer_t ba, bb, bxq,byq;
-    pse_buffer_t br, bs;
+    int                 ret = -1;
+    BN_CTX              *ctx = NULL;
+    BIGNUM              *order = NULL;
+    const EC_GROUP      *group = NULL;
+    const EC_POINT      *pub_key;
+    BIGNUM              *p = NULL, *a = NULL, *b = NULL;
+    BIGNUM              *xg = NULL, *yg = NULL;
+    BIGNUM              *xp = NULL, *yp = NULL;
+    const EC_POINT      *ec_point = NULL;
+    const BIGNUM        *sig_r = NULL, *sig_s = NULL;
+    int                 siglen = 0;
+    pse_buffer_t        bp, bn, bxg,byg;
+    pse_buffer_t        ba, bb, bxq,byq;
+    pse_buffer_t        br, bs;
 
     if((eckey == NULL) ||
        ((group = EC_KEY_get0_group(eckey)) == NULL) ||
@@ -346,6 +348,8 @@ int pse_ecdsa_verify_sig(const unsigned char *dgst,
         WARN("Failed to get order from the group");
         goto cleanup;
     }
+    
+    siglen = BN_num_bytes(order);
 
     ECDSA_SIG_get0(sig, &sig_r, &sig_s);
     if(BN_is_zero(sig_r) || BN_is_negative(sig_r) || BN_ucmp(sig_r, order) >= 0 ||
@@ -387,17 +391,18 @@ int pse_ecdsa_verify_sig(const unsigned char *dgst,
             goto cleanup;
         } 
     }
+    INFO("Siglen: %d", siglen);
 
-    pse_BN_to_buffer(p, &bp);
-    pse_BN_to_buffer(order, &bn);
-    pse_BN_to_buffer(xg, &bxg);
-    pse_BN_to_buffer(yg, &byg);
-    pse_BN_to_buffer(a, &ba);
-    pse_BN_to_buffer(b, &bb);
-    pse_BN_to_buffer(xp, &bxq);
-    pse_BN_to_buffer(yp, &byq);
-    pse_BN_to_buffer(sig_r, &br);
-    pse_BN_to_buffer(sig_s, &bs);
+    pse_BN_to_buffer_pad(p, &bp, siglen);
+    pse_BN_to_buffer_pad(order, &bn, siglen);
+    pse_BN_to_buffer_pad(xg, &bxg, siglen);
+    pse_BN_to_buffer_pad(yg, &byg, siglen);
+    pse_BN_to_buffer_pad(a, &ba, siglen);
+    pse_BN_to_buffer_pad(b, &bb, siglen);
+    pse_BN_to_buffer_pad(xp, &bxq, siglen);
+    pse_BN_to_buffer_pad(yp, &byq, siglen);
+    pse_BN_to_buffer_pad(sig_r, &br, siglen);
+    pse_BN_to_buffer_pad(sig_s, &bs, siglen);
 
     INFO("ECDSA parameters: ");
     LOG_BUFFER("bp", bp);
@@ -428,7 +433,6 @@ int pse_ecdsa_verify_sig(const unsigned char *dgst,
     ret = 1;
 #endif
     INFO("Return value: ret %d", ret);
-    ret = 1; // temp remove
 cleanup:
     if(ctx) {
         BN_CTX_end(ctx);
