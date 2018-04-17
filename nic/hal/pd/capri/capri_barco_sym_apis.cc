@@ -725,8 +725,6 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
             //                capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         }
     }
-    //sleep(5);
-    //abort();
 
     /* Copy out the results */
     if (encrypt) {
@@ -1008,39 +1006,337 @@ static inline void cap_drbg_read_ram_rand_num1(int chip_id, unsigned char* value
     DRBG_READ(random_num1)
 }
 
+static inline void cap_drbg_write_ram_psnl_str_p(int chip_id, const unsigned char* value, int len, bool refresh)
+{
+    DRBG_WRITE(psnl_str_p)
+}
+
+#define TRNG_SET(X) \
+    cap_hens_csr_t& csr_he_ns = CAP_BLK_REG_MODEL_ACCESS(cap_hens_csr_t, chip_id, 0); \
+    csr_he_ns.dhs_crypto_ctl.md_trng_##X.fld(value); \
+    if (refresh) { \
+        csr_he_ns.dhs_crypto_ctl.md_trng_##X.set_access_no_zero_time(true); \
+        csr_he_ns.dhs_crypto_ctl.md_trng_##X.write(); \
+        csr_he_ns.dhs_crypto_ctl.md_trng_##X.set_access_no_zero_time(false); }
+
+#define TRNG_GET(X) \
+    cap_hens_csr_t& csr_he_ns = CAP_BLK_REG_MODEL_ACCESS(cap_hens_csr_t, chip_id, 0); \
+    if (refresh) { \
+        csr_he_ns.dhs_crypto_ctl.md_trng_##X.set_access_no_zero_time(true); \
+        csr_he_ns.dhs_crypto_ctl.md_trng_##X.read(); \
+        csr_he_ns.dhs_crypto_ctl.md_trng_##X.set_access_no_zero_time(false); } \
+    return csr_he_ns.dhs_crypto_ctl.md_trng_##X.fld().convert_to<int>();
+
+
+static inline void cap_trng_set_ctl_reg(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(controlreg);
+}
+
+static inline void cap_trng_set_fifo_level(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(fifolevel);
+}
+
+static inline void cap_trng_set_fifo_thresh(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(fifothresh);
+}
+
+static inline void cap_trng_set_fifo_depth(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(fifodepth);
+}
+
+
+static inline void cap_trng_set_key0(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(key0);
+}
+
+static inline void cap_trng_set_key1(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(key1);
+}
+
+static inline void cap_trng_set_key2(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(key2);
+}
+
+static inline void cap_trng_set_key3(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(key3);
+}
+
+static inline 
+void cap_trng_set_test_data(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(testdata);
+}
+
+static inline void cap_trng_set_rep_thresh(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(repthresh);
+}
+
+static inline void cap_trng_set_prop1(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(prop1);
+}
+
+static inline void cap_trng_set_prop2(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(prop2);
+}
+
+static inline void cap_trng_set_status(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(status);
+}
+
+static inline void cap_trng_set_init_wait_val(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(initwaitval);
+}
+
+static inline void cap_trng_set_disable_osc0(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(disableosc0);
+}
+
+static inline void cap_trng_set_disable_osc1(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(disableosc1);
+}
+
+static inline void cap_trng_set_swoff_tmrval(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(swofftmrval);
+}
+
+static inline void cap_trng_set_clk_div(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(clkdiv);
+}
+
+static inline void cap_trng_set_ais31_conf0(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(ais31conf0);
+}
+
+static inline void cap_trng_set_ais31_conf1(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(ais31conf1);
+}
+
+static inline void cap_trng_set_ais31_conf2(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(ais31conf2);
+}
+
+static inline void cap_trng_set_ais31_status(int chip_id, int value, bool refresh)
+{
+    TRNG_SET(ais31status);
+}
+
+static inline int cap_trng_get_ctl_reg(int chip_id, bool refresh)
+{
+    TRNG_GET(controlreg);
+}
+
+static inline int cap_trng_get_fifo_level(int chip_id, bool refresh)
+{
+    TRNG_GET(fifolevel);
+}
+
+static inline int cap_trng_get_fifo_thresh(int chip_id, bool refresh)
+{
+    TRNG_GET(fifothresh);
+}
+
+static inline int cap_trng_get_fifo_depth(int chip_id, bool refresh)
+{
+    TRNG_GET(fifodepth);
+}
+
+
+static inline int cap_trng_get_key0(int chip_id, bool refresh)
+{
+    TRNG_GET(key0);
+}
+
+static inline int cap_trng_get_key1(int chip_id, bool refresh)
+{
+    TRNG_GET(key1);
+}
+
+static inline int cap_trng_get_key2(int chip_id, bool refresh)
+{
+    TRNG_GET(key2);
+}
+
+static inline int cap_trng_get_key3(int chip_id, bool refresh)
+{
+    TRNG_GET(key3);
+}
+
+static inline int cap_trng_get_test_data(int chip_id, bool refresh)
+{
+    TRNG_GET(testdata);
+}
+
+static inline int cap_trng_get_rep_thresh(int chip_id, bool refresh)
+{
+    TRNG_GET(repthresh);
+}
+
+static inline int cap_trng_get_prop1(int chip_id, bool refresh)
+{
+    TRNG_GET(prop1);
+}
+
+static inline int cap_trng_get_prop2(int chip_id, bool refresh)
+{
+    TRNG_GET(prop2);
+}
+
+static inline int cap_trng_get_status(int chip_id, bool refresh)
+{
+    TRNG_GET(status);
+}
+
+static inline int cap_trng_get_init_wait_val(int chip_id, bool refresh)
+{
+    TRNG_GET(initwaitval);
+}
+
+static inline int cap_trng_get_disable_osc0(int chip_id, bool refresh)
+{
+    TRNG_GET(disableosc0);
+}
+
+static inline int cap_trng_get_disable_osc1(int chip_id, bool refresh)
+{
+    TRNG_GET(disableosc1);
+}
+
+static inline int cap_trng_get_swoff_tmrval(int chip_id, bool refresh)
+{
+    TRNG_GET(swofftmrval);
+}
+
+static inline int cap_trng_get_clk_div(int chip_id, bool refresh)
+{
+    TRNG_GET(clkdiv);
+}
+
+static inline int cap_trng_get_ais31_conf0(int chip_id, bool refresh)
+{
+    TRNG_GET(ais31conf0);
+}
+
+static inline int cap_trng_get_ais31_conf1(int chip_id, bool refresh)
+{
+    TRNG_GET(ais31conf1);
+}
+
+static inline int cap_trng_get_ais31_conf2(int chip_id, bool refresh)
+{
+    TRNG_GET(ais31conf2);
+}
+
+static inline int cap_trng_get_ais31_status(int chip_id, bool refresh)
+{
+    TRNG_GET(ais31status);
+}
+
 void
 capri_barco_init_drbg (void)
 {
-#if 0
-
-    /*
-     * Testing only.
-     */
     unsigned char num0[512];
-    unsigned char num1[512];
-
-    memset(num0, 0, 512);
-    memset(num1, 0, 512);
-    cap_drbg_read_ram_rand_num0(0, num0, 512, true);
-    cap_drbg_read_ram_rand_num1(0, num1, 512, true);
-    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Random number set 0:", (char *)num0, 512);
-    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Random number set 1:", (char *)num1, 512);
-
-    cap_drbg_set_ctl_rng(0, 0x80000000, true);
-    cap_drbg_read_ram_rand_num0(0, num0, 512, true);
-    cap_drbg_read_ram_rand_num1(0, num1, 512, true);
-    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Random number set 0:", (char *)num0, 512);
-    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Random number set 1:", (char *)num1, 512);
-#endif
+    unsigned char psnl_str_p[32];
+    uint32_t      psnl_str_p_len;
+    uint32_t      rng, gs, val;
 
     /*
-     * Generate the random numbers once from ARM cpu, for the first use by the
+     * Initialize the Barco TRNG module.
+     */
+    HAL_TRACE_DEBUG("[DRBG] initializing ...");
+    strcpy((char *)psnl_str_p, "cap/he/drbg/pensando-pers-string"); // Less than 32 bytes
+    psnl_str_p_len = strlen((const char *)psnl_str_p);
+    HAL_TRACE_DEBUG("[DRBG] generated personalized string P -- {:s} len {:d}", psnl_str_p, psnl_str_p_len);
+    cap_drbg_write_ram_psnl_str_p(0, psnl_str_p, psnl_str_p_len, true);
+
+    ////////////// TRNG
+    val = 0;
+    val |= (1 << 8); //reset
+    cap_trng_set_ctl_reg(0, val, true);
+    cap_trng_set_clk_div(0, 1, true);
+    cap_trng_set_init_wait_val(0, 80, true);
+    cap_trng_set_swoff_tmrval(0, 0, true);
+    cap_trng_set_key0(0, 0x12345678, true);
+    cap_trng_set_key1(0, 0xabcdef07, true);
+    cap_trng_set_key2(0, 0x87654321, true);
+    cap_trng_set_key3(0, 0x1212abab, true);
+    cap_trng_set_ctl_reg(0, 0x406F1, true);
+    do {
+      val = cap_trng_get_status(0, true);
+        //HAL_TRACE_DEBUG("[DRBG] TRNG status = 0x{:x}", val);
+        val = cap_trng_get_fifo_level(0, true);
+        //HAL_TRACE_DEBUG("[DRBG] TRNG fifo level = 0x{:x}", val);
+    } while (0); //val < 0x20);
+
+    //////////// DRBG
+    rng = 0;
+    rng |= (0x1 << 0); ///NDRNG
+    HAL_TRACE_DEBUG("[DRBG] rng = {:x}", rng);
+    rng |= (0x1 << 2); ///DRNG
+    HAL_TRACE_DEBUG("[DRBG] rng = {:x}", rng);
+    rng |= (0x80 << 4); //size
+    HAL_TRACE_DEBUG("[DRBG] rng = {:x}", rng);
+    rng |= (0x0 << 29); ///TestDRNG
+    HAL_TRACE_DEBUG("[DRBG] rng = {:x}", rng);
+    rng |= ((psnl_str_p_len << 3) << 16); ///PSize
+    HAL_TRACE_DEBUG("[DRBG] rng = {:x}", rng);
+    rng |= (0x1 << 31); ///start 0
+    HAL_TRACE_DEBUG("[DRBG] set rng = {:x}", rng);
+    cap_drbg_set_ctl_rng(0, rng, true);
+
+    HAL_TRACE_DEBUG("[DRBG] start polling gs");
+    gs = 1;
+    do {
+        gs = cap_drbg_get_ctl_gs(0, true);
+        //HAL_TRACE_DEBUG("[DRBG] continue polling gs");
+    } while (gs != 0);
+    HAL_TRACE_DEBUG("[DRBG] Initialization done");
+
+    /*
+     * Generate the random number once from ARM cpu, for the first use by the
      * data-path. Data-path program will generate for subsequent uses.
      * (Eventually with a timer-based DRBG producer ring infra in data-path, we'll
      * not need this).
      */
-    cap_drbg_set_ctl_rng(0, 0xC0000000, true);
+    HAL_TRACE_DEBUG("[DRBG] generate random number with buffer id 0");
+    rng = 0;
+    rng |= (0x1 << 0); //NDRNG
+    rng |= (0x0 << 2); //DRNG
+    rng |= (0x80 << 4); //size
+    rng |= (0x0 << 29); //TestDRNG
+    rng |= (0x1 << 31); //start
+    HAL_TRACE_DEBUG("[DRBG] set rng = {:x}", rng);
+    cap_drbg_set_ctl_rng(0, rng, true);
 
+    HAL_TRACE_DEBUG("[DRBG] start polling gs");
+    gs = 1;
+    do {
+        gs = cap_drbg_get_ctl_gs(0, true);
+        //HAL_TRACE_DEBUG("[DRBG] continue polling gs");
+    } while (gs != 0);
+    HAL_TRACE_DEBUG("[DRBG] generate random number complete!");
+
+    cap_drbg_read_ram_rand_num0(0, num0, 512, true);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Random number set 0:", (char *)num0, 512);
 }
 
 }    // namespace pd
