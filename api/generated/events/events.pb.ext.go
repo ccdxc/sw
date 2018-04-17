@@ -151,6 +151,33 @@ func (m *EventExport) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *EventList) Clone(into interface{}) (interface{}, error) {
+	var out *EventList
+	var ok bool
+	if into == nil {
+		out = &EventList{}
+	} else {
+		out, ok = into.(*EventList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *EventList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Events {
+		if m.Events[k] != nil {
+			ret = ret || m.Events[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *EventPolicy) Clone(into interface{}) (interface{}, error) {
 	var out *EventPolicy
 	var ok bool
@@ -317,6 +344,15 @@ func (m *EventExport) Validate(ver string, ignoreStatus bool) bool {
 			if !v(m) {
 				return false
 			}
+		}
+	}
+	return true
+}
+
+func (m *EventList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Events {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
 		}
 	}
 	return true

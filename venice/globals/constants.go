@@ -90,4 +90,7 @@ const (
 
 	// Spyglass search service
 	SpyglassRPCPort = "9011"
+
+	// Events proxy
+	EvtsProxyRPCPort = "9012"
 )

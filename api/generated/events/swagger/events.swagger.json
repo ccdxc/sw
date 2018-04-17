@@ -129,7 +129,6 @@
           },
           {
             "name": "Spec.MaxRetentionTime",
-            "description": "Name of the venice or workload node which is generating the event.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -410,42 +409,43 @@
       "type": "object",
       "properties": {
         "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "Severity represents the criticality level of an event"
         },
         "O": {
           "$ref": "#/definitions/apiObjectMeta",
-          "title": "ObjectMeta.Name will be the UUID for an event object.\nTODO: Should there be a predefined list of labels or keep it free form ?"
+          "title": "Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined"
         },
         "Spec": {
           "$ref": "#/definitions/eventsEventPolicySpec",
-          "description": "Attributes contains the attributes of an event."
+          "title": "Message represents the human readable description of an event"
         },
         "Status": {
-          "$ref": "#/definitions/eventsEventPolicyStatus"
+          "$ref": "#/definitions/eventsEventPolicyStatus",
+          "title": "ObjectRef is the reference to the object associated with an event"
         }
       },
-      "description": "Event is a system notification of a fault, condition or configuration\nthat should be user visible. These objects are created internally by\nEvent client and persisted in EventDB."
+      "title": "EventAttributes contains all the event attributes"
     },
     "eventsEventPolicyList": {
       "type": "object",
       "properties": {
         "T": {
           "$ref": "#/definitions/apiTypeMeta",
-          "title": "Severity represents the criticality level of an event"
+          "description": "Component from which the event is generated."
         },
         "ListMeta": {
           "$ref": "#/definitions/apiListMeta",
-          "title": "Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined"
+          "description": "Name of the venice or workload node which is generating the event."
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/eventsEventPolicy"
-          },
-          "title": "Message represents the human readable description of an event"
+          }
         }
       },
-      "title": "EventAttributes contains all the event attributes"
+      "title": "EventSource has info about the component and\nhost/node that generated the event"
     },
     "eventsEventPolicySpec": {
       "type": "object",
@@ -454,15 +454,13 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/eventsEventExport"
-          },
-          "description": "Component from which the event is generated."
+          }
         },
         "MaxRetentionTime": {
-          "type": "string",
-          "description": "Name of the venice or workload node which is generating the event."
+          "type": "string"
         }
       },
-      "title": "EventSource has info about the component and\nhost/node that generated the event"
+      "title": "list of events"
     },
     "eventsEventPolicyStatus": {
       "type": "object"

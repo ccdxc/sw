@@ -8,8 +8,6 @@
 		evtsmgr.proto
 
 	It has these top-level messages:
-		Empty
-		EventList
 */
 package evtsmgrproto
 
@@ -17,6 +15,7 @@ import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
+import api "github.com/pensando/sw/api"
 import _ "github.com/pensando/sw/venice/utils/apigen/annotations"
 import _ "github.com/gogo/protobuf/gogoproto"
 import events "github.com/pensando/sw/api/generated/events"
@@ -25,8 +24,6 @@ import (
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
 )
-
-import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -39,35 +36,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-type Empty struct {
-}
-
-func (m *Empty) Reset()                    { *m = Empty{} }
-func (m *Empty) String() string            { return proto.CompactTextString(m) }
-func (*Empty) ProtoMessage()               {}
-func (*Empty) Descriptor() ([]byte, []int) { return fileDescriptorEvtsmgr, []int{0} }
-
-type EventList struct {
-	Events []events.Event `protobuf:"bytes,1,rep,name=Events" json:"Events"`
-}
-
-func (m *EventList) Reset()                    { *m = EventList{} }
-func (m *EventList) String() string            { return proto.CompactTextString(m) }
-func (*EventList) ProtoMessage()               {}
-func (*EventList) Descriptor() ([]byte, []int) { return fileDescriptorEvtsmgr, []int{1} }
-
-func (m *EventList) GetEvents() []events.Event {
-	if m != nil {
-		return m.Events
-	}
-	return nil
-}
-
-func init() {
-	proto.RegisterType((*Empty)(nil), "evtsmgrproto.Empty")
-	proto.RegisterType((*EventList)(nil), "evtsmgrproto.EventList")
-}
-
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -76,415 +44,89 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for EventsAPI service
+// Client API for EvtsMgrAPI service
 
-type EventsAPIClient interface {
+type EvtsMgrAPIClient interface {
 	// any component can use this method to generate an event
-	SendEvents(ctx context.Context, in *EventList, opts ...grpc.CallOption) (*Empty, error)
+	SendEvents(ctx context.Context, in *events.EventList, opts ...grpc.CallOption) (*api.Empty, error)
 }
 
-type eventsAPIClient struct {
+type evtsMgrAPIClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewEventsAPIClient(cc *grpc.ClientConn) EventsAPIClient {
-	return &eventsAPIClient{cc}
+func NewEvtsMgrAPIClient(cc *grpc.ClientConn) EvtsMgrAPIClient {
+	return &evtsMgrAPIClient{cc}
 }
 
-func (c *eventsAPIClient) SendEvents(ctx context.Context, in *EventList, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := grpc.Invoke(ctx, "/evtsmgrproto.EventsAPI/SendEvents", in, out, c.cc, opts...)
+func (c *evtsMgrAPIClient) SendEvents(ctx context.Context, in *events.EventList, opts ...grpc.CallOption) (*api.Empty, error) {
+	out := new(api.Empty)
+	err := grpc.Invoke(ctx, "/evtsmgrproto.EvtsMgrAPI/SendEvents", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for EventsAPI service
+// Server API for EvtsMgrAPI service
 
-type EventsAPIServer interface {
+type EvtsMgrAPIServer interface {
 	// any component can use this method to generate an event
-	SendEvents(context.Context, *EventList) (*Empty, error)
+	SendEvents(context.Context, *events.EventList) (*api.Empty, error)
 }
 
-func RegisterEventsAPIServer(s *grpc.Server, srv EventsAPIServer) {
-	s.RegisterService(&_EventsAPI_serviceDesc, srv)
+func RegisterEvtsMgrAPIServer(s *grpc.Server, srv EvtsMgrAPIServer) {
+	s.RegisterService(&_EvtsMgrAPI_serviceDesc, srv)
 }
 
-func _EventsAPI_SendEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EventList)
+func _EvtsMgrAPI_SendEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(events.EventList)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EventsAPIServer).SendEvents(ctx, in)
+		return srv.(EvtsMgrAPIServer).SendEvents(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/evtsmgrproto.EventsAPI/SendEvents",
+		FullMethod: "/evtsmgrproto.EvtsMgrAPI/SendEvents",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventsAPIServer).SendEvents(ctx, req.(*EventList))
+		return srv.(EvtsMgrAPIServer).SendEvents(ctx, req.(*events.EventList))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _EventsAPI_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "evtsmgrproto.EventsAPI",
-	HandlerType: (*EventsAPIServer)(nil),
+var _EvtsMgrAPI_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "evtsmgrproto.EvtsMgrAPI",
+	HandlerType: (*EvtsMgrAPIServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "SendEvents",
-			Handler:    _EventsAPI_SendEvents_Handler,
+			Handler:    _EvtsMgrAPI_SendEvents_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "evtsmgr.proto",
 }
 
-func (m *Empty) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Empty) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	return i, nil
-}
-
-func (m *EventList) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *EventList) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Events) > 0 {
-		for _, msg := range m.Events {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintEvtsmgr(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func encodeVarintEvtsmgr(dAtA []byte, offset int, v uint64) int {
-	for v >= 1<<7 {
-		dAtA[offset] = uint8(v&0x7f | 0x80)
-		v >>= 7
-		offset++
-	}
-	dAtA[offset] = uint8(v)
-	return offset + 1
-}
-func (m *Empty) Size() (n int) {
-	var l int
-	_ = l
-	return n
-}
-
-func (m *EventList) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Events) > 0 {
-		for _, e := range m.Events {
-			l = e.Size()
-			n += 1 + l + sovEvtsmgr(uint64(l))
-		}
-	}
-	return n
-}
-
-func sovEvtsmgr(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
-}
-func sozEvtsmgr(x uint64) (n int) {
-	return sovEvtsmgr(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *Empty) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowEvtsmgr
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Empty: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Empty: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipEvtsmgr(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthEvtsmgr
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *EventList) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowEvtsmgr
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: EventList: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventList: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvtsmgr
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvtsmgr
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Events = append(m.Events, events.Event{})
-			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipEvtsmgr(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthEvtsmgr
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func skipEvtsmgr(dAtA []byte) (n int, err error) {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return 0, ErrIntOverflowEvtsmgr
-			}
-			if iNdEx >= l {
-				return 0, io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		wireType := int(wire & 0x7)
-		switch wireType {
-		case 0:
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowEvtsmgr
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				iNdEx++
-				if dAtA[iNdEx-1] < 0x80 {
-					break
-				}
-			}
-			return iNdEx, nil
-		case 1:
-			iNdEx += 8
-			return iNdEx, nil
-		case 2:
-			var length int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowEvtsmgr
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				length |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			iNdEx += length
-			if length < 0 {
-				return 0, ErrInvalidLengthEvtsmgr
-			}
-			return iNdEx, nil
-		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowEvtsmgr
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipEvtsmgr(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
-		case 4:
-			return iNdEx, nil
-		case 5:
-			iNdEx += 4
-			return iNdEx, nil
-		default:
-			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
-		}
-	}
-	panic("unreachable")
-}
-
-var (
-	ErrInvalidLengthEvtsmgr = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowEvtsmgr   = fmt.Errorf("proto: integer overflow")
-)
-
 func init() { proto.RegisterFile("evtsmgr.proto", fileDescriptorEvtsmgr) }
 
 var fileDescriptorEvtsmgr = []byte{
-	// 270 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x90, 0xcf, 0x4a, 0xc3, 0x40,
-	0x10, 0xc6, 0x1b, 0xd4, 0x8a, 0xab, 0x05, 0x89, 0x07, 0x25, 0x48, 0x94, 0x9e, 0x04, 0x71, 0x17,
-	0xea, 0xc5, 0x83, 0x17, 0x0b, 0x39, 0x14, 0x3c, 0x14, 0x7d, 0x82, 0xfc, 0x19, 0xd7, 0x85, 0x64,
-	0x26, 0x74, 0x37, 0x11, 0xdf, 0xc4, 0x47, 0xea, 0xd1, 0x27, 0x10, 0x89, 0x2f, 0x22, 0x99, 0xae,
-	0x12, 0x04, 0x6f, 0xfb, 0x7d, 0xf3, 0xfb, 0xbe, 0x19, 0x56, 0x4c, 0xa0, 0x75, 0xb6, 0xd2, 0x2b,
-	0x59, 0xaf, 0xc8, 0x51, 0x78, 0xe0, 0x25, 0xab, 0xe8, 0x54, 0x13, 0xe9, 0x12, 0x54, 0x5a, 0x1b,
-	0x95, 0x22, 0x92, 0x4b, 0x9d, 0x21, 0xb4, 0x1b, 0x36, 0x4a, 0xb4, 0x71, 0xcf, 0x4d, 0x26, 0x73,
-	0xaa, 0x54, 0x0d, 0x68, 0x53, 0x2c, 0x48, 0xd9, 0x17, 0xd5, 0x02, 0x9a, 0x1c, 0x54, 0xe3, 0x4c,
-	0x69, 0xfb, 0xa8, 0x06, 0x1c, 0xa6, 0x95, 0xc1, 0xbc, 0x6c, 0x0a, 0xf8, 0xa9, 0xb9, 0x1a, 0xd4,
-	0x68, 0xd2, 0xa4, 0xd8, 0xce, 0x9a, 0x27, 0x56, 0x2c, 0xf8, 0xe5, 0x71, 0xf9, 0xcf, 0xd6, 0xfe,
-	0x46, 0x26, 0xac, 0x82, 0x16, 0xd0, 0xf9, 0xfa, 0xe9, 0xae, 0xd8, 0x49, 0xaa, 0xda, 0xbd, 0x4e,
-	0x6f, 0xc4, 0x5e, 0xd2, 0x0f, 0xee, 0x8d, 0x75, 0xe1, 0xa5, 0x18, 0xb3, 0xb0, 0x27, 0xc1, 0xf9,
-	0xd6, 0xc5, 0xfe, 0x6c, 0x22, 0x7d, 0x88, 0xdd, 0xf9, 0xf6, 0xfa, 0xe3, 0x6c, 0xf4, 0xe0, 0x91,
-	0xd9, 0xc2, 0x27, 0xed, 0xdd, 0x72, 0x11, 0xde, 0x0a, 0xf1, 0x08, 0x58, 0x6c, 0x8c, 0xf0, 0x58,
-	0x0e, 0x3f, 0x4c, 0xfe, 0x2e, 0x88, 0x8e, 0xfe, 0x0c, 0xf8, 0x84, 0xd1, 0xfc, 0x70, 0xdd, 0xc5,
-	0xc1, 0x7b, 0x17, 0x07, 0x9f, 0x5d, 0x1c, 0xbc, 0x7d, 0xc5, 0xa3, 0x65, 0x90, 0x8d, 0x19, 0xb9,
-	0xfe, 0x0e, 0x00, 0x00, 0xff, 0xff, 0xac, 0x9b, 0xc9, 0x17, 0x8b, 0x01, 0x00, 0x00,
+	// 238 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x8e, 0x31, 0x4a, 0xc5, 0x40,
+	0x10, 0x86, 0x5f, 0x2c, 0x2c, 0x16, 0x05, 0x4d, 0x19, 0x24, 0x85, 0x8d, 0xd5, 0xdb, 0x05, 0x2d,
+	0xad, 0x14, 0x52, 0x08, 0x0a, 0x0f, 0x3c, 0xc1, 0x26, 0x19, 0xd7, 0x85, 0xec, 0xcc, 0x92, 0x9d,
+	0x44, 0xbc, 0x89, 0x47, 0xb2, 0xf4, 0x08, 0x12, 0x2f, 0x22, 0x8e, 0x2b, 0xa4, 0xf1, 0x75, 0xf3,
+	0x0d, 0xdf, 0xfc, 0xff, 0xa8, 0x63, 0x98, 0x39, 0x05, 0x37, 0xea, 0x38, 0x12, 0x53, 0x79, 0x94,
+	0x51, 0xa8, 0x3a, 0x73, 0x44, 0x6e, 0x00, 0x63, 0xa3, 0x37, 0x16, 0x91, 0xd8, 0xb2, 0x27, 0x4c,
+	0xbf, 0x6e, 0x75, 0xe1, 0x3c, 0x3f, 0x4f, 0xad, 0xee, 0x28, 0x98, 0x08, 0x98, 0x2c, 0xf6, 0x64,
+	0xd2, 0x8b, 0xd8, 0x1d, 0x85, 0x40, 0x98, 0xc5, 0xe6, 0x1f, 0x71, 0x06, 0xf4, 0x1d, 0x98, 0x89,
+	0xfd, 0x90, 0x7e, 0xae, 0x1c, 0xe0, 0xba, 0xc6, 0x78, 0xec, 0x86, 0xa9, 0x87, 0xbf, 0xbe, 0xed,
+	0x2a, 0xc6, 0x91, 0x23, 0x23, 0xeb, 0x76, 0x7a, 0x12, 0x12, 0x90, 0x29, 0xeb, 0x7a, 0xcf, 0x7b,
+	0x62, 0x24, 0x03, 0x33, 0x20, 0xe7, 0xf8, 0xcb, 0x6b, 0xa5, 0x9a, 0x99, 0xd3, 0x83, 0x1b, 0x6f,
+	0x76, 0x77, 0xe5, 0x56, 0xa9, 0x47, 0xc0, 0xbe, 0x11, 0xa3, 0x3c, 0xd5, 0x59, 0x15, 0xbe, 0xf7,
+	0x89, 0x2b, 0xa5, 0x6d, 0xf4, 0xba, 0x09, 0x91, 0x5f, 0xcf, 0x37, 0xb7, 0x27, 0xef, 0x4b, 0x5d,
+	0x7c, 0x2c, 0x75, 0xf1, 0xb9, 0xd4, 0xc5, 0xdb, 0x57, 0xbd, 0xd9, 0x1d, 0xb4, 0x87, 0x92, 0x7b,
+	0xf5, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x8d, 0xd4, 0xb3, 0xaa, 0x63, 0x01, 0x00, 0x00,
 }

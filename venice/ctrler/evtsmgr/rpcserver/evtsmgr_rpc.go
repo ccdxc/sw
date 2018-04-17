@@ -10,7 +10,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -48,10 +49,10 @@ func NewEvtsMgrRPCHandler(client elastic.ESClient) (*EvtsMgrRPCHandler, error) {
 // Once indexed, the same list of events is passed to the channel for further
 // notification to all the watchers.
 // Events library will gather events across tenants.
-func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *emgrpc.EventList) (*emgrpc.Empty, error) {
+func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *events.EventList) (*api.Empty, error) {
 	events := eventList.Events
 	if len(events) == 0 {
-		return &emgrpc.Empty{}, nil
+		return &api.Empty{}, nil
 	}
 
 	// TODO: Use globals.GetIndex() with tenant name
@@ -106,7 +107,7 @@ func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *emgrpc.Ev
 		}
 	}
 
-	return &emgrpc.Empty{}, nil
+	return &api.Empty{}, nil
 }
 
 // getIndex returns the date string (YYYY-MM-DD) prefixed with venice.events

@@ -57,10 +57,10 @@ func TestEvtsMgrRPCServer(t *testing.T) {
 	defer rpcClient.ClientConn.Close()
 	defer mockElasticServer.Stop()
 
-	client := emgrpc.NewEventsAPIClient(rpcClient.ClientConn)
+	client := emgrpc.NewEvtsMgrAPIClient(rpcClient.ClientConn)
 
-	evts := []events.Event{
-		events.Event{
+	evts := []*events.Event{
+		&events.Event{
 			TypeMeta:   api.TypeMeta{Kind: "event"},
 			ObjectMeta: api.ObjectMeta{Name: "evt1", UUID: uuid.NewV4().String(), Tenant: "default"},
 			EventAttributes: events.EventAttributes{
@@ -75,13 +75,13 @@ func TestEvtsMgrRPCServer(t *testing.T) {
 	ctx := context.Background()
 
 	// send single event
-	_, err := client.SendEvents(ctx, &emgrpc.EventList{Events: evts})
+	_, err := client.SendEvents(ctx, &events.EventList{Events: evts})
 	tu.AssertOk(t, err, "failed to send event")
 
 	// send bulk events
 	// multiple index operations on a single index ID will result in an overwrite (update)
-	evts = []events.Event{
-		events.Event{
+	evts = []*events.Event{
+		&events.Event{
 			TypeMeta:   api.TypeMeta{Kind: "event"},
 			ObjectMeta: api.ObjectMeta{Name: "evt2", UUID: uuid.NewV4().String(), Tenant: "default"},
 			EventAttributes: events.EventAttributes{
@@ -91,7 +91,7 @@ func TestEvtsMgrRPCServer(t *testing.T) {
 				Source:    &events.EventSource{Component: "xxx", NodeName: "yyy"},
 			},
 		},
-		events.Event{
+		&events.Event{
 			TypeMeta:   api.TypeMeta{Kind: "event"},
 			ObjectMeta: api.ObjectMeta{Name: "evt3", UUID: uuid.NewV4().String(), Tenant: "default"},
 			EventAttributes: events.EventAttributes{
@@ -104,11 +104,11 @@ func TestEvtsMgrRPCServer(t *testing.T) {
 	}
 
 	// send bulk events
-	_, err = client.SendEvents(ctx, &emgrpc.EventList{Events: evts})
+	_, err = client.SendEvents(ctx, &events.EventList{Events: evts})
 	tu.AssertOk(t, err, "failed to bulk events")
 
 	// send empty events list
-	_, err = client.SendEvents(ctx, &emgrpc.EventList{})
+	_, err = client.SendEvents(ctx, &events.EventList{})
 	tu.AssertOk(t, err, "failed to send event")
 
 	rpcClient.ClientConn.Close()

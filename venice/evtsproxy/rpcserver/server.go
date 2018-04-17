@@ -5,15 +5,16 @@ package rpcserver
 import (
 	"github.com/pkg/errors"
 
-	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
+	epgrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
 	"github.com/pensando/sw/venice/utils"
-	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
-// RPCServer is the RPC server object with all event APIs
+// RPCServer is the RPC server object with all event proxy handlers and
+// gRPC server.
 type RPCServer struct {
-	handler *EvtsMgrRPCHandler
+	handler *EvtsProxyRPCHandler
 	server  *rpckit.RPCServer // rpckit server instance
 }
 
@@ -32,30 +33,31 @@ func (rs *RPCServer) GetListenURL() string {
 	return rs.server.GetListenURL()
 }
 
-// NewRPCServer creates a new instance of events RPC server
-func NewRPCServer(serverName, listenURL string, esclient elastic.ESClient) (*RPCServer, error) {
-	if utils.IsEmpty(serverName) || utils.IsEmpty(listenURL) || esclient == nil {
+// NewRPCServer creates a new instance of events proxy RPC server
+func NewRPCServer(serverName, listenURL string, logger log.Logger) (*RPCServer, error) {
+	if utils.IsEmpty(serverName) || utils.IsEmpty(listenURL) {
 		return nil, errors.New("all parameters are required")
 	}
 
-	// create a RPC server
+	// create a gRPC server
 	rpcServer, err := rpckit.NewRPCServer(serverName, listenURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating rpc server")
 	}
 
-	// instantiate events handlers which carries the implementation of the service
-	eh, err := NewEvtsMgrRPCHandler(esclient)
+	// instantiate a events proxy handler which carries the implementation of the
+	// events proxy service
+	eph, err := NewEvtsProxyRPCHandler()
 	if err != nil {
 		return nil, errors.Wrap(err, "error certificates rpc server")
 	}
 
 	// register the server
-	emgrpc.RegisterEvtsMgrAPIServer(rpcServer.GrpcServer, eh)
+	epgrpc.RegisterEventsProxyAPIServer(rpcServer.GrpcServer, eph)
 	rpcServer.Start()
 
 	return &RPCServer{
-		handler: eh,
+		handler: eph,
 		server:  rpcServer,
 	}, nil
 }

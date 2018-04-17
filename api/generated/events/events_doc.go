@@ -11,6 +11,7 @@ The following Messages are defined.
   Event
   EventAttributes
   EventExport
+  EventList
   EventPolicy
   EventPolicyList
   EventPolicySpec

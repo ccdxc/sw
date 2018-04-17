@@ -27,10 +27,5 @@ service EventsProxyAPI {
 
     // recorder can buffer events when the proxy is unavailable and send
     // all of them at once when the proxy comes back online.
-    rpc ForwardEvents (evtsmgrproto.EventList) returns (api.Empty) {};
-
-    // event sources can call flush using the recorder to flush the pending/deduped
-    // events from dispatcher to all the writers. This flushes only the events
-    // belonging to the given source.
-    rpc Flush (events.EventSource) returns (api.Empty){}
+    rpc ForwardEvents (events.EventList) returns (api.Empty) {};
 }

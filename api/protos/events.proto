@@ -157,6 +157,11 @@ message EventSource {
     string NodeName     = 2 [(gogoproto.jsontag) = "node-name,omitempty"];
 }
 
+// list of events
+message EventList {
+  repeated Event Events = 1 [(gogoproto.nullable) = true];
+}
+
 // Event object REST API definition
 // Events are internally created by the venice and naples sub-system
 // Users are only allowed to GET & LIST events
