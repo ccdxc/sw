@@ -52,15 +52,18 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     // one in HBM for lower latency P4+ processing, and another in host
     // memory which P4+ will copy into for the application.
     comp_status_buf1 = new dp_mem_t(1, sizeof(cp_status_sha512_t),
-                           DP_MEM_ALIGN_NONE, params.comp_status_mem_type1_);
+                           DP_MEM_ALIGN_SPEC, params.comp_status_mem_type1_,
+                           kMinHostMemAllocSize);
     if (params.comp_status_mem_type2_ != DP_MEM_TYPE_VOID) {
         comp_status_buf2 = new dp_mem_t(1, sizeof(cp_status_sha512_t),
-                               DP_MEM_ALIGN_NONE, params.comp_status_mem_type2_);
+                               DP_MEM_ALIGN_SPEC, params.comp_status_mem_type2_,
+                               kMinHostMemAllocSize);
     } else {
         comp_status_buf2 = comp_status_buf1;
     }
     comp_opaque_buf = new dp_mem_t(1, sizeof(uint64_t),
-                                   DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                   kMinHostMemAllocSize);
 
     // XTS AOL must be 512 byte aligned
     xts_in_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
@@ -167,11 +170,13 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     chain_params.chain_ent.next_db_action_barco_push = 1;
     chain_params.chain_ent.push_entry.barco_ring_addr = xts_ctx.xts_ring_base_addr;
     chain_params.chain_ent.push_entry.barco_pndx_addr = xts_ctx.xts_ring_pi_addr;
+    chain_params.chain_ent.push_entry.barco_pndx_shadow_addr = xts_ctx.xts_ring_pi_shadow_addr->pa();
     chain_params.chain_ent.push_entry.barco_desc_addr = xts_desc_buf->pa();
     chain_params.chain_ent.push_entry.barco_desc_size =
                            (uint8_t)log2(xts_desc_buf->line_size_get());
     chain_params.chain_ent.push_entry.barco_pndx_size =
                            (uint8_t)log2(xts::kXtsPISize);
+    chain_params.chain_ent.push_entry.barco_ring_size = (uint8_t)log2(kXtsQueueSize);
     comp_status_buf1->clear_thru();
     comp_status_buf2->clear_thru();
     chain_params.chain_ent.status_hbm_pa = comp_status_buf1->pa();

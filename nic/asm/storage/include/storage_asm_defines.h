@@ -28,7 +28,7 @@
 #define STORAGE_KIVEC0_DST_QID                  \
     k.{storage_kivec0_dst_qid_sbit0_ebit1...storage_kivec0_dst_qid_sbit18_ebit23}
 #define STORAGE_KIVEC0_DST_QADDR                \
-    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit26_ebit33}
+    k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit18_ebit33}
 #define STORAGE_KIVEC0_PRP_ASSIST               \
     k.storage_kivec0_prp_assist
 #define STORAGE_KIVEC0_IS_Q0                    \
@@ -76,15 +76,19 @@
 #define STORAGE_KIVEC4_BARCO_RING_ADDR          \
     k.{storage_kivec4_barco_ring_addr_sbit0_ebit15...storage_kivec4_barco_ring_addr_sbit32_ebit33}
 #define STORAGE_KIVEC4_BARCO_DESC_SIZE          \
-    k.storage_kivec4_barco_desc_size
+    k.{storage_kivec4_barco_desc_size_sbit0_ebit1...storage_kivec4_barco_desc_size_sbit2_ebit3}
 #define STORAGE_KIVEC4_BARCO_PNDX_ADDR          \
     k.{storage_kivec4_barco_pndx_addr_sbit0_ebit5...storage_kivec4_barco_pndx_addr_sbit30_ebit33}
+#define STORAGE_KIVEC4_BARCO_PNDX_SHADOW_ADDR   \
+    k.{storage_kivec4_barco_pndx_shadow_addr_sbit0_ebit3...storage_kivec4_barco_pndx_shadow_addr_sbit28_ebit33}
 #define STORAGE_KIVEC4_BARCO_PNDX_SIZE          \
     k.storage_kivec4_barco_pndx_size
+#define STORAGE_KIVEC4_BARCO_RING_SIZE          \
+    k.{storage_kivec4_barco_ring_size_sbit0_ebit2...storage_kivec4_barco_ring_size_sbit3_ebit4}
 #define STORAGE_KIVEC4_W_NDX                    \
-    k.{storage_kivec4_w_ndx_sbit0_ebit4...storage_kivec4_w_ndx_sbit13_ebit15}
+    k.{storage_kivec4_w_ndx_sbit0_ebit5...storage_kivec4_w_ndx_sbit14_ebit15}
 
-#define STORAGE_KIVEC5_INTR_ADDR              \
+#define STORAGE_KIVEC5_INTR_ADDR                \
     k.{storage_kivec5_intr_addr_sbit0_ebit7...storage_kivec5_intr_addr_sbit40_ebit63}
 #define STORAGE_KIVEC5_DATA_LEN                 \
     k.{storage_kivec5_data_len_sbit0_ebit7...storage_kivec5_data_len_sbit8_ebit15}

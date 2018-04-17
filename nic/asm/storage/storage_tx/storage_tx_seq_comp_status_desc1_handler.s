@@ -61,6 +61,7 @@ storage_tx_seq_comp_status_desc1_handler_start:
    add          r_aol_l0_addr, d.sgl_out_aol_pa, \
                 SIZE_IN_BYTES(offsetof(struct barco_aol_t, L0))
    DMA_PHV2MEM_SETUP_ADDR64(total_len_len, total_len_len, r_aol_l0_addr, dma_p2m_5)
+   DMA_PHV2MEM_FENCE(dma_p2m_5)
 
 exit:
    CLEAR_TABLE_VALID_e(1)

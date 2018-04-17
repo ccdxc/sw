@@ -23,7 +23,7 @@ uint32_t gcm_exp_opaque_tag_decr = 0;
 
 const static uint32_t  kAolSize              = 64;
 const static uint32_t  kXtsDescSize          = 128;
-const static uint32_t  kXtsQueueSize         = 1024;
+const        uint32_t  kXtsQueueSize         = 1024;
 
 using namespace dp_mem;
 extern size_t tcid;
@@ -33,6 +33,20 @@ extern std::vector<TestCtx> xts_tests;
 }
 
 namespace tests {
+
+static dp_mem_t *xts0_ring_pi_shadow_addr;
+static dp_mem_t *xts1_ring_pi_shadow_addr;
+static dp_mem_t *gcm0_ring_pi_shadow_addr;
+static dp_mem_t *gcm1_ring_pi_shadow_addr;
+
+int xts_init(void) {
+
+ xts0_ring_pi_shadow_addr = new dp_mem_t(1, sizeof(uint32_t));
+ xts1_ring_pi_shadow_addr = new dp_mem_t(1, sizeof(uint32_t));
+ gcm0_ring_pi_shadow_addr = new dp_mem_t(1, sizeof(uint32_t));
+ gcm1_ring_pi_shadow_addr = new dp_mem_t(1, sizeof(uint32_t));
+ return 0;
+}
 
 int verify_prot_info(char *out_buf, uint32_t num_aols, xts::xts_aol_t **out_aol,
   uint32_t sector_size, uint32_t sec_num_start, uint16_t app_tag) {
@@ -363,12 +377,23 @@ XtsCtx::desc_write_seq_xts(dp_mem_t *xts_desc) {
   dp_mem_t *seq_xts_desc;
 
   // Fill xts producer index addr globals
-  if(decr_en)
-    if(!is_gcm) xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX;
-    else xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX;
-  else
-    if(!is_gcm) xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX;
-    else xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX;
+  if(decr_en) {
+    if(!is_gcm) {
+      xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX;
+      xts_ring_pi_shadow_addr = xts1_ring_pi_shadow_addr;
+    } else {
+      xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX;
+      xts_ring_pi_shadow_addr = gcm1_ring_pi_shadow_addr;
+    }
+  } else {
+    if(!is_gcm) {
+      xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX;
+      xts_ring_pi_shadow_addr = xts0_ring_pi_shadow_addr;
+    } else {
+      xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX;
+      xts_ring_pi_shadow_addr = gcm0_ring_pi_shadow_addr;
+    }
+  }
 
   if(hal_if::get_xts_ring_base_address(decr_en, &xts_ring_base_addr, is_gcm) < 0) {
     printf("can't get xts ring base address \n");
@@ -381,11 +406,12 @@ XtsCtx::desc_write_seq_xts(dp_mem_t *xts_desc) {
       seq_xts_desc->clear();
       seq_xts_desc->write_bit_fields(0, 64, xts_desc->pa());
       seq_xts_desc->write_bit_fields(64, 34, xts_ring_pi_addr);
-      seq_xts_desc->write_bit_fields(98, 4, (uint8_t)log2(xts_desc->line_size_get()));
-      seq_xts_desc->write_bit_fields(102, 3, (uint8_t)log2(xts::kXtsPISize));
+      seq_xts_desc->write_bit_fields(98, 34, xts_ring_pi_shadow_addr->pa());
+      seq_xts_desc->write_bit_fields(132, 4, (uint8_t)log2(xts_desc->line_size_get()));
+      seq_xts_desc->write_bit_fields(136, 3, (uint8_t)log2(xts::kXtsPISize));
+      seq_xts_desc->write_bit_fields(139, 5, (uint8_t)log2(kXtsQueueSize));
 
-      // skip 1 filler bit
-      seq_xts_desc->write_bit_fields(106, 34, xts_ring_base_addr);
+      seq_xts_desc->write_bit_fields(144, 34, xts_ring_base_addr);
       seq_xts_desc->write_thru();
   }
 
@@ -520,6 +546,13 @@ int XtsCtx::ring_doorbell() {
     pi += 1;
     if(pi == kXtsQueueSize) pi = 0; // roll-over case
     if(ring_db) {
+
+      // since we didn't go thru sequencer here, ensure the shadow pindex
+      // maintains up-to-date value
+      if (xts_ring_pi_shadow_addr) {
+        *((uint32_t *)xts_ring_pi_shadow_addr->read()) = pi;
+        xts_ring_pi_shadow_addr->write_thru();
+      }
       write_reg(xts_ring_pi_addr, pi);
       pi_inited = false;
     }

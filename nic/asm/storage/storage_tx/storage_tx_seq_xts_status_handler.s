@@ -30,7 +30,7 @@ barco_push_check:
    nop
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC4_BARCO_PNDX_ADDR,
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC4_BARCO_PNDX_SHADOW_ADDR,
                                 STORAGE_KIVEC4_BARCO_PNDX_SIZE,
                                 storage_tx_seq_barco_chain_action_start)
                                 

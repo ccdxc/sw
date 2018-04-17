@@ -116,8 +116,8 @@ action seq_r2n_entry_handler(r2n_wqe_addr, r2n_wqe_size, dst_lif, dst_qtype,
  *                           part of the push operation in the next stage.
  *****************************************************************************/
 
-action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_desc_size,
-                               barco_pndx_size, filler, barco_ring_addr,
+action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_pndx_shadow_addr,
+                               barco_desc_size, barco_pndx_size, barco_ring_size, barco_ring_addr,
 			       barco_batch_pndx, barco_batch_mode, barco_batch_last) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -127,9 +127,10 @@ action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_desc_size
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_barco_entry_scratch.barco_desc_addr, barco_desc_addr);
   modify_field(seq_barco_entry_scratch.barco_pndx_addr, barco_pndx_addr);
+  modify_field(seq_barco_entry_scratch.barco_pndx_shadow_addr, barco_pndx_shadow_addr);
   modify_field(seq_barco_entry_scratch.barco_desc_size, barco_desc_size);
   modify_field(seq_barco_entry_scratch.barco_pndx_size, barco_pndx_size);
-  modify_field(seq_barco_entry_scratch.filler, filler);
+  modify_field(seq_barco_entry_scratch.barco_ring_size, barco_ring_size);
   modify_field(seq_barco_entry_scratch.barco_ring_addr, barco_ring_addr);
   modify_field(seq_barco_entry_scratch.barco_batch_pndx, barco_batch_pndx);
   modify_field(seq_barco_entry_scratch.barco_batch_mode, barco_batch_mode);
@@ -138,6 +139,7 @@ action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_desc_size
   // Update the K+I vector with the barco descriptor size to be used 
   // when calculating the offset for the push operation 
   modify_field(storage_kivec4.barco_desc_size, seq_barco_entry_scratch.barco_desc_size);
+  modify_field(storage_kivec4.barco_ring_size, seq_barco_entry_scratch.barco_ring_size);
   modify_field(storage_kivec1.device_addr, seq_barco_entry_scratch.barco_ring_addr);
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
@@ -176,7 +178,7 @@ action seq_barco_ring_pndx_read() {
   
   // Load the Barco ring for the next stage to push the Barco descriptor
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
-                        storage_kivec4.barco_pndx_addr,
+                        storage_kivec4.barco_pndx_shadow_addr,
                         storage_kivec4.barco_pndx_size, 
                         seq_barco_ring_push_start)
 }
@@ -228,10 +230,10 @@ action seq_barco_ring_push(p_ndx) {
  *****************************************************************************/
 
 //@pragma little_endian next_db_addr next_db_data status_hbm_addr status_host_addr intr_addr intr_data status_len
-@pragma little_endian next_db_data intr_data
+@pragma little_endian intr_data
 action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
-                                     barco_desc_addr, barco_pndx_addr,
-				     barco_desc_size, barco_pndx_size, filler,
+                                     barco_pndx_addr, barco_pndx_shadow_addr,
+				     barco_desc_size, barco_pndx_size, barco_ring_size,
                                      status_hbm_addr, status_host_addr, 
                                      intr_addr, intr_data, status_len, status_dma_en,
                                      next_db_en, intr_en, next_db_action_barco_push) {
@@ -243,11 +245,11 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_comp_status_desc0_scratch.next_db_addr, next_db_addr);
   modify_field(seq_comp_status_desc0_scratch.next_db_data, next_db_data);
-  modify_field(seq_comp_status_desc0_scratch.barco_desc_addr, barco_desc_addr);
   modify_field(seq_comp_status_desc0_scratch.barco_pndx_addr, barco_pndx_addr);
+  modify_field(seq_comp_status_desc0_scratch.barco_pndx_shadow_addr, barco_pndx_shadow_addr);
   modify_field(seq_comp_status_desc0_scratch.barco_desc_size, barco_desc_size);
   modify_field(seq_comp_status_desc0_scratch.barco_pndx_size, barco_pndx_size);
-  modify_field(seq_comp_status_desc0_scratch.filler, filler);
+  modify_field(seq_comp_status_desc0_scratch.barco_ring_size, barco_ring_size);
   modify_field(seq_comp_status_desc0_scratch.status_hbm_addr, status_hbm_addr);
   modify_field(seq_comp_status_desc0_scratch.status_host_addr, status_host_addr);
   modify_field(seq_comp_status_desc0_scratch.intr_addr, intr_addr);
@@ -261,8 +263,10 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(storage_kivec4.barco_ring_addr, seq_comp_status_desc0_scratch.next_db_addr);
   modify_field(storage_kivec4.barco_pndx_addr, seq_comp_status_desc0_scratch.barco_pndx_addr);
+  modify_field(storage_kivec4.barco_pndx_shadow_addr, seq_comp_status_desc0_scratch.barco_pndx_shadow_addr);
   modify_field(storage_kivec4.barco_desc_size, seq_comp_status_desc0_scratch.barco_desc_size);
   modify_field(storage_kivec4.barco_pndx_size, seq_comp_status_desc0_scratch.barco_pndx_size);
+  modify_field(storage_kivec4.barco_ring_size, seq_comp_status_desc0_scratch.barco_ring_size);
   modify_field(storage_kivec5.intr_addr, seq_comp_status_desc0_scratch.intr_addr);
   modify_field(storage_kivec5.status_dma_en, seq_comp_status_desc0_scratch.status_dma_en);
   modify_field(storage_kivec5.next_db_en, seq_comp_status_desc0_scratch.next_db_en);
@@ -517,10 +521,10 @@ action seq_comp_sgl_handler(addr0, addr1, addr2, addr3,
  *****************************************************************************/
 
 //@pragma little_endian next_db_addr next_db_data status_hbm_addr status_host_addr intr_addr intr_data status_len
-@pragma little_endian next_db_data intr_data
+@pragma little_endian intr_data
 action seq_xts_status_desc_handler(next_db_addr, next_db_data,
-                                   barco_desc_addr, barco_pndx_addr,
-				   barco_desc_size, barco_pndx_size, filler,
+                                   barco_pndx_addr, barco_pndx_shadow_addr,
+				   barco_desc_size, barco_pndx_size, barco_ring_size,
                                    status_hbm_addr, status_host_addr, 
                                    intr_addr, intr_data, status_len, status_dma_en,
                                    next_db_en, intr_en, next_db_action_barco_push,
@@ -533,11 +537,11 @@ action seq_xts_status_desc_handler(next_db_addr, next_db_data,
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_xts_status_desc_scratch.next_db_addr, next_db_addr);
   modify_field(seq_xts_status_desc_scratch.next_db_data, next_db_data);
-  modify_field(seq_xts_status_desc_scratch.barco_desc_addr, barco_desc_addr);
   modify_field(seq_xts_status_desc_scratch.barco_pndx_addr, barco_pndx_addr);
+  modify_field(seq_xts_status_desc_scratch.barco_pndx_shadow_addr, barco_pndx_shadow_addr);
   modify_field(seq_xts_status_desc_scratch.barco_desc_size, barco_desc_size);
   modify_field(seq_xts_status_desc_scratch.barco_pndx_size, barco_pndx_size);
-  modify_field(seq_xts_status_desc_scratch.filler, filler);
+  modify_field(seq_xts_status_desc_scratch.barco_ring_size, barco_ring_size);
   modify_field(seq_xts_status_desc_scratch.status_hbm_addr, status_hbm_addr);
   modify_field(seq_xts_status_desc_scratch.status_host_addr, status_host_addr);
   modify_field(seq_xts_status_desc_scratch.intr_addr, intr_addr);
@@ -552,8 +556,10 @@ action seq_xts_status_desc_handler(next_db_addr, next_db_data,
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(storage_kivec4.barco_ring_addr, seq_xts_status_desc_scratch.next_db_addr);
   modify_field(storage_kivec4.barco_pndx_addr, seq_xts_status_desc_scratch.barco_pndx_addr);
+  modify_field(storage_kivec4.barco_pndx_shadow_addr, seq_xts_status_desc_scratch.barco_pndx_shadow_addr);
   modify_field(storage_kivec4.barco_desc_size, seq_xts_status_desc_scratch.barco_desc_size);
   modify_field(storage_kivec4.barco_pndx_size, seq_xts_status_desc_scratch.barco_pndx_size);
+  modify_field(storage_kivec4.barco_ring_size, seq_xts_status_desc_scratch.barco_ring_size);
   modify_field(storage_kivec5.intr_addr, seq_xts_status_desc_scratch.intr_addr);
   modify_field(storage_kivec5.status_dma_en, seq_xts_status_desc_scratch.status_dma_en);
   modify_field(storage_kivec5.next_db_en, seq_xts_status_desc_scratch.next_db_en);

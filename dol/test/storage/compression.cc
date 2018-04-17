@@ -301,6 +301,7 @@ comp_queue_t::comp_queue_t(uint64_t cfg_q_base,
     curr_push_type(COMP_QUEUE_PUSH_INVALID)
 {
     q_size = size == 0 ? kMaxSubqEntries : size;
+    shadow_pd_idx_mem = new dp_mem_t(1, sizeof(uint32_t));
 
     // If comp was initialized by HAL, q_base_mem below would be used
     // as descriptor cache for sequencer submission.
@@ -341,11 +342,11 @@ comp_queue_t::push(const cp_desc_t& src_desc,
         seq_comp_desc->clear();
         seq_comp_desc->write_bit_fields(0, 64, host_mem_v2p(dst_desc));
         seq_comp_desc->write_bit_fields(64, 34, cfg_q_pd_idx);
-        seq_comp_desc->write_bit_fields(98, 4, (uint8_t)log2(sizeof(*dst_desc)));
-        seq_comp_desc->write_bit_fields(102, 3, (uint8_t)log2(sizeof(uint32_t)));
-
-        // skip 1 filler bit
-        seq_comp_desc->write_bit_fields(106, 34, q_base_mem_pa);
+        seq_comp_desc->write_bit_fields(98, 34, shadow_pd_idx_mem->pa());
+        seq_comp_desc->write_bit_fields(132, 4, (uint8_t)log2(sizeof(*dst_desc)));
+        seq_comp_desc->write_bit_fields(136, 3, (uint8_t)log2(sizeof(uint32_t)));
+        seq_comp_desc->write_bit_fields(139, 5, (uint8_t)log2(q_size));
+        seq_comp_desc->write_bit_fields(144, 34, q_base_mem_pa);
 
         // Sequencer queue depth is limited and should be taken into
         // considerations when using batch mode.
@@ -361,10 +362,10 @@ comp_queue_t::push(const cp_desc_t& src_desc,
         // Indicate Barco batch mode only as instructed;
         // Otherwise, simply defer the push as seen below
         if (push_type != COMP_QUEUE_PUSH_SEQUENCER_DEFER) {
-            seq_comp_desc->write_bit_fields(140, 16, pd_idx);
-            seq_comp_desc->write_bit_fields(156, 1, 1); /* set barco_batch_mode */
+            seq_comp_desc->write_bit_fields(178, 16, pd_idx);
+            seq_comp_desc->write_bit_fields(194, 1, 1); /* set barco_batch_mode */
             if (push_type == COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST) {
-                seq_comp_desc->write_bit_fields(157, 1, 1); /* set barco_batch_last */
+                seq_comp_desc->write_bit_fields(195, 1, 1); /* set barco_batch_last */
             }
         }
 
@@ -378,6 +379,11 @@ comp_queue_t::push(const cp_desc_t& src_desc,
         write_mem(q_base_mem_pa + (curr_pd_idx * sizeof(cp_desc_t)),
                   (uint8_t *)&src_desc, sizeof(cp_desc_t));
         curr_pd_idx = (curr_pd_idx + 1) % q_size;
+
+        // since we didn't go thru sequencer here, ensure the shadow pindex
+        // maintains up-to-date value
+        *((uint32_t *)shadow_pd_idx_mem->read()) = curr_pd_idx;
+        shadow_pd_idx_mem->write_thru();
         if (push_type == COMP_QUEUE_PUSH_HW_DIRECT) {
             write_reg(cfg_q_pd_idx, curr_pd_idx);
             curr_push_type = COMP_QUEUE_PUSH_INVALID;
@@ -401,9 +407,20 @@ comp_queue_t::post_push(void)
 {
     switch (curr_push_type) {
 
-    case COMP_QUEUE_PUSH_SEQUENCER_DEFER:
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH:
     case COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST:
+
+        // maintain up-to-date value for shadow pindex in batch mode
+        // as P4+ code takes a different path that does not read/update
+        // the shadow pindex
+        *((uint32_t *)shadow_pd_idx_mem->read()) = curr_pd_idx;
+        shadow_pd_idx_mem->write_thru();
+
+        /*
+         * Fall through!!!
+         */
+
+    case COMP_QUEUE_PUSH_SEQUENCER_DEFER:
         test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, 
                            curr_seq_comp_qid, 0,
                            curr_seq_comp_pd_idx);
@@ -435,26 +452,40 @@ compression_buf_init()
                                   DP_MEM_ALIGN_PAGE);
     compressed_host_buf = new dp_mem_t(1, kUncompressedDataSize + sizeof(cp_hdr_t),
                                        DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
-    status_buf = new dp_mem_t(1, sizeof(cp_status_sha512_t));
-    status_buf2 = new dp_mem_t(1, sizeof(cp_status_sha512_t));
+    status_buf = new dp_mem_t(1, sizeof(cp_status_sha512_t),
+                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                              kMinHostMemAllocSize);
+    status_buf2 = new dp_mem_t(1, sizeof(cp_status_sha512_t),
+                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                               kMinHostMemAllocSize);
     status_host_buf = new dp_mem_t(1, sizeof(cp_status_sha512_t),
-                                   DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                   kMinHostMemAllocSize);
     status_host_buf2 = new dp_mem_t(1, sizeof(cp_status_sha512_t),
-                                    DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                                    DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                    kMinHostMemAllocSize);
     opaque_host_buf = new dp_mem_t(1, sizeof(uint64_t),
-                                   DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                   kMinHostMemAllocSize);
     host_sgl1 = new dp_mem_t(1, sizeof(cp_sgl_t),
-                             DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                             DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                             sizeof(cp_sgl_t));
     host_sgl2 = new dp_mem_t(1, sizeof(cp_sgl_t),
-                             DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                             DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                             sizeof(cp_sgl_t));
     host_sgl3 = new dp_mem_t(1, sizeof(cp_sgl_t),
-                             DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                             DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                             sizeof(cp_sgl_t));
     host_sgl4 = new dp_mem_t(1, sizeof(cp_sgl_t),
-                             DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
-    seq_sgl = new dp_mem_t(1, sizeof(cp_sq_ent_sgl_t));
+                             DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                             sizeof(cp_sgl_t));
+    seq_sgl = new dp_mem_t(1, sizeof(cp_sq_ent_sgl_t),
+                           DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                           sizeof(cp_sq_ent_sgl_t));
 
     xts_status_host_buf = new dp_mem_t(1, sizeof(uint64_t),
-                                       DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                                       DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                       kMinHostMemAllocSize);
     comp_pad_buf = new dp_mem_t(1, 4096, DP_MEM_ALIGN_PAGE);
 
     // Pre-fill input buffers.
@@ -1138,18 +1169,24 @@ int _max_data_rate(comp_queue_push_t push_type,
                                                    DP_MEM_ALIGN_PAGE);
   dp_mem_t *max_cp_compressed_buf = new dp_mem_t(MAX_CP_REQ, kCompAppNominalSize,
                                                  DP_MEM_ALIGN_PAGE);
-  dp_mem_t *max_cp_status_buf = new dp_mem_t(MAX_CP_REQ, sizeof(cp_status_sha512_t));
+  dp_mem_t *max_cp_status_buf = new dp_mem_t(MAX_CP_REQ, CP_STATUS_PAD_ALIGNED_SIZE,
+                                             DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                                             kMinHostMemAllocSize);
   dp_mem_t *max_dc_uncompressed_buf = new dp_mem_t(MAX_DC_REQ, kCompAppNominalSize,
                                                    DP_MEM_ALIGN_PAGE);
-  dp_mem_t *max_dc_status_buf = new dp_mem_t(MAX_DC_REQ, sizeof(cp_status_sha512_t));
-
+  dp_mem_t *max_dc_status_buf = new dp_mem_t(MAX_DC_REQ, CP_STATUS_PAD_ALIGNED_SIZE,
+                                             DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                                             kMinHostMemAllocSize);
   // allocate opaque tags as a byte stream for easy memcmp
   dp_mem_t *max_cp_opaque_host_buf = new dp_mem_t(1, MAX_CP_REQ * sizeof(uint64_t),
-                                                  DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                                                  DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                                  kMinHostMemAllocSize);
   dp_mem_t *exp_opaque_data_buf = new dp_mem_t(1, MAX_CP_REQ * sizeof(uint64_t),
-                                               DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                               kMinHostMemAllocSize);
   dp_mem_t *max_dc_opaque_host_buf = new dp_mem_t(1, MAX_DC_REQ * sizeof(uint64_t),
-                                                  DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                                                  DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                                  kMinHostMemAllocSize);
   uint32_t exp_opaque_data = 0xa5a5a5a5;
 
   // Note that RTL expects each opaque tag as uint64_t and writes
