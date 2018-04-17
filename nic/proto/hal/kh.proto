@@ -76,21 +76,12 @@ message L2SegmentKeyHandle {
   }
 }
 
-// SecurityRuleKeyHandle uniquely identifies a security rule and is used
-// to create/update/delete/get secutiry rules
-message SecurityRuleKeyHandle {
-  oneof rule_key_or_handle {
-    uint64              security_rule_id     = 1;  // rule id idenfied by a number
-    fixed64             security_rule_handle = 2;  // handle for security rule returned by 
-  }
-}
-
 message SecurityPolicyKey {
   uint64       security_policy_id  = 1;
   VrfKeyHandle vrf_id_or_handle    = 2;
 }
 
-// SecurityPolicyKeyHandle uniquely identifies a security rule and is used
+// SecurityPolicyKeyHandle uniquely identifies a security policy and is used
 // to create/update/delete/get secutiry rules
 message SecurityPolicyKeyHandle {
   oneof policy_key_or_handle {
@@ -237,12 +228,18 @@ message GftExactMatchFlowEntryKeyHandle {
   }
 }
 
-// NatRuleKeyHandle uniquely identifies a NAT rule and is used
+// Key for the NAT policy
+message NATPolicyKey {
+  uint64          nat_policy_id     = 1;    // NAT policy id
+  VrfKeyHandle    vrf_key_or_handle = 2;    // VRF key or handle
+}
+
+// NatPolicyKeyHandle uniquely identifies a NAT policy and is used
 // to create/update/delete/get NAT rules
-message NatRuleKeyHandle {
+message NatPolicyKeyHandle {
   oneof key_or_handle {
-    uint64     rule_id     = 1;  // rule id idenfied by a number
-    fixed64    rule_handle = 2;  // handle for NAT rule returned by HAL
+    NATPolicyKey    policy_key    = 1;  // key for the NAT policy
+    fixed64         policy_handle = 2;  // handle for NAT policy returned by hal
   }
 }
 

@@ -300,7 +300,7 @@ enum FirewallAction {
 message Service {
   types.IPProtocol           ip_protocol   = 1;    // IP protocol
   oneof l4_info {
-    uint32                 dst_port      = 2;    // TCP or UDP port, 
+    uint32                 dst_port      = 2;    // TCP or UDP port,
     types.ICMPMsgType      icmp_msg_type = 3;
   }
   ALGName                    alg           = 4;                //  Identifies ALG name
@@ -324,7 +324,7 @@ message FirewallRuleSpec {
     repeated  Service   svc                = 2;    // application service
     repeated  string    apps               = 3;    // For appid based policy enforcement
     FirewallAction      action             = 4;    // action to take
-    bool                log                = 5;    // log if this rule is hit 
+    bool                log                = 5;    // log if this rule is hit
 }
 
 // ingress policy for the security group
@@ -508,7 +508,7 @@ message ICMPMsg {
 message DoSService {
     types.IPProtocol           ip_protocol   = 1;    // IP protocol
     oneof l4_info {
-        uint32                 dst_port      = 2;    // TCP or UDP port, 
+        uint32                 dst_port      = 2;    // TCP or UDP port,
                                                      // 0 for other protocols
         ICMPMsg                icmp_msg      = 3;
     }
@@ -782,7 +782,7 @@ message AppGroup {
     AppGroupStatus      status    = 3;
 }
 
-// AppSec represents an application 
+// AppSec represents an application
 enum SecurityAction {
     SECURITY_RULE_ACTION_NONE   = 0;
     SECURITY_RULE_ACTION_ALLOW  = 1;
@@ -805,7 +805,7 @@ message SecurityRuleAction {
 message SecurityRuleSpec {
     uint64                          rule_id            = 1;
     bool                            enable             = 2;        // enable/disable
-    SecurityRuleAction              action             = 3;        // action related to the rule 
+    SecurityRuleAction              action             = 3;        // action related to the rule
     bool                            count              = 4;        // Enable count of packets hitting the rule
     repeated Application            app                = 5;        // applications, if any, to invoke ALG
     repeated AppGroup               app_group          = 6;        // Comment TBD
@@ -837,7 +837,7 @@ message SecurityPolicyStatus {
     fixed64  security_policy_handle  = 1; // id of the security policy returned by HAL
 }
 
-// SecurityPolicyResponse is the response to SecurityPolicyRequest 
+// SecurityPolicyResponse is the response to SecurityPolicyRequest
 message SecurityPolicyResponse {
     types.ApiStatus       api_status         = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
     SecurityPolicyStatus  policy_status      = 2;  // operational status
@@ -848,10 +848,10 @@ message SecurityPolicyResponseMsg {
 }
 
 
-// SecurityPolicyDeleteRequest is used to delete a security rule 
+// SecurityPolicyDeleteRequest is used to delete a security rule
 message SecurityPolicyDeleteRequest {
     types.ObjectMeta                meta                  = 1; // object meta
-    kh.SecurityPolicyKeyHandle      policy_key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""]; // policy_handle 
+    kh.SecurityPolicyKeyHandle      policy_key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""]; // policy_handle
 }
 
 // SecurityPolicyDeleteRequestMsg is used to delete a batch of security policy
@@ -868,7 +868,7 @@ message SecurityPolicyDeleteResponseMsg {
     repeated SecurityPolicyDeleteResponse response = 1;  // API status code
 }
 
-// SecurityPolicyGet is used to get information about a security policy 
+// SecurityPolicyGet is used to get information about a security policy
 message SecurityPolicyGetRequest {
     types.ObjectMeta              meta          = 1; // object meta
     // key_or_handle is the security policy's unique identifier

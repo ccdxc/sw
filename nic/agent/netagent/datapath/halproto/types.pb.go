@@ -25,7 +25,7 @@
 		l2segment.proto
 		l4lb.proto
 		multicast.proto
-		nat.proto.draft
+		nat.proto
 		nic.proto
 		nw.proto
 		nwsec.proto
@@ -374,7 +374,6 @@
 		RouteKey
 		RouteKeyHandle
 		L2SegmentKeyHandle
-		SecurityRuleKeyHandle
 		SecurityPolicyKey
 		SecurityPolicyKeyHandle
 		SecurityGroupPolicyId
@@ -395,7 +394,8 @@
 		GftExactMatchProfileKeyHandle
 		GftHeaderTranspositionProfileKeyHandle
 		GftExactMatchFlowEntryKeyHandle
-		NatRuleKeyHandle
+		NATPolicyKey
+		NatPolicyKeyHandle
 		Svc
 		NatVpnMappingKeyHandle
 		IpsecRuleKeyHandle
@@ -466,15 +466,21 @@
 		MulticastEntryGetResponseMsg
 		NatPool
 		NatRuleSpec
-		NatRuleRequestMsg
-		NatRuleStatus
-		NatRuleResponse
-		NatRuleResponseMsg
-		NatRuleGetRequest
-		NatRuleGetRequestMsg
+		NatPolicySpec
+		NatPolicyRequestMsg
+		NatPolicyStatus
+		NatPolicyResponse
+		NatPolicyResponseMsg
+		NatPolicyDeleteRequest
+		NatPolicyDeleteRequestMsg
+		NatPolicyDeleteResponse
+		NatPolicyDeleteResponseMsg
+		NatPolicyGetRequest
+		NatPolicyGetRequestMsg
 		NatRuleStats
-		NatRuleGetResponse
-		NatRuleGetResponseMsg
+		NatPolicyStats
+		NatPolicyGetResponse
+		NatPolicyGetResponseMsg
 		NatVpnMappingSpec
 		NatVpnMappingRequestMsg
 		NatVpnMappingStatus

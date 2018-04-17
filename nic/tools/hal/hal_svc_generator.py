@@ -38,7 +38,7 @@ from tenjin import *
 from tenjin_wrapper import *
 
 def file_skip(name):
-    skip_list = ['port', 'quiesce', 'debug', 'barco_rings', 'event', 'interface_pb2.py', 'proxy_pb2.py', 'wring', 'rdma', 'telemetry_pb2.py', 'system', 'session_pb2.py', 'rawrcb', 'swphv', 'nat_pb2', 'ipsec_pb2' ]
+    skip_list = ['port', 'quiesce', 'debug', 'barco_rings', 'event', 'interface_pb2.py', 'proxy_pb2.py', 'wring', 'rdma', 'telemetry_pb2.py', 'system', 'session_pb2.py', 'rawrcb', 'swphv', 'ipsec_pb2' ]
 
     if not name.endswith(".py") or "grpc" in name:
         return True
@@ -110,7 +110,7 @@ def genSvcFiles(suffix):
         dic = {}
         dic['fileName'] = fileName;
         dic['enumCount'] = enumCount;
-        
+
 
         with open(out_file, "w") as of:
             render_template(of, template, dic, './', prefix=tenjin_prefix)
@@ -118,7 +118,7 @@ def genSvcFiles(suffix):
         for service in fileModule.DESCRIPTOR.services_by_name.items():
             for method in service[1].methods_by_name.items():
                 enumCount = enumCount + 3
-            
+
         of.close()
 
 genSvcFiles('hpp')

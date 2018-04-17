@@ -31,6 +31,7 @@
 #include "nic/hal/src/internal/proxyccb.hpp"
 #include "nic/hal/src/internal/crypto_cert_store.hpp"
 #include "nic/hal/src/gft/gft.hpp"
+#include "nic/hal/src/nat/nat.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "sdk/twheel.hpp"
 #include "sdk/shmmgr.hpp"
@@ -289,6 +290,12 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       sizeof(hal::nwsec_group_t), 64,
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_GROUP] != NULL), false);
+
+    slabs_[HAL_SLAB_NAT_RULE] =
+        slab::factory("nat_rule", HAL_SLAB_NAT_RULE,
+                      sizeof(hal::nat_rule_t), 64,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_RULE] != NULL), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
@@ -1640,6 +1647,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY:
         g_hal_state->gft_exact_match_flow_entry_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NAT_RULE:
+        g_hal_state->nat_rule_slab()->free(elem);
         break;
 
     default:

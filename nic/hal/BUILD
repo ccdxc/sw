@@ -72,6 +72,7 @@ cc_library(
     glob(["src/mcast/*.cc"]) +
     glob(["src/lif/*.cc"]) +
     glob(["src/firewall/*.cc"]) +
+    glob(["src/nat/*.cc"]) +
     glob(["src/dos/*.cc"]) +
     glob(["src/utils/*.cc"]) +
     glob(["src/gft/*.cc"]),
@@ -89,6 +90,7 @@ cc_library(
     glob(["src/mcast/*.hpp"]) +
     glob(["src/lif/*.hpp"]) +
     glob(["src/firewall/*.hpp"]) +
+    glob(["src/nat/*.hpp"]) +
     glob(["src/dos/*.hpp"]) +
     glob(["src/utils/*.hpp"]) +
     glob(["src/gft/*.hpp"]) +
@@ -149,6 +151,7 @@ cc_library(
         glob(["src/mcast/*.hpp"]) +
         glob(["src/lif/*.hpp"]) +
         glob(["src/firewall/*.hpp"]) +
+        glob(["src/nat/*.hpp"]) +
         glob(["src/dos/*.hpp"]) +
         glob(["src/utils/*.hpp"]) +
         glob(["src/gft/*.hpp"]) +
