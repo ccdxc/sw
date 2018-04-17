@@ -477,7 +477,7 @@ class RdmaQstateObject(object):
     def set_cindex(self, ring, value):
         assert(ring < 7)
         setattr(self.data, 'c_index%d' % ring, value)
-        self.Write()
+        self.WriteWithDelay()
 
     def set_ring_base(self, value):
         self.data.ring_base = value
@@ -501,12 +501,12 @@ class RdmaQstateObject(object):
     def reset_cindex(self, ring):
         assert(ring < 7)
         self.set_cindex(ring, self.get_pindex(ring))
-        self.Write()
+        self.WriteWithDelay()
 
     def ArmCq(self):
         assert(self.queue_type == 'RDMA_CQ')
         setattr(self.data, 'arm', 1)
-        self.Write()
+        self.WriteWithDelay()
 
     def Show(self, lgh = logger):
         lgh.ShowScapyObject(self.data) 
