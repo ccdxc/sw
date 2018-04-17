@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : BASE_PKT2 # Base packet
@@ -32,7 +32,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : EXP_PKT1 # Base packet
@@ -65,7 +65,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=0
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT1/rawbytes
 
     - packet:
         id          : EXP_PKT2 # Base packet
@@ -99,14 +99,14 @@ packets:
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
                 a       : 1                
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT2/rawbytes
 
 buffers:
     - buffer:
         id      : BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=BASE_PKT1/size
@@ -129,7 +129,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=BUF/address
                   len : ref://testcase/buffers/id=BUF/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
 
 trigger:
     descriptors:

@@ -19,9 +19,6 @@ def TestCaseSetup(tc):
     tc.pvtdata.va = 0x0102030405060708
     tc.pvtdata.r_key = 2
     tc.pvtdata.swap_or_add_data = 999
-    tc.pvtdata.slab_1 = rs.lqp.pd.ep.GetNewSlab()  
-    tc.pvtdata.mr_slab_1 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_1.GID())                           
-
     return
 
 def TestCaseTrigger(tc):

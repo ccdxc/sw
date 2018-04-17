@@ -60,7 +60,7 @@ buffers:
         id      : BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : 2500
@@ -83,7 +83,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=BUF/address
                   len : ref://testcase/buffers/id=BUF/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
 
 trigger:
     descriptors:

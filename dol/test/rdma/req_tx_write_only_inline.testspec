@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : EXP_PKT_BASE # Base packet
@@ -58,7 +58,7 @@ packets:
                 dma_len : 32
                 r_key   : ref://testcase/pvtdata/r_key
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
     - packet:
         id          : EXP_PKT
@@ -87,7 +87,7 @@ buffers:
         id      : BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=BASE_PKT/size

@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : SEND_MID_PYLD # Base packet
@@ -32,7 +32,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : SEND_LAST_PYLD # Base packet
@@ -40,7 +40,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : WRITE_FIRST_PYLD # Base packet
@@ -48,7 +48,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : WRITE_MID_PYLD # Base packet
@@ -56,7 +56,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : WRITE_LAST_PYLD # Base packet
@@ -64,7 +64,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
 
     - packet:
@@ -73,7 +73,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : READ_RESP_MID1_PYLD # Base packet
@@ -81,7 +81,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : READ_RESP_MID2_PYLD # Base packet
@@ -89,7 +89,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : READ_RESP_LAST_PYLD # Base packet
@@ -97,7 +97,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : SEND_FIRST # Base packet
@@ -555,7 +555,7 @@ buffers:
         id      : SEND_BUF1
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=SEND_FIRST_PYLD/size
@@ -568,7 +568,7 @@ buffers:
         id      : SEND_BUF2
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 2112
            segments:
                - size    : 100
@@ -578,7 +578,7 @@ buffers:
         id      : SEND_BUF3
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetSlab/id=SEND_BUF2
            offset  : 2400
            segments:
                - size    : 525
@@ -591,7 +591,7 @@ buffers:
         id      : WRITE_BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetSlab/id=SEND_BUF2
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=WRITE_FIRST_PYLD/size
@@ -607,7 +607,7 @@ buffers:
         id      : READ_BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=READ_RESP_FIRST_PYLD/size
@@ -650,13 +650,13 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=SEND_BUF1/address
                   len : ref://testcase/buffers/id=SEND_BUF1/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_BUF1
                 - va  : ref://testcase/buffers/id=SEND_BUF2/address
                   len : ref://testcase/buffers/id=SEND_BUF2/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_BUF2
                 - va  : ref://testcase/buffers/id=SEND_BUF3/address
                   len : ref://testcase/buffers/id=SEND_BUF3/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_BUF2
 
     - descriptor:
         id      : WRITE_DESC
@@ -674,7 +674,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=WRITE_BUF/address
                   len : ref://testcase/buffers/id=WRITE_BUF/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_BUF2
 
     - descriptor:
         id      : READ_DESC
@@ -692,7 +692,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=READ_BUF/address
                   len : ref://testcase/buffers/id=READ_BUF/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=READ_BUF
 
     - descriptor:
         id      : EXP_READ_DESC

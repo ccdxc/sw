@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : EXP_PKT # Base packet
@@ -60,14 +60,14 @@ packets:
             immdt:
                 imm_data: ref://testcase/pvtdata/imm_data
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
 buffers:
     - buffer:
         id      : BUF1
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : 300
@@ -77,29 +77,32 @@ buffers:
         id      : BUF2
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : 280
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+                 offset  : 300
     - buffer:
         id      : BUF3
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           slab    : callback://rdma/rdma/GetSlab/id=BUF1
            offset  : 300
            segments:
                - size    : 203
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+                 offset  : 580
     - buffer:
         id      : BUF4
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetSlab/id=BUF2
            offset  : 280
            segments:
                - size    : 222 
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+                 offset  : 783
 
 descriptors:
     - descriptor:
@@ -116,16 +119,16 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=BUF1/address
                   len : ref://testcase/buffers/id=BUF1/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF1
                 - va  : ref://testcase/buffers/id=BUF2/address
                   len : ref://testcase/buffers/id=BUF2/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF2
                 - va  : ref://testcase/buffers/id=BUF3/address
                   len : ref://testcase/buffers/id=BUF3/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF1
                 - va  : ref://testcase/buffers/id=BUF4/address
                   len : ref://testcase/buffers/id=BUF4/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF2
 
 trigger:
     descriptors:

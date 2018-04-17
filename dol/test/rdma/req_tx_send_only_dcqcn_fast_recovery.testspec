@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : EXP_PKT_1 # Base packet
@@ -58,7 +58,7 @@ packets:
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=0
                 a       : 1                
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
     - packet:
         id          : EXP_PKT_2 # Base packet
@@ -92,7 +92,7 @@ packets:
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
                 a       : 1                
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
     - packet:
         id          : EXP_PKT_3 # Base packet
@@ -126,7 +126,7 @@ packets:
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=2
                 a       : 1                
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
     - packet:
         id          : EXP_PKT_4 # Base packet
@@ -160,7 +160,7 @@ packets:
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=3
                 a       : 1                
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
 descriptors:
     - descriptor:

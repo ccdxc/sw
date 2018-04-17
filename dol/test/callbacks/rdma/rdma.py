@@ -317,3 +317,16 @@ def GetRandomPacketLen(testcase, packet):
     randlen = randint(64, 1000)
     logger.info("GetRandomPacketLen: Packet random len %d" % (randlen))
     return randlen
+
+def GetNewSlab(testcase, buffers):
+    return testcase.config.rdmasession.lqp.pd.ep.GetNewSlab()
+
+def GetMrSlabLkey(testcase, descriptor, args):
+    if args == None: return None    
+    slab_id = testcase.buffers.Get(args.id).slab_id
+    if slab_id == None: return None
+    return testcase.config.rdmasession.lqp.pd.mrs.Get('MR-' + slab_id.GID()).lkey
+
+def GetSlab(testcase, buffers, args):
+    if args == None: return None
+    return testcase.buffers.Get(args.id).slab_id

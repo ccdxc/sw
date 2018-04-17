@@ -21,16 +21,16 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
 
     - packet:
         id          : EXP_PKT_BASE # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         headers     :
@@ -56,7 +56,7 @@ packets:
                 psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
                 a       : 1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
 
     - packet:
@@ -139,7 +139,7 @@ buffers:
         id      : BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=BASE_PKT/size
@@ -159,7 +159,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=BUF/address
                   len : ref://testcase/buffers/id=BUF/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
 
     - descriptor:
         id      : EXP_CQ_DESC

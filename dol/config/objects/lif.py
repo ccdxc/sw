@@ -84,7 +84,7 @@ class LifObject(base.ConfigObjectBase):
             self.cqid_allocator = objects.TemplateFieldObject("range/0/16384")
             self.eqid_allocator = objects.TemplateFieldObject("range/0/256")
             self.pd_allocator = objects.TemplateFieldObject("range/0/128")
-            self.mr_key_allocator = objects.TemplateFieldObject("range/0/1024")
+            self.mr_key_allocator = objects.TemplateFieldObject("range/0/8192")
 
         if hasattr(spec, 'rss') and spec.rss.enable:
             self.rss_enable = True

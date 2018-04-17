@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : EXP_PKT # Base packet
@@ -58,14 +58,14 @@ packets:
                 psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
                 a       : 1                
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
 buffers:
     - buffer:
         id      : BUF1
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : 40
@@ -75,11 +75,12 @@ buffers:
         id      : BUF2
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 40
            segments:
                - size    : 24
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+                 offset  : 40
 
 descriptors:
     - descriptor:
@@ -95,10 +96,10 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=BUF1/address
                   len : ref://testcase/buffers/id=BUF1/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF1
                 - va  : ref://testcase/buffers/id=BUF2/address
                   len : ref://testcase/buffers/id=BUF2/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF2
 
 trigger:
     descriptors:

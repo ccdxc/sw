@@ -38,8 +38,8 @@ ptseg_loop:
     // page_bytes = min(transfer_bytes, (pt_info_p->page_size - page_offset))
     sll        r5, 1, K_LOG_PAGE_SIZE
     sub        r5, r5, r2
-    slt        c1, K_PT_BYTES, r5
-    cmov       r5, c1, K_PT_BYTES, r5
+    slt        c1, r4, r5
+    cmov       r5, c1, r4, r5
 
     // get DMA cmd entry based on dma_cmd_index
     DMA_CMD_I_BASE_GET(r7, r6, REQ_RX_DMA_CMD_START_FLIT_ID, r3)

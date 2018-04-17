@@ -23,7 +23,7 @@ class MrObject(base.ConfigObjectBase):
         self.pd = pd
         self.slab = slab
         self.lkey = pd.ep.intf.lif.GetMrKey()
-        self.rkey = self.lkey+512
+        self.rkey = self.lkey + 4096
         self.id = slab.id
         if id_substr:
             mr_id = ("MR-%s-%s" % (id_substr, self.slab.GID()))
@@ -37,9 +37,9 @@ class MrObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        logger.info("MR: %s PD: %s SLAB: %s LIF: %s" %\
+        logger.info("MR: %s PD: %s SLAB: %s LIF: %s lkey: %s local_wr %s" %\
                     (self.GID(), self.pd.GID(), self.slab.GID(),
-                     self.pd.ep.intf.lif.hw_lif_id))
+                     self.pd.ep.intf.lif.hw_lif_id, self.lkey, self.local_wr))
 
         if (GlobalOptions.dryrun): return
 

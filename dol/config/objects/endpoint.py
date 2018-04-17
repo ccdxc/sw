@@ -282,7 +282,7 @@ class EndpointObject(base.ConfigObjectBase):
         self.obj_helper_pd.Configure()
 
     def CreateSlabs(self, spec):
-        self.slab_allocator = objects.TemplateFieldObject("range/0/1024")
+        self.slab_allocator = objects.TemplateFieldObject("range/0/2048")
         self.slabs = objects.ObjectDatabase()
         self.obj_helper_slab = slab.SlabObjectHelper()
         self.obj_helper_slab.Generate(self, spec)

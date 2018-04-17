@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : BASE_PKT2 # Base packet
@@ -32,7 +32,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : BASE_PKT3 # Base packet
@@ -40,7 +40,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : EXP_PKT1 # Base packet
@@ -142,7 +142,7 @@ packets:
             ieth:
                 r_key   : ref://testcase/pvtdata/inv_r_key
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT3/rawbytes
 
 
 buffers:
@@ -170,7 +170,8 @@ buffers:
            offset  : 2269
            segments:
                - size    : 131
-                 data    : ref://testcase/packets/id=BASE_PKT1/rawbytes
+                 data    : ref://testcase/packets/id=BASE_PKT3/rawbytes
+                 offset  : 221
 
     - buffer:
         id      : BUF3
@@ -181,6 +182,7 @@ buffers:
            segments:
                - size    : 162
                  data    : ref://testcase/packets/id=BASE_PKT3/rawbytes
+                 offset  : 352
 
     - buffer:
         id      : BUF4
@@ -191,6 +193,7 @@ buffers:
            segments:
                - size    : 274
                  data    : ref://testcase/packets/id=BASE_PKT3/rawbytes
+                 offset  : 514
 
 descriptors:
     - descriptor:

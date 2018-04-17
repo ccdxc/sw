@@ -18,6 +18,7 @@ class RdmaBufferObject(base.FactoryObjectBase):
         self.offset = 0
         self.segments = []
         self.address = 0
+        self.slab_id = None
 
     def Init(self, spec):
         #self.LockAttributes()
@@ -26,13 +27,15 @@ class RdmaBufferObject(base.FactoryObjectBase):
        
         for segment in spec.fields.segments:
             skip_bytes = segment.skip if hasattr(segment, 'skip') else 0
+            offset = segment.offset if hasattr(segment, 'offset') else 0
             self.size += (segment.size - skip_bytes) if hasattr(segment, 'size') else 0
-            self.data += segment.data[:len(segment.data)-skip_bytes] if (hasattr(segment, 'data') and segment.data) else []
+            self.data += segment.data[offset:len(segment.data)-skip_bytes] if (hasattr(segment,'data') and segment.data) else []
             #handle segment.offset 
 
         #self.size = spec.fields.size if hasattr(spec.fields, 'size') else 0
         #self.data = spec.fields.data if hasattr(spec.fields, 'data') else [] 
         # Offset of the data
+        self.slab_id = spec.fields.slab
         self.offset = spec.fields.offset if hasattr(spec.fields, 'offset') else 0 
         self.address = spec.fields.slab.address if spec.fields.slab else 0
         self.address += self.offset
