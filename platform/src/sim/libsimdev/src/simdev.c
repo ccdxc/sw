@@ -106,6 +106,17 @@ void simdev_hal_create_eq(void *cmd,
     }
 }
 
+void simdev_hal_create_ah(void *cmd,
+                          void *comp,
+                          u_int32_t *done)
+{
+    simdev_api_t *api = simdevinfo_api();
+
+    if (api && api->hal_create_ah) {
+        return api->hal_create_ah(cmd, comp, done);
+    }
+}
+
 void simdev_hal_create_mr(void *cmd,
                           void *comp,
                           u_int32_t *done)

@@ -5,6 +5,9 @@
 void hal_create_eq_wrapper(struct create_eq_cmd  *cmd,
                            struct admin_comp     *comp,
                            u_int32_t             *done);
+void hal_create_ah_wrapper(struct create_ah_cmd  *cmd,
+                           struct create_ah_comp *comp,
+                           u_int32_t             *done);
 void hal_create_mr_wrapper(struct create_mr_cmd  *cmd,
                            struct create_mr_comp *comp,
                            u_int32_t             *done);

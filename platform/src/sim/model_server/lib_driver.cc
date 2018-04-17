@@ -215,6 +215,66 @@ void hal_create_eq (struct create_eq_cmd  *cmd,
     return;
 }
 
+void hal_create_ah(struct create_ah_cmd  *cmd,
+                   struct create_ah_comp *comp,
+                   hal_req_resp_t        *item)
+{
+    shared_ptr<Rdma::Stub> rdma_svc = GetRdmaStub();
+
+    ClientContext context;
+    RdmaAhRequestMsg request;
+    RdmaAhResponseMsg response;
+
+    struct rdma_create_ah_data *data =
+        reinterpret_cast<struct rdma_create_ah_data *>(item->header);
+
+    RdmaAhSpec *spec = request.add_request();
+
+    spec->set_smac(data->smac, sizeof(data->smac));
+    spec->set_dmac(data->dmac, sizeof(data->dmac));
+    spec->set_ethtype(data->ethtype);
+
+    if (data->vlan != 0xffff) {
+        spec->set_vlan(data->vlan);
+        spec->set_vlan_pri(data->vlan_pri);
+        spec->set_vlan_cfi(data->vlan_cfi);
+    }
+
+    spec->set_ip_ver(data->ip_ver);
+    spec->set_ip_tos(data->ip_tos);
+    spec->set_ip_ttl(data->ip_ttl);
+    if (data->ip_ver == 4) {
+        spec->mutable_ip_saddr()->set_v4_addr(data->ip.v4.saddr);
+        spec->mutable_ip_daddr()->set_v4_addr(data->ip.v4.daddr);
+    } else {
+        spec->mutable_ip_saddr()->set_v6_addr(data->ip.v6.saddr, sizeof(data->ip.v6.saddr));
+        spec->mutable_ip_daddr()->set_v6_addr(data->ip.v6.daddr, sizeof(data->ip.v6.daddr));
+    }
+
+    spec->set_udp_sport(data->udp_sport);
+    spec->set_udp_dport(data->udp_dport);
+
+    Status status = rdma_svc->RdmaAhCreate(&context, request, &response);
+    if (!status.ok()) {
+        cout << "lib_driver.cc: hal_create_ah error: "
+            << status.error_code() << ": " << status.error_message() << endl;
+
+        comp->status = status.error_code();
+        *item->done = 1;
+        return;
+    }
+
+    RdmaAhResponse ah_response = response.response(0);
+    comp->len = ah_response.ah_size();
+    comp->handle = ah_response.ah_handle();
+    comp->status = ah_response.api_status();
+
+    cout << "lib_driver.cc: hal_create_ah comp status: " << comp->status << endl;
+
+    *item->done = 1;
+    return;
+}
+
 void hal_create_mr (struct create_mr_cmd  *cmd,
                     struct create_mr_comp *comp,
                     hal_req_resp_t        *item)
@@ -554,6 +614,12 @@ public:
                               &req);
                 break;
 
+            case CMD_OPCODE_RDMA_CREATE_AH:
+                hal_create_ah((struct create_ah_cmd *)&req.cmd,
+                              (struct create_ah_comp *)&req.comp,
+                              &req);
+                break;
+
             case CMD_OPCODE_RDMA_CREATE_MR:
                 hal_create_mr((struct create_mr_cmd *)&req.cmd,
                               (struct create_mr_comp *)&req.comp,
@@ -618,6 +684,32 @@ extern "C" void hal_create_eq_wrapper (struct create_eq_cmd  *cmd,
     memcpy(&item.comp, comp, sizeof(*comp));
 
     item.done = done;
+
+    reqBuf.add(item);
+    comp->status = 0;
+}
+
+extern "C" void hal_create_ah_wrapper (struct create_ah_cmd  *cmd,
+                                       struct create_ah_comp *comp,
+                                       u_int32_t             *done)
+{
+    hal_req_resp_t item;
+    size_t padded_size;
+
+    std::cout << "Queing Req with opcode %d: " << cmd->opcode << std::endl;
+
+    memset(&item, 0, sizeof(item));
+    memcpy(&item.cmd, cmd, sizeof(*cmd));
+    memcpy(&item.comp, comp, sizeof(*comp));
+    item.done = done;
+
+    item.header_template_size = sizeof(struct rdma_create_ah_data);
+    padded_size = (item.header_template_size + 7) & ~7;
+
+    /* XXX I guess we just leak this buffer... where is delete[]? */
+    item.header = new unsigned char[padded_size];
+
+    simdev_read_host_mem(cmd->hdr_info, item.header, padded_size);
 
     reqBuf.add(item);
     comp->status = 0;

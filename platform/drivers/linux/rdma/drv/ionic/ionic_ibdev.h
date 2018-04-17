@@ -187,7 +187,9 @@ struct ionic_qp {
 
 struct ionic_ah {
 	struct ib_ah		ibah;
-	u32			avid;
+	u32			ahid;
+	/* XXX driver should alloc ah id */
+	u32			len;
 };
 
 struct ionic_mr {

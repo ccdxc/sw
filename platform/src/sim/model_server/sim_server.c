@@ -172,6 +172,7 @@ static simdev_api_t sim_server_api = {
     .host_read_mem = sim_server_read_clientmem,
     .host_write_mem = sim_server_write_clientmem,
     .hal_create_eq = hal_create_eq_wrapper,
+    .hal_create_ah = hal_create_ah_wrapper,
     .hal_create_mr = hal_create_mr_wrapper,
     .hal_create_cq = hal_create_cq_wrapper,
     .hal_create_qp = hal_create_qp_wrapper,

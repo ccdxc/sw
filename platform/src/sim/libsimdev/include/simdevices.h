@@ -16,6 +16,8 @@ extern "C" {
 
 struct admin_comp;
 struct create_eq_cmd;
+struct create_ah_cmd;
+struct create_ah_comp;
 struct create_mr_cmd;
 struct create_mr_comp;
 struct create_cq_cmd;
@@ -42,6 +44,9 @@ typedef struct simdev_api_s {
                           const size_t size);
     void (*hal_create_eq)(struct create_eq_cmd *cmd,
                           struct admin_comp *comp,
+                          u_int32_t *done);
+    void (*hal_create_ah)(struct create_ah_cmd *cmd,
+                          struct create_ah_comp *comp,
                           u_int32_t *done);
     void (*hal_create_mr)(struct create_mr_cmd *cmd,
                           struct create_mr_comp *comp,

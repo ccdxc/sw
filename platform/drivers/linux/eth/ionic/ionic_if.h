@@ -57,7 +57,9 @@ enum cmd_opcode {
 	CMD_OPCODE_RDMA_MODIFY_QP		= 60,
 	CMD_OPCODE_RDMA_DESTROY_QP		= 61,
 	CMD_OPCODE_RDMA_QUERY_PORT		= 62,
-	CMD_OPCODE_RDMA_LAST_CMD		= 63, //Keep this as last rdma cmd
+	CMD_OPCODE_RDMA_CREATE_AH		= 63,
+	CMD_OPCODE_RDMA_DESTROY_AH		= 64,
+	CMD_OPCODE_RDMA_LAST_CMD		= 65, //Keep this as last rdma cmd
 
 	CMD_OPCODE_DEBUG_Q_DUMP			= 0xf0,
 };
@@ -1115,6 +1117,65 @@ struct create_eq_cmd {
 	u8 rsvd[48];
 };
 
+/* XXX to be replaced by header template */
+struct rdma_create_ah_data {
+	u8 smac[8];
+	u8 dmac[8];
+	u32 ethtype;
+	u32 vlan; // special value 0xffff disables 802.1q header
+	u32 vlan_pri;
+	u32 vlan_cfi;
+	u32 ip_ver;
+	u32 ip_tos;
+	u32 ip_ttl;
+	union {
+		struct {
+			u32 saddr;
+			u32 daddr;
+		} v4;
+		struct {
+			u8 saddr[16];
+			u8 daddr[16];
+		} v6;
+	} ip;
+	u32 udp_sport;
+	u32 udp_dport;
+};
+
+/**
+ * struct rdma_create_ah_cmd - Create Address Handle command
+ * @opcode:        opcode = 63
+ * @pd_id:	protection domain id
+ * @hdr_info:	dma addr of rdma_create_ah_data buffer
+ *		(XXX replace ah data with header template)
+ **/
+struct create_ah_cmd {
+	u16 opcode;
+	u16 rsvd;
+	u32 pd_id;
+	u64 hdr_info;
+	u8 rsvd2[48];
+};
+
+/**
+ * rdma_create_ah_comp - create_ah command completion
+ * @status:        Status of the command.
+ *                  0 - Successful completion
+ * @len:	Opaque value identifying the AH on the device
+ * @handle:	Opaque value identifying the AH on the device
+ *
+ * The AH is identified by the vector <handle,len>.
+ *
+ * TODO: the driver should alloc the ah id, like other resources.
+ * The completion should only indicate status.
+ **/
+struct create_ah_comp {
+	u32 status:8;
+	u32 rsvd:24;
+	u32 len;
+	u64 handle;
+};
+
 /**
  * struct rdma_create_mr_cmd - Create Memory registration command
  * @opcode:        opcode = 54
@@ -1330,6 +1391,7 @@ union adminq_cmd {
 	struct rss_indir_set_cmd rss_indir_set;
 	struct debug_q_dump_cmd debug_q_dump;
 	struct create_eq_cmd create_eq;
+	struct create_ah_cmd create_ah;
 	struct create_mr_cmd create_mr;
 	struct create_cq_cmd create_cq;
 	struct create_qp_cmd create_qp;
@@ -1346,6 +1408,7 @@ union adminq_comp {
 	struct rx_filter_comp rx_filter;
 	struct stats_dump_comp stats_dump;
 	struct debug_q_dump_comp debug_q_dump;
+	struct create_ah_comp create_ah;
 	struct create_mr_comp create_mr;
 	struct create_cq_comp create_cq;
 	struct create_qp_comp create_qp;

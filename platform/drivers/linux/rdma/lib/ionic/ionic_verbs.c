@@ -968,8 +968,9 @@ static int ionic_prep_send_ud(struct ionic_qp *qp,
 
 	/* XXX endian? */
 	wqe->u.non_atomic.wqe.ud_send.q_key = wr->wr.ud.remote_qkey;
+	wqe->u.non_atomic.wqe.ud_send.ah_size = ah->len;
 	wqe->u.non_atomic.wqe.ud_send.dst_qp = wr->wr.ud.remote_qpn;
-	wqe->u.non_atomic.wqe.ud_send.ah_handle = ah->avid;
+	wqe->u.non_atomic.wqe.ud_send.ah_handle = ah->ahid;
 
 	return 0;
 }
@@ -1367,8 +1368,30 @@ static int ionic_post_srq_recv(struct ibv_srq *ibsrq, struct ibv_recv_wr *wr,
 static struct ibv_ah *ionic_create_ah(struct ibv_pd *ibpd,
 				      struct ibv_ah_attr *attr)
 {
-	IONIC_LOG("");
-	errno = ENOSYS;
+	struct ionic_ah *ah;
+	struct ionic_ah_resp resp;
+	int rc;
+
+	ah = calloc(1, sizeof(*ah));
+	if (!ah) {
+		rc = errno;
+		goto err_ah;
+	}
+
+	rc = ibv_cmd_create_ah(ibpd, &ah->ibah, attr,
+			       &resp.resp, sizeof(resp));
+	if (rc)
+		goto err_cmd;
+
+	ah->ahid = resp.ahid;
+	ah->len = resp.len;
+
+	return &ah->ibah;
+
+err_cmd:
+	free(ah);
+err_ah:
+	errno = rc;
 	return NULL;
 }
 

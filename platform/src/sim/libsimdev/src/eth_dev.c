@@ -578,6 +578,17 @@ devcmd_create_eq (struct admin_cmd  *acmd,
 }
 
 static void
+devcmd_create_ah (struct admin_cmd  *acmd,
+                  struct admin_comp *acomp,
+                  u_int32_t         *done)
+{
+    struct create_ah_cmd *cmd = (void *)acmd;
+    struct create_ah_comp *comp = (void *)acomp;
+
+    simdev_hal_create_ah(cmd, comp, done);
+}
+
+static void
 devcmd_create_mr (struct admin_cmd  *acmd,
                   struct admin_comp *acomp,
                   u_int32_t         *done)
@@ -699,6 +710,10 @@ devcmd(struct dev_cmd_regs *dc)
 
     case CMD_OPCODE_RDMA_CREATE_EQ:
         devcmd_create_eq(cmd, comp, &dc->done);
+        break;
+
+    case CMD_OPCODE_RDMA_CREATE_AH:
+        devcmd_create_ah(cmd, comp, &dc->done);
         break;
 
     case CMD_OPCODE_RDMA_CREATE_MR:
