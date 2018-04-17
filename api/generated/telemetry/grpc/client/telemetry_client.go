@@ -620,13 +620,13 @@ func (a *restObjFwlogPolicyV1FwlogPolicy) Watch(ctx context.Context, options *ap
 func (a *restObjFwlogPolicyV1FwlogPolicy) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
-		return true
+		return false
 	case apiserver.UpdateOper:
 		return true
 	case apiserver.GetOper:
 		return true
 	case apiserver.DeleteOper:
-		return true
+		return false
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
@@ -789,13 +789,13 @@ func (a *restObjStatsPolicyV1StatsPolicy) Watch(ctx context.Context, options *ap
 func (a *restObjStatsPolicyV1StatsPolicy) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
-		return true
+		return false
 	case apiserver.UpdateOper:
 		return true
 	case apiserver.GetOper:
 		return true
 	case apiserver.DeleteOper:
-		return true
+		return false
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:

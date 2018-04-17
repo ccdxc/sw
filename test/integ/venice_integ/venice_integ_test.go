@@ -44,8 +44,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"reflect"
+
 	"github.com/pensando/sw/nic/agent/netagent/protos"
+
 	. "github.com/pensando/sw/venice/utils/testutils"
+
+	"github.com/pensando/sw/venice/ctrler/tpm"
 )
 
 // integ test suite parameters
@@ -69,6 +74,7 @@ type veniceIntegSuite struct {
 	apiGw          apigw.APIGateway
 	certSrv        *certsrv.CertSrv
 	ctrler         *npm.Netctrler
+	tpm            *tpm.PolicyManager
 	agents         []*netagent.Agent
 	datapaths      []*datapath.Datapath
 	datapathKind   datapath.Kind
@@ -227,6 +233,12 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	it.apisrvClient = apicl
 	time.Sleep(time.Millisecond * 100)
 
+	// create tpm
+	rs := resolver.New(&resolver.Config{Name: globals.Tpm, Servers: []string{resolverServer.GetListenURL()}})
+	tpm, err := tpm.NewPolicyManager(rs)
+	c.Assert(err, IsNil)
+	it.tpm = tpm
+
 	it.vcHub.SetUp(c, it.numAgents)
 }
 
@@ -253,6 +265,7 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	it.datapaths = []*datapath.Datapath{}
 
 	// stop server and client
+	it.tpm.Stop()
 	it.ctrler.Stop()
 	it.ctrler = nil
 	it.apiSrv.Stop()
@@ -362,4 +375,48 @@ func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
 		return true, nil
 	}, "Deleted nwif still exists")
 
+}
+
+// test tpm
+func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
+	tenantName := "tenant-1"
+	// create a tenant
+	_, err := it.createTenant(tenantName)
+	AssertOk(c, err, "Error creating tenant")
+
+	AssertEventually(c, func() (bool, interface{}) {
+		sp, err := it.getStatsPolicy(tenantName)
+		if err == nil {
+			Assert(c, reflect.DeepEqual(sp.GetSpec(), tpm.DefaultStatsSpec),
+				fmt.Sprintf("stats spec didn't match: got %+v, expectd %+v",
+					sp.GetSpec(), tpm.DefaultStatsSpec))
+			return true, nil
+		}
+		return false, nil
+	}, "failed to create stats policy")
+
+	AssertEventually(c, func() (bool, interface{}) {
+		fp, err := it.getFwlogPolicy(tenantName)
+		if err == nil {
+			Assert(c, reflect.DeepEqual(fp.GetSpec(), tpm.DefaultFwlogSpec),
+				fmt.Sprintf("fwlog spec didn't match: got %+v, expectd %+v", fp.GetSpec(), tpm.DefaultFwlogSpec))
+			return true, nil
+		}
+		return false, nil
+	}, "failed to create fwlog policy")
+
+	_, err = it.deleteTenant(tenantName)
+	AssertOk(c, err, "Error deleting tenant")
+
+	AssertEventually(c, func() (bool, interface{}) {
+		_, err := it.getStatsPolicy(tenantName)
+		return err != nil, nil
+
+	}, "failed to delete stats policy")
+
+	AssertEventually(c, func() (bool, interface{}) {
+		_, err := it.getFwlogPolicy(tenantName)
+		return err != nil, nil
+
+	}, "failed to delete fwlog policy")
 }

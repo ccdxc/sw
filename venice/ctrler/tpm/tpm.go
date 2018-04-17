@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 // watch and process telemetry policies
 
-package policymgr
+package tpm
 
 import (
 	"context"
@@ -9,8 +9,12 @@ import (
 	"reflect"
 	"time"
 
+	"encoding/json"
+	"net/http"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/telemetry"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -36,7 +40,7 @@ type PolicyManager struct {
 	policyDb *memdb.Memdb
 }
 
-const pkgName = "PolicyManager"
+const pkgName = "tpm"
 const maxRetry = 15
 
 var pmLog vLog.Logger
@@ -47,6 +51,8 @@ func NewPolicyManager(nsClient resolver.Interface) (*PolicyManager, error) {
 	pmLog = vLog.WithContext("pkg", pkgName)
 	pm := &PolicyManager{nsClient: nsClient,
 		policyDb: memdb.NewMemdb()}
+
+	go pm.HandleEvents()
 	return pm, nil
 }
 
@@ -62,9 +68,11 @@ func (pm *PolicyManager) HandleEvents() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	pm.cancel = cancel
 
+	defer pm.cancel()
+
 	for {
 		if pm.client, err = pm.initGrpcClient(globals.APIServer, maxRetry); err != nil {
-			return err
+			pmLog.Fatalf("failed to init grpc client %s", err)
 		}
 		pmLog.Infof("connected to {%s}", globals.APIServer)
 
@@ -75,7 +83,7 @@ func (pm *PolicyManager) HandleEvents() error {
 
 		// context canceled, return
 		if err := ctx.Err(); err != nil {
-			pmLog.Infof("policy watcher context error: %v, exit", err)
+			pmLog.Warnf("policy watcher context error: %v, exit", err)
 			return nil
 		}
 		time.Sleep(2 * time.Second)
@@ -144,6 +152,18 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 		Dir:  reflect.SelectRecv,
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
+	// watch tenants
+	watcher, err = pm.client.TenantV1().Tenant().Watch(ctx, &opts)
+	if err != nil {
+		pmLog.Errorf("failed to watch tenant, error: {%s}", err)
+		return err
+	}
+
+	watchList[len(selCases)] = "tenant"
+	selCases = append(selCases, reflect.SelectCase{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(watcher.EventChan())})
+
 	// ctx done
 	watchList[len(selCases)] = "ctx-canceled"
 	selCases = append(selCases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ctx.Done())})
@@ -173,6 +193,9 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 
 		case *telemetry.FwlogPolicy:
 			pm.processFwlogPolicy(event.Type, polObj)
+
+		case *network.Tenant:
+			pm.processTenants(ctx, event.Type, polObj)
 
 		default:
 			pmLog.Errorf("invalid event type received from {%s}, %+v", watchList[id], event)
@@ -239,4 +262,109 @@ func (pm *PolicyManager) processExportPolicy(eventType kvstore.WatchEventType, p
 		pmLog.Errorf("invalid stats event, type %s policy %+v", eventType, policy)
 		return fmt.Errorf("invalid event")
 	}
+}
+
+// DefaultStatsSpec default stats policy spec
+var DefaultStatsSpec telemetry.StatsSpec = telemetry.StatsSpec{
+	RetentionTime:           "48hrs",
+	DownSampleRetentionTime: "7days",
+}
+
+// DefaultFwlogSpec default firewall log policy spec
+var DefaultFwlogSpec telemetry.FwlogSpec = telemetry.FwlogSpec{
+	RetentionTime: " 48hrs",
+}
+
+// process tenants
+func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.WatchEventType, tenant *network.Tenant) error {
+	pmLog.Infof("process tenant event:{%v} {%#v} ", eventType, tenant)
+
+	switch eventType {
+	case kvstore.Created:
+		// create stats policy
+		statsPolicy := &telemetry.StatsPolicy{
+			ObjectMeta: api.ObjectMeta{
+				Name:   tenant.GetName(),
+				Tenant: tenant.GetName(),
+			},
+			Spec: DefaultStatsSpec,
+		}
+
+		if _, err := pm.client.StatsPolicyV1().StatsPolicy().Get(ctx, &statsPolicy.ObjectMeta); err != nil {
+			if _, err := pm.client.StatsPolicyV1().StatsPolicy().Create(ctx, statsPolicy); err != nil {
+				pmLog.Errorf("failed to create stats policy for tenant %s, error: %s", tenant.GetName(), err)
+				return err
+			}
+		}
+
+		// create fwlog policy
+		fwlogPolicy := &telemetry.FwlogPolicy{
+			ObjectMeta: api.ObjectMeta{
+				Name:   tenant.GetName(),
+				Tenant: tenant.GetName(),
+			},
+			Spec: DefaultFwlogSpec,
+		}
+
+		if _, err := pm.client.FwlogPolicyV1().FwlogPolicy().Get(ctx, &fwlogPolicy.ObjectMeta); err != nil {
+			if _, err := pm.client.FwlogPolicyV1().FwlogPolicy().Create(ctx, fwlogPolicy); err != nil {
+				pmLog.Errorf("failed to create fwlog policy for tenant %s, error: %s", tenant.GetName(), err)
+				return err
+			}
+		}
+	case kvstore.Updated: // no-op
+
+	case kvstore.Deleted:
+		// delete stats policy
+		objMeta := &api.ObjectMeta{
+			Name:   tenant.GetName(),
+			Tenant: tenant.GetName(),
+		}
+
+		if _, err := pm.client.StatsPolicyV1().StatsPolicy().Delete(ctx, objMeta); err != nil {
+			pmLog.Errorf("failed to delete stats policy for tenant %s, error: %s", tenant.GetName(), err)
+			return err
+		}
+
+		// delete fwlog policy
+		if _, err := pm.client.FwlogPolicyV1().FwlogPolicy().Delete(ctx, objMeta); err != nil {
+			pmLog.Errorf("failed to delete fwlog policy for tenant %s, error: %s", tenant.GetName(), err)
+			return err
+		}
+	default:
+		return fmt.Errorf("invalid tenant event type %s", eventType)
+	}
+
+	return nil
+}
+
+// create/update database in Citadel
+func (pm *PolicyManager) updateDatabase(tenantName string, dbName string,
+	retentionTime string, downSampleRetention string) error {
+	pmLog.Infof("update db tenant: %s, db: %s, retention: %s, dretention: %s",
+		tenantName, dbName, retentionTime, downSampleRetention)
+	return nil
+}
+
+// delete database in Citadel
+func (pm *PolicyManager) deleteDatabase(tenantName string, dbName string) error {
+	pmLog.Infof("delete db tenant: %s, db: %s, retention: %s, dretention: %s",
+		tenantName, dbName)
+	return nil
+}
+
+// Debug dump all policy cache for debug
+func (pm *PolicyManager) Debug(w http.ResponseWriter, r *http.Request) {
+	policyNames := []string{"StatsPolicy", "FwlogPolicy", "FlowExportPolicy"}
+	policyData := map[string]map[string]memdb.Object{}
+
+	for _, key := range policyNames {
+		policyData[key] = map[string]memdb.Object{}
+
+		pl := pm.policyDb.ListObjects(key)
+		for _, p := range pl {
+			policyData[key][p.GetObjectMeta().GetName()] = p
+		}
+	}
+	json.NewEncoder(w).Encode(policyData)
 }

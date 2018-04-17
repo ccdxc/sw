@@ -1,4 +1,4 @@
-package policymgr
+package tpm
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/telemetry"
 	mockapi "github.com/pensando/sw/api/mock"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -153,6 +154,14 @@ func (m *mockExportV1) FlowExportPolicy() telemetry.FlowExportPolicyV1FlowExport
 	return m.mExp
 }
 
+type mockTenantV1 struct {
+	mTnt network.TenantV1TenantInterface
+}
+
+func (m mockTenantV1) Tenant() network.TenantV1TenantInterface {
+	return m.mTnt
+}
+
 func TestProcessEvents(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -175,6 +184,10 @@ func TestProcessEvents(t *testing.T) {
 	eV1 := &mockExportV1{}
 	mEvp := mockapi.NewMockFlowExportPolicyV1FlowExportPolicyInterface(ctrl)
 	eV1.mExp = mEvp
+
+	tV1 := &mockTenantV1{}
+	mTnt := mockapi.NewMockTenantV1TenantInterface(ctrl)
+	tV1.mTnt = mTnt
 
 	mapi := mockapi.NewMockServices(ctrl)
 	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
@@ -201,13 +214,34 @@ func TestProcessEvents(t *testing.T) {
 
 	mSp.EXPECT().Watch(ctx, opts).Return(statsEvent, nil).Times(1)
 	mFp.EXPECT().Watch(ctx, opts).Return(fwlogEvent, nil).Times(1)
-	mEvp.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("failed to watch export"))
+	mEvp.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("mock flowexport failure")).Times(1)
+
 	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
 	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
 	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
 
 	err = pa.processEvents(parentCtx)
 	tu.Assert(t, err != nil, "missed export failure")
+
+	// tenant errors
+	statsEvent.EXPECT().EventChan().Return(nil).Times(1)
+	fwlogEvent.EXPECT().EventChan().Return(nil).Times(1)
+	flowExpEvent := mockkvs.NewMockWatcher(ctrl)
+	flowExpEvent.EXPECT().EventChan().Return(nil).Times(1)
+
+	mSp.EXPECT().Watch(ctx, opts).Return(statsEvent, nil).Times(1)
+	mFp.EXPECT().Watch(ctx, opts).Return(fwlogEvent, nil).Times(1)
+	mEvp.EXPECT().Watch(ctx, opts).Return(flowExpEvent, nil).Times(1)
+	mTnt.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("mock tenant failure")).Times(1)
+
+	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
+	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
+	mapi.EXPECT().TenantV1().Return(tV1).Times(1)
+
+	err = pa.processEvents(parentCtx)
+	tu.Assert(t, err != nil, "missed tenant failure")
+
 }
 
 func TestEventLoop(t *testing.T) {
@@ -235,6 +269,10 @@ func TestEventLoop(t *testing.T) {
 	mEvp := mockapi.NewMockFlowExportPolicyV1FlowExportPolicyInterface(ctrl)
 	eV1.mExp = mEvp
 
+	tV1 := mockTenantV1{}
+	mTenant := mockapi.NewMockTenantV1TenantInterface(ctrl)
+	tV1.mTnt = mTenant
+
 	mapi := mockapi.NewMockServices(ctrl)
 	pa.client = mapi
 
@@ -251,11 +289,17 @@ func TestEventLoop(t *testing.T) {
 	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
 	mFp.EXPECT().Watch(gomock.Any(), opts).Return(fwlogEvent, nil).Times(1)
 
-	// exp watch
+	// export watch
 	expEvent := mockkvs.NewMockWatcher(ctrl)
 	expEvent.EXPECT().EventChan().Return(nil).Times(1)
 	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
 	mEvp.EXPECT().Watch(gomock.Any(), opts).Return(expEvent, nil).Times(1)
+
+	// tenant watch
+	tenantWatch := mockkvs.NewMockWatcher(ctrl)
+	tenantWatch.EXPECT().EventChan().Return(nil).Times(1)
+	mapi.EXPECT().TenantV1().Return(tV1).Times(1)
+	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
 
 	// close stats channel
 	close(statsCh)
@@ -281,6 +325,12 @@ func TestEventLoop(t *testing.T) {
 	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
 	mEvp.EXPECT().Watch(gomock.Any(), opts).Return(expEvent, nil).Times(1)
 
+	// watch tenants
+	tenantCh := make(chan *kvstore.WatchEvent, 2)
+	tenantWatch.EXPECT().EventChan().Return(tenantCh).Times(1)
+	mapi.EXPECT().TenantV1().Return(tV1).Times(1)
+	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
+
 	// stats event
 	statsCh <- &kvstore.WatchEvent{Object: &telemetry.StatsPolicy{}}
 
@@ -289,6 +339,9 @@ func TestEventLoop(t *testing.T) {
 
 	// export event
 	flowExpCh <- &kvstore.WatchEvent{Object: &telemetry.FlowExportPolicy{}}
+
+	// tenant event
+	tenantCh <- &kvstore.WatchEvent{Object: &network.Tenant{}}
 
 	// send invalid event type
 	statsCh <- &kvstore.WatchEvent{}
@@ -309,6 +362,11 @@ func TestEventLoop(t *testing.T) {
 	expEvent.EXPECT().EventChan().Return(flowExpCh).Times(1)
 	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
 	mEvp.EXPECT().Watch(gomock.Any(), opts).Return(expEvent, nil).Times(1)
+
+	// tenant watch
+	tenantWatch.EXPECT().EventChan().Return(tenantCh).Times(1)
+	mapi.EXPECT().TenantV1().Return(tV1).Times(1)
+	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
 
 	// cancel context
 	go func() {
@@ -334,6 +392,11 @@ func TestEventLoop(t *testing.T) {
 	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
 	mEvp.EXPECT().Watch(gomock.Any(), opts).Return(expEvent, nil).Times(1)
 
+	// tenant watch
+	tenantWatch.EXPECT().EventChan().Return(tenantCh).Times(1)
+	mapi.EXPECT().TenantV1().Return(tV1).Times(1)
+	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
+
 	nCtx, nCancel := context.WithCancel(context.Background())
 	pa.cancel = nCancel
 
@@ -345,6 +408,73 @@ func TestEventLoop(t *testing.T) {
 
 	err = pa.processEvents(nCtx)
 	tu.Assert(t, err != nil, "failed to test event error")
+
+}
+
+func TestProcessTenant(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parentCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	r := mockresolver.New()
+	pa, err := NewPolicyManager(r)
+	tu.AssertOk(t, err, "failed to create policy manager")
+
+	mapi := mockapi.NewMockServices(ctrl)
+	pa.client = mapi
+
+	sV1 := &mockStatsV1{}
+	mSp := mockapi.NewMockStatsPolicyV1StatsPolicyInterface(ctrl)
+	sV1.mStat = mSp
+
+	fV1 := &mockFwlogV1{}
+	mFp := mockapi.NewMockFwlogPolicyV1FwlogPolicyInterface(ctrl)
+	fV1.mFw = mFp
+
+	tenant := &network.Tenant{ObjectMeta: api.ObjectMeta{Name: "test-tenant"}}
+
+	// create failure
+	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(2)
+	mSp.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("no stats policy"))
+	mSp.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock stats error"))
+
+	err = pa.processTenants(parentCtx, kvstore.Created, tenant)
+	tu.Assert(t, err != nil, "failed to handle stats policy create error")
+
+	// create
+	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mSp.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, nil)
+
+	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(2)
+	mFp.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fwlog error"))
+	mFp.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fwlog error"))
+
+	err = pa.processTenants(parentCtx, kvstore.Created, tenant)
+	tu.Assert(t, err != nil, "failed to handle fwlog policy create error")
+
+	// update
+	err = pa.processTenants(parentCtx, kvstore.Updated, nil)
+	tu.AssertOk(t, err, "failed to porcess tenant update")
+
+	// delete failure
+	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mSp.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("stats policy error"))
+
+	err = pa.processTenants(parentCtx, kvstore.Deleted, tenant)
+	tu.Assert(t, err != nil, "failed to handle stats policy delete error")
+
+	// delete failure
+	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mSp.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
+
+	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
+	mFp.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fwlog policy error")).Times(1)
+
+	err = pa.processTenants(parentCtx, kvstore.Deleted, tenant)
+	tu.Assert(t, err != nil, "failed to handle fwlog policy delete error")
+
 }
 
 func TestClientRetry(t *testing.T) {

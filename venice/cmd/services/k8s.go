@@ -63,6 +63,13 @@ var logVolume = protos.ModuleSpec_Volume{
 	MountPath: "/var/log/pensando",
 }
 
+// runVolume is a volume to keep run time configs.
+var runVolume = protos.ModuleSpec_Volume{
+	Name:      "run",
+	HostPath:  "/var/run/pensando/",
+	MountPath: "/var/run/pensando/",
+}
+
 // k8sModules contain definitions of controller objects that need to deployed
 // through k8s.
 var k8sModules = map[string]protos.Module{
@@ -111,7 +118,7 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
 				// Volume definition for Filebeat config
-				&protos.ModuleSpec_Volume{
+				{
 					Name:      "configs",
 					HostPath:  globals.FilebeatConfigFile,
 					MountPath: "/usr/share/filebeat/filebeat.yml",
@@ -333,19 +340,19 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
 				// Volume definition for Elastic Discovery.
-				&protos.ModuleSpec_Volume{
+				{
 					Name:      "discovery",
 					HostPath:  "/etc/pensando/elastic-discovery",
 					MountPath: "/usr/share/elasticsearch/config/discovery-file",
 				},
 				// Volume definition for sourcing env variables
-				&protos.ModuleSpec_Volume{
+				{
 					Name:      "envvars",
 					HostPath:  globals.ElasticMgmtConfigFile,
 					MountPath: "/usr/share/elasticsearch/mgmt_env.sh",
 				},
 				// Volume definition for Elastic data storage
-				&protos.ModuleSpec_Volume{
+				{
 					Name:      "data",
 					HostPath:  globals.ElasticDataVolumeDir,
 					MountPath: "/usr/share/elasticsearch/data",
@@ -381,6 +388,7 @@ var k8sModules = map[string]protos.Module{
 			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
+				&runVolume,
 			},
 		},
 	},

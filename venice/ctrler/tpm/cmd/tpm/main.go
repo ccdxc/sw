@@ -7,7 +7,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pensando/sw/venice/ctrler/tpm/policymgr"
+	"net"
+	"net/http"
+
+	"github.com/gorilla/mux"
+
+	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -50,16 +55,23 @@ func main() {
 	log.Infof("starting telemetry controller with args : {%+v}", os.Args)
 	nsClient := resolver.New(&resolver.Config{Name: pkgName, Servers: strings.Split(*nsURLs, ",")})
 
-	// init policy watch
-	policyWatch, err := policymgr.NewPolicyManager(nsClient)
+	// init policy manager
+	pm, err := tpm.NewPolicyManager(nsClient)
 	if err != nil {
 		// let the scheduler restart tpm
 		log.Fatalf("failed to init policy agent, %s", err)
 	}
-	defer policyWatch.Stop()
 
-	if err := policyWatch.HandleEvents(); err != nil {
-		// let the scheduler restart tpm
-		log.Fatalf("%s", err)
+	// debug
+	router := mux.NewRouter()
+	router.HandleFunc("/debug", pm.Debug).Methods("GET")
+	// sudo curl --unix-socket /var/run/pensando/tpm.sock http://localhost/debug
+	l, err := net.Listen("unix", "/var/run/pensando/tpm.sock")
+
+	if err != nil {
+		log.Fatalf("failed to initialize debug, %s", err)
 	}
+	go log.Fatal(http.Serve(l, router))
+
+	select {}
 }

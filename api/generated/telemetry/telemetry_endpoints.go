@@ -1080,16 +1080,6 @@ func (r *EndpointsFwlogPolicyV1RestClient) getHTTPRequest(ctx context.Context, i
 }
 
 //
-func makeURIFwlogPolicyV1AutoAddFwlogPolicyCreateOper(in *FwlogPolicy) string {
-	return fmt.Sprint("/v1/fwlogPolicy", "/", in.Tenant, "/fwlogPolicy")
-}
-
-//
-func makeURIFwlogPolicyV1AutoDeleteFwlogPolicyDeleteOper(in *FwlogPolicy) string {
-	return fmt.Sprint("/v1/fwlogPolicy", "/", in.Tenant, "/fwlogPolicy/", in.Name)
-}
-
-//
 func makeURIFwlogPolicyV1AutoGetFwlogPolicyGetOper(in *FwlogPolicy) string {
 	return fmt.Sprint("/v1/fwlogPolicy", "/", in.Tenant, "/fwlogPolicy/", in.Name)
 }
@@ -1106,20 +1096,7 @@ func makeURIFwlogPolicyV1AutoUpdateFwlogPolicyUpdateOper(in *FwlogPolicy) string
 
 // AutoAddFwlogPolicy CRUD method for FwlogPolicy
 func (r *EndpointsFwlogPolicyV1RestClient) AutoAddFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
-	path := makeURIFwlogPolicyV1AutoAddFwlogPolicyCreateOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespFwlogPolicyV1AutoAddFwlogPolicy(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*FwlogPolicy), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateFwlogPolicy CRUD method for FwlogPolicy
@@ -1160,20 +1137,7 @@ func (r *EndpointsFwlogPolicyV1RestClient) AutoGetFwlogPolicy(ctx context.Contex
 
 // AutoDeleteFwlogPolicy CRUD method for FwlogPolicy
 func (r *EndpointsFwlogPolicyV1RestClient) AutoDeleteFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
-	path := makeURIFwlogPolicyV1AutoDeleteFwlogPolicyDeleteOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespFwlogPolicyV1AutoDeleteFwlogPolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*FwlogPolicy), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListFwlogPolicy CRUD method for FwlogPolicy
@@ -1672,46 +1636,23 @@ func (r *EndpointsStatsPolicyV1RestClient) getHTTPRequest(ctx context.Context, i
 }
 
 //
-func makeURIStatsPolicyV1AutoAddStatsPolicyCreateOper(in *StatsPolicy) string {
-	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/StatsPolicy")
-}
-
-//
-func makeURIStatsPolicyV1AutoDeleteStatsPolicyDeleteOper(in *StatsPolicy) string {
-	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/StatsPolicy/", in.Name)
-}
-
-//
 func makeURIStatsPolicyV1AutoGetStatsPolicyGetOper(in *StatsPolicy) string {
-	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/StatsPolicy/", in.Name)
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy/", in.Name)
 }
 
 //
 func makeURIStatsPolicyV1AutoListStatsPolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/StatsPolicy")
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy")
 }
 
 //
 func makeURIStatsPolicyV1AutoUpdateStatsPolicyUpdateOper(in *StatsPolicy) string {
-	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/StatsPolicy/", in.Name)
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy/", in.Name)
 }
 
 // AutoAddStatsPolicy CRUD method for StatsPolicy
 func (r *EndpointsStatsPolicyV1RestClient) AutoAddStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
-	path := makeURIStatsPolicyV1AutoAddStatsPolicyCreateOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespStatsPolicyV1AutoAddStatsPolicy(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*StatsPolicy), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateStatsPolicy CRUD method for StatsPolicy
@@ -1752,20 +1693,7 @@ func (r *EndpointsStatsPolicyV1RestClient) AutoGetStatsPolicy(ctx context.Contex
 
 // AutoDeleteStatsPolicy CRUD method for StatsPolicy
 func (r *EndpointsStatsPolicyV1RestClient) AutoDeleteStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
-	path := makeURIStatsPolicyV1AutoDeleteStatsPolicyDeleteOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespStatsPolicyV1AutoDeleteStatsPolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*StatsPolicy), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListStatsPolicy CRUD method for StatsPolicy

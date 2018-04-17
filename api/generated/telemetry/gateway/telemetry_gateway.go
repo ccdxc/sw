@@ -374,8 +374,6 @@ func (e *sFwlogPolicyV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
@@ -596,8 +594,6 @@ func (e *sStatsPolicyV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)

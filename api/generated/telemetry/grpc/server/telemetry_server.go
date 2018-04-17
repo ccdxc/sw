@@ -556,20 +556,12 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 
 		s.endpointsFwlogPolicyV1.fnAutoAddFwlogPolicy = srv.AddMethod("AutoAddFwlogPolicy",
 			apisrvpkg.NewMethod(s.Messages["telemetry.FwlogPolicy"], s.Messages["telemetry.FwlogPolicy"], "fwlogPolicy", "AutoAddFwlogPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(telemetry.FwlogPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "fwlogPolicy/", in.Tenant, "/fwlogPolicy/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsFwlogPolicyV1.fnAutoDeleteFwlogPolicy = srv.AddMethod("AutoDeleteFwlogPolicy",
 			apisrvpkg.NewMethod(s.Messages["telemetry.FwlogPolicy"], s.Messages["telemetry.FwlogPolicy"], "fwlogPolicy", "AutoDeleteFwlogPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(telemetry.FwlogPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "fwlogPolicy/", in.Tenant, "/fwlogPolicy/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsFwlogPolicyV1.fnAutoGetFwlogPolicy = srv.AddMethod("AutoGetFwlogPolicy",
@@ -677,20 +669,12 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 
 		s.endpointsStatsPolicyV1.fnAutoAddStatsPolicy = srv.AddMethod("AutoAddStatsPolicy",
 			apisrvpkg.NewMethod(s.Messages["telemetry.StatsPolicy"], s.Messages["telemetry.StatsPolicy"], "statsPolicy", "AutoAddStatsPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(telemetry.StatsPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/StatsPolicy/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsStatsPolicyV1.fnAutoDeleteStatsPolicy = srv.AddMethod("AutoDeleteStatsPolicy",
 			apisrvpkg.NewMethod(s.Messages["telemetry.StatsPolicy"], s.Messages["telemetry.StatsPolicy"], "statsPolicy", "AutoDeleteStatsPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(telemetry.StatsPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/StatsPolicy/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsStatsPolicyV1.fnAutoGetStatsPolicy = srv.AddMethod("AutoGetStatsPolicy",
@@ -699,7 +683,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/StatsPolicy/", in.Name), nil
+			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/statsPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsStatsPolicyV1.fnAutoListStatsPolicy = srv.AddMethod("AutoListStatsPolicy",
@@ -708,7 +692,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/StatsPolicy/", in.Name), nil
+			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/statsPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsStatsPolicyV1.fnAutoUpdateStatsPolicy = srv.AddMethod("AutoUpdateStatsPolicy",
@@ -717,7 +701,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/StatsPolicy/", in.Name), nil
+			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/statsPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsStatsPolicyV1.fnAutoWatchStatsPolicy = s.Messages["telemetry.StatsPolicy"].WatchFromKv
