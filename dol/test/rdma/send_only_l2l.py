@@ -13,15 +13,15 @@ def Setup(infra, module):
 
     logger.info("Iterator Selectors")
 
-    module.pvtdata.payloadlen = 32 # for inline data
+    module.pvtdata.payloadsize = 32 # for inline data
     if iterelem:
         if 'rdmasession' in iterelem.__dict__:
             if 'base' in iterelem.rdmasession.__dict__:
                 logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
                 module.testspec.selectors.rdmasession.base.Extend(iterelem.rdmasession.base)
 
-        if 'payloadlen' in iterelem.__dict__:
-            module.pvtdata.payloadlen = iterelem.payloadlen
+        if 'payloadsize' in iterelem.__dict__:
+            module.pvtdata.payloadsize = iterelem.payloadsize
     return
 
 def Teardown(infra, module):
@@ -64,11 +64,11 @@ def TestCaseSetup(tc):
     tc.pvtdata.rq_cq_pre_qstate = rs.rqp.rq_cq.qstate.data
 
 
-    # Read payloadlen from module into tc pvtdata, which is needed 
+    # Read payloadsize from module into tc pvtdata, which is needed 
     # for non-inline tests to sweep across diff pkt sizes for latency RTL tests
-    tc.pvtdata.payloadlen = tc.module.pvtdata.payloadlen
-    tc.pvtdata.num_total_bytes = tc.pvtdata.payloadlen
-    logger.info("RDMA TestCaseSetup() Module payloadlen: %d", tc.pvtdata.payloadlen)
+    tc.pvtdata.payloadsize = tc.module.pvtdata.payloadsize
+    tc.pvtdata.num_total_bytes = tc.pvtdata.payloadsize
+    logger.info("RDMA TestCaseSetup() Module payloadsize: %d" % tc.pvtdata.payloadsize)
 
     return
 
@@ -93,8 +93,11 @@ def TestCaseStepVerify(tc, step):
 
     elif step.step_id == 1:
         logger.info("RDMA TestCaseVerify() Step 1")
-        # verify that tx_psn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
+        num_pkts = (int)(((tc.pvtdata.payloadsize - 1) / rs.lqp.pmtu) + 1)
+        logger.info("KSMURTY num_pkts: %d" % num_pkts)
+
+        # verify that tx_psn is incremented by num_pkts
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', num_pkts):
             return False
         
         # verify that p_index is incremented by 1
@@ -158,20 +161,20 @@ def TestCaseStepVerify(tc, step):
         tc.pvtdata.rq_post_qstate = rs.rqp.rq.qstate.data
 
         ############     RQ VALIDATIONS #################
-        # verify that e_psn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 1):
+        # verify that e_psn is incremented by num_pkts
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', num_pkts):
             return False
 
         # verify that proxy_cindex is incremented by 1
         if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask, 1):
             return False
 
-        # verify that token_id is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 1):
+        # verify that token_id is incremented by num_pkts
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', num_pkts):
             return False
 
-        # verify that nxt_to_go_token_id is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
+        # verify that nxt_to_go_token_id is incremented by num_pkts
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', num_pkts):
             return False
 
         # verify that busy is 0
@@ -179,8 +182,8 @@ def TestCaseStepVerify(tc, step):
             return False
 
         ############     RQ STATS VALIDATIONS #################
-        # verify that num_pkts is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_pkts', 1):
+        # verify that num_pkts is incremented by num_pkts
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_pkts', num_pkts):
             return False
 
         # verify that num_bytes is incremented by pvtdata.num_total_bytes
@@ -191,12 +194,12 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_send_msgs', 1):
             return False
 
-        # verify that num_pkts_in_cur_msg is 1
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'num_pkts_in_cur_msg', 1):
+        # verify that num_pkts_in_cur_msg is num_pkts
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'num_pkts_in_cur_msg', num_pkts):
             return False
 
-        # verify that max_pkts_in_any_msg is 1
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'max_pkts_in_any_msg', max([1, tc.pvtdata.rq_pre_qstate.max_pkts_in_any_msg])):
+        # verify that max_pkts_in_any_msg is num_pkts
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'max_pkts_in_any_msg', max([num_pkts, tc.pvtdata.rq_pre_qstate.max_pkts_in_any_msg])):
             return False
 
         ############     CQ VALIDATIONS #################

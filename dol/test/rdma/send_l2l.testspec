@@ -21,7 +21,7 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://testcase/pvtdata/payloadlen #sweep thru payload length specified in mlist
+        payloadsize : ref://testcase/pvtdata/payloadsize #sweep thru payload length specified in mlist
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
