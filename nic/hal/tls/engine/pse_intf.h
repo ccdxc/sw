@@ -2,6 +2,8 @@
 #define __PSE_INTF_H__
 
 #include <openssl/evp.h>
+#include <openssl/ec.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif 
@@ -17,7 +19,8 @@ typedef struct PSE_rsa_key_st {
 } PSE_RSA_KEY;
 
 typedef struct PSE_ec_key_st {
-    
+    const EC_GROUP   *group;
+    const EC_POINT   *point;
 } PSE_EC_KEY;
 
 /* PSE Key Handle */

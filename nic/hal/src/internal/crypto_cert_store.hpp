@@ -4,6 +4,7 @@
 #include "nic/include/base.h"
 #include "nic/include/hal_state.hpp"
 #include <openssl/ossl_typ.h>
+#include <openssl/ec.h>
 
 namespace hal {
 
@@ -19,11 +20,17 @@ typedef struct crypto_key_pub_rsa_params_s {
     uint8_t                 e[CRYPTO_RSA_MAX_KEY_SIZE];
 } crypto_key_pub_rsa_params_t;
 
+typedef struct crypto_key_pub_ec_params_s {
+    const EC_GROUP          *group;
+    const EC_POINT          *point;
+} crypto_key_pub_ec_params_t;
+
 typedef struct crypto_key_pub_info_s {
     uint32_t                key_type; // key type based on openssl
     uint32_t                key_len;
     union {
         crypto_key_pub_rsa_params_t  rsa_params;
+        crypto_key_pub_ec_params_t   ec_params;
     } u;
 } crypto_key_pub_info_t;
 

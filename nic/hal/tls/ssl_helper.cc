@@ -72,8 +72,6 @@ SSLConnection::get_pse_key_rsa(PSE_KEY &pse_key,
                                const hal::tls_proxy_flow_info_t &tls_flow_cfg,
                                const hal::crypto_cert_t &cert) const
 {
-    pse_key.type = EVP_PKEY_RSA;
-    
     // n
     pse_key.u.rsa_key.rsa_n.len = cert.pub_key.u.rsa_params.mod_n_len;
     pse_key.u.rsa_key.rsa_n.data = (uint8_t *)cert.pub_key.u.rsa_params.mod_n;
@@ -82,11 +80,7 @@ SSLConnection::get_pse_key_rsa(PSE_KEY &pse_key,
     pse_key.u.rsa_key.rsa_e.len = cert.pub_key.u.rsa_params.e_len;
     pse_key.u.rsa_key.rsa_e.data = (uint8_t *)cert.pub_key.u.rsa_params.e;
 
-    // Key idx
-    pse_key.index = tls_flow_cfg.key_id;
-
-    HAL_TRACE_DEBUG("Received key index: {}, n {}, e: {}", 
-                    pse_key.index,
+    HAL_TRACE_DEBUG("Received  n {}, e: {}", 
                     pse_key.u.rsa_key.rsa_n.len,
                     pse_key.u.rsa_key.rsa_e.len);
 
@@ -104,10 +98,24 @@ SSLConnection::get_pse_key(PSE_KEY &pse_key,
         return HAL_RET_OK;
     }
     
+    pse_key.type = cert->pub_key.key_type;
+    // Key idx
+    pse_key.index = tls_flow_cfg->key_id;
+
+    HAL_TRACE_DEBUG("Received key type: {} index: {}",
+                    pse_key.type, pse_key.index);
+     
     switch(cert->pub_key.key_type) {
+
     case EVP_PKEY_RSA:
         ret = get_pse_key_rsa(pse_key, *tls_flow_cfg, *cert);
         break;
+       
+    case EVP_PKEY_EC:
+        pse_key.u.ec_key.group = cert->pub_key.u.ec_params.group;
+        pse_key.u.ec_key.point = cert->pub_key.u.ec_params.point;
+        break;
+
     default:
         break;
     }

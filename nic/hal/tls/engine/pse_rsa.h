@@ -9,7 +9,7 @@ typedef struct pse_rsa_ex_data_s {
 
 RSA_METHOD* pse_get_RSA_methods(void);
 void pse_free_RSA_methods(void);
-EVP_PKEY* pse_rsa_get_evp_key(ENGINE* engine, const char* key_id, 
-                              UI_METHOD *ui_method, PSE_KEY* key);
+EVP_PKEY* pse_rsa_get_evp_key(ENGINE* engine, PSE_KEY *key,
+                              UI_METHOD *ui_method, void *callback_data);
 
 #endif /* __PSE_EC_H__ */

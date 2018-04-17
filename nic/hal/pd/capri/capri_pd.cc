@@ -150,9 +150,23 @@ pd_capri_barco_asym_ecc_point_mul_p256 (pd_capri_barco_asym_ecc_point_mul_p256_a
 }
 
 hal_ret_t
+pd_capri_barco_asym_ecdsa_p256_setup_private_key(pd_capri_barco_asym_ecdsa_p256_setup_private_key_args_s *args)
+{
+    return capri_barco_asym_ecdsa_p256_setup_private_key(args->p,
+                                               args->n,
+                                               args->xg,
+                                               args->yg,
+                                               args->a,
+                                               args->b,
+                                               args->da,
+                                               args->key_idx);
+}
+
+hal_ret_t
 pd_capri_barco_asym_ecdsa_p256_sig_gen (pd_capri_barco_asym_ecdsa_p256_sig_gen_args_s *args)
 {
-    return capri_barco_asym_ecdsa_p256_sig_gen(args->p,
+    return capri_barco_asym_ecdsa_p256_sig_gen(args->key_idx,
+                                               args->p,
                                                args->n,
                                                args->xg,
                                                args->yg,

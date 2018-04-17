@@ -1,6 +1,3 @@
-
-
-
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -101,6 +98,7 @@ hal_ret_t crypto_asym_api_ecdsa_sig_gen(cryptoapis::CryptoApiRequest &req,
 
     switch (key_size) {
         case 32:
+            args.key_idx = req.ecdsa_sig_gen_fp().key_idx();
             args.p = (uint8_t *)req.ecdsa_sig_gen_fp().ecc_domain_params().p().data();
             args.n = (uint8_t *)req.ecdsa_sig_gen_fp().ecc_domain_params().n().data();
             args.xg = (uint8_t *)req.ecdsa_sig_gen_fp().ecc_domain_params().g().x().data();
@@ -281,6 +279,161 @@ hal_ret_t crypto_asym_api_rsa_crt_decrypt(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
+static hal_ret_t
+crypto_asym_api_setup_ec_priv_key(EVP_PKEY *pkey,
+                                  int32_t &key_idx)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    EC_KEY              *ec_key = NULL;
+    const EC_GROUP      *group = NULL;
+    const BIGNUM        *priv_key = NULL;
+    const EC_POINT      *ec_point = NULL;
+    BIGNUM              *p = NULL, *order = NULL;
+    BIGNUM              *xg = NULL, *yg = NULL;
+    BIGNUM              *a = NULL, *b = NULL;
+    BN_CTX              *ctx = NULL;
+    uint8_t             buf_p[256] = {0}, buf_n[256] = {0};
+    uint8_t             buf_xg[256] = {0}, buf_yg[256] = {0};
+    uint8_t             buf_a[256] = {0}, buf_b[256] = {0};
+    uint8_t             buf_da[256] = {0};
+    pd::pd_capri_barco_asym_ecdsa_p256_setup_private_key_args_t args = {0};
+    
+    if(!pkey)
+        return HAL_RET_INVALID_ARG;
+
+    ec_key = EVP_PKEY_get0_EC_KEY(pkey);
+    if(!ec_key) {
+        HAL_TRACE_ERR("Failed to get ec key");
+        return HAL_RET_ERR;
+    }
+    
+    group = EC_KEY_get0_group(ec_key);
+    priv_key = EC_KEY_get0_private_key(ec_key);
+    if(group == NULL || priv_key == NULL) {
+        HAL_TRACE_ERR("Failed to get the group/private key from the key");
+        return HAL_RET_ERR;
+    }
+
+    if((ec_point = EC_GROUP_get0_generator(group)) == NULL) {
+        HAL_TRACE_ERR("Failed to retrive ec_point");
+        return HAL_RET_ERR;
+    }
+
+    if((ctx = BN_CTX_new()) == NULL) {
+        HAL_TRACE_ERR("Failed to allocate BN ctx");
+        goto cleanup;
+    }
+
+    BN_CTX_start(ctx);
+    p = BN_CTX_get(ctx);
+    a = BN_CTX_get(ctx);
+    b = BN_CTX_get(ctx);
+    xg = BN_CTX_get(ctx);
+    yg = BN_CTX_get(ctx);
+    order = BN_CTX_get(ctx);
+
+    if(order == NULL) {
+        HAL_TRACE_ERR("Failed to allocate memory for p, a, b etc");
+        ret = HAL_RET_OOM;
+        goto cleanup;
+    }
+    
+    if(!EC_GROUP_get_order(group, order, ctx)) {
+        HAL_TRACE_ERR("Failed to get order from the group");
+        ret = HAL_RET_ERR;
+        goto cleanup;
+    }
+
+    if (EC_METHOD_get_field_type(EC_GROUP_method_of(group)) 
+                            == NID_X9_62_prime_field) {
+        HAL_TRACE_DEBUG("key field type primefield");
+        if ((!EC_GROUP_get_curve_GFp(group, p, a, b, ctx)) ||
+            (!EC_POINT_get_affine_coordinates_GFp(group, ec_point,
+                                                  xg, yg, ctx))) {
+            HAL_TRACE_ERR("Failed to get curve params for prime field");
+            ret = HAL_RET_ERR;
+            goto cleanup;
+        }
+    } else {
+        if ((!EC_GROUP_get_curve_GF2m(group, p, a, b, ctx)) ||
+            (!EC_POINT_get_affine_coordinates_GF2m(group, ec_point,
+                                                   xg, yg, ctx))) {
+            HAL_TRACE_ERR("Failed to get curve params for binary field");
+            ret = HAL_RET_ERR;
+            goto cleanup;
+        }
+    }
+    
+    BN_bn2bin(p, buf_p);
+    BN_bn2bin(order, buf_n);
+    BN_bn2bin(xg, buf_xg);
+    BN_bn2bin(yg, buf_yg);
+    BN_bn2bin(a, buf_a);
+    BN_bn2bin(b, buf_b);
+    BN_bn2bin(priv_key, buf_da);
+
+    args.p = buf_p;
+    args.n = buf_n;
+    args.xg = buf_xg;
+    args.yg = buf_yg;
+    args.a = buf_a;
+    args.b = buf_b;
+    args.da = buf_da;
+    args.key_idx = &key_idx;
+    
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY,
+                          (void *) &args);
+
+cleanup:
+    if(ctx) {
+        BN_CTX_end(ctx);
+        BN_CTX_free(ctx);
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+crypto_asym_api_setup_rsa_priv_key(EVP_PKEY *pkey,
+                                   int32_t &key_idx)
+{
+    uint32_t            key_size = 0;
+    RSA                 *rsa = NULL;
+    BIGNUM              *n = NULL, *e = NULL, *d = NULL;
+    uint8_t             buf_n[256] = {0}, buf_d[256] = {0};
+    pd::pd_capri_barco_asym_rsa2k_setup_private_key_args_t args;
+
+    if(!pkey) {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // get rsa
+    rsa = EVP_PKEY_get0_RSA(pkey);
+    if(!rsa) {
+        HAL_TRACE_ERR("Failed to extract RSA from key");
+        return HAL_RET_ERR;
+    }
+
+    key_size = RSA_size(rsa);
+    if(key_size != 256) {
+        HAL_TRACE_ERR("Invalid key size: {}", key_size);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // Extract params
+    RSA_get0_key(rsa,
+                 (const BIGNUM**)&n,
+                 (const BIGNUM**)&e,
+                 (const BIGNUM**)&d);
+    BN_bn2bin(n, buf_n);
+    BN_bn2bin(d, buf_d);
+    args.n = (uint8_t *)buf_n;
+    args.d = (uint8_t *)buf_d;
+    args.key_idx = &key_idx;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY,
+                          (void *)&args);
+}
+
 hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
 					 cryptoapis::CryptoApiResponse *resp)
 {
@@ -288,12 +441,7 @@ hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
     BIO                 *bio = NULL;
     EVP_PKEY            *pkey = NULL;
     uint32_t            key_type = 0;
-    uint32_t            key_size = 0;
-    int                 key_idx = -1;
-    RSA                 *rsa = NULL; 
-    BIGNUM              *n = NULL, *e = NULL, *d = NULL;
-    uint8_t             buf_n[256] = {0}, buf_d[256] = {0};
-    pd::pd_capri_barco_asym_rsa2k_setup_private_key_args_t args;
+    int32_t             key_idx = -1;
 
     // decode the key 
     bio = BIO_new_mem_buf(req.setup_priv_key().key().c_str(), -1);
@@ -311,36 +459,16 @@ hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
         goto end;
     }
     
-    // Extract parameters
+    // Program the key in hw
     key_type = EVP_PKEY_base_id(pkey);
 
     HAL_TRACE_DEBUG("Received privkey type {}", key_type);
     switch (key_type) {
+    case EVP_PKEY_EC:
+        ret = crypto_asym_api_setup_ec_priv_key(pkey, key_idx);
+        break;
     case EVP_PKEY_RSA:
-        rsa = EVP_PKEY_get0_RSA(pkey);
-        if(!rsa) {
-            HAL_TRACE_ERR("Failed to extract RSA from key");
-            ret = HAL_RET_ERR;
-            goto end;
-        }
-        key_size = RSA_size(rsa);
-        if(key_size != 256) {
-            HAL_TRACE_ERR("Invalid key size: {}", key_size);
-            ret = HAL_RET_INVALID_ARG;
-            goto end;
-        }
-        
-        RSA_get0_key(rsa, 
-                     (const BIGNUM**)&n, 
-                     (const BIGNUM**)&e, 
-                     (const BIGNUM**)&d);
-        BN_bn2bin(n, buf_n);
-        BN_bn2bin(d, buf_d);
-        args.n = (uint8_t *)buf_n;
-        args.d = (uint8_t *)buf_d;
-        args.key_idx = &key_idx;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASYM_RSA2K_SETUP_PRIV_KEY,
-                              (void *)&args);
+        ret = crypto_asym_api_setup_rsa_priv_key(pkey, key_idx);
         break;
     default:
         HAL_TRACE_ERR("Unsupported key type: {}", key_type);
@@ -349,6 +477,7 @@ hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
     }
 end:
     if (ret == HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Received key_idx: {}", key_idx);
         resp->mutable_setup_priv_key()->set_key_idx(key_idx);
         resp->set_api_status(types::API_STATUS_OK);
     }
@@ -433,6 +562,7 @@ crypto_asym_extract_cert_pubkey_params(crypto_cert_t *cert)
     EVP_PKEY      *pkey = NULL;
     RSA           *rsa = NULL;
     BIGNUM        *n = NULL, *e = NULL, *d = NULL;
+    const EC_KEY  *eckey = NULL;
 
     if(!cert || !cert->x509_cert)
         return HAL_RET_INVALID_ARG;
@@ -445,7 +575,7 @@ crypto_asym_extract_cert_pubkey_params(crypto_cert_t *cert)
     case EVP_PKEY_RSA:
         rsa = EVP_PKEY_get0_RSA(pkey);
         if(!rsa) {
-            HAL_TRACE_ERR("Failed to extra rsa from the cert");
+            HAL_TRACE_ERR("Failed to extract rsa from the cert");
             ret = HAL_RET_ERR;
             goto end;
         }
@@ -460,6 +590,18 @@ crypto_asym_extract_cert_pubkey_params(crypto_cert_t *cert)
         HAL_TRACE_DEBUG("n: {}", cert->pub_key.u.rsa_params.mod_n_len);
         HAL_TRACE_DEBUG("e: {}", cert->pub_key.u.rsa_params.e_len);
         break;
+
+    case EVP_PKEY_EC:
+        eckey = EVP_PKEY_get0_EC_KEY(pkey);
+        if(!eckey) {
+            HAL_TRACE_ERR("Failed to extract eckey from the cert");
+            ret = HAL_RET_ERR;
+            goto end;
+        }
+        cert->pub_key.u.ec_params.group = EC_KEY_get0_group(eckey);
+        cert->pub_key.u.ec_params.point = EC_KEY_get0_public_key(eckey);
+        break;
+
     default:
         HAL_TRACE_ERR("Invalid Key type {}", cert->pub_key.key_type);
         break;

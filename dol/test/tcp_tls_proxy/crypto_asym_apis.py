@@ -133,12 +133,13 @@ def ecc_point_mul_p256_test():
 
 # ECDSA Signature Generate test
 
-def ecdsa_p256_sig_gen(p, n, a, b, gx, gy, da, k, h):
+def ecdsa_p256_sig_gen(key_idx, p, n, a, b, gx, gy, da, k, h):
     stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
     req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
     req_spec.api_type = crypto_apis_pb2.ASYMAPI_ECDSA_SIG_GEN_FP
+    req_spec.ecdsa_sig_gen_fp.key_idx = key_idx
     req_spec.ecdsa_sig_gen_fp.ecc_domain_params.KeySize = 32
     req_spec.ecdsa_sig_gen_fp.ecc_domain_params.p = p
     req_spec.ecdsa_sig_gen_fp.ecc_domain_params.a = a
@@ -184,7 +185,7 @@ def ecdsa_p256_sig_gen_test():
     r = 0
     s = 0
 
-    ret, r, s = ecdsa_p256_sig_gen(p, n, a, b, Gx, Gy, k, k, n)
+    ret, r, s = ecdsa_p256_sig_gen(-1, p, n, a, b, Gx, Gy, k, k, n)
     if (ret != types_pb2.API_STATUS_OK):
         print("API ecdsa_p256_sig_gen failed with error")
         return False
@@ -807,7 +808,7 @@ def rsa2k_sig_gen(key_idx, mod_n, d, h):
     req_spec = req_msg.request.add()
 
     req_spec.api_type = crypto_apis_pb2.ASYMAPI_RSA_SIG_GEN
-    req_spec.rsa_sig_gen.key_idx = -1
+    req_spec.rsa_sig_gen.key_idx = key_idx
     req_spec.rsa_sig_gen.KeySize = 256
     req_spec.rsa_sig_gen.mod_n = mod_n
     req_spec.rsa_sig_gen.d = d

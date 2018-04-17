@@ -1,0 +1,9 @@
+# TLS Proxy Parameters for a Session
+meta:
+    id: TLS_PROXY_SESS_PROFILE_ECDSA
+    feature_set:
+        - iris
+
+id              : 0
+cert_file       : client_ecdsa.crt
+key_file        : client_ecdsa.key

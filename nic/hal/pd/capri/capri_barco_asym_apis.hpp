@@ -47,7 +47,11 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
         uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *x1, uint8_t *y1,
         uint8_t *k, uint8_t *x3, uint8_t *y3);
 
-hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(uint8_t *p, uint8_t *n,
+hal_ret_t capri_barco_asym_ecdsa_p256_setup_private_key(uint8_t *p, uint8_t *n,
+        uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *da,
+        int32_t *key_idx);
+
+hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8_t *n,
         uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *da,
         uint8_t *k, uint8_t *h, uint8_t *r, uint8_t *s);
 

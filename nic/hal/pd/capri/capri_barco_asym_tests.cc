@@ -92,7 +92,7 @@ hal_ret_t capri_barco_asym_ecdsa_sig_gen_test(void)
     /* Using k for private key (dA)     */
     /* Using n for the message hash h   */
 
-    ret = capri_barco_asym_ecdsa_p256_sig_gen(p, n,
+    ret = capri_barco_asym_ecdsa_p256_sig_gen(-1, p, n,
         xg, yg, a, b, k/*da*/, k, n/*h*/, r, s);
 
     return ret;

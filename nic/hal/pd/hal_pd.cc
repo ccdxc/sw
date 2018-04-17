@@ -366,6 +366,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET, pd_capri_barco_symm_req_descr_get);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_RING_META_GET, pd_capri_barco_ring_meta_get);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_ECC_MUL_P256, pd_capri_barco_asym_ecc_point_mul_p256);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, pd_capri_barco_asym_ecdsa_p256_setup_private_key);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, pd_capri_barco_asym_ecdsa_p256_sig_gen);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, pd_capri_barco_asym_ecdsa_p256_sig_verify);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, pd_capri_barco_asym_rsa2k_encrypt);
@@ -724,6 +725,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_RING_META_GET, pd_capri_barco_ring_meta_get);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_ECC_MUL_P256, pd_capri_barco_asym_ecc_point_mul_p256);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, pd_capri_barco_asym_ecdsa_p256_sig_gen);
+    PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, pd_capri_barco_asym_ecdsa_p256_setup_private_key);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, pd_capri_barco_asym_ecdsa_p256_sig_verify);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, pd_capri_barco_asym_rsa2k_encrypt);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_DECRYPT, pd_capri_barco_asym_rsa2k_decrypt);
@@ -890,6 +892,34 @@ hal_pd_init (hal_cfg_t *hal_cfg)
 cleanup:
 
     return ret;
+}
+
+extern "C" int
+pd_tls_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8_t *n,
+        uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *da,
+        uint8_t *k, uint8_t *h, uint8_t *r, uint8_t *s)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd_capri_barco_asym_ecdsa_p256_sig_gen_args_t args = {0};
+    
+    args.key_idx = key_idx;
+    args.p = n;
+    args.n = n;
+    args.xg = xg;
+    args.yg = yg;
+    args.a = a;
+    args.b = b;
+    args.da = da;
+    args.k = k;
+    args.h = h;
+    args.r = r;
+    args.s = s;
+
+    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, (void *)&args);
+    if(ret != HAL_RET_OK) {
+        return -1;
+    }
+    return 1;
 }
 
 extern "C" int

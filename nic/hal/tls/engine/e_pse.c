@@ -26,7 +26,10 @@ static EVP_PKEY* pse_load_privkey(ENGINE* engine, const char *key_id,
    
     switch(key->type) {
     case EVP_PKEY_RSA:
-        pkey = pse_rsa_get_evp_key(engine, key_id, ui_method, key);
+        pkey = pse_rsa_get_evp_key(engine, key, ui_method, callback_data);
+        break;
+    case EVP_PKEY_EC:
+        pkey = pse_ec_get_evp_key(engine, key, ui_method, callback_data);
         break;
     default:
         WARN("Invalid Key type %d", key->type);

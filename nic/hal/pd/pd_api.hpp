@@ -2203,7 +2203,19 @@ typedef struct pd_capri_barco_asym_ecc_point_mul_p256_args_s {
     uint8_t *y3;
 } __PACK__ pd_capri_barco_asym_ecc_point_mul_p256_args_t;
 
+typedef struct pd_capri_barco_asym_ecdsa_p256_setup_private_key_args_s {
+    uint8_t *p;
+    uint8_t *n;
+    uint8_t *xg;
+    uint8_t *yg;
+    uint8_t *a;
+    uint8_t *b;
+    uint8_t *da;
+    int32_t *key_idx;
+} __PACK__ pd_capri_barco_asym_ecdsa_p256_setup_private_key_args_t;
+
 typedef struct pd_capri_barco_asym_ecdsa_p256_sig_gen_args_s {
+    int32_t key_idx;
     uint8_t *p;
     uint8_t *n;
     uint8_t *xg;
@@ -2602,7 +2614,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_COPP_RESTORE,             223, "PD_FUNC_ID_COPP_RESTORE") \
     ENTRY(PD_FUNC_ID_ACL_GET,                  224, "PD_FUNC_ID_ACL_GET") \
     ENTRY(PD_FUNC_ID_ACL_RESTORE,              225, "PD_FUNC_ID_ACL_RESTORE") \
-    ENTRY(PD_FUNC_ID_MAX,                      226, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, 226, "PD_FUNC_ID_ASYM_ECDSA_P256_SETUP_PRIV_KEY")\
+    ENTRY(PD_FUNC_ID_MAX,                      227, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2921,6 +2934,7 @@ PD_FUNCP_TYPEDEF(pd_capri_barco_asym_req_descr_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_symm_req_descr_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_ring_meta_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecc_point_mul_p256);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_setup_private_key);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_sig_gen);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_sig_verify);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_encrypt);
@@ -3267,6 +3281,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_capri_barco_symm_req_descr_get);
         PD_UNION_FIELD(pd_capri_barco_ring_meta_get);
         PD_UNION_FIELD(pd_capri_barco_asym_ecc_point_mul_p256);
+        PD_UNION_FIELD(pd_capri_barco_asym_ecdsa_p256_setup_private_key);
         PD_UNION_FIELD(pd_capri_barco_asym_ecdsa_p256_sig_gen);
         PD_UNION_FIELD(pd_capri_barco_asym_ecdsa_p256_sig_verify);
         PD_UNION_FIELD(pd_capri_barco_asym_rsa2k_encrypt);

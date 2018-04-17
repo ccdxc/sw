@@ -91,6 +91,7 @@ message CryptoAsymApiReqECDSASignatureGenFp {
   bytes                             da                  = 2;
   bytes                             k                   = 3;
   bytes                             h                   = 4;
+  int32                             key_idx             = 5;
 }
 message CryptoAsymApiRespECDSASignatureGenFp {
   bytes                             r                   = 1;

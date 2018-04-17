@@ -362,8 +362,8 @@ err:
  * BUILD EVP PKey
  */
 EVP_PKEY* 
-pse_rsa_get_evp_key(ENGINE* engine, const char* key_id, 
-                    UI_METHOD *ui_method, PSE_KEY* key)
+pse_rsa_get_evp_key(ENGINE* engine, PSE_KEY* key,
+                    UI_METHOD *ui_method, void *callback_data)
 {
     EVP_PKEY    *pkey = NULL;
     RSA         *rsa = NULL;
