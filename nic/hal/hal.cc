@@ -661,6 +661,9 @@ hal_init (hal_cfg_t *hal_cfg)
             tid = HAL_THREAD_ID_FTE_MIN + i;
             g_hal_threads[tid]->start(g_hal_threads[tid]);
         }
+    } else {
+        // FTE disabled
+        fte::disable_fte();
     }
 
     // do proxy init

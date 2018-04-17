@@ -59,10 +59,12 @@ void unregister_features_and_pipelines();
 hal_ret_t session_create(SessionSpec& spec, SessionResponse *rsp);
 hal_ret_t session_delete(SessionDeleteRequest& spec, SessionDeleteResponse *rsp);
 hal_ret_t session_delete(hal::session_t *session, bool force_delete=false);
-void hal_ret_to_api_status(hal_ret_t ret, SessionResponse *rsp);
 
 // FTE pkt loop (infinite loop)
 void fte_start(uint8_t fte_id);
+
+// diable all fte threads
+void disable_fte();
 
 // Send a packet on ASQ
 // ***Should be called from FTE thread***
@@ -79,6 +81,11 @@ uint8_t fte_id();
 // ***Should be called from non FTE thread***
 typedef void (*softq_fn_t)(void *data);
 hal_ret_t fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data);
+
+// Executes the fn in the specified fte thread and blocks until the
+// the function is executed by the fte thread.
+// ***Should be called from non FTE thread***
+hal_ret_t fte_execute(uint8_t fte_id, softq_fn_t fn, void *data);
 
 // FTE Init routine
 hal_ret_t init();

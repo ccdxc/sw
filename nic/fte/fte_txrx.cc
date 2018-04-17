@@ -16,6 +16,13 @@ namespace fte {
 
 static const uint16_t MAX_SOFTQ_SLOTS(1024);
 
+static bool fte_disabled_;
+
+void disable_fte()
+{
+    fte_disabled_ = true;
+}
+
 //------------------------------------------------------------------------------
 // FTE Instance
 //------------------------------------------------------------------------------
@@ -90,6 +97,10 @@ fte_asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
 uint8_t
 fte_id()
 {
+    if (fte_disabled_) {
+        return 0;
+    }
+
     HAL_ASSERT_RETURN(g_inst, HAL_RET_INVALID_ARG);
     return g_inst->get_id();
 }
@@ -103,6 +114,11 @@ fte_id()
 hal_ret_t
 fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data)
 {
+    if (fte_disabled_) {
+        // call the function directly
+        fn(data);
+    }
+
     HAL_ASSERT_RETURN(g_inst == NULL, HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN(fte_id < hal::MAX_FTE_THREADS, HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN(fn, HAL_RET_INVALID_ARG);
@@ -117,6 +133,43 @@ fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data)
     return inst->softq_enqueue(fn, data);
 }
 
+//------------------------------------------------------------------------
+// Executes the fn in the specified fte thread and blocks until the
+// the function is executed by the fte thread.
+//------------------------------------------------------------------------
+hal_ret_t
+fte_execute(uint8_t fte_id, softq_fn_t fn, void *data)
+{
+    struct fn_ctx_t {
+        volatile std::atomic<bool> done;
+        softq_fn_t user_fn;
+        void *user_data;
+    } ctx;
+
+    ctx.user_fn = fn;
+    ctx.user_data = data;
+    ctx.done.store(false, std::memory_order_release);
+
+    hal_ret_t ret = fte_softq_enqueue(fte_id, [](void *data) {
+            fn_ctx_t *ctx = (fn_ctx_t *) data;
+            ctx->user_fn(ctx->user_data);
+            ctx->done.store(true, std::memory_order_release); },
+        &ctx);
+    
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    // try indefinatly until done
+    sdk::lib::thread *curr_thread = hal::hal_get_current_thread();
+    while(ctx.done.load(std::memory_order_acquire) == false) {
+        if (curr_thread->can_yield()) {
+            pthread_yield();
+        }
+    }
+
+    return ret;
+}
 
 //------------------------------------------------------------------------------
 // byte array to hex string for logging
@@ -344,7 +397,10 @@ void inst_t::process_arq()
         }
 
         // process the packet and update flow table
-        hal::app_redir::app_redir_ctx(*ctx_, false)->set_arm_ctx(arm_ctx_);
+        auto app_ctx = hal::app_redir::app_redir_ctx(*ctx_, false);
+        if (app_ctx) {
+            app_ctx->set_arm_ctx(arm_ctx_);
+        }
         ret = ctx_->process();
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failied to process, ret={}", ret);

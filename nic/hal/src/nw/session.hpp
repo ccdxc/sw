@@ -100,21 +100,6 @@ enum flow_direction_t {
 DEFINE_ENUM(flow_role_t, FLOW_ROLES)
 #undef FLOW_ROLES
 
-#define FLOW_END_TYPES(ENTRY)                                       \
-    ENTRY(FLOW_END_TYPE_HOST,        0, "FLOW_END_TYPE_HOST")       \
-    ENTRY(FLOW_END_TYPE_NETWORK,     1, "FLOW_END_TYPE_NETWORK")    \
-    ENTRY(FLOW_END_TYPE_P4PLUS,      2, "FLOW_END_TYPE_P4PLUS")
-
-DEFINE_ENUM(flow_end_type_t, FLOW_END_TYPES)
-#undef FLOW_END_TYPES
-
-#define SESSION_DIRECTIONS(ENTRY)                                   \
-    ENTRY(SESSION_DIR_H,     0, "SESSION_DIR_H")                    \
-    ENTRY(SESSION_DIR_N,     1, "SESSION_DIR_N")                    \
-
-DEFINE_ENUM(session_dir_t, SESSION_DIRECTIONS)
-#undef SESSION_DIRECTIONS
-
 // NAT types
 enum nat_type_t {
     NAT_TYPE_NONE         = 0,
@@ -286,8 +271,9 @@ typedef struct session_state_s {
 typedef struct session_cfg_s {
     uint8_t             tcp_ts_option:1;
     uint8_t             tcp_sack_perm_option:1;
+    uint8_t             conn_track_en:1;          // enable connection tracking
+
     session_id_t        session_id;               // unique session id
-    uint16_t            conn_track_en:1;          // enable connection tracking
 } __PACK__ session_cfg_t;
 
 static const uint8_t MAX_SESSION_FLOWS = 2;
@@ -319,6 +305,7 @@ typedef struct session_args_s {
 //------------------------------------------------------------------------------
 struct session_s {
     hal_spinlock_t      slock;                    // lock to protect this structure
+    uint8_t             fte_id;                   // FTE that created this session
     session_cfg_t       config;                   // session config
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
@@ -351,6 +338,7 @@ struct session_s {
 
 session_t *find_session_by_handle(hal_handle_t handle);
 //session_t *find_session_by_id(session_id_t session_id);
+
 extern void *session_get_key_func(void *entry);
 extern uint32_t session_compute_hash_func(void *key, uint32_t ht_size);
 extern bool session_compare_key_func(void *key1, void *key2);
@@ -382,7 +370,7 @@ hal_ret_t session_delete(const session_args_t *args, session_t *session);
 hal::session_t *session_lookup(flow_key_t key, flow_role_t *role);
 hal_ret_t session_get(session::SessionGetRequest& spec,
                       session::SessionGetResponse *rsp);
-bool session_age_cb(void *entry, void *ctxt);
+bool is_session_aged(session_t *entry, uint64_t ctime_ns);
 hal_ret_t schedule_tcp_close_timer(session_t *session);
 hal_ret_t schedule_tcp_half_closed_timer(session_t *session);
 hal_ret_t schedule_tcp_cxnsetup_timer(session_t *session);

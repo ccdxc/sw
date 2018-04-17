@@ -474,10 +474,8 @@ TEST_F(session_test, test2)
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
     ctime_ns += 1000000000ULL;
-    hal::session_age_cb(
-        (void *)hal::find_session_by_handle(sess_rsp2.status().session_handle()),
-        (void *)&ctime_ns);
-    ASSERT_TRUE(hal::find_session_by_handle(sess_rsp2.status().session_handle()) == NULL);
+    ASSERT_TRUE(hal::is_session_aged(hal::find_session_by_handle(sess_rsp2.status().session_handle()),
+                                     ctime_ns));
 }
 
 // ----------------------------------------------------------------------------

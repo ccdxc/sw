@@ -692,6 +692,9 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
         goto end;
     }
     *session = {};
+
+    session->fte_id = fte::fte_id();
+
     dllist_reset(&session->feature_list_head);
     session->config = *args->session;
     session->vrf_handle = args->vrf->hal_handle;
@@ -814,6 +817,8 @@ session_update(const session_args_t *args, session_t *session)
     hal_ret_t                ret;
     pd::pd_session_update_args_t    pd_session_args;
 
+    HAL_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
+
     if(args->iflow[0]) {
         session->iflow->config = *args->iflow[0];
         session->iflow->pgm_attrs = *args->iflow_attrs[0];
@@ -862,6 +867,8 @@ session_delete(const session_args_t *args, session_t *session)
 {
     hal_ret_t                ret;
     pd::pd_session_delete_args_t    pd_session_args;
+
+    HAL_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
 
     // Stop any timers that might be running
     if (session->tcp_cxntrack_timer) {
@@ -934,15 +941,18 @@ session_aging_timeout (session_t *session,
 //------------------------------------------------------------------------------
 // determine whether a given session should be aged or not
 //------------------------------------------------------------------------------
+struct session_age_cb_args_t {
+    uint64_t ctime_ns;
+    sdk::lib::dllist_ctxt_t session_list;
+};
+
 bool
-session_age_cb (void *entry, void *ctxt)
+is_session_aged (session_t *session, uint64_t ctime_ns)
 {
     pd::pd_conv_hw_clock_to_sw_clock_args_t    clock_args;
     hal_ret_t                                  ret;
-    session_t                                 *session = (session_t *)entry;
     flow_t                                    *iflow, *rflow = NULL;
     session_state_t                            session_state;
-    uint64_t                                   ctime_ns = *(uint64_t *)ctxt;
     uint64_t                                   last_pkt_ts;
     uint64_t                                   session_timeout;
     pd::pd_session_get_args_t                  args;
@@ -993,7 +1003,7 @@ session_age_cb (void *entry, void *ctxt)
     clock_args.sw_ns = &last_pkt_ts;
     pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, (void *)&clock_args);
     HAL_TRACE_DEBUG("Hw tick: {}", session_state.iflow_state.last_pkt_ts);
-    HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
+    HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}", 
                     last_pkt_ts, ctime_ns, session_timeout);
     if ((ctime_ns - last_pkt_ts) < session_timeout) {
         // session hasn't aged yet, move on
@@ -1007,14 +1017,29 @@ session_age_cb (void *entry, void *ctxt)
             // responder flow seems to be active still
             return false;
         }
+    }
 
-        // time to clean up the session
-        ret = fte::session_delete(session);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to delte aged session {}",
+    // session agedout
+    return true;
+}
+
+static bool
+session_age_cb (void *entry, void *ctxt)
+{
+    session_t                                 *session = (session_t *)entry;
+    session_age_cb_args_t                     *args = (session_age_cb_args_t *)ctxt;
+
+    if (is_session_aged(session, args->ctime_ns)) {
+        // time to clean up the session, add handle to session list
+        hal_handle_id_list_entry_t  *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
+            hal_handle_id_list_entry_slab()->alloc();
+        if (list_entry == NULL) {
+            HAL_TRACE_ERR("Out of memeory - Failed to delte aged session {}",
                           session->hal_handle);
             return false;
         }
+        list_entry->handle_id = session->hal_handle;
+        sdk::lib::dllist_add(&args->session_list, &list_entry->dllist_ctxt);
     }
 
     return false;
@@ -1028,18 +1053,35 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     uint32_t      i, bucket = *((uint32_t *)(&ctxt));
     timespec_t    ctime;
-    uint64_t      ctime_ns;
+
+    session_age_cb_args_t args;
+
+    sdk::lib::dllist_reset(&args.session_list);
 
     // get current time
     clock_gettime(CLOCK_MONOTONIC, &ctime);
-    sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
+    sdk::timestamp_to_nsecs(&ctime, &args.ctime_ns);
 
     //HAL_TRACE_DEBUG("[{}:{}] timer id {}, bucket: {}",
     //                __FUNCTION__, __LINE__, timer_id,  bucket);
     for (i = 0; i < HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL; i++) {
         g_hal_state->session_hal_handle_ht()->walk_bucket_safe(bucket,
-                                                     session_age_cb, &ctime_ns);
+                                                     session_age_cb, &args);
         bucket = (bucket + 1)%g_hal_state->session_hal_handle_ht()->num_buckets();
+    }
+
+    // delete all aged sessions
+    dllist_ctxt_t  *curr = NULL, *next = NULL;
+    dllist_for_each_safe(curr, next, &args.session_list) {
+        hal_handle_id_list_entry_t  *entry =
+            dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        hal::session_t *session = hal::find_session_by_handle(entry->handle_id);
+        if (session) {
+            fte::session_delete(session);
+        }
+        // Remove from list
+        sdk::lib::dllist_del(&entry->dllist_ctxt);
+        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
     }
 
     // store the bucket id to resume on next invocation
@@ -1335,60 +1377,64 @@ session_set_tcp_state (session_t *session, hal::flow_role_t role,
     HAL_TRACE_DEBUG("Updated tcp state to {}", tcp_state);
 }
 
-typedef struct session_walkall_args {
-    void   *rsp;
-    bool    is_del;
-} __PACK__ session_walkall_args_t;
-
-static bool
-hal_walkall_session (void *entry, void *ctxt)
+hal_ret_t 
+session_get_all(SessionGetResponseMsg *rsp)
 {
-    session_t                *session = (session_t *)entry;
-    session_walkall_args_t   *args = (session_walkall_args_t *)ctxt;
-
-    if (args->is_del) {
-        SessionDeleteResponseMsg *rsp = (SessionDeleteResponseMsg *)args->rsp;
-        SessionDeleteResponse    *response;
-        SessionDeleteRequest      req;
-
-        req.mutable_meta()->set_vrf_id(vrf_lookup_by_handle(session->vrf_handle)->vrf_id);
-        req.set_session_handle(session->hal_handle);
-        response = rsp->add_response();
-        fte::session_delete(req, response);
-    } else {
-        SessionGetResponseMsg *rsp = (SessionGetResponseMsg *)args->rsp;
-        SessionGetResponse    *response;
-        SessionGetRequest      req;
-
-        response = rsp->add_response();
-        system_get_fill_rsp(session, response);
-    }
-
-    return false;
-}
-
-hal_ret_t
-session_get_all (SessionGetResponseMsg *rsp)
-{
-    session_walkall_args_t args;
-
-    args.rsp = rsp;
-    args.is_del = false;
-
-    return (hal_sdk_ret_to_hal_ret(g_hal_state->session_hal_handle_ht()->\
-            walk_safe(hal_walkall_session, (void *)&args)));
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t  *session = (session_t *)entry;
+        SessionGetResponseMsg *rsp = (SessionGetResponseMsg *)ctxt;
+        system_get_fill_rsp(session, rsp->add_response());
+        return false;
+    };
+    
+    sdk_ret_t ret = g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, rsp);
+    
+    return hal_sdk_ret_to_hal_ret(ret);
 }
 
 hal_ret_t
 session_delete_all (SessionDeleteResponseMsg *rsp)
 {
-    session_walkall_args_t args;
+    
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t  *session = (session_t *)entry;
+        sdk::lib::dllist_ctxt_t *list_head = (sdk::lib::dllist_ctxt_t  *)ctxt;
+        
+        hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
+                hal_handle_id_list_entry_slab()->alloc();
+        
+        if (entry == NULL) {
+            HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
+            return false;
+        }
 
-    args.rsp = rsp;
-    args.is_del = true;
+        list_entry->handle_id = session->hal_handle;
+        sdk::lib::dllist_add(list_head, &list_entry->dllist_ctxt);
+        return false;
+    };
 
-    return (hal_sdk_ret_to_hal_ret(g_hal_state->session_hal_handle_ht()->\
-            walk(hal_walkall_session, (void *)&args)));
+    // build list of session_ids
+    sdk::lib::dllist_ctxt_t session_list;
+    sdk::lib::dllist_reset(&session_list);
+    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &session_list);
+
+    // delete all sessions
+    hal_ret_t ret;
+    dllist_ctxt_t  *curr = NULL, *next = NULL;
+    dllist_for_each_safe(curr, next, &session_list) {
+        hal_handle_id_list_entry_t  *entry =
+            dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        hal::session_t *session = hal::find_session_by_handle(entry->handle_id);
+        if (session) {
+            ret = fte::session_delete(session);
+            rsp->add_response()->set_api_status(hal::hal_prepare_rsp(ret));
+        }
+        // Remove from list
+        sdk::lib::dllist_del(&entry->dllist_ctxt);
+        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+    }
+
+    return HAL_RET_OK;
 }
 
 }    // namespace hal
