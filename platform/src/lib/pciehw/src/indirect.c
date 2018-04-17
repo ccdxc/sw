@@ -512,6 +512,7 @@ cmd_stats(int argc, char *argv[])
 
     p = &phwmem->port[port];
     pciehsys_log("port %d:\n", port);
+    pciehsys_log("%-*s : 0x%02x\n", w, "secbus", p->secbus);
     pciehsys_log("%-*s : %"PRIu64"\n", w, "indirect_cnt", p->indirect_cnt);
     pciehsys_log("%-*s : %"PRIu64"\n", w, "indcfgrd", p->indcfgrd);
     pciehsys_log("%-*s : %"PRIu64"\n", w, "indcfgwr", p->indcfgwr);

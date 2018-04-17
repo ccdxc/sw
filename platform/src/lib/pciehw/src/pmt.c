@@ -385,12 +385,18 @@ pmt_load_bar(pciehwbar_t *phwbar)
     const u_int32_t pmti = phwbar->pmti;
     const pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
     const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
+    const pciehw_port_t *p = &phwmem->port[phwdev->port];
+    u_int16_t bdf;
 
     assert(phwbar->valid);
 
+    bdf = bdf_make(bdf_to_bus(phwdev->bdf) + p->secbus,
+                   bdf_to_dev(phwdev->bdf),
+                   bdf_to_fnc(phwdev->bdf));
+
     pmt_set_bar(pmti,
                 phwdev->port,
-                phwdev->bdf,
+                bdf,
                 spmt);
 }
 

@@ -21,8 +21,8 @@ typedef struct pcieport_handler_info_s {
 } pcieport_handler_info_t;
 
 typedef struct pcieport_event_info_s {
-    pcieport_handler_info_t *handlers;
     int nhandlers;
+    pcieport_handler_info_t *handlers;
 } pcieport_event_info_t;
 
 static pcieport_event_info_t pcieport_event_info;
@@ -43,26 +43,46 @@ send_event(pcieport_event_t *ev)
 }
 
 void
-pcieport_event_hostup(pcieport_t *p)
+pcieport_event_hostup(pcieport_t *p, const int genid)
 {
     pcieport_event_t ev;
+    pcieport_event_hostup_t *hostup;
 
     memset(&ev, 0, sizeof(ev));
     ev.type = PCIEPORT_EVENT_HOSTUP;
-    ev.hostup.port = p->port;
-    ev.hostup.gen = p->cur_gen;
-    ev.hostup.width = p->cur_width;
+    hostup = &ev.hostup;
+    hostup->port = p->port;
+    hostup->gen = p->cur_gen;
+    hostup->width = p->cur_width;
+    hostup->genid = genid;
     send_event(&ev);
 }
 
 void
-pcieport_event_hostdn(pcieport_t *p)
+pcieport_event_hostdn(pcieport_t *p, const int genid)
 {
     pcieport_event_t ev;
+    pcieport_event_hostdn_t *hostdn;
 
     memset(&ev, 0, sizeof(ev));
     ev.type = PCIEPORT_EVENT_HOSTDN;
-    ev.hostdn.port = p->port;
+    hostdn = &ev.hostdn;
+    hostdn->port = p->port;
+    hostdn->genid = genid;
+    send_event(&ev);
+}
+
+void
+pcieport_event_buschg(pcieport_t *p, const u_int8_t secbus)
+{
+    pcieport_event_t ev;
+    pcieport_event_buschg_t *buschg;
+
+    memset(&ev, 0, sizeof(ev));
+    ev.type = PCIEPORT_EVENT_BUSCHG;
+    buschg = &ev.buschg;
+    buschg->port = p->port;
+    buschg->secbus = secbus;
     send_event(&ev);
 }
 
@@ -74,7 +94,7 @@ pcieport_register_event_handler(pcieport_event_handler_t h, void *arg)
     int n;
 
     n = evinfo->nhandlers + 1;
-    newhandlers = realloc(evinfo->handlers, n * sizeof(*newhandlers));
+    newhandlers = pciehsys_realloc(evinfo->handlers, n * sizeof(*newhandlers));
     if (newhandlers == NULL) return -1;
 
     evinfo->handlers = newhandlers;

@@ -77,6 +77,7 @@ typedef struct pciehwdev_s {
 } pciehwdev_t;
 
 typedef struct pciehw_port_s {
+    u_int8_t secbus;                    /* bridge secondary bus */
     u_int64_t indirect_cnt;             /* total count of indirect events */
     u_int64_t notify_cnt;               /* total count of notify events */
     u_int32_t notify_max;               /* largest pending notify events */

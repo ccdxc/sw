@@ -82,7 +82,6 @@ pcieport_close(pcieport_t *p)
     }
 }
 
-
 static void
 cmd_fsm(int argc, char *argv[])
 {

@@ -11,9 +11,11 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <sys/time.h>
+#include <linux/pci_regs.h>
 
 #include "pal.h"
 #include "pciehsys.h"
+#include "portcfg.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
@@ -103,19 +105,21 @@ pcieport_drain(pcieport_t *p)
 static void
 pcieport_buschg(pcieport_t *p)
 {
+    const u_int8_t secbus = portcfg_readb(p->port, PCI_SECONDARY_BUS);
+    pcieport_event_buschg(p, secbus);
 }
 
 static void
 pcieport_hostup(pcieport_t *p)
 {
     p->hostup++;
-    pcieport_event_hostup(p);
+    pcieport_event_hostup(p, p->hostup);
 }
 
 static void
 pcieport_hostdn(pcieport_t *p)
 {
-    pcieport_event_hostdn(p);
+    pcieport_event_hostdn(p, p->hostup);
 }
 
 static void

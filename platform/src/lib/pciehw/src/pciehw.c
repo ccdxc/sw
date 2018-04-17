@@ -271,7 +271,18 @@ pciehw_port_event_handler(pcieport_event_t *ev, void *arg)
         pciehw_foreach(port, pciehw_hostdn, NULL);
         break;
     }
+    case PCIEPORT_EVENT_BUSCHG: {
+        const int port = ev->buschg.port;
+        const u_int16_t secbus = ev->buschg.secbus;
+        pciehw_t *phw = pciehw_get();
+        pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+        pciehw_port_t *p = &phwmem->port[port];
+
+        p->secbus = secbus;
+        break;
+    }
     default:
+        /* Some event we don't need to handle. */
         break;
     }
 }

@@ -10,6 +10,7 @@ SOURCES = \
 	intr.c \
 	fsm.c \
 	utils.c \
+	portcfg.c \
 	$(NULL)
 
 LCFLAGS += \
