@@ -33,7 +33,7 @@ using nwsec::FirewallAction;
 using nwsec::ALGName;
 
 // Globals used in nwsec
-acl::acl_config_t ip_acl_config = {
+acl::acl_config_t ip_acl_config_glbl = {
     num_categories: 1,
     num_fields: NUM_FIELDS,
     defs:  { ACL_FLD_DEF(ACL_FIELD_TYPE_EXACT, ipv4_tuple, proto),
@@ -1233,6 +1233,7 @@ hal_ret_t
 security_policy_cleanup_ruledb(nwsec_policy_t *policy)
 {
     lib_acl_delete(policy->acl_ctx);
+    policy->acl_ctx = NULL;
     return HAL_RET_OK;
 }
 
@@ -1258,6 +1259,43 @@ security_policy_add_to_ruledb( nwsec_policy_t *policy)
     }
     return ret;
 }
+
+nwsec_policy_t *
+security_policy_lookup_key_or_handle(SecurityPolicyKeyHandle& kh)
+{
+    nwsec_policy_t *policy = NULL;
+    if (kh.policy_key_or_handle_case() == kh::SecurityPolicyKeyHandle::kSecurityPolicyKey) {
+        uint64_t        vrf_id;
+        auto policy_key = kh.security_policy_key();
+        if (policy_key.vrf_id_or_handle().key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
+            vrf_id = policy_key.vrf_id_or_handle().vrf_id();
+        } else {
+            vrf_t *vrf = vrf_lookup_by_handle(policy_key.vrf_id_or_handle().vrf_handle());
+            if (!vrf) {
+                HAL_TRACE_ERR("invalid vrf handle {}", policy_key.vrf_id_or_handle().vrf_handle());
+                return NULL;
+            }
+            vrf_id = vrf->vrf_id;
+        }
+
+        // find_nwsec_policy_by_key()
+        policy = find_nwsec_policy_by_key(policy_key.security_policy_id(), vrf_id);
+        if (policy == NULL) {
+            HAL_TRACE_ERR("Policy with id: {} not found",
+                            policy_key.security_policy_id());
+        }
+    } else if (kh.policy_key_or_handle_case() == SecurityPolicyKeyHandle::kSecurityPolicyHandle) {
+        // find by handle
+        policy = find_nwsec_policy_by_handle(kh.security_policy_handle());
+        if (policy == NULL) {
+            HAL_TRACE_ERR("policy with handle: {} not found",
+                            kh.security_policy_handle());
+        }
+    }
+
+    return policy;
+}
+
 
 static hal_ret_t
 validate_nwsec_policy_create (nwsec::SecurityPolicySpec&     spec,
@@ -1317,7 +1355,7 @@ nwsec_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (!policy->acl_ctx) {
         const char *ctx_name = nwsec_acl_ctx_name(policy->key.vrf_id);
         HAL_TRACE_DEBUG("Creating acl ctx {}", ctx_name);
-        policy->acl_ctx = lib_acl_create(ctx_name, &ip_acl_config);
+        policy->acl_ctx = lib_acl_create(ctx_name, &ip_acl_config_glbl);
     }
 
     HAL_TRACE_DEBUG("policy handle {}", hal_handle);
@@ -1489,22 +1527,183 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
                              nwsec_policy_create_abort_cb,
                              nwsec_policy_create_cleanup_cb);
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_CREATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_CREATE_FAIL);
+    }
     nwsec_policy_prepare_rsp(res, ret, nwsec_policy ? nwsec_policy->hal_handle : HAL_HANDLE_INVALID);
     HAL_TRACE_DEBUG("------------------------ API End -----------------------------");
     return HAL_RET_OK;
 }
 
+// Update policy
+//
+hal_ret_t
+nwsec_policy_make_clone(nwsec_policy_t *policy, nwsec_policy_t **policy_clone)
+{
+    *policy_clone = nwsec_policy_alloc_init();
+    if (*policy_clone == NULL) {
+        HAL_TRACE_ERR("Failed to allocate the policy");
+        return HAL_RET_ERR;  // Better return value
+    }
+
+    memcpy(&(*policy_clone)->key, &policy->key, sizeof(policy->key));
+
+    (*policy_clone)->hal_handle  = policy->hal_handle;
+    return HAL_RET_OK;
+}
+hal_ret_t
+validate_nwsec_policy_update(nwsec::SecurityPolicySpec&     spec,
+                                nwsec::SecurityPolicyResponse *res)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+nwsec_policy_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+nwsec_policy_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    dllist_ctxt_t        *lnode = NULL;
+    dhl_entry_t          *dhl_entry = NULL;
+    nwsec_policy_t       *policy = NULL;
+    nwsec_policy_t       *policy_clone = NULL;
+    hal_handle_t         hal_handle = 0;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("{}: invalid cfg_ctxt",
+                       __FUNCTION__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    policy = (nwsec_policy_t *) dhl_entry->obj;
+    policy_clone = (nwsec_policy_t *) dhl_entry->cloned_obj;
+    hal_handle = dhl_entry->handle;
+
+    HAL_TRACE_DEBUG("policy handle {}", hal_handle);
+
+    //Delete rules is the rule db
+    ret = security_policy_cleanup_ruledb(policy);
+    if (ret != HAL_RET_OK){
+        HAL_TRACE_ERR("Failed to del the security policy from db, err: {}",
+                      ret);
+        goto end;
+    }
+    // free the rules
+    nwsec_policy_rules_free(policy);
+
+    // Creating acl context
+    if (!policy_clone->acl_ctx) {
+        const char *ctx_name = nwsec_acl_ctx_name(policy_clone->key.vrf_id);
+        HAL_TRACE_DEBUG("Creating acl ctx {}", ctx_name);
+        policy_clone->acl_ctx = lib_acl_create(ctx_name, &ip_acl_config_glbl);
+    }
+
+    // Extract the policy
+    // Add it again
+    ret = security_policy_add_to_ruledb(policy_clone);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add policy to lib, ret: {}", ret);
+        goto end;
+    }
+
+    ret = security_policy_commit_to_ruledb(policy_clone->acl_ctx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Policy commit failed with ret: {}", ret);
+        goto end;
+    }
+end:
+    return ret;
+
+}
+
+hal_ret_t
+nwsec_policy_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+nwsec_policy_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
-                       nwsec::SecurityPolicyResponse   *res)
+                      nwsec::SecurityPolicyResponse   *res)
 {
+    hal_ret_t       ret = HAL_RET_OK;
+    nwsec_policy_t  *policy = NULL;
+    cfg_op_ctxt_t   cfg_ctxt = { 0 };
+    dhl_entry_t     dhl_entry = { 0 };
+    SecurityPolicyKeyHandle kh = spec.policy_key_or_handle();
+
+
+    HAL_TRACE_DEBUG("---------------------- API End -------------------");
+    HAL_TRACE_DEBUG(" {}: ", __FUNCTION__);
+
+    ret = validate_nwsec_policy_update(spec, res);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: validation failed", __FUNCTION__);
+        goto end;
+    }
+
+    // retrieve security_policy object
+    policy = security_policy_lookup_key_or_handle(kh);
+    if (policy == NULL) {
+        HAL_TRACE_ERR("Failed to find the policy");
+        ret = HAL_RET_SECURITY_POLICY_NOT_FOUND;
+        goto end;
+    }
+
+    nwsec_policy_make_clone(policy, (nwsec_policy_t **)&dhl_entry.cloned_obj);
+    ret = extract_policy_from_spec(spec, (nwsec_policy_t *)dhl_entry.cloned_obj);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to extract policy from spec");
+        nwsec_policy_free((nwsec_policy_t *)dhl_entry.cloned_obj);
+        ret = HAL_RET_HANDLE_INVALID;
+        goto end;
+    }
+
+    dhl_entry.handle = policy->hal_handle;
+    dhl_entry.obj = policy;
+    cfg_ctxt.app_ctxt = NULL;
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_upd_obj(policy->hal_handle, &cfg_ctxt,
+                             nwsec_policy_update_upd_cb,
+                             nwsec_policy_update_commit_cb,
+                             nwsec_policy_update_abort_cb,
+                             nwsec_policy_update_cleanup_cb);
+
+end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_UPDATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_UPDATE_FAIL);
+    }
+
+    nwsec_policy_prepare_rsp(res, ret,
+                             policy ? policy->hal_handle : HAL_HANDLE_INVALID);
+    hal_api_trace(" API End: nwsec_policy update");
     return HAL_RET_OK;
 }
 
 // Delete Policy
 //
 hal_ret_t
-validate_security_policy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
+validate_nwsec_policy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
                                nwsec::SecurityPolicyDeleteResponse    *res)
 {
     return HAL_RET_OK;
@@ -1577,45 +1776,19 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
     dhl_entry_t     dhl_entry = { 0 };
     SecurityPolicyKeyHandle kh = req.policy_key_or_handle();
 
-    ret = validate_security_policy_delete(req, res);
+    ret = validate_nwsec_policy_delete(req, res);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(" security policy validate failed ret : {}", ret);
         goto end;
     }
 
-    if (kh.policy_key_or_handle_case() == kh::SecurityPolicyKeyHandle::kSecurityPolicyKey) {
-        uint64_t        vrf_id;
-        auto policy_key = kh.security_policy_key();
-        if (policy_key.vrf_id_or_handle().key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
-            vrf_id = policy_key.vrf_id_or_handle().vrf_id();
-        } else {
-            vrf_t *vrf = vrf_lookup_by_handle(policy_key.vrf_id_or_handle().vrf_handle());
-            if (!vrf) {
-                HAL_TRACE_ERR("invalid vrf handle {}", policy_key.vrf_id_or_handle().vrf_handle());
-                ret = HAL_RET_HANDLE_INVALID;
-                goto end;
-            }
-            vrf_id = vrf->vrf_id;
-        }
-
-        // find_nwsec_policy_by_key()
-        policy = find_nwsec_policy_by_key(policy_key.security_policy_id(), vrf_id);
-        if (policy == NULL) {
-            HAL_TRACE_ERR("Policy with id: {} not found",
-                            policy_key.security_policy_id());
-            ret = HAL_RET_ERR;
-            goto end;
-        }
-    } else if (kh.policy_key_or_handle_case() == SecurityPolicyKeyHandle::kSecurityPolicyHandle) {
-        // find by handle
-        policy = find_nwsec_policy_by_handle(kh.security_policy_handle());
-        if (policy == NULL) {
-            HAL_TRACE_ERR("policy with handle: {} not found",
-                            kh.security_policy_handle());
-            ret = HAL_RET_ERR;
-            goto end;
-        }
+    policy  = security_policy_lookup_key_or_handle(kh);
+    if (policy == NULL) {
+        HAL_TRACE_ERR("failed to find the policy");
+        ret = HAL_RET_SECURITY_POLICY_NOT_FOUND;
+        goto end;
     }
+
 
     HAL_TRACE_DEBUG("deleting policy id:{}", policy->key.policy_id);
 
@@ -1632,6 +1805,11 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
                              nwsec_policy_delete_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_DELETE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_DELETE_FAIL);
+    }
     res->set_api_status(hal_prepare_rsp(ret));
 
     return ret;

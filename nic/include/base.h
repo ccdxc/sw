@@ -249,6 +249,7 @@ do {                                                       \
     ENTRY(HAL_RET_SSL_CERT_KEY_ADD_ERR,       67, "failed to add cert/key to SSL") \
     ENTRY(HAL_RET_KEY_HANDLE_NOT_SPECIFIED,   68, "key and handle not set")        \
     ENTRY(HAL_RET_CERT_NOT_FOUND,             69, "Certificate not found")         \
+    ENTRY(HAL_RET_SECURITY_POLICY_NOT_FOUND,  70, "Security policy not found")     \
                                                                                    \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

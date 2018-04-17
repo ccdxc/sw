@@ -589,7 +589,7 @@ typedef struct nwsec_policy_s {
     nwsec_rule_t   *dense_rules[MAX_RULES]; // Dense rules will be linearly arranged hashes with pointer to the rules.
     ht             *rules_ht[MAX_VERSION];
     hal_handle_t    hal_handle;
-    const acl_ctx_t      *acl_ctx;
+    const acl_ctx_t *acl_ctx;
     ht_ctxt_t       ht_ctxt;
 } nwsec_policy_t;
 
@@ -645,21 +645,25 @@ nwsec_policy_alloc_init()
     return nwsec_policy_init(nwsec_policy_alloc());
 }
 
+static inline hal_ret_t
+nwsec_policy_rules_free(nwsec_policy_t *policy)
+{
+    for (uint32_t rule_index = 0; rule_index < policy->rule_len; rule_index++) {
+        ref_dec(&policy->dense_rules[rule_index]->ref_count);
+    }
+    return HAL_RET_OK;
+}
+
 // free
 //
 static inline hal_ret_t
 nwsec_policy_free(nwsec_policy_t *policy)
 {
-    for (uint32_t rule_index = 0; rule_index < policy->rule_len; rule_index++) {
-        ref_dec(&policy->dense_rules[rule_index]->ref_count);
-    }
-
+    nwsec_policy_rules_free(policy);
     // Free dense rules one we make it dynamic array
     //HAL_MEM_FREE(policy->dense_rules);
     g_hal_state->nwsec_policy_cfg_slab()->free(policy);
     return HAL_RET_OK;
-
-
 }
 
 static inline hal_ret_t

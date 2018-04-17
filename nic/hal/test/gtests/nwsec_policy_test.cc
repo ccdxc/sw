@@ -131,6 +131,31 @@ TEST_F(nwsec_policy_test, test1)
     acl_classify(res_policy->acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
     EXPECT_EQ(rule, nullptr);
 
+    // Policy Update
+    rule_spec = pol_spec.add_rule();
+    rule_spec->set_rule_id(1);
+    rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+
+    dst_addr = rule_spec->add_dst_address();
+
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0xAABB0000);
+
+    port_range = rule_spec->add_dst_port_range();
+    port_range->set_port_low(1000);
+    port_range->set_port_high(2000);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securitypolicy_update(pol_spec, &res);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    res_policy = find_nwsec_policy_by_key(10, 0);
+
+    acl_classify(res_policy->acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_NE(rule, nullptr);
+
+    // Delete policy
     pol_del_req.mutable_policy_key_or_handle()->set_security_policy_handle(policy_handle);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securitypolicy_delete(pol_del_req, &pol_del_rsp);
