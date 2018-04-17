@@ -1446,7 +1446,7 @@ TEST_F(gft_test, test1) {
     ASSERT_NE(ret, -1);
     ret = capri_table_rw_init();
     ASSERT_NE(ret, -1);
-    ret = capri_hbm_cache_init();
+    ret = capri_hbm_cache_init(NULL);
     ASSERT_NE(ret, -1);
     ret = capri_hbm_cache_regions_init();
     ASSERT_NE(ret, -1);

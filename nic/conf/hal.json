@@ -4,7 +4,9 @@
   {
     "name" : "capri",
     "loader_info_file" : "gen/capri_loader.conf",
-    "hbm_cache" : "true"
+    "llc_cache" : "true",
+    "p4_cache" : "true",
+    "p4plus_cache" : "true"
   },
   "sw" : {
     "grpc_port" : "50054",

@@ -438,8 +438,12 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
         strncpy(hal_cfg->asic_name, sparam.c_str(), HAL_MAX_NAME_STR);
         hal_cfg->loader_info_file =
                 pt.get<std::string>("asic.loader_info_file");
-        hal_cfg->hbm_cache =
-                pt.get<std::string>("asic.hbm_cache", "true");
+        hal_cfg->p4_cache =
+                pt.get<std::string>("asic.p4_cache", "true");
+        hal_cfg->p4plus_cache =
+                pt.get<std::string>("asic.p4plus_cache", "true");
+        hal_cfg->llc_cache =
+                pt.get<std::string>("asic.llc_cache", "true");
 
         hal_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
         if (getenv("HAL_GRPC_PORT")) {

@@ -11,10 +11,13 @@
 #include "boost/property_tree/json_parser.hpp"
 #include <arpa/inet.h>
 
+#include "nic/include/hal_cfg.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
 #include "nic/asic/capri/model/cap_wa/cap_wa_csr.h"
 #include "nic/asic/capri/model/cap_pcie/cap_pxb_csr.h"
+#include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
+#include "nic/asic/capri/verif/apis/cap_nx_api.h"
 
 namespace pt = boost::property_tree;
 
@@ -176,33 +179,83 @@ capri_hbm_write_mem (uint64_t addr, uint8_t *buf, uint32_t size)
     return (rc == HAL_RET_OK) ? 0 : -EIO;
 }
 
-hal_ret_t
-capri_hbm_cache_init (void)
+static hal_ret_t
+capri_hbm_llc_cache_init (hal::hal_cfg_t *hal_cfg)
 {
-    // Disable RXDMA and TXDMA initializations until P4+ cache is fully enabled
-    // Enable P4Plus RXDMA (inst_id = 0)
-    cap_pics_csr_t & rxdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 0);
-    rxdma_pics_csr.picc.cfg_cache_global.bypass(0);
-    rxdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
-    rxdma_pics_csr.picc.cfg_cache_global.write();
+    if (hal_cfg == NULL || hal_cfg->llc_cache == "true") {
+        HAL_TRACE_DEBUG("Enabling HBM LLC cache.");
+        cap_nx_cache_enable();
+    } else {
+        HAL_TRACE_DEBUG("Disabling HBM LLC cache.");
+        cap_nx_cache_disable();
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+capri_hbm_p4_cache_init (hal::hal_cfg_t *hal_cfg)
+{
+    uint32_t global_bypass = 0;
+
+    if (hal_cfg == NULL || hal_cfg->p4_cache == "false") {
+        HAL_TRACE_DEBUG("Disabling HBM P4 cache based on HAL config.");
+        global_bypass = 1;
+    }
 
     // Enable P4 Ingress (inst_id = 1)
     cap_pics_csr_t & ig_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 1);
-    ig_pics_csr.picc.cfg_cache_global.bypass(0);
+    ig_pics_csr.picc.cfg_cache_global.bypass(global_bypass);
     ig_pics_csr.picc.cfg_cache_global.hash_mode(0);
     ig_pics_csr.picc.cfg_cache_global.write();
 
     // Enable P4 Egress (inst_id = 2)
     cap_pics_csr_t & eg_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 2);
-    eg_pics_csr.picc.cfg_cache_global.bypass(0);
+    eg_pics_csr.picc.cfg_cache_global.bypass(global_bypass);
     eg_pics_csr.picc.cfg_cache_global.hash_mode(0);
     eg_pics_csr.picc.cfg_cache_global.write();
 
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+capri_hbm_p4plus_cache_init (hal::hal_cfg_t *hal_cfg)
+{
+    uint32_t global_bypass = 0;
+
+    if (hal_cfg == NULL || hal_cfg->p4plus_cache == "false") {
+        HAL_TRACE_DEBUG("Disabling HBM P4Plus cache based on HAL config.");
+        global_bypass = 1;
+    }
+
+    // Enable P4Plus RXDMA (inst_id = 0)
+    cap_pics_csr_t & rxdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 0);
+    rxdma_pics_csr.picc.cfg_cache_global.bypass(global_bypass);
+    rxdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
+    rxdma_pics_csr.picc.cfg_cache_global.write();
+
     // Enable P4Plus TXDMA (inst_id = 3)
     cap_pics_csr_t & txdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 3);
-    txdma_pics_csr.picc.cfg_cache_global.bypass(0);
+    txdma_pics_csr.picc.cfg_cache_global.bypass(global_bypass);
     txdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
     txdma_pics_csr.picc.cfg_cache_global.write();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_hbm_cache_init (hal::hal_cfg_t *hal_cfg)
+{
+    hal_ret_t   ret;
+
+    ret = capri_hbm_llc_cache_init(hal_cfg);
+    assert(ret == HAL_RET_OK);
+
+    ret = capri_hbm_p4_cache_init(hal_cfg);
+    assert(ret == HAL_RET_OK);
+
+    ret = capri_hbm_p4plus_cache_init(hal_cfg);
+    assert(ret == HAL_RET_OK);
 
     return HAL_RET_OK;
 }

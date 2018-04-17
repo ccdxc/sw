@@ -82,7 +82,7 @@ cc_library(
                "//nic:google_includes",
                "//nic:grpc_includes",
                "//nic/hal/periodic:periodic",
-	       "//nic/hal/pd/asicpd:asicpd"
+               "//nic/hal/pd/asicpd:asicpd"
            ] + capri_util_deps +
            capri_pd_deps,
     alwayslink = 1,

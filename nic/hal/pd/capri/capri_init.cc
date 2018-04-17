@@ -860,12 +860,12 @@ capri_hbm_regions_init (capri_cfg_t *cfg)
 }
 
 static hal_ret_t
-capri_cache_init ()
+capri_cache_init (hal::hal_cfg_t *hal_cfg)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
     // Program Global parameters of the cache.
-    ret = capri_hbm_cache_init();
+    ret = capri_hbm_cache_init(hal_cfg);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -924,12 +924,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        if (hal_cfg->hbm_cache == "true") {
-            HAL_TRACE_DEBUG("Initializing HBM cache.");
-            ret = capri_cache_init();
-        } else {
-            HAL_TRACE_DEBUG("Disabling HBM cache based on HAL config.");
-        }
+        ret = capri_cache_init(hal_cfg);
     }
 
     // Do asic init before overwriting with the default configs

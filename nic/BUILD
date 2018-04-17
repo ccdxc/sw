@@ -17,6 +17,7 @@ cc_library(
     srcs = [
         "asic/capri/model/cap_top/cap_top_csr.cc",
         "asic/capri/model/cap_top/cap_top_csr.h",
+        "asic/capri/model/cap_top/cap_top_csr_defines.h",
         "asic/capri/model/utils/cap_csr_base.cc",
         "asic/capri/model/utils/cap_csr_base.h",
         "asic/capri/model/utils/cpp_int_helper.h",
@@ -131,6 +132,7 @@ cc_library(
         "asic/ip/verif/pcpp/pknobs_holder.h",
         "asic/capri/verif/apis/gen/cap_pb_api.cc",
         "asic/capri/verif/apis/cap_txs_api.cc",
+        "asic/capri/verif/apis/cap_nx_api.cc",
         "asic/capri/design/common/gen/cap_phv_intr_decoders.cc",
         "asic/capri/design/common/gen/cap_phv_intr_decoders.h",
         "asic/capri/design/common/gen/cap_axi_decoders.h",
