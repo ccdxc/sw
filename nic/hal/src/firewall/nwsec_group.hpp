@@ -544,8 +544,7 @@ FIELD_DEF(sg_field_t, sg_range_t, sg, 10);
 FIELD_DEF(port_range_field_t, port_range_t, port, 10);
 
 typedef struct nwsec_rule_s {
-    uint64_t              rule_id;
-    uint32_t              rule_no;
+    uint64_t              rule_id; // Identified the rule - Assumed to be given by Upper layers
     bool                  enable;
 
     nwsec::SecurityAction action;
@@ -554,7 +553,7 @@ typedef struct nwsec_rule_s {
 
     bool                  count_en;
 
-    dllist_ctxt_t         app_list_head;
+    dllist_ctxt_t         app_list_head;    // List of Alg apps
     dllist_ctxt_t         app_group_list_head;
     address_field_t       src_address;
     int                   src_addr_len;
@@ -570,7 +569,7 @@ typedef struct nwsec_rule_s {
     int                   src_port_len;
     uint32_t              hash_value;
     dllist_ctxt_t         dlentry;
-    ht_ctxt_t             ht_ctxt;
+    ht_ctxt_t             ht_ctxt;      // Hash context when this data strucutre is stored in nwsec_policy_t->hash_tree
     uint32_t              priority;
     hal_handle_t          hal_handle;
     acl::ref_t            ref_count;
@@ -587,10 +586,10 @@ typedef struct nwsec_policy_s {
     int             version;
     uint32_t        rule_len;
     nwsec_rule_t   *dense_rules[MAX_RULES]; // Dense rules will be linearly arranged hashes with pointer to the rules.
-    ht             *rules_ht[MAX_VERSION];
+    ht             *rules_ht[MAX_VERSION];  // Hash table of rules
     hal_handle_t    hal_handle;
-    const acl_ctx_t *acl_ctx;
-    ht_ctxt_t       ht_ctxt;
+    const acl_ctx_t *acl_ctx;  // lib acl context needed by acl lib
+    ht_ctxt_t       ht_ctxt;  // Hash context for storing it in the config db
 } nwsec_policy_t;
 
 

@@ -11,30 +11,30 @@ package nwsec;
 option go_package="halproto";
 
 service NwSecurity {
-    rpc SecurityProfileCreate (SecurityProfileRequestMsg) returns (SecurityProfileResponseMsg) {}
-    rpc SecurityProfileUpdate (SecurityProfileRequestMsg) returns (SecurityProfileResponseMsg) {}
-    rpc SecurityProfileDelete (SecurityProfileDeleteRequestMsg) returns (SecurityProfileDeleteResponseMsg) {}
-    rpc SecurityProfileGet (SecurityProfileGetRequestMsg) returns (SecurityProfileGetResponseMsg) {}
+  rpc SecurityProfileCreate (SecurityProfileRequestMsg) returns (SecurityProfileResponseMsg) {}
+  rpc SecurityProfileUpdate (SecurityProfileRequestMsg) returns (SecurityProfileResponseMsg) {}
+  rpc SecurityProfileDelete (SecurityProfileDeleteRequestMsg) returns (SecurityProfileDeleteResponseMsg) {}
+  rpc SecurityProfileGet (SecurityProfileGetRequestMsg) returns (SecurityProfileGetResponseMsg) {}
 
-    rpc SecurityGroupPolicyCreate (SecurityGroupPolicyRequestMsg) returns (SecurityGroupPolicyResponseMsg) {}
-    rpc SecurityGroupPolicyUpdate (SecurityGroupPolicyRequestMsg) returns (SecurityGroupPolicyResponseMsg) {}
-    rpc SecurityGroupPolicyDelete (SecurityGroupPolicyDeleteRequestMsg) returns (SecurityGroupPolicyDeleteResponseMsg) {}
-    rpc SecurityGroupPolicyGet (SecurityGroupPolicyGetRequestMsg) returns (SecurityGroupPolicyGetResponseMsg) {}
+  rpc SecurityGroupPolicyCreate (SecurityGroupPolicyRequestMsg) returns (SecurityGroupPolicyResponseMsg) {}
+  rpc SecurityGroupPolicyUpdate (SecurityGroupPolicyRequestMsg) returns (SecurityGroupPolicyResponseMsg) {}
+  rpc SecurityGroupPolicyDelete (SecurityGroupPolicyDeleteRequestMsg) returns (SecurityGroupPolicyDeleteResponseMsg) {}
+  rpc SecurityGroupPolicyGet (SecurityGroupPolicyGetRequestMsg) returns (SecurityGroupPolicyGetResponseMsg) {}
 
-    rpc SecurityGroupCreate (SecurityGroupRequestMsg) returns (SecurityGroupResponseMsg) {}
-    rpc SecurityGroupUpdate (SecurityGroupRequestMsg) returns (SecurityGroupResponseMsg) {}
-    rpc SecurityGroupDelete (SecurityGroupDeleteRequestMsg) returns (SecurityGroupDeleteResponseMsg) {}
-    rpc SecurityGroupGet (SecurityGroupGetRequestMsg) returns (SecurityGroupGetResponseMsg) {}
+  rpc SecurityGroupCreate (SecurityGroupRequestMsg) returns (SecurityGroupResponseMsg) {}
+  rpc SecurityGroupUpdate (SecurityGroupRequestMsg) returns (SecurityGroupResponseMsg) {}
+  rpc SecurityGroupDelete (SecurityGroupDeleteRequestMsg) returns (SecurityGroupDeleteResponseMsg) {}
+  rpc SecurityGroupGet (SecurityGroupGetRequestMsg) returns (SecurityGroupGetResponseMsg) {}
 
-    rpc DoSPolicyCreate (DoSPolicyRequestMsg) returns (DoSPolicyResponseMsg) {}
-    rpc DoSPolicyUpdate (DoSPolicyRequestMsg) returns (DoSPolicyResponseMsg) {}
-    rpc DoSPolicyDelete (DoSPolicyDeleteRequestMsg) returns (DoSPolicyDeleteResponseMsg) {}
-    rpc DoSPolicyGet (DoSPolicyGetRequestMsg) returns (DoSPolicyGetResponseMsg) {}
+  rpc DoSPolicyCreate (DoSPolicyRequestMsg) returns (DoSPolicyResponseMsg) {}
+  rpc DoSPolicyUpdate (DoSPolicyRequestMsg) returns (DoSPolicyResponseMsg) {}
+  rpc DoSPolicyDelete (DoSPolicyDeleteRequestMsg) returns (DoSPolicyDeleteResponseMsg) {}
+  rpc DoSPolicyGet (DoSPolicyGetRequestMsg) returns (DoSPolicyGetResponseMsg) {}
 
-    rpc SecurityPolicyCreate (SecurityPolicyRequestMsg) returns (SecurityPolicyResponseMsg) {}
-    rpc SecurityPolicyUpdate (SecurityPolicyRequestMsg) returns (SecurityPolicyResponseMsg) {}
-    rpc SecurityPolicyDelete (SecurityPolicyDeleteRequestMsg) returns (SecurityPolicyDeleteResponseMsg) {}
-    rpc SecurityPolicyGet (SecurityPolicyGetRequestMsg) returns (SecurityPolicyGetResponseMsg) {}
+  rpc SecurityPolicyCreate (SecurityPolicyRequestMsg) returns (SecurityPolicyResponseMsg) {}
+  rpc SecurityPolicyUpdate (SecurityPolicyRequestMsg) returns (SecurityPolicyResponseMsg) {}
+  rpc SecurityPolicyDelete (SecurityPolicyDeleteRequestMsg) returns (SecurityPolicyDeleteResponseMsg) {}
+  rpc SecurityPolicyGet (SecurityPolicyGetRequestMsg) returns (SecurityPolicyGetResponseMsg) {}
 }
 
 // normalization feature actions upon detecting malformed packets
@@ -120,7 +120,7 @@ message SecurityProfileSpec {
   uint32                       tcp_timeout                        = 12 [(gogoproto.moretags) = "range:1-172800, venice:default=3600"];
   uint32                       udp_timeout                        = 13 [(gogoproto.moretags) = "range:1-172800, venice:default=30"];
   uint32                       icmp_timeout                       = 14 [(gogoproto.moretags) = "range:1-172800, venice:default=6"];
-
+ 
   bool                         cnxn_tracking_en                   = 15 [(gogoproto.moretags) = "venice:default=true"];
   bool                         ipsg_en                            = 16 [(gogoproto.moretags) = "venice:default=false"];
   bool                         tcp_rtt_estimate_en                = 17 [(gogoproto.moretags) = "venice:default=false"];
@@ -261,7 +261,7 @@ message SecurityProfileDeleteResponseMsg {
 message SecurityProfileGetRequest {
   types.ObjectMeta             meta          = 1;    // object meta
   // key_or_handle is the security profile's identifier for retrieval
-   kh.SecurityProfileKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityProfileKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SecurityProfileGetRequestMsg is batched GET request for SecurityProfile profiles
@@ -298,44 +298,44 @@ enum FirewallAction {
 // in most cases. This object also can specify blanket apps like all TCP or
 // UDP traffic, all IP traffic, ICMP type/code combinations etc.
 message Service {
-  types.IPProtocol           ip_protocol   = 1;    // IP protocol
+  types.IPProtocol           ip_protocol     = 1;    // IP protocol
   oneof l4_info {
-    uint32                 dst_port      = 2;    // TCP or UDP port,
-    types.ICMPMsgType      icmp_msg_type = 3;
+    uint32                   dst_port        = 2;    // TCP or UDP port,
+    types.ICMPMsgType        icmp_msg_type   = 3;
   }
-  ALGName                    alg           = 4;                //  Identifies ALG name
+  ALGName                    alg             = 4;                //  Identifies ALG name
 }
 
 // Applicaion Layer Gateway (ALG) names for invoking appropriate ALG
 enum ALGName {
-   APP_SVC_NONE       = 0;
-   APP_SVC_TFTP       = 1;    // Trivial File Transfer Protocol
-   APP_SVC_FTP        = 2;    // File Transfer Protocol
-   APP_SVC_DNS        = 3;    // Domain Name System
-   APP_SVC_SIP        = 4;    // Session Initiation Protocol
-   APP_SVC_SUN_RPC    = 5;    // SUN Remote Procedure Call
-   APP_SVC_MSFT_RPC   = 6;    // Microsoft Remote Procedure Call
-   APP_SVC_RTSP       = 7;    // Real-Time Streaming Protocol
+  APP_SVC_NONE       = 0;
+  APP_SVC_TFTP       = 1;    // Trivial File Transfer Protocol
+  APP_SVC_FTP        = 2;    // File Transfer Protocol
+  APP_SVC_DNS        = 3;    // Domain Name System
+  APP_SVC_SIP        = 4;    // Session Initiation Protocol
+  APP_SVC_SUN_RPC    = 5;    // SUN Remote Procedure Call
+  APP_SVC_MSFT_RPC   = 6;    // Microsoft Remote Procedure Call
+  APP_SVC_RTSP       = 7;    // Real-Time Streaming Protocol
 }
 
 // FirewallRuleSpec defines a stateful firewall rule that is part of a
 // SecurityGroupSpec
 message FirewallRuleSpec {
-    repeated  Service   svc                = 2;    // application service
-    repeated  string    apps               = 3;    // For appid based policy enforcement
-    FirewallAction      action             = 4;    // action to take
-    bool                log                = 5;    // log if this rule is hit
+  repeated  Service   svc                = 2;    // application service
+  repeated  string    apps               = 3;    // For appid based policy enforcement
+  FirewallAction      action             = 4;    // action to take
+  bool                log                = 5;    // log if this rule is hit 
 }
 
 // ingress policy for the security group
 message SGPolicy {
   repeated FirewallRuleSpec    in_fw_rules       = 1;    // ingress firewall rules
-  repeated FirewallRuleSpec    eg_fw_rules    = 2;    // egress firewall rules
+  repeated FirewallRuleSpec    eg_fw_rules       = 2;    // egress firewall rules
 }
 
 // egress policy for the security group
 //message EgressSGPolicy {
-  //repeated FirewallRuleSpec    fw_rules       = 1;    // egress firewall rules
+ //repeated FirewallRuleSpec    fw_rules       = 1;    // egress firewall rules
 //}
 
 
@@ -426,9 +426,9 @@ message SecurityGroupPolicyGetResponseMsg {
 }
 
 message SecurityGroupSpec {
-    types.ObjectMeta          meta          = 1; // object meta
-    // key_or_handle is the security group's unique identifier
-    kh.SecurityGroupKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  types.ObjectMeta          meta          = 1; // object meta
+  // key_or_handle is the security group's unique identifier
+  kh.SecurityGroupKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SecurityGroupRequestMsg is batched add or modify security group policy request
@@ -506,12 +506,11 @@ message ICMPMsg {
 }
 
 message DoSService {
-    types.IPProtocol           ip_protocol   = 1;    // IP protocol
-    oneof l4_info {
-        uint32                 dst_port      = 2;    // TCP or UDP port,
-                                                     // 0 for other protocols
-        ICMPMsg                icmp_msg      = 3;
-    }
+  types.IPProtocol           ip_protocol   = 1;    // IP protocol
+  oneof l4_info {
+    uint32                   dst_port      = 2;    // TCP or UDP port, 0 for other protocols
+    ICMPMsg                  icmp_msg      = 3;
+  }
 }
 
 // DoSSessionLimits captures the session limits to be enforced on a security
@@ -519,7 +518,7 @@ message DoSService {
 message DoSSessionLimits {
   uint32    max_sessions       = 1;    // max. no of sessions
   uint32    blocking_timeout   = 2;    // cool off period once session count
-                                       // comes below the above limit
+                                      // comes below the above limit
 }
 
 // DoSPolicer is aggregate DoS policer object
@@ -566,12 +565,12 @@ message DoSProtectionSpec {
 
 // ingress policy for DoS
 message IngressDoSPolicy {
-    DoSProtectionSpec dos_protection = 1;   //ingress (D)DoS protection policy
+  DoSProtectionSpec dos_protection = 1;   //ingress (D)DoS protection policy
 }
 
 // egress policy for DoS
 message EgressDoSPolicy {
-    DoSProtectionSpec dos_protection = 1;  //egress (D)DoS Protection policy
+  DoSProtectionSpec dos_protection = 1;  //egress (D)DoS Protection policy
 }
 
 // DoSPolicySpec that has the ingressDosPolicy and EgressDoSPolicy,
@@ -579,11 +578,11 @@ message EgressDoSPolicy {
 // DoSPolicy object and the clients are expected to pass the handle for
 // Get/Modify/Delete calls. Note that there is no identifier for this object
 message DoSPolicySpec {
-   types.ObjectMeta           meta              = 1;    // object meta
-   IngressDoSPolicy           ingress_policy    = 2;    // ingress policy
-   EgressDoSPolicy            egress_policy     = 3;    // egress policy
-   fixed64                    dos_handle        = 4;    // dos policy handle
-   repeated uint64            sg_handle         = 5;    // list of security group handles
+  types.ObjectMeta           meta              = 1;    // object meta
+  IngressDoSPolicy           ingress_policy    = 2;    // ingress policy
+  EgressDoSPolicy            egress_policy     = 3;    // egress policy
+  fixed64                    dos_handle        = 4;    // dos policy handle
+  repeated uint64            sg_handle         = 5;    // list of security group handles
 }
 
 // DoSPolicyRequestMsg is batched add or modify DoS request
@@ -675,209 +674,206 @@ enum PredefinedApps {
 // App - represents an application defined by (Protocol, port) combination
 // along with all applicable parameters
 message App {
-    message AppPortInfo {
-        repeated types.L4PortRange    dst_port_range = 1; // dst port range low, high value
-        repeated types.L4PortRange    src_port_range = 2; // src port range low, high value
-    }
-    message ICMPAppInfo {
-        uint32    icmp_type        = 1;
-        uint32    icmp_code        = 2;
-    }
-    message ICMPv6AppInfo {
-        uint32    icmpv6_type      = 1;
-        uint32    icmpv6_code      = 2;
-    }
-    message RPCAppInfo {
-        uint32    program_number   = 1;
-    }
-    message MSRPCAppInfo {
-        uint32    uuid            = 1;
-    }
+  message AppPortInfo {
+    repeated types.L4PortRange    dst_port_range = 1; // dst port range low, high value
+    repeated types.L4PortRange    src_port_range = 2; // src port range low, high value
+  }
+  message ICMPAppInfo {
+    uint32    icmp_type        = 1;
+    uint32    icmp_code        = 2;
+  }
+  message ICMPv6AppInfo {
+    uint32    icmpv6_type      = 1;
+    uint32    icmpv6_code      = 2;
+  }
+  message RPCAppInfo {
+    uint32    program_number   = 1;
+  }
+  message MSRPCAppInfo {
+    uint32    uuid            = 1;
+  }
 
-    enum TraceLevel {
-        TRACE_LEVEL_NONE      = 0;
-        TRACE_LEVEL_BRIEF     = 1;
-        TRACE_LEVEL_DETAIL    = 2;
-        TRACE_LEVEL_EXTENSIVE = 3;
-        TRACE_LEVEL_VERBOSE   = 4;
-    }
-    message TraceOptions {
-        TraceLevel    level = 1;
-    }
+  enum TraceLevel {
+    TRACE_LEVEL_NONE      = 0;
+    TRACE_LEVEL_BRIEF     = 1;
+    TRACE_LEVEL_DETAIL    = 2;
+    TRACE_LEVEL_EXTENSIVE = 3;
+    TRACE_LEVEL_VERBOSE   = 4;
+  }
+  message TraceOptions {
+    TraceLevel    level = 1;
+  }
 
-    types.IPProtocol    protocol        = 1;
-    oneof L4AppInfo {
-        AppPortInfo   port_info         = 2;
-        ICMPAppInfo   icmp_info         = 3;
-        ICMPv6AppInfo icmpv6_info       = 4;
-        RPCAppInfo    rpc_info          = 5;
-        MSRPCAppInfo  msrpc_cinfo       = 6;
-    }
-    PredefinedApps    alg               = 7;
+  types.IPProtocol    protocol      = 1;
+  oneof L4AppInfo {
+    AppPortInfo   port_info         = 2;
+    ICMPAppInfo   icmp_info         = 3;
+    ICMPv6AppInfo icmpv6_info       = 4;
+    RPCAppInfo    rpc_info          = 5;
+    MSRPCAppInfo  msrpc_cinfo       = 6;
+  }
+  PredefinedApps    alg             = 7;
 
-    message FTPOptions {
-        bool allow_mismatch_ip_address  = 1; // pass FTP packets with mismatched IP header address and payload
-    }
-    message DNSOptions {
-        bool      drop_multi_question_packets       = 1; // drop pkt if number of questions > 1
-        bool      drop_large_domain_name_packets    = 2; // drop if domain name size is > 255 bytes
-        uint32    drop_long_label_packets           = 3; // drop if label length > 63
-        uint32    drop_multizone_packets            = 4; // (DDNS) drop if number of zones > 1
-        uint32    max_msg_length                    = 5; // default 512 (max. 8192) bytes
-    }
-    message MSRPCOptions {
-        uint32 map_entry_timeout             = 1;
-    }
-    message SunRPCOptions {
-        uint32 map_entry_timeout             = 1;
-    }
-    message SIPOptions {
-        uint32 ctimeout                      = 1;
-        uint32 dscp_code_point               = 2;
-        uint32 media_inactivity_timeout      = 3;
-        uint32 max_call_duration             = 4;
-        uint32 t1_timer_value                = 5;
-        uint32 t4_timer_value                = 6;
-    }
-    oneof AppOptions {
-        FTPOptions    ftp_option_info        = 8;
-        DNSOptions    dns_option_info        = 9;
-        MSRPCOptions  msrp_coption_info      = 10;
-        SunRPCOptions sun_rpc_pption_info    = 11;
-        SIPOptions    sip_options            = 12;
-    }
-    uint32            idle_timeout           = 13;
-    TraceOptions      trace_opts             = 14;
+  message FTPOptions {
+    bool allow_mismatch_ip_address  = 1; // pass FTP packets with mismatched IP header address and payload
+  }
+  message DNSOptions {
+    bool      drop_multi_question_packets       = 1; // drop pkt if number of questions > 1
+    bool      drop_large_domain_name_packets    = 2; // drop if domain name size is > 255 bytes
+    uint32    drop_long_label_packets           = 3; // drop if label length > 63
+    uint32    drop_multizone_packets            = 4; // (DDNS) drop if number of zones > 1
+    uint32    max_msg_length                    = 5; // default 512 (max. 8192) bytes
+  }
+  message MSRPCOptions {
+    uint32 map_entry_timeout             = 1;
+  }
+  message SunRPCOptions {
+    uint32 map_entry_timeout             = 1;
+  }
+  message SIPOptions {
+    uint32 ctimeout                      = 1;
+    uint32 dscp_code_point               = 2;
+    uint32 media_inactivity_timeout      = 3;
+    uint32 max_call_duration             = 4;
+    uint32 t1_timer_value                = 5;
+    uint32 t4_timer_value                = 6;
+  }
+  oneof AppOptions {
+    FTPOptions    ftp_option_info        = 8;
+    DNSOptions    dns_option_info        = 9;
+    MSRPCOptions  msrp_coption_info      = 10;
+    SunRPCOptions sun_rpc_pption_info    = 11;
+    SIPOptions    sip_options            = 12;
+  }
+  uint32            idle_timeout         = 13;
+  TraceOptions      trace_opts           = 14;
 }
 
 // ApplicationSpec is either a pre-defined pensando application or user-defined
 // custom application
 message ApplicationSpec {
-    oneof apps {
-        PredefinedApps    predefined_apps        = 1; //  Predefined apps
-        App               application            = 2;
-    }
+  oneof apps {
+    PredefinedApps    predefined_apps        = 1; //  Predefined apps
+    App               application            = 2;
+  }
 }
 
 message ApplicationStatus {
 }
 
 message Application {
-    types.ObjectMeta     meta   = 1;
-    ApplicationSpec      spec   = 2;
-    ApplicationStatus    status = 3;
+  types.ObjectMeta     meta   = 1;
+  ApplicationSpec      spec   = 2;
+  ApplicationStatus    status = 3;
 }
 
 // group of applications to apply same policy on
 message AppGroupSpec {
-    repeated Application Apps = 2;
+  repeated Application Apps = 2;
 }
 
 message AppGroupStatus {
 }
 
 message AppGroup {
-    types.ObjectMeta    meta      = 1;
-    AppGroupSpec        spec      = 2;
-    AppGroupStatus      status    = 3;
+  types.ObjectMeta    meta      = 1;
+  AppGroupSpec        spec      = 2;
+  AppGroupStatus      status    = 3;
 }
 
 // AppSec represents an application
 enum SecurityAction {
-    SECURITY_RULE_ACTION_NONE   = 0;
-    SECURITY_RULE_ACTION_ALLOW  = 1;
-    SECURITY_RULE_ACTION_DENY   = 2;
-    SECURITY_RULE_ACTION_REJECT = 3;
+  SECURITY_RULE_ACTION_NONE   = 0;
+  SECURITY_RULE_ACTION_ALLOW  = 1;
+  SECURITY_RULE_ACTION_DENY   = 2;
+  SECURITY_RULE_ACTION_REJECT = 3;
 }
 
 enum LogAction {
-    LOG_NONE                     = 0;
-    LOG_ON_SESSION_START         = 1;
-    LOG_ON_SESSION_END           = 2;
-    LOG_ON_SESSION_START_AND_END = 3;
+  LOG_NONE                     = 0;
+  LOG_ON_SESSION_START         = 1;
+  LOG_ON_SESSION_END           = 2;
+  LOG_ON_SESSION_START_AND_END = 3;
 }
 
 message SecurityRuleAction {
-    SecurityAction  sec_action = 1;  // Identifies the security action related to the rule
-    LogAction       log_action = 2;  // Identifies log actions related to the rule
+  SecurityAction  sec_action = 1;  // Identifies the security action related to the rule
+  LogAction       log_action = 2;  // Identifies log actions related to the rule
 }
 
 message SecurityRuleSpec {
-    uint64                          rule_id            = 1;
-    bool                            enable             = 2;        // enable/disable
-    SecurityRuleAction              action             = 3;        // action related to the rule
-    bool                            count              = 4;        // Enable count of packets hitting the rule
-    repeated Application            app                = 5;        // applications, if any, to invoke ALG
-    repeated AppGroup               app_group          = 6;        // Comment TBD
-    repeated types.IPAddressObj     src_address        = 7;        // source address(es)
-    repeated uint32                 src_sg             = 8;       // source security group
-    repeated types.IPAddressObj     dst_address        = 9;       // destination address(es)
-    repeated uint32                 dst_sg             = 10;       // destination security group
-    repeated types.L4PortRange      dst_port_range     = 11;       // dst port
-    repeated types.L4PortRange      src_port_range     = 12;       // src port range
+  uint64                          rule_id            = 1;
+  bool                            enable             = 2;        // enable/disable
+  SecurityRuleAction              action             = 3;        // action related to the rule 
+  bool                            count              = 4;        // Enable count of packets hitting the rule
+  repeated Application            app                = 5;        // applications, if any, to invoke ALG
+  repeated AppGroup               app_group          = 6;        // Comment TBD
+  repeated types.IPAddressObj     src_address        = 7;        // source address(es)
+  repeated uint32                 src_sg             = 8;        // source security group
+  repeated types.IPAddressObj     dst_address        = 9;        // destination address(es)
+  repeated uint32                 dst_sg             = 10;       // destination security group
+  repeated types.L4PortRange      dst_port_range     = 11;       // dst port
+  repeated types.L4PortRange      src_port_range     = 12;       // src port range
 
-    bool                            conn_track_en      = 13;       // Enable connection tracking
+  bool                            conn_track_en      = 13;       // Enable connection tracking
 }
 
 // SecurityPolicySpec that contains set of SecurityRules
 message SecurityPolicySpec {
-    types.ObjectMeta              meta                   = 1;
-    kh.SecurityPolicyKeyHandle    policy_key_or_handle   = 2;      // Policy Name that identifies the security Policy
-    repeated SecurityRuleSpec     rule                   = 3;      // List of security rules
+  types.ObjectMeta              meta                   = 1;
+  kh.SecurityPolicyKeyHandle    policy_key_or_handle   = 2;      // Policy Name that identifies the security Policy
+  repeated SecurityRuleSpec     rule                   = 3;      // List of security rules
 }
 
 // SecurityPolicyRequestMsg is batched add or modify security policy request
 message SecurityPolicyRequestMsg {
-    repeated SecurityPolicySpec       request = 1;  //  batched request
+  repeated SecurityPolicySpec       request = 1;  //  batched request
 }
 
-
-
 message SecurityPolicyStatus {
-    fixed64  security_policy_handle  = 1; // id of the security policy returned by HAL
+  fixed64  security_policy_handle  = 1; // id of the security policy returned by HAL
 }
 
 // SecurityPolicyResponse is the response to SecurityPolicyRequest
 message SecurityPolicyResponse {
-    types.ApiStatus       api_status         = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
-    SecurityPolicyStatus  policy_status      = 2;  // operational status
+  types.ApiStatus       api_status         = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  SecurityPolicyStatus  policy_status      = 2;  // operational status
 }
 
 message SecurityPolicyResponseMsg {
-    repeated SecurityPolicyResponse response = 1;
+  repeated SecurityPolicyResponse response = 1;
 }
 
-
-// SecurityPolicyDeleteRequest is used to delete a security rule
+// SecurityPolicyDeleteRequest is used to delete a security rule 
 message SecurityPolicyDeleteRequest {
-    types.ObjectMeta                meta                  = 1; // object meta
-    kh.SecurityPolicyKeyHandle      policy_key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""]; // policy_handle
+  types.ObjectMeta                meta                  = 1; // object meta
+  kh.SecurityPolicyKeyHandle      policy_key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""]; // policy_handle 
 }
 
 // SecurityPolicyDeleteRequestMsg is used to delete a batch of security policy
 message SecurityPolicyDeleteRequestMsg {
-    repeated SecurityPolicyDeleteRequest  request = 1;
+  repeated SecurityPolicyDeleteRequest  request = 1;
 }
 
 message SecurityPolicyDeleteResponse {
-    types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
 }
 
 // SecurityPolicyDeleteResponseMsg is batched response to SecurityPolicyDeleteRequestMsg
 message SecurityPolicyDeleteResponseMsg {
-    repeated SecurityPolicyDeleteResponse response = 1;  // API status code
+  repeated SecurityPolicyDeleteResponse response = 1;  // API status code
 }
 
 // SecurityPolicyGet is used to get information about a security policy
 message SecurityPolicyGetRequest {
-    types.ObjectMeta              meta          = 1; // object meta
-    // key_or_handle is the security policy's unique identifier
-    kh.SecurityPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  types.ObjectMeta              meta          = 1; // object meta
+  // key_or_handle is the security policy's unique identifier
+  kh.SecurityPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SecurityPolicyGetRequestMsg is batched GET request for security policy
 message SecurityPolicyGetRequestMsg {
-    repeated SecurityPolicyGetRequest    request = 1; // batched get request
+  repeated SecurityPolicyGetRequest    request = 1; // batched get request
 }
 
 // SecurityPolicyStats - place holder
@@ -887,13 +883,13 @@ message SecurityPolicyStats {
 // SecurityPolicyGetResponse caputres all the information about a security policy
 // only if api_status indicates success, other fields are valid
 message SecurityPolicyGetResponse {
-    types.ApiStatus       api_status  = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
-    SecurityPolicySpec    spec        = 2;  // SecurityPolicy configuration
-    SecurityPolicyStatus  status      = 3;  // operational state of the security policy
-    SecurityPolicyStats   stats       = 4;  // Stats related to security policy
+  types.ApiStatus       api_status  = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
+  SecurityPolicySpec    spec        = 2;  // SecurityPolicy configuration
+  SecurityPolicyStatus  status      = 3;  // operational state of the security policy
+  SecurityPolicyStats   stats       = 4;  // Stats related to security policy
 }
 
 // SecurityPolicyGetResponse Msg is batched response to SecurityPolicyGetRequestMsg
 message SecurityPolicyGetResponseMsg {
-    repeated SecurityPolicyGetResponse   response   = 1;
+  repeated SecurityPolicyGetResponse   response   = 1;
 }
