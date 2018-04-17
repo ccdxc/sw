@@ -13,8 +13,9 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
-	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -23,7 +24,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var funcMapX509 = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapX509 = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *Certificate) MakeKey(prefix string) string {
@@ -205,13 +206,13 @@ func (m *CertificateList) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *CertificateSpec) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapX509["CertificateSpec"][ver]; ok {
+	if vs, ok := validatorMapX509["CertificateSpec"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapX509["CertificateSpec"]["all"]; ok {
+	} else if vs, ok := validatorMapX509["CertificateSpec"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -222,13 +223,13 @@ func (m *CertificateSpec) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *CertificateStatus) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapX509["CertificateStatus"][ver]; ok {
+	if vs, ok := validatorMapX509["CertificateStatus"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapX509["CertificateStatus"]["all"]; ok {
+	} else if vs, ok := validatorMapX509["CertificateStatus"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -239,10 +240,11 @@ func (m *CertificateStatus) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func init() {
-	funcMapX509 = make(map[string]map[string][]func(interface{}) bool)
 
-	funcMapX509["CertificateSpec"] = make(map[string][]func(interface{}) bool)
-	funcMapX509["CertificateSpec"]["all"] = append(funcMapX509["CertificateSpec"]["all"], func(i interface{}) bool {
+	validatorMapX509 = make(map[string]map[string][]func(interface{}) bool)
+
+	validatorMapX509["CertificateSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapX509["CertificateSpec"]["all"] = append(validatorMapX509["CertificateSpec"]["all"], func(i interface{}) bool {
 		m := i.(*CertificateSpec)
 
 		for _, v := range m.Usages {
@@ -253,8 +255,8 @@ func init() {
 		return true
 	})
 
-	funcMapX509["CertificateStatus"] = make(map[string][]func(interface{}) bool)
-	funcMapX509["CertificateStatus"]["all"] = append(funcMapX509["CertificateStatus"]["all"], func(i interface{}) bool {
+	validatorMapX509["CertificateStatus"] = make(map[string][]func(interface{}) bool)
+	validatorMapX509["CertificateStatus"]["all"] = append(validatorMapX509["CertificateStatus"]["all"], func(i interface{}) bool {
 		m := i.(*CertificateStatus)
 
 		if _, ok := CertificateStatus_ValidityValues_value[m.Validity]; !ok {

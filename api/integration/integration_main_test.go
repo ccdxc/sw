@@ -14,6 +14,7 @@ import (
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
@@ -21,7 +22,10 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
+	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/testenv"
 	"github.com/pensando/sw/venice/utils/trace"
 
 	apicache "github.com/pensando/sw/api/cache"
@@ -31,11 +35,20 @@ import (
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 )
 
+const (
+	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
+	certPath  = "../../venice/utils/certmgr/testdata/ca.cert.pem"
+	keyPath   = "../../venice/utils/certmgr/testdata/ca.key.pem"
+	rootsPath = "../../venice/utils/certmgr/testdata/roots.pem"
+)
+
 type tInfo struct {
 	l             log.Logger
 	apiserverport string
 	apigwport     string
+	cache         apicache.Interface
 	esServer      *esmock.ElasticServer
+	certsrvurl    string
 }
 
 var tinfo tInfo
@@ -81,6 +94,26 @@ func startSpyglass() finder.Interface {
 
 }
 func TestMain(m *testing.M) {
+	// TLS is needed for ApiServer to know who is making a request (ApiGw, controller, etc)
+
+	// instantiate a certificates server
+	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)
+	if err != nil {
+		log.Fatalf("Error instantiating certsrv: %v", err)
+	}
+
+	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
+	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
+		p, err := tlsproviders.NewDefaultCMDBasedProvider(certSrv.GetListenURL(), svcName)
+		if err != nil {
+			return nil, err
+		}
+		return p, nil
+	}
+	testenv.EnableRpckitTestMode()
+	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
+	tinfo.certsrvurl = certSrv.GetListenURL()
+
 	// Start the API server
 	apiserverAddress := ":0"
 	l := log.WithContext("module", "CrudOpsTest")
@@ -99,6 +132,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic("failed to create cache")
 	}
+	tinfo.cache = cache
 	srvconfig := apiserver.Config{
 		GrpcServerPort: apiserverAddress,
 		DebugMode:      false,

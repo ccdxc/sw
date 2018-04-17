@@ -216,4 +216,5 @@ func (m *TrafficEncryptionPolicyStatus) Validate(ver string, ignoreStatus bool) 
 }
 
 func init() {
+
 }

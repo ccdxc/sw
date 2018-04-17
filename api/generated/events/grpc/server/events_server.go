@@ -140,6 +140,7 @@ func (s *seventsEventsBackend) CompleteRegistration(ctx context.Context, logger 
 			}
 			return nil
 		}),
+
 		"events.EventAttributes": apisrvpkg.NewMessage("events.EventAttributes"),
 		"events.EventExport":     apisrvpkg.NewMessage("events.EventExport"),
 		"events.EventPolicy": apisrvpkg.NewMessage("events.EventPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -238,6 +239,7 @@ func (s *seventsEventsBackend) CompleteRegistration(ctx context.Context, logger 
 			}
 			return nil
 		}),
+
 		"events.EventPolicyList": apisrvpkg.NewMessage("events.EventPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := events.EventPolicyList{}
@@ -353,6 +355,7 @@ func (s *seventsEventsBackend) CompleteRegistration(ctx context.Context, logger 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := events.AutoMsgEventPolicyWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,

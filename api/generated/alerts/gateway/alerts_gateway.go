@@ -233,6 +233,8 @@ func (e *sAlertDestinationV1GwService) newClient(ctx context.Context, grpcAddr s
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
 	}
 
 	if !devmode {
@@ -453,6 +455,8 @@ func (e *sAlertPolicyV1GwService) newClient(ctx context.Context, grpcAddr string
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
 	}
 
 	if !devmode {

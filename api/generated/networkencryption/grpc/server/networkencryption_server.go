@@ -155,6 +155,7 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 			}
 			return nil
 		}),
+
 		"networkencryption.TrafficEncryptionPolicyList": apisrvpkg.NewMessage("networkencryption.TrafficEncryptionPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := networkencryption.TrafficEncryptionPolicyList{}
@@ -268,6 +269,7 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := networkencryption.AutoMsgTrafficEncryptionPolicyWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,

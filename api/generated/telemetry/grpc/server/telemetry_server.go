@@ -179,6 +179,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 			}
 			return nil
 		}),
+
 		"telemetry.FlowExportPolicyList": apisrvpkg.NewMessage("telemetry.FlowExportPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := telemetry.FlowExportPolicyList{}
@@ -291,6 +292,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 			}
 			return nil
 		}),
+
 		"telemetry.FwlogPolicyList": apisrvpkg.NewMessage("telemetry.FwlogPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := telemetry.FwlogPolicyList{}
@@ -401,6 +403,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 			}
 			return nil
 		}),
+
 		"telemetry.StatsPolicyList": apisrvpkg.NewMessage("telemetry.StatsPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := telemetry.StatsPolicyList{}
@@ -520,6 +523,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := telemetry.AutoMsgFlowExportPolicyWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -640,6 +644,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := telemetry.AutoMsgFwlogPolicyWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -760,6 +765,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := telemetry.AutoMsgStatsPolicyWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,

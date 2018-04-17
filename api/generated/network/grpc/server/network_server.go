@@ -231,6 +231,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			}
 			return nil
 		}),
+
 		"network.EndpointList": apisrvpkg.NewMessage("network.EndpointList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.EndpointList{}
@@ -342,6 +343,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			}
 			return nil
 		}),
+
 		"network.LbPolicyList": apisrvpkg.NewMessage("network.LbPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.LbPolicyList{}
@@ -452,6 +454,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			}
 			return nil
 		}),
+
 		"network.NetworkList": apisrvpkg.NewMessage("network.NetworkList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.NetworkList{}
@@ -563,6 +566,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			}
 			return nil
 		}),
+
 		"network.SecurityGroupList": apisrvpkg.NewMessage("network.SecurityGroupList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.SecurityGroupList{}
@@ -673,6 +677,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			}
 			return nil
 		}),
+
 		"network.ServiceList": apisrvpkg.NewMessage("network.ServiceList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.ServiceList{}
@@ -783,6 +788,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			}
 			return nil
 		}),
+
 		"network.SgpolicyList": apisrvpkg.NewMessage("network.SgpolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.SgpolicyList{}
@@ -895,6 +901,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			}
 			return nil
 		}),
+
 		"network.TenantList": apisrvpkg.NewMessage("network.TenantList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.TenantList{}
@@ -1018,6 +1025,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := network.AutoMsgEndpointWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1138,6 +1146,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := network.AutoMsgLbPolicyWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1258,6 +1267,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := network.AutoMsgNetworkWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1378,6 +1388,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := network.AutoMsgSecurityGroupWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1498,6 +1509,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := network.AutoMsgServiceWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1618,6 +1630,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := network.AutoMsgSgpolicyWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1738,6 +1751,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := network.AutoMsgTenantWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,

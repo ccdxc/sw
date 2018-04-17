@@ -123,6 +123,32 @@ message Coupon {
   string DiscountCode = 3;
 }
 
+message CustomerPersonalInfo {
+  string SSN = 1 [(venice.storageTransformer) = "Secret()", (venice.storageTransformer) = "Secret()", // super secret encrypted twice!
+                  (gogoproto.jsontag) = "ssn,omitempty"];
+  string MotherMaidenName = 2 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "mother-maiden-name,omitempty"];
+}
+
+message CustomerSpec {
+  string Address = 1;
+  repeated string CreditCardNumbers = 2 [(venice.storageTransformer) = "Secret()", (venice.check) = "StrLen(3,16)"];
+  bytes Password = 3 [(venice.storageTransformer) = "Secret()"];
+  CustomerPersonalInfo PasswordRecoveryInfo = 4 [(gogoproto.nullable) = false];
+}
+
+message CustomerStatus {
+}
+
+message Customer {
+  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+
+  option (venice.objectPrefix) = {Collection: "customers"};
+
+  CustomerSpec Spec = 3 [(gogoproto.nullable) = false];
+  CustomerStatus Status = 4 [(gogoproto.nullable) = false];
+}
+
 message ApplyDiscountReq {
   api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
@@ -163,6 +189,7 @@ service BookstoreV1 {
   option (venice.apiGrpcCrudService) = "Publisher";
   option (venice.apiGrpcCrudService) = "Store";
   option (venice.apiGrpcCrudService) = "Coupon";
+  option (venice.apiGrpcCrudService) = "Customer";
 
   // REST resources exposed by the service. The Option specifies
   //   Object  - The resource
@@ -181,6 +208,11 @@ service BookstoreV1 {
   option (venice.apiRestService) = {
         Object: "Store"
         Method: [ "put", "get", "post", "delete" ]
+     };
+
+  option (venice.apiRestService) = {
+        Object: "Customer"
+        Method: [ "put", "get", "delete", "post", "list" ]
      };
 
   // Action on a Object

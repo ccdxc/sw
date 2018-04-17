@@ -272,4 +272,5 @@ func (m *SearchResult) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func init() {
+
 }

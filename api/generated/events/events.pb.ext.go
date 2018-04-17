@@ -13,8 +13,9 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
-	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -23,7 +24,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var funcMapEvents = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapEvents = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *Event) MakeKey(prefix string) string {
@@ -285,13 +286,13 @@ func (m *Event) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *EventAttributes) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapEvents["EventAttributes"][ver]; ok {
+	if vs, ok := validatorMapEvents["EventAttributes"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapEvents["EventAttributes"]["all"]; ok {
+	} else if vs, ok := validatorMapEvents["EventAttributes"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -305,13 +306,13 @@ func (m *EventExport) Validate(ver string, ignoreStatus bool) bool {
 	if m.Selector != nil && !m.Selector.Validate(ver, ignoreStatus) {
 		return false
 	}
-	if vs, ok := funcMapEvents["EventExport"][ver]; ok {
+	if vs, ok := validatorMapEvents["EventExport"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapEvents["EventExport"]["all"]; ok {
+	} else if vs, ok := validatorMapEvents["EventExport"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -355,10 +356,11 @@ func (m *EventSource) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func init() {
-	funcMapEvents = make(map[string]map[string][]func(interface{}) bool)
 
-	funcMapEvents["EventAttributes"] = make(map[string][]func(interface{}) bool)
-	funcMapEvents["EventAttributes"]["all"] = append(funcMapEvents["EventAttributes"]["all"], func(i interface{}) bool {
+	validatorMapEvents = make(map[string]map[string][]func(interface{}) bool)
+
+	validatorMapEvents["EventAttributes"] = make(map[string][]func(interface{}) bool)
+	validatorMapEvents["EventAttributes"]["all"] = append(validatorMapEvents["EventAttributes"]["all"], func(i interface{}) bool {
 		m := i.(*EventAttributes)
 
 		if _, ok := SeverityLevel_value[m.Severity]; !ok {
@@ -367,8 +369,8 @@ func init() {
 		return true
 	})
 
-	funcMapEvents["EventExport"] = make(map[string][]func(interface{}) bool)
-	funcMapEvents["EventExport"]["all"] = append(funcMapEvents["EventExport"]["all"], func(i interface{}) bool {
+	validatorMapEvents["EventExport"] = make(map[string][]func(interface{}) bool)
+	validatorMapEvents["EventExport"]["all"] = append(validatorMapEvents["EventExport"]["all"], func(i interface{}) bool {
 		m := i.(*EventExport)
 
 		if _, ok := EventExportFormat_value[m.Format]; !ok {

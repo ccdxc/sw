@@ -4,8 +4,8 @@
 Package {{.GoPkg.Name}}ApiServer is a auto generated package.
 Input file: {{.Name}}
 */
-package {{.GoPkg.Name}}ApiServer{{$validators := getValidatorManifest .}}{{if isAPIServerServed .}}
-
+package {{.GoPkg.Name}}ApiServer
+{{$validators := getValidatorManifest .}}{{$storageTransformers := getStorageTransformersManifest .}}{{if isAPIServerServed .}}
 import (
 	"context"
 	"fmt"
@@ -147,7 +147,8 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 				return fmt.Errorf("Default Validation failed")
 			}
 			return nil
-		}){{end}},{{else}}{{if isListHelper .}}.WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+		}){{end}}{{$msgname := .Name}}{{with (index $storageTransformers.Map (derefStr .Name))}}{{if .HasTransformers}}.WithStorageTransformer(&{{$pkgname}}.Storage{{$msgname}}Transformer){{end}}{{end}},
+		{{else}}{{if isListHelper .}}.WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 			{{$objname := getListType . true}}
 			into := {{$pkgname}}.{{.Name}}{}
 			r := {{$objname}}{}
@@ -156,7 +157,11 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
 				return nil, err
-			}
+			}{{with (index $storageTransformers.Map (derefStr .Name))}}{{if .HasTransformers}}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
+  			return nil, err
+			}{{end}}{{end}}
 			return into, nil
 		}){{end}},{{end}}{{end}}{{end}}
 		// Add a message handler for ListWatch options
@@ -230,6 +235,14 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					{{$crudname := .}}{{with (index $storageTransformers.Map (derefStr .))}}{{if .HasTransformers}}{
+						txin, err := {{$pkgname}}.Storage{{$crudname}}Transformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to {{$crudname}}")
+						}
+						obj := txin.({{$pkgname}}.{{$crudname}})
+						in = &obj
+					}{{end}}{{end}}
 					strEvent := {{$pkgname}}.AutoMsg{{.}}WatchHelper{
 						Type:   string(ev.Type),
 						Object: in,

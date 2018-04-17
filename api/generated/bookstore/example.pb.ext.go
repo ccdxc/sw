@@ -7,6 +7,7 @@ Input file: protos/example.proto
 package bookstore
 
 import (
+	"context"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+	"github.com/pensando/sw/venice/utils/transformers/storage"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -23,7 +25,9 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var funcMapExample = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapExample = make(map[string]map[string][]func(interface{}) bool)
+
+var storageTransformersMapExample = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error)
 
 // MakeKey generates a KV store key for the object
 func (m *ApplyDiscountReq) MakeKey(prefix string) string {
@@ -38,6 +42,11 @@ func (m *Book) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *Coupon) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Coupon/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *Customer) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "customers/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -83,6 +92,12 @@ func (m *CouponList) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *CustomerList) MakeKey(prefix string) string {
+	obj := Customer{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *OrderList) MakeKey(prefix string) string {
 	obj := Order{}
 	return obj.MakeKey(prefix)
@@ -109,6 +124,12 @@ func (m *AutoMsgBookWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgCouponWatchHelper) MakeKey(prefix string) string {
 	obj := Coupon{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgCustomerWatchHelper) MakeKey(prefix string) string {
+	obj := Customer{}
 	return obj.MakeKey(prefix)
 }
 
@@ -195,6 +216,31 @@ func (m *AutoMsgCouponWatchHelper) Clone(into interface{}) (interface{}, error) 
 // Default sets up the defaults for the object
 func (m *AutoMsgCouponWatchHelper) Defaults(ver string) bool {
 	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgCustomerWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgCustomerWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgCustomerWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgCustomerWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgCustomerWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -441,6 +487,120 @@ func (m *CouponList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *CouponList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *Customer) Clone(into interface{}) (interface{}, error) {
+	var out *Customer
+	var ok bool
+	if into == nil {
+		out = &Customer{}
+	} else {
+		out, ok = into.(*Customer)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Customer) Defaults(ver string) bool {
+	var ret bool
+	ret = ret || m.Spec.Defaults(ver)
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *CustomerList) Clone(into interface{}) (interface{}, error) {
+	var out *CustomerList
+	var ok bool
+	if into == nil {
+		out = &CustomerList{}
+	} else {
+		out, ok = into.(*CustomerList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CustomerList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *CustomerPersonalInfo) Clone(into interface{}) (interface{}, error) {
+	var out *CustomerPersonalInfo
+	var ok bool
+	if into == nil {
+		out = &CustomerPersonalInfo{}
+	} else {
+		out, ok = into.(*CustomerPersonalInfo)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CustomerPersonalInfo) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *CustomerSpec) Clone(into interface{}) (interface{}, error) {
+	var out *CustomerSpec
+	var ok bool
+	if into == nil {
+		out = &CustomerSpec{}
+	} else {
+		out, ok = into.(*CustomerSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CustomerSpec) Defaults(ver string) bool {
+	var ret bool
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *CustomerStatus) Clone(into interface{}) (interface{}, error) {
+	var out *CustomerStatus
+	var ok bool
+	if into == nil {
+		out = &CustomerStatus{}
+	} else {
+		out, ok = into.(*CustomerStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CustomerStatus) Defaults(ver string) bool {
 	return false
 }
 
@@ -817,6 +977,13 @@ func (m *AutoMsgCouponWatchHelper) Validate(ver string, ignoreStatus bool) bool 
 	return true
 }
 
+func (m *AutoMsgCustomerWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
+	return true
+}
+
 func (m *AutoMsgOrderWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
@@ -856,13 +1023,13 @@ func (m *BookList) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *BookSpec) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapExample["BookSpec"][ver]; ok {
+	if vs, ok := validatorMapExample["BookSpec"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapExample["BookSpec"]["all"]; ok {
+	} else if vs, ok := validatorMapExample["BookSpec"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -884,6 +1051,47 @@ func (m *CouponList) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *Customer) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
+	return true
+}
+
+func (m *CustomerList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *CustomerPersonalInfo) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *CustomerSpec) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := validatorMapExample["CustomerSpec"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := validatorMapExample["CustomerSpec"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (m *CustomerStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
 func (m *Order) Validate(ver string, ignoreStatus bool) bool {
 	if !m.Spec.Validate(ver, ignoreStatus) {
 		return false
@@ -897,13 +1105,13 @@ func (m *Order) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *OrderItem) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapExample["OrderItem"][ver]; ok {
+	if vs, ok := validatorMapExample["OrderItem"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapExample["OrderItem"]["all"]; ok {
+	} else if vs, ok := validatorMapExample["OrderItem"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -932,13 +1140,13 @@ func (m *OrderStatus) Validate(ver string, ignoreStatus bool) bool {
 			return false
 		}
 	}
-	if vs, ok := funcMapExample["OrderStatus"][ver]; ok {
+	if vs, ok := validatorMapExample["OrderStatus"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapExample["OrderStatus"]["all"]; ok {
+	} else if vs, ok := validatorMapExample["OrderStatus"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -969,13 +1177,13 @@ func (m *PublisherList) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *PublisherSpec) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapExample["PublisherSpec"][ver]; ok {
+	if vs, ok := validatorMapExample["PublisherSpec"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapExample["PublisherSpec"]["all"]; ok {
+	} else if vs, ok := validatorMapExample["PublisherSpec"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -1009,11 +1217,91 @@ func (m *StoreStatus) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func init() {
-	funcMapExample = make(map[string]map[string][]func(interface{}) bool)
+// Transformers
 
-	funcMapExample["BookSpec"] = make(map[string][]func(interface{}) bool)
-	funcMapExample["BookSpec"]["all"] = append(funcMapExample["BookSpec"]["all"], func(i interface{}) bool {
+func (m *AutoMsgCustomerWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Object == nil {
+		return nil
+	}
+	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *Customer) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+type storageCustomerTransformer struct{}
+
+var StorageCustomerTransformer storageCustomerTransformer
+
+func (st *storageCustomerTransformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(Customer)
+	err := r.ApplyStorageTransformer(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (st *storageCustomerTransformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(Customer)
+	err := r.ApplyStorageTransformer(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (m *CustomerList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Items {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Items[i] = &c
+	}
+	return nil
+}
+
+func (m *CustomerPersonalInfo) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if vs, ok := storageTransformersMapExample["CustomerPersonalInfo"]; ok {
+		for _, v := range vs {
+			if err := v(ctx, m, toStorage); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (m *CustomerSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if err := m.PasswordRecoveryInfo.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	if vs, ok := storageTransformersMapExample["CustomerSpec"]; ok {
+		for _, v := range vs {
+			if err := v(ctx, m, toStorage); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func init() {
+
+	validatorMapExample = make(map[string]map[string][]func(interface{}) bool)
+
+	validatorMapExample["BookSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapExample["BookSpec"]["all"] = append(validatorMapExample["BookSpec"]["all"], func(i interface{}) bool {
 		m := i.(*BookSpec)
 
 		if _, ok := BookSpec_BookCategories_value[m.Category]; !ok {
@@ -1022,8 +1310,23 @@ func init() {
 		return true
 	})
 
-	funcMapExample["OrderItem"] = make(map[string][]func(interface{}) bool)
-	funcMapExample["OrderItem"]["all"] = append(funcMapExample["OrderItem"]["all"], func(i interface{}) bool {
+	validatorMapExample["CustomerSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapExample["CustomerSpec"]["all"] = append(validatorMapExample["CustomerSpec"]["all"], func(i interface{}) bool {
+		m := i.(*CustomerSpec)
+		args := make([]string, 0)
+		args = append(args, "3")
+		args = append(args, "16")
+
+		for _, v := range m.CreditCardNumbers {
+			if !validators.StrLen(v, args) {
+				return false
+			}
+		}
+		return true
+	})
+
+	validatorMapExample["OrderItem"] = make(map[string][]func(interface{}) bool)
+	validatorMapExample["OrderItem"]["all"] = append(validatorMapExample["OrderItem"]["all"], func(i interface{}) bool {
 		m := i.(*OrderItem)
 		args := make([]string, 0)
 		args = append(args, "3")
@@ -1035,7 +1338,7 @@ func init() {
 		return true
 	})
 
-	funcMapExample["OrderItem"]["all"] = append(funcMapExample["OrderItem"]["all"], func(i interface{}) bool {
+	validatorMapExample["OrderItem"]["all"] = append(validatorMapExample["OrderItem"]["all"], func(i interface{}) bool {
 		m := i.(*OrderItem)
 		args := make([]string, 0)
 		args = append(args, "2")
@@ -1047,8 +1350,8 @@ func init() {
 		return true
 	})
 
-	funcMapExample["OrderStatus"] = make(map[string][]func(interface{}) bool)
-	funcMapExample["OrderStatus"]["all"] = append(funcMapExample["OrderStatus"]["all"], func(i interface{}) bool {
+	validatorMapExample["OrderStatus"] = make(map[string][]func(interface{}) bool)
+	validatorMapExample["OrderStatus"]["all"] = append(validatorMapExample["OrderStatus"]["all"], func(i interface{}) bool {
 		m := i.(*OrderStatus)
 
 		if _, ok := OrderStatus_OrderStatus_value[m.Status]; !ok {
@@ -1057,16 +1360,16 @@ func init() {
 		return true
 	})
 
-	funcMapExample["PublisherSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapExample["PublisherSpec"] = make(map[string][]func(interface{}) bool)
 
-	funcMapExample["PublisherSpec"]["all"] = append(funcMapExample["PublisherSpec"]["all"], func(i interface{}) bool {
+	validatorMapExample["PublisherSpec"]["all"] = append(validatorMapExample["PublisherSpec"]["all"], func(i interface{}) bool {
 		m := i.(*PublisherSpec)
 		if !validators.URI(m.WebAddr) {
 			return false
 		}
 		return true
 	})
-	funcMapExample["PublisherSpec"]["all"] = append(funcMapExample["PublisherSpec"]["all"], func(i interface{}) bool {
+	validatorMapExample["PublisherSpec"]["all"] = append(validatorMapExample["PublisherSpec"]["all"], func(i interface{}) bool {
 		m := i.(*PublisherSpec)
 		args := make([]string, 0)
 		args = append(args, "6")
@@ -1077,5 +1380,124 @@ func init() {
 		}
 		return true
 	})
+
+	{
+		CustomerPersonalInfoMotherMaidenNameTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapExample["CustomerPersonalInfo"] = append(storageTransformersMapExample["CustomerPersonalInfo"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*CustomerPersonalInfo)
+
+				if toStorage {
+					data, err = CustomerPersonalInfoMotherMaidenNameTx.TransformToStorage(ctx, []byte(m.MotherMaidenName))
+				} else {
+					data, err = CustomerPersonalInfoMotherMaidenNameTx.TransformFromStorage(ctx, []byte(m.MotherMaidenName))
+				}
+				m.MotherMaidenName = string(data)
+
+				return err
+			})
+	}
+
+	{
+		CustomerPersonalInfoSSNTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapExample["CustomerPersonalInfo"] = append(storageTransformersMapExample["CustomerPersonalInfo"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*CustomerPersonalInfo)
+
+				if toStorage {
+					data, err = CustomerPersonalInfoSSNTx.TransformToStorage(ctx, []byte(m.SSN))
+				} else {
+					data, err = CustomerPersonalInfoSSNTx.TransformFromStorage(ctx, []byte(m.SSN))
+				}
+				m.SSN = string(data)
+
+				return err
+			})
+	}
+
+	{
+		CustomerPersonalInfoSSNTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapExample["CustomerPersonalInfo"] = append(storageTransformersMapExample["CustomerPersonalInfo"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*CustomerPersonalInfo)
+
+				if toStorage {
+					data, err = CustomerPersonalInfoSSNTx.TransformToStorage(ctx, []byte(m.SSN))
+				} else {
+					data, err = CustomerPersonalInfoSSNTx.TransformFromStorage(ctx, []byte(m.SSN))
+				}
+				m.SSN = string(data)
+
+				return err
+			})
+	}
+
+	{
+		CustomerSpecCreditCardNumbersTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapExample["CustomerSpec"] = append(storageTransformersMapExample["CustomerSpec"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*CustomerSpec)
+
+				slice := make([]string, 0)
+				for _, v := range m.CreditCardNumbers {
+					if toStorage {
+						data, err = CustomerSpecCreditCardNumbersTx.TransformToStorage(ctx, []byte(v))
+					} else {
+						data, err = CustomerSpecCreditCardNumbersTx.TransformFromStorage(ctx, []byte(v))
+					}
+					if err != nil {
+						return err
+					}
+					if data != nil {
+						slice = append(slice, string(data))
+					}
+				}
+				m.CreditCardNumbers = slice
+
+				return err
+			})
+	}
+
+	{
+		CustomerSpecPasswordTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapExample["CustomerSpec"] = append(storageTransformersMapExample["CustomerSpec"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*CustomerSpec)
+
+				if toStorage {
+					data, err = CustomerSpecPasswordTx.TransformToStorage(ctx, []byte(m.Password))
+				} else {
+					data, err = CustomerSpecPasswordTx.TransformFromStorage(ctx, []byte(m.Password))
+				}
+				m.Password = []byte(data)
+
+				return err
+			})
+	}
 
 }

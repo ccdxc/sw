@@ -74,6 +74,17 @@ type BookstoreV1CouponInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
+// BookstoreV1CustomerInterface exposes the CRUD methods for Customer
+type BookstoreV1CustomerInterface interface {
+	Create(ctx context.Context, in *Customer) (*Customer, error)
+	Update(ctx context.Context, in *Customer) (*Customer, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Customer, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Customer, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Customer, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
 // BookstoreV1Interface exposes objects with CRUD operations allowed by the service
 type BookstoreV1Interface interface {
 	Order() BookstoreV1OrderInterface
@@ -81,4 +92,5 @@ type BookstoreV1Interface interface {
 	Publisher() BookstoreV1PublisherInterface
 	Store() BookstoreV1StoreInterface
 	Coupon() BookstoreV1CouponInterface
+	Customer() BookstoreV1CustomerInterface
 }

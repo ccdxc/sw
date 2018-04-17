@@ -99,4 +99,8 @@ extend google.protobuf.FieldOptions {
   repeated string check = 51301;
   // default defines a defaulting rule for the field. Limited to scalar fields.
   repeated string default = 51302;
+  // storageTransformer defines a transformer that is applied to the field
+  // before/after writing/reading to/from persistent storage.
+	// Only available for strings and byte arrays.
+  repeated string storageTransformer = 51303;
 };

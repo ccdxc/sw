@@ -13,8 +13,9 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
-	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -23,7 +24,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var funcMapAlerts = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapAlerts = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *Alert) MakeKey(prefix string) string {
@@ -663,13 +664,13 @@ func (m *AlertPolicySpec) Validate(ver string, ignoreStatus bool) bool {
 			return false
 		}
 	}
-	if vs, ok := funcMapAlerts["AlertPolicySpec"][ver]; ok {
+	if vs, ok := validatorMapAlerts["AlertPolicySpec"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapAlerts["AlertPolicySpec"]["all"]; ok {
+	} else if vs, ok := validatorMapAlerts["AlertPolicySpec"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -697,13 +698,13 @@ func (m *AlertSource) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *AlertSpec) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapAlerts["AlertSpec"][ver]; ok {
+	if vs, ok := validatorMapAlerts["AlertSpec"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapAlerts["AlertSpec"]["all"]; ok {
+	} else if vs, ok := validatorMapAlerts["AlertSpec"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -717,13 +718,13 @@ func (m *AlertStatus) Validate(ver string, ignoreStatus bool) bool {
 	if !m.Reason.Validate(ver, ignoreStatus) {
 		return false
 	}
-	if vs, ok := funcMapAlerts["AlertStatus"][ver]; ok {
+	if vs, ok := validatorMapAlerts["AlertStatus"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapAlerts["AlertStatus"]["all"]; ok {
+	} else if vs, ok := validatorMapAlerts["AlertStatus"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -738,13 +739,13 @@ func (m *AuditInfo) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *AuthConfig) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapAlerts["AuthConfig"][ver]; ok {
+	if vs, ok := validatorMapAlerts["AuthConfig"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapAlerts["AuthConfig"]["all"]; ok {
+	} else if vs, ok := validatorMapAlerts["AuthConfig"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -776,13 +777,13 @@ func (m *MatchedRequirement) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *PrivacyConfig) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapAlerts["PrivacyConfig"][ver]; ok {
+	if vs, ok := validatorMapAlerts["PrivacyConfig"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapAlerts["PrivacyConfig"]["all"]; ok {
+	} else if vs, ok := validatorMapAlerts["PrivacyConfig"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -793,13 +794,13 @@ func (m *PrivacyConfig) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *Requirement) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapAlerts["Requirement"][ver]; ok {
+	if vs, ok := validatorMapAlerts["Requirement"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapAlerts["Requirement"]["all"]; ok {
+	} else if vs, ok := validatorMapAlerts["Requirement"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -810,13 +811,13 @@ func (m *Requirement) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *SNMPTrapServer) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapAlerts["SNMPTrapServer"][ver]; ok {
+	if vs, ok := validatorMapAlerts["SNMPTrapServer"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapAlerts["SNMPTrapServer"]["all"]; ok {
+	} else if vs, ok := validatorMapAlerts["SNMPTrapServer"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -827,10 +828,11 @@ func (m *SNMPTrapServer) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func init() {
-	funcMapAlerts = make(map[string]map[string][]func(interface{}) bool)
 
-	funcMapAlerts["AlertPolicySpec"] = make(map[string][]func(interface{}) bool)
-	funcMapAlerts["AlertPolicySpec"]["all"] = append(funcMapAlerts["AlertPolicySpec"]["all"], func(i interface{}) bool {
+	validatorMapAlerts = make(map[string]map[string][]func(interface{}) bool)
+
+	validatorMapAlerts["AlertPolicySpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapAlerts["AlertPolicySpec"]["all"] = append(validatorMapAlerts["AlertPolicySpec"]["all"], func(i interface{}) bool {
 		m := i.(*AlertPolicySpec)
 
 		if _, ok := AlertSeverity_value[m.Severity]; !ok {
@@ -839,8 +841,8 @@ func init() {
 		return true
 	})
 
-	funcMapAlerts["AlertSpec"] = make(map[string][]func(interface{}) bool)
-	funcMapAlerts["AlertSpec"]["all"] = append(funcMapAlerts["AlertSpec"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["AlertSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapAlerts["AlertSpec"]["all"] = append(validatorMapAlerts["AlertSpec"]["all"], func(i interface{}) bool {
 		m := i.(*AlertSpec)
 
 		if _, ok := AlertSpec_AlertState_value[m.State]; !ok {
@@ -849,8 +851,8 @@ func init() {
 		return true
 	})
 
-	funcMapAlerts["AlertStatus"] = make(map[string][]func(interface{}) bool)
-	funcMapAlerts["AlertStatus"]["all"] = append(funcMapAlerts["AlertStatus"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["AlertStatus"] = make(map[string][]func(interface{}) bool)
+	validatorMapAlerts["AlertStatus"]["all"] = append(validatorMapAlerts["AlertStatus"]["all"], func(i interface{}) bool {
 		m := i.(*AlertStatus)
 
 		if _, ok := AlertSeverity_value[m.Severity]; !ok {
@@ -859,8 +861,8 @@ func init() {
 		return true
 	})
 
-	funcMapAlerts["AuthConfig"] = make(map[string][]func(interface{}) bool)
-	funcMapAlerts["AuthConfig"]["all"] = append(funcMapAlerts["AuthConfig"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["AuthConfig"] = make(map[string][]func(interface{}) bool)
+	validatorMapAlerts["AuthConfig"]["all"] = append(validatorMapAlerts["AuthConfig"]["all"], func(i interface{}) bool {
 		m := i.(*AuthConfig)
 
 		if _, ok := AuthConfig_Algos_value[m.Algo]; !ok {
@@ -869,8 +871,8 @@ func init() {
 		return true
 	})
 
-	funcMapAlerts["PrivacyConfig"] = make(map[string][]func(interface{}) bool)
-	funcMapAlerts["PrivacyConfig"]["all"] = append(funcMapAlerts["PrivacyConfig"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["PrivacyConfig"] = make(map[string][]func(interface{}) bool)
+	validatorMapAlerts["PrivacyConfig"]["all"] = append(validatorMapAlerts["PrivacyConfig"]["all"], func(i interface{}) bool {
 		m := i.(*PrivacyConfig)
 
 		if _, ok := PrivacyConfig_Algos_value[m.Algo]; !ok {
@@ -879,8 +881,8 @@ func init() {
 		return true
 	})
 
-	funcMapAlerts["Requirement"] = make(map[string][]func(interface{}) bool)
-	funcMapAlerts["Requirement"]["all"] = append(funcMapAlerts["Requirement"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["Requirement"] = make(map[string][]func(interface{}) bool)
+	validatorMapAlerts["Requirement"]["all"] = append(validatorMapAlerts["Requirement"]["all"], func(i interface{}) bool {
 		m := i.(*Requirement)
 
 		if _, ok := Requirement_AllowedOperators_value[m.Operator]; !ok {
@@ -889,8 +891,8 @@ func init() {
 		return true
 	})
 
-	funcMapAlerts["SNMPTrapServer"] = make(map[string][]func(interface{}) bool)
-	funcMapAlerts["SNMPTrapServer"]["all"] = append(funcMapAlerts["SNMPTrapServer"]["all"], func(i interface{}) bool {
+	validatorMapAlerts["SNMPTrapServer"] = make(map[string][]func(interface{}) bool)
+	validatorMapAlerts["SNMPTrapServer"]["all"] = append(validatorMapAlerts["SNMPTrapServer"]["all"], func(i interface{}) bool {
 		m := i.(*SNMPTrapServer)
 
 		if _, ok := SNMPTrapServer_SNMPVersions_value[m.Version]; !ok {

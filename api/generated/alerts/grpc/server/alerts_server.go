@@ -164,6 +164,7 @@ func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger 
 			}
 			return nil
 		}),
+
 		"alerts.AlertDestination": apisrvpkg.NewMessage("alerts.AlertDestination").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := alerts.AlertDestination{}
@@ -260,6 +261,7 @@ func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger 
 			}
 			return nil
 		}),
+
 		"alerts.AlertDestinationList": apisrvpkg.NewMessage("alerts.AlertDestinationList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := alerts.AlertDestinationList{}
@@ -370,6 +372,7 @@ func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger 
 			}
 			return nil
 		}),
+
 		"alerts.AlertPolicyList": apisrvpkg.NewMessage("alerts.AlertPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := alerts.AlertPolicyList{}
@@ -501,6 +504,7 @@ func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := alerts.AutoMsgAlertDestinationWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -621,6 +625,7 @@ func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := alerts.AutoMsgAlertPolicyWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,

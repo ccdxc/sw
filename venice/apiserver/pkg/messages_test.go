@@ -69,6 +69,8 @@ func TestMessageWith(t *testing.T) {
 	m = m.WithKvTxnUpdater(f.TxnUpdateFunc).WithKvTxnDelFunc(f.DelFromKvTxnFunc).WithSelfLinkWriter(f.SelfLinkWriterFunc)
 	m = m.WithKvWatchFunc(f.KvwatchFunc).WithKvListFunc(f.KvListFunc)
 	m = m.WithUUIDWriter(f.CreateUUID)
+	stx := mocks.ObjStorageTransformer{}
+	m = m.WithStorageTransformer(&stx)
 	singletonAPISrv.runstate.running = true
 	m.Validate(nil, "", true)
 	var kv kvstore.Interface
@@ -113,6 +115,26 @@ func TestMessageWith(t *testing.T) {
 		t.Errorf("Expecgting 1 call to UpdateSelfLink found %d", f.SelfLinkWrites)
 	}
 	ctx := context.TODO()
+
+	m.TransformToStorage(ctx, apisrv.CreateOper, nil)
+	if stx.TransformToStorageCalled != 1 {
+		t.Errorf("Expecting 1 call to TransformToStorage, found %d", stx.TransformToStorageCalled)
+	}
+	m.TransformFromStorage(ctx, apisrv.CreateOper, nil)
+	if stx.TransformFromStorageCalled != 1 {
+		t.Errorf("Expecting 1 call to TransformFromStorage, found %d", stx.TransformFromStorageCalled)
+	}
+	// Add the same storage transformer a second time. Now each calls increments the counter by 2.
+	m.WithStorageTransformer(&stx)
+	m.TransformToStorage(ctx, apisrv.UpdateOper, nil)
+	if stx.TransformToStorageCalled != 3 {
+		t.Errorf("Expecting 3 calls to TransformToStorage, found %d", stx.TransformToStorageCalled)
+	}
+	m.TransformFromStorage(ctx, apisrv.UpdateOper, nil)
+	if stx.TransformFromStorageCalled != 3 {
+		t.Errorf("Expecting 3 calls to TransformFromStorage, found %d", stx.TransformFromStorageCalled)
+	}
+
 	md := metadata.Pairs(apisrv.RequestParamVersion, "v1",
 		apisrv.RequestParamMethod, "WATCH")
 	ctx = metadata.NewIncomingContext(ctx, md)

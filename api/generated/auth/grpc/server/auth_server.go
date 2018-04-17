@@ -170,6 +170,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 			}
 			return nil
 		}),
+
 		"auth.AuthenticationPolicyList": apisrvpkg.NewMessage("auth.AuthenticationPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := auth.AuthenticationPolicyList{}
@@ -290,6 +291,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 			}
 			return nil
 		}),
+
 		"auth.RoleBinding": apisrvpkg.NewMessage("auth.RoleBinding").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := auth.RoleBinding{}
@@ -386,6 +388,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 			}
 			return nil
 		}),
+
 		"auth.RoleBindingList": apisrvpkg.NewMessage("auth.RoleBindingList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := auth.RoleBindingList{}
@@ -511,6 +514,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 			}
 			return nil
 		}),
+
 		"auth.UserList": apisrvpkg.NewMessage("auth.UserList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := auth.UserList{}
@@ -768,6 +772,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := auth.AutoMsgUserWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -825,6 +830,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := auth.AutoMsgAuthenticationPolicyWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -882,6 +888,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := auth.AutoMsgRoleWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -939,6 +946,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := auth.AutoMsgRoleBindingWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,

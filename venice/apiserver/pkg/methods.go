@@ -412,6 +412,13 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	}
 
 	if kvwrite {
+		// Apply transformToStorage(ctx, i, oper)
+		if oper == apiserver.CreateOper || oper == apiserver.UpdateOper {
+			i, err = m.requestType.TransformToStorage(ctx, oper, i)
+			if err != nil {
+				return nil, err
+			}
+		}
 		resp, err = m.updateKvStore(ctx, i, oper, kv, txn, replaceStatus)
 		if err != nil {
 			return nil, err
@@ -419,6 +426,13 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	} else {
 		l.DebugLog("msg", "KV operation over-ridden")
 		resp = i
+	}
+
+	// Always apply transformFromStorage to the response because response
+	// contains full object
+	resp, err = m.requestType.TransformFromStorage(ctx, oper, resp)
+	if err != nil {
+		return nil, err
 	}
 
 	if span != nil {

@@ -59,6 +59,8 @@ type MessageHdlr struct {
 	modTimeWriter apisrv.SetModTimeFunc
 	// updateSelfLinkFunc sets the SelfLink in the object.
 	selfLinkFunc apisrv.UpdateSelfLinkFunc
+	// functions to invoke before/after writing/reading to storage
+	storageTransformer []apisrv.ObjStorageTransformer
 }
 
 // NewMessage creates a new message performing all initialization needed.
@@ -142,6 +144,12 @@ func (m *MessageHdlr) WithKvWatchFunc(fn apisrv.WatchKvFunc) apisrv.Message {
 // WithSelfLinkWriter updates the selflink in the object
 func (m *MessageHdlr) WithSelfLinkWriter(fn apisrv.UpdateSelfLinkFunc) apisrv.Message {
 	m.selfLinkFunc = fn
+	return m
+}
+
+// WithStorageTransformer updates the storage transformer in the object
+func (m *MessageHdlr) WithStorageTransformer(st apisrv.ObjStorageTransformer) apisrv.Message {
+	m.storageTransformer = append(m.storageTransformer, st)
 	return m
 }
 
@@ -345,4 +353,28 @@ func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.Ser
 		return m.kvWatchFunc(l, options, kv, stream, m.PrepareMsg, ver, svcprefix)
 	}
 	return errNotImplemented
+}
+
+// TransformToStorage applies storage transformers before writing to storage
+func (m *MessageHdlr) TransformToStorage(ctx context.Context, oper apisrv.APIOperType, i interface{}) (interface{}, error) {
+	var err error
+	obj := i
+	for _, stx := range m.storageTransformer {
+		if obj, err = stx.TransformToStorage(ctx, obj); err != nil {
+			return nil, err
+		}
+	}
+	return obj, nil
+}
+
+// TransformFromStorage applies storage transformers after reading from storage
+func (m *MessageHdlr) TransformFromStorage(ctx context.Context, oper apisrv.APIOperType, i interface{}) (interface{}, error) {
+	var err error
+	obj := i
+	for _, stx := range m.storageTransformer {
+		if obj, err = stx.TransformFromStorage(ctx, obj); err != nil {
+			return nil, err
+		}
+	}
+	return obj, nil
 }

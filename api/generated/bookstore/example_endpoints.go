@@ -39,26 +39,31 @@ type EndpointsBookstoreV1Client struct {
 	ApplydiscountEndpoint       endpoint.Endpoint
 	AutoAddBookEndpoint         endpoint.Endpoint
 	AutoAddCouponEndpoint       endpoint.Endpoint
+	AutoAddCustomerEndpoint     endpoint.Endpoint
 	AutoAddOrderEndpoint        endpoint.Endpoint
 	AutoAddPublisherEndpoint    endpoint.Endpoint
 	AutoAddStoreEndpoint        endpoint.Endpoint
 	AutoDeleteBookEndpoint      endpoint.Endpoint
 	AutoDeleteCouponEndpoint    endpoint.Endpoint
+	AutoDeleteCustomerEndpoint  endpoint.Endpoint
 	AutoDeleteOrderEndpoint     endpoint.Endpoint
 	AutoDeletePublisherEndpoint endpoint.Endpoint
 	AutoDeleteStoreEndpoint     endpoint.Endpoint
 	AutoGetBookEndpoint         endpoint.Endpoint
 	AutoGetCouponEndpoint       endpoint.Endpoint
+	AutoGetCustomerEndpoint     endpoint.Endpoint
 	AutoGetOrderEndpoint        endpoint.Endpoint
 	AutoGetPublisherEndpoint    endpoint.Endpoint
 	AutoGetStoreEndpoint        endpoint.Endpoint
 	AutoListBookEndpoint        endpoint.Endpoint
 	AutoListCouponEndpoint      endpoint.Endpoint
+	AutoListCustomerEndpoint    endpoint.Endpoint
 	AutoListOrderEndpoint       endpoint.Endpoint
 	AutoListPublisherEndpoint   endpoint.Endpoint
 	AutoListStoreEndpoint       endpoint.Endpoint
 	AutoUpdateBookEndpoint      endpoint.Endpoint
 	AutoUpdateCouponEndpoint    endpoint.Endpoint
+	AutoUpdateCustomerEndpoint  endpoint.Endpoint
 	AutoUpdateOrderEndpoint     endpoint.Endpoint
 	AutoUpdatePublisherEndpoint endpoint.Endpoint
 	AutoUpdateStoreEndpoint     endpoint.Endpoint
@@ -76,31 +81,37 @@ type EndpointsBookstoreV1RestClient struct {
 	ApplydiscountEndpoint       endpoint.Endpoint
 	AutoAddBookEndpoint         endpoint.Endpoint
 	AutoAddCouponEndpoint       endpoint.Endpoint
+	AutoAddCustomerEndpoint     endpoint.Endpoint
 	AutoAddOrderEndpoint        endpoint.Endpoint
 	AutoAddPublisherEndpoint    endpoint.Endpoint
 	AutoAddStoreEndpoint        endpoint.Endpoint
 	AutoDeleteBookEndpoint      endpoint.Endpoint
 	AutoDeleteCouponEndpoint    endpoint.Endpoint
+	AutoDeleteCustomerEndpoint  endpoint.Endpoint
 	AutoDeleteOrderEndpoint     endpoint.Endpoint
 	AutoDeletePublisherEndpoint endpoint.Endpoint
 	AutoDeleteStoreEndpoint     endpoint.Endpoint
 	AutoGetBookEndpoint         endpoint.Endpoint
 	AutoGetCouponEndpoint       endpoint.Endpoint
+	AutoGetCustomerEndpoint     endpoint.Endpoint
 	AutoGetOrderEndpoint        endpoint.Endpoint
 	AutoGetPublisherEndpoint    endpoint.Endpoint
 	AutoGetStoreEndpoint        endpoint.Endpoint
 	AutoListBookEndpoint        endpoint.Endpoint
 	AutoListCouponEndpoint      endpoint.Endpoint
+	AutoListCustomerEndpoint    endpoint.Endpoint
 	AutoListOrderEndpoint       endpoint.Endpoint
 	AutoListPublisherEndpoint   endpoint.Endpoint
 	AutoListStoreEndpoint       endpoint.Endpoint
 	AutoUpdateBookEndpoint      endpoint.Endpoint
 	AutoUpdateCouponEndpoint    endpoint.Endpoint
+	AutoUpdateCustomerEndpoint  endpoint.Endpoint
 	AutoUpdateOrderEndpoint     endpoint.Endpoint
 	AutoUpdatePublisherEndpoint endpoint.Endpoint
 	AutoUpdateStoreEndpoint     endpoint.Endpoint
 	AutoWatchBookEndpoint       endpoint.Endpoint
 	AutoWatchCouponEndpoint     endpoint.Endpoint
+	AutoWatchCustomerEndpoint   endpoint.Endpoint
 	AutoWatchOrderEndpoint      endpoint.Endpoint
 	AutoWatchPublisherEndpoint  endpoint.Endpoint
 	AutoWatchStoreEndpoint      endpoint.Endpoint
@@ -117,26 +128,31 @@ type EndpointsBookstoreV1Server struct {
 	ApplydiscountEndpoint       endpoint.Endpoint
 	AutoAddBookEndpoint         endpoint.Endpoint
 	AutoAddCouponEndpoint       endpoint.Endpoint
+	AutoAddCustomerEndpoint     endpoint.Endpoint
 	AutoAddOrderEndpoint        endpoint.Endpoint
 	AutoAddPublisherEndpoint    endpoint.Endpoint
 	AutoAddStoreEndpoint        endpoint.Endpoint
 	AutoDeleteBookEndpoint      endpoint.Endpoint
 	AutoDeleteCouponEndpoint    endpoint.Endpoint
+	AutoDeleteCustomerEndpoint  endpoint.Endpoint
 	AutoDeleteOrderEndpoint     endpoint.Endpoint
 	AutoDeletePublisherEndpoint endpoint.Endpoint
 	AutoDeleteStoreEndpoint     endpoint.Endpoint
 	AutoGetBookEndpoint         endpoint.Endpoint
 	AutoGetCouponEndpoint       endpoint.Endpoint
+	AutoGetCustomerEndpoint     endpoint.Endpoint
 	AutoGetOrderEndpoint        endpoint.Endpoint
 	AutoGetPublisherEndpoint    endpoint.Endpoint
 	AutoGetStoreEndpoint        endpoint.Endpoint
 	AutoListBookEndpoint        endpoint.Endpoint
 	AutoListCouponEndpoint      endpoint.Endpoint
+	AutoListCustomerEndpoint    endpoint.Endpoint
 	AutoListOrderEndpoint       endpoint.Endpoint
 	AutoListPublisherEndpoint   endpoint.Endpoint
 	AutoListStoreEndpoint       endpoint.Endpoint
 	AutoUpdateBookEndpoint      endpoint.Endpoint
 	AutoUpdateCouponEndpoint    endpoint.Endpoint
+	AutoUpdateCustomerEndpoint  endpoint.Endpoint
 	AutoUpdateOrderEndpoint     endpoint.Endpoint
 	AutoUpdatePublisherEndpoint endpoint.Endpoint
 	AutoUpdateStoreEndpoint     endpoint.Endpoint
@@ -148,6 +164,7 @@ type EndpointsBookstoreV1Server struct {
 	watchHandlerPublisher func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerStore     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerCoupon    func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerCustomer  func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AddOutage is endpoint for AddOutage
@@ -203,6 +220,20 @@ func (e EndpointsBookstoreV1Client) AutoAddCoupon(ctx context.Context, in *Coupo
 
 type respBookstoreV1AutoAddCoupon struct {
 	V   Coupon
+	Err error
+}
+
+// AutoAddCustomer is endpoint for AutoAddCustomer
+func (e EndpointsBookstoreV1Client) AutoAddCustomer(ctx context.Context, in *Customer) (*Customer, error) {
+	resp, err := e.AutoAddCustomerEndpoint(ctx, in)
+	if err != nil {
+		return &Customer{}, err
+	}
+	return resp.(*Customer), nil
+}
+
+type respBookstoreV1AutoAddCustomer struct {
+	V   Customer
 	Err error
 }
 
@@ -276,6 +307,20 @@ type respBookstoreV1AutoDeleteCoupon struct {
 	Err error
 }
 
+// AutoDeleteCustomer is endpoint for AutoDeleteCustomer
+func (e EndpointsBookstoreV1Client) AutoDeleteCustomer(ctx context.Context, in *Customer) (*Customer, error) {
+	resp, err := e.AutoDeleteCustomerEndpoint(ctx, in)
+	if err != nil {
+		return &Customer{}, err
+	}
+	return resp.(*Customer), nil
+}
+
+type respBookstoreV1AutoDeleteCustomer struct {
+	V   Customer
+	Err error
+}
+
 // AutoDeleteOrder is endpoint for AutoDeleteOrder
 func (e EndpointsBookstoreV1Client) AutoDeleteOrder(ctx context.Context, in *Order) (*Order, error) {
 	resp, err := e.AutoDeleteOrderEndpoint(ctx, in)
@@ -343,6 +388,20 @@ func (e EndpointsBookstoreV1Client) AutoGetCoupon(ctx context.Context, in *Coupo
 
 type respBookstoreV1AutoGetCoupon struct {
 	V   Coupon
+	Err error
+}
+
+// AutoGetCustomer is endpoint for AutoGetCustomer
+func (e EndpointsBookstoreV1Client) AutoGetCustomer(ctx context.Context, in *Customer) (*Customer, error) {
+	resp, err := e.AutoGetCustomerEndpoint(ctx, in)
+	if err != nil {
+		return &Customer{}, err
+	}
+	return resp.(*Customer), nil
+}
+
+type respBookstoreV1AutoGetCustomer struct {
+	V   Customer
 	Err error
 }
 
@@ -416,6 +475,20 @@ type respBookstoreV1AutoListCoupon struct {
 	Err error
 }
 
+// AutoListCustomer is endpoint for AutoListCustomer
+func (e EndpointsBookstoreV1Client) AutoListCustomer(ctx context.Context, in *api.ListWatchOptions) (*CustomerList, error) {
+	resp, err := e.AutoListCustomerEndpoint(ctx, in)
+	if err != nil {
+		return &CustomerList{}, err
+	}
+	return resp.(*CustomerList), nil
+}
+
+type respBookstoreV1AutoListCustomer struct {
+	V   CustomerList
+	Err error
+}
+
 // AutoListOrder is endpoint for AutoListOrder
 func (e EndpointsBookstoreV1Client) AutoListOrder(ctx context.Context, in *api.ListWatchOptions) (*OrderList, error) {
 	resp, err := e.AutoListOrderEndpoint(ctx, in)
@@ -483,6 +556,20 @@ func (e EndpointsBookstoreV1Client) AutoUpdateCoupon(ctx context.Context, in *Co
 
 type respBookstoreV1AutoUpdateCoupon struct {
 	V   Coupon
+	Err error
+}
+
+// AutoUpdateCustomer is endpoint for AutoUpdateCustomer
+func (e EndpointsBookstoreV1Client) AutoUpdateCustomer(ctx context.Context, in *Customer) (*Customer, error) {
+	resp, err := e.AutoUpdateCustomerEndpoint(ctx, in)
+	if err != nil {
+		return &Customer{}, err
+	}
+	return resp.(*Customer), nil
+}
+
+type respBookstoreV1AutoUpdateCustomer struct {
+	V   Customer
 	Err error
 }
 
@@ -581,6 +668,11 @@ func (e EndpointsBookstoreV1Client) AutoWatchCoupon(ctx context.Context, in *api
 	return e.Client.AutoWatchCoupon(ctx, in)
 }
 
+// AutoWatchCustomer performs Watch for Customer
+func (e EndpointsBookstoreV1Client) AutoWatchCustomer(ctx context.Context, in *api.ListWatchOptions) (BookstoreV1_AutoWatchCustomerClient, error) {
+	return e.Client.AutoWatchCustomer(ctx, in)
+}
+
 // AddOutage implementation on server Endpoint
 func (e EndpointsBookstoreV1Server) AddOutage(ctx context.Context, in OutageRequest) (Store, error) {
 	resp, err := e.AddOutageEndpoint(ctx, in)
@@ -667,6 +759,28 @@ func MakeBookstoreV1AutoAddCouponEndpoint(s ServiceBookstoreV1Server, logger log
 		}, nil
 	}
 	return trace.ServerEndpoint("BookstoreV1:AutoAddCoupon")(f)
+}
+
+// AutoAddCustomer implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoAddCustomer(ctx context.Context, in Customer) (Customer, error) {
+	resp, err := e.AutoAddCustomerEndpoint(ctx, in)
+	if err != nil {
+		return Customer{}, err
+	}
+	return *resp.(*Customer), nil
+}
+
+// MakeBookstoreV1AutoAddCustomerEndpoint creates  AutoAddCustomer endpoints for the service
+func MakeBookstoreV1AutoAddCustomerEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Customer)
+		v, err := s.AutoAddCustomer(ctx, *req)
+		return respBookstoreV1AutoAddCustomer{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoAddCustomer")(f)
 }
 
 // AutoAddOrder implementation on server Endpoint
@@ -779,6 +893,28 @@ func MakeBookstoreV1AutoDeleteCouponEndpoint(s ServiceBookstoreV1Server, logger 
 	return trace.ServerEndpoint("BookstoreV1:AutoDeleteCoupon")(f)
 }
 
+// AutoDeleteCustomer implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoDeleteCustomer(ctx context.Context, in Customer) (Customer, error) {
+	resp, err := e.AutoDeleteCustomerEndpoint(ctx, in)
+	if err != nil {
+		return Customer{}, err
+	}
+	return *resp.(*Customer), nil
+}
+
+// MakeBookstoreV1AutoDeleteCustomerEndpoint creates  AutoDeleteCustomer endpoints for the service
+func MakeBookstoreV1AutoDeleteCustomerEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Customer)
+		v, err := s.AutoDeleteCustomer(ctx, *req)
+		return respBookstoreV1AutoDeleteCustomer{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoDeleteCustomer")(f)
+}
+
 // AutoDeleteOrder implementation on server Endpoint
 func (e EndpointsBookstoreV1Server) AutoDeleteOrder(ctx context.Context, in Order) (Order, error) {
 	resp, err := e.AutoDeleteOrderEndpoint(ctx, in)
@@ -887,6 +1023,28 @@ func MakeBookstoreV1AutoGetCouponEndpoint(s ServiceBookstoreV1Server, logger log
 		}, nil
 	}
 	return trace.ServerEndpoint("BookstoreV1:AutoGetCoupon")(f)
+}
+
+// AutoGetCustomer implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoGetCustomer(ctx context.Context, in Customer) (Customer, error) {
+	resp, err := e.AutoGetCustomerEndpoint(ctx, in)
+	if err != nil {
+		return Customer{}, err
+	}
+	return *resp.(*Customer), nil
+}
+
+// MakeBookstoreV1AutoGetCustomerEndpoint creates  AutoGetCustomer endpoints for the service
+func MakeBookstoreV1AutoGetCustomerEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Customer)
+		v, err := s.AutoGetCustomer(ctx, *req)
+		return respBookstoreV1AutoGetCustomer{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoGetCustomer")(f)
 }
 
 // AutoGetOrder implementation on server Endpoint
@@ -999,6 +1157,28 @@ func MakeBookstoreV1AutoListCouponEndpoint(s ServiceBookstoreV1Server, logger lo
 	return trace.ServerEndpoint("BookstoreV1:AutoListCoupon")(f)
 }
 
+// AutoListCustomer implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoListCustomer(ctx context.Context, in api.ListWatchOptions) (CustomerList, error) {
+	resp, err := e.AutoListCustomerEndpoint(ctx, in)
+	if err != nil {
+		return CustomerList{}, err
+	}
+	return *resp.(*CustomerList), nil
+}
+
+// MakeBookstoreV1AutoListCustomerEndpoint creates  AutoListCustomer endpoints for the service
+func MakeBookstoreV1AutoListCustomerEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListCustomer(ctx, *req)
+		return respBookstoreV1AutoListCustomer{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoListCustomer")(f)
+}
+
 // AutoListOrder implementation on server Endpoint
 func (e EndpointsBookstoreV1Server) AutoListOrder(ctx context.Context, in api.ListWatchOptions) (OrderList, error) {
 	resp, err := e.AutoListOrderEndpoint(ctx, in)
@@ -1107,6 +1287,28 @@ func MakeBookstoreV1AutoUpdateCouponEndpoint(s ServiceBookstoreV1Server, logger 
 		}, nil
 	}
 	return trace.ServerEndpoint("BookstoreV1:AutoUpdateCoupon")(f)
+}
+
+// AutoUpdateCustomer implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoUpdateCustomer(ctx context.Context, in Customer) (Customer, error) {
+	resp, err := e.AutoUpdateCustomerEndpoint(ctx, in)
+	if err != nil {
+		return Customer{}, err
+	}
+	return *resp.(*Customer), nil
+}
+
+// MakeBookstoreV1AutoUpdateCustomerEndpoint creates  AutoUpdateCustomer endpoints for the service
+func MakeBookstoreV1AutoUpdateCustomerEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Customer)
+		v, err := s.AutoUpdateCustomer(ctx, *req)
+		return respBookstoreV1AutoUpdateCustomer{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoUpdateCustomer")(f)
 }
 
 // AutoUpdateOrder implementation on server Endpoint
@@ -1284,6 +1486,19 @@ func MakeAutoWatchCouponEndpoint(s ServiceBookstoreV1Server, logger log.Logger) 
 	}
 }
 
+// AutoWatchCustomer is the watch handler for Customer on the server side.
+func (e EndpointsBookstoreV1Server) AutoWatchCustomer(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchCustomerServer) error {
+	return e.watchHandlerCustomer(in, stream)
+}
+
+// MakeAutoWatchCustomerEndpoint creates the Watch endpoint
+func MakeAutoWatchCustomerEndpoint(s ServiceBookstoreV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(BookstoreV1_AutoWatchCustomerServer)
+		return s.AutoWatchCustomer(options, wstream)
+	}
+}
+
 // MakeBookstoreV1ServerEndpoints creates server endpoints
 func MakeBookstoreV1ServerEndpoints(s ServiceBookstoreV1Server, logger log.Logger) EndpointsBookstoreV1Server {
 	return EndpointsBookstoreV1Server{
@@ -1292,26 +1507,31 @@ func MakeBookstoreV1ServerEndpoints(s ServiceBookstoreV1Server, logger log.Logge
 		ApplydiscountEndpoint:       MakeBookstoreV1ApplydiscountEndpoint(s, logger),
 		AutoAddBookEndpoint:         MakeBookstoreV1AutoAddBookEndpoint(s, logger),
 		AutoAddCouponEndpoint:       MakeBookstoreV1AutoAddCouponEndpoint(s, logger),
+		AutoAddCustomerEndpoint:     MakeBookstoreV1AutoAddCustomerEndpoint(s, logger),
 		AutoAddOrderEndpoint:        MakeBookstoreV1AutoAddOrderEndpoint(s, logger),
 		AutoAddPublisherEndpoint:    MakeBookstoreV1AutoAddPublisherEndpoint(s, logger),
 		AutoAddStoreEndpoint:        MakeBookstoreV1AutoAddStoreEndpoint(s, logger),
 		AutoDeleteBookEndpoint:      MakeBookstoreV1AutoDeleteBookEndpoint(s, logger),
 		AutoDeleteCouponEndpoint:    MakeBookstoreV1AutoDeleteCouponEndpoint(s, logger),
+		AutoDeleteCustomerEndpoint:  MakeBookstoreV1AutoDeleteCustomerEndpoint(s, logger),
 		AutoDeleteOrderEndpoint:     MakeBookstoreV1AutoDeleteOrderEndpoint(s, logger),
 		AutoDeletePublisherEndpoint: MakeBookstoreV1AutoDeletePublisherEndpoint(s, logger),
 		AutoDeleteStoreEndpoint:     MakeBookstoreV1AutoDeleteStoreEndpoint(s, logger),
 		AutoGetBookEndpoint:         MakeBookstoreV1AutoGetBookEndpoint(s, logger),
 		AutoGetCouponEndpoint:       MakeBookstoreV1AutoGetCouponEndpoint(s, logger),
+		AutoGetCustomerEndpoint:     MakeBookstoreV1AutoGetCustomerEndpoint(s, logger),
 		AutoGetOrderEndpoint:        MakeBookstoreV1AutoGetOrderEndpoint(s, logger),
 		AutoGetPublisherEndpoint:    MakeBookstoreV1AutoGetPublisherEndpoint(s, logger),
 		AutoGetStoreEndpoint:        MakeBookstoreV1AutoGetStoreEndpoint(s, logger),
 		AutoListBookEndpoint:        MakeBookstoreV1AutoListBookEndpoint(s, logger),
 		AutoListCouponEndpoint:      MakeBookstoreV1AutoListCouponEndpoint(s, logger),
+		AutoListCustomerEndpoint:    MakeBookstoreV1AutoListCustomerEndpoint(s, logger),
 		AutoListOrderEndpoint:       MakeBookstoreV1AutoListOrderEndpoint(s, logger),
 		AutoListPublisherEndpoint:   MakeBookstoreV1AutoListPublisherEndpoint(s, logger),
 		AutoListStoreEndpoint:       MakeBookstoreV1AutoListStoreEndpoint(s, logger),
 		AutoUpdateBookEndpoint:      MakeBookstoreV1AutoUpdateBookEndpoint(s, logger),
 		AutoUpdateCouponEndpoint:    MakeBookstoreV1AutoUpdateCouponEndpoint(s, logger),
+		AutoUpdateCustomerEndpoint:  MakeBookstoreV1AutoUpdateCustomerEndpoint(s, logger),
 		AutoUpdateOrderEndpoint:     MakeBookstoreV1AutoUpdateOrderEndpoint(s, logger),
 		AutoUpdatePublisherEndpoint: MakeBookstoreV1AutoUpdatePublisherEndpoint(s, logger),
 		AutoUpdateStoreEndpoint:     MakeBookstoreV1AutoUpdateStoreEndpoint(s, logger),
@@ -1323,6 +1543,7 @@ func MakeBookstoreV1ServerEndpoints(s ServiceBookstoreV1Server, logger log.Logge
 		watchHandlerPublisher: MakeAutoWatchPublisherEndpoint(s, logger),
 		watchHandlerStore:     MakeAutoWatchStoreEndpoint(s, logger),
 		watchHandlerCoupon:    MakeAutoWatchCouponEndpoint(s, logger),
+		watchHandlerCustomer:  MakeAutoWatchCustomerEndpoint(s, logger),
 	}
 }
 
@@ -1408,6 +1629,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoAddCoupon(ctx context.Context, i
 	resp, err = m.next.AutoAddCoupon(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareClient) AutoAddCustomer(ctx context.Context, in *Customer) (resp *Customer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddCustomer(ctx, in)
+	return
+}
 func (m loggingBookstoreV1MiddlewareClient) AutoAddOrder(ctx context.Context, in *Order) (resp *Order, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1471,6 +1705,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoDeleteCoupon(ctx context.Context
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteCoupon", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoDeleteCoupon(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareClient) AutoDeleteCustomer(ctx context.Context, in *Customer) (resp *Customer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteCustomer(ctx, in)
 	return
 }
 func (m loggingBookstoreV1MiddlewareClient) AutoDeleteOrder(ctx context.Context, in *Order) (resp *Order, err error) {
@@ -1538,6 +1785,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoGetCoupon(ctx context.Context, i
 	resp, err = m.next.AutoGetCoupon(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareClient) AutoGetCustomer(ctx context.Context, in *Customer) (resp *Customer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetCustomer(ctx, in)
+	return
+}
 func (m loggingBookstoreV1MiddlewareClient) AutoGetOrder(ctx context.Context, in *Order) (resp *Order, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1603,6 +1863,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoListCoupon(ctx context.Context, 
 	resp, err = m.next.AutoListCoupon(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareClient) AutoListCustomer(ctx context.Context, in *api.ListWatchOptions) (resp *CustomerList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListCustomer(ctx, in)
+	return
+}
 func (m loggingBookstoreV1MiddlewareClient) AutoListOrder(ctx context.Context, in *api.ListWatchOptions) (resp *OrderList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1666,6 +1939,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoUpdateCoupon(ctx context.Context
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateCoupon", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateCoupon(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareClient) AutoUpdateCustomer(ctx context.Context, in *Customer) (resp *Customer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateCustomer(ctx, in)
 	return
 }
 func (m loggingBookstoreV1MiddlewareClient) AutoUpdateOrder(ctx context.Context, in *Order) (resp *Order, err error) {
@@ -1799,6 +2085,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoWatchCoupon(ctx context.Context,
 	resp, err = m.next.AutoWatchCoupon(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareClient) AutoWatchCustomer(ctx context.Context, in *api.ListWatchOptions) (resp BookstoreV1_AutoWatchCustomerClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchCustomer(ctx, in)
+	return
+}
 
 func (m loggingBookstoreV1MiddlewareServer) AddOutage(ctx context.Context, in OutageRequest) (resp Store, err error) {
 	defer func(begin time.Time) {
@@ -1850,6 +2149,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoAddCoupon(ctx context.Context, i
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddCoupon", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddCoupon(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareServer) AutoAddCustomer(ctx context.Context, in Customer) (resp Customer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddCustomer(ctx, in)
 	return
 }
 func (m loggingBookstoreV1MiddlewareServer) AutoAddOrder(ctx context.Context, in Order) (resp Order, err error) {
@@ -1917,6 +2229,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoDeleteCoupon(ctx context.Context
 	resp, err = m.next.AutoDeleteCoupon(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareServer) AutoDeleteCustomer(ctx context.Context, in Customer) (resp Customer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteCustomer(ctx, in)
+	return
+}
 func (m loggingBookstoreV1MiddlewareServer) AutoDeleteOrder(ctx context.Context, in Order) (resp Order, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1980,6 +2305,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoGetCoupon(ctx context.Context, i
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetCoupon", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetCoupon(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareServer) AutoGetCustomer(ctx context.Context, in Customer) (resp Customer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetCustomer(ctx, in)
 	return
 }
 func (m loggingBookstoreV1MiddlewareServer) AutoGetOrder(ctx context.Context, in Order) (resp Order, err error) {
@@ -2047,6 +2385,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoListCoupon(ctx context.Context, 
 	resp, err = m.next.AutoListCoupon(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareServer) AutoListCustomer(ctx context.Context, in api.ListWatchOptions) (resp CustomerList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListCustomer(ctx, in)
+	return
+}
 func (m loggingBookstoreV1MiddlewareServer) AutoListOrder(ctx context.Context, in api.ListWatchOptions) (resp OrderList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2110,6 +2461,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoUpdateCoupon(ctx context.Context
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateCoupon", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateCoupon(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareServer) AutoUpdateCustomer(ctx context.Context, in Customer) (resp Customer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateCustomer(ctx, in)
 	return
 }
 func (m loggingBookstoreV1MiddlewareServer) AutoUpdateOrder(ctx context.Context, in Order) (resp Order, err error) {
@@ -2243,6 +2607,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoWatchCoupon(in *api.ListWatchOpt
 	err = m.next.AutoWatchCoupon(in, stream)
 	return
 }
+func (m loggingBookstoreV1MiddlewareServer) AutoWatchCustomer(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchCustomerServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "BookstoreV1", "method", "AutoWatchCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchCustomer(in, stream)
+	return
+}
 func (r *EndpointsBookstoreV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -2270,6 +2647,11 @@ func makeURIBookstoreV1ApplydiscountCreateOper(in *ApplyDiscountReq) string {
 }
 
 //
+func makeURIBookstoreV1AutoAddCustomerCreateOper(in *Customer) string {
+	return fmt.Sprint("/v1/bookstore", "/customers")
+}
+
+//
 func makeURIBookstoreV1AutoAddOrderCreateOper(in *Order) string {
 	return fmt.Sprint("/v1/bookstore", "/orders")
 }
@@ -2277,6 +2659,11 @@ func makeURIBookstoreV1AutoAddOrderCreateOper(in *Order) string {
 //
 func makeURIBookstoreV1AutoAddStoreCreateOper(in *Store) string {
 	return fmt.Sprint("/v1/bookstore", "/store")
+}
+
+//
+func makeURIBookstoreV1AutoDeleteCustomerDeleteOper(in *Customer) string {
+	return fmt.Sprint("/v1/bookstore", "/customers/", in.Name)
 }
 
 //
@@ -2295,6 +2682,11 @@ func makeURIBookstoreV1AutoGetBookGetOper(in *Book) string {
 }
 
 //
+func makeURIBookstoreV1AutoGetCustomerGetOper(in *Customer) string {
+	return fmt.Sprint("/v1/bookstore", "/customers/", in.Name)
+}
+
+//
 func makeURIBookstoreV1AutoGetOrderGetOper(in *Order) string {
 	return fmt.Sprint("/v1/bookstore", "/orders/", in.Name)
 }
@@ -2305,6 +2697,11 @@ func makeURIBookstoreV1AutoGetStoreGetOper(in *Store) string {
 }
 
 //
+func makeURIBookstoreV1AutoListCustomerListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/bookstore", "/customers")
+}
+
+//
 func makeURIBookstoreV1AutoListOrderListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/v1/bookstore", "/orders")
 }
@@ -2312,6 +2709,11 @@ func makeURIBookstoreV1AutoListOrderListOper(in *api.ListWatchOptions) string {
 //
 func makeURIBookstoreV1AutoUpdateBookUpdateOper(in *Book) string {
 	return fmt.Sprint("/v1/bookstore", "/books/", in.Name)
+}
+
+//
+func makeURIBookstoreV1AutoUpdateCustomerUpdateOper(in *Customer) string {
+	return fmt.Sprint("/v1/bookstore", "/customers/", in.Name)
 }
 
 //
@@ -2692,6 +3094,101 @@ func (r *EndpointsBookstoreV1RestClient) AutoListCoupon(ctx context.Context, opt
 
 // AutoWatchCoupon CRUD method for Coupon
 func (r *EndpointsBookstoreV1RestClient) AutoWatchCoupon(ctx context.Context, in *Coupon) (*Coupon, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoAddCustomer CRUD method for Customer
+func (r *EndpointsBookstoreV1RestClient) AutoAddCustomer(ctx context.Context, in *Customer) (*Customer, error) {
+	path := makeURIBookstoreV1AutoAddCustomerCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespBookstoreV1AutoAddCustomer(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Customer), nil
+}
+
+// AutoUpdateCustomer CRUD method for Customer
+func (r *EndpointsBookstoreV1RestClient) AutoUpdateCustomer(ctx context.Context, in *Customer) (*Customer, error) {
+	path := makeURIBookstoreV1AutoUpdateCustomerUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespBookstoreV1AutoUpdateCustomer(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Customer), err
+}
+
+// AutoGetCustomer CRUD method for Customer
+func (r *EndpointsBookstoreV1RestClient) AutoGetCustomer(ctx context.Context, in *Customer) (*Customer, error) {
+	path := makeURIBookstoreV1AutoGetCustomerGetOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespBookstoreV1AutoGetCustomer(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Customer), err
+}
+
+// AutoDeleteCustomer CRUD method for Customer
+func (r *EndpointsBookstoreV1RestClient) AutoDeleteCustomer(ctx context.Context, in *Customer) (*Customer, error) {
+	path := makeURIBookstoreV1AutoDeleteCustomerDeleteOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespBookstoreV1AutoDeleteCustomer(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Customer), err
+}
+
+// AutoListCustomer CRUD method for Customer
+func (r *EndpointsBookstoreV1RestClient) AutoListCustomer(ctx context.Context, options *api.ListWatchOptions) (*CustomerList, error) {
+	path := makeURIBookstoreV1AutoListCustomerListOper(options)
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespBookstoreV1AutoListCustomer(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*CustomerList), err
+}
+
+// AutoWatchCustomer CRUD method for Customer
+func (r *EndpointsBookstoreV1RestClient) AutoWatchCustomer(ctx context.Context, in *Customer) (*Customer, error) {
 	return nil, errors.New("not allowed")
 }
 

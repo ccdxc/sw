@@ -450,4 +450,5 @@ func (m *AutoMsgAppWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func init() {
+
 }

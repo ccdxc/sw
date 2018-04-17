@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	govldtr "github.com/asaskevich/govalidator"
@@ -2361,4 +2362,270 @@ func TestDefaulterManifest(t *testing.T) {
 	if !reflect.DeepEqual(v, expected) {
 		t.Fatalf("Default manifest does not match \n[%+v]\n[%+v]", v, expected)
 	}
+}
+
+// --- Storage Transformers ---
+
+func TestParseStorageTransformers(t *testing.T) {
+	scratchMap := storageTransformerArgMap
+	storageTransformerArgMap = map[string][]storageTransformerArgs{
+		"OneStr": {isString},
+		"MulStr": {isString, isString, isString},
+		"OneInt": {govldtr.IsInt},
+		"MulInt": {govldtr.IsInt, govldtr.IsInt},
+		"StrInt": {isString, govldtr.IsInt},
+		"NoArgs": {},
+	}
+
+	cases := []struct {
+		str string
+		res bool
+		ret *storageTransformerField
+	}{
+		{str: "OneStr(arg1)", ret: &storageTransformerField{Fn: "OneStr", Args: []string{"arg1"}}},
+		{str: "MulStr(arg1, arg2, arg3)", ret: &storageTransformerField{Fn: "MulStr", Args: []string{"arg1", "arg2", "arg3"}}},
+		{str: "OneInt(1)", ret: &storageTransformerField{Fn: "OneInt", Args: []string{"1"}}},
+		{str: "MulInt(1,3)", ret: &storageTransformerField{Fn: "MulInt", Args: []string{"1", "3"}}},
+		{str: "NoArgs()", ret: &storageTransformerField{Fn: "NoArgs", Args: []string{}}},
+		{str: "NoArgs(arg1)", ret: nil},
+		{str: "Unknown()", ret: nil},
+		{str: "NoArgs", ret: nil},
+		{str: ":NoArgs()", ret: nil},
+	}
+	for _, c := range cases {
+		v, err := parseStorageTransformers(c.str)
+		if v == nil && err == nil {
+			t.Errorf("[%s] - parser failed without returning an error", c.str)
+		}
+		if !reflect.DeepEqual(c.ret, v) {
+			t.Errorf("[%s] - returned transformer does not match [%+v]/[%+v]", c.str, c.ret, v)
+		}
+	}
+	storageTransformerArgMap = scratchMap
+}
+
+func TestGetStorageTransformersManifest(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		message_type <
+			name: 'msg1'
+			field <
+				name: 'nest1_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+				options:<[venice.storageTransformer]: "OneStr(str)">
+			>
+			field <
+				name: 'repeated_field'
+				label: LABEL_REPEATED
+				type: TYPE_BYTES
+				options:<[venice.storageTransformer]: "OneStr(str)" [venice.storageTransformer]: "NoParams()">
+				number: 2
+			>
+		>
+		message_type <
+			name: 'parentmsg'
+			field <
+				name: 'nestedfield'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.msg1'
+				number: 2
+			>
+		>
+		message_type <
+			name: 'parentmsgtoanotherfile'
+			field <
+				name: 'nestedfield'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.anothermsg1'
+				number: 2
+			>
+		>
+		`, `
+		name: 'another.proto'
+		package: 'example'
+		message_type <
+			name: 'anothermsg1'
+			field <
+				name: 'field1'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+				options:<[venice.storageTransformer]: "NoParams()">
+			>
+		>
+		syntax: "proto3"
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto", "another.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	scratchMap := storageTransformerArgMap
+	storageTransformerArgMap = map[string][]storageTransformerArgs{
+		"OneStr":   {isString},
+		"NoParams": {},
+	}
+	exp := storageTransformers{
+		Fmap: true,
+		Map: map[string]storageTransformerMsg{
+			"msg1": {
+				HasTransformers: true,
+				Fields: map[string]storageTransformerFields{
+					"nest1_field": {
+						Repeated: false,
+						Pointer:  false,
+						TypeCast: "string",
+						Transformers: []storageTransformerField{
+							{
+								Fn:   "OneStr",
+								Args: []string{"str"},
+							},
+						},
+					},
+					"repeated_field": {
+						Repeated: true,
+						Pointer:  false,
+						TypeCast: "[]byte",
+						Transformers: []storageTransformerField{
+							{
+								Fn:   "OneStr",
+								Args: []string{"str"},
+							},
+							{
+								Fn:   "NoParams",
+								Args: []string{},
+							},
+						},
+					},
+				},
+			},
+			"parentmsg": {
+				HasTransformers: true,
+				Fields: map[string]storageTransformerFields{
+					"nestedfield": {
+						Repeated:     false,
+						Pointer:      true,
+						Transformers: []storageTransformerField{},
+					},
+				},
+			},
+			"parentmsgtoanotherfile": {
+				HasTransformers: true,
+				Fields: map[string]storageTransformerFields{
+					"nestedfield": {
+						Repeated:     false,
+						Pointer:      true,
+						Transformers: []storageTransformerField{},
+					},
+				},
+			},
+		},
+	}
+
+	v, err := getStorageTransformersManifest(file)
+	if err != nil {
+		t.Fatalf("Could not generate storageTransformer manifest (%s)", err)
+	}
+
+	if !reflect.DeepEqual(*v, exp) {
+		want, _ := json.MarshalIndent(exp, "", "  ")
+		have, _ := json.MarshalIndent(v, "", "  ")
+		t.Fatalf("generated manifest does not match:\n have: %v\n want: %v", string(have), string(want))
+	}
+
+	storageTransformerArgMap = scratchMap
+}
+
+func TestStorageTransformerNegativeCases(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'test1.proto'
+		package: 'test'
+		syntax: 'proto3'
+		message_type <
+			name: 'msg1'
+			field <
+				name: 'invalidFieldTypeInt'
+				type: TYPE_INT32
+				number: 1
+				options:<[venice.storageTransformer]: "OneStr(str)">
+			>
+		>
+		`, `
+		name: 'test2.proto'
+		package: 'test'
+		syntax: "proto3"
+		message_type <
+			name: 'msg2'
+			field <
+				name: 'invalidFieldTypeMessage'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.test1.invalidFieldTypeInt'
+				number: 1
+				options:<[venice.storageTransformer]: "NoParams()">
+			>
+		>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"test1.proto", "test2.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Error loading files: %v", err)
+	}
+	scratchMap := storageTransformerArgMap
+	storageTransformerArgMap = map[string][]storageTransformerArgs{
+		"OneStr":   {isString},
+		"NoParams": {},
+	}
+
+	file, err := r.LookupFile("test1.proto")
+	if err != nil {
+		t.Fatalf("Could not find file test1.proto")
+	}
+	_, err = getStorageTransformersManifest(file)
+	if err == nil ||
+		!strings.Contains(err.Error(), "\"strings\" and \"bytes\" only") ||
+		!strings.Contains(err.Error(), "invalidFieldTypeInt") {
+		t.Fatalf("Expected type error while parsing storage transformers manifest, got: %v", err)
+	}
+
+	file, err = r.LookupFile("test2.proto")
+	if err != nil {
+		t.Fatalf("Could not find file test2.proto")
+	}
+	_, err = getStorageTransformersManifest(file)
+	if err == nil ||
+		!strings.Contains(err.Error(), "scalar types only") ||
+		!strings.Contains(err.Error(), "invalidFieldTypeMessage") {
+		t.Fatalf("Expected type error while parsing storage transformers manifest, got: %v", err)
+	}
+
+	storageTransformerArgMap = scratchMap
 }

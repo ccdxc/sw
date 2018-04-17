@@ -167,6 +167,7 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			}
 			return nil
 		}),
+
 		"cmd.ClusterList": apisrvpkg.NewMessage("cmd.ClusterList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := cmd.ClusterList{}
@@ -277,6 +278,7 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			}
 			return nil
 		}),
+
 		"cmd.NodeCondition": apisrvpkg.NewMessage("cmd.NodeCondition"),
 		"cmd.NodeList": apisrvpkg.NewMessage("cmd.NodeList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -391,6 +393,7 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			}
 			return nil
 		}),
+
 		"cmd.SmartNICCondition": apisrvpkg.NewMessage("cmd.SmartNICCondition"),
 		"cmd.SmartNICList": apisrvpkg.NewMessage("cmd.SmartNICList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -601,6 +604,7 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := cmd.AutoMsgClusterWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -658,6 +662,7 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := cmd.AutoMsgNodeWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -715,6 +720,7 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := cmd.AutoMsgSmartNICWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,

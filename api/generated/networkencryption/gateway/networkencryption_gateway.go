@@ -232,6 +232,8 @@ func (e *sTrafficEncryptionPolicyV1GwService) newClient(ctx context.Context, grp
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
 	}
 
 	if !devmode {

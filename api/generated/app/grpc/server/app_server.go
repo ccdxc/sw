@@ -164,6 +164,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			}
 			return nil
 		}),
+
 		"app.AppList": apisrvpkg.NewMessage("app.AppList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := app.AppList{}
@@ -274,6 +275,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			}
 			return nil
 		}),
+
 		"app.AppUserGrp": apisrvpkg.NewMessage("app.AppUserGrp").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := app.AppUserGrp{}
@@ -370,6 +372,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			}
 			return nil
 		}),
+
 		"app.AppUserGrpList": apisrvpkg.NewMessage("app.AppUserGrpList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := app.AppUserGrpList{}
@@ -588,6 +591,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := app.AutoMsgAppWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -645,6 +649,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := app.AutoMsgAppUserWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -702,6 +707,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := app.AutoMsgAppUserGrpWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,

@@ -13,8 +13,9 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
-	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -23,7 +24,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var funcMapAuth = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapAuth = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *AuthenticationPolicy) MakeKey(prefix string) string {
@@ -755,13 +756,13 @@ func (m *AuthenticationPolicyStatus) Validate(ver string, ignoreStatus bool) boo
 }
 
 func (m *Authenticators) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapAuth["Authenticators"][ver]; ok {
+	if vs, ok := validatorMapAuth["Authenticators"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapAuth["Authenticators"]["all"]; ok {
+	} else if vs, ok := validatorMapAuth["Authenticators"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -809,13 +810,13 @@ func (m *Local) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *Permission) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapAuth["Permission"][ver]; ok {
+	if vs, ok := validatorMapAuth["Permission"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapAuth["Permission"]["all"]; ok {
+	} else if vs, ok := validatorMapAuth["Permission"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -895,13 +896,13 @@ func (m *UserList) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *UserSpec) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapAuth["UserSpec"][ver]; ok {
+	if vs, ok := validatorMapAuth["UserSpec"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapAuth["UserSpec"]["all"]; ok {
+	} else if vs, ok := validatorMapAuth["UserSpec"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -916,10 +917,11 @@ func (m *UserStatus) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func init() {
-	funcMapAuth = make(map[string]map[string][]func(interface{}) bool)
 
-	funcMapAuth["Authenticators"] = make(map[string][]func(interface{}) bool)
-	funcMapAuth["Authenticators"]["all"] = append(funcMapAuth["Authenticators"]["all"], func(i interface{}) bool {
+	validatorMapAuth = make(map[string]map[string][]func(interface{}) bool)
+
+	validatorMapAuth["Authenticators"] = make(map[string][]func(interface{}) bool)
+	validatorMapAuth["Authenticators"]["all"] = append(validatorMapAuth["Authenticators"]["all"], func(i interface{}) bool {
 		m := i.(*Authenticators)
 
 		for _, v := range m.AuthenticatorOrder {
@@ -930,8 +932,8 @@ func init() {
 		return true
 	})
 
-	funcMapAuth["Permission"] = make(map[string][]func(interface{}) bool)
-	funcMapAuth["Permission"]["all"] = append(funcMapAuth["Permission"]["all"], func(i interface{}) bool {
+	validatorMapAuth["Permission"] = make(map[string][]func(interface{}) bool)
+	validatorMapAuth["Permission"]["all"] = append(validatorMapAuth["Permission"]["all"], func(i interface{}) bool {
 		m := i.(*Permission)
 
 		for _, v := range m.Actions {
@@ -942,7 +944,7 @@ func init() {
 		return true
 	})
 
-	funcMapAuth["Permission"]["all"] = append(funcMapAuth["Permission"]["all"], func(i interface{}) bool {
+	validatorMapAuth["Permission"]["all"] = append(validatorMapAuth["Permission"]["all"], func(i interface{}) bool {
 		m := i.(*Permission)
 
 		if _, ok := Permission_ResrcKind_value[m.ResourceKind]; !ok {
@@ -951,8 +953,8 @@ func init() {
 		return true
 	})
 
-	funcMapAuth["UserSpec"] = make(map[string][]func(interface{}) bool)
-	funcMapAuth["UserSpec"]["all"] = append(funcMapAuth["UserSpec"]["all"], func(i interface{}) bool {
+	validatorMapAuth["UserSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapAuth["UserSpec"]["all"] = append(validatorMapAuth["UserSpec"]["all"], func(i interface{}) bool {
 		m := i.(*UserSpec)
 
 		if _, ok := UserSpec_UserType_value[m.Type]; !ok {

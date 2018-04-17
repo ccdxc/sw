@@ -182,6 +182,13 @@ type SetModTimeFunc func(i interface{}) (interface{}, error)
 // UpdateSelfLinkFunc sets the SelfLink in the object
 type UpdateSelfLinkFunc func(path string, i interface{}) (interface{}, error)
 
+// ObjStorageTransformer is a pair of functions to be invoked before/after an object
+// is written/read to/from KvStore
+type ObjStorageTransformer interface {
+	TransformToStorage(ctx context.Context, i interface{}) (interface{}, error)
+	TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error)
+}
+
 // Message is the interface satisfied by the representation of the Message in the Api Server infra.
 // A Message may be the definition of parameters passed in and out of a gRPC method or an object that
 // is persisted in the KV store.
@@ -226,6 +233,8 @@ type MessageRegistration interface {
 	WithModTimeWriter(fn SetModTimeFunc) Message
 	// WithSelfLinkWriter updates the selflink in the object
 	WithSelfLinkWriter(fn UpdateSelfLinkFunc) Message
+	// WithStorageTransformer registers Storage Transformers
+	WithStorageTransformer(stx ObjStorageTransformer) Message
 }
 
 // MessageAction is the set of the Actions possible on a Message.
@@ -266,6 +275,10 @@ type MessageAction interface {
 	WriteModTime(i interface{}) (interface{}, error)
 	//UpdateSelfLink update the object with the self link provided
 	UpdateSelfLink(path string, i interface{}) (interface{}, error)
+	// TransformToStorage transforms the object before writing to storage
+	TransformToStorage(ctx context.Context, oper APIOperType, i interface{}) (interface{}, error)
+	// TransformFromStorage transforms the object after reading from storage
+	TransformFromStorage(ctx context.Context, oper APIOperType, i interface{}) (interface{}, error)
 }
 
 // Method is the interface satisfied by the representation of the RPC Method in the API Server infra.

@@ -47,26 +47,31 @@ type eBookstoreV1Endpoints struct {
 	fnApplydiscount       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddBook         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddCoupon       func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddCustomer     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddOrder        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddPublisher    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddStore        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteBook      func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteCoupon    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteCustomer  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteOrder     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeletePublisher func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteStore     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetBook         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetCoupon       func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetCustomer     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetOrder        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetPublisher    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetStore        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListBook        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListCoupon      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListCustomer    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListOrder       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListPublisher   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListStore       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateBook      func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateCoupon    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateCustomer  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateOrder     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdatePublisher func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateStore     func(ctx context.Context, t interface{}) (interface{}, error)
@@ -78,6 +83,7 @@ type eBookstoreV1Endpoints struct {
 	fnAutoWatchPublisher func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchStore     func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchCoupon    func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchCustomer  func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
@@ -167,8 +173,10 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return nil
 		}),
+
 		"bookstore.AutoMsgBookWatchHelper":      apisrvpkg.NewMessage("bookstore.AutoMsgBookWatchHelper"),
 		"bookstore.AutoMsgCouponWatchHelper":    apisrvpkg.NewMessage("bookstore.AutoMsgCouponWatchHelper"),
+		"bookstore.AutoMsgCustomerWatchHelper":  apisrvpkg.NewMessage("bookstore.AutoMsgCustomerWatchHelper"),
 		"bookstore.AutoMsgOrderWatchHelper":     apisrvpkg.NewMessage("bookstore.AutoMsgOrderWatchHelper"),
 		"bookstore.AutoMsgPublisherWatchHelper": apisrvpkg.NewMessage("bookstore.AutoMsgPublisherWatchHelper"),
 		"bookstore.AutoMsgStoreWatchHelper":     apisrvpkg.NewMessage("bookstore.AutoMsgStoreWatchHelper"),
@@ -268,6 +276,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return nil
 		}),
+
 		"bookstore.BookEdition": apisrvpkg.NewMessage("bookstore.BookEdition"),
 		"bookstore.BookList": apisrvpkg.NewMessage("bookstore.BookList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -366,6 +375,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return nil
 		}),
+
 		"bookstore.CouponList": apisrvpkg.NewMessage("bookstore.CouponList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := bookstore.CouponList{}
@@ -378,6 +388,122 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return into, nil
 		}),
+		"bookstore.Customer": apisrvpkg.NewMessage("bookstore.Customer").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := bookstore.Customer{}
+				return r.MakeKey(prefix)
+			}
+			r := i.(bookstore.Customer)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(bookstore.Customer)
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+			r := i.(bookstore.Customer)
+			key := r.MakeKey(prefix)
+			r.Kind = "Customer"
+			var err error
+			if create {
+				err = kvs.Create(ctx, key, &r)
+				err = errors.Wrap(err, "KV create failed")
+			} else {
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*bookstore.Customer)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &bookstore.Customer{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+				} else {
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
+				}
+			}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(bookstore.Customer)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(bookstore.Customer)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(bookstore.Customer)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(bookstore.Customer)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(bookstore.Customer)
+			r.SelfLink = path
+			return r, nil
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := bookstore.Customer{}
+			err := kvs.Get(ctx, key, &r)
+			err = errors.Wrap(err, "KV get failed")
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := bookstore.Customer{}
+			err := kvs.Delete(ctx, key, &r)
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(bookstore.Customer)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
+		}).WithStorageTransformer(&bookstore.StorageCustomerTransformer),
+
+		"bookstore.CustomerList": apisrvpkg.NewMessage("bookstore.CustomerList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := bookstore.CustomerList{}
+			r := bookstore.Customer{}
+			r.ObjectMeta = options.ObjectMeta
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"bookstore.CustomerPersonalInfo": apisrvpkg.NewMessage("bookstore.CustomerPersonalInfo"),
+		"bookstore.CustomerSpec":         apisrvpkg.NewMessage("bookstore.CustomerSpec"),
+		"bookstore.CustomerStatus":       apisrvpkg.NewMessage("bookstore.CustomerStatus"),
 		"bookstore.Order": apisrvpkg.NewMessage("bookstore.Order").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := bookstore.Order{}
@@ -474,6 +600,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return nil
 		}),
+
 		"bookstore.OrderItem": apisrvpkg.NewMessage("bookstore.OrderItem"),
 		"bookstore.OrderList": apisrvpkg.NewMessage("bookstore.OrderList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -572,6 +699,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return nil
 		}),
+
 		"bookstore.Publisher": apisrvpkg.NewMessage("bookstore.Publisher").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := bookstore.Publisher{}
@@ -655,6 +783,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return nil
 		}),
+
 		"bookstore.PublisherList": apisrvpkg.NewMessage("bookstore.PublisherList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := bookstore.PublisherList{}
@@ -751,6 +880,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return nil
 		}),
+
 		"bookstore.RestockResponse": apisrvpkg.NewMessage("bookstore.RestockResponse").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := bookstore.RestockResponse{}
@@ -834,6 +964,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return nil
 		}),
+
 		"bookstore.Store": apisrvpkg.NewMessage("bookstore.Store").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := bookstore.Store{}
@@ -930,6 +1061,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return nil
 		}),
+
 		"bookstore.StoreList": apisrvpkg.NewMessage("bookstore.StoreList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := bookstore.StoreList{}
@@ -952,6 +1084,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 		&bookstore.ApplyDiscountReq{},
 		&bookstore.Book{},
 		&bookstore.Coupon{},
+		&bookstore.Customer{},
 		&bookstore.Order{},
 		&bookstore.OutageRequest{},
 		&bookstore.Publisher{},
@@ -993,6 +1126,15 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
+		s.endpointsBookstoreV1.fnAutoAddCustomer = srv.AddMethod("AutoAddCustomer",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Customer"], s.Messages["bookstore.Customer"], "bookstore", "AutoAddCustomer")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(bookstore.Customer)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "bookstore/customers/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsBookstoreV1.fnAutoAddOrder = srv.AddMethod("AutoAddOrder",
 			apisrvpkg.NewMethod(s.Messages["bookstore.Order"], s.Messages["bookstore.Order"], "bookstore", "AutoAddOrder")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(bookstore.Order)
@@ -1020,6 +1162,15 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 		s.endpointsBookstoreV1.fnAutoDeleteCoupon = srv.AddMethod("AutoDeleteCoupon",
 			apisrvpkg.NewMethod(s.Messages["bookstore.Coupon"], s.Messages["bookstore.Coupon"], "bookstore", "AutoDeleteCoupon")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoDeleteCustomer = srv.AddMethod("AutoDeleteCustomer",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Customer"], s.Messages["bookstore.Customer"], "bookstore", "AutoDeleteCustomer")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(bookstore.Customer)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "bookstore/customers/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsBookstoreV1.fnAutoDeleteOrder = srv.AddMethod("AutoDeleteOrder",
@@ -1055,6 +1206,15 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
+		s.endpointsBookstoreV1.fnAutoGetCustomer = srv.AddMethod("AutoGetCustomer",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Customer"], s.Messages["bookstore.Customer"], "bookstore", "AutoGetCustomer")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(bookstore.Customer)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "bookstore/customers/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsBookstoreV1.fnAutoGetOrder = srv.AddMethod("AutoGetOrder",
 			apisrvpkg.NewMethod(s.Messages["bookstore.Order"], s.Messages["bookstore.Order"], "bookstore", "AutoGetOrder")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(bookstore.Order)
@@ -1082,6 +1242,15 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 		s.endpointsBookstoreV1.fnAutoListCoupon = srv.AddMethod("AutoListCoupon",
 			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["bookstore.CouponList"], "bookstore", "AutoListCoupon")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoListCustomer = srv.AddMethod("AutoListCustomer",
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["bookstore.CustomerList"], "bookstore", "AutoListCustomer")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "bookstore/customers/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsBookstoreV1.fnAutoListOrder = srv.AddMethod("AutoListOrder",
@@ -1115,6 +1284,15 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 		s.endpointsBookstoreV1.fnAutoUpdateCoupon = srv.AddMethod("AutoUpdateCoupon",
 			apisrvpkg.NewMethod(s.Messages["bookstore.Coupon"], s.Messages["bookstore.Coupon"], "bookstore", "AutoUpdateCoupon")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoUpdateCustomer = srv.AddMethod("AutoUpdateCustomer",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Customer"], s.Messages["bookstore.Customer"], "bookstore", "AutoUpdateCustomer")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(bookstore.Customer)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "bookstore/customers/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsBookstoreV1.fnAutoUpdateOrder = srv.AddMethod("AutoUpdateOrder",
@@ -1164,6 +1342,8 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 
 		s.endpointsBookstoreV1.fnAutoWatchCoupon = s.Messages["bookstore.Coupon"].WatchFromKv
 
+		s.endpointsBookstoreV1.fnAutoWatchCustomer = s.Messages["bookstore.Customer"].WatchFromKv
+
 		s.Services = map[string]apiserver.Service{
 			"bookstore.BookstoreV1": srv,
 		}
@@ -1207,6 +1387,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := bookstore.AutoMsgOrderWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1264,6 +1445,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := bookstore.AutoMsgBookWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1321,6 +1503,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := bookstore.AutoMsgPublisherWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1378,6 +1561,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := bookstore.AutoMsgStoreWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1435,6 +1619,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := bookstore.AutoMsgCouponWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1455,6 +1640,71 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 					}
 				case <-nctx.Done():
 					l.DebugLog("msg", "Context cancelled for Coupon Watcher")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
+		s.Messages["bookstore.Customer"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := bookstore.Customer{}
+			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
+			wstream := stream.(bookstore.BookstoreV1_AutoWatchCustomerServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
+			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Customer")
+				return err
+			}
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.DebugLog("Channel closed for Customer Watcher")
+						return nil
+					}
+					in, ok := ev.Object.(*bookstore.Customer)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+					{
+						txin, err := bookstore.StorageCustomerTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to Customer")
+						}
+						obj := txin.(bookstore.Customer)
+						in = &obj
+					}
+					strEvent := bookstore.AutoMsgCustomerWatchHelper{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "received Customer watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "Customer", "fromver", in.APIVersion, "tover", version)
+							break
+						}
+						strEvent.Object = i.(*bookstore.Customer)
+					}
+					l.DebugLog("msg", "writing to stream")
+					if err := wstream.Send(&strEvent); err != nil {
+						l.DebugLog("msg", "Stream send error'ed for Customer", "error", err)
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for Customer Watcher")
 					return wstream.Context().Err()
 				}
 			}
@@ -1497,6 +1747,14 @@ func (e *eBookstoreV1Endpoints) AutoAddCoupon(ctx context.Context, t bookstore.C
 	return bookstore.Coupon{}, err
 
 }
+func (e *eBookstoreV1Endpoints) AutoAddCustomer(ctx context.Context, t bookstore.Customer) (bookstore.Customer, error) {
+	r, err := e.fnAutoAddCustomer(ctx, t)
+	if err == nil {
+		return r.(bookstore.Customer), err
+	}
+	return bookstore.Customer{}, err
+
+}
 func (e *eBookstoreV1Endpoints) AutoAddOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
 	r, err := e.fnAutoAddOrder(ctx, t)
 	if err == nil {
@@ -1535,6 +1793,14 @@ func (e *eBookstoreV1Endpoints) AutoDeleteCoupon(ctx context.Context, t bookstor
 		return r.(bookstore.Coupon), err
 	}
 	return bookstore.Coupon{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoDeleteCustomer(ctx context.Context, t bookstore.Customer) (bookstore.Customer, error) {
+	r, err := e.fnAutoDeleteCustomer(ctx, t)
+	if err == nil {
+		return r.(bookstore.Customer), err
+	}
+	return bookstore.Customer{}, err
 
 }
 func (e *eBookstoreV1Endpoints) AutoDeleteOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
@@ -1577,6 +1843,14 @@ func (e *eBookstoreV1Endpoints) AutoGetCoupon(ctx context.Context, t bookstore.C
 	return bookstore.Coupon{}, err
 
 }
+func (e *eBookstoreV1Endpoints) AutoGetCustomer(ctx context.Context, t bookstore.Customer) (bookstore.Customer, error) {
+	r, err := e.fnAutoGetCustomer(ctx, t)
+	if err == nil {
+		return r.(bookstore.Customer), err
+	}
+	return bookstore.Customer{}, err
+
+}
 func (e *eBookstoreV1Endpoints) AutoGetOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
 	r, err := e.fnAutoGetOrder(ctx, t)
 	if err == nil {
@@ -1617,6 +1891,14 @@ func (e *eBookstoreV1Endpoints) AutoListCoupon(ctx context.Context, t api.ListWa
 	return bookstore.CouponList{}, err
 
 }
+func (e *eBookstoreV1Endpoints) AutoListCustomer(ctx context.Context, t api.ListWatchOptions) (bookstore.CustomerList, error) {
+	r, err := e.fnAutoListCustomer(ctx, t)
+	if err == nil {
+		return r.(bookstore.CustomerList), err
+	}
+	return bookstore.CustomerList{}, err
+
+}
 func (e *eBookstoreV1Endpoints) AutoListOrder(ctx context.Context, t api.ListWatchOptions) (bookstore.OrderList, error) {
 	r, err := e.fnAutoListOrder(ctx, t)
 	if err == nil {
@@ -1655,6 +1937,14 @@ func (e *eBookstoreV1Endpoints) AutoUpdateCoupon(ctx context.Context, t bookstor
 		return r.(bookstore.Coupon), err
 	}
 	return bookstore.Coupon{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoUpdateCustomer(ctx context.Context, t bookstore.Customer) (bookstore.Customer, error) {
+	r, err := e.fnAutoUpdateCustomer(ctx, t)
+	if err == nil {
+		return r.(bookstore.Customer), err
+	}
+	return bookstore.Customer{}, err
 
 }
 func (e *eBookstoreV1Endpoints) AutoUpdateOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
@@ -1712,6 +2002,9 @@ func (e *eBookstoreV1Endpoints) AutoWatchStore(in *api.ListWatchOptions, stream 
 }
 func (e *eBookstoreV1Endpoints) AutoWatchCoupon(in *api.ListWatchOptions, stream bookstore.BookstoreV1_AutoWatchCouponServer) error {
 	return e.fnAutoWatchCoupon(in, stream, "bookstore")
+}
+func (e *eBookstoreV1Endpoints) AutoWatchCustomer(in *api.ListWatchOptions, stream bookstore.BookstoreV1_AutoWatchCustomerServer) error {
+	return e.fnAutoWatchCustomer(in, stream, "bookstore")
 }
 
 func init() {

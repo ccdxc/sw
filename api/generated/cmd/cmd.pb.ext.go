@@ -13,8 +13,9 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
-	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -23,7 +24,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var funcMapCmd = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapCmd = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *Cluster) MakeKey(prefix string) string {
@@ -634,13 +635,13 @@ func (m *Node) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *NodeCondition) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapCmd["NodeCondition"][ver]; ok {
+	if vs, ok := validatorMapCmd["NodeCondition"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapCmd["NodeCondition"]["all"]; ok {
+	} else if vs, ok := validatorMapCmd["NodeCondition"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -660,13 +661,13 @@ func (m *NodeList) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *NodeSpec) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapCmd["NodeSpec"][ver]; ok {
+	if vs, ok := validatorMapCmd["NodeSpec"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapCmd["NodeSpec"]["all"]; ok {
+	} else if vs, ok := validatorMapCmd["NodeSpec"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -682,13 +683,13 @@ func (m *NodeStatus) Validate(ver string, ignoreStatus bool) bool {
 			return false
 		}
 	}
-	if vs, ok := funcMapCmd["NodeStatus"][ver]; ok {
+	if vs, ok := validatorMapCmd["NodeStatus"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapCmd["NodeStatus"]["all"]; ok {
+	} else if vs, ok := validatorMapCmd["NodeStatus"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -699,13 +700,13 @@ func (m *NodeStatus) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *PortCondition) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapCmd["PortCondition"][ver]; ok {
+	if vs, ok := validatorMapCmd["PortCondition"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapCmd["PortCondition"]["all"]; ok {
+	} else if vs, ok := validatorMapCmd["PortCondition"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -741,13 +742,13 @@ func (m *SmartNIC) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *SmartNICCondition) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapCmd["SmartNICCondition"][ver]; ok {
+	if vs, ok := validatorMapCmd["SmartNICCondition"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapCmd["SmartNICCondition"]["all"]; ok {
+	} else if vs, ok := validatorMapCmd["SmartNICCondition"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -767,13 +768,13 @@ func (m *SmartNICList) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *SmartNICSpec) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapCmd["SmartNICSpec"][ver]; ok {
+	if vs, ok := validatorMapCmd["SmartNICSpec"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapCmd["SmartNICSpec"]["all"]; ok {
+	} else if vs, ok := validatorMapCmd["SmartNICSpec"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -798,10 +799,11 @@ func (m *SmartNICStatus) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func init() {
-	funcMapCmd = make(map[string]map[string][]func(interface{}) bool)
 
-	funcMapCmd["NodeCondition"] = make(map[string][]func(interface{}) bool)
-	funcMapCmd["NodeCondition"]["all"] = append(funcMapCmd["NodeCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd = make(map[string]map[string][]func(interface{}) bool)
+
+	validatorMapCmd["NodeCondition"] = make(map[string][]func(interface{}) bool)
+	validatorMapCmd["NodeCondition"]["all"] = append(validatorMapCmd["NodeCondition"]["all"], func(i interface{}) bool {
 		m := i.(*NodeCondition)
 
 		if _, ok := ConditionStatus_value[m.Status]; !ok {
@@ -810,7 +812,7 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["NodeCondition"]["all"] = append(funcMapCmd["NodeCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd["NodeCondition"]["all"] = append(validatorMapCmd["NodeCondition"]["all"], func(i interface{}) bool {
 		m := i.(*NodeCondition)
 
 		if _, ok := NodeCondition_ConditionType_value[m.Type]; !ok {
@@ -819,8 +821,8 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["NodeSpec"] = make(map[string][]func(interface{}) bool)
-	funcMapCmd["NodeSpec"]["all"] = append(funcMapCmd["NodeSpec"]["all"], func(i interface{}) bool {
+	validatorMapCmd["NodeSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapCmd["NodeSpec"]["all"] = append(validatorMapCmd["NodeSpec"]["all"], func(i interface{}) bool {
 		m := i.(*NodeSpec)
 
 		for _, v := range m.Roles {
@@ -831,8 +833,8 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["NodeStatus"] = make(map[string][]func(interface{}) bool)
-	funcMapCmd["NodeStatus"]["all"] = append(funcMapCmd["NodeStatus"]["all"], func(i interface{}) bool {
+	validatorMapCmd["NodeStatus"] = make(map[string][]func(interface{}) bool)
+	validatorMapCmd["NodeStatus"]["all"] = append(validatorMapCmd["NodeStatus"]["all"], func(i interface{}) bool {
 		m := i.(*NodeStatus)
 
 		if _, ok := NodeStatus_NodePhase_value[m.Phase]; !ok {
@@ -841,8 +843,8 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["PortCondition"] = make(map[string][]func(interface{}) bool)
-	funcMapCmd["PortCondition"]["all"] = append(funcMapCmd["PortCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd["PortCondition"] = make(map[string][]func(interface{}) bool)
+	validatorMapCmd["PortCondition"]["all"] = append(validatorMapCmd["PortCondition"]["all"], func(i interface{}) bool {
 		m := i.(*PortCondition)
 
 		if _, ok := ConditionStatus_value[m.Status]; !ok {
@@ -851,7 +853,7 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["PortCondition"]["all"] = append(funcMapCmd["PortCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd["PortCondition"]["all"] = append(validatorMapCmd["PortCondition"]["all"], func(i interface{}) bool {
 		m := i.(*PortCondition)
 
 		if _, ok := PortCondition_ConditionType_value[m.Type]; !ok {
@@ -860,8 +862,8 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["SmartNICCondition"] = make(map[string][]func(interface{}) bool)
-	funcMapCmd["SmartNICCondition"]["all"] = append(funcMapCmd["SmartNICCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd["SmartNICCondition"] = make(map[string][]func(interface{}) bool)
+	validatorMapCmd["SmartNICCondition"]["all"] = append(validatorMapCmd["SmartNICCondition"]["all"], func(i interface{}) bool {
 		m := i.(*SmartNICCondition)
 
 		if _, ok := ConditionStatus_value[m.Status]; !ok {
@@ -870,7 +872,7 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["SmartNICCondition"]["all"] = append(funcMapCmd["SmartNICCondition"]["all"], func(i interface{}) bool {
+	validatorMapCmd["SmartNICCondition"]["all"] = append(validatorMapCmd["SmartNICCondition"]["all"], func(i interface{}) bool {
 		m := i.(*SmartNICCondition)
 
 		if _, ok := SmartNICCondition_ConditionType_value[m.Type]; !ok {
@@ -879,9 +881,9 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["SmartNICSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapCmd["SmartNICSpec"] = make(map[string][]func(interface{}) bool)
 
-	funcMapCmd["SmartNICSpec"]["all"] = append(funcMapCmd["SmartNICSpec"]["all"], func(i interface{}) bool {
+	validatorMapCmd["SmartNICSpec"]["all"] = append(validatorMapCmd["SmartNICSpec"]["all"], func(i interface{}) bool {
 		m := i.(*SmartNICSpec)
 		if !validators.HostAddr(m.MgmtIp) {
 			return false
@@ -889,7 +891,7 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["SmartNICSpec"]["all"] = append(funcMapCmd["SmartNICSpec"]["all"], func(i interface{}) bool {
+	validatorMapCmd["SmartNICSpec"]["all"] = append(validatorMapCmd["SmartNICSpec"]["all"], func(i interface{}) bool {
 		m := i.(*SmartNICSpec)
 
 		if _, ok := SmartNICSpec_SmartNICPhase_value[m.Phase]; !ok {

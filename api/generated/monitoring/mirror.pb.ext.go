@@ -13,8 +13,9 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
-	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -23,7 +24,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var funcMapMirror = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapMirror = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *MirrorSession) MakeKey(prefix string) string {
@@ -352,13 +353,13 @@ func (m *MatchSelector) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *MirrorCollector) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapMirror["MirrorCollector"][ver]; ok {
+	if vs, ok := validatorMapMirror["MirrorCollector"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapMirror["MirrorCollector"]["all"]; ok {
+	} else if vs, ok := validatorMapMirror["MirrorCollector"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -395,13 +396,13 @@ func (m *MirrorSessionSpec) Validate(ver string, ignoreStatus bool) bool {
 			return false
 		}
 	}
-	if vs, ok := funcMapMirror["MirrorSessionSpec"][ver]; ok {
+	if vs, ok := validatorMapMirror["MirrorSessionSpec"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapMirror["MirrorSessionSpec"]["all"]; ok {
+	} else if vs, ok := validatorMapMirror["MirrorSessionSpec"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -412,13 +413,13 @@ func (m *MirrorSessionSpec) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *MirrorSessionStatus) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapMirror["MirrorSessionStatus"][ver]; ok {
+	if vs, ok := validatorMapMirror["MirrorSessionStatus"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapMirror["MirrorSessionStatus"]["all"]; ok {
+	} else if vs, ok := validatorMapMirror["MirrorSessionStatus"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -441,10 +442,11 @@ func (m *SmartNICMirrorSessionStatus) Validate(ver string, ignoreStatus bool) bo
 }
 
 func init() {
-	funcMapMirror = make(map[string]map[string][]func(interface{}) bool)
 
-	funcMapMirror["MirrorCollector"] = make(map[string][]func(interface{}) bool)
-	funcMapMirror["MirrorCollector"]["all"] = append(funcMapMirror["MirrorCollector"]["all"], func(i interface{}) bool {
+	validatorMapMirror = make(map[string]map[string][]func(interface{}) bool)
+
+	validatorMapMirror["MirrorCollector"] = make(map[string][]func(interface{}) bool)
+	validatorMapMirror["MirrorCollector"]["all"] = append(validatorMapMirror["MirrorCollector"]["all"], func(i interface{}) bool {
 		m := i.(*MirrorCollector)
 
 		if _, ok := MirrorCollector_PacketCollectorType_value[m.Type]; !ok {
@@ -453,8 +455,8 @@ func init() {
 		return true
 	})
 
-	funcMapMirror["MirrorSessionSpec"] = make(map[string][]func(interface{}) bool)
-	funcMapMirror["MirrorSessionSpec"]["all"] = append(funcMapMirror["MirrorSessionSpec"]["all"], func(i interface{}) bool {
+	validatorMapMirror["MirrorSessionSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapMirror["MirrorSessionSpec"]["all"] = append(validatorMapMirror["MirrorSessionSpec"]["all"], func(i interface{}) bool {
 		m := i.(*MirrorSessionSpec)
 
 		for _, v := range m.PacketFilters {
@@ -465,8 +467,8 @@ func init() {
 		return true
 	})
 
-	funcMapMirror["MirrorSessionStatus"] = make(map[string][]func(interface{}) bool)
-	funcMapMirror["MirrorSessionStatus"]["all"] = append(funcMapMirror["MirrorSessionStatus"]["all"], func(i interface{}) bool {
+	validatorMapMirror["MirrorSessionStatus"] = make(map[string][]func(interface{}) bool)
+	validatorMapMirror["MirrorSessionStatus"]["all"] = append(validatorMapMirror["MirrorSessionStatus"]["all"], func(i interface{}) bool {
 		m := i.(*MirrorSessionStatus)
 
 		if _, ok := MirrorSessionState_value[m.State]; !ok {

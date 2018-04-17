@@ -163,6 +163,9 @@ func (e *s{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, rs
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+	  {{if strEq $cgrpcdest "" }}opts = append(opts, rpckit.WithRemoteServerName("{{$grpcdest}}")){{else}}
+		opts = append(opts, rpckit.WithRemoteServerName("{{$cgrpcdest}}")){{end}}
 	}
 
 	if !devmode {

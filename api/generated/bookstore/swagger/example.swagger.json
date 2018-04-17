@@ -136,7 +136,6 @@
           },
           {
             "name": "Spec.IdProvider",
-            "description": "Spec is not allowed to be Null hence disabling nullable.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -196,6 +195,305 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/bookstoreBook"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    },
+    "/customers": {
+      "get": {
+        "operationId": "AutoListCustomer",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreCustomerList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddCustomer",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreCustomer"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreCustomer"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    },
+    "/customers/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetCustomer",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreCustomer"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Address",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.CreditCardNumbers",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.Password",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "Spec.PasswordRecoveryInfo.SSN",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.PasswordRecoveryInfo.MotherMaidenName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteCustomer",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreCustomer"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateCustomer",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreCustomer"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreCustomer"
             }
           }
         ],
@@ -882,6 +1180,17 @@
         }
       }
     },
+    "bookstoreAutoMsgCustomerWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/bookstoreCustomer"
+        }
+      }
+    },
     "bookstoreAutoMsgOrderWatchHelper": {
       "type": "object",
       "properties": {
@@ -925,8 +1234,7 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/bookstoreBookSpec",
-          "description": "Added in  version 2 of the API."
+          "$ref": "#/definitions/bookstoreBookSpec"
         },
         "Status": {
           "$ref": "#/definitions/bookstoreBookStatus"
@@ -957,7 +1265,8 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreBook"
-          }
+          },
+          "description": "Spec is not allowed to be Null hence disabling nullable."
         }
       }
     },
@@ -971,8 +1280,7 @@
           "type": "string"
         },
         "IdProvider": {
-          "type": "string",
-          "description": "Spec is not allowed to be Null hence disabling nullable."
+          "type": "string"
         },
         "Category": {
           "type": "string"
@@ -1031,6 +1339,75 @@
           }
         }
       }
+    },
+    "bookstoreCustomer": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/bookstoreCustomerSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/bookstoreCustomerStatus"
+        }
+      }
+    },
+    "bookstoreCustomerList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreCustomer"
+          }
+        }
+      }
+    },
+    "bookstoreCustomerPersonalInfo": {
+      "type": "object",
+      "properties": {
+        "SSN": {
+          "type": "string"
+        },
+        "MotherMaidenName": {
+          "type": "string"
+        }
+      }
+    },
+    "bookstoreCustomerSpec": {
+      "type": "object",
+      "properties": {
+        "Address": {
+          "type": "string"
+        },
+        "CreditCardNumbers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Password": {
+          "type": "string",
+          "format": "byte"
+        },
+        "PasswordRecoveryInfo": {
+          "$ref": "#/definitions/bookstoreCustomerPersonalInfo"
+        }
+      }
+    },
+    "bookstoreCustomerStatus": {
+      "type": "object"
     },
     "bookstoreOrder": {
       "type": "object",

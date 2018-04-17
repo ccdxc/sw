@@ -13,8 +13,9 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
-	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -23,7 +24,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var funcMapNetwork = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapNetwork = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *Endpoint) MakeKey(prefix string) string {
@@ -1152,13 +1153,13 @@ func (m *TLSClientPolicySpec) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *TLSServerPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapNetwork["TLSServerPolicySpec"][ver]; ok {
+	if vs, ok := validatorMapNetwork["TLSServerPolicySpec"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapNetwork["TLSServerPolicySpec"]["all"]; ok {
+	} else if vs, ok := validatorMapNetwork["TLSServerPolicySpec"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -1185,10 +1186,11 @@ func (m *TenantStatus) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func init() {
-	funcMapNetwork = make(map[string]map[string][]func(interface{}) bool)
 
-	funcMapNetwork["TLSServerPolicySpec"] = make(map[string][]func(interface{}) bool)
-	funcMapNetwork["TLSServerPolicySpec"]["all"] = append(funcMapNetwork["TLSServerPolicySpec"]["all"], func(i interface{}) bool {
+	validatorMapNetwork = make(map[string]map[string][]func(interface{}) bool)
+
+	validatorMapNetwork["TLSServerPolicySpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapNetwork["TLSServerPolicySpec"]["all"] = append(validatorMapNetwork["TLSServerPolicySpec"]["all"], func(i interface{}) bool {
 		m := i.(*TLSServerPolicySpec)
 
 		if _, ok := TLSServerPolicySpec_ClientAuthTypes_value[m.ClientAuthentication]; !ok {

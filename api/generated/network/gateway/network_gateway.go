@@ -233,6 +233,8 @@ func (e *sEndpointV1GwService) newClient(ctx context.Context, grpcAddr string, r
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
 	}
 
 	if !devmode {
@@ -453,6 +455,8 @@ func (e *sLbPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, r
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
 	}
 
 	if !devmode {
@@ -673,6 +677,8 @@ func (e *sNetworkV1GwService) newClient(ctx context.Context, grpcAddr string, rs
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
 	}
 
 	if !devmode {
@@ -893,6 +899,8 @@ func (e *sSecurityGroupV1GwService) newClient(ctx context.Context, grpcAddr stri
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
 	}
 
 	if !devmode {
@@ -1113,6 +1121,8 @@ func (e *sServiceV1GwService) newClient(ctx context.Context, grpcAddr string, rs
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
 	}
 
 	if !devmode {
@@ -1333,6 +1343,8 @@ func (e *sSgpolicyV1GwService) newClient(ctx context.Context, grpcAddr string, r
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
 	}
 
 	if !devmode {
@@ -1553,6 +1565,8 @@ func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string, rsl
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
 	}
 
 	if !devmode {

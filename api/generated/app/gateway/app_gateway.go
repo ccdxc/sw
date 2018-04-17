@@ -430,6 +430,8 @@ func (e *sAppV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr 
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
 	}
 
 	if !devmode {

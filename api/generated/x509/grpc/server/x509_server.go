@@ -153,6 +153,7 @@ func (s *sx509X509Backend) CompleteRegistration(ctx context.Context, logger log.
 			}
 			return nil
 		}),
+
 		"x509.CertificateList": apisrvpkg.NewMessage("x509.CertificateList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := x509.CertificateList{}
@@ -270,6 +271,7 @@ func (s *sx509X509Backend) CompleteRegistration(ctx context.Context, logger log.
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := x509.AutoMsgCertificateWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,

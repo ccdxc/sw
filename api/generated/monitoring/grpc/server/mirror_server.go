@@ -157,6 +157,7 @@ func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, log
 			}
 			return nil
 		}),
+
 		"monitoring.MirrorSessionList": apisrvpkg.NewMessage("monitoring.MirrorSessionList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := monitoring.MirrorSessionList{}
@@ -277,6 +278,7 @@ func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, log
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+
 					strEvent := monitoring.AutoMsgMirrorSessionWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,

@@ -41,7 +41,7 @@ type Services interface {
 	AppV1() app.AppV1Interface
 	// Package is auth and len of messages is 4
 	AuthV1() auth.AuthV1Interface
-	// Package is bookstore and len of messages is 5
+	// Package is bookstore and len of messages is 6
 	BookstoreV1() bookstore.BookstoreV1Interface
 	// Package is cmd and len of messages is 3
 	CmdV1() cmd.CmdV1Interface

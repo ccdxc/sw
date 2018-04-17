@@ -153,6 +153,9 @@ func (e *sSearchV1GwService) newClient(ctx context.Context, grpcAddr string, rsl
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+
+		opts = append(opts, rpckit.WithRemoteServerName("pen-spyglass"))
 	}
 
 	if !devmode {

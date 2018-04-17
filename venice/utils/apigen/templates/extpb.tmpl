@@ -4,15 +4,17 @@
 Package {{.GoPkg.Name}} is a auto generated package.
 Input file: {{.Name}} {{$file := .}}
 */
-package {{.GoPkg.Name}}{{$validators := getValidatorManifest .}}{{$defaults := getDefaulterManifest .}}
+package {{.GoPkg.Name}}{{$validators := getValidatorManifest .}}{{$defaults := getDefaulterManifest .}}{{$storageTransformers := getStorageTransformersManifest .}}
 
 import (
+	"context"
 	fmt "fmt"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	{{if $validators.Fmap}}
-	validators "github.com/pensando/sw/venice/utils/apigen/validators" {{end}}
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"{{end}}
+	{{if $storageTransformers.Fmap}}"github.com/pensando/sw/venice/utils/transformers/storage"{{end}}
 	"github.com/pensando/sw/venice/globals"
 )
 
@@ -22,8 +24,10 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 {{if $validators.Fmap}}
 var _ validators.DummyVar
-var funcMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool)
+var validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool)
 {{end}}
+{{if $storageTransformers.Fmap}}
+var storageTransformersMap{{getFileName .Name}} = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error) {{end}}
 {{range .Messages}}{{if (len (getDbKey .)) ne 0}}{{$sep := ", "}}
 // MakeKey generates a KV store key for the object
 func (m *{{.Name}}) MakeKey(prefix string) string {
@@ -110,13 +114,13 @@ func (m *{{.Name}}) Validate(ver string, ignoreStatus bool) bool { {{with (index
 	if {{if $fldv.Pointer}} m.{{$fldk}} != nil && {{end}}!m.{{$fldk}}.Validate(ver, ignoreStatus) {
 		return false
 	}{{end}}{{end}}{{else}}{{$_:= (saveBool true 0)}}{{end}}{{end}}{{if getBool 0}}
-	if vs, ok := funcMap{{getFileName $file.Name}}["{{$msgname}}"][ver]; ok {
+	if vs, ok := validatorMap{{getFileName $file.Name}}["{{$msgname}}"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMap{{getFileName $file.Name}}["{{$msgname}}"]["all"]; ok {
+	} else if vs, ok := validatorMap{{getFileName $file.Name}}["{{$msgname}}"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -127,20 +131,75 @@ func (m *{{.Name}}) Validate(ver string, ignoreStatus bool) bool { {{with (index
 }
 {{end}}{{end}}
 
+{{if $storageTransformers.Fmap}}
+// Transformers
 
-func init() { {{if $validators.Fmap}}
-	funcMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool){{range .Messages}}{{$msgName := .Name}}{{with (index $validators.Map (derefStr .Name))}}
+{{range .Messages}}{{if isNestedMessage .}}{{else}}{{$msg := .}}{{$msgname := .Name}}{{with (index $storageTransformers.Map (derefStr .Name))}}{{if .HasTransformers}}
+func (m *{{$msgname}}) ApplyStorageTransformer(ctx context.Context, toStorage bool) error { {{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Transformers)}}{{if $fldv.Repeated}}
+	for i, v := range m.{{$fldk}} {
+		 c := *v
+		 if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			 return err
+		 }
+		 m.{{$fldk}}[i] = &c
+	} {{else}}{{if isSpecStatusMessage $msg}}
+	if err := m.{{$fldk}}.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}{{else}}
+	{{if $fldv.Pointer}}
+	if m.{{$fldk}} == nil {
+		return nil
+	}{{end}}
+	if err := m.{{$fldk}}.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}{{end}}{{end}}{{else}}{{$_:= (saveBool true 0)}}{{end}}{{end}}{{if getBool 0}}
+	if vs, ok := storageTransformersMap{{getFileName $file.Name}}["{{$msgname}}"]; ok {
+		for _, v := range vs {
+			if err := v(ctx, m, toStorage); err != nil {
+				return err
+			}
+		}
+	} {{end}}
+	return nil
+}
+
+{{if isSpecStatusMessage $msg}}
+type storage{{$msgname}}Transformer struct {}
+var Storage{{$msgname}}Transformer storage{{$msgname}}Transformer
+
+func (st *storage{{$msgname}}Transformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.({{$msgname}})
+	err := r.ApplyStorageTransformer(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (st *storage{{$msgname}}Transformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.({{$msgname}})
+	err := r.ApplyStorageTransformer(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}
+
+func init() {
+{{if $validators.Fmap}}
+	validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool){{range .Messages}}{{$msgName := .Name}}{{with (index $validators.Map (derefStr .Name))}}
 	{{$_ := saveBool true 1}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}{{if getBool 1}}
-	funcMap{{getFileName $file.Name}}["{{$msgName}}"] = make(map[string][]func(interface{})bool){{$_ := saveBool false 1}}{{end}}{{end}}{{end}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}
+	validatorMap{{getFileName $file.Name}}["{{$msgName}}"] = make(map[string][]func(interface{})bool){{$_ := saveBool false 1}}{{end}}{{end}}{{end}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}
 	{{range $fldv.Validators}}{{if eq 0 (len .Args)}}
-	funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {
+	validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {
 		m := i.(*{{$msgName}})
 		if !validators.{{.Fn}}(m.{{$fldk}}) {
 			return false
 		}
 		return true
 	})
-		{{else}} funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {
+		{{else}} validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {
 		m := i.(*{{$msgName}})
 		{{if (strEq .Fn "StrEnum")}}{{$enummap := (getEnumStrMap $file .Args)}}{{if $fldv.Repeated}}
 		for _, v := range m.{{$fldk}} {
@@ -163,5 +222,50 @@ func init() { {{if $validators.Fmap}}
 		}{{end}}{{end}}
 		return true
 	})
-	{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}
+	{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}
+{{end}}
+
+{{if $storageTransformers.Fmap}}
+	{{range .Messages}}{{$msgName := .Name}}{{with (index $storageTransformers.Map (derefStr .Name))}}
+	{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Transformers)}}{{else}}
+	{{range $fldv.Transformers}}{{if eq 0 (len .Args)}}
+	{
+	{{$msgName}}{{$fldk}}Tx, err := storage.New{{.Fn}}ValueTransformer()
+	if err != nil {
+		log.Fatalf("Error instantiating {{.Fn}}StorageTransformer: %v", err)
+	}
+	storageTransformersMap{{getFileName $file.Name}}["{{$msgName}}"] = append(storageTransformersMap{{getFileName $file.Name}}["{{$msgName}}"], 
+	func(ctx context.Context, i interface{}, toStorage bool) error {
+		var data []byte
+		var err error
+		m := i.(*{{$msgName}})
+		{{if $fldv.Repeated}}
+		slice := make([]{{$fldv.TypeCast}}, 0)
+		for _, v := range m.{{$fldk}} {
+			if toStorage {
+				data, err = {{$msgName}}{{$fldk}}Tx.TransformToStorage(ctx, []byte(v))
+			} else {
+				data, err = {{$msgName}}{{$fldk}}Tx.TransformFromStorage(ctx, []byte(v))
+			}
+			if err != nil {
+				return err
+			}
+			if data != nil {
+				slice = append(slice, {{$fldv.TypeCast}}(data))
+			}
+		}
+		m.{{$fldk}} = slice
+		{{else}}
+		if toStorage {
+			data, err = {{$msgName}}{{$fldk}}Tx.TransformToStorage(ctx, []byte(m.{{$fldk}}))
+		} else {
+			data, err = {{$msgName}}{{$fldk}}Tx.TransformFromStorage(ctx, []byte(m.{{$fldk}}))
+		}
+		m.{{$fldk}} = {{$fldv.TypeCast}}(data)
+		{{end}}
+		return err
+	})
+	}
+	{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}
+{{end}}
 }

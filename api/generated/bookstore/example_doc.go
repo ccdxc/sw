@@ -10,6 +10,7 @@ The following Messages are defined.
   ApplyDiscountReq
   AutoMsgBookWatchHelper
   AutoMsgCouponWatchHelper
+  AutoMsgCustomerWatchHelper
   AutoMsgOrderWatchHelper
   AutoMsgPublisherWatchHelper
   AutoMsgStoreWatchHelper
@@ -20,6 +21,11 @@ The following Messages are defined.
   BookStatus
   Coupon
   CouponList
+  Customer
+  CustomerList
+  CustomerPersonalInfo
+  CustomerSpec
+  CustomerStatus
   Order
   OrderItem
   OrderList
@@ -43,31 +49,37 @@ The following Services and Methods are defined.
    Applydiscount
    AutoAddBook
    AutoAddCoupon
+   AutoAddCustomer
    AutoAddOrder
    AutoAddPublisher
    AutoAddStore
    AutoDeleteBook
    AutoDeleteCoupon
+   AutoDeleteCustomer
    AutoDeleteOrder
    AutoDeletePublisher
    AutoDeleteStore
    AutoGetBook
    AutoGetCoupon
+   AutoGetCustomer
    AutoGetOrder
    AutoGetPublisher
    AutoGetStore
    AutoListBook
    AutoListCoupon
+   AutoListCustomer
    AutoListOrder
    AutoListPublisher
    AutoListStore
    AutoUpdateBook
    AutoUpdateCoupon
+   AutoUpdateCustomer
    AutoUpdateOrder
    AutoUpdatePublisher
    AutoUpdateStore
    AutoWatchBook
    AutoWatchCoupon
+   AutoWatchCustomer
    AutoWatchOrder
    AutoWatchPublisher
    AutoWatchStore

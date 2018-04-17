@@ -242,6 +242,11 @@ func (m *FakeMessage) WithSelfLinkWriter(fn apisrv.UpdateSelfLinkFunc) apisrv.Me
 	return m
 }
 
+// WithStorageTransformer is a mock method for testing
+func (m *FakeMessage) WithStorageTransformer(stx apisrv.ObjStorageTransformer) apisrv.Message {
+	return m
+}
+
 // GetKind is a mock method for testing
 func (m *FakeMessage) GetKind() string { return "" }
 
@@ -329,6 +334,16 @@ func (m *FakeMessage) Validate(i interface{}, ver string, ignoreStatus bool) err
 
 //UpdateSelfLink update the object with the self link provided
 func (m *FakeMessage) UpdateSelfLink(path string, i interface{}) (interface{}, error) {
+	return i, nil
+}
+
+//TransformToStorage is a mock method for testing
+func (m *FakeMessage) TransformToStorage(ctx context.Context, oper apisrv.APIOperType, i interface{}) (interface{}, error) {
+	return i, nil
+}
+
+//TransformFromStorage is a mock method for testing
+func (m *FakeMessage) TransformFromStorage(ctx context.Context, oper apisrv.APIOperType, i interface{}) (interface{}, error) {
 	return i, nil
 }
 
@@ -427,4 +442,23 @@ func NewFakeMessage(Kvpath string, validateResult bool) apisrv.Message {
 		ValidateRslt: validateResult,
 	}
 	return &r
+}
+
+// ObjStorageTransformer is a mock storage transformer for testing
+// It only counts the invocations of each method
+type ObjStorageTransformer struct {
+	TransformToStorageCalled   int
+	TransformFromStorageCalled int
+}
+
+// TransformFromStorage is a mock method for testing
+func (m *ObjStorageTransformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	m.TransformFromStorageCalled++
+	return i, nil
+}
+
+// TransformToStorage is a mock method for testing
+func (m *ObjStorageTransformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	m.TransformToStorageCalled++
+	return i, nil
 }

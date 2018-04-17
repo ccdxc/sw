@@ -13,8 +13,9 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
-	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -23,7 +24,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var funcMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
+var validatorMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *FlowExportPolicy) MakeKey(prefix string) string {
@@ -539,13 +540,13 @@ func (m *FlowExportStatus) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *FlowExportTarget) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapTelemetry["FlowExportTarget"][ver]; ok {
+	if vs, ok := validatorMapTelemetry["FlowExportTarget"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapTelemetry["FlowExportTarget"]["all"]; ok {
+	} else if vs, ok := validatorMapTelemetry["FlowExportTarget"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -556,13 +557,13 @@ func (m *FlowExportTarget) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *FwlogExport) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapTelemetry["FwlogExport"][ver]; ok {
+	if vs, ok := validatorMapTelemetry["FwlogExport"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapTelemetry["FwlogExport"]["all"]; ok {
+	} else if vs, ok := validatorMapTelemetry["FwlogExport"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -594,13 +595,13 @@ func (m *FwlogSpec) Validate(ver string, ignoreStatus bool) bool {
 			return false
 		}
 	}
-	if vs, ok := funcMapTelemetry["FwlogSpec"][ver]; ok {
+	if vs, ok := validatorMapTelemetry["FwlogSpec"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapTelemetry["FwlogSpec"]["all"]; ok {
+	} else if vs, ok := validatorMapTelemetry["FwlogSpec"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -631,10 +632,11 @@ func (m *StatsStatus) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func init() {
-	funcMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
 
-	funcMapTelemetry["FlowExportTarget"] = make(map[string][]func(interface{}) bool)
-	funcMapTelemetry["FlowExportTarget"]["all"] = append(funcMapTelemetry["FlowExportTarget"]["all"], func(i interface{}) bool {
+	validatorMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
+
+	validatorMapTelemetry["FlowExportTarget"] = make(map[string][]func(interface{}) bool)
+	validatorMapTelemetry["FlowExportTarget"]["all"] = append(validatorMapTelemetry["FlowExportTarget"]["all"], func(i interface{}) bool {
 		m := i.(*FlowExportTarget)
 
 		if _, ok := FlowExportTarget_Formats_value[m.Format]; !ok {
@@ -643,8 +645,8 @@ func init() {
 		return true
 	})
 
-	funcMapTelemetry["FwlogExport"] = make(map[string][]func(interface{}) bool)
-	funcMapTelemetry["FwlogExport"]["all"] = append(funcMapTelemetry["FwlogExport"]["all"], func(i interface{}) bool {
+	validatorMapTelemetry["FwlogExport"] = make(map[string][]func(interface{}) bool)
+	validatorMapTelemetry["FwlogExport"]["all"] = append(validatorMapTelemetry["FwlogExport"]["all"], func(i interface{}) bool {
 		m := i.(*FwlogExport)
 
 		for _, v := range m.Filter {
@@ -655,7 +657,7 @@ func init() {
 		return true
 	})
 
-	funcMapTelemetry["FwlogExport"]["all"] = append(funcMapTelemetry["FwlogExport"]["all"], func(i interface{}) bool {
+	validatorMapTelemetry["FwlogExport"]["all"] = append(validatorMapTelemetry["FwlogExport"]["all"], func(i interface{}) bool {
 		m := i.(*FwlogExport)
 
 		if _, ok := FwlogExportFormat_value[m.Format]; !ok {
@@ -664,8 +666,8 @@ func init() {
 		return true
 	})
 
-	funcMapTelemetry["FwlogSpec"] = make(map[string][]func(interface{}) bool)
-	funcMapTelemetry["FwlogSpec"]["all"] = append(funcMapTelemetry["FwlogSpec"]["all"], func(i interface{}) bool {
+	validatorMapTelemetry["FwlogSpec"] = make(map[string][]func(interface{}) bool)
+	validatorMapTelemetry["FwlogSpec"]["all"] = append(validatorMapTelemetry["FwlogSpec"]["all"], func(i interface{}) bool {
 		m := i.(*FwlogSpec)
 
 		for _, v := range m.Filter {

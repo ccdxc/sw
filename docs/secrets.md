@@ -293,3 +293,27 @@ expertise in cryptography.
 
 * [Current](https://github.com/kubernetes/features/issues/92)
 * [Initial](https://github.com/kubernetes/kubernetes/issues/12742)
+
+## Implementation Notes
+
+The Venice implementation consists of a generic "storage transformer" framework
+and a specific transformer for secrets.
+
+The storage transformers framework is described in [API](apidef.md) documentation.
+
+The following files and directories contain the implementation of the Secret 
+storage transformers and other additions to the existing API infrastructure:
+
+* [api/integration/...](../api/integration)  
+   Integration tests to verify secret encryption and zeroization logic for CRUD
+   and Watch operations performed using gRPC and REST interfaces.
+
+* [venice/apiserver/...](../venice/apiserver)  
+   Storage transformers interface, runtime logic, tests, mocks
+
+* [venice/utils/transformers/storage](../venice/utils/transformers/storage)  
+   Field transformers interface, secrets transformer implementation, tests
+
+* [venice/utils/apigen/plugins/...](../venice/utils/apigen/plugins)  
+   Protoc extension definitions, parsing logic, plugin and templates additions, tests
+
