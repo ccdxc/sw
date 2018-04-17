@@ -1,6 +1,20 @@
+#! /usr/bin/python3
+
+import copy
+
 from infra.factory.testcase import * 
 from infra.engine.trigger2  import DolTriggerEngine
 from infra.engine.verif import DolVerifEngine
+
+gl_ignore_fields = {
+#    'IP'    : [ 'chksum' ],
+#    'TCP'   : [ 'chksum' ],
+#    'UDP'   : [ 'chksum' ],
+#    'ICMP'  : [ 'chksum' ],
+    'CRC'       : [ 'crc' ],
+    'ESP'       : [ 'data' ],
+    'PADDING'   : [ 'data' ],
+}
 
 class DOLTestCaseTxRxStatsEntry:
     def __init__(self):
@@ -48,6 +62,8 @@ class DOLTestCase(TestCase):
         self.tracker        = module.GetTracker()
         self.coverage       = TestCaseCoverageHelper(self)
         self.stats          = DOLTestCaseStats()
+
+        self.ignore_pkt_fields = copy.deepcopy(gl_ignore_fields)
         super()._generate()
         return
 
@@ -60,6 +76,15 @@ class DOLTestCase(TestCase):
     
     def IsDrop(self):
         return self.drop
+
+    def AddIgnorePacketField(self, hdr, field):
+        if hdr not in self.ignore_pkt_fields:
+            self.ignore_pkt_fields[hdr] = []
+        self.ignore_pkt_fields[hdr].append(field)
+        return
+
+    def GetIgnorePacketFields(self):
+        return self.ignore_pkt_fields
 
     def __generate_packets_from_spec(self, pspec):
         pktspec = getattr(pspec, 'packet', None)

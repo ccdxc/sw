@@ -59,7 +59,7 @@ class DolVerifEngineObject(VerifEngineObject):
             return False
 
         logger.verbose("Comparing Packets")
-        pcr = comparators.PacketComparator()
+        pcr = comparators.PacketComparator(tc.GetIgnorePacketFields())
         pcr.AddExpected(epktbuf, None, 1)
         pcr.AddReceived(apktbuf, None)
         pcr.Compare()
@@ -242,7 +242,7 @@ class DolVerifEngineObject(VerifEngineObject):
         return
 
     def __verify_packets(self, step, tc):
-        pcr = comparators.PacketComparator()
+        pcr = comparators.PacketComparator(tc.GetIgnorePacketFields())
         # Add Expected
         self.__add_expected(pcr, step, tc)
         # Add RX

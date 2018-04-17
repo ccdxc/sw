@@ -13,6 +13,7 @@ def TestCaseSetup(tc):
     iterelem = tc.module.iterator.Get()
     tc.pvtdata.type = getattr(iterelem, 'type', None)
     tc.pvtdata.count = getattr(iterelem, 'count', 1)
+    #tc.AddIgnorePacketField('TCP', 'sport')
     modcbs.TestCaseSetup(tc)
     return
 

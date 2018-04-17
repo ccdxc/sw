@@ -10,6 +10,7 @@ step_id : None
 pvtdata : None  # Private data
 coverage : None  # Coverage helper
 stats   : None
+ignore_pkt_fields : None
 
 config:
     root: None

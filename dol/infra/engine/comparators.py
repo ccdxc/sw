@@ -12,16 +12,6 @@ from infra.factory.store    import FactoryStore
 from infra.common.glopts    import GlobalOptions
 from infra.common.logging   import logger as logger
 
-gl_ignore_fields = {
-#    'IP'    : [ 'chksum' ],
-#    'TCP'   : [ 'chksum' ],
-#    'UDP'   : [ 'chksum' ],
-#    'ICMP'  : [ 'chksum' ],
-    'CRC'       : [ 'crc' ],
-    'ESP'       : [ 'data' ],
-    'PADDING'   : [ 'data' ],
-}
-
 MIN_PACKET_SIZE = 60 # excluding CRC
 CPU_PORT        = 128
 
@@ -132,7 +122,7 @@ class CrPacket:
         return
 
 class CrPacketPair:
-    def __init__(self, expkt, rxpkt, pid):
+    def __init__(self, expkt, rxpkt, pid, ignore_fields):
         if expkt and isinstance(expkt, CrPacket) is False:
             pdb.set_trace()
         if rxpkt and isinstance(rxpkt, CrPacket) is False:
@@ -141,8 +131,9 @@ class CrPacketPair:
         self.rxpkt  = rxpkt
         
         # Match and Mis-match headers
-        self.match_hdrs      = []
-        self.mismatch_hdrs   = []
+        self.match_hdrs     = []
+        self.mismatch_hdrs  = []
+        self.ignore_fields  = ignore_fields
 
         self.degree = self.__get_degree()
         self.match  = None
@@ -172,8 +163,7 @@ class CrPacketPair:
         return idstring
 
     def __process_ignore(self, ehdr, ahdr):
-        global gl_ignore_fields
-        for hdr,fields in gl_ignore_fields.items():
+        for hdr,fields in self.ignore_fields.items():
             if hdr != ehdr.__class__.__name__: continue
             for f in fields:
                 setattr(ehdr, f, 0)
@@ -254,7 +244,7 @@ class CrPacketPair:
 
 # Packet Comparator for Scapy packets.
 class PacketComparator:
-    def __init__(self):
+    def __init__(self, ign = None):
         self.eid    = 0
         self.rid    = 0
         self.pid    = 0
@@ -263,6 +253,7 @@ class PacketComparator:
         self.dpm    = {} # Degree x Pair Matrix
         self.pairs  = {}
         self.match  = True
+        self.ignore_fields = ign
         return
 
     def __add_pair_to_dpm(self, deg, epid, rpid):
@@ -286,7 +277,7 @@ class PacketComparator:
     def __add_pair(self, epkt, rpkt):
         self.pid += 1
         logger.debug("- Adding new pair id = %s" % self.pid)
-        pair = CrPacketPair(epkt, rpkt, self.pid)
+        pair = CrPacketPair(epkt, rpkt, self.pid, self.ignore_fields)
         self.pairs[self.pid] = pair
         return
 
