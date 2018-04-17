@@ -1,6 +1,6 @@
 # Feature Test Modules List
 feature:
-    id          : rdma_send_only_l2l
+    id          : rdma_send_only_inline_l2l
     sub         : rdma
     package     : test.rdma
     module      : rdma
@@ -14,11 +14,11 @@ feature:
 
 modules:
     - module:
-        name    : RDMA_TX_SEND_ONLY
+        name    : RDMA_TX_SEND_ONLY_INLINE
         enable  : True
         package : test.rdma
         module  : send_only_l2l
-        spec    : send_only_l2l.testspec
+        spec    : send_only_inline_l2l.testspec
         ignore  : False
         iterate:
            - rdmasession:

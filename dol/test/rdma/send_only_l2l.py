@@ -13,10 +13,15 @@ def Setup(infra, module):
 
     logger.info("Iterator Selectors")
 
+    module.pvtdata.payloadlen = 32 # for inline data
     if iterelem:
-        if 'base' in iterelem.rdmasession.__dict__:
-            logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
-            module.testspec.selectors.rdmasession.base.Extend(iterelem.rdmasession.base)
+        if 'rdmasession' in iterelem.__dict__:
+            if 'base' in iterelem.rdmasession.__dict__:
+                logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
+                module.testspec.selectors.rdmasession.base.Extend(iterelem.rdmasession.base)
+
+        if 'payloadlen' in iterelem.__dict__:
+            module.pvtdata.payloadlen = iterelem.payloadlen
     return
 
 def Teardown(infra, module):
@@ -49,7 +54,6 @@ def TestCaseSetup(tc):
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
 
     # RX SIDE STUFF
-    tc.pvtdata.num_total_bytes = 0x40
 
     # Read RQ pre state
     rs.rqp.rq.qstate.Read()
@@ -58,6 +62,13 @@ def TestCaseSetup(tc):
     # Read CQ pre state
     rs.rqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_pre_qstate = rs.rqp.rq_cq.qstate.data
+
+
+    # Read payloadlen from module into tc pvtdata, which is needed 
+    # for non-inline tests to sweep across diff pkt sizes for latency RTL tests
+    tc.pvtdata.payloadlen = tc.module.pvtdata.payloadlen
+    tc.pvtdata.num_total_bytes = tc.pvtdata.payloadlen
+    logger.info("RDMA TestCaseSetup() Module payloadlen: %d", tc.pvtdata.payloadlen)
 
     return
 

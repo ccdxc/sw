@@ -21,7 +21,8 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        #payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 32  #Inlinei of 32B
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -66,14 +67,10 @@ descriptors:
         fields:
             op_type : 0  # OP_TYPE_SEND
             wrid    : 6
-            num_sges: 1
-
+            inline_data_vld : 1
             send    :
-               
-            sges:
-                - va  : ref://testcase/buffers/id=BUF/address
-                  len : ref://testcase/buffers/id=BUF/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                len             : 32
+                inline_data     : ref://testcase/packets/id=BASE_PKT/rawbytes
 
     - descriptor:
         id      : EXP_CQ_DESC

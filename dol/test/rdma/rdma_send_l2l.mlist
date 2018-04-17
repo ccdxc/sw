@@ -1,0 +1,32 @@
+# Feature Test Modules List
+feature:
+    id          : rdma_send_l2l
+    sub         : rdma
+    package     : test.rdma
+    module      : rdma
+    enable      : True
+    ignore      : False
+    perf        : True
+    rtl         : True
+    pps         : True
+    selectors:
+        maxrdmasessions: 1
+
+modules:
+    - module:
+        name    : RDMA_TX_SEND_ONLY
+        enable  : True
+        package : test.rdma
+        module  : send_only_l2l
+        spec    : send_l2l.testspec
+        ignore  : False
+        iterate:
+             - payloadsize: 64
+             - payloadsize: 128
+             - payloadsize: 256
+             - payloadsize: 512
+             - payloadsize: 1024
+             - payloadsize: 2048
+             - payloadsize: 4096
+
+
