@@ -929,7 +929,8 @@ action process_dst_seq(lif, qtype, qid, qaddr) {
   if (nvme_kivec_t0_s2s.punt_to_arm == 0) {
     // Load the table and program for reading the destination sequencer queue
     // state in the next stage
-    CAPRI_LOAD_TABLE_ADDR(common_te0_phv, qaddr, STORAGE_DEFAULT_TBL_LOAD_SIZE, 
+    CAPRI_LOAD_TABLE_ADDR(common_te0_phv, seq_db_info_scratch.qaddr, 
+                          STORAGE_DEFAULT_TBL_LOAD_SIZE, 
                           push_dst_seq_q_start)
   } else {
     // Load the table and program for reading the destination arm queue

@@ -1,16 +1,42 @@
+#include <assert.h>
+
 #include "dol/test/storage/utils.hpp"
 #include "dol/test/storage/queues.hpp"
+#include "dol/test/storage/rdma.hpp"
+#include "dol/test/storage/qstate_if.hpp"
 
 namespace nvme_dp {
 
+// I/O Map dst flags
+#define IO_XTS_ENCRYPT                          0x00000001
+#define IO_XTS_DECRYPT                          0x00000002
+#define IO_DST_REMOTE                           0x00000004
+
+
+#define IO_BUF_WRITE_ROCE_SQ_WQE_OFFSET         192
+#define IO_BUF_READ_ROCE_SQ_WQE_OFFSET          256
+
+#define IO_BUF_SEQ_DB_OFFSET                    2560  // Size == IO_BUF_SEQ_DB_TOTAL_SIZE Size = 512 bytes
+
+#define IO_BUF_SEQ_R2N_DB_OFFSET                384
+
+#define IO_BUF_NVME_BE_CMD_OFFSET               3896
+
+
 const static uint32_t	kIOMapEntrySize		 = 1024;
 const static uint32_t	kIOMapNumEntries	 = 8;
-const static uint32_t	kIOBufEntrySize		 = 8192;
+const static uint32_t	kIOBufMaxDataSize	 = 4096;
+const static uint32_t	kIOBufHdrSize	 	 = 4096;
+const static uint32_t	kIOBufEntrySize		 = (kIOBufHdrSize + kIOBufMaxDataSize);
+const static uint32_t	kIOBufHdrXmitSize	 = (kIOBufHdrSize - IO_BUF_NVME_BE_CMD_OFFSET);
 const static uint32_t	kIOBufNumEntries	 = 8;
 const static uint32_t	kIOBFreeListEntrySizeLog2	 = 6;
 const static uint32_t	kIOBFreeListEntrySize	 	 = NUM_TO_VAL(kIOBFreeListEntrySizeLog2);
 const static uint32_t	kIOBRingStateSizeLog2	 	 = 6;
 const static uint32_t	kIOBRingStateSize	 	 = NUM_TO_VAL(kIOBRingStateSizeLog2);
+
+
+uint32_t IOBufSendLKeyBase = 128;
 
 dp_mem_t *io_map_base_addr;
 uint32_t io_map_num_entries;
@@ -96,7 +122,121 @@ int init_iob_ring() {
   iob_ring_base_addr->write_bit_fields(64, 64, iob_free_list_base_addr->pa());
   iob_ring_base_addr->write_bit_fields(128, 16, kIOBFreeListEntrySizeLog2);
   iob_ring_base_addr->write_thru();
-  printf("IOB Ring Base PA: %lx \n", iob_ring_base_addr->pa());
+  printf("IOB Ring Base setup, PA: %lx \n", iob_ring_base_addr->pa());
+
+  return 0;
+}
+
+int setup_io_map() {
+  // Populate entry corresponding to NSID 1
+  io_map_base_addr->line_set(1);
+
+  // Basic information
+  io_map_base_addr->write_bit_fields(0, 64, io_map_base_addr->pa()); // Back pointer to itself
+  io_map_base_addr->write_bit_fields(64, 32, 1); // NSID
+  io_map_base_addr->write_bit_fields(96, 16, 1); // VFID
+  io_map_base_addr->write_bit_fields(112, 32, IO_DST_REMOTE); // dst_flags
+
+  // TBD: Populate R2N lif for testing local target
+  
+  // ROCE LIF 
+  uint16_t lif;
+  uint8_t qtype;
+  uint32_t qid;
+  uint64_t qaddr;
+#if 0
+  if (rdma_roce_ini_sq_info(&lif, &qtype, &qid, &qaddr) < 0) {
+    printf("Can't get RDMA Initiator SQ info \n");
+    assert(0);
+    return -1;
+  }
+#endif
+  // Fill the Sequencer ROCE descriptor
+  lif = queues::get_pvm_lif();
+  qtype = SQ_TYPE;
+  qid = get_rdma_pvm_roce_init_sq();
+  if (qstate_if::get_qstate_addr(lif, qtype, qid, &qaddr) < 0) {
+    printf("Can't get PVM's ROCE SQ qaddr \n");
+    assert(0);
+    return -1;
+  }
+
+  io_map_base_addr->write_bit_fields(216, 11, lif);
+  io_map_base_addr->write_bit_fields(227, 3, qtype);
+  io_map_base_addr->write_bit_fields(230, 24, qid);
+  io_map_base_addr->write_bit_fields(254, 34, qaddr);
+  
+  // NVME backend info
+  io_map_base_addr->write_bit_fields(288, 32, 0);
+  io_map_base_addr->write_bit_fields(320, 16, queues::nvme_e2e_ssd_handle());
+  io_map_base_addr->write_bit_fields(336, 8, 0);
+
+  // Commit to HBM
+  io_map_base_addr->write_thru();
+  printf("IOB MAP (for NSID 1) setup, PA: %lx \n", io_map_base_addr->pa());
+
+  return 0;
+}
+
+int setup_one_io_buffer(int index) {
+  // Start with the line set to the index
+  io_buf_base_addr->line_set(index);
+
+  // Get the Sequencer ROCE SQ
+  uint32_t seq_roce_q = queues::get_seq_roce_sq(index);
+  uint64_t seq_qaddr;
+  if (qstate_if::get_qstate_addr(queues::get_seq_lif(), SQ_TYPE, seq_roce_q, &seq_qaddr) < 0) {
+    printf("Can't get PVM's Seq ROCE SQ qaddr \n");
+    return -1;
+  }
+
+  // SendLKey  = base value + index of the IO buffer
+  uint32_t send_lkey = IOBufSendLKeyBase + index;
+
+  // Register IO Buffer with ROCE using identity mapping. 
+  // No remote access => only LKey (based on base value + offset).
+  RdmaMemRegister(io_buf_base_addr->pa(), io_buf_base_addr->pa(), kIOBufEntrySize,
+                  send_lkey, 0, false);
+
+
+  // Fill the write wqe
+  uint32_t roce_write_wqe_base = IO_BUF_WRITE_ROCE_SQ_WQE_OFFSET * 8;
+  uint64_t data_offset_pa = io_buf_base_addr->pa() + IO_BUF_NVME_BE_CMD_OFFSET;
+  uint32_t data_len = kIOBufHdrXmitSize + kIOBufMaxDataSize;
+  printf("data_offset %lx, data len %u \n", data_offset_pa, data_len);
+  io_buf_base_addr->write_bit_fields(roce_write_wqe_base, 64, data_offset_pa); // wrid, ptr to actual xmit data
+  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+64, 4,  kRdmaSendOpType);  
+  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+72, 8,  1); // Num SGEs = 1
+
+  // Store doorbell information of PVM's ROCE CQ in immediate data
+  if (kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
+      io_buf_base_addr->write_bit_fields(roce_write_wqe_base+96, 11, queues::get_pvm_lif());
+      io_buf_base_addr->write_bit_fields(roce_write_wqe_base+107, 3, CQ_TYPE);
+      io_buf_base_addr->write_bit_fields(roce_write_wqe_base+110, 18, get_rdma_pvm_roce_tgt_cq());
+  }
+  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+192, 32, data_len);  // data len
+
+  // Form the SGE
+  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+256, 64,  data_offset_pa); // SGE-va, same as pa
+  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+256+64, 32, data_len);
+  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+256+64+32, 32, send_lkey);
+
+  // Form the R2N sequencer doorbell
+  uint32_t base_db_bit = (IO_BUF_SEQ_DB_OFFSET + IO_BUF_SEQ_R2N_DB_OFFSET) * 8;
+  io_buf_base_addr->write_bit_fields(base_db_bit, 11, queues::get_seq_lif());
+  io_buf_base_addr->write_bit_fields(base_db_bit+11, 3, SQ_TYPE);
+  io_buf_base_addr->write_bit_fields(base_db_bit+14, 24, seq_roce_q);
+  io_buf_base_addr->write_bit_fields(base_db_bit+38, 34, seq_qaddr);
+
+  // Commit to HBM
+  io_buf_base_addr->write_thru();
+  printf("IOB buffer %d setup, PA: %lx \n", index, io_buf_base_addr->pa());
+  return 0;
+}
+
+int setup_io_buffers() {
+  // Setup only buffer 0 for now
+  setup_one_io_buffer(0);
 
   return 0;
 }
@@ -157,6 +297,25 @@ int test_setup () {
     return -1;
   }
   printf("Setup Sequeuncer queues \n");
+
+  return 0;
+}
+
+int config () {
+
+  //  Setup IO map for  NSID 1
+  if (setup_io_map() < 0) {
+    printf("Failed to setup IO MAP (for NSID 1)\n");
+    return -1;
+  }
+  printf("Setup IO MAP (for NSID 1)\n");
+
+  //  Setup IO buffers
+  if (setup_io_buffers() < 0) {
+    printf("Failed to setup IO buffers \n");
+    return -1;
+  }
+  printf("Setup IO buffers \n");
 
   return 0;
 }

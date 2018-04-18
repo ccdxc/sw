@@ -393,6 +393,13 @@ int main(int argc, char**argv) {
   }
   printf("RDMA configuration completed \n");
 
+  if (run_nvme_dp_tests) {
+    if (nvme_dp::config() < 0) {
+      printf("Storage NVME DP config failed\n");
+      return 1;
+    }
+    printf("Storage NVME DP config succeded \n");
+  }
   // Indicate to model that config is done
   config_done();
 
@@ -581,5 +588,7 @@ int main(int argc, char**argv) {
   }
   fflush(stdout);
   if (rc != 0) return rc;
+  printf("exiting successfuully \n");
+  fflush(stdout);
   exit(0);
 }

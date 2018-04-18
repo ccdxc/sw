@@ -65,12 +65,13 @@ uint64_t NvmeSsdCore::MoveData(NvmeCmd *cmd, uint64_t prp, uint64_t offset,
   } else {
     DMAMemCopyP2V(prp, &data_[offset], copy_size);
   } 
+  printf("Moved Data %lu\n", copy_size);
   return copy_size;
 }
 
 bool NvmeSsdCore::ExecuteRW(NvmeCmd *cmd) {
-  //printf("NVME command received by SSD\n");
-  //utils::dump((uint8_t *) cmd);
+  printf("NVME command received by SSD\n");
+  utils::dump((uint8_t *) cmd);
 
   if ((cmd->dw0.opc != NVME_READ_CMD_OPCODE) &&
       (cmd->dw0.opc != NVME_WRITE_CMD_OPCODE)) {

@@ -280,6 +280,7 @@ cc_library(
         "queues.hpp",
         "dp_mem.cc",
         "dp_mem.hpp",
+        "rdma.hpp",
     ],
     deps = [
         ":hal_if",

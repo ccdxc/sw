@@ -187,6 +187,10 @@ void lif_params_init(hal_if::lif_params_t *params, uint16_t type,
   params->type[type].num_queues = num_queues;  // you get 2^num_queues 
 }
 
+int nvme_e2e_ssd_handle() {
+  return kE2eSsdhandle;
+}
+
 int nvme_e2e_ssd_sq_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size) {
   // NOTE: Assumes that nvme_e2e SSD SQ is initated with 64 entries x 64 bytes size
   // TODO: Fix to make this consistent or assert on the values

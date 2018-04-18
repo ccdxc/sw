@@ -13,6 +13,8 @@ using namespace dp_mem;
 
 namespace queues {
 
+int nvme_e2e_ssd_handle();
+
 void seq_queue_pdma_num_set(uint64_t& num_pdma_queues);
 
 int resources_init();

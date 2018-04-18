@@ -10,6 +10,7 @@
 #include "dol/test/storage/tests.hpp"
 #include "dol/test/storage/r2n.hpp"
 #include "dol/test/storage/qstate_if.hpp"
+#include "dol/test/storage/rdma.hpp"
 #include "nic/gen/proto/hal/internal.grpc.pb.h"
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
 #include "nic/gen/proto/hal/l2segment.grpc.pb.h"
@@ -278,24 +279,6 @@ int rdma_p4_init() {
 }
 
 namespace {
-
-#define RDMA_OP_TYPE_SEND           0
-#define RDMA_OP_TYPE_SEND_INV       1
-#define RDMA_OP_TYPE_SEND_IMM       2
-#define RDMA_OP_TYPE_READ           3
-#define RDMA_OP_TYPE_WRITE          4
-#define RDMA_OP_TYPE_WRITE_IMM      5
-#define RDMA_OP_TYPE_CMP_N_SWAP     6
-#define RDMA_OP_TYPE_FETCH_N_ADD    7
-#define RDMA_OP_TYPE_FRPMR          8
-#define RDMA_OP_TYPE_LOCAL_INV      9
-#define RDMA_OP_TYPE_BIND_MW        10
-#define RDMA_OP_TYPE_SEND_INV_IMM   11
-
-// Define the desired Send op_type;
-// Valid choices are RDMA_OP_TYPE_SEND or RDMA_OP_TYPE_SEND_IMM
-const uint8_t  kRdmaSendOpType = RDMA_OP_TYPE_SEND_IMM;
-
 
 // Fixed keys:
 const uint32_t kInitiatorCQLKey = 1;
@@ -1059,6 +1042,36 @@ int set_rtl_qstate_cmp_ignore(int src_lif, int src_qtype, int src_qid) {
   }
 	eos_ignore_addr(qaddr + 64 + 64 + 21, 6);
 	return 0;
+}
+
+int rdma_roce_ini_sq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr) {
+  if (!lif || !qtype || !qid || !qaddr) return -1;
+  *lif = g_rdma_hw_lif_id;
+  *qtype = kSQType;
+  *qid = 0; // 0 - initiator; 1 - target
+  
+  return qstate_if::get_qstate_addr((int) *lif, (int) *qtype, (int) *qid, qaddr);
+}
+
+int rdma_roce_tgt_sq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr) {
+  if (!lif || !qtype || !qid || !qaddr) return -1;
+  *lif = g_rdma_hw_lif_id;
+  *qtype = kSQType;
+  *qid = 1; // 0 - initiator; 1 - target
+  
+  return qstate_if::get_qstate_addr((int) *lif, (int) *qtype, (int) *qid, qaddr);
+}
+
+uint32_t get_rdma_pvm_roce_init_sq() {
+  return g_rdma_pvm_roce_init_sq;
+}
+
+uint32_t get_rdma_pvm_roce_tgt_sq() {
+  return g_rdma_pvm_roce_tgt_sq;
+}
+
+uint32_t get_rdma_pvm_roce_tgt_cq() {
+  return g_rdma_pvm_roce_tgt_cq;
 }
 
 int rdma_pvm_qs_init() {

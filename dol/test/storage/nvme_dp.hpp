@@ -9,6 +9,8 @@ namespace nvme_dp {
 
 int test_setup();
 
+int config ();
+
 uint64_t get_io_map_base_addr();
 
 uint64_t get_io_map_num_entries();

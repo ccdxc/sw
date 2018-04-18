@@ -33,12 +33,6 @@ storage_nvme_process_dst_seq_start:
    bcf		[c1], push_to_arm
    nop
 
-   // Copy the table 0 stage2stage K+I vector to that of table 1
-   phvwr	p.{nvme_kivec_t1_s2s_w_ndx...nvme_kivec_t1_s2s_punt_to_arm},	\
-		k.{nvme_kivec_t0_s2s_w_ndx...nvme_kivec_t0_s2s_punt_to_arm}
-   phvwr	p.{nvme_kivec_t1_s2s_dst_lif...nvme_kivec_t1_s2s_dst_qaddr}, 	\
-		d.{lif...qaddr}
-
    // Set table 0 and program address to push the WQE to the destination
    // sequencer in the next stage. 
    LOAD_TABLE_FOR_ADDR34_PC_IMM(d.qaddr,
