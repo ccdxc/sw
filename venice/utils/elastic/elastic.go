@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/venice/utils"
@@ -417,9 +416,6 @@ func (e *Client) Search(ctx context.Context, index, iType string, query interfac
 				request = request.Size(int(defaultMaxResults))
 			}
 
-			e.logger.Debugf("Search request (spew)")
-			spew.Dump(request)
-
 			// Execute the search request with desired size
 			return request.Do(ctx)
 		}, retryCount, rResp, rErr)
@@ -436,9 +432,6 @@ func (e *Client) Search(ctx context.Context, index, iType string, query interfac
 		}
 
 		searchResult := rResp.(*es.SearchResult)
-		e.logger.Debugf("Search result (spew)")
-		spew.Dump(searchResult)
-
 		return searchResult, rErr
 	}
 }
