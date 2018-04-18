@@ -45,7 +45,6 @@ bitmap::factory(uint32_t size, bool thread_safe)
     void         *mem;
     bitmap       *new_bmap;
 
-    new_bmap = new bitmap();
     mem = HAL_CALLOC(HAL_MEM_ALLOC_LIB_BITMAP, sizeof(bitmap));
     if (mem == NULL) {
         return NULL;
