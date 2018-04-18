@@ -10,8 +10,8 @@
 #define CPU_PIDX_SIZE                       16
 #define CPU_PIDX_SHIFT                      4
 
-#define CPU_ARQRX_TABLE_SIZE                (1024 * 8)
-#define CPU_ARQRX_TABLE_SHIFT               13
+#define CPU_ARQRX_TABLE_SIZE                1024
+#define CPU_ARQRX_TABLE_SHIFT               10
 
 #define NIC_ARQRX_ENTRY_SIZE                8
 #define NIC_ARQRX_ENTRY_SIZE_SHIFT          3          /* for 8B */
@@ -43,6 +43,7 @@
                        _wr_fence_, \
                        _debug_dol_cr) \
  	add     _dest_r, r0, _arqrx_pindex; \
+    andi    _dest_r, _dest_r, ((1 << CPU_ARQRX_TABLE_SHIFT) - 1); \
 	sll     _dest_r, _dest_r, NIC_ARQRX_ENTRY_SIZE_SHIFT; \
 	add     _dest_r, _dest_r, _arqrx_base; \
 	phvwri  p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM; \

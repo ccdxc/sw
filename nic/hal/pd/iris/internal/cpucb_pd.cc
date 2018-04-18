@@ -370,7 +370,6 @@ pd_cpucb_create (pd_cpucb_create_args_t *args)
     cpucb_pd->cpucb = args->cpucb;
     // get hw-id for this CPUCB
     cpucb_pd->hw_id = pd_cpucb_get_base_hw_index(cpucb_pd);
-    printf("Received hw-id: 0x%lx ", cpucb_pd->hw_id);
 
     // program cpucb
     ret = p4pd_add_or_del_cpucb_entry(cpucb_pd, false);

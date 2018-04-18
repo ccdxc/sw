@@ -1212,7 +1212,6 @@ pd_tcpcb_create (pd_tcpcb_create_args_t *args)
     tcpcb_pd->tcpcb = args->tcpcb;
     // get hw-id for this TCPCB
     tcpcb_pd->hw_id = pd_tcpcb_get_base_hw_index(tcpcb_pd);
-    printf("Received hw-id: 0x%lx ", tcpcb_pd->hw_id);
     
     // program tcpcb
     ret = p4pd_add_or_del_tcpcb_entry(tcpcb_pd, false);
