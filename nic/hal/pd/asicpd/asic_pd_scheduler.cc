@@ -27,6 +27,7 @@ asicpd_scheduler_tx_pd_alloc (asicpd_scheduler_lif_params_t *lif)
     // Allocate txs scheduler resource for this lif.
     // Sched table can hold 8K queues per index and mandates new index for each cos.
     params.total_qcount = lif->total_qcount;
+    params.cos_bmp = lif->cos_bmp;
     ret = capri_txs_scheduler_tx_alloc(&params, &alloc_offset, &alloc_units);
     if (ret != HAL_RET_OK) {    
         HAL_TRACE_ERR("lif_id:{},failed to alloc txs sched res",
