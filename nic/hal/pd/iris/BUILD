@@ -30,6 +30,7 @@ cc_library(
            glob(["lif/*.hpp"]) +
            glob(["mcast/*.hpp"]) +
            glob(["nw/*.hpp"]) +
+           glob(["debug/*.hpp"]) +
            glob(["firewall/*.hpp"]) +
            glob(["dos/*.hpp"]) +
            glob(["telemetry/*.hpp"]),

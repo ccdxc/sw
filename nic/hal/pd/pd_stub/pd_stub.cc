@@ -223,6 +223,8 @@ PD_FUNC_STUB(pd_del_l2seg_uplink);
 PD_FUNC_STUB(pd_debug_cli_read);
 PD_FUNC_STUB(pd_debug_cli_write);
 PD_FUNC_STUB(pd_mpu_trace_enable);
+PD_FUNC_STUB(pd_table_metadata_get);
+PD_FUNC_STUB(pd_table_get);
 
 // get apis
 PD_FUNC_STUB(pd_if_get_hw_lif_id);

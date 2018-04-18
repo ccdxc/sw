@@ -53,7 +53,7 @@ public:
     }
 
     bool operator== (const SampleTcamEntry &right) const {
-        if (a == right.a && b == right.b && a_mask == right.a_mask && 
+        if (a == right.a && b == right.b && a_mask == right.a_mask &&
                 b_mask == right.b_mask && p == right.p && q == right.q) {
             return TRUE;
         } else {
@@ -143,8 +143,8 @@ class InputMappingNativeTcamEntry {
 public:
     InputMappingNativeTcamEntry(input_mapping_native_swkey_t swkey, input_mapping_native_swkey_mask_t swkey_mask,
             input_mapping_native_actiondata act_data) {
-        memcpy(&key, &swkey, sizeof(key)); 
-        memcpy(&key_mask, &swkey_mask, sizeof(key_mask)); 
+        memcpy(&key, &swkey, sizeof(key));
+        memcpy(&key_mask, &swkey_mask, sizeof(key_mask));
         memcpy(&data, &act_data, sizeof(data));
     }
     ~InputMappingNativeTcamEntry() {}
@@ -211,9 +211,9 @@ populate_fn (const void *key, const void *key_mask,
 }
 
 bool
-populate_im_fn (const void *key, const void *key_mask,
-             const void *data,
-             uint32_t tcam_idx, const void *cb_data)
+populate_im_fn (void *key, void *key_mask,
+                void *data,
+                uint32_t tcam_idx, const void *cb_data)
 {
     std::set<InputMappingNativeTcamEntry> *pop_set = (std::set<InputMappingNativeTcamEntry> *)cb_data;
     input_mapping_native_swkey_t *key_p = (input_mapping_native_swkey_t*)key;
@@ -228,7 +228,7 @@ populate_im_fn (const void *key, const void *key_mask,
 /* ---------------------------------------------------------------------------
  *
  * Test Case 1:
- *      - Test Case to verify the update 
+ *      - Test Case to verify the update
  * - Create Tcam table
  * - Insert Tcam entry
  * - Print Tcam Entries
@@ -240,9 +240,9 @@ TEST_F(tcam_test, test1) {
     std::string table_name = "Input_Mapping_Native";
     char * my_argument = const_cast<char*> (table_name.c_str());
 
-    tcam *test_tcam = tcam::factory(my_argument, 
+    tcam *test_tcam = tcam::factory(my_argument,
                                     (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                                    (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                                    (uint32_t)sizeof(input_mapping_native_swkey_t),
                                     (uint32_t)sizeof(input_mapping_native_actiondata));
 
     std::set<InputMappingNativeTcamEntry> sent_set;
@@ -295,7 +295,7 @@ TEST_F(tcam_test, test2) {
     std::string table_name = "Input_Mapping_Native";
     char * table_str = const_cast<char*> (table_name.c_str());
     tcam *test_tcam = tcam::factory(table_str, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                          (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                          (uint32_t)sizeof(input_mapping_native_swkey_t),
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
     sdk_ret_t rs = SDK_RET_OK;
@@ -346,7 +346,7 @@ TEST_F(tcam_test, test3) {
     std::string table_name = "Input_Mapping_Native";
     char * table_str = const_cast<char*> (table_name.c_str());
     tcam *test_tcam = tcam::factory(table_str, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                          (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                          (uint32_t)sizeof(input_mapping_native_swkey_t),
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
     sdk_ret_t rs = SDK_RET_OK;
@@ -391,14 +391,14 @@ TEST_F(tcam_test, test3) {
  * - Create Tcam table
  * - Insert Tcam entry
  * - Print Tcam Entries
- * - Retrieve Tcam entry 
+ * - Retrieve Tcam entry
  */
 TEST_F(tcam_test, test4) {
 
     std::string table_name = "Input_Mapping_Native";
     char * table_str = const_cast<char*> (table_name.c_str());
     tcam *test_tcam = tcam::factory(table_str, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                          (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                          (uint32_t)sizeof(input_mapping_native_swkey_t),
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
     input_mapping_native_swkey_t key, retr_key;
@@ -422,15 +422,15 @@ TEST_F(tcam_test, test4) {
     ASSERT_TRUE(rs == SDK_RET_OK);
 
 
-    rs = test_tcam->retrieve(tcam_idx+1, (void *)&retr_key, (void *)&retr_key_mask, 
+    rs = test_tcam->retrieve(tcam_idx+1, (void *)&retr_key, (void *)&retr_key_mask,
             (void *)&retr_data);
     ASSERT_TRUE(rs == SDK_RET_ENTRY_NOT_FOUND);
 
-    rs = test_tcam->retrieve(tcam_idx+1000, (void *)&retr_key, (void *)&retr_key_mask, 
+    rs = test_tcam->retrieve(tcam_idx+1000, (void *)&retr_key, (void *)&retr_key_mask,
             (void *)&retr_data);
     ASSERT_TRUE(rs == SDK_RET_OOB);
 
-    rs = test_tcam->retrieve(tcam_idx, (void *)&retr_key, (void *)&retr_key_mask, 
+    rs = test_tcam->retrieve(tcam_idx, (void *)&retr_key, (void *)&retr_key_mask,
             (void *)&retr_data);
     ASSERT_TRUE(rs == SDK_RET_OK);
 
@@ -462,7 +462,7 @@ TEST_F(tcam_test, test5) {
     std::string table_name = "Input_Mapping_Native";
     char * table_str = const_cast<char*> (table_name.c_str());
     tcam *test_tcam = tcam::factory(table_str, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                          (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                          (uint32_t)sizeof(input_mapping_native_swkey_t),
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
     sdk_ret_t rs = SDK_RET_OK;
@@ -511,7 +511,7 @@ TEST_F(tcam_test, test6) {
     std::string table_name = "Input_Mapping_Native";
     char * table_str = const_cast<char*> (table_name.c_str());
     tcam *test_tcam = tcam::factory(table_str, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                          (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                          (uint32_t)sizeof(input_mapping_native_swkey_t),
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
     sdk_ret_t rs = SDK_RET_OK;
@@ -562,7 +562,7 @@ TEST_F(tcam_test, test7) {
     std::string table_name = "Input_Mapping_Native";
     char * table_str = const_cast<char*> (table_name.c_str());
     tcam *test_tcam = tcam::factory(table_str, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                          (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                          (uint32_t)sizeof(input_mapping_native_swkey_t),
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
     sdk_ret_t rs = SDK_RET_OK;
@@ -637,7 +637,7 @@ TEST_F(tcam_test, test8) {
     std::string table_name = "Input_Mapping_Native";
     char * table_str = const_cast<char*> (table_name.c_str());
     tcam *test_tcam = tcam::factory(table_str, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                          (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                          (uint32_t)sizeof(input_mapping_native_swkey_t),
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
     sdk_ret_t rs = SDK_RET_OK;
@@ -692,7 +692,7 @@ TEST_F(tcam_test, test9) {
     std::string table_name = "Input_Mapping_Native";
     char * table_str = const_cast<char*> (table_name.c_str());
     tcam *test_tcam = tcam::factory(table_str, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                          (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                          (uint32_t)sizeof(input_mapping_native_swkey_t),
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
     sdk_ret_t rs = SDK_RET_OK;
@@ -742,7 +742,7 @@ TEST_F(tcam_test, test10) {
     std::string table_name = "Input_Mapping_Native";
     char * table_str = const_cast<char*> (table_name.c_str());
     tcam *test_tcam = tcam::factory(table_str, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                          (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                          (uint32_t)sizeof(input_mapping_native_swkey_t),
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
     sdk_ret_t rs = SDK_RET_OK;
@@ -803,7 +803,7 @@ TEST_F(tcam_test, test11) {
     std::string table_name = "Input_Mapping_Native";
     char * table_str = const_cast<char*> (table_name.c_str());
     tcam *test_tcam = tcam::factory(table_str, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                          (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                          (uint32_t)sizeof(input_mapping_native_swkey_t),
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
     sdk_ret_t rs = SDK_RET_OK;
@@ -864,7 +864,7 @@ TEST_F(tcam_test, test12) {
     std::string table_name = "Input_Mapping_Native";
     char * table_str = const_cast<char*> (table_name.c_str());
     tcam *test_tcam = tcam::factory(table_str, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
-                          (uint32_t)sizeof(input_mapping_native_swkey_t), 
+                          (uint32_t)sizeof(input_mapping_native_swkey_t),
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
     sdk_ret_t rs = SDK_RET_OK;

@@ -10,14 +10,14 @@
 namespace sdk {
 
 static inline void *
-sdk_malloc (char *id_str, uint32_t size)
+sdk_malloc (const char *id_str, uint32_t size)
 {
     // SDK_TRACE_DEBUG("MEMORY_ALLOC for id: %s, size: %d\n", id_str, size);
     return malloc(size);
 }
 
 static inline void *
-sdk_calloc (char *id_str, uint32_t size)
+sdk_calloc (const char *id_str, uint32_t size)
 {
     // SDK_TRACE_DEBUG("MEMORY_ALLOC for id: %s, size: %d\n", id_str, size);
     return calloc(1, (size));

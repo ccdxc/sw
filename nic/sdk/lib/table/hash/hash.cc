@@ -42,17 +42,17 @@ hash::factory(char *name, uint32_t dleft_table_id,
                                hash_entry_compute_hash_func,
                                hash_entry_compare_key_func);
 
-    h->name_ = (char *)SDK_CALLOC(SDK_MEM_ALLOC_ID_HASH_NAME, 
+    h->name_ = (char *)SDK_CALLOC(SDK_MEM_ALLOC_ID_HASH_NAME,
                                   strlen(name) + 1);
     memcpy(h->name_, name, strlen(name) + 1);
     // Initialize Stats
-    h->stats_ = (uint64_t *)SDK_CALLOC(SDK_MEM_ALLOC_HASH_STATS, 
+    h->stats_ = (uint64_t *)SDK_CALLOC(SDK_MEM_ALLOC_HASH_STATS,
                                     sizeof(uint64_t) * STATS_MAX);
 
     SDK_TRACE_DEBUG("hash::%-30s: dleft_tid: %-3d otcam_tid: %-3d "
                     "swkey_len: %-4d hwkey_len_: %-4d "
                     "hwdata_len_: %-4d",
-                    h->name_, dleft_table_id, otcam_table_id, h->swkey_len_, 
+                    h->name_, dleft_table_id, otcam_table_id, h->swkey_len_,
                     h->hwkey_len_, h->hwdata_len_);
 
     return h;
@@ -62,7 +62,7 @@ hash::factory(char *name, uint32_t dleft_table_id,
 // method to free & delete the object
 //---------------------------------------------------------------------------
 void
-hash::destroy(hash *hash) 
+hash::destroy(hash *hash)
 {
     if (hash) {
         hash->~hash();
@@ -86,11 +86,11 @@ hash::hash(char *name, uint32_t dleft_table_id, uint32_t otcam_table_id,
     hash_poly_      = hash_poly;
     entry_trace_en_ = entry_trace_en;
 
-    
+
     // Initialize the Overflow tcam
     otcam_ = NULL;
     if (otcam_capacity) {
-        otcam_ = tcam::factory(name, otcam_table_id, 
+        otcam_ = tcam::factory(name, otcam_table_id,
                                otcam_capacity, swkey_len_, swdata_len_, false,
                                entry_trace_en);
         if (!otcam_) {
@@ -111,7 +111,7 @@ hash::hash(char *name, uint32_t dleft_table_id, uint32_t otcam_table_id,
 // ---------------------------------------------------------------------------
 // destructor - hash
 // ---------------------------------------------------------------------------
-hash::~hash() 
+hash::~hash()
 {
     // freeing up OTcam
     if (otcam_) {
@@ -131,7 +131,7 @@ hash::~hash()
 //      SDK_RET_NO_RESOURCE     : Capacity reached
 //
 // ---------------------------------------------------------------------------
-sdk_ret_t 
+sdk_ret_t
 hash::insert(void *key, void *data, uint32_t *index, void *key_mask,
              bool direct_to_otcam)
 {
@@ -168,7 +168,7 @@ hash::insert(void *key, void *data, uint32_t *index, void *key_mask,
 
         // program hw
         rs = program_table_(he, hwkey);
-        
+
         if (rs == SDK_RET_OK) {
             // insert in sw DS
             // hash_entry_map_[dleft_index] = he;
@@ -188,7 +188,7 @@ hash::insert(void *key, void *data, uint32_t *index, void *key_mask,
         }
 #if 0
         he = itr->second;
-        if (itr != hash_entry_map_.end() && 
+        if (itr != hash_entry_map_.end() &&
             !std::memcmp(he->get_key(), key, swkey_len_)) {
             rs = SDK_RET_DUPLICATE_INS;
             goto end;
@@ -197,12 +197,12 @@ hash::insert(void *key, void *data, uint32_t *index, void *key_mask,
 
         if (has_otcam_()) {
             if (key_mask == NULL) {
-                key_mask = SDK_MALLOC(SDK_MEM_ALLOC_HASH_SW_KEY_MASK_INS, 
+                key_mask = SDK_MALLOC(SDK_MEM_ALLOC_HASH_SW_KEY_MASK_INS,
                                       swkey_len_);
-                memset(key_mask, ~0, swkey_len_); 
+                memset(key_mask, ~0, swkey_len_);
                 key_mask_free = true;
             }
-            
+
             // otcam insert
             rs = otcam_->insert(key, key_mask, data, &tcam_index);
             if (key_mask_free) {
@@ -228,6 +228,90 @@ end:
 }
 
 // ---------------------------------------------------------------------------
+// Insert WithId
+//
+// Return Code:
+//      SDK_RET_OK              : Successfull
+//      SDK_RET_DUPLICATE_INS   : Duplicate Insert
+//
+// ---------------------------------------------------------------------------
+sdk_ret_t
+hash::insert_withid(void *key, void *data, uint32_t index, void *key_mask)
+{
+    sdk_ret_t       rs       = SDK_RET_OK;
+    p4pd_error_t    pd_err   = P4PD_SUCCESS;
+    void            *hwkey   = NULL;
+    uint32_t        dleft_id = 0, dleft_index_key = 0;
+    uint32_t        otcam_id = 0;
+    hash_entry_t    *he      = NULL;
+
+    if (is_dleft(index)) {
+        // get hash dleft table index from index
+        dleft_id = get_dleft_id_from_hash_idx_(index);
+        if (dleft_id >= dleft_capacity_) {
+            rs = SDK_RET_OOB;
+            goto end;
+        }
+
+        SDK_TRACE_DEBUG("dleft insert at: {}", dleft_id);
+
+        // check if entry exists
+        he = (hash_entry_t *)entry_ht_->lookup(&dleft_id);
+        if (he != NULL) {
+            rs = SDK_RET_DUPLICATE_INS;
+            goto end;
+        }
+
+        // check if hash is matching the index passed
+        hwkey = SDK_CALLOC(SDK_MEM_ALLOC_HASH_HW_KEY_INS, hwkey_len_);
+        pd_err = p4pd_hwkey_hwmask_build(id_, key, NULL,
+                                         (uint8_t *)hwkey, NULL);
+        if (pd_err != P4PD_SUCCESS) {
+            rs = SDK_RET_HW_PROGRAM_ERR;
+            goto end;
+        }
+        dleft_index_key = generate_hash_(hwkey, hwkey_len_);
+        if (dleft_index_key != dleft_id) {
+            rs = SDK_RET_INVALID_ARG;
+            goto end;
+        }
+
+        // allocate hash entry
+        he = hash_entry_create(key, swkey_len_, data, swdata_len_,
+                               dleft_id);
+
+        // program hw
+        rs = program_table_(he, hwkey);
+
+        if (rs == SDK_RET_OK) {
+            // insert in sw DS
+            rs = entry_ht_->insert_with_key(&dleft_id, he, &he->ht_ctxt);
+            stats_incr(STATS_NUM_HASH);
+        } else {
+            // delete he;
+            hash_entry_delete(he);
+        }
+    } else {
+        if (otcam_) {
+            otcam_id = get_otcam_id_from_hash_idx_(index);
+            SDK_TRACE_DEBUG("otcam insert at: {}", otcam_id);
+            rs = otcam_->insert_withid(key, key_mask, data, otcam_id);
+        } else {
+            // invalid index. table doesn't have otcam.
+            rs = SDK_RET_INVALID_ARG;
+        }
+    }
+end:
+    if (hwkey) {
+        SDK_FREE(SDK_MEM_ALLOC_HASH_HW_KEY_INS, hwkey);
+    }
+    stats_update(INSERT, rs);
+    return rs;
+
+}
+
+
+// ---------------------------------------------------------------------------
 // Update
 //
 // Return Code:
@@ -238,7 +322,7 @@ end:
 //      SDK_RET_HW_PROGRAM_ERR         : Hw API failed
 //
 // ---------------------------------------------------------------------------
-sdk_ret_t 
+sdk_ret_t
 hash::update(uint32_t hash_idx, void *data)
 {
     sdk_ret_t       rs       = SDK_RET_OK;
@@ -295,7 +379,7 @@ hash::update(uint32_t hash_idx, void *data)
     }
 
 end:
-   
+
     if (hwkey) SDK_FREE(SDK_MEM_ALLOC_HASH_HW_KEY_UPD, hwkey);
     stats_update(UPDATE, rs);
     return rs;
@@ -312,7 +396,7 @@ end:
 //      SDK_RET_HW_PROGRAM_ERR         : Hw API failed
 //
 // ---------------------------------------------------------------------------
-sdk_ret_t 
+sdk_ret_t
 hash::remove(uint32_t hash_idx)
 {
     sdk_ret_t       rs       = SDK_RET_OK;
@@ -421,14 +505,14 @@ end:
 // call back func. for otcam iterate
 // ---------------------------------------------------------------------------
 bool
-hash::otcam_iterate_(const void *key, const void *key_mask,
-                     const void *data, 
-                     uint32_t tcam_idx, const void *cb_data) 
+hash::otcam_iterate_(void *key, void *key_mask,
+                     void *data,
+                     uint32_t tcam_idx, const void *cb_data)
 {
     otcam_iterate_cb_t *otcam_cb_data = (otcam_iterate_cb_t *)cb_data;
-    otcam_cb_data->cb(key, data, 
-                     form_hash_idx_from_otcam_id_(tcam_idx), 
-                     otcam_cb_data->cb_data); 
+    otcam_cb_data->cb(key, key_mask, data,
+                     form_hash_idx_from_otcam_id_(tcam_idx),
+                     otcam_cb_data->cb_data);
 
     return TRUE;
 }
@@ -438,8 +522,8 @@ bool hash_iter_walk_cb(void *entry, void *ctxt)
     hash_entry_t *he = (hash_entry_t *)entry;
     hash_iter_cb_t *he_cb = (hash_iter_cb_t *)ctxt;
 
-    he_cb->func(he->key, he->data, he->index, he_cb->iter_cb_data);
-    return true;
+    he_cb->func(he->key, NULL, he->data, he->index, he_cb->iter_cb_data);
+    return false;
 
 }
 
@@ -447,7 +531,7 @@ bool hash_iter_walk_cb(void *entry, void *ctxt)
 // hash iterate
 // ---------------------------------------------------------------------------
 sdk_ret_t
-hash::iterate(hash_iterate_func_t cb, const void *cb_data, 
+hash::iterate(hash_iterate_func_t cb, const void *cb_data,
               hash::EntryType type)
 {
     sdk_ret_t       rs = SDK_RET_OK;
@@ -466,7 +550,7 @@ hash::iterate(hash_iterate_func_t cb, const void *cb_data,
         for (itr = hash_entry_map_.begin(); itr != hash_entry_map_.end();
                 ++itr) {
             he = itr->second;
-            cb(he->get_key(), he->get_data(), 
+            cb(he->get_key(), he->get_data(),
                     form_hash_idx_from_dleft_id_(itr->first),
                     cb_data);
         }
@@ -479,7 +563,7 @@ hash::iterate(hash_iterate_func_t cb, const void *cb_data,
             otcam_cb.cb = cb;
             otcam_cb.cb_data = cb_data;
 
-            otcam_->iterate(hash::otcam_iterate_, (const void *)&otcam_cb); 
+            otcam_->iterate(hash::otcam_iterate_, (const void *)&otcam_cb);
         }
     }
 
@@ -498,7 +582,7 @@ hash::has_otcam_()
 // ---------------------------------------------------------------------------
 // forms hash idx from Dleft Id
 // ---------------------------------------------------------------------------
-uint32_t 
+uint32_t
 hash::form_hash_idx_from_dleft_id_(uint32_t dleft_id)
 {
     return dleft_id;
@@ -507,7 +591,7 @@ hash::form_hash_idx_from_dleft_id_(uint32_t dleft_id)
 // ---------------------------------------------------------------------------
 // forms hash idx from OTCAM Id
 // ---------------------------------------------------------------------------
-uint32_t 
+uint32_t
 hash::form_hash_idx_from_otcam_id_(uint32_t otcam_id)
 {
     return ((uint32_t)(1 << otcam_bit_) | otcam_id);
@@ -526,7 +610,7 @@ hash::get_dleft_id_from_hash_idx_(uint32_t hash_idx)
 // get OTCAM Id from hash Idx
 // ---------------------------------------------------------------------------
 uint32_t
-hash::get_otcam_id_from_hash_idx_(uint32_t hash_idx) 
+hash::get_otcam_id_from_hash_idx_(uint32_t hash_idx)
 {
     return (hash_idx & ~(uint32_t)(1 << otcam_bit_));
 }
@@ -553,30 +637,30 @@ hash::generate_hash_(void *key, uint32_t key_len)
     uint32_t crc_init_val = 0x00000000;
     boost::crc_basic<32> *crc_hash;
     // TODO - Replace this with whatever hardware implements
-    // return crc32((uint32_t)SDK_INTERNAL_MCAST_CRC32_HASH_SEED, (const void *)key, 
+    // return crc32((uint32_t)SDK_INTERNAL_MCAST_CRC32_HASH_SEED, (const void *)key,
     //        (uint32_t)key_len) % dleft_capacity_;
 
     switch(hash_poly_) {
         case HASH_POLY0:
-            crc_hash = new boost::crc_basic<32>(0x04C11DB7, crc_init_val, 
+            crc_hash = new boost::crc_basic<32>(0x04C11DB7, crc_init_val,
                                                 0x00000000, false, false);
             crc_hash->process_bytes(key, key_len);
             hash_val = crc_hash->checksum();
             break;
         case HASH_POLY1:
-            crc_hash = new boost::crc_basic<32>(0x1EDC6F41, crc_init_val, 
+            crc_hash = new boost::crc_basic<32>(0x1EDC6F41, crc_init_val,
                                                 0x00000000, false, false);
             crc_hash->process_bytes(key, key_len);
             hash_val = crc_hash->checksum();
             break;
         case HASH_POLY2:
-            crc_hash = new boost::crc_basic<32>(0x741B8CD7, crc_init_val, 
+            crc_hash = new boost::crc_basic<32>(0x741B8CD7, crc_init_val,
                                                 0x00000000, false, false);
             crc_hash->process_bytes(key, key_len);
             hash_val = crc_hash->checksum();
             break;
         case HASH_POLY3:
-            crc_hash = new boost::crc_basic<32>(0x814141AB, crc_init_val, 
+            crc_hash = new boost::crc_basic<32>(0x814141AB, crc_init_val,
                                                 0x00000000, false, false);
             crc_hash->process_bytes(key, key_len);
             hash_val = crc_hash->checksum();
@@ -595,7 +679,7 @@ end:
 // program hw table
 // ----------------------------------------------------------------------------
 sdk_ret_t
-hash::program_table_(hash_entry_t *he, void *hwkey) 
+hash::program_table_(hash_entry_t *he, void *hwkey)
 {
     p4pd_error_t pd_err = P4PD_SUCCESS;
 
@@ -608,8 +692,8 @@ hash::program_table_(hash_entry_t *he, void *hwkey)
         entry_trace_(he);
     }
 
-    // P4-API: Wrihe 
-    pd_err = p4pd_entry_write(id_, he->index, (uint8_t *)hwkey, 
+    // P4-API: Wrihe
+    pd_err = p4pd_entry_write(id_, he->index, (uint8_t *)hwkey,
                               NULL, he->data);
     SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
@@ -621,7 +705,7 @@ end:
 // deprogram HW table
 // ----------------------------------------------------------------------------
 sdk_ret_t
-hash::deprogram_table_(hash_entry_t *he) 
+hash::deprogram_table_(hash_entry_t *he)
 {
     p4pd_error_t pd_err = P4PD_SUCCESS;
     void *hwkey         = NULL;
@@ -634,8 +718,8 @@ hash::deprogram_table_(hash_entry_t *he)
     hwkey = SDK_CALLOC(SDK_MEM_ALLOC_HASH_HW_KEY_DEPGM, hwkey_len_);
     std::memset(he->data, 0, swdata_len_);
 
-    // P4-API: Write 
-    pd_err = p4pd_entry_write(id_, he->index, (uint8_t *)hwkey, 
+    // P4-API: Write
+    pd_err = p4pd_entry_write(id_, he->index, (uint8_t *)hwkey,
                               NULL, he->data);
     SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
@@ -680,9 +764,15 @@ hash::stats_update(hash::api ap, sdk_ret_t rs)
             else if(rs == SDK_RET_DUPLICATE_INS) stats_incr(STATS_INS_FAIL_DUP_INS);
             else SDK_ASSERT(0);
             break;
+        case INSERT_WITHID:
+            if(rs == SDK_RET_OK) stats_incr(STATS_INS_WITHID_SUCCESS);
+            else if(rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_INS_WITHID_FAIL_HW);
+            else if(rs == SDK_RET_DUPLICATE_INS) stats_incr(STATS_INS_WITHID_FAIL_DUP_INS);
+            else if(rs == SDK_RET_INVALID_ARG) stats_incr(STATS_INS_WITHID_FAIL_INV_ARG);
+            else SDK_ASSERT(0);
         case UPDATE:
             if(rs == SDK_RET_OK) stats_incr(STATS_UPD_SUCCESS);
-            else if(rs == SDK_RET_ENTRY_NOT_FOUND) 
+            else if(rs == SDK_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
             else if(rs == SDK_RET_INVALID_ARG) stats_incr(STATS_UPD_FAIL_INV_ARG);
             else if(rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_UPD_FAIL_HW);
@@ -691,7 +781,7 @@ hash::stats_update(hash::api ap, sdk_ret_t rs)
             break;
         case REMOVE:
             if(rs == SDK_RET_OK) stats_incr(STATS_REM_SUCCESS);
-            else if(rs == SDK_RET_ENTRY_NOT_FOUND) 
+            else if(rs == SDK_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
             else if(rs == SDK_RET_INVALID_ARG) stats_incr(STATS_REM_FAIL_INV_ARG);
             else if(rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_REM_FAIL_HW);
@@ -700,7 +790,7 @@ hash::stats_update(hash::api ap, sdk_ret_t rs)
             break;
         case RETRIEVE:
             if(rs == SDK_RET_OK) stats_incr(STATS_REM_SUCCESS);
-            else if(rs == SDK_RET_ENTRY_NOT_FOUND) 
+            else if(rs == SDK_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
             else if(rs == SDK_RET_INVALID_ARG) stats_incr(STATS_REM_FAIL_INV_ARG);
             else if(rs == SDK_RET_OOB) stats_incr(STATS_REM_FAIL_OOB);
@@ -714,11 +804,11 @@ hash::stats_update(hash::api ap, sdk_ret_t rs)
 // ----------------------------------------------------------------------------
 // Oflow tcam capacity
 // ----------------------------------------------------------------------------
-uint32_t 
-hash::oflow_capacity(void) 
-{ 
-    return otcam_ ? otcam_->capacity() : 0; 
-} 
+uint32_t
+hash::oflow_capacity(void)
+{
+    return otcam_ ? otcam_->capacity() : 0;
+}
 
 // ----------------------------------------------------------------------------
 // number of entries in use.
@@ -741,7 +831,7 @@ hash::oflow_num_entries_in_use(void)
 // ----------------------------------------------------------------------------
 // number of insert operations attempted
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 hash::num_inserts(void)
 {
     return stats_[STATS_INS_SUCCESS] + stats_[STATS_INS_FAIL_DUP_INS] +
@@ -751,7 +841,7 @@ hash::num_inserts(void)
 // ----------------------------------------------------------------------------
 // number of failed insert operations
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 hash::num_insert_errors(void)
 {
     return stats_[STATS_INS_FAIL_DUP_INS] +
@@ -759,9 +849,29 @@ hash::num_insert_errors(void)
 }
 
 // ----------------------------------------------------------------------------
+// number of update operations attempted
+// ----------------------------------------------------------------------------
+uint32_t
+hash::num_updates(void) const
+{
+    return stats_[STATS_UPD_SUCCESS] + stats_[STATS_UPD_FAIL_OOB] +
+        stats_[STATS_UPD_FAIL_INV_ARG] +
+        stats_[STATS_UPD_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_UPD_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// number of failed update operations
+// ----------------------------------------------------------------------------
+uint32_t
+hash::num_update_errors(void) const
+{
+    return stats_[STATS_UPD_FAIL_INV_ARG] + stats_[STATS_UPD_FAIL_OOB] +
+        stats_[STATS_UPD_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_UPD_FAIL_HW];
+}
+// ----------------------------------------------------------------------------
 // number of delete operations attempted
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 hash::num_deletes(void)
 {
     return stats_[STATS_REM_SUCCESS] + stats_[STATS_REM_FAIL_OOB] +
@@ -772,7 +882,7 @@ hash::num_deletes(void)
 // ----------------------------------------------------------------------------
 // number of failed delete operations
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 hash::num_delete_errors(void)
 {
     return stats_[STATS_REM_FAIL_OOB] +
@@ -794,6 +904,31 @@ hash::entry_trace_(hash_entry_t *he)
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
 
     SDK_TRACE_DEBUG("%s: Index: %d \n %s", name_, he->index, buff);
+
+    return SDK_RET_OK;
+}
+
+// ----------------------------------------------------------------------------
+// Returns string of the entry
+// ----------------------------------------------------------------------------
+sdk_ret_t
+hash::entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
+                   char *buff, uint32_t buff_size)
+{
+    p4pd_error_t    p4_err;
+
+    if (hash::is_dleft(index)) {
+        p4_err = p4pd_global_table_ds_decoded_string_get(id_, index,
+                                                         key, key_mask, data,
+                                                         buff, buff_size);
+        SDK_ASSERT(p4_err == P4PD_SUCCESS);
+    } else {
+        otcam_->entry_to_str(key, key_mask, data,
+                             get_otcam_id_from_hash_idx_(index),
+                             buff, buff_size);
+    }
+
+    SDK_TRACE_DEBUG("%s: Index: %d \n %s", name_, index, buff);
 
     return SDK_RET_OK;
 }

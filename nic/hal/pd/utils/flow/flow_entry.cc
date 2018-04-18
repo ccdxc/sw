@@ -615,6 +615,48 @@ FlowEntry::get_eff_spine_entry()
     }
 }
 
+hal_ret_t
+FlowEntry::form_action_data(FlowEntry *next_fe, void *swdata)
+{
+    uint8_t         *action_id;
+    uint8_t         *entry_valid;
+    void            *data;
+    void            *first_hash_hint;
+    uint8_t         *more_hashs;
+    void            *more_hints;
+    uint32_t        hint_bits = 0;
+    uint32_t        fhct_idx = 0;
+    uint32_t        hint_mem_len_B = 0;
+
+    hint_mem_len_B = get_flow_table_entry()->get_flow()->get_hint_mem_len_B();
+
+    get_flow_table_entry()->get_flow()->
+        flow_action_data_offsets(swdata,
+                                 &action_id,
+                                 &entry_valid,
+                                 &data,
+                                 &first_hash_hint,
+                                 &more_hashs,
+                                 &more_hints);
+
+    *action_id = 0;
+    *entry_valid = 1;
+    memcpy(data, data_, data_len_); // export_en + flow_index is data
+
+    if (next_fe) {
+        // first_hash_hint->hash = next_fe->get_fh_group()->get_hint_bits();
+        // first_hash_hint->hint = next_fe->get_fhct_index();
+        char *loc = (char *)first_hash_hint;
+        hint_bits = next_fe->get_fh_group()->get_hint_bits();
+        fhct_idx = next_fe->get_fhct_index();
+        memcpy(loc, &hint_bits, 2);
+        memcpy(loc + 2, &fhct_idx, hint_mem_len_B);
+    }
+
+    return HAL_RET_OK;
+}
+
+
 // ---------------------------------------------------------------------------
 // Program non-anchor entry
 // ---------------------------------------------------------------------------
@@ -859,4 +901,28 @@ FlowEntry::print_fe()
             "fhct_index: {}, fhg_bits: {:#x}",
             gl_index_, is_anchor_entry_,
             fhct_index_, fh_group_->get_hint_bits());
+}
+
+void
+FlowEntry::entry_to_str(char *buff, uint32_t buff_size)
+{
+    p4pd_error_t    p4_err;
+    void            *swdata;
+    uint32_t        entire_data_len;
+    uint32_t        oflow_table_id = 0;
+
+    oflow_table_id = get_flow_table_entry()->get_flow()->get_oflow_table_id();
+    entire_data_len = get_flow_table_entry()->get_flow()->
+                      get_flow_entire_data_len();
+
+    swdata = HAL_CALLOC(HAL_MEM_ALLOC_ENTIRE_FLOW_ENTRY_DATA,
+                        entire_data_len);
+
+    form_action_data(fh_group_->get_next_flow_entry(this), swdata);
+
+    p4_err = p4pd_table_ds_decoded_string_get(oflow_table_id, fhct_index_, key_, NULL,
+                                              swdata, buff, buff_size);
+    HAL_ASSERT(p4_err == P4PD_SUCCESS);
+
+    HAL_FREE(HAL_MEM_ALLOC_ENTIRE_FLOW_ENTRY_DATA, swdata);
 }

@@ -28,7 +28,7 @@ class ReplList;
 typedef std::map<uint32_t, ReplList*> ReplListMap;
 
 /** ---------------------------------------------------------------------------
-  *  
+  *
   *  class Met
   *
   *  - Multi-destination table management.
@@ -57,7 +57,7 @@ private:
     uint32_t        max_num_repls_per_entry_;// repl entries per table entry
     uint32_t        repl_entry_data_len_;    // repl entry data len
     indexer         *repl_table_indexer_;    // repl table indexer
-    
+
     ReplListMap     repl_list_map_;
 
     uint64_t        *stats_;                // Statistics
@@ -72,7 +72,7 @@ private:
         RETRIEVE_FROM_HW,
         ITERATE
     };
-    void stats_update(api ap, hal_ret_t rs); 
+    void stats_update(api ap, hal_ret_t rs);
 
     Met(std::string table_name, uint32_t table_id,
         uint32_t repl_table_capacity, uint32_t num_repl_entries,
@@ -84,7 +84,7 @@ public:
                         uint32_t repl_table_capacity, uint32_t num_repl_entries,
                         uint32_t repl_entry_data_len,
                         uint32_t mtrack_id = HAL_MEM_ALLOC_MET);
-    static void destroy(Met *met, 
+    static void destroy(Met *met,
                         uint32_t mtrack_id = HAL_MEM_ALLOC_MET);
 
     // Debug Info
@@ -94,6 +94,8 @@ public:
     uint32_t table_num_entries_in_use(void);
     uint32_t table_num_inserts(void);
     uint32_t table_num_insert_errors(void);
+    uint32_t table_num_updates(void);
+    uint32_t table_num_update_errors(void);
     uint32_t table_num_deletes(void);
     uint32_t table_num_delete_errors(void);
 

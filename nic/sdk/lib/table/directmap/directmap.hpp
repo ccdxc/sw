@@ -22,7 +22,7 @@ using sdk::lib::indexer;
 namespace sdk {
 namespace table {
 
-typedef bool (*direct_map_iterate_func_t)(uint32_t index, void *data, 
+typedef bool (*direct_map_iterate_func_t)(uint32_t index, void *data,
                                           const void *cb_data);
 
 class directmap {
@@ -77,12 +77,12 @@ private:
     bool            entry_trace_en_;// enable entry trace
 
     // private methods
-    sdk_ret_t alloc_index_(uint32_t *idx);  
-    sdk_ret_t alloc_index_withid_(uint32_t idx);    
+    sdk_ret_t alloc_index_(uint32_t *idx);
+    sdk_ret_t alloc_index_withid_(uint32_t idx);
     sdk_ret_t free_index_(uint32_t idx);
     void stats_incr(stats stat);
     void stats_decr(stats stat);
-    void stats_update(api ap, sdk_ret_t rs); 
+    void stats_update(api ap, sdk_ret_t rs);
     sdk_ret_t entry_trace_(void *data, uint32_t index);
 
     static void * dm_entry_get_key_func(void *entry);
@@ -93,15 +93,15 @@ private:
     void *del_directmap_entry_from_db(directmap_entry_t *dme);
     directmap_entry_t *find_directmap_entry(directmap_entry_t *key);
 
-    directmap(char *name, uint32_t id, uint32_t capacity, 
+    directmap(char *name, uint32_t id, uint32_t capacity,
               uint32_t swdata_len, bool sharing_en = false,
               bool entry_trace_en = false);
     ~directmap();
 
 public:
     // factory & destroy methods
-    static directmap *factory(char *name, uint32_t id, 
-                              uint32_t capacity, uint32_t swdata_len, 
+    static directmap *factory(char *name, uint32_t id,
+                              uint32_t capacity, uint32_t swdata_len,
                               bool sharing_en = false,
                               bool entry_trace_en = false);
     static void destroy(directmap *dm);
@@ -113,6 +113,8 @@ public:
     uint32_t num_entries_in_use(void) const;
     uint32_t num_inserts(void) const;
     uint32_t num_insert_errors(void) const;
+    uint32_t num_updates(void) const;
+    uint32_t num_update_errors(void) const;
     uint32_t num_deletes(void) const;
     uint32_t num_delete_errors(void) const;
 
@@ -125,9 +127,11 @@ public:
     sdk_ret_t update(uint32_t index, void *data, void *data_mask = NULL);
     sdk_ret_t remove(uint32_t index, void *data = NULL);
     sdk_ret_t retrieve(uint32_t index, void *data);
-    sdk_ret_t iterate(direct_map_iterate_func_t iterate_func, 
+    sdk_ret_t iterate(direct_map_iterate_func_t iterate_func,
                       const void *cb_data);
     sdk_ret_t fetch_stats(const uint64_t **stats);
+    sdk_ret_t entry_to_str(void *data, uint32_t index, char *buff,
+                           uint32_t buff_size);
 };
 
 }    // namespace table

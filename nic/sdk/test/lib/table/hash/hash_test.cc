@@ -111,7 +111,7 @@ class InputPropertiesHashEntry {
 
 public:
     InputPropertiesHashEntry(input_properties_swkey_t swkey, input_properties_actiondata act_data) {
-        memcpy(&key, &swkey, sizeof(key)); 
+        memcpy(&key, &swkey, sizeof(key));
         memcpy(&data, &act_data, sizeof(data));
     }
     ~InputPropertiesHashEntry() {}
@@ -175,9 +175,9 @@ populate_fn (const void *key,
 }
 
 bool
-populate_ip_fn (const void *key,
-             const void *data,
-             uint32_t hash_idx, const void *cb_data)
+populate_ip_fn (void *key, void *key_mask,
+                void *data,
+                uint32_t hash_idx, const void *cb_data)
 {
     std::set<InputPropertiesHashEntry> *pop_set = (std::set<InputPropertiesHashEntry> *)cb_data;
     input_properties_swkey_t *key_p = (input_properties_swkey_t*)key;
@@ -189,17 +189,17 @@ populate_ip_fn (const void *key,
 }
 
 bool
-print_fn (const void *key, 
-          const void *data, 
+print_fn (const void *key,
+          const void *data,
           uint32_t hash_idx, const void *cb_data)
 {
     hash_key_t *key1 = (hash_key_t *)key;
     hash_data_t *data1 = (hash_data_t *)data;
 
-    printf("Hash Idx: %d %s Table_idx: %d ", hash_idx, 
-            sdk::table::hash::is_dleft(hash_idx) ? "DLEFT" : "OTCAM", 
-            sdk::table::hash::is_dleft(hash_idx) ? 
-            sdk::table::hash::get_dleft_id_from_hash_idx_(hash_idx) : 
+    printf("Hash Idx: %d %s Table_idx: %d ", hash_idx,
+            sdk::table::hash::is_dleft(hash_idx) ? "DLEFT" : "OTCAM",
+            sdk::table::hash::is_dleft(hash_idx) ?
+            sdk::table::hash::get_dleft_id_from_hash_idx_(hash_idx) :
             sdk::table::hash::get_otcam_id_from_hash_idx_(hash_idx));
     printf("Key: %d %d ", key1->a, key1->b);
     printf("Data: %d %d\n", data1->p, data1->q);
@@ -210,7 +210,7 @@ print_fn (const void *key,
 /* ---------------------------------------------------------------------------
  *
  * Test Case 1:
- *      - Test Case to verify the update 
+ *      - Test Case to verify the update
  * - Create Hash table
  * - Insert Hash entry
  * - Print Hash Entries
@@ -221,10 +221,10 @@ TEST_F(hash_test, test1) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata));
 
     // std::set<SampleHashEntry> sent_set;
@@ -266,7 +266,7 @@ TEST_F(hash_test, test1) {
 /* ---------------------------------------------------------------------------
  *
  * Test Case 2:
- *      - Test Case to verify the duplicate insert failure 
+ *      - Test Case to verify the duplicate insert failure
  * - Create Hash table
  * - Insert Hash entry
  * - Print Hash Entries
@@ -277,10 +277,10 @@ TEST_F(hash_test, test2) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata));
 
     sdk_ret_t rs = sdk::SDK_RET_OK;
@@ -305,7 +305,7 @@ TEST_F(hash_test, test2) {
 
     rs = test_hash->iterate(populate_ip_fn, &hash_set, sdk::table::hash::BOTH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-    
+
     ASSERT_TRUE(sent_set == hash_set);
 
     rs = test_hash->remove(hash_idx);
@@ -326,10 +326,10 @@ TEST_F(hash_test, test3) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata));
 
     sdk_ret_t rs = sdk::SDK_RET_OK;
@@ -369,16 +369,16 @@ TEST_F(hash_test, test3) {
  * - Create Hash table
  * - Insert Hash entry
  * - Print Hash Entries
- * - Retrieve Hash entry 
+ * - Retrieve Hash entry
  */
 TEST_F(hash_test, test4) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata));
 
     sdk_ret_t rs = sdk::SDK_RET_OK;
@@ -431,10 +431,10 @@ TEST_F(hash_test, test5) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata));
 
     sdk_ret_t rs = sdk::SDK_RET_OK;
@@ -484,10 +484,10 @@ TEST_F(hash_test, test6) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)60, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)60, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata));
 
     sdk_ret_t rs = sdk::SDK_RET_OK;
@@ -510,7 +510,7 @@ TEST_F(hash_test, test6) {
         sent_set.insert(InputPropertiesHashEntry(key,data));
         key.capri_intrinsic_lif++;
     }
-    
+
     printf("Done with inserts \n");
 
     rs = test_hash->iterate(populate_ip_fn, &hash_set, sdk::table::hash::BOTH);
@@ -537,7 +537,7 @@ TEST_F(hash_test, test6) {
 /* ---------------------------------------------------------------------------
  *
  * Test Case 7:
- *      - Test Case to verify the -ve inserts 
+ *      - Test Case to verify the -ve inserts
  * - Create Hash table
  * - Insert Hash entry
  * - Test -ve insert cases
@@ -546,10 +546,10 @@ TEST_F(hash_test, test7) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata));
 
     std::set<InputPropertiesHashEntry> sent_set;
@@ -585,10 +585,10 @@ TEST_F(hash_test, test8) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata));
     sdk_ret_t rs = sdk::SDK_RET_OK;
     input_properties_swkey_t key;
@@ -625,10 +625,10 @@ TEST_F(hash_test, test9) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata));
 
     sdk_ret_t rs = sdk::SDK_RET_OK;
@@ -669,10 +669,10 @@ TEST_F(hash_test, test10) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata));
     sdk_ret_t rs = sdk::SDK_RET_OK;
     input_properties_swkey_t key;
@@ -706,10 +706,10 @@ TEST_F(hash_test, test11) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata), sdk::table::hash::HASH_POLY1);
 
     // std::set<SampleHashEntry> sent_set;
@@ -752,10 +752,10 @@ TEST_F(hash_test, test12) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata), sdk::table::hash::HASH_POLY2);
 
     // std::set<SampleHashEntry> sent_set;
@@ -798,10 +798,10 @@ TEST_F(hash_test, test13) {
 
     std::string table_name = "Input_Properties";
     char * table_str = const_cast<char*> (table_name.c_str());
-    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
-            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
-            (uint32_t)100, 
-            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+    sdk::table::hash *test_hash = sdk::table::hash::factory(table_str, (uint32_t)P4TBL_ID_INPUT_PROPERTIES,
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM,
+            (uint32_t)100,
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t),
             (uint32_t)sizeof(input_properties_actiondata), sdk::table::hash::HASH_POLY3);
 
     // std::set<SampleHashEntry> sent_set;

@@ -20,7 +20,7 @@ typedef std::list<FlowHintGroup*> FlowHintGroupList;
 
 class FlowSpineEntry {
 private:
-    FlowTableEntry *ft_entry_;      // Back Pointer to FT Entry        
+    FlowTableEntry *ft_entry_;      // Back Pointer to FT Entry
     FlowEntry *anchor_entry_; 		// Anchor entry if is_in_ft_:TRUE
     FlowHintGroupList  hg_list_;    // List of FHGs
     bool is_in_ft_;                 // Spine entry is in FT
@@ -32,7 +32,7 @@ private:
 public:
     static FlowSpineEntry *factory(FlowTableEntry *ft_entry,
                                    uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_SPINE_ENTRY);
-    static void destroy(FlowSpineEntry *fse, 
+    static void destroy(FlowSpineEntry *fse,
                         uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_SPINE_ENTRY);
 
     void form_action_data(void *action_data);
@@ -46,11 +46,12 @@ public:
     FlowEntry *get_last_flow_entry();
     FlowEntry *get_prev_flow_entry(FlowEntry *fe);
     FlowEntry *get_next_flow_entry(FlowEntry *fe);
-   
+
 	void replace_fhg(FlowHintGroup *fhg, FlowHintGroup *new_fhg);
-    hal_ret_t entry_trace(uint32_t table_id, uint32_t index, 
+    hal_ret_t entry_trace(uint32_t table_id, uint32_t index,
                           void *key, void *data);
     void print_fse();
+    void entry_to_str(char *buff, uint32_t buff_size);
 
     // Getters & Setters
     FlowEntry *get_anchor_entry() { return anchor_entry_; }
@@ -66,7 +67,7 @@ public:
     void set_is_in_ft(bool is_in_ft);
     void set_fhct_index(uint32_t idx);
     void set_ft_entry(FlowTableEntry *ft_entry);
-    
+
 };
 
 }   // namespace utils

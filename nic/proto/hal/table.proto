@@ -1,0 +1,194 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
+//------------------------------------------------------------------------------
+// protobuf specification for HAL tables
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package table;
+option go_package="halproto";
+
+// HAL tables
+service Table {
+  rpc TableMetadataGet(types.Empty) returns (TableMetadataResponseMsg) {}
+  rpc TableGet(TableRequestMsg) returns (TableResponseMsg) {}
+}
+
+// Table Types
+enum TableKind {
+  TABLE_NONE          = 0;
+  TABLE_INDEX         = 1;                    // index table
+  TABLE_TCAM          = 2;                    // tcam table
+  TABLE_HASH          = 3;                    // hash table
+  TABLE_FLOW          = 4;                    // flow table
+  TABLE_MET           = 5;                    // met table
+}
+
+// Index Metadata
+message TableIndexMetadata {
+  fixed32 capacity                = 1;        // index table capacity
+  fixed32 usage                   = 2;        // index table usage
+  fixed32 num_inserts             = 3;        // num. of inserts (inc. failures)
+  fixed32 num_insert_failures     = 4;        // num. of insert failures
+  fixed32 num_updates             = 5;        // num. of updates (inc. failures)
+  fixed32 num_update_failures     = 6;        // num. of update failures
+  fixed32 num_deletes             = 7;        // num. of deletes (inc. failures)
+  fixed32 num_delete_failures     = 8;        // num. of deletes
+  // TODO: Stats etc.
+}
+
+// Tcam Metadata
+message TableTcamMetadata {
+  fixed32 capacity                = 1;        // tcam capacity
+  fixed32 usage                   = 2;        // tcam usage
+  fixed32 num_inserts             = 3;        // num. of inserts (inc. failures)
+  fixed32 num_insert_failures     = 4;        // num. of insert failures
+  fixed32 num_updates             = 5;        // num. of updates (inc. failures)
+  fixed32 num_update_failures     = 6;        // num. of update failures
+  fixed32 num_deletes             = 7;        // num. of deletes (inc. failures)
+  fixed32 num_delete_failures     = 8;        // num. of deletes
+}
+
+// Hash Metadata
+message TableHashMetadata {
+  bool has_otcam                  = 1;        // hash has overflow tcam
+  fixed32 capacity                = 2;        // just hash capacity
+  fixed32 otcam_capacity          = 3;        // overflow tcam capacity
+  fixed32 hash_usage              = 4;        // just hash usage
+  fixed32 otcam_usage             = 5;        // overflow tcam usage
+  fixed32 num_inserts             = 6;        // num. of inserts (inc. failures)
+  fixed32 num_insert_failures     = 7;        // num. of insert failures
+  fixed32 num_updates             = 8;        // num. of updates (inc. failures)
+  fixed32 num_update_failures     = 9;        // num. of update failures
+  fixed32 num_deletes             = 10;       // num. of deletes (inc. failures)
+  fixed32 num_delete_failures     = 11;       // num. of deletes
+}
+
+// Flow Metadata
+message TableFlowMetadata {
+  fixed32 capacity                = 1;
+  fixed32 coll_capacity           = 2;
+  fixed32 hash_usage              = 3;
+  fixed32 coll_usage              = 4;
+  fixed32 num_inserts             = 5;        // num. of inserts (inc. failures)
+  fixed32 num_insert_failures     = 6;        // num. of insert failures
+  fixed32 num_updates             = 7;        // num. of updates (inc. failures)
+  fixed32 num_update_failures     = 8;        // num. of update failures
+  fixed32 num_deletes             = 9;        // num. of deletes (inc. failures)
+  fixed32 num_delete_failures     = 10;       // num. of deletes
+}
+
+// Met Metadata
+message TableMetMetadata {
+  fixed32 capacity                = 1;
+  fixed32 usage                   = 2;        // met usage
+  fixed32 num_inserts             = 3;        // num. of inserts (inc. failures)
+  fixed32 num_insert_failures     = 4;        // num. of insert failures
+  fixed32 num_updates             = 5;        // num. of updates (inc. failures)
+  fixed32 num_update_failures     = 6;        // num. of update failures
+  fixed32 num_deletes             = 7;        // num. of deletes (inc. failures)
+  fixed32 num_delete_failures     = 8;        // num. of deletes
+}
+
+
+// Table Metadata
+message TableMetadata {
+  string  table_name                    = 1;    // table name
+  fixed32 table_id                      = 2;    // table id
+  TableKind kind                        = 3;    // table type
+  oneof metadata {
+    TableIndexMetadata     index_meta   = 4;    // index table meta
+    TableTcamMetadata      tcam_meta    = 5;    // tcam table meta
+    TableHashMetadata      hash_meta    = 6;    // hash table meta
+    TableFlowMetadata      flow_meta    = 7;    // flow table meta
+    TableMetMetadata       met_meta     = 8;    // met meta
+  }
+}
+
+// Table metadata response message
+message TableMetadataResponseMsg {
+  types.ApiStatus        api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  repeated TableMetadata table_meta = 2;
+}
+
+
+message TableIdName {
+  oneof id_or_name {
+    string  table_name                  = 1;    // table name
+    fixed32 table_id                    = 2;    // table id
+  }
+}
+
+message TableSpec {
+  TableIdName key                       = 1;
+}
+
+message TableRequestMsg {
+  repeated TableSpec    spec            = 1;
+}
+
+message TableIndexEntry {
+  fixed32 index                         = 1;
+  string  entry                         = 2;
+}
+
+message TableIndexMsg {
+  repeated TableIndexEntry index_entry  = 1;
+}
+
+message TableTcamEntry {
+  fixed32   index                       = 1;
+  string    entry                       = 2;
+}
+
+message TableTcamMsg {
+  repeated TableTcamEntry tcam_entry    = 1;
+}
+
+message TableHashEntry {
+  bool      in_otcam                    = 1;
+  fixed32   index                       = 2;
+  string    entry                       = 3;
+}
+
+message TableHashMsg {
+  repeated TableHashEntry hash_entry    = 1;
+}
+
+message TableFlowEntry {
+  bool      in_coll                     = 1;
+  fixed32   index                       = 2;
+  string    entry                       = 3;
+}
+
+message TableFlowMsg {
+  repeated TableFlowEntry flow_entry    = 1;
+}
+
+message TableMetEntry {
+  fixed32   index                       = 1;
+  fixed32   table_index                 = 2;
+}
+
+message TableMetMsg {
+  repeated TableMetEntry met_entry      = 1;
+}
+
+message TableResponse {
+  types.ApiStatus        api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  oneof TableEntry {
+      TableIndexMsg     index_table     = 2;
+      TableTcamMsg      tcam_table      = 3;
+      TableHashMsg      hash_table      = 4;
+      TableFlowMsg      flow_table      = 5;
+      TableMetMsg       met_table       = 6;
+  }
+}
+
+message TableResponseMsg {
+  repeated TableResponse    response    = 1;
+}
+

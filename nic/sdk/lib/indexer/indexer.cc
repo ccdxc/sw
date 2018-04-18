@@ -84,7 +84,7 @@ indexer::indexer(uint32_t size, bool thread_safe, bool skip_zero)
 //---------------------------------------------------------------------------
 // destructor
 //---------------------------------------------------------------------------
-indexer::~indexer() 
+indexer::~indexer()
 {
     SDK_FREE(HAL_MEM_ALLOC_LIB_INDEXER, bits_);
 
@@ -352,8 +352,9 @@ indexer::num_indices_allocated(void)
 {
 	uint32_t	usage = 0;
 
-	for (uint32_t i = 1; i < size_; i++) {
-		if (is_index_allocated(i)) {
+	for (uint32_t i = 0; i < size_; i++) {
+		if (is_index_allocated(i) &&
+            !(skip_zero_ && i == 0)) { // Don't count 0 if skip_zero is set
 			usage++;
 		}
 	}

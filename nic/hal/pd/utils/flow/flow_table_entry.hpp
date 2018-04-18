@@ -2,9 +2,9 @@
  |
  | FlowTableEntry
  | --------------
- | 
+ |
  | - Represents an entry in flow hash table.
- | - Identifies an entry whose first set of hash bits are same. 
+ | - Identifies an entry whose first set of hash bits are same.
  |
  * ============================================================================
  */
@@ -28,7 +28,7 @@ typedef std::map<uint32_t, FlowHintGroup*> FHGMap;
 class FlowTableEntry {
 
 private:
-   
+
     uint32_t ft_bits_;
     Flow *flow_;
 
@@ -39,7 +39,7 @@ private:
     FlowTableEntry(uint32_t ft_bits, Flow *flow);
     ~FlowTableEntry();
 public:
-    static FlowTableEntry *factory(uint32_t ft_bits, 
+    static FlowTableEntry *factory(uint32_t ft_bits,
                                    Flow *flow,
                                    uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_TABLE_ENTRY);
     static void destroy(FlowTableEntry *fte,
@@ -47,7 +47,7 @@ public:
 
     hal_ret_t insert(FlowEntry *f_entry);
     hal_ret_t remove(FlowEntry *f_entry);
-    
+
     uint32_t get_num_flow_hgs();
     FlowSpineEntry *get_spine_entry_for_new_hg(bool *is_new);
     FlowSpineEntry *get_spine_entry_for_hg(FlowHintGroup *fhg, bool *is_new);
@@ -56,9 +56,12 @@ public:
     void add_fhg(uint32_t hint_bits, FlowHintGroup *fhg);
     void remove_fhg(FlowHintGroup *fhg);
     void print_fte();
+    void entry_to_str(char *buff, uint32_t buff_size);
+    void inter_spine_str(FlowSpineEntry *eff_spine,
+                         char *buff, uint32_t buff_size);
     // int find_pos_of_hg(FlowHintGroup *hg);
     // void form_ft_entry_from_hgs(uint32_t begin, uint32_t end, void *ft_entry);
-    
+
 
 
     // Getters & Setters

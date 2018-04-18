@@ -20,13 +20,13 @@ Met::factory(std::string table_name, uint32_t table_id,
         return NULL;
     }
 
-    met = new (mem) Met(table_name, table_id, repl_table_capacity, 
+    met = new (mem) Met(table_name, table_id, repl_table_capacity,
                         num_repl_entries, repl_entry_data_len);
 
     HAL_TRACE_DEBUG("met: table_name: {}, tableid: {}, repl_table_capacity:{}"
                     "num_repl_entries:{}, repl_entry_data_len:{}",
-                    met->table_name_, met->table_id_, met->repl_table_capacity_, 
-                    met->max_num_repls_per_entry_, 
+                    met->table_name_, met->table_id_, met->repl_table_capacity_,
+                    met->max_num_repls_per_entry_,
                     met->repl_entry_data_len_);
     return met;
 }
@@ -35,7 +35,7 @@ Met::factory(std::string table_name, uint32_t table_id,
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-Met::destroy(Met *met, uint32_t mtrack_id) 
+Met::destroy(Met *met, uint32_t mtrack_id)
 {
     if (met) {
         met->~Met();
@@ -46,7 +46,7 @@ Met::destroy(Met *met, uint32_t mtrack_id)
 // ----------------------------------------------------------------------------
 // Constructor
 // ----------------------------------------------------------------------------
-Met::Met(std::string table_name, uint32_t table_id, 
+Met::Met(std::string table_name, uint32_t table_id,
          uint32_t repl_table_capacity, uint32_t max_num_repls_per_entry,
          uint32_t repl_entry_data_len)
 {
@@ -65,18 +65,18 @@ Met::Met(std::string table_name, uint32_t table_id,
 
     // Initialize for Stats
     // stats_ = new uint64_t[STATS_MAX]();
-    stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_MET_STATS, 
+    stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_MET_STATS,
                                     sizeof(uint64_t) * STATS_MAX);
 }
 
 // ----------------------------------------------------------------------------
 // Destructor
 // ----------------------------------------------------------------------------
-Met::~Met() 
+Met::~Met()
 {
     // delete repl_table_indexer_;
 #if 0
-    indexer::destroy(repl_table_indexer_, 
+    indexer::destroy(repl_table_indexer_,
                      HAL_MEM_ALLOC_MET_REPL_TABLE_INDEXER);
 #endif
     indexer::destroy(repl_table_indexer_);
@@ -345,7 +345,7 @@ hal_ret_t
 Met::add_replication(uint32_t repl_list_idx, void *data)
 {
     hal_ret_t               rs = HAL_RET_OK;
-    ReplListMap::iterator   itr; 
+    ReplListMap::iterator   itr;
     ReplList                *repl_list;
 
     HAL_TRACE_DEBUG("{}: Adding replication entry to : {}",
@@ -375,7 +375,7 @@ hal_ret_t
 Met::del_replication(uint32_t repl_list_idx, void *data)
 {
     hal_ret_t               rs = HAL_RET_OK;
-    ReplListMap::iterator   itr; 
+    ReplListMap::iterator   itr;
     ReplList                *repl_list;
 
     // Get Repl. List
@@ -467,13 +467,13 @@ Met::stats_update(Met::api ap, hal_ret_t rs)
             break;
         case UPDATE:
             if(rs == HAL_RET_OK) stats_incr(STATS_UPD_SUCCESS);
-            else if(rs == HAL_RET_ENTRY_NOT_FOUND) 
+            else if(rs == HAL_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
             else HAL_ASSERT(0);
             break;
         case REMOVE:
             if (rs == HAL_RET_OK) stats_incr(STATS_REM_SUCCESS);
-            else if (rs == HAL_RET_ENTRY_NOT_FOUND) 
+            else if (rs == HAL_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
             else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_REM_FAIL_HW);
             else HAL_ASSERT(0);
@@ -495,36 +495,55 @@ Met::table_num_entries_in_use(void)
 // ----------------------------------------------------------------------------
 // Number of insert operations attempted
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 Met::table_num_inserts(void)
 {
-    return stats_[STATS_INS_SUCCESS] + 
+    return stats_[STATS_INS_SUCCESS] +
         stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
 }
 
 // ----------------------------------------------------------------------------
 // Number of failed insert operations
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 Met::table_num_insert_errors(void)
 {
     return stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
 }
 
 // ----------------------------------------------------------------------------
+// Number of update operations attempted
+// ----------------------------------------------------------------------------
+uint32_t
+Met::table_num_updates(void)
+{
+    return stats_[STATS_UPD_SUCCESS] +
+        stats_[STATS_UPD_FAIL_ENTRY_NOT_FOUND];
+}
+
+// ----------------------------------------------------------------------------
+// Number of failed update operations
+// ----------------------------------------------------------------------------
+uint32_t
+Met::table_num_update_errors(void)
+{
+    return stats_[STATS_UPD_FAIL_ENTRY_NOT_FOUND];
+}
+
+// ----------------------------------------------------------------------------
 // Number of delete operations attempted
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 Met::table_num_deletes(void)
 {
-    return stats_[STATS_REM_SUCCESS] + 
+    return stats_[STATS_REM_SUCCESS] +
         stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
 }
 
 // ----------------------------------------------------------------------------
 // Number of failed delete operations
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 Met::table_num_delete_errors(void)
 {
     return stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
@@ -543,7 +562,7 @@ Met::trace_met()
     HAL_TRACE_DEBUG("------------------------------------------------------");
     HAL_TRACE_DEBUG("Num. of Repl_lists: {}", repl_list_map_.size());
 
-    for (std::map<uint32_t, ReplList*>::iterator it = repl_list_map_.begin(); 
+    for (std::map<uint32_t, ReplList*>::iterator it = repl_list_map_.begin();
             it != repl_list_map_.end(); ++it) {
 
         tmp_repl_list = it->second;

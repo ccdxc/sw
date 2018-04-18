@@ -28,8 +28,9 @@ using sdk::lib::ht;
 namespace sdk {
 namespace table {
 
-typedef bool (*hash_iterate_func_t)(const void *key,
-                                    const void *data,
+typedef bool (*hash_iterate_func_t)(void *key,
+                                    void *key_mask,
+                                    void *data,
                                     uint32_t hash_idx,
                                     const void *cb_data);
 
@@ -57,6 +58,10 @@ public:
         STATS_INS_FAIL_HW,
         STATS_INS_FAIL_DUP_INS,
         STATS_INS_FAIL_NO_RES,
+        STATS_INS_WITHID_SUCCESS,
+        STATS_INS_WITHID_FAIL_DUP_INS,
+        STATS_INS_WITHID_FAIL_HW,
+        STATS_INS_WITHID_FAIL_INV_ARG,
         STATS_UPD_SUCCESS,
         STATS_UPD_FAIL_OOB,
         STATS_UPD_FAIL_ENTRY_NOT_FOUND,
@@ -98,10 +103,10 @@ private:
     uint64_t        *stats_;                 // Statistics
 
     // overflow tcam presence
-    bool has_otcam_();  
-    // Generates Hash 
+    bool has_otcam_();
+    // Generates Hash
     uint32_t generate_hash_(void *key, uint32_t key_len);
-    // hw program 
+    // hw program
     sdk_ret_t program_table_(hash_entry_t *he, void *hwkey);
     sdk_ret_t deprogram_table_(hash_entry_t *he);
 
@@ -112,26 +117,27 @@ private:
         hash_iterate_func_t cb;
         const void *cb_data;
     } otcam_iterate_cb_t;
-    static bool otcam_iterate_(const void *key, 
-                               const void *key_mask, 
-                               const void *data, 
-                               uint32_t tcam_idx, 
+    static bool otcam_iterate_(void *key,
+                               void *key_mask,
+                               void *data,
+                               uint32_t tcam_idx,
                                const void *cb_data);
     void stats_incr(stats stat);
     void stats_decr(stats stat);
     enum api {
         INSERT,
+        INSERT_WITHID,
         UPDATE,
         REMOVE,
         RETRIEVE
     };
-    void stats_update(api ap, sdk_ret_t rs); 
+    void stats_update(api ap, sdk_ret_t rs);
     // Entry Trace
     sdk_ret_t entry_trace_(hash_entry_t *he);
 
-    hash(char *name, uint32_t dleft_table_id, 
+    hash(char *name, uint32_t dleft_table_id,
          uint32_t otcam_table_id, uint32_t dleft_capacity,
-         uint32_t otcam_capacity, uint32_t swkey_len, uint32_t swdata_len, 
+         uint32_t otcam_capacity, uint32_t swkey_len, uint32_t swdata_len,
          hash::HashPoly hash_poly = HASH_POLY0, bool entry_trace_en = false);
     ~hash();
 public:
@@ -151,16 +157,22 @@ public:
     uint32_t oflow_num_entries_in_use(void);
     uint32_t num_inserts(void);
     uint32_t num_insert_errors(void);
+    uint32_t num_updates(void) const;
+    uint32_t num_update_errors(void) const;
     uint32_t num_deletes(void);
     uint32_t num_delete_errors(void);
 
-    sdk_ret_t insert(void *key, void *data, uint32_t *index, 
+    sdk_ret_t insert(void *key, void *data, uint32_t *index,
                      void *key_mask = NULL, bool direct_to_otcam = FALSE);
+    sdk_ret_t insert_withid(void *key, void *data, uint32_t index,
+                            void *key_mask);
     sdk_ret_t update(uint32_t index, void *data);
     sdk_ret_t remove(uint32_t index);
     sdk_ret_t retrieve(uint32_t index, void *key, void *data);
     sdk_ret_t iterate(hash_iterate_func_t cb, const void *cb_data,
                       hash::EntryType type);
+    sdk_ret_t entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
+                           char *buff, uint32_t buff_size);
 
     // For Debugging
     static bool is_dleft(uint32_t hash_idx);

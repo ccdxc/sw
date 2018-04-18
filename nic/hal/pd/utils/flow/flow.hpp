@@ -1,9 +1,9 @@
 // ============================================================================
-//  
+//
 // Flow Table Managment
-// 
-//  
-//  Hash(Flow_key) = 
+//
+//
+//  Hash(Flow_key) =
 //  +------+---------+
 //  |  11  |    21   |
 //  +------+---------+
@@ -25,16 +25,16 @@
 //
 //
 //
-// < ----------     Spine Entry     ---------->     
+// < ----------     Spine Entry     ---------->
 // +-----+----+----+----+------+----+----+----+
 // |  Anchor  |Hint Grp | ...  |Hint Grp | NS |
 // +-----+----+----+----+------+----+----+----+
 //
-// Spine Entry: Entry which either goes into Flow Table or Flow Hash Collision 
+// Spine Entry: Entry which either goes into Flow Table or Flow Hash Collision
 //              Table and has Hint Groups.
-// Anchor: Initial Few bits of spine entry which has the key and data of 
+// Anchor: Initial Few bits of spine entry which has the key and data of
 //         a Flow Entry.
-// Hint Group: Flow entries which has the same 21 bits and 11 bits. 
+// Hint Group: Flow entries which has the same 21 bits and 11 bits.
 //             6 HGs per spine.
 // NS: Next Spine Pointer.
 //
@@ -68,8 +68,12 @@ class FlowHintGroup;
 typedef std::map<uint32_t, FlowTableEntry*> FlowTableEntryMap;
 typedef std::map<uint32_t, FlowEntry*> FlowEntryMap;
 
+
+typedef bool (*flow_iterate_func_t)(uint32_t gl_flow_index,
+                                    const void *cb_data);
+
 /** ---------------------------------------------------------------------------
-  * 
+  *
   * class Flow
   *
   *     - Flow Management
@@ -135,7 +139,7 @@ private:
     bool                entry_trace_en_;            // enable entry tracing
 
     // Hash Value(21 bits) => Flow Table Entry
-    FlowTableEntryMap   flow_table_; 
+    FlowTableEntryMap   flow_table_;
 
     // indexer for Flow Coll. Table
     indexer             *flow_coll_indexer_;
@@ -165,11 +169,11 @@ private:
         RETRIEVE_FROM_HW,
         ITERATE
     };
-    void stats_update(api ap, hal_ret_t rs); 
+    void stats_update(api ap, hal_ret_t rs);
     // Public Methods
     Flow(std::string table_name, uint32_t table_id, uint32_t oflow_table_id,
-            uint32_t flow_hash_capacity,         
-            uint32_t oflow_capacity,    
+            uint32_t flow_hash_capacity,
+            uint32_t oflow_capacity,
             uint32_t flow_key_len,                  // 320
             uint32_t flow_data_len,                 // 20
             // uint32_t flow_table_entry_len,          // 512
@@ -179,7 +183,7 @@ private:
     ~Flow();
 
 public:
-    static Flow *factory(std::string table_name, uint32_t table_id, 
+    static Flow *factory(std::string table_name, uint32_t table_id,
                          uint32_t oflow_table_id, uint32_t flow_hash_capacity,
                          uint32_t oflow_capacity, uint32_t flow_key_len,
                          uint32_t flow_data_len, uint32_t num_hints_per_flow_entry = 6,
@@ -198,6 +202,8 @@ public:
     uint32_t oflow_table_num_entries_in_use(void);
     uint32_t table_num_inserts(void);
     uint32_t table_num_insert_errors(void);
+    uint32_t table_num_updates(void);
+    uint32_t table_num_update_errors(void);
     uint32_t table_num_deletes(void);
     uint32_t table_num_delete_errors(void);
 
@@ -209,17 +215,18 @@ public:
 
 
     /*
-    Hash::ReturnStatus retrieve(uint32_t index, void **key, uint32_t *key_len, 
+    Hash::ReturnStatus retrieve(uint32_t index, void **key, uint32_t *key_len,
                                 void **data, uint32_t *data_len);
-    Hash::ReturnStatus iterate( 
-            boost::function<Hash::ReturnStatus (const void *key, uint32_t key_len, 
-                                                const void *data, uint32_t data_len, 
-                                                uint32_t hash_idx, const void *cb_data)> cb, 
+    Hash::ReturnStatus iterate(
+            boost::function<Hash::ReturnStatus (const void *key, uint32_t key_len,
+                                                const void *data, uint32_t data_len,
+                                                uint32_t hash_idx, const void *cb_data)> cb,
                                                 const void *cb_data,
                                                 Hash::EntryType type);
     */
-	hal_ret_t alloc_flow_entry_index_(uint32_t *idx);
-	hal_ret_t free_flow_entry_index_(uint32_t idx);
+    hal_ret_t iterate(flow_iterate_func_t func, const void *cb_data);
+    hal_ret_t alloc_flow_entry_index_(uint32_t *idx);
+    hal_ret_t free_flow_entry_index_(uint32_t idx);
 
     uint32_t fetch_flow_table_bits_(uint32_t hash_val);
     uint32_t fetch_hint_bits_(uint32_t hash_val);
@@ -227,6 +234,7 @@ public:
     hal_ret_t free_fhct_index(uint32_t index);
     void add_flow_entry_global_map(FlowEntry *fe, uint32_t index);
     hal_ret_t print_flow();
+    hal_ret_t entry_to_str(uint32_t gl_index, char *buff, uint32_t buff_size);
 
     // Getters & Setters
     bool get_delayed_del_en();

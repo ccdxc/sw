@@ -40,6 +40,7 @@
 		rdma.proto
 		session.proto
 		system.proto
+		table.proto
 		tcp_proxy_cb.proto
 		telemetry.proto
 		tls_proxy_cb.proto
@@ -844,6 +845,28 @@
 		SystemResponse
 		Stats
 		DropStats
+		TableIndexMetadata
+		TableTcamMetadata
+		TableHashMetadata
+		TableFlowMetadata
+		TableMetMetadata
+		TableMetadata
+		TableMetadataResponseMsg
+		TableIdName
+		TableSpec
+		TableRequestMsg
+		TableIndexEntry
+		TableIndexMsg
+		TableTcamEntry
+		TableTcamMsg
+		TableHashEntry
+		TableHashMsg
+		TableFlowEntry
+		TableFlowMsg
+		TableMetEntry
+		TableMetMsg
+		TableResponse
+		TableResponseMsg
 		TcpCbKeyHandle
 		TcpCbSpec
 		TcpCbRequestMsg

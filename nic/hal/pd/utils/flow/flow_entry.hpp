@@ -42,12 +42,12 @@ private:
     FlowSpineEntry      *spine_entry_;      // back-ptr to spine if its anchor
     uint32_t            fhct_index_;        // non-anchor's flow coll. tbl idx
 
-    FlowEntry (void *key, uint32_t key_len, void *data, uint32_t data_len, 
+    FlowEntry (void *key, uint32_t key_len, void *data, uint32_t data_len,
                uint32_t hwkey_len, bool log);
     ~FlowEntry ();
 
 public:
-    static FlowEntry *factory(void *key, uint32_t key_len, void *data, 
+    static FlowEntry *factory(void *key, uint32_t key_len, void *data,
                               uint32_t data_len, uint32_t hwkey_len, bool log,
                               uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_ENTRY);
     static void destroy(FlowEntry *fe,
@@ -65,7 +65,7 @@ public:
     hal_ret_t program_table_non_anchor_entry(FlowEntry *next_fe);
     hal_ret_t deprogram_table_non_anchor_entry();
     hal_ret_t form_hw_key(uint32_t table_id, void *hwkey);
-    hal_ret_t entry_trace(uint32_t table_id, uint32_t index, 
+    hal_ret_t entry_trace(uint32_t table_id, uint32_t index,
                           void *data);
 
 
@@ -80,7 +80,9 @@ public:
     bool get_is_anchor_entry() { return is_anchor_entry_; }
     FlowSpineEntry *get_spine_entry() { return spine_entry_; }
     uint32_t get_fhct_index() { return fhct_index_; }
+    hal_ret_t form_action_data(FlowEntry *next_fe, void *swdata);
     void print_fe();
+    void entry_to_str(char *buff, uint32_t buff_size);
 
     void set_key(void *key);
     void set_key_len(uint32_t key_len);
@@ -95,7 +97,7 @@ public:
 
 };
 
-}   // namespace utils 
+}   // namespace utils
 }   // namespace pd
 }   // namespace hal
 #endif // __FLOW_ENTRY_HPP__

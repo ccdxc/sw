@@ -33,3 +33,21 @@ func VrfTypeToStr(vrfType halproto.VrfType) string {
 		return "Invalid"
 	}
 }
+
+// TableKindToStr converts table type to string
+func TableKindToStr(tType halproto.TableKind) string {
+	switch tType {
+	case halproto.TableKind_TABLE_INDEX:
+		return "Index"
+	case halproto.TableKind_TABLE_TCAM:
+		return "Tcam"
+	case halproto.TableKind_TABLE_HASH:
+		return "Hash"
+	case halproto.TableKind_TABLE_FLOW:
+		return "Flow"
+	case halproto.TableKind_TABLE_MET:
+		return "Met"
+	default:
+		return "Invalid"
+	}
+}

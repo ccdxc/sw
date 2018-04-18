@@ -264,6 +264,8 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_DEBUG_CLI_READ, pd_debug_cli_read);
     PD_SYMBOL_LOAD(PD_FUNC_ID_DEBUG_CLI_WRITE, pd_debug_cli_write);
     PD_SYMBOL_LOAD(PD_FUNC_ID_MPU_TRACE_ENABLE, pd_mpu_trace_enable);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_TABLE_METADATA_GET, pd_table_metadata_get);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_TABLE_GET, pd_table_get);
 
     // apis
     PD_SYMBOL_LOAD(PD_FUNC_ID_IF_GET_HW_LIF_ID, pd_if_get_hw_lif_id);
@@ -622,6 +624,8 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_DEBUG_CLI_READ, pd_debug_cli_read);
     PD_SYMBOL_CALL(PD_FUNC_ID_DEBUG_CLI_WRITE, pd_debug_cli_write);
     PD_SYMBOL_CALL(PD_FUNC_ID_MPU_TRACE_ENABLE, pd_mpu_trace_enable);
+    PD_SYMBOL_CALL(PD_FUNC_ID_TABLE_METADATA_GET, pd_table_metadata_get);
+    PD_SYMBOL_CALL(PD_FUNC_ID_TABLE_GET, pd_table_get);
 
     // apis
     PD_SYMBOL_CALL(PD_FUNC_ID_IF_GET_HW_LIF_ID, pd_if_get_hw_lif_id);
@@ -966,7 +970,7 @@ pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c)
     return 1;
 }
 
-extern "C" int 
+extern "C" int
 pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
                           uint8_t *h,  uint8_t *s)
 {

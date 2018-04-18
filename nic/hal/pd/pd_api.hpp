@@ -7,6 +7,7 @@
 #include "nic/include/nwsec_group_api.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/nw/nw.hpp"
+#include "nic/hal/src/debug/table.hpp"
 #include "nic/hal/src/mcast/multicast.hpp"
 #include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/hal/src/nw/session.hpp"
@@ -1699,6 +1700,16 @@ pd_del_l2seg_uplink_args_init (pd_del_l2seg_uplink_args_t *args)
     return;
 }
 
+// table metadata get
+typedef struct pd_table_metadata_get_args_s {
+    TableMetadataResponseMsg *rsp;
+} pd_table_metadata_get_args_t;
+
+typedef struct pd_table_get_args_s {
+    TableSpec *spec;
+    TableResponse *rsp;
+} pd_table_get_args_t;
+
 // table properties
 typedef struct pd_table_properties_get_args_s {
     uint32_t tableid;
@@ -2615,7 +2626,9 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_ACL_GET,                  224, "PD_FUNC_ID_ACL_GET") \
     ENTRY(PD_FUNC_ID_ACL_RESTORE,              225, "PD_FUNC_ID_ACL_RESTORE") \
     ENTRY(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, 226, "PD_FUNC_ID_ASYM_ECDSA_P256_SETUP_PRIV_KEY")\
-    ENTRY(PD_FUNC_ID_MAX,                      227, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_TABLE_METADATA_GET,       227, "PD_FUNC_ID_TABLE_METADATA_GET") \
+    ENTRY(PD_FUNC_ID_TABLE_GET,                228, "PD_FUNC_ID_TABLE_GET") \
+    ENTRY(PD_FUNC_ID_MAX,                      229, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2832,6 +2845,8 @@ PD_FUNCP_TYPEDEF(pd_del_l2seg_uplink);
 PD_FUNCP_TYPEDEF(pd_debug_cli_read);
 PD_FUNCP_TYPEDEF(pd_debug_cli_write);
 PD_FUNCP_TYPEDEF(pd_mpu_trace_enable);
+PD_FUNCP_TYPEDEF(pd_table_metadata_get);
+PD_FUNCP_TYPEDEF(pd_table_get);
 
 // get apis
 PD_FUNCP_TYPEDEF(pd_if_get_hw_lif_id);
@@ -3180,6 +3195,8 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_debug_cli_read);
         PD_UNION_FIELD(pd_debug_cli_write);
         PD_UNION_FIELD(pd_mpu_trace_enable);
+        PD_UNION_FIELD(pd_table_metadata_get);
+        PD_UNION_FIELD(pd_table_get);
 
         // get apis
         PD_UNION_FIELD(pd_if_get_hw_lif_id);

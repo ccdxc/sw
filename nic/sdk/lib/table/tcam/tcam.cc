@@ -39,12 +39,12 @@ tcam::factory(char *name, uint32_t id,
 
     t->indexer_ = indexer::factory(t->capacity_, false, false);
 
-    t->entry_ht_ = ht::factory(capacity, 
+    t->entry_ht_ = ht::factory(capacity,
                                tcam_entry_get_key_func,
                                tcam_entry_compute_hash_func,
                                tcam_entry_compare_key_func);
 
-    t->name_ = (char *)SDK_CALLOC(SDK_MEM_ALLOC_ID_TCAM_NAME, 
+    t->name_ = (char *)SDK_CALLOC(SDK_MEM_ALLOC_ID_TCAM_NAME,
                                   strlen(name) + 1);
     memcpy(t->name_, name, strlen(name) + 1);
 
@@ -53,7 +53,7 @@ tcam::factory(char *name, uint32_t id,
 
     SDK_TRACE_DEBUG("tcam::%-30s: tableid: %-3u swkey_len: %-4u "
                     "hwkey_len_: %-4u hwkeymask_len_: %-4u "
-                    "hwdata_len_: %-4u", t->name_, t->id_, t->swkey_len_, 
+                    "hwdata_len_: %-4u", t->name_, t->id_, t->swkey_len_,
                     t->hwkey_len_, t->hwkeymask_len_, t->hwdata_len_);
     return t;
 }
@@ -76,7 +76,7 @@ tcam::destroy(tcam *te)
 //---------------------------------------------------------------------------
 // tcam constructor
 //---------------------------------------------------------------------------
-tcam::tcam(uint32_t id, uint32_t capacity, uint32_t swkey_len, 
+tcam::tcam(uint32_t id, uint32_t capacity, uint32_t swkey_len,
            uint32_t swdata_len, bool allow_dup_insert, bool entry_trace_en)
 {
     id_               = id;
@@ -101,20 +101,20 @@ tcam::tcam(uint32_t id, uint32_t capacity, uint32_t swkey_len,
 //---------------------------------------------------------------------------
 // tcam destructor
 //---------------------------------------------------------------------------
-tcam::~tcam() 
+tcam::~tcam()
 {
 }
 
 //---------------------------------------------------------------------------
 // insert API
 //---------------------------------------------------------------------------
-sdk_ret_t 
+sdk_ret_t
 tcam::insert(void *key, void *key_mask, void *data,
              uint32_t *index, bool lowest)
 {
     sdk_ret_t     rs  = SDK_RET_OK;
     tcam_entry_t  *te = NULL;
-    
+
     // check if TCAM entry already exists
     if (entry_exists_(key, key_mask, swkey_len_, &te)) {
         if (!allow_dup_insert_) {
@@ -161,12 +161,12 @@ end:
 //---------------------------------------------------------------------------
 // insert a tcam entry with given index
 //---------------------------------------------------------------------------
-sdk_ret_t 
+sdk_ret_t
 tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
 {
     sdk_ret_t    rs  = SDK_RET_OK;
     tcam_entry_t *te = NULL;
-    
+
     // check if TCAM entry already exists
     if (entry_exists_(key, key_mask, swkey_len_, &te)) {
         if (!allow_dup_insert_) {
@@ -215,7 +215,7 @@ end:
 // TODO: program hw first and then update s/w copy or else if hw programming
 //       fails sw copy has new data ??
 //---------------------------------------------------------------------------
-sdk_ret_t 
+sdk_ret_t
 tcam::update(uint32_t tcam_idx, void *data)
 {
     sdk_ret_t    rs  = SDK_RET_OK;
@@ -259,7 +259,7 @@ end:
 //---------------------------------------------------------------------------
 // remove entry from tcam at given index
 //---------------------------------------------------------------------------
-sdk_ret_t 
+sdk_ret_t
 tcam::remove(uint32_t tcam_idx)
 {
     sdk_ret_t rs = SDK_RET_OK;
@@ -307,7 +307,7 @@ tcam::remove(uint32_t tcam_idx)
         // tcam_entry_map_.erase(itr);
 		te = (tcam_entry_t *)entry_ht_->remove(&tcam_idx);
         tcam_entry_delete(te);
-		
+
         // free index
         rs = free_index_(tcam_idx);
         if (rs != SDK_RET_OK) {
@@ -374,7 +374,7 @@ end:
 // retrieve from hardware table
 //---------------------------------------------------------------------------
 sdk_ret_t
-tcam::retrieve_from_hw(uint32_t tcam_idx, void *key, 
+tcam::retrieve_from_hw(uint32_t tcam_idx, void *key,
                        void *key_mask, void *data)
 {
     sdk_ret_t rs = SDK_RET_OK;
@@ -503,7 +503,7 @@ tcam::entry_exists_(void *key, void *key_mask, uint32_t key_len,
 // 2. std::memset() ? regular c memset() wouldn't bring std::
 //----------------------------------------------------------------------------
 sdk_ret_t
-tcam::program_table_(tcam_entry_t *te) 
+tcam::program_table_(tcam_entry_t *te)
 {
     p4pd_error_t pd_err = P4PD_SUCCESS;
     void *hwkey         = NULL;
@@ -522,12 +522,12 @@ tcam::program_table_(tcam_entry_t *te)
 	hwkeymask = SDK_CALLOC(SDK_MEM_ALLOC_ID_HW_KEY, hwkeymask_len_);
 
 
-    pd_err = p4pd_hwkey_hwmask_build(id_, te->key, te->key_mask, 
+    pd_err = p4pd_hwkey_hwmask_build(id_, te->key, te->key_mask,
                                      (uint8_t *)hwkey, (uint8_t *)hwkeymask);
     SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
     // write to the actual table
-    pd_err = p4pd_entry_write(id_, te->index, (uint8_t *)hwkey, 
+    pd_err = p4pd_entry_write(id_, te->index, (uint8_t *)hwkey,
                               (uint8_t *)hwkeymask, te->data);
     SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
@@ -555,7 +555,7 @@ end:
 // 2. std::memset() ? regular c memset() wouldn't bring std::
 //----------------------------------------------------------------------------
 sdk_ret_t
-tcam::deprogram_table_(tcam_entry_t *te) 
+tcam::deprogram_table_(tcam_entry_t *te)
 {
     p4pd_error_t pd_err = P4PD_SUCCESS;
     void *hwkey         = NULL;
@@ -576,7 +576,7 @@ tcam::deprogram_table_(tcam_entry_t *te)
     memset(te->data, 0, swdata_len_);
 
     // write to the P4 table
-    pd_err = p4pd_entry_write(id_, te->index, (uint8_t *)hwkey, 
+    pd_err = p4pd_entry_write(id_, te->index, (uint8_t *)hwkey,
                               (uint8_t *)hwkeymask, te->data);
     SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
@@ -614,7 +614,7 @@ sdk_ret_t
 tcam::alloc_index_(uint32_t *idx, bool lowest)
 {
     sdk_ret_t   rs = SDK_RET_OK;
-    
+
     indexer::status irs = indexer_->alloc(idx, lowest, 1);
     if (irs != indexer::SUCCESS) {
         return SDK_RET_NO_RESOURCE;
@@ -629,10 +629,10 @@ sdk_ret_t
 tcam::alloc_index_withid_(uint32_t idx)
 {
     sdk_ret_t   rs = SDK_RET_OK;
-    
+
     indexer::status irs = indexer_->alloc_withid(idx);
     if (irs != indexer::SUCCESS) {
-        rs = (irs == indexer::DUPLICATE_ALLOC) ? SDK_RET_DUPLICATE_INS : 
+        rs = (irs == indexer::DUPLICATE_ALLOC) ? SDK_RET_DUPLICATE_INS :
 			SDK_RET_OOB;
     }
 
@@ -780,7 +780,7 @@ tcam::num_entries_in_use(void) const
 //----------------------------------------------------------------------------
 // number of insert operations attempted
 //----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 tcam::num_inserts(void) const
 {
     return stats_[STATS_INS_SUCCESS] + stats_[STATS_INS_FAIL_DUP_INS] +
@@ -792,7 +792,7 @@ tcam::num_inserts(void) const
 //----------------------------------------------------------------------------
 // number of failed insert operations
 //----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 tcam::num_insert_errors(void) const
 {
     return stats_[STATS_INS_FAIL_DUP_INS] +
@@ -801,10 +801,30 @@ tcam::num_insert_errors(void) const
         stats_[STATS_INS_WITHID_FAIL_HW] + stats_[STATS_INS_WITHID_FAIL_OOB];
 }
 
+// ----------------------------------------------------------------------------
+// number of update operations attempted
+// ----------------------------------------------------------------------------
+uint32_t
+tcam::num_updates(void) const
+{
+    return stats_[STATS_UPD_SUCCESS] + stats_[STATS_UPD_FAIL_OOB] +
+        stats_[STATS_UPD_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_UPD_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// number of failed update operations
+// ----------------------------------------------------------------------------
+uint32_t
+tcam::num_update_errors(void) const
+{
+    return stats_[STATS_UPD_FAIL_OOB] +
+        stats_[STATS_UPD_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_UPD_FAIL_HW];
+}
+
 //----------------------------------------------------------------------------
 // number of delete operations attempted
 //----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 tcam::num_deletes(void) const
 {
     return stats_[STATS_REM_SUCCESS] + stats_[STATS_REM_FAIL_OOB] +
@@ -814,7 +834,7 @@ tcam::num_deletes(void) const
 //----------------------------------------------------------------------------
 // number of failed delete operations
 //----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 tcam::num_delete_errors(void) const
 {
     return stats_[STATS_REM_FAIL_OOB] +
@@ -834,11 +854,30 @@ tcam::entry_trace_(tcam_entry_t *te)
         return SDK_RET_OK;
     }
     p4_err = p4pd_table_ds_decoded_string_get(id_, te->index,
-            te->key, te->key_mask, te->data, 
+            te->key, te->key_mask, te->data,
             buff, sizeof(buff));
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
 
     SDK_TRACE_DEBUG("%s: Index: %d \n %s\n", name_, te->index, buff);
+
+    return SDK_RET_OK;
+}
+
+// ----------------------------------------------------------------------------
+// Returns string of the entry
+// ----------------------------------------------------------------------------
+sdk_ret_t
+tcam::entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
+                   char *buff, uint32_t buff_size)
+{
+    p4pd_error_t    p4_err;
+
+    p4_err = p4pd_global_table_ds_decoded_string_get(id_, index,
+                                                     key, key_mask, data,
+                                                     buff, buff_size);
+    SDK_ASSERT(p4_err == P4PD_SUCCESS);
+
+    SDK_TRACE_DEBUG("%s: Index: %d \n %s", name_, index, buff);
 
     return SDK_RET_OK;
 }

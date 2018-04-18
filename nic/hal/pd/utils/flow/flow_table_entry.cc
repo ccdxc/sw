@@ -33,7 +33,7 @@ FlowTableEntry::factory(uint32_t ft_bits, Flow *flow, uint32_t mtrack_id)
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-FlowTableEntry::destroy(FlowTableEntry *fte, uint32_t mtrack_id) 
+FlowTableEntry::destroy(FlowTableEntry *fte, uint32_t mtrack_id)
 {
     if (fte) {
         fte->~FlowTableEntry();
@@ -56,7 +56,7 @@ FlowTableEntry::FlowTableEntry(uint32_t ft_bits, Flow *flow)
 // Destructor - Flow Table Entry
 // ---------------------------------------------------------------------------
 FlowTableEntry::~FlowTableEntry() {}
-           
+
 // ---------------------------------------------------------------------------
 // Insert Flow Entry to Flow Table Entry
 // ---------------------------------------------------------------------------
@@ -70,7 +70,7 @@ FlowTableEntry::insert(FlowEntry *f_entry)
     bool                is_new_fse = FALSE;
     std::map<uint32_t, FlowHintGroup*>::iterator itr;
 
-    HAL_TRACE_DEBUG("FlowTE::{}: Hash_Table_Entry:{:#x} ...", __FUNCTION__, 
+    HAL_TRACE_DEBUG("FlowTE::{}: Hash_Table_Entry:{:#x} ...", __FUNCTION__,
                     get_ft_bits());
 
     hint_bits = get_flow()->fetch_hint_bits_(f_entry->get_hash_val());
@@ -145,8 +145,8 @@ FlowTableEntry::remove(FlowEntry *f_entry)
 
     rs = f_entry->remove();
 
-    HAL_TRACE_DEBUG("{}: After Removal: fhg_num_fes: {}, fhg_num_anchors:{}", 
-            __FUNCTION__, fhg->get_num_flow_entries(), 
+    HAL_TRACE_DEBUG("{}: After Removal: fhg_num_fes: {}, fhg_num_anchors:{}",
+            __FUNCTION__, fhg->get_num_flow_entries(),
             fhg->get_num_anchor_flow_entries());
     // Check if this is last in Hint group.
     if (!fhg->get_num_flow_entries() && !fhg->get_num_anchor_flow_entries()) {
@@ -154,8 +154,8 @@ FlowTableEntry::remove(FlowEntry *f_entry)
                 fhg->get_hint_bits());
         remove_fhg(fhg);
     }
-    HAL_TRACE_DEBUG("{}: After Removal: fspe_has_anchor: {:#x}, fspe_num_hgs:{}", 
-            __FUNCTION__, fspe->get_anchor_entry() ? true : false, 
+    HAL_TRACE_DEBUG("{}: After Removal: fspe_has_anchor: {:#x}, fspe_num_hgs:{}",
+            __FUNCTION__, fspe->get_anchor_entry() ? true : false,
             fspe->get_num_hgs());
     // Check if this is last in Spine entry.
     if (!fspe->get_anchor_entry() && !fspe->get_num_hgs()) {
@@ -199,8 +199,8 @@ FlowTableEntry::get_spine_entry_for_new_hg(bool *is_new)
         sp_entry = sp_entry->get_next();
     }
 
-    if (!sp_entry || 
-            (sp_entry->get_num_hgs() == 
+    if (!sp_entry ||
+            (sp_entry->get_num_hgs() ==
             flow_->get_num_hints_per_flow_entry())) {
         HAL_TRACE_DEBUG("FlowTE::{}: New Spine Entry ...", __FUNCTION__);
         *is_new = TRUE;
@@ -295,7 +295,7 @@ FlowTableEntry::find_pos_of_hg(FlowHintGroup *hg)
 // ---------------------------------------------------------------------------
 // Get FT entry for range of HGs
 // ---------------------------------------------------------------------------
-void 
+void
 FlowTableEntry::form_ft_entry_from_hgs(uint32_t begin, uint32_t end, void *ft_entry)
 {
     std::list<FlowHintGroup*>::iterator it = hint_groups_.begin();
@@ -376,6 +376,24 @@ FlowTableEntry::set_spine_entry(FlowSpineEntry *sp_entry)
     spine_entry_ = sp_entry;
 }
 
+void
+FlowTableEntry::inter_spine_str(FlowSpineEntry *eff_spine,
+                                char *buff, uint32_t buff_size)
+{
+    char tmp_buff[8] = {0};
+    uint32_t index = 0;
+
+    FlowSpineEntry *sp_entry = spine_entry_;
+    while (sp_entry) {
+        index = sp_entry->get_is_in_ft() ? sp_entry->get_ft_entry()->get_ft_bits() : sp_entry->get_fhct_index();
+        sprintf(tmp_buff, " %s:%d ", sp_entry->get_is_in_ft() ? "FT" : "COLL", index);
+        if (sp_entry == eff_spine) {
+            return;
+        }
+        sp_entry = sp_entry->get_next();
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Print Flow Hint Groups
 // ---------------------------------------------------------------------------
@@ -393,7 +411,7 @@ FlowTableEntry::print_fte()
     }
 
     HAL_TRACE_DEBUG("Total Num_FHGs: {}", hint_groups_map_.size());
-    for (FHGMap::const_iterator it = hint_groups_map_.begin(); 
+    for (FHGMap::const_iterator it = hint_groups_map_.begin();
             it != hint_groups_map_.end(); ++it) {
             hint_bits = it->first;
             fhg = it->second;
@@ -401,4 +419,16 @@ FlowTableEntry::print_fte()
             fhg->print_fhg();
     }
 
+}
+
+void
+FlowTableEntry::entry_to_str(char *buff, uint32_t buff_size)
+{
+    FlowSpineEntry *sp_entry = spine_entry_;
+
+    HAL_TRACE_DEBUG("Num_FSEs: {}", num_spine_entries_);
+    while (sp_entry) {
+        sp_entry->entry_to_str(buff, buff_size);
+        sp_entry = sp_entry->get_next();
+    }
 }

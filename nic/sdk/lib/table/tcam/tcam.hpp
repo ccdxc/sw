@@ -28,9 +28,9 @@ namespace table {
 
 typedef struct tcam_entry_s tcam_entry_t;
 
-typedef bool (*tcam_iterate_func_t)(const void *key,
-                                    const void *key_mask,
-                                    const void *data,
+typedef bool (*tcam_iterate_func_t)(void *key,
+                                    void *key_mask,
+                                    void *data,
                                     uint32_t tcam_idx,
                                     const void *cb_data);
 class tcam {
@@ -76,7 +76,7 @@ private:
 
     char            *name_;                 // table name
     uint32_t        id_;                    // table id
-    uint32_t        capacity_;              // size of tcam table 
+    uint32_t        capacity_;              // size of tcam table
     uint32_t        swkey_len_;             // sw key len
     uint32_t        swdata_len_;            // sw data len
     bool            allow_dup_insert_;      // allow uplicate insert
@@ -97,17 +97,17 @@ private:
     sdk_ret_t deprogram_table_(tcam_entry_t *te);
     void stats_incr_(stats stat);
     void stats_decr_(stats stat);
-    void stats_update_(api ap, sdk_ret_t rs); 
+    void stats_update_(api ap, sdk_ret_t rs);
     sdk_ret_t entry_trace_(tcam_entry_t *te);
     tcam(uint32_t id, uint32_t capacity,
-         uint32_t swkey_len, uint32_t swdata_len, 
+         uint32_t swkey_len, uint32_t swdata_len,
          bool allow_dup_insert = false, bool entry_trace_en = false);
     ~tcam();
 
 public:
     // factory & destroy methods
-    static tcam *factory(char *name, uint32_t id, 
-                         uint32_t tcam_capacity, uint32_t swkey_len, 
+    static tcam *factory(char *name, uint32_t id,
+                         uint32_t tcam_capacity, uint32_t swkey_len,
                          uint32_t swdata_len, bool allow_dup_insert = false,
                          bool entry_trace_en = false);
     static void destroy(tcam *tcam);
@@ -119,6 +119,8 @@ public:
     uint32_t num_entries_in_use(void) const;
     uint32_t num_inserts(void) const;
     uint32_t num_insert_errors(void) const;
+    uint32_t num_updates(void) const;
+    uint32_t num_update_errors(void) const;
     uint32_t num_deletes(void) const;
     uint32_t num_delete_errors(void) const;
 
@@ -129,12 +131,14 @@ public:
                             uint32_t index);
     sdk_ret_t update(uint32_t index, void *data);
     sdk_ret_t remove(uint32_t index);
-    sdk_ret_t retrieve(uint32_t index, void *key, void *key_mask, 
+    sdk_ret_t retrieve(uint32_t index, void *key, void *key_mask,
                        void *data);
-    sdk_ret_t retrieve_from_hw(uint32_t index, void *key, void *key_mask, 
+    sdk_ret_t retrieve_from_hw(uint32_t index, void *key, void *key_mask,
                                void *data);
     sdk_ret_t iterate(tcam_iterate_func_t func, const void *cb_data);
     sdk_ret_t fetch_stats(const uint64_t **stats);
+    sdk_ret_t entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
+                           char *buff, uint32_t buff_size);
 };
 
 }    // namespace table

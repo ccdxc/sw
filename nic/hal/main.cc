@@ -26,6 +26,7 @@
 #include "nic/hal/hal.hpp"
 
 #include "nic/hal/svc/debug_svc.hpp"
+#include "nic/hal/svc/table_svc.hpp"
 #include "nic/hal/svc/rdma_svc.hpp"
 #include "nic/hal/svc/session_svc.hpp"
 #include "nic/hal/svc/wring_svc.hpp"
@@ -80,6 +81,7 @@ svc_reg (const std::string& server_addr,
     RdmaServiceImpl          rdma_svc;
     L2SegmentServiceImpl     l2seg_svc;
     DebugServiceImpl         debug_svc;
+    TableServiceImpl         table_svc;
     SessionServiceImpl       session_svc;
     EndpointServiceImpl      endpoint_svc;
     L4LbServiceImpl          l4lb_svc;
@@ -124,6 +126,7 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&rdma_svc);
         server_builder.RegisterService(&l2seg_svc);
         server_builder.RegisterService(&debug_svc);
+        server_builder.RegisterService(&table_svc);
         server_builder.RegisterService(&session_svc);
         server_builder.RegisterService(&endpoint_svc);
         server_builder.RegisterService(&l4lb_svc);
@@ -275,7 +278,7 @@ main (int argc, char **argv)
     } else {
         hal_cfg.default_config_dir = std::string("8x25_hbm");
     }
- 
+
     // parse the ini file, if it exists
     hal::hal_parse_ini(ini_file.c_str(), &hal_cfg);
 

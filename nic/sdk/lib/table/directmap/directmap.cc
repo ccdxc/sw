@@ -28,7 +28,7 @@ directmap::factory(char *name, uint32_t id,
         return NULL;
     }
 
-    dm = new (mem) directmap(name, id, capacity, swdata_len, sharing_en, 
+    dm = new (mem) directmap(name, id, capacity, swdata_len, sharing_en,
                              entry_trace_en);
 
     dm->indexer_ = indexer::factory(capacity, false, false);
@@ -36,12 +36,12 @@ directmap::factory(char *name, uint32_t id,
     // Initialize hash table if sharing is enabled
 
     if (dm->sharing_en_) {
-        dm->entry_ht_ = ht::factory(capacity, 
+        dm->entry_ht_ = ht::factory(capacity,
                                 dm_entry_get_key_func,
                                 dm_entry_compute_hash_func,
                                 dm_entry_compare_key_func);
     }
-    
+
     // Initialize for stats
     dm->stats_ = (uint64_t *)SDK_CALLOC(SDK_MEM_ALLOC_ID_DM_STATS,
                                         sizeof(uint64_t) * STATS_MAX);
@@ -72,7 +72,7 @@ directmap::destroy(directmap *dm)
 // ----------------------------------------------------------------------------
 // directmap constructor
 // ----------------------------------------------------------------------------
-directmap::directmap(char *name, uint32_t id, 
+directmap::directmap(char *name, uint32_t id,
                      uint32_t capacity, uint32_t swdata_len, bool sharing_en,
                      bool entry_trace_en)
 {
@@ -95,7 +95,7 @@ directmap::directmap(char *name, uint32_t id,
     hwkey_len     = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwkeymask_len = (hwkeymask_len >> 3) + ((hwkeymask_len & 0x7) ? 1 : 0);
     hwdata_len_   = (hwdata_len_ >> 3) + ((hwdata_len_ & 0x7) ? 1 : 0);
-        
+
 }
 
 // ----------------------------------------------------------------------------
@@ -106,7 +106,7 @@ directmap::~directmap()
 }
 
 // ----------------------------------------------------------------------------
-// get key function for directmap entry 
+// get key function for directmap entry
 // ----------------------------------------------------------------------------
 void *
 directmap::dm_entry_get_key_func(void *entry)
@@ -176,8 +176,8 @@ directmap::insert(void *data, uint32_t *index)
             // increment ref count
             dme_elem->ref_cnt++;
             *index = dme_elem->index;
-            SDK_TRACE_DEBUG("directmap::%s:Sharing. index: %d ref_cnt: %d\n", 
-                            __FUNCTION__, dme_elem->index, dme_elem->ref_cnt); 
+            SDK_TRACE_DEBUG("directmap::%s:Sharing. index: %d ref_cnt: %d\n",
+                            __FUNCTION__, dme_elem->index, dme_elem->ref_cnt);
             goto end;
         } else {
             // allocate index
@@ -187,7 +187,7 @@ directmap::insert(void *data, uint32_t *index)
             }
 
             // program P4
-            pd_err = p4pd_global_entry_write(id_, *index, NULL, NULL, data); 
+            pd_err = p4pd_global_entry_write(id_, *index, NULL, NULL, data);
             if (pd_err != P4PD_SUCCESS) {
                 rs = SDK_RET_HW_PROGRAM_ERR;
                 SDK_ASSERT(0);
@@ -195,15 +195,15 @@ directmap::insert(void *data, uint32_t *index)
 
             // allocate DM entry
             dme_elem = directmap_entry_alloc_init();
-            dme_elem->data = (void *)SDK_MALLOC(SDK_MEM_ALLOC_DIRECT_MAP_DATA, 
+            dme_elem->data = (void *)SDK_MALLOC(SDK_MEM_ALLOC_DIRECT_MAP_DATA,
                                                 swdata_len_);
             memcpy(dme_elem->data, data, swdata_len_);
             dme_elem->len = swdata_len_;
             dme_elem->index = *index;
             dme_elem->ref_cnt = 1;
 
-            SDK_TRACE_DEBUG("directmap::%s:Sharing. index: %d ref_cnt: %d", 
-                            __FUNCTION__, dme_elem->index, dme_elem->ref_cnt); 
+            SDK_TRACE_DEBUG("directmap::%s:Sharing. index: %d ref_cnt: %d",
+                            __FUNCTION__, dme_elem->index, dme_elem->ref_cnt);
 
             // insert into hash table
             rs = add_directmap_entry_to_db(dme_elem);
@@ -225,7 +225,7 @@ directmap::insert(void *data, uint32_t *index)
     }
 
     // P4-API: write API
-    pd_err = p4pd_global_entry_write(id_, *index, NULL, NULL, data); 
+    pd_err = p4pd_global_entry_write(id_, *index, NULL, NULL, data);
     if (pd_err != P4PD_SUCCESS) {
         rs = SDK_RET_HW_PROGRAM_ERR;
         SDK_ASSERT(0);
@@ -255,9 +255,9 @@ directmap::insert_withid(void *data, uint32_t index, void* data_mask)
             // increment ref count
             dme_elem->ref_cnt++;
 
-            SDK_TRACE_DEBUG("directmap::%s:Sharing. index: %d ref_cnt: %d\n", 
-                            __FUNCTION__, dme_elem->index, dme_elem->ref_cnt); 
-            // You cant insert_withid for already existing entry at a different 
+            SDK_TRACE_DEBUG("directmap::%s:Sharing. index: %d ref_cnt: %d\n",
+                            __FUNCTION__, dme_elem->index, dme_elem->ref_cnt);
+            // You cant insert_withid for already existing entry at a different
             // index.
             SDK_ASSERT(index == dme_elem->index);
             goto end;
@@ -270,9 +270,9 @@ directmap::insert_withid(void *data, uint32_t index, void* data_mask)
             }
 
             // Program P4
-            pd_err = p4pd_global_entry_write_with_datamask(id_, index, 
-                                                           NULL, NULL, 
-                                                           data, data_mask); 
+            pd_err = p4pd_global_entry_write_with_datamask(id_, index,
+                                                           NULL, NULL,
+                                                           data, data_mask);
             if (pd_err != P4PD_SUCCESS) {
                 rs = SDK_RET_HW_PROGRAM_ERR;
                 SDK_ASSERT(0);
@@ -280,15 +280,15 @@ directmap::insert_withid(void *data, uint32_t index, void* data_mask)
 
             // Allocate DM entry
             dme_elem = directmap_entry_alloc_init();
-            dme_elem->data = (void *)SDK_MALLOC(SDK_MEM_ALLOC_DIRECT_MAP_DATA, 
+            dme_elem->data = (void *)SDK_MALLOC(SDK_MEM_ALLOC_DIRECT_MAP_DATA,
                                                 swdata_len_);
             memcpy(dme_elem->data, data, swdata_len_);
             dme_elem->len = swdata_len_;
             dme_elem->index = index;
             dme_elem->ref_cnt = 1;
 
-            SDK_TRACE_DEBUG("directmap::%s:Sharing. index: %d ref_cnt: %d\n", 
-                            __FUNCTION__, dme_elem->index, dme_elem->ref_cnt); 
+            SDK_TRACE_DEBUG("directmap::%s:Sharing. index: %d ref_cnt: %d\n",
+                            __FUNCTION__, dme_elem->index, dme_elem->ref_cnt);
 
             // Insert into hash table
             rs = add_directmap_entry_to_db(dme_elem);
@@ -310,9 +310,9 @@ directmap::insert_withid(void *data, uint32_t index, void* data_mask)
 
 
     // P4-API: write API
-    pd_err = p4pd_global_entry_write_with_datamask(id_, index, 
-                                                   NULL, NULL, 
-                                                   data, data_mask); 
+    pd_err = p4pd_global_entry_write_with_datamask(id_, index,
+                                                   NULL, NULL,
+                                                   data, data_mask);
     if (pd_err != P4PD_SUCCESS) {
         rs = SDK_RET_HW_PROGRAM_ERR;
         SDK_ASSERT(0);
@@ -350,9 +350,9 @@ directmap::update(uint32_t index, void *data, void *data_mask)
         SDK_ASSERT(0);
 
         // Update HW
-        pd_err = p4pd_global_entry_write_with_datamask(id_, index, 
-                                                       NULL, NULL, 
-                                                       data, data_mask); 
+        pd_err = p4pd_global_entry_write_with_datamask(id_, index,
+                                                       NULL, NULL,
+                                                       data, data_mask);
         if (pd_err != P4PD_SUCCESS) {
             rs = SDK_RET_HW_PROGRAM_ERR;
             SDK_ASSERT(0);
@@ -372,9 +372,9 @@ directmap::update(uint32_t index, void *data, void *data_mask)
     }
 
     // P4-API: Write API
-    pd_err = p4pd_global_entry_write_with_datamask(id_, index, 
-                                                   NULL, NULL, 
-                                                   data, data_mask); 
+    pd_err = p4pd_global_entry_write_with_datamask(id_, index,
+                                                   NULL, NULL,
+                                                   data, data_mask);
     if (pd_err != P4PD_SUCCESS) {
         rs = SDK_RET_HW_PROGRAM_ERR;
         SDK_ASSERT(0);
@@ -422,10 +422,10 @@ directmap::remove(uint32_t index, void *data)
         }
 
         // deprogram HW
-        SDK_TRACE_DEBUG("directmap::%s:Sharing. index: %d ref_cnt: %d", 
-                        __FUNCTION__, index, dme_elem->ref_cnt); 
+        SDK_TRACE_DEBUG("directmap::%s:Sharing. index: %d ref_cnt: %d",
+                        __FUNCTION__, index, dme_elem->ref_cnt);
 
-        pd_err = p4pd_global_entry_write(id_, index, NULL, NULL, tmp_data); 
+        pd_err = p4pd_global_entry_write(id_, index, NULL, NULL, tmp_data);
         if (pd_err != P4PD_SUCCESS) {
             rs = SDK_RET_HW_PROGRAM_ERR;
             SDK_ASSERT(0);
@@ -464,7 +464,7 @@ directmap::remove(uint32_t index, void *data)
     }
 
     // P4-API: Write API
-    pd_err = p4pd_global_entry_write(id_, index, NULL, NULL, tmp_data); 
+    pd_err = p4pd_global_entry_write(id_, index, NULL, NULL, tmp_data);
     if (pd_err != P4PD_SUCCESS) {
         rs = SDK_RET_HW_PROGRAM_ERR;
         SDK_ASSERT(0);
@@ -502,7 +502,7 @@ directmap::retrieve(uint32_t index, void *data)
     }
 
     // P4-API: Read API
-    pd_err = p4pd_global_entry_read(id_, index, NULL, NULL, data); 
+    pd_err = p4pd_global_entry_read(id_, index, NULL, NULL, data);
     if (pd_err != P4PD_SUCCESS) {
         rs = SDK_RET_HW_PROGRAM_ERR;
         SDK_ASSERT(0);
@@ -524,12 +524,12 @@ directmap::iterate(direct_map_iterate_func_t iterate_func, const void *cb_data)
     void            *tmp_data = NULL;
 
     // tmp_data = ::operator new(hwdata_len_);
-    tmp_data = SDK_CALLOC(SDK_MEM_ALLOC_DIRECT_MAP_HW_DATA, hwdata_len_);
+    tmp_data = SDK_CALLOC(SDK_MEM_ALLOC_DIRECT_MAP_HW_DATA, swdata_len_);
 
     for (uint32_t i = 0; i < capacity_; i++) {
         if (indexer_->is_index_allocated(i)) {
             // P4-API: Read API
-            pd_err = p4pd_global_entry_read(id_, i, NULL, NULL, tmp_data); 
+            pd_err = p4pd_global_entry_read(id_, i, NULL, NULL, tmp_data);
             SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
             iterate_func(i, tmp_data, cb_data);
         }
@@ -563,14 +563,14 @@ directmap::fetch_stats(const uint64_t **stats)
 }
 
 // ----------------------------------------------------------------------------
-// allocate an index 
+// allocate an index
 // ----------------------------------------------------------------------------
 sdk_ret_t
 directmap::alloc_index_(uint32_t *idx)
 {
     sdk_ret_t   rs = SDK_RET_OK;
 
-    // allocate an index 
+    // allocate an index
     indexer::status irs = indexer_->alloc(idx);
     if (irs != indexer::SUCCESS) {
         return SDK_RET_NO_RESOURCE;
@@ -580,24 +580,24 @@ directmap::alloc_index_(uint32_t *idx)
 }
 
 // ----------------------------------------------------------------------------
-// allocate an index with id 
+// allocate an index with id
 // ----------------------------------------------------------------------------
 sdk_ret_t
 directmap::alloc_index_withid_(uint32_t idx)
 {
     sdk_ret_t   rs = SDK_RET_OK;
 
-    // allocate an index 
+    // allocate an index
     indexer::status irs = indexer_->alloc_withid(idx);
     if (irs != indexer::SUCCESS) {
-        rs = (irs == indexer::DUPLICATE_ALLOC) ? SDK_RET_DUPLICATE_INS : SDK_RET_OOB;  
+        rs = (irs == indexer::DUPLICATE_ALLOC) ? SDK_RET_DUPLICATE_INS : SDK_RET_OOB;
     }
 
     return rs;
 }
 
 // ----------------------------------------------------------------------------
-// free an index 
+// free an index
 // ----------------------------------------------------------------------------
 sdk_ret_t
 directmap::free_index_(uint32_t idx)
@@ -606,7 +606,7 @@ directmap::free_index_(uint32_t idx)
 
     indexer::status irs = indexer_->free((uint32_t)idx);
     if (irs != indexer::SUCCESS) {
-        rs = (irs == indexer::DUPLICATE_FREE) ? SDK_RET_DUPLICATE_FREE : SDK_RET_OOB;  
+        rs = (irs == indexer::DUPLICATE_FREE) ? SDK_RET_DUPLICATE_FREE : SDK_RET_OOB;
     }
 
     return rs;
@@ -654,7 +654,7 @@ directmap::stats_update(directmap::api ap, sdk_ret_t rs)
             break;
         case UPDATE:
             if(rs == SDK_RET_OK) stats_incr(STATS_UPD_SUCCESS);
-            else if(rs == SDK_RET_ENTRY_NOT_FOUND) 
+            else if(rs == SDK_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
             else if(rs == SDK_RET_INVALID_ARG) stats_incr(STATS_UPD_FAIL_INV_ARG);
             else if(rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_UPD_FAIL_HW);
@@ -662,7 +662,7 @@ directmap::stats_update(directmap::api ap, sdk_ret_t rs)
             break;
         case REMOVE:
             if (rs == SDK_RET_OK) stats_incr(STATS_REM_SUCCESS);
-            else if (rs == SDK_RET_ENTRY_NOT_FOUND) 
+            else if (rs == SDK_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
             else if (rs == SDK_RET_INVALID_ARG) stats_incr(STATS_REM_FAIL_INV_ARG);
             else if (rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_REM_FAIL_HW);
@@ -670,7 +670,7 @@ directmap::stats_update(directmap::api ap, sdk_ret_t rs)
             break;
         case RETRIEVE:
             if (rs == SDK_RET_OK) stats_incr(STATS_RETR_SUCCESS);
-            else if (rs == SDK_RET_ENTRY_NOT_FOUND) 
+            else if (rs == SDK_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_RETR_FAIL_ENTRY_NOT_FOUND);
             else if (rs == SDK_RET_INVALID_ARG) stats_incr(STATS_RETR_FAIL_INV_ARG);
             else if (rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_RETR_FAIL_HW);
@@ -725,12 +725,12 @@ directmap::num_entries_in_use(void) const
 // ----------------------------------------------------------------------------
 // number of insert operations attempted
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 directmap::num_inserts(void) const
 {
     return stats_[STATS_INS_SUCCESS] + stats_[STATS_INS_FAIL_HW] +
         stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_WITHID_SUCCESS] +
-        stats_[STATS_INS_WITHID_FAIL_DUP_INS] + 
+        stats_[STATS_INS_WITHID_FAIL_DUP_INS] +
         stats_[STATS_INS_WITHID_FAIL_OOB] +
         stats_[STATS_INS_WITHID_FAIL_HW];
 }
@@ -738,19 +738,39 @@ directmap::num_inserts(void) const
 // ----------------------------------------------------------------------------
 // number of failed insert operations
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 directmap::num_insert_errors(void) const
 {
-    return stats_[STATS_INS_FAIL_HW] + stats_[STATS_INS_FAIL_NO_RES] + 
-        stats_[STATS_INS_WITHID_FAIL_DUP_INS] + 
+    return stats_[STATS_INS_FAIL_HW] + stats_[STATS_INS_FAIL_NO_RES] +
+        stats_[STATS_INS_WITHID_FAIL_DUP_INS] +
         stats_[STATS_INS_WITHID_FAIL_OOB] +
         stats_[STATS_INS_WITHID_FAIL_HW];
 }
 
 // ----------------------------------------------------------------------------
+// number of update operations attempted
+// ----------------------------------------------------------------------------
+uint32_t
+directmap::num_updates(void) const
+{
+    return stats_[STATS_UPD_SUCCESS] + stats_[STATS_UPD_FAIL_INV_ARG] +
+        stats_[STATS_UPD_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_UPD_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// number of failed update operations
+// ----------------------------------------------------------------------------
+uint32_t
+directmap::num_update_errors(void) const
+{
+    return stats_[STATS_UPD_FAIL_INV_ARG] +
+        stats_[STATS_UPD_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_UPD_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
 // number of delete operations attempted
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 directmap::num_deletes(void) const
 {
     return stats_[STATS_REM_SUCCESS] + stats_[STATS_REM_FAIL_INV_ARG] +
@@ -760,10 +780,10 @@ directmap::num_deletes(void) const
 // ----------------------------------------------------------------------------
 // number of failed delete operations
 // ----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 directmap::num_delete_errors(void) const
 {
-    return stats_[STATS_REM_FAIL_INV_ARG] + 
+    return stats_[STATS_REM_FAIL_INV_ARG] +
         stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
 }
 
@@ -778,6 +798,24 @@ directmap::entry_trace_(void *data, uint32_t index)
 
     p4_err = p4pd_global_table_ds_decoded_string_get(id_, index,
             NULL, NULL, data, buff, sizeof(buff));
+    SDK_ASSERT(p4_err == P4PD_SUCCESS);
+
+    SDK_TRACE_DEBUG("%s: Index: %d \n %s", name_, index, buff);
+
+    return SDK_RET_OK;
+}
+
+// ----------------------------------------------------------------------------
+// Returns string of the entry
+// ----------------------------------------------------------------------------
+sdk_ret_t
+directmap::entry_to_str(void *data, uint32_t index, char *buff,
+                        uint32_t buff_size)
+{
+    p4pd_error_t    p4_err;
+
+    p4_err = p4pd_global_table_ds_decoded_string_get(id_, index,
+            NULL, NULL, data, buff, buff_size);
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
 
     SDK_TRACE_DEBUG("%s: Index: %d \n %s", name_, index, buff);
