@@ -394,6 +394,8 @@
 		GftExactMatchProfileKeyHandle
 		GftHeaderTranspositionProfileKeyHandle
 		GftExactMatchFlowEntryKeyHandle
+		NatPoolKey
+		NatPoolKeyHandle
 		NATPolicyKey
 		NatPolicyKeyHandle
 		Svc
@@ -464,7 +466,20 @@
 		MulticastEntryStats
 		MulticastEntryGetResponse
 		MulticastEntryGetResponseMsg
-		NatPool
+		NatPoolSpec
+		NatPoolRequestMsg
+		NatPoolStatus
+		NatPoolResponse
+		NatPoolResponseMsg
+		NatPoolDeleteRequest
+		NatPoolDeleteRequestMsg
+		NatPoolDeleteResponse
+		NatPoolDeleteResponseMsg
+		NatPoolGetRequest
+		NatPoolGetRequestMsg
+		NatPoolStats
+		NatPoolGetResponse
+		NatPoolGetResponseMsg
 		NatRuleSpec
 		NatPolicySpec
 		NatPolicyRequestMsg

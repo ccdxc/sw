@@ -13,6 +13,12 @@ option go_package="halproto";
 
 // The NAT service definition
 service Nat {
+  // NAT pool related APIs
+  rpc NatPoolCreate (NatPoolRequestMsg) returns (NatPoolResponseMsg) {}
+  rpc NatPoolUpdate (NatPoolRequestMsg) returns (NatPoolResponseMsg) {}
+  rpc NatPoolDelete (NatPoolDeleteRequestMsg) returns (NatPoolDeleteResponseMsg) {}
+  rpc NatPoolGet (NatPoolGetRequestMsg) returns (NatPoolGetResponseMsg) {}
+
   // NAT policy related APIs
   rpc NatPolicyCreate (NatPolicyRequestMsg) returns (NatPolicyResponseMsg) {}
   rpc NatPolicyUpdate (NatPolicyRequestMsg) returns (NatPolicyResponseMsg) {}
@@ -32,12 +38,84 @@ enum NatAction {
   NAT_TYPE_DYNAMIC_ADDRESS_PORT = 3;
 }
 
-// NAT pool definition
+// NAT pool configuration
 // NOTE: addresses inside the NAT pool are "owned" by the device, so device is
 // expected to advertise the routes for the same and respond to ARP requests
-message NatPool {
-  repeated types.Address   address    = 1;    // NAT address range(s)
-  types.L4PortRange        port_range = 2;    // port range (for NAPT)
+message NatPoolSpec {
+  types.ObjectMeta         meta          = 1;    // object meta
+  kh.NatPoolKeyHandle      key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];    // identifier of NAT pool
+  repeated types.Address   address       = 3 [(gogoproto.moretags) = "venice:mandatory"];  // NAT address range(s)
+  types.L4PortRange        port_range    = 4;    // optional port range (for NAPT)
+}
+
+message NatPoolRequestMsg {
+  repeated NatPoolSpec    request = 1;    // batched request
+}
+
+// NatPoolStatus is the operational status of a given NAT pool
+// TODO: Add NAT mappings here
+message NatPoolStatus {
+  fixed64           pool_handle          = 1;    // id of pool returned by HAL
+}
+
+// NatPoolResponse is response to NatPoolSpec
+message NatPoolResponse {
+  types.ApiStatus    api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  NatPoolStatus      pool_status    = 2;    // NAT pool status
+}
+
+// NatPoolResponseMsg is batched response to NatPoolRequestMsg
+message NatPoolResponseMsg {
+  repeated NatPoolResponse    response = 1;    // batched response
+}
+
+// NatPoolDeleteRequest is used to delete a NAT pool
+message NatPoolDeleteRequest {
+  types.ObjectMeta       meta          = 1;    // object meta
+  kh.NatPoolKeyHandle    key_or_handle = 2;
+}
+
+// NatPoolDeleteRequestMsg is used to delete batch of NAT pools
+message NatPoolDeleteRequestMsg {
+  repeated NatPoolDeleteRequest    request = 1;    // batched delete request
+}
+
+// NatPoolDeleteResponse is response to NatPoolDeleteRequest
+message NatPoolDeleteResponse {
+  types.ApiStatus    api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+// NatPoolDeleteResponseMsg is batched response to NatPoolDeleteRequestMsg
+message NatPoolDeleteResponseMsg {
+  repeated NatPoolDeleteResponse    response = 1;    // batched delete response
+}
+
+// NatPoolGetRequest is used to get all the information about a pool
+message NatPoolGetRequest {
+  types.ObjectMeta       meta               = 1;    // object meta
+  kh.NatPoolKeyHandle    key_or_handle = 2;    // key or handle (optional)
+}
+
+// NatPoolGetRequestMsg is batched GET requests for NAT pools
+message NatPoolGetRequestMsg {
+  repeated NatPoolGetRequest    request = 1;    // batched GET request
+}
+
+// NatPoolStats is the statistics object for NAT pool
+message NatPoolStats {
+}
+
+// NatPoolGetResponse captures all the information for a given NAT pool
+message NatPoolGetResponse {
+  types.ApiStatus   api_status = 1 [(gogoproto.moretags) = "venice:api_status"];     // API status code
+  NatPoolSpec       spec       = 2;    // NAT pool configuration
+  NatPoolStatus     status     = 3;    // operational state of NAT pool
+  NatPoolStats      stats      = 4;    // stats of the NAT pool
+}
+
+// NatPoolGetResponseMsg is the batched response to NatPoolGetRequestMsg
+message NatPoolGetResponseMsg {
+  repeated NatPoolGetResponse    response = 1;     // batched get response
 }
 
 // NatRuleSpec is the user intent for the NAT rule
@@ -55,8 +133,8 @@ message NatRuleSpec {
   // NAT rule action related attributes
   NatAction                      src_nat_action  = 8;    // action related to the rule
   NatAction                      dst_nat_action  = 9;    // action related to the rule
-  NatPool                        src_nat_pool    = 10;   // src NAT pool
-  NatPool                        dst_nat_pool    = 11;   // dst NAT pool
+  kh.NatPoolKeyHandle            src_nat_pool    = 10;   // src NAT pool
+  kh.NatPoolKeyHandle            dst_nat_pool    = 11;   // dst NAT pool
 }
 
 // NatPolicySpec captures the NAT policy which is a group of NAT rules

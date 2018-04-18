@@ -49,29 +49,306 @@ func (x NatAction) String() string {
 }
 func (NatAction) EnumDescriptor() ([]byte, []int) { return fileDescriptorNat, []int{0} }
 
-// NAT pool definition
+// NAT pool configuration
 // NOTE: addresses inside the NAT pool are "owned" by the device, so device is
 // expected to advertise the routes for the same and respond to ARP requests
-type NatPool struct {
-	Address   []*Address   `protobuf:"bytes,1,rep,name=address" json:"address,omitempty"`
-	PortRange *L4PortRange `protobuf:"bytes,2,opt,name=port_range,json=portRange" json:"port_range,omitempty"`
+type NatPoolSpec struct {
+	Meta        *ObjectMeta       `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *NatPoolKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	Address     []*Address        `protobuf:"bytes,3,rep,name=address" json:"address,omitempty" venice:mandatory`
+	PortRange   *L4PortRange      `protobuf:"bytes,4,opt,name=port_range,json=portRange" json:"port_range,omitempty"`
 }
 
-func (m *NatPool) Reset()                    { *m = NatPool{} }
-func (m *NatPool) String() string            { return proto.CompactTextString(m) }
-func (*NatPool) ProtoMessage()               {}
-func (*NatPool) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{0} }
+func (m *NatPoolSpec) Reset()                    { *m = NatPoolSpec{} }
+func (m *NatPoolSpec) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolSpec) ProtoMessage()               {}
+func (*NatPoolSpec) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{0} }
 
-func (m *NatPool) GetAddress() []*Address {
+func (m *NatPoolSpec) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *NatPoolSpec) GetKeyOrHandle() *NatPoolKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *NatPoolSpec) GetAddress() []*Address {
 	if m != nil {
 		return m.Address
 	}
 	return nil
 }
 
-func (m *NatPool) GetPortRange() *L4PortRange {
+func (m *NatPoolSpec) GetPortRange() *L4PortRange {
 	if m != nil {
 		return m.PortRange
+	}
+	return nil
+}
+
+type NatPoolRequestMsg struct {
+	Request []*NatPoolSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *NatPoolRequestMsg) Reset()                    { *m = NatPoolRequestMsg{} }
+func (m *NatPoolRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolRequestMsg) ProtoMessage()               {}
+func (*NatPoolRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{1} }
+
+func (m *NatPoolRequestMsg) GetRequest() []*NatPoolSpec {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// NatPoolStatus is the operational status of a given NAT pool
+// TODO: Add NAT mappings here
+type NatPoolStatus struct {
+	PoolHandle uint64 `protobuf:"fixed64,1,opt,name=pool_handle,json=poolHandle,proto3" json:"pool_handle,omitempty"`
+}
+
+func (m *NatPoolStatus) Reset()                    { *m = NatPoolStatus{} }
+func (m *NatPoolStatus) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolStatus) ProtoMessage()               {}
+func (*NatPoolStatus) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{2} }
+
+func (m *NatPoolStatus) GetPoolHandle() uint64 {
+	if m != nil {
+		return m.PoolHandle
+	}
+	return 0
+}
+
+// NatPoolResponse is response to NatPoolSpec
+type NatPoolResponse struct {
+	ApiStatus  ApiStatus      `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	PoolStatus *NatPoolStatus `protobuf:"bytes,2,opt,name=pool_status,json=poolStatus" json:"pool_status,omitempty"`
+}
+
+func (m *NatPoolResponse) Reset()                    { *m = NatPoolResponse{} }
+func (m *NatPoolResponse) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolResponse) ProtoMessage()               {}
+func (*NatPoolResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{3} }
+
+func (m *NatPoolResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *NatPoolResponse) GetPoolStatus() *NatPoolStatus {
+	if m != nil {
+		return m.PoolStatus
+	}
+	return nil
+}
+
+// NatPoolResponseMsg is batched response to NatPoolRequestMsg
+type NatPoolResponseMsg struct {
+	Response []*NatPoolResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *NatPoolResponseMsg) Reset()                    { *m = NatPoolResponseMsg{} }
+func (m *NatPoolResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolResponseMsg) ProtoMessage()               {}
+func (*NatPoolResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{4} }
+
+func (m *NatPoolResponseMsg) GetResponse() []*NatPoolResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// NatPoolDeleteRequest is used to delete a NAT pool
+type NatPoolDeleteRequest struct {
+	Meta        *ObjectMeta       `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *NatPoolKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *NatPoolDeleteRequest) Reset()                    { *m = NatPoolDeleteRequest{} }
+func (m *NatPoolDeleteRequest) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolDeleteRequest) ProtoMessage()               {}
+func (*NatPoolDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{5} }
+
+func (m *NatPoolDeleteRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *NatPoolDeleteRequest) GetKeyOrHandle() *NatPoolKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// NatPoolDeleteRequestMsg is used to delete batch of NAT pools
+type NatPoolDeleteRequestMsg struct {
+	Request []*NatPoolDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *NatPoolDeleteRequestMsg) Reset()                    { *m = NatPoolDeleteRequestMsg{} }
+func (m *NatPoolDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolDeleteRequestMsg) ProtoMessage()               {}
+func (*NatPoolDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{6} }
+
+func (m *NatPoolDeleteRequestMsg) GetRequest() []*NatPoolDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// NatPoolDeleteResponse is response to NatPoolDeleteRequest
+type NatPoolDeleteResponse struct {
+	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+}
+
+func (m *NatPoolDeleteResponse) Reset()                    { *m = NatPoolDeleteResponse{} }
+func (m *NatPoolDeleteResponse) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolDeleteResponse) ProtoMessage()               {}
+func (*NatPoolDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{7} }
+
+func (m *NatPoolDeleteResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+// NatPoolDeleteResponseMsg is batched response to NatPoolDeleteRequestMsg
+type NatPoolDeleteResponseMsg struct {
+	Response []*NatPoolDeleteResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *NatPoolDeleteResponseMsg) Reset()                    { *m = NatPoolDeleteResponseMsg{} }
+func (m *NatPoolDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolDeleteResponseMsg) ProtoMessage()               {}
+func (*NatPoolDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{8} }
+
+func (m *NatPoolDeleteResponseMsg) GetResponse() []*NatPoolDeleteResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// NatPoolGetRequest is used to get all the information about a pool
+type NatPoolGetRequest struct {
+	Meta        *ObjectMeta       `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *NatPoolKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *NatPoolGetRequest) Reset()                    { *m = NatPoolGetRequest{} }
+func (m *NatPoolGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolGetRequest) ProtoMessage()               {}
+func (*NatPoolGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{9} }
+
+func (m *NatPoolGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *NatPoolGetRequest) GetKeyOrHandle() *NatPoolKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// NatPoolGetRequestMsg is batched GET requests for NAT pools
+type NatPoolGetRequestMsg struct {
+	Request []*NatPoolGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *NatPoolGetRequestMsg) Reset()                    { *m = NatPoolGetRequestMsg{} }
+func (m *NatPoolGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolGetRequestMsg) ProtoMessage()               {}
+func (*NatPoolGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{10} }
+
+func (m *NatPoolGetRequestMsg) GetRequest() []*NatPoolGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// NatPoolStats is the statistics object for NAT pool
+type NatPoolStats struct {
+}
+
+func (m *NatPoolStats) Reset()                    { *m = NatPoolStats{} }
+func (m *NatPoolStats) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolStats) ProtoMessage()               {}
+func (*NatPoolStats) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{11} }
+
+// NatPoolGetResponse captures all the information for a given NAT pool
+type NatPoolGetResponse struct {
+	ApiStatus ApiStatus      `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Spec      *NatPoolSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Status    *NatPoolStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+	Stats     *NatPoolStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *NatPoolGetResponse) Reset()                    { *m = NatPoolGetResponse{} }
+func (m *NatPoolGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolGetResponse) ProtoMessage()               {}
+func (*NatPoolGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{12} }
+
+func (m *NatPoolGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *NatPoolGetResponse) GetSpec() *NatPoolSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *NatPoolGetResponse) GetStatus() *NatPoolStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+func (m *NatPoolGetResponse) GetStats() *NatPoolStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// NatPoolGetResponseMsg is the batched response to NatPoolGetRequestMsg
+type NatPoolGetResponseMsg struct {
+	Response []*NatPoolGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *NatPoolGetResponseMsg) Reset()                    { *m = NatPoolGetResponseMsg{} }
+func (m *NatPoolGetResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*NatPoolGetResponseMsg) ProtoMessage()               {}
+func (*NatPoolGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{13} }
+
+func (m *NatPoolGetResponseMsg) GetResponse() []*NatPoolGetResponse {
+	if m != nil {
+		return m.Response
 	}
 	return nil
 }
@@ -87,16 +364,16 @@ type NatRuleSpec struct {
 	DstPortRange []*L4PortRange  `protobuf:"bytes,6,rep,name=dst_port_range,json=dstPortRange" json:"dst_port_range,omitempty"`
 	SrcPortRange []*L4PortRange  `protobuf:"bytes,7,rep,name=src_port_range,json=srcPortRange" json:"src_port_range,omitempty"`
 	// NAT rule action related attributes
-	SrcNatAction NatAction `protobuf:"varint,8,opt,name=src_nat_action,json=srcNatAction,proto3,enum=nat.NatAction" json:"src_nat_action,omitempty"`
-	DstNatAction NatAction `protobuf:"varint,9,opt,name=dst_nat_action,json=dstNatAction,proto3,enum=nat.NatAction" json:"dst_nat_action,omitempty"`
-	SrcNatPool   *NatPool  `protobuf:"bytes,10,opt,name=src_nat_pool,json=srcNatPool" json:"src_nat_pool,omitempty"`
-	DstNatPool   *NatPool  `protobuf:"bytes,11,opt,name=dst_nat_pool,json=dstNatPool" json:"dst_nat_pool,omitempty"`
+	SrcNatAction NatAction         `protobuf:"varint,8,opt,name=src_nat_action,json=srcNatAction,proto3,enum=nat.NatAction" json:"src_nat_action,omitempty"`
+	DstNatAction NatAction         `protobuf:"varint,9,opt,name=dst_nat_action,json=dstNatAction,proto3,enum=nat.NatAction" json:"dst_nat_action,omitempty"`
+	SrcNatPool   *NatPoolKeyHandle `protobuf:"bytes,10,opt,name=src_nat_pool,json=srcNatPool" json:"src_nat_pool,omitempty"`
+	DstNatPool   *NatPoolKeyHandle `protobuf:"bytes,11,opt,name=dst_nat_pool,json=dstNatPool" json:"dst_nat_pool,omitempty"`
 }
 
 func (m *NatRuleSpec) Reset()                    { *m = NatRuleSpec{} }
 func (m *NatRuleSpec) String() string            { return proto.CompactTextString(m) }
 func (*NatRuleSpec) ProtoMessage()               {}
-func (*NatRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{1} }
+func (*NatRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{14} }
 
 func (m *NatRuleSpec) GetRuleId() uint64 {
 	if m != nil {
@@ -161,14 +438,14 @@ func (m *NatRuleSpec) GetDstNatAction() NatAction {
 	return NatAction_NAT_TYPE_NONE
 }
 
-func (m *NatRuleSpec) GetSrcNatPool() *NatPool {
+func (m *NatRuleSpec) GetSrcNatPool() *NatPoolKeyHandle {
 	if m != nil {
 		return m.SrcNatPool
 	}
 	return nil
 }
 
-func (m *NatRuleSpec) GetDstNatPool() *NatPool {
+func (m *NatRuleSpec) GetDstNatPool() *NatPoolKeyHandle {
 	if m != nil {
 		return m.DstNatPool
 	}
@@ -185,7 +462,7 @@ type NatPolicySpec struct {
 func (m *NatPolicySpec) Reset()                    { *m = NatPolicySpec{} }
 func (m *NatPolicySpec) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicySpec) ProtoMessage()               {}
-func (*NatPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{2} }
+func (*NatPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{15} }
 
 func (m *NatPolicySpec) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -216,7 +493,7 @@ type NatPolicyRequestMsg struct {
 func (m *NatPolicyRequestMsg) Reset()                    { *m = NatPolicyRequestMsg{} }
 func (m *NatPolicyRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyRequestMsg) ProtoMessage()               {}
-func (*NatPolicyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{3} }
+func (*NatPolicyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{16} }
 
 func (m *NatPolicyRequestMsg) GetRequest() []*NatPolicySpec {
 	if m != nil {
@@ -233,7 +510,7 @@ type NatPolicyStatus struct {
 func (m *NatPolicyStatus) Reset()                    { *m = NatPolicyStatus{} }
 func (m *NatPolicyStatus) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyStatus) ProtoMessage()               {}
-func (*NatPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{4} }
+func (*NatPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{17} }
 
 func (m *NatPolicyStatus) GetNatPolicyHandle() uint64 {
 	if m != nil {
@@ -251,7 +528,7 @@ type NatPolicyResponse struct {
 func (m *NatPolicyResponse) Reset()                    { *m = NatPolicyResponse{} }
 func (m *NatPolicyResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyResponse) ProtoMessage()               {}
-func (*NatPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{5} }
+func (*NatPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{18} }
 
 func (m *NatPolicyResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -275,7 +552,7 @@ type NatPolicyResponseMsg struct {
 func (m *NatPolicyResponseMsg) Reset()                    { *m = NatPolicyResponseMsg{} }
 func (m *NatPolicyResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyResponseMsg) ProtoMessage()               {}
-func (*NatPolicyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{6} }
+func (*NatPolicyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{19} }
 
 func (m *NatPolicyResponseMsg) GetResponse() []*NatPolicyResponse {
 	if m != nil {
@@ -293,7 +570,7 @@ type NatPolicyDeleteRequest struct {
 func (m *NatPolicyDeleteRequest) Reset()                    { *m = NatPolicyDeleteRequest{} }
 func (m *NatPolicyDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyDeleteRequest) ProtoMessage()               {}
-func (*NatPolicyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{7} }
+func (*NatPolicyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{20} }
 
 func (m *NatPolicyDeleteRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -317,7 +594,7 @@ type NatPolicyDeleteRequestMsg struct {
 func (m *NatPolicyDeleteRequestMsg) Reset()                    { *m = NatPolicyDeleteRequestMsg{} }
 func (m *NatPolicyDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyDeleteRequestMsg) ProtoMessage()               {}
-func (*NatPolicyDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{8} }
+func (*NatPolicyDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{21} }
 
 func (m *NatPolicyDeleteRequestMsg) GetRequest() []*NatPolicyDeleteRequest {
 	if m != nil {
@@ -334,7 +611,7 @@ type NatPolicyDeleteResponse struct {
 func (m *NatPolicyDeleteResponse) Reset()                    { *m = NatPolicyDeleteResponse{} }
 func (m *NatPolicyDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyDeleteResponse) ProtoMessage()               {}
-func (*NatPolicyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{9} }
+func (*NatPolicyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{22} }
 
 func (m *NatPolicyDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -351,7 +628,7 @@ type NatPolicyDeleteResponseMsg struct {
 func (m *NatPolicyDeleteResponseMsg) Reset()                    { *m = NatPolicyDeleteResponseMsg{} }
 func (m *NatPolicyDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyDeleteResponseMsg) ProtoMessage()               {}
-func (*NatPolicyDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{10} }
+func (*NatPolicyDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{23} }
 
 func (m *NatPolicyDeleteResponseMsg) GetResponse() []*NatPolicyDeleteResponse {
 	if m != nil {
@@ -369,7 +646,7 @@ type NatPolicyGetRequest struct {
 func (m *NatPolicyGetRequest) Reset()                    { *m = NatPolicyGetRequest{} }
 func (m *NatPolicyGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyGetRequest) ProtoMessage()               {}
-func (*NatPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{11} }
+func (*NatPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{24} }
 
 func (m *NatPolicyGetRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -393,7 +670,7 @@ type NatPolicyGetRequestMsg struct {
 func (m *NatPolicyGetRequestMsg) Reset()                    { *m = NatPolicyGetRequestMsg{} }
 func (m *NatPolicyGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyGetRequestMsg) ProtoMessage()               {}
-func (*NatPolicyGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{12} }
+func (*NatPolicyGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{25} }
 
 func (m *NatPolicyGetRequestMsg) GetRequest() []*NatPolicyGetRequest {
 	if m != nil {
@@ -412,7 +689,7 @@ type NatRuleStats struct {
 func (m *NatRuleStats) Reset()                    { *m = NatRuleStats{} }
 func (m *NatRuleStats) String() string            { return proto.CompactTextString(m) }
 func (*NatRuleStats) ProtoMessage()               {}
-func (*NatRuleStats) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{13} }
+func (*NatRuleStats) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{26} }
 
 func (m *NatRuleStats) GetNumTcpSessions() uint32 {
 	if m != nil {
@@ -443,7 +720,7 @@ type NatPolicyStats struct {
 func (m *NatPolicyStats) Reset()                    { *m = NatPolicyStats{} }
 func (m *NatPolicyStats) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyStats) ProtoMessage()               {}
-func (*NatPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{14} }
+func (*NatPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{27} }
 
 func (m *NatPolicyStats) GetStats() []*NatRuleStats {
 	if m != nil {
@@ -463,7 +740,7 @@ type NatPolicyGetResponse struct {
 func (m *NatPolicyGetResponse) Reset()                    { *m = NatPolicyGetResponse{} }
 func (m *NatPolicyGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyGetResponse) ProtoMessage()               {}
-func (*NatPolicyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{15} }
+func (*NatPolicyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{28} }
 
 func (m *NatPolicyGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -501,7 +778,7 @@ type NatPolicyGetResponseMsg struct {
 func (m *NatPolicyGetResponseMsg) Reset()                    { *m = NatPolicyGetResponseMsg{} }
 func (m *NatPolicyGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyGetResponseMsg) ProtoMessage()               {}
-func (*NatPolicyGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{16} }
+func (*NatPolicyGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{29} }
 
 func (m *NatPolicyGetResponseMsg) GetResponse() []*NatPolicyGetResponse {
 	if m != nil {
@@ -519,7 +796,7 @@ type NatVpnMappingSpec struct {
 func (m *NatVpnMappingSpec) Reset()                    { *m = NatVpnMappingSpec{} }
 func (m *NatVpnMappingSpec) String() string            { return proto.CompactTextString(m) }
 func (*NatVpnMappingSpec) ProtoMessage()               {}
-func (*NatVpnMappingSpec) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{17} }
+func (*NatVpnMappingSpec) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{30} }
 
 func (m *NatVpnMappingSpec) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -543,7 +820,7 @@ type NatVpnMappingRequestMsg struct {
 func (m *NatVpnMappingRequestMsg) Reset()                    { *m = NatVpnMappingRequestMsg{} }
 func (m *NatVpnMappingRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatVpnMappingRequestMsg) ProtoMessage()               {}
-func (*NatVpnMappingRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{18} }
+func (*NatVpnMappingRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{31} }
 
 func (m *NatVpnMappingRequestMsg) GetRequest() []*NatVpnMappingSpec {
 	if m != nil {
@@ -561,7 +838,7 @@ type NatVpnMappingStatus struct {
 func (m *NatVpnMappingStatus) Reset()                    { *m = NatVpnMappingStatus{} }
 func (m *NatVpnMappingStatus) String() string            { return proto.CompactTextString(m) }
 func (*NatVpnMappingStatus) ProtoMessage()               {}
-func (*NatVpnMappingStatus) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{19} }
+func (*NatVpnMappingStatus) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{32} }
 
 func (m *NatVpnMappingStatus) GetHandle() uint64 {
 	if m != nil {
@@ -586,7 +863,7 @@ type NatVpnMappingResponse struct {
 func (m *NatVpnMappingResponse) Reset()                    { *m = NatVpnMappingResponse{} }
 func (m *NatVpnMappingResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatVpnMappingResponse) ProtoMessage()               {}
-func (*NatVpnMappingResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{20} }
+func (*NatVpnMappingResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{33} }
 
 func (m *NatVpnMappingResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -610,7 +887,7 @@ type NatVpnMappingResponseMsg struct {
 func (m *NatVpnMappingResponseMsg) Reset()                    { *m = NatVpnMappingResponseMsg{} }
 func (m *NatVpnMappingResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatVpnMappingResponseMsg) ProtoMessage()               {}
-func (*NatVpnMappingResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{21} }
+func (*NatVpnMappingResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{34} }
 
 func (m *NatVpnMappingResponseMsg) GetResponse() []*NatVpnMappingResponse {
 	if m != nil {
@@ -628,7 +905,7 @@ type NatVpnMappingGetRequest struct {
 func (m *NatVpnMappingGetRequest) Reset()                    { *m = NatVpnMappingGetRequest{} }
 func (m *NatVpnMappingGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*NatVpnMappingGetRequest) ProtoMessage()               {}
-func (*NatVpnMappingGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{22} }
+func (*NatVpnMappingGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{35} }
 
 func (m *NatVpnMappingGetRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -652,7 +929,7 @@ type NatVpnMappingGetRequestMsg struct {
 func (m *NatVpnMappingGetRequestMsg) Reset()                    { *m = NatVpnMappingGetRequestMsg{} }
 func (m *NatVpnMappingGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatVpnMappingGetRequestMsg) ProtoMessage()               {}
-func (*NatVpnMappingGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{23} }
+func (*NatVpnMappingGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{36} }
 
 func (m *NatVpnMappingGetRequestMsg) GetRequest() []*NatVpnMappingGetRequest {
 	if m != nil {
@@ -680,7 +957,7 @@ type NatVpnMappingStats struct {
 func (m *NatVpnMappingStats) Reset()                    { *m = NatVpnMappingStats{} }
 func (m *NatVpnMappingStats) String() string            { return proto.CompactTextString(m) }
 func (*NatVpnMappingStats) ProtoMessage()               {}
-func (*NatVpnMappingStats) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{24} }
+func (*NatVpnMappingStats) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{37} }
 
 func (m *NatVpnMappingStats) GetRxBytes() uint64 {
 	if m != nil {
@@ -777,7 +1054,7 @@ type NatVpnMappingGetResponse struct {
 func (m *NatVpnMappingGetResponse) Reset()                    { *m = NatVpnMappingGetResponse{} }
 func (m *NatVpnMappingGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatVpnMappingGetResponse) ProtoMessage()               {}
-func (*NatVpnMappingGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{25} }
+func (*NatVpnMappingGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{38} }
 
 func (m *NatVpnMappingGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -815,7 +1092,7 @@ type NatVpnMappingGetResponseMsg struct {
 func (m *NatVpnMappingGetResponseMsg) Reset()                    { *m = NatVpnMappingGetResponseMsg{} }
 func (m *NatVpnMappingGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatVpnMappingGetResponseMsg) ProtoMessage()               {}
-func (*NatVpnMappingGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{26} }
+func (*NatVpnMappingGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{39} }
 
 func (m *NatVpnMappingGetResponseMsg) GetResponse() []*NatVpnMappingGetResponse {
 	if m != nil {
@@ -825,7 +1102,20 @@ func (m *NatVpnMappingGetResponseMsg) GetResponse() []*NatVpnMappingGetResponse 
 }
 
 func init() {
-	proto.RegisterType((*NatPool)(nil), "nat.NatPool")
+	proto.RegisterType((*NatPoolSpec)(nil), "nat.NatPoolSpec")
+	proto.RegisterType((*NatPoolRequestMsg)(nil), "nat.NatPoolRequestMsg")
+	proto.RegisterType((*NatPoolStatus)(nil), "nat.NatPoolStatus")
+	proto.RegisterType((*NatPoolResponse)(nil), "nat.NatPoolResponse")
+	proto.RegisterType((*NatPoolResponseMsg)(nil), "nat.NatPoolResponseMsg")
+	proto.RegisterType((*NatPoolDeleteRequest)(nil), "nat.NatPoolDeleteRequest")
+	proto.RegisterType((*NatPoolDeleteRequestMsg)(nil), "nat.NatPoolDeleteRequestMsg")
+	proto.RegisterType((*NatPoolDeleteResponse)(nil), "nat.NatPoolDeleteResponse")
+	proto.RegisterType((*NatPoolDeleteResponseMsg)(nil), "nat.NatPoolDeleteResponseMsg")
+	proto.RegisterType((*NatPoolGetRequest)(nil), "nat.NatPoolGetRequest")
+	proto.RegisterType((*NatPoolGetRequestMsg)(nil), "nat.NatPoolGetRequestMsg")
+	proto.RegisterType((*NatPoolStats)(nil), "nat.NatPoolStats")
+	proto.RegisterType((*NatPoolGetResponse)(nil), "nat.NatPoolGetResponse")
+	proto.RegisterType((*NatPoolGetResponseMsg)(nil), "nat.NatPoolGetResponseMsg")
 	proto.RegisterType((*NatRuleSpec)(nil), "nat.NatRuleSpec")
 	proto.RegisterType((*NatPolicySpec)(nil), "nat.NatPolicySpec")
 	proto.RegisterType((*NatPolicyRequestMsg)(nil), "nat.NatPolicyRequestMsg")
@@ -866,6 +1156,11 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Nat service
 
 type NatClient interface {
+	// NAT pool related APIs
+	NatPoolCreate(ctx context.Context, in *NatPoolRequestMsg, opts ...grpc.CallOption) (*NatPoolResponseMsg, error)
+	NatPoolUpdate(ctx context.Context, in *NatPoolRequestMsg, opts ...grpc.CallOption) (*NatPoolResponseMsg, error)
+	NatPoolDelete(ctx context.Context, in *NatPoolDeleteRequestMsg, opts ...grpc.CallOption) (*NatPoolDeleteResponseMsg, error)
+	NatPoolGet(ctx context.Context, in *NatPoolGetRequestMsg, opts ...grpc.CallOption) (*NatPoolGetResponseMsg, error)
 	// NAT policy related APIs
 	NatPolicyCreate(ctx context.Context, in *NatPolicyRequestMsg, opts ...grpc.CallOption) (*NatPolicyResponseMsg, error)
 	NatPolicyUpdate(ctx context.Context, in *NatPolicyRequestMsg, opts ...grpc.CallOption) (*NatPolicyResponseMsg, error)
@@ -882,6 +1177,42 @@ type natClient struct {
 
 func NewNatClient(cc *grpc.ClientConn) NatClient {
 	return &natClient{cc}
+}
+
+func (c *natClient) NatPoolCreate(ctx context.Context, in *NatPoolRequestMsg, opts ...grpc.CallOption) (*NatPoolResponseMsg, error) {
+	out := new(NatPoolResponseMsg)
+	err := grpc.Invoke(ctx, "/nat.Nat/NatPoolCreate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *natClient) NatPoolUpdate(ctx context.Context, in *NatPoolRequestMsg, opts ...grpc.CallOption) (*NatPoolResponseMsg, error) {
+	out := new(NatPoolResponseMsg)
+	err := grpc.Invoke(ctx, "/nat.Nat/NatPoolUpdate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *natClient) NatPoolDelete(ctx context.Context, in *NatPoolDeleteRequestMsg, opts ...grpc.CallOption) (*NatPoolDeleteResponseMsg, error) {
+	out := new(NatPoolDeleteResponseMsg)
+	err := grpc.Invoke(ctx, "/nat.Nat/NatPoolDelete", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *natClient) NatPoolGet(ctx context.Context, in *NatPoolGetRequestMsg, opts ...grpc.CallOption) (*NatPoolGetResponseMsg, error) {
+	out := new(NatPoolGetResponseMsg)
+	err := grpc.Invoke(ctx, "/nat.Nat/NatPoolGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *natClient) NatPolicyCreate(ctx context.Context, in *NatPolicyRequestMsg, opts ...grpc.CallOption) (*NatPolicyResponseMsg, error) {
@@ -941,6 +1272,11 @@ func (c *natClient) NatVpnMappingGet(ctx context.Context, in *NatVpnMappingGetRe
 // Server API for Nat service
 
 type NatServer interface {
+	// NAT pool related APIs
+	NatPoolCreate(context.Context, *NatPoolRequestMsg) (*NatPoolResponseMsg, error)
+	NatPoolUpdate(context.Context, *NatPoolRequestMsg) (*NatPoolResponseMsg, error)
+	NatPoolDelete(context.Context, *NatPoolDeleteRequestMsg) (*NatPoolDeleteResponseMsg, error)
+	NatPoolGet(context.Context, *NatPoolGetRequestMsg) (*NatPoolGetResponseMsg, error)
 	// NAT policy related APIs
 	NatPolicyCreate(context.Context, *NatPolicyRequestMsg) (*NatPolicyResponseMsg, error)
 	NatPolicyUpdate(context.Context, *NatPolicyRequestMsg) (*NatPolicyResponseMsg, error)
@@ -953,6 +1289,78 @@ type NatServer interface {
 
 func RegisterNatServer(s *grpc.Server, srv NatServer) {
 	s.RegisterService(&_Nat_serviceDesc, srv)
+}
+
+func _Nat_NatPoolCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NatPoolRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NatServer).NatPoolCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/nat.Nat/NatPoolCreate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NatServer).NatPoolCreate(ctx, req.(*NatPoolRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Nat_NatPoolUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NatPoolRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NatServer).NatPoolUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/nat.Nat/NatPoolUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NatServer).NatPoolUpdate(ctx, req.(*NatPoolRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Nat_NatPoolDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NatPoolDeleteRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NatServer).NatPoolDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/nat.Nat/NatPoolDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NatServer).NatPoolDelete(ctx, req.(*NatPoolDeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Nat_NatPoolGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NatPoolGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NatServer).NatPoolGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/nat.Nat/NatPoolGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NatServer).NatPoolGet(ctx, req.(*NatPoolGetRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Nat_NatPolicyCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1068,6 +1476,22 @@ var _Nat_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*NatServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "NatPoolCreate",
+			Handler:    _Nat_NatPoolCreate_Handler,
+		},
+		{
+			MethodName: "NatPoolUpdate",
+			Handler:    _Nat_NatPoolUpdate_Handler,
+		},
+		{
+			MethodName: "NatPoolDelete",
+			Handler:    _Nat_NatPoolDelete_Handler,
+		},
+		{
+			MethodName: "NatPoolGet",
+			Handler:    _Nat_NatPoolGet_Handler,
+		},
+		{
 			MethodName: "NatPolicyCreate",
 			Handler:    _Nat_NatPolicyCreate_Handler,
 		},
@@ -1096,7 +1520,7 @@ var _Nat_serviceDesc = grpc.ServiceDesc{
 	Metadata: "nat.proto",
 }
 
-func (m *NatPool) Marshal() (dAtA []byte, err error) {
+func (m *NatPoolSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1106,14 +1530,34 @@ func (m *NatPool) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *NatPool) MarshalTo(dAtA []byte) (int, error) {
+func (m *NatPoolSpec) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.Meta.Size()))
+		n1, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n2, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
 	if len(m.Address) > 0 {
 		for _, msg := range m.Address {
-			dAtA[i] = 0xa
+			dAtA[i] = 0x1a
 			i++
 			i = encodeVarintNat(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -1124,14 +1568,421 @@ func (m *NatPool) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if m.PortRange != nil {
-		dAtA[i] = 0x12
+		dAtA[i] = 0x22
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.PortRange.Size()))
-		n1, err := m.PortRange.MarshalTo(dAtA[i:])
+		n3, err := m.PortRange.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n1
+		i += n3
+	}
+	return i, nil
+}
+
+func (m *NatPoolRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNat(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NatPoolStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.PoolHandle != 0 {
+		dAtA[i] = 0x9
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.PoolHandle))
+		i += 8
+	}
+	return i, nil
+}
+
+func (m *NatPoolResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.PoolStatus != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.PoolStatus.Size()))
+		n4, err := m.PoolStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	return i, nil
+}
+
+func (m *NatPoolResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNat(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NatPoolDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.Meta.Size()))
+		n5, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n6, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	return i, nil
+}
+
+func (m *NatPoolDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNat(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NatPoolDeleteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.ApiStatus))
+	}
+	return i, nil
+}
+
+func (m *NatPoolDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNat(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NatPoolGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.Meta.Size()))
+		n7, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n7
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n8, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n8
+	}
+	return i, nil
+}
+
+func (m *NatPoolGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNat(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NatPoolStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *NatPoolGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.Spec.Size()))
+		n9, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.Status.Size()))
+		n10, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.Stats.Size()))
+		n11, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	return i, nil
+}
+
+func (m *NatPoolGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatPoolGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNat(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
 	}
 	return i, nil
 }
@@ -1169,21 +2020,21 @@ func (m *NatRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.SrcSg) > 0 {
-		dAtA3 := make([]byte, len(m.SrcSg)*10)
-		var j2 int
+		dAtA13 := make([]byte, len(m.SrcSg)*10)
+		var j12 int
 		for _, num := range m.SrcSg {
 			for num >= 1<<7 {
-				dAtA3[j2] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA13[j12] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j2++
+				j12++
 			}
-			dAtA3[j2] = uint8(num)
-			j2++
+			dAtA13[j12] = uint8(num)
+			j12++
 		}
 		dAtA[i] = 0x1a
 		i++
-		i = encodeVarintNat(dAtA, i, uint64(j2))
-		i += copy(dAtA[i:], dAtA3[:j2])
+		i = encodeVarintNat(dAtA, i, uint64(j12))
+		i += copy(dAtA[i:], dAtA13[:j12])
 	}
 	if len(m.DstAddress) > 0 {
 		for _, msg := range m.DstAddress {
@@ -1198,21 +2049,21 @@ func (m *NatRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.DstSg) > 0 {
-		dAtA5 := make([]byte, len(m.DstSg)*10)
-		var j4 int
+		dAtA15 := make([]byte, len(m.DstSg)*10)
+		var j14 int
 		for _, num := range m.DstSg {
 			for num >= 1<<7 {
-				dAtA5[j4] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA15[j14] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j4++
+				j14++
 			}
-			dAtA5[j4] = uint8(num)
-			j4++
+			dAtA15[j14] = uint8(num)
+			j14++
 		}
 		dAtA[i] = 0x2a
 		i++
-		i = encodeVarintNat(dAtA, i, uint64(j4))
-		i += copy(dAtA[i:], dAtA5[:j4])
+		i = encodeVarintNat(dAtA, i, uint64(j14))
+		i += copy(dAtA[i:], dAtA15[:j14])
 	}
 	if len(m.DstPortRange) > 0 {
 		for _, msg := range m.DstPortRange {
@@ -1252,21 +2103,21 @@ func (m *NatRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x52
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.SrcNatPool.Size()))
-		n6, err := m.SrcNatPool.MarshalTo(dAtA[i:])
+		n16, err := m.SrcNatPool.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n16
 	}
 	if m.DstNatPool != nil {
 		dAtA[i] = 0x5a
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.DstNatPool.Size()))
-		n7, err := m.DstNatPool.MarshalTo(dAtA[i:])
+		n17, err := m.DstNatPool.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n7
+		i += n17
 	}
 	return i, nil
 }
@@ -1290,21 +2141,21 @@ func (m *NatPolicySpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Meta.Size()))
-		n8, err := m.Meta.MarshalTo(dAtA[i:])
+		n18, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n8
+		i += n18
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n9, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n19, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n19
 	}
 	if len(m.Rules) > 0 {
 		for _, msg := range m.Rules {
@@ -1399,11 +2250,11 @@ func (m *NatPolicyResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.PolicyStatus.Size()))
-		n10, err := m.PolicyStatus.MarshalTo(dAtA[i:])
+		n20, err := m.PolicyStatus.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n20
 	}
 	return i, nil
 }
@@ -1457,21 +2308,21 @@ func (m *NatPolicyDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Meta.Size()))
-		n11, err := m.Meta.MarshalTo(dAtA[i:])
+		n21, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n21
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n12, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n22, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n22
 	}
 	return i, nil
 }
@@ -1578,21 +2429,21 @@ func (m *NatPolicyGetRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Meta.Size()))
-		n13, err := m.Meta.MarshalTo(dAtA[i:])
+		n23, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n23
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n14, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n24, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n24
 	}
 	return i, nil
 }
@@ -1714,31 +2565,31 @@ func (m *NatPolicyGetResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Spec.Size()))
-		n15, err := m.Spec.MarshalTo(dAtA[i:])
+		n25, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n15
+		i += n25
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Status.Size()))
-		n16, err := m.Status.MarshalTo(dAtA[i:])
+		n26, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n16
+		i += n26
 	}
 	if m.Stats != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Stats.Size()))
-		n17, err := m.Stats.MarshalTo(dAtA[i:])
+		n27, err := m.Stats.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n17
+		i += n27
 	}
 	return i, nil
 }
@@ -1792,21 +2643,21 @@ func (m *NatVpnMappingSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Meta.Size()))
-		n18, err := m.Meta.MarshalTo(dAtA[i:])
+		n28, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n18
+		i += n28
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n19, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n29, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n19
+		i += n29
 	}
 	return i, nil
 }
@@ -1866,11 +2717,11 @@ func (m *NatVpnMappingStatus) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.SvcMapping.Size()))
-		n20, err := m.SvcMapping.MarshalTo(dAtA[i:])
+		n30, err := m.SvcMapping.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n20
+		i += n30
 	}
 	return i, nil
 }
@@ -1899,11 +2750,11 @@ func (m *NatVpnMappingResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Status.Size()))
-		n21, err := m.Status.MarshalTo(dAtA[i:])
+		n31, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n21
+		i += n31
 	}
 	return i, nil
 }
@@ -1957,21 +2808,21 @@ func (m *NatVpnMappingGetRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Meta.Size()))
-		n22, err := m.Meta.MarshalTo(dAtA[i:])
+		n32, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n22
+		i += n32
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n23, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n33, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n23
+		i += n33
 	}
 	return i, nil
 }
@@ -2108,31 +2959,31 @@ func (m *NatVpnMappingGetResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Spec.Size()))
-		n24, err := m.Spec.MarshalTo(dAtA[i:])
+		n34, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n24
+		i += n34
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Status.Size()))
-		n25, err := m.Status.MarshalTo(dAtA[i:])
+		n35, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n25
+		i += n35
 	}
 	if m.Stats != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintNat(dAtA, i, uint64(m.Stats.Size()))
-		n26, err := m.Stats.MarshalTo(dAtA[i:])
+		n36, err := m.Stats.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n26
+		i += n36
 	}
 	return i, nil
 }
@@ -2176,9 +3027,17 @@ func encodeVarintNat(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *NatPool) Size() (n int) {
+func (m *NatPoolSpec) Size() (n int) {
 	var l int
 	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
 	if len(m.Address) > 0 {
 		for _, e := range m.Address {
 			l = e.Size()
@@ -2188,6 +3047,164 @@ func (m *NatPool) Size() (n int) {
 	if m.PortRange != nil {
 		l = m.PortRange.Size()
 		n += 1 + l + sovNat(uint64(l))
+	}
+	return n
+}
+
+func (m *NatPoolRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovNat(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NatPoolStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.PoolHandle != 0 {
+		n += 9
+	}
+	return n
+}
+
+func (m *NatPoolResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNat(uint64(m.ApiStatus))
+	}
+	if m.PoolStatus != nil {
+		l = m.PoolStatus.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	return n
+}
+
+func (m *NatPoolResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovNat(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NatPoolDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	return n
+}
+
+func (m *NatPoolDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovNat(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NatPoolDeleteResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNat(uint64(m.ApiStatus))
+	}
+	return n
+}
+
+func (m *NatPoolDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovNat(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NatPoolGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	return n
+}
+
+func (m *NatPoolGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovNat(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NatPoolStats) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *NatPoolGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNat(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	return n
+}
+
+func (m *NatPoolGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovNat(uint64(l))
+		}
 	}
 	return n
 }
@@ -2630,7 +3647,7 @@ func sovNat(x uint64) (n int) {
 func sozNat(x uint64) (n int) {
 	return sovNat(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *NatPool) Unmarshal(dAtA []byte) error {
+func (m *NatPoolSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2653,13 +3670,79 @@ func (m *NatPool) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: NatPool: wiretype end group for non-group")
+			return fmt.Errorf("proto: NatPoolSpec: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: NatPool: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: NatPoolSpec: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &NatPoolKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
 			}
@@ -2690,7 +3773,7 @@ func (m *NatPool) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PortRange", wireType)
 			}
@@ -2720,6 +3803,1173 @@ func (m *NatPool) Unmarshal(dAtA []byte) error {
 				m.PortRange = &L4PortRange{}
 			}
 			if err := m.PortRange.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &NatPoolSpec{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolHandle", wireType)
+			}
+			m.PoolHandle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PoolHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.PoolStatus == nil {
+				m.PoolStatus = &NatPoolStatus{}
+			}
+			if err := m.PoolStatus.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &NatPoolResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &NatPoolKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &NatPoolDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolDeleteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolDeleteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &NatPoolDeleteResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &NatPoolKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &NatPoolGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &NatPoolSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &NatPoolStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &NatPoolStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatPoolGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatPoolGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatPoolGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &NatPoolGetResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3105,7 +5355,7 @@ func (m *NatRuleSpec) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.SrcNatPool == nil {
-				m.SrcNatPool = &NatPool{}
+				m.SrcNatPool = &NatPoolKeyHandle{}
 			}
 			if err := m.SrcNatPool.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -3138,7 +5388,7 @@ func (m *NatRuleSpec) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.DstNatPool == nil {
-				m.DstNatPool = &NatPool{}
+				m.DstNatPool = &NatPoolKeyHandle{}
 			}
 			if err := m.DstNatPool.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -5922,94 +8172,111 @@ var (
 func init() { proto.RegisterFile("nat.proto", fileDescriptorNat) }
 
 var fileDescriptorNat = []byte{
-	// 1421 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x58, 0xdf, 0x6e, 0x1b, 0x45,
-	0x17, 0xef, 0xc6, 0x8e, 0x9d, 0x1c, 0x3b, 0xae, 0x33, 0x6d, 0x93, 0x8d, 0xf3, 0xf7, 0x5b, 0xe9,
-	0xeb, 0xe7, 0xaf, 0x2a, 0x56, 0x31, 0x01, 0xb5, 0x48, 0x08, 0x39, 0x49, 0xa1, 0xa5, 0x8d, 0x63,
-	0xad, 0xdd, 0x96, 0x72, 0xb3, 0xda, 0xec, 0x0e, 0x8e, 0x1b, 0x67, 0x77, 0xd9, 0x19, 0x47, 0xb1,
-	0xc4, 0x05, 0xd7, 0x08, 0x24, 0xc4, 0x05, 0xe2, 0x21, 0x78, 0x10, 0x2e, 0x79, 0x82, 0x82, 0xca,
-	0x1d, 0x5c, 0x80, 0xfa, 0x04, 0x68, 0x66, 0x76, 0x76, 0xd7, 0xbb, 0xeb, 0xd0, 0x8a, 0xa2, 0x5e,
-	0x65, 0x67, 0xce, 0xef, 0xfc, 0xe6, 0x9c, 0x99, 0xdf, 0x9c, 0x33, 0x0e, 0xcc, 0x3b, 0x26, 0x6d,
-	0x78, 0xbe, 0x4b, 0x5d, 0x94, 0x73, 0x4c, 0x5a, 0x2b, 0xd1, 0xb1, 0x87, 0x89, 0x98, 0xa9, 0xcd,
-	0x1d, 0x1f, 0x89, 0x2f, 0xed, 0x53, 0x28, 0xb6, 0x4d, 0xda, 0x71, 0xdd, 0x21, 0xaa, 0x43, 0xd1,
-	0xb4, 0x6d, 0x1f, 0x13, 0xa2, 0x2a, 0x5b, 0xb9, 0x7a, 0xa9, 0x59, 0x69, 0x08, 0x9f, 0x96, 0x98,
-	0xd5, 0xa5, 0x19, 0xbd, 0x09, 0xe0, 0xb9, 0x3e, 0x35, 0x7c, 0xd3, 0xe9, 0x63, 0x75, 0x66, 0x4b,
-	0xa9, 0x97, 0x9a, 0x28, 0x00, 0xdf, 0xdf, 0xee, 0xb8, 0x3e, 0xd5, 0x99, 0x45, 0x9f, 0xf7, 0xe4,
-	0xa7, 0xf6, 0x45, 0x1e, 0x4a, 0x6d, 0x93, 0xea, 0xa3, 0x21, 0xee, 0x7a, 0xd8, 0x42, 0xcb, 0x50,
-	0xf4, 0x47, 0x43, 0x6c, 0x0c, 0x6c, 0x55, 0xd9, 0x52, 0xea, 0x79, 0xbd, 0xc0, 0x86, 0x77, 0x6d,
-	0xb4, 0x0d, 0x25, 0xe2, 0x5b, 0x86, 0x8c, 0x64, 0x86, 0x47, 0x72, 0x29, 0x20, 0xbf, 0xdb, 0x09,
-	0x62, 0x39, 0x38, 0x7c, 0xa2, 0x03, 0xf1, 0xad, 0x60, 0x88, 0xae, 0x40, 0x81, 0x79, 0x91, 0xbe,
-	0x9a, 0xdb, 0xca, 0xd5, 0x17, 0xf4, 0x59, 0xe2, 0x5b, 0xdd, 0x3e, 0x23, 0xb3, 0x09, 0x0d, 0xc9,
-	0xf2, 0xe7, 0x90, 0xd9, 0x84, 0xc6, 0xc8, 0x98, 0x17, 0xe9, 0xab, 0xb3, 0x82, 0xcc, 0x26, 0xb4,
-	0xdb, 0x47, 0x37, 0xa1, 0xc2, 0xa6, 0x63, 0x99, 0x17, 0x38, 0x5f, 0x56, 0xe6, 0x65, 0x9b, 0xd0,
-	0x70, 0xc4, 0x3c, 0x59, 0x74, 0x31, 0xcf, 0xe2, 0x74, 0x4f, 0xe2, 0x5b, 0x91, 0xe7, 0xb6, 0xf0,
-	0x74, 0x4c, 0x6a, 0x98, 0x16, 0x1d, 0xb8, 0x8e, 0x3a, 0xb7, 0xa5, 0xd4, 0x2b, 0xcd, 0x4a, 0x83,
-	0x1d, 0x6f, 0xdb, 0xa4, 0x2d, 0x3e, 0xcb, 0xbd, 0xc2, 0x11, 0xf3, 0x62, 0x91, 0xc6, 0xbc, 0xe6,
-	0xb3, 0xbd, 0x6c, 0x42, 0x23, 0xaf, 0x06, 0x94, 0xe5, 0x5a, 0x9e, 0xeb, 0x0e, 0x55, 0xe0, 0xe7,
-	0x5a, 0x96, 0x3e, 0x4c, 0x23, 0x7c, 0xcf, 0xa5, 0x5e, 0x1a, 0x50, 0x96, 0xab, 0x70, 0x7c, 0x29,
-	0x0b, 0x2f, 0x56, 0x60, 0xdf, 0xda, 0x0f, 0x0a, 0x2c, 0xf0, 0xef, 0xe1, 0xc0, 0x1a, 0x73, 0x11,
-	0xfc, 0x17, 0xf2, 0x27, 0x98, 0x9a, 0x5c, 0x01, 0xa5, 0xe6, 0x62, 0xb0, 0x1b, 0x07, 0x87, 0x4f,
-	0xb0, 0x45, 0xf7, 0x31, 0x35, 0x75, 0x6e, 0x46, 0xf7, 0x61, 0xe1, 0x18, 0x8f, 0x0d, 0xd7, 0x37,
-	0x8e, 0x4c, 0xc7, 0x1e, 0x4a, 0xc5, 0x2d, 0x35, 0x8e, 0x8f, 0x1a, 0x21, 0xe1, 0x3d, 0x3c, 0xbe,
-	0xc3, 0xad, 0x3b, 0xd5, 0xe7, 0x4f, 0x37, 0xcb, 0xa7, 0xd8, 0x19, 0x58, 0xf8, 0x5d, 0xed, 0x18,
-	0x8f, 0x35, 0xbd, 0x74, 0x8c, 0xc7, 0x07, 0xbe, 0x30, 0xa3, 0xab, 0x30, 0xcb, 0xa4, 0x46, 0xb8,
-	0x52, 0x4a, 0xcd, 0xaa, 0x8c, 0x57, 0x4a, 0x53, 0x17, 0x66, 0x6d, 0x17, 0x2e, 0x85, 0xe4, 0x3a,
-	0xfe, 0x6c, 0x84, 0x09, 0xdd, 0x27, 0x7d, 0x74, 0x1d, 0x8a, 0xbe, 0x18, 0x05, 0xb7, 0x04, 0x45,
-	0x09, 0xcb, 0xc4, 0x74, 0x09, 0xd1, 0xde, 0x83, 0x8b, 0x91, 0x85, 0x9a, 0x74, 0x44, 0xd0, 0x35,
-	0x58, 0x14, 0x5b, 0xc6, 0xe6, 0x64, 0x46, 0x6c, 0x07, 0x0a, 0xfa, 0x45, 0x47, 0x62, 0x45, 0xac,
-	0xda, 0x77, 0x0a, 0x2c, 0xc6, 0x82, 0x20, 0x9e, 0xeb, 0x10, 0x8c, 0x3e, 0x00, 0x30, 0xbd, 0x81,
-	0x41, 0x38, 0x1f, 0x77, 0xad, 0x34, 0xab, 0xf2, 0xae, 0x7a, 0x03, 0xb1, 0xce, 0xce, 0x95, 0xe7,
-	0x4f, 0x37, 0x17, 0x83, 0x6d, 0x88, 0xe0, 0xfa, 0xbc, 0x29, 0x11, 0xe8, 0x16, 0x2c, 0x04, 0x51,
-	0x04, 0x54, 0x62, 0x5f, 0x2f, 0x27, 0x12, 0x12, 0x7e, 0x65, 0x2f, 0x36, 0xd2, 0x3e, 0x82, 0xcb,
-	0xa9, 0xb8, 0xd8, 0xee, 0x34, 0x61, 0xce, 0x0f, 0x86, 0xc1, 0xf6, 0x2c, 0x4d, 0xb2, 0x49, 0xb0,
-	0x1e, 0xe2, 0xb4, 0xaf, 0x15, 0x58, 0x0a, 0xed, 0x7b, 0x78, 0x88, 0x29, 0x0e, 0xf6, 0xfb, 0xb5,
-	0x08, 0x44, 0xd3, 0x61, 0x25, 0x3b, 0x1c, 0x96, 0xe0, 0xdb, 0xc9, 0xe3, 0x5f, 0x9d, 0xcc, 0x6f,
-	0xc2, 0x21, 0xd2, 0x81, 0x09, 0xcb, 0x29, 0xc8, 0xab, 0x3d, 0x4d, 0xed, 0x21, 0xd4, 0xa6, 0x2c,
-	0xc1, 0xe2, 0xbe, 0x99, 0x3a, 0x98, 0xb5, 0xec, 0xc0, 0x53, 0xc7, 0xf3, 0xa5, 0x12, 0xbb, 0x08,
-	0x1f, 0x62, 0xfa, 0x5a, 0xcf, 0xe6, 0x7e, 0x4c, 0x2a, 0x51, 0x2c, 0x42, 0x79, 0x89, 0x83, 0x51,
-	0x27, 0xf3, 0x8b, 0xd0, 0xd1, 0xa9, 0x7c, 0xa3, 0x40, 0x59, 0xde, 0x7c, 0x6a, 0x52, 0x82, 0xea,
-	0x50, 0x75, 0x46, 0x27, 0x06, 0xb5, 0x3c, 0x83, 0x60, 0x42, 0x06, 0xae, 0x23, 0x4e, 0x64, 0x41,
-	0xaf, 0x38, 0xa3, 0x93, 0x9e, 0xe5, 0x75, 0x83, 0x59, 0x89, 0x1c, 0xd9, 0x31, 0xe4, 0x4c, 0x88,
-	0x7c, 0x60, 0x47, 0xc8, 0xeb, 0x80, 0x18, 0xd2, 0xa5, 0x47, 0xd8, 0x8f, 0xb0, 0x39, 0x8e, 0x65,
-	0x1c, 0x07, 0xcc, 0x20, 0xd1, 0xda, 0x2d, 0xa8, 0x4c, 0xdc, 0x3c, 0x82, 0xfe, 0x07, 0xb3, 0xec,
-	0xb0, 0x65, 0x53, 0x5e, 0x9c, 0xa8, 0x57, 0xcc, 0xa0, 0x0b, 0xbb, 0xf6, 0xb3, 0x12, 0xbb, 0x94,
-	0x3c, 0xdd, 0x57, 0x5c, 0x2f, 0xae, 0x42, 0x9e, 0x78, 0xd8, 0x0a, 0x1b, 0x7e, 0xba, 0xee, 0x71,
-	0x3b, 0xba, 0x0e, 0x85, 0x60, 0xad, 0xdc, 0x39, 0x05, 0x25, 0xc0, 0xa0, 0xff, 0xcb, 0xfc, 0xf2,
-	0x1c, 0x7c, 0x29, 0x0d, 0x0e, 0x33, 0xec, 0xc4, 0x6e, 0x51, 0x2c, 0x41, 0x71, 0x2f, 0x93, 0xfa,
-	0x5e, 0xc9, 0x38, 0xff, 0x94, 0xb8, 0xbf, 0x12, 0x05, 0xf6, 0xa1, 0xe7, 0xec, 0x9b, 0x9e, 0x37,
-	0x70, 0xfa, 0x2f, 0xd3, 0x97, 0x3a, 0xd9, 0xd2, 0xae, 0x05, 0xd2, 0x8e, 0x48, 0x5f, 0x58, 0xde,
-	0xf7, 0x78, 0x82, 0x91, 0x63, 0x4c, 0xdf, 0x37, 0x92, 0xfa, 0x0e, 0x0b, 0xeb, 0x64, 0xf0, 0x91,
-	0xba, 0x1f, 0xf1, 0x7b, 0x1b, 0xb3, 0x8a, 0xfd, 0x5e, 0x82, 0xc2, 0x44, 0xd3, 0x09, 0x46, 0xa8,
-	0x0e, 0x25, 0x72, 0x6a, 0x19, 0x27, 0x02, 0x1c, 0xe4, 0x52, 0x64, 0xb9, 0x74, 0x4f, 0x2d, 0x1d,
-	0xc8, 0xa9, 0x15, 0xf0, 0xb0, 0x8a, 0x70, 0x25, 0x11, 0x66, 0xa0, 0xb4, 0xf7, 0x5f, 0x48, 0x69,
-	0x95, 0xdf, 0x9e, 0x6e, 0x42, 0xb6, 0xc4, 0x6e, 0x84, 0xd2, 0x11, 0xeb, 0xab, 0x19, 0x49, 0x4e,
-	0xc8, 0x47, 0xd3, 0x41, 0xcd, 0x8c, 0x85, 0xed, 0xd9, 0x3b, 0x29, 0x51, 0xd4, 0xd2, 0x7c, 0x19,
-	0xaa, 0xf8, 0x56, 0x49, 0x9c, 0xc3, 0xcb, 0x97, 0xbd, 0x57, 0xaf, 0x8d, 0x1e, 0xaf, 0xef, 0x59,
-	0x31, 0x89, 0x54, 0x13, 0xf2, 0x58, 0x4b, 0x67, 0x9a, 0x55, 0x02, 0xff, 0xcc, 0x01, 0x4a, 0x6d,
-	0x2f, 0x41, 0x2b, 0x30, 0xe7, 0x9f, 0x19, 0x87, 0x63, 0x8a, 0x49, 0xf0, 0x3e, 0x2f, 0xfa, 0x67,
-	0x3b, 0x6c, 0x88, 0xd6, 0x01, 0xfc, 0x33, 0xc3, 0x33, 0xad, 0x63, 0x4c, 0xc5, 0x31, 0xe5, 0xf5,
-	0x79, 0xff, 0xac, 0x23, 0x26, 0x98, 0x27, 0x95, 0x9e, 0x39, 0xe1, 0x49, 0x23, 0x4f, 0x1a, 0x79,
-	0xe6, 0x85, 0x27, 0x0d, 0x3d, 0xeb, 0x50, 0x95, 0x6b, 0x1a, 0xb6, 0xef, 0x7a, 0x1e, 0xb6, 0xd5,
-	0x59, 0x0e, 0xaa, 0x04, 0x6b, 0xef, 0x89, 0x59, 0x56, 0x52, 0xa3, 0x10, 0x42, 0x6c, 0x81, 0x63,
-	0xab, 0x61, 0x28, 0x12, 0x5d, 0x87, 0x2a, 0x4d, 0xf2, 0x16, 0x05, 0x2f, 0x4d, 0xf1, 0xd2, 0x34,
-	0xef, 0x9c, 0xe0, 0xa5, 0x19, 0xbc, 0xa9, 0x66, 0x31, 0xff, 0xc2, 0xcd, 0x02, 0x5e, 0xa2, 0x59,
-	0x94, 0xb2, 0x9b, 0x05, 0xda, 0x86, 0x25, 0x86, 0x66, 0x6f, 0xfc, 0x53, 0x6c, 0x58, 0xae, 0xe3,
-	0x60, 0xfe, 0x94, 0x27, 0x6a, 0x99, 0x7b, 0x5c, 0x76, 0x46, 0x27, 0x2d, 0x6e, 0xdc, 0x8d, 0x6c,
-	0xda, 0x1f, 0x4a, 0xe2, 0xca, 0xfc, 0x1b, 0xbd, 0xe2, 0xda, 0x44, 0xaf, 0x98, 0x56, 0xab, 0x44,
-	0xbf, 0xb8, 0x91, 0xe8, 0x17, 0x7f, 0x7b, 0xe9, 0xd1, 0x1b, 0x93, 0x3d, 0x63, 0x39, 0xdb, 0x21,
-	0xec, 0x1b, 0x1f, 0xc3, 0xea, 0xb4, 0x84, 0xd9, 0xdd, 0xb9, 0x95, 0x2a, 0x13, 0xeb, 0x53, 0x2e,
-	0x4f, 0xb2, 0x52, 0x5c, 0xfb, 0x1c, 0xe6, 0xa3, 0x1f, 0x50, 0x8b, 0xb0, 0xd0, 0x6e, 0xf5, 0x8c,
-	0xde, 0xe3, 0xce, 0x6d, 0xa3, 0x7d, 0xd0, 0xbe, 0x5d, 0xbd, 0x80, 0x56, 0x61, 0x39, 0x9c, 0xea,
-	0xf6, 0x5a, 0xbd, 0xbb, 0xbb, 0x46, 0x6b, 0x6f, 0x4f, 0xbf, 0xdd, 0xed, 0x56, 0x15, 0xb4, 0x06,
-	0x6a, 0x68, 0xdc, 0x7b, 0xdc, 0x6e, 0xed, 0xc7, 0xac, 0x33, 0xe8, 0x3f, 0xb0, 0x3e, 0xcd, 0x6a,
-	0x74, 0x0e, 0xf4, 0x5e, 0x35, 0xd7, 0xfc, 0x3d, 0x07, 0xb9, 0xb6, 0x49, 0xd1, 0x9d, 0xd8, 0xaf,
-	0x8c, 0x5d, 0x1f, 0x9b, 0x14, 0x23, 0x35, 0xf9, 0xec, 0x96, 0x95, 0xa2, 0xb6, 0x92, 0xfd, 0x20,
-	0xdf, 0x27, 0x7d, 0xed, 0xc2, 0x04, 0xd3, 0x03, 0xcf, 0xfe, 0x07, 0x4c, 0xbd, 0x18, 0x93, 0x78,
-	0x5b, 0xa2, 0x8d, 0x73, 0x9e, 0xca, 0x8c, 0x6f, 0xf3, 0xbc, 0x17, 0xa9, 0x60, 0xbd, 0xc7, 0x1f,
-	0x6c, 0x61, 0x47, 0x47, 0xab, 0xd3, 0x1e, 0x79, 0x8c, 0x6f, 0x6d, 0xea, 0x0b, 0x40, 0x86, 0x38,
-	0xd9, 0x20, 0x83, 0xad, 0x5b, 0xcb, 0xea, 0x11, 0x21, 0xe9, 0xfa, 0xf4, 0x0e, 0x22, 0x58, 0x1f,
-	0x41, 0x35, 0x29, 0x1c, 0xb4, 0x79, 0x5e, 0x31, 0x66, 0xac, 0x5b, 0xe7, 0x0a, 0x8e, 0x13, 0xef,
-	0xd4, 0x7e, 0x7c, 0xb6, 0xa1, 0xfc, 0xf4, 0x6c, 0x43, 0xf9, 0xe5, 0xd9, 0x86, 0xf2, 0xfd, 0xaf,
-	0x1b, 0x17, 0x3e, 0x99, 0x3b, 0x32, 0x87, 0xfc, 0xdf, 0x38, 0x87, 0x05, 0xfe, 0xe7, 0xad, 0xbf,
-	0x02, 0x00, 0x00, 0xff, 0xff, 0x5c, 0xa4, 0x2d, 0xea, 0xf6, 0x11, 0x00, 0x00,
+	// 1694 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x59, 0x5b, 0x4f, 0x1c, 0xc9,
+	0x15, 0xa6, 0x99, 0x61, 0x80, 0x33, 0x30, 0x1e, 0xca, 0x5c, 0x86, 0xe1, 0xe6, 0xb4, 0x12, 0x87,
+	0x20, 0x07, 0x11, 0x8c, 0x2d, 0x3b, 0x52, 0x62, 0x71, 0x73, 0x7c, 0x81, 0x61, 0xd4, 0x33, 0xb6,
+	0xe3, 0xbc, 0xb4, 0x9a, 0xee, 0xd2, 0x30, 0x66, 0xe8, 0xee, 0x74, 0xd5, 0x10, 0x46, 0xca, 0x2f,
+	0xb0, 0x92, 0xc8, 0xca, 0x43, 0x94, 0x1f, 0xb1, 0x3f, 0x64, 0x1f, 0xf7, 0x6d, 0xdf, 0xd8, 0x95,
+	0xf7, 0x6d, 0x5f, 0x76, 0xe5, 0xfd, 0x03, 0xab, 0xba, 0xf4, 0xbd, 0x07, 0x83, 0x85, 0xf7, 0x89,
+	0xa9, 0xaa, 0x73, 0xbe, 0x73, 0xa9, 0x73, 0xeb, 0x02, 0x46, 0x6d, 0x83, 0xae, 0xba, 0x9e, 0x43,
+	0x1d, 0x94, 0xb3, 0x0d, 0x5a, 0x2d, 0xd2, 0x9e, 0x8b, 0x89, 0xd8, 0xa9, 0x8e, 0x1c, 0x1f, 0x89,
+	0x5f, 0xea, 0x4f, 0x0a, 0x14, 0x6b, 0x06, 0xad, 0x3b, 0x4e, 0xa7, 0xe1, 0x62, 0x13, 0xfd, 0x06,
+	0xf2, 0x27, 0x98, 0x1a, 0x15, 0xe5, 0x96, 0xb2, 0x5c, 0x5c, 0x9f, 0x58, 0x15, 0x5c, 0x07, 0x87,
+	0x6f, 0xb0, 0x49, 0xf7, 0x31, 0x35, 0x34, 0x7e, 0x8c, 0x9e, 0xc1, 0xf8, 0x31, 0xee, 0xe9, 0x8e,
+	0xa7, 0x1f, 0x19, 0xb6, 0xd5, 0xc1, 0x95, 0x41, 0x4e, 0x3f, 0xb9, 0x7a, 0x7c, 0xb4, 0x2a, 0xe1,
+	0x9e, 0xe3, 0xde, 0x13, 0x7e, 0xb6, 0x55, 0xfe, 0x70, 0xbe, 0x34, 0x76, 0x8a, 0xed, 0xb6, 0x89,
+	0xff, 0xa8, 0x1e, 0xe3, 0x9e, 0xaa, 0x15, 0x8f, 0x71, 0xef, 0xc0, 0x13, 0xc7, 0xe8, 0xcf, 0x30,
+	0x6c, 0x58, 0x96, 0x87, 0x09, 0xa9, 0xe4, 0x6e, 0xe5, 0x96, 0x8b, 0xeb, 0x25, 0x29, 0x75, 0x53,
+	0xec, 0x6e, 0x4d, 0x7e, 0x38, 0x5f, 0x2a, 0x4b, 0xfe, 0x13, 0xc3, 0xb6, 0x0c, 0xea, 0x78, 0x3d,
+	0xcd, 0x67, 0x42, 0x7f, 0x00, 0x70, 0x1d, 0x8f, 0xea, 0x9e, 0x61, 0xb7, 0x70, 0x25, 0xcf, 0x15,
+	0x41, 0x12, 0x62, 0x6f, 0xa3, 0xee, 0x78, 0x54, 0x63, 0x27, 0xda, 0xa8, 0xeb, 0xff, 0x54, 0x1f,
+	0xc1, 0x84, 0xd4, 0x52, 0xc3, 0x7f, 0xef, 0x62, 0x42, 0xf7, 0x49, 0x0b, 0xad, 0xc0, 0xb0, 0x27,
+	0x56, 0x15, 0x85, 0xeb, 0x51, 0x5e, 0x65, 0x3e, 0x8c, 0x78, 0x47, 0xf3, 0x09, 0xd4, 0x35, 0x18,
+	0xf7, 0xf7, 0xa9, 0x41, 0xbb, 0x04, 0x2d, 0x41, 0xd1, 0x75, 0x9c, 0x8e, 0xef, 0x0e, 0xe6, 0xbe,
+	0x82, 0x06, 0x6c, 0x4b, 0x58, 0xa9, 0xfe, 0x47, 0x81, 0x1b, 0x81, 0x4c, 0xe2, 0x3a, 0x36, 0xc1,
+	0xe8, 0x31, 0x80, 0xe1, 0xb6, 0x75, 0xc2, 0x21, 0x38, 0x4f, 0x69, 0xbd, 0xec, 0x1b, 0xef, 0xb6,
+	0x05, 0xf4, 0xd6, 0xd4, 0x87, 0xf3, 0xa5, 0x09, 0x69, 0x7e, 0x48, 0xae, 0x8d, 0x1a, 0x3e, 0x05,
+	0xba, 0x2b, 0x85, 0x4b, 0xa0, 0x41, 0xe9, 0x82, 0xa8, 0xf6, 0x82, 0x87, 0x2b, 0x24, 0x7e, 0xab,
+	0x8f, 0x01, 0x25, 0xf4, 0x61, 0x4e, 0x58, 0x83, 0x11, 0x4f, 0x2e, 0xa5, 0x17, 0x26, 0xa3, 0x38,
+	0x3e, 0xa9, 0x16, 0x50, 0xa9, 0xff, 0x80, 0x49, 0x79, 0xb8, 0x83, 0x3b, 0x98, 0x62, 0xe9, 0xd1,
+	0xcb, 0x46, 0xd2, 0x83, 0x2b, 0x44, 0x52, 0x2c, 0x6e, 0xd4, 0x1a, 0xcc, 0x64, 0x09, 0x66, 0x56,
+	0xdc, 0x4d, 0x5e, 0xe5, 0x6c, 0xd4, 0x88, 0x18, 0x79, 0x78, 0xa7, 0x3a, 0x4c, 0x25, 0x08, 0xae,
+	0xf7, 0x9a, 0x54, 0x0d, 0x2a, 0x99, 0x02, 0x98, 0xc6, 0xf7, 0x53, 0x7e, 0xaf, 0x66, 0xa9, 0x9c,
+	0xf2, 0x3e, 0x0d, 0x22, 0xf9, 0x2f, 0x98, 0xfe, 0x62, 0xae, 0x7f, 0x12, 0xdc, 0x79, 0x28, 0x55,
+	0x44, 0x4f, 0xc2, 0xef, 0xd3, 0x51, 0x23, 0x42, 0xda, 0xd0, 0xe9, 0x25, 0x18, 0x8b, 0x84, 0x28,
+	0x51, 0xbf, 0x56, 0x82, 0xb0, 0xe4, 0xe4, 0xd7, 0x9c, 0x29, 0xbf, 0x86, 0x3c, 0x71, 0xb1, 0x29,
+	0x2d, 0x4d, 0x27, 0x38, 0x3f, 0x45, 0x2b, 0x50, 0x90, 0x92, 0x72, 0x7d, 0x53, 0x49, 0x52, 0xa0,
+	0xdf, 0xc2, 0x10, 0xfb, 0x45, 0x64, 0xe1, 0x99, 0x48, 0x92, 0x12, 0x4d, 0x9c, 0xab, 0x7b, 0x41,
+	0x78, 0x45, 0x0c, 0x13, 0xc1, 0x9a, 0xbc, 0xfa, 0x99, 0x94, 0xd7, 0x52, 0xf7, 0xfe, 0x2e, 0xcf,
+	0xeb, 0xb6, 0xd6, 0xed, 0x60, 0x5e, 0xb7, 0x67, 0x60, 0xd8, 0xeb, 0x76, 0xb0, 0xde, 0xb6, 0xb8,
+	0x77, 0xf2, 0x5a, 0x81, 0x2d, 0x9f, 0x5a, 0x68, 0x03, 0x8a, 0xc4, 0x33, 0x75, 0xbf, 0xc2, 0x0e,
+	0x72, 0x01, 0x37, 0xa5, 0xeb, 0x9e, 0xd6, 0x65, 0x8d, 0x3d, 0x38, 0x7c, 0xa3, 0x01, 0xf1, 0x4c,
+	0xb9, 0x44, 0x53, 0x50, 0x60, 0x5c, 0xa4, 0xc5, 0x4b, 0xf2, 0xb8, 0x36, 0x44, 0x3c, 0xb3, 0xd1,
+	0x62, 0x60, 0x16, 0xa1, 0x01, 0x58, 0xfe, 0x02, 0x30, 0x8b, 0xd0, 0x08, 0x18, 0xe3, 0x22, 0xad,
+	0xca, 0x90, 0x00, 0xb3, 0x08, 0x6d, 0xb4, 0xd0, 0x03, 0x28, 0xb1, 0xed, 0x48, 0xed, 0x2e, 0x70,
+	0xbc, 0xac, 0xda, 0x3d, 0x66, 0x11, 0x1a, 0xac, 0x18, 0x27, 0xd3, 0x2e, 0xc2, 0x39, 0xdc, 0x9f,
+	0x93, 0x78, 0x66, 0xc8, 0xb9, 0x21, 0x38, 0x6d, 0x83, 0xea, 0x86, 0x49, 0xdb, 0x8e, 0x5d, 0x19,
+	0xe1, 0xb1, 0x54, 0xf2, 0x3d, 0xbe, 0xc9, 0x77, 0x39, 0x57, 0xb0, 0x62, 0x5c, 0x4c, 0xd3, 0x08,
+	0xd7, 0x68, 0x36, 0x97, 0x45, 0x68, 0xc8, 0x75, 0x1f, 0xc6, 0x7c, 0x59, 0xac, 0xec, 0x56, 0xe0,
+	0x82, 0xec, 0x02, 0x21, 0x8f, 0x6d, 0x32, 0x3e, 0x5f, 0x1a, 0xe7, 0x2b, 0x5e, 0xc4, 0x27, 0x24,
+	0xb2, 0x4d, 0xf5, 0x0b, 0x45, 0x36, 0xa5, 0x4e, 0xdb, 0xec, 0x5d, 0xa5, 0x99, 0xef, 0x65, 0xd7,
+	0x81, 0xe9, 0x40, 0x22, 0x03, 0xbc, 0x74, 0x3b, 0xbf, 0x0d, 0x43, 0x2c, 0xf4, 0xfc, 0x66, 0x1e,
+	0xe4, 0x98, 0x1f, 0xaa, 0x9a, 0x38, 0x56, 0xb7, 0xe1, 0x66, 0x00, 0x1e, 0x29, 0x21, 0x77, 0x92,
+	0x25, 0x24, 0x92, 0x7c, 0xbe, 0x61, 0x61, 0xf9, 0xf8, 0x93, 0x6c, 0xaa, 0xfc, 0x44, 0x24, 0xe4,
+	0x0a, 0x4c, 0x08, 0xd7, 0xb1, 0xbd, 0x78, 0x3f, 0xbe, 0x61, 0xfb, 0xb4, 0xb2, 0x8e, 0xfd, 0x4f,
+	0x91, 0xe5, 0x53, 0x28, 0x71, 0xcd, 0xc5, 0xe6, 0x21, 0x8c, 0x4b, 0x2d, 0x62, 0x8d, 0x79, 0x32,
+	0x61, 0x90, 0xe0, 0x1b, 0x73, 0x23, 0x2b, 0xf5, 0x99, 0x2c, 0xb0, 0x51, 0xbd, 0x98, 0x77, 0xd6,
+	0x53, 0xb5, 0x62, 0x3a, 0x8e, 0x96, 0x51, 0x2a, 0xfe, 0xad, 0xc0, 0x74, 0x70, 0xfe, 0x49, 0x3d,
+	0xfa, 0x5a, 0x03, 0x44, 0xd5, 0x60, 0x36, 0x5b, 0x1d, 0x66, 0xe0, 0xbd, 0xe4, 0xf5, 0xcf, 0xc5,
+	0xed, 0xeb, 0xd3, 0xbb, 0x0d, 0x39, 0x0b, 0x44, 0x49, 0xae, 0xb9, 0x7b, 0xbf, 0x84, 0x6a, 0x1f,
+	0x11, 0x4c, 0xef, 0x07, 0xa9, 0x8b, 0x99, 0xcf, 0x56, 0x3c, 0x75, 0x3d, 0x6f, 0x95, 0x48, 0x22,
+	0x5c, 0xbd, 0x89, 0x5f, 0xef, 0xdd, 0xec, 0x45, 0x42, 0x25, 0xde, 0xda, 0xd7, 0x93, 0x17, 0x53,
+	0x89, 0xdb, 0x97, 0xd5, 0xdc, 0xdf, 0x29, 0xbc, 0xbb, 0xf3, 0xcc, 0x67, 0x3d, 0x10, 0x2d, 0x43,
+	0xd9, 0xee, 0x9e, 0xe8, 0xd4, 0x74, 0x75, 0x82, 0x09, 0x69, 0x3b, 0xb6, 0xb8, 0x91, 0x71, 0xad,
+	0x64, 0x77, 0x4f, 0x9a, 0xa6, 0xdb, 0x90, 0xbb, 0x3e, 0x65, 0xd7, 0x8a, 0x50, 0x0e, 0x06, 0x94,
+	0x2f, 0xac, 0x90, 0xf2, 0x0e, 0x20, 0x46, 0xe9, 0xd0, 0x23, 0xec, 0x85, 0xb4, 0x39, 0x4e, 0xcb,
+	0x30, 0x0e, 0xd8, 0x81, 0x4f, 0xad, 0x3e, 0x84, 0x52, 0x2c, 0xf3, 0x22, 0x0d, 0x5c, 0x98, 0x35,
+	0x11, 0xab, 0x57, 0xd1, 0x06, 0xfe, 0x8d, 0x12, 0x49, 0xca, 0xcf, 0x31, 0x9c, 0xdc, 0x8e, 0x0d,
+	0x27, 0x59, 0x75, 0x4f, 0x8c, 0x27, 0x77, 0x12, 0xe3, 0x49, 0x76, 0x41, 0xf1, 0x07, 0x94, 0xdf,
+	0xc5, 0x07, 0x94, 0x9b, 0x69, 0xe2, 0xc0, 0xc2, 0x7a, 0x24, 0x8b, 0x12, 0x43, 0xca, 0xbd, 0x54,
+	0x7c, 0xcf, 0x66, 0xdc, 0x7f, 0x2a, 0xb8, 0xff, 0x25, 0x0a, 0xec, 0x4b, 0xd7, 0xde, 0x37, 0x5c,
+	0xb7, 0x6d, 0xb7, 0xae, 0xd2, 0x97, 0xea, 0xd9, 0xa1, 0x5d, 0x95, 0xa1, 0x1d, 0x82, 0x5e, 0x3a,
+	0xbc, 0x9f, 0x73, 0x03, 0x43, 0xc6, 0x4b, 0x8d, 0xae, 0x71, 0xe5, 0xc3, 0xe8, 0x7e, 0xc5, 0xf3,
+	0x36, 0x72, 0x2a, 0xfc, 0x3d, 0x0d, 0x85, 0x58, 0xd3, 0x91, 0x2b, 0xb4, 0x0c, 0x45, 0x72, 0x6a,
+	0xea, 0x27, 0x82, 0x58, 0xda, 0x32, 0xcc, 0x6c, 0x69, 0x9c, 0x9a, 0x1a, 0x90, 0x53, 0x53, 0xe2,
+	0xb0, 0x8a, 0x30, 0x95, 0x50, 0x53, 0x46, 0xda, 0xa3, 0x4b, 0x45, 0x5a, 0xe9, 0xfb, 0xf3, 0x25,
+	0xc8, 0x0e, 0xb1, 0xb5, 0x20, 0x74, 0x84, 0xfc, 0x4a, 0x86, 0x91, 0xb1, 0xf0, 0x91, 0x1f, 0x2d,
+	0x69, 0x5d, 0x3e, 0xf2, 0xd1, 0x92, 0x66, 0x88, 0x44, 0xc5, 0x7f, 0x95, 0xc4, 0x3d, 0x5c, 0xbd,
+	0xec, 0x5d, 0x7f, 0x6c, 0x34, 0x79, 0x7d, 0xcf, 0xd2, 0x49, 0x98, 0x9a, 0x08, 0x8f, 0xf9, 0xb4,
+	0xa5, 0x59, 0x25, 0xf0, 0xc7, 0x1c, 0xff, 0x9e, 0x89, 0xbb, 0x97, 0xa0, 0x59, 0x18, 0xf1, 0xce,
+	0xf4, 0xc3, 0x1e, 0xc5, 0x44, 0xce, 0xeb, 0xc3, 0xde, 0xd9, 0x16, 0x5b, 0xa2, 0x05, 0x00, 0xef,
+	0x4c, 0x77, 0x0d, 0xf3, 0x18, 0x53, 0x71, 0x4d, 0x79, 0x6d, 0xd4, 0x3b, 0xab, 0x8b, 0x0d, 0xc6,
+	0x49, 0x7d, 0xce, 0x9c, 0xe0, 0xa4, 0x21, 0x27, 0x0d, 0x39, 0xf3, 0x82, 0x93, 0x06, 0x9c, 0xcb,
+	0x50, 0xf6, 0x65, 0xea, 0x96, 0xe7, 0xb8, 0x2e, 0xb6, 0x2a, 0x43, 0x9c, 0xa8, 0x24, 0x65, 0xef,
+	0x88, 0x5d, 0x56, 0x52, 0x43, 0x15, 0x02, 0xda, 0x02, 0xa7, 0x2d, 0x07, 0xaa, 0xf8, 0xd4, 0xcb,
+	0x50, 0xa6, 0x49, 0xdc, 0x61, 0x81, 0x4b, 0x53, 0xb8, 0x34, 0x8d, 0x3b, 0x22, 0x70, 0x69, 0x06,
+	0x6e, 0xaa, 0x59, 0x8c, 0x5e, 0xba, 0x59, 0xc0, 0x15, 0x9a, 0x45, 0x31, 0xbb, 0x59, 0xa0, 0x0d,
+	0x98, 0x66, 0xd4, 0x6c, 0xe6, 0x3f, 0xc5, 0xba, 0xe9, 0xd8, 0x36, 0xe6, 0xa3, 0x3d, 0xa9, 0x8c,
+	0x71, 0x8e, 0x49, 0xbb, 0x7b, 0xb2, 0xc9, 0x0f, 0xb7, 0xc3, 0x33, 0xf5, 0x07, 0x25, 0x91, 0x32,
+	0x9f, 0xa3, 0x57, 0xac, 0xc4, 0x7a, 0x45, 0xbf, 0x5a, 0x25, 0xfa, 0xc5, 0x5a, 0xa2, 0x5f, 0x7c,
+	0x34, 0xe9, 0xd1, 0xef, 0xe3, 0x3d, 0x63, 0x26, 0x9b, 0x21, 0xe8, 0x1b, 0x7f, 0x85, 0xb9, 0x7e,
+	0x06, 0xb3, 0xdc, 0x79, 0x98, 0x2a, 0x13, 0x0b, 0x7d, 0x92, 0x27, 0x59, 0x29, 0x56, 0xfe, 0x09,
+	0xa3, 0xe1, 0x07, 0xd5, 0x04, 0x8c, 0xd7, 0x36, 0x9b, 0x7a, 0xf3, 0x75, 0x7d, 0x57, 0xaf, 0x1d,
+	0xd4, 0x76, 0xcb, 0x03, 0x68, 0x0e, 0x66, 0x82, 0xad, 0x46, 0x73, 0xb3, 0xf9, 0x74, 0x5b, 0xdf,
+	0xdc, 0xd9, 0xd1, 0x76, 0x1b, 0x8d, 0xb2, 0x82, 0xe6, 0xa1, 0x12, 0x1c, 0xee, 0xbc, 0xae, 0x6d,
+	0xee, 0x47, 0x4e, 0x07, 0xd1, 0xaf, 0x60, 0xa1, 0xdf, 0xa9, 0x5e, 0x3f, 0xd0, 0x9a, 0xe5, 0xdc,
+	0xfa, 0xdb, 0x02, 0xe4, 0x6a, 0x06, 0x45, 0x5b, 0xc1, 0x6b, 0xdf, 0xb6, 0x87, 0x0d, 0x8a, 0xd1,
+	0x74, 0xfc, 0x4d, 0xcc, 0xaf, 0x12, 0xd5, 0x99, 0xac, 0xb7, 0xb2, 0x7d, 0xd2, 0x52, 0x07, 0x22,
+	0x18, 0x2f, 0x5c, 0xeb, 0x13, 0x31, 0x6a, 0x01, 0x86, 0x98, 0x26, 0xd1, 0x7c, 0xdf, 0x67, 0x2d,
+	0x86, 0xb4, 0xd0, 0xff, 0x05, 0x49, 0xe0, 0xed, 0x02, 0x84, 0x8f, 0x0c, 0x68, 0x36, 0xfb, 0xad,
+	0x86, 0x21, 0x55, 0xfb, 0x3c, 0x48, 0x08, 0x98, 0x27, 0x91, 0x8f, 0x30, 0xe9, 0xa0, 0x4a, 0xf2,
+	0xab, 0x24, 0x80, 0x9a, 0xcd, 0xfe, 0x5e, 0x49, 0x23, 0x49, 0x37, 0x7d, 0x22, 0x52, 0x33, 0x82,
+	0x24, 0x9d, 0xb5, 0x78, 0xc1, 0x97, 0x04, 0xc3, 0x5b, 0xba, 0x68, 0x60, 0x17, 0xa8, 0xcf, 0xe5,
+	0x6b, 0x95, 0x1c, 0x78, 0xd0, 0x5c, 0xbf, 0x19, 0x98, 0xe1, 0xcd, 0xf7, 0x1d, 0x90, 0x7c, 0x15,
+	0xe3, 0xf3, 0x83, 0x74, 0xdd, 0x7c, 0x56, 0x0b, 0x4d, 0xdf, 0x69, 0x66, 0x47, 0x56, 0x07, 0xd0,
+	0x2b, 0x28, 0x27, 0xf3, 0x0a, 0x2d, 0x5d, 0xd4, 0xab, 0x18, 0xea, 0xad, 0x0b, 0xf3, 0x91, 0x03,
+	0x6f, 0x55, 0xbf, 0x7c, 0xbf, 0xa8, 0x7c, 0xf5, 0x7e, 0x51, 0xf9, 0xf6, 0xfd, 0xa2, 0xf2, 0xff,
+	0xef, 0x16, 0x07, 0xfe, 0x36, 0x72, 0x64, 0x74, 0xf8, 0x7f, 0x11, 0x0e, 0x0b, 0xfc, 0xcf, 0xdd,
+	0x9f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x65, 0x2b, 0x10, 0xa7, 0x75, 0x18, 0x00, 0x00,
 }

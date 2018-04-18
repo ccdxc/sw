@@ -22,13 +22,13 @@ service Vrf {
 
 // VrfSpec captures all the vrf level configuration
 message VrfSpec {
-  types.ObjectMeta                      meta                 = 1;    // common object meta
+  types.ObjectMeta               meta                = 1;    // common object meta
   // key_or_handle is vrf's unique identifier
-  kh.VrfKeyHandle                       key_or_handle        = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.SecurityProfileKeyHandle           security_key_handle  = 3 [(gogoproto.moretags) = "venice:ref"];    // security profile, if any
-  types.VrfType    					    vrf_type             = 4 [(gogoproto.moretags) = "venice:immutable"];
-  types.IPAddress     					mytep_ip             = 5;    // Local VTEP IP address for vxlan tunnels
-  types.IPPrefix      					gipo_prefix          = 6;    // GIPo prefix
+  kh.VrfKeyHandle                key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityProfileKeyHandle    security_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];    // security profile, if any
+  types.VrfType                  vrf_type            = 4 [(gogoproto.moretags) = "venice:immutable,venice:mandatory"];
+  types.IPAddress                mytep_ip            = 5;    // Local VTEP IP address for vxlan tunnels
+  types.IPPrefix                 gipo_prefix         = 6;    // GIPo prefix
 }
 
 // VrfRequestMsg is batched add or modify vrf request
@@ -127,5 +127,5 @@ message VrfGetResponse {
 
 // VrfGetResponseMsg is batched response to VrfGetRequestMsg
 message VrfGetResponseMsg {
-  repeated VrfGetResponse    response   = 1;    // batch get response
+  repeated VrfGetResponse    response   = 1;    // batched get response
 }

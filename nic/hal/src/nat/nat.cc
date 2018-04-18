@@ -106,6 +106,32 @@ nat_rule_get (NatRuleGetRequest& req, NatRuleGetResponseMsg *rsp)
 #endif
 
 hal_ret_t
+nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+nat_pool_update (NatPoolSpec& spec, NatPoolResponse *rsp)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+nat_pool_delete (NatPoolDeleteRequest& req,
+                 NatPoolDeleteResponse *rsp)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+nat_pool_get (NatPoolGetRequest& req,
+              NatPoolGetResponseMsg *rsp)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 nat_policy_create (NatPolicySpec& spec, NatPolicyResponse *rsp)
 {
     return HAL_RET_OK;

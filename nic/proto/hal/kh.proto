@@ -228,6 +228,20 @@ message GftExactMatchFlowEntryKeyHandle {
   }
 }
 
+// NAT pool key object
+message NatPoolKey {
+  VrfKeyHandle    vrf_id_or_handle    = 1;    // VRF's key or handle
+  uint64          pool_id             = 2;    // nat pool id
+}
+
+// NAT pool key/handle object
+message NatPoolKeyHandle {
+  oneof key_or_handle {
+    NatPoolKey    pool_key    = 1;    // NAT pool key
+    fixed64       pool_handle = 2;    // unique id allocated by HAL
+  }
+}
+
 // Key for the NAT policy
 message NATPolicyKey {
   uint64          nat_policy_id     = 1;    // NAT policy id

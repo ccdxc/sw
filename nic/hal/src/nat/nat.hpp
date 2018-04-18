@@ -17,6 +17,13 @@
 using sdk::lib::ht_ctxt_t;
 using acl::acl_ctx_t;
 
+using kh::NatPoolKeyHandle;
+using nat::NatPoolSpec;
+using nat::NatPoolResponse;
+using nat::NatPoolDeleteRequest;
+using nat::NatPoolDeleteResponse;
+using nat::NatPoolGetRequest;
+using nat::NatPoolGetResponseMsg;
 using kh::NatPolicyKeyHandle;
 using nat::NatPolicySpec;
 using nat::NatPolicyStatus;
@@ -67,17 +74,24 @@ typedef struct nat_rule_s {
     ht_ctxt_t        hal_hdl_ctx;
 } __PACK__ nat_rule_t;
 
+hal_ret_t nat_pool_create(NatPoolSpec& spec, NatPoolResponse *rsp);
+hal_ret_t nat_pool_update(NatPoolSpec& spec, NatPoolResponse *rsp);
+hal_ret_t nat_pool_delete(NatPoolDeleteRequest& req,
+                          NatPoolDeleteResponse *rsp);
+hal_ret_t nat_pool_get(NatPoolGetRequest& req,
+                       NatPoolGetResponseMsg *rsp);
+
 hal_ret_t nat_policy_create(NatPolicySpec& spec, NatPolicyResponse *rsp);
 hal_ret_t nat_policy_update(NatPolicySpec& spec, NatPolicyResponse *rsp);
 hal_ret_t nat_policy_delete(NatPolicyDeleteRequest& req,
-                            NatPolicyDeleteResponse *res);
+                            NatPolicyDeleteResponse *rsp);
 hal_ret_t nat_policy_get(NatPolicyGetRequest& req,
                          NatPolicyGetResponseMsg *res);
 
 hal_ret_t nat_vpn_mapping_create(NatVpnMappingSpec& spec,
                                  NatVpnMappingResponse *rsp);
 hal_ret_t nat_vpn_mapping_get(NatVpnMappingGetRequest& req,
-                              NatVpnMappingGetResponseMsg *rsp);
+                              NatVpnMappingGetResponseMsg *res);
 
 }    // namespace hal
 
