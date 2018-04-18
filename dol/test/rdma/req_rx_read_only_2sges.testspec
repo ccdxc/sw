@@ -61,7 +61,7 @@ packets:
          template    : ref://factory/packets/id=PAYLOAD
          headers     :
              payload:
-                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                 data    : pattern-random://0/255/1
     
     - packet:
          id          : READ_RESP_ONLY    # Receive packet 
@@ -105,7 +105,7 @@ buffers:
         id      : HOST_MEM1
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : 40
@@ -114,7 +114,7 @@ buffers:
         id      : HOST_MEM2
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 40
            segments:
                - size    : 24
@@ -146,10 +146,10 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=HOST_MEM1/address
                   len : ref://testcase/buffers/id=HOST_MEM1/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=HOST_MEM1
                 - va  : ref://testcase/buffers/id=HOST_MEM2/address
                   len : ref://testcase/buffers/id=HOST_MEM2/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=HOST_MEM2
 
     - descriptor:
         id      : EXP_SQ_WQE

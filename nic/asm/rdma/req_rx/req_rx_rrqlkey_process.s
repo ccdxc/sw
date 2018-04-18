@@ -69,10 +69,10 @@ pt_aligned_access:
 
 pt_unaligned_access:
      // pt_offset = transfer_offset % lkey_info_p->page_size
-     mincr        r5, K_LOG_PAGE_SIZE, r0
+     mincr        r5, d.log_page_size, r0
 
      // pt_seg_p = (u64 *)my_pt_base_addr + (transfer_offset / lkey_info_p->log_page_size)
-     srlv         r2, r2, r1
+     srlv         r2, r2, d.log_page_size
      add          r3, r3, r2, CAPRI_LOG_SIZEOF_U64
 
 set_arg:
