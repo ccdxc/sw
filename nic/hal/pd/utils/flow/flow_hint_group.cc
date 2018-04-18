@@ -11,7 +11,7 @@ using hal::pd::utils::FlowEntry;
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
 FlowHintGroup *
-FlowHintGroup::factory(uint32_t hint_bits, FlowSpineEntry *fs_entry, 
+FlowHintGroup::factory(uint32_t hint_bits, FlowSpineEntry *fs_entry,
                        uint32_t mtrack_id)
 {
     void            *mem = NULL;
@@ -30,7 +30,7 @@ FlowHintGroup::factory(uint32_t hint_bits, FlowSpineEntry *fs_entry,
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-FlowHintGroup::destroy(FlowHintGroup *fhg, uint32_t mtrack_id) 
+FlowHintGroup::destroy(FlowHintGroup *fhg, uint32_t mtrack_id)
 {
     if (fhg) {
         fhg->~FlowHintGroup();
@@ -46,7 +46,7 @@ FlowHintGroup::FlowHintGroup(uint32_t hint_bits, FlowSpineEntry *fs_entry)
     hint_bits_ = hint_bits;
     fs_entry_ = fs_entry;
 }
-           
+
 // ---------------------------------------------------------------------------
 // Destructor - Flow Hint Group
 // ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ FlowHintGroup::add_flow_entry(FlowEntry *f_entry)
 }
 
 // ---------------------------------------------------------------------------
-// Del Flow entry into the list 
+// Del Flow entry into the list
 // ---------------------------------------------------------------------------
 void
 FlowHintGroup::del_flow_entry(FlowEntry *f_entry)
@@ -108,13 +108,13 @@ FlowHintGroup::get_last_flow_entry()
 }
 
 // ---------------------------------------------------------------------------
-// Get Prev. Flow Entry 
+// Get Prev. Flow Entry
 // ---------------------------------------------------------------------------
 FlowEntry *
 FlowHintGroup::get_next_flow_entry(FlowEntry *fe)
 {
     std::list<FlowEntry*>::iterator itr;
-    for (itr = flow_entry_list_.begin(); 
+    for (itr = flow_entry_list_.begin();
             itr != flow_entry_list_.end(); itr++) {
         if (*itr == fe) {
             if (std::next(itr) == flow_entry_list_.end()) {
@@ -130,13 +130,13 @@ FlowHintGroup::get_next_flow_entry(FlowEntry *fe)
 }
 
 // ---------------------------------------------------------------------------
-// Get Next. Flow Entry 
+// Get Next. Flow Entry
 // ---------------------------------------------------------------------------
 FlowEntry *
 FlowHintGroup::get_prev_flow_entry(FlowEntry *fe)
 {
     std::list<FlowEntry*>::iterator itr;
-    for (itr = flow_entry_list_.begin(); 
+    for (itr = flow_entry_list_.begin();
             itr != flow_entry_list_.end(); itr++) {
         if (*itr == fe) {
             if (std::prev(itr) == flow_entry_list_.begin()) {
@@ -158,32 +158,60 @@ FlowHintGroup::check_flow_entry_exists(FlowEntry *fe)
 {
     std::list<FlowEntry*>::iterator itr;
     FlowEntry *tmp_fe = NULL;
-    for (itr = flow_entry_list_.begin(); 
+    for (itr = flow_entry_list_.begin();
             itr != flow_entry_list_.end(); itr++) {
         tmp_fe = (*itr);
 
-        if ((tmp_fe->get_key_len() == fe->get_key_len()) && 
-                (!memcmp(tmp_fe->get_key(), fe->get_key(), 
+        if ((tmp_fe->get_key_len() == fe->get_key_len()) &&
+                (!memcmp(tmp_fe->get_key(), fe->get_key(),
                         tmp_fe->get_key_len()))) {
             return TRUE;
-        } 
+        }
     }
-    for (itr = anchor_list_.begin(); 
+    for (itr = anchor_list_.begin();
             itr != anchor_list_.end(); itr++) {
         tmp_fe = (*itr);
 
-        HAL_TRACE_DEBUG("FlowHG:: key1: {} key2: {}, key_len: {}", 
+        HAL_TRACE_DEBUG("FlowHG:: key1: {} key2: {}, key_len: {}",
                 fe->get_key(), tmp_fe->get_key(), tmp_fe->get_key_len());
-        if ((tmp_fe->get_key_len() == fe->get_key_len()) && 
+        if ((tmp_fe->get_key_len() == fe->get_key_len()) &&
 
-                (!memcmp(fe->get_key(), 
-                         tmp_fe->get_key(), 
+                (!memcmp(fe->get_key(),
+                         tmp_fe->get_key(),
                          tmp_fe->get_key_len()))) {
             return TRUE;
-        } 
+        }
     }
     return FALSE;
 }
+
+
+void
+FlowHintGroup::inter_hg_str(FlowEntry *f_entry,
+                            char *inter_hg_buff, uint32_t inter_hg_size,
+                            char *entry_buff, uint32_t entry_size)
+{
+    char tmp_buff[32] = {0};
+    uint32_t index = 0;
+    std::list<FlowEntry*>::iterator itr;
+    FlowEntry *tmp_fe = NULL;
+    for (itr = flow_entry_list_.begin();
+            itr != flow_entry_list_.end(); itr++) {
+        tmp_fe = (*itr);
+        HAL_ASSERT(!tmp_fe->get_is_anchor_entry());
+        index = tmp_fe->get_fhct_index();
+        sprintf(tmp_buff, " %s:0x%x ", "COLL", index);
+        strcat(inter_hg_buff, tmp_buff);
+        if (tmp_fe == f_entry) {
+            tmp_fe->entry_to_str(entry_buff, entry_size);
+            HAL_TRACE_DEBUG("Inter HG str: {}", inter_hg_buff);
+            HAL_TRACE_DEBUG("Entry..: {}", entry_buff);
+            return;
+        }
+    }
+
+}
+
 
 // ---------------------------------------------------------------------------
 // Prints all flow entries
@@ -191,22 +219,22 @@ FlowHintGroup::check_flow_entry_exists(FlowEntry *fe)
 void
 FlowHintGroup::print_fhg()
 {
-    HAL_TRACE_DEBUG("  FHG:: hint_bits: {:#x}, num_anchors: {}, num_fes: {}", 
+    HAL_TRACE_DEBUG("  FHG:: hint_bits: {:#x}, num_anchors: {}, num_fes: {}",
             hint_bits_, anchor_list_.size(), flow_entry_list_.size());
     std::list<FlowEntry*>::iterator itr;
     FlowEntry *tmp_fe = NULL;
-    for (itr = anchor_list_.begin(); 
+    for (itr = anchor_list_.begin();
             itr != anchor_list_.end(); itr++) {
         tmp_fe = (*itr);
         HAL_TRACE_DEBUG("    FE: Anchors");
         tmp_fe->print_fe();
-    } 
-    for (itr = flow_entry_list_.begin(); 
+    }
+    for (itr = flow_entry_list_.begin();
             itr != flow_entry_list_.end(); itr++) {
         tmp_fe = (*itr);
         HAL_TRACE_DEBUG("    FE: Flow Entries");
         tmp_fe->print_fe();
-    } 
+    }
 }
 
 
@@ -223,7 +251,7 @@ FlowHintGroup::get_hint_bits()
 // Get the Flow Spine Entry
 // ---------------------------------------------------------------------------
 FlowSpineEntry *
-FlowHintGroup::get_fs_entry() 
+FlowHintGroup::get_fs_entry()
 {
     return fs_entry_;
 }
@@ -241,7 +269,7 @@ FlowHintGroup::set_fs_entry(FlowSpineEntry *fs_entry)
 // Get the Flow Spine Entry
 // ---------------------------------------------------------------------------
 FlowSpineEntry *
-FlowHintGroup::get_delayed_del_fs_entry() 
+FlowHintGroup::get_delayed_del_fs_entry()
 {
     return delayed_del_fs_entry_;
 }

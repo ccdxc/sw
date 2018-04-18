@@ -22,16 +22,16 @@ private:
 
     FlowSpineEntry *delayed_del_fs_entry_;  // Placeholder for delayed del
 
-    std::list<FlowEntry*> flow_entry_list_; // non-anchor flow entries.             
+    std::list<FlowEntry*> flow_entry_list_; // non-anchor flow entries.
     std::list<FlowEntry*> anchor_list_;     // anchors go only here
 
     FlowHintGroup(uint32_t hint_bits, FlowSpineEntry *fs_entry);
     ~FlowHintGroup();
 public:
-    static FlowHintGroup *factory(uint32_t hint_bits, 
+    static FlowHintGroup *factory(uint32_t hint_bits,
                                   FlowSpineEntry *fs_entry,
                                   uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_HINT_GROUP);
-    static void destroy(FlowHintGroup *fhg, 
+    static void destroy(FlowHintGroup *fhg,
                         uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_HINT_GROUP);
 
     void add_flow_entry(FlowEntry *f_entry);
@@ -47,6 +47,9 @@ public:
     uint32_t get_num_anchor_flow_entries();
     bool check_flow_entry_exists(FlowEntry *fe);
     void print_fhg();
+    void inter_hg_str(FlowEntry *f_entry,
+                      char *inter_hg_buff, uint32_t inter_hg_size,
+                      char *entry_buff, uint32_t entry_size);
 
     // Getters & Setters
     uint32_t get_hint_bits();
@@ -55,7 +58,7 @@ public:
 
     FlowSpineEntry *get_delayed_del_fs_entry();
     void set_delayed_del_fs_entry(FlowSpineEntry *fs_entry);
-    
+
 };
 
 }   // namespace utils

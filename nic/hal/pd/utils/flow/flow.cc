@@ -865,46 +865,52 @@ Flow::print_flow()
 }
 
 hal_ret_t
-Flow::entry_to_str(uint32_t gl_index, char *buff, uint32_t buff_size)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    FlowEntryMap::iterator  itr;
-    FlowEntry *f_entry = NULL;
-    uint32_t ft_bits = 0, hint_bits = 0;
-    char entry_buff[4096] = {0};
-    char inter_spine_buff[2048] = {0};
-    char inter_hg_buff[2048] = {0};
+ Flow::entry_to_str(uint32_t gl_index, char *buff, uint32_t buff_size)
+ {
+     hal_ret_t ret = HAL_RET_OK;
+     FlowEntryMap::iterator  itr;
+     FlowEntry *f_entry = NULL;
+     uint32_t ft_bits = 0, hint_bits = 0;
+     char entry_buff[4096] = {0};
+     char inter_spine_buff[2048] = {0};
+     char inter_hg_buff[2048] = {0};
 
 
 
-    itr = flow_entry_map_.find(gl_index);
-    if (itr != flow_entry_map_.end()) {
-        f_entry = itr->second;
-        ft_bits = fetch_flow_table_bits_(f_entry->get_hash_val());
-        hint_bits = f_entry->get_fh_group()->get_hint_bits();
+     itr = flow_entry_map_.find(gl_index);
+     if (itr != flow_entry_map_.end()) {
+         f_entry = itr->second;
+         ft_bits = fetch_flow_table_bits_(f_entry->get_hash_val());
+         hint_bits = f_entry->get_fh_group()->get_hint_bits();
 
-        if (f_entry->get_is_anchor_entry()) {
-            // Spine entry
-            sprintf(inter_spine_buff, "%s:0x%x ", "FT",
-                    f_entry->get_eff_spine_entry()->get_ft_entry()->get_ft_bits());
-            f_entry->get_eff_spine_entry()->entry_to_str(entry_buff, sizeof(entry_buff));
-        } else {
-            // Collision table entry
-            // - List of Spine entries and hint list entries
-            f_entry->get_eff_spine_entry()->get_ft_entry()->inter_spine_str(f_entry->get_eff_spine_entry(),
-                                                                            inter_spine_buff, sizeof(inter_spine_buff));
-        }
+         // Assumption: if its anchor its only the first spine entry
+         if (f_entry->get_is_anchor_entry()) {
+             // Spine entry
+             sprintf(inter_spine_buff, "Spine Entries(Anchor): %s:0x%x ", "FT",
+                     f_entry->get_eff_spine_entry()->get_ft_entry()->get_ft_bits());
+             f_entry->get_eff_spine_entry()->entry_to_str(entry_buff, sizeof(entry_buff));
+         } else {
+             // Collision table entry
+             // - List of Spine entries and hint list entries
+             strcat(inter_spine_buff, "Spine Entries: ");
+             f_entry->get_eff_spine_entry()->get_ft_entry()->inter_spine_str(f_entry->get_eff_spine_entry(),
+                                                                             inter_spine_buff, sizeof(inter_spine_buff));
 
-        sprintf(buff, "Hash Value: 0x%x Hash Bits: 0x%x, Hint Bits: 0x%x\n%s\n%s\n%s",
-                f_entry->get_hash_val(),
-                ft_bits, hint_bits,
-                inter_spine_buff, inter_hg_buff, entry_buff);
-    }
+             // - List of FHGs
+             strcat(inter_hg_buff, "Hint List: ");
+             f_entry->get_fh_group()->inter_hg_str(f_entry, inter_hg_buff, sizeof(inter_hg_buff),
+                                                   entry_buff, sizeof(entry_buff));
+         }
+
+         sprintf(buff, "Hash Value: 0x%x Hash Bits: 0x%x, Hint Bits: 0x%x\n%s\n%s\n%s",
+                 f_entry->get_hash_val(),
+                 ft_bits, hint_bits,
+                 inter_spine_buff, inter_hg_buff, entry_buff);
+     }
 
 
-    return ret;
-}
-
+     return ret;
+ }
 
 hal_ret_t
 Flow::iterate(flow_iterate_func_t func, const void *cb_data)

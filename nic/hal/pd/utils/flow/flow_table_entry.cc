@@ -380,14 +380,16 @@ void
 FlowTableEntry::inter_spine_str(FlowSpineEntry *eff_spine,
                                 char *buff, uint32_t buff_size)
 {
-    char tmp_buff[8] = {0};
+    char tmp_buff[32] = {0};
     uint32_t index = 0;
 
     FlowSpineEntry *sp_entry = spine_entry_;
     while (sp_entry) {
         index = sp_entry->get_is_in_ft() ? sp_entry->get_ft_entry()->get_ft_bits() : sp_entry->get_fhct_index();
-        sprintf(tmp_buff, " %s:%d ", sp_entry->get_is_in_ft() ? "FT" : "COLL", index);
+        sprintf(tmp_buff, " %s:0x%x ", sp_entry->get_is_in_ft() ? "FT" : "COLL", index);
+        strcat(buff, tmp_buff);
         if (sp_entry == eff_spine) {
+            HAL_TRACE_DEBUG("Inter spine str: {}", buff);
             return;
         }
         sp_entry = sp_entry->get_next();
