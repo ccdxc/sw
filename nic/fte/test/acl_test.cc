@@ -137,7 +137,7 @@ protected:
 
 
 TEST_F(acl_test, acl_create) {
-    const acl_ctx_t *ctx = lib_acl_create("test.rules", &acl_cfg);
+    const acl_ctx_t *ctx = acl_create("test.rules", &acl_cfg);
 
     acl_commit(ctx);
 
@@ -146,7 +146,7 @@ TEST_F(acl_test, acl_create) {
     ctx = acl_get("test.rules");
     EXPECT_NE(ctx, nullptr);
 
-    lib_acl_delete(ctx);
+    acl_delete(ctx);
 
     ctx = acl_get("test.rules");
     EXPECT_EQ(ctx, nullptr);
@@ -193,7 +193,7 @@ TEST_F(acl_test, acl_create) {
     CHECK_INVALID_RULE(ctx, fld, invalid) 
 
 TEST_F(acl_test, acl_add_rule) {
-    const acl_ctx_t *ctx = lib_acl_create("test.rules", &acl_cfg);
+    const acl_ctx_t *ctx = acl_create("test.rules", &acl_cfg);
 
     ADD_RULE(ctx, 0, "exact8", FLD_EXACT8, u8, 0xA0, 0xF0);
     ADD_RULE(ctx, 0, "exact16", FLD_EXACT16, u16, 0xAB00, 0xFF00);
@@ -239,11 +239,11 @@ TEST_F(acl_test, acl_add_rule) {
                (vector<uint32_t>{0xABCD0000, 0xABCD9999, 0xABCDFFFF}),
                (vector<uint32_t>{0xABC00000, 0x0BCD0000}));
 
-    lib_acl_delete(ctx);
+    acl_delete(ctx);
 }
 
 TEST_F(acl_test, acl_add_muti_field_rule) {
-    const acl_ctx_t *ctx = lib_acl_create("test.rules", &acl_cfg);
+    const acl_ctx_t *ctx = acl_create("test.rules", &acl_cfg);
 
     test_rule_t *rule;
 
@@ -284,11 +284,11 @@ TEST_F(acl_test, acl_add_muti_field_rule) {
     acl_classify(ctx, (const uint8_t*)&key, (const acl_rule_t **)&rule, 0x01);
     EXPECT_EQ(rule, nullptr);
 
-    lib_acl_delete(ctx);
+    acl_delete(ctx);
 }
 
 TEST_F(acl_test, acl_rule_priority) {
-    const acl_ctx_t *ctx = lib_acl_create("test.rules", &acl_cfg);
+    const acl_ctx_t *ctx = acl_create("test.rules", &acl_cfg);
 
     ADD_RULE(ctx, 0, "rule0", FLD_PREFIX32, u32, 0xAABBCCDD, 32);
     ADD_RULE(ctx, 1, "rule1", FLD_PREFIX32, u32, 0xAABBCCDD, 24);
@@ -314,11 +314,11 @@ TEST_F(acl_test, acl_rule_priority) {
     CHECK_VALID_RULE(ctx, "rule8", exact16, (vector<uint16_t>{0xAAFF}));
     CHECK_VALID_RULE(ctx, "rule9", exact16, (vector<uint16_t>{0xFFBB}));
 
-    lib_acl_delete(ctx);
+    acl_delete(ctx);
 }
 
 TEST_F(acl_test, acl_rule_update) {
-    const acl_ctx_t *ctx = lib_acl_create("test.rules", &acl_cfg);
+    const acl_ctx_t *ctx = acl_create("test.rules", &acl_cfg);
 
     ADD_RULE(ctx, 0, "rule0", FLD_PREFIX32, u32, 0xAABBCCDD, 32);
     ADD_RULE(ctx, 1, "rule1", FLD_PREFIX32, u32, 0xAABBCCDD, 24);
@@ -354,7 +354,7 @@ TEST_F(acl_test, acl_rule_update) {
     CHECK_RULE(ctx, "rule8", exact16, (vector<uint16_t>{0xAACC}), (vector<uint16_t>{0xAAFF}));
     CHECK_VALID_RULE(ctx, "rule9", exact16, (vector<uint16_t>{0xFFBB}));
 
-    lib_acl_delete(ctx);
+    acl_delete(ctx);
 
     // check old ref is still valid and has old rules
     CHECK_VALID_RULE(old, "rule0", prefix32, (vector<uint32_t>{0xAABBCCDD}));
@@ -486,7 +486,7 @@ TEST_F(acl_test, rule_random)
     gen_rules(10 * 1000, 100, rules, keys);
 
     // insert all entries
-    ctx = lib_acl_create("flow.rules", &acl_flow_cfg);
+    ctx = acl_create("flow.rules", &acl_flow_cfg);
     for (const auto rule: rules) {
         EXPECT_EQ(acl_add_rule(&ctx, acl_rule_clone((const acl_rule_t *)rule)), HAL_RET_OK);
     }
@@ -599,7 +599,7 @@ TEST_F(acl_test, rule_random)
     }
 
     // free
-    lib_acl_delete(ctx);
+    acl_delete(ctx);
 
     for (const auto rule: rules) {
         acl_rule_deref((const acl_rule_t *)rule);
@@ -619,7 +619,7 @@ TEST_F(acl_test, rule_benchmark)
     gen_rules(num_rules, 100, rules, keys);
 
     // insert all entries
-    ctx = lib_acl_create("flow.rules", &acl_flow_cfg);
+    ctx = acl_create("flow.rules", &acl_flow_cfg);
     timeit("insert", rules.size(), [&]() {
             for (const auto rule: rules) {
                 EXPECT_EQ(acl_add_rule(&ctx, acl_rule_clone((const acl_rule_t *)rule)), HAL_RET_OK);
@@ -666,7 +666,7 @@ TEST_F(acl_test, rule_benchmark)
 
     // free
     timeit("deref", 0, [&]() {
-            lib_acl_delete(ctx);
+            acl_delete(ctx);
         });
 
     for (const auto rule: rules) {

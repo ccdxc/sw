@@ -37,7 +37,7 @@ static ht *g_ctx_ht = ht::factory(16, ctx_get_key_func_,
 // Creates a new ACL context.
 //------------------------------------------------------------------------
 const acl_ctx_t *
-lib_acl_create(const char *name, const acl_config_t *cfg)
+acl_create(const char *name, const acl_config_t *cfg)
 {
     return acl_ctx_t::create(name, cfg);
 }
@@ -74,7 +74,7 @@ acl_deref(const acl_ctx_t *ctx)
 // Remove the ctx from the global list and release the reference.
 //------------------------------------------------------------------------
 void
-lib_acl_delete(const acl_ctx_t *ctx)
+acl_delete(const acl_ctx_t *ctx)
 {
     // remove from global list and deref
     SDK_ASSERT(SDK_SPINLOCK_LOCK(&g_ctx_lock) == 0);

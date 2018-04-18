@@ -1232,7 +1232,7 @@ add_nwsec_rule_to_ruledb(nwsec_policy_t *policy, nwsec_rule_t *rule)
 hal_ret_t
 security_policy_cleanup_ruledb(nwsec_policy_t *policy)
 {
-    lib_acl_delete(policy->acl_ctx);
+    acl::acl_delete(policy->acl_ctx);
     policy->acl_ctx = NULL;
     return HAL_RET_OK;
 }
@@ -1355,7 +1355,7 @@ nwsec_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (!policy->acl_ctx) {
         const char *ctx_name = nwsec_acl_ctx_name(policy->key.vrf_id);
         HAL_TRACE_DEBUG("Creating acl ctx {}", ctx_name);
-        policy->acl_ctx = lib_acl_create(ctx_name, &ip_acl_config_glbl);
+        policy->acl_ctx = acl::acl_create(ctx_name, &ip_acl_config_glbl);
     }
 
     HAL_TRACE_DEBUG("policy handle {}", hal_handle);
@@ -1605,7 +1605,7 @@ nwsec_policy_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (!policy_clone->acl_ctx) {
         const char *ctx_name = nwsec_acl_ctx_name(policy_clone->key.vrf_id);
         HAL_TRACE_DEBUG("Creating acl ctx {}", ctx_name);
-        policy_clone->acl_ctx = lib_acl_create(ctx_name, &ip_acl_config_glbl);
+        policy_clone->acl_ctx = acl::acl_create(ctx_name, &ip_acl_config_glbl);
     }
 
     // Extract the policy
