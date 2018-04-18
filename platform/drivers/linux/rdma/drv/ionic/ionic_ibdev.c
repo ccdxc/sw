@@ -922,7 +922,8 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 	};
 	size_t pagedir_size;
 	struct scatterlist *sg;
-	u64 *pagedir, pagedma, pg_dma;
+	u64 *pagedir;
+	dma_addr_t pagedma;
 	int rc, sg_i, pg_i, pg_end, npages;
 
 	if (mr->umem) {
@@ -943,12 +944,12 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 		pg_i = 0;
 		pg_end = 0;
 		for_each_sg(mr->umem->sg_head.sgl, sg, mr->umem->nmap, sg_i) {
-			pg_dma = sg_dma_address(sg);
+			pagedma = sg_dma_address(sg);
 			pg_end += sg_dma_len(sg) >> mr->umem->page_shift;
 			for (; pg_i < pg_end; ++pg_i) {
 				/* XXX endian? */
-				pagedir[pg_i] = BIT_ULL(63) | pg_dma;
-				pg_dma += BIT_ULL(mr->umem->page_shift);
+				pagedir[pg_i] = BIT_ULL(63) | pagedma;
+				pagedma += BIT_ULL(mr->umem->page_shift);
 			}
 		}
 	} else {
@@ -1161,7 +1162,8 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	};
 	size_t pagedir_size;
 	struct scatterlist *sg;
-	u64 *pagedir, pagedma, pg_dma;
+	u64 *pagedir;
+	dma_addr_t pagedma;
 	int rc, sg_i, pg_i, pg_end, npages;
 
 	if (cq->umem) {
@@ -1182,12 +1184,12 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		pg_i = 0;
 		pg_end = 0;
 		for_each_sg(cq->umem->sg_head.sgl, sg, cq->umem->nmap, sg_i) {
-			pg_dma = sg_dma_address(sg);
+			pagedma = sg_dma_address(sg);
 			pg_end += sg_dma_len(sg) >> cq->umem->page_shift;
 			for (; pg_i < pg_end; ++pg_i) {
 				/* XXX endian? */
-				pagedir[pg_i] = BIT_ULL(63) | pg_dma;
-				pg_dma += BIT_ULL(cq->umem->page_shift);
+				pagedir[pg_i] = BIT_ULL(63) | pagedma;
+				pagedma += BIT_ULL(cq->umem->page_shift);
 			}
 		}
 		/* XXX does it really need lkey and va? */
