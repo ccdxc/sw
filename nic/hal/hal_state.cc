@@ -291,10 +291,30 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_GROUP] != NULL), false);
 
+    slabs_[HAL_SLAB_V4_RANGE_LIST_ENTRY] =
+        slab::factory("v4-range-lentry", HAL_SLAB_V4_RANGE_LIST_ENTRY,
+                      sizeof(hal::addr_range_list_elem_t) +
+                          sizeof(ipv4_range_t),
+                      8, true, true, true, mmgr);
+    HAL_ASSERT_RETURN(slabs_[HAL_SLAB_V4_RANGE_LIST_ENTRY] != NULL, false);
+
+    slabs_[HAL_SLAB_V6_RANGE_LIST_ENTRY] =
+        slab::factory("v6-range-lentry", HAL_SLAB_V6_RANGE_LIST_ENTRY,
+                      sizeof(hal::addr_range_list_elem_t) +
+                          sizeof(ipv6_range_t),
+                      8, true, true, true, mmgr);
+    HAL_ASSERT_RETURN(slabs_[HAL_SLAB_V6_RANGE_LIST_ENTRY] != NULL, false);
+
+    slabs_[HAL_SLAB_NAT_POOL] =
+        slab::factory("natpool", HAL_SLAB_NAT_POOL,
+                      sizeof(hal::nat_pool_t), 8,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_POOL] != NULL), false);
+
     slabs_[HAL_SLAB_NAT_RULE] =
         slab::factory("nat_rule", HAL_SLAB_NAT_RULE,
                       sizeof(hal::nat_rule_t), 64,
-                      true, true, true);
+                      true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_RULE] != NULL), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
@@ -789,6 +809,15 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   true, mmgr);
     HAL_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
 
+    // initialize NAT related data structures
+    HAL_HT_CREATE("natpool", nat_pool_id_ht_,
+                  HAL_MAX_NAT_POOLS >> 1,
+                  hal::nat_pool_id_get_key_func,
+                  hal::nat_pool_id_compute_hash_func,
+                  hal::nat_pool_id_compare_key_func,
+                  true, mmgr);
+    HAL_ASSERT_RETURN((nat_pool_id_ht_ != NULL), false);
+
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         HAL_HT_CREATE("gft-profiles",
                       gft_exact_match_profile_id_ht_,
@@ -1002,9 +1031,11 @@ hal_oper_db::hal_oper_db()
     rawccb_id_ht_ = NULL;
     proxyrcb_id_ht_ = NULL;
     proxyccb_id_ht_ = NULL;
+    crypto_cert_store_id_ht_ = NULL;
     gft_exact_match_profile_id_ht_ = NULL;
     gft_hdr_transposition_profile_id_ht_ = NULL;
     gft_exact_match_flow_entry_id_ht_ = NULL;
+    nat_pool_id_ht_ = NULL;
 
     forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
     infra_vrf_handle_ = HAL_HANDLE_INVALID;
@@ -1050,6 +1081,7 @@ hal_oper_db::~hal_oper_db()
     nwsec_policy_cfg_ht_ ? ht::destroy(nwsec_policy_cfg_ht_) : HAL_NOP;
     nwsec_policy_ht_ ? ht::destroy(nwsec_policy_ht_) : HAL_NOP;
     nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
+    nat_pool_id_ht_ ? ht::destroy(nat_pool_id_ht_) : HAL_NOP;
     gft_exact_match_profile_id_ht_ ? ht::destroy(gft_exact_match_profile_id_ht_, mmgr_) : HAL_NOP;
     gft_hdr_transposition_profile_id_ht_ ? ht::destroy(gft_hdr_transposition_profile_id_ht_, mmgr_) : HAL_NOP;
     gft_exact_match_flow_entry_id_ht_ ? ht::destroy(gft_exact_match_flow_entry_id_ht_, mmgr_) : HAL_NOP;

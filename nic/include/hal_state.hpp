@@ -139,6 +139,9 @@ public:
     slab *gft_exact_match_flow_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY]); }
     slab *proxy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY]); }
     slab *proxy_flow_info_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY_FLOW_INFO]); }
+    slab *v4_range_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V4_RANGE_LIST_ENTRY]); }
+    slab *v6_range_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V6_RANGE_LIST_ENTRY]); }
+    slab *nat_pool_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_POOL]); }
     slab *nat_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_RULE]); }
 
 private:
@@ -208,7 +211,7 @@ public:
     ht *gft_exact_match_profile_id_ht(void) const { return gft_exact_match_profile_id_ht_; }
     ht *gft_hdr_transposition_profile_id_ht(void) const { return gft_hdr_transposition_profile_id_ht_; }
     ht *gft_exact_match_flow_entry_id_ht(void) const { return gft_exact_match_flow_entry_id_ht_; }
-    ht *nat_rule_id_ht(void) const { return nat_rule_id_ht_; }
+    ht *nat_pool_id_ht(void) const { return nat_pool_id_ht_; }
 
     void set_infra_vrf_handle(hal_handle_t infra_vrf_hdl) { infra_vrf_handle_ = infra_vrf_hdl; }
     hal_handle_t infra_vrf_handle(void) const { return infra_vrf_handle_; }
@@ -264,7 +267,7 @@ private:
     ht    *gft_hdr_transposition_profile_id_ht_;
     ht    *gft_exact_match_flow_entry_id_ht_;
     ht    *crypto_cert_store_id_ht_;
-    ht    *nat_rule_id_ht_;
+    ht    *nat_pool_id_ht_;
     bitmap                  *qos_cmap_pcp_bmp_;
     bitmap                  *qos_cmap_dscp_bmp_;
 
@@ -459,7 +462,7 @@ public:
 
     // get APIs for NAT state
     slab *nat_rule_slab(void) const { return cfg_db_->nat_rule_slab(); }
-    ht *nat_rule_id_ht(void) const { return oper_db_->nat_rule_id_ht(); }
+    ht *nat_pool_id_ht(void) const { return oper_db_->nat_pool_id_ht(); }
 
     // forwarding mode APIs
     void set_forwarding_mode(hal_forwarding_mode_t mode) {

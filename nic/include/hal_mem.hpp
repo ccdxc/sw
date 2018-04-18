@@ -90,8 +90,11 @@ typedef enum hal_slab_e {
     HAL_SLAB_RTSP_ALG_INFO                   = 76,
     HAL_SLAB_CRYPTO_CERT_STORE               = 77,
     HAL_SLAB_TCP_REASSEMBLY_BUFF             = 78,
-    HAL_SLAB_NAT_RULE                        = 79,
-    HAL_SLAB_PI_MAX                          = 80,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_V4_RANGE_LIST_ENTRY             = 79,
+    HAL_SLAB_V6_RANGE_LIST_ENTRY             = 80,
+    HAL_SLAB_NAT_POOL                        = 81,
+    HAL_SLAB_NAT_RULE                        = 82,
+    HAL_SLAB_PI_MAX                          = 83,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,

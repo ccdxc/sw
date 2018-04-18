@@ -53,7 +53,7 @@ namespace hal {
 #define EP_FLAGS_LEARN_SRC_RARP                      0x10
 #define EP_FLAGS_LEARN_SRC_CFG                       0x20
 
-#define MAX_SG_PER_ARRAY                             0x10 //16 
+#define MAX_SG_PER_ARRAY                             0x10 //16
 
 typedef hal_ret_t (*dhcp_status_func_t)(vrf_id_t vrf_id, ip_addr_t *ip_addr,
         DhcpStatus *dhcp_status);
@@ -103,7 +103,7 @@ typedef struct ep_s {
     hal_handle_t         if_handle;            // interface endpoint is attached to
     hal_handle_t         gre_if_handle;        // Set if there is a GRE tunnel destined to this EP.
     hal_handle_t         pinned_if_handle;     // interface endpoint is attached to
-    hal_handle_t         vrf_handle;            // vrf handle 
+    hal_handle_t         vrf_handle;           // vrf handle
     vlan_id_t            useg_vlan;            // micro-seg vlan allocated for this endpoint
     uint64_t             ep_flags;             // endpoint flags
     ep_sginfo_t          sgs;                  // Holds the security group ids
@@ -154,20 +154,20 @@ typedef struct ep_update_app_ctxt_s {
 
     dllist_ctxt_t           *add_iplist;
     dllist_ctxt_t           *del_iplist;
-    hal_handle_t            new_if_handle;    
+    hal_handle_t            new_if_handle;
     EndpointVMotionState    new_vmotion_state;
 } __PACK__ ep_update_app_ctxt_t;
 
 const char *ep_l2_key_to_str(ep_t *ep);
 
-static inline void 
+static inline void
 ep_lock (ep_t *ep, const char *fname,
           int lineno, const char *fxname)
 {
     HAL_SPINLOCK_LOCK(&ep->slock);
 }
 
-static inline void 
+static inline void
 ep_unlock (ep_t *ep, const char *fname,
             int lineno, const char *fxname)
 {
@@ -185,7 +185,7 @@ extern bool ep_compare_l3_key_func(void *key1, void *key2);
 mac_addr_t *ep_get_mac_addr(ep_t *pi_ep);
 mac_addr_t *ep_get_rmac(ep_t *pi_ep, l2seg_t *l2seg);
 hal_ret_t endpoint_update_pi_with_iplist(ep_t *ep, dllist_ctxt_t *add_iplist,
-                                         dllist_ctxt_t *del_iplist);  
+                                         dllist_ctxt_t *del_iplist);
 hal_ret_t endpoint_free_ip_list(dllist_ctxt_t *iplist);
 hal_ret_t endpoint_cleanup_ip_list(dllist_ctxt_t **list);
 hal_ret_t endpoint_update_ip_add(ep_t *ep, ip_addr_t *ip,
@@ -210,7 +210,7 @@ const char *ep_l2_key_to_str(ep_t *ep);
 
 hal_ret_t endpoint_create(EndpointSpec& spec, EndpointResponse *rsp);
 hal_ret_t endpoint_update(EndpointUpdateRequest& spec, EndpointResponse *rsp);
-hal_ret_t endpoint_delete(EndpointDeleteRequest& spec, 
+hal_ret_t endpoint_delete(EndpointDeleteRequest& spec,
                           EndpointDeleteResponse *rsp);
 hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
                        endpoint::EndpointGetResponseMsg *rsp);

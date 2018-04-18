@@ -52,7 +52,7 @@
 #define IP_PROTO_VRRP                  112
 
 //------------------------------------------------------------------------------
-// TCP Flags 
+// TCP Flags
 //------------------------------------------------------------------------------
 #define TCP_FLAG_CWR                   0x80
 #define TCP_FLAG_ECE                   0x40
@@ -86,7 +86,35 @@ typedef union ipvx_addr_u {
 } __PACK__ ipvx_addr_t;
 
 //------------------------------------------------------------------------------
-// IP address range
+// IPv4 address range definition
+//------------------------------------------------------------------------------
+typedef struct ipv4_range_s {
+    ipv4_addr_t    ip_lo;
+    ipv4_addr_t    ip_hi;
+} __PACK__ ipv4_range_t;
+
+//------------------------------------------------------------------------------
+// IPv6 address range definition
+//------------------------------------------------------------------------------
+typedef struct ipv6_range_s {
+    ipv6_addr_t    ip_lo;
+    ipv6_addr_t    ip_hi;
+} __PACK__ ipv6_range_t;
+
+//------------------------------------------------------------------------------
+// generic IP address range type to be used in memory optimized implementation
+//------------------------------------------------------------------------------
+typedef struct ip_range_s {
+    uint8_t            af;
+    union {
+        ipv4_range_t    v4_range;
+        ipv4_range_t    v6_range;
+    } vx_range[0];
+} __PACK__ ip_range_t;
+
+//------------------------------------------------------------------------------
+// generic IP address range type that can be used where memory usage need not be
+// optimized
 //------------------------------------------------------------------------------
 typedef struct ipvx_range_s {
     uint8_t            af;
@@ -150,7 +178,7 @@ static inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip)
     return os << ipv6addr2str(ip);
 }
 
-static inline bool 
+static inline bool
 ip_addr_is_equal (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
 {
     if (!ip_addr1 || !ip_addr2) {
@@ -167,7 +195,7 @@ ip_addr_is_zero (ip_addr_t *addr)
         (addr->addr.v6_addr.addr64[0] & addr->addr.v6_addr.addr64[1]) == 0;
 }
 
-static inline bool 
+static inline bool
 ip_prefix_is_equal (ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2)
 {
     if (!ip_prefix1 || !ip_prefix2) {
@@ -178,7 +206,7 @@ ip_prefix_is_equal (ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2)
 }
 
 
-static inline ipv4_addr_t 
+static inline ipv4_addr_t
 ipv4_prefix_len_to_mask (uint8_t len)
 {
     if (len > 32) {
@@ -187,7 +215,7 @@ ipv4_prefix_len_to_mask (uint8_t len)
     return len == 0 ? 0: ~((1<<(32-len))-1);
 }
 
-static inline int 
+static inline int
 ipv4_mask_to_prefix_len (ipv4_addr_t v4_addr)
 {
     ipv4_addr_t iv4_addr = ~v4_addr;
@@ -215,7 +243,7 @@ ipv6_prefix_len_to_mask (ipv6_addr_t *v6_addr, uint8_t len)
         return;
     }
     // Using addr32/addr64 is tricky here because the v6 addresses
-    // are stored in big-endian format. So for example, for prefix len of 20 
+    // are stored in big-endian format. So for example, for prefix len of 20
     // the mask should be 0xff 0xff 0xf0 0x00 ...
     // If read it as addr32 it translates to 0x00f0ffff . Forming this is tricky
     while (len) {
@@ -224,7 +252,7 @@ ipv6_prefix_len_to_mask (ipv6_addr_t *v6_addr, uint8_t len)
     }
 }
 
-static inline int 
+static inline int
 ipv6_mask_to_prefix_len (ipv6_addr_t *v6_addr)
 {
     int prefix_len = 0;
