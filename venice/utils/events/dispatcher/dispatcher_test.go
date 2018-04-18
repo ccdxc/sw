@@ -60,11 +60,6 @@ func TestEventsDispatcher(t *testing.T) {
 	mockWriter.Start(writerEventCh)
 	defer mockWriter.Stop()
 
-	// let multiple workers start sending events
-	wg := new(sync.WaitGroup)
-	workers := runtime.NumCPU()
-	wg.Add(workers)
-
 	// copy event and set type
 	event := *dummyEvt
 	NICDisconnectedEvt := *(&event)
@@ -73,83 +68,57 @@ func TestEventsDispatcher(t *testing.T) {
 	NICConnectedEvt := *(&event)
 	NICConnectedEvt.EventAttributes.Type = "TestNICConnected"
 
-	// run the workers
-	for w := 0; w < workers; w++ {
-		go func() {
-			for i := 0; i < 10; i++ {
-				AssertOk(t, dispatcher.Action(NICDisconnectedEvt), "failed to send event")
-				AssertOk(t, dispatcher.Action(NICConnectedEvt), "failed to send event")
-			}
-
-			wg.Done()
-		}()
+	// run multiple iterations
+	iterations := 10
+	for i := 0; i < iterations; i++ {
+		for i := 0; i < 10; i++ {
+			AssertOk(t, dispatcher.Action(NICDisconnectedEvt), "failed to send event")
+			AssertOk(t, dispatcher.Action(NICConnectedEvt), "failed to send event")
+		}
 
 		// to make sure the events reach the writers before next iteration
 		time.Sleep(sendInterval * 2)
 	}
 
-	wg.Wait()
-
 	// ensure the writer received all the events that're sent
-	expectedUniqueEvents := workers
-	expectedRepeatedEvents := workers * 10
-	totalEvents := expectedUniqueEvents + expectedRepeatedEvents
+	totalEvents := 10 * 10 // 10 iterations sent 10 events each
 
 	AssertEventually(t, func() (bool, interface{}) {
 		uniqueTestNICDisconnectedEvents := mockWriter.GetUniqueEvents("TestNICDisconnected")
-		if uniqueTestNICDisconnectedEvents >= expectedUniqueEvents {
-			return true, nil
-		}
-
-		fmt.Printf("expected: %d events, got: %d\n", expectedUniqueEvents, uniqueTestNICDisconnectedEvents)
-		return false, nil
-	}, "unexpected number of unique events", string("5ms"), string("5s"))
-
-	AssertEventually(t, func() (bool, interface{}) {
-		uniqueTestNICConnectedEvents := mockWriter.GetUniqueEvents("TestNICConnected")
-		if uniqueTestNICConnectedEvents >= expectedUniqueEvents {
-			return true, nil
-		}
-
-		fmt.Printf("expected: %d events, got: %d\n", expectedUniqueEvents, uniqueTestNICConnectedEvents)
-		return false, nil
-	}, "unexpected number of unique events", string("5ms"), string("5s"))
-
-	AssertEventually(t, func() (bool, interface{}) {
 		repeatedTestNICDisconnectedEvents := mockWriter.GetRepeatedEvents("TestNICDisconnected")
-		totalTestNICDisconnectedEvents := mockWriter.GetTotalEventsBySourceAndEvent(dummyEvtSource, "TestNICDisconnected")
-		if repeatedTestNICDisconnectedEvents >= expectedRepeatedEvents ||
+		totalTestNICDisconnectedEvents := uniqueTestNICDisconnectedEvents + repeatedTestNICDisconnectedEvents
+		if uniqueTestNICDisconnectedEvents > 0 &&
+			repeatedTestNICDisconnectedEvents > 0 &&
 			totalTestNICDisconnectedEvents == totalEvents {
 			return true, nil
 		}
 
-		fmt.Printf("expected: %d events, got: %d, total events received: %d\n", expectedRepeatedEvents, repeatedTestNICDisconnectedEvents,
-			totalTestNICDisconnectedEvents)
-		return false, nil
+		return false, fmt.Sprintf("expected: %d events, got: %d (unique %d + repeated %d)\n", totalEvents, totalTestNICDisconnectedEvents,
+			uniqueTestNICDisconnectedEvents, repeatedTestNICDisconnectedEvents)
 	}, "unexpected number of repeated events", string("5ms"), string("5s"))
 
 	AssertEventually(t, func() (bool, interface{}) {
+		uniqueTestNICConnectedEvents := mockWriter.GetUniqueEvents("TestNICConnected")
 		repeatedTestNICConnectedEvents := mockWriter.GetRepeatedEvents("TestNICConnected")
-		totalTestNICConnectedEvents := mockWriter.GetTotalEventsBySourceAndEvent(dummyEvtSource, "TestNICConnected")
-		if repeatedTestNICConnectedEvents >= expectedRepeatedEvents ||
+		totalTestNICConnectedEvents := uniqueTestNICConnectedEvents + repeatedTestNICConnectedEvents
+		if uniqueTestNICConnectedEvents > 0 &&
+			repeatedTestNICConnectedEvents > 0 &&
 			totalTestNICConnectedEvents == totalEvents {
 			return true, nil
 		}
 
-		fmt.Printf("expected: %d events, got: %d, total events received: %d\n", expectedRepeatedEvents, repeatedTestNICConnectedEvents,
-			totalTestNICConnectedEvents)
-		return false, nil
+		return false, fmt.Sprintf("expected: %d events, got: %d (unique %d + repeated %d)\n", totalEvents, totalTestNICConnectedEvents,
+			uniqueTestNICConnectedEvents, repeatedTestNICConnectedEvents)
 	}, "unexpected repeated number of events", string("5ms"), string("5s"))
 
 	// ensure the writer received all the events
-	expected := (workers * 10) + workers // + workers for the first occurrence
 	connectedEvts := mockWriter.GetTotalEventsBySourceAndEvent(dummyEvtSource, "TestNICConnected")
-	Assert(t, connectedEvts >= expected,
-		fmt.Sprintf("unexpected total number of events received. expected: %v, got:%v", expected, connectedEvts))
+	Assert(t, connectedEvts == totalEvents,
+		fmt.Sprintf("unexpected total number of events received. expected: %v, got:%v", totalEvents, connectedEvts))
 
 	disconnectedEvts := mockWriter.GetTotalEventsBySourceAndEvent(dummyEvtSource, "TestNICDisconnected")
-	Assert(t, disconnectedEvts >= expected,
-		fmt.Sprintf("unexpected total number of events received. expected: %v, got:%v", expected, disconnectedEvts))
+	Assert(t, disconnectedEvts == totalEvents,
+		fmt.Sprintf("unexpected total number of events received. expected: %v, got:%v", totalEvents, disconnectedEvts))
 
 	// send an event with missing attributes
 	incomEvent := *(&event)
@@ -493,7 +462,7 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int) {
 			Component: fmt.Sprintf("component%v", s),
 		}
 
-		expected := workers * 10 // workers * total events sent by each go routine (10 #iterations)
+		expected := workers * 10 // workers * total events sent by each go routine
 
 		// stop only after receiving all the events or timeout
 		AssertEventually(t, func() (bool, interface{}) {
@@ -505,7 +474,7 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int) {
 				return true, nil
 			}
 
-			return false, nil
+			return false, fmt.Sprintf("expected atleast: %d events, got: (%d, %d)", expected/2, disconnectedEvents, connectedEvents)
 		}, "did not receive all the events produced", string("5ms"), string("120s"))
 	}
 }

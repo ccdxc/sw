@@ -82,7 +82,7 @@ func TestMockEventsWriter(t *testing.T) {
 	mockEventsChan.result <- evts
 
 	AssertEventually(t, func() (bool, interface{}) {
-		if mockWriter.GetRepeatedEvents("TEST") == 10 {
+		if mockWriter.GetRepeatedEvents("TEST") == int(temp.EventAttributes.Count-1) {
 			return true, nil
 		}
 

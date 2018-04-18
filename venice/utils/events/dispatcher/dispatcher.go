@@ -114,6 +114,8 @@ func (d *dispatcherImpl) Action(event evtsapi.Event) error {
 	d.cache.Unlock()
 
 	// first event; send it to the writers
+	// It is an optimistic attempt to send the first event in an interval to the writers. So, that
+	// when process/node restarts, we'll lose only the duplicates (atleast one occurrence is already recordered).
 	if !ok {
 		d.logger.Debugf("{first event in the interval} send it to the writers: {%s}", event.GetSelfLink())
 		d.distributeEvents([]*evtsapi.Event{&event})

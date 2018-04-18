@@ -149,27 +149,36 @@ func (m *MockWriter) writeCount(event *evtsapi.Event) {
 	eventType := event.GetType()
 	count := int(event.GetCount())
 
+	// to update events by event type
 	if _, ok := m.stat[eventType]; !ok {
 		m.stat[eventType] = &eventsStat{}
 	}
 
-	if count == 1 {
-		// update unique event
-		m.stat[eventType].uniqueEvents++
-	} else {
-		// update repeated event
-		m.stat[eventType].repeatedEvents += count
-	}
-
-	// update total events by source and event type
+	// to update total events by source and event type
 	source := event.GetSource()
 	sourceKey := fmt.Sprintf("%v-%v", source.GetNodeName(), source.GetComponent())
 	if m.totalEventsBySourceAndEvents[sourceKey] == nil {
 		m.totalEventsBySourceAndEvents[sourceKey] = map[string]int{}
 	}
-
 	src := m.totalEventsBySourceAndEvents[sourceKey]
-	src[eventType] += count
+
+	if count == 1 {
+		// update unique event
+		m.stat[eventType].uniqueEvents++
+
+		// update events by source
+		src[eventType] += count
+	} else {
+		// update repeated event
+		// let us say 10 duplicate events are sent
+		// 1st event will be sent to the writers right way (with event.Count = 1), other 9 events are
+		// deduped and sent to the writer (with Count = 10);
+		// note the count is decremented here to avoid re-counting the 1st event that is already received
+		m.stat[eventType].repeatedEvents += (count - 1)
+
+		// update events by source
+		src[eventType] += (count - 1)
+	}
 }
 
 // startWorker watches the events using the event channel from dispatcher.
