@@ -118,7 +118,7 @@ swig-cli: swig-cli-clean
 
 package-size-check: package
     ifeq ($(ARCH),aarch64)
-	$(eval FILE_NAME = ../nic.tar)
+	$(eval FILE_NAME = nic.tar)
 	# max file size is 108MB
 	$(eval MAX_FILE_SIZE = 113246208)
 	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
@@ -130,7 +130,9 @@ package-size-check: package
     endif
 
 package-clean:
-	cd ../ && rm -rf fake_root_target && rm -f nic.tgz && rm -f nic.tar
+	@cd ../ && rm -rf fake_root_target
+	@rm -f nic.tgz
+	@rm -f nic.tar
 
 package: swig-cli package-clean
     ifeq ($(ARCH),aarch64)
@@ -155,7 +157,7 @@ release:
     endif
 
 release-clean:
-	rm -rf obj/release
+	@rm -rf obj/release
 
 platform:
     ifeq ($(ARCH),aarch64)
