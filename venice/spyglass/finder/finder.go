@@ -175,11 +175,9 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 		} else {
 			eType = err.Error()
 		}
-		sr.Result = &search.SearchResult{
-			Error: &search.Error{
-				Type:   eType,
-				Reason: eReason,
-			},
+		sr.Error = &search.Error{
+			Type:   eType,
+			Reason: eReason,
 		}
 		return &sr, err
 	}
@@ -245,14 +243,12 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 	// Marshall the elasticDB response and populate the SearchResult
 	var resp search.SearchResponse
-	resp.Result = &search.SearchResult{
-		TotalHits:      result.Hits.TotalHits,
-		ActualHits:     int64(len(result.Hits.Hits)),
-		TimeTakenMsecs: result.TookInMillis,
-	}
+	resp.TotalHits = result.Hits.TotalHits
+	resp.ActualHits = int64(len(result.Hits.Hits))
+	resp.TimeTakenMsecs = result.TookInMillis
 
 	// Decode the Hits, if present
-	resp.Result.Entries = make([]*search.Entry, len(result.Hits.Hits))
+	resp.Entries = make([]*search.Entry, len(result.Hits.Hits))
 
 	for i, entry := range result.Hits.Hits {
 		jsondata, err := entry.Source.MarshalJSON()
@@ -271,9 +267,9 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 			}
 
 			fdr.logger.Debugf("Search hits result - entry proto: %d {%+v}", i, e)
-			resp.Result.Entries[i] = &e
+			resp.Entries[i] = &e
 		} else {
-			resp.Result.Entries[i] = nil
+			resp.Entries[i] = nil
 			fdr.logger.Errorf("Failed to marshal hits result-Source i:%d err:%v", i, err)
 			// TBD: Stop here with error or continue with best effort ?
 		}
@@ -283,7 +279,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	if tenantAgg, found := result.Aggregations.Terms(elastic.TenantAggKey); found {
 
 		log.Debugf("Found tenant_agg, : %d", len(result.Aggregations))
-		resp.Result.AggregatedEntries = &search.NestedAggregation{
+		resp.AggregatedEntries = &search.NestedAggregation{
 			Entries: make(map[string]*search.Aggregation, len(result.Aggregations)),
 		}
 		log.Debugf("tenantAgg Buckets, : %d", len(tenantAgg.Buckets))
@@ -295,7 +291,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 			if kindAgg, found := tenantBucket.Terms(elastic.KindAggKey); found {
 
 				log.Debugf("kindAgg Buckets, : %d", len(kindAgg.Buckets))
-				resp.Result.AggregatedEntries.Entries[tenantBucket.Key.(string)] = &search.Aggregation{
+				resp.AggregatedEntries.Entries[tenantBucket.Key.(string)] = &search.Aggregation{
 					Entries: make(map[string]*search.EntryList, len(tenantAgg.Buckets)),
 				}
 				for _, kindBucket := range kindAgg.Buckets {
@@ -305,7 +301,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 						hits := topHits.Hits.Hits
 						log.Debugf("hits per kind : %d", len(hits))
-						resp.Result.AggregatedEntries.Entries[tenantBucket.Key.(string)].Entries[kindBucket.Key.(string)] = &search.EntryList{
+						resp.AggregatedEntries.Entries[tenantBucket.Key.(string)].Entries[kindBucket.Key.(string)] = &search.EntryList{
 							Entries: make([]*search.Entry, len(hits)),
 						}
 
@@ -328,9 +324,9 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 								log.Debugf("Entry: %d %s", i, e.GetName())
 								log.Debugf("Agg Search hits result - entry proto: %d {%+v}", i, e)
-								resp.Result.AggregatedEntries.Entries[tenantBucket.Key.(string)].Entries[kindBucket.Key.(string)].Entries[i] = &e
+								resp.AggregatedEntries.Entries[tenantBucket.Key.(string)].Entries[kindBucket.Key.(string)].Entries[i] = &e
 							} else {
-								resp.Result.AggregatedEntries.Entries[tenantBucket.Key.(string)].Entries[kindBucket.Key.(string)].Entries[i] = nil
+								resp.AggregatedEntries.Entries[tenantBucket.Key.(string)].Entries[kindBucket.Key.(string)].Entries[i] = nil
 								log.Errorf("Failed to marshal Agg hits result-Source i:%d err:%v", i, err)
 								// TBD: Stop here with error or continue with best effort ?
 							}

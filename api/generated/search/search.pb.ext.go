@@ -12,12 +12,17 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
 // Dummy definitions to suppress nonused warnings
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+var _ validators.DummyVar
+var validatorMapSearch = make(map[string]map[string][]func(interface{}) bool)
 
 // Clone clones the object into into or creates one of into is nil
 func (m *Aggregation) Clone(into interface{}) (interface{}, error) {
@@ -37,6 +42,27 @@ func (m *Aggregation) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Aggregation) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *Category) Clone(into interface{}) (interface{}, error) {
+	var out *Category
+	var ok bool
+	if into == nil {
+		out = &Category{}
+	} else {
+		out, ok = into.(*Category)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Category) Defaults(ver string) bool {
 	return false
 }
 
@@ -104,6 +130,27 @@ func (m *Error) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *Kind) Clone(into interface{}) (interface{}, error) {
+	var out *Kind
+	var ok bool
+	if into == nil {
+		out = &Kind{}
+	} else {
+		out, ok = into.(*Kind)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Kind) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *NestedAggregation) Clone(into interface{}) (interface{}, error) {
 	var out *NestedAggregation
 	var ok bool
@@ -125,13 +172,13 @@ func (m *NestedAggregation) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *Requirement) Clone(into interface{}) (interface{}, error) {
-	var out *Requirement
+func (m *SearchQuery) Clone(into interface{}) (interface{}, error) {
+	var out *SearchQuery
 	var ok bool
 	if into == nil {
-		out = &Requirement{}
+		out = &SearchQuery{}
 	} else {
-		out, ok = into.(*Requirement)
+		out, ok = into.(*SearchQuery)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -141,29 +188,19 @@ func (m *Requirement) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *Requirement) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SearchCriteria) Clone(into interface{}) (interface{}, error) {
-	var out *SearchCriteria
-	var ok bool
-	if into == nil {
-		out = &SearchCriteria{}
-	} else {
-		out, ok = into.(*SearchCriteria)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
+func (m *SearchQuery) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		for k := range m.Categories {
+			m.Categories[k] = Category_Type_name[0]
+		}
+		for k := range m.Kinds {
+			m.Kinds[k] = Kind_Type_name[0]
 		}
 	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SearchCriteria) Defaults(ver string) bool {
-	return false
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -184,7 +221,11 @@ func (m *SearchRequest) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *SearchRequest) Defaults(ver string) bool {
-	return false
+	var ret bool
+	for m.Query != nil {
+		ret = ret || m.Query.Defaults(ver)
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -209,13 +250,13 @@ func (m *SearchResponse) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *SearchResult) Clone(into interface{}) (interface{}, error) {
-	var out *SearchResult
+func (m *TextRequirement) Clone(into interface{}) (interface{}, error) {
+	var out *TextRequirement
 	var ok bool
 	if into == nil {
-		out = &SearchResult{}
+		out = &TextRequirement{}
 	} else {
-		out, ok = into.(*SearchResult)
+		out, ok = into.(*TextRequirement)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -225,13 +266,17 @@ func (m *SearchResult) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *SearchResult) Defaults(ver string) bool {
+func (m *TextRequirement) Defaults(ver string) bool {
 	return false
 }
 
 // Validators
 
 func (m *Aggregation) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *Category) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
@@ -247,19 +292,41 @@ func (m *Error) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *Kind) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
 func (m *NestedAggregation) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *Requirement) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *SearchCriteria) Validate(ver string, ignoreStatus bool) bool {
+func (m *SearchQuery) Validate(ver string, ignoreStatus bool) bool {
+	if m.Fields != nil && !m.Fields.Validate(ver, ignoreStatus) {
+		return false
+	}
+	if m.Labels != nil && !m.Labels.Validate(ver, ignoreStatus) {
+		return false
+	}
+	if vs, ok := validatorMapSearch["SearchQuery"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := validatorMapSearch["SearchQuery"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
 	return true
 }
 
 func (m *SearchRequest) Validate(ver string, ignoreStatus bool) bool {
+	if m.Query != nil && !m.Query.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
@@ -267,10 +334,35 @@ func (m *SearchResponse) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *SearchResult) Validate(ver string, ignoreStatus bool) bool {
+func (m *TextRequirement) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
 func init() {
+
+	validatorMapSearch = make(map[string]map[string][]func(interface{}) bool)
+
+	validatorMapSearch["SearchQuery"] = make(map[string][]func(interface{}) bool)
+	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(i interface{}) bool {
+		m := i.(*SearchQuery)
+
+		for _, v := range m.Categories {
+			if _, ok := Category_Type_value[v]; !ok {
+				return false
+			}
+		}
+		return true
+	})
+
+	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(i interface{}) bool {
+		m := i.(*SearchQuery)
+
+		for _, v := range m.Kinds {
+			if _, ok := Kind_Type_value[v]; !ok {
+				return false
+			}
+		}
+		return true
+	})
 
 }

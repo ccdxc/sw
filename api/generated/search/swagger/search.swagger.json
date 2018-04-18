@@ -30,14 +30,12 @@
         "parameters": [
           {
             "name": "QueryString",
-            "description": "TotalHits indicates total number of hits matched.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "From",
-            "description": "ActualHits indicates the actual hits returned in this response.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -45,11 +43,28 @@
           },
           {
             "name": "MaxResults",
-            "description": "TimeTakenMsecs is the time taken for search response in millisecs.",
             "in": "query",
             "required": false,
             "type": "integer",
             "format": "int32"
+          },
+          {
+            "name": "Query.Categories",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Query.Kinds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -127,6 +142,74 @@
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
     },
+    "fieldsRequirement": {
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "string",
+          "description": "The label key that the condition applies to."
+        },
+        "Operator": {
+          "type": "string",
+          "description": "Condition checked for the key."
+        },
+        "Values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Values contains one or more values corresponding to the label key. \"equals\" and\n\"notEquals\" operators need a single Value. \"in\" and \"notIn\" operators can have\none or more values."
+        }
+      },
+      "description": "Requirement defines a single matching condition for a selector."
+    },
+    "fieldsSelector": {
+      "type": "object",
+      "properties": {
+        "Requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/fieldsRequirement"
+          },
+          "description": "Requirements are ANDed."
+        }
+      },
+      "description": "Selector is used to select objects by fields. Requirements in the selector are ANDed.\nA selector with no Requirements does not select anything."
+    },
+    "labelsRequirement": {
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "string",
+          "description": "The label key that the condition applies to."
+        },
+        "Operator": {
+          "type": "string",
+          "description": "Condition checked for the key."
+        },
+        "Values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Values contains one or more values corresponding to the label key. \"equals\" and\n\"notEquals\" operators need a single Value. \"in\" and \"notIn\" operators can have\none or more values."
+        }
+      },
+      "description": "Requirement defines a single matching condition for a selector."
+    },
+    "labelsSelector": {
+      "type": "object",
+      "properties": {
+        "Requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/labelsRequirement"
+          },
+          "description": "Requirements are ANDed."
+        }
+      },
+      "description": "Selector is used to select objects by labels. Requirements in the selector are ANDed.\nA selector with no Requirements does not select anything."
+    },
     "searchAggregation": {
       "type": "object",
       "properties": {
@@ -134,24 +217,23 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/searchEntryList"
-          },
-          "description": "KeyOrText contains the following.\n-  \"Key\" followed by operator and list of values \n                (OR)\n-  \"Text\" - single-word or Phrase text search and\n   in such cases Operator and Values are empty and \n   not-applicable.\n\nExamples of Text search:\n    \"Prod\", \"Link Down\"\nExamples of Structured query: \n    (Note these are illustrative examples and exact values will be per our object model)\n    Key=Kind Operator=Equals Values=[Network]\n    Key=Meta.Tenant Operator=In Values=[tesla,ford]\n    Key=Status.RxErrCount Operator:Gt Values=[100]"
+          }
         }
       },
-      "title": "Requirement defines a single matching criteria for search\nTODO: Switch to unified requirement defintion once it is ready"
+      "title": "List of search categories, specified via \"category\" modifier\nTODO: generate these enums if possible and use it for validation"
     },
     "searchEntry": {
       "type": "object",
       "properties": {
         "T": {
           "$ref": "#/definitions/apiTypeMeta",
-          "description": "Requirements is a list of match critertia for the\nSearch request. It could be combination of Keyword,\nPhrase or Fields matching certain values. The\nrequirements are ANDed by default. In cases where\nUser specifies a QueryString as URI parameter, \nthe query parser would parse it and translate \ninto Requirements.\nFor contextual search, these requirements will be used\nas well to specify the scope to narrow down the search."
+          "title": "AND of words or phrases to be matched"
         },
         "O": {
           "$ref": "#/definitions/apiObjectMeta"
         }
       },
-      "description": "SearchCriteria contains the following : \n- Requirements is list of match critertia parsed by the Query Parser\n- User-info and optionally RbacFilters will be added by RBAC-plugin \n  running in API-GW and will be passed to backend. The details are TBD."
+      "description": "TextRequirement is AND of text-strings in the list\nIt is comprised of words or phrases for text search support.\nIf a text-string has space separated multi-word, it will be\ninterpreted as a phrase.\n\nIn the example below :\n- \"link down\" will be a phrase query\n- network, production, staging will be a word query\n\nFor eg:\n   network                      (match network)\n   link down                    (match \"link down\" phrase)\n   network,production           (match network AND production)\n   network,link down,staging    (match network AND \"link down\" AND staging)"
     },
     "searchEntryList": {
       "type": "object",
@@ -161,23 +243,23 @@
           "items": {
             "$ref": "#/definitions/searchEntry"
           },
-          "title": "Type of error"
+          "title": "OR of Text-requirements to be matched, Exclude is not supported for Text search"
         }
-      },
-      "title": "Error contains the error code, description and\nassociated details"
+      }
     },
     "searchError": {
       "type": "object",
       "properties": {
         "Type": {
           "type": "string",
-          "title": "For Policy \u0026 config objects, the result will have\nhave all the metadata and a self-link to get the\nentire object next if needed"
+          "title": "Type of error"
         },
         "Reason": {
-          "type": "string"
+          "type": "string",
+          "title": "Reason or description of the failure"
         }
       },
-      "title": "Entry represent a single search result entry"
+      "title": "Error contains the error code, description and\nassociated details"
     },
     "searchNestedAggregation": {
       "type": "object",
@@ -191,88 +273,76 @@
       },
       "title": "EntryList is list of search result entries"
     },
-    "searchRequirement": {
+    "searchSearchQuery": {
       "type": "object",
       "properties": {
-        "KeyOrText": {
-          "type": "string"
+        "Texts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/searchTextRequirement"
+          }
         },
-        "Operator": {
-          "type": "string"
-        },
-        "Values": {
+        "Categories": {
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "Kinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Fields": {
+          "$ref": "#/definitions/fieldsSelector"
+        },
+        "Labels": {
+          "$ref": "#/definitions/labelsSelector"
         }
       },
       "title": "Aggregation contains map of search results entries\ngrouped by a Key.\nFor eg: search result entries grouped by Kind as key"
-    },
-    "searchSearchCriteria": {
-      "type": "object",
-      "properties": {
-        "Requirements": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/searchRequirement"
-          }
-        }
-      },
-      "description": "NestedAggregation contains map of search results\ngrouped by two levels of Aggregation\nFor eg: search result entries grouped first by Tenant\n        name and subsequently grouped by Kind."
     },
     "searchSearchRequest": {
       "type": "object",
       "properties": {
         "QueryString": {
-          "type": "string",
-          "title": "TotalHits indicates total number of hits matched"
+          "type": "string"
         },
         "From": {
           "type": "integer",
-          "format": "int32",
-          "title": "ActualHits indicates the actual hits returned in this response"
+          "format": "int32"
         },
         "MaxResults": {
           "type": "integer",
-          "format": "int32",
-          "title": "TimeTakenMsecs is the time taken for search response in millisecs"
+          "format": "int32"
         },
-        "Criteria": {
-          "$ref": "#/definitions/searchSearchCriteria",
-          "title": "Error status for failures"
+        "Query": {
+          "$ref": "#/definitions/searchSearchQuery"
         }
       },
-      "description": "SearchResult contains the search result.\nBased on the search request, search results would be part\nof one of the entities : Entries, Aggregation or NestedAggregation.\nIn case of failures, Error would indicate the error status and\ndescription."
+      "description": "NestedAggregation contains map of search results\ngrouped by two levels of Aggregation\nFor eg: search result entries grouped first by Tenant\n        name and subsequently grouped by Kind."
     },
     "searchSearchResponse": {
       "type": "object",
       "properties": {
         "T": {
           "$ref": "#/definitions/apiTypeMeta",
-          "description": "Query string as presented by User."
+          "title": "Simple query string\nThis can be specified as URI parameter.\nFor advanced query cases, Users should use specify SearchQuery\nand pass the SearchRequest in a GET/POST Body"
         },
         "O": {
           "$ref": "#/definitions/apiObjectMeta",
-          "description": "From represents the start offset (zero based), used in paginated search requests\nThe results returned would be in the range [From ... From+MaxResults-1]\nTODO: Add venice option to set default to 0."
+          "description": "From represents the start offset (zero based), used in paginated search requests\nThe results returned would be in the range [From ... From+MaxResults-1]\nTODO: Add venice option to set default to 0.\nThis can be specified as URI parameter."
         },
-        "Result": {
-          "$ref": "#/definitions/searchSearchResult",
-          "title": "MaxResults is the max-count of search results\nTODO: Add venice option to set some default value (TBD)"
-        }
-      },
-      "title": "SearchRequest is the input to the Query method"
-    },
-    "searchSearchResult": {
-      "type": "object",
-      "properties": {
         "TotalHits": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "description": "MaxResults is the max-count of search results\nTODO: Add venice option to set some default value (TBD)\nThis can be specified as URI parameter."
         },
         "ActualHits": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "description": "Search query contains the search requirements\nThis is intended for advanced query use cases involving\nboolean query, structured term query and supports various\ncombinations of text, phrase strings and search modifiers \nfor specific categories, kinds, fields and labels.\nThis cannot be specified as URI parameter."
         },
         "TimeTakenMsecs": {
           "type": "string",
@@ -291,7 +361,20 @@
           "$ref": "#/definitions/searchNestedAggregation"
         }
       },
-      "title": "SearchResponse is the output provided by the Query method"
+      "description": "Simple queries can be specified as URI param using \"QueryString\".\nFor advanced queries, it is recommended to use the \"SearchQuery\" structure\nand specify them in BODY of the GET/POST method.\n\nExamples of search query in query-string format:\n\n 1. Find all occurrences matching text “Network” \n    Network\n 2. Find all occurrences matching phrase “link down”\n    “link down”\n 3. Find all occurrences matching text production OR \"staging\"\n    production staging\n 4. Find all occurrences matching text “Network” AND \"link down\"\n    Network,\"link down\"\n    Network AND \"link down\"\n 5. Find all config objects with label1=foo\n    category:config label:label1=foo\n 6. Find all objects created on or after certain date+time\n    category:config field:meta.created-time\u003e=”date-time-string”\n 7. Find all Network objects with type=vlan\n    kind:Network field:spec.type=vlan\n 8. Find all Naples nodes with admission-phase = pending or rejected\n    kind:SmartNIC field:spec.phase in (pending, rejected)\n 9. Find all events with text matching “disconnected”\n    category:events disconnected\n10. Find all Critical events for Network objects\n    category:events kind:Network field:severity=CRITICAL \n11. Find all Alerts generated from Naples MAC1\n    category:alerts field:status.source.node=MAC1\n    category:alerts MAC1\n12. Find all Naples nodes with metric filter : mem\u003e90 \u0026\u0026 cpu\u003e90\n    category:metrics kind:SmartNIC field:metric.mem\u003e90,metric.cpu\u003e90\n13. Find all Endpoints with label Tier=Web with counter1\u003e=100\n    category:metrics kind:Endpoint label:Tier=Web field:metric.counter1 \u003e 100\n14. Find all Endpoints objects with label target=prod with crc-error-count != 0\n    category:metrics kind:Endpoint label:target=prod field:status.crc-error-count!=0\n15. Find all occurences matching the words and phrase in a certain category \u0026 kinds with certain field and label match\n    production \"status down\" category:Network kind:Network,Service field:spec.service-type=external label:tier=web",
+      "title": "SearchRequest is the input to the search API"
+    },
+    "searchTextRequirement": {
+      "type": "object",
+      "properties": {
+        "Text": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "SearchResponse is the output provided by the search API\nBased on the search request, search results would be part\nof one of the entities : Entries or NestedAggregation.\nIn case of failures, Error would indicate the error status and\ndescription."
     }
   }
 }

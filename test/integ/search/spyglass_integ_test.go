@@ -615,24 +615,24 @@ func performSearchTests(t *testing.T) {
 					}
 
 					// Match on expected hits
-					if resp.Result.ActualHits != tc.expectedHits {
+					if resp.ActualHits != tc.expectedHits {
 						log.Errorf("Result mismatch expected: %d received: %d resp: {%+v}",
-							tc.expectedHits, resp.Result.ActualHits, resp)
+							tc.expectedHits, resp.ActualHits, resp)
 						return false, nil
 					}
-					log.Debugf("Query: %s, result : %+v", searchURL, *resp.Result)
+					log.Debugf("Query: %s, result : %+v", searchURL, resp)
 
 					// Check size of aggregated results
-					if len(tc.aggresults) != len(resp.Result.AggregatedEntries.Entries) {
+					if len(tc.aggresults) != len(resp.AggregatedEntries.Entries) {
 						log.Errorf("Tenant agg entries count didn't match, expected %d actual:%d",
-							len(tc.aggresults), len(resp.Result.AggregatedEntries.Entries))
+							len(tc.aggresults), len(resp.AggregatedEntries.Entries))
 						return false, nil
 					}
 
 					// Tenant verification
 					for tenantKey, tenantVal := range tc.aggresults {
 						log.Debugf("Verifying tenant Key: %s entries: %d", tenantKey, len(tenantVal))
-						if _, ok := resp.Result.AggregatedEntries.Entries[tenantKey]; !ok {
+						if _, ok := resp.AggregatedEntries.Entries[tenantKey]; !ok {
 							log.Errorf("Tenant %s not found", tenantKey)
 							return false, nil
 						}
@@ -640,13 +640,13 @@ func performSearchTests(t *testing.T) {
 						// Kind verification
 						for kindKey, kindVal := range tenantVal {
 							log.Debugf("Verifying Kind Key: %s entries: %d", kindKey, len(kindVal))
-							if _, ok := resp.Result.AggregatedEntries.Entries[tenantKey].Entries[kindKey]; !ok {
+							if _, ok := resp.AggregatedEntries.Entries[tenantKey].Entries[kindKey]; !ok {
 								log.Errorf("Kind %s not found", kindKey)
 								return false, nil
 							}
 
 							// make a interim object map from the entries slice
-							entries := resp.Result.AggregatedEntries.Entries[tenantKey].Entries[kindKey].Entries
+							entries := resp.AggregatedEntries.Entries[tenantKey].Entries[kindKey].Entries
 							omap := make(map[string]interface{}, len(entries))
 							for _, val := range entries {
 								omap[val.GetName()] = nil

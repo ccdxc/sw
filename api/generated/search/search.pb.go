@@ -11,15 +11,16 @@
 
 	It has these top-level messages:
 		Aggregation
+		Category
 		Entry
 		EntryList
 		Error
+		Kind
 		NestedAggregation
-		Requirement
-		SearchCriteria
+		SearchQuery
 		SearchRequest
 		SearchResponse
-		SearchResult
+		TextRequirement
 */
 package search
 
@@ -30,6 +31,8 @@ import _ "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 import _ "github.com/pensando/sw/venice/utils/apigen/annotations"
 import _ "github.com/gogo/protobuf/gogoproto"
 import api "github.com/pensando/sw/api"
+import fields "github.com/pensando/sw/api/fields"
+import labels "github.com/pensando/sw/api/labels"
 
 import (
 	context "golang.org/x/net/context"
@@ -49,60 +52,171 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-// Operator represents a key/field's relationship to value(s).
-type Operator int32
+type Category_Type int32
 
 const (
-	Operator_Empty     Operator = 0
-	Operator_Equals    Operator = 1
-	Operator_In        Operator = 2
-	Operator_NotEquals Operator = 3
-	Operator_NotIn     Operator = 4
-	Operator_Gt        Operator = 5
-	Operator_Lt        Operator = 6
+	Category_Cluster    Category_Type = 0
+	Category_Workload   Category_Type = 1
+	Category_Security   Category_Type = 2
+	Category_Auth       Category_Type = 3
+	Category_Network    Category_Type = 4
+	Category_Monitoring Category_Type = 5
+	Category_Telemetry  Category_Type = 6
+	Category_Events     Category_Type = 7
+	Category_Alerts     Category_Type = 8
+	Category_AuditTrail Category_Type = 9
+	Category_Log        Category_Type = 10
+	Category_Config     Category_Type = 11
 )
 
-var Operator_name = map[int32]string{
-	0: "Empty",
-	1: "Equals",
-	2: "In",
-	3: "NotEquals",
-	4: "NotIn",
-	5: "Gt",
-	6: "Lt",
+var Category_Type_name = map[int32]string{
+	0:  "Cluster",
+	1:  "Workload",
+	2:  "Security",
+	3:  "Auth",
+	4:  "Network",
+	5:  "Monitoring",
+	6:  "Telemetry",
+	7:  "Events",
+	8:  "Alerts",
+	9:  "AuditTrail",
+	10: "Log",
+	11: "Config",
 }
-var Operator_value = map[string]int32{
-	"Empty":     0,
-	"Equals":    1,
-	"In":        2,
-	"NotEquals": 3,
-	"NotIn":     4,
-	"Gt":        5,
-	"Lt":        6,
+var Category_Type_value = map[string]int32{
+	"Cluster":    0,
+	"Workload":   1,
+	"Security":   2,
+	"Auth":       3,
+	"Network":    4,
+	"Monitoring": 5,
+	"Telemetry":  6,
+	"Events":     7,
+	"Alerts":     8,
+	"AuditTrail": 9,
+	"Log":        10,
+	"Config":     11,
 }
 
-func (x Operator) String() string {
-	return proto.EnumName(Operator_name, int32(x))
+func (x Category_Type) String() string {
+	return proto.EnumName(Category_Type_name, int32(x))
 }
-func (Operator) EnumDescriptor() ([]byte, []int) { return fileDescriptorSearch, []int{0} }
+func (Category_Type) EnumDescriptor() ([]byte, []int) { return fileDescriptorSearch, []int{1, 0} }
 
-// Requirement defines a single matching criteria for search
-// TODO: Switch to unified requirement defintion once it is ready
+type Kind_Type int32
+
+const (
+	Kind_Cluster                 Kind_Type = 0
+	Kind_Node                    Kind_Type = 1
+	Kind_SmartNIC                Kind_Type = 2
+	Kind_Rollout                 Kind_Type = 3
+	Kind_Tenant                  Kind_Type = 4
+	Kind_Endpoint                Kind_Type = 5
+	Kind_SecurityGroup           Kind_Type = 6
+	Kind_Sgpolicy                Kind_Type = 7
+	Kind_App                     Kind_Type = 8
+	Kind_AppUser                 Kind_Type = 9
+	Kind_AppUserGrp              Kind_Type = 10
+	Kind_Certificate             Kind_Type = 11
+	Kind_TrafficEncryptionPolicy Kind_Type = 12
+	Kind_User                    Kind_Type = 13
+	Kind_AuthenticationPolicy    Kind_Type = 14
+	Kind_Role                    Kind_Type = 15
+	Kind_RoleBinding             Kind_Type = 16
+	Kind_ClusterUser             Kind_Type = 17
+	Kind_ClusterRole             Kind_Type = 18
+	Kind_ClusterRoleBinding      Kind_Type = 19
+	Kind_Network                 Kind_Type = 20
+	Kind_Service                 Kind_Type = 21
+	Kind_LbPolicy                Kind_Type = 22
+	Kind_Alert                   Kind_Type = 23
+	Kind_AlertDestination        Kind_Type = 24
+	Kind_AlertPolicy             Kind_Type = 25
+	Kind_Event                   Kind_Type = 26
+	Kind_EventPolicy             Kind_Type = 27
+	Kind_StatsPolicy             Kind_Type = 28
+	Kind_FlowExportPolicy        Kind_Type = 29
+	Kind_FwlogPolicy             Kind_Type = 30
+	Kind_MirrorSession           Kind_Type = 31
+)
+
+var Kind_Type_name = map[int32]string{
+	0:  "Cluster",
+	1:  "Node",
+	2:  "SmartNIC",
+	3:  "Rollout",
+	4:  "Tenant",
+	5:  "Endpoint",
+	6:  "SecurityGroup",
+	7:  "Sgpolicy",
+	8:  "App",
+	9:  "AppUser",
+	10: "AppUserGrp",
+	11: "Certificate",
+	12: "TrafficEncryptionPolicy",
+	13: "User",
+	14: "AuthenticationPolicy",
+	15: "Role",
+	16: "RoleBinding",
+	17: "ClusterUser",
+	18: "ClusterRole",
+	19: "ClusterRoleBinding",
+	20: "Network",
+	21: "Service",
+	22: "LbPolicy",
+	23: "Alert",
+	24: "AlertDestination",
+	25: "AlertPolicy",
+	26: "Event",
+	27: "EventPolicy",
+	28: "StatsPolicy",
+	29: "FlowExportPolicy",
+	30: "FwlogPolicy",
+	31: "MirrorSession",
+}
+var Kind_Type_value = map[string]int32{
+	"Cluster":                 0,
+	"Node":                    1,
+	"SmartNIC":                2,
+	"Rollout":                 3,
+	"Tenant":                  4,
+	"Endpoint":                5,
+	"SecurityGroup":           6,
+	"Sgpolicy":                7,
+	"App":                     8,
+	"AppUser":                 9,
+	"AppUserGrp":              10,
+	"Certificate":             11,
+	"TrafficEncryptionPolicy": 12,
+	"User":                 13,
+	"AuthenticationPolicy": 14,
+	"Role":                 15,
+	"RoleBinding":          16,
+	"ClusterUser":          17,
+	"ClusterRole":          18,
+	"ClusterRoleBinding":   19,
+	"Network":              20,
+	"Service":              21,
+	"LbPolicy":             22,
+	"Alert":                23,
+	"AlertDestination":     24,
+	"AlertPolicy":          25,
+	"Event":                26,
+	"EventPolicy":          27,
+	"StatsPolicy":          28,
+	"FlowExportPolicy":     29,
+	"FwlogPolicy":          30,
+	"MirrorSession":        31,
+}
+
+func (x Kind_Type) String() string {
+	return proto.EnumName(Kind_Type_name, int32(x))
+}
+func (Kind_Type) EnumDescriptor() ([]byte, []int) { return fileDescriptorSearch, []int{5, 0} }
+
+// List of search categories, specified via "category" modifier
+// TODO: generate these enums if possible and use it for validation
 type Aggregation struct {
-	// KeyOrText contains the following.
-	// -  "Key" followed by operator and list of values
-	//                 (OR)
-	// -  "Text" - single-word or Phrase text search and
-	//    in such cases Operator and Values are empty and
-	//    not-applicable.
-	//
-	// Examples of Text search:
-	//     "Prod", "Link Down"
-	// Examples of Structured query:
-	//     (Note these are illustrative examples and exact values will be per our object model)
-	//     Key=Kind Operator=Equals Values=[Network]
-	//     Key=Meta.Tenant Operator=In Values=[tesla,ford]
-	//     Key=Status.RxErrCount Operator:Gt Values=[100]
 	Entries map[string]*EntryList `protobuf:"bytes,1,rep,name=Entries" json:"entries,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
@@ -118,20 +232,36 @@ func (m *Aggregation) GetEntries() map[string]*EntryList {
 	return nil
 }
 
-// SearchCriteria contains the following :
-// - Requirements is list of match critertia parsed by the Query Parser
-// - User-info and optionally RbacFilters will be added by RBAC-plugin
-//   running in API-GW and will be passed to backend. The details are TBD.
+// List of all allowed Kinds in search, specified via "kind" modifier
+// TODO: Define a list/map of Kinds per Category
+// TODO: generate these enums if possible and use it for validation per Category
+//       This is a placeholder enum until we have a way to auto-generate list
+//       of all kinds
+type Category struct {
+}
+
+func (m *Category) Reset()                    { *m = Category{} }
+func (m *Category) String() string            { return proto.CompactTextString(m) }
+func (*Category) ProtoMessage()               {}
+func (*Category) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{1} }
+
+// TextRequirement is AND of text-strings in the list
+// It is comprised of words or phrases for text search support.
+// If a text-string has space separated multi-word, it will be
+// interpreted as a phrase.
+//
+// In the example below :
+// - "link down" will be a phrase query
+// - network, production, staging will be a word query
+//
+// For eg:
+//    network                      (match network)
+//    link down                    (match "link down" phrase)
+//    network,production           (match network AND production)
+//    network,link down,staging    (match network AND "link down" AND staging)
+//
 type Entry struct {
-	// Requirements is a list of match critertia for the
-	// Search request. It could be combination of Keyword,
-	// Phrase or Fields matching certain values. The
-	// requirements are ANDed by default. In cases where
-	// User specifies a QueryString as URI parameter,
-	// the query parser would parse it and translate
-	// into Requirements.
-	// For contextual search, these requirements will be used
-	// as well to specify the scope to narrow down the search.
+	// AND of words or phrases to be matched
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
 }
@@ -139,19 +269,17 @@ type Entry struct {
 func (m *Entry) Reset()                    { *m = Entry{} }
 func (m *Entry) String() string            { return proto.CompactTextString(m) }
 func (*Entry) ProtoMessage()               {}
-func (*Entry) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{1} }
+func (*Entry) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{2} }
 
-// Error contains the error code, description and
-// associated details
 type EntryList struct {
-	// Type of error
+	// OR of Text-requirements to be matched, Exclude is not supported for Text search
 	Entries []*Entry `protobuf:"bytes,1,rep,name=Entries" json:"entries,omitempty"`
 }
 
 func (m *EntryList) Reset()                    { *m = EntryList{} }
 func (m *EntryList) String() string            { return proto.CompactTextString(m) }
 func (*EntryList) ProtoMessage()               {}
-func (*EntryList) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{2} }
+func (*EntryList) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{3} }
 
 func (m *EntryList) GetEntries() []*Entry {
 	if m != nil {
@@ -160,19 +288,19 @@ func (m *EntryList) GetEntries() []*Entry {
 	return nil
 }
 
-// Entry represent a single search result entry
+// Error contains the error code, description and
+// associated details
 type Error struct {
-	// For Policy & config objects, the result will have
-	// have all the metadata and a self-link to get the
-	// entire object next if needed
-	Type   string `protobuf:"bytes,1,opt,name=Type,proto3" json:"type,omitempty"`
+	// Type of error
+	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"type,omitempty"`
+	// Reason or description of the failure
 	Reason string `protobuf:"bytes,2,opt,name=Reason,proto3" json:"reason,omitempty"`
 }
 
 func (m *Error) Reset()                    { *m = Error{} }
 func (m *Error) String() string            { return proto.CompactTextString(m) }
 func (*Error) ProtoMessage()               {}
-func (*Error) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{3} }
+func (*Error) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{4} }
 
 func (m *Error) GetType() string {
 	if m != nil {
@@ -188,6 +316,15 @@ func (m *Error) GetReason() string {
 	return ""
 }
 
+// Entry represent a single search result entry
+type Kind struct {
+}
+
+func (m *Kind) Reset()                    { *m = Kind{} }
+func (m *Kind) String() string            { return proto.CompactTextString(m) }
+func (*Kind) ProtoMessage()               {}
+func (*Kind) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{5} }
+
 // EntryList is list of search result entries
 type NestedAggregation struct {
 	Entries map[string]*Aggregation `protobuf:"bytes,1,rep,name=Entries" json:"entries,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
@@ -196,7 +333,7 @@ type NestedAggregation struct {
 func (m *NestedAggregation) Reset()                    { *m = NestedAggregation{} }
 func (m *NestedAggregation) String() string            { return proto.CompactTextString(m) }
 func (*NestedAggregation) ProtoMessage()               {}
-func (*NestedAggregation) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{4} }
+func (*NestedAggregation) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{6} }
 
 func (m *NestedAggregation) GetEntries() map[string]*Aggregation {
 	if m != nil {
@@ -208,34 +345,50 @@ func (m *NestedAggregation) GetEntries() map[string]*Aggregation {
 // Aggregation contains map of search results entries
 // grouped by a Key.
 // For eg: search result entries grouped by Kind as key
-type Requirement struct {
-	KeyOrText string   `protobuf:"bytes,1,opt,name=KeyOrText,proto3" json:"key-or-text,omitempty"`
-	Operator  string   `protobuf:"bytes,2,opt,name=Operator,proto3" json:"operator,omitempty"`
-	Values    []string `protobuf:"bytes,3,rep,name=Values" json:"values,omitempty"`
+type SearchQuery struct {
+	Texts      []*TextRequirement `protobuf:"bytes,1,rep,name=Texts" json:"texts,omitempty"`
+	Categories []string           `protobuf:"bytes,2,rep,name=Categories" json:"categories,omitempty"`
+	Kinds      []string           `protobuf:"bytes,3,rep,name=Kinds" json:"kinds,omitempty"`
+	Fields     *fields.Selector   `protobuf:"bytes,4,opt,name=Fields" json:"fields,omitempty"`
+	Labels     *labels.Selector   `protobuf:"bytes,5,opt,name=Labels" json:"labels,omitempty"`
 }
 
-func (m *Requirement) Reset()                    { *m = Requirement{} }
-func (m *Requirement) String() string            { return proto.CompactTextString(m) }
-func (*Requirement) ProtoMessage()               {}
-func (*Requirement) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{5} }
+func (m *SearchQuery) Reset()                    { *m = SearchQuery{} }
+func (m *SearchQuery) String() string            { return proto.CompactTextString(m) }
+func (*SearchQuery) ProtoMessage()               {}
+func (*SearchQuery) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{7} }
 
-func (m *Requirement) GetKeyOrText() string {
+func (m *SearchQuery) GetTexts() []*TextRequirement {
 	if m != nil {
-		return m.KeyOrText
+		return m.Texts
 	}
-	return ""
+	return nil
 }
 
-func (m *Requirement) GetOperator() string {
+func (m *SearchQuery) GetCategories() []string {
 	if m != nil {
-		return m.Operator
+		return m.Categories
 	}
-	return ""
+	return nil
 }
 
-func (m *Requirement) GetValues() []string {
+func (m *SearchQuery) GetKinds() []string {
 	if m != nil {
-		return m.Values
+		return m.Kinds
+	}
+	return nil
+}
+
+func (m *SearchQuery) GetFields() *fields.Selector {
+	if m != nil {
+		return m.Fields
+	}
+	return nil
+}
+
+func (m *SearchQuery) GetLabels() *labels.Selector {
+	if m != nil {
+		return m.Labels
 	}
 	return nil
 }
@@ -244,42 +397,17 @@ func (m *Requirement) GetValues() []string {
 // grouped by two levels of Aggregation
 // For eg: search result entries grouped first by Tenant
 //         name and subsequently grouped by Kind.
-type SearchCriteria struct {
-	Requirements []Requirement `protobuf:"bytes,1,rep,name=Requirements" json:"requirements,omitempty"`
-}
-
-func (m *SearchCriteria) Reset()                    { *m = SearchCriteria{} }
-func (m *SearchCriteria) String() string            { return proto.CompactTextString(m) }
-func (*SearchCriteria) ProtoMessage()               {}
-func (*SearchCriteria) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{6} }
-
-func (m *SearchCriteria) GetRequirements() []Requirement {
-	if m != nil {
-		return m.Requirements
-	}
-	return nil
-}
-
-// SearchResult contains the search result.
-// Based on the search request, search results would be part
-// of one of the entities : Entries, Aggregation or NestedAggregation.
-// In case of failures, Error would indicate the error status and
-// description.
 type SearchRequest struct {
-	// TotalHits indicates total number of hits matched
-	QueryString string `protobuf:"bytes,1,opt,name=QueryString,proto3" json:"query-string,omitempty"`
-	// ActualHits indicates the actual hits returned in this response
-	From int32 `protobuf:"varint,2,opt,name=From,proto3" json:"from,omitempty"`
-	// TimeTakenMsecs is the time taken for search response in millisecs
-	MaxResults int32 `protobuf:"varint,3,opt,name=MaxResults,proto3" json:"max-results,omitempty"`
-	// Error status for failures
-	Criteria *SearchCriteria `protobuf:"bytes,4,opt,name=Criteria" json:"criteria,omitempty"`
+	QueryString string       `protobuf:"bytes,1,opt,name=QueryString,proto3" json:"query-string,omitempty"`
+	From        int32        `protobuf:"varint,2,opt,name=From,proto3" json:"from,omitempty"`
+	MaxResults  int32        `protobuf:"varint,3,opt,name=MaxResults,proto3" json:"max-results,omitempty"`
+	Query       *SearchQuery `protobuf:"bytes,4,opt,name=Query" json:"query,omitempty"`
 }
 
 func (m *SearchRequest) Reset()                    { *m = SearchRequest{} }
 func (m *SearchRequest) String() string            { return proto.CompactTextString(m) }
 func (*SearchRequest) ProtoMessage()               {}
-func (*SearchRequest) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{7} }
+func (*SearchRequest) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{8} }
 
 func (m *SearchRequest) GetQueryString() string {
 	if m != nil {
@@ -302,107 +430,164 @@ func (m *SearchRequest) GetMaxResults() int32 {
 	return 0
 }
 
-func (m *SearchRequest) GetCriteria() *SearchCriteria {
+func (m *SearchRequest) GetQuery() *SearchQuery {
 	if m != nil {
-		return m.Criteria
+		return m.Query
 	}
 	return nil
 }
 
-// SearchRequest is the input to the Query method
+// SearchRequest is the input to the search API
+//
+// Simple queries can be specified as URI param using "QueryString".
+// For advanced queries, it is recommended to use the "SearchQuery" structure
+// and specify them in BODY of the GET/POST method.
+//
+// Examples of search query in query-string format:
+//
+//  1. Find all occurrences matching text “Network”
+//     Network
+//  2. Find all occurrences matching phrase “link down”
+//     “link down”
+//  3. Find all occurrences matching text production OR "staging"
+//     production staging
+//  4. Find all occurrences matching text “Network” AND "link down"
+//     Network,"link down"
+//     Network AND "link down"
+//  5. Find all config objects with label1=foo
+//     category:config label:label1=foo
+//  6. Find all objects created on or after certain date+time
+//     category:config field:meta.created-time>=”date-time-string”
+//  7. Find all Network objects with type=vlan
+//     kind:Network field:spec.type=vlan
+//  8. Find all Naples nodes with admission-phase = pending or rejected
+//     kind:SmartNIC field:spec.phase in (pending, rejected)
+//  9. Find all events with text matching “disconnected”
+//     category:events disconnected
+// 10. Find all Critical events for Network objects
+//     category:events kind:Network field:severity=CRITICAL
+// 11. Find all Alerts generated from Naples MAC1
+//     category:alerts field:status.source.node=MAC1
+//     category:alerts MAC1
+// 12. Find all Naples nodes with metric filter : mem>90 && cpu>90
+//     category:metrics kind:SmartNIC field:metric.mem>90,metric.cpu>90
+// 13. Find all Endpoints with label Tier=Web with counter1>=100
+//     category:metrics kind:Endpoint label:Tier=Web field:metric.counter1 > 100
+// 14. Find all Endpoints objects with label target=prod with crc-error-count != 0
+//     category:metrics kind:Endpoint label:target=prod field:status.crc-error-count!=0
+// 15. Find all occurences matching the words and phrase in a certain category & kinds with certain field and label match
+//     production "status down" category:Network kind:Network,Service field:spec.service-type=external label:tier=web
+//
 type SearchResponse struct {
-	// Query string as presented by User.
+	// Simple query string
+	// This can be specified as URI parameter.
+	// For advanced query cases, Users should use specify SearchQuery
+	// and pass the SearchRequest in a GET/POST Body
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
 	// From represents the start offset (zero based), used in paginated search requests
 	// The results returned would be in the range [From ... From+MaxResults-1]
 	// TODO: Add venice option to set default to 0.
+	// This can be specified as URI parameter.
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
 	// MaxResults is the max-count of search results
 	// TODO: Add venice option to set some default value (TBD)
-	Result *SearchResult `protobuf:"bytes,3,opt,name=Result" json:"result,omitempty"`
+	// This can be specified as URI parameter.
+	TotalHits int64 `protobuf:"varint,3,opt,name=TotalHits,proto3" json:"total-hits,omitempty"`
+	// Search query contains the search requirements
+	// This is intended for advanced query use cases involving
+	// boolean query, structured term query and supports various
+	// combinations of text, phrase strings and search modifiers
+	// for specific categories, kinds, fields and labels.
+	// This cannot be specified as URI parameter.
+	ActualHits        int64              `protobuf:"varint,4,opt,name=ActualHits,proto3" json:"actual-hits,omitempty"`
+	TimeTakenMsecs    int64              `protobuf:"varint,5,opt,name=TimeTakenMsecs,proto3" json:"time-taken-msecs,omitempty"`
+	Error             *Error             `protobuf:"bytes,6,opt,name=Error" json:"error,omitempty"`
+	Entries           []*Entry           `protobuf:"bytes,7,rep,name=Entries" json:"entries,omitempty"`
+	AggregatedEntries *NestedAggregation `protobuf:"bytes,8,opt,name=AggregatedEntries" json:"aggregated-entries,omitempty"`
 }
 
 func (m *SearchResponse) Reset()                    { *m = SearchResponse{} }
 func (m *SearchResponse) String() string            { return proto.CompactTextString(m) }
 func (*SearchResponse) ProtoMessage()               {}
-func (*SearchResponse) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{8} }
+func (*SearchResponse) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{9} }
 
-func (m *SearchResponse) GetResult() *SearchResult {
-	if m != nil {
-		return m.Result
-	}
-	return nil
-}
-
-// SearchResponse is the output provided by the Query method
-type SearchResult struct {
-	TotalHits         int64              `protobuf:"varint,1,opt,name=TotalHits,proto3" json:"total-hits,omitempty"`
-	ActualHits        int64              `protobuf:"varint,2,opt,name=ActualHits,proto3" json:"actual-hits,omitempty"`
-	TimeTakenMsecs    int64              `protobuf:"varint,3,opt,name=TimeTakenMsecs,proto3" json:"time-taken-msecs,omitempty"`
-	Error             *Error             `protobuf:"bytes,4,opt,name=Error" json:"error,omitempty"`
-	Entries           []*Entry           `protobuf:"bytes,5,rep,name=Entries" json:"entries,omitempty"`
-	AggregatedEntries *NestedAggregation `protobuf:"bytes,6,opt,name=AggregatedEntries" json:"aggregated-entries,omitempty"`
-}
-
-func (m *SearchResult) Reset()                    { *m = SearchResult{} }
-func (m *SearchResult) String() string            { return proto.CompactTextString(m) }
-func (*SearchResult) ProtoMessage()               {}
-func (*SearchResult) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{9} }
-
-func (m *SearchResult) GetTotalHits() int64 {
+func (m *SearchResponse) GetTotalHits() int64 {
 	if m != nil {
 		return m.TotalHits
 	}
 	return 0
 }
 
-func (m *SearchResult) GetActualHits() int64 {
+func (m *SearchResponse) GetActualHits() int64 {
 	if m != nil {
 		return m.ActualHits
 	}
 	return 0
 }
 
-func (m *SearchResult) GetTimeTakenMsecs() int64 {
+func (m *SearchResponse) GetTimeTakenMsecs() int64 {
 	if m != nil {
 		return m.TimeTakenMsecs
 	}
 	return 0
 }
 
-func (m *SearchResult) GetError() *Error {
+func (m *SearchResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
 	}
 	return nil
 }
 
-func (m *SearchResult) GetEntries() []*Entry {
+func (m *SearchResponse) GetEntries() []*Entry {
 	if m != nil {
 		return m.Entries
 	}
 	return nil
 }
 
-func (m *SearchResult) GetAggregatedEntries() *NestedAggregation {
+func (m *SearchResponse) GetAggregatedEntries() *NestedAggregation {
 	if m != nil {
 		return m.AggregatedEntries
 	}
 	return nil
 }
 
+// SearchResponse is the output provided by the search API
+// Based on the search request, search results would be part
+// of one of the entities : Entries or NestedAggregation.
+// In case of failures, Error would indicate the error status and
+// description.
+type TextRequirement struct {
+	Text []string `protobuf:"bytes,1,rep,name=Text" json:"text,omitempty"`
+}
+
+func (m *TextRequirement) Reset()                    { *m = TextRequirement{} }
+func (m *TextRequirement) String() string            { return proto.CompactTextString(m) }
+func (*TextRequirement) ProtoMessage()               {}
+func (*TextRequirement) Descriptor() ([]byte, []int) { return fileDescriptorSearch, []int{10} }
+
+func (m *TextRequirement) GetText() []string {
+	if m != nil {
+		return m.Text
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Aggregation)(nil), "search.Aggregation")
+	proto.RegisterType((*Category)(nil), "search.Category")
 	proto.RegisterType((*Entry)(nil), "search.Entry")
 	proto.RegisterType((*EntryList)(nil), "search.EntryList")
 	proto.RegisterType((*Error)(nil), "search.Error")
+	proto.RegisterType((*Kind)(nil), "search.Kind")
 	proto.RegisterType((*NestedAggregation)(nil), "search.NestedAggregation")
-	proto.RegisterType((*Requirement)(nil), "search.Requirement")
-	proto.RegisterType((*SearchCriteria)(nil), "search.SearchCriteria")
+	proto.RegisterType((*SearchQuery)(nil), "search.SearchQuery")
 	proto.RegisterType((*SearchRequest)(nil), "search.SearchRequest")
 	proto.RegisterType((*SearchResponse)(nil), "search.SearchResponse")
-	proto.RegisterType((*SearchResult)(nil), "search.SearchResult")
-	proto.RegisterEnum("search.Operator", Operator_name, Operator_value)
+	proto.RegisterType((*TextRequirement)(nil), "search.TextRequirement")
+	proto.RegisterEnum("search.Category_Type", Category_Type_name, Category_Type_value)
+	proto.RegisterEnum("search.Kind_Type", Kind_Type_name, Kind_Type_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -531,6 +716,24 @@ func (m *Aggregation) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *Category) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Category) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
 func (m *Entry) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -625,6 +828,24 @@ func (m *Error) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *Kind) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Kind) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
 func (m *NestedAggregation) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -671,7 +892,7 @@ func (m *NestedAggregation) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *Requirement) Marshal() (dAtA []byte, err error) {
+func (m *SearchQuery) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -681,25 +902,40 @@ func (m *Requirement) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Requirement) MarshalTo(dAtA []byte) (int, error) {
+func (m *SearchQuery) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.KeyOrText) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintSearch(dAtA, i, uint64(len(m.KeyOrText)))
-		i += copy(dAtA[i:], m.KeyOrText)
+	if len(m.Texts) > 0 {
+		for _, msg := range m.Texts {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintSearch(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
 	}
-	if len(m.Operator) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintSearch(dAtA, i, uint64(len(m.Operator)))
-		i += copy(dAtA[i:], m.Operator)
+	if len(m.Categories) > 0 {
+		for _, s := range m.Categories {
+			dAtA[i] = 0x12
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
 	}
-	if len(m.Values) > 0 {
-		for _, s := range m.Values {
+	if len(m.Kinds) > 0 {
+		for _, s := range m.Kinds {
 			dAtA[i] = 0x1a
 			i++
 			l = len(s)
@@ -713,35 +949,25 @@ func (m *Requirement) MarshalTo(dAtA []byte) (int, error) {
 			i += copy(dAtA[i:], s)
 		}
 	}
-	return i, nil
-}
-
-func (m *SearchCriteria) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *SearchCriteria) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Requirements) > 0 {
-		for _, msg := range m.Requirements {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintSearch(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
+	if m.Fields != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintSearch(dAtA, i, uint64(m.Fields.Size()))
+		n5, err := m.Fields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
 		}
+		i += n5
+	}
+	if m.Labels != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintSearch(dAtA, i, uint64(m.Labels.Size()))
+		n6, err := m.Labels.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
 	}
 	return i, nil
 }
@@ -777,15 +1003,15 @@ func (m *SearchRequest) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintSearch(dAtA, i, uint64(m.MaxResults))
 	}
-	if m.Criteria != nil {
+	if m.Query != nil {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintSearch(dAtA, i, uint64(m.Criteria.Size()))
-		n5, err := m.Criteria.MarshalTo(dAtA[i:])
+		i = encodeVarintSearch(dAtA, i, uint64(m.Query.Size()))
+		n7, err := m.Query.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n7
 	}
 	return i, nil
 }
@@ -808,75 +1034,47 @@ func (m *SearchResponse) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintSearch(dAtA, i, uint64(m.TypeMeta.Size()))
-	n6, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n8, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n6
+	i += n8
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSearch(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n7, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n9, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n7
-	if m.Result != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintSearch(dAtA, i, uint64(m.Result.Size()))
-		n8, err := m.Result.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n8
-	}
-	return i, nil
-}
-
-func (m *SearchResult) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *SearchResult) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
+	i += n9
 	if m.TotalHits != 0 {
-		dAtA[i] = 0x8
+		dAtA[i] = 0x18
 		i++
 		i = encodeVarintSearch(dAtA, i, uint64(m.TotalHits))
 	}
 	if m.ActualHits != 0 {
-		dAtA[i] = 0x10
+		dAtA[i] = 0x20
 		i++
 		i = encodeVarintSearch(dAtA, i, uint64(m.ActualHits))
 	}
 	if m.TimeTakenMsecs != 0 {
-		dAtA[i] = 0x18
+		dAtA[i] = 0x28
 		i++
 		i = encodeVarintSearch(dAtA, i, uint64(m.TimeTakenMsecs))
 	}
 	if m.Error != nil {
-		dAtA[i] = 0x22
+		dAtA[i] = 0x32
 		i++
 		i = encodeVarintSearch(dAtA, i, uint64(m.Error.Size()))
-		n9, err := m.Error.MarshalTo(dAtA[i:])
+		n10, err := m.Error.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n10
 	}
 	if len(m.Entries) > 0 {
 		for _, msg := range m.Entries {
-			dAtA[i] = 0x2a
+			dAtA[i] = 0x3a
 			i++
 			i = encodeVarintSearch(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -887,14 +1085,47 @@ func (m *SearchResult) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if m.AggregatedEntries != nil {
-		dAtA[i] = 0x32
+		dAtA[i] = 0x42
 		i++
 		i = encodeVarintSearch(dAtA, i, uint64(m.AggregatedEntries.Size()))
-		n10, err := m.AggregatedEntries.MarshalTo(dAtA[i:])
+		n11, err := m.AggregatedEntries.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n11
+	}
+	return i, nil
+}
+
+func (m *TextRequirement) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TextRequirement) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Text) > 0 {
+		for _, s := range m.Text {
+			dAtA[i] = 0xa
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
 	}
 	return i, nil
 }
@@ -924,6 +1155,12 @@ func (m *Aggregation) Size() (n int) {
 			n += mapEntrySize + 1 + sovSearch(uint64(mapEntrySize))
 		}
 	}
+	return n
+}
+
+func (m *Category) Size() (n int) {
+	var l int
+	_ = l
 	return n
 }
 
@@ -963,6 +1200,12 @@ func (m *Error) Size() (n int) {
 	return n
 }
 
+func (m *Kind) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
 func (m *NestedAggregation) Size() (n int) {
 	var l int
 	_ = l
@@ -982,34 +1225,34 @@ func (m *NestedAggregation) Size() (n int) {
 	return n
 }
 
-func (m *Requirement) Size() (n int) {
+func (m *SearchQuery) Size() (n int) {
 	var l int
 	_ = l
-	l = len(m.KeyOrText)
-	if l > 0 {
-		n += 1 + l + sovSearch(uint64(l))
+	if len(m.Texts) > 0 {
+		for _, e := range m.Texts {
+			l = e.Size()
+			n += 1 + l + sovSearch(uint64(l))
+		}
 	}
-	l = len(m.Operator)
-	if l > 0 {
-		n += 1 + l + sovSearch(uint64(l))
-	}
-	if len(m.Values) > 0 {
-		for _, s := range m.Values {
+	if len(m.Categories) > 0 {
+		for _, s := range m.Categories {
 			l = len(s)
 			n += 1 + l + sovSearch(uint64(l))
 		}
 	}
-	return n
-}
-
-func (m *SearchCriteria) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Requirements) > 0 {
-		for _, e := range m.Requirements {
-			l = e.Size()
+	if len(m.Kinds) > 0 {
+		for _, s := range m.Kinds {
+			l = len(s)
 			n += 1 + l + sovSearch(uint64(l))
 		}
+	}
+	if m.Fields != nil {
+		l = m.Fields.Size()
+		n += 1 + l + sovSearch(uint64(l))
+	}
+	if m.Labels != nil {
+		l = m.Labels.Size()
+		n += 1 + l + sovSearch(uint64(l))
 	}
 	return n
 }
@@ -1027,8 +1270,8 @@ func (m *SearchRequest) Size() (n int) {
 	if m.MaxResults != 0 {
 		n += 1 + sovSearch(uint64(m.MaxResults))
 	}
-	if m.Criteria != nil {
-		l = m.Criteria.Size()
+	if m.Query != nil {
+		l = m.Query.Size()
 		n += 1 + l + sovSearch(uint64(l))
 	}
 	return n
@@ -1041,16 +1284,6 @@ func (m *SearchResponse) Size() (n int) {
 	n += 1 + l + sovSearch(uint64(l))
 	l = m.ObjectMeta.Size()
 	n += 1 + l + sovSearch(uint64(l))
-	if m.Result != nil {
-		l = m.Result.Size()
-		n += 1 + l + sovSearch(uint64(l))
-	}
-	return n
-}
-
-func (m *SearchResult) Size() (n int) {
-	var l int
-	_ = l
 	if m.TotalHits != 0 {
 		n += 1 + sovSearch(uint64(m.TotalHits))
 	}
@@ -1073,6 +1306,18 @@ func (m *SearchResult) Size() (n int) {
 	if m.AggregatedEntries != nil {
 		l = m.AggregatedEntries.Size()
 		n += 1 + l + sovSearch(uint64(l))
+	}
+	return n
+}
+
+func (m *TextRequirement) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Text) > 0 {
+		for _, s := range m.Text {
+			l = len(s)
+			n += 1 + l + sovSearch(uint64(l))
+		}
 	}
 	return n
 }
@@ -1242,6 +1487,56 @@ func (m *Aggregation) Unmarshal(dAtA []byte) error {
 			}
 			m.Entries[mapkey] = mapvalue
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSearch(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSearch
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Category) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSearch
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Category: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Category: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipSearch(dAtA[iNdEx:])
@@ -1562,6 +1857,56 @@ func (m *Error) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *Kind) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSearch
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Kind: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Kind: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSearch(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSearch
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *NestedAggregation) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1735,7 +2080,7 @@ func (m *NestedAggregation) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Requirement) Unmarshal(dAtA []byte) error {
+func (m *SearchQuery) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1758,152 +2103,15 @@ func (m *Requirement) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Requirement: wiretype end group for non-group")
+			return fmt.Errorf("proto: SearchQuery: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Requirement: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SearchQuery: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrText", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSearch
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSearch
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.KeyOrText = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Operator", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSearch
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSearch
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Operator = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Values", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSearch
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSearch
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Values = append(m.Values, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSearch(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthSearch
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *SearchCriteria) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSearch
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SearchCriteria: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SearchCriteria: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Requirements", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Texts", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1927,8 +2135,132 @@ func (m *SearchCriteria) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Requirements = append(m.Requirements, Requirement{})
-			if err := m.Requirements[len(m.Requirements)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Texts = append(m.Texts, &TextRequirement{})
+			if err := m.Texts[len(m.Texts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Categories", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSearch
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSearch
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Categories = append(m.Categories, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Kinds", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSearch
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSearch
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Kinds = append(m.Kinds, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSearch
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSearch
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Fields == nil {
+				m.Fields = &fields.Selector{}
+			}
+			if err := m.Fields.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Labels", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSearch
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSearch
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Labels == nil {
+				m.Labels = &labels.Selector{}
+			}
+			if err := m.Labels.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2051,7 +2383,7 @@ func (m *SearchRequest) Unmarshal(dAtA []byte) error {
 			}
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Criteria", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Query", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2075,10 +2407,10 @@ func (m *SearchRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Criteria == nil {
-				m.Criteria = &SearchCriteria{}
+			if m.Query == nil {
+				m.Query = &SearchQuery{}
 			}
-			if err := m.Criteria.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Query.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2193,89 +2525,6 @@ func (m *SearchResponse) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSearch
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSearch
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Result == nil {
-				m.Result = &SearchResult{}
-			}
-			if err := m.Result.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSearch(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthSearch
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *SearchResult) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSearch
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SearchResult: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SearchResult: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TotalHits", wireType)
 			}
@@ -2294,7 +2543,7 @@ func (m *SearchResult) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 2:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ActualHits", wireType)
 			}
@@ -2313,7 +2562,7 @@ func (m *SearchResult) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TimeTakenMsecs", wireType)
 			}
@@ -2332,7 +2581,7 @@ func (m *SearchResult) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 4:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
 			}
@@ -2365,7 +2614,7 @@ func (m *SearchResult) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 5:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Entries", wireType)
 			}
@@ -2396,7 +2645,7 @@ func (m *SearchResult) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AggregatedEntries", wireType)
 			}
@@ -2428,6 +2677,85 @@ func (m *SearchResult) Unmarshal(dAtA []byte) error {
 			if err := m.AggregatedEntries.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSearch(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSearch
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TextRequirement) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSearch
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TextRequirement: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TextRequirement: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Text", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSearch
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSearch
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Text = append(m.Text, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2558,69 +2886,94 @@ var (
 func init() { proto.RegisterFile("search.proto", fileDescriptorSearch) }
 
 var fileDescriptorSearch = []byte{
-	// 1014 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x4f, 0x6f, 0x1b, 0x45,
-	0x14, 0xef, 0xd8, 0xb1, 0x1b, 0x8f, 0x93, 0xd4, 0x99, 0xa6, 0xc1, 0xb6, 0x4a, 0x6c, 0x59, 0x50,
-	0x02, 0xca, 0xda, 0x6d, 0x90, 0x2a, 0x0a, 0xbd, 0x74, 0x51, 0x02, 0x15, 0x4d, 0x0c, 0x8e, 0x29,
-	0x07, 0xc4, 0x61, 0xe2, 0xbc, 0x6e, 0x86, 0x78, 0x77, 0x36, 0x33, 0xb3, 0x21, 0xbe, 0xa1, 0xf4,
-	0x1b, 0xc0, 0xad, 0x27, 0xbe, 0x03, 0x9c, 0xb8, 0x71, 0x40, 0xca, 0xb1, 0x12, 0x77, 0x0b, 0x45,
-	0x9c, 0xf2, 0x29, 0xd0, 0xcc, 0xce, 0xc6, 0xe3, 0x84, 0x8a, 0x3f, 0x07, 0x4e, 0xf6, 0xbc, 0xf9,
-	0xfd, 0xde, 0x9f, 0xdf, 0x7b, 0xf3, 0xb4, 0x78, 0x4e, 0x02, 0x15, 0x83, 0xfd, 0x76, 0x2c, 0xb8,
-	0xe2, 0xa4, 0x98, 0x9e, 0xea, 0xb7, 0x03, 0xce, 0x83, 0x21, 0x74, 0x68, 0xcc, 0x3a, 0x34, 0x8a,
-	0xb8, 0xa2, 0x8a, 0xf1, 0x48, 0xa6, 0xa8, 0xfa, 0x46, 0xc0, 0xd4, 0x7e, 0xb2, 0xdb, 0x1e, 0xf0,
-	0xb0, 0x13, 0x43, 0x24, 0x69, 0xb4, 0xc7, 0x3b, 0xf2, 0x9b, 0xce, 0x11, 0x44, 0x6c, 0x00, 0x9d,
-	0x44, 0xb1, 0xa1, 0xd4, 0xd4, 0x00, 0x22, 0x97, 0xdd, 0x61, 0xd1, 0x60, 0x98, 0xec, 0x41, 0xe6,
-	0xc6, 0x73, 0xdc, 0x04, 0x3c, 0xe0, 0x1d, 0x63, 0xde, 0x4d, 0x9e, 0x99, 0x93, 0x39, 0x98, 0x7f,
-	0x16, 0xfe, 0xe6, 0x2b, 0xa2, 0xea, 0x1c, 0x43, 0x50, 0x34, 0x85, 0xb5, 0x7e, 0x44, 0xb8, 0xfc,
-	0x28, 0x08, 0x04, 0x04, 0x26, 0x2a, 0xf9, 0x1c, 0x5f, 0xdf, 0x88, 0x94, 0x60, 0x20, 0xab, 0xa8,
-	0x99, 0x5f, 0x2d, 0xaf, 0x37, 0xdb, 0xb6, 0x64, 0x07, 0xd5, 0xb6, 0x10, 0xfd, 0x33, 0xf2, 0x6b,
-	0xa7, 0xe3, 0x06, 0x3a, 0x1f, 0x37, 0x16, 0x21, 0xb5, 0xae, 0xf1, 0x90, 0x29, 0x08, 0x63, 0x35,
-	0xea, 0x65, 0xbe, 0xea, 0x5b, 0x78, 0xce, 0xe5, 0x90, 0x0a, 0xce, 0x1f, 0xc0, 0xa8, 0x8a, 0x9a,
-	0x68, 0xb5, 0xd4, 0xd3, 0x7f, 0xc9, 0x5b, 0xb8, 0x70, 0x44, 0x87, 0x09, 0x54, 0x73, 0x4d, 0xb4,
-	0x5a, 0x5e, 0x5f, 0xcc, 0xc2, 0x1a, 0xfc, 0x13, 0x26, 0x55, 0x2f, 0xbd, 0x7f, 0x3f, 0xf7, 0x1e,
-	0x6a, 0x29, 0x5c, 0x48, 0xfd, 0xdc, 0xc5, 0xa8, 0x6f, 0xbc, 0x94, 0xd7, 0xe7, 0xdb, 0x34, 0x66,
-	0xed, 0xfe, 0x28, 0x86, 0x2d, 0x50, 0xd4, 0xbf, 0x79, 0x3a, 0x6e, 0x5c, 0x7b, 0x99, 0x66, 0x76,
-	0x7d, 0x8d, 0x45, 0x43, 0x16, 0x41, 0x0f, 0xf5, 0xc9, 0x03, 0x8c, 0xba, 0x36, 0xc6, 0x0d, 0xc3,
-	0xe8, 0xee, 0x7e, 0x0d, 0x03, 0x65, 0x38, 0x75, 0x87, 0xb3, 0xa0, 0x45, 0x72, 0x4a, 0x41, 0xdd,
-	0x56, 0x17, 0x97, 0x2e, 0xb2, 0x21, 0xfe, 0x65, 0xa1, 0xe6, 0xa7, 0x32, 0xfe, 0x27, 0xaa, 0xb4,
-	0xbe, 0xc2, 0x85, 0x0d, 0x21, 0xb8, 0x20, 0x77, 0xf0, 0x8c, 0x4e, 0x3c, 0xd5, 0xc3, 0x27, 0x3a,
-	0xbc, 0x1a, 0xc5, 0xe0, 0x70, 0xcc, 0x3d, 0x59, 0xc3, 0xc5, 0x1e, 0x50, 0xc9, 0x23, 0x53, 0x41,
-	0xc9, 0x5f, 0x3a, 0x1f, 0x37, 0x2a, 0xc2, 0x58, 0x1c, 0xac, 0xc5, 0xb4, 0x7e, 0x41, 0x78, 0x71,
-	0x1b, 0xa4, 0x82, 0x3d, 0xb7, 0xc3, 0x5f, 0x5e, 0x4e, 0xfc, 0x4e, 0x96, 0xf8, 0x15, 0xec, 0xbf,
-	0xef, 0x73, 0xf7, 0x6f, 0xfb, 0xfc, 0xf6, 0x74, 0x9f, 0x6f, 0xfe, 0xc5, 0x78, 0xb9, 0x9d, 0xfe,
-	0x09, 0xe1, 0x72, 0x0f, 0x0e, 0x13, 0x26, 0x20, 0x84, 0x48, 0x91, 0x0f, 0x70, 0xe9, 0x13, 0x18,
-	0x75, 0x45, 0x1f, 0x8e, 0x95, 0x95, 0xeb, 0x75, 0x9b, 0xd7, 0xad, 0x03, 0x18, 0x79, 0x5c, 0x78,
-	0x0a, 0x8e, 0x95, 0x93, 0xdb, 0x04, 0x4f, 0xee, 0xe3, 0xd9, 0x6e, 0x0c, 0x82, 0x2a, 0x2e, 0xac,
-	0x80, 0x75, 0xcb, 0x25, 0xdc, 0xda, 0x1d, 0xe2, 0x05, 0x96, 0xdc, 0xc5, 0xc5, 0xa7, 0x3a, 0x23,
-	0x59, 0xcd, 0x37, 0xf3, 0xab, 0x25, 0xbf, 0x6a, 0x59, 0x15, 0x93, 0xa7, 0x2b, 0x84, 0xc5, 0xb5,
-	0x18, 0x5e, 0xd8, 0x31, 0x75, 0x7d, 0x28, 0x98, 0x02, 0xc1, 0x28, 0xf9, 0x02, 0xcf, 0x39, 0x75,
-	0x64, 0xda, 0x5f, 0x94, 0xef, 0xdc, 0xf9, 0x2b, 0x7a, 0x0c, 0xcf, 0xc7, 0x8d, 0x65, 0xe1, 0x10,
-	0x9c, 0x20, 0x53, 0x8e, 0x5a, 0xdf, 0xe6, 0xf0, 0x7c, 0x1a, 0x4b, 0x9b, 0x41, 0x2a, 0xf2, 0x10,
-	0x97, 0x3f, 0x4b, 0x40, 0x8c, 0x76, 0x94, 0x60, 0x51, 0x60, 0x55, 0xaa, 0x6b, 0x87, 0x87, 0xda,
-	0xec, 0x49, 0x63, 0x77, 0x1c, 0xba, 0x70, 0x3d, 0x8b, 0x9b, 0x82, 0x87, 0x46, 0xa0, 0x42, 0x3a,
-	0x8b, 0xcf, 0x04, 0x0f, 0xdd, 0x59, 0xd4, 0xf7, 0xe4, 0x01, 0xc6, 0x5b, 0xf4, 0xb8, 0x07, 0x32,
-	0x19, 0x2a, 0x2d, 0x8c, 0x46, 0xd7, 0x74, 0x1b, 0x42, 0x7a, 0xec, 0x89, 0xd4, 0xec, 0x90, 0x1c,
-	0x30, 0xd9, 0xc6, 0xb3, 0x99, 0x2e, 0xd5, 0x19, 0x33, 0x06, 0xcb, 0x99, 0x0e, 0xd3, 0xaa, 0x4d,
-	0xfa, 0x33, 0xb0, 0x16, 0xb7, 0x3f, 0x19, 0xaa, 0xf5, 0x2b, 0xca, 0xe4, 0xee, 0x81, 0x8c, 0x79,
-	0x24, 0xe1, 0x7f, 0x5d, 0x0c, 0x64, 0x53, 0x3f, 0x4b, 0x5d, 0x9a, 0x91, 0xa1, 0xbc, 0xbe, 0x34,
-	0x5d, 0x4d, 0x7a, 0x37, 0x99, 0x9a, 0x54, 0x9c, 0xe9, 0x07, 0xab, 0x2d, 0xad, 0x9f, 0xf3, 0x78,
-	0xce, 0xa5, 0x90, 0xfb, 0xb8, 0xd4, 0xe7, 0x8a, 0x0e, 0x3f, 0x66, 0x66, 0x62, 0xd0, 0x6a, 0xde,
-	0xaf, 0x9e, 0x8f, 0x1b, 0x4b, 0x4a, 0x1b, 0xbd, 0x7d, 0x36, 0xa5, 0xf0, 0x04, 0xaa, 0x7b, 0xf3,
-	0x68, 0xa0, 0x12, 0x4b, 0xcc, 0x19, 0xa2, 0xe9, 0x0d, 0x35, 0xd6, 0xcb, 0x4c, 0x07, 0x4c, 0x36,
-	0xf1, 0x42, 0x9f, 0x85, 0xd0, 0xa7, 0x07, 0x10, 0x6d, 0x49, 0x18, 0xa4, 0xad, 0xcd, 0xfb, 0x2b,
-	0xe7, 0xe3, 0x46, 0x5d, 0xb1, 0x10, 0x3c, 0xa5, 0xaf, 0xbc, 0x50, 0xdf, 0x39, 0x3e, 0x2e, 0xb1,
-	0xc8, 0x43, 0xbb, 0xdb, 0x6c, 0x83, 0x27, 0xdb, 0x51, 0x1b, 0xfd, 0xd7, 0xac, 0x16, 0x37, 0x40,
-	0x1f, 0x1d, 0x37, 0x76, 0x21, 0x3a, 0xdb, 0xb5, 0xf0, 0x1f, 0xb7, 0x2b, 0x09, 0xf1, 0x62, 0xb6,
-	0x54, 0x60, 0x2f, 0xf3, 0x56, 0x34, 0xd9, 0xd4, 0x5e, 0xb9, 0xf2, 0xfc, 0x37, 0xac, 0xe7, 0xdb,
-	0xf4, 0x82, 0xeb, 0x5d, 0x0d, 0x72, 0xd5, 0xf3, 0x3b, 0x3b, 0x93, 0xe5, 0x42, 0x4a, 0xb8, 0xb0,
-	0xa1, 0x71, 0x95, 0x6b, 0x04, 0xe3, 0xe2, 0xc6, 0x61, 0x42, 0x87, 0xb2, 0x82, 0x48, 0x11, 0xe7,
-	0x1e, 0x47, 0x95, 0x1c, 0x99, 0xc7, 0xa5, 0x6d, 0xae, 0xac, 0x39, 0xaf, 0xd1, 0xdb, 0x5c, 0x3d,
-	0x8e, 0x2a, 0x33, 0x1a, 0xf1, 0x91, 0xaa, 0x14, 0xf4, 0xef, 0x13, 0x55, 0x29, 0xae, 0xef, 0xe1,
-	0xd9, 0x74, 0x20, 0x9e, 0xde, 0x23, 0x9b, 0xb8, 0x60, 0xde, 0x29, 0xb9, 0x75, 0x79, 0xbc, 0xcc,
-	0xb3, 0xaf, 0x2f, 0x5f, 0x99, 0x3a, 0xf3, 0x14, 0x5a, 0x0b, 0x27, 0xbf, 0xfd, 0xf1, 0x7d, 0x6e,
-	0x96, 0x14, 0x3b, 0xe6, 0xf9, 0xd7, 0x2b, 0xdf, 0x3d, 0xaf, 0xe5, 0x8e, 0xee, 0xbd, 0x78, 0x5e,
-	0xb3, 0xdf, 0x2f, 0x7e, 0xf3, 0xc5, 0x49, 0x6d, 0x2e, 0x86, 0xc8, 0x93, 0xf1, 0x28, 0x18, 0x52,
-	0x29, 0x7f, 0x38, 0xa9, 0x5d, 0x3b, 0x3d, 0x5b, 0x41, 0x2f, 0xcf, 0x56, 0xd0, 0xef, 0x67, 0x2b,
-	0xe8, 0x53, 0xb4, 0x5b, 0x34, 0xdf, 0x0b, 0xef, 0xfe, 0x19, 0x00, 0x00, 0xff, 0xff, 0xf0, 0xcc,
-	0xc5, 0x15, 0x02, 0x09, 0x00, 0x00,
+	// 1420 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0xbf, 0x6f, 0x1b, 0x47,
+	0x16, 0xf6, 0xf2, 0x97, 0xc8, 0xa1, 0x7e, 0x8c, 0x46, 0xb2, 0x44, 0xd2, 0x3e, 0x51, 0x20, 0xee,
+	0x7c, 0x32, 0x60, 0x92, 0xb6, 0x0e, 0x38, 0x9c, 0x0f, 0xc6, 0x1d, 0x44, 0x1d, 0xe5, 0x3b, 0x9c,
+	0x7e, 0x38, 0x24, 0x9d, 0x14, 0x41, 0x8a, 0x15, 0xf9, 0xb4, 0x9a, 0x68, 0x39, 0xb3, 0x9e, 0x9d,
+	0x95, 0xc4, 0x32, 0x36, 0xe0, 0x22, 0x65, 0xd2, 0xb9, 0x0a, 0xd2, 0xc5, 0x4d, 0x8a, 0xfc, 0x05,
+	0xe9, 0x5c, 0x1a, 0x48, 0x4f, 0x04, 0x46, 0x90, 0x42, 0x75, 0xfe, 0x80, 0xe0, 0xcd, 0xee, 0x4a,
+	0x2b, 0xda, 0x4e, 0x9c, 0x14, 0xa9, 0xb8, 0xf3, 0xe6, 0xfb, 0xbe, 0x99, 0xf9, 0xe6, 0xcd, 0x7b,
+	0x24, 0xd3, 0x3e, 0xd8, 0xaa, 0x7f, 0xd8, 0xf0, 0x94, 0xd4, 0x92, 0xe5, 0xc2, 0x51, 0xe5, 0xba,
+	0x23, 0xa5, 0xe3, 0x42, 0xd3, 0xf6, 0x78, 0xd3, 0x16, 0x42, 0x6a, 0x5b, 0x73, 0x29, 0xfc, 0x10,
+	0x55, 0x69, 0x3b, 0x5c, 0x1f, 0x06, 0xfb, 0x8d, 0xbe, 0x1c, 0x36, 0x3d, 0x10, 0xbe, 0x2d, 0x06,
+	0xb2, 0xe9, 0x9f, 0x34, 0x8f, 0x41, 0xf0, 0x3e, 0x34, 0x03, 0xcd, 0x5d, 0x1f, 0xa9, 0x0e, 0x88,
+	0x24, 0xbb, 0xc9, 0x45, 0xdf, 0x0d, 0x06, 0x10, 0xcb, 0xd4, 0x13, 0x32, 0x8e, 0x74, 0x64, 0xd3,
+	0x84, 0xf7, 0x83, 0x03, 0x33, 0x32, 0x03, 0xf3, 0x15, 0xc1, 0xff, 0xf2, 0x96, 0x55, 0x71, 0x8f,
+	0x43, 0xd0, 0x76, 0x04, 0xbb, 0xfd, 0x0b, 0xb0, 0x03, 0x0e, 0xee, 0xc0, 0x6f, 0xfa, 0xe0, 0x42,
+	0x5f, 0x4b, 0xf5, 0x0e, 0x0c, 0xd7, 0xde, 0x07, 0x77, 0x92, 0x51, 0xfb, 0xc6, 0x22, 0xc5, 0x0d,
+	0xc7, 0x51, 0xe0, 0x98, 0x93, 0xb1, 0x87, 0x64, 0xaa, 0x2d, 0xb4, 0xe2, 0xe0, 0x97, 0xac, 0xd5,
+	0xf4, 0x5a, 0x71, 0x7d, 0xb5, 0x11, 0xd9, 0x9a, 0x40, 0x35, 0x22, 0x08, 0xfe, 0x8c, 0x5a, 0xe5,
+	0x17, 0xe3, 0xaa, 0x75, 0x36, 0xae, 0xce, 0x43, 0x18, 0xbd, 0x25, 0x87, 0x5c, 0xc3, 0xd0, 0xd3,
+	0xa3, 0x4e, 0xac, 0x55, 0xd9, 0x21, 0xd3, 0x49, 0x0e, 0xa3, 0x24, 0x7d, 0x04, 0xa3, 0x92, 0xb5,
+	0x6a, 0xad, 0x15, 0x3a, 0xf8, 0xc9, 0xfe, 0x4a, 0xb2, 0xc7, 0xb6, 0x1b, 0x40, 0x29, 0xb5, 0x6a,
+	0xad, 0x15, 0xd7, 0xe7, 0xe3, 0x65, 0x0d, 0x7e, 0x9b, 0xfb, 0xba, 0x13, 0xce, 0xff, 0x33, 0xf5,
+	0x0f, 0xab, 0xf6, 0xb5, 0x45, 0xf2, 0x9b, 0xb6, 0x06, 0x47, 0xaa, 0x51, 0xed, 0x4b, 0x8b, 0x64,
+	0x7a, 0x23, 0x0f, 0x58, 0x91, 0x4c, 0x6d, 0xba, 0x81, 0xaf, 0x41, 0xd1, 0x2b, 0x6c, 0x9a, 0xe4,
+	0x3f, 0x90, 0xea, 0xc8, 0x95, 0xf6, 0x80, 0x5a, 0x38, 0xea, 0x42, 0x3f, 0x50, 0x5c, 0x8f, 0x68,
+	0x8a, 0xe5, 0x49, 0x66, 0x23, 0xd0, 0x87, 0x34, 0x8d, 0x94, 0x5d, 0xd0, 0x27, 0x52, 0x1d, 0xd1,
+	0x0c, 0x9b, 0x25, 0x64, 0x47, 0x0a, 0xae, 0xa5, 0xe2, 0xc2, 0xa1, 0x59, 0x36, 0x43, 0x0a, 0x3d,
+	0x70, 0x61, 0x08, 0x5a, 0x8d, 0x68, 0x8e, 0x11, 0x92, 0x6b, 0x1f, 0x83, 0xd0, 0x3e, 0x9d, 0xc2,
+	0xef, 0x0d, 0x17, 0x94, 0xf6, 0x69, 0x1e, 0x69, 0x1b, 0xc1, 0x80, 0xeb, 0x9e, 0xb2, 0xb9, 0x4b,
+	0x0b, 0x6c, 0x8a, 0xa4, 0xb7, 0xa5, 0x43, 0x09, 0x82, 0x36, 0xa5, 0x38, 0xe0, 0x0e, 0x2d, 0xd6,
+	0x34, 0xc9, 0x86, 0x27, 0xbf, 0x4d, 0xac, 0x9e, 0x39, 0x77, 0x71, 0x7d, 0xa6, 0x61, 0x7b, 0xbc,
+	0x81, 0x5b, 0xdf, 0x01, 0x6d, 0xb7, 0x16, 0x5e, 0x8c, 0xab, 0x57, 0x5e, 0x86, 0x5e, 0x4e, 0xdd,
+	0xe2, 0xc2, 0xe5, 0x02, 0x3a, 0x56, 0x8f, 0xdd, 0x25, 0xd6, 0x5e, 0xe4, 0xca, 0x9c, 0x61, 0xec,
+	0xed, 0x7f, 0x0c, 0x7d, 0x6d, 0x38, 0x95, 0x04, 0x67, 0x16, 0x53, 0x27, 0x61, 0xbe, 0xb5, 0x57,
+	0xdb, 0x23, 0x85, 0x73, 0xff, 0x58, 0x6b, 0xf2, 0x6a, 0x67, 0x2e, 0x79, 0xfc, 0x2e, 0xf7, 0x58,
+	0xfb, 0x88, 0x64, 0xdb, 0x4a, 0x49, 0xc5, 0x6e, 0x84, 0x9e, 0x87, 0x37, 0xd8, 0x62, 0xb8, 0xbc,
+	0x1e, 0x79, 0x90, 0xe0, 0x84, 0x77, 0x72, 0x8b, 0xe4, 0x3a, 0x60, 0xfb, 0x52, 0x98, 0x13, 0x14,
+	0x5a, 0x8b, 0x67, 0xe3, 0x2a, 0x55, 0x26, 0x92, 0xc0, 0x46, 0x98, 0xda, 0xa7, 0x19, 0x92, 0xf9,
+	0x3f, 0x17, 0x83, 0xda, 0x27, 0x99, 0x37, 0xdd, 0x69, 0x9e, 0x64, 0x76, 0xe5, 0x00, 0xa2, 0xfb,
+	0x1c, 0xda, 0x4a, 0xef, 0xfe, 0x6f, 0x93, 0xa6, 0x10, 0xd4, 0x91, 0xae, 0x2b, 0x03, 0x4d, 0xd3,
+	0xe8, 0x7a, 0x0f, 0x84, 0x2d, 0x34, 0xcd, 0x20, 0xac, 0x2d, 0x06, 0x9e, 0xe4, 0x42, 0xd3, 0x2c,
+	0x9b, 0x27, 0x33, 0x71, 0x12, 0xdc, 0x57, 0x32, 0xf0, 0x68, 0xce, 0xe8, 0x38, 0x9e, 0x74, 0x79,
+	0x7f, 0x44, 0xa7, 0xf0, 0xe6, 0x36, 0x3c, 0x8f, 0xe6, 0x51, 0x70, 0xc3, 0xf3, 0x1e, 0xfa, 0xa0,
+	0x68, 0xc1, 0xdc, 0x6f, 0x38, 0xb8, 0xaf, 0x3c, 0x4a, 0xd8, 0x1c, 0x29, 0x6e, 0x82, 0xd2, 0xfc,
+	0x80, 0xf7, 0x6d, 0x0d, 0xb4, 0xc8, 0xae, 0x91, 0xe5, 0x9e, 0xb2, 0x0f, 0x0e, 0x78, 0xbf, 0x2d,
+	0xfa, 0x6a, 0xe4, 0xe1, 0x13, 0x79, 0x10, 0x6a, 0x4e, 0xe3, 0x9e, 0x8d, 0xce, 0x0c, 0x2b, 0x91,
+	0x45, 0xcc, 0x3a, 0x10, 0x1a, 0x89, 0x17, 0x98, 0x59, 0xc4, 0x74, 0xa4, 0x0b, 0x74, 0x0e, 0xb5,
+	0xf1, 0xab, 0xc5, 0xc5, 0x00, 0x73, 0x90, 0x9a, 0xc5, 0xc2, 0xf3, 0x1b, 0x95, 0xf9, 0x44, 0xc0,
+	0x50, 0x18, 0x5b, 0x22, 0x2c, 0x11, 0x88, 0x99, 0x0b, 0xc9, 0xd4, 0x5e, 0xc4, 0x41, 0x17, 0xd4,
+	0x31, 0xef, 0x03, 0xbd, 0x8a, 0x87, 0xde, 0xde, 0x8f, 0x16, 0x5f, 0x62, 0x05, 0x92, 0x35, 0xa9,
+	0x4c, 0x97, 0xd9, 0x22, 0xa1, 0xe6, 0xf3, 0x3f, 0xe0, 0x6b, 0x2e, 0xcc, 0x1e, 0x69, 0x09, 0x57,
+	0x34, 0xd1, 0x88, 0x51, 0x46, 0x86, 0x79, 0x08, 0xb4, 0x82, 0x73, 0xe6, 0x33, 0x9a, 0xbb, 0x86,
+	0x81, 0xae, 0xb6, 0xb5, 0x1f, 0x05, 0xae, 0xa3, 0xe6, 0x96, 0x2b, 0x4f, 0xda, 0xa7, 0x9e, 0x3c,
+	0x97, 0xf8, 0x13, 0xc2, 0xb6, 0x4e, 0x5c, 0xe9, 0x44, 0x81, 0x15, 0xbc, 0x9b, 0x1d, 0x8e, 0x99,
+	0xd5, 0x05, 0xdf, 0xc7, 0x75, 0xab, 0xb5, 0x6f, 0x2d, 0x32, 0xbf, 0x0b, 0xbe, 0x86, 0x41, 0xb2,
+	0x40, 0x7d, 0x38, 0x99, 0xc5, 0x37, 0xe2, 0x2c, 0x7e, 0x0d, 0xfb, 0xdb, 0xcb, 0xd4, 0xde, 0xaf,
+	0x96, 0xa9, 0x9b, 0x97, 0xcb, 0xd4, 0xc2, 0x1b, 0xaa, 0x63, 0xb2, 0x50, 0xfd, 0x98, 0x22, 0xc5,
+	0xae, 0x41, 0xbc, 0x17, 0x80, 0x1a, 0xb1, 0x16, 0xc9, 0xf6, 0xe0, 0x54, 0xc7, 0x7b, 0x5f, 0x8e,
+	0xe9, 0x18, 0xec, 0xc0, 0xa3, 0x80, 0x2b, 0x18, 0x82, 0xd0, 0xad, 0x85, 0xb3, 0x71, 0x75, 0x4e,
+	0x23, 0x32, 0xb1, 0xcd, 0x90, 0xca, 0x3a, 0x84, 0x44, 0xb5, 0x0f, 0x4d, 0x48, 0xad, 0xa6, 0xd7,
+	0x0a, 0xad, 0xf5, 0xe7, 0x4f, 0xcb, 0x4b, 0x5d, 0xad, 0xda, 0x22, 0x18, 0xae, 0xc5, 0x95, 0xd1,
+	0x94, 0x96, 0x9b, 0x67, 0xe3, 0xea, 0x62, 0xff, 0x1c, 0x9f, 0x90, 0x4b, 0xa8, 0xb0, 0x7f, 0x93,
+	0x2c, 0xbe, 0x3b, 0xbf, 0x94, 0x36, 0x72, 0x37, 0x9f, 0x3f, 0x2d, 0xb3, 0x58, 0x0e, 0x27, 0xce,
+	0xa5, 0xe6, 0x8e, 0x10, 0x96, 0xdc, 0x94, 0xe1, 0xb1, 0x7f, 0x91, 0xdc, 0x96, 0x69, 0x49, 0xa5,
+	0x8c, 0x31, 0x86, 0x36, 0xc2, 0x0e, 0xd5, 0xe8, 0x46, 0xfd, 0x26, 0x7c, 0xf9, 0x61, 0x30, 0xf9,
+	0xf2, 0x43, 0x16, 0xf2, 0xb7, 0x4d, 0x83, 0x2a, 0x65, 0x23, 0x7e, 0xd8, 0xaf, 0x26, 0xf8, 0x61,
+	0x30, 0xc9, 0x0f, 0x59, 0xb5, 0x9f, 0x2c, 0x7c, 0xdc, 0xe8, 0x25, 0xda, 0x08, 0xbe, 0x66, 0xf7,
+	0x48, 0xd1, 0x78, 0xde, 0xd5, 0x58, 0xce, 0xa3, 0x42, 0x55, 0x39, 0x1b, 0x57, 0x97, 0x1e, 0x61,
+	0xb8, 0xee, 0x9b, 0x78, 0x42, 0x2a, 0x09, 0xc7, 0xfa, 0xb6, 0xa5, 0xe4, 0xd0, 0x5c, 0x73, 0x36,
+	0xac, 0x6f, 0x07, 0x4a, 0x0e, 0x93, 0xf5, 0x0d, 0xe7, 0xd9, 0x5d, 0x42, 0x76, 0xec, 0xd3, 0x0e,
+	0xf8, 0x81, 0xab, 0xd1, 0x3d, 0x44, 0x97, 0xcf, 0xc6, 0xd5, 0xab, 0x43, 0xfb, 0xb4, 0xae, 0xc2,
+	0x70, 0xd2, 0xf3, 0x0b, 0x30, 0xe6, 0x82, 0x59, 0x31, 0x72, 0xec, 0x3c, 0x95, 0x12, 0xf9, 0xd2,
+	0x5a, 0x8e, 0x92, 0x76, 0xce, 0xec, 0x39, 0x69, 0xbb, 0x99, 0xaf, 0x7d, 0x95, 0x21, 0xb3, 0xf1,
+	0xb1, 0x7d, 0x4f, 0x0a, 0x1f, 0xfe, 0xd0, 0x06, 0xc3, 0xfe, 0x4e, 0x0a, 0x3d, 0xa9, 0x6d, 0xf7,
+	0xbf, 0x3c, 0x3a, 0x7d, 0xba, 0x55, 0xc2, 0x84, 0xd3, 0x18, 0xac, 0x1f, 0xf2, 0x4b, 0x87, 0xbf,
+	0x80, 0xa2, 0x6d, 0x1b, 0x7d, 0x1d, 0x44, 0xc4, 0x8c, 0x21, 0x1a, 0xdb, 0x6c, 0x13, 0x9d, 0x64,
+	0x26, 0xc0, 0x6c, 0x8b, 0xcc, 0xf6, 0xf8, 0x10, 0x7a, 0xf6, 0x11, 0x88, 0x1d, 0x1f, 0xfa, 0x61,
+	0xc6, 0xa4, 0x5b, 0x2b, 0x67, 0xe3, 0x6a, 0x45, 0xf3, 0x21, 0xd4, 0x35, 0x4e, 0xd5, 0x87, 0x38,
+	0x97, 0xd0, 0x98, 0x60, 0xb1, 0x7b, 0x51, 0x2b, 0x2b, 0xe5, 0x22, 0xaf, 0xe2, 0x66, 0x88, 0xc1,
+	0x0b, 0xe3, 0x01, 0x87, 0x49, 0xe3, 0xc3, 0xfe, 0x97, 0x68, 0xa6, 0x53, 0xbf, 0xb3, 0x99, 0xb2,
+	0x21, 0x99, 0x8f, 0xcb, 0x06, 0x0c, 0x62, 0xb5, 0xbc, 0xd9, 0x4d, 0xf9, 0xad, 0x45, 0xad, 0xf5,
+	0xe7, 0x48, 0xf9, 0xba, 0x7d, 0xce, 0xad, 0xbf, 0xbe, 0xc8, 0xeb, 0xca, 0xb5, 0xbb, 0x64, 0x6e,
+	0xa2, 0xcc, 0x98, 0x2e, 0x0e, 0xa7, 0xda, 0x54, 0xa3, 0xb8, 0x8b, 0xc3, 0xa9, 0xbe, 0xd4, 0xc5,
+	0xe1, 0x54, 0xaf, 0x0f, 0xf0, 0xef, 0x13, 0xee, 0xe7, 0xfd, 0x3b, 0x6c, 0x2b, 0x4a, 0x5b, 0x76,
+	0xf5, 0x72, 0xc2, 0x46, 0xef, 0xae, 0xb2, 0x34, 0x19, 0x0e, 0xf3, 0xb2, 0x36, 0xfb, 0xf8, 0xbb,
+	0x1f, 0x3e, 0x4f, 0xe5, 0x59, 0xae, 0x69, 0x72, 0xb9, 0x42, 0x3f, 0x7b, 0x52, 0x4e, 0x1d, 0xdf,
+	0x79, 0xf6, 0xa4, 0x1c, 0xfd, 0x55, 0x6f, 0xad, 0x3e, 0x7b, 0x5c, 0x9e, 0xf6, 0x40, 0xd4, 0x7d,
+	0x6f, 0xe4, 0xb8, 0xb6, 0xef, 0x7f, 0xf1, 0xb8, 0x7c, 0xe5, 0xc5, 0xab, 0x15, 0xeb, 0xe5, 0xab,
+	0x15, 0xeb, 0xfb, 0x57, 0x2b, 0xd6, 0x03, 0x6b, 0x3f, 0x67, 0xfe, 0xb6, 0xfe, 0xed, 0xe7, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x32, 0xd1, 0x3f, 0xc4, 0xed, 0x0b, 0x00, 0x00,
 }

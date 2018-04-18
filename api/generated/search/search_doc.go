@@ -8,15 +8,16 @@ Input file: protos/search.proto
 The following Messages are defined.
 
   Aggregation
+  Category
   Entry
   EntryList
   Error
+  Kind
   NestedAggregation
-  Requirement
-  SearchCriteria
+  SearchQuery
   SearchRequest
   SearchResponse
-  SearchResult
+  TextRequirement
 
 The following Services and Methods are defined.
 

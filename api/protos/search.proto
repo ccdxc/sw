@@ -9,61 +9,188 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/fields/selector.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
 
-// Operator represents a key/field's relationship to value(s).
-enum Operator {
-    Empty        = 0;
-    Equals       = 1;
-    In           = 2;
-    NotEquals    = 3;
-    NotIn        = 4;
-    Gt           = 5;
-    Lt           = 6;
+
+// API-groups and associated Kinds as defined in api/protos
+//
+// Cluster
+//        Cluster
+//        Node
+//        SmartNIC
+//        Rollout
+//        RolloutPolicy
+//        Tenant
+//
+// Workload
+//        Endpoint
+//
+// Security
+//        SecurityGroup
+//        Sgpolicy
+//        App
+//        AppUser
+//        AppUserGrp
+//        Certificate
+//        TrafficEncryptionPolicy
+//
+// Auth
+//        User
+//        AuthenticationPolicy
+//        Role
+//        RoleBinding
+//        ClusterUser
+//        ClusterRole
+//        
+// Network
+//        Network
+//        Service
+//        LbPolicy
+//
+// Monitoring
+//        Alert
+//        AlertDestination
+//        AlertPolicy
+//        Event
+//        EventPolicy
+//        StatsPolicy
+//        FlowExportPolicy
+//        FwlogPolicy
+//        MirrorSession
+//        MetricObjects (TBD ??)
+
+// List of search categories, specified via "category" modifier
+// TODO: generate these enums if possible and use it for validation
+message Category {
+    enum Type {
+        // api-groups
+        Cluster     = 0;
+        Workload    = 1;
+        Security    = 2;
+        Auth        = 3;
+        Network     = 4;
+        Monitoring  = 5;
+
+        // Additional categories
+        // granular categories
+        Telemetry   = 6;
+        Events      = 7;
+        Alerts      = 8;
+
+        // special categories
+        AuditTrail  = 9;    
+        Log         = 10; // Debug log, not exposed to user
+        Config      = 11; // User configured objects (TBD)
+    }
 }
 
-// Requirement defines a single matching criteria for search
-// TODO: Switch to unified requirement defintion once it is ready
-message Requirement {
-
-    // KeyOrText contains the following.
-    // -  "Key" followed by operator and list of values 
-    //                 (OR)
-    // -  "Text" - single-word or Phrase text search and
-    //    in such cases Operator and Values are empty and 
-    //    not-applicable.
-    //
-    // Examples of Text search:
-    //     "Prod", "Link Down"
-    // Examples of Structured query: 
-    //     (Note these are illustrative examples and exact values will be per our object model)
-    //     Key=Kind Operator=Equals Values=[Network]
-    //     Key=Meta.Tenant Operator=In Values=[tesla,ford]
-    //     Key=Status.RxErrCount Operator:Gt Values=[100]
-    string KeyOrText        = 1 [(gogoproto.nullable) = true,
-                                (gogoproto.jsontag) = "key-or-text,omitempty"];
-    string Operator         = 2 [(gogoproto.nullable) = true,
-                                (gogoproto.jsontag) = "operator,omitempty"];
-    repeated string Values  = 3 [(gogoproto.nullable) = true,
-                                (gogoproto.jsontag) = "values,omitempty"];
+// List of all allowed Kinds in search, specified via "kind" modifier
+// TODO: Define a list/map of Kinds per Category
+// TODO: generate these enums if possible and use it for validation per Category
+//       This is a placeholder enum until we have a way to auto-generate list
+//       of all kinds 
+message Kind {
+    enum Type {
+        Cluster                 = 0;
+        Node                    = 1;
+        SmartNIC                = 2;
+        Rollout                 = 3;
+        Tenant                  = 4;
+        Endpoint                = 5;
+        SecurityGroup           = 6;
+        Sgpolicy                = 7;
+        App                     = 8;
+        AppUser                 = 9;
+        AppUserGrp              = 10;
+        Certificate             = 11;
+        TrafficEncryptionPolicy = 12;
+        User                    = 13;
+        AuthenticationPolicy    = 14;
+        Role                    = 15;
+        RoleBinding             = 16;
+        ClusterUser             = 17;
+        ClusterRole             = 18;
+        ClusterRoleBinding      = 19;
+        Network                 = 20;
+        Service                 = 21;
+        LbPolicy                = 22;
+        Alert                   = 23;
+        AlertDestination        = 24;
+        AlertPolicy             = 25;
+        Event                   = 26;
+        EventPolicy             = 27;
+        StatsPolicy             = 28;
+        FlowExportPolicy        = 29;
+        FwlogPolicy             = 30;
+        MirrorSession           = 31;
+    }
 }
 
-// SearchCriteria contains the following : 
-// - Requirements is list of match critertia parsed by the Query Parser
-// - User-info and optionally RbacFilters will be added by RBAC-plugin 
-//   running in API-GW and will be passed to backend. The details are TBD.
-message SearchCriteria {
+// TextRequirement is AND of text-strings in the list
+// It is comprised of words or phrases for text search support.
+// If a text-string has space separated multi-word, it will be
+// interpreted as a phrase.
+//
+// In the example below :
+// - "link down" will be a phrase query
+// - network, production, staging will be a word query
+//
+// For eg:
+//    network                      (match network)
+//    link down                    (match "link down" phrase)
+//    network,production           (match network AND production)
+//    network,link down,staging    (match network AND "link down" AND staging)
+//
+message TextRequirement {
 
-    // Requirements is a list of match critertia for the
-    // Search request. It could be combination of Keyword,
-    // Phrase or Fields matching certain values. The
-    // requirements are ANDed by default. In cases where
-    // User specifies a QueryString as URI parameter, 
-    // the query parser would parse it and translate 
-    // into Requirements.
-    // For contextual search, these requirements will be used
-    // as well to specify the scope to narrow down the search.
-    repeated Requirement Requirements   = 1 [(gogoproto.nullable) = false,
-                                            (gogoproto.jsontag) = "requirements,omitempty"];
+  // AND of words or phrases to be matched
+  repeated string Text = 1 [(gogoproto.jsontag) = "text,omitempty"];
+}
+
+// SearchQuery contains various search clauses, modifiers and its associated requirements.
+// This is intended to be used in advanced query use-cases, specified in a GET/POST Body.
+// All the clauses & modifiers (words, phrases, category, kind, field, label) at top level 
+// specified here are AND'ed by default.
+//
+// Currently we don't plan to support exclude option on Words, Phrases, Categories & Kinds.
+// If there is a customer ask, we can add this support using the "-" prefix that is commonly
+// used for exclusion. 
+//
+// Texts:
+//      production staging                     (match production OR staging)
+//      "link down"                            (match the phrase "link down")
+//      network                                (match network)
+// Categories:
+//      category:category1 category:category2  (match category1 OR category2)
+//      category:category1,category2           (match category1 OR category2)
+// Kinds: are scoped within the Categories, if specified
+//      kind:kind1 kind:kind2                  (match kind1 OR kind2)
+//      kind:kind1,kind2                       (match kind1 OR kind2) 
+// Field selector: scoped within the Kind modifier, if specified
+//      field:x=a,y=b,z!=c      (match on field selector requirements)
+// Label selector: scoped within Kinds, Categories if specified in that order
+//      label:x in (a,b)        (match on label selector requirements)
+
+message SearchQuery {
+
+  // OR of Text-requirements to be matched, Exclude is not supported for Text search
+  repeated TextRequirement Texts    = 1 [(gogoproto.jsontag) = "texts,omitempty"];
+
+ 
+  // OR of Categories to be matched, AND and Exclude are not supported for this type
+  repeated string Categories        = 2 [(venice.check) = "StrEnum(Category.Type)",
+                                         (gogoproto.jsontag) = "categories,omitempty"];
+ 
+  // OR of Kinds to be matched, AND and Exclude are not supported for this type
+  repeated string Kinds             = 3 [(venice.check) = "StrEnum(Kind.Type)",
+                                         (gogoproto.jsontag) = "kinds,omitempty"];
+
+  // Field Selector is AND of field.Requirements
+  fields.Selector Fields            = 4 [(gogoproto.jsontag) = "fields,omitempty"];
+
+  // Label Selector is AND of label.Requirememts
+  labels.Selector Labels            = 5 [(gogoproto.jsontag) = "labels,omitempty"];
 }
 
 // Error contains the error code, description and
@@ -113,67 +240,111 @@ message NestedAggregation {
                                            (gogoproto.jsontag) = "entries,omitempty"];
 }
 
-// SearchResult contains the search result.
-// Based on the search request, search results would be part
-// of one of the entities : Entries, Aggregation or NestedAggregation.
-// In case of failures, Error would indicate the error status and
-// description.
-message SearchResult {
-
-    // TotalHits indicates total number of hits matched
-    int64 TotalHits                     = 1 [(gogoproto.jsontag) = "total-hits,omitempty"];
-
-    // ActualHits indicates the actual hits returned in this response
-    int64 ActualHits                    = 2 [(gogoproto.jsontag) = "actual-hits,omitempty"];
-
-    // TimeTakenMsecs is the time taken for search response in millisecs
-    int64 TimeTakenMsecs                = 3 [(gogoproto.jsontag) = "time-taken-msecs,omitempty"];
-
-    // Error status for failures
-    Error Error                         = 4 [(gogoproto.nullable) = true,
-                                            (gogoproto.jsontag) = "error,omitempty"];
-
-    // EntryList is list of all search results with no grouping.
-    repeated Entry Entries              = 5 [(gogoproto.nullable) = true,
-                                             (gogoproto.jsontag) = "entries,omitempty"];
-
-    // AggregatedEntries is a two level grouping of all search results,
-    // Grouped by tenant and kind in that order.
-    NestedAggregation AggregatedEntries = 6 [(gogoproto.nullable) = true,
-                                            (gogoproto.jsontag) = "aggregated-entries,omitempty"];
-}
-
-// SearchRequest is the input to the Query method
+// SearchRequest is the input to the search API
+//
+// Simple queries can be specified as URI param using "QueryString".
+// For advanced queries, it is recommended to use the "SearchQuery" structure
+// and specify them in BODY of the GET/POST method.
+//
+// Examples of search query in query-string format:
+//
+//  1. Find all occurrences matching text “Network” 
+//     Network
+//  2. Find all occurrences matching phrase “link down”
+//     “link down”
+//  3. Find all occurrences matching text production OR "staging"
+//     production staging
+//  4. Find all occurrences matching text “Network” AND "link down"
+//     Network,"link down"
+//     Network AND "link down"
+//  5. Find all config objects with label1=foo
+//     category:config label:label1=foo
+//  6. Find all objects created on or after certain date+time
+//     category:config field:meta.created-time>=”date-time-string”
+//  7. Find all Network objects with type=vlan
+//     kind:Network field:spec.type=vlan
+//  8. Find all Naples nodes with admission-phase = pending or rejected
+//     kind:SmartNIC field:spec.phase in (pending, rejected)
+//  9. Find all events with text matching “disconnected”
+//     category:events disconnected
+// 10. Find all Critical events for Network objects
+//     category:events kind:Network field:severity=CRITICAL 
+// 11. Find all Alerts generated from Naples MAC1
+//     category:alerts field:status.source.node=MAC1
+//     category:alerts MAC1
+// 12. Find all Naples nodes with metric filter : mem>90 && cpu>90
+//     category:metrics kind:SmartNIC field:metric.mem>90,metric.cpu>90
+// 13. Find all Endpoints with label Tier=Web with counter1>=100
+//     category:metrics kind:Endpoint label:Tier=Web field:metric.counter1 > 100
+// 14. Find all Endpoints objects with label target=prod with crc-error-count != 0
+//     category:metrics kind:Endpoint label:target=prod field:status.crc-error-count!=0
+// 15. Find all occurences matching the words and phrase in a certain category & kinds with certain field and label match
+//     production "status down" category:Network kind:Network,Service field:spec.service-type=external label:tier=web
+//
 message SearchRequest {
 
-    // Query string as presented by User.
+    // Simple query string
+    // This can be specified as URI parameter.
+    // For advanced query cases, Users should use specify SearchQuery
+    // and pass the SearchRequest in a GET/POST Body
     string QueryString          = 1 [(gogoproto.jsontag) = "query-string,omitempty"];
 
     // From represents the start offset (zero based), used in paginated search requests
     // The results returned would be in the range [From ... From+MaxResults-1]
     // TODO: Add venice option to set default to 0.
+    // This can be specified as URI parameter.
     int32 From                  = 2 [(gogoproto.jsontag) = "from,omitempty"];
 
     // MaxResults is the max-count of search results
     // TODO: Add venice option to set some default value (TBD)
+    // This can be specified as URI parameter.
     int32 MaxResults            = 3 [(gogoproto.jsontag) = "max-results,omitempty"];
 
-    // Search criteria is list of search requirements to be met
-    SearchCriteria Criteria     = 4 [(gogoproto.nullable) = true,
-                                    (gogoproto.jsontag) = "criteria,omitempty"];
+    // Search query contains the search requirements
+    // This is intended for advanced query use cases involving
+    // boolean query, structured term query and supports various
+    // combinations of text, phrase strings and search modifiers 
+    // for specific categories, kinds, fields and labels.
+    // This cannot be specified as URI parameter.
+    SearchQuery Query           = 4 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "query,omitempty"];
 }
 
-// SearchResponse is the output provided by the Query method
+// SearchResponse is the output provided by the search API
+// Based on the search request, search results would be part
+// of one of the entities : Entries or NestedAggregation.
+// In case of failures, Error would indicate the error status and
+// description.
 message SearchResponse {
 
-    api.TypeMeta T          = 1 [(gogoproto.embed) = true,
-                                (gogoproto.nullable) = false,
-                                (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta O        = 2 [(gogoproto.embed) = true,
-                                (gogoproto.nullable) = false,
-                                (gogoproto.jsontag) = "meta,omitempty"];
-    SearchResult Result     = 3 [(gogoproto.nullable) = true,
-                                (gogoproto.jsontag) = "result,omitempty"];
+    api.TypeMeta T                      = 1 [(gogoproto.embed) = true,
+                                            (gogoproto.nullable) = false,
+                                            (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O                    = 2 [(gogoproto.embed) = true,
+                                             (gogoproto.nullable) = false,
+                                             (gogoproto.jsontag) = "meta,omitempty"];
+
+    // TotalHits indicates total number of hits matched
+    int64 TotalHits                     = 3 [(gogoproto.jsontag) = "total-hits,omitempty"];
+
+    // ActualHits indicates the actual hits returned in this response
+    int64 ActualHits                    = 4 [(gogoproto.jsontag) = "actual-hits,omitempty"];
+
+    // TimeTakenMsecs is the time taken for search response in millisecs
+    int64 TimeTakenMsecs                = 5 [(gogoproto.jsontag) = "time-taken-msecs,omitempty"];
+
+    // Error status for failures
+    Error Error                         = 6 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "error,omitempty"];
+
+    // EntryList is list of all search results with no grouping.
+    repeated Entry Entries              = 7 [(gogoproto.nullable) = true,
+                                             (gogoproto.jsontag) = "entries,omitempty"];
+
+    // AggregatedEntries is a three level grouping of all search results,
+    // Grouped by tenant, category and kind in that order.
+    NestedAggregation AggregatedEntries = 8 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "aggregated-entries,omitempty"];
 }
 
 // fileGrpcDest is the gRPC destination for this service
