@@ -20,6 +20,7 @@
 #include <rdma/ib_cache.h>
 #include <rdma/ib_mad.h>
 
+#include "ionic_fw.h"
 #include "ionic_ibdev.h"
 #include "ionic_ibdebug.h"
 
@@ -52,11 +53,6 @@ MODULE_PARM_DESC(eq_depth, "Max events to poll per round in isr context.");
 static u16 ionic_eq_work_budget = 1000; /* XXX needs tuning */
 module_param_named(work_budget, ionic_eq_work_budget, ushort, 0644);
 MODULE_PARM_DESC(eq_depth, "Max events to poll per round in work context.");
-
-/* XXX cleanup */
-#define IONIC_NUM_RSQ_WQE         4
-#define IONIC_NUM_RRQ_WQE         4
-/* XXX cleanup */
 
 static struct workqueue_struct *ionic_workq;
 
@@ -1423,7 +1419,8 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			       struct ionic_pd *pd,
 			       struct ionic_cq *send_cq,
 			       struct ionic_cq *recv_cq,
-			       struct ionic_qp *qp)
+			       struct ionic_qp *qp,
+			       struct ib_qp_init_attr *attr)
 {
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
@@ -1445,8 +1442,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			.pd = pd->pdid,
 			/* XXX lif should be dbid */
 			.lif_id = dev->lif_id,
-			/* XXX ib_qp_type_to_ionic(init_attr->qp_type) */
-			.service = 0,
+			.service = ib_qp_type_to_ionic(attr->qp_type),
 			.pmtu = 1024,
 			.qp_num = qp->qpid,
 			.sq_cq_num = send_cq->cqid,
@@ -1718,7 +1714,7 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	rc = ionic_create_qp_cmd(dev, pd,
 				 to_ionic_cq(attr->send_cq),
 				 to_ionic_cq(attr->recv_cq),
-				 qp);
+				 qp, attr);
 	if (rc)
 		goto err_cmd;
 
