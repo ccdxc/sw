@@ -60,6 +60,14 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 		return;
 	}
 
+#ifdef HAPS
+	if (comp->len > netdev->mtu + VLAN_ETH_HLEN) {
+		printk(KERN_ERR "RX PKT TOO LARGE!  comp->len %d\n", comp->len);
+		ionic_rx_recycle(q, desc_info, skb);
+		return;
+	}
+#endif
+
 	stats->pkts++;
 	stats->bytes += comp->len;
 
