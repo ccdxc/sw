@@ -1104,6 +1104,7 @@ static int ionic_prep_one_ud(struct ionic_qp *qp,
 	case IBV_WR_SEND:
 	case IBV_WR_SEND_WITH_IMM:
 		rc = ionic_prep_send_ud(qp, wr);
+		break;
 	default:
 		ionic_dbg(ctx, "invalid opcode %d", wr->opcode);
 		rc = EINVAL;
