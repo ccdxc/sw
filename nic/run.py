@@ -123,7 +123,7 @@ def run_rtl(args):
     log = open(model_log, "w")
     asic_src = os.getcwd() + "/asic"
     os.environ["ASIC_SRC"] = asic_src
-    os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64:" + os.getcwd() + "/asic/capri/model/capsim-gen/lib:/home/asic/bin/tools/lib64"
+    os.environ["LD_LIBRARY_PATH"] = ".:../libs:/usr/local/lib:/usr/local/lib64:" + os.getcwd() + "/asic/capri/model/capsim-gen/lib:/home/asic/bin/tools/lib64"
     os.environ["PATH"] = os.getcwd() + "/asic/common/tools/bin" + ":" + os.environ["PATH"]
 
     if args.port_mode == 'nomac':
@@ -170,7 +170,7 @@ def run_model(args):
     global model_log
     if args.test_suf:
         model_log = nic_dir + "/logs_%s/model.log" % args.test_suf
-    os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64:/home/asic/bin/tools/lib64"
+    os.environ["LD_LIBRARY_PATH"] = ".:../libs:/usr/local/lib:/usr/local/lib64:/home/asic/bin/tools/lib64"
 
     #model_dir = nic_dir + "/model_sim/build"
     model_dir = nic_dir + "/../bazel-bin/nic/model_sim"
