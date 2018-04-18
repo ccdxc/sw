@@ -40,8 +40,12 @@ const (
 
 // GetIndex returns the Elastic Index based on the data type & tenant name
 //
-// - The index is of the following format
-//   <venice>.<external/internal>.<tenant>.<datatype>.<YYYY-MM-DD>
+// - The index is of the following format for Alerts, Events, AuditTrail and Logs
+//   with daily indexing allowing to search historical data.
+//   "venice.<external/internal>.<tenant>.<datatype>.<YYYY-MM-DD>"
+// - The index is of the following format for Configs. For configs search there
+//   is no need for historical data and hence we don't need daily indexing.
+//   "venice.external.default.configs"
 // - Having the convention above facilitates multi-index search using common prefix
 // - Indicies marked external are subject to search scope by Spyglass service and
 //   and the user visibility is bounded by RBAC rules.
@@ -54,7 +58,7 @@ func GetIndex(dtype globals.DataType, tenant string) string {
 
 	switch dtype {
 	case globals.Configs:
-		return fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay)
+		return fmt.Sprintf("%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype))
 	case globals.Alerts:
 		return fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay)
 	case globals.Events:
