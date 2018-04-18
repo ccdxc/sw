@@ -93,6 +93,7 @@ func TestEventsDispatcher(t *testing.T) {
 	// ensure the writer received all the events that're sent
 	expectedUniqueEvents := workers
 	expectedRepeatedEvents := workers * 10
+	totalEvents := expectedUniqueEvents + expectedRepeatedEvents
 
 	AssertEventually(t, func() (bool, interface{}) {
 		uniqueTestNICDisconnectedEvents := mockWriter.GetUniqueEvents("TestNICDisconnected")
@@ -100,8 +101,9 @@ func TestEventsDispatcher(t *testing.T) {
 			return true, nil
 		}
 
+		fmt.Printf("expected: %d events, got: %d\n", expectedUniqueEvents, uniqueTestNICDisconnectedEvents)
 		return false, nil
-	}, "unexpected unique number of events", string("5ms"), string("6s"))
+	}, "unexpected number of unique events", string("5ms"), string("5s"))
 
 	AssertEventually(t, func() (bool, interface{}) {
 		uniqueTestNICConnectedEvents := mockWriter.GetUniqueEvents("TestNICConnected")
@@ -109,26 +111,35 @@ func TestEventsDispatcher(t *testing.T) {
 			return true, nil
 		}
 
+		fmt.Printf("expected: %d events, got: %d\n", expectedUniqueEvents, uniqueTestNICConnectedEvents)
 		return false, nil
-	}, "unexpected unique number of events", string("5ms"), string("6s"))
+	}, "unexpected number of unique events", string("5ms"), string("5s"))
 
 	AssertEventually(t, func() (bool, interface{}) {
 		repeatedTestNICDisconnectedEvents := mockWriter.GetRepeatedEvents("TestNICDisconnected")
-		if repeatedTestNICDisconnectedEvents >= expectedRepeatedEvents {
+		totalTestNICDisconnectedEvents := mockWriter.GetTotalEventsBySourceAndEvent(dummyEvtSource, "TestNICDisconnected")
+		if repeatedTestNICDisconnectedEvents >= expectedRepeatedEvents ||
+			totalTestNICDisconnectedEvents == totalEvents {
 			return true, nil
 		}
 
+		fmt.Printf("expected: %d events, got: %d, total events received: %d\n", expectedRepeatedEvents, repeatedTestNICDisconnectedEvents,
+			totalTestNICDisconnectedEvents)
 		return false, nil
-	}, "unexpected repeated number of events", string("5ms"), string("6s"))
+	}, "unexpected number of repeated events", string("5ms"), string("5s"))
 
 	AssertEventually(t, func() (bool, interface{}) {
 		repeatedTestNICConnectedEvents := mockWriter.GetRepeatedEvents("TestNICConnected")
-		if repeatedTestNICConnectedEvents >= expectedRepeatedEvents {
+		totalTestNICConnectedEvents := mockWriter.GetTotalEventsBySourceAndEvent(dummyEvtSource, "TestNICConnected")
+		if repeatedTestNICConnectedEvents >= expectedRepeatedEvents ||
+			totalTestNICConnectedEvents == totalEvents {
 			return true, nil
 		}
 
+		fmt.Printf("expected: %d events, got: %d, total events received: %d\n", expectedRepeatedEvents, repeatedTestNICConnectedEvents,
+			totalTestNICConnectedEvents)
 		return false, nil
-	}, "unexpected repeated number of events", string("5ms"), string("6s"))
+	}, "unexpected repeated number of events", string("5ms"), string("5s"))
 
 	// ensure the writer received all the events
 	expected := (workers * 10) + workers // + workers for the first occurrence
