@@ -968,6 +968,14 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	admin.cmd.create_cq.pt_size = npages;
 	admin.cmd.create_cq.pt_base_addr = pagedma;
 
+	/* XXX for HAPS: side-data */
+	if (ionic_xxx_haps) {
+#ifndef ADMINQ
+		admin.side_data = pagedir;
+		admin.side_data_len = pagedir_size;
+#endif
+	}
+
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)
 		goto err_cmd;
