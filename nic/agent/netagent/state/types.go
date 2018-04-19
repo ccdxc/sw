@@ -17,6 +17,7 @@ const (
 	SecurityGroupID = "sgID"
 	TenantID        = "tenantID"
 	InterfaceID     = "interfaceID"
+	EndpointID      = "endpointID"
 )
 
 // IntfInfo has the interface names to be plumbed into container
@@ -27,16 +28,17 @@ type IntfInfo struct {
 
 // NetAgent is the network agent instance
 type NetAgent struct {
-	sync.Mutex                                     // global lock for the agent
-	store       emstore.Emstore                    // embedded db
-	nodeUUID    string                             // Node's UUID
-	datapath    NetDatapathAPI                     // network datapath
-	ctrlerif    CtrlerAPI                          // controller object
-	networkDB   map[string]*netproto.Network       // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
-	endpointDB  map[string]*netproto.Endpoint      // Endpoint object db
-	secgroupDB  map[string]*netproto.SecurityGroup // security group object db
-	tenantDB    map[string]*netproto.Tenant        // tenant object db
-	interfaceDB map[string]*netproto.Interface     // interface object db
+	sync.Mutex                                    // global lock for the agent
+	store      emstore.Emstore                    // embedded db
+	nodeUUID   string                             // Node's UUID
+	datapath   NetDatapathAPI                     // network datapath
+	ctrlerif   CtrlerAPI                          // controller object
+	networkDB  map[string]*netproto.Network       // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
+	endpointDB map[string]*netproto.Endpoint      // Endpoint object db
+	secgroupDB map[string]*netproto.SecurityGroup // security group object db
+	tenantDB   map[string]*netproto.Tenant        // tenant object db
+	enicDB     map[string]*netproto.Interface     // ENIC interface object db
+	hwIfDB     map[string]*netproto.Interface     // Has all the Uplinks and Lifs
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent
@@ -83,25 +85,25 @@ type PluginIntf interface {
 // NetDatapathAPI is the API provided by datapath modules
 type NetDatapathAPI interface {
 	SetAgent(ag DatapathIntf) error
-	CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) (*IntfInfo, error) // creates a local endpoint in datapath
-	UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error              // updates a local endpoint in datapath
-	DeleteLocalEndpoint(ep *netproto.Endpoint) error                                                                   // deletes a local endpoint in datapath
-	CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error             // creates a remote endpoint in datapath
-	UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error             // updates a remote endpoint in datapath
-	DeleteRemoteEndpoint(ep *netproto.Endpoint) error                                                                  // deletes a remote endpoint in datapath
-	CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) error                                                     // creates a network
-	UpdateNetwork(nw *netproto.Network) error                                                                          // updates a network in datapath
-	DeleteNetwork(nw *netproto.Network) error                                                                          // deletes a network from datapath
-	CreateSecurityGroup(sg *netproto.SecurityGroup) error                                                              // creates a security group
-	UpdateSecurityGroup(sg *netproto.SecurityGroup) error                                                              // updates a security group
-	DeleteSecurityGroup(sg *netproto.SecurityGroup) error                                                              // deletes a security group
-	CreateTenant(tn *netproto.Tenant) error                                                                            // creates a tenant
-	DeleteTenant(tn *netproto.Tenant) error                                                                            // deletes a tenant
-	UpdateTenant(tn *netproto.Tenant) error                                                                            // updates a tenant
-	CreateInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                               // creates an interface
-	UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                               // updates an interface
-	DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                               // deletes an interface
-	ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error)                           // Lists all the lifs and uplinks from the datapath state
+	CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) (*IntfInfo, error)                                      // creates a local endpoint in datapath
+	UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error                                                   // updates a local endpoint in datapath
+	DeleteLocalEndpoint(ep *netproto.Endpoint) error                                                                                                        // deletes a local endpoint in datapath
+	CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, uplink *netproto.Interface, tn *netproto.Tenant) error // creates a remote endpoint in datapath
+	UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error                                                  // updates a remote endpoint in datapath
+	DeleteRemoteEndpoint(ep *netproto.Endpoint) error                                                                                                       // deletes a remote endpoint in datapath
+	CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, tn *netproto.Tenant) error                                                           // creates a network
+	UpdateNetwork(nw *netproto.Network) error                                                                                                               // updates a network in datapath
+	DeleteNetwork(nw *netproto.Network) error                                                                                                               // deletes a network from datapath
+	CreateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                   // creates a security group
+	UpdateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                   // updates a security group
+	DeleteSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                   // deletes a security group
+	CreateTenant(tn *netproto.Tenant) error                                                                                                                 // creates a tenant
+	DeleteTenant(tn *netproto.Tenant) error                                                                                                                 // deletes a tenant
+	UpdateTenant(tn *netproto.Tenant) error                                                                                                                 // updates a tenant
+	CreateInterface(intf *netproto.Interface, lif *netproto.Interface, tn *netproto.Tenant) error                                                           // creates an interface
+	UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                                                                    // updates an interface
+	DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                                                                    // deletes an interface
+	ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error)                                                                // Lists all the lifs and uplinks from the datapath state
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths

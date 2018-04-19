@@ -16,6 +16,9 @@ import (
 
 // CreateInterface creates an interface
 func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
+	var ok bool
+	var lif *netproto.Interface
+
 	oldIf, err := na.FindInterface(intf.ObjectMeta)
 	if err == nil {
 		// check if the contents are same
@@ -28,12 +31,13 @@ func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
 		return nil
 	}
 
-	intf.Status.InterfaceID, err = na.store.GetNextID(InterfaceID)
+	intfID, err := na.store.GetNextID(InterfaceID)
 
 	if err != nil {
 		log.Errorf("Could not allocate interface id. {%+v}", err)
 		return err
 	}
+	intf.Status.InterfaceID = intfID + maxNumUplinks
 
 	// find the corresponding tenant
 	tnMeta := api.ObjectMeta{
@@ -47,8 +51,29 @@ func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
 		return err
 	}
 
+	// Perform interface associations, currently only ENIC interfaces supported as
+	switch intf.Spec.Type {
+	case "ENIC":
+		if len(intf.Spec.LifName) != 0 {
+			lif, ok = na.findIntfByName(intf.Spec.LifName)
+		} else {
+			lifCount, err := na.countIntfs("LIF")
+			if err != nil {
+				log.Errorf("could not enumerate lifs created")
+				return err
+			}
+			// lifIndex finds an available lif. Uses % operator to ensure uniform distribution
+			lif, ok = na.findIntfByName(fmt.Sprintf("default-lif-%d", intf.Status.InterfaceID%lifCount))
+		}
+
+		if !ok {
+			log.Errorf("could not find user specified lif: {%v}", lif)
+			return errors.New("lif not found")
+		}
+	}
+
 	// create it in datapath
-	err = na.datapath.CreateInterface(intf, tn)
+	err = na.datapath.CreateInterface(intf, lif, tn)
 	if err != nil {
 		log.Errorf("Error creating interface in datapath. Interface {%+v}. Err: %v", intf, err)
 		return err
@@ -57,7 +82,7 @@ func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
 	// save it in db
 	key := objectKey(intf.ObjectMeta)
 	na.Lock()
-	na.interfaceDB[key] = intf
+	na.enicDB[key] = intf
 	na.Unlock()
 	err = na.store.Write(intf)
 
@@ -72,7 +97,7 @@ func (na *NetAgent) FindInterface(meta api.ObjectMeta) (*netproto.Interface, err
 
 	// lookup the database
 	key := objectKey(meta)
-	tn, ok := na.interfaceDB[key]
+	tn, ok := na.enicDB[key]
 	if !ok {
 		return nil, fmt.Errorf("interface not found %v", tn)
 	}
@@ -87,7 +112,7 @@ func (na *NetAgent) ListInterface() []*netproto.Interface {
 	na.Lock()
 	defer na.Unlock()
 
-	for _, intf := range na.interfaceDB {
+	for _, intf := range na.enicDB {
 		intfList = append(intfList, intf)
 	}
 
@@ -122,7 +147,7 @@ func (na *NetAgent) UpdateInterface(intf *netproto.Interface) error {
 	err = na.datapath.UpdateInterface(intf, tn)
 	key := objectKey(intf.ObjectMeta)
 	na.Lock()
-	na.interfaceDB[key] = intf
+	na.enicDB[key] = intf
 	na.Unlock()
 	err = na.store.Write(intf)
 	return err
@@ -157,7 +182,7 @@ func (na *NetAgent) DeleteInterface(intf *netproto.Interface) error {
 	// delete from db
 	key := objectKey(intf.ObjectMeta)
 	na.Lock()
-	delete(na.interfaceDB, key)
+	delete(na.enicDB, key)
 	na.Unlock()
 	err = na.store.Delete(intf)
 
@@ -190,18 +215,18 @@ func (na *NetAgent) GetHwInterfaces() error {
 		}
 		key := objectKey(l.ObjectMeta)
 		na.Lock()
-		na.interfaceDB[key] = l
+		na.hwIfDB[key] = l
 		na.Unlock()
 	}
 
 	for i, uplink := range uplinks.Response {
-		l := &netproto.Interface{
+		u := &netproto.Interface{
 			TypeMeta: api.TypeMeta{
 				Kind: "Interface",
 			},
 			ObjectMeta: api.ObjectMeta{
 				Tenant: "default",
-				Name:   fmt.Sprintf("default-lif-%d", i),
+				Name:   fmt.Sprintf("default-uplink-%d", i),
 			},
 			Spec: netproto.InterfaceSpec{
 				Type: "UPLINK",
@@ -210,11 +235,39 @@ func (na *NetAgent) GetHwInterfaces() error {
 				InterfaceID: uplink.Spec.KeyOrHandle.GetInterfaceId(),
 			},
 		}
-		key := objectKey(l.ObjectMeta)
+		key := objectKey(u.ObjectMeta)
 		na.Lock()
-		na.interfaceDB[key] = l
+		na.hwIfDB[key] = u
 		na.Unlock()
 	}
 
 	return nil
+}
+
+// findIntfByName looks up either uplinks or lifs from the hw interfaces db
+func (na *NetAgent) findIntfByName(intfName string) (intf *netproto.Interface, ok bool) {
+	lifMeta := api.ObjectMeta{
+		Name:   intfName,
+		Tenant: "default",
+	}
+	key := objectKey(lifMeta)
+	na.Lock()
+	intf, ok = na.hwIfDB[key]
+	na.Unlock()
+	return
+}
+
+func (na *NetAgent) countIntfs(intfName string) (intfCount uint64, err error) {
+	na.Lock()
+	defer na.Unlock()
+	for _, i := range na.hwIfDB {
+		if i.Spec.Type == intfName {
+			intfCount++
+		}
+	}
+	// prevent divide by 0 in calculating %
+	if intfCount == 0 {
+		err = errors.New("lif count was 0")
+	}
+	return
 }

@@ -23,11 +23,11 @@ message EndpointSpec {
 
 // endpoint status
 message EndpointStatus {
-    string IPv4Address = 1;
-    string IPv4Gateway = 2;
-    string IPv6Address = 3;
-    string IPv6Gateway = 4;
-    string MacAddress  = 5;
+    string IPv4Address    = 1;
+    string IPv4Gateway    = 2;
+    string IPv6Address    = 3;
+    string IPv6Gateway    = 4;
+    string MacAddress     = 5;
     string HomingHostAddr = 6;
     string HomingHostName = 7;
     string NodeUUID       = 8;

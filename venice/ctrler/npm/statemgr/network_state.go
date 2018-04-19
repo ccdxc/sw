@@ -62,7 +62,6 @@ func ipv4toMac(macPrefix []byte, ip net.IP) net.HardwareAddr {
 // allocIPv4Addr allocates new IP address
 func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 	var allocatedAddr string
-
 	// lock the network for bit allocation
 	ns.Lock()
 	defer ns.Unlock()
@@ -225,6 +224,7 @@ func (ns *NetworkState) CreateEndpoint(epinfo *network.Endpoint) (*EndpointState
 
 	// allocate an IP address
 	ipv4Addr, err := ns.allocIPv4Addr(epinfo.Status.IPv4Address)
+
 	if err != nil {
 		log.Errorf("Error allocating IP address from network {%+v}. Err: %v", ns, err)
 		return nil, err
@@ -267,7 +267,6 @@ func (ns *NetworkState) CreateEndpoint(epinfo *network.Endpoint) (*EndpointState
 		log.Errorf("Error writing the network object. Err: %v", err)
 		return nil, err
 	}
-
 	return eps, nil
 }
 

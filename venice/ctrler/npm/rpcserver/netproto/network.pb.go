@@ -47,6 +47,7 @@
 		TenantEvent
 		InterfaceStatus
 		InterfaceSpec
+		EnicStatus
 		Interface
 		InterfaceList
 		InterfaceEvent

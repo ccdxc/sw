@@ -12,6 +12,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+// This will ensure that the agent interface ID will not clash with the datapath uplink ID
+const maxNumUplinks = 128
+
 // NewNetAgent creates a new network agent
 func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID string) (*NetAgent, error) {
 	var emdb emstore.Emstore
@@ -28,14 +31,15 @@ func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID stri
 	}
 
 	nagent := NetAgent{
-		store:       emdb,
-		nodeUUID:    nodeUUID,
-		datapath:    dp,
-		networkDB:   make(map[string]*netproto.Network),
-		endpointDB:  make(map[string]*netproto.Endpoint),
-		secgroupDB:  make(map[string]*netproto.SecurityGroup),
-		tenantDB:    make(map[string]*netproto.Tenant),
-		interfaceDB: make(map[string]*netproto.Interface),
+		store:      emdb,
+		nodeUUID:   nodeUUID,
+		datapath:   dp,
+		networkDB:  make(map[string]*netproto.Network),
+		endpointDB: make(map[string]*netproto.Endpoint),
+		secgroupDB: make(map[string]*netproto.SecurityGroup),
+		tenantDB:   make(map[string]*netproto.Tenant),
+		enicDB:     make(map[string]*netproto.Interface),
+		hwIfDB:     make(map[string]*netproto.Interface),
 	}
 
 	c := config.Agent{

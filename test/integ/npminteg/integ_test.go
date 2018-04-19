@@ -250,6 +250,9 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			found := CheckEventually(func() (bool, interface{}) {
+				fmt.Println("EP COUNT: ", ag.datapath.GetEndpointCount())
+				fmt.Println("AG COUNT: ", it.numAgents)
+
 				return (ag.datapath.GetEndpointCount() == it.numAgents), nil
 			}, "10ms", it.pollTimeout())
 			if !found {

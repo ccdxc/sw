@@ -11,11 +11,10 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/golang/mock/gomock"
-
-	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
@@ -168,6 +167,7 @@ func (hd *Hal) setExpectations() {
 	hd.MockClients.MockEpclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 
 	hd.MockClients.MockIfclient.EXPECT().InterfaceGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockIfclient.EXPECT().AddL2SegmentOnUplink(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIfclient.EXPECT().InterfaceCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIfclient.EXPECT().InterfaceUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIfclient.EXPECT().InterfaceDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
@@ -362,7 +362,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 }
 
 // CreateRemoteEndpoint creates remote endpoint
-func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplink *netproto.Interface, tn *netproto.Tenant) error {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
@@ -396,20 +396,20 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 		sgHandles = append(sgHandles, &sgKey)
 	}
 
-	l2Handle := halproto.L2SegmentKeyHandle{
-		KeyOrHandle: &halproto.L2SegmentKeyHandle_L2SegmentHandle{
-			L2SegmentHandle: nw.Status.NetworkHandle,
+	l2Key := halproto.L2SegmentKeyHandle{
+		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
+			SegmentId: nw.Status.NetworkID,
 		},
 	}
 
-	ifKeyHandle := halproto.InterfaceKeyHandle{
-		KeyOrHandle: &halproto.InterfaceKeyHandle_IfHandle{
-			IfHandle: 0, //FIXME
+	ifKey := halproto.InterfaceKeyHandle{
+		KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+			InterfaceId: uplink.Status.InterfaceID,
 		},
 	}
 
 	epAttrs := halproto.EndpointAttributes{
-		InterfaceKeyHandle: &ifKeyHandle, //FIXME
+		InterfaceKeyHandle: &ifKey,
 		UsegVlan:           ep.Status.UsegVlan,
 		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
 		SgKeyHandle:        sgHandles,
@@ -420,7 +420,7 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 			EndpointKey: &halproto.EndpointKey{
 				EndpointL2L3Key: &halproto.EndpointKey_L2Key{
 					L2Key: &halproto.EndpointL2Key{
-						L2SegmentKeyHandle: &l2Handle,
+						L2SegmentKeyHandle: &l2Key,
 						MacAddress:         macaddr,
 					},
 				},
@@ -433,6 +433,11 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 		Meta:          &halproto.ObjectMeta{},
 		KeyOrHandle:   &epHandle,
 		EndpointAttrs: &epAttrs,
+		VrfKeyHandle: &halproto.VrfKeyHandle{
+			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+				VrfId: tn.Status.TenantID,
+			},
+		},
 	}
 	epReq := halproto.EndpointRequestMsg{
 		Request: []*halproto.EndpointSpec{&epinfo},
@@ -440,10 +445,22 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 
 	// call hal to create the endpoint
 	// FIXME: handle response
-	_, err := hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
-	if err != nil {
-		log.Errorf("Error creating endpoint. Err: %v", err)
-		return err
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
+		if err != nil {
+			log.Errorf("Error creating endpoint. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("Error creating endpoint. Err: %v", err)
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
+		if err != nil {
+			log.Errorf("Error creating endpoint. Err: %v", err)
+			return err
+		}
 	}
 
 	// save the endpoint message
@@ -732,7 +749,7 @@ func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 
 // CreateNetwork creates a l2 segment in datapath if vlan id is specified and a network if IPSubnet is specified.
 // ToDo Investigate if HAL needs network updates and deletes.
-func (hd *Datapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) error {
+func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, tn *netproto.Tenant) error {
 	// construct vrf key that gets passed on to hal
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
@@ -818,19 +835,68 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) err
 
 	// create the tenant. Enforce HAL Status == OK for HAL datapath
 	if hd.Kind == "hal" {
+		ifL2SegReqMsg := halproto.InterfaceL2SegmentRequestMsg{
+			Request: make([]*halproto.InterfaceL2SegmentSpec, 0),
+		}
+
 		resp, err := hd.Hal.L2SegClient.L2SegmentCreate(context.Background(), &segReq)
 		if err != nil {
-			log.Errorf("Error creating network. Err: %v", err)
+			log.Errorf("Error creating L2 Segment. Err: %v", err)
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
 			return ErrHALNotOK
 		}
+		for _, uplink := range uplinks {
+			ifL2SegReq := halproto.InterfaceL2SegmentSpec{
+				L2SegmentKeyOrHandle: seg.KeyOrHandle,
+				IfKeyHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: uplink.Status.InterfaceID,
+					},
+				},
+			}
+			ifL2SegReqMsg.Request = append(ifL2SegReqMsg.Request, &ifL2SegReq)
+		}
+		// Perform batched Add
+		l2SegAddResp, err := hd.Hal.Ifclient.AddL2SegmentOnUplink(context.Background(), &ifL2SegReqMsg)
+		if err != nil {
+			log.Errorf("Error adding l2 segments on uplinks. Err: %v", err)
+			return err
+		}
+		for _, r := range l2SegAddResp.Response {
+			if r.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				log.Errorf("HAL returned non OK status. Err: %v", err)
+				return ErrHALNotOK
+			}
+		}
+
 	} else {
+		ifL2SegReqMsg := halproto.InterfaceL2SegmentRequestMsg{
+			Request: make([]*halproto.InterfaceL2SegmentSpec, 0),
+		}
+		//var req []*halproto.InterfaceL2SegmentSpec
 		_, err := hd.Hal.L2SegClient.L2SegmentCreate(context.Background(), &segReq)
 		if err != nil {
 			log.Errorf("Error creating tenant. Err: %v", err)
+			return err
+		}
+		for _, uplink := range uplinks {
+			ifL2SegReq := halproto.InterfaceL2SegmentSpec{
+				L2SegmentKeyOrHandle: seg.KeyOrHandle,
+				IfKeyHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: uplink.Status.InterfaceID,
+					},
+				},
+			}
+			ifL2SegReqMsg.Request = append(ifL2SegReqMsg.Request, &ifL2SegReq)
+		}
+
+		_, err = hd.Hal.Ifclient.AddL2SegmentOnUplink(context.Background(), &ifL2SegReqMsg)
+		if err != nil {
+			log.Errorf("Error adding l2 segments on uplinks. Err: %v", err)
 			return err
 		}
 	}
@@ -1140,7 +1206,7 @@ func (hd *Datapath) UpdateTenant(tn *netproto.Tenant) error {
 }
 
 // CreateInterface creates an interface
-func (hd *Datapath) CreateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Interface, tn *netproto.Tenant) error {
 	var ifSpec *halproto.InterfaceSpec
 	switch intf.Spec.Type {
 	case "LIF":
@@ -1192,6 +1258,17 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, tn *netproto.Tenan
 				},
 			},
 			Type: halproto.IfType_IF_TYPE_ENIC,
+			// associate the lif id
+			IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
+				IfEnicInfo: &halproto.IfEnicInfo{
+					EnicType: halproto.IfEnicType_IF_ENIC_TYPE_USEG,
+					LifKeyOrHandle: &halproto.LifKeyHandle{
+						KeyOrHandle: &halproto.LifKeyHandle_LifId{
+							LifId: lif.Status.InterfaceID,
+						},
+					},
+				},
+			},
 		}
 	default:
 		return errors.New("invalid interface type")
@@ -1202,11 +1279,26 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, tn *netproto.Tenan
 			ifSpec,
 		},
 	}
-	_, err := hd.Hal.Ifclient.InterfaceCreate(context.Background(), ifReqMsg)
-	if err != nil {
-		log.Errorf("Error creating inteface. Err: %v", err)
-		return err
+
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Ifclient.InterfaceCreate(context.Background(), ifReqMsg)
+		if err != nil {
+			log.Errorf("Error creating interface. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Ifclient.InterfaceCreate(context.Background(), ifReqMsg)
+		if err != nil {
+			log.Errorf("Error creating inteface. Err: %v", err)
+			return err
+		}
 	}
+
 	hd.Lock()
 	hd.DB.InterfaceDB[objectKey(&tn.ObjectMeta)] = ifReqMsg
 	hd.Unlock()

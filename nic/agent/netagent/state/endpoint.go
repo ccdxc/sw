@@ -3,7 +3,10 @@
 package state
 
 import (
+	"encoding/binary"
 	"errors"
+	"fmt"
+	"net"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -83,6 +86,18 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 		sgs = append(sgs, sg)
 	}
 
+	// find the corresponding tenant
+	tnMeta := api.ObjectMeta{
+		Name:   ep.Tenant,
+		Tenant: ep.Tenant,
+	}
+
+	tn, err := na.FindTenant(tnMeta)
+	if err != nil {
+		log.Errorf("Could not find the tenant: {%+v}", err)
+		return nil, err
+	}
+
 	// call the datapath
 	var intfInfo *IntfInfo
 	if ep.Status.NodeUUID == na.nodeUUID {
@@ -93,7 +108,14 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 		}
 
 	} else {
-		err = na.datapath.CreateRemoteEndpoint(ep, nw, sgs)
+		uplinkCount, err := na.countIntfs("UPLINK")
+		pinnedUplink, err := na.findPinnedUplink(uplinkCount, ep.Status.IPv4Address)
+		uplink, ok := na.findIntfByName(pinnedUplink)
+		if !ok {
+			log.Errorf("could not find an uplink")
+			return nil, err
+		}
+		err = na.datapath.CreateRemoteEndpoint(ep, nw, sgs, uplink, tn)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
@@ -224,4 +246,20 @@ func (na *NetAgent) ListEndpoint() []*netproto.Endpoint {
 	}
 
 	return epList
+}
+
+func (na *NetAgent) findPinnedUplink(uplinkCount uint64, IPAddress string) (string, error) {
+	// convert the ip address to int
+	ip, _, err := net.ParseCIDR(IPAddress)
+	if err != nil {
+		log.Errorf("Error parsing the IP Address. Err: %v", err)
+		return "", err
+	}
+
+	if len(IPAddress) == 16 {
+		intIP := binary.BigEndian.Uint32(ip[12:16])
+		return fmt.Sprintf("default-uplink-%d", uint64(intIP)%uplinkCount), nil
+	}
+	intIP := binary.BigEndian.Uint32(ip)
+	return fmt.Sprintf("default-uplink-%d", uint64(intIP)%uplinkCount), nil
 }

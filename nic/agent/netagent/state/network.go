@@ -45,8 +45,10 @@ func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
 		return err
 	}
 
+	uplinks := na.getUplinks()
+
 	// create it in datapath
-	err = na.datapath.CreateNetwork(nt, tn)
+	err = na.datapath.CreateNetwork(nt, uplinks, tn)
 	if err != nil {
 		log.Errorf("Error creating network in datapath. Nw {%+v}. Err: %v", nt, err)
 		return err
@@ -139,4 +141,15 @@ func (na *NetAgent) DeleteNetwork(nt *netproto.Network) error {
 	err = na.store.Delete(nt)
 
 	return err
+}
+
+func (na *NetAgent) getUplinks() (uplinks []*netproto.Interface) {
+	na.Lock()
+	defer na.Unlock()
+	for _, intf := range na.hwIfDB {
+		if intf.Spec.Type == "UPLINK" {
+			uplinks = append(uplinks, intf)
+		}
+	}
+	return
 }

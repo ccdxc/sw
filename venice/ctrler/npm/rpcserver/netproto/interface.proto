@@ -25,6 +25,7 @@ message InterfaceStatus {
     uint64 InterfaceID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
     string OperStatus               = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
                                          (gogoproto.jsontag) = "oper-status,omitempty"];
+    EnicStatus EnicStatus           = 3 [(gogoproto.jsontag) = "enic-status,omitempty"];
 }
 
 // InterfaceSpec captures all the interface level configuration
@@ -40,10 +41,16 @@ message InterfaceSpec {
                                  (gogoproto.jsontag) = "type,omitempty"];
     string AdminStatus      = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
                                  (gogoproto.jsontag) = "admin-status,omitempty"];
-    // Has the endpoint it is associated to in case of ENIC
-    string EpName                   = 3 [(gogoproto.jsontag) = "ep-name,omitempty"];
-    // Has the L2 Seg it is attached to in case of an Uplink
-    uint64 NetworkID                = 4 [(gogoproto.jsontag) = "network-id,omitempty"];
+    // The user need to specify the specific LIF in VSS scenarios. If its is not defined, Agent state will pick
+    // one of the available LIFs with equal distribution
+    string LifName          = 3 [(gogoproto.jsontag) = "lif-name,omitempty"];
+}
+
+// EnicStatus captures enic configurations.
+message EnicStatus {
+    string LifName = 1 [(gogoproto.jsontag) = "lif-name,omitempty"];
+    // List of endpoints that this ENIC is mapped to
+    repeated string EpName = 2 [(gogoproto.jsontag) = "ep-name,omitempty"];
 }
 
 // Interface object

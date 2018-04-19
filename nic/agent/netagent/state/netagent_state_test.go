@@ -38,7 +38,7 @@ func (dp *mockDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.
 	return nil, nil
 }
 
-func (dp *mockDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (dp *mockDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, intf *netproto.Interface, tn *netproto.Tenant) error {
 	dp.Lock()
 	defer dp.Unlock()
 
@@ -84,7 +84,7 @@ func (dp *mockDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 }
 
 // CreateNetwork creates a network in datapath
-func (dp *mockDatapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) error {
+func (dp *mockDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, tn *netproto.Tenant) error {
 	return nil
 }
 
@@ -149,7 +149,7 @@ func (dp *mockDatapath) UpdateTenant(tn *netproto.Tenant) error {
 }
 
 // CreateInterface creates an interface. Stubbed out to satisfy datapath interface.
-func (dp *mockDatapath) CreateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+func (dp *mockDatapath) CreateInterface(intf *netproto.Interface, lif *netproto.Interface, tn *netproto.Tenant) error {
 	return nil
 }
 
@@ -515,6 +515,9 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.1.1.1/24",
+		},
 	}
 
 	// create the endpoint
@@ -637,6 +640,9 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 			NetworkName:    "default",
 			SecurityGroups: []string{"test-sg"},
 		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/24",
+		},
 	}
 
 	// create endpoint referring to security group
@@ -699,6 +705,9 @@ func TestEndpointUpdate(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
+		},
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.0.0.1/24",
 		},
 	}
 
@@ -881,6 +890,9 @@ func TestEndpointConcurrency(t *testing.T) {
 					EndpointUUID: "testEndpointUUID",
 					WorkloadUUID: "testWorkloadUUID",
 					NetworkName:  "default",
+				},
+				Status: netproto.EndpointStatus{
+					IPv4Address: "10.0.0.1/24",
 				},
 			}
 
