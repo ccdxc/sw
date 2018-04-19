@@ -57,8 +57,9 @@ storage_tx_seq_xts_status_desc_handler_start:
    phvwrpair	p.storage_kivec4_barco_ring_addr, d.next_db_addr[33:0], \
                 p.storage_kivec4_barco_pndx_addr, d.barco_pndx_addr
    b            status_dma_setup
-   phvwr        p.{storage_kivec4_barco_pndx_shadow_addr...storage_kivec4_barco_ring_size}, \
-                d.{barco_pndx_shadow_addr...barco_ring_size}   // delay slot
+   phvwrpair    p.{storage_kivec4_barco_pndx_shadow_addr...storage_kivec4_barco_ring_size}, \
+                d.{barco_pndx_shadow_addr...barco_ring_size}, \
+                p.storage_kivec4_barco_num_descs, 1     // delay slot
                 
 next_db_ring:
 
@@ -73,9 +74,9 @@ status_dma_setup:
    
    // Set up the status DMA:
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.status_hbm_addr, 
-                     r3, 0, 0, dma_m2m_1)
+                     r3, 0, 0, dma_m2m_0)
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.status_host_addr, 
-                     r3, 0, 0, dma_m2m_2)
+                     r3, 0, 0, dma_m2m_1)
 
 tbl_load:
 

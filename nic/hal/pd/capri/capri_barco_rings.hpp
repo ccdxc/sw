@@ -152,7 +152,8 @@ typedef struct capri_barco_ring_s {
 #define BARCO_CRYPTO_CP_CFG_GLB_HDR_VER             0x00001234
 #define BARCO_CRYPTO_CP_CFG_GLB_HDR_VER_MASK        0x0000ffff
 #define BARCO_CRYPTO_CP_UENG_LO_EN_ALL              0x0000ffff
-#define BARCO_CRYPTO_CP_UENG_HI_CSUM_ON_CP          (1 << (53 - 32))
+#define BARCO_CRYPTO_CP_UENG_HI_SHA_DATA_UNCOMP     (1 << (36 - 32))
+#define BARCO_CRYPTO_CP_UENG_HI_CSUM_ON_UNCOMP      (1 << (53 - 32))
 #define BARCO_CRYPTO_CP_UENG_HI_HMEM_FILL_ZERO      (1 << (54 - 32))
 #define BARCO_CRYPTO_CP_UENG_HI_INTEG_APP_STATUS    (1 << (55 - 32))
 #define BARCO_CRYPTO_CP_DIST_DESC_Q_EN              (1 << 0U)
@@ -170,7 +171,8 @@ typedef struct capri_barco_ring_s {
 #define BARCO_CRYPTO_DC_CFG_GLB_HDR_VER             0x00001234
 #define BARCO_CRYPTO_DC_CFG_GLB_HDR_VER_MASK        0x0000ffff
 #define BARCO_CRYPTO_DC_UENG_LO_EN_ALL              0x00000003
-#define BARCO_CRYPTO_DC_UENG_HI_CSUM_ON_CP          (1 << (53 - 32))
+#define BARCO_CRYPTO_DC_UENG_HI_SHA_DATA_UNCOMP     (1 << (36 - 32))
+#define BARCO_CRYPTO_DC_UENG_HI_CSUM_ON_UNCOMP      (1 << (53 - 32))
 #define BARCO_CRYPTO_DC_UENG_HI_HMEM_FILL_ZERO      (1 << (54 - 32))
 #define BARCO_CRYPTO_DC_UENG_HI_INTEG_APP_STATUS    (1 << (55 - 32))
 #define BARCO_CRYPTO_DC_DIST_DESC_Q_EN              (1 << 0)

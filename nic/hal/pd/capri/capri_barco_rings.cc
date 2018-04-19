@@ -1252,8 +1252,9 @@ hal_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
              BARCO_CRYPTO_CP_UENG_LO_EN_ALL;
     hens.dhs_crypto_ctl.cp_cfg_ueng_w1.read();
     reg_hi = (hens.dhs_crypto_ctl.cp_cfg_ueng_w1.fld().convert_to<uint32_t>()   &
-              ~(BARCO_CRYPTO_CP_UENG_HI_CSUM_ON_CP | BARCO_CRYPTO_CP_UENG_HI_HMEM_FILL_ZERO)) |
-             BARCO_CRYPTO_CP_UENG_HI_INTEG_APP_STATUS;
+              ~(BARCO_CRYPTO_CP_UENG_HI_CSUM_ON_UNCOMP | BARCO_CRYPTO_CP_UENG_HI_HMEM_FILL_ZERO)) | 
+             (BARCO_CRYPTO_CP_UENG_HI_SHA_DATA_UNCOMP  |
+              BARCO_CRYPTO_CP_UENG_HI_INTEG_APP_STATUS);
     hens.dhs_crypto_ctl.cp_cfg_ueng_w0.fld(reg_lo);
     hens.dhs_crypto_ctl.cp_cfg_ueng_w0.write();
     hens.dhs_crypto_ctl.cp_cfg_ueng_w1.fld(reg_hi);
@@ -1379,8 +1380,9 @@ hal_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring)
              BARCO_CRYPTO_DC_UENG_LO_EN_ALL;
     hens.dhs_crypto_ctl.dc_cfg_ueng_w1.read();
     reg_hi = (hens.dhs_crypto_ctl.dc_cfg_ueng_w1.fld().convert_to<uint32_t>()   &
-              ~(BARCO_CRYPTO_DC_UENG_HI_CSUM_ON_CP | BARCO_CRYPTO_DC_UENG_HI_HMEM_FILL_ZERO)) |
-             BARCO_CRYPTO_DC_UENG_HI_INTEG_APP_STATUS;
+              ~(BARCO_CRYPTO_DC_UENG_HI_CSUM_ON_UNCOMP | BARCO_CRYPTO_DC_UENG_HI_HMEM_FILL_ZERO)) |
+             (BARCO_CRYPTO_DC_UENG_HI_SHA_DATA_UNCOMP  |
+              BARCO_CRYPTO_DC_UENG_HI_INTEG_APP_STATUS);
     hens.dhs_crypto_ctl.dc_cfg_ueng_w0.fld(reg_lo);
     hens.dhs_crypto_ctl.dc_cfg_ueng_w0.write();
     hens.dhs_crypto_ctl.dc_cfg_ueng_w1.fld(reg_hi);

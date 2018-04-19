@@ -79,6 +79,7 @@ cc_library(
         "compression.hpp",
         "compression_test.hpp",
         "comp_encrypt_chain.hpp",
+        "comp_hash_chain.hpp",
         "decrypt_decomp_chain.hpp",
         "utils.hpp",
         "dp_mem.hpp",
@@ -105,6 +106,7 @@ cc_library(
         "compression.hpp",
         "compression_test.hpp",
         "comp_encrypt_chain.hpp",
+        "comp_hash_chain.hpp",
         "decrypt_decomp_chain.hpp",
         "utils.hpp",
         "dp_mem.hpp",
@@ -137,6 +139,29 @@ cc_library(
         "tests.hpp",
     ],
     hdrs = ["comp_encrypt_chain.hpp"],
+    copts = [ "-g" ],
+    deps = [
+        "//nic:compression_asic_hdrs",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
+        "//nic/model_sim:model_client",
+        "//external:gflags",
+    ],
+)
+
+cc_library(
+    name = "comp_hash_chain",
+    srcs = [
+        "comp_hash_chain.cc",
+        "comp_hash_chain.hpp",
+        "compression.hpp",
+        "compression_test.hpp",
+        "utils.hpp",
+        "dp_mem.hpp",
+	"queues.hpp",
+        "tests.hpp",
+    ],
+    hdrs = ["comp_hash_chain.hpp"],
     copts = [ "-g" ],
     deps = [
         "//nic:compression_asic_hdrs",
@@ -311,6 +336,7 @@ cc_binary(
         ":compression",
         ":acc_scale_tests",
         ":comp_encrypt_chain",
+        ":comp_hash_chain",
         ":decrypt_decomp_chain",
         ":nvme_dp",
         "//nic:grpc",

@@ -58,16 +58,25 @@ typedef struct acc_chain_entry {
   uint64_t dst_hbm_pa;		// Address of compression destination buffer (see above)
 
   // post compression, options available are:
-  // - copy compressed data to sgl_out_aol_pa (sgl_xfer_en), or
-  // - chain to next accelerator service which uses input/output AOL (aol_len_pad_en),
-  //   where P4+ will modify length fields in the AOL based on compression result
-  uint64_t sgl_in_aol_pa;	// Address of the input SGL or AOL
-  uint64_t sgl_out_aol_pa;	// Address of the output SGL or AOL
+  // - PDMA compressed data to pdma_out_sgl_pa (sgl_pdma_en), or
+  // - chain to next accelerator service which uses input/output AOL (aol_pad_en),
+  // - chain to next accelerator service which uses SGL input (sgl_pad_hash_en),
+  //   where P4+ will modify addr/length fields in the AOL/SGL based on compression result
+  union {
+      uint64_t sgl_pdma_in_pa;	// Address of the input SGL
+      uint64_t barco_aol_in_pa;
+  };
+  union {
+      uint64_t sgl_pdma_out_pa;	// Address of the output SGL
+      uint64_t barco_aol_out_pa;
+  };
+  uint64_t sgl_vec_pa;	    // SGL vector for multi-block hash
+  uint64_t pad_buf_pa;	    // pad buffer address
   uint64_t intr_pa;		    // MSI-X Interrupt address
   uint32_t intr_data;		// MSI-X Interrupt data
   uint16_t status_len;		// Length of the status header
   uint16_t data_len;		// Remaining data length of compression buffer
-  uint8_t  pad_len_shift;   // Padding length (power of 2)
+  uint8_t  pad_len_shift;   // Max padding length (power of 2)
   uint8_t  unused;
   // TODO: These bitfields are interpretted in big endian 
   //       fashion by P4+. For DOL it won't matter as we set bitfields.
@@ -84,8 +93,9 @@ typedef struct acc_chain_entry {
            copy_src_dst_on_error:1,
   // NOTE: sgl_xfer_en and aol_len_pad_en are mutually exclusive.
   // Order of evaluation: 1. aol_len_pad_en 2. sgl_xfer_en
-           aol_pad_xfer_en      :1, // enable length pad AOL transfer
-           sgl_xfer_en          :1; // enable data transfer from src_hbm_pa to sgl_pa
+           aol_pad_en           :1, // enable AOL length padding
+           sgl_pad_hash_en      :1, // enable SGL length padding for multi-block hash
+           sgl_pdma_en          :1; // enable data transfer from src_hbm_pa to sgl_pa
 } acc_chain_entry_t;
 
 typedef struct cq_sq_ent_sgl {

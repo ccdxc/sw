@@ -65,8 +65,11 @@
     k.storage_kivec2_ssd_q_num
 #define STORAGE_KIVEC2_SSD_Q_SIZE               \
     k.storage_kivec2_ssd_q_size
-#define STORAGE_KIVEC2_SGL_OUT_AOL_ADDR         \
-    k.storage_kivec2_sgl_out_aol_addr
+
+#define STORAGE_KIVEC2ACC_SGL_PDMA_OUT_ADDR     \
+    k.{storage_kivec2acc_sgl_pdma_out_addr_sbit0_ebit15...storage_kivec2acc_sgl_pdma_out_addr_sbit32_ebit63}
+#define STORAGE_KIVEC2ACC_SGL_VEC_ADDR          \
+    k.storage_kivec2acc_sgl_vec_addr
 
 #define STORAGE_KIVEC3_ROCE_MSN                 \
     k.storage_kivec3_roce_msn
@@ -85,8 +88,10 @@
     k.storage_kivec4_barco_pndx_size
 #define STORAGE_KIVEC4_BARCO_RING_SIZE          \
     k.{storage_kivec4_barco_ring_size_sbit0_ebit2...storage_kivec4_barco_ring_size_sbit3_ebit4}
+#define STORAGE_KIVEC4_BARCO_NUM_DESCS          \
+    k.storage_kivec4_barco_num_descs
 #define STORAGE_KIVEC4_W_NDX                    \
-    k.{storage_kivec4_w_ndx_sbit0_ebit5...storage_kivec4_w_ndx_sbit14_ebit15}
+    k.{storage_kivec4_w_ndx_sbit0_ebit0...storage_kivec4_w_ndx_sbit9_ebit15}
 
 #define STORAGE_KIVEC5_INTR_ADDR                \
     k.{storage_kivec5_intr_addr_sbit0_ebit7...storage_kivec5_intr_addr_sbit40_ebit63}
@@ -104,10 +109,12 @@
     k.storage_kivec5_copy_src_desc_on_error
 #define STORAGE_KIVEC5_NEXT_DB_EN               \
     k.storage_kivec5_next_db_en
-#define STORAGE_KIVEC5_AOL_PAD_XFER_EN          \
-    k.storage_kivec5_aol_pad_xfer_en
-#define STORAGE_KIVEC5_SGL_XFER_EN              \
-    k.storage_kivec5_sgl_xfer_en
+#define STORAGE_KIVEC5_AOL_PAD_EN               \
+    k.storage_kivec5_aol_pad_en
+#define STORAGE_KIVEC5_SGL_PAD_HASH_EN          \
+    k.storage_kivec5_sgl_pad_hash_en
+#define STORAGE_KIVEC5_SGL_PDMA_EN              \
+    k.storage_kivec5_sgl_pdma_en
 #define STORAGE_KIVEC5_INTR_EN                  \
     k.storage_kivec5_intr_en
 #define STORAGE_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH\
@@ -218,6 +225,8 @@
 #define NVME_KIVEC_ARM_DST7_ARM_QADDR           \
     k.{nvme_kivec_arm_dst7_arm_qaddr_sbit0_ebit1...nvme_kivec_arm_dst7_arm_qaddr_sbit2_ebit33}
 
+#define BARCO_SGL_DESC_SIZE         64
+#define BARCO_SGL_DESC_SIZE_SHIFT   6
 
 // TODO: Fix these to use the values defined in hardware
 #define CAPRI_DMA_NOP               0
@@ -459,6 +468,10 @@
 #define DMA_ADDR_UPDATE(_addr, _dma_cmd_X)                              \
    phvwr    p._dma_cmd_X##_dma_cmd_addr, _addr;                         \
    phvwr    p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];             \
+   
+// DMA size update: Specify the size for the DMA command
+#define DMA_SIZE_UPDATE(_size, _dma_cmd_X)                              \
+   phvwr    p._dma_cmd_X##_dma_cmd_size, _size;                         \
    
 // Setup the start and end DMA pointers
 #define DMA_PTR_SETUP(_start, _dma_cmd_eop, _dma_cmd_ptr)               \

@@ -94,6 +94,8 @@ metadata storage_kivec1_t storage_kivec1;
 metadata storage_kivec5_t storage_kivec5;
 @pragma pa_header_union ingress to_stage_2
 metadata storage_kivec2_t storage_kivec2;
+@pragma pa_header_union ingress to_stage_2
+metadata storage_kivec2acc_t storage_kivec2acc;
 @pragma pa_header_union ingress to_stage_3
 metadata storage_kivec3_t storage_kivec3;
 
@@ -155,6 +157,9 @@ metadata ssd_ci_t ssd_ci;
 // for RDMA Write command
 @pragma dont_trim
 metadata storage_capri_addr_t r2n_data_buff_addr;
+@pragma pa_header_union ingress r2n_data_buff_addr
+@pragma dont_trim
+metadata barco_addr_t pad_buf_addr;
 
 // Compression output data length and computed pad length
 @pragma dont_trim
@@ -284,6 +289,9 @@ metadata storage_kivec1_t storage_kivec1_scratch;
 
 @pragma scratch_metadata
 metadata storage_kivec2_t storage_kivec2_scratch;
+
+@pragma scratch_metadata
+metadata storage_kivec2acc_t storage_kivec2acc_scratch;
 
 @pragma scratch_metadata
 metadata storage_kivec3_t storage_kivec3_scratch;

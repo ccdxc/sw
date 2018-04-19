@@ -190,10 +190,11 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     // above. The compression status sequencer will use the AOLs given below
     // only to update the length fields with the correct output data length
     // and pad length.
-    chain_params.chain_ent.sgl_in_aol_pa = xts_in_aol->pa();
-    chain_params.chain_ent.sgl_out_aol_pa = xts_out_aol->pa();
+    chain_params.chain_ent.barco_aol_in_pa = xts_in_aol->pa();
+    chain_params.chain_ent.barco_aol_out_pa = xts_out_aol->pa();
+    chain_params.chain_ent.pad_buf_pa = caller_comp_pad_buf->pa();
     chain_params.chain_ent.stop_chain_on_error = 1;
-    chain_params.chain_ent.aol_pad_xfer_en = 1;
+    chain_params.chain_ent.aol_pad_en = 1;
     chain_params.chain_ent.pad_len_shift =
                  (uint8_t)log2(caller_comp_pad_buf->line_size_get());
 
@@ -271,8 +272,6 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
                  kCompEngineMaxSize :  cp_desc.datain_len;
     xts_in->a0 = comp_buf->pa();
     xts_in->l0 = datain_len;
-    xts_in->a1 = caller_comp_pad_buf->pa();
-    xts_in->l1 = caller_comp_pad_buf->line_size_get();
     xts_in_aol->write_thru();
 
     xts_out_aol->clear();
@@ -299,7 +298,7 @@ comp_encrypt_chain_t::verify(void)
 {
     // Poll for comp status
     if (!comp_status_poll(comp_status_buf2, suppress_info_log)) {
-      printf("ERROR: comp_encrypt_chain ompression status never came\n");
+      printf("ERROR: comp_encrypt_chain compression status never came\n");
       return -1;
     }
 
