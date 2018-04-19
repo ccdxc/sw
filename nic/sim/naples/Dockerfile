@@ -4,6 +4,7 @@ MAINTAINER Pensando
 
 RUN yum install -y \
     iproute \
+    net-tools \
     vim \
     bzip2 \
     tar \
@@ -16,4 +17,4 @@ RUN yum install -y \
 
 ADD nic.tgz /naples/
 
-CMD ["/naples/nic/tools/start-naples-sim.sh"]
+CMD ["/naples/nic/tools/start-naples.sh"]

@@ -1,3 +1,40 @@
-In your Vagrant VM, do:
-1. run install.sh in current directory to install NAPLES packages
-2. run run.sh from NAPLES installed directory to bringup NAPLES container
+
+1. create a directory and copy naples-release-v1.tgz (call it install_dir)
+
+2. cd install_dir
+
+3. tar xvzf naples-release-v1.tgz
+
+   once naples-release-v1.tgz is unzipped, you will find a Vagrantfile
+   that is needed to VMs needed for simulating multiple data centers
+   (each VM is a datacenter/kingdom)
+
+   to create a VM needed to run NAPLES docker container. Note that
+   only bare minimum packages needed to run NAPLES docker container
+   are installed in this default Vagrantfile. Please feel free to add
+   other packages that you may need to run your (native) apps, if any.
+
+4. vagrant up
+
+   This will bringup the datacenters and establish the VM connectivity between
+   them. Additionally, each of the VMs will have NAPLES container running
+   already with all the components of Pensando NIC. This container represents
+   the NIC in the VPN gateway of that datacenter.
+
+5. If you have to spin the NAPLES container manually (in case VM was restarted
+   or something went wrong), simply use start-naples-docker.sh script (and use
+   stop-naples-docker.sh to stop it, if needed)
+
+By default, port 9007 of the docker container is exposed to the host (i.e., VM
+representing the datacenter) and hence REST APIs can be invoked using curl.
+
+Example 1 : Create a tenant
+
+curl -d'{"Kind":"Tenant","meta":{"Name":"tenant-1","Tenant":"tenant-1","CreationTime":"1970-01-01T00:00:00Z","ModTime":"1970-01-01T00:00:00Z"},"spec":{},"status":{}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/tenants/
+
+Example 2: Get all tenants
+
+curl 172.17.0.2:9007/api/tenants/
+[{"kind":"Tenant","meta":{"name":"tenant-1","tenant":"tenant-1","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"spec":{},"status":{"TenantID":3}}]
+
+Here 172.17.0.2 is IP address of the eth0 interface inside the NAPLES container

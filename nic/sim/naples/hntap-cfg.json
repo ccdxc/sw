@@ -1,0 +1,20 @@
+[
+  {
+    "name"   : "uplink1",
+    "local"  : false,
+    "port"   : 1,
+    "lif_id" : 0
+  },
+  {
+    "name"    : "uplink2",
+    "local"   : false,
+    "port"    : 3,
+    "lif_id"  : 0
+  },
+  {
+    "name"    : "ep-1",
+    "local"   : true,
+    "port"    : 0,
+    "lif_id"  : 1
+  }
+]

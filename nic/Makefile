@@ -143,17 +143,7 @@ package: swig-cli package-clean
 
 release:
     ifneq ($(ARCH),aarch64)
-		mkdir -p obj/release
-		\cp sim/naples/Dockerfile obj/release/
-		\cp sim/naples/README obj/release/
-		\cp sim/naples/Vagrantfile obj/release/
-		\mv nic.tgz obj/release/
-		cd obj/release && docker build -t naples:v1 . && \
-			docker save -o naples-docker-v1.tar naples:v1 && \
-			gzip naples-docker-v1.tar && \
-			mv naples-docker-v1.tar.gz naples-docker-v1.tgz
-		docker rmi -f naples:v1
-		\mv obj/release/nic.tgz .
+	    ./tools/release.sh
     endif
 
 release-clean:

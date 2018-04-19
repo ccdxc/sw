@@ -108,7 +108,7 @@ typedef struct ip_range_s {
     uint8_t            af;
     union {
         ipv4_range_t    v4_range;
-        ipv4_range_t    v6_range;
+        ipv6_range_t    v6_range;
     } vx_range[0];
 } __PACK__ ip_range_t;
 
