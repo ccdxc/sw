@@ -13,6 +13,12 @@ import (
 	tu "github.com/pensando/sw/venice/utils/testutils"
 )
 
+func TestSyslogNRfc5424WithNoHostname(t *testing.T) {
+	s, err := NewRfc5424(LogFtp, "", "app1")
+	tu.AssertOk(t, err, "failed to create new syslog")
+	defer s.conn.Close()
+}
+
 func TestSyslogNRfc5424(t *testing.T) {
 	s, err := NewRfc5424(LogFtp, "host1", "app1")
 	tu.AssertOk(t, err, "failed to create new syslog")
