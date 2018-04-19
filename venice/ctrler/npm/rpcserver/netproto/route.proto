@@ -1,0 +1,62 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for route
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+
+// RouteSpec captures all the route configuration
+message RouteSpec {
+    // CIDR based ip prefix
+    string IPPrefix         = 1 [(gogoproto.jsontag) = "ip-prefix,omitempty"];
+    // Next Hop interface
+    string Interface        = 2 [(gogoproto.jsontag) = "interface,omitempty"];
+    // Next Hop gateway IP
+    string GatewayIP        = 3 [(gogoproto.jsontag) = "gateway-ip,omitempty"];
+}
+
+// RouteStatus captures the route status
+message RouteStatus {
+    uint64 RouteID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+// Route object
+message Route {
+    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    RouteSpec       Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    RouteStatus     Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+message RouteList {
+    repeated Route routes  = 1;
+}
+
+// route watch event
+message RouteEvent {
+    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    Route           Route       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "route,omitempty"];
+}
+
+// Route controller api
+service RouteApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Route",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Route}"
+    };
+
+    rpc GetRoute (api.ObjectMeta) returns (Route) {};
+    rpc ListRoutes (api.ObjectMeta) returns (RouteList) {};
+    rpc WatchRoutes (api.ObjectMeta) returns (stream RouteEvent) {};
+}

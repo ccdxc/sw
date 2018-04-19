@@ -12,6 +12,8 @@
 		tenant.proto
 		interface.proto
 		nat.proto
+		route.proto
+		namespace.proto
 
 	It has these top-level messages:
 		NetworkSpec
@@ -59,6 +61,16 @@
 		NatPolicy
 		NatPolicyList
 		NatPolicyEvent
+		RouteSpec
+		RouteStatus
+		Route
+		RouteList
+		RouteEvent
+		NamespaceStatus
+		NamespaceSpec
+		Namespace
+		NamespaceList
+		NamespaceEvent
 */
 package netproto
 
