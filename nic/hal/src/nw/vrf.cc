@@ -1208,6 +1208,29 @@ vrf_lookup_key_or_handle (const VrfKeyHandle& kh)
 }
 
 //------------------------------------------------------------------------------
+// Lookup vrf from key or handle to str
+//------------------------------------------------------------------------------
+const char *
+vrf_lookup_key_or_handle_to_str (const VrfKeyHandle& key_handle)
+{
+	static thread_local char       if_str[4][50];
+	static thread_local uint8_t    if_str_next = 0;
+	char                           *buf;
+
+	buf = if_str[if_str_next++ & 0x3];
+	memset(buf, 0, 50);
+
+    if (key_handle.key_or_handle_case() == VrfKeyHandle::kVrfId) {
+		snprintf(buf, 50, "vrf_id: %lu", key_handle.vrf_id());
+    }
+    if (key_handle.key_or_handle_case() == VrfKeyHandle::kVrfHandle) {
+		snprintf(buf, 50, "vrf_handle: 0x%lx", key_handle.vrf_handle());
+    }
+
+	return buf;
+}
+
+//------------------------------------------------------------------------------
 // 1. PD Call to delete PD and free up resources and deprogram HW
 //------------------------------------------------------------------------------
 hal_ret_t

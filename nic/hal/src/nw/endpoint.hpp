@@ -123,6 +123,7 @@ typedef struct ep_s {
     // dllist_ctxt_t        l2seg_ep_lentry;      // links in L2 segment endpoint list
     // dllist_ctxt_t        if_ep_lentry;         // links in inteface endpoint list
     dllist_ctxt_t        session_list_head;    // session from/to this EP
+    block_list           *nh_list;             // next hops back refs
 
 } __PACK__ ep_t;
 
@@ -203,6 +204,7 @@ ep_t *find_ep_by_l3_key(ep_l3_key_t *ep_l3_key);
 ep_t *find_ep_by_v4_key(vrf_id_t tid, uint32_t v4_addr);
 // find EP from v6 key
 ep_t *find_ep_by_v6_key(vrf_id_t tid, const ip_addr_t *ip_addr);
+hal_ret_t find_ep (EndpointKeyHandle kh, ep_t **ep, ::types::ApiStatus *api_status);
 
 // Debug APIs
 void ep_print_ips(ep_t *ep);

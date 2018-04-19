@@ -189,7 +189,7 @@ cc_test(
         "//nic/hal/plugins/app_redir:app_redir",
         "//nic:snort3",
     ] + gl_deps_list + test_deps_list,
-    linkopts = ["-lsnort"] + 
+    linkopts = ["-lsnort"] +
         gl_linkopts_list,
     copts = sdk_copts,
 )
@@ -301,5 +301,13 @@ cc_test(
     deps = gl_deps_list + test_deps_list,
     linkopts = gl_linkopts_list,
     tags = ["gft"],
+    copts = sdk_copts,
+)
+
+cc_test(
+    name = "nh_test",
+    srcs = ["nh_test.cc"],
+    deps = [] + gl_deps_list + test_deps_list,
+    linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )

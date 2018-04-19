@@ -7,6 +7,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/src/nw/nh.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/gen/proto/hal/l2segment.pb.h"
@@ -99,6 +100,7 @@ if_init (if_t *hal_if)
     hal_if->mbr_if_list     = block_list::factory(sizeof(hal_handle_t));
     hal_if->l2seg_list      = block_list::factory(sizeof(hal_handle_t));
     hal_if->enicif_list     = block_list::factory(sizeof(hal_handle_t));
+    hal_if->nh_list         = block_list::factory(sizeof(hal_handle_t));
     sdk::lib::dllist_reset(&hal_if->l2seg_list_clsc_head);
     sdk::lib::dllist_reset(&hal_if->mc_entry_list_head);
 
@@ -130,6 +132,7 @@ if_cleanup (if_t *hal_if)
     block_list::destroy(hal_if->mbr_if_list);
     block_list::destroy(hal_if->l2seg_list);
     block_list::destroy(hal_if->enicif_list);
+    block_list::destroy(hal_if->nh_list);
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(hal_if->acl_list); i++) {
         block_list::destroy(hal_if->acl_list[i]);
     }
@@ -306,7 +309,6 @@ if_lookup_key_or_handle_to_str (const kh::InterfaceKeyHandle& key_handle)
     }
 
 	return buf;
-
 }
 
 //------------------------------------------------------------------------------
@@ -3050,9 +3052,18 @@ validate_if_delete (if_t *hal_if)
             HAL_TRACE_ERR("If delete failure, acls still referring {}:",
                           static_cast<if_acl_ref_type_t>(i));
             hal_print_handles_block_list(hal_if->acl_list[i]);
+            goto end;
         }
     }
 
+    if (hal_if->nh_list->num_elems()) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("If delete failure, NHs still referring:");
+        hal_print_handles_block_list(hal_if->nh_list);
+        goto end;
+    }
+
+end:
     return ret;
 }
 
@@ -4050,6 +4061,60 @@ if_del_l2seg (if_t *hal_if, l2seg_t *l2seg)
 
 end:
     HAL_TRACE_DEBUG("Deleted l2seg {} to if {}", l2seg->seg_id, hal_if->if_id);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Adds nh to if back refs
+//-----------------------------------------------------------------------------
+hal_ret_t
+if_add_nh (if_t *hal_if, nexthop_t *nh)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (hal_if == NULL || nh == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
+    ret = hal_if->nh_list->insert(&nh->hal_handle);
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add nh {} to hal_if {}",
+                        nh->nh_id, hal_if->if_id);
+        goto end;
+    }
+
+end:
+    HAL_TRACE_DEBUG("Added nh {} to if {}", nh->nh_id, hal_if->if_id);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Remove nh from if
+//-----------------------------------------------------------------------------
+hal_ret_t
+if_del_nh (if_t *hal_if, nexthop_t *nh)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (hal_if == NULL || nh == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
+    ret = hal_if->nh_list->remove(&nh->hal_handle);
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add nh {} to hal_if {}",
+                        nh->nh_id, hal_if->if_id);
+        goto end;
+    }
+
+end:
+    HAL_TRACE_DEBUG("Deleted nh {} from hal_if {}", nh->nh_id, hal_if->if_id);
     return ret;
 }
 

@@ -94,7 +94,9 @@ typedef enum hal_slab_e {
     HAL_SLAB_V6_RANGE_LIST_ENTRY             = 80,
     HAL_SLAB_NAT_POOL                        = 81,
     HAL_SLAB_NAT_RULE                        = 82,
-    HAL_SLAB_PI_MAX                          = 83,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_NEXTHOP                         = 83,
+    HAL_SLAB_ROUTE                           = 84,
+    HAL_SLAB_PI_MAX                          = 85,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,

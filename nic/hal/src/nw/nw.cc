@@ -735,7 +735,7 @@ network_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt = (network_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    nw = (network_t *)dhl_entry->obj;
+    nw = (network_t *)dhl_entry->cloned_obj;
     // nw_clone = (network_t *)dhl_entry->cloned_obj;
 
     HAL_TRACE_DEBUG("{}:update abort cb {}",
@@ -1033,7 +1033,7 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
         auto kh = req.key_or_handle();
         if (kh.key_or_handle_case() == NetworkKeyHandle::kNwKey) {
             auto nw_pfx = kh.nw_key().ip_prefix();
-            
+
             nw_key.vrf_id = kh.nw_key().vrf_key_handle().vrf_id();
             if (nw_key.vrf_id == HAL_VRF_ID_INVALID) {
                 g_hal_state->network_key_ht()->walk(network_get_ht_cb, rsp);

@@ -153,6 +153,7 @@ typedef struct if_s {
     block_list          *l2seg_list;            // l2segments, add_l2seg_on_uplink
     block_list          *enicif_list;           // enicifs, Classic enics
     block_list          *acl_list[IF_ACL_REF_TYPES]; // List of acls matching on src if
+    block_list          *nh_list;               // next hops
 #if 0
     dllist_ctxt_t       mbr_if_list_head;       // list of member ports for uplink PC
     dllist_ctxt_t       l2seg_list_clsc_head;   // l2segments in classic nic
@@ -310,6 +311,7 @@ hal_ret_t get_lif_handle_for_app_redir_if(intf::InterfaceSpec& spec,
                                           intf::InterfaceResponse *rsp,
                                           if_t *hal_if);
 if_t *if_lookup_key_or_handle(const kh::InterfaceKeyHandle& key_handle);
+const char *if_lookup_key_or_handle_to_str (const kh::InterfaceKeyHandle& key_handle);
 
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);

@@ -5,6 +5,7 @@
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/src/nw/nh.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/endpoint_api.hpp"
 #include "nic/hal/src/firewall/nwsec.hpp"
@@ -113,6 +114,7 @@ ep_init (ep_t *ep)
 
     sdk::lib::dllist_reset(&ep->ip_list_head);
     sdk::lib::dllist_reset(&ep->session_list_head);
+    ep->nh_list = block_list::factory(sizeof(hal_handle_t));
     ep->sgs.sg_id_cnt = 0;
     memset(&ep->sgs.arr_sg_id, 0 , MAX_SG_PER_ARRAY);
 
@@ -126,6 +128,12 @@ ep_alloc_init (void)
     return ep_init(ep_alloc());
 }
 
+//------------------------------------------------------------------------------
+// Partial Cleanup of Object: (Generally called when destroying original after
+//                             copying original to clone)
+// - clone will have its own slock. So we can destroy in original
+// - Lists are copied to clone, so dont destory lists
+//------------------------------------------------------------------------------
 static inline hal_ret_t
 ep_free (ep_t *ep)
 {
@@ -133,6 +141,21 @@ ep_free (ep_t *ep)
 
     // TODO: may have to free list of ip entries
     hal::delay_delete_to_slab(HAL_SLAB_EP, ep);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// Total Cleanup of Object:
+// - Assume nothing ni this object is being used
+// - So destorying lists and freeing up
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+ep_cleanup (ep_t *ep)
+{
+    block_list::destroy(ep->nh_list);
+
+    ep_free(ep);
+
     return HAL_RET_OK;
 }
 
@@ -983,7 +1006,7 @@ ep_copy_ip_list (ep_t *dst_ep, ep_t *src_ep)
 
 //------------------------------------------------------------------------------
 // After all hw programming is done
-//  1. Free original PI & PD nwsec.
+//  1. Free original PI & PD endpoint
 // Note: Infra make clone as original by replacing original pointer by clone.
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -1076,13 +1099,13 @@ endpoint_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 //------------------------------------------------------------------------------
 // helper to get endpoint from key or handle
 //------------------------------------------------------------------------------
-static hal_ret_t
-find_ep (vrf_id_t tid, EndpointKeyHandle kh, ep_t **ep,
-         ::types::ApiStatus *api_status)
+hal_ret_t
+find_ep (EndpointKeyHandle kh, ep_t **ep, ::types::ApiStatus *api_status)
 {
     ep_l3_key_t            l3_key    = { 0 };
     l2seg_t                *l2seg    = NULL;
     mac_addr_t             mac_addr;
+    vrf_t                  *vrf = NULL;
 
     if (kh.key_or_handle_case() == EndpointKeyHandle::kEndpointKey) {
         auto ep_key = kh.endpoint_key();
@@ -1103,24 +1126,37 @@ find_ep (vrf_id_t tid, EndpointKeyHandle kh, ep_t **ep,
             *ep = find_ep_by_l2_key(l2seg->seg_id, mac_addr);
         } else if (ep_key.has_l3_key()) {
             auto ep_l3_key = ep_key.l3_key();
-            l3_key.vrf_id = tid;
+            vrf = vrf_lookup_key_or_handle(ep_l3_key.vrf_key_handle());
+            if (vrf == NULL) {
+                HAL_TRACE_ERR("Failed to find vrf {}",
+                              vrf_lookup_key_or_handle_to_str(ep_l3_key.vrf_key_handle()));
+                return HAL_RET_VRF_NOT_FOUND;
+
+            }
+            l3_key.vrf_id = vrf->vrf_id;
             ip_addr_spec_to_ip_addr(&l3_key.ip_addr,
                     ep_l3_key.ip_address());
             *ep = find_ep_by_l3_key(&l3_key);
         } else {
-            *api_status = types::API_STATUS_INVALID_ARG;
+            if (api_status) {
+                *api_status = types::API_STATUS_INVALID_ARG;
+            }
             return HAL_RET_INVALID_ARG;
         }
     } else if (kh.key_or_handle_case() ==
             EndpointKeyHandle::kEndpointHandle) {
         *ep = find_ep_by_handle(kh.endpoint_handle());
     } else {
-        *api_status = types::API_STATUS_INVALID_ARG;
+        if (api_status) {
+            *api_status = types::API_STATUS_INVALID_ARG;
+        }
         return HAL_RET_INVALID_ARG;
     }
 
     if (!(*ep)) {
-        *api_status = types::API_STATUS_INVALID_ARG;
+        if (api_status) {
+            *api_status = types::API_STATUS_INVALID_ARG;
+        }
         return HAL_RET_INVALID_ARG;
     }
 
@@ -1673,7 +1709,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     }
 
     // fetch the ep
-    ret = find_ep(tid, req.key_or_handle(), &ep, &api_status);
+    ret = find_ep(req.key_or_handle(), &ep, &api_status);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch endpoint");
         rsp->set_api_status(api_status);
@@ -1775,7 +1811,7 @@ end:
 // validate ep delete request
 //------------------------------------------------------------------------------
 static hal_ret_t
-validate_endpoint_delete (EndpointDeleteRequest& req,
+validate_endpoint_delete_req (EndpointDeleteRequest& req,
                           EndpointDeleteResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -1784,6 +1820,23 @@ validate_endpoint_delete (EndpointDeleteRequest& req,
     if (!req.has_key_or_handle()) {
         HAL_TRACE_ERR("EP spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// validate ep delete
+//------------------------------------------------------------------------------
+static hal_ret_t
+validate_endpoint_delete (ep_t *ep)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    if (ep->nh_list->num_elems()) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("If delete failure, NHs still referring:");
+        hal_print_handles_block_list(ep->nh_list);
     }
 
     return ret;
@@ -1898,7 +1951,7 @@ endpoint_delete (EndpointDeleteRequest& req,
     ApiStatus                       api_status;
 
     // validate the request message
-    ret = validate_endpoint_delete(req, rsp);
+    ret = validate_endpoint_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("EP delete validation failed, err : {}", ret);
         goto end;
@@ -1915,13 +1968,21 @@ endpoint_delete (EndpointDeleteRequest& req,
     }
 
     // fetch the ep
-    ret = find_ep(tid, req.key_or_handle(), &ep, &api_status);
+    ret = find_ep(req.key_or_handle(), &ep, &api_status);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to find EP");
         goto end;
     }
 
     HAL_TRACE_DEBUG("Deleting EP {}", ep_l2_key_to_str(ep));
+
+    // validate the EP delete
+    ret = validate_endpoint_delete(ep);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("EP delete validation failed, err : {}", ret);
+        goto end;
+    }
+
 
     // form ctxt and call infra add
     dhl_entry.handle = ep->hal_handle;
@@ -2144,6 +2205,61 @@ end:
                     ep_l2_key_to_str(ep), ep->hal_handle,
                     session->config.session_id, session->hal_handle,
                     ret);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Adds nh to ep back refs
+//-----------------------------------------------------------------------------
+hal_ret_t
+ep_add_nh (ep_t *ep, nexthop_t *nh)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (ep == NULL || nh == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    ep_lock(ep, __FILENAME__, __LINE__, __func__);      // lock
+    ret = ep->nh_list->insert(&nh->hal_handle);
+    ep_unlock(ep, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add nh {} to ep {}",
+                        nh->nh_id, ep_l2_key_to_str(ep));
+        goto end;
+    }
+
+end:
+    HAL_TRACE_DEBUG("Added nh {} to ep {}", nh->nh_id, ep_l2_key_to_str(ep));
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Remove nh from ep
+//-----------------------------------------------------------------------------
+hal_ret_t
+ep_del_nh (ep_t *ep, nexthop_t *nh)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (ep == NULL || nh == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    ep_lock(ep, __FILENAME__, __LINE__, __func__);      // lock
+    ret = ep->nh_list->remove(&nh->hal_handle);
+    ep_unlock(ep, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add nh {} to ep {}",
+                        nh->nh_id, ep_l2_key_to_str(ep));
+        goto end;
+    }
+
+end:
+    HAL_TRACE_DEBUG("Deleted nh {} from ep {}", nh->nh_id,
+                    ep_l2_key_to_str(ep));
     return ret;
 }
 

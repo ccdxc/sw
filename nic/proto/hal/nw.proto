@@ -16,10 +16,21 @@ package nw;
 option go_package="halproto";
 
 service Network {
+  // Network
   rpc NetworkCreate (NetworkRequestMsg) returns (NetworkResponseMsg) {}
   rpc NetworkUpdate (NetworkRequestMsg) returns (NetworkResponseMsg) {}
   rpc NetworkDelete (NetworkDeleteRequestMsg) returns (NetworkDeleteResponseMsg) {}
   rpc NetworkGet (NetworkGetRequestMsg) returns (NetworkGetResponseMsg) {}
+  // Nexthop
+  rpc NexthopCreate (NexthopRequestMsg) returns (NexthopResponseMsg) {}
+  rpc NexthopUpdate (NexthopRequestMsg) returns (NexthopResponseMsg) {}
+  rpc NexthopDelete (NexthopDeleteRequestMsg) returns (NexthopDeleteResponseMsg) {}
+  rpc NexthopGet (NexthopGetRequestMsg) returns (NexthopGetResponseMsg) {}
+  // Route
+  rpc RouteCreate (RouteRequestMsg) returns (RouteResponseMsg) {}
+  rpc RouteUpdate (RouteRequestMsg) returns (RouteResponseMsg) {}
+  rpc RouteDelete (RouteDeleteRequestMsg) returns (RouteDeleteResponseMsg) {}
+  rpc RouteGet (RouteGetRequestMsg) returns (RouteGetResponseMsg) {}
 }
 
 // NetworkSpec is used to add or modify a network object

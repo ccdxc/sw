@@ -7,6 +7,7 @@
 #include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/src/nw/vrf.hpp"
 #include "nic/hal/src/nw/nw.hpp"
+#include "nic/hal/src/nw/nh.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/mcast/multicast.hpp"
@@ -316,6 +317,12 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       sizeof(hal::nat_rule_t), 64,
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_RULE] != NULL), false);
+
+    slabs_[HAL_SLAB_NEXTHOP] =
+        slab::factory("nexthop", HAL_SLAB_NEXTHOP,
+                      sizeof(hal::nexthop_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NEXTHOP] != NULL), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
@@ -818,6 +825,15 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   true, mmgr);
     HAL_ASSERT_RETURN((nat_pool_id_ht_ != NULL), false);
 
+    // initialize nexthop related data structures
+    HAL_HT_CREATE("nexthop", nexthop_id_ht_,
+                  HAL_MAX_NEXTHOPS >> 1,
+                  hal::nexthop_id_get_key_func,
+                  hal::nexthop_id_compute_hash_func,
+                  hal::nexthop_id_compare_key_func,
+                  true, mmgr);
+    HAL_ASSERT_RETURN((nexthop_id_ht_ != NULL), false);
+
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         HAL_HT_CREATE("gft-profiles",
                       gft_exact_match_profile_id_ht_,
@@ -1036,6 +1052,7 @@ hal_oper_db::hal_oper_db()
     gft_hdr_transposition_profile_id_ht_ = NULL;
     gft_exact_match_flow_entry_id_ht_ = NULL;
     nat_pool_id_ht_ = NULL;
+    nexthop_id_ht_ = NULL;
 
     forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
     infra_vrf_handle_ = HAL_HANDLE_INVALID;
@@ -1683,6 +1700,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_NAT_RULE:
         g_hal_state->nat_rule_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NEXTHOP:
+        g_hal_state->nexthop_slab()->free(elem);
         break;
 
     default:

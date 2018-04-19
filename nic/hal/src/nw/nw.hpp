@@ -230,6 +230,24 @@ hal_ret_t network_get(nw::NetworkGetRequest& req,
                       nw::NetworkGetResponseMsg *rsp);
 network_t *network_lookup_key_or_handle(NetworkKeyHandle& kh);
 
+hal_ret_t nexthop_create(nw::NexthopSpec& spec,
+                         nw::NexthopResponse *rsp);
+hal_ret_t nexthop_update(nw::NexthopSpec& spec,
+                         nw::NexthopResponse *rsp);
+hal_ret_t nexthop_delete(nw::NexthopDeleteRequest& req,
+                         nw::NexthopDeleteResponse *rsp);
+hal_ret_t nexthop_get(nw::NexthopGetRequest& req,
+                      nw::NexthopGetResponseMsg *rsp);
+
+
+static hal_ret_t route_create(nw::RouteSpec& spec,
+                              nw::RouteResponse *rsp) { return HAL_RET_OK; }
+static hal_ret_t route_update(nw::RouteSpec& spec,
+                              nw::RouteResponse *rsp) { return HAL_RET_OK; }
+static hal_ret_t route_delete(nw::RouteDeleteRequest& req,
+                              nw::RouteDeleteResponse *rsp) { return HAL_RET_OK; }
+static hal_ret_t route_get(nw::RouteGetRequest& req,
+                           nw::RouteGetResponseMsg *rsp) { return HAL_RET_OK; }
 }    // namespace hal
 
 #endif    // __NETWORK_HPP__

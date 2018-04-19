@@ -164,6 +164,150 @@ func (_mr *MockNetworkClientMockRecorder) NetworkGet(arg0, arg1 interface{}, arg
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "NetworkGet", reflect.TypeOf((*MockNetworkClient)(nil).NetworkGet), _s...)
 }
 
+// NexthopCreate mocks base method
+func (_m *MockNetworkClient) NexthopCreate(ctx context.Context, in *NexthopRequestMsg, opts ...grpc.CallOption) (*NexthopResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "NexthopCreate", _s...)
+	ret0, _ := ret[0].(*NexthopResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NexthopCreate indicates an expected call of NexthopCreate
+func (_mr *MockNetworkClientMockRecorder) NexthopCreate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "NexthopCreate", reflect.TypeOf((*MockNetworkClient)(nil).NexthopCreate), _s...)
+}
+
+// NexthopUpdate mocks base method
+func (_m *MockNetworkClient) NexthopUpdate(ctx context.Context, in *NexthopRequestMsg, opts ...grpc.CallOption) (*NexthopResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "NexthopUpdate", _s...)
+	ret0, _ := ret[0].(*NexthopResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NexthopUpdate indicates an expected call of NexthopUpdate
+func (_mr *MockNetworkClientMockRecorder) NexthopUpdate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "NexthopUpdate", reflect.TypeOf((*MockNetworkClient)(nil).NexthopUpdate), _s...)
+}
+
+// NexthopDelete mocks base method
+func (_m *MockNetworkClient) NexthopDelete(ctx context.Context, in *NexthopDeleteRequestMsg, opts ...grpc.CallOption) (*NexthopDeleteResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "NexthopDelete", _s...)
+	ret0, _ := ret[0].(*NexthopDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NexthopDelete indicates an expected call of NexthopDelete
+func (_mr *MockNetworkClientMockRecorder) NexthopDelete(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "NexthopDelete", reflect.TypeOf((*MockNetworkClient)(nil).NexthopDelete), _s...)
+}
+
+// NexthopGet mocks base method
+func (_m *MockNetworkClient) NexthopGet(ctx context.Context, in *NexthopGetRequestMsg, opts ...grpc.CallOption) (*NexthopGetResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "NexthopGet", _s...)
+	ret0, _ := ret[0].(*NexthopGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NexthopGet indicates an expected call of NexthopGet
+func (_mr *MockNetworkClientMockRecorder) NexthopGet(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "NexthopGet", reflect.TypeOf((*MockNetworkClient)(nil).NexthopGet), _s...)
+}
+
+// RouteCreate mocks base method
+func (_m *MockNetworkClient) RouteCreate(ctx context.Context, in *RouteRequestMsg, opts ...grpc.CallOption) (*RouteResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "RouteCreate", _s...)
+	ret0, _ := ret[0].(*RouteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RouteCreate indicates an expected call of RouteCreate
+func (_mr *MockNetworkClientMockRecorder) RouteCreate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "RouteCreate", reflect.TypeOf((*MockNetworkClient)(nil).RouteCreate), _s...)
+}
+
+// RouteUpdate mocks base method
+func (_m *MockNetworkClient) RouteUpdate(ctx context.Context, in *RouteRequestMsg, opts ...grpc.CallOption) (*RouteResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "RouteUpdate", _s...)
+	ret0, _ := ret[0].(*RouteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RouteUpdate indicates an expected call of RouteUpdate
+func (_mr *MockNetworkClientMockRecorder) RouteUpdate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "RouteUpdate", reflect.TypeOf((*MockNetworkClient)(nil).RouteUpdate), _s...)
+}
+
+// RouteDelete mocks base method
+func (_m *MockNetworkClient) RouteDelete(ctx context.Context, in *RouteDeleteRequestMsg, opts ...grpc.CallOption) (*RouteDeleteResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "RouteDelete", _s...)
+	ret0, _ := ret[0].(*RouteDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RouteDelete indicates an expected call of RouteDelete
+func (_mr *MockNetworkClientMockRecorder) RouteDelete(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "RouteDelete", reflect.TypeOf((*MockNetworkClient)(nil).RouteDelete), _s...)
+}
+
+// RouteGet mocks base method
+func (_m *MockNetworkClient) RouteGet(ctx context.Context, in *RouteGetRequestMsg, opts ...grpc.CallOption) (*RouteGetResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "RouteGet", _s...)
+	ret0, _ := ret[0].(*RouteGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RouteGet indicates an expected call of RouteGet
+func (_mr *MockNetworkClientMockRecorder) RouteGet(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "RouteGet", reflect.TypeOf((*MockNetworkClient)(nil).RouteGet), _s...)
+}
+
 // MockNetworkServer is a mock of NetworkServer interface
 type MockNetworkServer struct {
 	ctrl     *gomock.Controller
@@ -237,4 +381,108 @@ func (_m *MockNetworkServer) NetworkGet(_param0 context.Context, _param1 *Networ
 // NetworkGet indicates an expected call of NetworkGet
 func (_mr *MockNetworkServerMockRecorder) NetworkGet(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "NetworkGet", reflect.TypeOf((*MockNetworkServer)(nil).NetworkGet), arg0, arg1)
+}
+
+// NexthopCreate mocks base method
+func (_m *MockNetworkServer) NexthopCreate(_param0 context.Context, _param1 *NexthopRequestMsg) (*NexthopResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "NexthopCreate", _param0, _param1)
+	ret0, _ := ret[0].(*NexthopResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NexthopCreate indicates an expected call of NexthopCreate
+func (_mr *MockNetworkServerMockRecorder) NexthopCreate(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "NexthopCreate", reflect.TypeOf((*MockNetworkServer)(nil).NexthopCreate), arg0, arg1)
+}
+
+// NexthopUpdate mocks base method
+func (_m *MockNetworkServer) NexthopUpdate(_param0 context.Context, _param1 *NexthopRequestMsg) (*NexthopResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "NexthopUpdate", _param0, _param1)
+	ret0, _ := ret[0].(*NexthopResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NexthopUpdate indicates an expected call of NexthopUpdate
+func (_mr *MockNetworkServerMockRecorder) NexthopUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "NexthopUpdate", reflect.TypeOf((*MockNetworkServer)(nil).NexthopUpdate), arg0, arg1)
+}
+
+// NexthopDelete mocks base method
+func (_m *MockNetworkServer) NexthopDelete(_param0 context.Context, _param1 *NexthopDeleteRequestMsg) (*NexthopDeleteResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "NexthopDelete", _param0, _param1)
+	ret0, _ := ret[0].(*NexthopDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NexthopDelete indicates an expected call of NexthopDelete
+func (_mr *MockNetworkServerMockRecorder) NexthopDelete(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "NexthopDelete", reflect.TypeOf((*MockNetworkServer)(nil).NexthopDelete), arg0, arg1)
+}
+
+// NexthopGet mocks base method
+func (_m *MockNetworkServer) NexthopGet(_param0 context.Context, _param1 *NexthopGetRequestMsg) (*NexthopGetResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "NexthopGet", _param0, _param1)
+	ret0, _ := ret[0].(*NexthopGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NexthopGet indicates an expected call of NexthopGet
+func (_mr *MockNetworkServerMockRecorder) NexthopGet(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "NexthopGet", reflect.TypeOf((*MockNetworkServer)(nil).NexthopGet), arg0, arg1)
+}
+
+// RouteCreate mocks base method
+func (_m *MockNetworkServer) RouteCreate(_param0 context.Context, _param1 *RouteRequestMsg) (*RouteResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "RouteCreate", _param0, _param1)
+	ret0, _ := ret[0].(*RouteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RouteCreate indicates an expected call of RouteCreate
+func (_mr *MockNetworkServerMockRecorder) RouteCreate(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "RouteCreate", reflect.TypeOf((*MockNetworkServer)(nil).RouteCreate), arg0, arg1)
+}
+
+// RouteUpdate mocks base method
+func (_m *MockNetworkServer) RouteUpdate(_param0 context.Context, _param1 *RouteRequestMsg) (*RouteResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "RouteUpdate", _param0, _param1)
+	ret0, _ := ret[0].(*RouteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RouteUpdate indicates an expected call of RouteUpdate
+func (_mr *MockNetworkServerMockRecorder) RouteUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "RouteUpdate", reflect.TypeOf((*MockNetworkServer)(nil).RouteUpdate), arg0, arg1)
+}
+
+// RouteDelete mocks base method
+func (_m *MockNetworkServer) RouteDelete(_param0 context.Context, _param1 *RouteDeleteRequestMsg) (*RouteDeleteResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "RouteDelete", _param0, _param1)
+	ret0, _ := ret[0].(*RouteDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RouteDelete indicates an expected call of RouteDelete
+func (_mr *MockNetworkServerMockRecorder) RouteDelete(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "RouteDelete", reflect.TypeOf((*MockNetworkServer)(nil).RouteDelete), arg0, arg1)
+}
+
+// RouteGet mocks base method
+func (_m *MockNetworkServer) RouteGet(_param0 context.Context, _param1 *RouteGetRequestMsg) (*RouteGetResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "RouteGet", _param0, _param1)
+	ret0, _ := ret[0].(*RouteGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RouteGet indicates an expected call of RouteGet
+func (_mr *MockNetworkServerMockRecorder) RouteGet(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "RouteGet", reflect.TypeOf((*MockNetworkServer)(nil).RouteGet), arg0, arg1)
 }

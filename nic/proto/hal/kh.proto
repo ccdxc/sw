@@ -86,7 +86,7 @@ message SecurityPolicyKey {
 message SecurityPolicyKeyHandle {
   oneof policy_key_or_handle {
     SecurityPolicyKey   security_policy_key    = 1;  // rule id idenfied by a number
-    fixed64             security_policy_handle = 2;  // handle for security policy returned by hal 
+    fixed64             security_policy_handle = 2;  // handle for security policy returned by hal
   }
 }
 
@@ -100,7 +100,7 @@ message SecurityGroupPolicyId {
 message SecurityGroupPolicyKeyHandle {
   oneof policy_key_or_handle {
     SecurityGroupPolicyId   security_group_policy_id      = 1;
-    fixed64                 security_group_policy_handle  = 2;// handle for security group policy 
+    fixed64                 security_group_policy_handle  = 2;// handle for security group policy
   }
 }
 
@@ -148,8 +148,9 @@ message EndpointL2Key {
 // EndpointL3Key is the L3 key of the endpoint
 // NOTE: An endpoint can have many L3 keys
 message EndpointL3Key {
-  types.IPAddress    ip_address = 1;    // IP address of the endpoint
-                                        // NOTE: vrf information is taken from meta
+  VrfKeyHandle      vrf_key_handle = 1 [(gogoproto.moretags) = "venice:ref"];;    // VRF key or handle
+  types.IPAddress   ip_address = 2;    // IP address of the endpoint
+                                       // NOTE: vrf information is taken from meta
 }
 
 // Endpoint can be uniquely identified by its L2 or one of its L3 keys
