@@ -202,6 +202,9 @@ public:
     void set_clock_delta_op(hal_clock_delta_op_t op) { clock_delta_op_ = op; }
     hal_clock_delta_op_t clock_delta_op(void) { return clock_delta_op_; }
 
+    void set_cpu_bypass_flowid(uint32_t flowid) { cpu_bypass_flowid_ = flowid; }
+    uint32_t cpu_bypass_flowid(void) { return cpu_bypass_flowid_; }
+
 private:
     bool init(void);
     hal_state_pd();
@@ -322,6 +325,11 @@ private:
     // Proxy Chain CB related state
     struct {
         ht         *proxyccb_hwid_ht_;
+    } __PACK__;
+
+    // Bypass Flow info
+    struct {
+        uint32_t    cpu_bypass_flowid_;
     } __PACK__;
 
     slab                    *slabs_[HAL_SLAB_PD_MAX - HAL_SLAB_PD_MIN];

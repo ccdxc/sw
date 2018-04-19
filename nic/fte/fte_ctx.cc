@@ -503,10 +503,10 @@ ctx_t::update_flow_table()
         } else if (iflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID) {
             iflow_attrs.tnnl_rw_idx = 1;
         } else if (dif_ && dif_->if_type == intf::IF_TYPE_TUNNEL) {
-			t_args.hal_if = dif_;
-			ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TNNL_IF_GET_RW_IDX,
-									   (void *)&t_args);
-			iflow_attrs.tnnl_rw_idx = t_args.tnnl_rw_idx;
+            t_args.hal_if = dif_;
+            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TNNL_IF_GET_RW_IDX,
+                                       (void *)&t_args);
+            iflow_attrs.tnnl_rw_idx = t_args.tnnl_rw_idx;
         }
 
         session_args.iflow[stage] = &iflow_cfg;
@@ -1072,7 +1072,8 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                    hal::pd::cpu_to_p4plus_header_t *cpu_header,
                    hal::pd::p4plus_to_p4_header_t  *p4plus_header,
                    uint16_t dest_lif, uint8_t  qtype, uint32_t qid,
-                   uint8_t  ring_number, types::WRingType wring_type)
+                   uint8_t  ring_number, types::WRingType wring_type,
+                   post_xmit_cb_t cb) 
 {
     txpkt_info_t *pkt_info;
     hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args;
@@ -1121,6 +1122,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     pkt_info->lifq.qid = qid;
     pkt_info->ring_number = ring_number;
     pkt_info->wring_type = wring_type;
+    pkt_info->cb = cb;
 
     HAL_TRACE_DEBUG("fte: feature={} queued txpkt lkp_inst={} src_lif={} vlan={} "
                     "dest_lifq={} ring={} wring={} pkt={:p} len={}",
@@ -1190,6 +1192,9 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failed to transmit pkt, ret={}", ret);
         }
+        // Issue a callback to free the packet
+        if (pkt_info->cb) 
+            pkt_info->cb(pkt_info->pkt);
     }
 
     txpkt_cnt_ = 0;

@@ -173,7 +173,8 @@ hal_thread_init (hal_cfg_t *hal_cfg)
     thread_prio = sched_get_priority_max(SCHED_FIFO);
     assert(thread_prio >= 0);
 
-    for (i = 0; i < hal_cfg->num_data_threads; i++) {
+    for (i = 0; (i < hal_cfg->num_data_threads && \
+         hal_cfg->features != HAL_FEATURE_SET_GFT); i++) {
 
         // pin each data thread to a specific core
         cores_mask = 1 << (ffsl(data_cores_mask) - 1);
@@ -657,7 +658,8 @@ hal_init (hal_cfg_t *hal_cfg)
         !getenv("DISABLE_FTE") &&
         !(hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC)) {
         // start fte threads
-        for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
+        for (uint32_t i = 0; (i < hal_cfg->num_data_threads &&
+                   hal_cfg->features != HAL_FEATURE_SET_GFT); i++) {
             tid = HAL_THREAD_ID_FTE_MIN + i;
             g_hal_threads[tid]->start(g_hal_threads[tid]);
         }

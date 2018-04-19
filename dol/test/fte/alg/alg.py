@@ -16,6 +16,12 @@ def TestCaseSetup(tc):
     stepspec = tc.module.iterator.Get()
     tc.tracker.SetStep(stepspec, tc)
     tc.tracker.SetupTestcaseConfig(tc)
+    if (tc.tracker.IsIgnorePktField):
+        tc.AddIgnorePacketField('IP', 'id')
+        tc.AddIgnorePacketField('IP', 'chksum')
+        tc.AddIgnorePacketField('IP', 'len')
+        tc.AddIgnorePacketField('TCP', 'seq')
+        tc.AddIgnorePacketField('TCP', 'chksum')
     return
 
 def TestCaseVerify(tc):

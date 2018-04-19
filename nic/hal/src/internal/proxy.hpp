@@ -42,19 +42,21 @@ enum {
     SERVICE_LIF_APP_REDIR,
     SERVICE_LIF_GC,
     SERVICE_LIF_P4PT,
+    SERVICE_LIF_CPU_BYPASS,
     SERVICE_LIF_END
 };
 
 inline uint16_t parse_service_lif(const char *s)
 {
     static std::map<std::string, uint16_t> _map = {
-        { "SERVICE_LIF_TCP_PROXY", SERVICE_LIF_TCP_PROXY},
-        { "SERVICE_LIF_TLS_PROXY", SERVICE_LIF_TLS_PROXY},
-        { "SERVICE_LIF_CPU"      , SERVICE_LIF_CPU},
-        { "SERVICE_LIF_IPSEC_ESP", SERVICE_LIF_IPSEC_ESP},
-        { "SERVICE_LIF_IPFIX"    , SERVICE_LIF_IPFIX},
-        { "SERVICE_LIF_APP_REDIR", SERVICE_LIF_APP_REDIR},
-        { "SERVICE_LIF_GC"       , SERVICE_LIF_GC},
+        { "SERVICE_LIF_TCP_PROXY",  SERVICE_LIF_TCP_PROXY},
+        { "SERVICE_LIF_TLS_PROXY",  SERVICE_LIF_TLS_PROXY},
+        { "SERVICE_LIF_CPU"      ,  SERVICE_LIF_CPU},
+        { "SERVICE_LIF_IPSEC_ESP",  SERVICE_LIF_IPSEC_ESP},
+        { "SERVICE_LIF_IPFIX"    ,  SERVICE_LIF_IPFIX},
+        { "SERVICE_LIF_APP_REDIR",  SERVICE_LIF_APP_REDIR},
+        { "SERVICE_LIF_GC"       ,  SERVICE_LIF_GC},
+        { "SERVICE_LIF_CPU_BYPASS", SERVICE_LIF_CPU_BYPASS}, 
     };
 
     return _map[s];

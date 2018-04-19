@@ -23,6 +23,9 @@ class ALGTrackerObject(base.TrackerObject):
     def IsFteDone(self):
         return self.step.IsFteDone()
 
+    def IsIgnorePktField(self):
+        return self.step.IsIgnorePktField()
+
     def __set_flow_states(self):
         ifstate = self.flowstate.GetState(True)
         rfstate = self.flowstate.GetState(False)
@@ -34,6 +37,7 @@ class ALGTrackerObject(base.TrackerObject):
         self.step = copy.copy(step)
         self.step.SetCpuCopyValid(getattr(stepspec, 'cpu', False))
         self.step.SetFTEDone(getattr(stepspec, 'fte_done', False))
+        self.step.SetIgnorePktField(getattr(stepspec, 'ignore_pkt_field', False))
         self.__set_flow_states()
         self.step.SetPorts(self.iport, self.rport)
         if 'pkttemplate' in dir(stepspec):

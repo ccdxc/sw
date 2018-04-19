@@ -13,11 +13,14 @@ class StepALGObject(base.StepObject):
         super().__init__(spec)
         self.pkt_template = None
         self.fte_done = None
+        self.ignore_pkt_field = None
 
     def __init_step(self):
         super().__init_step()
         self.pkt_template = None
         self.fte_done = None
+        self.ignore_pkt_field = None
+        self.permit = getattr(self, 'permit', base.permit)
         return
 
     def IsSyn(self):
@@ -31,6 +34,9 @@ class StepALGObject(base.StepObject):
         else:
             return False
 
+    def IsDrop(self):
+        return self.permit == False
+
     def PktTemplate(self):
         if 'pkt_template' in dir(self): 
             return self.pkt_template
@@ -41,6 +47,11 @@ class StepALGObject(base.StepObject):
         return self.fte_done
     def SetFTEDone(self, fte_done):
         self.fte_done = fte_done
+
+    def IsIgnorePktField(self):
+        return self.ignore_pkt_field
+    def SetIgnorePktField(self, ignore_pkt_field):
+        self.ignore_pkt_field = ignore_pkt_field
 
     def SetPorts(self, iport, rport):
         if self.IsIflow():

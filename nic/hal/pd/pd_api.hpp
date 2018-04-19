@@ -791,6 +791,19 @@ pd_session_get_args_init (pd_session_get_args_t *args)
     return;
 }
 
+typedef struct pd_get_cpu_bypass_flowid_args_s {
+    uint64_t       hw_flowid;
+} __PACK__ pd_get_cpu_bypass_flowid_args_t;
+
+static inline void
+pd_get_cpu_bypass_flowid_args_init (pd_get_cpu_bypass_flowid_args_t *args)
+{
+    args->hw_flowid = 0;
+
+    return;
+}
+
+
 // tlscb
 typedef struct pd_tlscb_create_args_s {
     tlscb_t            *tlscb;
@@ -2628,7 +2641,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, 226, "PD_FUNC_ID_ASYM_ECDSA_P256_SETUP_PRIV_KEY")\
     ENTRY(PD_FUNC_ID_TABLE_METADATA_GET,       227, "PD_FUNC_ID_TABLE_METADATA_GET") \
     ENTRY(PD_FUNC_ID_TABLE_GET,                228, "PD_FUNC_ID_TABLE_GET") \
-    ENTRY(PD_FUNC_ID_MAX,                      229, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_BYPASS_FLOWID_GET,        229, "PD_FUNC_ID_BYPASS_FLOWID_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      230, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2718,6 +2732,7 @@ PD_FUNCP_TYPEDEF(pd_session_create);
 PD_FUNCP_TYPEDEF(pd_session_update);
 PD_FUNCP_TYPEDEF(pd_session_delete);
 PD_FUNCP_TYPEDEF(pd_session_get);
+PD_FUNCP_TYPEDEF(pd_get_cpu_bypass_flowid);
 
 // tlscb calls
 PD_FUNCP_TYPEDEF(pd_tlscb_create);
@@ -3068,6 +3083,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_session_update);
         PD_UNION_FIELD(pd_session_delete);
         PD_UNION_FIELD(pd_session_get);
+        PD_UNION_FIELD(pd_get_cpu_bypass_flowid);
 
         // tlscb calls
         PD_UNION_FIELD(pd_tlscb_create);

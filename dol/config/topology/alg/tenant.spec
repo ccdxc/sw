@@ -6,8 +6,8 @@ type    : tenant
 overlay : vlan
 
 segments:
-#    - spec  : ref://store/specs/id=SEGMENT_ALG
-#      count : 2
+    #- spec  : ref://store/specs/id=SEGMENT_ALG
+    #  count : 2
     - spec  : ref://store/specs/id=SEGMENT_NATIVE_ALG
       count : 1
 

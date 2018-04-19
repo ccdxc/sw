@@ -1058,5 +1058,56 @@ pd_flow_get (pd_flow_get_args_t *args)
     return ret;
 }
 
+//------------------------------------------------------------------------------------
+// Add a bypass flow info entry
+//------------------------------------------------------------------------------------
+hal_ret_t
+pd_add_cpu_bypass_flow_info (uint32_t *flow_info_hwid)
+{
+    flow_info_actiondata    d = { 0};
+    hal_ret_t               ret = HAL_RET_OK;
+    sdk_ret_t               sdk_ret;
+    directmap              *dm;
+
+    ret = p4pd_add_flow_stats_table_entry(flow_info_hwid);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
+    HAL_ASSERT(dm != NULL);
+
+    d.actionid = FLOW_INFO_FLOW_INFO_FROM_CPU_ID;
+
+    // insert the entry
+    sdk_ret = dm->insert_withid(&d, *flow_info_hwid);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",
+                       *flow_info_hwid, ret);
+        return ret;
+    }    
+    
+    return HAL_RET_OK;     
+}
+
+//------------------------------------------------------------------------------------
+// Get bypass flow info entry
+//------------------------------------------------------------------------------------
+hal_ret_t
+pd_get_cpu_bypass_flowid (pd_get_cpu_bypass_flowid_args_t *args)
+{
+    uint32_t   flow_info_hwid = 0;
+
+    if (!g_hal_state_pd->cpu_bypass_flowid()) {
+        pd_add_cpu_bypass_flow_info(&flow_info_hwid);
+        g_hal_state_pd->set_cpu_bypass_flowid(flow_info_hwid);
+    }
+    
+    args->hw_flowid = g_hal_state_pd->cpu_bypass_flowid();
+ 
+    return HAL_RET_OK;
+}
+
 }    // namespace pd
 }    // namespace hal

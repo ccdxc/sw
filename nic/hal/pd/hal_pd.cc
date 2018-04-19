@@ -136,6 +136,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_SESSION_DELETE, pd_session_delete);
     PD_SYMBOL_LOAD(PD_FUNC_ID_SESSION_UPDATE, pd_session_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_SESSION_GET, pd_session_get);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_BYPASS_FLOWID_GET, pd_get_cpu_bypass_flowid);
 
     // tlscb pd calls
     PD_SYMBOL_LOAD(PD_FUNC_ID_TLSCB_CREATE, pd_tlscb_create);
@@ -496,6 +497,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_SESSION_DELETE, pd_session_delete);
     PD_SYMBOL_CALL(PD_FUNC_ID_SESSION_UPDATE, pd_session_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_SESSION_GET, pd_session_get);
+    PD_SYMBOL_CALL(PD_FUNC_ID_BYPASS_FLOWID_GET, pd_get_cpu_bypass_flowid);
 
     // tlscb pd calls
     PD_SYMBOL_CALL(PD_FUNC_ID_TLSCB_CREATE, pd_tlscb_create);

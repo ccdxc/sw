@@ -223,6 +223,7 @@ enum {
     HAL_MEM_ALLOC_OTHER,
     HAL_MEM_ALLOC_LIB_SHM,
     HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF,
+    HAL_MEM_ALLOC_SESS_TIMER_CTXT,
     HAL_MEM_ALLOC_ALL = 0xFFFFFFFF,    // reserved and shouldn't be used
 };
 

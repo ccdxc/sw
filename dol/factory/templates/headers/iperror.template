@@ -1,0 +1,6 @@
+meta:
+    id      : IPERRORV4
+    scapy   : IPerror
+    size    : 20
+
+fields:

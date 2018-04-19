@@ -93,12 +93,22 @@ def GetPacketTemplateBySessionIflow(testcase, packet, args=None):
     return __get_packet_template_impl(testcase.tracker.config.flow, l7proto)
 
 def GetPacketTemplateBySessionRflow(testcase, packet, args=None):
-    return __get_packet_template_impl(testcase.config.session.rconfig.flow, args)
+    l7proto =  testcase.tracker.PktTemplate()
+    if (l7proto == 'ETH_IPV4_UDP'):
+        l7proto = 'ETH_IPV4_ICMP_IPERROR_UDPERROR'
+    return __get_packet_template_impl(testcase.config.session.rconfig.flow, l7proto)
 
 def GetForwardingCopy(tc, args = None):
     if tc.tracker.step.IsDrop():
         return None
     return tc.packets.Get(args.pktid)
+
+def GetRejectCopy(tc, args):
+    return  __get_expected_packet(tc, args, tc.config.session.rconfig)
+
+def GetPadding(tc, args):
+    data = [0x0] * 20 
+    return data
 
 def GetCpuCopy(tc, args = None):
     if tc.tracker.IsCpuCopyValid():

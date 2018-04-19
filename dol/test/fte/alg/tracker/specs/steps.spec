@@ -554,3 +554,20 @@ steps:
         fields      :
             flags   : ack
             dport   : 21
+
+    - step:
+        id          : IFLOW_SFW_SYN
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
+        fields      :
+            flags   : syn
+            dport   : 55
+            ack     : 0
+
+    - step:
+        id          : IFLOW_SFW_UDP
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 20 
+        fields      :
+            proto   : UDP
+            dport   : 55 

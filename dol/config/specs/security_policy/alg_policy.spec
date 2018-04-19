@@ -35,6 +35,16 @@ policies:
                         dst_port : 21
                         alg      : FTP
             - rule:
+                action : REJECT
+                log    : True
+                svcs: 
+                    - svc:
+                        proto    : 6
+                        dst_port : 55
+                    - svc:
+                        proto    : 17
+                        dst_port : 55
+            - rule:
                 action :  DENY 
                 log    :  True
                 svcs:

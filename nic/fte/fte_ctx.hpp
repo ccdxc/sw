@@ -377,6 +377,10 @@ uint16_t feature_id(const std::string &name);
 size_t feature_state_size(uint16_t *num_features);
 void feature_state_init(feature_state_t *feature_state, uint16_t num_features);
 
+// Callback definition for FTE to call per queued
+// packet for cleanup
+typedef void (*post_xmit_cb_t)(uint8_t *pkt);
+
 // pkt info for queued tx packets
 typedef struct txpkt_info_s txpkt_info_t;
 struct txpkt_info_s {
@@ -387,6 +391,7 @@ struct txpkt_info_s {
     lifqid_t                        lifq;   // Dest lif/qtype/qid
     uint8_t                         ring_number; // arm ring
     types::WRingType                wring_type;
+    post_xmit_cb_t                  cb;
 };
 
 typedef hal::pd::p4_to_p4plus_cpu_pkt_t cpu_rxhdr_t;
@@ -458,7 +463,8 @@ public:
                           uint8_t  qtype = CPU_ASQ_QTYPE,
                           uint32_t qid = CPU_ASQ_QID,
                           uint8_t  ring_number = CPU_SCHED_RING_ASQ,
-                          types::WRingType wring_type = types::WRING_TYPE_ASQ);
+                          types::WRingType wring_type = types::WRING_TYPE_ASQ,
+                          post_xmit_cb_t cb = NULL);
     hal_ret_t send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx);
 
     //proto spec is valid when flow update triggered via hal proto api
@@ -506,6 +512,14 @@ public:
 
     bool valid_rflow() const { return valid_rflow_; }
     void set_valid_rflow(bool val) { valid_rflow_ = val; }
+
+    flow_t *flow(hal::flow_role_t role, uint8_t stage=0) {
+         if (role == hal::FLOW_ROLE_INITIATOR) {
+             return (iflow_[stage]);
+         } else {
+             return (rflow_[stage]);
+         }
+    }
 
     bool ignore_session_create() const { return ignore_session_create_; }
     void set_ignore_session_create(bool val) { ignore_session_create_ = val; }

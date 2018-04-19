@@ -1,0 +1,45 @@
+# Feature Test Modules List
+feature:
+    id          : alg 
+    sub         : sfw_reject 
+    package     : test.fte.alg
+    module      : alg
+    spec        : sfw_reject.testspec
+    enable      : True 
+    ignore      : False
+    serial      : True
+
+modules:
+    - module:
+        name     : SFW_REJECT_TCP
+        tracker  : True
+        args     :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        selectors:
+            session       :
+                base      : filter://type=IPV4,proto=TCP,label=FTE
+                iflow     : filter://any
+                rflow     : filter://any
+
+        iterate  :
+            - step            : ref://trackerstore/steps/id=IFLOW_SFW_SYN
+              cpu             : True
+              pkttemplate     : ETH_IPV4_TCP
+              ignore_pkt_field: True
+
+    - module:
+        name     : SFW_REJECT_UDP
+        tracker  : True
+        args     :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        selectors:
+            session       :
+                base      : filter://type=IPV4,proto=UDP,label=FTE
+                iflow     : filter://any
+                rflow     : filter://any
+
+        iterate  :
+            - step            : ref://trackerstore/steps/id=IFLOW_SFW_UDP
+              cpu             : True
+              pkttemplate     : ETH_IPV4_UDP
+              ignore_pkt_field: True

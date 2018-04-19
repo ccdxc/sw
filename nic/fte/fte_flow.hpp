@@ -185,6 +185,30 @@ public:
         return is_proxy_enabled_;
     }
 
+    header_rewrite_info_t header_rewrite_info() const {
+        header_rewrite_info_t info = {};
+
+        for (int i = 0; i < num_header_updates_; i++) {
+            const header_update_t *entry = &header_updates_[i];
+            if (entry->type == HEADER_REWRITE) {
+                return (entry->header_rewrite);
+            }
+        }
+        return info;
+    }
+
+    header_push_info_t header_push_info() const {
+       header_push_info_t info = {}; 
+ 
+       for (int i = 0; i < num_header_updates_; i++) {
+            const header_update_t *entry = &header_updates_[i];
+            if (entry->type == HEADER_PUSH) {
+                return (entry->header_push);
+            }
+        }
+        return info;
+    }
+
 private:
     // Max header updates we track per flow
     // This is enough to pop the outer, rewrite inner and push new outer

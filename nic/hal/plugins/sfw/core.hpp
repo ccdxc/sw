@@ -4,6 +4,7 @@
 
 using session::FlowAction;
 using nwsec::ALGName;
+using nwsec::FirewallAction;
 
 namespace hal {
 namespace plugins {
@@ -18,13 +19,29 @@ typedef struct sfw_info_s {
     bool            skip_sfw;
     bool            sfw_done;
 } sfw_info_t;
-
+std::ostream& operator<<(std::ostream& os, const sfw_info_t& val);
+    
 typedef struct net_sfw_match_result_s {
     bool            valid;
     FlowAction      action;
     ALGName         alg;
     bool            log;
+    FirewallAction  sfw_action; 
 } net_sfw_match_result_t;
+std::ostream& operator<<(std::ostream& os, const net_sfw_match_result_t& val);
+
+uint32_t
+net_sfw_build_tcp_rst (fte::ctx_t& ctx, uint8_t **pkt,
+                       const fte::header_rewrite_info_t rewrite_info,
+                       const fte::header_push_info_t push_info);
+
+uint32_t
+net_sfw_build_icmp_error (fte::ctx_t& ctx, uint8_t **pkt,
+                          const fte::header_rewrite_info_t rewrite_info,
+                          const fte::header_push_info_t push_info);
+
+void
+net_sfw_free_reject_pkt (uint8_t *pkt);
 
 }  // namespace sfw
 }  // namespace plugins
