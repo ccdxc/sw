@@ -1,11 +1,6 @@
 
 #include <string.h>
-
-
-/* TODO: bool should be found elsewhere */
-typedef uint8_t bool;
-#define false ((uint8_t)0)
-#define true  ((uint8_t)1)
+#include <stdbool.h>
 
 /* Algorithm wrappers */
 bool algo_sha_gen(void* scratch, unsigned char* hash, const unsigned char* msg, int len, int hash_bits);

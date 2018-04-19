@@ -28,7 +28,7 @@ typedef struct {
 } pnso_sim_q_t;
 
 typedef struct {
-    struct pnso_sim_session *sess; /* TODO */
+    struct pnso_sim_session *sess;
     struct pnso_service cmd;
     struct pnso_service_status status;
     uint32_t is_first:1,
@@ -48,7 +48,7 @@ typedef int (*stage_func_t)(pnso_sim_stage_t*, void*);
 
 struct pnso_sim_session {
     bool is_valid;
-    uint32_t pad_sz;
+    uint32_t block_sz;
     pnso_sim_scratch_region_t scratch;
     stage_func_t funcs[PNSO_SVC_TYPE_MAX];
 };
@@ -65,7 +65,6 @@ static int stage_pad(pnso_sim_stage_t* stage, void* opaque);
 static int stage_hash(pnso_sim_stage_t* stage, void* opaque);
 static int stage_chksum(pnso_sim_stage_t* stage, void* opaque);
 
-
 #define CMD_SCRATCH_SZ (16 * 1024)
 
 static int pnso_sim_init_session(struct pnso_sim_session* sess, stage_func_t *funcs,
@@ -79,17 +78,23 @@ static int pnso_sim_init_session(struct pnso_sim_session* sess, stage_func_t *fu
         sess->funcs[func_i] = funcs[func_i];
         if (sess->funcs[func_i] == NULL) {
             switch(func_i) {
+            case PNSO_SVC_TYPE_ENCRYPT:
+                sess->funcs[func_i] = stage_encrypt;
+                break;
+            case PNSO_SVC_TYPE_DECRYPT:
+                sess->funcs[func_i] = stage_decrypt;
+                break;
             case PNSO_SVC_TYPE_COMPRESS:
                 sess->funcs[func_i] = stage_compress;
                 break;
             case PNSO_SVC_TYPE_DECOMPRESS:
                 sess->funcs[func_i] = stage_decompress;
                 break;
-            case PNSO_SVC_TYPE_ENCRYPT:
-                sess->funcs[func_i] = stage_encrypt;
+            case PNSO_SVC_TYPE_HASH:
+                sess->funcs[func_i] = stage_hash;
                 break;
-            case PNSO_SVC_TYPE_DECRYPT:
-                sess->funcs[func_i] = stage_decrypt;
+            case PNSO_SVC_TYPE_CHKSUM:
+                sess->funcs[func_i] = stage_chksum;
                 break;
             case PNSO_SVC_TYPE_PAD:
                 sess->funcs[func_i] = stage_pad;
@@ -112,7 +117,7 @@ static int pnso_sim_init_session(struct pnso_sim_session* sess, stage_func_t *fu
     sess->scratch.data[0] = scratch;
     sess->scratch.data[1] = scratch + (scratch_sz / 2);
 
-    sess->pad_sz = PNSO_DEFAULT_BLOCK_SZ;
+    sess->block_sz = PNSO_DEFAULT_BLOCK_SZ;
     sess->is_valid = true;
 
     return 0;
@@ -156,7 +161,7 @@ static int stage_memcpy(pnso_sim_stage_t* stage, void* opaque)
         len = stage->output.len;
     }
 
-    memcpy((uint8_t*)stage->input.buf, (uint8_t*)stage->output.buf, len);
+    memcpy((uint8_t*)stage->output.buf, (uint8_t*)stage->input.buf, len);
     stage->output.len = len;
     return 0;
 }
@@ -232,6 +237,10 @@ static int execute_stage(struct pnso_sim_session *session, pnso_sim_stage_t *sta
     PNSO_ASSERT(session->funcs[stage->cmd.svc_type]);
     rc = session->funcs[stage->cmd.svc_type](stage, opaque);
 
+    stage->status.output_data_len = stage->output.len;
+    stage->status.svc_type = stage->cmd.svc_type;
+    stage->status.err = rc;
+
     return rc;
 }
 
@@ -301,12 +310,13 @@ pnso_error_t pnso_sim_execute_request(
 
         /* Execute stage */
         rc = execute_stage(sess, cur_stage, NULL /* TODO */);
-        svc_res->status[stage_i].err = rc;
+        svc_res->status[stage_i] = cur_stage->status;
         if (rc != 0) {
             /* TODO: continue?? */
             goto error;
         }
 
+        prev_stage = cur_stage;
     }
 
     /* Copy final result from scratch buffer to request buffer */
@@ -316,29 +326,55 @@ error:
     return rc;
 }
 
-static int stage_lzrw1a(uint32_t action, pnso_sim_stage_t* stage)
+static int stage_compress_lzrw1a(pnso_sim_stage_t* stage)
 {
-    uint32_t dst_len = stage->sess->scratch.data_sz;
+    struct pnso_compression_header* hdr = (struct pnso_compression_header*) stage->output.buf;
+    uint32_t dst_len = stage->sess->scratch.data_sz - sizeof(*hdr);
 
-    if (lzrw1a_compress(action, stage->sess->scratch.cmd,
+    if (lzrw1a_compress(COMPRESS_ACTION_COMPRESS, stage->sess->scratch.cmd,
                         (uint8_t*)stage->input.buf, stage->input.len,
-                        (uint8_t*)stage->output.buf, &dst_len, 0)) {
-        stage->output.len = dst_len;
+                        (uint8_t*)stage->output.buf + sizeof(*hdr),
+                        &dst_len, 0)) {
+        stage->output.len = dst_len + sizeof(*hdr);
+        hdr->chksum = 0;
+        hdr->data_len = dst_len;
+        hdr->version = 1; /* TODO */
         return 0;
     }
     return -1;
+}
+
+static int stage_decompress_lzrw1a(pnso_sim_stage_t* stage)
+{
+    struct pnso_compression_header* hdr = (struct pnso_compression_header*) stage->input.buf;
+    uint32_t dst_len = stage->sess->scratch.data_sz;
+
+    PNSO_ASSERT(stage->input.len >= sizeof(*hdr));
+    PNSO_ASSERT(stage->input.len - sizeof(*hdr) >= hdr->data_len);
+
+    /* Note: currently lzrw1a decompress does not provide error status */
+    lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS, stage->sess->scratch.cmd,
+                    (uint8_t*)stage->input.buf + sizeof(*hdr),
+                    hdr->data_len,
+                    (uint8_t*)stage->output.buf, &dst_len, 0);
+    stage->output.len = dst_len;
+    return 0;
 }
 
 static int stage_compress(pnso_sim_stage_t* stage, void* opaque)
 {
     int rc = 0;
 
+    memset(stage->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
+
+    /* TODO: obey threshold value */
+
     switch(stage->cmd.algo_type) {
     case PNSO_COMPRESSOR_TYPE_NONE:
         rc = stage_noop(stage, opaque);
         break;
     case PNSO_COMPRESSOR_TYPE_LZRW1A:
-        rc = stage_lzrw1a(COMPRESS_ACTION_COMPRESS, stage);
+        rc = stage_compress_lzrw1a(stage);
         break;
     default:
         rc = -1;
@@ -352,16 +388,75 @@ static int stage_decompress(pnso_sim_stage_t* stage, void* opaque)
 {
     int rc = 0;
 
+    memset(stage->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
+
     switch(stage->cmd.algo_type) {
     case PNSO_COMPRESSOR_TYPE_NONE:
         rc = stage_noop(stage, opaque);
         break;
     case PNSO_COMPRESSOR_TYPE_LZRW1A:
-        rc = stage_lzrw1a(COMPRESS_ACTION_DECOMPRESS, stage);
+        rc = stage_decompress_lzrw1a(stage);
         break;
     default:
         rc = -1;
         break;
+    }
+
+    return rc;
+}
+
+static int stage_encrypt(pnso_sim_stage_t* stage, void* opaque)
+{
+    uint8_t key[] = "abcd\0"; /* TODO */
+
+    memset(stage->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
+
+    return algo_encrypt_xts(stage->sess->scratch.cmd, key, (uint8_t*)stage->input.buf, stage->input.len,
+                            (uint8_t*)stage->output.buf, &stage->output.len);
+}
+
+static int stage_decrypt(pnso_sim_stage_t* stage, void* opaque)
+{
+    uint8_t key[] = "abcd\0"; /* TODO */
+
+    memset(stage->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
+
+    return algo_decrypt_xts(stage->sess->scratch.cmd, key, (uint8_t*)stage->input.buf, stage->input.len,
+                            (uint8_t*)stage->output.buf, &stage->output.len);
+}
+
+static inline uint32_t flat_buffer_block_count(const struct pnso_flat_buffer* buf, uint32_t block_sz)
+{
+    return (buf->len + (block_sz - 1)) / block_sz;
+}
+
+static inline void flat_buffer_to_block(const struct pnso_flat_buffer* src, struct pnso_flat_buffer* dst, uint32_t block_sz, uint32_t block_idx)
+{
+    dst->buf = src->buf + (block_sz * block_idx);
+    if (src->len >= (block_sz * (block_idx + 1))) {
+        /* Full block */
+        dst->len = block_sz;
+    } else if (src->len >= (block_sz * block_idx)) {
+        /* Last and partial block */
+        dst->len = src->len % block_sz;
+    } else {
+        /* Beyond last block */
+        dst->len = 0;
+    }
+}
+
+typedef int (*stage_iterator_func)(pnso_sim_stage_t* stage, uint32_t block_idx, struct pnso_flat_buffer* block, void* opaque);
+
+static int stage_iterate_blocks(pnso_sim_stage_t* stage, stage_iterator_func func, void* opaque)
+{
+    int rc;
+    uint32_t block_i, block_count = flat_buffer_block_count(&stage->input, stage->sess->block_sz);
+    struct pnso_flat_buffer block;
+
+    for (block_i = 0; block_i < block_count; block_i++) {
+        flat_buffer_to_block(&stage->input, &block, stage->sess->block_sz, block_i);
+        rc = func(stage, block_i, &block, opaque);
+        if (rc != 0) break;
     }
 
     return rc;
@@ -373,72 +468,45 @@ static int stage_decompress(pnso_sim_stage_t* stage, void* opaque)
 static int stage_pad(pnso_sim_stage_t* stage, void* opaque)
 {
     int rc = 0;
-    uint8_t* buf = (uint8_t*)stage->input.buf;
-    uint32_t len = stage->input.len;
-    uint32_t pad_sz = stage->sess->pad_sz;
+    uint32_t block_count = flat_buffer_block_count(&stage->input, stage->sess->block_sz);
+    struct pnso_flat_buffer block;
 
-    /* Start at page offset. Assumes pad_sz is a multiple of 2 */
-    buf = (uint8_t*) ((uint64_t)buf & ~((uint64_t)pad_sz - 1));
-    len += (uint8_t*)stage->input.buf - buf;
+    flat_buffer_to_block(&stage->input, &block, stage->sess->block_sz, block_count - 1);
 
-    /* Skip past initial blocks */
-    while (len >= pad_sz) {
-        len -= pad_sz;
-        buf += pad_sz;
-    }
-    pad_sz -= len;
-    buf += len;
-
-    /* Copy input to output, or just use pointer magic */
-    if (stage->is_last) {
-        rc = stage_memcpy(stage, opaque);
-    } else {
-        stage->output = stage->input;
+    if (block.len && block.len < stage->sess->block_sz) {
+        /* Pad block with zeroes in-place */
+        uint32_t pad_len = stage->sess->block_sz - block.len;
+        memset((uint8_t*)(block.buf + block.len), 0, pad_len);
+        stage->input.len += pad_len;
     }
 
-    /* Pad output with zeroes up to pad_sz */
-    if (pad_sz) {
-        memset((uint8_t*)stage->output.buf + stage->output.len, 0, pad_sz);
-        stage->output.len += pad_sz;
-    }
+    /* Zero-copy output */
+    stage->output = stage->input;
 
     return rc;
 }
 
-static int stage_encrypt(pnso_sim_stage_t* stage, void* opaque)
+static int stage_hash_one_block(pnso_sim_stage_t* stage, uint32_t block_idx, struct pnso_flat_buffer* block, void* opaque)
 {
-    uint8_t key[] = "abcd\0"; /* TODO */
-
-    return algo_encrypt_xts(stage->sess->scratch.cmd, key, (uint8_t*)stage->input.buf, stage->input.len,
-                            (uint8_t*)stage->output.buf, &stage->output.len);
-}
-
-static int stage_decrypt(pnso_sim_stage_t* stage, void* opaque)
-{
-    uint8_t key[] = "abcd\0"; /* TODO */
-
-    return algo_decrypt_xts(stage->sess->scratch.cmd, key, (uint8_t*)stage->input.buf, stage->input.len,
-                            (uint8_t*)stage->output.buf, &stage->output.len);
-}
-
-static int stage_hash(pnso_sim_stage_t* stage, void* opaque)
-{
+    int *call_count = (int*) opaque;
     int rc = 0;
 
-    /* TODO: iterate through blocks */
+    (*call_count)++;
 
-    PNSO_ASSERT(stage->status.num_tags > 0);
+    PNSO_ASSERT(stage->status.num_tags > block_idx);
+
+    memset(stage->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
 
     switch (stage->cmd.algo_type) {
     case PNSO_HASH_TYPE_SHA2_256:
-        if (!algo_sha_gen(stage->sess->scratch.cmd, stage->status.tags->hash_or_chksum,
-                          (uint8_t*)stage->input.buf, stage->input.len, 256)) {
+        if (!algo_sha_gen(stage->sess->scratch.cmd, stage->status.tags[block_idx].hash_or_chksum,
+                          (uint8_t*)block->buf, block->len, 256)) {
             rc = -1;
         }
         break;
     case PNSO_HASH_TYPE_SHA2_512:
-        if (!algo_sha_gen(stage->sess->scratch.cmd, stage->status.tags->hash_or_chksum,
-                          (uint8_t*)stage->input.buf, stage->input.len, 512)) {
+        if (!algo_sha_gen(stage->sess->scratch.cmd, stage->status.tags[block_idx].hash_or_chksum,
+                          (uint8_t*)block->buf, block->len, 512)) {
             rc = -1;
         }
         break;
@@ -450,16 +518,31 @@ static int stage_hash(pnso_sim_stage_t* stage, void* opaque)
     return rc;
 }
 
-static int stage_chksum(pnso_sim_stage_t* stage, void* opaque)
+static int stage_hash(pnso_sim_stage_t* stage, void* opaque)
 {
-    int rc = 0;
+    int opaque_counter = 0;
+    int rc = stage_iterate_blocks(stage, stage_hash_one_block, &opaque_counter);
+
+    stage->status.num_tags = opaque_counter;
+
+    /* Zero-copy output */
+    stage->output = stage->input;
+
+    return rc;
+}
+
+static int stage_chksum_one_block(pnso_sim_stage_t* stage, uint32_t block_idx, struct pnso_flat_buffer* block, void* opaque)
+{
+    int *call_count = (int*) opaque;
     uint32_t temp32;
     uint8_t *hash_buf;
+    int rc = 0;
 
-    /* TODO: iterate through blocks */
+    (*call_count)++;
 
-    PNSO_ASSERT(stage->status.num_tags > 0);
-    hash_buf = stage->status.tags->hash_or_chksum;
+    PNSO_ASSERT(stage->status.num_tags > block_idx);
+
+    hash_buf = stage->status.tags[block_idx].hash_or_chksum;
 
     switch (stage->cmd.algo_type) {
     case PNSO_CHKSUM_TYPE_NONE:
@@ -476,7 +559,7 @@ static int stage_chksum(pnso_sim_stage_t* stage, void* opaque)
         break;
 
     case PNSO_CHKSUM_TYPE_ADLER32:
-        temp32 = algo_gen_adler32((uint8_t*)stage->input.buf, stage->input.len);
+        temp32 = algo_gen_adler32((uint8_t*)block->buf, block->len);
         /* TODO: do proper htonl conversion */
         hash_buf[0] = temp32 >> 24;
         hash_buf[1] = (temp32 >> 16) & 0xff;
@@ -485,7 +568,7 @@ static int stage_chksum(pnso_sim_stage_t* stage, void* opaque)
         break;
 
     case PNSO_CHKSUM_TYPE_MADLER32:
-        temp32 = algo_gen_madler((uint64_t*)stage->input.buf, stage->input.len);
+        temp32 = algo_gen_madler((uint64_t*)block->buf, block->len);
         /* TODO: do proper htonl conversion */
         hash_buf[0] = temp32 >> 24;
         hash_buf[1] = (temp32 >> 16) & 0xff;
@@ -497,6 +580,22 @@ static int stage_chksum(pnso_sim_stage_t* stage, void* opaque)
         rc = -1;
         break;
     }
+
+    /* Zero-copy output */
+    stage->output = stage->input;
+
+    return rc;
+}
+
+static int stage_chksum(pnso_sim_stage_t* stage, void* opaque)
+{
+    int opaque_counter = 0;
+    int rc = stage_iterate_blocks(stage, stage_chksum_one_block, &opaque_counter);
+
+    stage->status.num_tags = opaque_counter;
+
+    /* Zero-copy output */
+    stage->output = stage->input;
 
     return rc;
 }

@@ -3,6 +3,9 @@
 #include <openssl/evp.h>
 #include "offloader_sim.h"
 
+/* GCC specific, required for madler */
+typedef unsigned __int128 uint128_t;
+
 bool algo_sha_gen(void* scratch, unsigned char* hash, const unsigned char* msg, int len, int hash_bits)
 {
     EVP_MD_CTX* ctx = (EVP_MD_CTX*) scratch;
@@ -57,7 +60,7 @@ uint32_t algo_gen_madler(uint64_t *data, size_t len)
 {
     return 0;
 /* TODO: find where uint128_t is defined */
-#if 0
+#if 1
         uint128_t sumA = 1;
         uint128_t sumB = 0;
  
@@ -65,9 +68,11 @@ uint32_t algo_gen_madler(uint64_t *data, size_t len)
                 sumA += *data;
                 sumB += sumA;
         }
- 
-        uint32_t sumA_mod = integer_modulus(sumA, PRIME_BASE);
-        uint32_t sumB_mod = integer_modulus(sumB, PRIME_BASE);
+
+        //uint32_t sumA_mod = integer_modulus(sumA, PRIME_BASE);
+        //uint32_t sumB_mod = integer_modulus(sumB, PRIME_BASE);
+        uint32_t sumA_mod = sumA % PRIME_BASE;
+        uint32_t sumB_mod = sumB % PRIME_BASE;
  
         return (sumB_mod << 16) | sumA_mod;
 #endif

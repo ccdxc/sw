@@ -39,150 +39,25 @@ protected:
     uint8_t session_mem[PNSO_TEST_SESSION_MEM];
 };
 
-/* PTTP request */
-static unsigned char g_data1[1116] = {
-  0xa0, 0xe0, 0xaf, 0x14, 0xe8, 0xc1, 0x18, 0x65, /* .......e */
-  0x90, 0xda, 0x71, 0xd9, 0x08, 0x00, 0x45, 0x00, /* ..q...E. */
-  0x04, 0x4e, 0x05, 0xa7, 0x40, 0x00, 0x40, 0x06, /* .N..@.@. */
-  0x24, 0x3e, 0xc0, 0xa8, 0x4a, 0x1a, 0xc0, 0x00, /* $>..J... */
-  0x42, 0x02, 0xca, 0xb4, 0x00, 0x46, 0xc9, 0x24, /* B....P.$ */
-  0xb8, 0x96, 0xc2, 0x93, 0x71, 0x5d, 0x50, 0x18, /* ....q]P. */
-  0x20, 0x00, 0x2f, 0x14, 0x00, 0x00, 0x50, 0x45, /*  ./...PE */
-  0x54, 0x20, 0x2f, 0x20, 0x50, 0x54, 0x54, 0x50, /* T / PTTP */
-  0x2f, 0x31, 0x2e, 0x31, 0x0d, 0x0a, 0x48, 0x6f, /* /1.1..Ho */
-  0x73, 0x74, 0x3a, 0x20, 0x77, 0x77, 0x77, 0x2e, /* st: www. */
-  0x6d, 0x65, 0x72, 0x63, 0x75, 0x72, 0x79, 0x6e, /* mercuryn */
-  0x65, 0x77, 0x73, 0x2e, 0x63, 0x6f, 0x6d, 0x0d, /* ews.com. */
-  0x0a, 0x55, 0x73, 0x65, 0x72, 0x2d, 0x41, 0x67, /* .User-Ag */
-  0x65, 0x6e, 0x74, 0x3a, 0x20, 0x4d, 0x6f, 0x7a, /* ent: Moz */
-  0x69, 0x6c, 0x6c, 0x61, 0x2f, 0x35, 0x2e, 0x30, /* illa/5.0 */
-  0x20, 0x28, 0x4d, 0x61, 0x63, 0x69, 0x6e, 0x74, /*  (Macint */
-  0x6f, 0x73, 0x68, 0x3b, 0x20, 0x49, 0x6e, 0x74, /* osh; Int */
-  0x65, 0x6c, 0x20, 0x4d, 0x61, 0x63, 0x20, 0x4f, /* el Mac O */
-  0x53, 0x20, 0x58, 0x20, 0x31, 0x30, 0x2e, 0x31, /* S X 10.1 */
-  0x32, 0x3b, 0x20, 0x72, 0x76, 0x3a, 0x35, 0x35, /* 2; rv:55 */
-  0x2e, 0x30, 0x29, 0x20, 0x47, 0x65, 0x63, 0x6b, /* .0) Geck */
-  0x6f, 0x2f, 0x32, 0x30, 0x31, 0x30, 0x30, 0x31, /* o/201001 */
-  0x30, 0x31, 0x20, 0x46, 0x69, 0x72, 0x65, 0x66, /* 01 Firef */
-  0x6f, 0x78, 0x2f, 0x35, 0x35, 0x2e, 0x30, 0x0d, /* ox/55.0. */
-  0x0a, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x3a, /* .Accept: */
-  0x20, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x68, 0x74, /*  text/ht */
-  0x6d, 0x6c, 0x2c, 0x61, 0x70, 0x70, 0x6c, 0x69, /* ml,appli */
-  0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x78, /* cation/x */
-  0x68, 0x74, 0x6d, 0x6c, 0x2b, 0x78, 0x6d, 0x6c, /* html+xml */
-  0x2c, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, /* ,applica */
-  0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x78, 0x6d, 0x6c, /* tion/xml */
-  0x3b, 0x71, 0x3d, 0x30, 0x2e, 0x39, 0x2c, 0x2a, /* ;q=0.9,. */
-  0x2f, 0x2a, 0x3b, 0x71, 0x3d, 0x30, 0x2e, 0x38, /* /.;q=0.8 */
-  0x0d, 0x0a, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, /* ..Accept */
-  0x2d, 0x4c, 0x61, 0x6e, 0x67, 0x75, 0x61, 0x67, /* -Languag */
-  0x65, 0x3a, 0x20, 0x65, 0x6e, 0x2d, 0x55, 0x53, /* e: en-US */
-  0x2c, 0x65, 0x6e, 0x3b, 0x71, 0x3d, 0x30, 0x2e, /* ,en;q=0. */
-  0x35, 0x0d, 0x0a, 0x41, 0x63, 0x63, 0x65, 0x70, /* 5..Accep */
-  0x74, 0x2d, 0x45, 0x6e, 0x63, 0x6f, 0x64, 0x69, /* t-Encodi */
-  0x6e, 0x67, 0x3a, 0x20, 0x67, 0x7a, 0x69, 0x70, /* ng: gzip */
-  0x2c, 0x20, 0x64, 0x65, 0x66, 0x6c, 0x61, 0x74, /* , deflat */
-  0x65, 0x0d, 0x0a, 0x43, 0x6f, 0x6f, 0x6b, 0x69, /* e..Cooki */
-  0x65, 0x3a, 0x20, 0x6f, 0x70, 0x74, 0x69, 0x6d, /* e: optim */
-  0x69, 0x7a, 0x65, 0x6c, 0x79, 0x45, 0x6e, 0x64, /* izelyEnd */
-  0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x3d, 0x6f, /* UserId=o */
-  0x65, 0x75, 0x31, 0x35, 0x30, 0x38, 0x31, 0x37, /* eu150817 */
-  0x34, 0x34, 0x36, 0x30, 0x39, 0x35, 0x31, 0x72, /* 4460951r */
-  0x30, 0x2e, 0x36, 0x39, 0x34, 0x34, 0x30, 0x35, /* 0.694405 */
-  0x37, 0x33, 0x32, 0x34, 0x36, 0x33, 0x36, 0x37, /* 73246367 */
-  0x33, 0x37, 0x3b, 0x20, 0x6f, 0x70, 0x74, 0x69, /* 37; opti */
-  0x6d, 0x69, 0x7a, 0x65, 0x6c, 0x79, 0x53, 0x65, /* mizelySe */
-  0x67, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x3d, 0x25, /* gments=% */
-  0x37, 0x42, 0x25, 0x32, 0x32, 0x36, 0x37, 0x38, /* 7B%22678 */
-  0x30, 0x31, 0x31, 0x31, 0x30, 0x31, 0x35, 0x25, /* 0111015% */
-  0x32, 0x32, 0x25, 0x33, 0x41, 0x25, 0x32, 0x32, /* 22%3A%22 */
-  0x66, 0x66, 0x25, 0x32, 0x32, 0x25, 0x32, 0x43, /* ff%22%2C */
-  0x25, 0x32, 0x32, 0x36, 0x37, 0x39, 0x36, 0x33, /* %2267963 */
-  0x30, 0x31, 0x30, 0x33, 0x39, 0x25, 0x32, 0x32, /* 01039%22 */
-  0x25, 0x33, 0x41, 0x25, 0x32, 0x32, 0x65, 0x63, /* %3A%22ec */
-  0x68, 0x6f, 0x62, 0x6f, 0x78, 0x25, 0x32, 0x32, /* hobox%22 */
-  0x25, 0x32, 0x43, 0x25, 0x32, 0x32, 0x36, 0x37, /* %2C%2267 */
-  0x38, 0x38, 0x30, 0x38, 0x31, 0x30, 0x37, 0x34, /* 88081074 */
-  0x25, 0x32, 0x32, 0x25, 0x33, 0x41, 0x25, 0x32, /* %22%3A%2 */
-  0x32, 0x66, 0x61, 0x6c, 0x73, 0x65, 0x25, 0x32, /* 2false%2 */
-  0x32, 0x25, 0x32, 0x43, 0x25, 0x32, 0x32, 0x36, /* 2%2C%226 */
-  0x37, 0x38, 0x32, 0x32, 0x34, 0x32, 0x38, 0x34, /* 78224284 */
-  0x35, 0x25, 0x32, 0x32, 0x25, 0x33, 0x41, 0x25, /* 5%22%3A% */
-  0x32, 0x32, 0x63, 0x61, 0x6d, 0x70, 0x61, 0x69, /* 22campai */
-  0x67, 0x6e, 0x25, 0x32, 0x32, 0x25, 0x37, 0x44, /* gn%22%7D */
-  0x3b, 0x20, 0x6f, 0x70, 0x74, 0x69, 0x6d, 0x69, /* ; optimi */
-  0x7a, 0x65, 0x6c, 0x79, 0x42, 0x75, 0x63, 0x6b, /* zelyBuck */
-  0x65, 0x74, 0x73, 0x3d, 0x25, 0x37, 0x42, 0x25, /* ets=%7B% */
-  0x37, 0x44, 0x3b, 0x20, 0x5f, 0x67, 0x61, 0x3d, /* 7D; _ga= */
-  0x47, 0x41, 0x31, 0x2e, 0x32, 0x2e, 0x31, 0x38, /* GA1.2.18 */
-  0x33, 0x38, 0x36, 0x37, 0x37, 0x38, 0x30, 0x32, /* 38677802 */
-  0x2e, 0x31, 0x35, 0x30, 0x38, 0x31, 0x37, 0x34, /* .1508174 */
-  0x34, 0x36, 0x33, 0x3b, 0x20, 0x5f, 0x5f, 0x71, /* 463; __q */
-  0x63, 0x61, 0x3d, 0x50, 0x30, 0x2d, 0x31, 0x36, /* ca=P0-16 */
-  0x31, 0x36, 0x33, 0x31, 0x30, 0x36, 0x39, 0x34, /* 16310694 */
-  0x2d, 0x31, 0x35, 0x30, 0x38, 0x31, 0x37, 0x34, /* -1508174 */
-  0x34, 0x36, 0x33, 0x30, 0x32, 0x33, 0x3b, 0x20, /* 463023;  */
-  0x5f, 0x70, 0x61, 0x72, 0x73, 0x65, 0x6c, 0x79, /* _parsely */
-  0x5f, 0x76, 0x69, 0x73, 0x69, 0x74, 0x6f, 0x72, /* _visitor */
-  0x3d, 0x7b, 0x25, 0x32, 0x32, 0x69, 0x64, 0x25, /* ={%22id% */
-  0x32, 0x32, 0x3a, 0x25, 0x32, 0x32, 0x31, 0x34, /* 22:%2214 */
-  0x35, 0x33, 0x33, 0x64, 0x62, 0x30, 0x2d, 0x65, /* 533db0-e */
-  0x38, 0x34, 0x62, 0x2d, 0x34, 0x35, 0x32, 0x61, /* 84b-452a */
-  0x2d, 0x38, 0x64, 0x33, 0x39, 0x2d, 0x39, 0x32, /* -8d39-92 */
-  0x34, 0x62, 0x62, 0x61, 0x65, 0x30, 0x30, 0x65, /* 4bbae00e */
-  0x63, 0x66, 0x25, 0x32, 0x32, 0x25, 0x32, 0x43, /* cf%22%2C */
-  0x25, 0x32, 0x32, 0x73, 0x65, 0x73, 0x73, 0x69, /* %22sessi */
-  0x6f, 0x6e, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, /* on_count */
-  0x25, 0x32, 0x32, 0x3a, 0x33, 0x25, 0x32, 0x43, /* %22:3%2C */
-  0x25, 0x32, 0x32, 0x6c, 0x61, 0x73, 0x74, 0x5f, /* %22last_ */
-  0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, /* session_ */
-  0x74, 0x73, 0x25, 0x32, 0x32, 0x3a, 0x31, 0x35, /* ts%22:15 */
-  0x30, 0x39, 0x36, 0x35, 0x32, 0x39, 0x38, 0x39, /* 09652989 */
-  0x38, 0x35, 0x31, 0x7d, 0x3b, 0x20, 0x5f, 0x5f, /* 851}; __ */
-  0x67, 0x61, 0x64, 0x73, 0x3d, 0x49, 0x44, 0x3d, /* gads=ID= */
-  0x38, 0x66, 0x66, 0x33, 0x39, 0x32, 0x66, 0x37, /* 8ff392f7 */
-  0x35, 0x37, 0x66, 0x63, 0x66, 0x31, 0x37, 0x37, /* 57fcf177 */
-  0x3a, 0x54, 0x3d, 0x31, 0x35, 0x30, 0x38, 0x31, /* :T=15081 */
-  0x37, 0x34, 0x34, 0x36, 0x33, 0x3a, 0x53, 0x3d, /* 74463:S= */
-  0x41, 0x4c, 0x4e, 0x49, 0x5f, 0x4d, 0x62, 0x65, /* ALNI_Mbe */
-  0x64, 0x71, 0x63, 0x35, 0x55, 0x47, 0x56, 0x69, /* dqc5UGVi */
-  0x4d, 0x6c, 0x79, 0x4b, 0x2d, 0x53, 0x46, 0x6f, /* MlyK-SFo */
-  0x63, 0x36, 0x57, 0x7a, 0x4f, 0x58, 0x68, 0x4d, /* c6WzOXhM */
-  0x66, 0x51, 0x3b, 0x20, 0x5f, 0x63, 0x62, 0x5f, /* fQ; _cb_ */
-  0x6c, 0x73, 0x3d, 0x31, 0x3b, 0x20, 0x5f, 0x63, /* ls=1; _c */
-  0x62, 0x3d, 0x42, 0x59, 0x66, 0x58, 0x4d, 0x77, /* b=BYfXMw */
-  0x42, 0x4e, 0x64, 0x53, 0x71, 0x5a, 0x42, 0x6f, /* BNdSqZBo */
-  0x5a, 0x79, 0x70, 0x57, 0x3b, 0x20, 0x5f, 0x63, /* ZypW; _c */
-  0x68, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61, 0x74, /* hartbeat */
-  0x32, 0x3d, 0x2e, 0x31, 0x35, 0x30, 0x38, 0x31, /* 2=.15081 */
-  0x37, 0x34, 0x34, 0x37, 0x35, 0x38, 0x31, 0x39, /* 74475819 */
-  0x2e, 0x31, 0x35, 0x30, 0x39, 0x36, 0x35, 0x32, /* .1509652 */
-  0x39, 0x38, 0x39, 0x32, 0x34, 0x35, 0x2e, 0x30, /* 989245.0 */
-  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, /* 00000000 */
-  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x31, 0x2e, /* 0000001. */
-  0x64, 0x68, 0x4c, 0x37, 0x2d, 0x44, 0x61, 0x50, /* dhL7-DaP */
-  0x31, 0x58, 0x6f, 0x42, 0x6c, 0x58, 0x76, 0x70, /* 1XoBlXvp */
-  0x55, 0x37, 0x55, 0x4b, 0x38, 0x66, 0x44, 0x69, /* U7UK8fDi */
-  0x6d, 0x77, 0x65, 0x31, 0x3b, 0x20, 0x4f, 0x58, /* mwe1; OX */
-  0x5f, 0x70, 0x6c, 0x67, 0x3d, 0x70, 0x6d, 0x3b, /* _plg=pm; */
-  0x20, 0x6f, 0x70, 0x74, 0x69, 0x2d, 0x70, 0x6f, /*  opti-po */
-  0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x3d, 0x31, /* sition=1 */
-  0x3b, 0x20, 0x6f, 0x70, 0x74, 0x69, 0x2d, 0x75, /* ; opti-u */
-  0x73, 0x65, 0x72, 0x69, 0x64, 0x3d, 0x31, 0x66, /* serid=1f */
-  0x37, 0x31, 0x31, 0x34, 0x63, 0x66, 0x2d, 0x36, /* 7114cf-6 */
-  0x38, 0x35, 0x64, 0x2d, 0x34, 0x62, 0x32, 0x62, /* 85d-4b2b */
-  0x2d, 0x39, 0x63, 0x39, 0x33, 0x2d, 0x65, 0x30, /* -9c93-e0 */
-  0x38, 0x31, 0x62, 0x62, 0x61, 0x39, 0x65, 0x64, /* 81bba9ed */
-  0x62, 0x33, 0x0d, 0x0a, 0x43, 0x6f, 0x6e, 0x6e, /* b3..Conn */
-  0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x3a, 0x20, /* ection:  */
-  0x6b, 0x65, 0x65, 0x70, 0x2d, 0x61, 0x6c, 0x69, /* keep-ali */
-  0x76, 0x65, 0x0d, 0x0a, 0x55, 0x70, 0x67, 0x72, /* ve..Upgr */
-  0x61, 0x64, 0x65, 0x2d, 0x49, 0x6e, 0x73, 0x65, /* ade-Inse */
-  0x63, 0x75, 0x72, 0x65, 0x2d, 0x52, 0x65, 0x71, /* cure-Req */
-  0x75, 0x65, 0x73, 0x74, 0x73, 0x3a, 0x20, 0x31, /* uests: 1 */
-  0x0d, 0x0a, 0x0d, 0x0a                          /* .... */
-};
+/* single block request */
+static uint8_t g_data1[1000];
 
+/* multi-block request */
+static uint8_t g_data2[8000];
+
+static const char g_fill_src[] = "<html><body>The quick brown fox jumps over the lazy dog</body></html>\n";
+
+static inline void fill_data(uint8_t* data, uint32_t data_len)
+{
+    uint32_t copy_len;
+
+    while (data_len > 0) {
+        copy_len = data_len >= sizeof(g_fill_src) ? sizeof(g_fill_src) : data_len;
+        memcpy(data, g_fill_src, copy_len);
+        data += copy_len;
+        data_len -= copy_len;
+    }    
+}
 
 TEST_F(pnso_sim_test, one_request) {
     int rc;
@@ -190,8 +65,17 @@ TEST_F(pnso_sim_test, one_request) {
     void *sess;
     struct pnso_service_request *svc_req;
     struct pnso_service_result *svc_res;
-    struct pnso_buffer_list *buf_list;
-    uint8_t* output[16 * 4096];
+    struct pnso_buffer_list *src_buflist, *dst_buflist;
+    uint32_t buflist_sz;
+    struct pnso_flat_buffer *buf;
+    struct pnso_hash_or_chksum_tag tags[16];
+    uint8_t output[16 * 4096];
+
+    memset(tags, 0, sizeof(tags));
+
+    /* Initialize input */
+    fill_data(g_data1, sizeof(g_data1));
+    fill_data(g_data2, sizeof(g_data2));
 
     /* Initialize session */
     rc = pnso_sim_init(2, session_mem, PNSO_TEST_SESSION_MEM);
@@ -211,43 +95,309 @@ TEST_F(pnso_sim_test, one_request) {
     memset(svc_res, 0, alloc_sz);
 
     /* Allocate buffer descriptors */
-    alloc_sz = sizeof(struct pnso_buffer_list) + 16*sizeof(struct pnso_flat_buffer);
-    buf_list = (struct pnso_buffer_list*) malloc(alloc_sz);
-    EXPECT_NE(buf_list, nullptr);
-    memset(buf_list, 0, alloc_sz);
-    svc_req->src_buf = buf_list;
+    buflist_sz = sizeof(struct pnso_buffer_list) + 16*sizeof(struct pnso_flat_buffer);
+    src_buflist = (struct pnso_buffer_list*) malloc(buflist_sz);
+    EXPECT_NE(src_buflist, nullptr);
+    dst_buflist = (struct pnso_buffer_list*) malloc(buflist_sz);
+    EXPECT_NE(dst_buflist, nullptr);
 
-    buf_list = (struct pnso_buffer_list*) malloc(alloc_sz);
-    EXPECT_NE(buf_list, nullptr);
-    memset(buf_list, 0, alloc_sz);
-    svc_req->dst_buf = buf_list;
+    /* -------------- Test 1: Compression + Hash, single block -------------- */
 
+    /* Initialize request buffers */
+    memset(src_buflist, 0, buflist_sz);
+    memset(dst_buflist, 0, buflist_sz);
+    svc_req->src_buf = src_buflist;
+    svc_req->dst_buf = dst_buflist;
     svc_req->src_buf->count = 1;
     svc_req->src_buf->buffers[0].buf = (uint64_t) g_data1;
     svc_req->src_buf->buffers[0].len = sizeof(g_data1);
-
     svc_req->dst_buf->count = 16;
     for (int i = 0; i < 16; i++) {
         svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
         svc_req->dst_buf->buffers[i].len = 4096;
     }
 
-    /* Setup services */
-    svc_req->num_services = 1;
+    /* Setup 3 services */
+    svc_req->num_services = 3;
+    svc_res->num_services = 3;
+
+    /* Setup compression service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
     svc_req->svc[0].algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
     svc_req->svc[0].req.cp_desc.threshold_len = sizeof(g_data1) - 8;
 
-    svc_res->num_services = 1;
+    /* Setup pad service */
+    svc_req->svc[1].svc_type = PNSO_SVC_TYPE_PAD;
+
+    /* Setup hash service */
+    svc_req->svc[2].svc_type = PNSO_SVC_TYPE_HASH;
+    svc_req->svc[2].algo_type = PNSO_HASH_TYPE_SHA2_512;
+    svc_res->status[2].num_tags = 16;
+    svc_res->status[2].tags = tags;
 
     /* Execute synchronously */
     rc = pnso_sim_execute_request(sess, svc_req, svc_res, nullptr, nullptr);
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(svc_res->err, 0);
-    EXPECT_EQ(svc_res->status[0].err, 0);
+
+    /* Check compression status */
     EXPECT_EQ(svc_req->dst_buf->count, 1);
-    EXPECT_GT(svc_req->dst_buf->buffers[0].len, 8);
-    EXPECT_LT(svc_req->dst_buf->buffers[0].len, sizeof(g_data1));
+    EXPECT_EQ(svc_res->status[0].err, 0);
+    EXPECT_EQ(svc_res->status[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
+    EXPECT_GT(svc_res->status[0].output_data_len, 8);
+    EXPECT_LT(svc_res->status[0].output_data_len, sizeof(g_data1));
+
+    /* Check pad status */
+    EXPECT_EQ(svc_res->status[1].err, 0);
+    EXPECT_EQ(svc_res->status[1].svc_type, PNSO_SVC_TYPE_PAD);
+    buf = &svc_req->dst_buf->buffers[0];
+    EXPECT_EQ(buf->len, 4096);
+    EXPECT_EQ(((uint8_t*)buf->buf)[4095], 0);
+
+    /* Check hash status */
+    EXPECT_EQ(svc_res->status[2].err, 0);
+    EXPECT_EQ(svc_res->status[2].svc_type, PNSO_SVC_TYPE_HASH);
+    EXPECT_EQ(svc_res->status[2].num_tags, 1);
+    EXPECT_NE(svc_res->status[2].tags->hash_or_chksum[0], 0);
+
+
+    /* -------------- Test 2: Encryption + Hash, single block -------------- */
+
+    /* Initialize request buffers */
+    memset(src_buflist, 0, buflist_sz);
+    memset(dst_buflist, 0, buflist_sz);
+    svc_req->src_buf = src_buflist;
+    svc_req->dst_buf = dst_buflist;
+    svc_req->src_buf->count = 1;
+    svc_req->src_buf->buffers[0].buf = (uint64_t) g_data1;
+    svc_req->src_buf->buffers[0].len = sizeof(g_data1);
+    svc_req->dst_buf->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_req->dst_buf->buffers[i].len = 4096;
+    }
+
+    /* Setup 2 services */
+    svc_req->num_services = 2;
+    svc_res->num_services = 2;
+
+    /* Setup encryption service */
+    svc_req->svc[0].svc_type = PNSO_SVC_TYPE_ENCRYPT;
+    svc_req->svc[0].algo_type = 0; /* TODO */
+
+    /* Setup hash service */
+    svc_req->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
+    svc_req->svc[1].algo_type = PNSO_HASH_TYPE_SHA2_512;
+    svc_res->status[1].num_tags = 16;
+    svc_res->status[1].tags = tags;
+
+    /* Execute synchronously */
+    rc = pnso_sim_execute_request(sess, svc_req, svc_res, nullptr, nullptr);
+    EXPECT_EQ(rc, 0);
+    EXPECT_EQ(svc_res->err, 0);
+
+    /* Check encryption status */
+    EXPECT_EQ(svc_req->dst_buf->count, 1);
+    EXPECT_EQ(svc_res->status[0].err, 0);
+    EXPECT_EQ(svc_res->status[0].svc_type, PNSO_SVC_TYPE_ENCRYPT);
+    EXPECT_EQ(svc_res->status[0].output_data_len, sizeof(g_data1));
+
+    /* Check hash status */
+    EXPECT_EQ(svc_res->status[1].err, 0);
+    EXPECT_EQ(svc_res->status[1].svc_type, PNSO_SVC_TYPE_HASH);
+    EXPECT_EQ(svc_res->status[1].num_tags, 1);
+    EXPECT_NE(svc_res->status[1].tags->hash_or_chksum[0], 0);
+
+    /* -------------- Test 3: Compression + Encryption, single block -------------- */
+
+    /* Initialize request buffers */
+    memset(src_buflist, 0, buflist_sz);
+    memset(dst_buflist, 0, buflist_sz);
+    svc_req->src_buf = src_buflist;
+    svc_req->dst_buf = dst_buflist;
+    svc_req->src_buf->count = 1;
+    svc_req->src_buf->buffers[0].buf = (uint64_t) g_data1;
+    svc_req->src_buf->buffers[0].len = sizeof(g_data1);
+    svc_req->dst_buf->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_req->dst_buf->buffers[i].len = 4096;
+    }
+
+    /* Setup 3 services */
+    svc_req->num_services = 3;
+    svc_res->num_services = 3;
+
+    /* Setup compression service */
+    svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
+    svc_req->svc[0].algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
+    svc_req->svc[0].req.cp_desc.threshold_len = sizeof(g_data1) - 8;
+
+    /* Setup pad service */
+    svc_req->svc[1].svc_type = PNSO_SVC_TYPE_PAD;
+
+    /* Setup encryption service */
+    svc_req->svc[2].svc_type = PNSO_SVC_TYPE_ENCRYPT;
+    svc_req->svc[2].algo_type = 0; /* TODO */
+
+    /* Execute synchronously */
+    rc = pnso_sim_execute_request(sess, svc_req, svc_res, nullptr, nullptr);
+    EXPECT_EQ(rc, 0);
+    EXPECT_EQ(svc_res->err, 0);
+
+    /* Check compression status */
+    EXPECT_EQ(svc_req->dst_buf->count, 1);
+    EXPECT_EQ(svc_res->status[0].err, 0);
+    EXPECT_EQ(svc_res->status[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
+    EXPECT_GT(svc_res->status[0].output_data_len, 8);
+    EXPECT_LT(svc_res->status[0].output_data_len, sizeof(g_data1));
+
+    /* Check pad status */
+    EXPECT_EQ(svc_res->status[1].err, 0);
+    EXPECT_EQ(svc_res->status[1].svc_type, PNSO_SVC_TYPE_PAD);
+    buf = &svc_req->dst_buf->buffers[0];
+    EXPECT_EQ(buf->len, 4096);
+    //EXPECT_EQ(((uint8_t*)buf->buf)[4095], 0);
+
+    /* Check encryption status */
+    EXPECT_EQ(svc_res->status[2].err, 0);
+    EXPECT_EQ(svc_res->status[2].svc_type, PNSO_SVC_TYPE_ENCRYPT);
+    EXPECT_EQ(svc_res->status[2].output_data_len, 4096);
+
+    /* -------------- Test 4: Compression + Hash + Encryption, multiple blocks -------------- */
+
+    /* Initialize request buffers */
+    memset(src_buflist, 0, buflist_sz);
+    memset(dst_buflist, 0, buflist_sz);
+    svc_req->src_buf = src_buflist;
+    svc_req->dst_buf = dst_buflist;
+    svc_req->src_buf->count = 2;
+    svc_req->src_buf->buffers[0].buf = (uint64_t) g_data2;
+    svc_req->src_buf->buffers[0].len = 4096;
+    svc_req->src_buf->buffers[1].buf = (uint64_t) g_data2 + 4096;
+    svc_req->src_buf->buffers[1].len = sizeof(g_data2) - 4096;
+    svc_req->dst_buf->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_req->dst_buf->buffers[i].len = 4096;
+    }
+
+    /* Setup 4 services (including pad) */
+    svc_req->num_services = 4;
+    svc_res->num_services = 4;
+
+    /* Setup compression service */
+    svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
+    svc_req->svc[0].algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
+    svc_req->svc[0].req.cp_desc.threshold_len = sizeof(g_data2) - 8;
+
+    /* Setup pad service */
+    svc_req->svc[1].svc_type = PNSO_SVC_TYPE_PAD;
+
+    /* Setup hash service */
+    svc_req->svc[2].svc_type = PNSO_SVC_TYPE_HASH;
+    svc_req->svc[2].algo_type = PNSO_HASH_TYPE_SHA2_512;
+    svc_res->status[2].num_tags = 16;
+    svc_res->status[2].tags = tags;
+
+    /* Setup encryption service */
+    svc_req->svc[3].svc_type = PNSO_SVC_TYPE_ENCRYPT;
+    svc_req->svc[3].algo_type = 0; /* TODO */
+
+    /* Execute synchronously */
+    rc = pnso_sim_execute_request(sess, svc_req, svc_res, nullptr, nullptr);
+    EXPECT_EQ(rc, 0);
+    EXPECT_EQ(svc_res->err, 0);
+
+    /* Check compression status */
+    EXPECT_EQ(svc_res->status[0].err, 0);
+    EXPECT_EQ(svc_res->status[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
+    EXPECT_GT(svc_res->status[0].output_data_len, 8);
+    EXPECT_LT(svc_res->status[0].output_data_len, sizeof(g_data2));
+
+    /* Check pad status */
+    EXPECT_EQ(svc_res->status[1].err, 0);
+    EXPECT_EQ(svc_res->status[1].svc_type, PNSO_SVC_TYPE_PAD);
+    buf = &svc_req->dst_buf->buffers[0];
+    EXPECT_EQ(buf->len, 4096);
+    //EXPECT_EQ(((uint8_t*)buf->buf)[4095], 0);
+
+    /* Check hash status */
+    EXPECT_EQ(svc_res->status[2].err, 0);
+    EXPECT_EQ(svc_res->status[2].svc_type, PNSO_SVC_TYPE_HASH);
+    EXPECT_LE(svc_res->status[2].num_tags, 2);
+    EXPECT_NE(svc_res->status[2].tags->hash_or_chksum[0], 0);
+
+    /* Check encryption status */
+    EXPECT_EQ(svc_res->status[3].err, 0);
+    EXPECT_EQ(svc_res->status[3].svc_type, PNSO_SVC_TYPE_ENCRYPT);
+    EXPECT_EQ(svc_res->status[3].output_data_len, 4096);
+
+    /* -------------- Test 5: Decryption + Hash + Decompression, multiple blocks -------------- */
+
+    /* Use previous test data as input to new test */
+    memcpy(g_data2, (uint8_t*) buf->buf, 4096);
+
+    /* Initialize request buffers */
+    memset(src_buflist, 0, buflist_sz);
+    memset(dst_buflist, 0, buflist_sz);
+    svc_req->src_buf = src_buflist;
+    svc_req->dst_buf = dst_buflist;
+    svc_req->src_buf->count = 1;
+    svc_req->src_buf->buffers[0].buf = (uint64_t) g_data2;
+    svc_req->src_buf->buffers[0].len = 4096;
+    svc_req->dst_buf->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_req->dst_buf->buffers[i].len = 4096;
+    }
+
+    /* Setup 3 services */
+    svc_req->num_services = 3;
+    svc_res->num_services = 3;
+
+    /* Setup decryption service */
+    svc_req->svc[0].svc_type = PNSO_SVC_TYPE_DECRYPT;
+    svc_req->svc[0].algo_type = 0; /* TODO */
+
+    /* Setup hash service */
+    svc_req->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
+    svc_req->svc[1].algo_type = PNSO_HASH_TYPE_SHA2_512;
+    svc_res->status[1].num_tags = 16;
+    svc_res->status[1].tags = tags;
+
+    /* Setup decompression service */
+    svc_req->svc[2].svc_type = PNSO_SVC_TYPE_DECOMPRESS;
+    svc_req->svc[2].algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
+
+    /* Execute synchronously */
+    rc = pnso_sim_execute_request(sess, svc_req, svc_res, nullptr, nullptr);
+    EXPECT_EQ(rc, 0);
+    EXPECT_EQ(svc_res->err, 0);
+
+    /* Check decryption status */
+    EXPECT_EQ(svc_res->status[0].err, 0);
+    EXPECT_EQ(svc_res->status[0].svc_type, PNSO_SVC_TYPE_DECRYPT);
+    EXPECT_EQ(svc_res->status[0].output_data_len, 4096);
+
+    /* Check hash status */
+    EXPECT_EQ(svc_res->status[1].err, 0);
+    EXPECT_EQ(svc_res->status[1].svc_type, PNSO_SVC_TYPE_HASH);
+    EXPECT_LE(svc_res->status[1].num_tags, 2);
+    EXPECT_NE(svc_res->status[1].tags->hash_or_chksum[0], 0);
+
+    /* Check decompression status */
+    EXPECT_EQ(svc_res->status[2].err, 0);
+    EXPECT_EQ(svc_res->status[2].svc_type, PNSO_SVC_TYPE_DECOMPRESS);
+    EXPECT_EQ(svc_res->status[2].output_data_len, sizeof(g_data2));
+    EXPECT_EQ(svc_req->dst_buf->count, 2);
+    EXPECT_EQ(svc_req->dst_buf->buffers[0].len, 4096);
+    EXPECT_EQ(svc_req->dst_buf->buffers[1].len, sizeof(g_data2) - 4096);
+    EXPECT_EQ(memcmp((uint8_t*)svc_req->dst_buf->buffers[0].buf, g_fill_src, sizeof(g_fill_src)), 0);
+
+    /* Restore original g_data2 for next test */
+    fill_data(g_data2, sizeof(g_data2));
+
 }
 
 int main(int argc, char **argv) {
