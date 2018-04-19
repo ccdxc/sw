@@ -288,6 +288,14 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 				return nil, NewError(ErrBulkRequestFailed, "")
 			}
 
+			// check for partial failures
+			// bulkResp.Errors will be true in such cases and bulkResp.Items
+			// will have Error details for each entry sent in the bulkRequest.
+			// Caller is expected to retry the Bulk operation for failed entries.
+			if bulkResp.Errors == true {
+				return bulkResp, NewError(ErrBulkRequestFailed, "Partial-failure")
+			}
+
 			return bulkResp, nil
 		}, retryCount, rResp, rErr)
 
