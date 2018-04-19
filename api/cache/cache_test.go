@@ -145,6 +145,10 @@ func (f *fakeKvStore) List(ctx context.Context, prefix string, into runtime.Obje
 	return nil
 }
 
+func (f *fakeKvStore) ListFiltered(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error {
+	return nil
+}
+
 func (f *fakeKvStore) Watch(ctx context.Context, key string, fromVersion string) (kvstore.Watcher, error) {
 	f.watches++
 	if f.watchfn != nil {
@@ -153,12 +157,12 @@ func (f *fakeKvStore) Watch(ctx context.Context, key string, fromVersion string)
 	return nil, nil
 }
 
-func (f *fakeKvStore) WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) kvstore.Watcher {
+func (f *fakeKvStore) WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) (kvstore.Watcher, error) {
 	f.watchfiltered++
 	if f.fwatchfn != nil {
-		return f.fwatchfn(ctx, key, opts)
+		return f.fwatchfn(ctx, key, opts), nil
 	}
-	return nil
+	return nil, nil
 }
 
 func (f *fakeKvStore) PrefixWatch(ctx context.Context, prefix string, fromVersion string) (kvstore.Watcher, error) {

@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/helper"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -448,7 +449,7 @@ func (f *MemKv) Get(ctx context.Context, key string, into runtime.Object) error 
 }
 
 // List the objects corresponding to a prefix. It is assumed that all the keys under this
-// prefix are homogenous. "into" should point to a List object and should have an "Items"
+// prefix are homogeneous. "into" should point to a List object and should have an "Items"
 // slice for individual objects.
 func (f *MemKv) List(ctx context.Context, prefix string, into runtime.Object) error {
 
@@ -474,14 +475,17 @@ func (f *MemKv) List(ctx context.Context, prefix string, into runtime.Object) er
 		ptr = true
 		elem = elem.Elem()
 	}
+	if elem.Kind() == reflect.Interface {
+		ptr = true
+	}
 
 	for key, v := range f.cluster.kvs {
 		if strings.HasPrefix(key, prefix) {
-			obj := reflect.New(elem).Interface().(runtime.Object)
-			if err := f.decode([]byte(v.value), obj, v.revision); err != nil {
+			obj, err := f.codec.Decode([]byte(v.value), nil)
+			if err != nil {
 				return err
 			}
-
+			f.objVersioner.SetVersion(obj, uint64(v.revision))
 			if ptr {
 				target.Set(reflect.Append(target, reflect.ValueOf(obj)))
 			} else {
@@ -491,6 +495,14 @@ func (f *MemKv) List(ctx context.Context, prefix string, into runtime.Object) er
 	}
 
 	return f.listVersioner.SetVersion(into, uint64(0))
+}
+
+// ListFiltered lists objects corresponding to a prefix after applying
+// the filter specified by opts. It is assumed that all keys under the
+// prefix are homogeneous.
+func (f *MemKv) ListFiltered(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error {
+	// Filtering is not supported, fallback to List
+	return f.List(ctx, prefix, into)
 }
 
 // Watch the object corresponding to a key. fromVersion is the version to start
@@ -515,6 +527,13 @@ func (f *MemKv) PrefixWatch(ctx context.Context, prefix string, fromVersion stri
 	}
 
 	return f.newPrefixWatcher(ctx, prefix, fromVersion)
+}
+
+// WatchFiltered watches changes on all objects with filters specified
+// by opts applied.
+func (f *MemKv) WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) (kvstore.Watcher, error) {
+	// Filtering is no supported. Fallback to PrefixWatch
+	return f.PrefixWatch(ctx, key, opts.ResourceVersion)
 }
 
 // Contest creates a new contender in an election. name is the name of the

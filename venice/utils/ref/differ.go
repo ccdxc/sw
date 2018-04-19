@@ -103,6 +103,9 @@ func (d *Diffs) List() []string {
 func (d *Diffs) Lookup(path string) bool {
 	c := strings.Split(path, ".")
 	e := d.Root
+	if len(e.Elems) == 0 {
+		return true
+	}
 	ok := true
 	for i := range c {
 		if params := d.re.FindStringSubmatch(c[i]); params != nil {

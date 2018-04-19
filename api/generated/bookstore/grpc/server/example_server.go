@@ -284,7 +284,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			r := bookstore.Book{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -382,7 +382,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			r := bookstore.Coupon{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -491,7 +491,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			r := bookstore.Customer{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -608,7 +608,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			r := bookstore.Order{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -790,7 +790,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			r := bookstore.Publisher{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -1068,7 +1068,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			r := bookstore.Store{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -1367,7 +1367,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Order")
 				return err
@@ -1425,7 +1425,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Book")
 				return err
@@ -1483,7 +1483,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Publisher")
 				return err
@@ -1541,7 +1541,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Store")
 				return err
@@ -1599,7 +1599,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Coupon")
 				return err
@@ -1657,7 +1657,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Customer")
 				return err

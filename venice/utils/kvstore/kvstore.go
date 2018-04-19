@@ -3,6 +3,7 @@ package kvstore
 import (
 	"context"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -50,10 +51,15 @@ type Interface interface {
 	Get(ctx context.Context, key string, into runtime.Object) error
 
 	// List the objects corresponding to a prefix. It is assumed that all
-	// the keys under this prefix are homogenous. "into" should point to
+	// the keys under this prefix are homogeneous. "into" should point to
 	// a List object and should have an "Items" slice for individual
 	// objects.
 	List(ctx context.Context, prefix string, into runtime.Object) error
+
+	// ListFiltered lists objects corresponding to a prefix after applying
+	// the filter specified by opts. It is assumed that all keys under the
+	// prefix are homogeneous.
+	ListFiltered(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error
 
 	// Watch the object corresponding to a key. fromVersion is the version
 	// to start the watch from. If fromVersion is 0, it will return the
@@ -66,6 +72,10 @@ type Interface interface {
 	// changes from the returned version.
 	// TODO: Filter objects
 	PrefixWatch(ctx context.Context, prefix string, fromVersion string) (Watcher, error)
+
+	// WatchFiltered watches changes on all objects with filters specified
+	// by opts applied.
+	WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) (Watcher, error)
 
 	// Contest creates a new contender in an election. name is the name of
 	// the election. id is the identifier of the contender. When a leader is

@@ -44,7 +44,7 @@ func createAPIServer(url string) (apiserver.Server, string) {
 	// create api server
 	apiSrv := apisrvpkg.MustGetAPIServer()
 	go apiSrv.Run(apisrvConfig)
-	time.Sleep(time.Millisecond * 100)
+	apiSrv.WaitRunning()
 
 	if apiSrv == nil {
 		panic("Unable to create API Server")

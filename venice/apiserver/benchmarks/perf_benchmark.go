@@ -25,7 +25,6 @@ import (
 	rl "github.com/juju/ratelimit"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
@@ -286,21 +285,8 @@ func setupAPIServer(kvtype string, cluster []string, pool int) {
 		},
 		KVPoolSize: pool,
 	}
-	if tinfo.useCache {
-		cachecfg := cache.Config{
-			Config: store.Config{
-				Type:    kvtype,
-				Codec:   runtime.NewJSONCodec(tinfo.scheme),
-				Servers: cluster,
-			},
-			NumKvClients: pool,
-			Logger:       tinfo.l,
-		}
-		cache, err := cache.CreateNewCache(cachecfg)
-		if err != nil {
-			panic("failed to create cache")
-		}
-		srvconfig.CacheStore = cache
+	if !tinfo.useCache {
+		srvconfig.BypassCache = true
 	}
 	trace.Init("ApiServer")
 	trace.DisableOpenTrace()

@@ -65,6 +65,7 @@ type store struct {
 	objs       *patricia.Trie
 	stats      StoreStats
 	delPending *delPendingHeap
+	versioner  runtime.Versioner
 	id         uint32
 }
 
@@ -75,6 +76,7 @@ func NewStore() Store {
 		objs:       patricia.NewTrie(),
 		id:         atomic.AddUint32(&storeID, 1),
 		delPending: &delPendingHeap{},
+		versioner:  runtime.NewObjectVersioner(),
 	}
 	heap.Init(ret.delPending)
 	ret.registerStats()
@@ -235,6 +237,7 @@ func (s *store) Delete(key string, rev uint64, cb SuccessCbFunc) (obj runtime.Ob
 	if rev != 0 {
 		cobj.revision = rev
 	}
+	s.versioner.SetVersion(obj, rev)
 	cobj.lastUpd = time.Now()
 	cobj.deleted = true
 	if !cobj.inDelQ {

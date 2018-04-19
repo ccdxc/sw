@@ -238,7 +238,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := network.Endpoint{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -350,7 +350,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := network.LbPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -461,7 +461,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := network.Network{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -573,7 +573,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := network.SecurityGroup{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -684,7 +684,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := network.Service{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -795,7 +795,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := network.Sgpolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -908,7 +908,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := network.Tenant{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				return nil, err
 			}
@@ -1005,7 +1005,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Endpoint")
 				return err
@@ -1126,7 +1126,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "LbPolicy")
 				return err
@@ -1247,7 +1247,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Network")
 				return err
@@ -1368,7 +1368,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "SecurityGroup")
 				return err
@@ -1489,7 +1489,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Service")
 				return err
@@ -1610,7 +1610,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Sgpolicy")
 				return err
@@ -1731,7 +1731,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Tenant")
 				return err

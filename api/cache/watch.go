@@ -296,7 +296,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 	sendevent := func(e *list.Element) {
 		sendCh := make(chan error)
 		obj := e.Value.(*watchEvent)
-		if obj.version < startVer {
+		if obj.version != 0 && obj.version < startVer {
 			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "SendDrop", "type", obj.evType, "path", w.path, "startVer", startVer, "ver", obj.version)
 			return
 		}
@@ -388,10 +388,16 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 	stopCh := make(chan error)
 	w.log.InfoLog("oper", "WatchEventQDequeue", "prefix", w.path, "msg", "starting dequeue monitor")
 	wg.Add(1)
+	deferCh := make(chan bool)
 	go func() {
 		defer wg.Done()
+		once := true
 		for {
 			w.cond.L.Lock()
+			if once {
+				close(deferCh)
+				once = false
+			}
 			w.cond.Wait()
 			w.cond.L.Unlock()
 			select {
@@ -402,6 +408,9 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 			}
 		}
 	}()
+	<-deferCh
+	// Kickstart the dequeue monitor
+	w.notify()
 	for {
 		select {
 		case <-condCh:
@@ -519,22 +528,32 @@ func (w *watchEventQ) start() {
 	k := fmt.Sprintf("api.cache.watchq[%s].enqueue", w.path)
 	if v := expvar.Get(k); v == nil {
 		w.stats.enqueues = expvar.NewInt(k)
+	} else {
+		w.stats.enqueues = v.(*expvar.Int)
 	}
 	k = fmt.Sprintf("api.cache.watchq[%s].dequeue", w.path)
 	if v := expvar.Get(k); v == nil {
 		w.stats.dequeues = expvar.NewInt(k)
+	} else {
+		w.stats.dequeues = v.(*expvar.Int)
 	}
 	k = fmt.Sprintf("api.cache.watchq[%s].ageEvictions", w.path)
 	if v := expvar.Get(k); v == nil {
 		w.stats.ageoutEvictions = expvar.NewInt(k)
+	} else {
+		w.stats.ageoutEvictions = v.(*expvar.Int)
 	}
 	k = fmt.Sprintf("api.cache.watchq[%s].depthEvictions", w.path)
 	if v := expvar.Get(k); v == nil {
 		w.stats.depthEvictions = expvar.NewInt(k)
+	} else {
+		w.stats.depthEvictions = v.(*expvar.Int)
 	}
 	k = fmt.Sprintf("api.cache.watchq[%s].clientEvictions", w.path)
 	if v := expvar.Get(k); v == nil {
 		w.stats.clientEvictions = expvar.NewInt(k)
+	} else {
+		w.stats.clientEvictions = v.(*expvar.Int)
 	}
 	go w.janitor()
 	go w.notifier()

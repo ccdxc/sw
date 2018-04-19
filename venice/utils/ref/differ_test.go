@@ -469,6 +469,10 @@ func TestDifferentTypes(t *testing.T) {
 	if got[0] != "." {
 		t.Fatalf("expecting {.}, got %v", got)
 	}
+	// Lookup random path
+	if !diff.Lookup("Any.Path") {
+		t.Fatalf("expecing true got false")
+	}
 }
 
 func TestUninitialized(t *testing.T) {

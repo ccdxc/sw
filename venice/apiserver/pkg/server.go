@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api/cache"
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -53,6 +54,8 @@ type apiSrv struct {
 	}
 	// config is the passed in config at Run.
 	config apiserver.Config
+	// apiChace is cache used by the server
+	apiCache cache.Interface
 }
 
 // addKvConnToPool is adds connections to the pool if there is space in the pool.
@@ -110,6 +113,12 @@ func reinitAPIServer() {
 func MustGetAPIServer() apiserver.Server {
 	once.Do(initAPIServer)
 	return &singletonAPISrv
+}
+
+// GetAPIServerCache is a utility function to retrieve the cache used by the
+//  singletonAPISrv. Usage is mostly retricted to test.
+func GetAPIServerCache() cache.Interface {
+	return singletonAPISrv.apiCache
 }
 
 // insertWatcher adds a new watcher context to the list of active Watchers
@@ -192,17 +201,24 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	if config.DebugMode {
 		log.SetTraceDebug()
 	}
-	poolSize := apiserver.DefaultKvPoolSize
-	if config.CacheStore != nil {
+
+	if config.KVPoolSize < 1 {
+		a.config.KVPoolSize = apiserver.DefaultKvPoolSize
+	}
+	if config.BypassCache == false {
+		cachecfg := cache.Config{
+			Config:       config.Kvstore,
+			NumKvClients: a.config.KVPoolSize,
+			Logger:       config.Logger,
+		}
+		a.apiCache, err = cache.CreateNewCache(cachecfg)
+		if err != nil {
+			panic(fmt.Sprintf("failed to create cache (%s)", err))
+		}
 		// override PoolSize to 1
 		a.config.KVPoolSize = 1
-	} else {
-		if config.KVPoolSize < 1 {
-			a.config.KVPoolSize = apiserver.DefaultKvPoolSize
-		}
-		poolSize = a.config.KVPoolSize
 	}
-
+	poolSize := a.config.KVPoolSize
 	opts := []rpckit.Option{}
 	if !config.DevMode {
 		opts = append(opts, rpckit.WithTracerEnabled(false))
@@ -238,12 +254,12 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		}
 	}
 
-	if config.CacheStore != nil {
+	if a.apiCache != nil {
 		// connect to the cache provided. The cache will in turn connect to the KV store backend.
 		a.nextKvMutex.Lock()
-		a.kvPool = append(a.kvPool, config.CacheStore)
+		a.kvPool = append(a.kvPool, a.apiCache)
 		a.nextKvMutex.Unlock()
-		config.CacheStore.Start()
+		a.apiCache.Start()
 	} else {
 		// Connect to the KV Store
 		for i := 0; i < poolSize; i++ {

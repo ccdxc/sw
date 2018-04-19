@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	"github.com/pensando/sw/api"
-	apicache "github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -92,27 +91,18 @@ func TestMain(m *testing.M) {
 	l := log.WithContext("module", "AuthTest")
 	tinfo.l = l
 	scheme := runtime.NewScheme()
-	cachecfg := apicache.Config{
-		Config: store.Config{
-			Type:    store.KVStoreTypeMemkv,
-			Codec:   runtime.NewJSONCodec(scheme),
-			Servers: []string{"test-cluster"},
-		},
-		NumKvClients: 1,
-		Logger:       l,
-	}
-	cache, err := apicache.CreateNewCache(cachecfg)
-	if err != nil {
-		panic("failed to create cache")
-	}
 	srvconfig := apiserver.Config{
 		GrpcServerPort: apiserverAddress,
 		DebugMode:      false,
 		Logger:         l,
 		Version:        "v1",
 		Scheme:         scheme,
-		CacheStore:     cache,
-		KVPoolSize:     1,
+		Kvstore: store.Config{
+			Type:    store.KVStoreTypeMemkv,
+			Codec:   runtime.NewJSONCodec(scheme),
+			Servers: []string{"test-cluster"},
+		},
+		KVPoolSize: 1,
 	}
 	grpclog.SetLogger(l)
 

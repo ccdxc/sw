@@ -95,7 +95,7 @@ func getFilters(opts api.ListWatchOptions) ([]filterFn, error) {
 	if opts.LabelSelector != "" {
 		selector, err := labels.Parse(opts.LabelSelector)
 		if err != nil {
-			return nil, fmt.Errorf("invalid label selector sepecification")
+			return nil, fmt.Errorf("invalid label selector specification(%s)", err)
 		}
 		filters = append(filters, labelSelectorFilterFn(selector))
 	}

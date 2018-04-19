@@ -49,8 +49,6 @@ const (
 //   on top of standard KV Store operations.
 type Interface interface {
 	kvstore.Interface
-	ListFiltered(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error
-	WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) (kvstore.Watcher, error)
 	Start() error
 	Clear()
 }
@@ -446,7 +444,11 @@ func (c *cache) Delete(ctx context.Context, key string, into runtime.Object, cs 
 	hdr.Record("kvstore.Delete", time.Since(kvtime))
 	if err == nil {
 		c.logger.DebugLog("oper", "delete", "msg", "kvstore succcess. deleting from cache")
-		c.store.Delete(key, 0, c.getCbFunc(kvstore.Deleted))
+		v := uint64(0)
+		if into != nil {
+			_, v = mustGetObjectMetaVersion(into)
+		}
+		c.store.Delete(key, v, c.getCbFunc(kvstore.Deleted))
 	}
 	hdr.Record("cache.Delete", time.Since(start))
 	deleteOps.Add(1)

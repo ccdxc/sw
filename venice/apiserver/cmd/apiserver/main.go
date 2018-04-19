@@ -8,7 +8,6 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
-	"github.com/pensando/sw/api/cache"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	apisrv "github.com/pensando/sw/venice/apiserver"
@@ -70,30 +69,15 @@ func main() {
 		config.Logger = pl
 		config.Version = *version
 		config.Scheme = runtime.NewScheme()
-		if !*usecache {
-			config.Kvstore = store.Config{
-				Type:    store.KVStoreTypeEtcd,
-				Servers: strings.Split(*kvstore, ","),
-				Codec:   runtime.NewJSONCodec(config.Scheme),
-			}
-		} else {
-			var err error
-			cachecfg := cache.Config{
-				Config: store.Config{
-					Type:    store.KVStoreTypeEtcd,
-					Servers: strings.Split(*kvstore, ","),
-					Codec:   runtime.NewJSONCodec(config.Scheme),
-				},
-				NumKvClients: *poolsize,
-				Logger:       pl,
-			}
-			config.CacheStore, err = cache.CreateNewCache(cachecfg)
-			if err != nil {
-				panic("failed to create cache")
-			}
+		config.Kvstore = store.Config{
+			Type:    store.KVStoreTypeEtcd,
+			Servers: strings.Split(*kvstore, ","),
+			Codec:   runtime.NewJSONCodec(config.Scheme),
 		}
-
 		config.KVPoolSize = *poolsize
+		if !*usecache {
+			config.BypassCache = true
+		}
 	}
 	trace.Init("ApiServer")
 	if *devmode {

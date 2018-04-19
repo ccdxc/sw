@@ -12,6 +12,7 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -316,7 +317,7 @@ func (e *etcdStore) Get(ctx context.Context, key string, into runtime.Object) er
 }
 
 // List the objects corresponding to a prefix. It is assumed that all the keys under this
-// prefix are homogenous. "into" should point to a List object and should have an "Items"
+// prefix are homogeneous. "into" should point to a List object and should have an "Items"
 // slice for individual objects.
 func (e *etcdStore) List(ctx context.Context, prefix string, into runtime.Object) error {
 	v, err := helper.ValidListObjForDecode(into)
@@ -366,6 +367,14 @@ func (e *etcdStore) List(ctx context.Context, prefix string, into runtime.Object
 	return e.listVersioner.SetVersion(into, uint64(resp.Header.Revision))
 }
 
+// ListFiltered lists objects corresponding to a prefix after applying
+// the filter specified by opts. It is assumed that all keys under the
+// prefix are homogeneous.
+func (e *etcdStore) ListFiltered(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error {
+	// Filtering is not supported, fallback to List
+	return e.List(ctx, prefix, into)
+}
+
 // Watch the object corresponding to a key. fromVersion is the version to start
 // the watch from. If fromVersion is 0, it will return the existing object and
 // watch for changes from the returned version.
@@ -380,6 +389,13 @@ func (e *etcdStore) Watch(ctx context.Context, key string, fromVersion string) (
 // TODO: Filter objects
 func (e *etcdStore) PrefixWatch(ctx context.Context, prefix string, fromVersion string) (kvstore.Watcher, error) {
 	return e.newPrefixWatcher(ctx, prefix, fromVersion)
+}
+
+// WatchFiltered watches changes on all objects with filters specified
+// by opts applied.
+func (e *etcdStore) WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) (kvstore.Watcher, error) {
+	// Filtering is no supported. Fallback to PrefixWatch
+	return e.PrefixWatch(ctx, key, opts.ResourceVersion)
 }
 
 // Contest creates a new contender in an election. name is the name of the

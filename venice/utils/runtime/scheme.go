@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 // Scheme contains methods to help with serialization/deserialization of API
@@ -31,13 +32,14 @@ func (s *Scheme) AddKnownTypes(types ...Object) {
 		if t.Kind() != reflect.Struct {
 			panic("Must be a ptr to struct")
 		}
-		s.kindToTypes[t.Name()] = t
+		s.kindToTypes[strings.ToLower(t.Name())] = t
 	}
 }
 
 // New creates a new object given a kind, if the kind was registered using
 // AddKnownTypes above.
 func (s *Scheme) New(kind string) (Object, error) {
+	kind = strings.ToLower(kind)
 	t, exists := s.kindToTypes[kind]
 	if !exists {
 		return nil, fmt.Errorf("Kind %s not registered with this scheme", kind)

@@ -2,10 +2,13 @@ package integration
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
+
+	mapset "github.com/deckarep/golang-set"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"
@@ -46,12 +49,14 @@ func TestCrudOps(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot create grpc client")
 	}
+	defer apicl.Close()
 
 	// REST Client
 	restcl, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
 	if err != nil {
 		t.Fatalf("cannot create REST client")
 	}
+	defer restcl.Close()
 
 	// Create some objects for use
 	var pub, pub2 bookstore.Publisher
@@ -730,4 +735,221 @@ func TestCrudOps(t *testing.T) {
 		t.Errorf("REST: Outage action did not go through hook")
 	}
 
+}
+
+func TestFilters(t *testing.T) {
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+	ctx := context.Background()
+
+	var book1, book2, book3 bookstore.Book
+	{
+		book1 = bookstore.Book{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "selector1",
+				Labels: map[string]string{"label1": "xxx", "label2": "yyy"},
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "book",
+			},
+			Spec: bookstore.BookSpec{
+				ISBNId:   "111-2-31-123456-0",
+				Author:   "foo",
+				Category: "ChildrensLit",
+			},
+		}
+		book2 = bookstore.Book{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "selector2",
+				Labels: map[string]string{"label1": "xxx", "label2": "ppp"},
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "book",
+			},
+			Spec: bookstore.BookSpec{
+				ISBNId:   "111-2-31-123456-1",
+				Author:   "foo",
+				Category: "ChildrensLit",
+			},
+		}
+		book3 = bookstore.Book{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "selector3",
+				Labels: map[string]string{"label3": "qqq"},
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "book",
+			},
+			Spec: bookstore.BookSpec{
+				ISBNId:   "111-2-31-123456-2",
+				Author:   "foo",
+				Category: "ChildrensLit",
+			},
+		}
+	}
+	// gRPC client
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	AssertOk(t, err, fmt.Sprintf("cannot create grpc client (%s)", err))
+	defer apicl.Close()
+
+	wctx, wcancel := context.WithCancel(ctx)
+	opts := []api.ListWatchOptions{
+		api.ListWatchOptions{LabelSelector: "label1=xxx"},
+		api.ListWatchOptions{LabelSelector: "label1=xxx,label2 in (zzz, ppp)"},
+		api.ListWatchOptions{LabelSelector: "label3=xxx"},
+		api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}},
+		api.ListWatchOptions{FieldChangeSelector: []string{"Status"}},
+		api.ListWatchOptions{FieldChangeSelector: []string{"Spec.Category"}},
+		api.ListWatchOptions{LabelSelector: "label1=xxx", FieldChangeSelector: []string{"Spec.Category"}},
+	}
+	var watchers []kvstore.Watcher
+	var rwatches [][]kvstore.WatchEvent
+	var wmu []sync.Mutex
+	var wwg sync.WaitGroup
+	watchCount := len(opts)
+
+	watcherFn := func(id int) {
+		w := watchers[id]
+		defer wwg.Done()
+		for {
+			select {
+			case wev, ok := <-w.EventChan():
+				t.Logf("ts[%s] [%d]received event [%v][%+v]", time.Now(), id, ok, wev)
+				if ok {
+					t.Logf(" W%d event [%+v]", id, *wev)
+					wmu[id].Lock()
+					rwatches[id] = append(rwatches[id], *wev)
+					wmu[id].Unlock()
+				} else {
+					t.Logf("W%d closed", id)
+					return
+				}
+			}
+		}
+	}
+
+	validateFn := func(evtype kvstore.WatchEventType, rw []bool, obj *bookstore.Book) bool {
+		// Get the last one from each slice.
+		failed := false
+		for i := 0; i < watchCount; i++ {
+			if rw[i] {
+				wmu[i].Lock()
+				ev := rwatches[i][len(rwatches[i])-1]
+				wmu[i].Unlock()
+				if ev.Type != evtype {
+					t.Errorf("unexpected eventtype [%d] exp: %v got: %v", i, evtype, ev.Type)
+					failed = true
+				}
+				if !validateObjectSpec(obj, ev.Object) {
+					t.Errorf("unmatched object [%d] exp:[%+v] got:[%+v]", i, obj, ev.Object)
+					failed = true
+				}
+			}
+		}
+		return !failed
+	}
+
+	waitFn := func(counts []int, exp []bool) {
+		for i := 0; i < watchCount; i++ {
+			if exp[i] {
+				AssertEventually(t,
+					func() (bool, interface{}) {
+						defer wmu[i].Unlock()
+						wmu[i].Lock()
+						return len(rwatches[i]) == counts[i]+1, nil
+					},
+					fmt.Sprintf("[%d]failed to receive all watch events", i),
+					"10ms",
+					"3s")
+			} else {
+				AssertConsistently(t, func() (bool, interface{}) {
+					defer wmu[i].Unlock()
+					wmu[i].Lock()
+					return len(rwatches[i]) == counts[i], nil
+				}, fmt.Sprintf("inconsistent count on watch[%d] channel exp: %d got: %d", i, counts[i], len(rwatches[i])))
+			}
+		}
+	}
+	t.Logf("Delete existing objects")
+	// Delete any existing objects before starting watch.
+	bl, err := apicl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{})
+	AssertOk(t, err, "error getting list of objects")
+	for _, v := range bl {
+		meta := &api.ObjectMeta{Name: v.GetName()}
+		_, err = apicl.BookstoreV1().Book().Delete(ctx, meta)
+		AssertOk(t, err, fmt.Sprintf("error deleting object[%v](%s)", meta, err))
+	}
+	for i := 0; i < len(opts); i++ {
+		w, err := apicl.BookstoreV1().Book().Watch(wctx, &opts[i])
+		AssertOk(t, err, fmt.Sprintf("Failed to start watch (%s)", err))
+		watchers = append(watchers, w)
+		wmu = append(wmu, sync.Mutex{})
+		rwatches = append(rwatches, []kvstore.WatchEvent{})
+		wwg.Add(1)
+		go watcherFn(i)
+	}
+	book4 := book1
+	book4.Spec.Author = "New Author"
+	book5 := book4
+	book5.Status.Inventory = 4
+	book6 := book5
+	book6.Spec.Category = "YoungAdult"
+
+	cases := []struct {
+		name      string
+		oper      kvstore.WatchEventType
+		obj       runtime.Object
+		expev     []bool
+		listRslts []*bookstore.Book
+		listOpts  int
+	}{
+		{name: "case1", oper: kvstore.Created, obj: &book1, expev: []bool{true, false, false, true, true, true, true}},
+		{name: "case2", oper: kvstore.Created, obj: &book2, expev: []bool{true, true, false, true, true, true, true}},
+		{name: "case3", oper: kvstore.Created, obj: &book3, expev: []bool{false, false, false, true, true, true, false}},
+		{name: "case4", oper: kvstore.Updated, obj: &book4, expev: []bool{true, false, false, true, false, false, false}, listOpts: 0, listRslts: []*bookstore.Book{&book1, &book2}},
+		{name: "case5", oper: kvstore.Updated, obj: &book5, expev: []bool{true, false, false, false, true, false, false}, listOpts: 1, listRslts: []*bookstore.Book{&book2}},
+		{name: "case6", oper: kvstore.Updated, obj: &book6, expev: []bool{true, false, false, true, false, true, true}},
+		{name: "case7", oper: kvstore.Deleted, obj: &book6, expev: []bool{true, false, false, true, true, true, true}},
+		{name: "case8", oper: kvstore.Deleted, obj: &book2, expev: []bool{true, true, false, true, true, true, true}},
+		{name: "case9", oper: kvstore.Deleted, obj: &book3, expev: []bool{false, false, false, true, true, true, false}},
+	}
+	for _, c := range cases {
+		var counts []int
+		for i := 0; i < watchCount; i++ {
+			counts = append(counts, len(rwatches[i]))
+		}
+		t.Logf("running case [%s]", c.name)
+		obj := c.obj.(*bookstore.Book)
+		switch c.oper {
+		case kvstore.Created:
+			_, err := apicl.BookstoreV1().Book().Create(ctx, obj)
+			AssertOk(t, err, "create failed")
+		case kvstore.Updated:
+			_, err := apicl.BookstoreV1().Book().Update(ctx, obj)
+			AssertOk(t, err, "update failed")
+		case kvstore.Deleted:
+			_, err := apicl.BookstoreV1().Book().Delete(ctx, &obj.ObjectMeta)
+			AssertOk(t, err, "delete failed")
+		}
+		waitFn(counts, c.expev)
+		if !validateFn(c.oper, c.expev, obj) {
+			t.Fatalf("validate failed")
+		}
+		if c.listRslts != nil {
+			var e, g []interface{}
+			objs, err := apicl.BookstoreV1().Book().List(ctx, &opts[c.listOpts])
+			AssertOk(t, err, fmt.Sprintf("case [%s] List Failed (%s)", c.name, err))
+			for _, v := range c.listRslts {
+				e = append(e, v.Name)
+			}
+			for _, v := range objs {
+				g = append(g, v.Name)
+			}
+			if !mapset.NewSetFromSlice(e).Equal(mapset.NewSetFromSlice(g)) {
+				t.Fatalf("-%s : expecting [%v] in list got [%v]", c.name, e, g)
+			}
+		}
+
+	}
+	wcancel()
+	wwg.Wait()
 }
