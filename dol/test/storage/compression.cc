@@ -225,7 +225,7 @@ compress_status_verify(dp_mem_t *status,
             return -1;
         }
     }
-    if (desc.cmd_bits.comp_decomp_en && desc.cmd_bits.sha_en) {
+    if (desc.cmd_bits.sha_en) {
         int sha_size = desc.cmd_bits.sha_type ? 32 : 64;
         if (memcmp(st->sha512, all_zeros, sha_size) == 0) {
             LOG_CHECK_PRINTF("%s ERROR: Sha is all zero\n", __func__);
@@ -1587,6 +1587,8 @@ int seq_decrypt_output_decompress_last_app_blk() {
 
 int seq_compress_output_hash_app_max_size() {
     comp_hash_chain_push_params_t   params;
+
+    // Compression and hash both using cp_queue
     comp_hash_chain->push(params.app_blk_size(kCompAppMaxSize).
                                  app_hash_size(kCompAppHashBlkSize).
                                  comp_queue(cp_queue).
@@ -1602,7 +1604,6 @@ int seq_compress_output_hash_app_test_size() {
     comp_hash_chain_push_params_t   params;
 
     // Note: cp_queue being used for compression and cp_hotq for hashing
-    
     comp_hash_chain->push(params.app_blk_size(kCompAppTestSize).
                                  app_hash_size(kCompAppHashBlkSize).
                                  comp_queue(cp_queue).
@@ -1613,4 +1614,20 @@ int seq_compress_output_hash_app_test_size() {
     comp_hash_chain->post_push();
     return comp_hash_chain->verify();
 }
+
+int seq_compress_output_hash_app_nominal_size() {
+    comp_hash_chain_push_params_t   params;
+
+    // Note: cp_hotq being used for compression and cp_queue for hashing
+    comp_hash_chain->push(params.app_blk_size(kCompAppNominalSize).
+                                 app_hash_size(kCompAppHashBlkSize).
+                                 comp_queue(cp_hotq).
+                                 hash_queue(cp_queue).
+                                 push_type(COMP_QUEUE_PUSH_SEQUENCER).
+                                 seq_comp_qid(queues::get_seq_comp_sq(0)).
+                                 seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
+    comp_hash_chain->post_push();
+    return comp_hash_chain->verify();
+}
+
 }  // namespace tests

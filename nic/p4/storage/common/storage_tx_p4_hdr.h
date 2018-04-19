@@ -565,17 +565,15 @@ header_type barco_sgl_t {
 #define BARCO_SGL_DESC_SIZE         64
 #define BARCO_SGL_DESC_SIZE_SHIFT   6
 
-// A Barco address specification
-header_type barco_addr_t {
+// Accelerator chaining state structure:
+// these fields are grouped together to make it easier to
+// overlay the structure over other structs
+header_type acc_chain_state_t {
   fields {
-    addr 	: 64;
-  }
-}
-
-// AOL 32-bit length
-header_type barco_aol_len_t {
-  fields {
-    len 	: 32;
+    pad_buf_addr    : 64;
+    data_len        : 32;
+    pad_len         : 32;
+    total_len       : 32;
   }
 }
 

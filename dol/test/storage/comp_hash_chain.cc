@@ -28,6 +28,7 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     app_max_size(params.app_max_size_),
     app_blk_size(0),
     app_hash_size(kCompAppHashBlkSize),
+    actual_hash_blks(-1),
     caller_comp_pad_buf(nullptr),
     caller_hash_status_vec(nullptr),
     caller_hash_opaque_vec(nullptr),
@@ -175,6 +176,7 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
     app_hash_size = params.app_hash_size_;
     num_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(app_blk_size, sizeof(cp_hdr_t),
                                                   app_hash_size);
+    actual_hash_blks = -1;
     if (num_hash_blks > max_hash_blks) {
         printf("%s num_hash_blks %u exceeds max_hash_blks %u\n",
                __FUNCTION__, num_hash_blks, max_hash_blks);
@@ -275,11 +277,11 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
     chain_params.chain_ent.intr_en = 1;
 
     /*
-     * If only a max of 1 hash block is required, compression plus hash/checksum
-     * can all be done in one Barco request. Question: are hash/checksum results
-     * for a block (of less than 4K) identical to the result for the same block padded
-     * to 4K? For now, let's assume they're not and execute the hash/checksum
-     * operations separately from the comp operation.
+     * If only one hash block is required, it is possible to do compression
+     * plus hash with one Barco request. However, doing so would require setting
+     * sha_data_src to 0 in the cfg_ueng CSR, which would conflict with other
+     * requests that require multiple hash blocks. Hence, we normalize this
+     * by always executing hash separately from the comp operation.
      */
     for (block_no = 0; block_no < num_hash_blks; block_no++) {
         hash_setup(block_no, chain_params);
@@ -374,41 +376,91 @@ comp_hash_chain_t::hash_setup(uint32_t block_no,
 
 
 /*
+ * Return actual number of hash blocks based on the output data length
+ * from compression.
+ */
+int 
+comp_hash_chain_t::actual_hash_blks_get(comp_hash_chain_retrieve_method_t method)
+{
+    bool    log_error = (method == COMP_HASH_CHAIN_BLOCKING_RETRIEVE);
+
+    if (actual_hash_blks < 0) {
+
+        switch (method) {
+
+        case COMP_HASH_CHAIN_BLOCKING_RETRIEVE:
+
+            // Poll for comp status
+            if (!comp_status_poll(comp_status_buf2, suppress_info_log)) {
+              printf("ERROR: comp_hash_chain compression status never came\n");
+              return -1;
+            }
+
+            /*
+             * Fall through!!!
+             */
+             
+        case COMP_HASH_CHAIN_NON_BLOCKING_RETRIEVE:
+        default:
+
+            // Validate comp status
+            if (compress_status_verify(comp_status_buf2, comp_buf1, cp_desc, log_error)) {
+                if (log_error) {
+                    printf("ERROR: comp_hash_chain compression status verification failed\n");
+                }
+                return -1;
+            }
+            last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
+            actual_hash_blks = (int)COMP_HASH_CHAIN_MAX_HASH_BLKS(last_cp_output_data_len, 0,
+                                                                  app_hash_size);
+            if (!suppress_info_log) {
+                printf("comp_hash_chain: last_cp_output_data_len %u actual_hash_blks %u\n",
+                       last_cp_output_data_len, actual_hash_blks);
+            }
+            if ((actual_hash_blks == 0) || ((uint32_t)actual_hash_blks > num_hash_blks)) {
+                printf("comp_hash_chain: invalid actual_hash_blks %d in relation to "
+                       "num_hash_blks %u\n", actual_hash_blks, num_hash_blks);
+                actual_hash_blks = -1;
+            }
+        }
+    }
+
+    return actual_hash_blks;
+}
+
+
+/*
  * Test result verification
  */
 int 
 comp_hash_chain_t::verify(void)
 {
     cp_desc_t   *hash_desc;
-    uint32_t    actual_hash_blks;
+    cp_sgl_t    *hash_sgl;
     uint32_t    block_no;
+    uint32_t    pad_data_len;
+    uint64_t    total_data_len;
+    uint64_t    accum_data_len0;
+    uint64_t    accum_data_len1;
+    uint64_t    accum_data_len2;
+    uint64_t    accum_link;
+    uint64_t    total_accum_data_len;
 
-    // Poll for comp status
-    if (!comp_status_poll(comp_status_buf2, suppress_info_log)) {
-      printf("ERROR: comp_hash_chain compression status never came\n");
-      return -1;
-    }
-
-    // Validate comp status
-    if (compress_status_verify(comp_status_buf2, comp_buf1, cp_desc)) {
-        printf("ERROR: comp_hash_chain compression status verification failed\n");
+    if (actual_hash_blks_get(COMP_HASH_CHAIN_BLOCKING_RETRIEVE) < 0) {
         return -1;
     }
-    last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
 
-    // Verify all hash status
-    actual_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(last_cp_output_data_len, 0,
-                                                     app_hash_size);
-    if (!suppress_info_log) {
-        printf("comp_hash_chain: last_cp_output_data_len %u actual_hash_blks %u\n",
-               last_cp_output_data_len, actual_hash_blks);
-    }
-    if ((actual_hash_blks == 0) || (actual_hash_blks > num_hash_blks)) {
-        printf("comp_hash_chain: invalid actual_hash_blks %u in relation to "
-               "num_hash_blks %u\n", actual_hash_blks, num_hash_blks);
-        return -1;
-    }
-    for (block_no = 0; block_no < actual_hash_blks; block_no++) {
+    /*
+     * Verify all hash status and P4+ modified SGL lengths
+     */
+    total_data_len = actual_hash_blks * app_hash_size;
+    accum_data_len0 = 0;
+    accum_data_len1 = 0;
+    accum_data_len2 = 0;
+    accum_link = 0;
+    pad_data_len = 0;
+
+    for (block_no = 0; block_no < (uint32_t)actual_hash_blks; block_no++) {
         caller_hash_status_vec->line_set(block_no);
         hash_desc_vec->line_set(block_no);
         hash_desc = (cp_desc_t *)hash_desc_vec->read_thru();
@@ -424,6 +476,54 @@ comp_hash_chain_t::verify(void)
                    block_no);
             return -1;
         }
+
+        /*
+         * Accumulate SGL lengths to be validated
+         */
+        hash_sgl_vec->line_set(block_no);
+        hash_sgl = (cp_sgl_t *)hash_sgl_vec->read_thru();
+        accum_data_len0 += hash_sgl->len0;
+        accum_data_len1 += hash_sgl->len1;
+        accum_data_len2 += hash_sgl->len2;
+        accum_link += hash_sgl->link;
+        if (block_no == ((uint32_t)actual_hash_blks - 1)) {
+            pad_data_len = hash_sgl->len1;
+        }
+    }
+
+    /*
+     * Validate total accumulated length
+     */
+    total_accum_data_len = accum_data_len0 + accum_data_len1 + accum_data_len2;
+    if (total_accum_data_len != total_data_len) {
+        printf("ERROR: comp_hash_chain total_accum_data_len %lu expected %lu\n",
+               total_accum_data_len, total_data_len);
+        return -1;
+    }
+
+    /*
+     * Validate padding length
+     */
+    if (pad_data_len != (total_data_len - last_cp_output_data_len)) {
+        printf("ERROR: comp_hash_chain invalid pad_len %u in relation to "
+               "total_data_len %lu and last_cp_output_data_len %u\n",
+               pad_data_len, total_data_len, last_cp_output_data_len);
+        return -1;
+    }
+
+    /*
+     * Validate other lengths
+     */
+    if (pad_data_len != accum_data_len1) {
+        printf("ERROR: comp_hash_chain invalid pad_len %u in relation to "
+               "accum_data_len1 %lu\n", pad_data_len, accum_data_len1);
+        return -1;
+    }
+
+    if (accum_data_len2 || accum_link) {
+        printf("ERROR: comp_hash_chain unexpected accum_data_len2 %lu "
+               "or accum_link %lu\n", accum_data_len2, accum_link);
+        return -1;
     }
 
     if (!suppress_info_log) {

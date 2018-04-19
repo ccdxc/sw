@@ -81,10 +81,10 @@ storage_tx_seq_comp_status_handler_start:
     sll         r_total_len, r_num_blks, STORAGE_KIVEC5_PAD_LEN_SHIFT
     sub         r_pad_len, r_total_len, r_comp_data_len
 
-    phvwrpair   p.data_len_len, r_comp_data_len.wx, \
-                p.pad_len_len, r_pad_len.wx
+    phvwrpair   p.acc_chain_data_len, r_comp_data_len.wx, \
+                p.acc_chain_pad_len, r_pad_len.wx
     bbeq        STORAGE_KIVEC5_SGL_PAD_HASH_EN, 1, sgl_padding_for_hash
-    phvwr       p.total_len_len, r_total_len.wx                // delay slot
+    phvwr       p.acc_chain_total_len, r_total_len.wx                // delay slot
     bbeq        STORAGE_KIVEC5_AOL_PAD_EN, 0, possible_barco_push
     nop
 
@@ -121,19 +121,19 @@ if0:
     // last_sgl_p->len1 = r_pad_len
     
     sub         r_last_blk_len, r_pad_boundary, r_pad_len
-    phvwr       p.data_len_len, r_last_blk_len.wx
+    phvwr       p.acc_chain_data_len, r_last_blk_len.wx
     
     add         r_sgl_field_p, r_last_sgl_p, \
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len0))
-    DMA_PHV2MEM_SETUP_ADDR64(data_len_len, data_len_len, r_sgl_field_p, dma_p2m_2)
+    DMA_PHV2MEM_SETUP_ADDR64(acc_chain_data_len, acc_chain_data_len, r_sgl_field_p, dma_p2m_2)
     
     add         r_sgl_field_p, r_last_sgl_p, \
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, addr1))
-    DMA_PHV2MEM_SETUP_ADDR64(pad_buf_addr_addr, pad_buf_addr_addr, r_sgl_field_p, dma_p2m_3)
+    DMA_PHV2MEM_SETUP_ADDR64(acc_chain_pad_buf_addr, acc_chain_pad_buf_addr, r_sgl_field_p, dma_p2m_3)
     
     add         r_sgl_field_p, r_last_sgl_p, \
                 SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len1))
-    DMA_PHV2MEM_SETUP_ADDR64(pad_len_len, pad_len_len, r_sgl_field_p, dma_p2m_4)
+    DMA_PHV2MEM_SETUP_ADDR64(acc_chain_pad_len, acc_chain_pad_len, r_sgl_field_p, dma_p2m_4)
     DMA_PHV2MEM_FENCE(dma_p2m_4)
 endif0:
 

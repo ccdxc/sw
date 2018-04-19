@@ -157,18 +157,11 @@ metadata ssd_ci_t ssd_ci;
 // for RDMA Write command
 @pragma dont_trim
 metadata storage_capri_addr_t r2n_data_buff_addr;
-@pragma pa_header_union ingress r2n_data_buff_addr
-@pragma dont_trim
-metadata barco_addr_t pad_buf_addr;
 
-// Compression output data length and computed pad length
+// Accelerator chaining state
+@pragma pa_header_union ingress nvme_cmd
 @pragma dont_trim
-metadata barco_aol_len_t data_len;
-@pragma dont_trim
-metadata barco_aol_len_t pad_len;
-@pragma dont_trim
-metadata barco_aol_len_t total_len;
-
+metadata acc_chain_state_t acc_chain;
 
 // DMA commands metadata
 @pragma dont_trim
