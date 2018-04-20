@@ -66,6 +66,18 @@ def run(cmd, timeout=None, background=False, stdout=None):
     print ("Success : ", cmd)
     return True
 
+def clean_up_container(name):
+    try:
+        DockerApiClient.stop(name)
+        print("Stopped previously running container")
+    except:
+        print("Container was not running before.")
+    try:
+        DockerApiClient.remove_container(name)
+        print("Removed previously running container")
+    except:
+        print("Container image was not found before.")
+
 class Interface(object):
     
     def __init__(self, name, vlan=None, mac_address=None):
@@ -229,13 +241,8 @@ class Container(NS):
         data = json.load(open(config_file))
         if not container_id:
             self._container_name = name
+            clean_up_container(name)
             self._image = data["App"]["registry"] + data["App"]["image"]
-            print("Trying to stop previously running container")
-            try:
-                DockerApiClient.stop(name)
-                print("Stopped previously running container")
-            except:
-                print("Container was not running before.")
             self._container_obj = DockerEnvClient.containers.run(self._image,
                                                name = name,
                                                detach=True,
