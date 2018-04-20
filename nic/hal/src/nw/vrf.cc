@@ -473,9 +473,7 @@ vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 static hal_ret_t
 vrf_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t   ret = HAL_RET_OK;
-
-    return ret;
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------

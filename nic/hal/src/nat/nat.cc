@@ -483,15 +483,48 @@ nat_pool_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// perform the commit operation for the NAT pool by adding to config db
+//------------------------------------------------------------------------------
 static hal_ret_t
 nat_pool_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    return HAL_RET_OK;
+    hal_ret_t        ret;
+    dllist_ctxt_t    *lnode = NULL;
+    dhl_entry_t      *dhl_entry = NULL;
+    nat_pool_t       *pool;
+    hal_handle_t     hal_handle;
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    pool = (nat_pool_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    // add nat pool to the cfg db
+    ret = nat_pool_add_to_db(pool, hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add nat pool ({}, {}) to ",
+                      pool->key.vrf_id, pool->key.pool_id);
+    }
+    return ret;
 }
 
+//------------------------------------------------------------------------------
+// abort NAT pool create operation
+//------------------------------------------------------------------------------
 static hal_ret_t
 nat_pool_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
+    dllist_ctxt_t    *lnode = NULL;
+    dhl_entry_t      *dhl_entry = NULL;
+    nat_pool_t       *pool;
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    pool = (nat_pool_t *)dhl_entry->obj;
+    hal_handle_free(dhl_entry->handle);
+    nat_pool_cleanup(pool);
+
     return HAL_RET_OK;
 }
 
