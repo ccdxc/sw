@@ -939,7 +939,7 @@ capri_table_entry_write (uint32_t tableid,
                                  tbl_info.entry_width);
     int tbl_col = index % tbl_info.num_buckets;
     int blk = tbl_info.top_left_block
-                 + ((tbl_col * tbl_info.entry_width) /
+                 + (((tbl_col * tbl_info.entry_width) + tbl_info.top_left_x) /
                      CAPRI_SRAM_WORDS_PER_BLOCK);
     int block = blk;
     int copy_bits = hwentry_bit_len;
@@ -1048,7 +1048,7 @@ capri_table_entry_read (uint32_t tableid,
                                  tbl_info.entry_width);
     int tbl_col = index % tbl_info.num_buckets;
     int blk = tbl_info.top_left_block
-                 + ((tbl_col * tbl_info.entry_width) /
+                 + (((tbl_col * tbl_info.entry_width) + tbl_info.top_left_x) /
                      CAPRI_SRAM_WORDS_PER_BLOCK);
     int block = blk;
     int copy_bits = tbl_info.entry_width_bits;

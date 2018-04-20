@@ -72,50 +72,64 @@
 #include <string.h>
 #include "nic/include/hal_pd_error.hpp"
 
-//::     tabledict = {}
-//::     tableid = start_table_base
-//::     hash_min = tableid
-//::     for table in pddict['tables']:
-//::        if pddict['tables'][table]['type'] == 'Hash':
-//::            tabledict[table] = tableid
-//::            tableid += 1
-//::        #endif
-//::     #endfor
-//::     hash_max = tableid - 1
-//::     hash_otcam_min = tableid
-//::     for table in pddict['tables']:
-//::        if pddict['tables'][table]['type'] == 'Hash_OTcam':
-//::            tabledict[table] = tableid
-//::            tableid += 1
-//::        #endif
-//::     #endfor
-//::     hash_otcam_max = tableid - 1
-//::     tcam_min = tableid
-//::     for table in pddict['tables']:
-//::        if pddict['tables'][table]['type'] == 'Ternary':
-//::            tabledict[table] = tableid
-//::            tableid += 1
-//::        #endif
-//::     #endfor
-//::     tcam_max = tableid - 1
-//::     index_min = tableid
-//::     for table in pddict['tables']:
-//::        if pddict['tables'][table]['type'] == 'Index':
-//::            tabledict[table] = tableid
-//::            tableid += 1
-//::        #endif
-//::     #endfor
-//::     index_max = tableid - 1
-//::     mpu_min = tableid
-//::     max_min = tableid
-//::     for table in pddict['tables']:
-//::        if pddict['tables'][table]['type'] == 'Mpu':
-//::            tabledict[table] = tableid
-//::            tableid += 1
-//::        #endif
-//::        mpu_max = tableid - 1
-//::        tblid_max = tableid
-//::     #endfor
+//::    tabledict = {}
+//::    tableid = start_table_base
+//::    hash_min = tableid
+//::    hash_max = tableid
+//::    for table in pddict['tables']:
+//::       if pddict['tables'][table]['type'] == 'Hash':
+//::           tabledict[table] = tableid
+//::           tableid += 1
+//::       #endif
+//::    #endfor
+//::    if tableid > hash_max:
+//::       hash_max = tableid - 1
+//::    #endif
+//::    hash_otcam_min = tableid
+//::    hash_otcam_max = tableid
+//::    for table in pddict['tables']:
+//::       if pddict['tables'][table]['type'] == 'Hash_OTcam':
+//::           tabledict[table] = tableid
+//::           tableid += 1
+//::       #endif
+//::    #endfor
+//::    if tableid > hash_otcam_max:
+//::       hash_otcam_max = tableid - 1
+//::    #endif
+//::    tcam_min = tableid
+//::    tcam_max = tableid
+//::    for table in pddict['tables']:
+//::       if pddict['tables'][table]['type'] == 'Ternary':
+//::           tabledict[table] = tableid
+//::           tableid += 1
+//::       #endif
+//::    #endfor
+//::    if tableid > tcam_max:
+//::       tcam_max = tableid - 1
+//::    #endif
+//::    index_min = tableid
+//::    index_max = tableid
+//::    for table in pddict['tables']:
+//::       if pddict['tables'][table]['type'] == 'Index':
+//::           tabledict[table] = tableid
+//::           tableid += 1
+//::       #endif
+//::    #endfor
+//::    if tableid > index_max:
+//::       index_max = tableid - 1
+//::    #endif
+//::    mpu_min = tableid
+//::    mpu_max = tableid
+//::    for table in pddict['tables']:
+//::       if pddict['tables'][table]['type'] == 'Mpu':
+//::           tabledict[table] = tableid
+//::           tableid += 1
+//::       #endif
+//::    #endfor
+//::    if tableid > mpu_max:
+//::       mpu_max = tableid - 1
+//::    #endif
+//::    tblid_max = tableid
 //::    table_min_dict = {}
 //::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_HASH_MIN'] = hash_min
 //::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_HASH_MAX'] = hash_max
