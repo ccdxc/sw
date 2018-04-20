@@ -14,6 +14,7 @@ struct s1_tbl_r2n_sq_handler_d d;
 struct phv_ p;
 
 %%
+   .param storage_tx_nvme_be_save_iob_addr_start
    .param storage_tx_nvme_be_wqe_prep_start
    .param storage_tx_roce_rq_push_start
 
@@ -26,7 +27,13 @@ storage_tx_r2n_sq_handler_start:
    bcf		[!c1], check_buf_post
    nop
 
-   // Process WQE => Set the table and program address for loading the
+   // Process WQE => Set the table1 and program address to load the 
+   // IO context to save to R2N WQE
+   add		r7, d.handle, R2N_BUF_IO_CTX_REL_OFFSET
+   LOAD_TABLE1_FOR_ADDR34_PC_IMM(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE, 
+                                 storage_tx_nvme_be_save_iob_addr_start)
+
+   // Process WQE => Set the table0 and program address for loading the
    // WQE pointer
    LOAD_TABLE_FOR_ADDR_PC_IMM(d.handle, STORAGE_DEFAULT_TBL_LOAD_SIZE,
                               storage_tx_nvme_be_wqe_prep_start)
@@ -43,7 +50,7 @@ check_buf_post:
    // Setup the R2N buffer to post using mem2mem DMA in DMA commands 1 & 2
    R2N_BUF_POST_SETUP(d.handle)
    
-   // Set the program address and table address based on the destination passed 
+   // Set the program address and table0 address based on the destination passed 
    // in the WQE to post the R2N buffer to ROCE RQ
    LOAD_TABLE_FOR_ADDR34_PC_IMM(d.dst_qaddr, Q_STATE_SIZE,
                                 storage_tx_roce_rq_push_start)

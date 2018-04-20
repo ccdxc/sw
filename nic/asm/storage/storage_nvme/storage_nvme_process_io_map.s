@@ -58,6 +58,9 @@ storage_nvme_process_io_map_start:
    phvwrpair	p.seq_r2n_wqe_r2n_wqe_addr, r7,				\
 		p.seq_r2n_wqe_r2n_wqe_size, IO_MAP_ROCE_SQ_WQE_SIZE	
 
+   // Set the is_remote flag in R2N WQE
+   phvwr	p.seq_r2n_wqe_is_remote, 1
+
    // Destination for R2N sequencer is ROCE LIF
    phvwr 	p.{seq_r2n_wqe_dst_lif...seq_r2n_wqe_dst_qaddr},	\
 		d.{roce_lif...roce_qaddr}
@@ -88,7 +91,7 @@ save_to_iob:
    // Setup the DMA command to save the NVME command entry and I/O context
    // into the I/O buffer to be sent to target side
    add		r7, r6, IO_BUF_NVME_BE_CMD_OFFSET + NVME_BE_NVME_CMD_OFFSET
-   DMA_PHV2MEM_SETUP_ADDR34(nvme_cmd_opc, io_ctx_nvme_sq_qaddr, 
+   DMA_PHV2MEM_SETUP_ADDR34(nvme_cmd_opc, io_ctx_iob_addr, 
                             r7, dma_p2m_3)
    
    // Setup the DMA command to save the NVME backend command header
@@ -99,7 +102,7 @@ save_to_iob:
    
    // Load the table and program for downloading the data (if it is a write 
    // command and has no PRP list) in the next stage
-   add		r7, NVME_KIVEC_T0_S2S_IO_MAP_BASE_ADDR, IO_BUF_PRP_LIST_OFFSET
+   add		r7, NVME_KIVEC_T0_S2S_IOB_ADDR, IO_BUF_PRP_LIST_OFFSET
    LOAD_TABLE_FOR_ADDR34_PC_IMM(r7,
                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
                                 storage_nvme_handle_no_prp_list_start)

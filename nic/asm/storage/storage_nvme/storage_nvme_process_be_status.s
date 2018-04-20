@@ -20,10 +20,13 @@ storage_nvme_process_be_status_start:
    phvwr	p.{nvme_be_sta_hdr_time_us...nvme_be_sta_hdr_r2n_buf_handle},	\
 		d.{time_us...r2n_buf_handle}
    phvwr	p.{nvme_sta_cspec...nvme_sta_status}, d.{cspec...status}
-
+  
+   // TODO: FIXME later with correct status + phase bit decoding
+#if 0
    // If I/O returned with error status, mark it in oper_status of I/O context
    seq		c1, d.status, NVME_STATUS_SUCESS
    phvwr.!c1	p.nvme_kivec_global_oper_status, IO_CTX_OPER_STATUS_BE_ERROR
+#endif
 
    // Store the I/O context to K+I vector
    phvwr	p.nvme_kivec_t0_s2s_iob_addr, d.iob_addr

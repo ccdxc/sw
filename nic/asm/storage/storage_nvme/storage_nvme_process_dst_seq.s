@@ -22,8 +22,8 @@ storage_nvme_process_dst_seq_start:
 		d.{lif...qaddr}
 
    // Setup DMA command to store the I/O context into the I/O buffer
-   add		r7, NVME_KIVEC_T0_S2S_IOB_ADDR, IO_BUF_IO_CTX_OFFSET
-   DMA_PHV2MEM_SETUP_ADDR34(io_ctx_iob_addr, io_ctx_nvme_sq_qaddr, 
+   add		r7, NVME_KIVEC_T0_S2S_IOB_ADDR, IO_BUF_IO_CTX_NVME_DATA_LEN_OFFSET
+   DMA_PHV2MEM_SETUP_ADDR34(io_ctx_nvme_data_len, io_ctx_nvme_sq_qaddr, 
                             r7, dma_p2m_11)
    
    
@@ -32,12 +32,6 @@ storage_nvme_process_dst_seq_start:
    seq		c1, NVME_KIVEC_T0_S2S_PUNT_TO_ARM, 1
    bcf		[c1], push_to_arm
    nop
-
-   // Copy the table 0 stage2stage K+I vector to that of table 1
-   phvwr	p.{nvme_kivec_t1_s2s_w_ndx...nvme_kivec_t1_s2s_punt_to_arm},	\
-		k.{nvme_kivec_t0_s2s_w_ndx...nvme_kivec_t0_s2s_punt_to_arm}
-   phvwr	p.{nvme_kivec_t1_s2s_dst_lif...nvme_kivec_t1_s2s_dst_qaddr}, 	\
-		d.{lif...qaddr}
 
    // Set table 0 and program address to push the WQE to the destination
    // sequencer in the next stage. 

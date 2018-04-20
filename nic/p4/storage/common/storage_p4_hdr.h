@@ -143,6 +143,12 @@ header_type storage_pci_data_t  {
   }
 }
 
+// IO buffer address
+header_type iob_addr_t {
+  fields {
+    iob_addr		: 34;	// Base address of the I/O buffer
+  }
+}
 // Copy macros
 
 #define NVME_CMD_COPY(cmd)			\
@@ -199,6 +205,9 @@ header_type storage_pci_data_t  {
   modify_field(entry.dst_qid, dst_qid);			\
   modify_field(entry.dst_qaddr, dst_qaddr);		\
   modify_field(entry.is_remote, is_remote);		\
+
+#define IOB_ADDR_COPY(entry)				\
+  modify_field(entry.iob_addr, iob_addr);		\
 
 // Macro to return the (byte) offset of a field within a PHV. Dummy in the
 // P4 land, implement this in ASM.

@@ -31,8 +31,7 @@ storage_nvme_handle_cmd_start:
    phvwr.c1	p.nvme_be_cmd_hdr_is_read, 1
 
    // r1: nvme_data_len which is LB_SIZE(nlb + 1)
-   sll		r1, d.nlb, LB_SIZE_SHIFT
-   addi  	r1, r1, 1;						                            \
+   add		r1, PRP_SIZE_SUB, d.{nlb}.hx, LB_SIZE_SHIFT
 
    // Store the NVME data length into PHV and into K+I vector
    phvwr	p.nvme_kivec_global_nvme_data_len, r1
@@ -43,28 +42,28 @@ storage_nvme_handle_cmd_start:
    seq		c2, d.opc, NVME_WRITE_CMD_OPCODE
    bcf		[!c1 & !c2], punt_to_arm
 
+   // Write PRP0, PRP1 to K+I vector
+   phvwr        p.nvme_kivec_prp_base_prp0, d.{dptr1}.dx
+   phvwr        p.nvme_kivec_prp_base_prp1, d.{dptr2}.dx
+
    // If admin_q (or) psdt set (or) len > MAX_ASSIST_SIZE, punt
    seq		c3, NVME_KIVEC_SQ_INFO_IS_ADMIN_Q, 0	// delay slot
    seq		c4, d.psdt, 0
    sle		c5, r1, MAX_ASSIST_SIZE
    bcf		[!c3 | !c4 | !c5], punt_to_arm
   
-   // Write PRP0, PRP1 to K+I vector
-   phvwrpair	p.nvme_kivec_prp_base_prp0, d.dptr1,	\
-		p.nvme_kivec_prp_base_prp1, d.dptr2
-   
 
    // Check if LB_SIZE(nlb + 1) > (PRP_SIZE(dptr1) + PRP_SIZE(dptr2)) 
    // => there is a PRP list and prp_assist needs to be set
-   addi		r2, r0, PRP_SIZE_SUB
-   and		r3, d.dptr1, PRP_SIZE_MASK
+   addi		r2, r0, PRP_SIZE_SUB                                  // delay slot
+   and		r3, d.{dptr1}.dx, PRP_SIZE_MASK
    sub		r3, r2, r3
-   and		r4, d.dptr2, PRP_SIZE_MASK
+   and		r4, d.{dptr2}.dx, PRP_SIZE_MASK
    sub		r4, r2, r4
-   add		r5, r3, r3
+   add		r5, r3, r4
    sle		c6, r1, r5
    b		tbl_load
-   phvwr.c1	p.nvme_kivec_t0_s2s_prp_assist, 1 // delay slot
+   phvwr.!c6	p.nvme_kivec_t0_s2s_prp_assist, 1                    // delay slot
 
    // Punt to arm
 punt_to_arm:
@@ -73,7 +72,7 @@ punt_to_arm:
 tbl_load:
    // Set the table and program address to process the IO map entryin the next stage
    LOAD_TABLE_FOR_INDEX_PARAM(NVME_KIVEC_T0_S2S_IO_MAP_BASE_ADDR,
-                              d.nsid,
+                              d.{nsid}.wx,
                               IO_MAP_ENTRY_SIZE_LOG2,
                               STORAGE_DEFAULT_TBL_LOAD_SIZE,
                               storage_nvme_process_io_map_start)

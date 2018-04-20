@@ -133,8 +133,8 @@ typedef struct r2n_buf_ {
    r2n_sta_desc_t	sta_desc;
    r2n_pad_t		pad;
    nvme_be_cmd_t	cmd_buf;
-   r2n_write_desc_t	write_desc;
    r2n_iob_ctx_id_t	io_ctx_id;
+   r2n_write_desc_t	write_desc;
 } r2n_buf_t;
 
 typedef struct r2n_wqe_ {

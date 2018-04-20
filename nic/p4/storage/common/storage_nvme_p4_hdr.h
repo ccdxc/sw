@@ -194,8 +194,9 @@ header_type io_map_entry_t {
 // IO context entry
 header_type io_ctx_entry_t {
   fields {
-    oper_status		: 8;	// Free/InUse/TimedOut/Punt2Arm/Error etc
     iob_addr		: 34;	// Base address of the I/O buffer
+    pad			: 6;	// Align next field to byte boundary
+    oper_status		: 8;	// Free/InUse/TimedOut/Punt2Arm/Error etc
     nvme_data_len	: 32;	// Data length
     is_read		: 8;	// Whether it is read command
     is_remote		: 8;	// Whether destination is remote
@@ -203,12 +204,6 @@ header_type io_ctx_entry_t {
   }
 }
 
-// IO buffer address
-header_type iob_addr_t {
-  fields {
-    iob_addr		: 34;	// Base address of the I/O buffer
-  }
-}
 
 // Scratch metadata used only in P4 (mirrored in registers)
 header_type nvme_scratch_t {
@@ -446,14 +441,12 @@ header_type nvme_kivec_arm_dst_t {
 
 #define IO_CTX_ENTRY_COPY(entry)			\
   modify_field(entry.iob_addr, iob_addr);		\
-  modify_field(entry.nvme_data_len, nvme_data_len);	\
+  modify_field(entry.pad, pad);		                \
   modify_field(entry.oper_status, oper_status);		\
+  modify_field(entry.nvme_data_len, nvme_data_len);	\
   modify_field(entry.is_read, is_read);			\
   modify_field(entry.is_remote, is_remote);		\
   modify_field(entry.nvme_sq_qaddr, nvme_sq_qaddr);	\
-
-#define IOB_ADDR_COPY(entry)				\
-  modify_field(entry.iob_addr, iob_addr);		\
 
 #define NVME_PRP_LIST_COPY(list)			\
   modify_field(list.entry0, entry0);			\
@@ -570,6 +563,7 @@ header_type nvme_kivec_arm_dst_t {
 #define free_iob_start			0x81150000
 #define timeout_iob_skip_start		0x81160000
 #define timeout_io_ctx_start		0x81170000
+#define save_iob_addr_start		0x81180000
 
 
 #endif     // STORAGE_NVME_P4_HDR_H

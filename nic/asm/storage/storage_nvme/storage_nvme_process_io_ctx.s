@@ -25,15 +25,15 @@ struct phv_ p;
 
 storage_nvme_process_io_ctx_start:
 
-   // ARM already detected a timeout ? Drop PHV and exit 
-   sne		c1, d.oper_status, IO_CTX_OPER_STATUS_TIMED_OUT
+   // I/O not in progress ? Drop PHV and exit 
+   sne		c1, d.oper_status, IO_CTX_OPER_STATUS_IN_PROGRESS
    bcf		[c1], drop_n_exit
 
    // Form the oper status in the K+I vector and write it to the table.
    // Locked table write protects the modification of this oper status.
 
    // Backend error ? Set oper status to error, drop PHV and exit
-   sne		c2, NVME_KIVEC_GLOBAL_OPER_STATUS, IO_CTX_OPER_STATUS_BE_ERROR	// delay slot
+   seq		c2, NVME_KIVEC_GLOBAL_OPER_STATUS, IO_CTX_OPER_STATUS_BE_ERROR	// delay slot
    bcf		[c2], set_err_status
    nop
 
@@ -50,7 +50,7 @@ storage_nvme_process_io_ctx_start:
    // dont involve large I/O xfers
    seq		c3, d.is_read, 1
    sle		c4, d.nvme_data_len, NVME_READ_MAX_INLINE_DATA_SIZE
-   andcf	c1, [c2 & c3]
+   andcf	c1, [c3 & c4]
    phvwr.c1	p.nvme_kivec_t0_s2s_is_read, 1
    phvwr.c1	p.nvme_kivec_global_nvme_data_len, d.nvme_data_len
 

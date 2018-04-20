@@ -7,6 +7,8 @@
 
 const static uint32_t kMinHostMemAllocSize = 64;
 
+#define	NUM_TO_VAL(num)		(1 << (num))
+
 namespace utils {
 
 extern const uint32_t kUtilsPageSize;

@@ -22,6 +22,8 @@ storage_tx_nvme_be_wqe_handler_start:
    // Restore the fields in the NVME backend status to saved values
    phvwrpair	p.nvme_be_sta_hdr_r2n_buf_handle, d.r2n_buf_handle, \
                 p.nvme_sta_cid, d.nvme_cmd_cid
+   phvwr	p.iob_addr_ctx_iob_addr, d.iob_addr
+
 
    // Save the SSD handle and priority into the K+I vector
    phvwrpair    p.storage_kivec0_io_priority, d.io_priority, \
@@ -54,7 +56,7 @@ check_remote:
    // Setup the DMA command to copy the NVME backend status entry from PHV 
    // to the R2N buffer
    addi		r7, r6, R2N_BUF_STATUS_BUF_OFFSET
-   DMA_PHV2MEM_SETUP_ADDR64(nvme_be_sta_hdr_time_us, nvme_sta_status, r7, 
+   DMA_PHV2MEM_SETUP_ADDR64(nvme_be_sta_hdr_time_us, iob_addr_ctx_iob_addr, r7, 
                             dma_p2m_1)
 
    // If read command, send read data back via RDMA write
@@ -89,7 +91,7 @@ push_local_status:
    // Setup the DMA command to push the NVME backend status entry. For now keep 
    // the destination address to be 0 (in GPR r0). Set this correctly in the
    // next stage.
-   DMA_PHV2MEM_SETUP_ADDR64(nvme_be_sta_hdr_time_us, nvme_sta_status, r0, 
+   DMA_PHV2MEM_SETUP_ADDR64(nvme_be_sta_hdr_time_us, iob_addr_ctx_iob_addr, r0, 
                             dma_p2m_1)
 
 load_tbl:

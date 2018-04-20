@@ -125,12 +125,13 @@
 #define R2N_BUF_STATUS_REQ_OFFSET		256
 #define R2N_BUF_PAD_OFFSET			320 // Pad size = 4096 - (128 + 64 + 8) - 320 = 3576
 #define R2N_BUF_NVME_BE_CMD_OFFSET		3896
-#define R2N_BUF_WRITE_REQ_OFFSET		4024
-#define R2N_BUF_IO_CTX_ID_OFFSET		4088
+#define R2N_BUF_IO_CTX_ID_OFFSET		4024
+#define R2N_BUF_WRITE_REQ_OFFSET		4032
 #define R2N_BUF_DATA_OFFSET			4096
 
 // Offsets and sizes of various sub-buffers in the R2N I/O buffer for PDMA
 #define NVME_CMD_PRP1_OFFSET			24
+#define R2N_BUF_IO_CTX_REL_OFFSET		(R2N_BUF_IO_CTX_ID_OFFSET - R2N_BUF_NVME_BE_CMD_OFFSET)
 #define R2N_BUF_NVME_BE_CMD_HDR_SIZE		64
 #define R2N_BUF_NVME_CMD_PRP1_OFFSET		(R2N_BUF_NVME_BE_CMD_OFFSET + R2N_BUF_NVME_BE_CMD_HDR_SIZE + NVME_CMD_PRP1_OFFSET)
 #define R2N_BUF_WRITE_REQ_WRID_OFFSET		R2N_BUF_WRITE_REQ_OFFSET
@@ -216,14 +217,15 @@
 #define IO_BUF_PAD1_OFFSET			3072  // Pad size = 4096 - (128 + 64 + 8) - 3072 = 824 bytes
 // Keep the following offset the same as the NVME_BE_CMD_OFFSET in R2N Buffer using pad above
 #define IO_BUF_NVME_BE_CMD_OFFSET		3896
-#define IO_BUF_WRITE_REQ_OFFSET			4024
-#define IO_BUF_IO_CTX_ID_OFFSET			4088
+#define IO_BUF_IO_CTX_ID_OFFSET			4024
+#define IO_BUF_WRITE_REQ_OFFSET			4032
 // Start of the data buffer in the R2N I/O buffer (align to 4K page)
 #define IO_BUF_DATA_OFFSET			4096
 // Size of base length of R2N buffer to be provided to the transport
 #define IO_BUF_BASE_XPORT_DATA_LEN		(IO_BUF_DATA_OFFSET - IO_BUF_NVME_BE_CMD_OFFSET)
 
-// Offsets into ROCE SQ WQE, R2N WQE to adjust length
+// Offsets into IO context, ROCE SQ WQE, R2N WQE to adjust length
+#define IO_BUF_IO_CTX_NVME_DATA_LEN_OFFSET	(IO_BUF_IO_CTX_OFFSET + 6)
 #define IO_BUF_ROCE_SQ_WQE_LEN_OFFSET		(IO_BUF_ROCE_SQ_WQE_OFFSET + 40)
 #define IO_BUF_R2N_WQE_LEN_OFFSET		(IO_BUF_R2N_WQE_OFFSET + 8)
 

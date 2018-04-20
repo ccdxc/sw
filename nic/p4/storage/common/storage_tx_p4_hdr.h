@@ -215,7 +215,6 @@ header_type pvm_roce_sq_cb_t {
 // Trailer in the PVM cmd containing source information
 header_type pvm_cmd_trailer_t {
   fields {
-    tickreg	: 64;	// Microsecond reg from NIC
     vf_id	: 16;	// VF number
     sq_id	: 16;	// Submission queue id
     num_prps	: 8;	// Number of additional PRPs
@@ -363,7 +362,8 @@ header_type r2n_wqe_t {
     r2n_buf_handle	: 64;	// Back pointer to the R2N buffer
     nvme_cmd_cid	: 16;	// Command identifier
     pri_qaddr		: 34;	// Priority queue state address for status
-    pad			: 6;	// Align to byte boundary
+    iob_addr		: 34;	// IO buffer address from initiator
+    pad			: 4;	// Align to byte boundary
     // Note: The total size of this cannot exceed 64 bytes
   }
 }
@@ -810,6 +810,7 @@ header_type storage_kivec5_t {
   NVME_BE_CMD_HDR_COPY(wqe)					\
   modify_field(wqe.nvme_cmd_cid, nvme_cmd_cid);			\
   modify_field(wqe.pri_qaddr, pri_qaddr);			\
+  modify_field(wqe.iob_addr, iob_addr);			        \
   modify_field(wqe.pad, pad);					\
 
 
@@ -900,6 +901,7 @@ header_type storage_kivec5_t {
 #define seq_comp_sgl_handler_start	0x80040000
 #define seq_xts_status_handler_start	0x80050000
 #define seq_barco_ring_pndx_read_start	0x80060000
+#define nvme_be_save_iob_addr_start	0x80070000
 
 
 #endif     // STORAGE_TX_P4_HDR_H

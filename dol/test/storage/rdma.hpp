@@ -5,6 +5,24 @@
 
 using namespace dp_mem;
 
+#define RDMA_OP_TYPE_SEND           0
+#define RDMA_OP_TYPE_SEND_INV       1
+#define RDMA_OP_TYPE_SEND_IMM       2
+#define RDMA_OP_TYPE_READ           3
+#define RDMA_OP_TYPE_WRITE          4
+#define RDMA_OP_TYPE_WRITE_IMM      5
+#define RDMA_OP_TYPE_CMP_N_SWAP     6
+#define RDMA_OP_TYPE_FETCH_N_ADD    7
+#define RDMA_OP_TYPE_FRPMR          8
+#define RDMA_OP_TYPE_LOCAL_INV      9
+#define RDMA_OP_TYPE_BIND_MW        10
+#define RDMA_OP_TYPE_SEND_INV_IMM   11
+
+// Define the desired Send op_type;
+// Valid choices are RDMA_OP_TYPE_SEND or RDMA_OP_TYPE_SEND_IMM
+const uint8_t  kRdmaSendOpType = RDMA_OP_TYPE_SEND_IMM;
+
+
 typedef struct __attribute__((packed)) sqwqe {
                                // Offsets
   uint64_t wrid;               // 0
@@ -29,7 +47,7 @@ uint32_t rdma_r2n_data_size(void);
 uint32_t rdma_r2n_data_offset(void);
 uint32_t rdma_r2n_buf_size(void);
 
-int rdma_init();
+int rdma_init(bool dp_init);
 
 void rdma_uspace_test();
 
@@ -41,6 +59,17 @@ void PostInitiatorRcvBuf1();
 
 void IncrTargetRcvBufPtr();
 void IncrInitiatorRcvBufPtr();
+
+int rdma_roce_ini_sq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr);
+int rdma_roce_tgt_sq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr);
+uint32_t get_rdma_pvm_roce_init_sq();
+uint32_t get_rdma_pvm_roce_init_cq();
+uint32_t get_rdma_pvm_roce_tgt_sq();
+uint32_t get_rdma_pvm_roce_tgt_cq();
+
+void RdmaMemRegister(uint64_t va, uint64_t pa, uint32_t len, uint32_t lkey,
+                     uint32_t rkey, bool remote);
+void RdmaMemRegister(dp_mem_t *mem, uint32_t lkey, uint32_t rkey, bool remote);
 
 int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd_ptr, uint64_t slba);
 int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_handle,

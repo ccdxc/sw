@@ -240,6 +240,10 @@ cc_library(
         "tests.cc",
 	"tests.hpp",
         "rdma.hpp",
+        "nvme_dp.cc",
+        "nvme_dp.hpp",
+        "nvme_dp_tests.cc",
+        "nvme_dp_tests.hpp",
         "queues.cc",
         "queues.hpp",
         "dp_mem.cc",
@@ -249,6 +253,34 @@ cc_library(
         "xts.cc",
         "xts_tests.cc",
         "e2e_perf_tests.cc",
+    ],
+    deps = [
+        ":hal_if",
+        ":qstate_if",
+        ":r2n",
+        ":ssd",
+        ":utils",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
+        "//nic/model_sim:model_client",
+    ],
+    copts = [
+        "-std=c++14",
+        "-g",
+    ]
+)
+
+cc_library(
+    name= "nvme_dp",
+    srcs = [
+        "nvme.hpp",
+        "nvme_dp.cc",
+        "nvme_dp.hpp",
+        "queues.cc",
+        "queues.hpp",
+        "dp_mem.cc",
+        "dp_mem.hpp",
+        "rdma.hpp",
     ],
     deps = [
         ":hal_if",
@@ -280,6 +312,7 @@ cc_binary(
         ":acc_scale_tests",
         ":comp_encrypt_chain",
         ":decrypt_decomp_chain",
+        ":nvme_dp",
         "//nic:grpc",
         "//nic:libprotobuf",
         "//external:gflags",

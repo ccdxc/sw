@@ -44,6 +44,7 @@ struct SsdWorkingParams {
 //   - The SSDs operates using libhostmem.so
 class NvmeSsdCore {
  public:
+  virtual ~NvmeSsdCore() = default;
   static constexpr uint64_t kCapacity = 1024 * 1024;
   static constexpr uint64_t kNumSubqEntries = 64;
   static constexpr uint64_t kNumCompqEntries = 64;

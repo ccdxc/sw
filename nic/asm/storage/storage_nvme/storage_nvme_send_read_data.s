@@ -24,7 +24,7 @@ storage_nvme_send_read_data_start:
    // => don't download data
    seq		c1, NVME_KIVEC_T0_S2S_IS_READ, 0
    sne		c2, NVME_KIVEC_GLOBAL_OPER_STATUS, IO_CTX_OPER_STATUS_COMPLETED
-   bcf		[c2 | c3], tbl_load
+   bcf		[c1 | c2], tbl_load
 
    // Compute base address into r7, initialize xfer_len into r5
    add		r7, r6, IO_BUF_DATA_OFFSET				// delay slot

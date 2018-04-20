@@ -21,13 +21,6 @@ storage_tx_nvme_sq_handler_start:
    // Save the NVME command to PHV
    phvwr	p.{nvme_cmd_opc...nvme_cmd_dw15}, d.{opc...dw15}                                           
 
-   // Initialize PRP assist parameters in PHV
-   phvwrpair	p.pvm_cmd_trailer_tickreg, 0, \
-                p.pvm_cmd_trailer_num_prps, 0
-
-   // Initialize set PRP assist flag to false (unless check logic overrides this)
-   phvwri	p.storage_kivec0_prp_assist, 0
-
    // PRP assist check. Output of PRP_SIZE(d.dptr2) stored in r7.
    PRP_ASSIST_CHECK(STORAGE_KIVEC0_IS_Q0, d.opc, d.psdt, d.nlb, 
                     d.dptr1, d.dptr2, dma_nvme_cmd)
@@ -48,8 +41,8 @@ dma_nvme_cmd:
    // Setup the DMA command to push the NVME command entry. For now keep the 
    // destination address to be 0 (in GPR r0). Set this correctly in the
    // next stage.
-   DMA_PHV2MEM_SETUP(nvme_cmd_opc, pvm_cmd_trailer_num_prps, r0, 
-                     dma_p2m_1)
+   DMA_PHV2MEM_SETUP_ADDR64(nvme_cmd_opc, pvm_cmd_trailer_num_prps, r0, 
+                            dma_p2m_1)
 
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,

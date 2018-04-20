@@ -280,7 +280,7 @@
 
 // _table_addr is 34 bits
 #define LOAD_TABLE1_FOR_ADDR34(_table_addr, _load_size, _pc)            \
-  phvwri    p.app_header_table0_valid, 1;                               \
+  phvwri    p.app_header_table1_valid, 1;                               \
   phvwrpair p.common_te1_phv_table_lock_en, 1,                          \
         p.common_te1_phv_table_raw_table_size, _load_size;              \
   phvwr     p.common_te1_phv_table_pc, _pc;                             \
@@ -313,6 +313,16 @@
 #define LOAD_TABLE1_FOR_ADDR34_PC_IMM(_table_addr, _load_size, _pc)     \
   addi      r1, r0, _pc[33:6];                                          \
   LOAD_TABLE1_FOR_ADDR34(_table_addr, _load_size, r1)                   \
+
+// Special API to load table1 without setting the header valid bits
+// pc is an immediate value
+// _table_addr is 34 bits
+#define LOAD_TABLE1_NO_VALID_BIT_e(_table_addr, _load_size, _pc)        \
+  addi      r1, r0, _pc[33:6];                                          \
+  phvwrpair p.common_te1_phv_table_lock_en, 1,                          \
+        p.common_te1_phv_table_raw_table_size, _load_size;              \
+  phvwr.e   p.common_te1_phv_table_pc, r1;                              \
+  phvwr     p.common_te1_phv_table_addr, _table_addr;                   \
 
 
 // Calculate a table address based on index and size
@@ -351,8 +361,15 @@
   add       r1, r3, _table_base;                                        \
   LOAD_TABLE_FOR_ADDR(r1, _load_size, _pc)                              \
 
-// Used to clear table 1 valid bits 
+// Used to set table 1 valid bit 
+#define SET_TABLE1                                                      \
+  phvwri    p.app_header_table1_valid, 1;   				\
+
+// Used to clear table 1 valid bit 
 #define CLEAR_TABLE1                                                    \
+  phvwri    p.app_header_table1_valid, 0;   				\
+
+#define CLEAR_TABLE1_e                                                  \
   phvwri.e  p.app_header_table1_valid, 0;   				\
   nop;                                                                  \
 
@@ -758,10 +775,8 @@
             d.{handle...dst_qaddr};                                     \
 
 #define R2N_WQE_FULL_COPY                                               \
-   phvwr    p.{r2n_wqe_handle...r2n_wqe_nvme_cmd_cid},                  \
-            d.{handle...nvme_cmd_cid};                                  \
-   phvwr    p.{r2n_wqe_pri_qaddr...r2n_wqe_pad},                        \
-            d.{pri_qaddr...pad};                                        \
+   phvwr    p.{r2n_wqe_handle...r2n_wqe_pad},                           \
+            d.{handle...pad};                                           \
 
 // Calculate the table address based on the command index offset into
 // the SSD's list of outstanding commands

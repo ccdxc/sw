@@ -50,6 +50,31 @@ int setup_roce_cq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
 
 int update_xlate_entry(int lif, int qtype, int qid, uint64_t hbm_addr, char *pgm_bin);
 
+int setup_nvme_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
+                        uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
+                        uint64_t base_addr, uint64_t entry_size, uint16_t vf_id, 
+                        uint16_t sq_id, uint16_t cq_lif, uint8_t cq_qtype, 
+                        uint32_t cq_qid, uint16_t arm_lif, uint8_t arm_qtype, 
+                        uint32_t arm_base_qid, uint64_t io_map_base_addr, 
+                        uint16_t io_map_num_entries, uint64_t iob_ring_base_addr);
+
+int setup_nvme_cq_state(int src_lif, int src_qtype, int src_qid, uint8_t total_rings, 
+                        uint8_t host_rings, uint16_t num_entries, uint64_t base_addr, 
+                        uint64_t entry_size, uint64_t intr_addr, uint32_t intr_data, 
+                        uint8_t intr_en, uint8_t phase);
+
+int setup_arm_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
+                      uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
+                      uint64_t base_addr, uint64_t entry_size, bool dst_valid,
+                      uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid, 
+                      uint32_t intr_addr, uint32_t intr_data, uint8_t intr_en, 
+                      uint8_t  phase, uint64_t iob_ring_base_addr);
+
+int setup_init_r2n_q_state(int src_lif, int src_qtype, int src_qid,
+                           uint8_t total_rings, uint8_t host_rings, 
+                           uint16_t num_entries, uint64_t base_addr, 
+                           uint64_t entry_size);
+
 }  // namespace qstate_if
 
 #endif

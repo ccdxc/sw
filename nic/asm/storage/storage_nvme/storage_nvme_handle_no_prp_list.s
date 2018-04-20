@@ -22,7 +22,7 @@ storage_nvme_handle_no_prp_list_start:
    add		r6, r0, NVME_KIVEC_T0_S2S_IOB_ADDR
 
    // Table write the PRP entries and check PRP assist
-   tblwr	d.entry1, NVME_KIVEC_PRP_BASE_PRP0
+   tblwr	d.entry0, NVME_KIVEC_PRP_BASE_PRP0
    seq		c1, NVME_KIVEC_T0_S2S_PRP_ASSIST, 0
    bcf		[c1], no_prp_list
    tblwr.c1	d.entry1, NVME_KIVEC_PRP_BASE_PRP1			// delay slot
@@ -65,9 +65,9 @@ no_prp_list:
 
 
 tbl_load:
-   // Load the table and program for downloading the data (if it is a write 
-   // command and has no PRP list) in the next stage
-   add		r7, NVME_KIVEC_T0_S2S_IO_MAP_BASE_ADDR,			\
+   // Load the table and program for obtaining the destination sequencer 
+   // (R2N sequencer) doorbeell information in the next stage
+   add		r7, NVME_KIVEC_T0_S2S_IOB_ADDR,			\
 		IO_BUF_SEQ_DB_OFFSET + IO_BUF_SEQ_R2N_DB_OFFSET
    LOAD_TABLE_FOR_ADDR34_PC_IMM(r7,
                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,

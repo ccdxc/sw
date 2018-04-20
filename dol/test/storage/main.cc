@@ -12,11 +12,17 @@
 
 #include "gflags/gflags.h"
 
+#include "dol/test/storage/hal_if.hpp"
+#include "dol/test/storage/qstate_if.hpp"
+#include "dol/test/storage/utils.hpp"
 #include "dol/test/storage/tests.hpp"
 #include "dol/test/storage/rdma.hpp"
 #include "dol/test/storage/queues.hpp"
+#include "dol/test/storage/nvme_dp.hpp"
+#include "dol/test/storage/nvme_dp_tests.hpp"
 #include "dol/test/storage/compression_test.hpp"
 #include "dol/test/storage/acc_scale_tests.hpp"
+#include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
 namespace queues {
@@ -29,7 +35,6 @@ DEFINE_string(test_group, "", "Test group to run");
 DEFINE_uint64(poll_interval, 60, "Polling interval in seconds");
 DEFINE_uint64(long_poll_interval, 300,
               "Polling interval for longer running tests in seconds");
-
 DEFINE_uint64(num_pdma_queues, 3,
               "number of queues for PDMA test (in power of 2)");
 
@@ -54,6 +59,7 @@ DEFINE_uint64(acc_scale_iters, 1,
 DEFINE_string(acc_scale_verify_method, "full",
               "Per-iteration verification method for accelerator scale testing: fast, or full");
 
+bool run_nvme_dp_tests = false;
 bool run_unit_tests = false;
 bool run_nvme_tests = false;
 bool run_nvme_be_tests = false;
@@ -73,6 +79,10 @@ bool run_rdma_perf_tests = false;
 bool run_acc_scale_tests = false;
 
 std::vector<tests::TestEntry> test_suite;
+
+std::vector<tests::TestEntry> nvme_dp_tests = {
+  {&tests::test_run_nvme_dp_write_cmd, "NVME Datapath write command", false},
+};
 
 std::vector<tests::TestEntry> unit_tests = {
   {&tests::test_run_nvme_pvm_admin_cmd, "NVME->PVM Admin Cmd", false},
@@ -225,6 +235,36 @@ void sig_handler(int sig) {
   exit(1);
 }
 
+int common_setup() {
+  // Initialize hal interface
+  hal_if::init_hal_if();
+  printf("HAL client initialized\n");
+
+  // Initialize host memory
+  if (init_host_mem() < 0) {
+    printf("Host mem init failed (is model running?)\n");
+    return -1;
+  }
+  printf("Host mem initialized\n");
+
+  // Initialize storage hbm memory
+  if (utils::hbm_buf_init() < 0) {
+    printf("HBM buf init failed is \n");
+    return -1;
+  }
+  printf("HBM buf initialized\n");
+
+  // Initialize model client
+  if (lib_model_connect() < 0) {
+    printf("Failed to connect with model (is model running?)\n");
+    return -1;
+  }
+  printf("Model client initialized\n");
+
+  return 0;
+}
+
+
 size_t tcid = 0;
 int main(int argc, char**argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -279,6 +319,8 @@ int main(int argc, char**argv) {
       run_unit_tests = true;
   } else if (FLAGS_test_group == "nvme") {
       run_nvme_tests = true;
+  } else if (FLAGS_test_group == "nvme_dp") {
+      run_nvme_dp_tests = true;
   } else if (FLAGS_test_group == "nvme_be") {
       run_nvme_be_tests = true;
       run_nvme_wrr_tests = true;
@@ -318,11 +360,30 @@ int main(int argc, char**argv) {
   }
 
   printf("Starting configuration \n");
-  if (tests::test_setup() < 0) {
-    printf("Setup failed\n");
+  if (common_setup() < 0)  {
+    printf("Common setup failed\n");
     return 1;
   }
+  printf("Commmon configuration completed \n");
+
+  if (run_nvme_dp_tests) {
+    if (nvme_dp::test_setup() < 0) {
+      printf("Storage NVME DP test setup failed\n");
+      return 1;
+    }
+  } else {
+    if (tests::test_setup() < 0) {
+      printf("Storage test setup failed\n");
+      return 1;
+    }
+  }
   printf("Base configuration completed \n");
+
+  if (tests::alloc_buffers() < 0) {
+    printf("Storage test buffer allocation failed\n");
+    return 1;
+  }
+  printf("Storage test buffer completed\n");
 
   printf("Going to init compression\n");
   tests::compression_init();
@@ -332,12 +393,19 @@ int main(int argc, char**argv) {
   tests::xts_init();
   printf("XTS configuration completed \n");
 
-  if (rdma_init() < 0) {
+  if (rdma_init(run_nvme_dp_tests) < 0) {
     printf("RDMA Setup failed\n");
     return 1;
   }
   printf("RDMA configuration completed \n");
 
+  if (run_nvme_dp_tests) {
+    if (nvme_dp::config() < 0) {
+      printf("Storage NVME DP config failed\n");
+      return 1;
+    }
+    printf("Storage NVME DP config succeded \n");
+  }
   // Indicate to model that config is done
   config_done();
 
@@ -356,6 +424,14 @@ int main(int argc, char**argv) {
       test_suite.push_back(nvme_tests[i]);
     }
     printf("Added nvme tests \n");
+  }
+
+  // Add nvme_dp tests
+  if (run_nvme_dp_tests) {
+    for (size_t i = 0; i < nvme_dp_tests.size(); i++) {
+      test_suite.push_back(nvme_dp_tests[i]);
+    }
+    printf("Added nvme_dp tests \n");
   }
 
   // Add nvme_be tests
@@ -518,5 +594,7 @@ int main(int argc, char**argv) {
   }
   fflush(stdout);
   if (rc != 0) return rc;
+  printf("exiting successfuully \n");
+  fflush(stdout);
   exit(0);
 }
