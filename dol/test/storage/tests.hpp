@@ -131,6 +131,8 @@ int test_data_verify_and_dump(uint8_t *expected_data,
 
 int test_setup();
 
+int alloc_buffers();
+
 int check_ignore_cid(dp_mem_t *send_cmd, dp_mem_t *recv_cmd, uint32_t size);
 
 int form_read_cmd_no_buf(dp_mem_t *nvme_cmd, uint64_t slba);

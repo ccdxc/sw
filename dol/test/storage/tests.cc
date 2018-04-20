@@ -115,6 +115,10 @@ int test_setup() {
     return -1;
   }
   printf("Setup Sequeuncer queues \n");
+  return 0;
+}
+
+int alloc_buffers() {
 
   // Allocate the read and write buffer
   // TODO: Have a fancy allocator with various pages

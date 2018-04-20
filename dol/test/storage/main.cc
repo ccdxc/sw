@@ -379,6 +379,12 @@ int main(int argc, char**argv) {
   }
   printf("Base configuration completed \n");
 
+  if (tests::alloc_buffers() < 0) {
+    printf("Storage test buffer allocation failed\n");
+    return 1;
+  }
+  printf("Storage test buffer completed\n");
+
   printf("Going to init compression\n");
   tests::compression_init();
   printf("Compression configuration completed \n");
