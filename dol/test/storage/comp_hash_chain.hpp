@@ -299,6 +299,7 @@ private:
     dp_mem_t        *uncomp_buf;
     dp_mem_t        *comp_buf1;
     dp_mem_t        *comp_buf2;
+    dp_mem_t        *seq_sgl_pdma;
 
     dp_mem_t        *comp_status_buf1;
     dp_mem_t        *comp_status_buf2;

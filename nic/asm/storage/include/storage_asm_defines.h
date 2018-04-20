@@ -225,6 +225,14 @@
 #define NVME_KIVEC_ARM_DST7_ARM_QADDR           \
     k.{nvme_kivec_arm_dst7_arm_qaddr_sbit0_ebit1...nvme_kivec_arm_dst7_arm_qaddr_sbit2_ebit33}
 
+/*
+ * Debug flags
+ */
+#define STORAGE_COMP_SGL_PDMA_XFER_DEBUG 1
+
+/*
+ * Barco SGL descriptor size
+ */
 #define BARCO_SGL_DESC_SIZE         64
 #define BARCO_SGL_DESC_SIZE_SHIFT   6
 
@@ -266,6 +274,14 @@
   phvwrpair p.common_te0_phv_table_lock_en, 1,                          \
             p.common_te0_phv_table_raw_table_size, _load_size;          \
   phvwr.e   p.common_te0_phv_table_pc, _pc;                             \
+  phvwr     p.common_te0_phv_table_addr, _table_addr;                   \
+
+// Same as LOAD_TABLE0_FOR_ADDR34() but does not exit            
+#define LOAD_TABLE0_FOR_ADDR34_CONT(_table_addr, _load_size, _pc)       \
+  phvwri    p.app_header_table0_valid, 1;                               \
+  phvwrpair p.common_te0_phv_table_lock_en, 1,                          \
+            p.common_te0_phv_table_raw_table_size, _load_size;          \
+  phvwr     p.common_te0_phv_table_pc, _pc;                             \
   phvwr     p.common_te0_phv_table_addr, _table_addr;                   \
             
 // Load table 1 based on absolute address
@@ -315,6 +331,10 @@
 #define LOAD_TABLE_FOR_ADDR34_PC_IMM(_table_addr, _load_size, _pc)      \
   addi      r1, r0, _pc[33:6];                                          \
   LOAD_TABLE0_FOR_ADDR34(_table_addr, _load_size, r1)                   \
+
+#define LOAD_TABLE_FOR_ADDR34_PC_IMM_CONT(_table_addr, _load_size, _pc) \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE0_FOR_ADDR34_CONT(_table_addr, _load_size, r1)              \
 
 #define LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, _pc)               \
   LOAD_TABLE0_FOR_ADDR64(_table_addr, _load_size, _pc)                  \
@@ -877,5 +897,16 @@
                      _dst_dma_cmd)                                      \
    add      _xfer_len, _xfer_len, r3;                                   \
 
+/*
+ * Compression SGL PDMA transfer length error
+ */
+#if STORAGE_COMP_SGL_PDMA_XFER_DEBUG
+#define STORAGE_COMP_SGL_PDMA_XFER_ERROR_TRAP()                         \
+        illegal;                                                        \
+        nop;
+#else
+#define STORAGE_COMP_SGL_PDMA_XFER_ERROR_TRAP()                         \
+        nop;
+#endif
 
 #endif     // STORAGE_ASM_DEFINES_H

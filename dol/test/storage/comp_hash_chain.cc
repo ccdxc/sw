@@ -29,6 +29,7 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     app_blk_size(0),
     app_hash_size(kCompAppHashBlkSize),
     actual_hash_blks(-1),
+    seq_sgl_pdma(nullptr),
     caller_comp_pad_buf(nullptr),
     caller_hash_status_vec(nullptr),
     caller_hash_opaque_vec(nullptr),
@@ -48,15 +49,18 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     // 
     // Also, caller can elect to have 2 output buffers, e.g.
     // one in HBM for lower latency P4+ processing, and another in host
-    // memory which P4+ will copy into for the application.
+    // memory which P4+ will PDMA transfer into for the application.
     comp_buf1 = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
                              DP_MEM_ALIGN_PAGE, params.comp_mem_type1_);
     if (params.comp_mem_type2_ != DP_MEM_TYPE_VOID) {
         comp_buf2 = new dp_mem_t(1, comp_buf1->line_size_get(),
-                                 DP_MEM_ALIGN_NONE, params.comp_mem_type2_);
+                                 DP_MEM_ALIGN_PAGE, params.comp_mem_type2_);
     } else {
         comp_buf2 = comp_buf1;
     }
+    seq_sgl_pdma = new dp_mem_t(1, sizeof(cp_sq_ent_sgl_t),
+                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                                sizeof(cp_sq_ent_sgl_t));
 
     // for comp status, caller can elect to have 2 status buffers, e.g.
     // one in HBM for lower latency P4+ processing, and another in host
@@ -117,6 +121,7 @@ comp_hash_chain_t::~comp_hash_chain_t()
         delete comp_opaque_buf;
         delete hash_desc_vec;
         delete hash_sgl_vec;
+        delete seq_sgl_pdma;
     }
 }
 
@@ -140,6 +145,7 @@ int
 comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
 {
     acc_chain_params_t  chain_params = {0};
+    cp_sq_ent_sgl_t     *sgl_pdma_entry;
     uint32_t            block_no;
 
     // validate app_blk_size
@@ -262,6 +268,23 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
         chain_params.chain_ent.status_dma_en = 1;
         chain_params.chain_ent.status_host_pa = comp_status_buf2->pa();
         chain_params.chain_ent.status_len = comp_status_buf2->line_size_get();
+    }
+
+    /*
+     * P4+ is capable of initiating chained hash operation simultaneous
+     * with PDMA transfer of the comp data. So activate that if the caller
+     * had requested it.
+     */
+    if (comp_buf1 != comp_buf2) {
+        seq_sgl_pdma->clear();
+        sgl_pdma_entry = (cp_sq_ent_sgl_t *)seq_sgl_pdma->read();
+        sgl_pdma_entry->addr[0] = comp_buf2->pa();
+        sgl_pdma_entry->len[0] = comp_buf2->line_size_get();
+        seq_sgl_pdma->write_thru();
+
+        chain_params.chain_ent.dst_hbm_pa = comp_buf1->pa();
+        chain_params.chain_ent.sgl_pdma_out_pa = seq_sgl_pdma->pa();
+        chain_params.chain_ent.sgl_pdma_en = 1;
     }
 
     chain_params.chain_ent.pad_buf_pa = caller_comp_pad_buf->pa();
@@ -524,6 +547,17 @@ comp_hash_chain_t::verify(void)
         printf("ERROR: comp_hash_chain unexpected accum_data_len2 %lu "
                "or accum_link %lu\n", accum_data_len2, accum_link);
         return -1;
+    }
+
+    /*
+     * Validate PDMA transfer capability
+     */
+    if (comp_buf1 != comp_buf2) {
+        if (test_data_verify_and_dump(comp_buf1->read_thru(),
+                                      comp_buf2->read_thru(),
+                                      last_cp_output_data_len)) {
+            return -1;
+        }
     }
 
     if (!suppress_info_log) {

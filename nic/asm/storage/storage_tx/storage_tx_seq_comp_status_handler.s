@@ -56,8 +56,8 @@ storage_tx_seq_comp_status_handler_start:
    
     // bit 15: valid bit, bits 14-12: error bits
     add         r_status, d.status, r0
-    smeqh       c1, r_status, 0xf000, 0x8000
-    bcf         [!c1], comp_error
+    smeqh       c4, r_status, 0xf000, 0x8000
+    bcf         [!c4], comp_error
    
     // AOL/SGL padding makes sense only when next_db_en is true, with the
     // assumption that the next db handler would act on the AOL/SGL.
@@ -66,8 +66,7 @@ storage_tx_seq_comp_status_handler_start:
     
     seq	        c3, STORAGE_KIVEC5_DATA_LEN_FROM_DESC, 1        // delay slot
     cmov        r_comp_data_len, c3, STORAGE_KIVEC5_DATA_LEN, d.output_data_len
-    bbeq        STORAGE_KIVEC5_SGL_PDMA_EN, 1, sgl_pdma_xfer
-    phvwr	p.storage_kivec5_data_len, r_comp_data_len      // delay slot
+    phvwr	p.storage_kivec5_data_len, r_comp_data_len
    
     // Preliminary padding calculations:
     // r_num_blks = (r_comp_data_len + r_pad_boundary - 1) / r_pad_boundary)
@@ -85,7 +84,7 @@ storage_tx_seq_comp_status_handler_start:
                 p.acc_chain_pad_len, r_pad_len.wx
     bbeq        STORAGE_KIVEC5_SGL_PAD_HASH_EN, 1, sgl_padding_for_hash
     phvwr       p.acc_chain_total_len, r_total_len.wx                // delay slot
-    bbeq        STORAGE_KIVEC5_AOL_PAD_EN, 0, possible_barco_push
+    bbeq        STORAGE_KIVEC5_AOL_PAD_EN, 0, possible_sgl_pdma_xfer
     nop
 
 aol_padding:
@@ -93,20 +92,20 @@ aol_padding:
     // AOL padding enabled:
     // Note that preliminary DMA setup has been made in storage_tx_seq_comp_status_desc1_handler.
     // We now make adjustment based on pad length result.
-    bne         r_pad_len, r0, possible_barco_push
+    bne         r_pad_len, r0, possible_sgl_pdma_xfer
     nop
 
     // pad length is zero so don't write A1/L1
     DMA_CMD_CANCEL(dma_p2m_3)
     DMA_CMD_CANCEL(dma_p2m_4)
-    b           possible_barco_push
+    b           possible_sgl_pdma_xfer
     nop
 
 sgl_padding_for_hash:
    
     // SGL padding for hash enabled:
     // Given a vector of SGLs, each prefilled with exactly one block addr and len,
-    // i.e., addr0/len0 specifiy one block of data, find the last applicable SGL
+    // i.e., addr0/len0 specifies one block of data, find the last applicable SGL
     // and apply padding.
    
 if0:
@@ -147,19 +146,30 @@ endif0:
     DMA_SIZE_UPDATE(r_desc_vec_len, dma_m2m_10)
     phvwr       p.storage_kivec4_barco_num_descs, r_num_blks
     
+possible_sgl_pdma_xfer:
+
+    // PDMA compressed data only for non-error case (c4 was set)
+    seq.c4      c4, STORAGE_KIVEC5_SGL_PDMA_EN, 1
+    bcf         [!c4], possible_barco_push
+    nop
+    
+    // PDMA compressed data to user buffers specified in SGL
+    LOAD_TABLE1_FOR_ADDR_PC_IMM(STORAGE_KIVEC2ACC_SGL_PDMA_OUT_ADDR, 
+                                STORAGE_DEFAULT_TBL_LOAD_SIZE,
+                                storage_tx_seq_comp_sgl_handler_start)
 possible_barco_push:
 
-    // if Barco ring push is applicable, execute table lock read
+    // If Barco ring push is applicable, execute table lock read
     // to get the current ring pindex. Note that this must be done
     // in the same stage as storage_tx_seq_barco_entry_handler_start()
     // which is stage 2.
-    bbeq        STORAGE_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH, 0, all_dma_complete
+    bbeq        STORAGE_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH, 1, barco_push
     nop
 
-    // Set the table and program address 
-    LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC4_BARCO_PNDX_SHADOW_ADDR,
-                                 STORAGE_KIVEC4_BARCO_PNDX_SIZE,
-                                 storage_tx_seq_barco_chain_action_start)
+    // Barco push not applicable so we're done if SGL PDMA was launched
+    nop.c4.e
+    nop
+    
 all_dma_complete:
 
     // Setup the start and end DMA pointers
@@ -168,7 +178,13 @@ all_dma_complete:
 
 exit:
     LOAD_NO_TABLES
-   
+
+barco_push:
+
+    // Set the table and program address 
+    LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC4_BARCO_PNDX_SHADOW_ADDR,
+                                 STORAGE_KIVEC4_BARCO_PNDX_SIZE,
+                                 storage_tx_seq_barco_chain_action_start)
 comp_error:
 
     // TODO: if copy_src_dst_on_error wss set, copy header (presumably containing
@@ -177,7 +193,7 @@ comp_error:
    
    // Cancel any AOL DMA that might have been set up by storage_tx_seq_comp_status_desc1_handler
     bbeq        STORAGE_KIVEC5_AOL_PAD_EN, 0, possible_stop_chain
-    seq         c1, STORAGE_KIVEC5_NEXT_DB_EN, 1 // delay slot
+    seq         c5, STORAGE_KIVEC5_NEXT_DB_EN, 1 // delay slot
    
     DMA_CMD_CANCEL(dma_p2m_2)
     DMA_CMD_CANCEL(dma_p2m_3)
@@ -187,7 +203,7 @@ comp_error:
 possible_stop_chain:
    
     // if next_db_en and !stop_chain_on_error then ring_db
-    bbeq.c1     STORAGE_KIVEC5_STOP_CHAIN_ON_ERROR, 0, possible_barco_push
+    bbeq.c5     STORAGE_KIVEC5_STOP_CHAIN_ON_ERROR, 0, possible_sgl_pdma_xfer
     nop
 
     // cancel any barco push prep

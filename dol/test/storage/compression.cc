@@ -541,7 +541,7 @@ compression_buf_init()
          new comp_hash_chain_t(chc_ctor.app_max_size(kCompAppMaxSize).
                                         uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
                                         comp_mem_type1(DP_MEM_TYPE_HBM).
-                                        comp_mem_type2(DP_MEM_TYPE_VOID).
+                                        comp_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                         comp_status_mem_type1(DP_MEM_TYPE_HBM).
                                         comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                         destructor_free_buffers(false));
