@@ -312,11 +312,29 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_POOL] != NULL), false);
 
-    slabs_[HAL_SLAB_NAT_RULE] =
-        slab::factory("nat_rule", HAL_SLAB_NAT_RULE,
-                      sizeof(hal::nat_rule_t), 64,
+    slabs_[HAL_SLAB_NAT_CFG_PORT] =
+        slab::factory("nat_cfg_port", HAL_SLAB_NAT_CFG_PORT,
+                      sizeof(hal::nat_cfg_port_t), 64,
                       true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_RULE] != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_CFG_PORT] != NULL), false);
+
+    slabs_[HAL_SLAB_NAT_CFG_ADDR] =
+        slab::factory("nat_cfg_addr", HAL_SLAB_NAT_CFG_ADDR,
+                      sizeof(hal::nat_cfg_addr_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_CFG_ADDR] != NULL), false);
+
+    slabs_[HAL_SLAB_NAT_CFG_RULE] =
+        slab::factory("nat_cfg_rule", HAL_SLAB_NAT_CFG_RULE,
+                      sizeof(hal::nat_cfg_rule_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_CFG_RULE] != NULL), false);
+
+    slabs_[HAL_SLAB_NAT_CFG_POL] =
+        slab::factory("nat_cfg_policy", HAL_SLAB_NAT_CFG_POL,
+                      sizeof(hal::nat_cfg_pol_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_CFG_POL] != NULL), false);
 
     slabs_[HAL_SLAB_NEXTHOP] =
         slab::factory("nexthop", HAL_SLAB_NEXTHOP,
@@ -1706,8 +1724,17 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->v6_range_list_entry_slab()->free(elem);
         break;
 
-    case HAL_SLAB_NAT_RULE:
-        g_hal_state->nat_rule_slab()->free(elem);
+    case HAL_SLAB_NAT_CFG_PORT:
+        g_hal_state->nat_cfg_port_slab()->free(elem);
+        break;
+    case HAL_SLAB_NAT_CFG_ADDR:
+        g_hal_state->nat_cfg_addr_slab()->free(elem);
+        break;
+    case HAL_SLAB_NAT_CFG_RULE:
+        g_hal_state->nat_cfg_rule_slab()->free(elem);
+        break;
+    case HAL_SLAB_NAT_CFG_POL:
+        g_hal_state->nat_cfg_pol_slab()->free(elem);
         break;
 
     case HAL_SLAB_NEXTHOP:

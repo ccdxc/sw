@@ -12,7 +12,9 @@
 #include "nic/gen/proto/hal/nat.pb.h"
 #include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/ip.h"
+#include "nic/include/l4.h"
 #include "nic/fte/acl/acl.hpp"
+#include "pol.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using acl::acl_ctx_t;
@@ -42,38 +44,6 @@ using nat::NatVpnMappingGetRequest;
 using nat::NatVpnMappingGetResponseMsg;
 
 namespace hal {
-
-typedef unsigned int rule_id_t;
-
-//------------------------------------------------------------------------------
-// NAT Rule Key
-// Key passed by user to identify the rule
-//------------------------------------------------------------------------------
-typedef struct nat_rule_key_s {
-    rule_id_t   rule_id;
-    vrf_id_t    vrf_id;
-} __PACK__ nat_rule_key_t;
-
-//------------------------------------------------------------------------------
-// NAT Rule
-//
-// Each NAT rule config is saved in this structure.
-//
-// There are many ways of accessing this node for ease-of use.
-//
-//   @key/key_ctx - To lookup based on vrf-id/rule-id
-//   @hal_hdl/hal_hdl_ctx - To lookup based on hal handle
-//   @acl_ctx - To lookup based on the packet fields (ip-addr/port)
-//------------------------------------------------------------------------------
-typedef struct nat_rule_s {
-    hal_spinlock_t   slock;
-    nat_rule_key_t   key;
-    ht_ctxt_t        key_ctx;
-
-    const acl_ctx_t  *acl_ctx;
-    hal_handle_t     hal_hdl;
-    ht_ctxt_t        hal_hdl_ctx;
-} __PACK__ nat_rule_t;
 
 // NAT pool key
 typedef struct nat_pool_key_s {

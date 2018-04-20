@@ -820,6 +820,9 @@ nat_pool_get (NatPoolGetRequest& req,
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// NAT Policy config routines
+//------------------------------------------------------------------------------
 hal_ret_t
 nat_policy_create (NatPolicySpec& spec, NatPolicyResponse *rsp)
 {
@@ -845,6 +848,9 @@ nat_policy_get (NatPolicyGetRequest& req, NatPolicyGetResponseMsg *res)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// NAT mapping config routines
+//------------------------------------------------------------------------------
 hal_ret_t
 nat_vpn_mapping_create (NatVpnMappingSpec& spec,
                         NatVpnMappingResponse *rsp)
