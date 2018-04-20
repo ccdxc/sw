@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,6 +17,8 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/cli/api"
 	"github.com/pensando/sw/venice/cli/testserver/tserver"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 const (
@@ -26,10 +29,22 @@ const (
 	snapshotDir    = "snap3443"
 )
 
+var once sync.Once
+
 func veniceCLI(cmdStr string) string {
 	cmdStr = veniceCmd + testServerOpt + cmdStr
 	cmdArgs := strings.Split(cmdStr, " ")
 
+	once.Do(func() {
+		// InvokeCLI below changes the os.Stdout temporarily to a os.Pipe() and calls backend server functions in martini context and reverts back.
+		// These backend server functions can call log().
+		// If the defaultLogger.LogToStdout is true, then on the first invocation of Log(), the current os.Stdout is Dup2 to os.Stderr
+		//	In such a case, its possible that the pipe is duplicated instead of real os.Stdout. Hence one end of pipe is always open
+		//  (only one file descriptor is closed). And hence the other end of pipe never sees EOF and is stuck forever reading from the pipe.
+		//  Hence the call to InvokeCLI never returns.
+		// To prevent all this, do a dummy log, which creates the defaultLogger's singleton object before invoking the InvokeCLI
+		log.Debugf("Initializing log")
+	})
 	stdOut := InvokeCLI(cmdArgs, true)
 	return stdOut
 }
@@ -47,20 +62,20 @@ func TestStartServer(t *testing.T) {
 	count := 5
 	url := "http://localhost:" + testServerPort + "/v1/cmd/cluster"
 	for {
-		err = httpPost(url, cluster)
+		var response map[string]string
+		err = netutils.HTTPPost(url, cluster, &response)
 		if err == nil {
 			break
 		}
-		if strings.Contains(err.Error(), "connection refused") {
-			// server may not be ready by now
-			count--
-			if count <= 0 {
-				t.Fatalf("error creating default cluster: %s", err)
-				return
-			}
-			t.Logf("error - server not ready")
-			time.Sleep(10 * time.Millisecond)
+		// server may not be ready yet. retry..
+		count--
+		if count <= 0 {
+			t.Fatalf("error creating default cluster: %s", err)
+			return
 		}
+		t.Logf("server not ready yet. Retrying.")
+		time.Sleep(10 * time.Millisecond)
+
 	}
 	os.RemoveAll(snapshotDir)
 }
