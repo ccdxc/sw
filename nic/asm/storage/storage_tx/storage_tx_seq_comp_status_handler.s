@@ -220,9 +220,3 @@ possible_stop_chain:
     b           all_dma_complete
     nop
       
-sgl_pdma_xfer:
-   
-    // PDMA compressed data to user buffers specified in SGL
-    LOAD_TABLE1_FOR_ADDR_PC_IMM_e(STORAGE_KIVEC2ACC_SGL_PDMA_OUT_ADDR, 
-                                  STORAGE_DEFAULT_TBL_LOAD_SIZE,
-                                  storage_tx_seq_comp_sgl_handler_start)
