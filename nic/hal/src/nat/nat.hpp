@@ -17,6 +17,7 @@
 using sdk::lib::ht_ctxt_t;
 using acl::acl_ctx_t;
 
+using kh::NatPoolKey;
 using kh::NatPoolKeyHandle;
 using nat::NatPoolSpec;
 using nat::NatPoolResponse;
@@ -84,7 +85,7 @@ typedef struct nat_pool_key_s {
 // address range list element used to store
 // NAT address ranges
 typedef struct addr_range_list_elem_s {
-    dllist_ctxt_t     next_range;
+    dllist_ctxt_t     list_ctxt;
     ip_range_t        ip_range;
 } __PACK__ addr_range_list_elem_t;
 

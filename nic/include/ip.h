@@ -109,7 +109,7 @@ typedef struct ip_range_s {
     union {
         ipv4_range_t    v4_range;
         ipv6_range_t    v6_range;
-    } vx_range[0];
+    } __PACK__ vx_range[0];
 } __PACK__ ip_range_t;
 
 //------------------------------------------------------------------------------

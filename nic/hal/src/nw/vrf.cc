@@ -467,9 +467,9 @@ vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     return ret;
 }
 
-// ----------------------------------------------------------------------------
-// Dummy create cleanup callback
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// dummy create cleanup callback
+//----------------------------------------------------------------------------
 static hal_ret_t
 vrf_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
@@ -479,17 +479,15 @@ vrf_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 //------------------------------------------------------------------------------
-// Converts hal_ret_t to API status
+// converts hal_ret_t to API status
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 vrf_prepare_rsp (VrfResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
 {
     if ((ret == HAL_RET_OK) || (ret == HAL_RET_ENTRY_EXISTS)) {
         rsp->mutable_vrf_status()->set_vrf_handle(hal_handle);
     }
-
     rsp->set_api_status(hal_prepare_rsp(ret));
-
     return HAL_RET_OK;
 }
 
@@ -603,7 +601,8 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     // instantiate a PI vrf object
     vrf = vrf_alloc_init();
     if (vrf == NULL) {
-        HAL_TRACE_ERR("Failed to alloc/init vrf");
+        HAL_TRACE_ERR("Failed to alloc/init vrf {}",
+                      spec.key_or_handle().vrf_id());
         ret = HAL_RET_OOM;
         goto end;
     }
@@ -622,7 +621,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     // allocate hal handle id
     vrf->hal_handle = hal_handle_alloc(HAL_OBJ_ID_VRF);
     if (vrf->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("Failed to alloc handle {}", vrf->vrf_id);
+        HAL_TRACE_ERR("Failed to alloc handle for vrf {}", vrf->vrf_id);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         vrf_cleanup(vrf);
         ret = HAL_RET_HANDLE_INVALID;

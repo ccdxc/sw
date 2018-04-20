@@ -78,8 +78,8 @@ private:
 hal_handle_t hal_handle_alloc(hal_obj_id_t obj_id,
                               hal_handle_t handle_id = HAL_HANDLE_INVALID,
                               hal_handle **handle = NULL);
-hal_ret_t hal_handle_insert (hal_obj_id_t obj_id, hal_handle_t handle_id,
-                             void *obj);
+hal_ret_t hal_handle_insert(hal_obj_id_t obj_id, hal_handle_t handle_id,
+                            void *obj);
 void hal_handle_free(hal_handle_t handle_id);
 hal_ret_t hal_handle_add_obj(hal_handle_t handle_id, cfg_op_ctxt_t *ctxt,
                              hal_cfg_op_cb_t add_cb,
