@@ -189,7 +189,8 @@ FlowHintGroup::check_flow_entry_exists(FlowEntry *fe)
 void
 FlowHintGroup::inter_hg_str(FlowEntry *f_entry,
                             char *inter_hg_buff, uint32_t inter_hg_size,
-                            char *entry_buff, uint32_t entry_size)
+                            char *entry_buff, uint32_t entry_size,
+                            uint32_t *num_recircs)
 {
     char tmp_buff[32] = {0};
     uint32_t index = 0;
@@ -202,6 +203,7 @@ FlowHintGroup::inter_hg_str(FlowEntry *f_entry,
         index = tmp_fe->get_fhct_index();
         sprintf(tmp_buff, " %s:0x%x ", "COLL", index);
         strcat(inter_hg_buff, tmp_buff);
+        (*num_recircs)++;
         if (tmp_fe == f_entry) {
             tmp_fe->entry_to_str(entry_buff, entry_size);
             HAL_TRACE_DEBUG("Inter HG str: {}", inter_hg_buff);

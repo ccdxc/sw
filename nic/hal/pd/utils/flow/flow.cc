@@ -874,6 +874,8 @@ hal_ret_t
      char entry_buff[4096] = {0};
      char inter_spine_buff[2048] = {0};
      char inter_hg_buff[2048] = {0};
+     char num_recircs_str[32] = {0};
+     uint32_t num_recircs = 0;
 
 
 
@@ -893,18 +895,23 @@ hal_ret_t
              // Collision table entry
              // - List of Spine entries and hint list entries
              strcat(inter_spine_buff, "Spine Entries: ");
-             f_entry->get_eff_spine_entry()->get_ft_entry()->inter_spine_str(f_entry->get_eff_spine_entry(),
-                                                                             inter_spine_buff, sizeof(inter_spine_buff));
+             f_entry->get_eff_spine_entry()->get_ft_entry()->
+                 inter_spine_str(f_entry->get_eff_spine_entry(),
+                                 inter_spine_buff, sizeof(inter_spine_buff),
+                                 &num_recircs);
 
              // - List of FHGs
              strcat(inter_hg_buff, "Hint List: ");
              f_entry->get_fh_group()->inter_hg_str(f_entry, inter_hg_buff, sizeof(inter_hg_buff),
-                                                   entry_buff, sizeof(entry_buff));
+                                                   entry_buff, sizeof(entry_buff),
+                                                   &num_recircs);
          }
 
-         sprintf(buff, "Hash Value: 0x%x Hash Bits: 0x%x, Hint Bits: 0x%x\n%s\n%s\n%s",
+         sprintf(num_recircs_str, "#Recircs: %d", num_recircs);
+
+         sprintf(buff, "Hash Value: 0x%x Hash Bits: 0x%x, Hint Bits: 0x%x, %s\n%s\n%s\n%s",
                  f_entry->get_hash_val(),
-                 ft_bits, hint_bits,
+                 ft_bits, hint_bits, num_recircs_str,
                  inter_spine_buff, inter_hg_buff, entry_buff);
      }
 

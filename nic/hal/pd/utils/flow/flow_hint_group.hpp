@@ -49,7 +49,8 @@ public:
     void print_fhg();
     void inter_hg_str(FlowEntry *f_entry,
                       char *inter_hg_buff, uint32_t inter_hg_size,
-                      char *entry_buff, uint32_t entry_size);
+                      char *entry_buff, uint32_t entry_size,
+                      uint32_t *num_recircs);
 
     // Getters & Setters
     uint32_t get_hint_bits();

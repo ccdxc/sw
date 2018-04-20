@@ -58,7 +58,7 @@ public:
     void print_fte();
     void entry_to_str(char *buff, uint32_t buff_size);
     void inter_spine_str(FlowSpineEntry *eff_spine,
-                         char *buff, uint32_t buff_size);
+                         char *buff, uint32_t buff_size, uint32_t *num_recircs);
     // int find_pos_of_hg(FlowHintGroup *hg);
     // void form_ft_entry_from_hgs(uint32_t begin, uint32_t end, void *ft_entry);
 
