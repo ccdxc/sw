@@ -131,6 +131,7 @@
 
 // Offsets and sizes of various sub-buffers in the R2N I/O buffer for PDMA
 #define NVME_CMD_PRP1_OFFSET			24
+#define R2N_BUF_IO_CTX_REL_OFFSET		(R2N_BUF_IO_CTX_ID_OFFSET - R2N_BUF_NVME_BE_CMD_OFFSET)
 #define R2N_BUF_NVME_BE_CMD_HDR_SIZE		64
 #define R2N_BUF_NVME_CMD_PRP1_OFFSET		(R2N_BUF_NVME_BE_CMD_OFFSET + R2N_BUF_NVME_BE_CMD_HDR_SIZE + NVME_CMD_PRP1_OFFSET)
 #define R2N_BUF_WRITE_REQ_WRID_OFFSET		R2N_BUF_WRITE_REQ_OFFSET
@@ -223,7 +224,8 @@
 // Size of base length of R2N buffer to be provided to the transport
 #define IO_BUF_BASE_XPORT_DATA_LEN		(IO_BUF_DATA_OFFSET - IO_BUF_NVME_BE_CMD_OFFSET)
 
-// Offsets into ROCE SQ WQE, R2N WQE to adjust length
+// Offsets into IO context, ROCE SQ WQE, R2N WQE to adjust length
+#define IO_BUF_IO_CTX_NVME_DATA_LEN_OFFSET	(IO_BUF_IO_CTX_OFFSET + 6)
 #define IO_BUF_ROCE_SQ_WQE_LEN_OFFSET		(IO_BUF_ROCE_SQ_WQE_OFFSET + 40)
 #define IO_BUF_R2N_WQE_LEN_OFFSET		(IO_BUF_R2N_WQE_OFFSET + 8)
 

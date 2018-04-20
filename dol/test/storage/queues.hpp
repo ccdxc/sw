@@ -66,13 +66,15 @@ uint32_t get_host_nvme_sq(uint32_t offset);
 
 uint32_t get_pvm_nvme_sq(uint32_t offset);
 
-uint32_t get_pvm_r2n_sq(uint32_t offset);
+uint32_t get_pvm_r2n_tgt_sq(uint32_t offset);
+
+uint32_t get_pvm_r2n_init_sq(uint32_t offset);
+
+uint32_t get_pvm_r2n_host_sq(uint32_t offset);
 
 uint32_t get_pvm_nvme_be_sq(uint32_t offset);
 
 uint32_t get_pvm_ssd_sq(uint32_t offset);
-
-uint32_t get_pvm_host_r2n_sq(uint32_t offset);
 
 uint32_t get_seq_pdma_sq(uint32_t offset);
 

@@ -33,6 +33,14 @@ storage_nvme_send_sta_free_iob_start:
    // Ring the doorbell for the recipient of the push
    NVME_SEQ_QUEUE_PUSH_DOORBELL_RING(dma_p2m_8)
 
+   // Setup the start and end DMA pointers 
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_8_dma_cmd_eop,
+                 p4_txdma_intr_dma_cmd_ptr)
+   LOAD_NO_TABLES
+
 tbl_load:
+   // Hack. FIXME after ARMQ setup is done in DOL
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_5_dma_cmd_eop,
+                 p4_txdma_intr_dma_cmd_ptr)
    // Load no tables and exit the pipeline
    LOAD_NO_TABLES

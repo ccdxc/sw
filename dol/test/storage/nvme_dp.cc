@@ -181,6 +181,8 @@ int setup_io_map() {
 int setup_one_io_buffer(int index) {
   // Start with the line set to the index
   io_buf_base_addr->line_set(index);
+  // Set the IO buffer address in the IO buffer
+  io_buf_base_addr->write_bit_fields(0, 34, io_buf_base_addr->pa());
 
   // Get the Sequencer ROCE SQ
   uint32_t seq_roce_q = queues::get_seq_roce_sq(index);

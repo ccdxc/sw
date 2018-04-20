@@ -149,12 +149,13 @@ uint64_t nvme_lif, seq_lif, pvm_lif, arm_lif;
 
 uint32_t host_nvme_sq_base;
 uint32_t pvm_nvme_sq_base;
-uint32_t pvm_r2n_sq_base;
+uint32_t pvm_r2n_tgt_sq_base;
+uint32_t pvm_r2n_init_sq_base;
 uint32_t pvm_nvme_be_sq_base;
 uint32_t pvm_ssd_sq_base;
 uint32_t pvm_seq_pdma_sq_base;
 uint32_t pvm_seq_r2n_sq_base;
-uint32_t pvm_host_r2n_sq_base;
+uint32_t pvm_r2n_host_sq_base;
 uint32_t pvm_seq_xts_sq_base;
 uint32_t pvm_seq_xts_status_sq_base;
 uint32_t pvm_seq_roce_sq_base;
@@ -324,10 +325,11 @@ calc_total_queues()
 
   // Get the total count and log2 to nearest power of 2
   count = NUM_TO_VAL(kPvmNumNvmeSQs) + 
-          NUM_TO_VAL(kPvmNumR2nSQs) + 
-          NUM_TO_VAL(kPvmNumR2nSQs) + 
+          NUM_TO_VAL(kPvmNumR2nSQs) +            // target R2N SQ in P4+
           NUM_TO_VAL(kPvmNumNvmeBeSQs) + 
-          NUM_TO_VAL(kPvmNumSsdSQs);
+          NUM_TO_VAL(kPvmNumSsdSQs) +
+          NUM_TO_VAL(kPvmNumR2nSQs) +            // target R2N SQ in host
+          NUM_TO_VAL(kPvmNumR2nSQs);             // initiator R2N SQ
   PvmNumSQs = log_2(count); 
   printf("PVM SQS %u \n", PvmNumSQs);
 
@@ -634,7 +636,7 @@ pvm_queues_setup() {
   //       by R2N module in datapath.
   // Save the R2N queue number
   uint32_t nvme_be_q = i + NUM_TO_VAL(kPvmNumR2nSQs);
-  pvm_r2n_sq_base = i;
+  pvm_r2n_tgt_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
@@ -751,7 +753,7 @@ pvm_queues_setup() {
   // This is strictly to avoid queue sharing between PVM and P4+ code.
   // Note: This is different from the Sequencer R2N entry handler queue 
   // created above.
-  pvm_host_r2n_sq_base = i;
+  pvm_r2n_host_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
@@ -769,6 +771,28 @@ pvm_queues_setup() {
                                  nvme_be_q, 0, 0, storage_hbm_ssd_bm_addr, 
                                  kPvmNumNvmeBeSQs, kDefaultEntrySize, 0) < 0) {
       printf("Failed to setup PVM R2N SQ %d state for Seq \n", i);
+      return -1;
+    }
+  }
+
+  // Initialize Initiator R2N SQs for processing NVME status
+  // Save the R2N queue number
+  pvm_r2n_init_sq_base = i;
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nSQs); j++, i++) {
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
+                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+      printf("Unable to allocate host memory for Initiator R2N SQ %d\n", i);
+      return -1;
+    }
+    printf("Initialized Initiator R2N SQ %d \n", i);
+
+    // Setup the queue state in Capri:
+    if (qstate_if::setup_init_r2n_q_state(pvm_lif, SQ_TYPE, i, 
+                                          kDefaultTotalRings, kDefaultHostRings, 
+                                          kPvmNumEntries, pvm_sqs[i].mem->pa(),
+                                          kDefaultEntrySize) < 0) {
+      printf("Failed to setup Inititator R2N SQ %d state \n", i);
       return -1;
     }
   }
@@ -1149,9 +1173,19 @@ uint32_t get_pvm_nvme_sq(uint32_t offset) {
   return (pvm_nvme_sq_base + offset);
 }
 
-uint32_t get_pvm_r2n_sq(uint32_t offset) {
+uint32_t get_pvm_r2n_tgt_sq(uint32_t offset) {
   assert((int) offset < NUM_TO_VAL(kPvmNumR2nSQs));
-  return (pvm_r2n_sq_base + offset);
+  return (pvm_r2n_tgt_sq_base + offset);
+}
+
+uint32_t get_pvm_r2n_init_sq(uint32_t offset) {
+  assert((int) offset < NUM_TO_VAL(kPvmNumR2nSQs));
+  return (pvm_r2n_init_sq_base + offset);
+}
+
+uint32_t get_pvm_r2n_host_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumR2nSQs));
+  return (pvm_r2n_host_sq_base + offset);
 }
 
 uint32_t get_pvm_nvme_be_sq(uint32_t offset) {
@@ -1162,11 +1196,6 @@ uint32_t get_pvm_nvme_be_sq(uint32_t offset) {
 uint32_t get_pvm_ssd_sq(uint32_t offset) {
   assert((int) offset < NUM_TO_VAL(kPvmNumSsdSQs));
   return (pvm_ssd_sq_base + offset);
-}
-
-uint32_t get_pvm_host_r2n_sq(uint32_t offset) {
-  assert(offset < NUM_TO_VAL(kPvmNumR2nSQs));
-  return (pvm_host_r2n_sq_base + offset);
 }
 
 uint32_t get_seq_pdma_sq(uint32_t offset) {
@@ -1275,7 +1304,8 @@ void get_capri_doorbell_with_pndx_inc(uint16_t lif, uint8_t qtype, uint32_t qid,
 }
 
 void queues_shutdown() {
-  nvme_e2e_ssd.release();
+  storage_test::NvmeSsd *ssd_ptr = nvme_e2e_ssd.release();
+  delete ssd_ptr;
   exit_simulation();
 }
 

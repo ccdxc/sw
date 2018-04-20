@@ -387,7 +387,7 @@ int main(int argc, char**argv) {
   tests::xts_init();
   printf("XTS configuration completed \n");
 
-  if (rdma_init() < 0) {
+  if (rdma_init(run_nvme_dp_tests) < 0) {
     printf("RDMA Setup failed\n");
     return 1;
   }

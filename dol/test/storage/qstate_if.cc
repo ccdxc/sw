@@ -498,7 +498,7 @@ int setup_nvme_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   utils::write_bit_fields(q_state, 446, 16, io_map_num_entries);
   utils::write_bit_fields(q_state, 462, 34, iob_ring_base_addr);
 
-  utils::dump(q_state);
+  //utils::dump(q_state);
 
   if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
     printf("Failed to set lif_qstate addr \n");
@@ -535,7 +535,7 @@ int setup_nvme_cq_state(int src_lif, int src_qtype, int src_qid, uint8_t total_r
   utils::write_bit_fields(q_state, 300, 1, intr_en);
   utils::write_bit_fields(q_state, 301, 1, phase);
 
-  utils::dump(q_state);
+  //utils::dump(q_state);
 
   if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
     printf("Failed to set lif_qstate addr \n");
@@ -609,7 +609,7 @@ int setup_arm_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   utils::write_bit_fields(q_state, 371, 1, phase);
   utils::write_bit_fields(q_state, 372, 34, iob_ring_base_addr);
 
-  utils::dump(q_state);
+  //utils::dump(q_state);
 
   if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
     printf("Failed to set lif_qstate addr \n");
@@ -624,6 +624,45 @@ int setup_arm_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   printf("ARM Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n", 
          qaddr, src_lif, src_qtype, src_qid, next_pc, base_addr);
 
+  return 0;
+}
+
+int setup_init_r2n_q_state(int src_lif, int src_qtype, int src_qid,
+                           uint8_t total_rings, uint8_t host_rings, 
+                           uint16_t num_entries, uint64_t base_addr, 
+                           uint64_t entry_size) {
+
+  uint8_t q_state[64];
+  uint8_t pc_offset;
+
+  bzero(q_state, sizeof(q_state));
+
+  if (hal_if::get_pgm_label_offset("txdma_stage0.bin", "storage_nvme_r2n_sq_stage0", &pc_offset) < 0) {
+    printf("Failed to get pc offset for storage tx stage0\n");
+    return -1;
+  }
+
+  utils::write_bit_fields(q_state, 0, 8, pc_offset);
+  utils::write_bit_fields(q_state, 40, 4, total_rings);
+  utils::write_bit_fields(q_state, 44, 4, host_rings);
+  utils::write_bit_fields(q_state, 112, 16, num_entries);
+  utils::write_bit_fields(q_state, 128, 64, base_addr);
+  utils::write_bit_fields(q_state, 192, 16, entry_size);
+
+  //utils::dump(q_state);
+
+  if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
+    printf("Failed to set lif_qstate addr \n");
+    return -1;
+  }
+
+  uint64_t qaddr;
+  if (get_qstate_addr(src_lif, src_qtype, src_qid, &qaddr) < 0) {
+    printf("Failed to get q state address \n");
+    return -1;
+  }
+  printf("Init R2N Q state addr %lx created with lif %u type %u, qid %u base_addr %lx\n", 
+         qaddr, src_lif, src_qtype, src_qid, base_addr);
   return 0;
 }
 }  // namespace qstate_if

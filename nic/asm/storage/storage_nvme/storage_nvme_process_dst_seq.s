@@ -22,8 +22,8 @@ storage_nvme_process_dst_seq_start:
 		d.{lif...qaddr}
 
    // Setup DMA command to store the I/O context into the I/O buffer
-   add		r7, NVME_KIVEC_T0_S2S_IOB_ADDR, IO_BUF_IO_CTX_OFFSET
-   DMA_PHV2MEM_SETUP_ADDR34(io_ctx_iob_addr, io_ctx_nvme_sq_qaddr, 
+   add		r7, NVME_KIVEC_T0_S2S_IOB_ADDR, IO_BUF_IO_CTX_NVME_DATA_LEN_OFFSET
+   DMA_PHV2MEM_SETUP_ADDR34(io_ctx_nvme_data_len, io_ctx_nvme_sq_qaddr, 
                             r7, dma_p2m_11)
    
    

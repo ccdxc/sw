@@ -47,7 +47,7 @@ uint32_t rdma_r2n_data_size(void);
 uint32_t rdma_r2n_data_offset(void);
 uint32_t rdma_r2n_buf_size(void);
 
-int rdma_init();
+int rdma_init(bool dp_init);
 
 void rdma_uspace_test();
 
@@ -63,6 +63,7 @@ void IncrInitiatorRcvBufPtr();
 int rdma_roce_ini_sq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr);
 int rdma_roce_tgt_sq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t *qaddr);
 uint32_t get_rdma_pvm_roce_init_sq();
+uint32_t get_rdma_pvm_roce_init_cq();
 uint32_t get_rdma_pvm_roce_tgt_sq();
 uint32_t get_rdma_pvm_roce_tgt_cq();
 

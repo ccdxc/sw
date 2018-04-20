@@ -676,7 +676,7 @@ action handle_cmd(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
  *  save_io_ctx: Save the oper_status in I/O context via a locked table write
  *****************************************************************************/
 
-action save_io_ctx(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+action save_io_ctx(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote,
                    nvme_sq_qaddr) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -919,8 +919,8 @@ action process_dst_seq(lif, qtype, qid, qaddr) {
 
   // Setup DMA command to store the I/O context into the I/O buffer
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_11, 
-                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_IO_CTX_OFFSET,
-                           PHV_FIELD_OFFSET(io_ctx.iob_addr),
+                           nvme_kivec_t0_s2s.iob_addr + IO_BUF_IO_CTX_NVME_DATA_LEN_OFFSET,
+                           PHV_FIELD_OFFSET(io_ctx.nvme_data_len),
                            PHV_FIELD_OFFSET(io_ctx.nvme_sq_qaddr),
                            0, 0, 0, 0)
 
@@ -1154,15 +1154,14 @@ action handle_r2n_wqe(handle, data_size, opcode, status) {
 
 action process_be_status(time_us, be_status, is_q0, be_rsvd, r2n_buf_handle,
                          cspec, rsvd, sq_head, sq_id, cid, phase, status,
-                         iob_addr, nvme_data_len, oper_status, is_read, 
-                         is_remote, nvme_sq_qaddr) {
+                         iob_addr) {
 
   // Save NVME Backend status header, NVME status to PHV
   NVME_BE_STA_HDR_COPY(nvme_be_sta_hdr)
   NVME_STATUS_COPY(nvme_sta)
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  IO_CTX_ENTRY_COPY(io_ctx_scratch)
+  IOB_ADDR_COPY(iob_addr_scratch)
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
@@ -1174,11 +1173,11 @@ action process_be_status(time_us, be_status, is_q0, be_rsvd, r2n_buf_handle,
   }
 
   // Store the I/O context to K+I vector 
-  modify_field(nvme_kivec_t0_s2s.iob_addr, iob_addr);
+  modify_field(nvme_kivec_t0_s2s.iob_addr, iob_addr_scratch.iob_addr);
   
 
   // Load the I/O context for processing in the next stage
-  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, iob_addr + IO_BUF_IO_CTX_OFFSET,
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, iob_addr_scratch.iob_addr + IO_BUF_IO_CTX_OFFSET,
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, process_io_ctx_start)
 }
 
@@ -1196,7 +1195,7 @@ action process_be_status(time_us, be_status, is_q0, be_rsvd, r2n_buf_handle,
  *                     back to host.
  *****************************************************************************/
 
-action process_io_ctx(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+action process_io_ctx(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote,
                       nvme_sq_qaddr) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -1567,7 +1566,7 @@ action free_iob_addr(iob_addr) {
  *               various sequencer doorbells.
  *****************************************************************************/
 
-action cleanup_iob(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+action cleanup_iob(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote,
                    nvme_sq_qaddr) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -1668,7 +1667,7 @@ action cleanup_iob(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
  *                  oper_status
  *****************************************************************************/
 
-action cleanup_io_ctx(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+action cleanup_io_ctx(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote,
                       nvme_sq_qaddr) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -1760,7 +1759,7 @@ action timeout_iob_addr(iob_addr) {
  *                    via a locked table write in stage 3
  *****************************************************************************/
 
-action timeout_iob_skip(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+action timeout_iob_skip(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote,
                         nvme_sq_qaddr) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -1781,7 +1780,7 @@ action timeout_iob_skip(oper_status, iob_addr, nvme_data_len, is_read, is_remote
  *                  table write 
  *****************************************************************************/
 
-action timeout_io_ctx(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+action timeout_io_ctx(iob_addr, pad, oper_status, nvme_data_len, is_read, is_remote,
                       nvme_sq_qaddr) {
 
   // For D vector generation (type inference). No need to translate this to ASM.

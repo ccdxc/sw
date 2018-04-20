@@ -34,7 +34,7 @@ class NvmeSsd : public NvmeSsdCore {
   virtual void RaiseInterrupt(uint16_t index) { 
     if (intr_enabled_) {
       uint64_t db_data_ndx =  (db_data_ & 0xFFFFFFFFFFFF0000ULL) | index;
-      printf("Calling DB %lx %lx\n", db_addr_, db_data_ndx);
+      //printf("Calling DB %lx %lx\n", db_addr_, db_data_ndx);
       step_doorbell(db_addr_, db_data_ndx);
     }
   }

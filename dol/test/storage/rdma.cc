@@ -70,13 +70,16 @@ const uint64_t kMACAddr2 = 0x4567;
 const uint32_t kDot1QEncapVal = 301;
 const uint32_t kVlanId = 2;
 
-uint64_t pvm_roce_sq_xlate_addr;
+uint64_t pvm_roce_tgt_sq_xlate_addr;
+uint64_t pvm_roce_init_sq_xlate_addr;
 uint64_t g_rdma_hw_lif_id;
 uint64_t g_l2seg_handle;
 uint64_t g_enic1_handle, g_enic2_handle;
 uint32_t g_rdma_pvm_roce_init_sq;
+uint32_t g_rdma_pvm_roce_init_cq;
 uint32_t g_rdma_pvm_roce_tgt_sq;
 uint32_t g_rdma_pvm_roce_tgt_cq;
+bool nvme_dp_init = false;
 
 
 }  // anonymous namespace
@@ -580,10 +583,23 @@ void PostTargetRcvBuf1() {
                                                      sizeof(r2n::roce_sq_wqe_t));
   sqwqe->clear();
 
+  // WRID, Num SGEs and data len are fixed
   sqwqe->write_bit_fields(0, 64, sta_buf->pa());  // wrid 
-  sqwqe->write_bit_fields(64, 4, 0);  // op_type = OP_TYPE_SEND
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
   sqwqe->write_bit_fields(192, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));  // data len
+
+  // Optype and immediate data varies based on configuration
+  // Store doorbell information of Initiator ROCE CQ in immediate data 
+  // TODO: FIXME later when kRdmaSendOpType changes but nvme_dp_init remains
+  if (nvme_dp_init && kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
+      sqwqe->write_bit_fields(64, 4, kRdmaSendOpType);  // op_type = OP_TYPE_SEND_IMM
+      sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
+      sqwqe->write_bit_fields(107, 3, CQ_TYPE);
+      sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_init_cq);
+  } else {
+    sqwqe->write_bit_fields(64, 4, 0);  // op_type = OP_TYPE_SEND
+  }
+
   // write the SGE
   sqwqe->write_bit_fields(256, 64, sta_buf->va());  // SGE-va
   sqwqe->write_bit_fields(256+64, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t)); // SGE-len
@@ -1066,6 +1082,10 @@ uint32_t get_rdma_pvm_roce_init_sq() {
   return g_rdma_pvm_roce_init_sq;
 }
 
+uint32_t get_rdma_pvm_roce_init_cq() {
+  return g_rdma_pvm_roce_init_cq;
+}
+
 uint32_t get_rdma_pvm_roce_tgt_sq() {
   return g_rdma_pvm_roce_tgt_sq;
 }
@@ -1081,12 +1101,38 @@ int rdma_pvm_qs_init() {
                                      kSQType, 0, // 0 - initiator; 1 - target
                                      initiator_sq_va,
                                      kRoceNumEntries, kRoceEntrySize)) < 0) {
-    printf("RDMA PVM Initiator ROCE SQ init failure\n");
+    printf("RDMA Initiator ROCE SQ init failure\n");
     return -1;
   } else {
     g_rdma_pvm_roce_init_sq = (uint32_t) rc;
   }
-  printf("RDMA PVM Initiator ROCE SQ init success\n");
+  printf("RDMA Initiator ROCE SQ init success\n");
+
+  // Init the initiator CQ only if NVME is running in the datapath
+  if  (nvme_dp_init) {
+    // Init the initiator CQ 
+    if ((rc = queues::pvm_roce_cq_init(g_rdma_hw_lif_id, 
+                                       kCQType, 0, // 0 - initiator; 1 - target
+                                       initiator_cq_va, 
+                                       kRoceNumEntries, kRoceCQEntrySize,
+                                       pvm_roce_init_sq_xlate_addr)) < 0) {
+      printf("RDMA Initiator ROCE CQ init failure\n");
+      return -1;
+    } else {
+      g_rdma_pvm_roce_init_cq = (uint32_t) rc;
+    }
+    printf("RDMA Initiator ROCE CQ init success\n");
+
+    // Initiator SQ Xlate
+    qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
+                                  g_rdma_pvm_roce_init_sq, 
+                                  pvm_roce_init_sq_xlate_addr + (1 * 64), NULL);
+
+    // Initiator R2N Xlate
+    qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
+                                  queues::get_pvm_r2n_init_sq(0),  // Only one R2N SQ
+                                  pvm_roce_init_sq_xlate_addr, NULL);
+  }
 
   // Init the target SQ 
   if ((rc = queues::pvm_roce_sq_init(g_rdma_hw_lif_id, 
@@ -1105,7 +1151,7 @@ int rdma_pvm_qs_init() {
                                      kCQType, 1, // 0 - initiator; 1 - target
                                      target_cq_va, 
                                      kRoceNumEntries, kRoceCQEntrySize,
-                                     pvm_roce_sq_xlate_addr)) < 0) {
+                                     pvm_roce_tgt_sq_xlate_addr)) < 0) {
     printf("RDMA PVM Target ROCE CQ init failure\n");
     return -1;
   } else {
@@ -1125,21 +1171,36 @@ int rdma_pvm_qs_init() {
   // Target SQ Xlate
   qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
                                 g_rdma_pvm_roce_tgt_sq, 
-                                pvm_roce_sq_xlate_addr + (1 * 64), NULL);
+                                pvm_roce_tgt_sq_xlate_addr + (1 * 64), NULL);
 
   // Target R2N Xlate
   qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
-                                queues::get_pvm_r2n_sq(0),  // Only one R2N SQ
-                                pvm_roce_sq_xlate_addr, NULL);
+                                queues::get_pvm_r2n_tgt_sq(0),  // Only one R2N SQ
+                                pvm_roce_tgt_sq_xlate_addr, NULL);
   return 0;
 }
 
-int rdma_init() {
+
+int rdma_init(bool dp_init) {
   uint8_t ent[64];
-  // Allocate the PVM ROCE XLATE address in HBM for the sequencer
-  if (utils::hbm_addr_alloc(kPvmRoceSqXlateTblSize, &pvm_roce_sq_xlate_addr) < 0) {
-    printf("Can't allocate Read HBM buffer \n");
+
+  // Flag to indicate whether there is an NVME datapath initiator 
+  // => cq needs to be in capri, sq xlate needs to be setup
+  nvme_dp_init = dp_init;
+
+  // Allocate the PVM ROCE XLATE table in HBM for the sequencer
+  if (utils::hbm_addr_alloc(kPvmRoceSqXlateTblSize, &pvm_roce_tgt_sq_xlate_addr) < 0) {
+    printf("Can't allocate Target Xlate table\n");
     return -1;
+  }
+
+  // Allocate the NVME ROCE XLATE table in HBM for the sequencer only if NVME datapath
+  // is enabled
+  if  (nvme_dp_init) {
+    if (utils::hbm_addr_alloc(kPvmRoceSqXlateTblSize, &pvm_roce_init_sq_xlate_addr) < 0) {
+      printf("Can't allocate Initiator Xlate table \n");
+      return -1;
+    }
   }
 
   printf("RDMA init start\n");

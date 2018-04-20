@@ -15,6 +15,7 @@
 #define tx_table_s5_t0		s5_tbl
 
 #define tx_table_s1_t1		s1_tbl1
+#define tx_table_s2_t1		s2_tbl1
 #define tx_table_s3_t1		s3_tbl1
 
 #define tx_table_s0_t0_action	q_state_pop
@@ -49,6 +50,8 @@
 #define tx_table_s2_t0_action10	seq_comp_status_handler
 #define tx_table_s2_t0_action11	seq_xts_status_handler
 #define tx_table_s2_t0_action12	seq_barco_ring_pndx_read
+
+#define tx_table_s2_t1_action	nvme_be_save_iob_addr
 
 #define tx_table_s3_t0_action	pri_q_state_push
 #define tx_table_s3_t0_action1	pri_q_state_incr
@@ -108,20 +111,25 @@ metadata storage_pci_data_t pci_push_data;
 @pragma dont_trim
 metadata storage_pci_data_t pci_intr_data;
 
+// R2N work queue entry 
+@pragma dont_trim
+metadata r2n_wqe_t r2n_wqe;
+
+// Barco ring doorbell data
+@pragma dont_trim
+metadata barco_ring_t barco_doorbell_data;
+
 // Keep the WQEs/commands that occupy full flit aligned at flit boundaries
 
 // NVME command (occupies full flit)
 @pragma dont_trim
+@pragma pa_align 512
 metadata nvme_cmd_t nvme_cmd;
 
 // PVM command metadata (immediately follows NVME command as phv2mem DMA of 
 // both these are done together)
 @pragma dont_trim
 metadata pvm_cmd_trailer_t pvm_cmd_trailer;
-
-// R2N work queue entry 
-@pragma dont_trim
-metadata r2n_wqe_t r2n_wqe;
 
 // NVME backend status 
 @pragma dont_trim
@@ -132,13 +140,16 @@ metadata nvme_be_sta_hdr_t nvme_be_sta_hdr;
 @pragma dont_trim
 metadata nvme_sta_t nvme_sta;
 
+// IOB address needed to be passed back for NVME datapath
+// (immediately follows NVME status metadata as 
+// phv2mem DMA of all these are done together)
+@pragma dont_trim
+metadata iob_addr_t iob_addr_ctx;
+
 // SSD's consumer index
 @pragma dont_trim
 metadata ssd_ci_t ssd_ci;
 
-// Barco ring doorbell data
-@pragma dont_trim
-metadata barco_ring_t barco_doorbell_data;
 
 // R2N data buffer address that needs to be fixed up for passing to ROCE
 // for RDMA Write command
@@ -331,6 +342,9 @@ metadata seq_xts_status_desc_t seq_xts_status_desc_scratch;
 @pragma scratch_metadata
 metadata seq_xts_status_t seq_xts_status_scratch;
 
+@pragma scratch_metadata
+metadata iob_addr_t iob_addr_scratch;
+
 /*****************************************************************************
  * Storage Tx PVM initiator BEGIN
  *****************************************************************************/
@@ -359,7 +373,6 @@ action nvme_sq_handler(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
 
   // Initialize the remaining fields of the PVM command in the PHV
   modify_field(pvm_cmd_trailer.num_prps, 0);
-  modify_field(pvm_cmd_trailer.tickreg, 0);
 
   // Initialize set PRP assist flag to false (unless check logic overrides this)
   modify_field(storage_kivec0.prp_assist, 0);
@@ -395,8 +408,8 @@ action nvme_sq_handler(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
   // Setup the DMA command to push the NVME command entry
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_1, 
                            0,
-                           PHV_FIELD_OFFSET(pvm_cmd_trailer.opc),
-                           PHV_FIELD_OFFSET(pvm_cmd_trailer.tickreg),
+                           PHV_FIELD_OFFSET(nvme_cmd.opc),
+                           PHV_FIELD_OFFSET(pvm_cmd_trailer.num_prps),
                            0, 0, 0, 0)
 
 #if 0
@@ -495,7 +508,11 @@ action r2n_sq_handler(handle, data_size, opcode, status, db_enable, db_lif,
 
   // If opcode is set to process WQE
   if (r2n_wqe_scratch.opcode == R2N_OPCODE_PROCESS_WQE) {
-    // Load the PVM VF SQ context for the next stage to push the NVME command
+    // Load the IO context to prep the WQE
+    CAPRI_LOAD_TABLE_ADDR(common_te1_phv, handle + R2N_BUF_IO_CTX_REL_OFFSET,
+                          STORAGE_DEFAULT_TBL_LOAD_SIZE, nvme_be_save_iob_addr_start)
+
+    // Load the NVME backend command to prep the WQE
     CAPRI_LOAD_TABLE_ADDR(common_te0_phv, handle,
                           STORAGE_DEFAULT_TBL_LOAD_SIZE, nvme_be_wqe_prep_start)
   }
@@ -560,6 +577,22 @@ action nvme_be_wqe_prep(src_queue_id, ssd_handle, io_priority, is_read,
 }
 
 /*****************************************************************************
+ *  nvme_be_save_iob_addr : Save the IO buffer pointer passed in the command
+ *                          to the R2N WQE
+ *****************************************************************************/
+
+action nvme_be_save_iob_addr(iob_addr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  IOB_ADDR_COPY(iob_addr_scratch)
+
+  // Save the IOB address from the free list into K+I vector
+  modify_field(r2n_wqe.iob_addr, iob_addr_scratch.iob_addr);
+
+  // In ASM clear table 1
+}
+
+/*****************************************************************************
  *  nvme_be_sq_handler: Read the NVME backend priority submission queue entry.
  *                      Load the actual NVME command for the next stage.
  *****************************************************************************/
@@ -568,7 +601,7 @@ action nvme_be_sq_handler(handle, data_size, opcode, status, db_enable, db_lif,
                           db_qtype, db_qid, db_index, is_remote, dst_lif, 
                           dst_qtype, dst_qid, dst_qaddr, src_queue_id,
                           ssd_handle, io_priority, is_read, r2n_buf_handle, 
-                          nvme_cmd_cid, pri_qaddr, pad) {
+                          nvme_cmd_cid, pri_qaddr, iob_addr, pad) {
 
   // Carry forward state information to be saved with R2N WQE in PHV
   R2N_WQE_FULL_COPY(r2n_wqe)
@@ -720,7 +753,7 @@ action nvme_be_wqe_handler(handle, data_size, opcode, status, db_enable, db_lif,
                            db_qtype, db_qid, db_index, is_remote, dst_lif, 
                            dst_qtype, dst_qid, dst_qaddr, src_queue_id,
                            ssd_handle, io_priority, is_read, r2n_buf_handle, 
-                           nvme_cmd_cid, pri_qaddr, pad) {
+                           nvme_cmd_cid, pri_qaddr, iob_addr, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   R2N_WQE_FULL_COPY(r2n_wqe_scratch)
@@ -728,6 +761,7 @@ action nvme_be_wqe_handler(handle, data_size, opcode, status, db_enable, db_lif,
   // Restore the fields in the NVME backend status to saved values
   modify_field(nvme_be_sta_hdr.r2n_buf_handle, r2n_wqe_scratch.r2n_buf_handle);
   modify_field(nvme_sta.cid, r2n_wqe_scratch.nvme_cmd_cid);
+  modify_field(iob_addr_ctx.iob_addr, r2n_wqe_scratch.iob_addr);
 
   // Store fields needed in the K+I vector
   modify_field(storage_kivec0.ssd_handle, ssd_handle);
@@ -771,7 +805,7 @@ action nvme_be_wqe_handler(handle, data_size, opcode, status, db_enable, db_lif,
                              r2n_wqe_scratch.handle - R2N_BUF_NVME_BE_CMD_OFFSET + 
                              R2N_BUF_STATUS_BUF_OFFSET,
                              PHV_FIELD_OFFSET(nvme_be_sta_hdr.time_us),
-                             PHV_FIELD_OFFSET(nvme_be_sta.status_phase),
+                             PHV_FIELD_OFFSET(iob_addr_ctx.iob_addr),
                              0, 0, 0, 0)
 
     // Setup the DMA command to push the write request pointer
@@ -799,7 +833,7 @@ action nvme_be_wqe_handler(handle, data_size, opcode, status, db_enable, db_lif,
     DMA_COMMAND_PHV2MEM_FILL(dma_p2m_1, 
                              0,
                              PHV_FIELD_OFFSET(nvme_be_sta_hdr.time_us),
-                             PHV_FIELD_OFFSET(nvme_be_sta.status_phase),
+                             PHV_FIELD_OFFSET(iob_addr_ctx.iob_addr),
                              0, 0, 0, 0)
   }
 

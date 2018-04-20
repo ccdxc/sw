@@ -804,7 +804,7 @@ int test_run_r2n_read_cmd() {
   uint16_t r2n_index, ssd_index;
   uint16_t ssd_handle = 0; uint8_t io_priority = 0; uint8_t is_read = 1;
   dp_mem_t *nvme_cmd, *ssd_cmd;
-  uint16_t r2n_q = queues::get_pvm_r2n_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
   if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
@@ -836,7 +836,7 @@ int test_run_r2n_write_cmd() {
   uint16_t r2n_index, ssd_index;
   uint16_t ssd_handle = 0; uint8_t io_priority = 0; uint8_t is_read = 0;
   dp_mem_t *nvme_cmd, *ssd_cmd;
-  uint16_t r2n_q = queues::get_pvm_r2n_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
   if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
@@ -868,7 +868,7 @@ int test_run_r2n_ssd_pri1() {
   uint16_t r2n_index, ssd_index;
   uint16_t ssd_handle = 1; uint8_t io_priority = 0; uint8_t is_read = 1;
   dp_mem_t *nvme_cmd, *ssd_cmd;
-  uint16_t r2n_q = queues::get_pvm_r2n_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
   if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
@@ -900,7 +900,7 @@ int test_run_r2n_ssd_pri2() {
   uint16_t r2n_index, ssd_index;
   uint16_t ssd_handle = 15; uint8_t io_priority = 0; uint8_t is_read = 0;
   dp_mem_t *nvme_cmd, *ssd_cmd;
-  uint16_t r2n_q = queues::get_pvm_r2n_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
   if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
@@ -931,7 +931,7 @@ int test_run_r2n_ssd_pri3() {
   uint16_t r2n_index, ssd_index;
   uint16_t ssd_handle = 8; uint8_t io_priority = 1; uint8_t is_read = 1;
   dp_mem_t *nvme_cmd, *ssd_cmd;
-  uint16_t r2n_q = queues::get_pvm_r2n_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
   if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
@@ -963,7 +963,7 @@ int test_run_r2n_ssd_pri4() {
   uint16_t r2n_index, ssd_index;
   uint16_t ssd_handle = 0; uint8_t io_priority = 2; uint8_t is_read = 0;
   dp_mem_t *nvme_cmd, *ssd_cmd;
-  uint16_t r2n_q = queues::get_pvm_r2n_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
   if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
@@ -992,7 +992,7 @@ int send_r2n_pri_cmd(uint16_t ssd_handle, uint8_t io_priority,
   dp_mem_t *r2n_buf;
   dp_mem_t *r2n_wqe_buf;
   uint16_t r2n_index;
-  uint16_t r2n_q = queues::get_pvm_r2n_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
 
   if (!nvme_cmd) return -1;
 
@@ -1157,7 +1157,7 @@ int test_run_nvme_e2e_io(uint16_t io_priority, uint16_t is_read) {
   uint16_t ssd_handle = 2;
   uint16_t pvm_index;
   dp_mem_t *status_buf;
-  uint16_t pvm_q = queues::get_pvm_r2n_sq(0);
+  uint16_t pvm_q = queues::get_pvm_r2n_tgt_sq(0);
 
   // Reset the SLBA for this test
   reset_slba();
@@ -1294,7 +1294,7 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   dp_mem_t *seq_r2n_desc;
   uint64_t db_data;
   uint64_t db_addr;
-  uint16_t r2n_q = queues::get_pvm_host_r2n_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_host_sq(0);
   dp_mem_t *r2n_wqe_buf;
   dp_mem_t *cmd_buf;
   uint16_t pvm_status_q = queues::get_pvm_r2n_cq(0);
@@ -1376,7 +1376,7 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
                       uint16_t io_priority) {
   uint16_t seq_pdma_index;
   dp_mem_t *seq_pdma_desc;
-  uint16_t r2n_q = queues::get_pvm_r2n_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t r2n_index;
   dp_mem_t *r2n_wqe_buf;
   dp_mem_t *r2n_buf;
@@ -1561,7 +1561,7 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   dp_mem_t *seq_r2n_desc;
   uint64_t db_data;
   uint64_t db_addr;
-  uint16_t r2n_q = queues::get_pvm_host_r2n_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_host_sq(0);
   dp_mem_t *r2n_wqe_buf;
   dp_mem_t *cmd_buf;
   uint16_t pvm_status_q = queues::get_pvm_r2n_cq(0);
@@ -1654,7 +1654,7 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
                       uint16_t io_priority, XtsCtx& xts_ctx) {
   uint16_t seq_pdma_index;
   dp_mem_t *seq_pdma_desc;
-  uint16_t r2n_q = queues::get_pvm_r2n_sq(0);
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t r2n_index;
   dp_mem_t *r2n_wqe_buf;
   dp_mem_t *r2n_buf;
