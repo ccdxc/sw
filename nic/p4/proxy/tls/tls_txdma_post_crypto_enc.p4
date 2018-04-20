@@ -149,7 +149,7 @@ metadata tlscb_0_t tlscb_0_d;
 metadata tlscb_1_t tlscb_1_d;
 
 @pragma scratch_metadata
-metadata recq_entry_t   recq_entry_scratch;
+metadata bsq_slot_t BSQ_SLOT_SCRATCH;
 
 @pragma scratch_metadata
 metadata barco_result_t read_desc_d;
@@ -250,10 +250,10 @@ action tls_rx_bsq(TLSCB_1_PARAMS) {
 }
 
 /* Stage 3 table 0 action */
-action tls_read_recq(RECQ_FILEDS) {
+action tls_read_recq(BSQ_SLOT_FIELDS) {
     GENERATE_GLOBAL_K
     GENERATE_TO_S3_K
-    GENERATE_RECQ_ENTRY_D
+    GENERATE_BSQ_SLOT_D
 }
 
 /*

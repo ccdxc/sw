@@ -1,5 +1,6 @@
 /*
  * 	Implements the queuing of barco post completion output descriptor to TCP SESQ
+ *  Stage 7 Table 0
  */
 
 #include "tls-constants.h"
@@ -13,16 +14,14 @@
 	
 
         
-struct tx_table_s5_t0_k     k;
+struct tx_table_s7_t0_k     k;
 struct phv_                 p;
-struct tx_table_s5_t0_d     d;
+struct tx_table_s7_t0_d     d;
 
 	
 %%
-    .param      tls_dec_post_crypto_stats_process
 
 tls_dec_queue_sesq_process:
-    CAPRI_SET_DEBUG_STAGE4_7(p.to_s6_debug_stage4_7_thread, CAPRI_MPU_STAGE_4, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
 	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
 	add		    r4, r5, r0
@@ -30,7 +29,7 @@ tls_dec_queue_sesq_process:
 
 
 tls_dec_odesc_write:
-    add         r3, r0, k.to_s5_odesc
+    add         r3, r0, k.to_s7_odesc
     addi        r3, r3, PKT_DESC_AOL_OFFSET
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, odesc_A0, odesc_next_pkt)
@@ -41,7 +40,7 @@ dma_cmd_sesq_slot:
 	/* Set the DMA_WRITE CMD for SESQ slot */
 	add		    r1, r5, d.u.tls_queue_sesq_d.sesq_base
 
-    add         r3, r0, k.to_s5_odesc
+    add         r3, r0, k.to_s7_odesc
 #if 1
     /* FIXME : remove the offset when enqueueing to SESQ */
     addi        r3, r3, PKT_DESC_AOL_OFFSET
@@ -53,15 +52,15 @@ dma_cmd_sesq_slot:
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r1, ring_entry_descr_addr,ring_entry_descr_addr)
 
-    smeqb       c1, k.to_s5_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
+    smeqb       c1, k.to_s7_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
     bcf         [c1], tls_sesq_produce_skip
     nop
 
 tls_sesq_produce:
 
-    smeqb       c1, k.to_s5_debug_dol, TLS_DDOL_BYPASS_PROXY, TLS_DDOL_BYPASS_PROXY
+    smeqb       c1, k.to_s7_debug_dol, TLS_DDOL_BYPASS_PROXY, TLS_DDOL_BYPASS_PROXY
     add.c1      r7, k.tls_global_phv_fid, r0
-    add.!c1     r7, k.to_s5_other_fid, r0
+    add.!c1     r7, k.to_s7_other_fid, r0
 
     tblmincri   d.u.tls_queue_sesq_d.sw_sesq_pi, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
     CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd2_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
@@ -79,8 +78,5 @@ tls_sesq_produce_skip:
     phvwri.!c1  p.dma_cmd1_dma_cmd_wr_fence, 1
         
 tls_queue_sesq_process_done:
-	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_dec_post_crypto_stats_process,
-	                    k.tls_global_phv_qstate_addr,
-	                    TLS_TCB_POST_CRYPTO_STATS_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop

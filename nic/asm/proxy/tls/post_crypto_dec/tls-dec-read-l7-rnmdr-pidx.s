@@ -1,3 +1,7 @@
+/*
+ *  Stage 4 Table 3
+ */
+
 #include "tls-constants.h"
 #include "tls-phv.h"
 #include "tls-shared-state.h"
@@ -6,17 +10,17 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 
-struct tx_table_s2_t2_k k;
+struct tx_table_s4_t3_k k;
 struct phv_ p;
-struct tx_table_s2_t2_d d;
+struct tx_table_s4_t3_d d;
 
 %%
     .param      tls_read_l7_descr_alloc
     .param      RNMDR_TABLE_BASE
     .align
 tls_dec_post_read_l7_rnmdr_pidx:
+    CAPRI_SET_DEBUG_STAGE4_7(p.stats_debug_stage4_7_thread, CAPRI_MPU_STAGE_4, CAPRI_MPU_TABLE_3)
 
-    CAPRI_CLEAR_TABLE2_VALID
     // TODO : check for semaphore full
     add         r4, r0, d.{u.tls_read_l7_rnmdr_pidx_d.rnmdr_pidx}.wx
     andi        r4, r4, ((1 << CAPRI_RNMDR_RING_SHIFT) - 1)

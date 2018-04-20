@@ -1,7 +1,7 @@
 /*
  * 	Doorbell write to clear the sched bit for the BSQ having
  *      finished the consumption processing.
- *  Stage 3, Table 0
+ *  Stage 5, Table 0
  */
 
 #include "tls-constants.h"
@@ -15,15 +15,15 @@
 	
 
         
-struct tx_table_s3_t0_k k                  ;
+struct tx_table_s5_t0_k k                  ;
 struct phv_ p	;
-struct tx_table_s3_t0_tls_bsq_consume_d d;
+struct tx_table_s5_t0_tls_bsq_consume_d d;
 	
 %%
 	.param      tls_dec_post_read_odesc
         
 tls_dec_bsq_consume_process:
-    CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
+    CAPRI_SET_DEBUG_STAGE4_7(p.stats_debug_stage4_7_thread, CAPRI_MPU_STAGE_5, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
 
     /*
@@ -57,7 +57,7 @@ tls_enc_check_barco_status:
     nop
 
 table_read_QUEUE_SESQ:
-    add     r1, r0, k.to_s3_odesc
+    add     r1, r0, k.to_s5_odesc
     addi    r1, r1, PKT_DESC_AOL_OFFSET
 
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_post_read_odesc,

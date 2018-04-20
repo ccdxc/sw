@@ -1,5 +1,6 @@
 /*
  * 	Implements the reading of BSQ to pick up barco completion
+ *  Stage 0, Table 0
  */
 
 #include "tls-constants.h"
@@ -16,10 +17,10 @@ struct tx_table_s0_t0_k k;
 struct tx_table_s0_t0_d d;
 %%
 
-   	.param		tls_dec_rx_bsq_process
+   	.param		tls_dec_rx_bsq_dec_dummy_process
 	
 tls_dec_post_crypto_process:
-    CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_0, CAPRI_MPU_TABLE_0)
+    CAPRI_SET_DEBUG_STAGE0_3(p.stats_debug_stage0_3_thread, CAPRI_MPU_STAGE_0, CAPRI_MPU_TABLE_0)
     phvwr	p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow
 
     phvwrpair   p.tls_global_phv_fid, k.p4_txdma_intr_qid[15:0],    \
@@ -37,7 +38,7 @@ tls_dec_post_crypto_process:
     seq         c4, d.{u.read_tls_stg0_d.ci_1}.hx, d.{u.read_tls_stg0_d.pi_1}.hx
     phvwri.c4   p.tls_global_phv_pending_rx_bsq, 1
 
-    phvwr       p.to_s5_debug_dol, d.u.read_tls_stg0_d.debug_dol
+    phvwr       p.to_s7_debug_dol, d.u.read_tls_stg0_d.debug_dol
     sne         c1, d.u.read_tls_stg0_d.l7_proxy_type, L7_PROXY_TYPE_NONE
     phvwri.c1   p.tls_global_phv_l7_proxy_en, 1
     seq         c2, d.u.read_tls_stg0_d.l7_proxy_type, L7_PROXY_TYPE_SPAN
@@ -49,10 +50,9 @@ tls_dec_post_crypto_process:
      * endian-swapped).
      */
     seq         c1, d.u.read_tls_stg0_d.barco_command[7:0], 0x05
-    phvwri.c1   p.to_s4_do_post_ccm_dec, 1
+    phvwri.c1   p.to_s6_do_post_ccm_dec, 1
 
 table_read_rx_bsq_dec: 
-	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_rx_bsq_process,
-	                       r3, TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tls_dec_rx_bsq_dec_dummy_process)
 	nop.e
     nop

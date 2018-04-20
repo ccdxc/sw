@@ -27,32 +27,6 @@ tls_dec_queue_brq_process:
     bcf         [!c1], tls_queue_brq_dec_process_done
     nop
         
-	/*   tlsp->next_tls_hdr_offset = md->next_tls_hdr_offset; */
-//	phvwr	    p.tls_global_phv_next_tls_hdr_offset, k.to_s6_next_tls_hdr_offset
-
-dma_cmd_dec_data_len:
-	/*   brq.odesc->data_len = tlsp->cur_tls_data_len; */
-	add		    r5, r0, k.to_s6_odesc
-	addi		r5, r5, NIC_DESC_DATA_LEN_OFFSET
-
-	/* Fill the data len */
-
-    /* Setup plain-text size , RecordLen - IV - AuthTag*/
-    add         r1, r0, k.to_s6_cur_tls_data_len
-    sub         r1, r1, (NTLS_NONCE_SIZE + TLS_AES_GCM_AUTH_TAG_SIZE)
-    phvwr       p.to_s6_cur_tls_data_len, r1
-
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r5, to_s6_cur_tls_data_len,to_s6_cur_tls_data_len)    
-
-	/*   tlsp->cur_tls_data_len = md->next_tls_hdr_offset - sizeof(tls_hdr_t); */
-//	add		    r1, r0, k.to_s6_next_tls_hdr_offset
-
-	/*
-	  SET_DESC_ENTRY(brq.odesc, 0, 
-		 md->opage, 
-		 NIC_PAGE_HEADROOM, 
-		 tlsp->cur_tls_data_len);
-	 */
 dma_cmd_dec_odesc:
 	add		    r5, r0, k.to_s6_odesc
 	addi		r5, r5, PKT_DESC_AOL_OFFSET

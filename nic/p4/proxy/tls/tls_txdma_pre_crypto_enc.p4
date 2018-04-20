@@ -218,12 +218,6 @@ header_type s3_t2_s2s_phv_t {
 #define s2_s5_t0_phv_t  additional_data_t
 #define GENERATE_S2_S5_T0  GENERATE_AAD_FIELDS(s2_s5_t0_scratch, s2_s5_t0_phv)
 
-header_type bsq_slot_t {
-    fields {
-        desc                    : 32;
-    }
-}
-
 @pragma scratch_metadata
 metadata tlscb_0_t tlscb_0_d;
 

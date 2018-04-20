@@ -1,6 +1,6 @@
 /* 
  *  Read odesc to setup the DMA request
- *  Stage 4, Table 0
+ *  Stage 6, Table 0
  */
 
 #include "tls-constants.h"
@@ -11,15 +11,17 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 
-struct tx_table_s4_t0_d     d;
-struct tx_table_s4_t0_k     k;
+struct tx_table_s6_t0_d     d;
+struct tx_table_s6_t0_k     k;
 struct phv_                 p;
 
 %%
     .param      tls_dec_queue_sesq_process
+    .param      tls_dec_post_crypto_stats_process
     .param      tls_dec_queue_l7q_process
 
 tls_dec_post_read_odesc:
+    CAPRI_SET_DEBUG_STAGE4_7(p.stats_debug_stage4_7_thread, CAPRI_MPU_STAGE_6, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
     sne         c1, k.tls_global_phv_l7_proxy_en, r0
     sne         c2, k.tls_global_phv_l7_proxy_type_span, r0
@@ -30,7 +32,7 @@ tls_dec_post_read_odesc:
      * Trim off the AAD from the output
      *  - AES-CCM uses 2 16-byte header blocks to specify AAD.
      */
-    seq         c3, k.to_s4_do_post_ccm_dec, 1
+    seq         c3, k.to_s6_do_post_ccm_dec, 1
     addi.!c3    r2, r0, NTLS_AAD_SIZE
     addi.c3     r2, r0, TLS_AES_CCM_HEADER_SIZE
     add         r1, d.{u.tls_read_odesc_d.O0}.wx, r2
@@ -49,6 +51,10 @@ tls_dec_post_read_odesc:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_queue_sesq_process,
                            k.tls_global_phv_qstate_addr,
                        	   TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
+
+	CAPRI_NEXT_TABLE_READ_OFFSET(3, TABLE_LOCK_DIS, tls_dec_post_crypto_stats_process,
+	                    k.tls_global_phv_qstate_addr,
+	                    TLS_TCB_POST_CRYPTO_STATS_OFFSET, TABLE_SIZE_512_BITS)
 
     /* Skip queue to L7Q if L7 proxy is not enabled */
     bcf         [!c1], tls_dec_post_read_odesc_done

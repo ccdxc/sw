@@ -51,7 +51,6 @@ tls_enc_post_crypto_process:
     phvwri.c4   p.tls_global_phv_pending_rx_bsq, 1
 	
 table_read_rx_bsq_enc: 
-        CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_rx_bsq_enc_dummy_process,
-                              r3, TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
+        CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tls_enc_rx_bsq_enc_dummy_process)
     nop.e
     nop

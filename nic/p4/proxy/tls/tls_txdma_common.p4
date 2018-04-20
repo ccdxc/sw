@@ -594,3 +594,16 @@ header_type ccm_header_t {
         B_1_zero_pad                : 8;
     }
 }
+
+header_type bsq_slot_t {
+    fields {
+        desc                    : HBM_ADDRESS_WIDTH;
+    }
+}
+
+#define BSQ_SLOT_SCRATCH    bsq_slot_scratch
+
+#define BSQ_SLOT_FIELDS     desc
+
+#define GENERATE_BSQ_SLOT_D modify_field(BSQ_SLOT_SCRATCH.desc, desc);
+

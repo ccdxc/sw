@@ -1,3 +1,6 @@
+/*
+ *  Stage 7 Table 1
+ */
 #include "tls-constants.h"
 #include "tls-phv.h"
 #include "tls-shared-state.h"
@@ -8,9 +11,9 @@
 #include "INGRESS_p.h"
 #include "../../../app-redir-p4+/common/include/app_redir_shared.h"
         
-struct tx_table_s5_t1_k     k;
+struct tx_table_s7_t1_k     k;
 struct phv_                 p;
-struct tx_table_s5_t1_d     d;
+struct tx_table_s7_t1_d     d;
 	
 %%
 
@@ -30,21 +33,21 @@ tls_dec_queue_l7q_process:
 
 dma_cmd_l7_desc_redir:
     // redir: dma odesc as desc
-    add         r3, r0, k.to_s5_odesc
+    add         r3, r0, k.to_s7_odesc
     addi        r3, r3, PKT_DESC_AOL_OFFSET
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, odesc_A0, odesc_next_pkt)
 
-    phvwr       p.l7_ring_entry_descr_addr, k.to_s5_odesc
+    phvwr       p.l7_ring_entry_descr_addr, k.to_s7_odesc
     b           dma_cmd_l7q_slot
     nop
 
 dma_cmd_l7_desc_span:
     // redir: dma l7_desc desc
-    add         r3, r0, k.to_s5_l7_desc
+    add         r3, r0, k.to_s7_l7_desc
     addi        r3, r3, PKT_DESC_AOL_OFFSET
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd3_dma_cmd, r3, l7_desc_A0, l7_desc_next_pkt)
     
-    phvwr       p.l7_ring_entry_descr_addr, k.to_s5_l7_desc
+    phvwr       p.l7_ring_entry_descr_addr, k.to_s7_l7_desc
 
 dma_cmd_l7q_slot:
     // Set DMA command to do L7Q write
@@ -54,7 +57,7 @@ dma_cmd_l7q_slot:
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd4_dma_cmd, r1, l7_ring_entry_descr_addr,l7_ring_entry_descr_addr)
 
-    smeqb       c1, k.to_s5_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
+    smeqb       c1, k.to_s7_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
     bcf         [c1], tls_l7q_produce_skip
     nop
 

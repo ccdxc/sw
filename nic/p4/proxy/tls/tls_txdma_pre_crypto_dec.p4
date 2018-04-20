@@ -270,7 +270,7 @@ header_type s3_t2_s2s_phv_t {
 
 header_type pad_to_dma_cmds_t {
     fields {
-        pad                     : 60;
+        pad                     : 28;
     }
 }
 
@@ -378,6 +378,8 @@ metadata barco_desc_t barco_desc;
 metadata ring_entry_t ring_entry;
 @pragma dont_trim
 metadata ccm_header_t ccm_header_with_aad;
+@pragma dont_trim
+metadata bsq_slot_t bsq_slot;
 @pragma dont_trim
 metadata pad_to_dma_cmds_t pad_to_dma_cmds;
 
