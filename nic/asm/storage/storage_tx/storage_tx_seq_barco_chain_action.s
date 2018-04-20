@@ -20,13 +20,14 @@ storage_tx_seq_barco_chain_action_start:
 
    // Calculate the address to which the entry to be pushed has to be 
    // written to in the destination queue. Output will be stored in GPR r7.
-   QUEUE_PUSH_ADDR(STORAGE_KIVEC4_BARCO_RING_ADDR, 
-                   d.p_ndx,
-                   STORAGE_KIVEC4_BARCO_DESC_SIZE)
-                   
-   add          r6, d.p_ndx, 1
+   // Note that d.p_ndx is a shadow copy of the HW ring producer index.
+   add          r6, d.p_ndx, r0
+   QUEUE_PUSH_ADDR(STORAGE_KIVEC4_BARCO_RING_ADDR, r6, STORAGE_KIVEC4_BARCO_DESC_SIZE)
+   mincr        r6, STORAGE_KIVEC4_BARCO_RING_SIZE, 1
+
    // Need to word swap before writing back as the p_ndx is little endian
    phvwr	p.barco_doorbell_data_p_ndx, r6.wx
+   tblwr.f      d.p_ndx, r6
 
    // DMA command address update
    DMA_ADDR_UPDATE(r7, dma_m2m_10)

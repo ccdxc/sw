@@ -51,15 +51,18 @@ decrypt_decomp_chain_t::decrypt_decomp_chain_t(decrypt_decomp_chain_params_t par
     // one in HBM for lower latency P4+ processing, and another in host
     // memory which P4+ will copy into for the application.
     xts_status_buf1 = new dp_mem_t(1, sizeof(uint64_t),
-                          DP_MEM_ALIGN_NONE, params.xts_status_mem_type1_);
+                          DP_MEM_ALIGN_SPEC, params.xts_status_mem_type1_,
+                          kMinHostMemAllocSize);
     if (params.xts_status_mem_type2_ != DP_MEM_TYPE_VOID) {
         xts_status_buf2 = new dp_mem_t(1, sizeof(uint64_t),
-                              DP_MEM_ALIGN_NONE, params.xts_status_mem_type2_);
+                              DP_MEM_ALIGN_SPEC, params.xts_status_mem_type2_,
+                              kMinHostMemAllocSize);
     } else {
         xts_status_buf2 = xts_status_buf1;
     }
     xts_opaque_buf = new dp_mem_t(1, sizeof(uint64_t),
-                                  DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+                                  DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                  kMinHostMemAllocSize);
 
     // XTS AOL must be 512 byte aligned
     xts_in_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
@@ -161,11 +164,13 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     chain_params.chain_ent.next_db_action_barco_push = 1;
     chain_params.chain_ent.push_entry.barco_ring_addr = decomp_queue->q_base_mem_pa_get();
     chain_params.chain_ent.push_entry.barco_pndx_addr = decomp_queue->cfg_q_pd_idx_get();
+    chain_params.chain_ent.push_entry.barco_pndx_shadow_addr = decomp_queue->shadow_pd_idx_pa_get();
     chain_params.chain_ent.push_entry.barco_desc_addr = xts_decomp_cp_desc->pa();
     chain_params.chain_ent.push_entry.barco_desc_size = 
                            (uint8_t)log2(xts_decomp_cp_desc->line_size_get());
     chain_params.chain_ent.push_entry.barco_pndx_size = 
                            (uint8_t)log2(sizeof(uint32_t));
+    chain_params.chain_ent.push_entry.barco_ring_size = (uint8_t)log2(decomp_queue->q_size_get());
     if (xts_status_buf1 != xts_status_buf2) {
 
         // xts_status_buf2 will receive the content of xts_status_buf1

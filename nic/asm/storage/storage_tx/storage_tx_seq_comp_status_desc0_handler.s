@@ -42,7 +42,8 @@ storage_tx_seq_comp_status_desc0_handler_start:
    sll          r7, 1, d.barco_desc_size        // delay slot
                 
    // Setup the source of the mem2mem DMA into DMA cmd 1.
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.barco_desc_addr, r7,
+   // Note: next_db_data doubles as barco_desc_addr in this case
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.next_db_data, r7,
                      r0, r0, dma_m2m_9)
 
    // Setup the destination of the mem2mem DMA into DMA cmd 2 (just fill
@@ -57,12 +58,16 @@ storage_tx_seq_comp_status_desc0_handler_start:
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
                             d.barco_pndx_addr, dma_p2m_11)
    DMA_PHV2MEM_FENCE(dma_p2m_11)
+   
+   // Note that d.next_db_addr in this case is really d.barco_ring_addr.
+   // phvwrpair limits destination p[] to 64 bits per.
+   phvwrpair	p.storage_kivec4_barco_ring_addr, d.next_db_addr[33:0], \
+                p.storage_kivec4_barco_pndx_addr, d.barco_pndx_addr
    b            status_dma_setup
    
-   // Note that d.next_db_addr in this case is really d.barco_ring_addr
-   phvwrpair	p.storage_kivec4_barco_ring_addr, d.next_db_addr[33:0], \
-                p.{storage_kivec4_barco_pndx_addr...storage_kivec4_barco_pndx_size}, \
-                d.{barco_pndx_addr...barco_pndx_size}   // delay slot
+   // phvwrpair limits destination p[] to 64 bits per.
+   phvwr        p.{storage_kivec4_barco_pndx_shadow_addr...storage_kivec4_barco_ring_size}, \
+                d.{barco_pndx_shadow_addr...barco_ring_size}   // delay slot
 
 next_db_ring:
                             

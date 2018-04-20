@@ -16,7 +16,7 @@ struct phv_ p;
 
 storage_tx_seq_barco_ring_pndx_read_start:
 
-   LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC4_BARCO_PNDX_ADDR,
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC4_BARCO_PNDX_SHADOW_ADDR,
                                 STORAGE_KIVEC4_BARCO_PNDX_SIZE,
                                 storage_tx_seq_barco_ring_push_start)
 

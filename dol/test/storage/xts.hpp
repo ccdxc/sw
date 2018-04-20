@@ -7,6 +7,8 @@
 
 using namespace dp_mem;
 
+extern const uint32_t  kXtsQueueSize;
+
 //model/cap_hens/readonly/cap_hese_csr_define.h
 
 #define CAPRI_BARCO_MD_HENS_REG_BASE                    (0x6580000)
@@ -238,10 +240,12 @@ public:
 
   uint64_t xts_ring_base_addr;
   uint64_t xts_ring_pi_addr;
+  dp_mem_t *xts_ring_pi_shadow_addr;
   bool use_seq = true;
 };
 
 
+int xts_init(void);
 int xts_multi_blk();
 int xts_in_place();
 int xts_netapp_data();

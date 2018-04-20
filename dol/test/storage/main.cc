@@ -328,6 +328,10 @@ int main(int argc, char**argv) {
   tests::compression_init();
   printf("Compression configuration completed \n");
 
+  printf("Going to init XTS\n");
+  tests::xts_init();
+  printf("XTS configuration completed \n");
+
   if (rdma_init() < 0) {
     printf("RDMA Setup failed\n");
     return 1;

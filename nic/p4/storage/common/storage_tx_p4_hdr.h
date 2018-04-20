@@ -412,9 +412,10 @@ header_type seq_barco_entry_t {
   fields {
     barco_desc_addr	: 64;	// Address of the descriptor to push
     barco_pndx_addr	: 34;	// 64 bit address of the doorbell to ring
+    barco_pndx_shadow_addr: 34;
     barco_desc_size	:  4;	// Size of the descriptor to push
     barco_pndx_size	:  3;	// Size of the ring state to be loaded
-    filler		    :  1;
+    barco_ring_size	:  5;	// log2(ring_size)
     barco_ring_addr	: 34;	// Address of the ring
 
     // special test batch mode: pndx value is given in entry
@@ -428,12 +429,13 @@ header_type seq_barco_entry_t {
 header_type seq_comp_status_desc0_t {
   fields {
     next_db_addr	: 64;	// 64 bit address of the next doorbell to ring
-    next_db_data	: 64;	// 64 bit data of the next doorbell to ring
-    barco_desc_addr	: 64;
+    next_db_data	: 64;	// 64 bit data of the next doorbell to ring,
+    	                    // also represents barco_desc_addr when next_db_action_barco_push is set
     barco_pndx_addr	: 34;	// producer index address
+    barco_pndx_shadow_addr: 34;
     barco_desc_size	:  4;	// descriptor size (power of 2 exponent)
     barco_pndx_size	:  3;	// producer index size (power of 2 exponent)
-    filler		    :  1;
+    barco_ring_size	:  5;	// log2(ring_size)
     status_hbm_addr	: 64;	// Address where compression status will be placed
     status_host_addr    : 64;	// Address where compression status will be placed
     intr_addr		: 64;	// Address where interrupt needs to be written
@@ -494,11 +496,12 @@ header_type seq_xts_status_desc_t {
   fields {
     next_db_addr	: 64;	// 64 bit address of the next doorbell to ring
     next_db_data	: 64;	// 64 bit data of the next doorbell to ring
-    barco_desc_addr	: 64;
+                            // also represents barco_desc_addr when next_db_action_barco_push is set
     barco_pndx_addr	: 34;	// producer index address
+    barco_pndx_shadow_addr: 34;
     barco_desc_size	:  4;	// descriptor size (power of 2 exponent)
     barco_pndx_size	:  3;	// producer index size (power of 2 exponent)
-    filler		    :  1;
+    barco_ring_size	:  5;	// log2(ring_size)
     status_hbm_addr	: 64;	// Address where HW compression status was placed
     status_host_addr    : 64;	// Address where a copy of above status can be made
     intr_addr		: 64;	// Address where interrupt needs to be written
@@ -602,8 +605,10 @@ header_type storage_kivec4_t {
   fields {
     barco_ring_addr : 34;
     barco_pndx_addr	: 34;
+    barco_pndx_shadow_addr: 34;
     barco_desc_size	: 4;
     barco_pndx_size	: 3;
+    barco_ring_size	: 5;
     w_ndx		    : 16;	// Working consumer index
   }
 }
@@ -850,8 +855,10 @@ header_type storage_kivec5_t {
 
 #define STORAGE_KIVEC4_USE(scratch, kivec)				\
   modify_field(scratch.barco_pndx_addr, kivec.barco_pndx_addr);			\
+  modify_field(scratch.barco_pndx_shadow_addr, kivec.barco_pndx_shadow_addr);\
   modify_field(scratch.barco_desc_size, kivec.barco_desc_size);			\
   modify_field(scratch.barco_pndx_size, kivec.barco_pndx_size);			\
+  modify_field(scratch.barco_ring_size, kivec.barco_ring_size);			\
   modify_field(scratch.barco_ring_addr, kivec.barco_ring_addr);			\
   modify_field(scratch.w_ndx, kivec.w_ndx);				\
 

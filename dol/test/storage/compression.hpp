@@ -77,6 +77,10 @@ typedef struct cp_hdr {
 #define CP_STATUS_CHECKSUM_FAILED	6
 #define CP_STATUS_SGL_DESC_ERROR	7
 
+#define CP_STATUS_PAD_ALIGNED_SIZE                              \
+  (((sizeof(cp_status_sha512_t) + kMinHostMemAllocSize - 1) /   \
+   kMinHostMemAllocSize) * kMinHostMemAllocSize)
+  
 typedef struct cp_status_no_hash {
   uint16_t rsvd:12,
            err:3,  // See status code above
@@ -130,6 +134,11 @@ public:
               uint32_t seq_comp_qid);
     void post_push(void);
 
+    uint32_t q_size_get(void)
+    {
+        return q_size;
+    }
+
     uint64_t q_base_mem_pa_get(void)
     {
         return q_base_mem_pa;
@@ -140,9 +149,15 @@ public:
         return cfg_q_pd_idx;
     }
 
+    uint64_t shadow_pd_idx_pa_get(void)
+    {
+        return shadow_pd_idx_mem->pa();
+    }
+
 private:
     uint64_t    cfg_q_base;
     uint64_t    cfg_q_pd_idx;
+    dp_mem_t    *shadow_pd_idx_mem;
     cp_desc_t   *q_base_mem;
     uint64_t    q_base_mem_pa;
 

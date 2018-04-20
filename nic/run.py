@@ -311,10 +311,10 @@ def run_storage_dol(port, args):
         else:
             cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip)]
 
-        #pass additional arguments to storage_test
-        if args.storage_runargs:
-            cmd.extend(shlex.split(args.storage_runargs))
-            print 'Executing command [%s]' % ', '.join(map(str, cmd))
+    #pass additional arguments to storage_test
+    if args.storage_runargs:
+        cmd.extend(shlex.split(args.storage_runargs))
+        print 'Executing command [%s]' % ', '.join(map(str, cmd))
 
     p = Popen(cmd)
     #p.communicate()

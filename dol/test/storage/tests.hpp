@@ -38,9 +38,11 @@ typedef struct {
 typedef struct {
   uint64_t barco_ring_addr;     // ring address
   uint64_t barco_pndx_addr;     // producer index address
+  uint64_t barco_pndx_shadow_addr;// producer index shadow address
   uint64_t barco_desc_addr;     // descriptor to push
   uint8_t  barco_desc_size;     // descriptor size (power of 2 exponent)
   uint8_t  barco_pndx_size;     // producer index size (power of 2 exponent)
+  uint8_t  barco_ring_size;     // ring size (power of 2 exponent)
 } acc_chain_barco_push_entry_t;
 
 typedef struct acc_chain_entry {
