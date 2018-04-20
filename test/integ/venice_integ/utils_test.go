@@ -36,13 +36,13 @@ func (it *veniceIntegSuite) deleteTenant(tenantName string) (*network.Tenant, er
 }
 
 // createNetwork creates a network using REST api
-func (it *veniceIntegSuite) createNetwork(tenant, net, subnet, gw string) (*network.Network, error) {
+func (it *veniceIntegSuite) createNetwork(tenant, namespace, net, subnet, gw string) (*network.Network, error) {
 	// build network object
 	nw := network.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      net,
-			Namespace: "",
+			Namespace: namespace,
 			Tenant:    tenant,
 		},
 		Spec: network.NetworkSpec{

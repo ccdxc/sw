@@ -59,7 +59,7 @@ func TestNetworkWatcher(t *testing.T) {
 	}
 
 	// create a tenant
-	err = watcher.CreateTenant("testTenant")
+	err = watcher.CreateTenant("testTenant", "testTenant")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -71,7 +71,7 @@ func TestNetworkWatcher(t *testing.T) {
 	AssertEquals(t, "testTenant", ts.Name, "Tenant name did not match")
 
 	// create a network
-	err = watcher.CreateNetwork("testTenant", "testNetwork", "10.1.1.0/24", "10.1.1.254")
+	err = watcher.CreateNetwork("testTenant", "testTenant", "testNetwork", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(t, err, "Error creating network")
 
 	// verify network got created
@@ -115,7 +115,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	}
 
 	// create a tenant
-	err = watcher.CreateTenant("testTenant")
+	err = watcher.CreateTenant("testTenant", "testTenant")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -127,7 +127,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	AssertEquals(t, "testTenant", ts.Name, "Tenant name did not match")
 
 	// create a network
-	err = watcher.CreateNetwork("testTenant", "testNetwork", "10.1.1.0/24", "10.1.1.254")
+	err = watcher.CreateNetwork("testTenant", "testTenant", "testNetwork", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(t, err, "Error creating network")
 	AssertEventually(t, func() (bool, interface{}) {
 		_, nerr := stateMgr.FindNetwork("testTenant", "testNetwork")
@@ -136,7 +136,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 
 	// create a endpoint
 	var attrs map[string]string
-	err = watcher.CreateEndpoint("testTenant", "testNetwork", "testEndpoint", "testVm", "01:02:03:04:05:06", "testHost", "20.1.1.1", attrs, 101)
+	err = watcher.CreateEndpoint("testTenant", "testTenant", "testNetwork", "testEndpoint", "testVm", "01:02:03:04:05:06", "testHost", "20.1.1.1", attrs, 101)
 	AssertOk(t, err, "Error creating endpoint")
 
 	// verify endpoint got created
@@ -150,7 +150,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	Assert(t, (ep.GetObjectMeta().Name == "testEndpoint"), "Incorrect object params", ep.GetObjectMeta())
 
 	// test duplicate create
-	watcher.CreateEndpoint("testTenant", "testNetwork", "testEndpoint", "testVm", "01:02:03:04:05:06", "testHost", "20.1.1.1", attrs, 101)
+	watcher.CreateEndpoint("testTenant", "testTenant", "testNetwork", "testEndpoint", "testVm", "01:02:03:04:05:06", "testHost", "20.1.1.1", attrs, 101)
 	time.Sleep(time.Millisecond * 10)
 
 	// delete the endpoint
@@ -187,7 +187,7 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	}
 
 	// create a tenant
-	err = watcher.CreateTenant("testTenant")
+	err = watcher.CreateTenant("testTenant", "testTenant")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -199,7 +199,7 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	AssertEquals(t, "testTenant", ts.Name, "Tenant name did not match")
 
 	// create an sg
-	err = watcher.CreateSecurityGroup("testTenant", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	err = watcher.CreateSecurityGroup("testTenant", "testTenant", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating sg")
 
 	// verify sg got created
@@ -242,7 +242,7 @@ func TestSgPolicyWatcher(t *testing.T) {
 		return
 	}
 	// create a tenant
-	err = watcher.CreateTenant("testTenant")
+	err = watcher.CreateTenant("testTenant", "testTenant")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -254,7 +254,7 @@ func TestSgPolicyWatcher(t *testing.T) {
 	AssertEquals(t, "testTenant", ts.Name, "Tenant name did not match")
 
 	// create an sg
-	err = watcher.CreateSecurityGroup("testTenant", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	err = watcher.CreateSecurityGroup("testTenant", "testTenant", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating sg")
 
 	// wait a little for watch even to propagate
@@ -278,7 +278,7 @@ func TestSgPolicyWatcher(t *testing.T) {
 	}
 
 	// create an sg policy
-	err = watcher.CreateSgpolicy("testTenant", "pol1", []string{"testsg"}, inrules, outrules)
+	err = watcher.CreateSgpolicy("testTenant", "testTenant", "pol1", []string{"testsg"}, inrules, outrules)
 	AssertOk(t, err, "Error creating sg policy")
 
 	// verify the sg policy exists
@@ -323,7 +323,7 @@ func TestTenantWatcher(t *testing.T) {
 	}
 
 	// create a tenant
-	err = watcher.CreateTenant("testTenant")
+	err = watcher.CreateTenant("testTenant", "testTenant")
 	AssertOk(t, err, "Error creating tenant")
 
 	// verify tenant got created
@@ -375,7 +375,7 @@ func TestRestartWatchers(t *testing.T) {
 
 	// Ensure object creates go through.
 	// create a tenant
-	err = w.CreateTenant("testTenant")
+	err = w.CreateTenant("testTenant", "testTenant")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -387,7 +387,7 @@ func TestRestartWatchers(t *testing.T) {
 	AssertEquals(t, "testTenant", ts.Name, "Tenant name did not match")
 
 	// create a network
-	err = w.CreateNetwork("testTenant", "testNetwork", "10.1.1.0/24", "10.1.1.254")
+	err = w.CreateNetwork("testTenant", "testTenant", "testNetwork", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(t, err, "Error creating network")
 
 	// verify network got created
@@ -402,7 +402,7 @@ func TestRestartWatchers(t *testing.T) {
 	Assert(t, nw.TypeMeta.Kind == "Network", "Network type meta did not match", nw)
 
 	// security group and security group policy objects
-	err = w.CreateSecurityGroup("testTenant", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	err = w.CreateSecurityGroup("testTenant", "testTenant", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating sg")
 
 	// wait a little for watch even to propagate
@@ -426,7 +426,7 @@ func TestRestartWatchers(t *testing.T) {
 	}
 
 	// create an sg policy
-	err = w.CreateSgpolicy("testTenant", "pol1", []string{"testsg"}, inrules, outrules)
+	err = w.CreateSgpolicy("testTenant", "testTenant", "pol1", []string{"testsg"}, inrules, outrules)
 	AssertOk(t, err, "Error creating sg policy")
 
 	// verify the sg policy exists
@@ -444,7 +444,7 @@ func TestRestartWatchers(t *testing.T) {
 
 	// create a endpoint
 	var attrs map[string]string
-	err = w.CreateEndpoint("testTenant", "testNetwork", "testEndpoint", "testVm", "01:02:03:04:05:06", "testHost", "20.1.1.1", attrs, 101)
+	err = w.CreateEndpoint("testTenant", "testTenant", "testNetwork", "testEndpoint", "testVm", "01:02:03:04:05:06", "testHost", "20.1.1.1", attrs, 101)
 	AssertOk(t, err, "Error creating endpoint")
 
 	// verify endpoint got created

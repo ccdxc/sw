@@ -44,8 +44,9 @@ func TestInterfacePost(t *testing.T) {
 	postData := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testPostInterface",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testPostInterface",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        "ENIC",
@@ -81,8 +82,9 @@ func TestInterfaceDelete(t *testing.T) {
 	deleteData := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testDeleteInterface",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testDeleteInterface",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        "LIF",
@@ -121,8 +123,9 @@ func TestInterfaceUpdate(t *testing.T) {
 	putData := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "preCreatedInterface",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedInterface",
 		},
 		Spec: updatedInterfaceSpec,
 	}

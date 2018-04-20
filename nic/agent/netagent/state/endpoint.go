@@ -67,7 +67,7 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 
 	// check if we have the network endpoint is referring to
 	// FIXME: if network gets deleted after endpoint is created, how do we handle it?
-	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Name: ep.Spec.NetworkName})
+	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: ep.Spec.NetworkName})
 	if err != nil {
 		log.Errorf("Error finding the network %v. Err: %v", ep.Spec.NetworkName, err)
 		return nil, err
@@ -77,7 +77,7 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 	// FIXME: how do we handle security group getting deleted after ep is created.
 	var sgs []*netproto.SecurityGroup
 	for _, sgname := range ep.Spec.SecurityGroups {
-		sg, serr := na.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Name: sgname})
+		sg, serr := na.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: sgname})
 		if serr != nil {
 			log.Errorf("Error finding security group %v. Err: %v", sgname, serr)
 			return nil, serr
@@ -88,8 +88,9 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 
 	// find the corresponding tenant
 	tnMeta := api.ObjectMeta{
-		Name:   ep.Tenant,
-		Tenant: ep.Tenant,
+		Tenant:    ep.Tenant,
+		Namespace: ep.Namespace,
+		Name:      ep.Tenant,
 	}
 
 	tn, err := na.FindTenant(tnMeta)
@@ -154,7 +155,7 @@ func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// find the network
-	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Name: ep.Spec.NetworkName})
+	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: ep.Spec.NetworkName})
 	if err != nil {
 		log.Errorf("Error finding the network %v. Err: %v", ep.Spec.NetworkName, err)
 		return err
@@ -163,7 +164,7 @@ func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	// check if security groups its referring to exists
 	var sgs []*netproto.SecurityGroup
 	for _, sgname := range ep.Spec.SecurityGroups {
-		sg, serr := na.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Name: sgname})
+		sg, serr := na.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: sgname})
 		if serr != nil {
 			log.Errorf("Error finding security group %v. Err: %v", sgname, serr)
 			return serr

@@ -52,6 +52,7 @@ import (
                                 TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                                 ObjectMeta: api.ObjectMeta{
                                     Tenant: "default",
+                                    Namespace: "default",
                                     Name: "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec:   netproto.{{title $crudObject}}Spec{
@@ -66,6 +67,7 @@ import (
                                 TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                                 ObjectMeta: api.ObjectMeta{
                                     Tenant: "default",
+                                    Namespace: "default",
                                     Name:   "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec: netproto.{{title $crudObject}}Spec{
@@ -86,6 +88,7 @@ import (
                                 TypeMeta: api.TypeMeta{Kind: "Endpoint"},
                                 ObjectMeta: api.ObjectMeta{
                                     Tenant: "default",
+                                    Namespace: "default",
                                     Name:   "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec: netproto.{{title $crudObject}}Spec{
@@ -100,12 +103,13 @@ import (
                             }
                             err := netutils.HTTPPost("http://"+agentRestURL+"/api/endpoints/", &{{lower .}}Data, &resp)
                             getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
-                         {{else if strEq $crudObject "Tenant"}}
+                         {{else if (or (strEq $crudObject "Tenant") (strEq $crudObject "Namespace"))}}
                             {{lower .}}Data := netproto.{{title $crudObject}}{
                                                     TypeMeta: api.TypeMeta{Kind: "Tenant"},
                                                     ObjectMeta : api.ObjectMeta{
                                                                         Tenant:"test{{title .}}{{title $crudObject}}",
                                                                         Name: "test{{title .}}{{title $crudObject}}",
+                                                                        Namespace: "test{{title .}}{{title $crudObject}}",
                                                     },
                             }
 
@@ -116,6 +120,7 @@ import (
                                                          TypeMeta: api.TypeMeta{Kind: "Interface"},
                                                          ObjectMeta: api.ObjectMeta{
                                                              Tenant: "default",
+                                                             Namespace: "default",
                                                              Name:   "test{{title .}}{{title $crudObject}}",
                                                          },
                                                          Spec: netproto.{{title $crudObject}}Spec{
@@ -158,6 +163,7 @@ import (
                                     TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                                     ObjectMeta: api.ObjectMeta{
                                         Tenant: "default",
+                                        Namespace: "default",
                                         Name: "preCreated{{title $crudObject}}",
                                     },
                                     Spec:  updated{{title $crudObject}}Spec,
@@ -174,7 +180,35 @@ import (
                                     }
                                 }
                                 AssertEquals(t, updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validated updated spec.")
+                            {{else if strEq $crudObject "Namespace"}}
 
+                                var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
+                                updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                       Meta: &api.ObjectMeta{
+                                                                                       ResourceVersion:"v2",
+                                                                                   },
+                                                                    }
+                                {{lower .}}Data := netproto.{{title $crudObject}}{
+                                    TypeMeta: api.TypeMeta{Kind: "Namespace"},
+                                    ObjectMeta: api.ObjectMeta{
+                                        Tenant: "preCreatedTenant",
+                                        Name:   "preCreated{{title $crudObject}}",
+                                        Namespace: "preCreated{{title $crudObject}}",
+                                    },
+                                    Spec: updated{{title $crudObject}}Spec,
+                                }
+                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/namespaces/preCreatedTenant/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
+
+                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/namespaces/", &{{lower $crudObject}}List )
+                               AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
+                               for _, o := range {{lower $crudObject}}List{
+                                    if o.Name == "preCreated{{title $crudObject}}"{
+                                            actual{{title $crudObject}}Spec = o.Spec
+                                            break
+                                    }
+                               }
+                               AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
 
                             {{else if strEq $crudObject "SecurityGroup"}}
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
@@ -192,6 +226,7 @@ import (
                                     TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                                     ObjectMeta: api.ObjectMeta{
                                         Tenant: "default",
+                                        Namespace: "default",
                                         Name:   "preCreated{{title $crudObject}}",
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
@@ -220,6 +255,7 @@ import (
                                     TypeMeta: api.TypeMeta{Kind: "Endpoint"},
                                     ObjectMeta: api.ObjectMeta{
                                         Tenant: "default",
+                                        Namespace: "default",
                                         Name:   "preCreated{{title $crudObject}}",
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
@@ -253,6 +289,7 @@ import (
                                     TypeMeta: api.TypeMeta{Kind: "Tenant"},
                                     ObjectMeta: api.ObjectMeta{
                                         Tenant: "preCreated{{title $crudObject}}",
+                                        Namespace: "preCreated{{title $crudObject}}",
                                         Name:   "preCreated{{title $crudObject}}",
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
@@ -281,6 +318,7 @@ import (
                                     TypeMeta: api.TypeMeta{Kind: "Interface"},
                                     ObjectMeta: api.ObjectMeta{
                                         Tenant: "default",
+                                        Namespace: "default",
                                         Name:   "preCreated{{title $crudObject}}",
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
@@ -312,6 +350,7 @@ import (
                                 TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                                 ObjectMeta: api.ObjectMeta{
                                     Tenant: "default",
+                                    Namespace: "default",
                                     Name: "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec:   netproto.{{title $crudObject}}Spec{
@@ -327,6 +366,7 @@ import (
                                 TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                                 ObjectMeta: api.ObjectMeta{
                                     Tenant: "default",
+                                    Namespace: "default",
                                     Name:   "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec: netproto.{{title $crudObject}}Spec{
@@ -348,6 +388,7 @@ import (
                                 TypeMeta: api.TypeMeta{Kind: "Endpoint"},
                                 ObjectMeta: api.ObjectMeta{
                                     Tenant: "default",
+                                    Namespace: "default",
                                     Name:   "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec: netproto.{{title $crudObject}}Spec{
@@ -374,11 +415,25 @@ import (
                              postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/tenants/", &{{lower .}}Data, &resp)
                              err := netutils.HTTPDelete( "http://"+agentRestURL+"/api/tenants/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                              getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+                          {{else if strEq $crudObject "Namespace"}}
+                             {{lower .}}Data := netproto.{{title $crudObject}}{
+                                 TypeMeta: api.TypeMeta{Kind: "Namespace"},
+                                 ObjectMeta: api.ObjectMeta{
+                                     Tenant: "preCreatedTenant",
+                                     Name:   "testDelete{{title $crudObject}}",
+                                     Namespace: "testDelete{{title $crudObject}}",
+                                 },
+                             }
+                             postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/namespaces/", &{{lower .}}Data, &resp)
+                             err := netutils.HTTPDelete( "http://"+agentRestURL+"/api/namespaces/preCreatedTenant/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                             getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+
                          {{else if strEq $crudObject "Interface"}}
                               {{lower .}}Data := netproto.{{title $crudObject}}{
                                                       TypeMeta: api.TypeMeta{Kind: "Interface"},
                                                       ObjectMeta : api.ObjectMeta{
                                                                           Tenant:"default",
+                                                                          Namespace: "default",
                                                                           Name: "test{{title .}}{{title $crudObject}}",
                                                       },
                                                       Spec: netproto.InterfaceSpec{

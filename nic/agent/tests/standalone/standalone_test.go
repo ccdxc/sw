@@ -50,8 +50,9 @@ var _ = Describe("Agent standalone tests", func() {
 			postData := netproto.Network{
 				TypeMeta: api.TypeMeta{Kind: "Network"},
 				ObjectMeta: api.ObjectMeta{
-					Tenant: "default",
-					Name:   "skynet",
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      "skynet",
 				},
 				Spec: netproto.NetworkSpec{
 					IPv4Subnet:  "10.1.1.0/24",

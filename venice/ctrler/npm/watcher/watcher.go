@@ -445,13 +445,13 @@ func (w *Watcher) stop() {
 // ******************* Functions for testing and emulating *********************
 
 // CreateNetwork injects a create network event on the watcher
-func (w *Watcher) CreateNetwork(tenant, net, subnet, gw string) error {
+func (w *Watcher) CreateNetwork(tenant, namespace, net, subnet, gw string) error {
 	// build network object
 	nw := network.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      net,
-			Namespace: "",
+			Namespace: namespace,
 			Tenant:    tenant,
 		},
 		Spec: network.NetworkSpec{
@@ -494,12 +494,13 @@ func (w *Watcher) DeleteNetwork(tenant, net string) error {
 }
 
 // CreateEndpoint injects an endpoint create event
-func (w *Watcher) CreateEndpoint(tenant, net, epName, vmName, macAddr, hostName, hostAddr string, attr map[string]string, usegVlan uint32) error {
+func (w *Watcher) CreateEndpoint(tenant, namespace, net, epName, vmName, macAddr, hostName, hostAddr string, attr map[string]string, usegVlan uint32) error {
 	epInfo := network.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Name:   epName,
-			Tenant: tenant,
+			Name:      epName,
+			Tenant:    tenant,
+			Namespace: namespace,
 		},
 		Spec: network.EndpointSpec{},
 		Status: network.EndpointStatus{
@@ -560,13 +561,14 @@ func (w *Watcher) DeleteEndpoint(tenant, net, epName, vmName, macAddr, hostName,
 }
 
 // CreateSecurityGroup injects a create sg event on the watcher
-func (w *Watcher) CreateSecurityGroup(tenant, sgname string, selector *labels.Selector) error {
+func (w *Watcher) CreateSecurityGroup(tenant, namespace, sgname string, selector *labels.Selector) error {
 	// build sg object
 	sg := network.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
-			Name:   sgname,
-			Tenant: tenant,
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      sgname,
 		},
 		Spec: network.SecurityGroupSpec{
 			WorkloadSelector: selector,
@@ -607,13 +609,14 @@ func (w *Watcher) DeleteSecurityGroup(tenant, sgname string) error {
 }
 
 // CreateSgpolicy injects a create sg policy event on the watcher
-func (w *Watcher) CreateSgpolicy(tenant, pname string, attachGroups []string, inrules, outrules []network.SGRule) error {
+func (w *Watcher) CreateSgpolicy(tenant, namespace, pname string, attachGroups []string, inrules, outrules []network.SGRule) error {
 	// build sg object
 	sgp := network.Sgpolicy{
 		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
 		ObjectMeta: api.ObjectMeta{
-			Name:   pname,
-			Tenant: tenant,
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      pname,
 		},
 		Spec: network.SgpolicySpec{
 			AttachGroups: attachGroups,
@@ -657,13 +660,14 @@ func (w *Watcher) DeleteSgpolicy(tenant, pname string) error {
 }
 
 // CreateTenant injects a create tenant event on the watcher
-func (w *Watcher) CreateTenant(tenant string) error {
+func (w *Watcher) CreateTenant(tenant, namespace string) error {
 	// build network object
 	tn := network.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Name:   tenant,
-			Tenant: tenant,
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      tenant,
 		},
 	}
 

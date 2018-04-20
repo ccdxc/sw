@@ -66,8 +66,9 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "preCreatedNetwork",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedNetwork",
 		},
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",
@@ -76,14 +77,16 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 	}
 	err = nagent.CreateNetwork(&nt)
 	if err != nil {
+		log.Errorf("Failed to create network. {%v}", nt)
 		return
 	}
 
 	ep := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "preCreatedEndpoint",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedEndpoint",
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID: "testEndpointUUID",
@@ -97,14 +100,16 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 	}
 	_, err = nagent.CreateEndpoint(&ep)
 	if err != nil {
+		log.Errorf("Failed to create endpoint. {%v}", ep)
 		return
 	}
 
 	sg := netproto.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "preCreatedSecurityGroup",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedSecurityGroup",
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
@@ -119,27 +124,46 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 	}
 	err = nagent.CreateSecurityGroup(&sg)
 	if err != nil {
+		log.Errorf("Failed to create security group. {%v}", sg)
 		return
 	}
 
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "preCreatedTenant",
-			Name:   "preCreatedTenant",
+			Tenant:    "preCreatedTenant",
+			Name:      "preCreatedTenant",
+			Namespace: "preCreatedTenant",
 		},
 	}
 
 	err = nagent.CreateTenant(&tn)
 	if err != nil {
+		log.Errorf("Failed to create tenant. {%v}", tn)
+		return
+	}
+
+	ns := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "preCreatedTenant",
+			Name:      "preCreatedNamespace",
+			Namespace: "preCreatedNamespace",
+		},
+	}
+
+	err = nagent.CreateNamespace(&ns)
+	if err != nil {
+		log.Errorf("Failed to create Namespace. {%v}", ns)
 		return
 	}
 
 	lif := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "preCreatedInterface",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedInterface",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        "LIF",
@@ -153,8 +177,9 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 	uplink := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "preCreatedUplink",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedUplink",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        "UPLINK",
@@ -168,8 +193,9 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 	enic := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "preCreatedEnic",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedEnic",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        "ENIC",
@@ -182,16 +208,19 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 
 	err = nagent.CreateInterface(&lif)
 	if err != nil {
+		log.Errorf("Failed to create LIF. {%v}", lif)
 		return
 	}
 
 	err = nagent.CreateInterface(&uplink)
 	if err != nil {
+		log.Errorf("Failed to create uplink. {%v}", uplink)
 		return
 	}
 
 	err = nagent.CreateInterface(&enic)
 	if err != nil {
+		log.Errorf("Failed to create ENIC. {%v}", enic)
 		return
 	}
 

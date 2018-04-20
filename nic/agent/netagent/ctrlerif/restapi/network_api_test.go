@@ -44,8 +44,9 @@ func TestNetworkPost(t *testing.T) {
 	postData := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testPostNetwork",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testPostNetwork",
 		},
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",
@@ -82,8 +83,9 @@ func TestNetworkUpdate(t *testing.T) {
 	putData := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "preCreatedNetwork",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedNetwork",
 		},
 		Spec: updatedNetworkSpec,
 	}
@@ -111,8 +113,9 @@ func TestNetworkDelete(t *testing.T) {
 	deleteData := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testDeleteNetwork",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testDeleteNetwork",
 		},
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",

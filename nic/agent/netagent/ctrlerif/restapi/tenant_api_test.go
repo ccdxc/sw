@@ -44,8 +44,9 @@ func TestTenantPost(t *testing.T) {
 	postData := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testPostTenant",
-			Name:   "testPostTenant",
+			Tenant:    "testPostTenant",
+			Name:      "testPostTenant",
+			Namespace: "testPostTenant",
 		},
 	}
 
@@ -112,8 +113,9 @@ func TestTenantUpdate(t *testing.T) {
 	putData := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "preCreatedTenant",
-			Name:   "preCreatedTenant",
+			Tenant:    "preCreatedTenant",
+			Namespace: "preCreatedTenant",
+			Name:      "preCreatedTenant",
 		},
 		Spec: updatedTenantSpec,
 	}

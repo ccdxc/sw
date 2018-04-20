@@ -288,7 +288,7 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 	}
 
 	// create a network using REST api
-	nw, err := it.createNetwork("default", "test", "10.1.1.0/24", "10.1.1.254")
+	nw, err := it.createNetwork("default", "default", "test", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(c, err, "Error creating network")
 
 	// verify network gets created in agent

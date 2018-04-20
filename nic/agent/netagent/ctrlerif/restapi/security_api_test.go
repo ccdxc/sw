@@ -44,8 +44,9 @@ func TestSecurityGroupPost(t *testing.T) {
 	postData := netproto.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testPostSecurityGroup",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testPostSecurityGroup",
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
@@ -94,8 +95,9 @@ func TestSecurityGroupUpdate(t *testing.T) {
 	putData := netproto.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "preCreatedSecurityGroup",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedSecurityGroup",
 		},
 		Spec: updatedSecurityGroupSpec,
 	}
@@ -124,8 +126,9 @@ func TestSecurityGroupDelete(t *testing.T) {
 	postData := netproto.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testDeleteSecurityGroup",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testDeleteSecurityGroup",
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",

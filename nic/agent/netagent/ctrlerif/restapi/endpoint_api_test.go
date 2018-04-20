@@ -44,8 +44,9 @@ func TestEndpointPost(t *testing.T) {
 	postData := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testPostEndpoint",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testPostEndpoint",
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID: "testEndpointUUID",
@@ -88,8 +89,9 @@ func TestEndpointUpdate(t *testing.T) {
 	putData := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "preCreatedEndpoint",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedEndpoint",
 		},
 		Spec: updatedEndpointSpec,
 		Status: netproto.EndpointStatus{
@@ -122,8 +124,9 @@ func TestEndpointDelete(t *testing.T) {
 	deleteData := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testDeleteEndpoint",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testDeleteEndpoint",
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID: "testEndpointUUID",

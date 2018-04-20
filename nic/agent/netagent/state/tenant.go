@@ -28,7 +28,7 @@ func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
 		return nil
 	}
 
-	tn.Status.TenantID, err = na.store.GetNextID(TenantID)
+	tn.Status.TenantID, err = na.store.GetNextID(VrfID)
 
 	if err != nil {
 		log.Errorf("Could not allocate tenant id. {%+v}", err)
@@ -36,7 +36,7 @@ func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateTenant(tn)
+	err = na.datapath.CreateVrf(tn.Status.TenantID)
 	if err != nil {
 		log.Errorf("Error creating tenant in datapath. Tenant {%+v}. Err: %v", tn, err)
 		return err
@@ -95,7 +95,7 @@ func (na *NetAgent) UpdateTenant(tn *netproto.Tenant) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateTenant(tn)
+	err = na.datapath.UpdateVrf(tn.Status.TenantID)
 	key := objectKey(tn.ObjectMeta)
 	na.Lock()
 	na.tenantDB[key] = tn
@@ -117,7 +117,7 @@ func (na *NetAgent) DeleteTenant(tn *netproto.Tenant) error {
 	}
 
 	// delete it in the datapath
-	err = na.datapath.DeleteTenant(existingTenant)
+	err = na.datapath.DeleteVrf(existingTenant.Status.TenantID)
 	if err != nil {
 		log.Errorf("Error deleting tenant {%+v}. Err: %v", tn, err)
 	}

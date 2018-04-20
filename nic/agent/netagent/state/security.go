@@ -17,7 +17,7 @@ func (na *NetAgent) addSgRules(sg *netproto.SecurityGroup) error {
 	for _, rule := range sg.Spec.Rules {
 		// find peer sg
 		if rule.PeerGroup != "" {
-			peersg, err := na.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Name: rule.PeerGroup})
+			peersg, err := na.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Namespace: sg.Namespace, Name: rule.PeerGroup})
 			if err != nil {
 				log.Errorf("Error finding peer group %s. Err: %v", rule.PeerGroup, err)
 				return err
@@ -40,7 +40,7 @@ func (na *NetAgent) delSgRules(sg *netproto.SecurityGroup) error {
 	for _, rule := range sg.Spec.Rules {
 		// find peer sg
 		if rule.PeerGroup != "" {
-			_, err = na.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Name: rule.PeerGroup})
+			_, err = na.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Namespace: sg.Namespace, Name: rule.PeerGroup})
 			if err != nil {
 				log.Errorf("Error finding peer group %s. Err: %v", rule.PeerGroup, err)
 				return err

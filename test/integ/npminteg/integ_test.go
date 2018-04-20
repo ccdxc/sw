@@ -161,16 +161,16 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 // basic connectivity tests between NPM and agent
 func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	// create a network in controller
-	err := it.ctrler.Watchr.CreateNetwork("default", "testNetwork", "10.1.1.0/24", "10.1.1.254")
+	err := it.ctrler.Watchr.CreateNetwork("default", "default", "testNetwork", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(c, err, "error creating network")
 
 	// verify agent receives the network
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
+			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
 			return (nerr == nil), nil
 		}, "Network not found on agent", "10ms", it.pollTimeout())
-		nt, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
+		nt, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
 		AssertOk(c, nerr, "error finding network")
 		Assert(c, (nt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network params didnt match", nt)
 	}
@@ -182,7 +182,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	// verify network is removed from all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
+			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
 			return (nerr != nil), nil
 		}, "Network still found on agent", "100ms", it.pollTimeout())
 	}
@@ -191,7 +191,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 // test endpoint create workflow e2e
 func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	// create a network in controller
-	err := it.ctrler.Watchr.CreateNetwork("default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
+	err := it.ctrler.Watchr.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
@@ -201,7 +201,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	// wait till agent has the network
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			ometa := api.ObjectMeta{Tenant: "default", Name: "testNetwork"}
+			ometa := api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"}
 			_, nerr := ag.nagent.NetworkAgent.FindNetwork(ometa)
 			return (nerr == nil), nil
 		}, "Network not found in agent")
@@ -217,7 +217,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 			hostName := fmt.Sprintf("testHost-%d", i)
 
 			// make the call
-			ep, cerr := ag.createEndpointReq("default", "testNetwork", epname, hostName)
+			ep, cerr := ag.createEndpointReq("default", "default", "testNetwork", epname, hostName)
 			if cerr != nil {
 				waitCh <- fmt.Errorf("endpoint create failed: %v", cerr)
 				return
@@ -250,9 +250,6 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				fmt.Println("EP COUNT: ", ag.datapath.GetEndpointCount())
-				fmt.Println("AG COUNT: ", it.numAgents)
-
 				return (ag.datapath.GetEndpointCount() == it.numAgents), nil
 			}, "10ms", it.pollTimeout())
 			if !found {

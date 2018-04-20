@@ -156,6 +156,26 @@ func (ag *fakeAgent) UpdateTenant(tn *netproto.Tenant) error {
 	return nil
 }
 
+// CreateNamespace creates a namespace. Stubbed out to satisfy the interface
+func (ag *fakeAgent) CreateNamespace(ns *netproto.Namespace) error {
+	return nil
+}
+
+// DeleteNamespace deletes a namespace. Stubbed out to satisfy the interface
+func (ag *fakeAgent) DeleteNamespace(ns *netproto.Namespace) error {
+	return nil
+}
+
+// ListNamespace lists namespaces. Stubbed out to satisfy the interface
+func (ag *fakeAgent) ListNamespace() []*netproto.Namespace {
+	return nil
+}
+
+// UpdateNamespace updates a namespace. Stubbed out to satisfy the interface
+func (ag *fakeAgent) UpdateNamespace(ns *netproto.Namespace) error {
+	return nil
+}
+
 // CreateInterface creates an interface. Stubbed out to satisfy the ctrlerIf interface
 func (ag *fakeAgent) CreateInterface(intf *netproto.Interface) error {
 	return nil

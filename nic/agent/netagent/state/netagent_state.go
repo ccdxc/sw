@@ -31,15 +31,16 @@ func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID stri
 	}
 
 	nagent := NetAgent{
-		store:      emdb,
-		nodeUUID:   nodeUUID,
-		datapath:   dp,
-		networkDB:  make(map[string]*netproto.Network),
-		endpointDB: make(map[string]*netproto.Endpoint),
-		secgroupDB: make(map[string]*netproto.SecurityGroup),
-		tenantDB:   make(map[string]*netproto.Tenant),
-		enicDB:     make(map[string]*netproto.Interface),
-		hwIfDB:     make(map[string]*netproto.Interface),
+		store:       emdb,
+		nodeUUID:    nodeUUID,
+		datapath:    dp,
+		networkDB:   make(map[string]*netproto.Network),
+		endpointDB:  make(map[string]*netproto.Endpoint),
+		secgroupDB:  make(map[string]*netproto.SecurityGroup),
+		tenantDB:    make(map[string]*netproto.Tenant),
+		namespaceDB: make(map[string]*netproto.Namespace),
+		enicDB:      make(map[string]*netproto.Interface),
+		hwIfDB:      make(map[string]*netproto.Interface),
 	}
 
 	c := config.Agent{
@@ -108,7 +109,7 @@ func (na *NetAgent) Stop() error {
 
 // objectKey returns object key from object meta
 func objectKey(meta api.ObjectMeta) string {
-	return fmt.Sprintf("%s|%s", meta.Tenant, meta.Name)
+	return fmt.Sprintf("%s|%s|%s", meta.Tenant, meta.Namespace, meta.Name)
 }
 
 // GetAgentID returns UUID of the agent
@@ -120,8 +121,9 @@ func (na *NetAgent) createDefaultTenant() error {
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Name:   "default",
-			Tenant: "default",
+			Name:      "default",
+			Tenant:    "default",
+			Namespace: "default",
 		},
 	}
 	return na.CreateTenant(&tn)

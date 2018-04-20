@@ -47,6 +47,7 @@ func NewRestServer(agent state.CtrlerIntf, listenURL string) (*RestServer, error
 		"/api/sgs/":        addSecurityGroupAPIRoutes,
 		"/api/tenants/":    addTenantAPIRoutes,
 		"/api/interfaces/": addInterfaceAPIRoutes,
+		"/api/namespaces/": addNamespaceAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

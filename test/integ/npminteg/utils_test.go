@@ -63,12 +63,13 @@ func CreateAgent(kind datapath.Kind, nodeUUID, srvURL string, resolver resolver.
 	return &ag, nil
 }
 
-func (ag *Dpagent) createEndpointReq(tenant, net, epname, host string) (*netproto.Endpoint, error) {
+func (ag *Dpagent) createEndpointReq(tenant, namespace, net, epname, host string) (*netproto.Endpoint, error) {
 	epinfo := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: tenant,
-			Name:   epname,
+			Tenant:    tenant,
+			Name:      epname,
+			Namespace: namespace,
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID: epname,

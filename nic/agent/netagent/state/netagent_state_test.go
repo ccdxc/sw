@@ -133,18 +133,18 @@ func (dp *mockDatapath) DeleteSecurityRule(sg *netproto.SecurityGroup, rule *net
 	return nil
 }
 
-// CreateTenant creates a tenant. Stubbed out to satisfy the interface
-func (dp *mockDatapath) CreateTenant(tn *netproto.Tenant) error {
+// CreateVrf creates a vrf. Stubbed out to satisfy the interface
+func (dp *mockDatapath) CreateVrf(vrfID uint64) error {
 	return nil
 }
 
-// DeleteTenant deletes a tenant. Stubbed out to satisfy the interface
-func (dp *mockDatapath) DeleteTenant(tn *netproto.Tenant) error {
+// DeleteVrf deletes a vrf. Stubbed out to satisfy the interface
+func (dp *mockDatapath) DeleteVrf(vrfID uint64) error {
 	return nil
 }
 
-// UpdateTenant updates a tenant. Stubbed out to satisfy the interface
-func (dp *mockDatapath) UpdateTenant(tn *netproto.Tenant) error {
+// UpdateVrf updates a vrf. Stubbed out to satisfy the interface
+func (dp *mockDatapath) UpdateVrf(vrfID uint64) error {
 	return nil
 }
 
@@ -275,8 +275,9 @@ func TestNetworkCreateDelete(t *testing.T) {
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "default",
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",
@@ -299,8 +300,9 @@ func TestNetworkCreateDelete(t *testing.T) {
 	nnt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "default",
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "20.2.2.0/24",
@@ -335,8 +337,9 @@ func TestNetworkUpdate(t *testing.T) {
 	tn := &netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "updateTenant",
-			Name:   "updateTenant",
+			Tenant:    "updateTenant",
+			Name:      "updateTenant",
+			Namespace: "updateTenant",
 		},
 	}
 
@@ -347,8 +350,9 @@ func TestNetworkUpdate(t *testing.T) {
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "updateTenant",
-			Name:   "updateNetwork",
+			Tenant:    "updateTenant",
+			Name:      "updateNetwork",
+			Namespace: "updateTenant",
 		},
 	}
 
@@ -380,8 +384,9 @@ func TestEndpointCreateDelete(t *testing.T) {
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "default",
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",
@@ -397,8 +402,9 @@ func TestEndpointCreateDelete(t *testing.T) {
 	epinfo := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testEndpoint",
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID: "testEndpointUUID",
@@ -431,8 +437,9 @@ func TestEndpointCreateDelete(t *testing.T) {
 	ep2 := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testEndpoint2",
+			Tenant:    "default",
+			Name:      "testEndpoint2",
+			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID: "testEndpointUUID",
@@ -451,8 +458,9 @@ func TestEndpointCreateDelete(t *testing.T) {
 	depinfo := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testEndpoint",
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID: "testEndpointUUID2",
@@ -490,8 +498,9 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "default",
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",
@@ -507,8 +516,9 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 	epinfo := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testEndpoint",
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID: "testEndpointUUID",
@@ -541,8 +551,9 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 	depinfo := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testEndpoint",
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID: "testEndpointUUID2",
@@ -578,8 +589,9 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 	sg := netproto.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "test-sg",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "test-sg",
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
@@ -614,8 +626,9 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "default",
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",
@@ -631,8 +644,9 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 	epinfo := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testEndpoint",
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID:   "testEndpointUUID",
@@ -653,8 +667,9 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 	ep2 := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testEndpoint2",
+			Tenant:    "default",
+			Name:      "testEndpoint2",
+			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID:   "testEndpointUUID",
@@ -681,8 +696,9 @@ func TestEndpointUpdate(t *testing.T) {
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "default",
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",
@@ -698,8 +714,9 @@ func TestEndpointUpdate(t *testing.T) {
 	epinfo := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testEndpoint",
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
 			EndpointUUID: "testEndpointUUID",
@@ -719,8 +736,9 @@ func TestEndpointUpdate(t *testing.T) {
 	sg := netproto.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "test-sg",
+			Tenant:    "default",
+			Name:      "test-sg",
+			Namespace: "default",
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
@@ -781,8 +799,9 @@ func TestSecurityGroupUpdate(t *testing.T) {
 	sg := netproto.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "test-sg",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "test-sg",
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
@@ -861,8 +880,9 @@ func TestEndpointConcurrency(t *testing.T) {
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "default",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default",
 		},
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",
@@ -883,8 +903,9 @@ func TestEndpointConcurrency(t *testing.T) {
 			epinfo := netproto.Endpoint{
 				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 				ObjectMeta: api.ObjectMeta{
-					Tenant: "default",
-					Name:   fmt.Sprintf("testEndpoint-%d", idx),
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      fmt.Sprintf("testEndpoint-%d", idx),
 				},
 				Spec: netproto.EndpointSpec{
 					EndpointUUID: "testEndpointUUID",
@@ -911,8 +932,9 @@ func TestEndpointConcurrency(t *testing.T) {
 			epinfo := netproto.Endpoint{
 				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 				ObjectMeta: api.ObjectMeta{
-					Tenant: "default",
-					Name:   fmt.Sprintf("testEndpoint-%d", idx),
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      fmt.Sprintf("testEndpoint-%d", idx),
 				},
 			}
 			eperr := ag.DeleteEndpoint(&epinfo)
@@ -936,8 +958,9 @@ func TestTenantCreateDelete(t *testing.T) {
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testTenant",
-			Name:   "testTenant",
+			Tenant:    "testTenant",
+			Namespace: "default",
+			Name:      "testTenant",
 		},
 	}
 
@@ -977,8 +1000,9 @@ func TestTenantUpdate(t *testing.T) {
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "updateTenant",
-			Name:   "updateTenant",
+			Tenant:    "updateTenant",
+			Namespace: "updateTenant",
+			Name:      "updateTenant",
 		},
 	}
 
@@ -991,7 +1015,7 @@ func TestTenantUpdate(t *testing.T) {
 
 	tnSpec := netproto.TenantSpec{
 		Meta: &api.ObjectMeta{
-			Namespace: "testNamespace",
+			ResourceVersion: "v2",
 		},
 	}
 
@@ -1011,8 +1035,9 @@ func TestNetworkCreateOnNonExistentTenant(t *testing.T) {
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "nonExistentNetwork",
-			Name:   "default",
+			Tenant:    "nonExistentNetwork",
+			Namespace: "nonExistentNetwork",
+			Name:      "default",
 		},
 	}
 
@@ -1033,8 +1058,9 @@ func TestInterfacesCreateDelete(t *testing.T) {
 	lif := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testLif",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testLif",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type: "LIF",
@@ -1045,8 +1071,9 @@ func TestInterfacesCreateDelete(t *testing.T) {
 	enic := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testEnic",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testEnic",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type: "ENIC",
@@ -1057,8 +1084,9 @@ func TestInterfacesCreateDelete(t *testing.T) {
 	uplink := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testUplink",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testUplink",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type: "UPLINK",
@@ -1125,8 +1153,9 @@ func TestInterfaceUpdate(t *testing.T) {
 	lif := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testLif",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testLif",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        "LIF",
@@ -1141,8 +1170,9 @@ func TestInterfaceUpdate(t *testing.T) {
 	enic := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testEnic",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testEnic",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        "ENIC",
@@ -1157,8 +1187,9 @@ func TestInterfaceUpdate(t *testing.T) {
 	uplink := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testUplink",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testUplink",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        "UPLINK",
@@ -1194,8 +1225,9 @@ func TestInterfaceUpdate(t *testing.T) {
 	downLif := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testLif",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testLif",
 		},
 		Spec: netproto.InterfaceSpec{
 			AdminStatus: "DOWN",
@@ -1205,8 +1237,9 @@ func TestInterfaceUpdate(t *testing.T) {
 	downEnic := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testEnic",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testEnic",
 		},
 		Spec: netproto.InterfaceSpec{
 			AdminStatus: "DOWN",
@@ -1216,8 +1249,9 @@ func TestInterfaceUpdate(t *testing.T) {
 	downUplink := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testUplink",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testUplink",
 		},
 		Spec: netproto.InterfaceSpec{
 			AdminStatus: "DOWN",
@@ -1260,8 +1294,9 @@ func TestDuplicateInterfaceCreate(t *testing.T) {
 	lif := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "testLif",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testLif",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        "LIF",
@@ -1309,8 +1344,9 @@ func TestNonExistentInterfaceObjects(t *testing.T) {
 	badLif := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "nonExistentInterface",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "nonExistentInterface",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        "LIF",
@@ -1344,4 +1380,81 @@ func TestNonExistentInterfaceObjects(t *testing.T) {
 	err = ag.DeleteInterface(badLif)
 	Assert(t, err != nil, "Non existent tenant interface deletes should fail, it passed instead")
 
+}
+
+func TestNamespaceCreateDelete(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// namespace
+	ns := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "testTenant",
+			Namespace: "default",
+			Name:      "testTenant",
+		},
+	}
+
+	// create tenant
+	err := ag.CreateNamespace(&ns)
+	AssertOk(t, err, "Error creating tenant")
+	tnt, err := ag.FindNamespace(ns.ObjectMeta)
+	AssertOk(t, err, "Tenant was not found in DB")
+	Assert(t, tnt.Name == "testTenant", "Tenant names did not match", tnt)
+
+	// verify duplicate tenant creations succeed
+	err = ag.CreateNamespace(&ns)
+	AssertOk(t, err, "Error creating duplicate tenant")
+
+	// verify list api works.
+	nsList := ag.ListNamespace()
+	Assert(t, len(nsList) == 1, "Incorrect number of tenants")
+
+	// delete the namespace and verify its gone from db
+	err = ag.DeleteNamespace(&ns)
+	AssertOk(t, err, "Error deleting network")
+	_, err = ag.FindTenant(ns.ObjectMeta)
+	Assert(t, err != nil, "Tenant was still found in database after deleting", ag)
+
+	// verify you can not delete non-existing tenant
+	err = ag.DeleteNamespace(&ns)
+	Assert(t, err != nil, "deleting non-existing network succeeded", ag)
+}
+
+func TestNamespaceUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// namespace
+	ns := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "updateTenant",
+			Namespace: "updateTenant",
+			Name:      "updateTenant",
+		},
+	}
+
+	// create tenant
+	err := ag.CreateNamespace(&ns)
+	AssertOk(t, err, "Error creating namespace")
+	tnt, err := ag.FindNamespace(ns.ObjectMeta)
+	AssertOk(t, err, "Tenant was not found in DB")
+	Assert(t, tnt.Name == "updateTenant", "Namespace names did not match", tnt)
+
+	nsSpec := netproto.NamespaceSpec{
+		Meta: &api.ObjectMeta{
+			ResourceVersion: "v2",
+		},
+	}
+
+	ns.Spec = nsSpec
+
+	err = ag.UpdateNamespace(&ns)
+	AssertOk(t, err, "Error updating namespace")
 }

@@ -1105,15 +1105,15 @@ func (hd *Datapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	return nil
 }
 
-// CreateTenant creates a tenant
-func (hd *Datapath) CreateTenant(tn *netproto.Tenant) error {
+// CreateVrf creates a vrf
+func (hd *Datapath) CreateVrf(vrfID uint64) error {
 	vrfSpec := halproto.VrfSpec{
 		Meta: &halproto.ObjectMeta{
-			VrfId: tn.Status.TenantID,
+			VrfId: vrfID,
 		},
 		KeyOrHandle: &halproto.VrfKeyHandle{
 			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-				VrfId: tn.Status.TenantID,
+				VrfId: vrfID,
 			},
 		},
 		// All tenant creates are currently customer type as we don't intend to expose infra vrf creates to the user.
@@ -1142,19 +1142,19 @@ func (hd *Datapath) CreateTenant(tn *netproto.Tenant) error {
 		}
 	}
 
-	// save tenant create request message.
-	hd.Lock()
-	hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &vrfReqMsg
-	hd.Unlock()
+	//// save tenant create request message.
+	//hd.Lock()
+	//hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &vrfReqMsg
+	//hd.Unlock()
 	return nil
 }
 
-// DeleteTenant deletes a tenant
-func (hd *Datapath) DeleteTenant(tn *netproto.Tenant) error {
+// DeleteVrf deletes a vrf
+func (hd *Datapath) DeleteVrf(vrfID uint64) error {
 
 	vrfDelReq := halproto.VrfDeleteRequest{
 		Meta: &halproto.ObjectMeta{
-			VrfId: tn.Status.TenantID,
+			VrfId: vrfID,
 		},
 	}
 
@@ -1169,20 +1169,20 @@ func (hd *Datapath) DeleteTenant(tn *netproto.Tenant) error {
 		return err
 	}
 
-	// save the tenant delete message
-	hd.Lock()
-	hd.DB.TenantDelDB[objectKey(&tn.ObjectMeta)] = &vrfDelReqMsg
-	delete(hd.DB.TenantDB, objectKey(&tn.ObjectMeta))
-	hd.Unlock()
+	//// save the tenant delete message
+	//hd.Lock()
+	//hd.DB.TenantDelDB[objectKey(&tn.ObjectMeta)] = &vrfDelReqMsg
+	//delete(hd.DB.TenantDB, objectKey(&tn.ObjectMeta))
+	//hd.Unlock()
 
 	return nil
 }
 
-// UpdateTenant deletes a tenant
-func (hd *Datapath) UpdateTenant(tn *netproto.Tenant) error {
+// UpdateVrf deletes a tenant
+func (hd *Datapath) UpdateVrf(vrfID uint64) error {
 	vrfSpec := halproto.VrfSpec{
 		Meta: &halproto.ObjectMeta{
-			VrfId: tn.Status.TenantID,
+			VrfId: vrfID,
 		},
 	}
 	vrfReqMsg := halproto.VrfRequestMsg{
@@ -1196,11 +1196,11 @@ func (hd *Datapath) UpdateTenant(tn *netproto.Tenant) error {
 		return err
 	}
 
-	// save the tenant delete message
-	hd.Lock()
-	hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &vrfReqMsg
-	delete(hd.DB.TenantDB, objectKey(&tn.ObjectMeta))
-	hd.Unlock()
+	//// save the tenant delete message
+	//hd.Lock()
+	//hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &vrfReqMsg
+	//delete(hd.DB.TenantDB, objectKey(&tn.ObjectMeta))
+	//hd.Unlock()
 
 	return nil
 }

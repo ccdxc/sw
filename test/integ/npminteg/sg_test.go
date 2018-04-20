@@ -15,7 +15,7 @@ import (
 // TestNpmSgCreateDelete
 func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// create sg in watcher
-	err := it.ctrler.Watchr.CreateSecurityGroup("default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	err := it.ctrler.Watchr.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	c.Assert(err, IsNil)
 
 	// verify all agents have the security group
@@ -41,7 +41,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	}
 
 	// create sg policy
-	err = it.ctrler.Watchr.CreateSgpolicy("default", "testpolicy", []string{"testsg"}, inrules, outrules)
+	err = it.ctrler.Watchr.CreateSgpolicy("default", "default", "testpolicy", []string{"testsg"}, inrules, outrules)
 	c.Assert(err, IsNil)
 
 	// verify datapath has the rules
@@ -92,7 +92,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 
 func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// create a network in controller
-	err := it.ctrler.Watchr.CreateNetwork("default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
+	err := it.ctrler.Watchr.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
@@ -100,7 +100,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}, "Network not found in statemgr")
 
 	// create sg in watcher
-	err = it.ctrler.Watchr.CreateSecurityGroup("default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	err = it.ctrler.Watchr.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
 		_, serr := it.ctrler.StateMgr.FindSecurityGroup("default", "testsg")
@@ -108,7 +108,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}, "Sg not found in statemgr")
 
 	// create endpoint
-	err = it.ctrler.Watchr.CreateEndpoint("default", "testNetwork", "testEndpoint1", "testVm1", "01:01:01:01:01:01", "host1", "20.1.1.1", map[string]string{"env": "production", "app": "procurement"}, 2)
+	err = it.ctrler.Watchr.CreateEndpoint("default", "default", "testNetwork", "testEndpoint1", "testVm1", "01:01:01:01:01:01", "host1", "20.1.1.1", map[string]string{"env": "production", "app": "procurement"}, 2)
 	c.Assert(err, IsNil)
 
 	// verify endpoint is present in all agents
@@ -124,7 +124,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}
 
 	// create second endpoint
-	err = it.ctrler.Watchr.CreateEndpoint("default", "testNetwork", "testEndpoint2", "testVm2", "02:02:02:02:02:02", "host2", "20.2.2.2", map[string]string{"env": "production", "app": "procurement"}, 3)
+	err = it.ctrler.Watchr.CreateEndpoint("default", "default", "testNetwork", "testEndpoint2", "testVm2", "02:02:02:02:02:02", "host2", "20.2.2.2", map[string]string{"env": "production", "app": "procurement"}, 3)
 	c.Assert(err, IsNil)
 
 	// verify new endpoint is present in all agents

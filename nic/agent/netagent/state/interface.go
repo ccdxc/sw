@@ -41,8 +41,9 @@ func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
 
 	// find the corresponding tenant
 	tnMeta := api.ObjectMeta{
-		Name:   intf.Tenant,
-		Tenant: intf.Tenant,
+		Name:      intf.Tenant,
+		Namespace: intf.Namespace,
+		Tenant:    intf.Tenant,
 	}
 
 	tn, err := na.FindTenant(tnMeta)
@@ -134,8 +135,9 @@ func (na *NetAgent) UpdateInterface(intf *netproto.Interface) error {
 
 	// find the corresponding tenant
 	tnMeta := api.ObjectMeta{
-		Name:   intf.Tenant,
-		Tenant: intf.Tenant,
+		Name:      intf.Tenant,
+		Namespace: intf.Namespace,
+		Tenant:    intf.Tenant,
 	}
 
 	tn, err := na.FindTenant(tnMeta)
@@ -163,8 +165,9 @@ func (na *NetAgent) DeleteInterface(intf *netproto.Interface) error {
 
 	// find the corresponding tenant
 	tnMeta := api.ObjectMeta{
-		Name:   intf.Tenant,
-		Tenant: intf.Tenant,
+		Name:      intf.Tenant,
+		Namespace: intf.Namespace,
+		Tenant:    intf.Tenant,
 	}
 
 	tn, err := na.FindTenant(tnMeta)
@@ -203,8 +206,9 @@ func (na *NetAgent) GetHwInterfaces() error {
 				Kind: "Interface",
 			},
 			ObjectMeta: api.ObjectMeta{
-				Tenant: "default",
-				Name:   fmt.Sprintf("default-lif-%d", i),
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      fmt.Sprintf("default-lif-%d", i),
 			},
 			Spec: netproto.InterfaceSpec{
 				Type: "LIF",
@@ -225,8 +229,9 @@ func (na *NetAgent) GetHwInterfaces() error {
 				Kind: "Interface",
 			},
 			ObjectMeta: api.ObjectMeta{
-				Tenant: "default",
-				Name:   fmt.Sprintf("default-uplink-%d", i),
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      fmt.Sprintf("default-uplink-%d", i),
 			},
 			Spec: netproto.InterfaceSpec{
 				Type: "UPLINK",
@@ -247,8 +252,9 @@ func (na *NetAgent) GetHwInterfaces() error {
 // findIntfByName looks up either uplinks or lifs from the hw interfaces db
 func (na *NetAgent) findIntfByName(intfName string) (intf *netproto.Interface, ok bool) {
 	lifMeta := api.ObjectMeta{
-		Name:   intfName,
-		Tenant: "default",
+		Name:      intfName,
+		Tenant:    "default",
+		Namespace: "default",
 	}
 	key := objectKey(lifMeta)
 	na.Lock()

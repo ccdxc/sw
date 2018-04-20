@@ -35,8 +35,9 @@ func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
 
 	// find the corresponding tenant
 	tnMeta := api.ObjectMeta{
-		Name:   nt.Tenant,
-		Tenant: nt.Tenant,
+		Name:      nt.Tenant,
+		Tenant:    nt.Tenant,
+		Namespace: nt.Namespace,
 	}
 
 	tn, err := na.FindTenant(tnMeta)

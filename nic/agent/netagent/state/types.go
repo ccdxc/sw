@@ -15,9 +15,8 @@ import (
 const (
 	NetworkID       = "networkID"
 	SecurityGroupID = "sgID"
-	TenantID        = "tenantID"
+	VrfID           = "vrfID"
 	InterfaceID     = "interfaceID"
-	EndpointID      = "endpointID"
 )
 
 // IntfInfo has the interface names to be plumbed into container
@@ -28,17 +27,18 @@ type IntfInfo struct {
 
 // NetAgent is the network agent instance
 type NetAgent struct {
-	sync.Mutex                                    // global lock for the agent
-	store      emstore.Emstore                    // embedded db
-	nodeUUID   string                             // Node's UUID
-	datapath   NetDatapathAPI                     // network datapath
-	ctrlerif   CtrlerAPI                          // controller object
-	networkDB  map[string]*netproto.Network       // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
-	endpointDB map[string]*netproto.Endpoint      // Endpoint object db
-	secgroupDB map[string]*netproto.SecurityGroup // security group object db
-	tenantDB   map[string]*netproto.Tenant        // tenant object db
-	enicDB     map[string]*netproto.Interface     // ENIC interface object db
-	hwIfDB     map[string]*netproto.Interface     // Has all the Uplinks and Lifs
+	sync.Mutex                                     // global lock for the agent
+	store       emstore.Emstore                    // embedded db
+	nodeUUID    string                             // Node's UUID
+	datapath    NetDatapathAPI                     // network datapath
+	ctrlerif    CtrlerAPI                          // controller object
+	networkDB   map[string]*netproto.Network       // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
+	endpointDB  map[string]*netproto.Endpoint      // Endpoint object db
+	secgroupDB  map[string]*netproto.SecurityGroup // security group object db
+	tenantDB    map[string]*netproto.Tenant        // tenant object db
+	namespaceDB map[string]*netproto.Namespace     // tenant object db
+	enicDB      map[string]*netproto.Interface     // ENIC interface object db
+	hwIfDB      map[string]*netproto.Interface     // Has all the Uplinks and Lifs
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent
@@ -69,6 +69,10 @@ type CtrlerIntf interface {
 	DeleteTenant(tn *netproto.Tenant) error                     // delete a tenant
 	ListTenant() []*netproto.Tenant                             // lists all tenants
 	UpdateTenant(tn *netproto.Tenant) error                     // updates a tenant
+	CreateNamespace(ns *netproto.Namespace) error               // create a namespace
+	DeleteNamespace(ns *netproto.Namespace) error               // delete a namespace
+	ListNamespace() []*netproto.Namespace                       // lists all namespaces
+	UpdateNamespace(ns *netproto.Namespace) error               // updates a namespace
 	CreateInterface(intf *netproto.Interface) error             // creates an interface
 	UpdateInterface(intf *netproto.Interface) error             // updates an interface
 	DeleteInterface(intf *netproto.Interface) error             // deletes an interface
@@ -97,9 +101,9 @@ type NetDatapathAPI interface {
 	CreateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                   // creates a security group
 	UpdateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                   // updates a security group
 	DeleteSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                   // deletes a security group
-	CreateTenant(tn *netproto.Tenant) error                                                                                                                 // creates a tenant
-	DeleteTenant(tn *netproto.Tenant) error                                                                                                                 // deletes a tenant
-	UpdateTenant(tn *netproto.Tenant) error                                                                                                                 // updates a tenant
+	CreateVrf(vrfID uint64) error                                                                                                                           // creates a vrf
+	DeleteVrf(vrfID uint64) error                                                                                                                           // deletes a vrf
+	UpdateVrf(vrfID uint64) error                                                                                                                           // updates a vrf
 	CreateInterface(intf *netproto.Interface, lif *netproto.Interface, tn *netproto.Tenant) error                                                           // creates an interface
 	UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                                                                    // updates an interface
 	DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                                                                    // deletes an interface
