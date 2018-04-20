@@ -278,7 +278,7 @@ nat_pool_add_to_db (nat_pool_t *pool, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("Adding natpool (vrf {}, pool id {}) to cfg db",
+    HAL_TRACE_DEBUG("Adding natpool ({}, {}) to cfg db",
                     pool->key.vrf_id, pool->key.pool_id);
 
     // allocate an entry to establish mapping from natpool key to its handle
@@ -295,7 +295,7 @@ nat_pool_add_to_db (nat_pool_t *pool, hal_handle_t handle)
                                                              &entry->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("Failed to add natpool (vrf {}, pool id {}) to handle db,"
+        HAL_TRACE_ERR("Failed to add natpool ({}, {}) to handle db,"
                       " err : {}", pool->key.vrf_id, pool->key.pool_id, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
         return ret;
@@ -308,12 +308,12 @@ nat_pool_add_to_db (nat_pool_t *pool, hal_handle_t handle)
 // delete a natpool from the config database
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-natpool_del_from_db (nat_pool_t *pool)
+nat_pool_del_from_db (nat_pool_t *pool)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("Removing from natpool (vrf {}, pool id {}) from cfg db");
-
+    HAL_TRACE_DEBUG("Removing from natpool ({}, {}) from cfg db",
+                    pool->key.vrf_id, pool->key.pool_id);
     entry =
         (hal_handle_id_ht_entry_t *)
             g_hal_state->nat_pool_id_ht()->remove(&pool->key);
@@ -322,7 +322,9 @@ natpool_del_from_db (nat_pool_t *pool)
     if (entry) {
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     } else {
-        HAL_TRACE_ERR("natpool (vrf {}, pool id {}) not found");
+        HAL_TRACE_ERR("Failed to delete natpool ({}, {}), pool not found",
+                      pool->key.vrf_id, pool->key.pool_id);
+        return HAL_RET_NAT_POOL_NOT_FOUND;
     }
 
     return HAL_RET_OK;
@@ -348,7 +350,7 @@ nat_pool_spec_dump (NatPoolSpec& spec)
 static hal_ret_t
 validate_nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
 {
-    // chec if key-handle field is set or not
+    // check if key-handle field is set or not
     if (!spec.has_key_or_handle()) {
         HAL_TRACE_ERR("NAT pool id/handle not set in request");
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
@@ -477,6 +479,9 @@ cleanup:
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// allocate hw resources and program the hw tables, if any, for the NAT pool
+//------------------------------------------------------------------------------
 static hal_ret_t
 nat_pool_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
@@ -484,7 +489,8 @@ nat_pool_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 //------------------------------------------------------------------------------
-// perform the commit operation for the NAT pool by adding to config db
+// perform the commit operation for the NAT pool by adding to config db and
+// making this config available
 //------------------------------------------------------------------------------
 static hal_ret_t
 nat_pool_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -503,9 +509,11 @@ nat_pool_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // add nat pool to the cfg db
     ret = nat_pool_add_to_db(pool, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add nat pool ({}, {}) to ",
+        HAL_TRACE_ERR("Failed to add natpool ({}, {}) to cfg db",
                       pool->key.vrf_id, pool->key.pool_id);
     }
+    HAL_TRACE_DEBUG("Committed natpool ({}, {}) to cfg db",
+                    pool->key.vrf_id, pool->key.pool_id);
     return ret;
 }
 
@@ -528,6 +536,9 @@ nat_pool_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// cleanup any transient state that we are holding
+//------------------------------------------------------------------------------
 static hal_ret_t
 nat_pool_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
@@ -561,7 +572,6 @@ nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
     cfg_op_ctxt_t    cfg_ctxt  = { 0 };
 
     auto pool_key = spec.key_or_handle().pool_key();
-
     // validate the request message
     ret = validate_nat_pool_create(spec, rsp);
     if (ret != HAL_RET_OK) {
@@ -574,6 +584,7 @@ nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
         HAL_TRACE_ERR("Failed to find vrf with key {}/handle {}",
                       pool_key.vrf_id_or_handle().vrf_id(),
                       pool_key.vrf_id_or_handle().vrf_handle());
+        ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
 
@@ -649,6 +660,92 @@ nat_pool_update (NatPoolSpec& spec, NatPoolResponse *rsp)
     return HAL_RET_INVALID_OP;
 }
 
+//------------------------------------------------------------------------------
+// validate a nat pool delete request
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+validate_nat_pool_delete_req (NatPoolDeleteRequest& req,
+                              NatPoolDeleteResponse *rsp)
+{
+    // check if key-handle field is set or not
+    if (!req.has_key_or_handle()) {
+        HAL_TRACE_ERR("NAT pool id/handle not set in request");
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // if key is set, make sure that VRF key/handle is set
+    auto kh = req.key_or_handle();
+    if (kh.key_or_handle_case() == NatPoolKeyHandle::kPoolKey) {
+        if (!kh.pool_key().has_vrf_id_or_handle()) {
+            // vrf key/handle not set in the NAT pool key
+            HAL_TRACE_ERR("VRF id/handle missing in NAT pool key");
+            rsp->set_api_status(types::API_STATUS_NAT_POOL_KEY_INVALID);
+            return HAL_RET_INVALID_ARG;
+        }
+    }
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// free hw resources and cleanup the hw tables, if any, for the NAT pool
+//------------------------------------------------------------------------------
+static hal_ret_t
+nat_pool_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// perform the commit operation for the NAT pool by deleting from config db
+//------------------------------------------------------------------------------
+static hal_ret_t
+nat_pool_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t       ret;
+    dllist_ctxt_t   *lnode = NULL;
+    dhl_entry_t     *dhl_entry = NULL;
+    nat_pool_t      *pool;
+    hal_handle_t    hal_handle;
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    pool = (nat_pool_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    ret = nat_pool_del_from_db(pool);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    HAL_TRACE_DEBUG("Deleted natpool ({}, {}) from cfg db",
+                    pool->key.vrf_id, pool->key.pool_id);
+
+    // free all sw resources associated with this pool
+    hal_handle_free(hal_handle);
+    nat_pool_cleanup(pool);
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// abort NAT pool delete operation
+//------------------------------------------------------------------------------
+static hal_ret_t
+nat_pool_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    HAL_TRACE_ERR("Aborting NAT pool delete operation");
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// cleanup any transient state that we are holding
+//------------------------------------------------------------------------------
+static hal_ret_t
+nat_pool_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
 //-----------------------------------------------------------------------------
 // process a NAT pool delete request
 //-----------------------------------------------------------------------------
@@ -656,7 +753,64 @@ hal_ret_t
 nat_pool_delete (NatPoolDeleteRequest& req,
                  NatPoolDeleteResponse *rsp)
 {
-    return HAL_RET_OK;
+    hal_ret_t        ret;
+    vrf_t            *vrf;
+    nat_pool_t       *pool;
+    cfg_op_ctxt_t    cfg_ctxt = { 0 };
+    dhl_entry_t      dhl_entry = { 0 };
+
+    auto pool_key = req.key_or_handle().pool_key();
+    // validate the request message
+    ret = validate_nat_pool_delete_req(req, rsp);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+
+    // get the VRF this nat pool belongs to
+    vrf = vrf_lookup_key_or_handle(pool_key.vrf_id_or_handle());
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("Failed to find vrf with key {}/handle {}",
+                      pool_key.vrf_id_or_handle().vrf_id(),
+                      pool_key.vrf_id_or_handle().vrf_handle());
+        ret = HAL_RET_VRF_NOT_FOUND;
+        goto end;
+    }
+
+    // get the NAT pool
+    pool = find_nat_pool(vrf->vrf_id, req.key_or_handle());
+    if (pool == NULL) {
+        HAL_TRACE_ERR("Failed to delete natpool ({}, {}), pool not found",
+                      vrf->vrf_id, pool_key.pool_id());
+        ret = HAL_RET_NAT_POOL_NOT_FOUND;
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Deleting natpool ({}, {})",
+                    vrf->vrf_id, pool_key.pool_id());
+
+    // TODO: check if there are NAT Mappings outstanding
+
+    // form ctxt and handover to the HAL infra
+    dhl_entry.handle = pool->hal_handle;
+    dhl_entry.obj = pool;
+    cfg_ctxt.app_ctxt = NULL;
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_del_obj(pool->hal_handle, &cfg_ctxt,
+                             nat_pool_delete_del_cb,
+                             nat_pool_delete_commit_cb,
+                             nat_pool_delete_abort_cb,
+                             nat_pool_delete_cleanup_cb);
+
+end:
+
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC (HAL_API_NAT_POOL_DELETE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC (HAL_API_NAT_POOL_DELETE_FAIL);
+    }
+    rsp->set_api_status(hal_prepare_rsp(ret));
+    return ret;
 }
 
 hal_ret_t
