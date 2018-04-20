@@ -142,6 +142,9 @@ typedef enum hal_obj_id_e {
     HAL_OBJ_ID_GFT_EXACT_MATCH_PROFILE,
     HAL_OBJ_ID_GFT_HDR_TRANSPOSITION_PROFILE,
     HAL_OBJ_ID_GFT_EXACT_MATCH_FLOW_ENTRY,
+    HAL_OBJ_ID_NAT_POOL,
+    HAL_OBJ_ID_NAT_POLICY,
+    HAL_OBJ_ID_NAT_VPN_MAPPING,
     HAL_OBJ_ID_PORT,                              // TBD: doesn't belong in HAL
     HAL_OBJ_ID_MAX                                // NOTE: must be the last
 } hal_obj_id_t;

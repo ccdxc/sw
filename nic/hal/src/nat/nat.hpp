@@ -124,6 +124,10 @@ hal_ret_t nat_vpn_mapping_create(NatVpnMappingSpec& spec,
 hal_ret_t nat_vpn_mapping_get(NatVpnMappingGetRequest& req,
                               NatVpnMappingGetResponseMsg *res);
 
+// module level callbacks
+hal_ret_t hal_nat_init_cb(hal_cfg_t *hal_cfg);
+hal_ret_t hal_nat_cleanup_cb(void);
+
 }    // namespace hal
 
 #endif    // __NAT_HPP__

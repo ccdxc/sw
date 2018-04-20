@@ -85,6 +85,7 @@ enum ApiStatus {
   API_STATUS_HW_READ_ERROR                = 49;    // hardware read error
   API_STATUS_HW_WRITE_ERROR               = 50;    // hardware write error
   API_STATUS_L2_SEGMENT_TYPE_INVALID      = 51;    // L2 Segment set to invalide type
+  API_STATUS_NAT_POOL_KEY_INVALID         = 52;    // invalid NAT pool key
 }
 
 // common meta object that is part of all other top level objects

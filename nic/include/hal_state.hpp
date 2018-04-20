@@ -466,6 +466,9 @@ public:
 
     // get APIs for NAT state
     slab *nat_rule_slab(void) const { return cfg_db_->nat_rule_slab(); }
+    slab *nat_pool_slab(void) const { return cfg_db_->nat_pool_slab(); }
+    slab *v4_range_list_entry_slab(void) const { return cfg_db_->v4_range_list_entry_slab(); }
+    slab *v6_range_list_entry_slab(void) const { return cfg_db_->v6_range_list_entry_slab(); }
     ht *nat_pool_id_ht(void) const { return oper_db_->nat_pool_id_ht(); }
 
     // get APIs for nexthop related state

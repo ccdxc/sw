@@ -5,6 +5,7 @@
 #include "nic/hal/src/mcast/multicast.hpp"
 #include "nic/hal/src/aclqos/acl.hpp"
 #include "nic/hal/src/firewall/nwsec.hpp"
+#include "nic/hal/src/nat/nat.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"
 #include "nic/hal/src/telemetry/telemetry.hpp"
 #include "nic/hal/src/stats/stats.hpp"
@@ -28,6 +29,9 @@ hal_module_meta_init (void)
     g_module_meta[HAL_MODULE_ID_FIREWALL] =
         new hal_module_meta(hal_fw_init_cb,
                             hal_fw_cleanup_cb);
+    g_module_meta[HAL_MODULE_ID_NAT] =
+        new hal_module_meta(hal_nat_init_cb,
+                            hal_nat_cleanup_cb);
     g_module_meta[HAL_MODULE_ID_DOS] =
         new hal_module_meta(hal_dos_init_cb,
                             hal_dos_cleanup_cb);

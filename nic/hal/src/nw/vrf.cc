@@ -169,7 +169,8 @@ vrf_add_to_db (vrf_t *vrf, hal_handle_t handle, nwsec_profile_t *sec_prof)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("Adding to vrf id hash table");
+    HAL_TRACE_DEBUG("Adding to vrf {} to cfg db", vrf->vrf_id);
+
     // allocate an entry to establish mapping from vrf id to its handle
     entry = (hal_handle_id_ht_entry_t *)
                 g_hal_state->hal_handle_id_ht_entry_slab()->alloc();
@@ -183,9 +184,10 @@ vrf_add_to_db (vrf_t *vrf, hal_handle_t handle, nwsec_profile_t *sec_prof)
                                                         entry, &entry->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("Failed to add vrf id to handle mapping, "
-                      "err : {}", ret);
+        HAL_TRACE_ERR("Failed to add vrf {} to handle mapping, "
+                      "err : {}", vrf->vrf_id, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+        return ret;
     }
 
     // add vrf to nwsec profile
@@ -217,7 +219,7 @@ vrf_del_from_db (vrf_t *vrf)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("Removing from vrf id hash table");
+    HAL_TRACE_DEBUG("Removing from vrf {} from cfg db", vrf->vrf_id);
 
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->vrf_id_ht()->

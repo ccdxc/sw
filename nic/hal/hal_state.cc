@@ -1698,12 +1698,24 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->gft_exact_match_flow_entry_slab()->free(elem);
         break;
 
+    case HAL_SLAB_V4_RANGE_LIST_ENTRY:
+        g_hal_state->v4_range_list_entry_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_V6_RANGE_LIST_ENTRY:
+        g_hal_state->v6_range_list_entry_slab()->free(elem);
+        break;
+
     case HAL_SLAB_NAT_RULE:
         g_hal_state->nat_rule_slab()->free(elem);
         break;
 
     case HAL_SLAB_NEXTHOP:
         g_hal_state->nexthop_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NAT_POOL:
+        g_hal_state->nat_pool_slab()->free(elem);
         break;
 
     default:
