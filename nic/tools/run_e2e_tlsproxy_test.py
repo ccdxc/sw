@@ -307,19 +307,6 @@ def main():
                 'certfile': TLS_RSA_CERTFILE, 'keyfile': TLS_RSA_KEYFILE,
                 'clientCAfile': None 
              },
-             {
-                'id': 6, 'name': "TLS Proxy - RSA - Client Auth",
-                'port': 83, 'bypass_tls': 0, 'cipher': TLS_RSA_CIPHER, 
-                'certfile': TLS_RSA_CERTFILE, 'keyfile': TLS_RSA_KEYFILE,
-                'clientCAfile': TLS_RSA_CLIENTCA_FILE 
-             },
-             {
-                'id': 7, 'name': "TLS Proxy - ECDSA - Client Auth",
-                'port': 84, 'bypass_tls': 0, 'cipher': TLS_GCM_CIPHER, 
-                'certfile': TLS_GCM_CERTFILE, 'keyfile': TLS_GCM_KEYFILE,
-                'clientCAfile': TLS_GCM_CLIENTCA_FILE 
-             },
-
             ]
     
     for test in TESTS:
