@@ -1612,10 +1612,8 @@ qos_class_add_lif (qos_class_t *qos_class, lif_t *lif, bool rx)
         goto end;
     }
 
-end:
-
     HAL_TRACE_DEBUG("Added lif {} to qos_class {}", lif->lif_id, qos_class->key);
-
+end:
     return ret;
 }
 
@@ -1644,7 +1642,6 @@ qos_class_del_lif (qos_class_t *qos_class, lif_t *lif, bool rx)
     HAL_TRACE_DEBUG("Deleted lif {} from qos_class {}", lif->lif_id, qos_class->key);
 
 end:
-
     return ret;
 }
 
@@ -2061,9 +2058,9 @@ validate_copp_spec (CoppSpec& spec)
         return HAL_RET_INVALID_ARG;
     }
 
-    if ((spec.policer().has_pps_policer() && 
+    if ((spec.policer().has_pps_policer() &&
          !spec.policer().pps_policer().packets_per_sec()) ||
-        (spec.policer().has_bps_policer() && 
+        (spec.policer().has_bps_policer() &&
          !spec.policer().bps_policer().bytes_per_sec())) {
         HAL_TRACE_ERR("Copp policer rate not set in request");
         return HAL_RET_INVALID_ARG;
@@ -2651,8 +2648,8 @@ copp_process_get (copp_t *copp, qos::CoppGetResponse *rsp)
     rsp->mutable_status()->set_copp_handle(copp->hal_handle);
 
     // TODO: fill stats of this copp
-    
-    
+
+
     // Getting PD information
     args.copp = copp;
     args.rsp = rsp;

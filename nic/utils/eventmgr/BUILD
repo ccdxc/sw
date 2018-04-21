@@ -15,6 +15,7 @@ cc_library(
         "//nic:boost",
         "//nic/hal/lib:hal_lib_includes",
         "//nic/hal/periodic:periodic",
+        "//nic/fte:fte_includes",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_list",

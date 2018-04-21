@@ -30,6 +30,7 @@ cc_library(
         "//nic:spdlog",
         "//nic:boost",
         "//nic/hal/periodic:periodic",
+        "//nic/fte:fte_includes"
     ],
     copts = sdk_copts,
 )

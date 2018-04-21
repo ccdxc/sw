@@ -600,7 +600,7 @@ endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // 3. free PI EP
-    endpoint_cleanup(ep);
+    // endpoint_cleanup(ep);
 
     return ret;
 }
@@ -806,6 +806,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     ep->hal_handle = hal_handle_alloc(HAL_OBJ_ID_ENDPOINT);
     if (ep->hal_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("Failed to alloc handle for EP");
+        ep_cleanup(ep);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
@@ -847,9 +848,9 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 
 end:
 
-    if (ret != HAL_RET_OK) {
+    if (ret != HAL_RET_OK && ret != HAL_RET_ENTRY_EXISTS) {
         if (ep) {
-            ep_free(ep);
+            ep_cleanup(ep);
             ep = NULL;
         }
         HAL_API_STATS_INC(HAL_API_ENDPOINT_CREATE_FAIL);
@@ -1835,7 +1836,7 @@ validate_endpoint_delete (ep_t *ep)
 
     if (ep->nh_list->num_elems()) {
         ret = HAL_RET_OBJECT_IN_USE;
-        HAL_TRACE_ERR("If delete failure, NHs still referring:");
+        HAL_TRACE_ERR("EP delete failure, NHs still referring:");
         hal_print_handles_block_list(ep->nh_list);
     }
 
@@ -2230,8 +2231,8 @@ ep_add_nh (ep_t *ep, nexthop_t *nh)
         goto end;
     }
 
-end:
     HAL_TRACE_DEBUG("Added nh {} to ep {}", nh->nh_id, ep_l2_key_to_str(ep));
+end:
     return ret;
 }
 
@@ -2257,9 +2258,9 @@ ep_del_nh (ep_t *ep, nexthop_t *nh)
         goto end;
     }
 
-end:
     HAL_TRACE_DEBUG("Deleted nh {} from ep {}", nh->nh_id,
                     ep_l2_key_to_str(ep));
+end:
     return ret;
 }
 

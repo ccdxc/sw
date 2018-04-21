@@ -15,6 +15,7 @@ cc_library(
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_slab",
         #"//nic/hal/pd/iris:iris_includes",
+        "//nic/fte:fte_includes",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/utils/mtrack:mtrack",
         "@sdk//obj:sdk_list",

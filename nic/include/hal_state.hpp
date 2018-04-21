@@ -17,6 +17,8 @@
 #include "nic/include/ip.h"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/periodic/periodic.hpp"
+#include "nic/fte/acl/acl.hpp"
+
 
 #ifdef SHM
 #define slab_ptr_t        offset_ptr<slab>
@@ -40,6 +42,9 @@ using sdk::lib::ht;
 using hal::utils::bitmap;
 using hal::utils::eventmgr;
 using sdk::lib::dllist_ctxt_t;
+using acl::acl_ctx_t;
+using acl::acl_config_t;
+using acl::ref_t;
 
 typedef enum hal_timer_id_s {
     HAL_TIMER_ID_NONE                     = 0,
@@ -148,6 +153,10 @@ public:
     slab *nat_cfg_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_CFG_RULE]); }
     slab *nat_cfg_pol_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_CFG_POL]); }
     slab *nexthop_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NEXTHOP]); }
+    slab *route_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ROUTE]); }
+    slab *route_acl_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ROUTE_ACL_RULE]); }
+    slab *hal_handle_id_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_ID]); }
+
 
 private:
     slab_ptr_t    slabs_[HAL_SLAB_PI_MAX - HAL_SLAB_PI_MIN];
@@ -218,6 +227,8 @@ public:
     ht *gft_exact_match_flow_entry_id_ht(void) const { return gft_exact_match_flow_entry_id_ht_; }
     ht *nat_pool_id_ht(void) const { return nat_pool_id_ht_; }
     ht *nexthop_id_ht(void) const { return nexthop_id_ht_; }
+    ht *route_ht(void) const { return route_ht_; }
+    const acl_ctx_t *route_acl(void) const { return route_acl_; }
 
     void set_infra_vrf_handle(hal_handle_t infra_vrf_hdl) { infra_vrf_handle_ = infra_vrf_hdl; }
     hal_handle_t infra_vrf_handle(void) const { return infra_vrf_handle_; }
@@ -275,6 +286,7 @@ private:
     ht    *crypto_cert_store_id_ht_;
     ht    *nat_pool_id_ht_;
     ht    *nexthop_id_ht_;
+    ht    *route_ht_;
     bitmap                  *qos_cmap_pcp_bmp_;
     bitmap                  *qos_cmap_dscp_bmp_;
 
@@ -283,6 +295,9 @@ private:
     ip_addr_t               mytep_ip_;
     hal_forwarding_mode_t   forwarding_mode_;
     if_id_t                 app_redir_if_id_;
+
+    // Route "ACL"
+    const acl_ctx_t *route_acl_;
 
     // following comes from linux process virtual memory
     shmmgr       *mmgr_;
@@ -480,6 +495,14 @@ public:
     // get APIs for nexthop related state
     slab *nexthop_slab(void) const { return cfg_db_->nexthop_slab(); }
     ht *nexthop_id_ht(void) const { return oper_db_->nexthop_id_ht(); }
+
+    // get APIs for route related state
+    slab *route_slab(void) const { return cfg_db_->route_slab(); }
+    slab *route_acl_rule_slab(void) const { return cfg_db_->route_acl_rule_slab(); }
+    ht *route_ht(void) const { return oper_db_->route_ht(); }
+    const acl_ctx_t *route_acl(void) const { return oper_db_->route_acl(); }
+
+    slab *hal_handle_id_slab(void) const { return cfg_db_->hal_handle_id_slab(); }
 
     // forwarding mode APIs
     void set_forwarding_mode(hal_forwarding_mode_t mode) {

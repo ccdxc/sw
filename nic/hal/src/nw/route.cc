@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 //
-// Handles CRUD APIs for Nexthops
+// Handles CRUD APIs for Routes
 //-----------------------------------------------------------------------------
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
@@ -10,64 +10,63 @@
 #include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
-#include "nic/hal/src/nw/nh.hpp"
+#include "nic/hal/src/nw/route.hpp"
+#include "nic/hal/src/nw/route_acl.hpp"
 
 namespace hal {
 
 // ----------------------------------------------------------------------------
-// Get key function for nexthop hash table
+// Get key function for route hash table
 // ----------------------------------------------------------------------------
 void *
-nexthop_id_get_key_func (void *entry)
+route_get_key_func (void *entry)
 {
     hal_handle_id_ht_entry_t    *ht_entry;
-    nexthop_t                   *nh = NULL;
+    route_t                     *route = NULL;
 
     HAL_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
     }
-    nh = (nexthop_t *)hal_handle_get_obj(ht_entry->handle_id);
-    return (void *)&(nh->nh_id);
+    route = (route_t *)hal_handle_get_obj(ht_entry->handle_id);
+    return (void *)&(route->key);
 
 }
 
 // ----------------------------------------------------------------------------
-// Compute hash function for nexthop hash table
+// Compute hash function for route hash table
 // ----------------------------------------------------------------------------
 uint32_t
-nexthop_id_compute_hash_func (void *key, uint32_t ht_size)
+route_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(nh_id_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(route_key_t)) % ht_size;
 }
 
 // ----------------------------------------------------------------------------
-// Compare key function for nexthop hash table
+// Compare key function for route hash table
 // ----------------------------------------------------------------------------
 bool
-nexthop_id_compare_key_func (void *key1, void *key2)
+route_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(nh_id_t *)key1 == *(nh_id_t *)key2) {
+    if (!memcmp(key1, key2, sizeof(route_key_t))) {
         return true;
     }
     return false;
 }
 
 //------------------------------------------------------------------------------
-// insert nexthop to db
+// insert route to db
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-nexthop_add_to_db (nexthop_t *nh, hal_handle_t handle)
+route_add_to_db (route_t *route, hal_handle_t handle)
 {
     hal_ret_t                   ret;
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
-    if_t                        *hal_if;
-    ep_t                        *ep;
 
-    HAL_TRACE_DEBUG("{}:adding to nexthop key hash table",
+    HAL_TRACE_DEBUG("{}:adding to route key hash table",
                     __FUNCTION__);
     // allocate an entry to establish mapping from l2key to its handle
     entry =
@@ -79,62 +78,41 @@ nexthop_add_to_db (nexthop_t *nh, hal_handle_t handle)
 
     // add mapping from vrf id to its handle
     entry->handle_id = handle;
-    sdk_ret = g_hal_state->nexthop_id_ht()->insert_with_key(&nh->nh_id,
-                                                            entry,
-                                                            &entry->ht_ctxt);
+    sdk_ret = g_hal_state->route_ht()->insert_with_key(&route->key,
+                                                       entry,
+                                                       &entry->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("failed to add nexthop id to handle mapping, "
+        HAL_TRACE_ERR("failed to add route id to handle mapping, "
                       "err : {}", ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
 
-    // add nexthop as back ref to if
-    if (nh->if_handle != HAL_HANDLE_INVALID) {
-        hal_if = find_if_by_handle(nh->if_handle);
-        HAL_ASSERT(hal_if != NULL);
-        ret = if_add_nh(hal_if, nh);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to add nh to if. err: {}", ret);
-            goto end;
-        }
-    }
+    // TODO(bharat): Add to "ACL"
 
-    // add nexthop as back ref to ep
-    if (nh->ep_handle != HAL_HANDLE_INVALID) {
-        ep = find_ep_by_handle(nh->ep_handle);
-        HAL_ASSERT(ep != NULL);
-        ret = ep_add_nh(ep, nh);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to add nh to if. err: {}", ret);
-            goto end;
-        }
-    }
-
-end:
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// delete a nh from the config database
+// delete a route from the config database
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-nexthop_del_from_db (nexthop_t *nh)
+route_del_from_db (route_t *route)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("removing from nexthop id hash table");
+    HAL_TRACE_DEBUG("removing from route id hash table");
     // remove from hash table
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state->nexthop_id_ht()->
-        remove(&nh->nh_id);
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->route_ht()->
+        remove(&route->key);
 
     if (entry) {
         // free up
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     } else {
-        HAL_TRACE_ERR("unable to find nexthop:{}", nexthop_to_str(nh));
-        ret = HAL_RET_NEXTHOP_NOT_FOUND;
+        HAL_TRACE_ERR("unable to find route:{}", route_to_str(route));
+        ret = HAL_RET_ROUTE_NOT_FOUND;
         goto end;
     }
 
@@ -142,18 +120,23 @@ end:
     return ret;;
 }
 
-
-
 //------------------------------------------------------------------------------
-// validate an incoming nexthop create request
+// validate an incoming route create request
 //------------------------------------------------------------------------------
 static hal_ret_t
-validate_nexthop_create (NexthopSpec& spec, NexthopResponse *rsp)
+validate_route_create (RouteSpec& spec, RouteResponse *rsp)
 {
     // key-handle field must be set
     if (!spec.has_key_or_handle() ||
-        spec.key_or_handle().key_or_handle_case() == NexthopKeyHandle::KEY_OR_HANDLE_NOT_SET) {
-        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
+        spec.key_or_handle().key_or_handle_case() == RouteKeyHandle::KEY_OR_HANDLE_NOT_SET) {
+        HAL_TRACE_ERR("spec has no key or handle");
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // check for NH to be present
+    if (!spec.has_nh_key_or_handle()) {
+        HAL_TRACE_ERR("spec has no nexthop key or handle");
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
@@ -165,7 +148,7 @@ validate_nexthop_create (NexthopSpec& spec, NexthopResponse *rsp)
 // create add callback
 // ----------------------------------------------------------------------------
 hal_ret_t
-nexthop_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -177,16 +160,16 @@ nexthop_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 // create commit callback
 // ----------------------------------------------------------------------------
 hal_ret_t
-nexthop_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                       ret = HAL_RET_OK;
-    nexthop_t                       *nh = NULL;
+    route_t                         *route = NULL;
     dllist_ctxt_t                   *lnode = NULL;
     dhl_entry_t                     *dhl_entry = NULL;
     hal_handle_t                    hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -194,21 +177,28 @@ nexthop_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    // app_ctxt = (nexthop_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    // app_ctxt = (route_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    nh = (nexthop_t *)dhl_entry->obj;
+    route = (route_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("create commit cb {}", nexthop_to_str(nh));
+    HAL_TRACE_DEBUG("create commit cb {}", route_to_str(route));
 
-    // Add nexthop to key DB
-    ret = nexthop_add_to_db (nh, hal_handle);
+    // Add route to key DB
+    ret = route_add_to_db (route, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to add nexthop to DB. err: {}", ret);
+        HAL_TRACE_ERR("unable to add route to DB. err: {}", ret);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("added nexthop to DB");
+    // add route to route "ACL"
+    ret = route_acl_add_route(route);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to add route to \"ACL\". err: {}", ret);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("added route to DB");
 end:
     return ret;
 }
@@ -217,11 +207,11 @@ end:
 // create abort callback
 // ----------------------------------------------------------------------------
 hal_ret_t
-nexthop_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t      ret = HAL_RET_OK;
     dhl_entry_t    *dhl_entry = NULL;
-    nexthop_t      *nh = NULL;
+    route_t        *route = NULL;
     hal_handle_t   hal_handle = 0;
     dllist_ctxt_t  *lnode = NULL;
 
@@ -234,16 +224,16 @@ nexthop_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    nh = (nexthop_t *)dhl_entry->obj;
+    route = (route_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("nexthop:{}: create abort cb", nexthop_to_str(nh));
+    HAL_TRACE_DEBUG("route:{}: create abort cb", route_to_str(route));
 
     // remove the object
     hal_handle_free(hal_handle);
 
-    // free PI nh
-    // nexthop_cleanup(nh);
+    // free PI route
+    // route_cleanup(route);
 end:
     return ret;
 }
@@ -252,7 +242,7 @@ end:
 // Dummy create cleanup callback
 // ----------------------------------------------------------------------------
 hal_ret_t
-nexthop_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -263,128 +253,125 @@ nexthop_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // Converts hal_ret_t to API status
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_prepare_rsp (NexthopResponse *rsp, hal_ret_t ret,
+route_prepare_rsp (RouteResponse *rsp, hal_ret_t ret,
                      hal_handle_t hal_handle)
 {
     if (ret == HAL_RET_OK) {
-        rsp->mutable_status()->set_nexthop_handle(hal_handle);
+        rsp->mutable_status()->set_route_handle(hal_handle);
     }
-
     rsp->set_api_status(hal_prepare_rsp(ret));
-
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
-// process a nexthop create request
-// TODO: if nexthop exists, treat this as modify
+// process a route create request
+// TODO: if route exists, treat this as modify
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_create (NexthopSpec& spec, NexthopResponse *rsp)
+route_create (RouteSpec& spec, RouteResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
+    route_key_t                     route_key = {0};
+    route_t                         *route = NULL;
     nexthop_t                       *nh = NULL;
-    if_t                            *hal_if = NULL;
-    ep_t                            *ep = NULL;
-    nexthop_create_app_ctxt_t       app_ctxt;
+    vrf_t                           *vrf = NULL;
+    route_create_app_ctxt_t         app_ctxt;
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: nexthop create ");
+    hal_api_trace(" API Begin: route create ");
 
     auto kh = spec.key_or_handle();
 
     // validate the request message
-    ret = validate_nexthop_create(spec, rsp);
+    ret = validate_route_create(spec, rsp);
     if (ret != HAL_RET_OK) {
         goto end;
     }
 
-    nh = nexthop_lookup_by_id(kh.nexthop_id());
-    if (nh) {
-        HAL_TRACE_ERR("nexthop already {}", nexthop_to_str(nh));
+    // check for vrf
+    vrf = vrf_lookup_key_or_handle(kh.route_key().vrf_key_handle());
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("Route create failure. Unable to find vrf {}",
+                      vrf_lookup_key_or_handle_to_str(kh.route_key().vrf_key_handle()));
+        ret = HAL_RET_VRF_NOT_FOUND;
+        goto end;
+    }
+
+    route_key.vrf_id = vrf->vrf_id;
+    ip_pfx_spec_to_pfx_spec(&route_key.pfx, kh.route_key().ip_prefix());
+
+    // check for route
+    route = route_lookup_by_key(&route_key);
+    if (route) {
+        HAL_TRACE_ERR("Route create failure: {} Already exists",
+                      route_to_str(route));
         ret = HAL_RET_ENTRY_EXISTS;
         goto end;
     }
 
-    // check if if is present
-    if (spec.if_or_ep_case() == NexthopSpec::kIfKeyOrHandle) {
-        auto if_key_or_handle = spec.if_key_or_handle();
-        hal_if = if_lookup_key_or_handle(if_key_or_handle);
-        if (hal_if == NULL) {
-            ret = HAL_RET_IF_NOT_FOUND;
-            HAL_TRACE_ERR("Unable to find if {}",
-                          if_lookup_key_or_handle_to_str(if_key_or_handle));
-            goto end;
-        }
-    }
-
-    // check if ep is present
-    if (spec.if_or_ep_case() == NexthopSpec::kEpKeyOrHandle) {
-        auto ep_kh = spec.ep_key_or_handle();
-        ret = find_ep(ep_kh, &ep, NULL);
-        if (ep == NULL) {
-            HAL_TRACE_ERR("Unable to find ep err: {}", ret);
-            ret = HAL_RET_EP_NOT_FOUND;
-            goto end;
-        }
-    }
-
-    // instantiate a nexthop
-    nh = nexthop_alloc_init();
+    // check for nexthop
+    nh = nexthop_lookup_key_or_handle(spec.nh_key_or_handle());
     if (nh == NULL) {
+        HAL_TRACE_ERR("Route Create failure. Unable to find nexthop {}",
+                      nexthop_lookup_key_or_handle_to_str(spec.nh_key_or_handle()));
+        ret = HAL_RET_NEXTHOP_NOT_FOUND;
+        goto end;
+    }
+
+    // instantiate a route
+    route = route_alloc_init();
+    if (route == NULL) {
         ret = HAL_RET_OOM;
         HAL_TRACE_ERR("out of memory. err: {}", ret);
         goto end;
     }
 
     // allocate hal handle id
-    nh->hal_handle = hal_handle_alloc(HAL_OBJ_ID_NEXTHOP);
-    if (nh->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}: failed to alloc handle",
-                      __FUNCTION__);
+    route->hal_handle = hal_handle_alloc(HAL_OBJ_ID_ROUTE);
+    if (route->hal_handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_ERR("Route Create failure. Unable to alloc handle");
+        route_cleanup(route);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
 
+    route->key = route_key;
+    route->nh_handle = nh->hal_handle;
 
-    nh->nh_id = kh.nexthop_id();
-    nh->if_handle = hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID;
-    nh->ep_handle = ep ? ep->hal_handle : HAL_HANDLE_INVALID;
-
-    dhl_entry.handle = nh->hal_handle;
-    dhl_entry.obj = nh;
+    dhl_entry.handle = route->hal_handle;
+    dhl_entry.obj = route;
     cfg_ctxt.app_ctxt = &app_ctxt;
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_add_obj(nh->hal_handle, &cfg_ctxt,
-                             nexthop_create_add_cb,
-                             nexthop_create_commit_cb,
-                             nexthop_create_abort_cb,
-                             nexthop_create_cleanup_cb);
+    ret = hal_handle_add_obj(route->hal_handle, &cfg_ctxt,
+                             route_create_add_cb,
+                             route_create_commit_cb,
+                             route_create_abort_cb,
+                             route_create_cleanup_cb);
 
 end:
 
     if (ret != HAL_RET_OK && ret != HAL_RET_ENTRY_EXISTS) {
-	    if (nh != NULL) {
-            nexthop_cleanup(nh);
-            nh = NULL;
+	    if (route != NULL) {
+            route_cleanup(route);
+            route = NULL;
 	    }
-	    HAL_API_STATS_INC(HAL_API_NEXTHOP_CREATE_FAIL);
+	    HAL_API_STATS_INC(HAL_API_ROUTE_CREATE_FAIL);
     } else {
-	    HAL_API_STATS_INC(HAL_API_NEXTHOP_CREATE_SUCCESS);
+	    HAL_API_STATS_INC(HAL_API_ROUTE_CREATE_SUCCESS);
     }
-    nexthop_prepare_rsp(rsp, ret, nh ? nh->hal_handle : HAL_HANDLE_INVALID);
-    hal_api_trace(" API End: nexthop create ");
+    route_prepare_rsp(rsp, ret, route ? route->hal_handle : HAL_HANDLE_INVALID);
+    hal_api_trace(" API End: route create ");
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// validate nexthop update request
+// validate route update request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_nexthop_update (NexthopSpec& spec, NexthopResponse *rsp)
+validate_route_update (RouteSpec& spec, RouteResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -398,39 +385,54 @@ validate_nexthop_update (NexthopSpec& spec, NexthopResponse *rsp)
 }
 
 //------------------------------------------------------------------------------
-// Lookup nexthop from key or handle
+// Lookup route from key or handle
 //------------------------------------------------------------------------------
-nexthop_t *
-nexthop_lookup_key_or_handle (const NexthopKeyHandle& kh)
+route_t *
+route_lookup_key_or_handle (RouteKeyHandle& kh)
 {
-    nexthop_t                       *nh = NULL;
+    vrf_t       *vrf = NULL;
+    route_key_t route_key = {0};
+    route_t     *route = NULL;
 
-    if (kh.key_or_handle_case() == NexthopKeyHandle::kNexthopId) {
-        nh = nexthop_lookup_by_id(kh.nexthop_id());
-    } else if (kh.key_or_handle_case() == NexthopKeyHandle::kNexthopHandle) {
-        nh = nexthop_lookup_by_handle(kh.nexthop_handle());
+    vrf = vrf_lookup_key_or_handle(kh.route_key().vrf_key_handle());
+    if (vrf == NULL) {
+        goto end;
     }
 
-    return nh;
+    route_key.vrf_id = vrf->vrf_id;
+    ip_pfx_spec_to_pfx_spec(&route_key.pfx, kh.route_key().ip_prefix());
+
+    if (kh.key_or_handle_case() == RouteKeyHandle::kRouteKey) {
+        route = route_lookup_by_key(&route_key);
+    } else if (kh.key_or_handle_case() == RouteKeyHandle::kRouteHandle) {
+        route = route_lookup_by_handle(kh.route_handle());
+    }
+
+end:
+    return route;
 }
 
 //------------------------------------------------------------------------------
-// Lookup nexthop from key or handle to str
+// Lookup route from key or handle to str
 //------------------------------------------------------------------------------
 const char *
-nexthop_lookup_key_or_handle_to_str (const NexthopKeyHandle& kh)
+route_lookup_key_or_handle_to_str (RouteKeyHandle& kh)
 {
 	static thread_local char       if_str[4][50];
 	static thread_local uint8_t    if_str_next = 0;
 	char                           *buf;
+    ip_prefix_t                    pfx;
 
 	buf = if_str[if_str_next++ & 0x3];
 	memset(buf, 0, 50);
 
-    if (kh.key_or_handle_case() == NexthopKeyHandle::kNexthopId) {
-        snprintf(buf, 50, "nh_id: %d", kh.nexthop_id());
-    } else if (kh.key_or_handle_case() == NexthopKeyHandle::kNexthopHandle) {
-        snprintf(buf, 50, "nh_handle: 0x%lx", kh.nexthop_handle());
+    if (kh.key_or_handle_case() == RouteKeyHandle::kRouteKey) {
+        ip_pfx_spec_to_pfx_spec(&pfx, kh.route_key().ip_prefix());
+        snprintf(buf, 50, "vrf: %s, pfx: %s",
+                 vrf_lookup_key_or_handle_to_str(kh.route_key().vrf_key_handle()),
+                 ippfx2str(&pfx));
+    } else if (kh.key_or_handle_case() == RouteKeyHandle::kRouteHandle) {
+        snprintf(buf, 50, "route_handle: 0x%lx", kh.route_handle());
     }
 
     return buf;
@@ -441,31 +443,33 @@ nexthop_lookup_key_or_handle_to_str (const NexthopKeyHandle& kh)
 // - Both PI and PD objects cloned.
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_make_clone (nexthop_t *nh, nexthop_t **nh_clone)
+route_make_clone (route_t *route, route_t **route_clone)
 {
-    *nh_clone = nexthop_alloc_init();
-    memcpy(*nh_clone, nh, sizeof(nexthop_t));
+    *route_clone = route_alloc_init();
+    memcpy(*route_clone, route, sizeof(route_t));
+
+    // Make a PD clone if needed
 
     return HAL_RET_OK;
 }
 
 hal_ret_t
-nexthop_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
-// nexthop update commit cb
+// route update commit cb
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     dllist_ctxt_t                   *lnode = NULL;
     dhl_entry_t                     *dhl_entry = NULL;
-    nexthop_t                       *nh = NULL/*, *nh_clone = NULL*/;
-    // nexthop_update_app_ctxt_t       *app_ctxt = NULL;
+    route_t                         *route = NULL/*, *route_clone = NULL*/;
+    // route_update_app_ctxt_t       *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -475,31 +479,31 @@ nexthop_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    // app_ctxt = (nexthop_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    // app_ctxt = (route_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    nh = (nexthop_t *)dhl_entry->obj;
-    // nh_clone = (nexthop_t *)dhl_entry->cloned_obj;
+    route = (route_t *)dhl_entry->obj;
+    // route_clone = (route_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update commit cb {}", nexthop_to_str(nh));
+    HAL_TRACE_DEBUG("update commit cb {}", route_to_str(route));
 
-    // Free PI
-    nexthop_free(nh);
+    // Free up original
+    route_free(route);
 
 end:
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// nexthop update abort cb
+// route update abort cb
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     dllist_ctxt_t                   *lnode = NULL;
     dhl_entry_t                     *dhl_entry = NULL;
-    nexthop_t                       *nh = NULL;
-    // nexthop_update_app_ctxt_t       *app_ctxt = NULL;
+    route_t                         *route = NULL;
+    // route_update_app_ctxt_t       *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -509,196 +513,195 @@ nexthop_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    // app_ctxt = (nexthop_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    // app_ctxt = (route_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    nh = (nexthop_t *)dhl_entry->cloned_obj;
+    route = (route_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update abort cb {}", nexthop_to_str(nh));
+    HAL_TRACE_DEBUG("update abort cb {}", route_to_str(route));
 
     // Free PI
-    nexthop_free(nh);
+    route_free(route);
 
 end:
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// nexthop update cleanup cb
+// route update cleanup cb
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                       ret = HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
 
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// check what changes in the nexthop update
+// check what changes in the route update
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_check_update (NexthopSpec& spec, nexthop_t *nh,
-                      nexthop_update_app_ctxt_t *app_ctxt)
+route_check_update (RouteSpec& spec, route_t *nh,
+                      route_update_app_ctxt_t *app_ctxt)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
 
-    // TODO: Check for If or EP change
+    // TODO: Check for nh changes
 
     return ret;
 }
 
 
 //------------------------------------------------------------------------------
-// process a nexthop update request
+// process a route update request
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_update (NexthopSpec& spec, NexthopResponse *rsp)
+route_update (RouteSpec& spec, RouteResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
-    nexthop_t                       *nh = NULL;
+    route_t                         *route = NULL;
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
     dhl_entry_t                     dhl_entry = { 0 };
-    nexthop_update_app_ctxt_t       app_ctxt = { 0 };
+    route_update_app_ctxt_t         app_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: nexthop update ");
+    hal_api_trace(" API Begin: route update ");
 
     auto kh = spec.key_or_handle();
 
     // validate the request message
-    ret = validate_nexthop_update(spec, rsp);
+    ret = validate_route_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("nexthop update validation failed, ret : {}", ret);
+        HAL_TRACE_ERR("route update validation failed, ret : {}", ret);
         goto end;
     }
 
-    // retrieve nexthop object
-    nh = nexthop_lookup_key_or_handle(kh);
-    if (nh == NULL) {
-        HAL_TRACE_ERR("failed to find nh {}",
-                      nexthop_lookup_key_or_handle_to_str(kh));
-        ret = HAL_RET_NEXTHOP_NOT_FOUND;
+    // retrieve route object
+    route = route_lookup_key_or_handle(kh);
+    if (route == NULL) {
+        HAL_TRACE_ERR("failed to find route {}",
+                      route_lookup_key_or_handle_to_str(kh));
+        ret = HAL_RET_ROUTE_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("nexthop update for {}", nexthop_to_str(nh));
+    HAL_TRACE_DEBUG("route update for {}", route_to_str(route));
 
-    ret = nexthop_check_update(spec, nh, &app_ctxt);
+    ret = route_check_update(spec, route, &app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("nexthop check update failed, err: {}", ret);
+        HAL_TRACE_ERR("route check update failed, err: {}", ret);
         goto end;
     }
 
     // check if anything changed
-    if (!app_ctxt.nexthop_changed) {
-        HAL_TRACE_ERR("no change in nexthop update: noop");
+    if (!app_ctxt.route_changed) {
+        HAL_TRACE_ERR("no change in route update: noop");
         goto end;
     }
 
-    nexthop_make_clone(nh, (nexthop_t **)&dhl_entry.cloned_obj);
+    route_make_clone(route, (route_t **)&dhl_entry.cloned_obj);
 
-    dhl_entry.handle = nh->hal_handle;
-    dhl_entry.obj = nh;
+    dhl_entry.handle = route->hal_handle;
+    dhl_entry.obj = route;
     cfg_ctxt.app_ctxt = &app_ctxt;
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_upd_obj(nh->hal_handle, &cfg_ctxt,
-                             nexthop_update_upd_cb,
-                             nexthop_update_commit_cb,
-                             nexthop_update_abort_cb,
-                             nexthop_update_cleanup_cb);
+    ret = hal_handle_upd_obj(route->hal_handle, &cfg_ctxt,
+                             route_update_upd_cb,
+                             route_update_commit_cb,
+                             route_update_abort_cb,
+                             route_update_cleanup_cb);
 
 end:
     if (ret == HAL_RET_OK) {
-	    HAL_API_STATS_INC(HAL_API_NEXTHOP_UPDATE_SUCCESS);
+	    HAL_API_STATS_INC(HAL_API_ROUTE_UPDATE_SUCCESS);
     } else {
-	    HAL_API_STATS_INC(HAL_API_NEXTHOP_UPDATE_FAIL);
+        // TODO: Check if we have to cleanup clone
+	    HAL_API_STATS_INC(HAL_API_ROUTE_UPDATE_FAIL);
     }
-    nexthop_prepare_rsp(rsp, ret,
-                        nh ? nh->hal_handle : HAL_HANDLE_INVALID);
-    hal_api_trace(" API End: nexthop update ");
+    route_prepare_rsp(rsp, ret,
+                        route ? route->hal_handle : HAL_HANDLE_INVALID);
+    hal_api_trace(" API End: route update ");
     return ret;
 
 }
 
 //------------------------------------------------------------------------------
-// process a get request for a given nexthop
+// process a get request for a given route
 //------------------------------------------------------------------------------
 static void
-nexthop_process_get (nexthop_t *nh, NexthopGetResponse *rsp)
+route_process_get (route_t *route, RouteGetResponse *rsp)
 {
-    // fill config spec of this vrf
-    rsp->mutable_spec()->mutable_key_or_handle()->set_nexthop_id(nh->nh_id);
+    // fill route key
+    auto route_key_spec = rsp->mutable_spec()->mutable_key_or_handle()->
+        mutable_route_key();
+    route_key_spec->mutable_vrf_key_handle()->set_vrf_id(route->key.vrf_id);
+    ip_pfx_to_spec(route_key_spec->mutable_ip_prefix(), &route->key.pfx);
 
     // fill operational state of this vrf
-    rsp->mutable_status()->set_nexthop_handle(nh->hal_handle);
+    rsp->mutable_status()->set_route_handle(route->hal_handle);
 
 
-    if (nh->if_handle != HAL_HANDLE_INVALID) {
-        rsp->mutable_spec()->mutable_if_key_or_handle()->
-            set_if_handle(nh->if_handle);
-    }
-
-    if (nh->ep_handle != HAL_HANDLE_INVALID) {
-        rsp->mutable_spec()->mutable_ep_key_or_handle()->
-            set_endpoint_handle(nh->ep_handle);
+    if (route->nh_handle != HAL_HANDLE_INVALID) {
+        rsp->mutable_spec()->mutable_nh_key_or_handle()->
+            set_nexthop_handle(route->nh_handle);
     }
 
     rsp->set_api_status(types::API_STATUS_OK);
 }
 
 //------------------------------------------------------------------------------
-// callback invoked from nexthop hash table while processing nexthop get request
+// callback invoked from route hash table while processing route get request
 //------------------------------------------------------------------------------
 static bool
-nexthop_get_ht_cb (void *ht_entry, void *ctxt)
+route_get_ht_cb (void *ht_entry, void *ctxt)
 {
     hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
-    NexthopGetResponseMsg *rsp      = (NexthopGetResponseMsg *)ctxt;
-    NexthopGetResponse *response    = rsp->add_response();
-    nexthop_t *nh                   = NULL;
+    RouteGetResponseMsg *rsp      = (RouteGetResponseMsg *)ctxt;
+    RouteGetResponse *response    = rsp->add_response();
+    route_t *route                   = NULL;
 
-    nh = (nexthop_t *)hal_handle_get_obj(entry->handle_id);
-    nexthop_process_get(nh, response);
+    route = (route_t *)hal_handle_get_obj(entry->handle_id);
+    route_process_get(route, response);
 
     // return false here, so that we walk through all hash table entries.
     return false;
 }
 
 //------------------------------------------------------------------------------
-// process a nh get request
+// process a route get request
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_get (NexthopGetRequest& req, NexthopGetResponseMsg *rsp)
+route_get (RouteGetRequest& req, RouteGetResponseMsg *rsp)
 {
-    nexthop_t *nh = NULL;
+    route_t *route = NULL;
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
         // If the Vrf key handle field is not set, then this is a request
         // for information from all VRFs. Run through all VRFs in the hash
         // table and populate the response.
-        g_hal_state->nexthop_id_ht()->walk(nexthop_get_ht_cb, rsp);
+        g_hal_state->route_ht()->walk(route_get_ht_cb, rsp);
     } else {
         auto kh = req.key_or_handle();
-        nh = nexthop_lookup_key_or_handle(kh);
+        route = route_lookup_key_or_handle(kh);
         auto response = rsp->add_response();
-        if (nh == NULL) {
+        if (route == NULL) {
             response->set_api_status(types::API_STATUS_NOT_FOUND);
-            HAL_API_STATS_INC(HAL_API_NEXTHOP_GET_FAIL);
-            return HAL_RET_NEXTHOP_NOT_FOUND;
+            HAL_API_STATS_INC(HAL_API_ROUTE_GET_FAIL);
+            return HAL_RET_ROUTE_NOT_FOUND;
         } else {
-            nexthop_process_get(nh, response);
+            route_process_get(route, response);
         }
     }
 
-    HAL_API_STATS_INC(HAL_API_NEXTHOP_GET_SUCCESS);
+    HAL_API_STATS_INC(HAL_API_ROUTE_GET_SUCCESS);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-validate_nexthop_delete_req (NexthopDeleteRequest& req,
-                             NexthopDeleteResponse* rsp)
+validate_route_delete_req (RouteDeleteRequest& req,
+                             RouteDeleteResponse* rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -712,19 +715,14 @@ validate_nexthop_delete_req (NexthopDeleteRequest& req,
 }
 
 //------------------------------------------------------------------------------
-// validate nexthop delete request
+// validate route delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_nexthop_delete (nexthop_t *nh)
+validate_route_delete (route_t *route)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
-    // check for no presence of l2segs
-    if (nh->route_list->num_elems()) {
-        ret = HAL_RET_OBJECT_IN_USE;
-        HAL_TRACE_ERR("NH delete failure, routes still referring :");
-        hal_print_handles_block_list(nh->route_list);
-    }
+    // check for back refs
 
     return ret;
 }
@@ -733,7 +731,7 @@ validate_nexthop_delete (nexthop_t *nh)
 // Delete main cb
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
 
@@ -741,15 +739,15 @@ nexthop_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 //------------------------------------------------------------------------------
-// Update PI DBs as nexthop_delete_del_cb() was a succcess
+// Update PI DBs as route_delete_del_cb() was a succcess
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    nexthop_t                   *nh = NULL;
+    route_t                     *route = NULL;
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
@@ -761,25 +759,25 @@ nexthop_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    nh = (nexthop_t *)dhl_entry->obj;
+    route = (route_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("delete commit cb {}", nexthop_to_str(nh));
+    HAL_TRACE_DEBUG("delete commit cb {}", route_to_str(route));
 
 
     // Remove from nexhtop key hash table
-    ret = nexthop_del_from_db(nh);
+    ret = route_del_from_db(route);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to del nexthop {} from db, err : {}",
-                      nexthop_to_str(nh), ret);
+        HAL_TRACE_ERR("failed to del route {} from db, err : {}",
+                      route_to_str(route), ret);
         goto end;
     }
 
     // Remove object from handle id based hash table
     hal_handle_free(hal_handle);
 
-    // Free PI nexthop
-    nexthop_free(nh);
+    // Free PI route
+    route_cleanup(route);
 
 end:
     if (ret != HAL_RET_OK) {
@@ -793,7 +791,7 @@ end:
 // If delete fails, nothing to do
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
 }
@@ -802,100 +800,97 @@ nexthop_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 // If delete fails, nothing to do
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+route_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
-// process a nexthop delete request
+// process a route delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-nexthop_delete (NexthopDeleteRequest& req, NexthopDeleteResponse *rsp)
+route_delete (RouteDeleteRequest& req, RouteDeleteResponse *rsp)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    nexthop_t           *nh = NULL;
+    route_t             *route = NULL;
     cfg_op_ctxt_t       cfg_ctxt = { 0 };
     dhl_entry_t         dhl_entry = { 0 };
 
-    hal_api_trace(" API Begin: nexthop delete ");
+    hal_api_trace(" API Begin: route delete ");
 
     auto kh = req.key_or_handle();
 
     // validate the request message
-    ret = validate_nexthop_delete_req(req, rsp);
+    ret = validate_route_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("nexthop delete validation failed, err:: {}", ret);
+        HAL_TRACE_ERR("route delete validation failed, err:: {}", ret);
         goto end;
     }
 
-    nh = nexthop_lookup_key_or_handle(kh);
-    if (nh == NULL) {
-        HAL_TRACE_ERR("failed to find nh {}",
-                      nexthop_lookup_key_or_handle_to_str(kh));
-        ret = HAL_RET_NEXTHOP_NOT_FOUND;
+    route = route_lookup_key_or_handle(kh);
+    if (route == NULL) {
+        HAL_TRACE_ERR("failed to find route {}",
+                      route_lookup_key_or_handle_to_str(kh));
+        ret = HAL_RET_ROUTE_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("deleting NH :{}", nexthop_to_str(nh));
+    HAL_TRACE_DEBUG("deleting route :{}", route_to_str(route));
 
-    ret = validate_nexthop_delete(nh);
+    ret = validate_route_delete(route);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("nexthop delete validation failed, err: {}", ret);
+        HAL_TRACE_ERR("route delete validation failed, err: {}", ret);
         goto end;
     }
 
     // form ctxt and call infra add
-    dhl_entry.handle = nh->hal_handle;
-    dhl_entry.obj = nh;
+    dhl_entry.handle = route->hal_handle;
+    dhl_entry.obj = route;
     cfg_ctxt.app_ctxt = NULL;
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_del_obj(nh->hal_handle, &cfg_ctxt,
-                             nexthop_delete_del_cb,
-                             nexthop_delete_commit_cb,
-                             nexthop_delete_abort_cb,
-                             nexthop_delete_cleanup_cb);
+    ret = hal_handle_del_obj(route->hal_handle, &cfg_ctxt,
+                             route_delete_del_cb,
+                             route_delete_commit_cb,
+                             route_delete_abort_cb,
+                             route_delete_cleanup_cb);
 
 end:
     if (ret == HAL_RET_OK) {
-	    HAL_API_STATS_INC(HAL_API_NEXTHOP_DELETE_SUCCESS);
+	    HAL_API_STATS_INC(HAL_API_ROUTE_DELETE_SUCCESS);
     } else {
-	    HAL_API_STATS_INC(HAL_API_NEXTHOP_DELETE_FAIL);
+	    HAL_API_STATS_INC(HAL_API_ROUTE_DELETE_FAIL);
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
-    hal_api_trace(" API End: nexthop delete ");
+    hal_api_trace(" API End: route delete ");
     return ret;
 }
 
 const char *
-nexthop_to_str (nexthop_t *nh)
+route_to_str (route_t *route)
 {
-    static thread_local char       nh_str[4][50];
-    static thread_local uint8_t    nh_str_next = 0;
+    static thread_local char       route_str[4][50];
+    static thread_local uint8_t    route_str_next = 0;
     char                           *buf;
 
-    buf = nh_str[nh_str_next++ & 0x3];
+    buf = route_str[route_str_next++ & 0x3];
     memset(buf, 0, 50);
-    if (nh) {
-        if (nh->if_handle != HAL_HANDLE_INVALID) {
-            snprintf(buf, 50, "nh_id: %d, if_handle: %lu", nh->nh_id, nh->if_handle);
-        } else {
-            snprintf(buf, 50, "nh_id: %d, ep_handle: %lu", nh->nh_id, nh->ep_handle);
-        }
+    if (route) {
+        snprintf(buf, 50, "vrf_id: %lu, pfx: %s, nh_handle: %lu", route->key.vrf_id,
+                 ippfx2str(&route->key.pfx), route->nh_handle);
     }
     return buf;
 }
 
 hal_ret_t
-hal_nh_init_cb (hal_cfg_t *hal_cfg)
+hal_route_init_cb (hal_cfg_t *hal_cfg)
 {
     return HAL_RET_OK;
 }
 
 hal_ret_t
-hal_nh_cleanup_cb (void)
+hal_route_cleanup_cb (void)
 {
     return HAL_RET_OK;
 }

@@ -8,6 +8,8 @@
 #include "nic/hal/src/nw/vrf.hpp"
 #include "nic/hal/src/nw/nw.hpp"
 #include "nic/hal/src/nw/nh.hpp"
+#include "nic/hal/src/nw/route.hpp"
+#include "nic/hal/src/nw/route_acl.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/mcast/multicast.hpp"
@@ -49,6 +51,8 @@
 using namespace boost::interprocess;
 
 namespace hal {
+
+extern acl::acl_config_t route_acl_config;
 
 // global instance of all HAL state including config, operational states
 class hal_state    *g_hal_state;
@@ -341,6 +345,24 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       sizeof(hal::nexthop_t), 64,
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NEXTHOP] != NULL), false);
+
+    slabs_[HAL_SLAB_ROUTE] =
+        slab::factory("route", HAL_SLAB_ROUTE,
+                      sizeof(hal::route_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ROUTE] != NULL), false);
+
+    slabs_[HAL_SLAB_ROUTE_ACL_RULE] =
+        slab::factory("route_acl_rule", HAL_SLAB_ROUTE_ACL_RULE,
+                      sizeof(hal::route_acl_rule_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ROUTE_ACL_RULE] != NULL), false);
+
+    slabs_[HAL_SLAB_HANDLE_ID] =
+        slab::factory("hal-handle-id",
+                      HAL_SLAB_HANDLE_ID, sizeof(hal_handle_t),
+                      64, true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_ID] != NULL), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
@@ -852,6 +874,17 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   true, mmgr);
     HAL_ASSERT_RETURN((nexthop_id_ht_ != NULL), false);
 
+    // initialize route related data structures
+    HAL_HT_CREATE("route", route_ht_,
+                  HAL_MAX_ROUTES >> 1,
+                  hal::route_get_key_func,
+                  hal::route_compute_hash_func,
+                  hal::route_compare_key_func,
+                  true, mmgr);
+    HAL_ASSERT_RETURN((route_ht_ != NULL), false);
+
+    route_acl_ = acl_create("route_acl", &route_acl_config);
+
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         HAL_HT_CREATE("gft-profiles",
                       gft_exact_match_profile_id_ht_,
@@ -1071,6 +1104,7 @@ hal_oper_db::hal_oper_db()
     gft_exact_match_flow_entry_id_ht_ = NULL;
     nat_pool_id_ht_ = NULL;
     nexthop_id_ht_ = NULL;
+    route_ht_ = NULL;
 
     forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
     infra_vrf_handle_ = HAL_HANDLE_INVALID;
@@ -1743,6 +1777,18 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_NAT_POOL:
         g_hal_state->nat_pool_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_ROUTE:
+        g_hal_state->route_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_ROUTE_ACL_RULE:
+        g_hal_state->route_acl_rule_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_HANDLE_ID:
+        g_hal_state->hal_handle_id_slab()->free(elem);
         break;
 
     default:

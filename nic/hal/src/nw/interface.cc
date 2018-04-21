@@ -981,11 +981,12 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
                              if_create_cleanup_cb);
 
 end:
-
-    if (ret != HAL_RET_OK && hal_if != NULL) {
-        // if there is an error, if will be freed in abort cb
-        if_cleanup(hal_if);
-        hal_if = NULL;
+    if (ret != HAL_RET_OK && ret != HAL_RET_ENTRY_EXISTS) {
+        if (hal_if) {
+            // if there is an error, if will be freed in abort cb
+            if_cleanup(hal_if);
+            hal_if = NULL;
+        }
     }
     if_prepare_rsp(rsp, ret, hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID);
     return ret;
@@ -4031,8 +4032,8 @@ if_add_l2seg (if_t *hal_if, l2seg_t *l2seg)
         goto end;
     }
 
-end:
     HAL_TRACE_DEBUG("Added l2seg {} to if {}", l2seg->seg_id, hal_if->if_id);
+end:
     return ret;
 }
 
@@ -4059,8 +4060,8 @@ if_del_l2seg (if_t *hal_if, l2seg_t *l2seg)
         goto end;
     }
 
-end:
     HAL_TRACE_DEBUG("Deleted l2seg {} to if {}", l2seg->seg_id, hal_if->if_id);
+end:
     return ret;
 }
 
@@ -4086,8 +4087,8 @@ if_add_nh (if_t *hal_if, nexthop_t *nh)
         goto end;
     }
 
-end:
     HAL_TRACE_DEBUG("Added nh {} to if {}", nh->nh_id, hal_if->if_id);
+end:
     return ret;
 }
 
@@ -4113,8 +4114,8 @@ if_del_nh (if_t *hal_if, nexthop_t *nh)
         goto end;
     }
 
-end:
     HAL_TRACE_DEBUG("Deleted nh {} from hal_if {}", nh->nh_id, hal_if->if_id);
+end:
     return ret;
 }
 
@@ -4167,8 +4168,9 @@ uplink_del_enicif (if_t *uplink, if_t *enic_if)
         goto end;
     }
 
+    HAL_TRACE_DEBUG("Deleted enicif {} to uplink {}",
+                    enic_if->if_id, uplink->if_id);
 end:
-    HAL_TRACE_DEBUG("Deletedenicif {} to uplink {}", enic_if->if_id, uplink->if_id);
     return ret;
 }
 
@@ -4234,11 +4236,10 @@ if_add_acl (if_t *hal_if, acl_t *acl, if_acl_ref_type_t type)
         goto end;
     }
 
-end:
 
     HAL_TRACE_DEBUG("Added acl {} to hal_if {} type {}",
                     acl->key, hal_if->if_id, type);
-
+end:
     return ret;
 }
 
@@ -4268,7 +4269,6 @@ if_del_acl (if_t *hal_if, acl_t *acl, if_acl_ref_type_t type)
                     acl->key, hal_if->if_id, type);
 
 end:
-
     return ret;
 }
 }    // namespace hal

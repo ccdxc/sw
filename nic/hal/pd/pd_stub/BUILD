@@ -13,6 +13,7 @@ cc_library(
         "//nic/hal/periodic",
         "//nic:halproto",
         "//nic:gen_proto_includes",
+        "//nic/fte:fte_includes",
         #"//nic/hal/pd/iris:iris_includes", # this exists only because session.hpp include p4pd header files !!
         "//nic/hal/pd:hal_pd_includes",
         "//nic/utils/bm_allocator",

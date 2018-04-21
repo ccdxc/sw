@@ -57,8 +57,9 @@ typedef struct vrf_s {
     uint32_t           num_ep;               // no. of endpoints
 
     // back references
-    block_list         *l2seg_list;           // L2 segment list
-    block_list         *acl_list;
+    block_list         *l2seg_list;          // L2 segment list
+    block_list         *acl_list;            // acl list
+    block_list         *route_list;          // route list
 
     // PD state
     void               *pd;                  // all PD specific state

@@ -141,13 +141,23 @@ network_alloc_init (void)
     return network_init(network_alloc());
 }
 
-// free network instance
+// Preferred to call only to free original. As the lists will be copied over
+// to clone
 static inline hal_ret_t
 network_free (network_t *network)
 {
     HAL_SPINLOCK_DESTROY(&network->slock);
     hal::delay_delete_to_slab(HAL_SLAB_NETWORK, network);
     return HAL_RET_OK;
+}
+
+// Complete cleanup network instance
+static inline hal_ret_t
+network_cleanup (network_t *network)
+{
+    // Destroy block lists if there are any
+
+    return network_free(network);
 }
 
 static bool
@@ -239,15 +249,14 @@ hal_ret_t nexthop_delete(nw::NexthopDeleteRequest& req,
 hal_ret_t nexthop_get(nw::NexthopGetRequest& req,
                       nw::NexthopGetResponseMsg *rsp);
 
-
-static hal_ret_t route_create(nw::RouteSpec& spec,
-                              nw::RouteResponse *rsp) { return HAL_RET_OK; }
-static hal_ret_t route_update(nw::RouteSpec& spec,
-                              nw::RouteResponse *rsp) { return HAL_RET_OK; }
-static hal_ret_t route_delete(nw::RouteDeleteRequest& req,
-                              nw::RouteDeleteResponse *rsp) { return HAL_RET_OK; }
-static hal_ret_t route_get(nw::RouteGetRequest& req,
-                           nw::RouteGetResponseMsg *rsp) { return HAL_RET_OK; }
+hal_ret_t route_create(nw::RouteSpec& spec,
+                       nw::RouteResponse *rsp);
+hal_ret_t route_update(nw::RouteSpec& spec,
+                       nw::RouteResponse *rsp);
+hal_ret_t route_delete(nw::RouteDeleteRequest& req,
+                       nw::RouteDeleteResponse *rsp);
+hal_ret_t route_get(nw::RouteGetRequest& req,
+                    nw::RouteGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __NETWORK_HPP__

@@ -55,6 +55,7 @@ cc_library(
         "//nic:google_includes",
         "//nic:grpc_includes",
         "//nic/utils/bm_allocator",
+        "//nic/fte:fte_includes",
     ],
     alwayslink = 1,
 )

@@ -590,7 +590,7 @@ l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // Free l2seg. This will also cleanup nws if there are any
-    l2seg_cleanup(l2seg);
+    // l2seg_cleanup(l2seg);
 end:
     return ret;
 }
@@ -856,6 +856,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error in reading networks, err {}", ret);
         l2seg_cleanup(l2seg);
+        l2seg = NULL;
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -886,11 +887,10 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                              l2seg_create_cleanup_cb);
 
 end:
-
-    if (ret != HAL_RET_OK) {
+    if (ret != HAL_RET_OK && (ret != HAL_RET_ENTRY_EXISTS)) {
         if (l2seg) {
-            // if there is an error, it will be cleaned up in abort cb
-            // l2seg_cleanup(l2seg);
+            // Free l2seg: Moved from create abort as alloc happened here
+            l2seg_cleanup(l2seg);
             l2seg = NULL;
         }
         HAL_API_STATS_INC(HAL_API_L2SEGMENT_CREATE_FAIL);

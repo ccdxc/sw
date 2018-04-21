@@ -95,6 +95,7 @@ vrf_init (vrf_t *vrf)
     // initialize meta information
     vrf->l2seg_list = block_list::factory(sizeof(hal_handle_t));
     vrf->acl_list = block_list::factory(sizeof(hal_handle_t));
+    vrf->route_list = block_list::factory(sizeof(hal_handle_t));
     // utils::dllist_reset(&vrf->l2seg_list_head);
     // utils::dllist_reset(&vrf->ep_list_head);
     // utils::dllist_reset(&vrf->session_list_head);
@@ -131,6 +132,9 @@ vrf_cleanup (vrf_t *vrf)
     }
     if (vrf->acl_list) {
         block_list::destroy(vrf->acl_list);
+    }
+    if (vrf->route_list) {
+        block_list::destroy(vrf->route_list);
     }
     vrf_free(vrf);
 
@@ -422,7 +426,7 @@ vrf_create_abort_cleanup (vrf_t *vrf, hal_handle_t hal_handle)
     hal_handle_free(hal_handle);
 
     // 3. free vrf
-    vrf_cleanup(vrf);
+    // vrf_cleanup(vrf);
 
     return HAL_RET_OK;
 }
@@ -559,7 +563,7 @@ hal_ret_t
 vrf_create (VrfSpec& spec, VrfResponse *rsp)
 {
     hal_ret_t                   ret;
-    vrf_t                       *vrf;
+    vrf_t                       *vrf = NULL;
     nwsec_profile_t             *sec_prof = NULL;
     vrf_create_app_ctxt_t       app_ctxt  = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
@@ -630,10 +634,11 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
                              vrf_create_cleanup_cb);
 
 end:
-
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
         if (vrf) {
-            // if there is an error, if will be freed in abort cb
+            // Free vrf. Moved from create abort as alloc is
+            //           happening here.
+            vrf_cleanup(vrf);
             vrf = NULL;
         }
         HAL_API_STATS_INC(HAL_API_VRF_CREATE_FAIL);
@@ -1353,6 +1358,14 @@ validate_vrf_delete (vrf_t *vrf)
         goto end;
     }
 
+    // check for no presence of routes
+    if (vrf->route_list->num_elems()) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("VRF delete failure, routes still referring :");
+        hal_print_handles_block_list(vrf->route_list);
+        goto end;
+    }
+
 end:
 
     return ret;
@@ -1495,10 +1508,8 @@ vrf_add_acl (vrf_t *vrf, acl_t *acl)
         goto end;
     }
 
-end:
-
     HAL_TRACE_DEBUG("Added acl {} to vrf {}", acl->key, vrf->vrf_id);
-
+end:
     return ret;
 }
 
@@ -1523,10 +1534,65 @@ vrf_del_acl (vrf_t *vrf, acl_t *acl)
                        acl->key, vrf->vrf_id, ret);
         goto end;
     }
+
     HAL_TRACE_DEBUG("Deleted acl {} from vrf {}", acl->key, vrf->vrf_id);
-
 end:
+    return ret;
+}
 
+//-----------------------------------------------------------------------------
+// adds route into vrf list
+//-----------------------------------------------------------------------------
+hal_ret_t
+vrf_add_route (vrf_t *vrf, route_t *route)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (vrf == NULL || route == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    vrf_lock(vrf, __FILENAME__, __LINE__, __func__);      // lock
+    ret = vrf->route_list->insert(&route->hal_handle);
+    vrf_unlock(vrf, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add route {} to vrf {}",
+                        route_to_str(route), vrf->vrf_id);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Added route {} to vrf {}", route_to_str(route),
+                    vrf->vrf_id);
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// remove route from vrf list
+//-----------------------------------------------------------------------------
+hal_ret_t
+vrf_del_route (vrf_t *vrf, route_t *route)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (vrf == NULL || route == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    vrf_lock(vrf, __FILENAME__, __LINE__, __func__);      // lock
+    ret = vrf->route_list->remove(&route->hal_handle);
+    vrf_unlock(vrf, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to remove route {} from from vrf {}, err : {}",
+                       route_to_str(route), vrf->vrf_id, ret);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Deleted route {} from vrf {}", route_to_str(route),
+                    vrf->vrf_id);
+end:
     return ret;
 }
 

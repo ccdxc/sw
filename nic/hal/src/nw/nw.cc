@@ -249,8 +249,8 @@ network_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // remove the object
     hal_handle_free(hal_handle);
 
-    // free PI if
-    network_free(nw);
+    // free PI nw
+    // network_free(nw);
 end:
     return ret;
 }
@@ -323,9 +323,9 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     network_t                       *nw = NULL;
-    vrf_id_t                     tid;
+    vrf_id_t                        tid;
     ep_t                            *gw_ep = NULL;
-    vrf_t                        *vrf = NULL;
+    vrf_t                           *vrf = NULL;
     network_create_app_ctxt_t       app_ctxt;
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
@@ -391,6 +391,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     if (nw->hal_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("{}: failed to alloc handle",
                       __FUNCTION__);
+        network_cleanup(nw);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
@@ -424,10 +425,10 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
 
 end:
 
-    if (ret != HAL_RET_OK) {
+    if (ret != HAL_RET_OK && ret != HAL_RET_ENTRY_EXISTS) {
 	    if (nw != NULL) {
             // if there is an error, nw will be freed in abort cb
-            // network_free(nw);
+            network_cleanup(nw);
             nw = NULL;
 	    }
 	    HAL_API_STATS_INC(HAL_API_NETWORK_CREATE_FAIL);
@@ -1201,7 +1202,7 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // Free PI network
-    network_free(nw);
+    network_cleanup(nw);
 
     // TODO: Decrement the ref counts of dependent objects
 

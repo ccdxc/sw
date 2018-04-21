@@ -1,4 +1,4 @@
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #ifndef __NEXTHOP_HPP__
 #define __NEXTHOP_HPP__
@@ -108,6 +108,7 @@ nexthop_alloc_init (void)
 static inline hal_ret_t
 nexthop_free (nexthop_t *nexthop)
 {
+    HAL_SPINLOCK_DESTROY(&nexthop->slock);
     hal::delay_delete_to_slab(HAL_SLAB_NEXTHOP, nexthop);
     return HAL_RET_OK;
 }
@@ -115,7 +116,6 @@ nexthop_free (nexthop_t *nexthop)
 static inline hal_ret_t
 nexthop_cleanup (nexthop_t *nexthop)
 {
-    HAL_SPINLOCK_DESTROY(&nexthop->slock);
     block_list::destroy(nexthop->route_list);
     return nexthop_free(nexthop);
 }
@@ -158,6 +158,9 @@ nexthop_lookup_by_handle (hal_handle_t handle)
     }
     return (nexthop_t *)hal_handle->obj();
 }
+
+nexthop_t *nexthop_lookup_key_or_handle (const NexthopKeyHandle& kh);
+const char *nexthop_lookup_key_or_handle_to_str (const NexthopKeyHandle& kh);
 
 void *nexthop_id_get_key_func(void *entry);
 uint32_t nexthop_id_compute_hash_func(void *key, uint32_t ht_size);
