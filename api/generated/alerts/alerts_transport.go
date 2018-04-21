@@ -320,6 +320,155 @@ func (s *grpcServerAlertPolicyV1) AutoWatchAlertPolicy(in *api.ListWatchOptions,
 	return s.Endpoints.AutoWatchAlertPolicy(in, stream)
 }
 
+type grpcServerAlertsV1 struct {
+	Endpoints EndpointsAlertsV1Server
+
+	AutoAddAlertHdlr    grpctransport.Handler
+	AutoDeleteAlertHdlr grpctransport.Handler
+	AutoGetAlertHdlr    grpctransport.Handler
+	AutoListAlertHdlr   grpctransport.Handler
+	AutoUpdateAlertHdlr grpctransport.Handler
+}
+
+// MakeGRPCServerAlertsV1 creates a GRPC server for AlertsV1 service
+func MakeGRPCServerAlertsV1(ctx context.Context, endpoints EndpointsAlertsV1Server, logger log.Logger) AlertsV1Server {
+	options := []grpctransport.ServerOption{
+		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(recoverVersion),
+	}
+	return &grpcServerAlertsV1{
+		Endpoints: endpoints,
+		AutoAddAlertHdlr: grpctransport.NewServer(
+			endpoints.AutoAddAlertEndpoint,
+			DecodeGrpcReqAlert,
+			EncodeGrpcRespAlert,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAlert", logger)))...,
+		),
+
+		AutoDeleteAlertHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteAlertEndpoint,
+			DecodeGrpcReqAlert,
+			EncodeGrpcRespAlert,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAlert", logger)))...,
+		),
+
+		AutoGetAlertHdlr: grpctransport.NewServer(
+			endpoints.AutoGetAlertEndpoint,
+			DecodeGrpcReqAlert,
+			EncodeGrpcRespAlert,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAlert", logger)))...,
+		),
+
+		AutoListAlertHdlr: grpctransport.NewServer(
+			endpoints.AutoListAlertEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespAlertList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAlert", logger)))...,
+		),
+
+		AutoUpdateAlertHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateAlertEndpoint,
+			DecodeGrpcReqAlert,
+			EncodeGrpcRespAlert,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAlert", logger)))...,
+		),
+	}
+}
+
+func (s *grpcServerAlertsV1) AutoAddAlert(ctx oldcontext.Context, req *Alert) (*Alert, error) {
+	_, resp, err := s.AutoAddAlertHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAlertsV1AutoAddAlert).V
+	return &r, resp.(respAlertsV1AutoAddAlert).Err
+}
+
+func decodeHTTPrespAlertsV1AutoAddAlert(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Alert
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAlertsV1) AutoDeleteAlert(ctx oldcontext.Context, req *Alert) (*Alert, error) {
+	_, resp, err := s.AutoDeleteAlertHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAlertsV1AutoDeleteAlert).V
+	return &r, resp.(respAlertsV1AutoDeleteAlert).Err
+}
+
+func decodeHTTPrespAlertsV1AutoDeleteAlert(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Alert
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAlertsV1) AutoGetAlert(ctx oldcontext.Context, req *Alert) (*Alert, error) {
+	_, resp, err := s.AutoGetAlertHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAlertsV1AutoGetAlert).V
+	return &r, resp.(respAlertsV1AutoGetAlert).Err
+}
+
+func decodeHTTPrespAlertsV1AutoGetAlert(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Alert
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAlertsV1) AutoListAlert(ctx oldcontext.Context, req *api.ListWatchOptions) (*AlertList, error) {
+	_, resp, err := s.AutoListAlertHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAlertsV1AutoListAlert).V
+	return &r, resp.(respAlertsV1AutoListAlert).Err
+}
+
+func decodeHTTPrespAlertsV1AutoListAlert(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AlertList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAlertsV1) AutoUpdateAlert(ctx oldcontext.Context, req *Alert) (*Alert, error) {
+	_, resp, err := s.AutoUpdateAlertHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAlertsV1AutoUpdateAlert).V
+	return &r, resp.(respAlertsV1AutoUpdateAlert).Err
+}
+
+func decodeHTTPrespAlertsV1AutoUpdateAlert(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Alert
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAlertsV1) AutoWatchAlert(in *api.ListWatchOptions, stream AlertsV1_AutoWatchAlertServer) error {
+	return s.Endpoints.AutoWatchAlert(in, stream)
+}
+
 func encodeHTTPAlert(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -487,6 +636,40 @@ func EncodeGrpcRespAlertDestinationStatus(ctx context.Context, response interfac
 
 // DecodeGrpcRespAlertDestinationStatus decodes GRPC response
 func DecodeGrpcRespAlertDestinationStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPAlertList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPAlertList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AlertList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqAlertList encodes GRPC request
+func EncodeGrpcReqAlertList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AlertList)
+	return req, nil
+}
+
+// DecodeGrpcReqAlertList decodes GRPC request
+func DecodeGrpcReqAlertList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AlertList)
+	return req, nil
+}
+
+// EncodeGrpcRespAlertList endodes the GRPC response
+func EncodeGrpcRespAlertList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespAlertList decodes the GRPC response
+func DecodeGrpcRespAlertList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

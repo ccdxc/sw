@@ -12,6 +12,7 @@ The following Messages are defined.
   AlertDestinationList
   AlertDestinationSpec
   AlertDestinationStatus
+  AlertList
   AlertPolicy
   AlertPolicyList
   AlertPolicySpec
@@ -24,6 +25,7 @@ The following Messages are defined.
   AuthConfig
   AutoMsgAlertDestinationWatchHelper
   AutoMsgAlertPolicyWatchHelper
+  AutoMsgAlertWatchHelper
   MatchedRequirement
   PrivacyConfig
   Requirement
@@ -46,6 +48,14 @@ The following Services and Methods are defined.
    AutoListAlertPolicy
    AutoUpdateAlertPolicy
    AutoWatchAlertPolicy
+
+ Service: AlertsV1
+   AutoAddAlert
+   AutoDeleteAlert
+   AutoGetAlert
+   AutoListAlert
+   AutoUpdateAlert
+   AutoWatchAlert
 
 */
 package alerts

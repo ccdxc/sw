@@ -48,6 +48,12 @@ func (m *AlertDestinationList) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *AlertList) MakeKey(prefix string) string {
+	obj := Alert{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AlertPolicyList) MakeKey(prefix string) string {
 	obj := AlertPolicy{}
 	return obj.MakeKey(prefix)
@@ -62,6 +68,12 @@ func (m *AutoMsgAlertDestinationWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgAlertPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := AlertPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgAlertWatchHelper) MakeKey(prefix string) string {
+	obj := Alert{}
 	return obj.MakeKey(prefix)
 }
 
@@ -185,6 +197,33 @@ func (m *AlertDestinationStatus) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AlertDestinationStatus) Defaults(ver string) bool {
 	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AlertList) Clone(into interface{}) (interface{}, error) {
+	var out *AlertList
+	var ok bool
+	if into == nil {
+		out = &AlertList{}
+	} else {
+		out, ok = into.(*AlertList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AlertList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = ret || m.Items[k].Defaults(ver)
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -490,6 +529,31 @@ func (m *AutoMsgAlertPolicyWatchHelper) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgAlertWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgAlertWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgAlertWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgAlertWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgAlertWatchHelper) Defaults(ver string) bool {
+	var ret bool
+	for m.Object != nil {
+		ret = ret || m.Object.Defaults(ver)
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *MatchedRequirement) Clone(into interface{}) (interface{}, error) {
 	var out *MatchedRequirement
 	var ok bool
@@ -642,6 +706,15 @@ func (m *AlertDestinationStatus) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *AlertList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
 func (m *AlertPolicy) Validate(ver string, ignoreStatus bool) bool {
 	if !m.Spec.Validate(ver, ignoreStatus) {
 		return false
@@ -763,6 +836,13 @@ func (m *AutoMsgAlertDestinationWatchHelper) Validate(ver string, ignoreStatus b
 }
 
 func (m *AutoMsgAlertPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
+	return true
+}
+
+func (m *AutoMsgAlertWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}

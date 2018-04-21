@@ -1211,3 +1211,559 @@ func MakeAlertPolicyV1RestClientEndpoints(instance string) (EndpointsAlertPolicy
 	}, nil
 
 }
+
+// MiddlewareAlertsV1Client add middleware to the client
+type MiddlewareAlertsV1Client func(ServiceAlertsV1Client) ServiceAlertsV1Client
+
+// EndpointsAlertsV1Client is the endpoints for the client
+type EndpointsAlertsV1Client struct {
+	Client AlertsV1Client
+
+	AutoAddAlertEndpoint    endpoint.Endpoint
+	AutoDeleteAlertEndpoint endpoint.Endpoint
+	AutoGetAlertEndpoint    endpoint.Endpoint
+	AutoListAlertEndpoint   endpoint.Endpoint
+	AutoUpdateAlertEndpoint endpoint.Endpoint
+}
+
+// EndpointsAlertsV1RestClient is the REST client
+type EndpointsAlertsV1RestClient struct {
+	logger   log.Logger
+	client   *http.Client
+	instance string
+
+	AutoAddAlertEndpoint    endpoint.Endpoint
+	AutoDeleteAlertEndpoint endpoint.Endpoint
+	AutoGetAlertEndpoint    endpoint.Endpoint
+	AutoListAlertEndpoint   endpoint.Endpoint
+	AutoUpdateAlertEndpoint endpoint.Endpoint
+	AutoWatchAlertEndpoint  endpoint.Endpoint
+}
+
+// MiddlewareAlertsV1Server adds middle ware to the server
+type MiddlewareAlertsV1Server func(ServiceAlertsV1Server) ServiceAlertsV1Server
+
+// EndpointsAlertsV1Server is the server endpoints
+type EndpointsAlertsV1Server struct {
+	AutoAddAlertEndpoint    endpoint.Endpoint
+	AutoDeleteAlertEndpoint endpoint.Endpoint
+	AutoGetAlertEndpoint    endpoint.Endpoint
+	AutoListAlertEndpoint   endpoint.Endpoint
+	AutoUpdateAlertEndpoint endpoint.Endpoint
+
+	watchHandlerAlert func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+}
+
+// AutoAddAlert is endpoint for AutoAddAlert
+func (e EndpointsAlertsV1Client) AutoAddAlert(ctx context.Context, in *Alert) (*Alert, error) {
+	resp, err := e.AutoAddAlertEndpoint(ctx, in)
+	if err != nil {
+		return &Alert{}, err
+	}
+	return resp.(*Alert), nil
+}
+
+type respAlertsV1AutoAddAlert struct {
+	V   Alert
+	Err error
+}
+
+// AutoDeleteAlert is endpoint for AutoDeleteAlert
+func (e EndpointsAlertsV1Client) AutoDeleteAlert(ctx context.Context, in *Alert) (*Alert, error) {
+	resp, err := e.AutoDeleteAlertEndpoint(ctx, in)
+	if err != nil {
+		return &Alert{}, err
+	}
+	return resp.(*Alert), nil
+}
+
+type respAlertsV1AutoDeleteAlert struct {
+	V   Alert
+	Err error
+}
+
+// AutoGetAlert is endpoint for AutoGetAlert
+func (e EndpointsAlertsV1Client) AutoGetAlert(ctx context.Context, in *Alert) (*Alert, error) {
+	resp, err := e.AutoGetAlertEndpoint(ctx, in)
+	if err != nil {
+		return &Alert{}, err
+	}
+	return resp.(*Alert), nil
+}
+
+type respAlertsV1AutoGetAlert struct {
+	V   Alert
+	Err error
+}
+
+// AutoListAlert is endpoint for AutoListAlert
+func (e EndpointsAlertsV1Client) AutoListAlert(ctx context.Context, in *api.ListWatchOptions) (*AlertList, error) {
+	resp, err := e.AutoListAlertEndpoint(ctx, in)
+	if err != nil {
+		return &AlertList{}, err
+	}
+	return resp.(*AlertList), nil
+}
+
+type respAlertsV1AutoListAlert struct {
+	V   AlertList
+	Err error
+}
+
+// AutoUpdateAlert is endpoint for AutoUpdateAlert
+func (e EndpointsAlertsV1Client) AutoUpdateAlert(ctx context.Context, in *Alert) (*Alert, error) {
+	resp, err := e.AutoUpdateAlertEndpoint(ctx, in)
+	if err != nil {
+		return &Alert{}, err
+	}
+	return resp.(*Alert), nil
+}
+
+type respAlertsV1AutoUpdateAlert struct {
+	V   Alert
+	Err error
+}
+
+// AutoWatchAlert performs Watch for Alert
+func (e EndpointsAlertsV1Client) AutoWatchAlert(ctx context.Context, in *api.ListWatchOptions) (AlertsV1_AutoWatchAlertClient, error) {
+	return e.Client.AutoWatchAlert(ctx, in)
+}
+
+// AutoAddAlert implementation on server Endpoint
+func (e EndpointsAlertsV1Server) AutoAddAlert(ctx context.Context, in Alert) (Alert, error) {
+	resp, err := e.AutoAddAlertEndpoint(ctx, in)
+	if err != nil {
+		return Alert{}, err
+	}
+	return *resp.(*Alert), nil
+}
+
+// MakeAlertsV1AutoAddAlertEndpoint creates  AutoAddAlert endpoints for the service
+func MakeAlertsV1AutoAddAlertEndpoint(s ServiceAlertsV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Alert)
+		v, err := s.AutoAddAlert(ctx, *req)
+		return respAlertsV1AutoAddAlert{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AlertsV1:AutoAddAlert")(f)
+}
+
+// AutoDeleteAlert implementation on server Endpoint
+func (e EndpointsAlertsV1Server) AutoDeleteAlert(ctx context.Context, in Alert) (Alert, error) {
+	resp, err := e.AutoDeleteAlertEndpoint(ctx, in)
+	if err != nil {
+		return Alert{}, err
+	}
+	return *resp.(*Alert), nil
+}
+
+// MakeAlertsV1AutoDeleteAlertEndpoint creates  AutoDeleteAlert endpoints for the service
+func MakeAlertsV1AutoDeleteAlertEndpoint(s ServiceAlertsV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Alert)
+		v, err := s.AutoDeleteAlert(ctx, *req)
+		return respAlertsV1AutoDeleteAlert{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AlertsV1:AutoDeleteAlert")(f)
+}
+
+// AutoGetAlert implementation on server Endpoint
+func (e EndpointsAlertsV1Server) AutoGetAlert(ctx context.Context, in Alert) (Alert, error) {
+	resp, err := e.AutoGetAlertEndpoint(ctx, in)
+	if err != nil {
+		return Alert{}, err
+	}
+	return *resp.(*Alert), nil
+}
+
+// MakeAlertsV1AutoGetAlertEndpoint creates  AutoGetAlert endpoints for the service
+func MakeAlertsV1AutoGetAlertEndpoint(s ServiceAlertsV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Alert)
+		v, err := s.AutoGetAlert(ctx, *req)
+		return respAlertsV1AutoGetAlert{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AlertsV1:AutoGetAlert")(f)
+}
+
+// AutoListAlert implementation on server Endpoint
+func (e EndpointsAlertsV1Server) AutoListAlert(ctx context.Context, in api.ListWatchOptions) (AlertList, error) {
+	resp, err := e.AutoListAlertEndpoint(ctx, in)
+	if err != nil {
+		return AlertList{}, err
+	}
+	return *resp.(*AlertList), nil
+}
+
+// MakeAlertsV1AutoListAlertEndpoint creates  AutoListAlert endpoints for the service
+func MakeAlertsV1AutoListAlertEndpoint(s ServiceAlertsV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListAlert(ctx, *req)
+		return respAlertsV1AutoListAlert{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AlertsV1:AutoListAlert")(f)
+}
+
+// AutoUpdateAlert implementation on server Endpoint
+func (e EndpointsAlertsV1Server) AutoUpdateAlert(ctx context.Context, in Alert) (Alert, error) {
+	resp, err := e.AutoUpdateAlertEndpoint(ctx, in)
+	if err != nil {
+		return Alert{}, err
+	}
+	return *resp.(*Alert), nil
+}
+
+// MakeAlertsV1AutoUpdateAlertEndpoint creates  AutoUpdateAlert endpoints for the service
+func MakeAlertsV1AutoUpdateAlertEndpoint(s ServiceAlertsV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Alert)
+		v, err := s.AutoUpdateAlert(ctx, *req)
+		return respAlertsV1AutoUpdateAlert{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AlertsV1:AutoUpdateAlert")(f)
+}
+
+// AutoWatchAlert is the watch handler for Alert on the server side.
+func (e EndpointsAlertsV1Server) AutoWatchAlert(in *api.ListWatchOptions, stream AlertsV1_AutoWatchAlertServer) error {
+	return e.watchHandlerAlert(in, stream)
+}
+
+// MakeAutoWatchAlertEndpoint creates the Watch endpoint
+func MakeAutoWatchAlertEndpoint(s ServiceAlertsV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(AlertsV1_AutoWatchAlertServer)
+		return s.AutoWatchAlert(options, wstream)
+	}
+}
+
+// MakeAlertsV1ServerEndpoints creates server endpoints
+func MakeAlertsV1ServerEndpoints(s ServiceAlertsV1Server, logger log.Logger) EndpointsAlertsV1Server {
+	return EndpointsAlertsV1Server{
+
+		AutoAddAlertEndpoint:    MakeAlertsV1AutoAddAlertEndpoint(s, logger),
+		AutoDeleteAlertEndpoint: MakeAlertsV1AutoDeleteAlertEndpoint(s, logger),
+		AutoGetAlertEndpoint:    MakeAlertsV1AutoGetAlertEndpoint(s, logger),
+		AutoListAlertEndpoint:   MakeAlertsV1AutoListAlertEndpoint(s, logger),
+		AutoUpdateAlertEndpoint: MakeAlertsV1AutoUpdateAlertEndpoint(s, logger),
+
+		watchHandlerAlert: MakeAutoWatchAlertEndpoint(s, logger),
+	}
+}
+
+// LoggingAlertsV1MiddlewareClient adds middleware for the client
+func LoggingAlertsV1MiddlewareClient(logger log.Logger) MiddlewareAlertsV1Client {
+	return func(next ServiceAlertsV1Client) ServiceAlertsV1Client {
+		return loggingAlertsV1MiddlewareClient{
+			logger: logger,
+			next:   next,
+		}
+	}
+}
+
+type loggingAlertsV1MiddlewareClient struct {
+	logger log.Logger
+	next   ServiceAlertsV1Client
+}
+
+// LoggingAlertsV1MiddlewareServer adds middleware for the client
+func LoggingAlertsV1MiddlewareServer(logger log.Logger) MiddlewareAlertsV1Server {
+	return func(next ServiceAlertsV1Server) ServiceAlertsV1Server {
+		return loggingAlertsV1MiddlewareServer{
+			logger: logger,
+			next:   next,
+		}
+	}
+}
+
+type loggingAlertsV1MiddlewareServer struct {
+	logger log.Logger
+	next   ServiceAlertsV1Server
+}
+
+func (m loggingAlertsV1MiddlewareClient) AutoAddAlert(ctx context.Context, in *Alert) (resp *Alert, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AlertsV1", "method", "AutoAddAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddAlert(ctx, in)
+	return
+}
+func (m loggingAlertsV1MiddlewareClient) AutoDeleteAlert(ctx context.Context, in *Alert) (resp *Alert, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AlertsV1", "method", "AutoDeleteAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteAlert(ctx, in)
+	return
+}
+func (m loggingAlertsV1MiddlewareClient) AutoGetAlert(ctx context.Context, in *Alert) (resp *Alert, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AlertsV1", "method", "AutoGetAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetAlert(ctx, in)
+	return
+}
+func (m loggingAlertsV1MiddlewareClient) AutoListAlert(ctx context.Context, in *api.ListWatchOptions) (resp *AlertList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AlertsV1", "method", "AutoListAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListAlert(ctx, in)
+	return
+}
+func (m loggingAlertsV1MiddlewareClient) AutoUpdateAlert(ctx context.Context, in *Alert) (resp *Alert, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AlertsV1", "method", "AutoUpdateAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateAlert(ctx, in)
+	return
+}
+
+func (m loggingAlertsV1MiddlewareClient) AutoWatchAlert(ctx context.Context, in *api.ListWatchOptions) (resp AlertsV1_AutoWatchAlertClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AlertsV1", "method", "AutoWatchAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchAlert(ctx, in)
+	return
+}
+
+func (m loggingAlertsV1MiddlewareServer) AutoAddAlert(ctx context.Context, in Alert) (resp Alert, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AlertsV1", "method", "AutoAddAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddAlert(ctx, in)
+	return
+}
+func (m loggingAlertsV1MiddlewareServer) AutoDeleteAlert(ctx context.Context, in Alert) (resp Alert, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AlertsV1", "method", "AutoDeleteAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteAlert(ctx, in)
+	return
+}
+func (m loggingAlertsV1MiddlewareServer) AutoGetAlert(ctx context.Context, in Alert) (resp Alert, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AlertsV1", "method", "AutoGetAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetAlert(ctx, in)
+	return
+}
+func (m loggingAlertsV1MiddlewareServer) AutoListAlert(ctx context.Context, in api.ListWatchOptions) (resp AlertList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AlertsV1", "method", "AutoListAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListAlert(ctx, in)
+	return
+}
+func (m loggingAlertsV1MiddlewareServer) AutoUpdateAlert(ctx context.Context, in Alert) (resp Alert, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AlertsV1", "method", "AutoUpdateAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateAlert(ctx, in)
+	return
+}
+
+func (m loggingAlertsV1MiddlewareServer) AutoWatchAlert(in *api.ListWatchOptions, stream AlertsV1_AutoWatchAlertServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "AlertsV1", "method", "AutoWatchAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchAlert(in, stream)
+	return
+}
+func (r *EndpointsAlertsV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
+	target, err := url.Parse(r.instance)
+	if err != nil {
+		return nil, fmt.Errorf("invalid instance %s", r.instance)
+	}
+	target.Path = path
+	req, err := http.NewRequest(method, target.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("could not create request (%s)", err)
+	}
+	if err = encodeHTTPRequest(ctx, req, in); err != nil {
+		return nil, fmt.Errorf("could not encode request (%s)", err)
+	}
+	return req, nil
+}
+
+//
+func makeURIAlertsV1AutoGetAlertGetOper(in *Alert) string {
+	return fmt.Sprint("/v1/alerts", "/", in.Tenant, "/alerts/", in.Name)
+}
+
+//
+func makeURIAlertsV1AutoListAlertListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/alerts", "/", in.Tenant, "/alerts")
+}
+
+//
+func makeURIAlertsV1AutoUpdateAlertUpdateOper(in *Alert) string {
+	return fmt.Sprint("/v1/alerts", "/", in.Tenant, "/alerts/", in.Name)
+}
+
+// AutoAddAlert CRUD method for Alert
+func (r *EndpointsAlertsV1RestClient) AutoAddAlert(ctx context.Context, in *Alert) (*Alert, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoUpdateAlert CRUD method for Alert
+func (r *EndpointsAlertsV1RestClient) AutoUpdateAlert(ctx context.Context, in *Alert) (*Alert, error) {
+	path := makeURIAlertsV1AutoUpdateAlertUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAlertsV1AutoUpdateAlert(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Alert), err
+}
+
+// AutoGetAlert CRUD method for Alert
+func (r *EndpointsAlertsV1RestClient) AutoGetAlert(ctx context.Context, in *Alert) (*Alert, error) {
+	path := makeURIAlertsV1AutoGetAlertGetOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAlertsV1AutoGetAlert(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Alert), err
+}
+
+// AutoDeleteAlert CRUD method for Alert
+func (r *EndpointsAlertsV1RestClient) AutoDeleteAlert(ctx context.Context, in *Alert) (*Alert, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoListAlert CRUD method for Alert
+func (r *EndpointsAlertsV1RestClient) AutoListAlert(ctx context.Context, options *api.ListWatchOptions) (*AlertList, error) {
+	path := makeURIAlertsV1AutoListAlertListOper(options)
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAlertsV1AutoListAlert(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*AlertList), err
+}
+
+// AutoWatchAlert CRUD method for Alert
+func (r *EndpointsAlertsV1RestClient) AutoWatchAlert(ctx context.Context, in *Alert) (*Alert, error) {
+	return nil, errors.New("not allowed")
+}
+
+// MakeAlertsV1RestClientEndpoints make REST client endpoints
+func MakeAlertsV1RestClientEndpoints(instance string) (EndpointsAlertsV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsAlertsV1RestClient{
+		instance: instance,
+		client:   http.DefaultClient,
+	}, nil
+
+}

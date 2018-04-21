@@ -142,6 +142,8 @@ service AlertsV1 {
     // API Version
     option (venice.apiVersion) = "v1";
 
+    option(venice.apiGrpcCrudService) = "Alert";
+
     option(venice.apiRestService) = {
         Object: "Alert"
         Method: ["list"]

@@ -484,6 +484,226 @@ func (e *sAlertPolicyV1GwService) newClient(ctx context.Context, grpcAddr string
 	return cl, nil
 }
 
+type sAlertsV1GwService struct {
+	logger     log.Logger
+	defSvcProf apigw.ServiceProfile
+	svcProf    map[string]apigw.ServiceProfile
+}
+
+type adapterAlertsV1 struct {
+	conn    *rpckit.RPCClient
+	service alerts.ServiceAlertsV1Client
+	gwSvc   *sAlertsV1GwService
+	gw      apigw.APIGateway
+}
+
+func (a adapterAlertsV1) AutoAddAlert(oldctx oldcontext.Context, t *alerts.Alert, options ...grpc.CallOption) (*alerts.Alert, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddAlert")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.Alert)
+		return a.service.AutoAddAlert(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.Alert), err
+}
+
+func (a adapterAlertsV1) AutoDeleteAlert(oldctx oldcontext.Context, t *alerts.Alert, options ...grpc.CallOption) (*alerts.Alert, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAlert")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.Alert)
+		return a.service.AutoDeleteAlert(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.Alert), err
+}
+
+func (a adapterAlertsV1) AutoGetAlert(oldctx oldcontext.Context, t *alerts.Alert, options ...grpc.CallOption) (*alerts.Alert, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetAlert")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.Alert)
+		return a.service.AutoGetAlert(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.Alert), err
+}
+
+func (a adapterAlertsV1) AutoListAlert(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*alerts.AlertList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListAlert")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListAlert(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.AlertList), err
+}
+
+func (a adapterAlertsV1) AutoUpdateAlert(oldctx oldcontext.Context, t *alerts.Alert, options ...grpc.CallOption) (*alerts.Alert, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAlert")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*alerts.Alert)
+		return a.service.AutoUpdateAlert(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*alerts.Alert), err
+}
+
+func (a adapterAlertsV1) AutoWatchAlert(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (alerts.AlertsV1_AutoWatchAlertClient, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchAlert(ctx, in)
+}
+
+func (e *sAlertsV1GwService) setupSvcProfile() {
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoGetAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+}
+
+func (e *sAlertsV1GwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
+	if ret, ok := e.svcProf[method]; ok {
+		return ret, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sAlertsV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	name := apiserver.GetCrudServiceName(obj, oper)
+	if name != "" {
+		return e.GetServiceProfile(name)
+	}
+	return nil, errors.New("not found")
+}
+
+func (e *sAlertsV1GwService) CompleteRegistration(ctx context.Context,
+	logger log.Logger,
+	grpcserver *grpc.Server,
+	m *http.ServeMux,
+	rslvr resolver.Interface,
+	wg *sync.WaitGroup) error {
+	apigw := apigwpkg.MustGetAPIGateway()
+	// IP:port destination or service discovery key.
+	grpcaddr := "pen-apiserver"
+	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
+	e.logger = logger
+
+	marshaller := runtime.JSONBuiltin{}
+	opts := runtime.WithMarshalerOption("*", &marshaller)
+	muxMutex.Lock()
+	if mux == nil {
+		mux = runtime.NewServeMux(opts)
+	}
+	muxMutex.Unlock()
+	e.setupSvcProfile()
+
+	fileCount++
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			nctx, cancel := context.WithCancel(ctx)
+			cl, err := e.newClient(nctx, grpcaddr, rslvr, apigw.GetDevMode())
+			if err == nil {
+				muxMutex.Lock()
+				err = alerts.RegisterAlertsV1HandlerWithClient(ctx, mux, cl)
+				muxMutex.Unlock()
+				if err == nil {
+					logger.InfoLog("msg", "registered service alerts.AlertsV1")
+					m.Handle("/v1/alerts/", http.StripPrefix("/v1/alerts", mux))
+					return
+				} else {
+					err = errors.Wrap(err, "failed to register")
+				}
+			} else {
+				err = errors.Wrap(err, "failed to create client")
+			}
+			cancel()
+			logger.ErrorLog("msg", "failed to register", "service", "alerts.AlertsV1", "error", err)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(5 * time.Second):
+			}
+		}
+	}()
+	return nil
+}
+
+func (e *sAlertsV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapterAlertsV1, error) {
+	var opts []rpckit.Option
+	if rslvr != nil {
+		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
+	} else {
+		opts = append(opts, rpckit.WithRemoteServerName("pen-apiserver"))
+	}
+
+	if !devmode {
+		opts = append(opts, rpckit.WithTracerEnabled(false))
+		opts = append(opts, rpckit.WithLoggerEnabled(false))
+		opts = append(opts, rpckit.WithStatsEnabled(false))
+	}
+
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
+	if err != nil {
+		return nil, errors.Wrap(err, "create rpc client")
+	}
+
+	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
+	defer func() {
+		go func() {
+			<-ctx.Done()
+			if cerr := client.Close(); cerr != nil {
+				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
+			}
+		}()
+	}()
+
+	cl := &adapterAlertsV1{conn: client, gw: apigwpkg.MustGetAPIGateway(), gwSvc: e, service: grpcclient.NewAlertsV1Backend(client.ClientConn, e.logger)}
+	return cl, nil
+}
+
 func init() {
 	apigw := apigwpkg.MustGetAPIGateway()
 
@@ -491,4 +711,6 @@ func init() {
 	apigw.Register("alerts.AlertDestinationV1", "alertDestinations/", &svcAlertDestinationV1)
 	svcAlertPolicyV1 := sAlertPolicyV1GwService{}
 	apigw.Register("alerts.AlertPolicyV1", "alertPolicies/", &svcAlertPolicyV1)
+	svcAlertsV1 := sAlertsV1GwService{}
+	apigw.Register("alerts.AlertsV1", "alerts/", &svcAlertsV1)
 }

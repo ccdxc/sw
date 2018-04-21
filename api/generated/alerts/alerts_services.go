@@ -37,6 +37,17 @@ type ServiceAlertPolicyV1Client interface {
 	AutoWatchAlertPolicy(ctx context.Context, in *api.ListWatchOptions) (AlertPolicyV1_AutoWatchAlertPolicyClient, error)
 }
 
+// ServiceAlertsV1Client  is the client interface for the service.
+type ServiceAlertsV1Client interface {
+	AutoAddAlert(ctx context.Context, t *Alert) (*Alert, error)
+	AutoDeleteAlert(ctx context.Context, t *Alert) (*Alert, error)
+	AutoGetAlert(ctx context.Context, t *Alert) (*Alert, error)
+	AutoListAlert(ctx context.Context, t *api.ListWatchOptions) (*AlertList, error)
+	AutoUpdateAlert(ctx context.Context, t *Alert) (*Alert, error)
+
+	AutoWatchAlert(ctx context.Context, in *api.ListWatchOptions) (AlertsV1_AutoWatchAlertClient, error)
+}
+
 // ServiceAlertDestinationV1Server is the server interface for the service.
 type ServiceAlertDestinationV1Server interface {
 	AutoAddAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
@@ -57,4 +68,15 @@ type ServiceAlertPolicyV1Server interface {
 	AutoUpdateAlertPolicy(ctx context.Context, t AlertPolicy) (AlertPolicy, error)
 
 	AutoWatchAlertPolicy(in *api.ListWatchOptions, stream AlertPolicyV1_AutoWatchAlertPolicyServer) error
+}
+
+// ServiceAlertsV1Server is the server interface for the service.
+type ServiceAlertsV1Server interface {
+	AutoAddAlert(ctx context.Context, t Alert) (Alert, error)
+	AutoDeleteAlert(ctx context.Context, t Alert) (Alert, error)
+	AutoGetAlert(ctx context.Context, t Alert) (Alert, error)
+	AutoListAlert(ctx context.Context, t api.ListWatchOptions) (AlertList, error)
+	AutoUpdateAlert(ctx context.Context, t Alert) (Alert, error)
+
+	AutoWatchAlert(in *api.ListWatchOptions, stream AlertsV1_AutoWatchAlertServer) error
 }

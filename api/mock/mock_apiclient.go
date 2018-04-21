@@ -80,6 +80,18 @@ func (_mr *MockServicesMockRecorder) AlertPolicyV1() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "AlertPolicyV1", reflect.TypeOf((*MockServices)(nil).AlertPolicyV1))
 }
 
+// AlertsV1 mocks base method
+func (_m *MockServices) AlertsV1() alerts.AlertsV1Interface {
+	ret := _m.ctrl.Call(_m, "AlertsV1")
+	ret0, _ := ret[0].(alerts.AlertsV1Interface)
+	return ret0
+}
+
+// AlertsV1 indicates an expected call of AlertsV1
+func (_mr *MockServicesMockRecorder) AlertsV1() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "AlertsV1", reflect.TypeOf((*MockServices)(nil).AlertsV1))
+}
+
 // AppV1 mocks base method
 func (_m *MockServices) AppV1() app.AppV1Interface {
 	ret := _m.ctrl.Call(_m, "AppV1")

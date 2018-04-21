@@ -207,6 +207,97 @@ func NewAlertPolicyV1Backend(conn *grpc.ClientConn, logger log.Logger) alerts.Se
 	return cl
 }
 
+// NewAlertsV1 sets up a new client for AlertsV1
+func NewAlertsV1(conn *grpc.ClientConn, logger log.Logger) alerts.ServiceAlertsV1Client {
+
+	var lAutoAddAlertEndpoint endpoint.Endpoint
+	{
+		lAutoAddAlertEndpoint = grpctransport.NewClient(
+			conn,
+			"alerts.AlertsV1",
+			"AutoAddAlert",
+			alerts.EncodeGrpcReqAlert,
+			alerts.DecodeGrpcRespAlert,
+			&alerts.Alert{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddAlertEndpoint = trace.ClientEndPoint("AlertsV1:AutoAddAlert")(lAutoAddAlertEndpoint)
+	}
+	var lAutoDeleteAlertEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteAlertEndpoint = grpctransport.NewClient(
+			conn,
+			"alerts.AlertsV1",
+			"AutoDeleteAlert",
+			alerts.EncodeGrpcReqAlert,
+			alerts.DecodeGrpcRespAlert,
+			&alerts.Alert{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteAlertEndpoint = trace.ClientEndPoint("AlertsV1:AutoDeleteAlert")(lAutoDeleteAlertEndpoint)
+	}
+	var lAutoGetAlertEndpoint endpoint.Endpoint
+	{
+		lAutoGetAlertEndpoint = grpctransport.NewClient(
+			conn,
+			"alerts.AlertsV1",
+			"AutoGetAlert",
+			alerts.EncodeGrpcReqAlert,
+			alerts.DecodeGrpcRespAlert,
+			&alerts.Alert{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetAlertEndpoint = trace.ClientEndPoint("AlertsV1:AutoGetAlert")(lAutoGetAlertEndpoint)
+	}
+	var lAutoListAlertEndpoint endpoint.Endpoint
+	{
+		lAutoListAlertEndpoint = grpctransport.NewClient(
+			conn,
+			"alerts.AlertsV1",
+			"AutoListAlert",
+			alerts.EncodeGrpcReqListWatchOptions,
+			alerts.DecodeGrpcRespAlertList,
+			&alerts.AlertList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListAlertEndpoint = trace.ClientEndPoint("AlertsV1:AutoListAlert")(lAutoListAlertEndpoint)
+	}
+	var lAutoUpdateAlertEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateAlertEndpoint = grpctransport.NewClient(
+			conn,
+			"alerts.AlertsV1",
+			"AutoUpdateAlert",
+			alerts.EncodeGrpcReqAlert,
+			alerts.DecodeGrpcRespAlert,
+			&alerts.Alert{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateAlertEndpoint = trace.ClientEndPoint("AlertsV1:AutoUpdateAlert")(lAutoUpdateAlertEndpoint)
+	}
+	return alerts.EndpointsAlertsV1Client{
+		Client: alerts.NewAlertsV1Client(conn),
+
+		AutoAddAlertEndpoint:    lAutoAddAlertEndpoint,
+		AutoDeleteAlertEndpoint: lAutoDeleteAlertEndpoint,
+		AutoGetAlertEndpoint:    lAutoGetAlertEndpoint,
+		AutoListAlertEndpoint:   lAutoListAlertEndpoint,
+		AutoUpdateAlertEndpoint: lAutoUpdateAlertEndpoint,
+	}
+}
+
+// NewAlertsV1Backend creates an instrumented client with middleware
+func NewAlertsV1Backend(conn *grpc.ClientConn, logger log.Logger) alerts.ServiceAlertsV1Client {
+	cl := NewAlertsV1(conn, logger)
+	cl = alerts.LoggingAlertsV1MiddlewareClient(logger)(cl)
+	return cl
+}
+
 type grpcObjAlertDestinationV1AlertDestination struct {
 	logger log.Logger
 	client alerts.ServiceAlertDestinationV1Client
@@ -545,6 +636,175 @@ func (a *restObjAlertPolicyV1AlertPolicy) Allowed(oper apiserver.APIOperType) bo
 	}
 }
 
+type grpcObjAlertsV1Alert struct {
+	logger log.Logger
+	client alerts.ServiceAlertsV1Client
+}
+
+func (a *grpcObjAlertsV1Alert) Create(ctx context.Context, in *alerts.Alert) (*alerts.Alert, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Alert", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddAlert(nctx, in)
+}
+
+func (a *grpcObjAlertsV1Alert) Update(ctx context.Context, in *alerts.Alert) (*alerts.Alert, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Alert", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateAlert(nctx, in)
+}
+
+func (a *grpcObjAlertsV1Alert) Get(ctx context.Context, objMeta *api.ObjectMeta) (*alerts.Alert, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Alert", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := alerts.Alert{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetAlert(nctx, &in)
+}
+
+func (a *grpcObjAlertsV1Alert) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*alerts.Alert, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Alert", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := alerts.Alert{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteAlert(nctx, &in)
+}
+
+func (a *grpcObjAlertsV1Alert) List(ctx context.Context, options *api.ListWatchOptions) ([]*alerts.Alert, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Alert", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListAlert(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjAlertsV1Alert) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Alert", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchAlert(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(alerts.AlertsV1_AutoWatchAlertClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			ev := kvstore.WatchEvent{
+				Type:   kvstore.WatchEventType(r.Type),
+				Object: r.Object,
+			}
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjAlertsV1Alert) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjAlertsV1Alert struct {
+	endpoints alerts.EndpointsAlertsV1RestClient
+	instance  string
+}
+
+func (a *restObjAlertsV1Alert) Create(ctx context.Context, in *alerts.Alert) (*alerts.Alert, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddAlert(ctx, in)
+}
+
+func (a *restObjAlertsV1Alert) Update(ctx context.Context, in *alerts.Alert) (*alerts.Alert, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateAlert(ctx, in)
+}
+
+func (a *restObjAlertsV1Alert) Get(ctx context.Context, objMeta *api.ObjectMeta) (*alerts.Alert, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := alerts.Alert{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetAlert(ctx, &in)
+}
+
+func (a *restObjAlertsV1Alert) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*alerts.Alert, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := alerts.Alert{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteAlert(ctx, &in)
+}
+
+func (a *restObjAlertsV1Alert) List(ctx context.Context, options *api.ListWatchOptions) ([]*alerts.Alert, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	r, err := a.endpoints.AutoListAlert(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjAlertsV1Alert) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not allowed")
+}
+
+func (a *restObjAlertsV1Alert) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return false
+	case apiserver.UpdateOper:
+		return true
+	case apiserver.GetOper:
+		return true
+	case apiserver.DeleteOper:
+		return false
+	case apiserver.ListOper:
+		return true
+	case apiserver.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
 type crudClientAlertDestinationV1 struct {
 	grpcAlertDestination alerts.AlertDestinationV1AlertDestinationInterface
 }
@@ -617,4 +877,41 @@ func NewRestCrudClientAlertPolicyV1(url string) alerts.AlertPolicyV1Interface {
 
 func (a *crudRestClientAlertPolicyV1) AlertPolicy() alerts.AlertPolicyV1AlertPolicyInterface {
 	return a.restAlertPolicy
+}
+
+type crudClientAlertsV1 struct {
+	grpcAlert alerts.AlertsV1AlertInterface
+}
+
+// NewGrpcCrudClientAlertsV1 creates a GRPC client for the service
+func NewGrpcCrudClientAlertsV1(conn *grpc.ClientConn, logger log.Logger) alerts.AlertsV1Interface {
+	client := NewAlertsV1Backend(conn, logger)
+	return &crudClientAlertsV1{
+
+		grpcAlert: &grpcObjAlertsV1Alert{client: client, logger: logger},
+	}
+}
+
+func (a *crudClientAlertsV1) Alert() alerts.AlertsV1AlertInterface {
+	return a.grpcAlert
+}
+
+type crudRestClientAlertsV1 struct {
+	restAlert alerts.AlertsV1AlertInterface
+}
+
+// NewRestCrudClientAlertsV1 creates a REST client for the service.
+func NewRestCrudClientAlertsV1(url string) alerts.AlertsV1Interface {
+	endpoints, err := alerts.MakeAlertsV1RestClientEndpoints(url)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClientAlertsV1{
+
+		restAlert: &restObjAlertsV1Alert{endpoints: endpoints, instance: url},
+	}
+}
+
+func (a *crudRestClientAlertsV1) Alert() alerts.AlertsV1AlertInterface {
+	return a.restAlert
 }

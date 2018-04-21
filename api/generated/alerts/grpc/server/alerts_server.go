@@ -39,6 +39,7 @@ type salertsAlertsBackend struct {
 
 	endpointsAlertDestinationV1 *eAlertDestinationV1Endpoints
 	endpointsAlertPolicyV1      *eAlertPolicyV1Endpoints
+	endpointsAlertsV1           *eAlertsV1Endpoints
 }
 
 type eAlertDestinationV1Endpoints struct {
@@ -62,6 +63,17 @@ type eAlertPolicyV1Endpoints struct {
 	fnAutoUpdateAlertPolicy func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchAlertPolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+}
+type eAlertsV1Endpoints struct {
+	Svc salertsAlertsBackend
+
+	fnAutoAddAlert    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteAlert func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetAlert    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListAlert   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateAlert func(ctx context.Context, t interface{}) (interface{}, error)
+
+	fnAutoWatchAlert func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
@@ -276,6 +288,18 @@ func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger 
 		}),
 		"alerts.AlertDestinationSpec":   apisrvpkg.NewMessage("alerts.AlertDestinationSpec"),
 		"alerts.AlertDestinationStatus": apisrvpkg.NewMessage("alerts.AlertDestinationStatus"),
+		"alerts.AlertList": apisrvpkg.NewMessage("alerts.AlertList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := alerts.AlertList{}
+			r := alerts.Alert{}
+			r.ObjectMeta = options.ObjectMeta
+			key := r.MakeKey(prefix)
+			err := kvs.ListFiltered(ctx, key, &into, *options)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
 		"alerts.AlertPolicy": apisrvpkg.NewMessage("alerts.AlertPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := alerts.AlertPolicy{}
@@ -395,6 +419,7 @@ func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger 
 		"alerts.AuthConfig":                         apisrvpkg.NewMessage("alerts.AuthConfig"),
 		"alerts.AutoMsgAlertDestinationWatchHelper": apisrvpkg.NewMessage("alerts.AutoMsgAlertDestinationWatchHelper"),
 		"alerts.AutoMsgAlertPolicyWatchHelper":      apisrvpkg.NewMessage("alerts.AutoMsgAlertPolicyWatchHelper"),
+		"alerts.AutoMsgAlertWatchHelper":            apisrvpkg.NewMessage("alerts.AutoMsgAlertWatchHelper"),
 		"alerts.MatchedRequirement":                 apisrvpkg.NewMessage("alerts.MatchedRequirement"),
 		"alerts.PrivacyConfig":                      apisrvpkg.NewMessage("alerts.PrivacyConfig"),
 		"alerts.Requirement":                        apisrvpkg.NewMessage("alerts.Requirement"),
@@ -653,6 +678,119 @@ func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger 
 
 	}
 
+	{
+		srv := apisrvpkg.NewService("AlertsV1")
+
+		s.endpointsAlertsV1.fnAutoAddAlert = srv.AddMethod("AutoAddAlert",
+			apisrvpkg.NewMethod(s.Messages["alerts.Alert"], s.Messages["alerts.Alert"], "alerts", "AutoAddAlert")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsAlertsV1.fnAutoDeleteAlert = srv.AddMethod("AutoDeleteAlert",
+			apisrvpkg.NewMethod(s.Messages["alerts.Alert"], s.Messages["alerts.Alert"], "alerts", "AutoDeleteAlert")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsAlertsV1.fnAutoGetAlert = srv.AddMethod("AutoGetAlert",
+			apisrvpkg.NewMethod(s.Messages["alerts.Alert"], s.Messages["alerts.Alert"], "alerts", "AutoGetAlert")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(alerts.Alert)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "alerts/", in.Tenant, "/alerts/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsAlertsV1.fnAutoListAlert = srv.AddMethod("AutoListAlert",
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["alerts.AlertList"], "alerts", "AutoListAlert")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "alerts/", in.Tenant, "/alerts/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsAlertsV1.fnAutoUpdateAlert = srv.AddMethod("AutoUpdateAlert",
+			apisrvpkg.NewMethod(s.Messages["alerts.Alert"], s.Messages["alerts.Alert"], "alerts", "AutoUpdateAlert")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(alerts.Alert)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "alerts/", in.Tenant, "/alerts/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsAlertsV1.fnAutoWatchAlert = s.Messages["alerts.Alert"].WatchFromKv
+
+		s.Services = map[string]apiserver.Service{
+			"alerts.AlertsV1": srv,
+		}
+		apisrv.RegisterService("alerts.AlertsV1", srv)
+		endpoints := alerts.MakeAlertsV1ServerEndpoints(s.endpointsAlertsV1, logger)
+		server := alerts.MakeGRPCServerAlertsV1(ctx, endpoints, logger)
+		alerts.RegisterAlertsV1Server(grpcserver.GrpcServer, server)
+	}
+	// Add Watchers
+	{
+
+		s.Messages["alerts.Alert"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := alerts.Alert{}
+			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
+			wstream := stream.(alerts.AlertsV1_AutoWatchAlertServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Alert")
+				return err
+			}
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.DebugLog("Channel closed for Alert Watcher")
+						return nil
+					}
+					in, ok := ev.Object.(*alerts.Alert)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+
+					strEvent := alerts.AutoMsgAlertWatchHelper{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "received Alert watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "Alert", "fromver", in.APIVersion, "tover", version)
+							break
+						}
+						strEvent.Object = i.(*alerts.Alert)
+					}
+					l.DebugLog("msg", "writing to stream")
+					if err := wstream.Send(&strEvent); err != nil {
+						l.DebugLog("msg", "Stream send error'ed for Alert", "error", err)
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for Alert Watcher")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
+	}
+
 	return nil
 }
 
@@ -744,6 +882,50 @@ func (e *eAlertPolicyV1Endpoints) AutoUpdateAlertPolicy(ctx context.Context, t a
 func (e *eAlertPolicyV1Endpoints) AutoWatchAlertPolicy(in *api.ListWatchOptions, stream alerts.AlertPolicyV1_AutoWatchAlertPolicyServer) error {
 	return e.fnAutoWatchAlertPolicy(in, stream, "alertPolicies")
 }
+func (e *eAlertsV1Endpoints) AutoAddAlert(ctx context.Context, t alerts.Alert) (alerts.Alert, error) {
+	r, err := e.fnAutoAddAlert(ctx, t)
+	if err == nil {
+		return r.(alerts.Alert), err
+	}
+	return alerts.Alert{}, err
+
+}
+func (e *eAlertsV1Endpoints) AutoDeleteAlert(ctx context.Context, t alerts.Alert) (alerts.Alert, error) {
+	r, err := e.fnAutoDeleteAlert(ctx, t)
+	if err == nil {
+		return r.(alerts.Alert), err
+	}
+	return alerts.Alert{}, err
+
+}
+func (e *eAlertsV1Endpoints) AutoGetAlert(ctx context.Context, t alerts.Alert) (alerts.Alert, error) {
+	r, err := e.fnAutoGetAlert(ctx, t)
+	if err == nil {
+		return r.(alerts.Alert), err
+	}
+	return alerts.Alert{}, err
+
+}
+func (e *eAlertsV1Endpoints) AutoListAlert(ctx context.Context, t api.ListWatchOptions) (alerts.AlertList, error) {
+	r, err := e.fnAutoListAlert(ctx, t)
+	if err == nil {
+		return r.(alerts.AlertList), err
+	}
+	return alerts.AlertList{}, err
+
+}
+func (e *eAlertsV1Endpoints) AutoUpdateAlert(ctx context.Context, t alerts.Alert) (alerts.Alert, error) {
+	r, err := e.fnAutoUpdateAlert(ctx, t)
+	if err == nil {
+		return r.(alerts.Alert), err
+	}
+	return alerts.Alert{}, err
+
+}
+
+func (e *eAlertsV1Endpoints) AutoWatchAlert(in *api.ListWatchOptions, stream alerts.AlertsV1_AutoWatchAlertServer) error {
+	return e.fnAutoWatchAlert(in, stream, "alerts")
+}
 
 func init() {
 	apisrv = apisrvpkg.MustGetAPIServer()
@@ -757,6 +939,10 @@ func init() {
 	{
 		e := eAlertPolicyV1Endpoints{Svc: svc}
 		svc.endpointsAlertPolicyV1 = &e
+	}
+	{
+		e := eAlertsV1Endpoints{Svc: svc}
+		svc.endpointsAlertsV1 = &e
 	}
 	apisrv.Register("alerts.protos/alerts.proto", &svc)
 }

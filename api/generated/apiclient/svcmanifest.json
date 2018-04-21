@@ -12,6 +12,12 @@
         "Messages": [
           "AlertPolicy"
         ]
+      },
+      "AlertsV1": {
+        "Version": "v1",
+        "Messages": [
+          "Alert"
+        ]
       }
     },
     "Files": [

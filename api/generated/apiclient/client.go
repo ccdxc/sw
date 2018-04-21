@@ -37,6 +37,8 @@ type Services interface {
 	AlertDestinationV1() alerts.AlertDestinationV1Interface
 	// Package is alerts and len of messages is 1
 	AlertPolicyV1() alerts.AlertPolicyV1Interface
+	// Package is alerts and len of messages is 1
+	AlertsV1() alerts.AlertsV1Interface
 	// Package is app and len of messages is 3
 	AppV1() app.AppV1Interface
 	// Package is auth and len of messages is 4
@@ -82,6 +84,7 @@ type apiGrpcServerClient struct {
 
 	aAlertDestinationV1        alerts.AlertDestinationV1Interface
 	aAlertPolicyV1             alerts.AlertPolicyV1Interface
+	aAlertsV1                  alerts.AlertsV1Interface
 	aAppV1                     app.AppV1Interface
 	aAuthV1                    auth.AuthV1Interface
 	aBookstoreV1               bookstore.BookstoreV1Interface
@@ -113,6 +116,10 @@ func (a *apiGrpcServerClient) AlertDestinationV1() alerts.AlertDestinationV1Inte
 
 func (a *apiGrpcServerClient) AlertPolicyV1() alerts.AlertPolicyV1Interface {
 	return a.aAlertPolicyV1
+}
+
+func (a *apiGrpcServerClient) AlertsV1() alerts.AlertsV1Interface {
+	return a.aAlertsV1
 }
 
 func (a *apiGrpcServerClient) AppV1() app.AppV1Interface {
@@ -201,6 +208,7 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 
 		aAlertDestinationV1:        alertsClient.NewGrpcCrudClientAlertDestinationV1(client.ClientConn, logger),
 		aAlertPolicyV1:             alertsClient.NewGrpcCrudClientAlertPolicyV1(client.ClientConn, logger),
+		aAlertsV1:                  alertsClient.NewGrpcCrudClientAlertsV1(client.ClientConn, logger),
 		aAppV1:                     appClient.NewGrpcCrudClientAppV1(client.ClientConn, logger),
 		aAuthV1:                    authClient.NewGrpcCrudClientAuthV1(client.ClientConn, logger),
 		aBookstoreV1:               bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
@@ -227,6 +235,7 @@ type apiRestServerClient struct {
 
 	aAlertDestinationV1        alerts.AlertDestinationV1Interface
 	aAlertPolicyV1             alerts.AlertPolicyV1Interface
+	aAlertsV1                  alerts.AlertsV1Interface
 	aAppV1                     app.AppV1Interface
 	aAuthV1                    auth.AuthV1Interface
 	aBookstoreV1               bookstore.BookstoreV1Interface
@@ -258,6 +267,10 @@ func (a *apiRestServerClient) AlertDestinationV1() alerts.AlertDestinationV1Inte
 
 func (a *apiRestServerClient) AlertPolicyV1() alerts.AlertPolicyV1Interface {
 	return a.aAlertPolicyV1
+}
+
+func (a *apiRestServerClient) AlertsV1() alerts.AlertsV1Interface {
+	return a.aAlertsV1
 }
 
 func (a *apiRestServerClient) AppV1() app.AppV1Interface {
@@ -339,6 +352,7 @@ func NewRestAPIClient(url string) (Services, error) {
 
 		aAlertDestinationV1:        alertsClient.NewRestCrudClientAlertDestinationV1(url),
 		aAlertPolicyV1:             alertsClient.NewRestCrudClientAlertPolicyV1(url),
+		aAlertsV1:                  alertsClient.NewRestCrudClientAlertsV1(url),
 		aAppV1:                     appClient.NewRestCrudClientAppV1(url),
 		aAuthV1:                    authClient.NewRestCrudClientAuthV1(url),
 		aBookstoreV1:               bookstoreClient.NewRestCrudClientBookstoreV1(url),

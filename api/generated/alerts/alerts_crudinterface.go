@@ -46,3 +46,19 @@ type AlertPolicyV1AlertPolicyInterface interface {
 type AlertPolicyV1Interface interface {
 	AlertPolicy() AlertPolicyV1AlertPolicyInterface
 }
+
+// AlertsV1AlertInterface exposes the CRUD methods for Alert
+type AlertsV1AlertInterface interface {
+	Create(ctx context.Context, in *Alert) (*Alert, error)
+	Update(ctx context.Context, in *Alert) (*Alert, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Alert, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Alert, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Alert, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
+// AlertsV1Interface exposes objects with CRUD operations allowed by the service
+type AlertsV1Interface interface {
+	Alert() AlertsV1AlertInterface
+}

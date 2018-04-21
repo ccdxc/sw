@@ -534,38 +534,42 @@
           },
           {
             "name": "Spec.Resource",
-            "description": "name of the field or metric.",
+            "description": "Resource type - target resource to run this policy.\ne.g. Network, Endpoint - object based alert policy\n     Event - event based alert policy\n     EndpointMetrics - metric based alert policy\nbased on the resource type, the policy gets interpreted.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.Severity",
+            "description": "Severity to be set for an alert that gets triggered from this rule.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.Message",
-            "description": "Values contains one or more values corresponding to the field-or-metric. \"Equals\",\n\"NotEquals\", \"Gt\" and \"Lt\" operators need a single value. \"In\" and \"NotIn\" operators\ncan have one or more values.",
+            "description": "Message to be used while generating the alert\nXXX: Event based alerts should not carry a message. It will be derived from the event.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.PersistenceDuration",
+            "description": "Met rule (requirements) needs to sustain for the given duration to qualify to be an alert.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.ClearDuration",
+            "description": "Met rule (requirements) needs to be cleared for the given duration to resolve an alert.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.Enable",
+            "description": "User can disable the policy by setting this field.\nDisabled policies will not generate any more alerts but the outstanding ones will remain as is.",
             "in": "query",
             "required": false,
             "type": "boolean",
@@ -573,6 +577,7 @@
           },
           {
             "name": "Spec.AutoResolve",
+            "description": "If set, the underlying alert will be auto-resolved if the rule that\ntriggered the alert is cleared.",
             "in": "query",
             "required": false,
             "type": "boolean",
@@ -580,6 +585,7 @@
           },
           {
             "name": "Spec.Destinations",
+            "description": "name of the alert destinations to be used to send out notification when an alert\ngets generated.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -589,7 +595,7 @@
           },
           {
             "name": "Status.TotalHits",
-            "description": "Resource type - target resource to run this policy.\ne.g. Network, Endpoint - object based alert policy\n     Event - event based alert policy\n     EndpointMetrics - metric based alert policy\nbased on the resource type, the policy gets interpreted.",
+            "description": "Total hits on this policy.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -597,7 +603,7 @@
           },
           {
             "name": "Status.OpenAlerts",
-            "description": "Severity to be set for an alert that gets triggered from this rule.",
+            "description": "Open alerts based on this policy.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -605,7 +611,7 @@
           },
           {
             "name": "Status.AcknowledgedAlerts",
-            "description": "Message to be used while generating the alert\nXXX: Event based alerts should not carry a message. It will be derived from the event.",
+            "description": "Acknowledged alerts based on this policy.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -680,9 +686,338 @@
           "AlertPolicyV1"
         ]
       }
+    },
+    "/{O.Tenant}/alerts": {
+      "get": {
+        "operationId": "AutoListAlert",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/alertsAlertList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "AlertsV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/alerts/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetAlert",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/alertsAlert"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.State",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Severity",
+            "description": "Host where the trap needs to be sent.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Source.Component",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Source.NodeName",
+            "description": "Password contains the authentication password.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.ObjectRef.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.ObjectRef.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.ObjectRef.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Message",
+            "description": "CommunityOrUser contains community string for v2c, user for v3.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Reason.PolicyID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Acknowledged.User",
+            "description": "If set, this will be the default notification option for the alert policies unless otherwise\nsomething else is mentioned.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Acknowledged.Time.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "Status.Resolved.User",
+            "description": "If set, this will be the default notification option for the alert policies unless otherwise\nsomething else is mentioned.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Resolved.Time.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "AlertsV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateAlert",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/alertsAlert"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/alertsAlert"
+            }
+          }
+        ],
+        "tags": [
+          "AlertsV1"
+        ]
+      }
     }
   },
   "definitions": {
+    "alertsAlert": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/alertsAlertSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/alertsAlertStatus"
+        }
+      },
+      "title": "Source of an alert; for alerts generated from events, it maps to event.Source"
+    },
     "alertsAlertDestination": {
       "type": "object",
       "properties": {
@@ -757,33 +1092,51 @@
       },
       "title": "User can change the state of the alert by changing the spec"
     },
-    "alertsAlertPolicy": {
+    "alertsAlertList": {
       "type": "object",
       "properties": {
         "T": {
           "$ref": "#/definitions/apiTypeMeta",
           "title": "Severity of an alert"
         },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta",
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta",
           "title": "Alert source or origin"
         },
-        "Spec": {
-          "$ref": "#/definitions/alertsAlertPolicySpec",
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/alertsAlert"
+          },
           "title": "Affected object"
-        },
-        "Status": {
-          "$ref": "#/definitions/alertsAlertPolicyStatus",
-          "title": "Message from the alert rule that triggered the alert"
         }
       },
       "title": "Status part of the alert object"
+    },
+    "alertsAlertPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/alertsAlertPolicySpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/alertsAlertPolicyStatus"
+        }
+      },
+      "title": "Alert defines an alert object"
     },
     "alertsAlertPolicyList": {
       "type": "object",
       "properties": {
         "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "name of the field or metric"
         },
         "ListMeta": {
           "$ref": "#/definitions/apiListMeta"
@@ -792,53 +1145,60 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/alertsAlertPolicy"
-          }
+          },
+          "description": "Values contains one or more values corresponding to the field-or-metric. \"Equals\",\n\"NotEquals\", \"Gt\" and \"Lt\" operators need a single value. \"In\" and \"NotIn\" operators\ncan have one or more values."
         }
       },
-      "title": "Alert defines an alert object"
+      "title": "Requirement specifies each\n{\"field\": \"Status.Phase\", \"operator\":\"Equals\", \"values\":[\"JOINED\"]}"
     },
     "alertsAlertPolicySpec": {
       "type": "object",
       "properties": {
         "Resource": {
           "type": "string",
-          "title": "name of the field or metric"
+          "description": "Resource type - target resource to run this policy.\ne.g. Network, Endpoint - object based alert policy\n     Event - event based alert policy\n     EndpointMetrics - metric based alert policy\nbased on the resource type, the policy gets interpreted."
         },
         "Severity": {
-          "type": "string"
+          "type": "string",
+          "title": "Severity to be set for an alert that gets triggered from this rule"
         },
         "Message": {
           "type": "string",
-          "description": "Values contains one or more values corresponding to the field-or-metric. \"Equals\",\n\"NotEquals\", \"Gt\" and \"Lt\" operators need a single value. \"In\" and \"NotIn\" operators\ncan have one or more values."
+          "description": "Message to be used while generating the alert\nXXX: Event based alerts should not carry a message. It will be derived from the event."
         },
         "Requirements": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/alertsRequirement"
-          }
+          },
+          "title": "List of requirements that needs to be met to trigger an alert"
         },
         "PersistenceDuration": {
-          "type": "string"
+          "type": "string",
+          "title": "Met rule (requirements) needs to sustain for the given duration to qualify to be an alert"
         },
         "ClearDuration": {
-          "type": "string"
+          "type": "string",
+          "title": "Met rule (requirements) needs to be cleared for the given duration to resolve an alert"
         },
         "Enable": {
           "type": "boolean",
-          "format": "boolean"
+          "format": "boolean",
+          "description": "User can disable the policy by setting this field.\nDisabled policies will not generate any more alerts but the outstanding ones will remain as is."
         },
         "AutoResolve": {
           "type": "boolean",
-          "format": "boolean"
+          "format": "boolean",
+          "title": "If set, the underlying alert will be auto-resolved if the rule that\ntriggered the alert is cleared"
         },
         "Destinations": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "name of the alert destinations to be used to send out notification when an alert\ngets generated."
         }
-      },
-      "title": "Requirement specifies each\n{\"field\": \"Status.Phase\", \"operator\":\"Equals\", \"values\":[\"JOINED\"]}"
+      }
     },
     "alertsAlertPolicyStatus": {
       "type": "object",
@@ -846,17 +1206,99 @@
         "TotalHits": {
           "type": "integer",
           "format": "int32",
-          "description": "Resource type - target resource to run this policy.\ne.g. Network, Endpoint - object based alert policy\n     Event - event based alert policy\n     EndpointMetrics - metric based alert policy\nbased on the resource type, the policy gets interpreted."
+          "title": "Total hits on this policy"
         },
         "OpenAlerts": {
           "type": "integer",
           "format": "int32",
-          "title": "Severity to be set for an alert that gets triggered from this rule"
+          "title": "Open alerts based on this policy"
         },
         "AcknowledgedAlerts": {
           "type": "integer",
           "format": "int32",
-          "description": "Message to be used while generating the alert\nXXX: Event based alerts should not carry a message. It will be derived from the event."
+          "title": "Acknowledged alerts based on this policy"
+        }
+      }
+    },
+    "alertsAlertReason": {
+      "type": "object",
+      "properties": {
+        "MatchedRequirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/alertsMatchedRequirement"
+          }
+        },
+        "PolicyID": {
+          "type": "string"
+        }
+      },
+      "title": "AlertPolicy - tenant scoped"
+    },
+    "alertsAlertSource": {
+      "type": "object",
+      "properties": {
+        "Component": {
+          "type": "string"
+        },
+        "NodeName": {
+          "type": "string",
+          "description": "Password contains the authentication password."
+        }
+      },
+      "description": "AuthConfig contains the configuration for SNMP Trap authentication."
+    },
+    "alertsAlertSpec": {
+      "type": "object",
+      "properties": {
+        "State": {
+          "type": "string"
+        }
+      },
+      "description": "PrivacyConfig contains the configuration for SNMP Trap encryption."
+    },
+    "alertsAlertStatus": {
+      "type": "object",
+      "properties": {
+        "Severity": {
+          "type": "string",
+          "description": "Host where the trap needs to be sent."
+        },
+        "Source": {
+          "$ref": "#/definitions/alertsAlertSource",
+          "description": "Port on the Host where the trap needs to be sent, default is 162."
+        },
+        "ObjectRef": {
+          "$ref": "#/definitions/apiObjectRef"
+        },
+        "Message": {
+          "type": "string",
+          "description": "CommunityOrUser contains community string for v2c, user for v3."
+        },
+        "Reason": {
+          "$ref": "#/definitions/alertsAlertReason",
+          "description": "AuthConfig contains the configuration for authentication, valid only for v3."
+        },
+        "Acknowledged": {
+          "$ref": "#/definitions/alertsAuditInfo",
+          "description": "PrivacyConfig contains the configuration for encryption, valid only for v3."
+        },
+        "Resolved": {
+          "$ref": "#/definitions/alertsAuditInfo"
+        }
+      },
+      "description": "SNMPTrapServer contains the configuration for sending SNMP traps to a receiver."
+    },
+    "alertsAuditInfo": {
+      "type": "object",
+      "properties": {
+        "User": {
+          "type": "string",
+          "description": "If set, this will be the default notification option for the alert policies unless otherwise\nsomething else is mentioned."
+        },
+        "Time": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "Email notification"
         }
       }
     },
@@ -865,11 +1307,10 @@
       "properties": {
         "Algo": {
           "type": "string",
-          "description": "If set, this will be the default notification option for the alert policies unless otherwise\nsomething else is mentioned."
+          "title": "total number of notifications sent using this notification mechanism"
         },
         "Password": {
-          "type": "string",
-          "title": "Email notification"
+          "type": "string"
         }
       }
     },
@@ -877,13 +1318,13 @@
       "type": "object",
       "properties": {
         "Type": {
-          "type": "string",
-          "title": "total number of notifications sent using this notification mechanism"
+          "type": "string"
         },
         "Object": {
           "$ref": "#/definitions/alertsAlertDestination"
         }
-      }
+      },
+      "title": "AlertDestination - tenant scoped"
     },
     "alertsAutoMsgAlertPolicyWatchHelper": {
       "type": "object",
@@ -894,8 +1335,29 @@
         "Object": {
           "$ref": "#/definitions/alertsAlertPolicy"
         }
-      },
-      "title": "AlertDestination - tenant scoped"
+      }
+    },
+    "alertsAutoMsgAlertWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/alertsAlert"
+        }
+      }
+    },
+    "alertsMatchedRequirement": {
+      "type": "object",
+      "properties": {
+        "Requirement": {
+          "$ref": "#/definitions/alertsRequirement"
+        },
+        "ObservedValue": {
+          "type": "string"
+        }
+      }
     },
     "alertsPrivacyConfig": {
       "type": "object",
@@ -1026,6 +1488,24 @@
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
     },
     "apiTimestamp": {
       "type": "object",
