@@ -17,7 +17,7 @@ hal_ret_t fte::ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     this->dep_ = temp_dep;
     this->sep_handle_ = temp_ep->hal_handle;
     this->dep_handle_ = temp_dep ? temp_dep->hal_handle : HAL_HANDLE_INVALID;
-    this->vrf_ = temp_ten;
+    this->svrf_ = this->dvrf_ = temp_ten;
     this->vlan_tag_valid_ = false;
     this->num_features_ = 100;
     this->feature_state_ = feature_state; //(feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sizeof(feature_state_t));

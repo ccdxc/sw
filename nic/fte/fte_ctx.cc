@@ -63,7 +63,7 @@ ctx_t::extract_flow_key()
     }
     l2seg = (hal::l2seg_t *)obj;
 
-    key_.vrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id;
+    key_.svrf_id = key_.dvrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id;
 
     // extract src/dst/proto
     switch (cpu_rxhdr_->lkp_type) {
@@ -146,10 +146,20 @@ ctx_t::lookup_flow_objs()
     void *obj;
     hal_ret_t ret;
 
-    vrf_ = hal::vrf_lookup_by_id(key_.vrf_id);
-    if (vrf_ == NULL) {
+    svrf_ = hal::vrf_lookup_by_id(key_.svrf_id);
+    if (svrf_ == NULL) {
         HAL_TRACE_ERR("fte: vrf not found, key {}", key_);
         return HAL_RET_VRF_NOT_FOUND;
+    }
+
+    if (key_.svrf_id == key_.dvrf_id) {
+        dvrf_ = svrf_;
+    } else {
+        dvrf_ = hal::vrf_lookup_by_id(key_.dvrf_id);
+        if (svrf_ == NULL) {
+            HAL_TRACE_ERR("fte: dvrf not found, key {}", key_);
+            return HAL_RET_VRF_NOT_FOUND;
+        }
     }
 
     //Lookup src and dest EPs
@@ -385,7 +395,8 @@ ctx_t::create_session()
     } else {
         valid_rflow_ = true;
         rkey.flow_type = key_.flow_type;
-        rkey.vrf_id = key_.vrf_id;
+        rkey.svrf_id = key_.dvrf_id;
+        rkey.dvrf_id = key_.svrf_id;
 
         // TODO(goli) check valid ether types for rflow
         if (key_.flow_type == hal::FLOW_TYPE_L2) {
@@ -606,7 +617,7 @@ ctx_t::update_flow_table()
                         rflow_attrs.qos_class_en, rflow_attrs.qos_class_id);
     }
 
-    session_args.vrf         = vrf_;
+    session_args.vrf         = svrf_;
     session_args.sep         = sep_;
     session_args.dep         = dep_;
     session_args.sif         = sif_;
@@ -664,15 +675,32 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
 {
     ipvx_addr_t dip;
 
+    if (header.valid_flds.dvrf_id) {
+        uint32_t dvrf_id;
+        
+        if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
+            dvrf_id = header.ipv4.dvrf_id;
+        } else {
+            dvrf_id = header.ipv6.dvrf_id;
+        }
+
+        dvrf_ =  hal::vrf_lookup_by_id(dvrf_id);
+        
+        if (dvrf_ == NULL) {
+            HAL_TRACE_ERR("DNAT vrf not found vrf={}", dvrf_id);
+            return HAL_RET_VRF_NOT_FOUND;
+        }
+    }
+
     if (header.valid_flds.dip) {
         if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
-            dep_ = hal::find_ep_by_v4_key(vrf_->vrf_id, header.ipv4.dip);
+            dep_ = hal::find_ep_by_v4_key(dvrf_->vrf_id, header.ipv4.dip);
             dip.v4_addr = header.ipv4.dip;
         } else {
             ip_addr_t addr;
             addr.af = IP_AF_IPV6;
             addr.addr.v6_addr = header.ipv6.dip;
-            dep_ = hal::find_ep_by_v6_key(vrf_->vrf_id, &addr);
+            dep_ = hal::find_ep_by_v6_key(dvrf_->vrf_id, &addr);
             dip.v6_addr = header.ipv6.dip;
         }
     } else if (dep_ == NULL && header.valid_flds.dmac && sl2seg_ != NULL) {

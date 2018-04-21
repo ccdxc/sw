@@ -75,7 +75,7 @@ lookup_l4lb_service(const hal::flow_key_t &key)
         break;
     }
 
-    l4lb_key.vrf_id = key.vrf_id;
+    l4lb_key.vrf_id = key.dvrf_id;
     l4lb_key.proto = key.proto;
     l4lb_key.service_ip.addr = key.dip;
     l4lb_key.service_port = key.dport;

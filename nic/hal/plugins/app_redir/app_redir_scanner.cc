@@ -449,7 +449,7 @@ hal_ret_t scanner_get_appid_info(const hal::flow_key_t& key, appid_info_t& appid
 
     if (0 == snort_dl.lib_get_flow_info_by_key(key.proto, key.flow_type == hal::FLOW_TYPE_V6,
                  key.sip.v6_addr.addr8, key.dip.v6_addr.addr8, key.sport, key.dport,
-                 0 /* TODO: vlan_id */, (uint16_t) key.vrf_id, &flow_info)) {
+                 0 /* TODO: vlan_id */, (uint16_t) key.svrf_id, &flow_info)) {
         scanner_flow_info_to_appid_info(flow_info, appid_info);
         return HAL_RET_OK;
     }

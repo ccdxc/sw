@@ -117,7 +117,8 @@ enum nat_type_t {
 typedef struct flow_key_s {
     uint8_t              flow_type:4;    // one of the flow types defined above
     uint8_t              dir:1;
-    vrf_id_t             vrf_id;    // vrf id
+    vrf_id_t             svrf_id;    // src vrf id
+    vrf_id_t             dvrf_id;    // dst vrf id
 
     union {
         // L2 flow key information
@@ -285,7 +286,7 @@ typedef struct session_args_s {
     flow_pgm_attrs_t   *rflow_attrs[MAX_SESSION_FLOWS];   // responder flow attrs
     session_state_t    *session_state;                    // connection tracking state
     bool               valid_rflow;                       // Rflow valid ?
-    vrf_t              *vrf;                              // vrf
+    vrf_t              *vrf;                              // src vrf
     ep_t               *sep;                              // spurce ep
     ep_t               *dep;                              // dest ep
     if_t               *sif;                              // source interface
@@ -309,7 +310,7 @@ struct session_s {
     session_cfg_t       config;                   // session config
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
-    hal_handle_t        vrf_handle;               // vrf handle
+    hal_handle_t        vrf_handle;               // src vrf handle
     void                *tcp_cxntrack_timer;      // Timer to check connection establishment
                                                   // and connection close
 
@@ -328,7 +329,7 @@ struct session_s {
     dllist_ctxt_t       dif_session_lentry;       // destination interface's session list context
     dllist_ctxt_t       sl2seg_session_lentry;    // source L2 segment's session list context
     dllist_ctxt_t       dl2seg_session_lentry;    // destination L2 segment's session list context
-    dllist_ctxt_t       vrf_session_lentry;       // vrf's session list context
+    dllist_ctxt_t       vrf_session_lentry;      // src vrf's session list context
     dllist_ctxt_t       feature_list_head;        // List of feature specific states
 } __PACK__;
 

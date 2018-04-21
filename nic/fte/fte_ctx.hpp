@@ -109,6 +109,8 @@ typedef struct header_fld_s {
     uint32_t dmac:1;
     uint32_t vlan_id:1;
     uint32_t dot1p:1;
+    uint32_t svrf_id:1;
+    uint32_t dvrf_id:1;
     uint32_t sip:1;
     uint32_t dip:1;
     uint32_t ttl:1;
@@ -161,16 +163,20 @@ typedef struct header_rewrite_info_s {
 
     union {
         struct {
+            uint32_t    svrf_id;
+            uint32_t    dvrf_id;
             ipv4_addr_t sip;
             ipv4_addr_t dip;
-            uint8_t   ttl;
-            uint8_t   dscp;
+            uint8_t     ttl;
+            uint8_t     dscp;
         } __PACK__ ipv4;
         struct {
+            uint32_t    svrf_id;
+            uint32_t    dvrf_id;
             ipv6_addr_t sip;
             ipv6_addr_t dip;
-            uint8_t   ttl;
-            uint8_t   dscp;
+            uint8_t     ttl;
+            uint8_t     dscp;
         } __PACK__ ipv6;
     };
 
@@ -524,7 +530,8 @@ public:
     bool ignore_session_create() const { return ignore_session_create_; }
     void set_ignore_session_create(bool val) { ignore_session_create_ = val; }
 
-    hal::vrf_t *vrf() const { return vrf_; }
+    hal::vrf_t *svrf() const { return svrf_; }
+    hal::vrf_t *dvrf() const { return dvrf_; }
     hal::l2seg_t *sl2seg() const { return sl2seg_; }
     hal::l2seg_t *dl2seg() const { return dl2seg_; }
     hal::if_t *sif() const { return sif_; }
@@ -618,7 +625,8 @@ private:
     flow_t                *rflow_[MAX_STAGES];       // rflow 
     bool                  force_delete_;     // Force delete session
 
-    hal::vrf_t            *vrf_;
+    hal::vrf_t            *svrf_;
+    hal::vrf_t            *dvrf_;
     hal::l2seg_t          *sl2seg_;
     hal::l2seg_t          *dl2seg_;
     hal::if_t             *sif_;

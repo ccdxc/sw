@@ -791,7 +791,7 @@ proxy_flow_enable(types::ProxyType proxy_type,
         HAL_TRACE_DEBUG("ipsec proxy flow configured");
         if(ipsec_flow_config->encrypt()) {
             HAL_TRACE_DEBUG("ipsec proxy host flow configured");
-            extract_flow_key_from_spec(flow_key.vrf_id,
+            extract_flow_key_from_spec(flow_key.svrf_id,
                                        &pfi->u.ipsec.u.host_flow.esp_flow_key,
                                        ipsec_flow_config->esp_flow_key());
         }

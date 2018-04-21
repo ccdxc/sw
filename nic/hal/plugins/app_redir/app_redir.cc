@@ -461,7 +461,7 @@ app_redir_flow_key_build_from_redir_hdr(fte::ctx_t& ctx,
     flow_key_t      flow_key = {0};
 
     flow_key.dir = dir;
-    flow_key.vrf_id = ntohs(app_hdr.proxy.vrf);
+    flow_key.svrf_id = flow_key.dvrf_id = ntohs(app_hdr.proxy.vrf);
     if (app_hdr.proxy.af == AF_INET) {
         flow_key.flow_type = hal::FLOW_TYPE_V4;
         flow_key.sip.v4_addr = ntohl(app_hdr.proxy.ip_sa[0]);
@@ -493,7 +493,7 @@ app_redir_flow_key_build_from_proxyrcb(fte::ctx_t& ctx,
     flow_key_t      flow_key = {0};
 
     flow_key.dir = proxyrcb.dir;
-    flow_key.vrf_id = ntohs(proxyrcb.vrf);
+    flow_key.svrf_id = flow_key.dvrf_id = ntohs(proxyrcb.vrf);
     if (proxyrcb.af == AF_INET) {
         flow_key.flow_type = hal::FLOW_TYPE_V4;
         flow_key.sip.v4_addr = ntohl(proxyrcb.ip_sa.v4_addr);
@@ -552,7 +552,7 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
         hdr_len = PEN_APP_REDIR_VERSION_HEADER_SIZE +
                   PEN_RAW_REDIR_HEADER_V1_SIZE;
         redir_miss_hdr.ver.hdr_len = htons(hdr_len);
-        redir_miss_hdr.raw.vrf = htons(flow_key.vrf_id);
+        redir_miss_hdr.raw.vrf = htons(flow_key.svrf_id);
         redir_miss_hdr.raw.flags = htons(redir_flags);
         redir_miss_hdr.raw.flow_id = htonl(redir_ctx.chain_flow_id());
         redir_ctx.set_redir_miss_pkt_p(ctx.pkt());
@@ -566,7 +566,7 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
         hdr_len = PEN_APP_REDIR_VERSION_HEADER_SIZE +
                   PEN_PROXY_REDIR_HEADER_V1_SIZE;
         redir_miss_hdr.ver.hdr_len = htons(hdr_len);
-        redir_miss_hdr.proxy.vrf = htons(flow_key.vrf_id);
+        redir_miss_hdr.proxy.vrf = htons(flow_key.svrf_id);
         redir_miss_hdr.proxy.flags = htons(redir_flags);
         redir_miss_hdr.proxy.flow_id = htonl(redir_ctx.chain_flow_id());
         redir_miss_hdr.proxy.tcp_flags = cpu_rxhdr->tcp_flags;
@@ -657,9 +657,9 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
          * Tenant ID not accessible from P4+ so have to set it here
          */
         redir_flags = ntohs(app_hdr->raw.flags);
-        app_hdr->raw.vrf = htons(flow_key.vrf_id);
+        app_hdr->raw.vrf = htons(flow_key.svrf_id);
         HAL_TRACE_DEBUG("{} flow_id {:#x} redir_flags {:#x} vrf {}", __FUNCTION__,
-                        ntohl(app_hdr->raw.flow_id), redir_flags, flow_key.vrf_id);
+                        ntohl(app_hdr->raw.flow_id), redir_flags, flow_key.svrf_id);
         if ((pkt_len < PEN_RAW_REDIR_HEADER_V1_FULL_SIZE) ||
             ((hdr_len - PEN_APP_REDIR_VERSION_HEADER_SIZE) != 
                         PEN_RAW_REDIR_HEADER_V1_SIZE)) {

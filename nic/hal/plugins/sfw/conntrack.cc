@@ -105,9 +105,9 @@ net_conntrack_configured(fte::ctx_t &ctx)
     }
 
     // lookup Security profile
-    if (ctx.vrf()->nwsec_profile_handle  != HAL_HANDLE_INVALID) {
+    if (ctx.svrf()->nwsec_profile_handle  != HAL_HANDLE_INVALID) {
         hal::nwsec_profile_t  *nwsec_prof =
-            find_nwsec_profile_by_handle(ctx.vrf()->nwsec_profile_handle);
+            find_nwsec_profile_by_handle(ctx.svrf()->nwsec_profile_handle);
         if (nwsec_prof != NULL) {
             return nwsec_prof->cnxn_tracking_en;
         }

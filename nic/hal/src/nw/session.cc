@@ -187,14 +187,20 @@ flowkey2str (const flow_key_t& key)
 
     out.write("{{dir={}, ", key.dir);
 
+    if ( key.svrf_id == key.dvrf_id) {
+        out.write("svrf={}, ", key.svrf_id);
+    } else {
+        out.write("svrf={}, dvrf={} ", key.svrf_id, key.dvrf_id);
+    }
+
     switch (key.flow_type) {
     case FLOW_TYPE_L2:
-        out.write("vrf={}, l2seg={}, smac={}, dmac={} etype={}", key.vrf_id, key.l2seg_id, macaddr2str(key.smac),
+        out.write("l2seg={}, smac={}, dmac={} etype={}",
+                  key.l2seg_id, macaddr2str(key.smac),
                   macaddr2str(key.dmac), key.ether_type);
         break;
     case FLOW_TYPE_V4:
     case FLOW_TYPE_V6:
-        out.write("vrf={}, ", key.vrf_id);
         if (key.flow_type == FLOW_TYPE_V4) {
             out.write("sip={}, dip={}, ", ipv4addr2str(key.sip.v4_addr), ipv4addr2str(key.dip.v4_addr));
         } else {
@@ -283,7 +289,7 @@ extract_flow_key_from_spec(vrf_id_t tid,
                            flow_key_t *key,
                            const FlowKey& flow_spec_key)
 {
-    key->vrf_id = tid;
+    key->svrf_id = key->dvrf_id = tid;
 
     if (flow_spec_key.has_l2_key()) {
         key->flow_type = hal::FLOW_TYPE_L2;
@@ -363,12 +369,13 @@ ep_get_from_flow_key (const flow_key_t* key, ep_t **sep, ep_t **dep)
     case FLOW_TYPE_V4:
     case FLOW_TYPE_V6:
         ep_l3_key_t l3key;
-        l3key.vrf_id = key->vrf_id;
         l3key.ip_addr.af = key->flow_type == FLOW_TYPE_V4 ? IP_AF_IPV4 : IP_AF_IPV6;
 
+        l3key.vrf_id = key->svrf_id;
         l3key.ip_addr.addr = key->sip;
         *sep = find_ep_by_l3_key(&l3key);
 
+        l3key.vrf_id = key->dvrf_id;
         l3key.ip_addr.addr = key->dip;
         *dep = find_ep_by_l3_key(&l3key);
         break;

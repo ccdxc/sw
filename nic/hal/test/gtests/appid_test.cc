@@ -1190,7 +1190,7 @@ static void flow_key_init(hal::flow_key_t* key, uint8_t* pkt, bool is_resp)
     memset(key, 0, sizeof(*key));
     key->flow_type = hal::FLOW_TYPE_V4;
     key->dir = is_resp ? 1 : 0;
-    key->vrf_id = 0;
+    key->svrf_id = key->dvrf_id = 0;
     for (int i = 0; i < 4; i++) {
         // TODO: endianness?
         key->sip.v6_addr.addr8[i] = pkt[i+26];
@@ -1229,7 +1229,7 @@ static uint32_t flow_key_and_pkt_init(hal::flow_key_t* key, uint8_t* pkt,
     memset(key, 0, sizeof(*key));
     key->flow_type = hal::FLOW_TYPE_V4;
     key->dir = appid_pkt.is_resp ? 1 : 0;
-    key->vrf_id = 0;
+    key->svrf_id = key->dvrf_id = 0;
     for (int i = 0; i < 4; i++) {
         key->sip.v6_addr.addr8[i] = appid_pkt.pkt[i+l3_offset+12];
         key->dip.v6_addr.addr8[i] = appid_pkt.pkt[i+l3_offset+16];

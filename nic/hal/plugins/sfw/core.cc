@@ -175,7 +175,7 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
 
     HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy acl rule lookup for key={}", ctx.key());
 
-    const char *ctx_name = nwsec_acl_ctx_name(ctx.key().vrf_id);
+    const char *ctx_name = nwsec_acl_ctx_name(ctx.key().svrf_id);
     acl_ctx = acl::acl_get(ctx_name);
     if (acl_ctx == NULL) {
         HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy failed to lookup acl_ctx {}", ctx_name);
