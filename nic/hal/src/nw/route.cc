@@ -299,7 +299,7 @@ route_create (RouteSpec& spec, RouteResponse *rsp)
     }
 
     route_key.vrf_id = vrf->vrf_id;
-    ip_pfx_spec_to_pfx_spec(&route_key.pfx, kh.route_key().ip_prefix());
+    ip_pfx_spec_to_pfx(&route_key.pfx, kh.route_key().ip_prefix());
 
     // check for route
     route = route_lookup_by_key(&route_key);
@@ -400,7 +400,7 @@ route_lookup_key_or_handle (RouteKeyHandle& kh)
     }
 
     route_key.vrf_id = vrf->vrf_id;
-    ip_pfx_spec_to_pfx_spec(&route_key.pfx, kh.route_key().ip_prefix());
+    ip_pfx_spec_to_pfx(&route_key.pfx, kh.route_key().ip_prefix());
 
     if (kh.key_or_handle_case() == RouteKeyHandle::kRouteKey) {
         route = route_lookup_by_key(&route_key);
@@ -427,7 +427,7 @@ route_lookup_key_or_handle_to_str (RouteKeyHandle& kh)
 	memset(buf, 0, 50);
 
     if (kh.key_or_handle_case() == RouteKeyHandle::kRouteKey) {
-        ip_pfx_spec_to_pfx_spec(&pfx, kh.route_key().ip_prefix());
+        ip_pfx_spec_to_pfx(&pfx, kh.route_key().ip_prefix());
         snprintf(buf, 50, "vrf: %s, pfx: %s",
                  vrf_lookup_key_or_handle_to_str(kh.route_key().vrf_key_handle()),
                  ippfx2str(&pfx));
