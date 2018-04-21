@@ -2,6 +2,6 @@
 third_party_libs 1.1.44
 lkl_libs 1.1.0
 openssl_libs 1.1.0
-asic_libs 43012fe-1
-ncc_tools 43012fe
-pbc_config 43012fe
+asic_libs 1f68582
+ncc_tools 1f68582
+pbc_config 1f68582

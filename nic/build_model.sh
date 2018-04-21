@@ -14,11 +14,11 @@ echo $PATH
 cd $ASIC_SRC/capri/model/cap_top
 if [ $# -eq 0 ]; then
     echo "Starting ASIC build"
-    gen_rtl -n -v -j$(grep -c processor /proc/cpuinfo)
+    gen_rtl -n -v NOSKNOBS_PATH=1 -j$(grep -c processor /proc/cpuinfo)
 elif [ $1 == "--coverage" ]; then
     echo "Starting ASIC build with coverage"
     $BULLSEYE_PATH/cov01 -1
-    gen_rtl -n -v -- --coverage=1 EXT_CC_OVERRIDE=$BULLSEYE_PATH/g++  -j $(grep -c processor /proc/cpuinfo)
+    gen_rtl -n -v -- --coverage=1 NOSKNOBS_PATH=1 EXT_CC_OVERRIDE=$BULLSEYE_PATH/g++  -j $(grep -c processor /proc/cpuinfo)
     $BULLSEYE_PATH/cov01 -0
 elif [ $1 == "--clean" ]; then
     echo "Starting ASIC clean build"
