@@ -8,6 +8,7 @@
 #include "xts.hpp"
 #include "decrypt_decomp_chain.hpp"
 #include "comp_encrypt_chain.hpp"
+#include "comp_hash_chain.hpp"
 #include "nic/asic/capri/design/common/cap_addr_define.h"
 #include "nic/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
 
@@ -117,6 +118,8 @@ static dp_mem_t *status_buf2;
 static dp_mem_t *status_host_buf;
 static dp_mem_t *status_host_buf2;
 static dp_mem_t *opaque_host_buf;
+static dp_mem_t *hash_status_host_vec;
+static dp_mem_t *hash_opaque_host_vec;
 
 static dp_mem_t *host_sgl1;
 static dp_mem_t *host_sgl2;
@@ -127,6 +130,7 @@ static dp_mem_t *seq_sgl;
 static dp_mem_t *xts_status_host_buf;
 
 static comp_encrypt_chain_t   *comp_encrypt_chain;
+static comp_hash_chain_t      *comp_hash_chain;
 static decrypt_decomp_chain_t *decrypt_decomp_chain;
 
 static dp_mem_t *comp_pad_buf;
@@ -221,7 +225,7 @@ compress_status_verify(dp_mem_t *status,
             return -1;
         }
     }
-    if (desc.cmd_bits.comp_decomp_en && desc.cmd_bits.sha_en) {
+    if (desc.cmd_bits.sha_en) {
         int sha_size = desc.cmd_bits.sha_type ? 32 : 64;
         if (memcmp(st->sha512, all_zeros, sha_size) == 0) {
             LOG_CHECK_PRINTF("%s ERROR: Sha is all zero\n", __func__);
@@ -442,6 +446,8 @@ comp_queue_t::post_push(void)
 void
 compression_buf_init()
 {
+    uint32_t    max_hash_blks;
+
     uncompressed_buf = new dp_mem_t(1, kUncompressedDataSize,
                                     DP_MEM_ALIGN_PAGE);
     uncompressed_host_buf = new dp_mem_t(1, kUncompressedDataSize,
@@ -529,6 +535,29 @@ compression_buf_init()
     decrypt_decomp_chain->pre_push(ddc_pre_push.caller_comp_status_buf(status_host_buf).
                                                 caller_comp_opaque_buf(nullptr).
                                                 caller_comp_opaque_data(0));
+    // Create and initialize compression->hash chaining
+    comp_hash_chain_params_t chc_ctor;
+    comp_hash_chain = 
+         new comp_hash_chain_t(chc_ctor.app_max_size(kCompAppMaxSize).
+                                        uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
+                                        comp_mem_type1(DP_MEM_TYPE_HBM).
+                                        comp_mem_type2(DP_MEM_TYPE_HOST_MEM).
+                                        comp_status_mem_type1(DP_MEM_TYPE_HBM).
+                                        comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
+                                        destructor_free_buffers(false));
+    max_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(kCompAppMaxSize, sizeof(cp_hdr_t),
+                                                  kCompAppHashBlkSize);
+    hash_status_host_vec = new dp_mem_t(max_hash_blks, CP_STATUS_PAD_ALIGNED_SIZE,
+                                        DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                        kMinHostMemAllocSize);
+    hash_opaque_host_vec = new dp_mem_t(max_hash_blks, sizeof(uint64_t),
+                                        DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                        kMinHostMemAllocSize);
+    comp_hash_chain_pre_push_params_t chc_pre_push;
+    comp_hash_chain->pre_push(chc_pre_push.caller_comp_pad_buf(comp_pad_buf).
+                                           caller_hash_status_vec(hash_status_host_vec).
+                                           caller_hash_opaque_vec(hash_opaque_host_vec).
+                                           caller_hash_opaque_data(kCompHashIntrData));
 }
 
 void
@@ -583,7 +612,8 @@ compression_init()
       lo_reg |= 0xFFFF;
       hi_reg &= ~(1u << (54 - 32));
       hi_reg &= ~(1u << (53 - 32));
-      hi_reg |= 1u << (55 - 32);
+      hi_reg |= (1u << (36 - 32)) |
+                (1u << (55 - 32));
       write_reg(cp_cfg_ueng, lo_reg);
       write_reg(cp_cfg_ueng+4, hi_reg);
       // Enable both DC engines.
@@ -592,7 +622,8 @@ compression_init()
       lo_reg |= 0x3;
       hi_reg &= ~(1u << (54 - 32));
       hi_reg &= ~(1u << (53 - 32));
-      hi_reg |= 1u << (55 - 32);
+      hi_reg |= (1u << (36 - 32)) |
+                (1u << (55 - 32));
       write_reg(dc_cfg_ueng, lo_reg);
       write_reg(dc_cfg_ueng+4, hi_reg);
 
@@ -1036,8 +1067,8 @@ int _compress_output_through_sequencer(comp_queue_push_t push_type,
   chain_params.chain_ent.status_host_pa = status_host_buf->pa();
   chain_params.chain_ent.src_hbm_pa = d.src;
   chain_params.chain_ent.dst_hbm_pa = d.dst;
-  chain_params.chain_ent.sgl_out_aol_pa = seq_sgl->pa();
-  chain_params.chain_ent.sgl_xfer_en = 1;
+  chain_params.chain_ent.sgl_pdma_out_pa = seq_sgl->pa();
+  chain_params.chain_ent.sgl_pdma_en = 1;
   chain_params.chain_ent.intr_pa = opaque_host_buf->pa();
   chain_params.chain_ent.intr_data = kCompSeqIntrData;
 
@@ -1552,6 +1583,51 @@ int seq_decrypt_output_decompress_last_app_blk() {
                                       seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
     decrypt_decomp_chain->post_push();
     return decrypt_decomp_chain->verify();
+}
+
+int seq_compress_output_hash_app_max_size() {
+    comp_hash_chain_push_params_t   params;
+
+    // Compression and hash both using cp_queue
+    comp_hash_chain->push(params.app_blk_size(kCompAppMaxSize).
+                                 app_hash_size(kCompAppHashBlkSize).
+                                 comp_queue(cp_queue).
+                                 hash_queue(cp_queue).
+                                 push_type(COMP_QUEUE_PUSH_SEQUENCER).
+                                 seq_comp_qid(queues::get_seq_comp_sq(0)).
+                                 seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
+    comp_hash_chain->post_push();
+    return comp_hash_chain->verify();
+}
+
+int seq_compress_output_hash_app_test_size() {
+    comp_hash_chain_push_params_t   params;
+
+    // Note: cp_queue being used for compression and cp_hotq for hashing
+    comp_hash_chain->push(params.app_blk_size(kCompAppTestSize).
+                                 app_hash_size(kCompAppHashBlkSize).
+                                 comp_queue(cp_queue).
+                                 hash_queue(cp_hotq).
+                                 push_type(COMP_QUEUE_PUSH_SEQUENCER).
+                                 seq_comp_qid(queues::get_seq_comp_sq(0)).
+                                 seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
+    comp_hash_chain->post_push();
+    return comp_hash_chain->verify();
+}
+
+int seq_compress_output_hash_app_nominal_size() {
+    comp_hash_chain_push_params_t   params;
+
+    // Note: cp_hotq being used for compression and cp_queue for hashing
+    comp_hash_chain->push(params.app_blk_size(kCompAppNominalSize).
+                                 app_hash_size(kCompAppHashBlkSize).
+                                 comp_queue(cp_hotq).
+                                 hash_queue(cp_queue).
+                                 push_type(COMP_QUEUE_PUSH_SEQUENCER).
+                                 seq_comp_qid(queues::get_seq_comp_sq(0)).
+                                 seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
+    comp_hash_chain->post_push();
+    return comp_hash_chain->verify();
 }
 
 }  // namespace tests

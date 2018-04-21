@@ -23,7 +23,7 @@ storage_tx_seq_barco_chain_action_start:
    // Note that d.p_ndx is a shadow copy of the HW ring producer index.
    add          r6, d.p_ndx, r0
    QUEUE_PUSH_ADDR(STORAGE_KIVEC4_BARCO_RING_ADDR, r6, STORAGE_KIVEC4_BARCO_DESC_SIZE)
-   mincr        r6, STORAGE_KIVEC4_BARCO_RING_SIZE, 1
+   mincr        r6, STORAGE_KIVEC4_BARCO_RING_SIZE, STORAGE_KIVEC4_BARCO_NUM_DESCS
 
    // Need to word swap before writing back as the p_ndx is little endian
    phvwr	p.barco_doorbell_data_p_ndx, r6.wx

@@ -94,6 +94,8 @@ metadata storage_kivec1_t storage_kivec1;
 metadata storage_kivec5_t storage_kivec5;
 @pragma pa_header_union ingress to_stage_2
 metadata storage_kivec2_t storage_kivec2;
+@pragma pa_header_union ingress to_stage_2
+metadata storage_kivec2acc_t storage_kivec2acc;
 @pragma pa_header_union ingress to_stage_3
 metadata storage_kivec3_t storage_kivec3;
 
@@ -156,14 +158,10 @@ metadata ssd_ci_t ssd_ci;
 @pragma dont_trim
 metadata storage_capri_addr_t r2n_data_buff_addr;
 
-// Compression output data length and computed pad length
+// Accelerator chaining state
+@pragma pa_header_union ingress nvme_cmd
 @pragma dont_trim
-metadata barco_aol_len_t data_len;
-@pragma dont_trim
-metadata barco_aol_len_t pad_len;
-@pragma dont_trim
-metadata barco_aol_len_t total_len;
-
+metadata acc_chain_state_t acc_chain;
 
 // DMA commands metadata
 @pragma dont_trim
@@ -284,6 +282,9 @@ metadata storage_kivec1_t storage_kivec1_scratch;
 
 @pragma scratch_metadata
 metadata storage_kivec2_t storage_kivec2_scratch;
+
+@pragma scratch_metadata
+metadata storage_kivec2acc_t storage_kivec2acc_scratch;
 
 @pragma scratch_metadata
 metadata storage_kivec3_t storage_kivec3_scratch;

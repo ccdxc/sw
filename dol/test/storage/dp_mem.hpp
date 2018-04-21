@@ -82,6 +82,11 @@ public:
         return mem_type == DP_MEM_TYPE_HOST_MEM;
     }
 
+    uint32_t num_lines_get(void)
+    {
+        return num_lines;
+    }
+
     uint32_t line_size_get(void)
     {
         return line_size;

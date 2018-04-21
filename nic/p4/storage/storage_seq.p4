@@ -317,11 +317,12 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
  *  seq_comp_status_desc1_handler: Part 2 of the comp status decriptor
  *****************************************************************************/
 
-//@pragma little_endian src_hbm_pa dst_hbm_pa sgl_in_aol_pa sgl_out_aol_pa data_len
-action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_in_aol_pa, sgl_out_aol_pa, 
+//@pragma little_endian src_hbm_pa dst_hbm_pa sgl_pdma_in_pa sgl_pdma_out_pa data_len sgl_vec_pa pad_buf_pa
+action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_pdma_in_pa, sgl_pdma_out_pa, 
+                                     sgl_vec_pa, pad_buf_pa,
                                      data_len, pad_len_shift, stop_chain_on_error,
-				     data_len_from_desc, aol_pad_xfer_en,
-				     sgl_xfer_en, copy_src_dst_on_error) {
+				     data_len_from_desc, aol_pad_en, sgl_pad_hash_en,
+				     sgl_pdma_en, copy_src_dst_on_error) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
@@ -329,14 +330,17 @@ action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_in_aol_pa, sgl_
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_comp_status_desc1_scratch.src_hbm_pa, src_hbm_pa);
   modify_field(seq_comp_status_desc1_scratch.dst_hbm_pa, dst_hbm_pa);
-  modify_field(seq_comp_status_desc1_scratch.sgl_in_aol_pa, sgl_in_aol_pa);
-  modify_field(seq_comp_status_desc1_scratch.sgl_out_aol_pa, sgl_out_aol_pa);
+  modify_field(seq_comp_status_desc1_scratch.sgl_pdma_in_pa, sgl_pdma_in_pa);
+  modify_field(seq_comp_status_desc1_scratch.sgl_pdma_out_pa, sgl_pdma_out_pa);
+  modify_field(seq_comp_status_desc1_scratch.sgl_vec_pa, sgl_vec_pa);
+  modify_field(seq_comp_status_desc1_scratch.pad_buf_pa, pad_buf_pa);
   modify_field(seq_comp_status_desc1_scratch.data_len, data_len);
   modify_field(seq_comp_status_desc1_scratch.pad_len_shift, pad_len_shift);
   modify_field(seq_comp_status_desc1_scratch.stop_chain_on_error, stop_chain_on_error);
   modify_field(seq_comp_status_desc1_scratch.data_len_from_desc, data_len_from_desc);
-  modify_field(seq_comp_status_desc1_scratch.aol_pad_xfer_en, aol_pad_xfer_en);
-  modify_field(seq_comp_status_desc1_scratch.sgl_xfer_en, sgl_xfer_en);
+  modify_field(seq_comp_status_desc1_scratch.aol_pad_en, aol_pad_en);
+  modify_field(seq_comp_status_desc1_scratch.sgl_pad_hash_en, sgl_pad_hash_en);
+  modify_field(seq_comp_status_desc1_scratch.sgl_pdma_en, sgl_pdma_en);
   modify_field(seq_comp_status_desc1_scratch.copy_src_dst_on_error, copy_src_dst_on_error);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
@@ -344,8 +348,9 @@ action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_in_aol_pa, sgl_
   modify_field(storage_kivec5.pad_len_shift, seq_comp_status_desc1_scratch.pad_len_shift);
   modify_field(storage_kivec5.stop_chain_on_error, seq_comp_status_desc1_scratch.stop_chain_on_error);
   modify_field(storage_kivec5.data_len_from_desc, seq_comp_status_desc1_scratch.data_len_from_desc);
-  modify_field(storage_kivec5.aol_pad_xfer_en, seq_comp_status_desc1_scratch.aol_pad_xfer_en);
-  modify_field(storage_kivec5.sgl_xfer_en, seq_comp_status_desc1_scratch.sgl_xfer_en);
+  modify_field(storage_kivec5.aol_pad_en, seq_comp_status_desc1_scratch.aol_pad_en);
+  modify_field(storage_kivec5.sgl_pad_hash_en, seq_comp_status_desc1_scratch.sgl_pad_hash_en);
+  modify_field(storage_kivec5.sgl_pdma_en, seq_comp_status_desc1_scratch.sgl_pdma_en);
   modify_field(storage_kivec5.copy_src_dst_on_error, seq_comp_status_desc1_scratch.copy_src_dst_on_error);
 }
 
@@ -358,7 +363,7 @@ action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_in_aol_pa, sgl_
 action seq_comp_status_handler(status, output_data_len, rsvd) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
-  STORAGE_KIVEC2_USE(storage_kivec2_scratch, storage_kivec2)
+  STORAGE_KIVEC2ACC_USE(storage_kivec2acc_scratch, storage_kivec2acc)
   STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
 
@@ -376,7 +381,7 @@ action seq_comp_status_handler(status, output_data_len, rsvd) {
   // Load the address where compression destination SGL is stored for 
   // processing in the next stage
   CAPRI_LOAD_TABLE_ADDR(common_te1_phv, 
-                        storage_kivec2.sgl_out_aol_addr,
+                        storage_kivec2acc.sgl_pdma_out_addr,
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, 
                         seq_comp_sgl_handler_start)
 }

@@ -40,6 +40,9 @@ int seq_compress_output_encrypt_app_min_size();
 int seq_compress_output_encrypt_app_max_size();
 int seq_compress_output_encrypt_app_nominal_size();
 int seq_decrypt_output_decompress_last_app_blk();
+int seq_compress_output_hash_app_max_size();
+int seq_compress_output_hash_app_test_size();
+int seq_compress_output_hash_app_nominal_size();
 
 }  // namespace tests
 

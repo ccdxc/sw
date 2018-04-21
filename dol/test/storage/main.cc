@@ -178,6 +178,9 @@ std::vector<tests::TestEntry> comp_seq_tests = {
   {&tests::seq_decrypt_output_decompress_last_app_blk, "Sequencer XTS decrypt->Decompress chaining: app nominal block size", false},
   {&tests::seq_compress_output_encrypt_app_max_size, "Sequencer Compress->XTS encrypt chaining: app max block size", false},
   {&tests::seq_decrypt_output_decompress_last_app_blk, "Sequencer XTS decrypt->Decompress chaining: app max block size", false},
+  {&tests::seq_compress_output_hash_app_max_size, "Sequencer Compress->hash chaining: app max block size", false},
+  {&tests::seq_compress_output_hash_app_test_size, "Sequencer Compress->hash chaining: app test block size", false},
+  {&tests::seq_compress_output_hash_app_nominal_size, "Sequencer Compress->hash chaining: app nominal block size", false},
 };
 
 std::vector<tests::TestEntry> comp_perf_tests = {

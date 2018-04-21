@@ -606,9 +606,11 @@ int XtsCtx::verify_doorbell(bool verify_pi) {
         rv = -1;
       }
     }
+
+    uint32_t exp_opaque_tag = decr_en? exp_opaque_tag_decr : exp_opaque_tag_encr;
+    return verify_opaque_tag(exp_opaque_tag, decr_en);
   }
-  uint32_t exp_opaque_tag = decr_en? exp_opaque_tag_decr : exp_opaque_tag_encr;
-  return verify_opaque_tag(exp_opaque_tag, decr_en);
+  return 0;
 }
 
 int e2e_verify(XtsCtx& xts_ctx1, XtsCtx& xts_ctx2) {

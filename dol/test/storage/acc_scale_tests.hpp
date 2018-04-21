@@ -5,6 +5,7 @@
 #include <list>
 #include "decrypt_decomp_chain.hpp"
 #include "comp_encrypt_chain.hpp"
+#include "comp_hash_chain.hpp"
 
 /*
  * Accelerator scale tests DOL
@@ -123,6 +124,84 @@ private:
     dp_mem_t        *exp_status_data_buf;
     dp_mem_t        *exp_opaque_data_buf;
     uint64_t        exp_opaque_data;
+
+    bool            destructor_free_buffers;
+    bool            success;
+};
+
+
+/*
+ * Emulate named parameters support for comp_hash_chain_scale_t constructor
+ */
+class comp_hash_chain_scale_params_t
+{
+public:
+
+    comp_hash_chain_scale_params_t() :
+        num_chains_(0),
+        destructor_free_buffers_(false)
+    {
+    }
+
+    uint32_t                    num_chains_;
+    comp_hash_chain_params_t    chc_params_;
+    bool                        destructor_free_buffers_;
+
+    comp_hash_chain_scale_params_t&
+    num_chains(uint32_t num_chains)
+    {
+        num_chains_ = num_chains;
+        return *this;
+    }
+    comp_hash_chain_scale_params_t&
+    chc_params(comp_hash_chain_params_t chc_params)
+    {
+        chc_params_ = chc_params;
+        return *this;
+    }
+    comp_hash_chain_scale_params_t&
+    destructor_free_buffers(bool destructor_free_buffers)
+    {
+        destructor_free_buffers_ = destructor_free_buffers;
+        return *this;
+    }
+};
+
+
+/*
+ * Accelerator compression to hash chaining scale
+ */
+class comp_hash_chain_scale_t : public acc_scale_tests_t
+{
+public:
+    comp_hash_chain_scale_t(comp_hash_chain_scale_params_t params);
+    ~comp_hash_chain_scale_t();
+
+    void push_params_set(comp_hash_chain_push_params_t params);
+
+    virtual int push(void);
+    virtual int completion_check(void);
+    virtual int fast_verify(void);
+    virtual int full_verify(void);
+
+    virtual const char *scale_test_name_get(void)
+    {
+        return scale_test_name;
+    }
+
+private:
+    std::vector<comp_hash_chain_t*>  comp_hash_chain_vec;
+
+    const char      *scale_test_name;
+    comp_hash_chain_push_params_t    push_params;
+
+    dp_mem_t        *comp_pad_buf;
+
+    std::vector<dp_mem_t*> hash_status_host_vec;
+    std::vector<dp_mem_t*> hash_opaque_host_vec;
+
+    dp_mem_t        *exp_opaque_data_buf;
+    uint32_t        exp_opaque_data;
 
     bool            destructor_free_buffers;
     bool            success;

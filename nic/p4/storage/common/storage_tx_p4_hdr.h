@@ -455,15 +455,18 @@ header_type seq_comp_status_desc1_t {
   fields {
     src_hbm_pa		: 64;
     dst_hbm_pa		: 64;
-    sgl_in_aol_pa	: 64;	// SGL or AOL address where destination will be placed for PDMA
-    sgl_out_aol_pa	: 64;
+    sgl_pdma_in_pa	: 64;	// SGL in/out addresses for PDMA
+    sgl_pdma_out_pa	: 64;
+    sgl_vec_pa	    : 64;   // SGL vector for multi-block hash
+    pad_buf_pa	    : 64;   // pad buffer address
     data_len		: 16;	// Length of the compression data
     pad_len_shift	:  5;	// Padding length (power of 2)
     stop_chain_on_error	:  1; // 1: don't ring next DB on error
     data_len_from_desc	:  1;	// 1 => Use the data length in the descriptor, 
 				// 0 => Use the data lenghth in the status
-    aol_pad_xfer_en     :  1;
-    sgl_xfer_en         :  1;
+    aol_pad_en     :  1;
+    sgl_pad_hash_en:  1;
+    sgl_pdma_en         :  1;
     copy_src_dst_on_error: 1;
   }
 }
@@ -542,16 +545,41 @@ header_type barco_aol_t {
   }
 }
 
-// AOL 32-bit length
-header_type barco_aol_len_t {
+// Barco SGL (used by comp/decomp engines)
+header_type barco_sgl_t {
   fields {
-    len 	: 32;
+    addr0		: 64;	// SGL data buffer 0 address
+    len0		: 32;	// SGL data buffer 0 length
+    rsvd0		: 32;
+    addr1		: 64;	// SGL data buffer 1 address
+    len1		: 32;	// SGL data buffer 1 length
+    rsvd1		: 32;
+    addr2		: 64;	// SGL data buffer 2 address
+    len2		: 32;	// SGL data buffer 2 length
+    rsvd2		: 32;
+    link        : 64;
+    rsvd        : 64;
+  }
+}
+
+#define BARCO_SGL_DESC_SIZE         64
+#define BARCO_SGL_DESC_SIZE_SHIFT   6
+
+// Accelerator chaining state structure:
+// these fields are grouped together to make it easier to
+// overlay the structure over other structs
+header_type acc_chain_state_t {
+  fields {
+    pad_buf_addr    : 64;
+    data_len        : 32;
+    pad_len         : 32;
+    total_len       : 32;
   }
 }
 
 // Storage K+I vectors
 
-// kivec0: header union with stage_2_stage for table 0
+// kivec0: header union with stage_2_stage for table 0 (160 bits max)
 header_type storage_kivec0_t {
   fields {
     w_ndx		: 16;	// Working consumer index
@@ -570,7 +598,7 @@ header_type storage_kivec0_t {
   }
 }
 
-// kivec1: header union with global
+// kivec1: header union with global (128 bits max)
 header_type storage_kivec1_t {
   fields {
     src_lif		: 11;	// Source LIF number
@@ -583,16 +611,23 @@ header_type storage_kivec1_t {
   }
 }
 
-// kivec2: header union with to_stage_2
+// kivec2: header union with to_stage_2  (128 bits max)
 header_type storage_kivec2_t {
   fields {
     ssd_q_num	: 16;	// Number of entries in the SSD priority queue
     ssd_q_size	: 16;	// Size of each queue state entry in SSD priority queue
-    sgl_out_aol_addr: 64;	// SGL or AOL address where data will be placed for PDMA
   }
 }
 
-// kivec3: header union with to_stage_3
+// kivec2acc: header union with to_stage_2, used by acclerator chaining (128 bits max)
+header_type storage_kivec2acc_t {
+  fields {
+    sgl_pdma_out_addr: 64;	// SGL address where data will be placed for PDMA
+    sgl_vec_addr    : 64;	// address of SGL vector for hash after compression
+  }
+}
+
+// kivec3: header union with to_stage_3  (128 bits max)
 header_type storage_kivec3_t {
   fields {
     roce_msn	: 32;	// ROCE message sequence number 
@@ -600,7 +635,7 @@ header_type storage_kivec3_t {
   }
 }
 
-// kivec4: header union with stage_2_stage for table 0
+// kivec4: header union with stage_2_stage for table 0 (160 bits max)
 header_type storage_kivec4_t {
   fields {
     barco_ring_addr : 34;
@@ -609,11 +644,12 @@ header_type storage_kivec4_t {
     barco_desc_size	: 4;
     barco_pndx_size	: 3;
     barco_ring_size	: 5;
+    barco_num_descs	: 5;
     w_ndx		    : 16;	// Working consumer index
   }
 }
 
-// kivec5: header union with global
+// kivec5: header union with global (128 bits max)
 header_type storage_kivec5_t {
   fields {
     intr_addr		: 64;
@@ -627,8 +663,9 @@ header_type storage_kivec5_t {
     stop_chain_on_error :  1;
     data_len_from_desc	:  1;	// 1 => Use the data length in the descriptor, 
                                 // 0 => Use the data lenghth in the status
-    aol_pad_xfer_en     :  1;
-    sgl_xfer_en         :  1;
+    aol_pad_en          :  1;
+    sgl_pad_hash_en     :  1;
+    sgl_pdma_en         :  1;
     copy_src_dst_on_error: 1;
   }
 }
@@ -848,7 +885,10 @@ header_type storage_kivec5_t {
 #define STORAGE_KIVEC2_USE(scratch, kivec)				\
   modify_field(scratch.ssd_q_num, kivec.ssd_q_num);			\
   modify_field(scratch.ssd_q_size, kivec.ssd_q_size);			\
-  modify_field(scratch.sgl_out_aol_addr, kivec.sgl_out_aol_addr);\
+
+#define STORAGE_KIVEC2ACC_USE(scratch, kivec)				\
+  modify_field(scratch.sgl_pdma_out_addr, kivec.sgl_pdma_out_addr);\
+  modify_field(scratch.sgl_vec_addr, kivec.sgl_vec_addr);			\
 
 #define STORAGE_KIVEC3_USE(scratch, kivec)				\
   modify_field(scratch.roce_msn, kivec.roce_msn);			\
@@ -861,6 +901,7 @@ header_type storage_kivec5_t {
   modify_field(scratch.barco_pndx_size, kivec.barco_pndx_size);			\
   modify_field(scratch.barco_ring_size, kivec.barco_ring_size);			\
   modify_field(scratch.barco_ring_addr, kivec.barco_ring_addr);			\
+  modify_field(scratch.barco_num_descs, kivec.barco_num_descs);			\
   modify_field(scratch.w_ndx, kivec.w_ndx);				\
 
 #define STORAGE_KIVEC5_USE(scratch, kivec)				\
@@ -873,8 +914,9 @@ header_type storage_kivec5_t {
   modify_field(scratch.next_db_action_barco_push, kivec.next_db_action_barco_push);\
   modify_field(scratch.stop_chain_on_error, kivec.stop_chain_on_error); \
   modify_field(scratch.data_len_from_desc, kivec.data_len_from_desc);	\
-  modify_field(scratch.aol_pad_xfer_en, kivec.aol_pad_xfer_en);	        \
-  modify_field(scratch.sgl_xfer_en, kivec.sgl_xfer_en);                 \
+  modify_field(scratch.aol_pad_en, kivec.aol_pad_en);	        \
+  modify_field(scratch.sgl_pad_hash_en, kivec.sgl_pad_hash_en);	        \
+  modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
   modify_field(scratch.copy_src_dst_on_error, kivec.copy_src_dst_on_error);\
 
 

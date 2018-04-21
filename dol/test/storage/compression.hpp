@@ -29,6 +29,20 @@ typedef struct ccmd {
            integrity_type:3; // 000:M-CRC64, 001:CRC32C, 010:Adler32 011:M-Adler32
 } ccmd_t;
 
+#define COMP_DEDUP_SHA512               0
+#define COMP_DEDUP_SHA256               1
+
+#define COMP_INTEGRITY_SRC_COMP_DATA    0
+#define COMP_INTEGRITY_SRC_UNCOMP_DATA  1
+
+#define COMP_INTEGRITY_M_CRC64          0
+#define COMP_INTEGRITY_CRC32C           1
+#define COMP_INTEGRITY_ADLER32          2
+#define COMP_INTEGRITY_M_ADLER32        3
+
+#define COMP_CHECKSUM_ADLER32           0
+#define COMP_CHECKSUM_CRC32C            1
+
 typedef struct cp_desc {
   uint64_t src;
   uint64_t dst;
@@ -176,8 +190,12 @@ constexpr uint32_t kCompEngineMaxSize = 65536;
 constexpr uint32_t kCompAppMinSize = 4096;
 constexpr uint32_t kCompAppMaxSize = 32768;
 constexpr uint32_t kCompAppNominalSize = 8192;
+constexpr uint32_t kCompAppTestSize = 16384;
+
+constexpr uint32_t kCompAppHashBlkSize = 4096;
 
 constexpr uint32_t kCompSeqIntrData = 0x11223344;
+constexpr uint32_t kCompHashIntrData = 0xaabbccdd;
 
 extern comp_queue_t *cp_queue;
 extern comp_queue_t *dc_queue;
