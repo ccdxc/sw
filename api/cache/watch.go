@@ -384,8 +384,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 		}
 	}
 
-	condCh := make(chan error)
-	stopCh := make(chan error)
+	condCh := make(chan error, 1)
 	w.log.InfoLog("oper", "WatchEventQDequeue", "prefix", w.path, "msg", "starting dequeue monitor")
 	wg.Add(1)
 	deferCh := make(chan bool)
@@ -401,9 +400,12 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 			w.cond.Wait()
 			w.cond.L.Unlock()
 			select {
-			case condCh <- nil:
-			case <-stopCh:
+			case <-tracker.ctx.Done():
 				return
+			default:
+			}
+			select {
+			case condCh <- nil:
 			default:
 			}
 		}
@@ -425,7 +427,6 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 				item = item.Next()
 			}
 		case <-tracker.ctx.Done():
-			close(stopCh)
 			w.cond.Broadcast()
 			wg.Wait()
 			return
