@@ -162,7 +162,7 @@ func TestMockElasticServerRestart(t *testing.T) {
 	mr.AddServiceInstance(si)
 
 	// create a new elastic client using the mock server address
-	client, err := elastic.NewClient("", mr, log.WithContext("elastic", "client"))
+	client, err := elastic.NewClient("", mr, log.GetNewLogger(log.GetDefaultConfig(t.Name())))
 	tu.AssertOk(t, err, "failed to create client")
 
 	ctx := context.Background()
@@ -174,7 +174,6 @@ func TestMockElasticServerRestart(t *testing.T) {
 	tu.AssertOk(t, err, "failed to perform index operation")
 
 	stopServerRestarts := make(chan struct{}, 1)
-	defer close(stopServerRestarts)
 
 	// restart the server every 60ms
 	go func() {
@@ -187,13 +186,15 @@ func TestMockElasticServerRestart(t *testing.T) {
 				mes.Stop()
 				mr.DeleteServiceInstance(si)
 
+				time.Sleep(60 * time.Millisecond)
+
 				mes = NewElasticServer()
 				mes.Start()
 
 				si.URL = mes.GetElasticURL()
 				mr.AddServiceInstance(si)
 
-				time.Sleep(30 * time.Millisecond)
+				time.Sleep(500 * time.Millisecond)
 			}
 		}
 	}()
@@ -221,4 +222,8 @@ func TestMockElasticServerRestart(t *testing.T) {
 
 		time.Sleep(20 * time.Millisecond)
 	}
+
+	close(stopServerRestarts)
+
+	tu.Assert(t, client.GetResetCount() > 0, "client never reset?? something went wrong")
 }

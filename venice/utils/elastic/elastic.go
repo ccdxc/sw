@@ -25,8 +25,17 @@ const (
 	// before failing the client reset operation.
 	maxResetRetries = 10
 
+	// delay between reset retries
+	resetInterval = 1 * time.Second
+
 	// the caller retries `maxCallerRetries` no.of. times before failing the request.
 	maxCallerRetries = 5
+
+	// initial delay between request retries
+	initialRetryInterval = 100 * time.Millisecond
+
+	// max retry delay between request retries
+	maxRetryInterval = 500 * time.Millisecond
 )
 
 type request func() (interface{}, error)
@@ -116,6 +125,8 @@ func (e *Client) Version() (string, error) {
 // After creating the index, only number of replicas can be changed dynamically but not number of shards.
 func (e *Client) CreateIndex(ctx context.Context, index, settings string) error {
 	retryCount := 0
+	retryInterval := initialRetryInterval
+
 	var rResp interface{}
 	var rErr error
 	var retry bool
@@ -143,6 +154,14 @@ func (e *Client) CreateIndex(ctx context.Context, index, settings string) error 
 		}, retryCount, rResp, rErr)
 
 		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
 			e.logger.Debugf("retrying, create index {%s}", index)
 			retryCount++
 			continue
@@ -156,6 +175,8 @@ func (e *Client) CreateIndex(ctx context.Context, index, settings string) error 
 // we cannot efficiently delete (all the docs) from an existing index, but deleting an entire index is cheap.
 func (e *Client) DeleteIndex(ctx context.Context, index string) error {
 	retryCount := 0
+	retryInterval := initialRetryInterval
+
 	var rResp interface{}
 	var rErr error
 	var retry bool
@@ -173,6 +194,14 @@ func (e *Client) DeleteIndex(ctx context.Context, index string) error {
 		}, retryCount, rResp, rErr)
 
 		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
 			e.logger.Debugf("retrying, delete index {%s}", index)
 			retryCount++
 			continue
@@ -185,6 +214,8 @@ func (e *Client) DeleteIndex(ctx context.Context, index string) error {
 // FlushIndex flushes the given index; flushes the data to index storage.
 func (e *Client) FlushIndex(ctx context.Context, index string) error {
 	retryCount := 0
+	retryInterval := initialRetryInterval
+
 	var rResp interface{}
 	var rErr error
 	var retry bool
@@ -195,6 +226,14 @@ func (e *Client) FlushIndex(ctx context.Context, index string) error {
 		}, retryCount, rResp, rErr)
 
 		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
 			e.logger.Debugf("retrying, flush index {%s}", index)
 			retryCount++
 			continue
@@ -213,6 +252,8 @@ func (e *Client) Index(ctx context.Context, index, iType, ID string, obj interfa
 	}
 
 	retryCount := 0
+	retryInterval := initialRetryInterval
+
 	var rResp interface{}
 	var rErr error
 	var retry bool
@@ -231,6 +272,14 @@ func (e *Client) Index(ctx context.Context, index, iType, ID string, obj interfa
 		}, retryCount, rResp, rErr)
 
 		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
 			e.logger.Debugf("retrying, index operation on document {%s}", ID)
 			retryCount++
 			continue
@@ -254,6 +303,8 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 	}
 
 	retryCount := 0
+	retryInterval := initialRetryInterval
+
 	var rResp interface{}
 	var rErr error
 	var retry bool
@@ -300,6 +351,14 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 		}, retryCount, rResp, rErr)
 
 		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
 			e.logger.Debug("retrying, bulk operation")
 			retryCount++
 			continue
@@ -318,6 +377,8 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 // Delete deletes the given object in the index and docType provided
 func (e *Client) Delete(ctx context.Context, index, docType, ID string) error {
 	retryCount := 0
+	retryInterval := initialRetryInterval
+
 	var rResp interface{}
 	var rErr error
 	var retry bool
@@ -328,6 +389,15 @@ func (e *Client) Delete(ctx context.Context, index, docType, ID string) error {
 		}, retryCount, rResp, rErr)
 
 		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
+			e.logger.Debug("retrying, delete index {%s}", index)
 			retryCount++
 			continue
 		}
@@ -386,6 +456,8 @@ func (e *Client) Search(ctx context.Context, index, iType string, query interfac
 	}
 
 	retryCount := 0
+	retryInterval := initialRetryInterval
+
 	var rResp interface{}
 	var rErr error
 	var retry bool
@@ -429,6 +501,14 @@ func (e *Client) Search(ctx context.Context, index, iType string, query interfac
 		}, retryCount, rResp, rErr)
 
 		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
 			e.logger.Debugf("retrying, search on index {%s}", index)
 			retryCount++
 			continue
@@ -498,12 +578,12 @@ func (e *Client) resetClient() error {
 
 	for i := 0; i < maxResetRetries; i++ {
 		if rErr := e.resetClientHelper(); rErr != nil {
-			time.Sleep(20 * time.Millisecond)
+			time.Sleep(resetInterval)
 			e.logger.Debugf("failed to reset elastic client, err: %v, retrying", rErr)
 			continue
 		}
 
-		// update the number of times the client has been reset
+		// update the number of times the client has been reset successfully
 		e.resetCount++
 		return nil
 	}
