@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -328,11 +330,11 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp,
         rule->proto_valid = TRUE;
     }
     if (spec->has_source_ip()) {
-        ip_pfx_spec_to_pfx_spec(&rule->sip, spec->source_ip());
+        ip_pfx_spec_to_pfx(&rule->sip, spec->source_ip());
         rule->sip_valid = TRUE;
     }
     if (spec->has_dest_ip()) {
-        ip_pfx_spec_to_pfx_spec(&rule->dip, spec->dest_ip());
+        ip_pfx_spec_to_pfx(&rule->dip, spec->dest_ip());
         rule->dip_valid = TRUE;
     }
     if (spec->has_source_l4_port()) {

@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __UTILS_HPP__
 #define __UTILS_HPP__
 
@@ -18,15 +20,20 @@ hal_ret_t ip_addr_spec_to_ip_addr(ip_addr_t *out_ipaddr,
                                   const types::IPAddress& in_ipaddr);
 hal_ret_t ip_addr_to_spec(types::IPAddress *ip_addr_spec,
                           const ip_addr_t *ip_addr);
-hal_ret_t ip_pfx_spec_to_pfx_spec(ip_prefix_t *ip_pfx,
-                                  const types::IPPrefix& in_ippfx);
+hal_ret_t ip_pfx_spec_to_pfx(ip_prefix_t *ip_pfx,
+                             const types::IPPrefix& in_ippfx);
 hal_ret_t ip_pfx_to_spec(types::IPPrefix *ip_pfx_spec,
                          const ip_prefix_t *ip_pfx);
+hal_ret_t ip_range_spec_to_ip_range(ip_range_t *range,
+                                    const types::AddressRange& spec);
+hal_ret_t ip_range_to_spec(types::AddressRange *spec,
+                           ip_range_t *range);
+hal_ret_t ip_subnet_spec_to_ip_range(ip_range_t *range,
+                                     const ::types::IPSubnet& spec);
 bool ip_addr_check_equal(ip_addr_t *ipaddr1, ip_addr_t *ipaddr2);
 bool ip_addr_in_ip_pfx(ip_addr_t *ipaddr, ip_prefix_t *ip_pfx);
 ApiStatus hal_prepare_rsp(hal_ret_t ret);
 void hal_api_trace(const char *trace);
-void custom_backtrace();
 
 // handle list specific APIs
 void hal_print_handles_list(dllist_ctxt_t  *list);

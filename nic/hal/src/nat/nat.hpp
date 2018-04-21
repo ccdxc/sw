@@ -26,6 +26,7 @@ using nat::NatPoolResponse;
 using nat::NatPoolDeleteRequest;
 using nat::NatPoolDeleteResponse;
 using nat::NatPoolGetRequest;
+using nat::NatPoolGetResponse;
 using nat::NatPoolGetResponseMsg;
 using kh::NatPolicyKeyHandle;
 using nat::NatPolicySpec;

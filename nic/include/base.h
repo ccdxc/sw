@@ -254,7 +254,7 @@ do {                                                       \
     ENTRY(HAL_RET_SECURITY_POLICY_NOT_FOUND,  70,  "Security policy not found")      \
     ENTRY(HAL_RET_NEXTHOP_NOT_FOUND,          71,  "Nexthop not found")              \
     ENTRY(HAL_RET_NAT_POOL_NOT_FOUND,         72,  "NAT pool not found")             \
-                                                                                     \
+    ENTRY(HAL_RET_NOT_SUPPORTED,              73,  "Feature not supported")          \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
 DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)

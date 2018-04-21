@@ -253,6 +253,35 @@ find_nat_pool_by_handle (hal_handle_t handle)
 }
 
 //------------------------------------------------------------------------------
+// lookup a NAT pool by key-handle spec
+//------------------------------------------------------------------------------
+nat_pool_t *
+find_nat_pool_by_key_or_handle (NatPoolKeyHandle& kh)
+{
+    nat_pool_key_t    key;
+    vrf_t             *vrf;
+
+    if (kh.has_pool_key()) {
+        if (kh.pool_key().vrf_id_or_handle().key_or_handle_case() ==
+                VrfKeyHandle::kVrfId) {
+            key.vrf_id = kh.pool_key().vrf_id_or_handle().vrf_id();
+        } else {
+            vrf = vrf_lookup_by_handle(kh.pool_key().vrf_id_or_handle().vrf_handle());
+            if (vrf == NULL) {
+                HAL_TRACE_ERR("vrf {} not found",
+                              kh.pool_key().vrf_id_or_handle().vrf_handle());
+                return NULL;
+            }
+            key.vrf_id = vrf->vrf_id;
+        }
+        key.pool_id = kh.pool_key().pool_id();
+        return find_nat_pool_by_key(&key);
+    }
+
+    return find_nat_pool_by_handle(kh.pool_handle());
+}
+
+//------------------------------------------------------------------------------
 // lookup a NAT pool by its key
 //------------------------------------------------------------------------------
 static nat_pool_t *
@@ -408,11 +437,8 @@ nat_pool_init_from_spec (vrf_t *vrf, nat_pool_t *pool, const NatPoolSpec& spec)
                     goto cleanup;
                 }
                 sdk::lib::dllist_reset(&addr_range->list_ctxt);
-                addr_range->ip_range.af = IP_AF_IPV4;
-                addr_range->ip_range.vx_range[0].v4_range.ip_lo =
-                    range.ipv4_range().low_ipaddr().v4_addr();
-                addr_range->ip_range.vx_range[0].v4_range.ip_hi =
-                    range.ipv4_range().high_ipaddr().v4_addr();
+                ip_range_spec_to_ip_range(&addr_range->ip_range,
+                                          range);
             } else if (range.has_ipv6_range()) {
                 HAL_TRACE_ERR("IPv6 NAT range/subnets not supported, skipping");
                 continue;
@@ -433,13 +459,7 @@ nat_pool_init_from_spec (vrf_t *vrf, nat_pool_t *pool, const NatPoolSpec& spec)
                     goto cleanup;
                 }
                 sdk::lib::dllist_reset(&addr_range->list_ctxt);
-                addr_range->ip_range.af = IP_AF_IPV4;
-                addr_range->ip_range.vx_range[0].v4_range.ip_lo =
-                    prefix.ipv4_subnet().address().v4_addr() &
-                    ~((1 << (32 - prefix.ipv4_subnet().prefix_len())) - 1);
-                addr_range->ip_range.vx_range[0].v4_range.ip_hi =
-                    addr_range->ip_range.vx_range[0].v4_range.ip_lo +
-                    (1 << (32 - prefix.ipv4_subnet().prefix_len())) - 1;
+                ip_subnet_spec_to_ip_range(&addr_range->ip_range, prefix);
             } else if (prefix.has_ipv6_subnet()) {
                 HAL_TRACE_ERR("IPv6 NAT range/subnets not supported, skipping");
                 continue;
@@ -813,10 +833,75 @@ end:
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// process a get request for a given nat pool
+//------------------------------------------------------------------------------
+static void
+nat_pool_process_get (nat_pool_t *pool, NatPoolGetResponse *rsp)
+{
+    sdk::lib::dllist_ctxt_t    *entry;
+    addr_range_list_elem_t     *addr_range;
+
+    auto pool_key =
+        rsp->mutable_spec()->mutable_key_or_handle()->mutable_pool_key();
+    pool_key->mutable_vrf_id_or_handle()->set_vrf_id(pool->key.vrf_id);
+    pool_key->set_pool_id(pool->key.pool_id);
+
+    dllist_for_each(entry, &pool->addr_ranges) {
+        auto addr_spec = rsp->mutable_spec()->add_address();
+         addr_range =
+             dllist_entry(entry, addr_range_list_elem_t, list_ctxt);
+         ip_range_to_spec(addr_spec->mutable_range(), &addr_range->ip_range);
+    }
+    rsp->set_api_status(types::API_STATUS_OK);
+}
+
+//------------------------------------------------------------------------------
+// callback invoked from nat pool hash table while processing get request
+//------------------------------------------------------------------------------
+static bool
+nat_pool_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t    *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    NatPoolGetResponseMsg       *rsp = (NatPoolGetResponseMsg *)ctxt;
+    NatPoolGetResponse          *response = rsp->add_response();
+    nat_pool_t                  *pool = NULL;
+
+    pool = (nat_pool_t *)hal_handle_get_obj(entry->handle_id);
+    nat_pool_process_get(pool, response);
+
+    // return false here, so that we don't terminate the walk
+    return false;
+}
+
+//------------------------------------------------------------------------------
+// process a vrf get request
+//------------------------------------------------------------------------------
 hal_ret_t
 nat_pool_get (NatPoolGetRequest& req,
               NatPoolGetResponseMsg *rsp)
 {
+    nat_pool_t    *pool;
+
+    // if the natpool key-handle field is not set, then this is a request
+    // for information for all pools, so run through all pools in the
+    // cfg db and populate the response
+    if (!req.has_key_or_handle()) {
+        g_hal_state->nat_pool_id_ht()->walk(nat_pool_get_ht_cb, rsp);
+    } else {
+        auto kh = req.key_or_handle();
+        pool = find_nat_pool_by_key_or_handle(kh);
+        auto response = rsp->add_response();
+        if (pool == NULL) {
+            response->set_api_status(types::API_STATUS_NOT_FOUND);
+            HAL_API_STATS_INC(HAL_API_NAT_POOL_GET_FAIL);
+            return HAL_RET_NAT_POOL_NOT_FOUND;
+        } else {
+            nat_pool_process_get(pool, response);
+        }
+    }
+
+    HAL_API_STATS_INC(HAL_API_NAT_POOL_GET_SUCCESS);
     return HAL_RET_OK;
 }
 

@@ -281,7 +281,7 @@ vrf_spec_dump (VrfSpec& spec)
         buf.write("my_tep : {}", ipaddr2str(&my_tep));
     }
     if (spec.has_gipo_prefix()) {
-        ret = ip_pfx_spec_to_pfx_spec(&gipo_pfx, spec.gipo_prefix());
+        ret = ip_pfx_spec_to_pfx(&gipo_pfx, spec.gipo_prefix());
         if (ret == HAL_RET_OK) {
             buf.write("gipo_pfx : {}/{}", ipaddr2str(&gipo_pfx.addr),
                       gipo_pfx.len);
@@ -334,16 +334,6 @@ validate_vrf_create (VrfSpec& spec, VrfResponse *rsp)
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         return HAL_RET_INVALID_ARG;
     }
-#if 0
-    infra_vrf = (vrf_t *)g_hal_state->infra_vrf();
-    if ((spec.vrf_type() == types::VRF_TYPE_INFRA) &&
-        (infra_vrf != NULL)) {
-        HAL_TRACE_ERR("Infra VRF already exists vrf id: {}",
-                      infra_vrf->vrf_id);
-        rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
-        return HAL_RET_INVALID_ARG;
-    }
-#endif
 
     return HAL_RET_OK;
 }
@@ -522,8 +512,7 @@ vrf_init_from_spec (vrf_t *vrf, const VrfSpec& spec)
             }
         }
         if (spec.has_gipo_prefix()) {
-            ret = ip_pfx_spec_to_pfx_spec(&vrf->gipo_prefix,
-                                          spec.gipo_prefix());
+            ret = ip_pfx_spec_to_pfx(&vrf->gipo_prefix, spec.gipo_prefix());
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Invalid GIPo prefix in VRF {} spec, err : {}",
                                vrf->vrf_id, ret);
@@ -750,7 +739,7 @@ vrf_gipo_prefix_update (VrfSpec& spec, vrf_t *vrf, bool *gipo_prefix_change,
     }
 
     if (spec.has_gipo_prefix()) {
-        ret = ip_pfx_spec_to_pfx_spec(new_gipo_prefix, spec.gipo_prefix());
+        ret = ip_pfx_spec_to_pfx(new_gipo_prefix, spec.gipo_prefix());
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Invalid GIPO prefix specified for VRF Update {}",
                            vrf->vrf_id);
@@ -811,7 +800,7 @@ end:
 // 1. PD Call to update PD
 // 2. Update Other objects to update with new nwsec profile
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 vrf_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret         = HAL_RET_OK;
@@ -878,8 +867,8 @@ vrf_make_clone (vrf_t *ten, vrf_t **ten_clone)
 //  1. Free original PI & PD vrf.
 // Note: Infra make clone as original by replacing original pointer by clone.
 //------------------------------------------------------------------------------
-hal_ret_t
-vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
+static hal_ret_t
+vrf_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                         ret         = HAL_RET_OK;
     pd::pd_vrf_mem_free_args_t        pd_vrf_args = { 0 };
@@ -954,7 +943,7 @@ end:
 // Update didnt go through.
 //  1. Kill the clones
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 vrf_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                       ret         = HAL_RET_OK;
@@ -985,7 +974,7 @@ vrf_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     return ret;
 }
 
-hal_ret_t
+static hal_ret_t
 vrf_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
@@ -1149,11 +1138,10 @@ vrf_get (VrfGetRequest& req, VrfGetResponseMsg *rsp)
 {
     vrf_t        *vrf;
 
-    // key-handle field must be set
+    // if the vrf key-handle field is not set, then this is a request
+    // for information for all vrfs, so run through all vrfs in the
+    // cfg db and populate the response
     if (!req.has_key_or_handle()) {
-        // If the Vrf key handle field is not set, then this is a request
-        // for information from all VRFs. Run through all VRFs in the hash
-        // table and populate the response.
         g_hal_state->vrf_id_ht()->walk(vrf_get_ht_cb, rsp);
     } else {
         auto kh = req.key_or_handle();
@@ -1232,7 +1220,7 @@ vrf_lookup_key_or_handle_to_str (const VrfKeyHandle& key_handle)
 //------------------------------------------------------------------------------
 // 1. PD Call to delete PD and free up resources and deprogram HW
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 vrf_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret         = HAL_RET_OK;
@@ -1268,7 +1256,7 @@ vrf_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 //      b. Remove object from handle id based hash table
 //      c. Free PI vrf
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t          ret = HAL_RET_OK;
@@ -1298,7 +1286,7 @@ vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     }
 
-    // a. Remove from vrf id hash table
+    // a. remove from vrf id hash table
     ret = vrf_del_from_db(vrf);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to del vrf {} from db, err : {}",
@@ -1306,15 +1294,15 @@ vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // If the VRF deleted is Infra VRF, remove from hal_state
+    // if the VRF deleted is Infra VRF, remove from hal_state
     if (vrf->vrf_type == types::VRF_TYPE_INFRA) {
         g_hal_state->set_infra_vrf_handle(HAL_HANDLE_INVALID);
     }
 
-    // b. Remove object from handle id based hash table
+    // b. remove object from handle id based hash table
     hal_handle_free(hal_handle);
 
-    // c. Free PI vrf
+    // c. free PI vrf
     vrf_cleanup(vrf);
 
 end:
@@ -1325,16 +1313,17 @@ end:
 //------------------------------------------------------------------------------
 // if delete fails, nothing to do
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 vrf_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
+    HAL_TRACE_ERR("Aborting VRF delete operation");
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
 // if delete fails, nothing to do
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 vrf_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
@@ -1365,6 +1354,7 @@ validate_vrf_delete (vrf_t *vrf)
     }
 
 end:
+
     return ret;
 }
 
@@ -1374,11 +1364,11 @@ end:
 hal_ret_t
 vrf_delete (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    vrf_t                    *vrf = NULL;
-    cfg_op_ctxt_t               cfg_ctxt = { 0 };
-    dhl_entry_t                 dhl_entry = { 0 };
-    const VrfKeyHandle       &kh = req.key_or_handle();
+    hal_ret_t             ret = HAL_RET_OK;
+    vrf_t                 *vrf = NULL;
+    cfg_op_ctxt_t         cfg_ctxt = { 0 };
+    dhl_entry_t           dhl_entry = { 0 };
+    const VrfKeyHandle    &kh = req.key_or_handle();
 
     // validate the request message
     ret = validate_vrf_delete_req(req, rsp);
@@ -1404,7 +1394,7 @@ vrf_delete (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
         goto end;
     }
 
-    // form ctxt and call infra add
+    // form ctxt and call infra del
     dhl_entry.handle = vrf->hal_handle;
     dhl_entry.obj = vrf;
     cfg_ctxt.app_ctxt = NULL;
@@ -1450,6 +1440,7 @@ vrf_add_l2seg (vrf_t *vrf, l2seg_t *l2seg)
     }
 
 end:
+
     HAL_TRACE_DEBUG("Added l2seg {} to vrf {}", l2seg->seg_id, vrf->vrf_id);
     return ret;
 }

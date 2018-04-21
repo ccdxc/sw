@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -69,19 +71,80 @@ ip_pfx_to_spec (types::IPPrefix *ip_pfx_spec,
 // convert IP prefix spec in proto to ip_addr used in HAL
 //----------------------------------------------------------------------------
 hal_ret_t
-ip_pfx_spec_to_pfx_spec (ip_prefix_t *ip_pfx,
-                         const types::IPPrefix& in_ippfx)
+ip_pfx_spec_to_pfx (ip_prefix_t *ip_pfx, const types::IPPrefix& in_ippfx)
 {
     hal_ret_t ret = HAL_RET_OK;
 
     ip_pfx->len = in_ippfx.prefix_len();
-    if (((in_ippfx.address().ip_af() == types::IP_AF_INET) && (ip_pfx->len > 32)) ||
-        ((in_ippfx.address().ip_af() == types::IP_AF_INET6) && (ip_pfx->len > 128))) {
+    if (((in_ippfx.address().ip_af() == types::IP_AF_INET) &&
+             (ip_pfx->len > 32)) ||
+        ((in_ippfx.address().ip_af() == types::IP_AF_INET6) &&
+             (ip_pfx->len > 128))) {
         ret = HAL_RET_INVALID_ARG;
     } else {
         ret = ip_addr_spec_to_ip_addr(&ip_pfx->addr, in_ippfx.address());
     }
     return ret;
+}
+
+//----------------------------------------------------------------------------
+// convert IP range spec in proto to IP range used in HAL
+//----------------------------------------------------------------------------
+hal_ret_t
+ip_range_spec_to_ip_range (ip_range_t *range, const types::AddressRange& spec)
+{
+    if (spec.has_ipv4_range()) {
+        range->af = IP_AF_IPV4;
+        range->vx_range[0].v4_range.ip_lo =
+            spec.ipv4_range().low_ipaddr().v4_addr();
+        range->vx_range[0].v4_range.ip_hi =
+            spec.ipv4_range().high_ipaddr().v4_addr();
+    } else if (spec.has_ipv6_range()) {
+        return HAL_RET_NOT_SUPPORTED;
+    } else {
+        return HAL_RET_INVALID_ARG;
+    }
+    return HAL_RET_OK;
+}
+
+//----------------------------------------------------------------------------
+// convert IP prefix spec in proto to IP address range used in HAL
+//----------------------------------------------------------------------------
+hal_ret_t
+ip_subnet_spec_to_ip_range (ip_range_t *range, const ::types::IPSubnet& spec)
+{
+    if (spec.has_ipv4_subnet()) {
+        range->af = IP_AF_IPV4;
+        range->vx_range[0].v4_range.ip_lo =
+            spec.ipv4_subnet().address().v4_addr() &
+                ~((1 << (32 - spec.ipv4_subnet().prefix_len())) - 1);
+        range->vx_range[0].v4_range.ip_hi =
+            range->vx_range[0].v4_range.ip_lo +
+                (1 << (32 - spec.ipv4_subnet().prefix_len())) - 1;
+    } else if (spec.has_ipv6_subnet()) {
+        return HAL_RET_NOT_SUPPORTED;
+    } else {
+        return HAL_RET_INVALID_ARG;
+    }
+    return HAL_RET_OK;
+}
+
+//----------------------------------------------------------------------------
+// convert HAL IP range to IP range proto spec
+//----------------------------------------------------------------------------
+hal_ret_t
+ip_range_to_spec (types::AddressRange *spec, ip_range_t *range)
+{
+    if (range->af == IP_AF_IPV4) {
+        auto v4_range = spec->mutable_ipv4_range();
+        v4_range->mutable_low_ipaddr()->set_v4_addr(range->vx_range[0].v4_range.ip_lo);
+        v4_range->mutable_high_ipaddr()->set_v4_addr(range->vx_range[0].v4_range.ip_hi);
+    } else if (range->af == IP_AF_IPV6) {
+        return HAL_RET_NOT_SUPPORTED;
+    } else {
+        return HAL_RET_INVALID_ARG;
+    }
+    return HAL_RET_OK;
 }
 
 //----------------------------------------------------------------------------
@@ -554,80 +617,6 @@ hal_copy_block_lists (block_list *dst, block_list *src)
     hal_add_block_lists(dst, src);
 
     return HAL_RET_OK;
-}
-
-//-----------------------------------------------------------------------------
-// demangling symbols for custom backtrace
-//-----------------------------------------------------------------------------
-std::string
-demangle (const char* const symbol)
-{
-    const std::unique_ptr< char, decltype( &std::free ) > demangled(
-            abi::__cxa_demangle( symbol, 0, 0, 0 ), &std::free );
-    if (demangled ) {
-        return demangled.get();
-    }
-    else {
-        return symbol;
-    }
-}
-
-//-----------------------------------------------------------------------------
-// prints the 2nd frame in the BT
-//   x -> y -> custom_backtrace
-//   prints the x frame
-//-----------------------------------------------------------------------------
-void
-custom_backtrace (void)
-{
-    // TODO: replace hardcoded limit?
-    void* addresses[ 256 ];
-    const int n = ::backtrace( addresses, std::extent< decltype( addresses ) >::value );
-    const std::unique_ptr< char*, decltype( &std::free ) > symbols(
-            ::backtrace_symbols( addresses, n ), &std::free );
-    for( int i = 0; i < n; ++i ) {
-        if (i != 2) {
-            continue;
-        }
-        // we parse the symbols retrieved from backtrace_symbols() to
-        // extract the "real" symbols that represent the mangled names.
-        char* const symbol = symbols.get()[ i ];
-        char* end = symbol;
-        while( *end ) {
-            ++end;
-        }
-        // scanning is done backwards, since the module name
-        // might contain both '+' or '(' characters.
-        while( end != symbol && *end != '+' ) {
-            --end;
-        }
-        char* begin = end;
-        while( begin != symbol && *begin != '(' ) {
-            --begin;
-        }
-
-        if( begin != symbol ) {
-            // std::cout << std::string( symbol, ++begin - symbol );
-            *end++ = '\0';
-            std::cout << demangle( begin ) << '+' << end;
-        }
-        else {
-            std::cout << symbol;
-        }
-        // Revisit: Line number not working.
-#if 0
-        // For line number
-        size_t p = 0;
-        while(symbol[p] != '(' && symbol[p] != ' '
-                && symbol[p] != 0)
-            ++p;
-        char syscom[256];
-        sprintf(syscom,"addr2line %p -e %.*s", addresses[i], (int)p, symbol);
-        //last parameter is the file name of the symbol
-        system(syscom);
-#endif
-        std::cout << std::endl;
-    }
 }
 
 }    // namespace hal

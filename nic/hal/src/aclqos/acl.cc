@@ -1,4 +1,5 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/base.h"
 #include "nic/include/eth.h"
 #include "nic/hal/hal.hpp"
@@ -219,57 +220,57 @@ acl_spec_dump (AclSpec& spec)
         if (sel.has_ip_selector()) {
             if (sel.ip_selector().has_src_prefix()) {
                 ip_prefix_t src_pfx;
-                ip_pfx_spec_to_pfx_spec(&src_pfx, sel.ip_selector().src_prefix());
+                ip_pfx_spec_to_pfx(&src_pfx, sel.ip_selector().src_prefix());
                 buf.write("src {}, ", ippfx2str(&src_pfx));
             }
             if (sel.ip_selector().has_dst_prefix()) {
                 ip_prefix_t dst_pfx;
-                ip_pfx_spec_to_pfx_spec(&dst_pfx, sel.ip_selector().dst_prefix());
+                ip_pfx_spec_to_pfx(&dst_pfx, sel.ip_selector().dst_prefix());
                 buf.write("dst {}, ", ippfx2str(&dst_pfx));
             }
 
             const acl::IPSelector& ip_sel = sel.ip_selector();
             switch(ip_sel.l4_selectors_case()) {
-                case acl::IPSelector::kIpProtocol:
-                    buf.write("proto {}, ", ip_sel.ip_protocol());
-                    break;
-                case acl::IPSelector::kIcmpSelector:
-                    buf.write("icmp code {}/{}, ",
-                              ip_sel.icmp_selector().icmp_code_mask(),
-                              ip_sel.icmp_selector().icmp_code());
+            case acl::IPSelector::kIpProtocol:
+                buf.write("proto {}, ", ip_sel.ip_protocol());
+                break;
+            case acl::IPSelector::kIcmpSelector:
+                buf.write("icmp code {}/{}, ",
+                          ip_sel.icmp_selector().icmp_code_mask(),
+                          ip_sel.icmp_selector().icmp_code());
 
-                    buf.write("icmp type {}/{}, ",
-                              ip_sel.icmp_selector().icmp_type_mask(),
-                              ip_sel.icmp_selector().icmp_type());
-                    break;
-                case acl::IPSelector::kUdpSelector:
-                    buf.write("udp ");
-                    if (ip_sel.udp_selector().has_src_port_range()) {
-                        buf.write("sport {}-{}, ",
-                                  ip_sel.udp_selector().src_port_range().port_low(),
-                                  ip_sel.udp_selector().src_port_range().port_high());
-                    }
-                    if (ip_sel.udp_selector().has_dst_port_range()) {
-                        buf.write("dport {}-{}, ",
-                                  ip_sel.udp_selector().dst_port_range().port_low(),
-                                  ip_sel.udp_selector().dst_port_range().port_high());
-                    }
-                    break;
-                case acl::IPSelector::kTcpSelector:
-                    buf.write("tcp ");
-                    if (ip_sel.tcp_selector().has_src_port_range()) {
-                        buf.write("sport {}-{}, ",
-                                  ip_sel.tcp_selector().src_port_range().port_low(),
-                                  ip_sel.tcp_selector().src_port_range().port_high());
-                    }
-                    if (ip_sel.tcp_selector().has_dst_port_range()) {
-                        buf.write("dport {}-{}, ",
-                                  ip_sel.tcp_selector().dst_port_range().port_low(),
-                                  ip_sel.tcp_selector().dst_port_range().port_high());
-                    }
-                    break;
-                default:
-                    break;
+                buf.write("icmp type {}/{}, ",
+                          ip_sel.icmp_selector().icmp_type_mask(),
+                          ip_sel.icmp_selector().icmp_type());
+                break;
+            case acl::IPSelector::kUdpSelector:
+                buf.write("udp ");
+                if (ip_sel.udp_selector().has_src_port_range()) {
+                    buf.write("sport {}-{}, ",
+                              ip_sel.udp_selector().src_port_range().port_low(),
+                              ip_sel.udp_selector().src_port_range().port_high());
+                }
+                if (ip_sel.udp_selector().has_dst_port_range()) {
+                    buf.write("dport {}-{}, ",
+                              ip_sel.udp_selector().dst_port_range().port_low(),
+                              ip_sel.udp_selector().dst_port_range().port_high());
+                }
+                break;
+            case acl::IPSelector::kTcpSelector:
+                buf.write("tcp ");
+                if (ip_sel.tcp_selector().has_src_port_range()) {
+                    buf.write("sport {}-{}, ",
+                              ip_sel.tcp_selector().src_port_range().port_low(),
+                              ip_sel.tcp_selector().src_port_range().port_high());
+                }
+                if (ip_sel.tcp_selector().has_dst_port_range()) {
+                    buf.write("dport {}-{}, ",
+                              ip_sel.tcp_selector().dst_port_range().port_low(),
+                              ip_sel.tcp_selector().dst_port_range().port_high());
+                }
+                break;
+            default:
+                break;
             }
         }
 
@@ -333,7 +334,7 @@ acl_add_refs (acl_t *acl)
     }
 
     if (ms->src_if_match) {
-        ret = if_add_acl(find_if_by_handle(ms->src_if_handle), acl, 
+        ret = if_add_acl(find_if_by_handle(ms->src_if_handle), acl,
                          IF_ACL_REF_TYPE_SRC);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to add ref to src if ret {}", ret);
@@ -342,7 +343,7 @@ acl_add_refs (acl_t *acl)
     }
 
     if (ms->dest_if_match) {
-        ret = if_add_acl(find_if_by_handle(ms->dest_if_handle), acl, 
+        ret = if_add_acl(find_if_by_handle(ms->dest_if_handle), acl,
                          IF_ACL_REF_TYPE_DEST);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to add ref to dest if ret {}", ret);
@@ -359,7 +360,7 @@ acl_add_refs (acl_t *acl)
     }
 
     if (as->redirect_if_handle != HAL_HANDLE_INVALID) {
-        ret = if_add_acl(find_if_by_handle(as->redirect_if_handle), acl, 
+        ret = if_add_acl(find_if_by_handle(as->redirect_if_handle), acl,
                          IF_ACL_REF_TYPE_REDIRECT);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to add ref to redirect if ret {}", ret);
@@ -387,7 +388,7 @@ acl_rem_refs (acl_t *acl)
     }
 
     if (ms->src_if_match) {
-        ret = if_del_acl(find_if_by_handle(ms->src_if_handle), acl, 
+        ret = if_del_acl(find_if_by_handle(ms->src_if_handle), acl,
                          IF_ACL_REF_TYPE_SRC);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to del ref to src if ret {}", ret);
@@ -396,7 +397,7 @@ acl_rem_refs (acl_t *acl)
     }
 
     if (ms->dest_if_match) {
-        ret = if_del_acl(find_if_by_handle(ms->dest_if_handle), acl, 
+        ret = if_del_acl(find_if_by_handle(ms->dest_if_handle), acl,
                          IF_ACL_REF_TYPE_DEST);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to del ref to dest if ret {}", ret);
@@ -413,7 +414,7 @@ acl_rem_refs (acl_t *acl)
     }
 
     if (as->redirect_if_handle != HAL_HANDLE_INVALID) {
-        ret = if_del_acl(find_if_by_handle(as->redirect_if_handle), acl, 
+        ret = if_del_acl(find_if_by_handle(as->redirect_if_handle), acl,
                          IF_ACL_REF_TYPE_REDIRECT);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to del ref to redirect if ret {}", ret);
@@ -498,7 +499,7 @@ acl_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ret = acl_add_refs(acl);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add references for acl {} ret {}", 
+        HAL_TRACE_ERR("Failed to add references for acl {} ret {}",
                       acl->key, ret);
         goto end;
     }
@@ -692,165 +693,167 @@ extract_ip_common (acl_type_e acl_type,
     uint16_t    port_start, port_end;
 
     switch(ip_sel.l4_selectors_case()) {
-        case acl::IPSelector::kIpProtocol:
-            ip_key->ip_proto = ip_sel.ip_protocol();
+    case acl::IPSelector::kIpProtocol:
+        ip_key->ip_proto = ip_sel.ip_protocol();
+        ip_mask->ip_proto = 0xff;
+        break;
+    case acl::IPSelector::kIcmpSelector:
+        if (acl_type == ACL_TYPE_IPv6) {
+            ip_key->ip_proto = IP_PROTO_ICMPV6;
             ip_mask->ip_proto = 0xff;
-            break;
-        case acl::IPSelector::kIcmpSelector:
-            if (acl_type == ACL_TYPE_IPv6) {
-                ip_key->ip_proto = IP_PROTO_ICMPV6;
-                ip_mask->ip_proto = 0xff;
-            } else {
-                ip_key->ip_proto = IP_PROTO_ICMP;
-                ip_mask->ip_proto = 0xff;
-            }
-
-            ip_key->u.icmp.icmp_code = ip_sel.icmp_selector().icmp_code();
-            ip_mask->u.icmp.icmp_code = ip_sel.icmp_selector().icmp_code_mask();
-
-            ip_key->u.icmp.icmp_type = ip_sel.icmp_selector().icmp_type();
-            ip_mask->u.icmp.icmp_type = ip_sel.icmp_selector().icmp_type_mask();
-            break;
-        case acl::IPSelector::kUdpSelector:
-            ip_key->ip_proto = IP_PROTO_UDP;
+        } else {
+            ip_key->ip_proto = IP_PROTO_ICMP;
             ip_mask->ip_proto = 0xff;
+        }
 
-            if (ip_sel.udp_selector().has_src_port_range()) {
-                port_start = ip_sel.udp_selector().src_port_range().port_low();
-                port_end = ip_sel.udp_selector().src_port_range().port_high();
+        ip_key->u.icmp.icmp_code = ip_sel.icmp_selector().icmp_code();
+        ip_mask->u.icmp.icmp_code = ip_sel.icmp_selector().icmp_code_mask();
 
-                ret = validate_l4port_range(port_start, port_end,
-                                            &ip_key->u.udp.sport,
-                                            &ip_mask->u.udp.sport);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("UDP sport range {} to {} cannot be supported"
-                                  " Only maskable ranges are supported",
-                                  port_start, port_end);
-                    ret = HAL_RET_INVALID_ARG;
-                    goto end;
-                }
+        ip_key->u.icmp.icmp_type = ip_sel.icmp_selector().icmp_type();
+        ip_mask->u.icmp.icmp_type = ip_sel.icmp_selector().icmp_type_mask();
+        break;
+    case acl::IPSelector::kUdpSelector:
+        ip_key->ip_proto = IP_PROTO_UDP;
+        ip_mask->ip_proto = 0xff;
+
+        if (ip_sel.udp_selector().has_src_port_range()) {
+            port_start = ip_sel.udp_selector().src_port_range().port_low();
+            port_end = ip_sel.udp_selector().src_port_range().port_high();
+
+            ret = validate_l4port_range(port_start, port_end,
+                                        &ip_key->u.udp.sport,
+                                        &ip_mask->u.udp.sport);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("UDP sport range {} to {} cannot be supported"
+                              " Only maskable ranges are supported",
+                              port_start, port_end);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
             }
-            if (ip_sel.udp_selector().has_dst_port_range()) {
-                port_start = ip_sel.udp_selector().dst_port_range().port_low();
-                port_end = ip_sel.udp_selector().dst_port_range().port_high();
+        }
+        if (ip_sel.udp_selector().has_dst_port_range()) {
+            port_start = ip_sel.udp_selector().dst_port_range().port_low();
+            port_end = ip_sel.udp_selector().dst_port_range().port_high();
 
-                ret = validate_l4port_range(port_start, port_end,
-                                            &ip_key->u.udp.dport,
-                                            &ip_mask->u.udp.dport);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("UDP dport range {} to {} cannot be supported"
-                                  " Only maskable ranges are supported",
-                                  port_start, port_end);
-                    ret = HAL_RET_INVALID_ARG;
-                    goto end;
-                }
+            ret = validate_l4port_range(port_start, port_end,
+                                        &ip_key->u.udp.dport,
+                                        &ip_mask->u.udp.dport);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("UDP dport range {} to {} cannot be supported"
+                              " Only maskable ranges are supported",
+                              port_start, port_end);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
             }
+        }
+        break;
+    case acl::IPSelector::kTcpSelector:
+        ip_key->ip_proto = IP_PROTO_TCP;
+        ip_mask->ip_proto = 0xff;
+
+        if (ip_sel.tcp_selector().has_src_port_range()) {
+
+            port_start = ip_sel.tcp_selector().src_port_range().port_low();
+            port_end = ip_sel.tcp_selector().src_port_range().port_high();
+
+            ret = validate_l4port_range(port_start, port_end,
+                                        &ip_key->u.tcp.sport,
+                                        &ip_mask->u.tcp.sport);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("TCP sport range {} to {} cannot be supported"
+                              " Only maskable ranges are supported",
+                              port_start, port_end);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
+
+        }
+        if (ip_sel.tcp_selector().has_dst_port_range()) {
+            port_start = ip_sel.tcp_selector().dst_port_range().port_low();
+            port_end = ip_sel.tcp_selector().dst_port_range().port_high();
+
+            ret = validate_l4port_range(port_start, port_end,
+                                        &ip_key->u.tcp.dport,
+                                        &ip_mask->u.tcp.dport);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("TCP dport range {} to {} cannot be supported"
+                              " Only maskable ranges are supported",
+                              port_start, port_end);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
+        }
+
+        switch(ip_sel.tcp_selector().tcp_syn_case()) {
+        case acl::TCPSelector::kTcpSynSet:
+            tcp_flags |= TCP_FLAG_SYN;
+            tcp_flags_mask |= TCP_FLAG_SYN;
             break;
-        case acl::IPSelector::kTcpSelector:
-            ip_key->ip_proto = IP_PROTO_TCP;
-            ip_mask->ip_proto = 0xff;
-
-            if (ip_sel.tcp_selector().has_src_port_range()) {
-
-                port_start = ip_sel.tcp_selector().src_port_range().port_low();
-                port_end = ip_sel.tcp_selector().src_port_range().port_high();
-
-                ret = validate_l4port_range(port_start, port_end,
-                                            &ip_key->u.tcp.sport,
-                                            &ip_mask->u.tcp.sport);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("TCP sport range {} to {} cannot be supported"
-                                  " Only maskable ranges are supported",
-                                  port_start, port_end);
-                    ret = HAL_RET_INVALID_ARG;
-                    goto end;
-                }
-
-            }
-            if (ip_sel.tcp_selector().has_dst_port_range()) {
-                port_start = ip_sel.tcp_selector().dst_port_range().port_low();
-                port_end = ip_sel.tcp_selector().dst_port_range().port_high();
-
-                ret = validate_l4port_range(port_start, port_end,
-                                            &ip_key->u.tcp.dport,
-                                            &ip_mask->u.tcp.dport);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("TCP dport range {} to {} cannot be supported"
-                                  " Only maskable ranges are supported",
-                                  port_start, port_end);
-                    ret = HAL_RET_INVALID_ARG;
-                    goto end;
-                }
-            }
-
-            switch(ip_sel.tcp_selector().tcp_syn_case()) {
-                case acl::TCPSelector::kTcpSynSet:
-                    tcp_flags |= TCP_FLAG_SYN;
-                    tcp_flags_mask |= TCP_FLAG_SYN;
-                    break;
-                case acl::TCPSelector::kTcpSynClear:
-                    tcp_flags_mask |= TCP_FLAG_SYN;
-                    break;
-                case acl::TCPSelector::TCP_SYN_NOT_SET:
-                    break;
-            }
-
-            switch(ip_sel.tcp_selector().tcp_ack_case()) {
-                case acl::TCPSelector::kTcpAckSet:
-                    tcp_flags |= TCP_FLAG_ACK;
-                    tcp_flags_mask |= TCP_FLAG_ACK;
-                    break;
-                case acl::TCPSelector::kTcpAckClear:
-                    tcp_flags_mask |= TCP_FLAG_ACK;
-                    break;
-                case acl::TCPSelector::TCP_ACK_NOT_SET:
-                    break;
-            }
-
-            switch(ip_sel.tcp_selector().tcp_fin_case()) {
-                case acl::TCPSelector::kTcpFinSet:
-                    tcp_flags |= TCP_FLAG_FIN;
-                    tcp_flags_mask |= TCP_FLAG_FIN;
-                    break;
-                case acl::TCPSelector::kTcpFinClear:
-                    tcp_flags_mask |= TCP_FLAG_FIN;
-                    break;
-                case acl::TCPSelector::TCP_FIN_NOT_SET:
-                    break;
-            }
-
-            switch(ip_sel.tcp_selector().tcp_rst_case()) {
-                case acl::TCPSelector::kTcpRstSet:
-                    tcp_flags |= TCP_FLAG_RST;
-                    tcp_flags_mask |= TCP_FLAG_RST;
-                    break;
-                case acl::TCPSelector::kTcpRstClear:
-                    tcp_flags_mask |= TCP_FLAG_RST;
-                    break;
-                case acl::TCPSelector::TCP_RST_NOT_SET:
-                    break;
-            }
-
-            switch(ip_sel.tcp_selector().tcp_urg_case()) {
-                case acl::TCPSelector::kTcpUrgSet:
-                    tcp_flags |= TCP_FLAG_URG;
-                    tcp_flags_mask |= TCP_FLAG_URG;
-                    break;
-                case acl::TCPSelector::kTcpUrgClear:
-                    tcp_flags_mask |= TCP_FLAG_URG;
-                    break;
-                case acl::TCPSelector::TCP_URG_NOT_SET:
-                    break;
-            }
-
-            ip_key->u.tcp.tcp_flags = tcp_flags;
-            ip_mask->u.tcp.tcp_flags = tcp_flags_mask;
-
+        case acl::TCPSelector::kTcpSynClear:
+            tcp_flags_mask |= TCP_FLAG_SYN;
             break;
-        default:
+        case acl::TCPSelector::TCP_SYN_NOT_SET:
             break;
+        }
+
+        switch(ip_sel.tcp_selector().tcp_ack_case()) {
+        case acl::TCPSelector::kTcpAckSet:
+            tcp_flags |= TCP_FLAG_ACK;
+            tcp_flags_mask |= TCP_FLAG_ACK;
+            break;
+        case acl::TCPSelector::kTcpAckClear:
+            tcp_flags_mask |= TCP_FLAG_ACK;
+            break;
+        case acl::TCPSelector::TCP_ACK_NOT_SET:
+            break;
+        }
+
+        switch(ip_sel.tcp_selector().tcp_fin_case()) {
+        case acl::TCPSelector::kTcpFinSet:
+            tcp_flags |= TCP_FLAG_FIN;
+            tcp_flags_mask |= TCP_FLAG_FIN;
+            break;
+        case acl::TCPSelector::kTcpFinClear:
+            tcp_flags_mask |= TCP_FLAG_FIN;
+            break;
+        case acl::TCPSelector::TCP_FIN_NOT_SET:
+            break;
+        }
+
+        switch(ip_sel.tcp_selector().tcp_rst_case()) {
+        case acl::TCPSelector::kTcpRstSet:
+            tcp_flags |= TCP_FLAG_RST;
+            tcp_flags_mask |= TCP_FLAG_RST;
+            break;
+        case acl::TCPSelector::kTcpRstClear:
+            tcp_flags_mask |= TCP_FLAG_RST;
+            break;
+        case acl::TCPSelector::TCP_RST_NOT_SET:
+            break;
+        }
+
+        switch(ip_sel.tcp_selector().tcp_urg_case()) {
+        case acl::TCPSelector::kTcpUrgSet:
+            tcp_flags |= TCP_FLAG_URG;
+            tcp_flags_mask |= TCP_FLAG_URG;
+            break;
+        case acl::TCPSelector::kTcpUrgClear:
+            tcp_flags_mask |= TCP_FLAG_URG;
+            break;
+        case acl::TCPSelector::TCP_URG_NOT_SET:
+            break;
+        }
+
+        ip_key->u.tcp.tcp_flags = tcp_flags;
+        ip_mask->u.tcp.tcp_flags = tcp_flags_mask;
+
+        break;
+    default:
+        break;
     }
+
 end:
+
     return ret;
 }
 
@@ -868,92 +871,92 @@ populate_ip_common (acl_ip_match_spec_t *ip_key,
         return HAL_RET_OK;
     }
     switch(ip_key->ip_proto) {
-        case IP_PROTO_ICMPV6:
-        case IP_PROTO_ICMP:
-            ip_sel->mutable_icmp_selector()->set_icmp_code(ip_key->u.icmp.icmp_code);
-            ip_sel->mutable_icmp_selector()->set_icmp_code_mask(ip_mask->u.icmp.icmp_code);
+    case IP_PROTO_ICMPV6:
+    case IP_PROTO_ICMP:
+        ip_sel->mutable_icmp_selector()->set_icmp_code(ip_key->u.icmp.icmp_code);
+        ip_sel->mutable_icmp_selector()->set_icmp_code_mask(ip_mask->u.icmp.icmp_code);
 
-            ip_sel->mutable_icmp_selector()->set_icmp_type(ip_key->u.icmp.icmp_type);
-            ip_sel->mutable_icmp_selector()->set_icmp_type_mask(ip_mask->u.icmp.icmp_type);
-            break;
-        case IP_PROTO_UDP:
-            if (ip_mask->u.udp.sport) {
-                ret = key_mask_to_l4port_range(ip_key->u.udp.sport,
-                                               ip_mask->u.udp.sport,
-                                               &port_start,
-                                               &port_end);
-                ip_sel->mutable_udp_selector()->mutable_src_port_range()->set_port_low(port_start);
-                ip_sel->mutable_udp_selector()->mutable_src_port_range()->set_port_high(port_end);
-            }
-            if (ip_mask->u.udp.dport) {
-                ret = key_mask_to_l4port_range(ip_key->u.udp.dport,
-                                               ip_mask->u.udp.dport,
-                                               &port_start,
-                                               &port_end);
-                ip_sel->mutable_udp_selector()->mutable_dst_port_range()->set_port_low(port_start);
-                ip_sel->mutable_udp_selector()->mutable_dst_port_range()->set_port_high(port_end);
-            }
-            break;
-        case IP_PROTO_TCP:
-            if (ip_mask->u.tcp.sport) {
-                ret = key_mask_to_l4port_range(ip_key->u.tcp.sport,
-                                               ip_mask->u.tcp.sport,
-                                               &port_start,
-                                               &port_end);
-                ip_sel->mutable_tcp_selector()->mutable_src_port_range()->set_port_low(port_start);
-                ip_sel->mutable_tcp_selector()->mutable_src_port_range()->set_port_high(port_end);
-            }
-            if (ip_mask->u.tcp.dport) {
-                ret = key_mask_to_l4port_range(ip_key->u.tcp.dport,
-                                               ip_mask->u.tcp.dport,
-                                               &port_start,
-                                               &port_end);
-                ip_sel->mutable_tcp_selector()->mutable_dst_port_range()->set_port_low(port_start);
-                ip_sel->mutable_tcp_selector()->mutable_dst_port_range()->set_port_high(port_end);
-            }
+        ip_sel->mutable_icmp_selector()->set_icmp_type(ip_key->u.icmp.icmp_type);
+        ip_sel->mutable_icmp_selector()->set_icmp_type_mask(ip_mask->u.icmp.icmp_type);
+        break;
+    case IP_PROTO_UDP:
+        if (ip_mask->u.udp.sport) {
+            ret = key_mask_to_l4port_range(ip_key->u.udp.sport,
+                                           ip_mask->u.udp.sport,
+                                           &port_start,
+                                           &port_end);
+            ip_sel->mutable_udp_selector()->mutable_src_port_range()->set_port_low(port_start);
+            ip_sel->mutable_udp_selector()->mutable_src_port_range()->set_port_high(port_end);
+        }
+        if (ip_mask->u.udp.dport) {
+            ret = key_mask_to_l4port_range(ip_key->u.udp.dport,
+                                           ip_mask->u.udp.dport,
+                                           &port_start,
+                                           &port_end);
+            ip_sel->mutable_udp_selector()->mutable_dst_port_range()->set_port_low(port_start);
+            ip_sel->mutable_udp_selector()->mutable_dst_port_range()->set_port_high(port_end);
+        }
+        break;
+    case IP_PROTO_TCP:
+        if (ip_mask->u.tcp.sport) {
+            ret = key_mask_to_l4port_range(ip_key->u.tcp.sport,
+                                           ip_mask->u.tcp.sport,
+                                           &port_start,
+                                           &port_end);
+            ip_sel->mutable_tcp_selector()->mutable_src_port_range()->set_port_low(port_start);
+            ip_sel->mutable_tcp_selector()->mutable_src_port_range()->set_port_high(port_end);
+        }
+        if (ip_mask->u.tcp.dport) {
+            ret = key_mask_to_l4port_range(ip_key->u.tcp.dport,
+                                           ip_mask->u.tcp.dport,
+                                           &port_start,
+                                           &port_end);
+            ip_sel->mutable_tcp_selector()->mutable_dst_port_range()->set_port_low(port_start);
+            ip_sel->mutable_tcp_selector()->mutable_dst_port_range()->set_port_high(port_end);
+        }
 
-            tcp_flags_mask = ip_mask->u.tcp.tcp_flags;
-            tcp_flags = ip_key->u.tcp.tcp_flags;
-            if (tcp_flags_mask & TCP_FLAG_SYN) {
-                if (tcp_flags & TCP_FLAG_SYN) {
-                    ip_sel->mutable_tcp_selector()->set_tcp_syn_set(true);
-                } else {
-                    ip_sel->mutable_tcp_selector()->set_tcp_syn_clear(true);
-                }
+        tcp_flags_mask = ip_mask->u.tcp.tcp_flags;
+        tcp_flags = ip_key->u.tcp.tcp_flags;
+        if (tcp_flags_mask & TCP_FLAG_SYN) {
+            if (tcp_flags & TCP_FLAG_SYN) {
+                ip_sel->mutable_tcp_selector()->set_tcp_syn_set(true);
+            } else {
+                ip_sel->mutable_tcp_selector()->set_tcp_syn_clear(true);
             }
-            if (tcp_flags_mask & TCP_FLAG_ACK) {
-                if (tcp_flags & TCP_FLAG_ACK) {
-                    ip_sel->mutable_tcp_selector()->set_tcp_ack_set(true);
-                } else {
-                    ip_sel->mutable_tcp_selector()->set_tcp_ack_clear(true);
-                }
+        }
+        if (tcp_flags_mask & TCP_FLAG_ACK) {
+            if (tcp_flags & TCP_FLAG_ACK) {
+                ip_sel->mutable_tcp_selector()->set_tcp_ack_set(true);
+            } else {
+                ip_sel->mutable_tcp_selector()->set_tcp_ack_clear(true);
             }
-            if (tcp_flags_mask & TCP_FLAG_FIN) {
-                if (tcp_flags & TCP_FLAG_FIN) {
-                    ip_sel->mutable_tcp_selector()->set_tcp_fin_set(true);
-                } else {
-                    ip_sel->mutable_tcp_selector()->set_tcp_fin_clear(true);
-                }
+        }
+        if (tcp_flags_mask & TCP_FLAG_FIN) {
+            if (tcp_flags & TCP_FLAG_FIN) {
+                ip_sel->mutable_tcp_selector()->set_tcp_fin_set(true);
+            } else {
+                ip_sel->mutable_tcp_selector()->set_tcp_fin_clear(true);
             }
-            if (tcp_flags_mask & TCP_FLAG_RST) {
-                if (tcp_flags & TCP_FLAG_RST) {
-                    ip_sel->mutable_tcp_selector()->set_tcp_rst_set(true);
-                } else {
-                    ip_sel->mutable_tcp_selector()->set_tcp_rst_clear(true);
-                }
+        }
+        if (tcp_flags_mask & TCP_FLAG_RST) {
+            if (tcp_flags & TCP_FLAG_RST) {
+                ip_sel->mutable_tcp_selector()->set_tcp_rst_set(true);
+            } else {
+                ip_sel->mutable_tcp_selector()->set_tcp_rst_clear(true);
             }
-            if (tcp_flags_mask & TCP_FLAG_URG) {
-                if (tcp_flags & TCP_FLAG_URG) {
-                    ip_sel->mutable_tcp_selector()->set_tcp_urg_set(true);
-                } else {
-                    ip_sel->mutable_tcp_selector()->set_tcp_urg_clear(true);
-                }
+        }
+        if (tcp_flags_mask & TCP_FLAG_URG) {
+            if (tcp_flags & TCP_FLAG_URG) {
+                ip_sel->mutable_tcp_selector()->set_tcp_urg_set(true);
+            } else {
+                ip_sel->mutable_tcp_selector()->set_tcp_urg_clear(true);
             }
-            break;
-        default:
-            // TODO Fixme
-            //ip_sel->set_ip_protocol(ip_key->ip_proto);
-            break;
+        }
+        break;
+    default:
+        // TODO Fixme
+        //ip_sel->set_ip_protocol(ip_key->ip_proto);
+        break;
     }
     return ret;
 }
@@ -967,46 +970,46 @@ get_acl_type (const acl::AclSelector &sel)
     types::IPAddressFamily ip_af  = types::IP_AF_NONE;
 
     switch(sel.pkt_selector_case()) {
-        case acl::AclSelector::kEthSelector:
-            acl_type = ACL_TYPE_ETH;
-            break;
-        case acl::AclSelector::kIpSelector:
+    case acl::AclSelector::kEthSelector:
+        acl_type = ACL_TYPE_ETH;
+        break;
+    case acl::AclSelector::kIpSelector:
 
-            ip_af = sel.ip_selector().ip_af();
+        ip_af = sel.ip_selector().ip_af();
 
-            if (sel.ip_selector().has_src_prefix()) {
-                src_af = sel.ip_selector().src_prefix().address().ip_af();
-            }
-            if (sel.ip_selector().has_dst_prefix()) {
-                dst_af = sel.ip_selector().dst_prefix().address().ip_af();
-            }
+        if (sel.ip_selector().has_src_prefix()) {
+            src_af = sel.ip_selector().src_prefix().address().ip_af();
+        }
+        if (sel.ip_selector().has_dst_prefix()) {
+            dst_af = sel.ip_selector().dst_prefix().address().ip_af();
+        }
 
-            if (ip_af == types::IP_AF_NONE) {
-                if ((src_af != types::IP_AF_NONE) ||
-                    (dst_af != types::IP_AF_NONE)) {
-                    acl_type = ACL_TYPE_INVALID;
-                } else {
-                    acl_type = ACL_TYPE_IP;
-                }
-            } else if (ip_af == types::IP_AF_INET) {
-                if ((src_af == types::IP_AF_INET6) ||
-                    (dst_af == types::IP_AF_INET6)) {
-                    acl_type = ACL_TYPE_INVALID;
-                } else {
-                    acl_type = ACL_TYPE_IPv4;
-                }
-            } else if (ip_af == types::IP_AF_INET6) {
-                if ((src_af == types::IP_AF_INET) ||
-                    (dst_af == types::IP_AF_INET)) {
-                    acl_type = ACL_TYPE_INVALID;
-                } else {
-                    acl_type = ACL_TYPE_IPv6;
-                }
+        if (ip_af == types::IP_AF_NONE) {
+            if ((src_af != types::IP_AF_NONE) ||
+                (dst_af != types::IP_AF_NONE)) {
+                acl_type = ACL_TYPE_INVALID;
+            } else {
+                acl_type = ACL_TYPE_IP;
             }
-            break;
-        default:
-            acl_type = ACL_TYPE_NONE;
-            break;
+        } else if (ip_af == types::IP_AF_INET) {
+            if ((src_af == types::IP_AF_INET6) ||
+                (dst_af == types::IP_AF_INET6)) {
+                acl_type = ACL_TYPE_INVALID;
+            } else {
+                acl_type = ACL_TYPE_IPv4;
+            }
+        } else if (ip_af == types::IP_AF_INET6) {
+            if ((src_af == types::IP_AF_INET) ||
+                (dst_af == types::IP_AF_INET)) {
+                acl_type = ACL_TYPE_INVALID;
+            } else {
+                acl_type = ACL_TYPE_IPv6;
+            }
+        }
+        break;
+    default:
+        acl_type = ACL_TYPE_NONE;
+        break;
     }
     return acl_type;
 }
@@ -1087,67 +1090,67 @@ extract_match_spec (acl_match_spec_t *ms,
     ms->acl_type = get_acl_type(sel);
 
     switch(ms->acl_type) {
-        case ACL_TYPE_NONE:
-            // Nothing to do
-            break;
-        case ACL_TYPE_ETH:
-            eth_key->ether_type = sel.eth_selector().eth_type();
-            eth_mask->ether_type = sel.eth_selector().eth_type_mask();
+    case ACL_TYPE_NONE:
+        // Nothing to do
+        break;
+    case ACL_TYPE_ETH:
+        eth_key->ether_type = sel.eth_selector().eth_type();
+        eth_mask->ether_type = sel.eth_selector().eth_type_mask();
 
-            MAC_UINT64_TO_ADDR(eth_key->mac_sa, sel.eth_selector().src_mac());
-            MAC_UINT64_TO_ADDR(eth_mask->mac_sa, sel.eth_selector().src_mac_mask());
+        MAC_UINT64_TO_ADDR(eth_key->mac_sa, sel.eth_selector().src_mac());
+        MAC_UINT64_TO_ADDR(eth_mask->mac_sa, sel.eth_selector().src_mac_mask());
 
-            MAC_UINT64_TO_ADDR(eth_key->mac_da, sel.eth_selector().dst_mac());
-            MAC_UINT64_TO_ADDR(eth_mask->mac_da, sel.eth_selector().dst_mac_mask());
-            break;
-        case ACL_TYPE_IP:
-            ret = extract_ip_common(ms->acl_type, ip_key, ip_mask,
-                                    sel.ip_selector());
-            break;
-        case ACL_TYPE_IPv4:
-            if (sel.ip_selector().has_src_prefix()) {
-                ip_addr_spec_to_ip_addr(&ip_key->sip,
-                                        sel.ip_selector().src_prefix().address());
-                // Convert prefix len to mask
-                ip_mask->sip.addr.v4_addr = ipv4_prefix_len_to_mask(
-                    sel.ip_selector().src_prefix().prefix_len());
-            }
+        MAC_UINT64_TO_ADDR(eth_key->mac_da, sel.eth_selector().dst_mac());
+        MAC_UINT64_TO_ADDR(eth_mask->mac_da, sel.eth_selector().dst_mac_mask());
+        break;
+    case ACL_TYPE_IP:
+        ret = extract_ip_common(ms->acl_type, ip_key, ip_mask,
+                                sel.ip_selector());
+        break;
+    case ACL_TYPE_IPv4:
+        if (sel.ip_selector().has_src_prefix()) {
+            ip_addr_spec_to_ip_addr(&ip_key->sip,
+                                    sel.ip_selector().src_prefix().address());
+            // Convert prefix len to mask
+            ip_mask->sip.addr.v4_addr = ipv4_prefix_len_to_mask(
+                sel.ip_selector().src_prefix().prefix_len());
+        }
 
-            if (sel.ip_selector().has_dst_prefix()) {
-                ip_addr_spec_to_ip_addr(&ip_key->dip,
-                                        sel.ip_selector().dst_prefix().address());
-                // Convert prefix len to mask
-                ip_mask->dip.addr.v4_addr = ipv4_prefix_len_to_mask(
-                    sel.ip_selector().dst_prefix().prefix_len());
-            }
+        if (sel.ip_selector().has_dst_prefix()) {
+            ip_addr_spec_to_ip_addr(&ip_key->dip,
+                                    sel.ip_selector().dst_prefix().address());
+            // Convert prefix len to mask
+            ip_mask->dip.addr.v4_addr = ipv4_prefix_len_to_mask(
+                sel.ip_selector().dst_prefix().prefix_len());
+        }
 
-            ret = extract_ip_common(ms->acl_type, ip_key, ip_mask,
-                                    sel.ip_selector());
-            break;
-        case ACL_TYPE_IPv6:
-            if (sel.ip_selector().has_src_prefix()) {
-                ip_addr_spec_to_ip_addr(&ip_key->sip,
-                                        sel.ip_selector().src_prefix().address());
-                // Convert prefix len to mask
-                ipv6_prefix_len_to_mask(&ip_mask->sip.addr.v6_addr,
-                                        sel.ip_selector().src_prefix().prefix_len());
-            }
+        ret = extract_ip_common(ms->acl_type, ip_key, ip_mask,
+                                sel.ip_selector());
+        break;
+    case ACL_TYPE_IPv6:
+        if (sel.ip_selector().has_src_prefix()) {
+            ip_addr_spec_to_ip_addr(&ip_key->sip,
+                                    sel.ip_selector().src_prefix().address());
+            // Convert prefix len to mask
+            ipv6_prefix_len_to_mask(&ip_mask->sip.addr.v6_addr,
+                                    sel.ip_selector().src_prefix().prefix_len());
+        }
 
-            if (sel.ip_selector().has_dst_prefix()) {
-                ip_addr_spec_to_ip_addr(&ip_key->dip,
-                                        sel.ip_selector().dst_prefix().address());
-                // Convert prefix len to mask
-                ipv6_prefix_len_to_mask(&ip_mask->dip.addr.v6_addr,
-                                        sel.ip_selector().dst_prefix().prefix_len());
-            }
+        if (sel.ip_selector().has_dst_prefix()) {
+            ip_addr_spec_to_ip_addr(&ip_key->dip,
+                                    sel.ip_selector().dst_prefix().address());
+            // Convert prefix len to mask
+            ipv6_prefix_len_to_mask(&ip_mask->dip.addr.v6_addr,
+                                    sel.ip_selector().dst_prefix().prefix_len());
+        }
 
-            ret = extract_ip_common(ms->acl_type, ip_key, ip_mask,
-                                    sel.ip_selector());
-            break;
-        case ACL_TYPE_INVALID:
-            HAL_TRACE_ERR("ACL Type invalid");
-            ret = HAL_RET_INVALID_ARG;
-            break;
+        ret = extract_ip_common(ms->acl_type, ip_key, ip_mask,
+                                sel.ip_selector());
+        break;
+    case ACL_TYPE_INVALID:
+        HAL_TRACE_ERR("ACL Type invalid");
+        ret = HAL_RET_INVALID_ARG;
+        break;
     }
 
     if (ret != HAL_RET_OK) {
@@ -1347,7 +1350,7 @@ extract_action_spec (acl_action_spec_t *as,
     }
 
     if ((as->action == acl::ACL_ACTION_LOG) ||
-        ((as->action == acl::ACL_ACTION_REDIRECT) && 
+        ((as->action == acl::ACL_ACTION_REDIRECT) &&
          (redirect_if->if_type == intf::IF_TYPE_CPU))) {
         copp_needed = true;
     }
@@ -1755,14 +1758,14 @@ acl_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ret = acl_rem_refs(acl);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to remove references for acl {} ret {}", 
+        HAL_TRACE_ERR("Failed to remove references for acl {} ret {}",
                       acl->key, ret);
         goto end;
     }
 
     ret = acl_add_refs(acl_clone);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add references for acl_clone {} ret {}", 
+        HAL_TRACE_ERR("Failed to add references for acl_clone {} ret {}",
                       acl_clone->key, ret);
         goto end;
     }
@@ -2011,7 +2014,7 @@ acl_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ret = acl_rem_refs(acl);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to remove references for acl {} ret {}", 
+        HAL_TRACE_ERR("Failed to remove references for acl {} ret {}",
                       acl->key, ret);
         goto end;
     }
@@ -2031,6 +2034,7 @@ acl_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl_free(acl, false);
 
 end:
+
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("commit cbs can't fail: ret : {}",
                       ret);

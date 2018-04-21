@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -157,8 +159,7 @@ ip_addr_to_spec (types::IPAddress *ip_addr_spec,
 // convert IP prefix spec in proto to ip_addr used in HAL
 //----------------------------------------------------------------------------
 hal_ret_t
-ip_pfx_spec_to_pfx_spec (ip_prefix_t *ip_pfx,
-                         const types::IPPrefix& in_ippfx)
+ip_pfx_spec_to_pfx (ip_prefix_t *ip_pfx, const types::IPPrefix& in_ippfx)
 {
     hal_ret_t ret = HAL_RET_OK;
 

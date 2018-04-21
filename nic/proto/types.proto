@@ -142,8 +142,8 @@ message IPAddress {
 
 // IP Range 
 message IPRange {
-    IPAddress      low_ipaddr  = 1;    // start ip address 
-    IPAddress      high_ipaddr = 2;    // end ip address
+  IPAddress    low_ipaddr  = 1;    // start ip address 
+  IPAddress    high_ipaddr = 2;    // end ip address
 }
 
 // IP Prefix object
@@ -165,34 +165,34 @@ enum IPAddressType {
 
 // IPSubnet represents an IPv4 or IPv6 subnet
 message IPSubnet {
-    oneof subnet {
-        types.IPPrefix ipv4_subnet      = 1;     // V4 Subnet
-        types.IPPrefix ipv6_subnet      = 2;     // V6 Subnet
-    }
+  oneof subnet {
+    types.IPPrefix ipv4_subnet      = 1;     // V4 Subnet
+    types.IPPrefix ipv6_subnet      = 2;     // V6 Subnet
+  }
 }
 
 // AddressRange represents an IPv4 or IPv6 address range
 message AddressRange {
-    oneof range {
-        types.IPRange ipv4_range       = 1;  // V4 address range
-        types.IPRange ipv6_range       = 2;  // V6 address range
-    }
+  oneof range {
+    types.IPRange ipv4_range       = 1;  // V4 address range
+    types.IPRange ipv6_range       = 2;  // V6 address range
+  }
 }
 
 // Address object is the prefix or range
 message Address {
-    oneof   Address {
-        IPSubnet      prefix     = 1;    // v4 or v6 address prefix
-        AddressRange  range      = 2;    // v4 or v6 address range
-    }
+  oneof   Address {
+    IPSubnet      prefix     = 1;    // v4 or v6 address prefix
+    AddressRange  range      = 2;    // v4 or v6 address range
+  }
 }
 
 message IPAddressObj {
-    oneof Formats {
-        IPAddressType   type        = 1;
-        Address         address     = 2;
-    }
-    bool negate                     = 3;
+  oneof Formats {
+    IPAddressType   type        = 1;
+    Address         address     = 2;
+  }
+  bool negate                     = 3;
 }
 
 // PortRange object has low and high end of the port ranges

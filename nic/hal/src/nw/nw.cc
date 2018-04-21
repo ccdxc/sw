@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
@@ -364,7 +366,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     }
 
     // check if network with pfx already exists
-    ret = ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
+    ret = ip_pfx_spec_to_pfx(&ip_pfx, nw_pfx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key", __FUNCTION__);
         goto end;
@@ -396,7 +398,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     nw->nw_key.vrf_id = tid;
     nw->gw_ep_handle = spec.gateway_ep_handle();
     MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
-    ret = ip_pfx_spec_to_pfx_spec(&nw->nw_key.ip_pfx, nw_pfx);
+    ret = ip_pfx_spec_to_pfx(&nw->nw_key.ip_pfx, nw_pfx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key", __FUNCTION__);
         goto end;
@@ -466,7 +468,7 @@ network_lookup_key_or_handle (NetworkKeyHandle& kh)
     hal_ret_t                       ret = HAL_RET_OK;
 
     if (kh.key_or_handle_case() == NetworkKeyHandle::kNwKey) {
-        ret = ip_pfx_spec_to_pfx_spec(&ip_pfx, kh.nw_key().ip_prefix());
+        ret = ip_pfx_spec_to_pfx(&ip_pfx, kh.nw_key().ip_prefix());
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key", __FUNCTION__);
             return NULL;
@@ -1041,7 +1043,7 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
                 return HAL_RET_OK;
             }
 
-            ret = ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
+            ret = ip_pfx_spec_to_pfx(&ip_pfx, nw_pfx);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key",
                                __FUNCTION__);
