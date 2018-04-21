@@ -1,18 +1,18 @@
 [
   {
-    "name"   : "uplink1",
+    "name"   : "pen-intf1",
     "local"  : false,
     "port"   : 1,
     "lif_id" : 0
   },
   {
-    "name"    : "uplink2",
+    "name"    : "pen-intf2",
     "local"   : false,
     "port"    : 3,
     "lif_id"  : 0
   },
   {
-    "name"    : "ep-1",
+    "name"    : "pen-host0",
     "local"   : true,
     "port"    : 0,
     "lif_id"  : 1

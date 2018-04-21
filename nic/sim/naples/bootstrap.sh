@@ -16,14 +16,6 @@ exec > /var/log/bootstrap.log
 exec 2>&1
 
 #######################################################################
-# create tap interfaces (TODO remove once the naples container is ready)
-#######################################################################
-docker exec naples-sim yum install -y iproute
-docker exec naples-sim ip tuntap add mode tap dev $HOST0
-docker exec naples-sim ip tuntap add mode tap dev $INTF1
-docker exec naples-sim ip tuntap add mode tap dev $INTF2
-
-#######################################################################
 # move the tap interfaces inside the naples container to global namaspace
 #######################################################################
 pid=$(docker inspect --format '{{.State.Pid}}' naples-sim)

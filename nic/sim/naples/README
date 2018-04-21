@@ -19,11 +19,13 @@
    This will bringup the datacenters and establish the VM connectivity between
    them. Additionally, each of the VMs will have NAPLES container running
    already with all the components of Pensando NIC. This container represents
-   the NIC in the VPN gateway of that datacenter.
+   the NIC in the VPN gateway of that datacenter. Use 'vagrant ssh node1/node2'
+   to connect to VMs
 
-5. If you have to spin the NAPLES container manually (in case VM was restarted
-   or something went wrong), simply use start-naples-docker.sh script (and use
-   stop-naples-docker.sh to stop it, if needed)
+5. If you have to spin the NAPLES container manually (in case something went wrong),
+   use 'docker start/stop naples-sim' inside the VMs.
+   To do a fresh re-install of the naples container, re-provision the vargant VM
+   using 'vagrant up --provision'
 
 By default, port 9007 of the docker container is exposed to the host (i.e., VM
 representing the datacenter) and hence REST APIs can be invoked using curl.

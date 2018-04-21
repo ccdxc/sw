@@ -134,7 +134,7 @@ package-clean:
 	@rm -f nic.tgz
 	@rm -f nic.tar
 
-package: swig-cli package-clean
+package: swig-cli package-clean hntap
     ifeq ($(ARCH),aarch64)
 		cd ../ && python nic/tools/package.py
     else
@@ -169,6 +169,11 @@ capmodel:
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:cap_model
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_client
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_cli
+    endif
+
+hntap:
+    ifneq ($(ARCH),aarch64)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests:nic_infra_hntap
     endif
 
 go-proto:
