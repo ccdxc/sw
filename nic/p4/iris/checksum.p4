@@ -107,7 +107,9 @@ table compute_checksum {
 }
 
 control process_checksum_computation {
-    apply(compute_checksum);
+    if (capri_intrinsic.drop == FALSE) {
+        apply(compute_checksum);
+    }
 }
 
 /******************************************************************************

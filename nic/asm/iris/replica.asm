@@ -36,8 +36,9 @@ set_replica_rewrites:
   and         r1, k.tunnel_metadata_tunnel_terminate, k.tm_replication_data_is_tunnel
   seq.!c1     c1, r1[0], 1
   phvwr.c1.e  p.capri_intrinsic_drop, TRUE
+  phvwr.c1    p.control_metadata_egress_drop_reason[EGRESS_DROP_PRUNE_SRC_PORT], 1
 
-  phvwr.!c1   p.control_metadata_dst_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
+  phvwr       p.control_metadata_dst_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
                                                tm_replication_data_lport_sbit5_ebit10}
   phvwr       p.control_metadata_qtype, k.tm_replication_data_qtype
   phvwr       p.rewrite_metadata_rewrite_index, \

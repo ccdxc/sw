@@ -468,7 +468,7 @@ p4pd_flow_stats_init (void)
 }
 
 //-----------------------------------------------------------------------------
-// Initializes drop stats to point to atomic region
+// Initializes drop stats table
 //-----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_drop_stats_init (void)
@@ -496,8 +496,8 @@ p4pd_drop_stats_init (void)
         sdk_ret = tcam->insert_withid(&key, &key_mask, &data, i);
         if (sdk_ret != sdk::SDK_RET_OK) {
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-            HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
-                    i, ret);
+            HAL_TRACE_ERR("drop stats table write failure, idx : {}, err : {}",
+                          i, ret);
             return ret;
         }
     }
@@ -508,11 +508,62 @@ p4pd_drop_stats_init (void)
     memset(&data, 0, sizeof(data));
     key.entry_inactive_drop_stats = 0;
     key_mask.entry_inactive_drop_stats_mask = 0xFF;
+    data.actionid = DROP_STATS_DROP_STATS_ID;
     sdk_ret = tcam->insert_withid(&key, &key_mask, &data, DROP_MAX + 1);
     if (sdk_ret != sdk::SDK_RET_OK) {
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-        HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
-                DROP_MAX + 1, ret);
+        HAL_TRACE_ERR("drop stats table write failure, idx : {}, err : {}",
+                      DROP_MAX + 1, ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_egress_drop_stats_init (void)
+{
+    hal_ret_t                       ret;
+    sdk_ret_t                       sdk_ret;
+    tcam                            *tcam;
+    egress_drop_stats_swkey         key      = { 0 };
+    egress_drop_stats_swkey_mask    key_mask = { 0 };
+    egress_drop_stats_actiondata    data     = { 0 };
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
+    HAL_ASSERT(tcam != NULL);
+
+    for (int i = EGRESS_DROP_MIN; i <= EGRESS_DROP_MAX; i++) {
+        uint64_t drop_reason = ((uint64_t)1 << i);
+        key.entry_inactive_egress_drop_stats = 0;
+        memcpy(key.control_metadata_egress_drop_reason, &drop_reason,
+               sizeof(key.control_metadata_egress_drop_reason));
+        key_mask.entry_inactive_egress_drop_stats_mask = 0xFF;
+        memcpy(key_mask.control_metadata_egress_drop_reason_mask, &drop_reason,
+               sizeof(key_mask.control_metadata_egress_drop_reason_mask));
+
+        data.actionid = EGRESS_DROP_STATS_EGRESS_DROP_STATS_ID;
+        sdk_ret = tcam->insert_withid(&key, &key_mask, &data, i);
+        if (sdk_ret != sdk::SDK_RET_OK) {
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            HAL_TRACE_ERR("egress drop stats table write failure, idx : {}, "
+                          "err : {}", i, ret);
+            return ret;
+        }
+    }
+
+    // catch all entry for unknown drop reasons
+    memset(&key, 0, sizeof(key));
+    memset(&key_mask, 0, sizeof(key_mask));
+    memset(&data, 0, sizeof(data));
+    key.entry_inactive_egress_drop_stats = 0;
+    key_mask.entry_inactive_egress_drop_stats_mask = 0xFF;
+    data.actionid = EGRESS_DROP_STATS_EGRESS_DROP_STATS_ID;
+    sdk_ret = tcam->insert_withid(&key, &key_mask, &data, EGRESS_DROP_MAX + 1);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        HAL_TRACE_ERR("egress drop stats table write failure, idx : {}, "
+                      "err : {}", EGRESS_DROP_MAX + 1, ret);
         return ret;
     }
 
@@ -1493,6 +1544,7 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
     HAL_ASSERT(p4pd_p4plus_app_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_mirror_table_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_compute_checksum_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_egress_drop_stats_init() == HAL_RET_OK);
 
     // initialize all PB/TM tables with default entries, if any
     // Even though this is not really a P4 Table it is very

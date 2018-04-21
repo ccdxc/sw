@@ -131,6 +131,37 @@ table drop_stats {
     size : DROP_STATS_TABLE_SIZE;
 }
 
+/*****************************************************************************/
+/* Egress Drop accounting per reason code                                    */
+/*****************************************************************************/
+action egress_drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
+    if (mirror_en == TRUE) {
+        modify_field(capri_intrinsic.tm_span_session, mirror_session_id);
+    }
+
+    // force tm_oport to DMA when packet is being dropped
+    modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
+
+    // dummy ops to keep compiler happy
+    modify_field(scratch_metadata.drop_stats_packets, drop_pkts);
+    modify_field(scratch_metadata.drop_stats_pad, pad);
+    modify_field(scratch_metadata.ingress_mirror_en, mirror_en);
+}
+
+@pragma stage 5
+@pragma table_write
+table egress_drop_stats {
+    reads {
+        entry_inactive.egress_drop_stats    : ternary;
+        control_metadata.egress_drop_reason : ternary;
+    }
+    actions {
+        egress_drop_stats;
+    }
+    default_action : egress_drop_stats;
+    size : DROP_STATS_TABLE_SIZE;
+}
+
 action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
                   drop_packets, drop_bytes, drop_reason, drop_count_map,
                   drop_count1, drop_count2, drop_count3, drop_count4,
@@ -265,5 +296,8 @@ table tx_stats {
 }
 
 control process_tx_stats {
+    if (capri_intrinsic.drop == TRUE) {
+        apply(egress_drop_stats);
+    }
     apply(tx_stats);
 }

@@ -22,6 +22,7 @@ action execute_copp(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
                     burst, rate, tbkt) {
     if ((entry_valid == TRUE) and ((tbkt >> 39) == 1)) {
         modify_field(copp_metadata.policer_color, POLICER_COLOR_RED);
+        modify_field(control_metadata.egress_drop_reason, EGRESS_DROP_COPP);
         drop_packet();
     }
 

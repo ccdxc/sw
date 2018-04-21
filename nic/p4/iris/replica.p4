@@ -21,14 +21,15 @@ action set_replica_rewrites() {
     if (tm_replication_data.valid == TRUE) {
         if ((tm_replication_data.repl_type == TM_REPL_TYPE_DEFAULT) or
             (tm_replication_data.repl_type == TM_REPL_TYPE_TO_CPU_REL_COPY)) {
-
             // Only in these cases we need to do source port suppression check.
             // For the case where we will honor ingress we will never have the
             // FTE Programming where src_lport and dst_lport are same.
             if ((control_metadata.src_lport == tm_replication_data.lport) or
                 ((tm_replication_data.is_tunnel == TRUE) and
                  (tunnel_metadata.tunnel_terminate == TRUE))) {
-                modify_field(capri_intrinsic.drop, TRUE);
+                modify_field(control_metadata.egress_drop_reason,
+                             EGRESS_DROP_PRUNE_SRC_PORT);
+                drop_packet();
             }
             modify_field(control_metadata.dst_lport, tm_replication_data.lport);
             modify_field(control_metadata.qtype, tm_replication_data.qtype);

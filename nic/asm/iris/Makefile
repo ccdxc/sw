@@ -29,6 +29,7 @@ SRC_FILES := \
     $(SRC_DIR)/ddos_src_vf_policer_action.asm \
     $(SRC_DIR)/decode_roce_opcode.asm \
     $(SRC_DIR)/drop_stats.asm \
+    $(SRC_DIR)/egress_drop_stats.asm \
     $(SRC_DIR)/flow_hash.asm \
     $(SRC_DIR)/flow_hash_overflow.asm \
     $(SRC_DIR)/flow_info.asm \

@@ -17,6 +17,7 @@ action execute_rx_policer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
                               burst, rate, tbkt) {
     if ((entry_valid == TRUE) and ((tbkt >> 39) == 1)) {
         modify_field(policer_metadata.rx_policer_color, POLICER_COLOR_RED);
+        modify_field(control_metadata.egress_drop_reason, EGRESS_DROP_POLICER);
         drop_packet();
     }
 

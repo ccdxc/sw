@@ -13,7 +13,7 @@ output_mapping_drop:
   K_DBG_WR(0x100)
   DBG_WR(0x108, k.control_metadata_dst_lport)
   phvwr.e       p.capri_intrinsic_drop, TRUE
-  nop
+  phvwr         p.control_metadata_egress_drop_reason[EGRESS_DROP_OUTPUT_MAPPING], 1
 
 .align
 set_tm_oport:
@@ -25,7 +25,7 @@ set_tm_oport:
 
   // mod instruction stalls; instructions below execute till r7 is ready
   seq         c1, d.u.set_tm_oport_d.egress_mirror_en, TRUE
-  seq.c1      c1, k.control_metadata_span_copy, FALSE 
+  seq.c1      c1, k.control_metadata_span_copy, FALSE
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
   phvwrpair   p.capri_intrinsic_lif, d.u.set_tm_oport_d.dst_lif, \
                 p.capri_intrinsic_tm_oq, k.control_metadata_dest_tm_oq[4:0]

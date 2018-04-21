@@ -129,7 +129,8 @@ action erspan_mirror(dst_lport, truncate_len, tunnel_rewrite_index, span_tm_oq) 
 action drop_mirror() {
     modify_field(control_metadata.dst_lport, 0);
     modify_field(capri_intrinsic.tm_span_session, 0);
-    modify_field(capri_intrinsic.drop, TRUE);
+    modify_field(control_metadata.egress_drop_reason, EGRESS_DROP_MIRROR);
+    drop_packet();
 }
 
 @pragma stage 0

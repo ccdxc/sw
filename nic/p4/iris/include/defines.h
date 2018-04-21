@@ -223,7 +223,7 @@
 #define DROP_FLOW_MISS                          4
 #define DROP_NACL                               5
 #define DROP_IPSG                               6
-#define DROP_IP_NORMALIZATION                   7        
+#define DROP_IP_NORMALIZATION                   7
 #define DROP_TCP_NORMALIZATION                  8
 #define DROP_TCP_RST_WITH_INVALID_ACK_NUM       9
 #define DROP_TCP_NON_SYN_FIRST_PKT              10
@@ -245,6 +245,18 @@
 /* Note: After adding a new drop code, update the system.proto file as well. */
 /*****************************************************************************/
 #define DROP_MAX                                DROP_HARDWARE_ERR
+
+/*****************************************************************************/
+/* egress drop reasons - these are bit positions to be used in ASM           */
+/*****************************************************************************/
+#define EGRESS_DROP_OUTPUT_MAPPING              0
+#define EGRESS_DROP_PRUNE_SRC_PORT              1
+#define EGRESS_DROP_MIRROR                      2
+#define EGRESS_DROP_POLICER                     3
+#define EGRESS_DROP_COPP                        4
+#define EGRESS_DROP_CHECKSUM_ERR                5
+#define EGRESS_DROP_MIN                         EGRESS_DROP_OUTPUT_MAPPING
+#define EGRESS_DROP_MAX                         EGRESS_DROP_CHECKSUM_ERR
 
 /*****************************************************************************/
 /* Rewrite flags                                                             */

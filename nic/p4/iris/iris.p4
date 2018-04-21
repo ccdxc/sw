@@ -63,6 +63,7 @@ header_type l3_metadata_t {
 header_type control_metadata_t {
     fields {
         drop_reason                    : 40;
+        egress_drop_reason             : 40;
         qid                            : 24;
         qtype                          : 8;
         tm_iport                       : 4;
@@ -112,17 +113,18 @@ header_type control_metadata_t {
 
 header_type entry_inactive_t {
     fields {
-        input_mapping    : 1;
-        input_properties : 1;
-        input_mac_vlan   : 1;
-        registered_macs  : 1;
-        ipsg             : 1;
-        nacl             : 1;
-        drop_stats       : 1;
-        ddos_src_vf      : 1;
-        ddos_src_dst     : 1;
-        ddos_service     : 1;
-        compute_checksum : 1;
+        input_mapping       : 1;
+        input_properties    : 1;
+        input_mac_vlan      : 1;
+        registered_macs     : 1;
+        ipsg                : 1;
+        nacl                : 1;
+        drop_stats          : 1;
+        egress_drop_stats   : 1;
+        ddos_src_vf         : 1;
+        ddos_src_dst        : 1;
+        ddos_service        : 1;
+        compute_checksum    : 1;
     }
 }
 
@@ -298,7 +300,6 @@ metadata capri_deparser_len_t capri_deparser_len;
 @pragma gso_csum_header
 @pragma dont_trim
 metadata capri_gso_csum_phv_loc_t   capri_gso_csum;
-
 
 metadata l3_metadata_t l3_metadata;
 @pragma parser_end_offset parser_payload_offset

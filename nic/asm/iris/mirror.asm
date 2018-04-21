@@ -65,8 +65,9 @@ drop_mirror:
   K_DBG_WR(0xd0)
   DBG_WR(0xdc, 0xdc)
   phvwr       p.control_metadata_dst_lport, 0
-  phvwr.e     p.capri_intrinsic_drop, TRUE
   phvwr       p.capri_intrinsic_tm_span_session, 0
+  phvwr.e     p.capri_intrinsic_drop, TRUE
+  phvwr       p.control_metadata_egress_drop_reason[EGRESS_DROP_MIRROR], 1
 
 span_truncation:
   sub         r2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \

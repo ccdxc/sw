@@ -89,6 +89,8 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
 }
 
 action output_mapping_drop () {
+    modify_field(control_metadata.egress_drop_reason,
+                 EGRESS_DROP_OUTPUT_MAPPING);
     drop_packet();
 }
 

@@ -11,8 +11,9 @@ execute_rx_policer:
   seq         c1, d.execute_rx_policer_d.entry_valid, TRUE
   seq.c1      c1, d.execute_rx_policer_d.tbkt[39], TRUE
   nop.!c1.e
-  phvwr.c1.e  p.policer_metadata_rx_policer_color, POLICER_COLOR_RED
-  phvwr       p.capri_intrinsic_drop, TRUE
+  phvwr.c1    p.policer_metadata_rx_policer_color, POLICER_COLOR_RED
+  phvwr.e     p.capri_intrinsic_drop, TRUE
+  phvwr       p.control_metadata_egress_drop_reason[EGRESS_DROP_POLICER], 1
 
 /*****************************************************************************/
 /* error function                                                            */

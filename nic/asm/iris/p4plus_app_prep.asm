@@ -10,7 +10,7 @@ struct phv_              p;
 
 p4plus_app_prep:
   sne         c1, k.control_metadata_p4plus_app_id, P4PLUS_APPTYPE_CLASSIC_NIC
-  nop.c1.e
+  bcf         [c1], p4plus_app_non_classic
 
   seq         c1, k.inner_ipv4_valid, TRUE
   seq         c2, k.inner_ipv6_valid, TRUE
@@ -138,6 +138,12 @@ p4plus_app_classic_nic_ipv4:
 p4plus_app_classic_nic_ipv6:
   phvwr.e     p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV6
+
+p4plus_app_non_classic:
+  sne         c1, k.control_metadata_checksum_results, r0
+  phvwr.c1    p.capri_intrinsic_drop, TRUE
+  nop.e
+  phvwr.c1    p.control_metadata_egress_drop_reason[EGRESS_DROP_CHECKSUM_ERR], 1
 
 /*****************************************************************************/
 /* error function                                                            */
