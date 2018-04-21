@@ -228,6 +228,8 @@ class Packet(objects.FrameworkObject):
                 self.pktspec.paddingsize = pktspec.paddingsize
             if objects.IsCallback(self.pktspec.paddingsize):
                 self.pktspec.paddingsize = self.pktspec.paddingsize.call(tc, self)
+            if objects.IsReference(self.pktspec.paddingsize):
+                self.pktspec.paddingsize = self.pktspec.paddingsize.Get(tc)
             self.basepkt = basepkt
 
             # Special handling for ICRC inheritance.
@@ -240,6 +242,11 @@ class Packet(objects.FrameworkObject):
                 self.inherit_icrc = True
             self.icrc = pktspec.icrc
             return
+
+        if objects.IsReference(self.pktspec.paddingsize):
+            self.pktspec.paddingsize = self.pktspec.paddingsize.Get(tc)
+        if objects.IsCallback(self.pktspec.paddingsize):
+            self.pktspec.paddingsize = self.pktspec.paddingsize.call(tc, self)
 
         if pktspec.template == None:
             logger.error("No Template or Clone specified for packet.")

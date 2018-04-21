@@ -15,6 +15,7 @@ packets:
     - packet:
         id          : BASE_PKT  # Input packet 1
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        paddingsize : callback://normalization/callbacks/GetPaddingSize
         template    : callback://networking/packets/GetPacketTemplateByFlow
         #pendol      : True
         encaps      : 

@@ -676,7 +676,11 @@ def GetExpectedTcpUrgPtr(testcase, packet):
 def GetInputPaddingSize(testcase, packet):
     iterelem = testcase.module.iterator.Get()
     profile_name = iterelem.profile
-    if 'INVALID_LEN_ACTION_ALLOW' in profile_name:
+    if 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
+        return 2
+    elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
+        return 2
+    elif 'INVALID_LEN_ACTION_ALLOW' in profile_name:
         return 200
     elif 'INVALID_LEN_ACTION_DROP' in profile_name:
         return 200
@@ -693,6 +697,12 @@ def GetInputPaddingSize(testcase, packet):
         return 10
     elif 'TCP_NORMALIZE_MSS_WITH_WS_ONLY_OPTION' in profile_name:
         return 10
+    elif 'SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW' in profile_name:
+        return 2
+    elif 'SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_DROP' in profile_name:
+        return 2
+    elif 'SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_EDIT' in profile_name:
+        return 2
     return 0
 
 def GetExpectedPaddingSize(testcase, packet):
@@ -808,4 +818,9 @@ def GetExpectedCpuPacket(testcase, args):
         return testcase.packets.Get(pktid)
     return None
 
-
+def GetPaddingSize(tc, pkt):
+    iterelem = tc.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
+        return 2
+    return 0

@@ -4,39 +4,45 @@ steps:
         id          : IFLOW_BASE
         direction   : iflow
         payloadsize : 0
+        paddingsize : 0
         advance     : True
         permit      : True
         fields      :
-            flags   : None
+            flags       : None
 
     - step:
         id          : RFLOW_BASE
         direction   : rflow
         payloadsize : 0
+        paddingsize : 0
         advance     : True
         permit      : True
         fields      :
-            flags   : None
+            flags       : None
    
     - step:
         id          : IFLOW_SYN
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2 
         fields      :
-            flags   : syn
+            flags       : syn
 
     - step:
         id          : IFLOW_SYN_RETRANSMIT
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2
         advance     : False
         fields      :
-            flags   : syn
-            seq     : callback://firewall/alu/Sub/val=1
+            flags       : syn
+            seq         : callback://firewall/alu/Sub/val=1
+            paddingsize : 2 
 
     - step:
         id          : IFLOW_SYN_WS
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
-            flags   : syn
+            flags       : syn
+            paddingsize : 2 
             options :
                 scale       : ref://step/ifstate/scale
 
@@ -44,7 +50,8 @@ steps:
         id          : IFLOW_SYN_SACK_OK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
-            flags   : syn
+            flags       : syn
+            paddingsize : 2 
             options :
                 sackok       : 0
 
@@ -52,7 +59,8 @@ steps:
         id          : IFLOW_SYN_MSS
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
-            flags   : syn
+            flags       : syn
+            paddingsize : 2 
             options :
                 mss       : ref://step/ifstate/mss
 
@@ -60,7 +68,8 @@ steps:
         id          : IFLOW_SYN_WS_MSS
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
-            flags   : syn
+            flags       : syn
+            paddingsize : 2 
             options :
                 scale     : ref://step/ifstate/scale
                 mss       : ref://step/ifstate/mss
@@ -68,17 +77,19 @@ steps:
     - step:
         id          : IFLOW_SYN_TS
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2 
         fields      :
-            flags   : syn
+            flags       : syn
             options :
                 timestamp   : 0x12345678
 
     - step:
         id          : IFLOW_SYN_WS_MSS_TS_SACK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2 
         fields      :
-            flags   : syn
-            options :
+            flags       : syn
+            options     :
                 scale     : ref://step/ifstate/scale
                 mss       : ref://step/ifstate/mss
                 timestamp : 0x12345678
@@ -88,8 +99,9 @@ steps:
     - step:
         id          : IFLOW_SYN_WS_MSS_TS
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : syn
+            flags       : syn
             options :
                 scale     : ref://step/ifstate/scale
                 mss       : ref://step/ifstate/mss
@@ -99,8 +111,9 @@ steps:
     - step:
         id          : IFLOW_SYN_WS_MSS_TS_NOP
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : syn
+            flags       : syn
             options :
                 scale     : ref://step/ifstate/scale
                 mss       : ref://step/ifstate/mss
@@ -110,81 +123,91 @@ steps:
     - step:
         id          : IFLOW_SYN_DROP
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2
         permit      : False
         fields      :
-            flags   : syn
+            flags       : syn
 
     - step:
         id          : IFLOW_SYN_WIN_ZERO
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : syn
-            window  : 0
+            flags       : syn
+            window      : 0
 
     # Used for 5 way handshake. We need to decrement the seq
     # so that we send the original syn seq again.
     - step:
         id          : IFLOW_SYN_ACK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2
         advance     : False
         fields      :
-            flags   : syn,ack
-            seq     : callback://firewall/alu/Sub/val=1
+            flags       : syn,ack
+            seq         : callback://firewall/alu/Sub/val=1
 
     - step:
         id          : RFLOW_SYN_ACK
+        paddingsize : 2
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
-            flags   : syn,ack
+            flags       : syn,ack
 
     - step:
         id          : RFLOW_SYN_ACK_WS
+        paddingsize : 2
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
-            flags   : syn,ack
-            options :
+            flags       : syn,ack
+            options     :
                 scale       : ref://step/rfstate/scale
 
     - step:
         id          : RFLOW_SYN_ACK_SACK_OK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : syn,ack
+            flags       : syn,ack
             options :
                 sackok     : 0
 
     - step:
         id          : RFLOW_SYN_ACK_MSS
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : syn,ack
+            flags       : syn,ack
             options :
                 mss       : ref://step/rfstate/mss
 
     - step:
         id          : RFLOW_SYN_ACK_WS_MSS
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : syn,ack
-            options :
+            flags       : syn,ack
+            options     :
                 scale     : ref://step/rfstate/scale
                 mss       : ref://step/rfstate/mss
 
     - step:
         id          : RFLOW_SYN_ACK_TS
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : syn,ack
-            options :
+            flags       : syn,ack
+            options     :
                 timestamp       : 0x23456789
 
       # This packet will have 3 EOLs
     - step:
         id          : RFLOW_SYN_ACK_WS_MSS_TS
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : syn,ack
-            options :
+            flags       : syn,ack
+            options     :
                 scale     : ref://step/rfstate/scale
                 mss       : ref://step/rfstate/mss
                 timestamp : 0x23456789
@@ -192,9 +215,10 @@ steps:
     - step:
         id          : RFLOW_SYN_ACK_WS_MSS_TS_SACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : syn,ack
-            options :
+            flags       : syn,ack
+            options     :
                 scale     : ref://step/rfstate/scale
                 mss       : ref://step/rfstate/mss
                 timestamp : 0x23456789
@@ -203,28 +227,32 @@ steps:
     - step:
         id          : RFLOW_SYN_ACK_DROP
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         permit      : False
         fields      :
-            flags   : syn,ack
+            flags       : syn,ack
 
     - step:
         id          : IFLOW_ACK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : ack
+            flags       : ack
 
     - step:
         id          : RFLOW_ACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : ack
+            flags       : ack
 
     - step:
         id          : RFLOW_SYN_ONLY
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : syn
-            ack     : callback://firewall/alu/Mul/val=0
+            flags       : syn
+            ack         : callback://firewall/alu/Mul/val=0
 
     - step:
         id          : RFLOW_SYN_ONLY_WS_MSS_TS_SACK
@@ -241,6 +269,7 @@ steps:
     - step:
         id          : RFLOW_SYN_DROP
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         permit      : False
         fields      :
             flags   : syn
@@ -248,12 +277,13 @@ steps:
     - step:
         id          : RFLOW_INVALID_FIRST_PKT
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         permit      : False
         fields      :
-            flags   : 
+            flags       :
             # Making seq zero so that the seq number check passes as
             # the iflow ack number should be zero to start with.
-            seq     : 0
+            seq         : 0
 
     - step:
         id          : IFLOW_DATA
@@ -331,42 +361,48 @@ steps:
     - step:
         id          : IFLOW_FIN
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : fin,ack
+            flags       : fin,ack
 
     - step:
         id          : IFLOW_FIN_ACK_MINUS_1
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : fin,ack
-            ack     : callback://firewall/alu/Sub/val=1
+            flags       : fin,ack
+            ack         : callback://firewall/alu/Sub/val=1
 
     - step:
         id          : IFLOW_FIN_DROP
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        paddingsize : 2
         permit      : False
         fields      :
-            flags   : fin,ack
+            flags       : fin,ack
 
     - step:
         id          : RFLOW_FIN
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : fin,ack
+            flags       : fin,ack
 
     - step:
         id          : RFLOW_FIN_ACK_MINUS_1
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         fields      :
-            flags   : fin,ack
-            ack     : callback://firewall/alu/Sub/val=1
+            flags       : fin,ack
+            ack         : callback://firewall/alu/Sub/val=1
 
     - step:
         id          : RFLOW_FIN_DROP
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        paddingsize : 2
         permit      : False
         fields      :
-            flags   : fin,ack
+            flags       : fin,ack
 
     - step:
         id          : IFLOW_DATA_OVERLAP_LEFT
@@ -538,6 +574,7 @@ steps:
         id          : IFLOW_ZERO_DATA_LEFT_OF_WINDOW
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         advance     : False
         fields      :
             seq     : callback://firewall/alu/SubWithWindow/val=1
@@ -547,6 +584,7 @@ steps:
         id          : RFLOW_ZERO_DATA_LEFT_OF_WINDOW
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         advance     : False
         fields      :
             seq     : callback://firewall/alu/SubWithWindow/val=1
@@ -556,6 +594,7 @@ steps:
         id          : IFLOW_ZERO_DATA_ON_WINDOW
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         advance     : False
         permit      : False
         fields      :
@@ -566,6 +605,7 @@ steps:
         id          : RFLOW_ZERO_DATA_ON_WINDOW
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         advance     : False
         permit      : False
         fields      :
@@ -576,6 +616,7 @@ steps:
         id          : IFLOW_ZERO_DATA_RIGHT_OF_WINDOW
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         advance     : False
         permit      : False
         fields      :
@@ -586,6 +627,7 @@ steps:
         id          : RFLOW_ZERO_DATA_RIGHT_OF_WINDOW
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         advance     : False
         permit      : False
         fields      :
@@ -646,6 +688,7 @@ steps:
         id          : IFLOW_ZERO_DATA_RCV_NEXT_MINUS_1
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         fields      :
             flags   : ack
             seq     : callback://firewall/alu/Sub/val=1
@@ -654,6 +697,7 @@ steps:
         id          : RFLOW_ZERO_DATA_RCV_NEXT_MINUS_1
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         fields      :
             flags   : ack
             seq     : callback://firewall/alu/Sub/val=1
@@ -662,6 +706,7 @@ steps:
         id          : IFLOW_ZERO_DATA_RCV_NEXT_MINUS_2
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         permit      : False
         fields      :
             flags   : ack
@@ -671,6 +716,7 @@ steps:
         id          : RFLOW_ZERO_DATA_RCV_NEXT_MINUS_2
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         permit      : False
         fields      :
             flags   : ack
@@ -680,6 +726,7 @@ steps:
         id          : IFLOW_ZERO_DATA_RCV_NEXT_PLUS_1
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         permit      : False
         fields      :
             flags   : ack
@@ -689,6 +736,7 @@ steps:
         id          : RFLOW_ZERO_DATA_RCV_NEXT_PLUS_1
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         permit      : False
         fields      :
             flags   : ack
@@ -716,6 +764,7 @@ steps:
         id          : IFLOW_RST
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         fields      :
             flags   : rst
 
@@ -723,6 +772,7 @@ steps:
         id          : RFLOW_RST
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         fields      :
             flags   : rst
 
@@ -748,6 +798,7 @@ steps:
         id          : RFLOW_RST_FOR_SYN
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         fields      :
             flags   : rst
             seq     : 0
@@ -756,6 +807,7 @@ steps:
         id          : RFLOW_RST_FOR_SYN_INVALID_ACK_NUM
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
+        paddingsize : 2
         permit      : False
         fields      :
             flags   : rst

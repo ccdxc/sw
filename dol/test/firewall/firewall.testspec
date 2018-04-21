@@ -23,6 +23,7 @@ packets:
     - packet:
         id          : PKT     # IFLOW Packet Base
         payloadsize : ref://testcase/tracker/step/payloadsize
+        paddingsize : ref://testcase/tracker/step/paddingsize
         template    : callback://networking/packets/GetPacketTemplateBySessionIflow
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG

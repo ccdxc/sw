@@ -231,6 +231,7 @@ packets:
     - packet:
         id          : PKT  # IFlow Base Packet
         payloadsize : ref://testcase/tracker/step/payloadsize
+        paddingsize : ref://testcase/tracker/step/paddingsize
         template    : callback://alg/callbacks/GetPacketTemplateBySessionIflow
         headers     :
             eth:

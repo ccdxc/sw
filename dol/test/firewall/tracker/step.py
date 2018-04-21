@@ -121,6 +121,7 @@ class StepObject(objects.FrameworkTemplateObject):
         self.fields = objects.MergeObjects(self.fields, base.fields)
         self.state = getattr(self, 'state', None)
         self.payloadsize = getattr(self, 'payloadsize', base.payloadsize)
+        self.paddingsize = getattr(self, 'paddingsize', base.paddingsize)
         self.direction = getattr(self, 'direction', base.direction)
         self.advance = getattr(self, 'advance', base.advance)
         self.permit = getattr(self, 'permit', base.permit)
@@ -133,6 +134,7 @@ class StepObject(objects.FrameworkTemplateObject):
         obj.fields = copy.copy(self.fields)
         obj.state = copy.deepcopy(self.state)
         obj.payloadsize = self.payloadsize
+        obj.paddingsize = self.paddingsize
         obj.direction = self.direction
         obj.advance = self.advance
         obj.permit = self.permit
