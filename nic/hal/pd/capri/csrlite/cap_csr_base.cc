@@ -1,6 +1,11 @@
 #include "sdk/asic/capri/csrlite/cap_csr_base.hpp"
 #include "sdk/pal.hpp"
 
+namespace sdk {
+namespace lib {
+namespace csrlite {
+using namespace std;
+
 cap_sw_csr_base::cap_sw_csr_base()=default;
 cap_sw_csr_base::~cap_sw_csr_base()=default;
 
@@ -222,3 +227,6 @@ uint32_t cap_sw_block_base::get_byte_size() const {
     return block__byte_size;
 }
 
+}
+}
+}

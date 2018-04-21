@@ -1,5 +1,5 @@
-#ifndef CAP_TOP_CSR_H
-#define CAP_TOP_CSR_H
+#ifndef CAP_TOP_CSR_LITE_H
+#define CAP_TOP_CSR_LITE_H
 
 #include "sdk/asic/capri/csrlite/cap_bx_csr_helper.hpp"
 #include "sdk/asic/capri/csrlite/cap_ap_helper.hpp"
@@ -60,6 +60,11 @@
 #include "sdk/asic/capri/csrlite/cap_te_csr_helper.hpp"
 #include "sdk/asic/capri/csrlite/cap_txs_csr_helper.hpp"
 #include "sdk/asic/capri/csrlite/cap_wa_csr_helper.hpp"
+
+namespace sdk {
+namespace lib {
+namespace csrlite {
+using namespace std;
 
 #define cap_emmc_csr_t          emmc_SDHOST_Memory_Map_t
 #define cap_emmc_csr_helper_t   emmc_SDHOST_Memory_Map_helper_t
@@ -445,4 +450,7 @@ public:
 
 extern class cap_top_csr_helper_t cap_top_csr_helper; 
 
-#endif // CAP_TOP_CSR_H
+}
+}
+}
+#endif // CAP_TOP_CSR_LITE_H

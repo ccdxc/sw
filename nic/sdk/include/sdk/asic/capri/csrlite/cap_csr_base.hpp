@@ -1,7 +1,13 @@
-#ifndef CAP_CSR_BASE_H
-#define CAP_CSR_BASE_H
+#ifndef CAP_CSR_BASE_LITE_H
+#define CAP_CSR_BASE_LITE_H
 
 #include <stdint.h>
+#include <iostream>
+
+namespace sdk {
+namespace lib {
+namespace csrlite {
+using namespace std;
 
 class cap_sw_csr_base {
     public:
@@ -91,4 +97,7 @@ class cap_sw_block_base : public cap_sw_csr_base {
         uint32_t  get_byte_size() const override;
 };
 
-#endif // CAP_CSR_BASE_H
+}
+}
+}
+#endif // CAP_CSR_BASE_LITE_H

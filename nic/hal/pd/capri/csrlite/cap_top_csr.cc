@@ -1,7 +1,12 @@
 #include "sdk/asic/capri/csrlite/cap_top_csr.hpp"
 #include "sdk/asic/capri/csrlite/cap_top_csr_defines.h"
 
-class cap_top_csr_helper_t cap_top_csr_helper; 
+namespace sdk {
+namespace lib {
+namespace csrlite {
+using namespace std;
+
+class cap_top_csr_helper_t cap_top_csr_helper;
 
 void cap_top_csr_helper_t::init() {
 
@@ -124,3 +129,6 @@ void cap_top_csr_helper_t::init() {
 //TODO    ms.mss.init(CAP_ADDR_BASE_MS_MSS_OFFSET);
 }
 
+}
+}
+}

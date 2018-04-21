@@ -90,6 +90,7 @@ class ${classname} : public cap_sw_${base}_base {
     public:
         ${classname}();
         virtual ~${classname}();
+        friend std::ostream& operator<<(std::ostream& os, const ${classname}& s);
 
         void init(uint32_t chip_id, uint32_t _addr_base) override;
         void pack(uint8_t *bytes, uint32_t start=0) override;
@@ -276,6 +277,30 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
     c_ccfile_pack_array_tail = Template("""
 }""")
 
+    c_ccfile_show_declare = Template("""
+std::ostream& operator<<(std::ostream& os, const ${classname}& s)
+{""")
+    c_ccfile_show_declare_end = Template("""
+    return os;
+}
+""")
+
+    c_ccfile_show_decoder_array_impl = Template("""
+    for(int ii = 0; ii < ${field_array}; ii++) {
+        os << s.${field_name}[ii];
+    }""")
+
+    c_ccfile_show_decoder_impl = Template("""
+    os << s.${field_name};""")
+
+    c_ccfile_show_array_impl = Template("""
+        for(int ii = 0; ii < ${field_array}; ii++) {
+            os << fmt::format("{{${field_name}={}}}", s.${field_name});
+        }""")
+
+    c_ccfile_show_impl = Template("""
+    os << fmt::format("{{${field_name}={}}}", s.${field_name});""")
+
     def set_tot_size(self, indent_level=0):
 
         if self.total_size != 0:
@@ -349,6 +374,11 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
                        init_str, set_field_str, get_field_str, indent_level=0, p_classname=""):
         if self.size != 0:
             if self.array > 1:
+                show_str = '{0}{1}'.format(show_str, self.c_ccfile_show_array_impl.substitute(field_typename="cpp_int",
+                                                                                              field_name='{0}'.format(
+                                                                                                  self.name),
+                                                                                              field_array=self.array,
+                                                                                              field_size=self.size))
                 width_str = '{0}{1}'.format(width_str,
                                             self.c_ccfile_width_array_impl.substitute(field_typename="cpp_int",
                                                                                       field_name='{0}'.format(
@@ -478,6 +508,10 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
 
                     if wide > 0:
                         name = '{0}[{1}]'.format(self.name, str(index))
+
+                    show_str = '{0}{1}'.format(show_str, self.c_ccfile_show_impl.substitute(field_name='{0}'.format(name),
+                                                                                            field_array='',
+                                                                                            field_size=self.size))
                     set_field_str = '{0}{1}'.format(set_field_str,
                                                     self.c_ccfile_pack_body.substitute(field_name='{0}'.format(name),
                                                                                        field_start=start,
@@ -534,9 +568,10 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
                     head_str = '{0}{1}'.format(head_str, self.c_ccfile_class_declare.substitute(
                         classname='{0}_t'.format(self.name), field_size=self.size, base=self.subtype))
 
-                width_str = '{0}{1}'.format(width_str,
-                                            self.c_ccfile_width_declare.substitute(classname='{0}_t'.format(self.name),
-                                                                                   field_size=self.size))
+                show_str = '{0}{1}'.format(show_str, self.c_ccfile_show_declare.substitute(
+                    classname='{0}_t'.format(self.name), field_size=self.size))
+                width_str = '{0}{1}'.format(width_str, self.c_ccfile_width_declare.substitute(
+                    classname='{0}_t'.format(self.name), field_size=self.size))
                 s_width_str = '{0}{1}'.format(s_width_str, self.c_ccfile_s_width_declare.substitute(
                     classname='{0}_t'.format(self.name), field_size=self.size))
                 set_all_str = '{0}{1}'.format(set_all_str, self.c_ccfile_unpack_declare.substitute(
@@ -556,22 +591,28 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
                 bit_offset = bit_offset + field.size
                 if field.decoder != "":
                     if field.array > 1:
+                        show_str = '{0}{1}'.format(show_str, self.c_ccfile_show_decoder_array_impl.substitute(
+                            field_typename=field.decoder, field_name='{0}'.format(field.name), field_array=field.array,
+                            field_size=field.size))
                         width_str = '{0}{1}'.format(width_str, self.c_ccfile_width_decoder_array_impl.substitute(
                             field_typename=field.decoder, field_name='{0}'.format(field.name), field_array=field.array),
-                                                    field_size=field.size)
+                            field_size=field.size)
                         s_width_str = '{0}{1}'.format(s_width_str, self.c_ccfile_s_width_decoder_array_impl.substitute(
                             field_typename=field.decoder, field_name='{0}'.format(field.name), field_array=field.array),
-                                                      field_size=field.size)
+                            field_size=field.size)
                         set_all_str = '{0}{1}'.format(set_all_str, self.c_ccfile_unpack_decoder_array_impl.substitute(
                             field_typename=field.decoder, field_name='{0}'.format(field.name), field_array=field.array),
-                                                      field_size=field.size)
+                            field_size=field.size)
                         get_all_str = '{0}{1}'.format(get_all_str, self.c_ccfile_pack_decoder_array_impl.substitute(
                             field_typename=field.decoder, field_name='{0}'.format(field.name), field_array=field.array),
-                                                      field_size=field.size)
+                            field_size=field.size)
                         init_str = '{0}{1}'.format(init_str, self.c_ccfile_init_decoder_array_impl.substitute(
                             field_typename=field.decoder, field_name='{0}'.format(field.name), field_array=field.array,
                             field_offset=format(field.offset, 'x')), field_size=field.size)
                     else:
+                        show_str = '{0}{1}'.format(show_str, self.c_ccfile_show_decoder_impl.substitute(
+                            field_typename=field.decoder, field_name='{0}'.format(field.name), field_array='',
+                            field_size=field.size))
                         width_str = '{0}{1}'.format(width_str, self.c_ccfile_width_decoder_impl.substitute(
                             field_typename=field.decoder, field_name='{0}'.format(field.name), field_array='',
                             field_size=field.size))
@@ -595,6 +636,8 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
                         field.instance_done = 1
 
             if self.name != 'root':
+                show_str = '{0}{1}'.format(show_str, self.c_ccfile_show_declare_end.substitute(
+                    classname='{0}_t'.format(self.name), field_size=self.size))
                 width_str = '{0}{1}'.format(width_str, self.c_ccfile_width_declare_end.substitute(
                     classname='{0}_t'.format(self.name), field_size=self.size))
                 s_width_str = '{0}{1}'.format(s_width_str, self.c_ccfile_s_width_declare_end.substitute(
@@ -609,6 +652,7 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
                 init_str = '{0}{1}'.format(init_str, self.c_ccfile_init_declare_end.substitute(
                     classname='{0}_t'.format(self.name), field_size=self.size))
         return cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str, init_str, set_field_str, get_field_str
+
     def gen_helper_h_file(self, l_cur_str, indent_level=0):
 
         if len(self.fields) > 0:
@@ -660,8 +704,8 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
 
     def gen_c_header(self, include_map):
         cur_str = """
-#ifndef {0}_HPP
-#define {0}_HPP
+#ifndef {0}_LITE_HPP
+#define {0}_LITE_HPP
 
 #include "sdk/asic/capri/csrlite/cap_csr_base.hpp"
 """.format(block_name.upper())
@@ -669,17 +713,28 @@ void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
             cur_str = cur_str + """#include "sdk/asic/capri/csrlite/{0}.hpp"
 """.format(i)
         cur_str = cur_str + """
+namespace sdk {{
+namespace lib {{
+namespace csrlite {{
 using namespace std;""".format(block_name.upper())
+
         cur_str = self.gen_h_file(cur_str, 0)
         cur_str = cur_str + """
-#endif // {0}_HPP
+}}
+}}
+}}
+#endif // {0}_LITE_HPP
         """.format(block_name.upper())
         return cur_str
+
     def gen_c_source(self):
         cur_str = """
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 #include "sdk/asic/capri/csrlite/{0}.hpp"
 
+namespace sdk {{
+namespace lib {{
+namespace csrlite {{
 using namespace std;
         """.format(block_name)
 
@@ -698,11 +753,17 @@ using namespace std;
             cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str, init_str,
             set_field_str, get_field_str, 0, "")
 
-        return cur_str + head_str + tail_str + show_str + width_str + s_width_str + set_all_str + get_all_str + init_str + get_field_str + set_field_str
+        return cur_str + head_str + tail_str + show_str + width_str + s_width_str + set_all_str + get_all_str + init_str + get_field_str + set_field_str + \
+"""
+}
+}
+}
+"""
+
     def gen_c_helper_header(self, include_map):
         cur_str = """
-#ifndef {0}_HELPER_HPP
-#define {0}_HELPER_HPP
+#ifndef {0}_LITE_HELPER_HPP
+#define {0}_LITE_HELPER_HPP
 
 #include "sdk/asic/capri/csrlite/{1}.hpp"
 """.format(block_name.upper(), block_name)
@@ -710,11 +771,17 @@ using namespace std;
             cur_str = cur_str + """#include "sdk/asic/capri/csrlite/{0}_helper.hpp" 
 """.format(i)
         cur_str = cur_str + """
+namespace sdk {{
+namespace lib {{
+namespace csrlite {{
 using namespace std;
 """.format(block_name.upper())
         cur_str = self.gen_helper_h_file(cur_str, 0)
         cur_str = cur_str + """
-#endif // {0}_HELPER_HPP
+}}
+}}
+}}
+#endif // {0}_LITE_HELPER_HPP
 """.format(block_name.upper())
         return cur_str
     def gen_c_helper_source(self):
@@ -722,10 +789,18 @@ using namespace std;
 #include "sdk/asic/capri/csrlite/{0}_helper.hpp"
 """.format(block_name)
         cur_str = cur_str + """
+namespace sdk {
+namespace lib {
+namespace csrlite {
 using namespace std;
 """
         cur_str = self.gen_helper_c_file(cur_str, 0)
-        return cur_str
+        return cur_str + \
+"""
+}
+}
+}
+"""
 
 def filter_unused(include_map, cur_map, init_map, target, target_block, depth=0, field_or_decoder=1):
     # print "checking ", target
