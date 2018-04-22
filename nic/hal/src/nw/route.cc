@@ -76,7 +76,7 @@ route_add_to_db (route_t *route, hal_handle_t handle)
         return HAL_RET_OOM;
     }
 
-    // add mapping from vrf id to its handle
+    // add mapping from route key to its handle
     entry->handle_id = handle;
     sdk_ret = g_hal_state->route_ht()->insert_with_key(&route->key,
                                                        entry,

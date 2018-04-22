@@ -21,7 +21,7 @@ using namespace acl;
 typedef struct route_tuple_s {
     uint32_t vrf_id;
     uint32_t ip_pfx;
-} route_tuple_t;
+} __PACK__ route_tuple_t;
 
 // route tuple for route "ACL"
 typedef enum route_tuple_field_e {

@@ -89,8 +89,6 @@ route_init (route_t *route)
     }
     HAL_SPINLOCK_INIT(&route->slock, PTHREAD_PROCESS_SHARED);
 
-    memset(&route->key, 0, sizeof(route_key_t));
-
     route->hal_handle = HAL_HANDLE_INVALID;
     route->nh_handle  = HAL_HANDLE_INVALID;
 

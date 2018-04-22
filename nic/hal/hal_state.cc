@@ -1152,6 +1152,8 @@ hal_oper_db::~hal_oper_db()
     nwsec_policy_ht_ ? ht::destroy(nwsec_policy_ht_) : HAL_NOP;
     nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
     nat_pool_id_ht_ ? ht::destroy(nat_pool_id_ht_) : HAL_NOP;
+    nexthop_id_ht_ ? ht::destroy(nexthop_id_ht_) : HAL_NOP;
+    route_ht_ ? ht::destroy(route_ht_) : HAL_NOP;
     gft_exact_match_profile_id_ht_ ? ht::destroy(gft_exact_match_profile_id_ht_, mmgr_) : HAL_NOP;
     gft_hdr_transposition_profile_id_ht_ ? ht::destroy(gft_hdr_transposition_profile_id_ht_, mmgr_) : HAL_NOP;
     gft_exact_match_flow_entry_id_ht_ ? ht::destroy(gft_exact_match_flow_entry_id_ht_, mmgr_) : HAL_NOP;
