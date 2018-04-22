@@ -16,6 +16,7 @@
 #include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/src/firewall/nwsec.hpp"
+#include "nic/hal/src/dos/dos.hpp"
 #include "nic/hal/src/internal/event.hpp"
 #include "nic/hal/src/internal/tls_proxy_cb.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"

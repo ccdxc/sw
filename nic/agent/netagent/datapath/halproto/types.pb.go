@@ -13,6 +13,7 @@
 		crypto_keys.proto
 		debug.proto
 		descriptor_aol.proto
+		dos.proto
 		endpoint.proto
 		eplearn.proto
 		event.proto
@@ -192,6 +193,28 @@
 		DescrAolRequestMsg
 		DescrAolSpec
 		DescrAolResponseMsg
+		ICMPMsg
+		DoSService
+		DoSSessionLimits
+		DoSPolicer
+		DoSFloodLimits
+		DoSProtectionSpec
+		IngressDoSPolicy
+		EgressDoSPolicy
+		DoSPolicySpec
+		DoSPolicyRequestMsg
+		DoSPolicyStatus
+		DoSPolicyResponse
+		DoSPolicyResponseMsg
+		DoSPolicyDeleteRequest
+		DoSPolicyDeleteRequestMsg
+		DoSPolicyDeleteResponse
+		DoSPolicyDeleteResponseMsg
+		DoSPolicyGetRequest
+		DoSPolicyGetRequestMsg
+		DoSPolicyStats
+		DoSPolicyGetResponse
+		DoSPolicyGetResponseMsg
 		EndpointAttributes
 		EndpointSpec
 		EndpointRequestMsg
@@ -594,28 +617,6 @@
 		SecurityGroupStats
 		SecurityGroupGetResponse
 		SecurityGroupGetResponseMsg
-		ICMPMsg
-		DoSService
-		DoSSessionLimits
-		DoSPolicer
-		DoSFloodLimits
-		DoSProtectionSpec
-		IngressDoSPolicy
-		EgressDoSPolicy
-		DoSPolicySpec
-		DoSPolicyRequestMsg
-		DoSPolicyStatus
-		DoSPolicyResponse
-		DoSPolicyResponseMsg
-		DoSPolicyDeleteRequest
-		DoSPolicyDeleteRequestMsg
-		DoSPolicyDeleteResponse
-		DoSPolicyDeleteResponseMsg
-		DoSPolicyGetRequest
-		DoSPolicyGetRequestMsg
-		DoSPolicyStats
-		DoSPolicyGetResponse
-		DoSPolicyGetResponseMsg
 		App
 		ApplicationSpec
 		ApplicationStatus

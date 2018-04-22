@@ -6,6 +6,7 @@
 #include "nic/hal/src/aclqos/acl.hpp"
 #include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/hal/src/nat/nat.hpp"
+#include "nic/hal/src/dos/dos.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"
 #include "nic/hal/src/telemetry/telemetry.hpp"
 #include "nic/hal/src/stats/stats.hpp"

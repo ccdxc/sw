@@ -5,7 +5,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
-#include "nic/hal/src/firewall/nwsec.hpp"
+#include "nic/hal/src/dos/dos.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/firewall/nwsec_group.hpp"
 
@@ -101,7 +101,7 @@ dos_policy_handle_update (DoSPolicySpec& spec, dos_policy_t *dosp,
 // initialize dos policy object from the config spec
 static inline void
 dos_policy_props_init_from_spec (dos_policy_prop_t *dosp,
-                                 const nwsec::DoSProtectionSpec& spec)
+                                 const dos::DoSProtectionSpec& spec)
 {
     nwsec_group_t *nwsec_group = NULL;
 
@@ -190,7 +190,7 @@ dos_policy_props_init_from_spec (dos_policy_prop_t *dosp,
 
 static inline void
 dos_policy_init_from_spec (dos_policy_t *dosp,
-                           nwsec::DoSPolicySpec& spec)
+                           dos::DoSPolicySpec& spec)
 {
     int                         num_sgs, sg_id;
     dos_policy_sg_list_entry_t  *entry = NULL;
@@ -386,8 +386,8 @@ dos_policy_prepare_rsp (DoSPolicyResponse *rsp, hal_ret_t ret,
 
 // create an instance of dos policy
 hal_ret_t
-dospolicy_create (nwsec::DoSPolicySpec& spec,
-                  nwsec::DoSPolicyResponse *rsp)
+dospolicy_create (dos::DoSPolicySpec& spec,
+                  dos::DoSPolicyResponse *rsp)
 {
     hal_ret_t                   ret;
     dos_policy_t                *dosp = NULL;
@@ -658,8 +658,8 @@ dos_policy_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctx)
 
 // update a dos policy instance
 hal_ret_t
-dospolicy_update (nwsec::DoSPolicySpec& spec,
-                  nwsec::DoSPolicyResponse *rsp)
+dospolicy_update (dos::DoSPolicySpec& spec,
+                  dos::DoSPolicyResponse *rsp)
 {
     hal_ret_t                   ret;
     dos_policy_t                *dosp = NULL;
@@ -930,12 +930,12 @@ end:
 }
 
 hal_ret_t
-dospolicy_get (nwsec::DoSPolicyGetRequest& req,
-               nwsec::DoSPolicyGetResponseMsg *resp)
+dospolicy_get (dos::DoSPolicyGetRequest& req,
+               dos::DoSPolicyGetResponseMsg *resp)
 {
     hal_ret_t       ret = HAL_RET_OK;
     dos_policy_t    *dosp;
-    nwsec::DoSPolicyGetResponse *rsp = resp->add_response();
+    dos::DoSPolicyGetResponse *rsp = resp->add_response();
 
     if (req.dos_handle() == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("{}:dosp update validation failed, ret : {}",

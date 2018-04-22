@@ -1,4 +1,6 @@
 //------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
 // protobuf specification for network security objects
 //------------------------------------------------------------------------------
 
@@ -25,11 +27,6 @@ service NwSecurity {
   rpc SecurityGroupUpdate (SecurityGroupRequestMsg) returns (SecurityGroupResponseMsg) {}
   rpc SecurityGroupDelete (SecurityGroupDeleteRequestMsg) returns (SecurityGroupDeleteResponseMsg) {}
   rpc SecurityGroupGet (SecurityGroupGetRequestMsg) returns (SecurityGroupGetResponseMsg) {}
-
-  rpc DoSPolicyCreate (DoSPolicyRequestMsg) returns (DoSPolicyResponseMsg) {}
-  rpc DoSPolicyUpdate (DoSPolicyRequestMsg) returns (DoSPolicyResponseMsg) {}
-  rpc DoSPolicyDelete (DoSPolicyDeleteRequestMsg) returns (DoSPolicyDeleteResponseMsg) {}
-  rpc DoSPolicyGet (DoSPolicyGetRequestMsg) returns (DoSPolicyGetResponseMsg) {}
 
   rpc SecurityPolicyCreate (SecurityPolicyRequestMsg) returns (SecurityPolicyResponseMsg) {}
   rpc SecurityPolicyUpdate (SecurityPolicyRequestMsg) returns (SecurityPolicyResponseMsg) {}
@@ -499,162 +496,6 @@ message SecurityGroupGetResponseMsg {
   repeated SecurityGroupGetResponse    response   = 1;    // batched get response
   types.ApiStatus                      api_status = 2;    // batch status
 }
-
-message ICMPMsg {
-  types.ICMPMsgType     type = 1;  // ICMP Type
-  uint32                code = 2;  // ICMP code
-}
-
-message DoSService {
-  types.IPProtocol           ip_protocol   = 1;    // IP protocol
-  oneof l4_info {
-    uint32                   dst_port      = 2;    // TCP or UDP port, 0 for other protocols
-    ICMPMsg                  icmp_msg      = 3;
-  }
-}
-
-// DoSSessionLimits captures the session limits to be enforced on a security
-// group
-message DoSSessionLimits {
-  uint32    max_sessions       = 1;    // max. no of sessions
-  uint32    blocking_timeout   = 2;    // cool off period once session count
-                                      // comes below the above limit
-}
-
-// DoSPolicer is aggregate DoS policer object
-message DoSPolicer {
-  uint32    bytes_per_second = 1;    // max. bytes per second
-  uint32    peak_rate        = 2;    // in bytes-per-second
-  uint32    burst_size       = 3;    // in bytes
-}
-
-// DoSFloodLimits object captures the flood limits configuration
-message DoSFloodLimits {
-  // default and only action in restrict phase is Random Early Drop (RED)
-  message RestrictLimits {
-    uint32    pps               = 1;    // packet-per-second limit
-    uint32    burst_pps         = 2;    // packets-per-second burst
-    uint32    duration          = 3;    // restrict action duration in seconds
-  }
-  // default and only action in protection phase is drop
-  message ProtectLimits {
-    uint32    pps               = 1;    // packet-per-second limit
-    uint32    burst_pps         = 2;    // packets-per-second burst
-    uint32    duration          = 3;    // protect action duration in seconds
-  }
-  RestrictLimits    restrict_limits = 1;
-  ProtectLimits     protect_limits  = 2;
-}
-
-// DoSProtectionSpec defines DoS protection policy for a security group
-message DoSProtectionSpec {
-  DoSService          svc                  = 1;    // (optional) application
-                                                   // service for which rest of
-                                                   // the DoS config to be
-                                                   // applied on
-  uint32              session_setup_rate   = 2;    // 0 inidicates no limits
-  DoSSessionLimits    session_limits       = 3;    // session limits config
-  DoSPolicer          policer              = 4;    // DoS policer configuration
-  DoSFloodLimits      tcp_syn_flood_limits = 5;    // TCP SYN flood limits
-  DoSFloodLimits      udp_flood_limits     = 6;    // UDP flood limits
-  DoSFloodLimits      icmp_flood_limits    = 7;    // ICMP flood limits
-  DoSFloodLimits      other_flood_limits   = 8;    // flood limits for all other
-                                                   // traffic (IP and non-IP)
-  uint64              peer_sg_handle       = 9;    // TO security group handle
-}
-
-// ingress policy for DoS
-message IngressDoSPolicy {
-  DoSProtectionSpec dos_protection = 1;   //ingress (D)DoS protection policy
-}
-
-// egress policy for DoS
-message EgressDoSPolicy {
-  DoSProtectionSpec dos_protection = 1;  //egress (D)DoS Protection policy
-}
-
-// DoSPolicySpec that has the ingressDosPolicy and EgressDoSPolicy,
-// Spec is identified by the handle. HAL will assign a unique handle for each
-// DoSPolicy object and the clients are expected to pass the handle for
-// Get/Modify/Delete calls. Note that there is no identifier for this object
-message DoSPolicySpec {
-  types.ObjectMeta           meta              = 1;    // object meta
-  IngressDoSPolicy           ingress_policy    = 2;    // ingress policy
-  EgressDoSPolicy            egress_policy     = 3;    // egress policy
-  fixed64                    dos_handle        = 4;    // dos policy handle
-  repeated uint64            sg_handle         = 5;    // list of security group handles
-}
-
-// DoSPolicyRequestMsg is batched add or modify DoS request
-message DoSPolicyRequestMsg {
-  repeated DoSPolicySpec    request = 1;    // batched request
-}
-
-// DoS operational status
-message DoSPolicyStatus {
-  fixed64    dos_handle = 1;    // id of the dos returned by HAL
-}
-
-// DoSResponse is the response to DoSPolicySpec
-message DoSPolicyResponse {
-  types.ApiStatus       api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  DoSPolicyStatus       status      = 2;    // operational status
-}
-
-// DoSPolicyResponseMsg is batched response to DoSPolicyRequestMsg
-message DoSPolicyResponseMsg {
-  repeated DoSPolicyResponse    response = 1;    // batched response
-}
-
-// DoSRequest is used to delete a DoS
-message DoSPolicyDeleteRequest {
-  types.ObjectMeta  meta           = 1;    // object meta
-  fixed64           dos_handle     = 2;    // object handle
-}
-
-// DoSPolicyDeleteRequestMsg is used to delete a batch of security groups
-message DoSPolicyDeleteRequestMsg {
-  repeated DoSPolicyDeleteRequest    request = 1;
-}
-
-message DoSPolicyDeleteResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-}
-
-// DoSPolicyDeleteResponseMsg is batched response to
-// DoSPolicyDeleteRequestMsg
-message DoSPolicyDeleteResponseMsg {
-  repeated DoSPolicyDeleteResponse response = 1;
-}
-
-// DoSGetRequest is used to get information about a DoS
-message DoSPolicyGetRequest {
-  types.ObjectMeta  meta           = 1;    // object meta
-  fixed64           dos_handle     = 2;    // object handle
-}
-
-// DoSPolicyGetRequestMsg is batched GET request for DoS
-message DoSPolicyGetRequestMsg {
-  repeated DoSPolicyGetRequest    request = 1;    // batched get request
-}
-
-// DoSPolicyStats is the statistics object for a security group
-message DoSPolicyStats {
-}
-
-// DoSGetResponse captures all the information about a security group
-message DoSPolicyGetResponse {
-  types.ApiStatus         api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  DoSPolicySpec           spec       = 2;    // configuration of DoS
-  DoSPolicyStatus         status     = 3;    // operational state of DoS
-  DoSPolicyStats          stats      = 4;    // debug status of DoS
-}
-
-// DoSPolicyGetResponseMsg is batched response to DoSPolicyGetRequestMsg
-message DoSPolicyGetResponseMsg {
-  repeated DoSPolicyGetResponse    response = 1;    // batched get response
-}
-
 
 // predefined apps - default apps for which ALG functionality is invoked
 enum PredefinedApps {

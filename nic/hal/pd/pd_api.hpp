@@ -3,7 +3,7 @@
 
 #include "nic/hal/src/nw/vrf.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
-#include "nic/hal/src/firewall/nwsec.hpp"
+#include "nic/hal/src/dos/dos.hpp"
 #include "nic/include/nwsec_group_api.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/nw/nw.hpp"

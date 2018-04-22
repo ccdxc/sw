@@ -42,6 +42,7 @@ import multicast_pb2        as multicast_pb2
 import barco_rings_pb2      as barco_rings_pb2
 import system_pb2           as system_pb2
 import gft_pb2              as gft_pb2
+import dos_pb2              as dos_pb2
 
 HAL_MAX_BATCH_SIZE = 64
 
@@ -481,10 +482,10 @@ def ConfigureSecurityGroups(objlist, update = False):
 
 def ConfigureDosPolicies(objlist, update = False):
     if not IsConfigAllowed(objlist): return
-    stub = nwsec_pb2.NwSecurityStub(HalChannel)
+    stub = dos_pb2.DosStub(HalChannel)
     api = stub.DoSPolicyCreate
     if update: api = stub.DoSPolicyUpdate
-    __config(objlist, nwsec_pb2.DoSPolicyRequestMsg, api)
+    __config(objlist, dos_pb2.DoSPolicyRequestMsg, api)
     return
 
 def GetSecurityGroups(objlist):
