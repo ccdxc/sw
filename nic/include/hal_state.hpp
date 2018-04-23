@@ -225,7 +225,8 @@ public:
     ht *gft_exact_match_profile_id_ht(void) const { return gft_exact_match_profile_id_ht_; }
     ht *gft_hdr_transposition_profile_id_ht(void) const { return gft_hdr_transposition_profile_id_ht_; }
     ht *gft_exact_match_flow_entry_id_ht(void) const { return gft_exact_match_flow_entry_id_ht_; }
-    ht *nat_pool_id_ht(void) const { return nat_pool_id_ht_; }
+    ht *nat_pool_ht(void) const { return nat_pool_ht_; }
+    ht *nat_addr_map_ht(void) const { return nat_addr_map_ht_; }
     ht *nexthop_id_ht(void) const { return nexthop_id_ht_; }
     ht *route_ht(void) const { return route_ht_; }
     const acl_ctx_t *route_acl(void) const { return route_acl_; }
@@ -284,7 +285,8 @@ private:
     ht    *gft_hdr_transposition_profile_id_ht_;
     ht    *gft_exact_match_flow_entry_id_ht_;
     ht    *crypto_cert_store_id_ht_;
-    ht    *nat_pool_id_ht_;
+    ht    *nat_pool_ht_;
+    ht    *nat_addr_map_ht_;
     ht    *nexthop_id_ht_;
     ht    *route_ht_;
     bitmap                  *qos_cmap_pcp_bmp_;
@@ -490,7 +492,8 @@ public:
     slab *nat_pool_slab(void) const { return cfg_db_->nat_pool_slab(); }
     slab *v4_range_list_entry_slab(void) const { return cfg_db_->v4_range_list_entry_slab(); }
     slab *v6_range_list_entry_slab(void) const { return cfg_db_->v6_range_list_entry_slab(); }
-    ht *nat_pool_id_ht(void) const { return oper_db_->nat_pool_id_ht(); }
+    ht *nat_pool_ht(void) const { return oper_db_->nat_pool_ht(); }
+    ht *nat_addr_map_ht(void) const { return oper_db_->nat_addr_map_ht(); }
 
     // get APIs for nexthop related state
     slab *nexthop_slab(void) const { return cfg_db_->nexthop_slab(); }

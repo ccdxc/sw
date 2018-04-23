@@ -25,9 +25,9 @@ service Nat {
   rpc NatPolicyDelete (NatPolicyDeleteRequestMsg) returns (NatPolicyDeleteResponseMsg) {}
   rpc NatPolicyGet (NatPolicyGetRequestMsg) returns (NatPolicyGetResponseMsg) {}
 
-  // NAT-VPN mappings related APIs
-  rpc NatVpnMappingCreate (NatVpnMappingRequestMsg) returns (NatVpnMappingResponseMsg) {}
-  rpc NatVpnMappingGet (NatVpnMappingGetRequestMsg) returns (NatVpnMappingGetResponseMsg) {}
+  // NAT mappings related APIs
+  rpc NatMappingCreate (NatMappingRequestMsg) returns (NatMappingResponseMsg) {}
+  rpc NatMappingGet (NatMappingGetRequestMsg) returns (NatMappingGetResponseMsg) {}
 }
 
 // types of NAT actions supported
@@ -222,47 +222,47 @@ message NatPolicyGetResponseMsg {
   repeated NatPolicyGetResponse    response = 1;
 }
 
-// NatVpnMappingSpec is the user intent for the NAT-VPN mapping
-message NatVpnMappingSpec {
-  types.ObjectMeta             meta            = 1;    // common object meta
-  kh.NatVpnMappingKeyHandle    key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
+// NatMappingSpec is the user intent for the NAT mapping
+message NatMappingSpec {
+  types.ObjectMeta          meta            = 1;    // common object meta
+  kh.NatMappingKeyHandle    key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
 }
 
-// NatVpnMappingRequestMsg is the batched add or modify of NAT VPN mapping request
-message NatVpnMappingRequestMsg {
-  repeated NatVpnMappingSpec    request = 1;    // batched request
+// NatMappingRequestMsg is the batched add or modify of NAT mapping request
+message NatMappingRequestMsg {
+  repeated NatMappingSpec    request = 1;    // batched request
 }
 
-// NatVpnMappingStatus reflects the current operational status of a NAT VPN mapping
-message NatVpnMappingStatus  {
-  fixed64    handle      = 1;    // id of the NAT VPN mapping returned by HAL
-  kh.Svc     svc_mapping = 2;    // NAT VPN mapping allocated for the service
+// NatMappingStatus reflects the current operational status of a NAT mapping
+message NatMappingStatus  {
+  fixed64    handle      = 1;    // id of the NAT mapping returned by HAL
+  kh.Svc     svc_mapping = 2;    // NAT mapping allocated for the service
 }
 
-// NatVpnMappingResponse is the response to NatVpnMappingSpec
-message NatVpnMappingResponse {
-  types.ApiStatus        api_status = 1 [(gogoproto.jsontag) = "api_status"];  // API status code
-  NatVpnMappingStatus    status     = 2;
+// NatMappingResponse is the response to NatMappingSpec
+message NatMappingResponse {
+  types.ApiStatus     api_status = 1 [(gogoproto.jsontag) = "api_status"];  // API status code
+  NatMappingStatus    status     = 2;
 }
 
-// NatVpnMappingResponseMsg is batched response to NatVpnMappingRequestMsg
-message NatVpnMappingResponseMsg {
-  repeated NatVpnMappingResponse    response = 1;    // batched response
+// NatMappingResponseMsg is batched response to NatMappingRequestMsg
+message NatMappingResponseMsg {
+  repeated NatMappingResponse    response = 1;    // batched response
 }
 
-// NatVpnMappingGetRequest is used to get information about a NAT VPN mapping
-message NatVpnMappingGetRequest {
-  types.ObjectMeta             meta          = 1;    // object meta
-  kh.NatVpnMappingKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+// NatMappingGetRequest is used to get information about a NAT mapping
+message NatMappingGetRequest {
+  types.ObjectMeta          meta          = 1;    // object meta
+  kh.NatMappingKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
-// NatVpnMappingGetRequestMsg is batched GET request for NAT VPN mappings
-message NatVpnMappingGetRequestMsg {
-  repeated NatVpnMappingGetRequest    request = 1;    // batched get request
+// NatMappingGetRequestMsg is batched GET request for NAT mappings
+message NatMappingGetRequestMsg {
+  repeated NatMappingGetRequest    request = 1;    // batched get request
 }
 
-// NatVpnMappingStats is the statistics object for each NAT VPN mapping
-message NatVpnMappingStats {
+// NatMappingStats is the statistics object for each NAT mapping
+message NatMappingStats {
   uint64    rx_bytes               = 1;
   uint64    rx_packets             = 2;
   uint64    tx_bytes               = 3;
@@ -277,15 +277,15 @@ message NatVpnMappingStats {
   uint32    num_active_connections = 12;
 }
 
-// NatVpnMappingGetResponse reflects all the information about a NAT VPN mapping
-message NatVpnMappingGetResponse {
-  types.ApiStatus        api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  NatVpnMappingSpec      spec       = 2;    // NAT VPN mapping config
-  NatVpnMappingStatus    status     = 3;    // NAT VPN mapping operational status
-  NatVpnMappingStats     stats      = 4;    // NAT VPN mapping stats, if any
+// NatMappingGetResponse reflects all the information about a NAT mapping
+message NatMappingGetResponse {
+  types.ApiStatus     api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  NatMappingSpec      spec       = 2;    // NAT mapping config
+  NatMappingStatus    status     = 3;    // NAT mapping operational status
+  NatMappingStats     stats      = 4;    // NAT mapping stats, if any
 }
 
-// NatVpnMappingGetResponseMsg is batched response to NatVpnMappingGetRequestMsg
-message NatVpnMappingGetResponseMsg {
-  repeated NatVpnMappingGetResponse    response   = 1;    // batched get response
+// NatMappingGetResponseMsg is batched response to NatMappingGetRequestMsg
+message NatMappingGetResponseMsg {
+  repeated NatMappingGetResponse    response   = 1;    // batched get response
 }

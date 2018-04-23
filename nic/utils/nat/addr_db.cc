@@ -1,8 +1,10 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
+#include "nic/utils/nat/addr_db.hpp"
 #include "sdk/slab.hpp"
-#include "sdk/ht.hpp"
-#include "nic/utils/nat/db.hpp"
+
+using sdk::lib::ht;
+using sdk::lib::slab;
 
 namespace hal {
 namespace utils {
@@ -35,21 +37,25 @@ addr_entry_key_func_compare (void *key1, void *key2)
 
 ht *addr_db_;
 hal_ret_t
-addr_db_init (void)
+addr_db_init (uint32_t db_size)
 {
-    addr_db_ = sdk::lib::ht::factory(
-        NAT_MAX_ADDR << 1, addr_entry_key_func_get,
-        addr_entry_key_hash_func_compute, addr_entry_key_func_compare);
-
+    addr_db_ =
+        sdk::lib::ht::factory(db_size << 1,
+                              addr_entry_key_func_get,
+                              addr_entry_key_hash_func_compute,
+                              addr_entry_key_func_compare);
     HAL_ASSERT_RETURN((addr_db_ != NULL), HAL_RET_ERR);
     return HAL_RET_OK;
 }
 
 static inline ht *
-addr_db (void) { return addr_db_; }
+addr_db (void)
+{
+    return addr_db_;
+}
 
 static inline addr_entry_t *
-addr_entry_db_lookup (void *key)
+addr_entry_db_lookup (addr_entry_key_t *key)
 {
     return (addr_entry_t *)addr_db()->lookup(key);
 }
@@ -69,17 +75,20 @@ addr_entry_db_insert (addr_entry_t *entry)
 }
 
 static inline addr_entry_t *
-addr_entry_db_remove (void *key)
+addr_entry_db_remove (addr_entry_key_t *key)
 {
     return ((addr_entry_t *)(addr_db()->remove(key)));
 }
 
 slab  *addr_entry_slab_;
 static inline slab *
-addr_entry_slab() { return addr_entry_slab_; }
+addr_entry_slab()
+{
+    return addr_entry_slab_;
+}
 
-static inline addr_entry_t *
-addr_entry_alloc()
+addr_entry_t *
+addr_entry_alloc (void)
 {
     addr_entry_t *entry;
     entry = (addr_entry_t *)addr_entry_slab()->alloc();
@@ -105,11 +114,13 @@ addr_entry_add (addr_entry_key_t *key, ip_addr_t tgt_ip_addr)
 {
     addr_entry_t *entry;
 
-    if (addr_entry_db_lookup(key) != NULL)
+    if (addr_entry_db_lookup(key) != NULL) {
         return HAL_RET_ENTRY_EXISTS;
+    }
 
-    if ((entry = addr_entry_alloc()) == NULL)
+    if ((entry = addr_entry_alloc()) == NULL) {
         return HAL_RET_OOM;
+    }
 
     addr_entry_fill(entry, key, tgt_ip_addr);
 
@@ -123,6 +134,12 @@ addr_entry_del (addr_entry_key_t *key)
 
     entry = addr_entry_db_remove(key);
     addr_entry_free(entry);
+}
+
+addr_entry_t *
+addr_entry_get (addr_entry_key_t *key)
+{
+    return addr_entry_db_lookup(key);
 }
 
 } // namespace nat

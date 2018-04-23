@@ -11,12 +11,14 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
+#include "nic/hal/src/nw/vrf.hpp"
 #include "nic/hal/src/nat/nat.hpp"
-#include "nic/include/pd_api.hpp"
-#include "nic/fte/acl/acl.hpp"
+#include "nic/hal/src/utils/utils.hpp"
+#include "nic/utils/nat/addr_db.hpp"
 
 using sdk::lib::ht_ctxt_t;
-using acl::acl_ctx_t;
+using hal::utils::nat::addr_entry_key_t;
+using hal::utils::nat::addr_entry_t;
 
 namespace hal {
 
@@ -107,10 +109,10 @@ nat_rule_get (NatRuleGetRequest& req, NatRuleGetResponseMsg *rsp)
 #endif
 
 //------------------------------------------------------------------------------
-// hash table for nat pool id to nat pool
+// return key for hash table that maps nat pool key to its handle
 //------------------------------------------------------------------------------
 void *
-nat_pool_id_get_key_func (void *entry)
+nat_pool_get_key_func (void *entry)
 {
     hal_handle_id_ht_entry_t    *ht_entry = NULL;
     nat_pool_t                  *nat_pool = NULL;
@@ -121,24 +123,27 @@ nat_pool_id_get_key_func (void *entry)
         return NULL;
     }
     nat_pool = (nat_pool_t *)hal_handle_get_obj(ht_entry->handle_id);
-    return (void *)&(nat_pool->key);
+    if (nat_pool) {
+       return (void *)&(nat_pool->key);
+    }
+    return NULL;
 }
 
 //------------------------------------------------------------------------------
-// hash computation for nat pool
+// hash computation for nat pool key to handle hash table
 //------------------------------------------------------------------------------
 uint32_t
-nat_pool_id_compute_hash_func (void *key, uint32_t ht_size)
+nat_pool_compute_hash_func (void *key, uint32_t ht_size)
 {
     HAL_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key, sizeof(nat_pool_key_t)) % ht_size;
 }
 
 //------------------------------------------------------------------------------
-// key comparision for nat pool hash table
+// key comparision for nat pool key to handle hash table
 //------------------------------------------------------------------------------
 bool
-nat_pool_id_compare_key_func (void *key1, void *key2)
+nat_pool_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(nat_pool_key_t))) {
@@ -198,6 +203,9 @@ nat_pool_free (nat_pool_t *pool)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// free up all the state associated with a NAT pool
+//------------------------------------------------------------------------------
 static inline hal_ret_t
 nat_pool_cleanup (nat_pool_t *pool)
 {
@@ -216,7 +224,7 @@ find_nat_pool_by_key (nat_pool_key_t *key)
     hal_handle                  *handle;
 
     handle_id_entry =
-        (hal_handle_id_ht_entry_t *)g_hal_state->nat_pool_id_ht()->lookup(key);
+        (hal_handle_id_ht_entry_t *)g_hal_state->nat_pool_ht()->lookup(key);
     if (handle_id_entry) {
         if (handle_id_entry->handle_id != HAL_HANDLE_INVALID) {
             handle = hal_handle_get_from_handle_id(handle_id_entry->handle_id);
@@ -284,7 +292,7 @@ find_nat_pool_by_key_or_handle (NatPoolKeyHandle& kh)
 //------------------------------------------------------------------------------
 // lookup a NAT pool by its key
 //------------------------------------------------------------------------------
-static nat_pool_t *
+static inline nat_pool_t *
 find_nat_pool (vrf_id_t vrf_id, const NatPoolKeyHandle& kh)
 {
     nat_pool_key_t    key;
@@ -317,11 +325,11 @@ nat_pool_add_to_db (nat_pool_t *pool, hal_handle_t handle)
         return HAL_RET_OOM;
     }
 
-    // add mapping from vrf id to its handle
+    // add mapping from pool key to its handle
     entry->handle_id = handle;
-    sdk_ret = g_hal_state->nat_pool_id_ht()->insert_with_key(&pool->key,
-                                                             entry,
-                                                             &entry->ht_ctxt);
+    sdk_ret = g_hal_state->nat_pool_ht()->insert_with_key(&pool->key,
+                                                          entry,
+                                                          &entry->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add natpool ({}, {}) to handle db,"
@@ -341,11 +349,11 @@ nat_pool_del_from_db (nat_pool_t *pool)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("Removing from natpool ({}, {}) from cfg db",
+    HAL_TRACE_DEBUG("Removing natpool ({}, {}) from cfg db",
                     pool->key.vrf_id, pool->key.pool_id);
     entry =
         (hal_handle_id_ht_entry_t *)
-            g_hal_state->nat_pool_id_ht()->remove(&pool->key);
+            g_hal_state->nat_pool_ht()->remove(&pool->key);
 
     // free up the hash entry
     if (entry) {
@@ -362,10 +370,14 @@ nat_pool_del_from_db (nat_pool_t *pool)
 //-----------------------------------------------------------------------------
 // dump natpool spec
 //-----------------------------------------------------------------------------
-static void
+static inline void
 nat_pool_spec_dump (NatPoolSpec& spec)
 {
     std::string    nat_pool_cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return;
+    }
 
     google::protobuf::util::MessageToJsonString(spec, &nat_pool_cfg);
     HAL_TRACE_DEBUG("NAT Pool Configuration received:");
@@ -376,7 +388,7 @@ nat_pool_spec_dump (NatPoolSpec& spec)
 //-----------------------------------------------------------------------------
 // validate NAT pool configuration
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 validate_nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
 {
     // check if key-handle field is set or not
@@ -414,7 +426,7 @@ validate_nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
 //-----------------------------------------------------------------------------
 // initialize NAT pool object given its configuration/spec
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 nat_pool_init_from_spec (vrf_t *vrf, nat_pool_t *pool, const NatPoolSpec& spec)
 {
     int                       i;
@@ -502,7 +514,7 @@ cleanup:
 //------------------------------------------------------------------------------
 // allocate hw resources and program the hw tables, if any, for the NAT pool
 //------------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 nat_pool_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
@@ -512,7 +524,7 @@ nat_pool_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 // perform the commit operation for the NAT pool by adding to config db and
 // making this config available
 //------------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 nat_pool_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t        ret;
@@ -540,7 +552,7 @@ nat_pool_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 //------------------------------------------------------------------------------
 // abort NAT pool create operation
 //------------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 nat_pool_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     dllist_ctxt_t    *lnode = NULL;
@@ -559,7 +571,7 @@ nat_pool_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 //------------------------------------------------------------------------------
 // cleanup any transient state that we are holding
 //------------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 nat_pool_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
@@ -568,7 +580,7 @@ nat_pool_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 //-----------------------------------------------------------------------------
 // convert hal_ret_t to API status to return to the app
 //-----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 nat_pool_prepare_rsp (NatPoolResponse *rsp, hal_ret_t ret,
                       hal_handle_t hal_handle)
 {
@@ -591,6 +603,9 @@ nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
     dhl_entry_t      dhl_entry = { 0 };
     cfg_op_ctxt_t    cfg_ctxt  = { 0 };
 
+    // dump the received config
+    nat_pool_spec_dump(spec);
+
     auto pool_key = spec.key_or_handle().pool_key();
     // validate the request message
     ret = validate_nat_pool_create(spec, rsp);
@@ -599,6 +614,7 @@ nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
         goto end;
     }
 
+    // lookup the vrf
     vrf = vrf_lookup_key_or_handle(pool_key.vrf_id_or_handle());
     if (vrf == NULL) {
         HAL_TRACE_ERR("Failed to find vrf with key {}/handle {}",
@@ -608,6 +624,7 @@ nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
         goto end;
     }
 
+    // check to see if this mapping exists
     if ((pool = find_nat_pool(vrf->vrf_id, spec.key_or_handle()))) {
         HAL_TRACE_ERR("Failed to create natpool, pool ({}, {}) exists already",
                       vrf->vrf_id, pool_key.pool_id());
@@ -710,7 +727,7 @@ validate_nat_pool_delete_req (NatPoolDeleteRequest& req,
 //------------------------------------------------------------------------------
 // free hw resources and cleanup the hw tables, if any, for the NAT pool
 //------------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 nat_pool_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
@@ -719,7 +736,7 @@ nat_pool_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 //------------------------------------------------------------------------------
 // perform the commit operation for the NAT pool by deleting from config db
 //------------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 nat_pool_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t       ret;
@@ -750,7 +767,7 @@ nat_pool_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 //------------------------------------------------------------------------------
 // abort NAT pool delete operation
 //------------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 nat_pool_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     HAL_TRACE_ERR("Aborting NAT pool delete operation");
@@ -760,7 +777,7 @@ nat_pool_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 //------------------------------------------------------------------------------
 // cleanup any transient state that we are holding
 //------------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 nat_pool_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
@@ -836,7 +853,7 @@ end:
 //------------------------------------------------------------------------------
 // process a get request for a given nat pool
 //------------------------------------------------------------------------------
-static void
+static inline void
 nat_pool_process_get (nat_pool_t *pool, NatPoolGetResponse *rsp)
 {
     sdk::lib::dllist_ctxt_t    *entry;
@@ -859,7 +876,7 @@ nat_pool_process_get (nat_pool_t *pool, NatPoolGetResponse *rsp)
 //------------------------------------------------------------------------------
 // callback invoked from nat pool hash table while processing get request
 //------------------------------------------------------------------------------
-static bool
+static inline bool
 nat_pool_get_ht_cb (void *ht_entry, void *ctxt)
 {
     hal_handle_id_ht_entry_t    *entry = (hal_handle_id_ht_entry_t *)ht_entry;
@@ -887,7 +904,7 @@ nat_pool_get (NatPoolGetRequest& req,
     // for information for all pools, so run through all pools in the
     // cfg db and populate the response
     if (!req.has_key_or_handle()) {
-        g_hal_state->nat_pool_id_ht()->walk(nat_pool_get_ht_cb, rsp);
+        g_hal_state->nat_pool_ht()->walk(nat_pool_get_ht_cb, rsp);
     } else {
         auto kh = req.key_or_handle();
         pool = find_nat_pool_by_key_or_handle(kh);
@@ -933,16 +950,416 @@ nat_policy_get (NatPolicyGetRequest& req, NatPolicyGetResponseMsg *res)
     return HAL_RET_OK;
 }
 
-hal_ret_t
-nat_vpn_mapping_create (NatVpnMappingSpec& spec,
-                        NatVpnMappingResponse *rsp)
+//------------------------------------------------------------------------------
+// return key for hash table that maps nat mapping key to its handle
+//------------------------------------------------------------------------------
+void *
+nat_addr_map_get_key_func (void *entry)
+{
+    hal_handle_id_ht_entry_t    *ht_entry = NULL;
+    addr_entry_t                *mapping = NULL;
+
+    HAL_ASSERT(entry != NULL);
+    ht_entry = (hal_handle_id_ht_entry_t *)entry;
+    if (ht_entry == NULL) {
+        return NULL;
+    }
+    mapping = (addr_entry_t *)hal_handle_get_obj(ht_entry->handle_id);
+    if (mapping) {
+       return (void *)&(mapping->key);
+    }
+    return NULL;
+}
+
+//------------------------------------------------------------------------------
+// hash computation for nat mapping key to handle hash table
+//------------------------------------------------------------------------------
+uint32_t
+nat_addr_map_compute_hash_func (void *key, uint32_t ht_size)
+{
+    HAL_ASSERT(key != NULL);
+    return sdk::lib::hash_algo::fnv_hash(key,
+                                         sizeof(addr_entry_key_t)) % ht_size;
+}
+
+//------------------------------------------------------------------------------
+// key comparision for nat mapping key to handle hash table
+//------------------------------------------------------------------------------
+bool
+nat_addr_map_compare_key_func (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(addr_entry_key_t))) {
+        return true;
+    }
+    return false;
+}
+
+//------------------------------------------------------------------------------
+// free NAT mapping instance back to its slab
+// TODO: fix this
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_free (addr_entry_t *mapping)
 {
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// clean up all the state associated with a NAT mapping
+// TODO: why is handle free outside at all ?
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_cleanup (addr_entry_t *mapping)
+{
+    nat_mapping_free(mapping);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// lookup a NAT mapping by its key
+//------------------------------------------------------------------------------
+static inline addr_entry_t *
+find_nat_mapping (vrf_id_t vrf_id, const NatMappingKeyHandle& kh)
+{
+    addr_entry_key_t    key;
+
+    if (kh.key_or_handle_case() == NatMappingKeyHandle::kSvc) {
+        key.vrf_id = vrf_id;
+        ip_addr_spec_to_ip_addr(&key.ip_addr, kh.svc().ip_addr());
+        return addr_entry_get(&key);
+    }
+
+    // TODO: fix me (do handle based lookup)
+    return NULL;
+}
+
+//------------------------------------------------------------------------------
+// add a nat mapping to HAL config db
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_add_to_db (addr_entry_t *mapping, hal_handle_t handle)
+{
+    hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
+    hal_handle_id_ht_entry_t    *entry;
+
+    HAL_TRACE_DEBUG("Adding nat mapping ({}, {}) -> ({}, {}) to cfg db",
+                    mapping->key.vrf_id, ipaddr2str(&mapping->key.ip_addr),
+                    mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr));
+
+    // allocate an entry to establish mapping from natpool key to its handle
+    entry = (hal_handle_id_ht_entry_t *)
+                g_hal_state->hal_handle_id_ht_entry_slab()->alloc();
+    if (entry == NULL) {
+        return HAL_RET_OOM;
+    }
+
+    // add mapping from to its handle
+    entry->handle_id = handle;
+    sdk_ret =
+        g_hal_state->nat_addr_map_ht()->insert_with_key(&mapping->key,
+                                                        entry, &entry->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to add nat mapping ({}, {}) -> ({}, {}) to "
+                      "handle db, err : {}",
+                      mapping->key.vrf_id, ipaddr2str(&mapping->key.ip_addr),
+                      mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr));
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// delete a nat mapping from the config database
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_del_from_db (addr_entry_t *mapping)
+{
+    hal_handle_id_ht_entry_t    *entry;
+
+    HAL_TRACE_DEBUG("Removing nat mapping ({}, {}) -> ({}, {}) from cfg db",
+                    mapping->key.vrf_id, ipaddr2str(&mapping->key.ip_addr),
+                    mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr));
+
+    entry =
+        (hal_handle_id_ht_entry_t *)
+            g_hal_state->nat_addr_map_ht()->remove(&mapping->key);
+
+    // free up the hash entry
+    if (entry) {
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+    } else {
+        HAL_TRACE_ERR("Failed to delete nat mapping ({}, {}) --> ({}, {}), "
+                      "mapping not found",
+                      mapping->key.vrf_id, ipaddr2str(&mapping->key.ip_addr),
+                      mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr));
+        return HAL_RET_NAT_MAPPING_NOT_FOUND;
+    }
+
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// dump nat mapping spec
+//-----------------------------------------------------------------------------
+static inline void
+nat_mapping_spec_dump (NatMappingSpec& spec)
+{
+    std::string    nat_mapping_cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return;
+    }
+
+    google::protobuf::util::MessageToJsonString(spec, &nat_mapping_cfg);
+    HAL_TRACE_DEBUG("NAT mapping configuration received:");
+    HAL_TRACE_DEBUG("{}", nat_mapping_cfg.c_str());
+    return;
+}
+
+//-----------------------------------------------------------------------------
+// validate NAT mapping configuration
+//-----------------------------------------------------------------------------
+static inline hal_ret_t
+validate_nat_mapping_create (NatMappingSpec& spec, NatMappingResponse *rsp)
+{
+    // check if key-handle field is set or not
+    if (!spec.has_key_or_handle()) {
+        HAL_TRACE_ERR("NAT mapping key-handle not set in request");
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    auto kh = spec.key_or_handle();
+    if (kh.key_or_handle_case() != NatMappingKeyHandle::kSvc) {
+        // key-handle field set, but key is not populated
+        HAL_TRACE_ERR("NAT mapping key fields are not set");
+        rsp->set_api_status(types::API_STATUS_NAT_MAPPING_KEY_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (!kh.svc().has_vrf_kh()) {
+        // vrf key/handle not set in the service key
+        HAL_TRACE_ERR("VRF id/handle missing in NAT mapping key");
+        rsp->set_api_status(types::API_STATUS_NAT_MAPPING_KEY_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // we don't support port in the key currently
+    if (kh.svc().port() != 0) {
+        HAL_TRACE_ERR("Service with port isn't supported");
+        rsp->set_api_status(types::API_STATUS_NAT_MAPPING_KEY_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// allocate hw resources and program the hw tables, if any, for the NAT mapping
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// perform the commit operation for the NAT mapping by adding to config db and
+// making this config available
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t        ret;
+    dllist_ctxt_t    *lnode = NULL;
+    dhl_entry_t      *dhl_entry = NULL;
+    addr_entry_t     *mapping;
+    hal_handle_t     hal_handle;
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    mapping = (addr_entry_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    // add nat pool to the cfg db
+    ret = nat_mapping_add_to_db(mapping, hal_handle);
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// abort NAT mapping create operation
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    dllist_ctxt_t    *lnode = NULL;
+    dhl_entry_t      *dhl_entry = NULL;
+    addr_entry_t     *mapping;
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    mapping = (addr_entry_t *)dhl_entry->obj;
+    hal_handle_free(dhl_entry->handle);
+    nat_mapping_cleanup(mapping);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// cleanup any transient state that we are holding
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// convert hal_ret_t to API status to return to the app
+//-----------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_prepare_rsp (NatMappingResponse *rsp, hal_ret_t ret,
+                         hal_handle_t hal_handle)
+{
+    if ((ret == HAL_RET_OK) || (ret == HAL_RET_ENTRY_EXISTS)) {
+        rsp->mutable_status()->set_handle(hal_handle);
+    }
+    rsp->set_api_status(hal_prepare_rsp(ret));
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// process a NAT mapping create request
+//-----------------------------------------------------------------------------
 hal_ret_t
-nat_vpn_mapping_get (NatVpnMappingGetRequest& req,
-                     NatVpnMappingGetResponseMsg *rsp)
+nat_mapping_create (NatMappingSpec& spec,
+                    NatMappingResponse *rsp)
+{
+    hal_ret_t        ret;
+    vrf_t            *vrf;
+    addr_entry_t     *mapping = NULL;
+    dhl_entry_t      dhl_entry = { 0 };
+    cfg_op_ctxt_t    cfg_ctxt  = { 0 };
+
+    // dump the incoming config
+    nat_mapping_spec_dump(spec);
+
+    auto svc = spec.key_or_handle().svc();
+
+    // validate the request message
+    ret = validate_nat_mapping_create(spec, rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("NAT mapping create cfg validation error, err : {}", ret);
+        goto end;
+    }
+
+    // lookup the vrf
+    vrf = vrf_lookup_key_or_handle(svc.vrf_kh());
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("Failed to find vrf with key {}/handle {}",
+                      svc.vrf_kh().vrf_id(), svc.vrf_kh().vrf_handle());
+        ret = HAL_RET_VRF_NOT_FOUND;
+    }
+
+    // check to see if the NAT address mapping exists for this already
+    if ((mapping = find_nat_mapping(vrf->vrf_id, spec.key_or_handle()))) {
+        HAL_TRACE_ERR("Failed to create NAT mapping, mapping exists already");
+        ret = HAL_RET_ENTRY_EXISTS;
+        goto end;
+    }
+
+#if 0
+    // instanitate NAT address map object
+    mapping = nat_mapping_alloc_init();
+    if (mapping == NULL) {
+        HAL_TRACE_ERR("Failed to alloc/init nat addr map ({}, {})",
+                      vrf->vrf_id, );
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    ret = nat_mapping_init_from_spec(vrf, mapping, spec);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize natpool ({}, {})",
+                     vrf->vrf_id, );
+        goto end;
+    }
+#endif
+
+    // allocate HAL handle id
+    mapping->hal_handle = hal_handle_alloc(HAL_OBJ_ID_NAT_MAPPING);
+    if (mapping->hal_handle == HAL_HANDLE_INVALID) {
+         HAL_TRACE_ERR("Failed to alloc handle for NAT mapping ({}, {})",
+                       vrf->vrf_id, ipaddr2str(&mapping->key.ip_addr));
+         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
+         nat_mapping_cleanup(mapping);
+         ret = HAL_RET_HANDLE_INVALID;
+         goto end;
+    }
+
+    // form ctxt and handover to the HAL infra
+    dhl_entry.handle = mapping->hal_handle;
+    dhl_entry.obj = mapping;
+    cfg_ctxt.app_ctxt = NULL;
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_add_obj(mapping->hal_handle, &cfg_ctxt,
+                             nat_mapping_create_add_cb,
+                             nat_mapping_create_commit_cb,
+                             nat_mapping_create_abort_cb,
+                             nat_mapping_create_cleanup_cb);
+
+end:
+
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
+        if (mapping) {
+            // abort callback will take care of cleaning up
+            mapping = NULL;
+        }
+        HAL_API_STATS_INC(HAL_API_NAT_MAPPING_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_NAT_MAPPING_CREATE_SUCCESS);
+    }
+    nat_mapping_prepare_rsp(rsp, ret,
+                            mapping ? mapping->hal_handle : HAL_HANDLE_INVALID);
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// process a get request for a given nat mapping
+//------------------------------------------------------------------------------
+static inline void
+nat_mapping_process_get (void *mapping, NatMappingGetResponse *rsp)   // TODO: FIXME
+{
+    rsp->set_api_status(types::API_STATUS_OK);
+}
+
+//------------------------------------------------------------------------------
+// callback invoked from nat mapping hash table while processing get request
+//------------------------------------------------------------------------------
+static inline bool
+nat_mapping_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    //hal_handle_id_ht_entry_t    *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    NatMappingGetResponseMsg    *rsp = (NatMappingGetResponseMsg *)ctxt;
+    NatMappingGetResponse       *response = rsp->add_response();
+    void *mapping = NULL;    // TODO: FIXME
+
+    nat_mapping_process_get(mapping, response);
+
+    // return false here, so that we don't terminate the walk
+    return false;
+}
+
+hal_ret_t
+nat_mapping_get (NatMappingGetRequest& req,
+                 NatMappingGetResponseMsg *rsp)
 {
     return HAL_RET_OK;
 }

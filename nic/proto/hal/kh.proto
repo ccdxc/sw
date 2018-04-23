@@ -264,17 +264,17 @@ message NatPolicyKeyHandle {
 // instance of service is run. Similarlt, port is not mandatory when only
 // single instance of service is running on a given IP and nothing else
 message Svc {
-  uint32             port    = 1;    // L4 port on which the service runs on
-  kh.VrfKeyHandle    vrf_kh  = 2;    // VRF key or handle
-  types.IPAddress    ip_addr = 3;    // IP address on which service is running
+  kh.VrfKeyHandle    vrf_kh  = 1;    // VRF key or handle
+  types.IPAddress    ip_addr = 2;    // IP address on which service is running
+  uint32             port    = 3;    // L4 port on which the service runs on
 }
 
-// NatVpnMappingKeyHandle uniquely identifies a NAT VPN mapping and is used
-// to create/update/delete/get NAT VPN mappings
-message NatVpnMappingKeyHandle {
+// NatMappingKeyHandle uniquely identifies a NAT mapping and is used
+// to create/update/delete/get NAT mappings
+message NatMappingKeyHandle {
   oneof key_or_handle {
-    Svc        svc_key        = 1;  // service key
-    fixed64    mapping_handle = 2;  // handle for NAT VPN mapping returned by HAL
+    Svc        svc            = 1;  // (VRF, IP, port) that identifies the service
+    fixed64    mapping_handle = 2;  // handle for NAT mapping returned by HAL
   }
 }
 

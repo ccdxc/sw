@@ -113,6 +113,7 @@ svc_reg (const std::string& server_addr,
     SystemServiceImpl        system_svc;
     SoftwarePhvServiceImpl   swphv_svc;
 
+    grpc_init();
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
 
     // listen on the given address (no authentication)

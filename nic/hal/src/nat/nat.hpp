@@ -28,6 +28,7 @@ using nat::NatPoolDeleteResponse;
 using nat::NatPoolGetRequest;
 using nat::NatPoolGetResponse;
 using nat::NatPoolGetResponseMsg;
+
 using kh::NatPolicyKeyHandle;
 using nat::NatPolicySpec;
 using nat::NatPolicyStatus;
@@ -39,10 +40,13 @@ using nat::NatPolicyDeleteRequest;
 using nat::NatPolicyDeleteResponse;
 using nat::NatPolicyGetRequest;
 using nat::NatPolicyGetResponseMsg;
-using nat::NatVpnMappingSpec;
-using nat::NatVpnMappingResponse;
-using nat::NatVpnMappingGetRequest;
-using nat::NatVpnMappingGetResponseMsg;
+
+using kh::NatMappingKeyHandle;
+using nat::NatMappingSpec;
+using nat::NatMappingResponse;
+using nat::NatMappingGetRequest;
+using nat::NatMappingGetResponse;
+using nat::NatMappingGetResponseMsg;
 
 namespace hal {
 
@@ -62,20 +66,27 @@ typedef struct addr_range_list_elem_s {
 
 // NAT pool
 typedef struct nat_pool_s {
-    hal_spinlock_t    slock;          // lock to protect this structure
-    nat_pool_key_t    key;            // key for the nat pool
-    dllist_ctxt_t     addr_ranges;    // NAT address ranges
+    hal_spinlock_t    slock;                // lock to protect this structure
+    nat_pool_key_t    key;                  // key for the nat pool
+    dllist_ctxt_t     addr_ranges;          // NAT address ranges
 
     // operational state of nat pool
-    hal_handle_t       hal_handle;    // HAL allocated handle
+    hal_handle_t       hal_handle;          // HAL allocated handle
+    uint32_t           num_addrs_in_use;    // no. of NAT addresses in use
 
     // stats
     uint32_t           num_in_use;
 } __PACK__ nat_pool_t;
 
-void *nat_pool_id_get_key_func(void *entry);
-uint32_t nat_pool_id_compute_hash_func(void *key, uint32_t ht_size);
-bool nat_pool_id_compare_key_func(void *key1, void *key2);
+#define HAL_MAX_NAT_ADDR_MAP        8192
+
+void *nat_pool_get_key_func(void *entry);
+uint32_t nat_pool_compute_hash_func(void *key, uint32_t ht_size);
+bool nat_pool_compare_key_func(void *key1, void *key2);
+
+void *nat_addr_map_get_key_func(void *entry);
+uint32_t nat_addr_map_compute_hash_func(void *key, uint32_t ht_size);
+bool nat_addr_map_compare_key_func(void *key1, void *key2);
 
 hal_ret_t nat_pool_create(NatPoolSpec& spec, NatPoolResponse *rsp);
 hal_ret_t nat_pool_update(NatPoolSpec& spec, NatPoolResponse *rsp);
@@ -91,10 +102,9 @@ hal_ret_t nat_policy_delete(NatPolicyDeleteRequest& req,
 hal_ret_t nat_policy_get(NatPolicyGetRequest& req,
                          NatPolicyGetResponseMsg *res);
 
-hal_ret_t nat_vpn_mapping_create(NatVpnMappingSpec& spec,
-                                 NatVpnMappingResponse *rsp);
-hal_ret_t nat_vpn_mapping_get(NatVpnMappingGetRequest& req,
-                              NatVpnMappingGetResponseMsg *res);
+hal_ret_t nat_mapping_create(NatMappingSpec& spec, NatMappingResponse *rsp);
+hal_ret_t nat_mapping_get(NatMappingGetRequest& req,
+                          NatMappingGetResponseMsg *res);
 
 // module level callbacks
 hal_ret_t hal_nat_init_cb(hal_cfg_t *hal_cfg);

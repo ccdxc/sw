@@ -858,13 +858,21 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
 
     // initialize NAT related data structures
-    HAL_HT_CREATE("natpool", nat_pool_id_ht_,
+    HAL_HT_CREATE("natpool", nat_pool_ht_,
                   HAL_MAX_NAT_POOLS >> 1,
-                  hal::nat_pool_id_get_key_func,
-                  hal::nat_pool_id_compute_hash_func,
-                  hal::nat_pool_id_compare_key_func,
+                  hal::nat_pool_get_key_func,
+                  hal::nat_pool_compute_hash_func,
+                  hal::nat_pool_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((nat_pool_id_ht_ != NULL), false);
+    HAL_ASSERT_RETURN((nat_pool_ht_ != NULL), false);
+
+    HAL_HT_CREATE("nat-addr-map", nat_addr_map_ht_,
+                  HAL_MAX_NAT_ADDR_MAP >> 1,
+                  hal::nat_addr_map_get_key_func,
+                  hal::nat_addr_map_compute_hash_func,
+                  hal::nat_addr_map_compare_key_func,
+                  true, mmgr);
+    HAL_ASSERT_RETURN((nat_addr_map_ht_ != NULL), false);
 
     // initialize nexthop related data structures
     HAL_HT_CREATE("nexthop", nexthop_id_ht_,
@@ -1103,7 +1111,8 @@ hal_oper_db::hal_oper_db()
     gft_exact_match_profile_id_ht_ = NULL;
     gft_hdr_transposition_profile_id_ht_ = NULL;
     gft_exact_match_flow_entry_id_ht_ = NULL;
-    nat_pool_id_ht_ = NULL;
+    nat_pool_ht_ = NULL;
+    nat_addr_map_ht_ = NULL;
     nexthop_id_ht_ = NULL;
     route_ht_ = NULL;
 
@@ -1151,7 +1160,8 @@ hal_oper_db::~hal_oper_db()
     nwsec_policy_cfg_ht_ ? ht::destroy(nwsec_policy_cfg_ht_) : HAL_NOP;
     nwsec_policy_ht_ ? ht::destroy(nwsec_policy_ht_) : HAL_NOP;
     nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
-    nat_pool_id_ht_ ? ht::destroy(nat_pool_id_ht_) : HAL_NOP;
+    nat_pool_ht_ ? ht::destroy(nat_pool_ht_) : HAL_NOP;
+    nat_addr_map_ht_ ? ht::destroy(nat_addr_map_ht_) : HAL_NOP;
     nexthop_id_ht_ ? ht::destroy(nexthop_id_ht_) : HAL_NOP;
     route_ht_ ? ht::destroy(route_ht_) : HAL_NOP;
     gft_exact_match_profile_id_ht_ ? ht::destroy(gft_exact_match_profile_id_ht_, mmgr_) : HAL_NOP;

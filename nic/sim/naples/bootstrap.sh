@@ -16,7 +16,7 @@ exec > /var/log/bootstrap.log
 exec 2>&1
 
 #######################################################################
-# move the tap interfaces inside the naples container to global namaspace
+# move the tap interfaces inside the naples container to global namespace
 #######################################################################
 pid=$(docker inspect --format '{{.State.Pid}}' naples-sim)
 nsenter -t $pid -n ip link set $HOST0 netns 1

@@ -132,6 +132,7 @@ cc_library(
         "//nic/utils/print",
         "//nic/utils/bitmap:bitmap",
         "//nic:boost",
+        "//nic/utils/nat:nat",
         "//nic:grpc_includes",
     ],
     alwayslink = 1,

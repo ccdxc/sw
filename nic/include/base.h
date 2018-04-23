@@ -256,6 +256,7 @@ do {                                                       \
     ENTRY(HAL_RET_NAT_POOL_NOT_FOUND,         72,  "NAT pool not found")             \
     ENTRY(HAL_RET_NOT_SUPPORTED,              73,  "Feature not supported")          \
     ENTRY(HAL_RET_ROUTE_NOT_FOUND,            74,  "Route not found")                \
+    ENTRY(HAL_RET_NAT_MAPPING_NOT_FOUND,      75,  "NAT mapping not found")          \
                                                                                      \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
