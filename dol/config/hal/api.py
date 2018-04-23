@@ -125,6 +125,7 @@ def IsHalDisabled():
 def IsObjectListInFeatureSet(objs):
     return GlobalOptions.feature_set in objs[0].meta.feature_set
 def IsConfigAllowed(objs):
+    assert(GlobalOptions.agent is False)
     if not len(objs): return False
     if not IsObjectListInFeatureSet(objs):
         logger.info("Skipping config: Object not in feature set")

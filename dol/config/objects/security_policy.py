@@ -114,9 +114,9 @@ class SecurityGroupPolicyObjectHelper:
 
     def Configure(self):
         sgpairlist  = Store.objects.GetAllByClass(SGPairObject)
-        logger.info("Confguring %d SecurityGroupPolicies." %len(sgpairlist))
-
-        halapi.ConfigureSecurityGroupPolicies(sgpairlist)
+        if len(sgpairlist):
+            logger.info("Confguring %d SecurityGroupPolicies." %len(sgpairlist))
+            halapi.ConfigureSecurityGroupPolicies(sgpairlist)
         return
 
     def GetSGType(self, flow_obj, sep, dep):

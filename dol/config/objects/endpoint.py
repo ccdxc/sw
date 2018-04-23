@@ -9,6 +9,7 @@ import config.resmgr            as resmgr
 import config.objects.enic      as enic
 
 import config.hal.api           as halapi
+import config.agent.api         as agentapi
 import config.hal.defs          as haldefs
 
 from config.store               import Store
@@ -18,6 +19,30 @@ from infra.common.glopts        import GlobalOptions
 #import config.objects.qp        as qp
 import config.objects.pd        as pd
 import config.objects.slab      as slab
+
+class AgentEndpointObjectSpec:
+    def __init__(self, ep):
+        self.EndpointUUID = ep.GID()
+        self.WorkloadUUID = ep.GID()
+        self.WorkloadName = ep.GID()
+        self.NetworkName = ep.segment.GID()
+        return
+
+class AgentEndpointObjectStatus:
+    def __init__(self, ep):
+        self.IPv4Address = ep.ipaddrs[0].get() + "/32"
+        #self.IPv6Address = ep.ipv6addrs[0].get()
+        self.MacAddress = ep.macaddr.get()
+        self.NodeUUID = "remote"
+        return
+
+
+class AgentEndpointObject(base.AgentObjectBase):
+    def __init__(self, ep):
+        super().__init__("Endpoint", ep.GID(), ep.tenant.GID())
+        self.spec = AgentEndpointObjectSpec(ep)
+        self.status = AgentEndpointObjectStatus(ep)
+        return
 
 class EndpointObject(base.ConfigObjectBase):
     def __init__(self):
@@ -303,6 +328,10 @@ class EndpointObject(base.ConfigObjectBase):
         logger.info("- # New slab on EP %s assigned: %s" % (self.GID(), 'SLAB%04d' % self.last_slab_id))
         return self.slabs.Get('SLAB%04d' % self.last_slab_id);
 
+    def PrepareAgentObject(self):
+        return AgentEndpointObject(self)
+
+
 # Helper Class to Generate/Configure/Manage Endpoint Objects.
 class EndpointObjectHelper:
     def __init__(self):
@@ -340,11 +369,12 @@ class EndpointObjectHelper:
 
     def Configure(self):
         logger.info("Configuring %d Endpoints." % len(self.eps))
+        api = agentapi if GlobalOptions.agent else halapi
         if GlobalOptions.classic:
-            halapi.ConfigureEndpoints(self.local)
+            api.ConfigureEndpoints(self.local)
         else:
-            halapi.ConfigureEndpoints(self.eps)
-            halapi.ConfigureEndpoints(self.backend_eps)
+            api.ConfigureEndpoints(self.eps)
+            api.ConfigureEndpoints(self.backend_eps)
 
         if self.rdma:
             for ep in self.local:

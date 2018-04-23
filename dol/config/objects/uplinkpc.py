@@ -10,6 +10,7 @@ import config.objects.segment   as segment
 
 import config.objects.interface_segment_association as if_seg_assoc
 
+from infra.common.glopts        import GlobalOptions
 from infra.common.logging       import logger
 from config.store               import Store
 
@@ -211,13 +212,19 @@ class UplinkPcObjectHelper:
     def Configure(self):
         if len(self.uplinkpcs) == 0: return
         logger.info("Configuring %d UplinkPCs." % len(self.uplinkpcs))
-        halapi.ConfigureInterfaces(self.uplinkpcs)
+        if not GlobalOptions.agent:
+            halapi.ConfigureInterfaces(self.uplinkpcs)
+        else:
+            logger.info(" - Skipping in agent mode.")
         return
 
     def ReConfigure(self):
         if len(self.uplinkpcs) == 0: return
         logger.info("Updating %d UplinkPCs." % len(self.uplinkpcs))
-        halapi.ConfigureInterfaces(self.uplinkpcs, update = True)
+        if not GlobalOptions.agent:
+            halapi.ConfigureInterfaces(self.uplinkpcs, update = True)
+        else:
+            logger.info(" - Skipping in agent mode.")
         return
 
     def ConfigureAllSegments(self):

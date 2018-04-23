@@ -357,8 +357,11 @@ validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 {
     mac_addr_t mac_addr;
 
-    if (!spec.has_vrf_key_handle() ||
-        spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
+    if (!spec.has_vrf_key_handle()) {
+        HAL_TRACE_ERR("Endpoint spec has no vrf key");
+        return HAL_RET_VRF_ID_INVALID;
+    }
+    if (spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         HAL_TRACE_ERR("Invalid vrf id");
         return HAL_RET_VRF_ID_INVALID;
     }
@@ -768,6 +771,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 
     // allocate memory for each IP entry in the EP
     num_ips = spec.endpoint_attrs().ip_address_size();
+    HAL_TRACE_DEBUG("Num IPs in EP {}", num_ips);
     if (num_ips) {
         l3_entry = (ep_l3_entry_t **)HAL_CALLOC(HAL_MEM_ALLOC_EP,
                                                 num_ips * sizeof(ep_l3_entry_t *));

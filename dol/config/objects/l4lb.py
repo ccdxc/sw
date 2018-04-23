@@ -263,7 +263,7 @@ class L4LbServiceObjectHelper:
 
     def Configure(self):
         global gl_l4lb_config_ipv4
-
+        if not len(self.svcs): return
         logger.info("Configuring %d IPv4 L4LbServices." % len(self.svcs))
         gl_l4lb_config_ipv4 = True
         halapi.ConfigureL4LbServices(self.svcs)

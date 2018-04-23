@@ -23,6 +23,12 @@ from infra.common.glopts        import GlobalOptions
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
+import config.agent.api         as agentapi
+
+class AgentTenantObject(base.AgentObjectBase):
+    def __init__(self, tenant):
+        super().__init__("Tenant", tenant.GID(), tenant.GID())
+        return
 
 class TenantObject(base.ConfigObjectBase):
     def __init__(self):
@@ -353,6 +359,9 @@ class TenantObject(base.ConfigObjectBase):
             self.security_profile_handle = None
         return
 
+    def PrepareAgentObject(self):
+        return AgentTenantObject(self)
+
     def Get(self):
         halapi.GetTenants([self])
 
@@ -367,7 +376,11 @@ class TenantObjectHelper:
 
     def Configure(self):
         logger.info("Configuring %d Tenants." % len(self.tens))
-        halapi.ConfigureTenants(self.tens)
+        if GlobalOptions.agent:
+            agentapi.ConfigureTenants(self.tens)
+        else:
+            halapi.ConfigureTenants(self.tens)
+
         for ten in self.tens:
             ten.ConfigureSegments()
             ten.ConfigureL4LbServices()

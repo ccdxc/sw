@@ -330,8 +330,9 @@ class EnicObjectHelper:
             logger.info("Configuring %d Classic Enics." % len(enics))
             halapi.ConfigureInterfaces(enics)
         else:
-            logger.info("Configuring %d Enics." % len(self.enics))
-            halapi.ConfigureInterfaces(self.enics)
+            if len(self.enics):
+                logger.info("Configuring %d Enics." % len(self.enics))
+                halapi.ConfigureInterfaces(self.enics)
             if len(self.backend_enics):
                 logger.info("Configuring %d L4LbBackend Enics." %\
                                len(self.backend_enics))

@@ -8,6 +8,7 @@ import config.resmgr            as resmgr
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
+from infra.common.glopts        import GlobalOptions
 from infra.common.logging       import logger
 from config.store               import Store
 
@@ -146,7 +147,10 @@ class NetworkObjectHelper:
 
     def Configure(self):
         logger.info("Configuring %d Networks" % len(self.nws))
-        halapi.ConfigureNetworks(self.nws)
+        if not GlobalOptions.agent:
+            halapi.ConfigureNetworks(self.nws)
+        else:
+            logger.info(" - Skipping in agent mode.")
         return
 
     def Generate(self, segment):

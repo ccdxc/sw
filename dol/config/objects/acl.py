@@ -736,8 +736,9 @@ class AclObjectHelper:
         return
 
     def Configure(self):
-        logger.info("Configuring %d Acls." % len(self.acls)) 
-        halapi.ConfigureAcls(self.acls)
+        if not GlobalOptions.agent:
+            logger.info("Configuring %d Acls." % len(self.acls)) 
+            halapi.ConfigureAcls(self.acls)
         return
         
     def Generate(self, topospec):

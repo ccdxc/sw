@@ -14,9 +14,11 @@ import config.objects.span      as span
 
 from config.store               import Store
 from infra.common.logging       import logger
+from infra.common.glopts        import GlobalOptions as GlobalOptions
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
+import config.agent.api         as agentapi
 
 class QosClassObject(base.ConfigObjectBase):
     def __init__(self):
@@ -59,7 +61,10 @@ class QosClassObject(base.ConfigObjectBase):
     def Configure(self):
         logger.info("Configuring QosClass  : %s (id: %d)" % (self.GID(), self.id))
         self.Show()
-        halapi.ConfigureQosClass([self])
+        if not GlobalOptions.agent:
+            halapi.ConfigureQosClass([self])
+        else:
+            logger.info(" - Skipping in agent mode.")
         return
 
     def GroupEnum(self):
@@ -112,7 +117,10 @@ class QosClassObjectHelper:
 
     def Configure(self):
         logger.info("Configuring %d Qos-classes." % len(self.qos_classes)) 
-        halapi.ConfigureQosClass(self.qos_classes)
+        if GlobalOptions.agent:
+            logger.info(" - Skipping in agent mode.")
+        else:
+            halapi.ConfigureQosClass(self.qos_classes)
         return
         
     def Generate(self, topospec):

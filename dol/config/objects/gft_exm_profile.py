@@ -76,8 +76,9 @@ class GftExmProfileObjectHelper:
         return
 
     def Configure(self):
-        logger.info("Configuring %d GFT EXM Profiles." % len(self.objlist))
-        halapi.ConfigureGftExmProfiles(self.objlist)
+        if len(self.objlist):
+            logger.info("Configuring %d GFT EXM Profiles." % len(self.objlist))
+            halapi.ConfigureGftExmProfiles(self.objlist)
         return
 
     def ReConfigure(self):

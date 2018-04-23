@@ -199,6 +199,7 @@ class MulticastGroupObjectHelper:
         return
 
     def Configure(self):
-        logger.info("Configuring %d Multicast Groups." % len(self.groups))
-        halapi.ConfigureMulticastGroups(self.cfg_groups)
+        if len(self.groups):
+            logger.info("Configuring %d Multicast Groups." % len(self.groups))
+            halapi.ConfigureMulticastGroups(self.cfg_groups)
         return

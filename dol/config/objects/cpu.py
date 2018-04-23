@@ -10,6 +10,7 @@ import config.objects.segment   as segment
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
+from infra.common.glopts        import GlobalOptions
 from infra.common.logging       import logger
 from config.store               import Store
 
@@ -101,8 +102,9 @@ class CpuObjectHelper:
         # CPU if is created inside HAL during init ...
         #     DOL just queries for handle
         #self.Configure()
-        self.GetConf()
-        logger.info("Adding %d Cpus to Store." % len(self.objlist))
+        if not GlobalOptions.agent:
+            self.GetConf()
+            logger.info("Adding %d Cpus to Store." % len(self.objlist))
         return
 
     def GetAll(self):

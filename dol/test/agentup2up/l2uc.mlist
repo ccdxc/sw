@@ -1,0 +1,17 @@
+# Feature Test Modules List
+feature:
+    id          : agentup2up
+    sub         : l2uc
+    package     : test.agentup2up
+    module      : agentup2up
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPV4_TCP_QTAG
+        spec    : l2uc.testspec
+        perf    : True
+        iterate :
+            - flow          : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment       : filter://native=False

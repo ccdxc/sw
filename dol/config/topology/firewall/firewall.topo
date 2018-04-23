@@ -26,4 +26,4 @@ security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT
 tenants:
     -   spec    : ref://store/specs/id=TENANT_FIREWALL
         count   : 1
-        lifns   : range/101/101
+        lifns   : None

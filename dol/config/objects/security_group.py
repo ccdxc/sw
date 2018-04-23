@@ -6,15 +6,30 @@ import infra.config.base        as base
 
 import config.resmgr            as resmgr
 import config.hal.api           as halapi
+import config.agent.api         as agentapi
 import config.hal.defs          as haldefs
 
+from infra.common.glopts        import GlobalOptions
 from infra.common.logging       import logger
 from config.store               import Store
+
+class AgentSecurityGroupRuleObject:
+    def __init__(self):
+        self.Direction = "incoming"
+        self.Action = "allow"
+        return
+
+class AgentSecurityGroupObject(base.AgentObjectBase):
+    def __init__(self, sg):
+        super().__init__("SecurityGroup", sg.GID(), sg.tenant.GID())
+        self.SecurityProfile = "unknown"
+        self.Rules = [ AgentSecurityGroupRuleObject() ]
+        return
 
 class SecurityGroupObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
-        self.Clone(Store.templates.Get('NETWORK'))
+        self.Clone(Store.templates.Get('SECURITY_GROUP'))
         return
 
     def Init(self, tenant, local, eps, label):
@@ -53,6 +68,9 @@ class SecurityGroupObject(base.ConfigObjectBase):
         for e in self.eps:
             logger.info("  - %s" % e.GID())
         return
+
+    def PrepareAgentObject(self):
+        return AgentSecurityGroupObject(self)
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.vrf_id = self.tenant.id
@@ -93,7 +111,10 @@ class SecurityGroupObjectHelper:
 
     def Configure(self):
         logger.info("Configuring %d Security Groups" % len(self.sgs))
-        halapi.ConfigureSecurityGroups(self.sgs)
+        if GlobalOptions.agent:
+            agentapi.ConfigureSecurityGroups(self.sgs)
+        else:
+            halapi.ConfigureSecurityGroups(self.sgs)
         return
 
     def __create(self, tenant, local, eps, label):

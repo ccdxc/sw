@@ -174,12 +174,18 @@ class UplinkObjectHelper:
 
     def Configure(self):
         logger.info("Configuring %d Uplinks." % len(self.objlist))
-        halapi.ConfigureInterfaces(self.objlist)
+        if not GlobalOptions.agent:
+            halapi.ConfigureInterfaces(self.objlist)
+        else:
+            logger.info(" - Skipping in agent mode.")
         return
 
     def ReConfigure(self):
         logger.info("Updating %d Uplinks." % len(self.objlist))
-        halapi.ConfigureInterfaces(self.objlist, update = True)
+        if not GlobalOptions.agent:
+            halapi.ConfigureInterfaces(self.objlist, update = True)
+        else:
+            logger.info(" - Skipping in agent mode.")
         return
 
     def __configure_all_segments(self):
@@ -229,7 +235,8 @@ class UplinkObjectHelper:
         logger.info("Adding %d Uplinks to Store." % len(self.objlist))
         if len(self.objlist) == 0: return
         Store.objects.SetAll(self.objlist)
-        Store.SetTrunkingUplinks(self.trunks)
+        if len(self.trunks):
+            Store.SetTrunkingUplinks(self.trunks)
         return
 
     def GetAll(self):

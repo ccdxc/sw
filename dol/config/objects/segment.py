@@ -12,6 +12,7 @@ import config.objects.oif_list  as oiflist
 import config.objects.multicast_group as multicast_group
 
 import config.hal.api            as halapi
+import config.agent.api          as agentapi
 import config.hal.defs           as haldefs
 
 from infra.common.logging       import logger
@@ -20,6 +21,26 @@ from config.store               import Store
 
 global gl_pinif_iter
 gl_pinif_iter = 0
+
+class AgentSegmentObjectSpec:
+    def __init__(self, seg):
+        ipobj = seg.ipv4_pool.get()
+        self.IPv4Subnet = ipobj.get() + '/16'
+        self.IPv4Gateway = ipobj.get()
+
+        ip6obj = seg.ipv6_pool.get()
+        self.IPv6Subnet = ip6obj.get() + '/96'
+        self.IPv6Gateway = ip6obj.get()
+
+        self.VlanID = seg.vlan_id
+        self.VxlanVNI = seg.vxlan_id
+        return
+
+class AgentSegmentObject(base.AgentObjectBase):
+    def __init__(self, seg):
+        super().__init__("Network", seg.GID(), seg.tenant.GID())
+        self.spec = AgentSegmentObjectSpec(seg)
+        return
 
 class SegmentObject(base.ConfigObjectBase):
     def __init__(self):
@@ -396,6 +417,9 @@ class SegmentObject(base.ConfigObjectBase):
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
+    def PrepareAgentObject(self):
+        return AgentSegmentObject(self)
+
 # Helper Class to Generate/Configure/Manage Segment Objects.
 class SegmentObjectHelper:
     def __init__(self):
@@ -410,7 +434,10 @@ class SegmentObjectHelper:
         logger.info("Configuring %d Segments." % len(self.segs))
         for seg in self.segs:
             seg.ConfigureNetworks()
-        halapi.ConfigureSegments(self.segs)
+        if GlobalOptions.agent:
+            agentapi.ConfigureSegments(self.segs)
+        else:
+            halapi.ConfigureSegments(self.segs)
         return
 
     def ConfigurePhase2(self):

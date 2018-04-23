@@ -354,6 +354,8 @@ class RdmaSessionObjectHelper:
             self.UDGenerate()
         
     def Configure(self):
+        if GlobalOptions.agent:
+            return
         for rdma_s in self.rdma_sessions:
             rdma_s.Configure()
         halapi.ConfigureAhs(self.rdma_sessions)

@@ -1,19 +1,19 @@
 # Topology Specification
 meta:
-    id: TOPO_UP2UP
+    id: TOPO_AGENT_UP2UP
 
 uplink:
     - entry:
         id      : Uplink1
         port    : 1
-        mode    : TRUNK
+        mode    : PC_MEMBER
         sriov   : True
         status  : UP
 
     - entry:
         id      : Uplink2
         port    : 2
-        mode    : TRUNK
+        mode    : PC_MEMBER
         sriov   : True
         status  : UP
 
@@ -39,14 +39,10 @@ uplinkpc:
         port    : 3
         mode    : TRUNK
         members :
+            - ref://store/objects/id=Uplink1
+            - ref://store/objects/id=Uplink2
             - ref://store/objects/id=Uplink3
-    - entry:
-        id      : UplinkPc2
-        port    : 4
-        mode    : TRUNK
-        members :
             - ref://store/objects/id=Uplink4
-
 
 acls: None
 
@@ -55,7 +51,7 @@ qos : True
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 
 tenants:
-    -   spec    : ref://store/specs/id=TENANT_UP2UP
+    -   spec    : ref://store/specs/id=TENANT_AGENT_UP2UP
         count   : 1
         lifns   : None
 

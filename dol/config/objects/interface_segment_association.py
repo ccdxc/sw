@@ -46,5 +46,8 @@ class HalInterfaceSegmentAssociationObjectHelper:
 
     def Configure(self, intfs, segs):
         objs = self.Generate(intfs, segs)
-        halapi.ConfigureInterfaceSegmentAssociations(objs)
+        if not GlobalOptions.agent:
+            halapi.ConfigureInterfaceSegmentAssociations(objs)
+        else:
+            logger.info(" - Skipping in agent mode.")
         return

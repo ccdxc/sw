@@ -23,6 +23,7 @@ from infra.common.logging               import logger
 from infra.common.glopts                import GlobalOptions as GlobalOptions
 from config.objects.proxycb_service     import ProxyCbServiceHelper
 
+import config.agent.api          as agentapi
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
@@ -512,9 +513,10 @@ class SessionObjectHelper:
         return
 
     def Configure(self):
-        logger.info("Configuring %d NON-FTE Sessions." % len(self.ssns))
-        if len(self.ssns):
-            halapi.ConfigureSessions(self.ssns)
+        if not GlobalOptions.agent:
+            logger.info("Configuring %d NON-FTE Sessions." % len(self.ssns))
+            if len(self.ssns):
+                halapi.ConfigureSessions(self.ssns)
         return
 
     def main(self):

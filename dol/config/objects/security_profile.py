@@ -14,6 +14,7 @@ from infra.common.glopts        import GlobalOptions
 
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
+import config.agent.api          as agentapi
 
 class SecurityProfileObject(base.ConfigObjectBase):
     def __init__(self):
@@ -183,8 +184,11 @@ class SecurityProfileObjectHelper:
         return
 
     def Configure(self):
-        logger.info("Configuring %d SecurityProfiles." % len(self.sps)) 
-        halapi.ConfigureSecurityProfiles(self.sps)
+        logger.info("Configuring %d SecurityProfiles." % len(self.sps))
+        if GlobalOptions.agent:
+            agentapi.ConfigureSecurityProfiles(self.sps)
+        else:
+            halapi.ConfigureSecurityProfiles(self.sps)
         return
         
     def Generate(self, topospec):

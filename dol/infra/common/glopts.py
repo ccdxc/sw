@@ -85,6 +85,8 @@ parser.add_argument('--hal_ip', dest='hal_ip', default=None,
                     help='HAL IP Address.')
 parser.add_argument('--model_ip', dest='model_ip', default=None,
                     help='Model IP Address.')
+parser.add_argument('--agent', dest='agent', action='store_true',
+                    help='Start DOL with Agent')
 
 
 GlobalOptions = parser.parse_args()
@@ -149,9 +151,9 @@ def ValidateGlopts():
     if GlobalOptions.model_ip:
         os.environ["MODEL_ZMQ_SERVER_IP"] = GlobalOptions.model_ip
 
-    print("========================================================")
-    print("Global Command Line Options")
-    for k,v in GlobalOptions.__dict__.items():
-        print ("  %s = " % k, v)
-    print("========================================================")
-
+    if GlobalOptions.debug:
+        print("========================================================")
+        print("Global Command Line Options")
+        for k,v in GlobalOptions.__dict__.items():
+            print ("  %s = " % k, v)
+        print("========================================================")

@@ -458,6 +458,8 @@ def run_dol(args):
         cmd.append("--debug")
     if args.verbose:
         cmd.append("--verbose")
+    if args.agent:
+        cmd.append("--agent")
 
     if args.coveragerun:
         #Increasing timeout for coverage runs only.
@@ -730,6 +732,8 @@ def main():
                         action='store_true', help='Set loglevel to VERBOSE.')
     parser.add_argument('--rtl_coverage', dest='rtl_coverage', default=None, action='store_true',
                         help='Dump RTL toggle coverage')
+    parser.add_argument('--agent', dest='agent', default=None, action='store_true',
+                        help='Run with agent.')
 
     args = parser.parse_args()
 

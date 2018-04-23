@@ -129,3 +129,16 @@ class ConfigObjectBase(objects.FrameworkObject):
     def IsRetryEnabled(self):
         return False
 
+class AgentObjectMeta:
+    def __init__(self):
+        self.Name = None
+        self.Tenant = None
+        return
+
+class AgentObjectBase:
+    def __init__(self, kind, name, ten):
+        self.Kind = kind
+        self.meta = AgentObjectMeta()
+        self.meta.Name = name
+        self.meta.Tenant = ten
+        return

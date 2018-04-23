@@ -378,12 +378,12 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	}
 
 	// convert v6 address
-	v6Addr := halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
-		V4OrV6: &halproto.IPAddress_V6Addr{
-			V6Addr: []byte(net.ParseIP(ep.Status.IPv6Address)),
-		},
-	}
+	//	v6Addr := halproto.IPAddress{
+	//		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
+	//		V4OrV6: &halproto.IPAddress_V6Addr{
+	//			V6Addr: []byte(net.ParseIP(ep.Status.IPv6Address)),
+	//		},
+	//	}
 
 	// get sg ids
 	var sgHandles []*halproto.SecurityGroupKeyHandle
@@ -411,7 +411,7 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	epAttrs := halproto.EndpointAttributes{
 		InterfaceKeyHandle: &ifKey,
 		UsegVlan:           ep.Status.UsegVlan,
-		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
+		IpAddress:          []*halproto.IPAddress{&v4Addr},
 		SgKeyHandle:        sgHandles,
 	}
 
