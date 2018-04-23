@@ -34,14 +34,13 @@ flow_info:
                        u.flow_info_d.multicast_en}
   phvwr         p.control_metadata_dst_lport, d.u.flow_info_d.dst_lport
 
-  /* rewrite info */
-  phvwrpair     p.rewrite_metadata_rewrite_index[11:0], \
-                    d.u.flow_info_d.rewrite_index, \
-                    p.rewrite_metadata_tunnel_rewrite_index[9:0], \
+  /* rewrite and info */
+  phvwrpair     p.tunnel_metadata_tunnel_originate[0], \
+                    d.u.flow_info_d.tunnel_originate, \
+                p.rewrite_metadata_rewrite_index[11:0], \
+                    d.u.flow_info_d.rewrite_index
+  phvwr         p.rewrite_metadata_tunnel_rewrite_index[9:0], \
                     d.u.flow_info_d.tunnel_rewrite_index
-
-  /* tunnel info */
-  phvwr         p.tunnel_metadata_tunnel_originate, d.u.flow_info_d.tunnel_originate
   phvwrpair.e   p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid, \
                     p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
 
@@ -68,14 +67,12 @@ f_flow_info_thread_1:
 
   /* Commenting this to bring down the # of phvwr done in this table */
   /* ttl change detected */
-  sne           c1, d.u.flow_info_d.flow_ttl, \
-                    k.{flow_lkp_metadata_ip_ttl_sbit0_ebit4,\
-                       flow_lkp_metadata_ip_ttl_sbit5_ebit7}
+  sne           c1, d.u.flow_info_d.flow_ttl, k.flow_lkp_metadata_ip_ttl
   phvwr.c1      p.flow_info_metadata_flow_ttl_change_detected, \
                     k.l4_metadata_ip_ttl_change_detect_en
   /* flow info */
-  phvwrpair.e   p.flow_info_metadata_flow_role, d.u.flow_info_d.flow_role, \
-                    p.flow_info_metadata_session_state_index, \
+  phvwr         p.flow_info_metadata_flow_role, d.u.flow_info_d.flow_role
+  phvwr.e       p.flow_info_metadata_session_state_index, \
                     d.u.flow_info_d.session_state_index
 
   /* Flow Connection Tracking enable */
@@ -130,12 +127,13 @@ flow_miss_multicast:
   phvwrpair.c1  p.capri_intrinsic_tm_replicate_ptr, \
                     k.control_metadata_flow_miss_idx, \
                     p.capri_intrinsic_tm_replicate_en, 1
-  phvwrpair     p.rewrite_metadata_rewrite_index[11:0], \
-                    k.flow_miss_metadata_rewrite_index, \
-                    p.rewrite_metadata_tunnel_rewrite_index[9:0], \
-                    k.flow_miss_metadata_tunnel_rewrite_index
+  phvwrpair     p.tunnel_metadata_tunnel_originate[0], \
+                    k.flow_miss_metadata_tunnel_originate, \
+                p.rewrite_metadata_rewrite_index[11:0], \
+                    k.flow_miss_metadata_rewrite_index
   phvwr.e       p.rewrite_metadata_tunnel_vnid, k.flow_miss_metadata_tunnel_vnid
-  phvwr         p.tunnel_metadata_tunnel_originate, k.flow_miss_metadata_tunnel_originate
+  phvwr.f       p.rewrite_metadata_tunnel_rewrite_index[9:0], \
+                    k.flow_miss_metadata_tunnel_rewrite_index
 
 flow_miss_drop:
   phvwr.e       p.control_metadata_drop_reason[DROP_FLOW_MISS], 1
@@ -183,13 +181,14 @@ nop:
 
 validate_ipv4_flow_key:
   sub           r7, r0, 1
-  seq           c1, k.flow_lkp_metadata_lkp_src[31:24], 0x7f
-  seq           c2, k.flow_lkp_metadata_lkp_src[31:28], 0xe
-  seq           c3, k.flow_lkp_metadata_lkp_src[31:0], r7[31:0]
+  add           r6, k.flow_lkp_metadata_lkp_src_sbit104_ebit127, \
+                    k.flow_lkp_metadata_lkp_src_sbit96_ebit103, 24
+  seq           c1, r6[31:24], 0x7f
+  seq           c2, r6[31:28], 0xe
+  seq           c3, r6[31:0], r7[31:0]
   seq           c4, k.flow_lkp_metadata_lkp_dst[31:0], r0
   seq           c5, k.flow_lkp_metadata_lkp_dst[31:24], 0x7f
-  seq           c6, k.flow_lkp_metadata_lkp_src[31:0], \
-                    k.flow_lkp_metadata_lkp_dst[31:0]
+  seq           c6, r6[31:0], k.flow_lkp_metadata_lkp_dst[31:0]
   bcf           [c1|c2|c3|c4|c5|c6], malformed_flow_key
   nop
   b             flow_miss_common
@@ -197,8 +196,10 @@ validate_ipv4_flow_key:
 
 validate_ipv6_flow_key:
   // srcAddr => r2(hi) r3(lo)
-  add           r2, r0, k.flow_lkp_metadata_lkp_src[127:64]
-  add           r3, r0, k.flow_lkp_metadata_lkp_src[63:0]
+  add           r2, r0, k.flow_lkp_metadata_lkp_src_sbit0_ebit95[95:32]
+  add           r3, k.flow_lkp_metadata_lkp_src_sbit104_ebit127, \
+                    k.flow_lkp_metadata_lkp_src_sbit96_ebit103, 24
+  add           r3, r3, k.flow_lkp_metadata_lkp_src_sbit0_ebit95[31:0], 32
   // dstAddr ==> r4(hi), r5(lo)
   add           r4, r0, k.flow_lkp_metadata_lkp_dst[127:64]
   add           r5, r0, k.flow_lkp_metadata_lkp_dst[63:0]

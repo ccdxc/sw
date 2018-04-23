@@ -48,23 +48,23 @@ input_properties_mac_vlan:
 
   phvwr         p.flow_miss_metadata_tunnel_originate, \
                     d.input_properties_mac_vlan_d.tunnel_originate
-  phvwrpair     p.flow_miss_metadata_tunnel_vnid, \
-                    d.input_properties_mac_vlan_d.tunnel_vnid, \
-                    p.control_metadata_flow_miss_idx, \
+  phvwr         p.control_metadata_flow_miss_idx, \
                     d.input_properties_mac_vlan_d.flow_miss_idx
-  phvwrpair     p.flow_miss_metadata_rewrite_index, \
-                    d.input_properties_mac_vlan_d.rewrite_index, \
-                    p.flow_miss_metadata_tunnel_rewrite_index, \
-                    d.input_properties_mac_vlan_d.tunnel_rewrite_index
+  phvwrpair     p.flow_miss_metadata_tunnel_rewrite_index, \
+                    d.input_properties_mac_vlan_d.tunnel_rewrite_index, \
+                    p.flow_miss_metadata_tunnel_vnid, \
+                    d.input_properties_mac_vlan_d.tunnel_vnid
 
   phvwrpair     p.control_metadata_dst_lport[10:0], \
                     d.input_properties_mac_vlan_d.dst_lport, \
                     p.control_metadata_src_lport[10:0], \
                     d.input_properties_mac_vlan_d.src_lport
   phvwr         p.flow_lkp_metadata_lkp_vrf, d.input_properties_mac_vlan_d.vrf
-  phvwrpair     p.control_metadata_flow_miss_action, \
-                    d.input_properties_mac_vlan_d.flow_miss_action, \
-                    p.control_metadata_flow_miss_qos_class_id, \
+  phvwrpair     p.flow_miss_metadata_rewrite_index, \
+                    d.input_properties_mac_vlan_d.rewrite_index, \
+                    p.control_metadata_flow_miss_action, \
+                    d.input_properties_mac_vlan_d.flow_miss_action
+  phvwr         p.control_metadata_flow_miss_qos_class_id, \
                     d.input_properties_mac_vlan_d.flow_miss_qos_class_id
   phvwrpair     p.control_metadata_ipsg_enable, \
                     d.input_properties_mac_vlan_d.ipsg_enable, \

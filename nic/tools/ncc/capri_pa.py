@@ -910,9 +910,18 @@ class capri_gress_pa:
                         # ignore any cfs that are used for widekey lookup
                         hdr_used = False
 
-                    if (self.d == xgress.INGRESS or cf not in self.i2e_fields) and \
-                        not cf.is_key and not cf.is_input:
-                        cf.allow_relocation = True
+                    # Not relocating (i.e. allocating phv whereever possible) helps to localize
+                    # a key maker for a given table but wastes phv space.. 
+                    # current programs seems to compile w/ relocation so make it cmd line option
+                    # for future
+                    if self.pa.be.args.avoid_ki_relocation:
+                        if (self.d == xgress.INGRESS or cf not in self.i2e_fields) and \
+                            not cf.is_key and not cf.is_input:
+                            cf.allow_relocation = True
+                    else:
+                        if (self.d == xgress.INGRESS or cf not in self.i2e_fields):
+                            # Always allow relocation ?? Or decide it based on num-tables in a stage
+                            cf.allow_relocation = True
 
             if hdr_used and (self.pa.be.args.p4_plus or is_atomic_header(h)):
                 self.hdr_fld_order.append(h)
@@ -2198,26 +2207,36 @@ class capri_gress_pa:
                 (self.d.name, flit.id, hf.name))
 
         if isinstance(hf, capri_field) and hf.allow_relocation:
+            # Previously relocation was not allowed for table k or i fields so alignment and
+            # Relocating table k,i fields
+            justify = JUSTIFY_LEFT
+            if hf in self.i2e_fields or \
+                ((hf.is_key or hf.is_input) and hf.storage_size() >= 4):
+                align = 8
+            else:
+                align = 0
+            if hf.is_index_key:
+                if hf.storage_size() >= 4:
+                    justify = JUSTIFY_RIGHT
+
             # try to allocate in prior flits and then this flit
             for fid in range(flit.id-1, -1, -1):
-                if hf in self.i2e_fields:
-                    align = 8
-                else:
-                    align = 0
-                phv_bit = self.flits[fid].flit_chunk_alloc(hf.width, -1, align, 0, 0, False)
+                phv_bit = self.flits[fid].flit_chunk_alloc(hf.width, -1, align, justify, 0, False)
                 if phv_bit >= 0:
                     hf.phv_bit = phv_bit
                     self.pa.logger.debug("%s:Allocated %s at %d in closed flit %d" % \
                         (self.d.name, hf.hfname, hf.phv_bit, fid))
                     return True
 
-            # try current flit
-            phv_bit = flit.flit_chunk_alloc(hf.width, -1, align, 0, 0, False)
+            # try current flit - fallthru' to use the common code
+            '''
+            phv_bit = flit.flit_chunk_alloc(hf.width, -1, align, justify, 0, False)
             if phv_bit >= 0:
                 hf.phv_bit = phv_bit
                 return True
             # cannot allocate in current flit
             return False
+            '''
 
         # get all the headers and flds that need to go into a single flit
         hf_list = []; cs_list = []

@@ -37,19 +37,25 @@ nacl_permit:
   phvwr.c2      p.control_metadata_qid, d.u.nacl_permit_d.qid
 
   seq           c2, d.u.nacl_permit_d.ingress_mirror_en, 1
-  phvwr.c2      p.capri_intrinsic_tm_span_session, d.u.nacl_permit_d.ingress_mirror_session_id
+  phvwr.c2      p.capri_intrinsic_tm_span_session, \
+                    d.u.nacl_permit_d.ingress_mirror_session_id
 
   seq           c2, d.u.nacl_permit_d.egress_mirror_en, 1
-  phvwr.c2      p.control_metadata_egress_mirror_session_id, d.u.nacl_permit_d.egress_mirror_session_id
+  phvwr.c2      p.control_metadata_egress_mirror_session_id, \
+                    d.u.nacl_permit_d.egress_mirror_session_id
 
   seq           c2, d.u.nacl_permit_d.rewrite_en, 1
-  phvwr.c2      p.rewrite_metadata_rewrite_index[11:0], d.u.nacl_permit_d.rewrite_index
+  phvwr.c2      p.rewrite_metadata_rewrite_index[11:0], \
+                    d.u.nacl_permit_d.rewrite_index
   phvwr.c2      p.rewrite_metadata_flags, d.u.nacl_permit_d.rewrite_flags
 
   seq           c2, d.u.nacl_permit_d.tunnel_rewrite_en, 1
-  phvwrpair.c2  p.tunnel_metadata_tunnel_originate[0], d.u.nacl_permit_d.tunnel_originate, \
-                p.rewrite_metadata_tunnel_rewrite_index[9:0], d.u.nacl_permit_d.tunnel_rewrite_index
-  phvwr.c2      p.rewrite_metadata_tunnel_vnid, d.u.nacl_permit_d.tunnel_vnid
+  phvwrpair.c2  p.rewrite_metadata_tunnel_rewrite_index[9:0], \
+                    d.u.nacl_permit_d.tunnel_rewrite_index, \
+                    p.rewrite_metadata_tunnel_vnid, \
+                    d.u.nacl_permit_d.tunnel_vnid
+  phvwr.c2      p.tunnel_metadata_tunnel_originate[0], \
+                    d.u.nacl_permit_d.tunnel_originate
 
   seq           c2, d.u.nacl_permit_d.dst_lport_en, 1
   phvwr.c2      p.control_metadata_dst_lport, d.u.nacl_permit_d.dst_lport

@@ -69,17 +69,17 @@ l4_profile:
                  u.l4_profile_d.tcp_flags_nonsyn_noack_drop}
 
   bal         r7, f_ip_normalization_optimal
-  phvwrpair   p.l4_metadata_ip_fragment_drop, \
-                d.u.l4_profile_d.ip_fragment_drop, \
-                p.l4_metadata_tcp_split_handshake_detect_en, \
-                d.u.l4_profile_d.tcp_split_handshake_detect_en
+  phvwr       p.l4_metadata_ip_fragment_drop, \
+                d.u.l4_profile_d.ip_fragment_drop
   phvwrpair   p.l4_metadata_ip_normalize_ttl, \
                 d.u.l4_profile_d.ip_normalize_ttl, \
                 p.{l4_metadata_tcp_invalid_flags_drop, \
                    l4_metadata_tcp_non_syn_first_pkt_drop}, \
                 d.{u.l4_profile_d.tcp_invalid_flags_drop, \
                    u.l4_profile_d.tcp_non_syn_first_pkt_drop}
-  phvwr       p.l4_metadata_tcp_normalize_mss, \
+  phvwrpair   p.l4_metadata_tcp_split_handshake_detect_en, \
+                d.u.l4_profile_d.tcp_split_handshake_detect_en, \
+                p.l4_metadata_tcp_normalize_mss, \
                 d.u.l4_profile_d.tcp_normalize_mss
   b           f_p4plus_to_p4_1
   phvwrpair   p.l4_metadata_tcp_split_handshake_drop, \
@@ -117,9 +117,7 @@ lb_ipv4_normalizaiton_optimal:
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}
   seq         c3, k.control_metadata_uplink, FALSE
   sne.c3      c3, d.u.l4_profile_d.ip_normalize_ttl, r0
-  sne.c3      c3, k.{flow_lkp_metadata_ip_ttl_sbit0_ebit4, \
-                     flow_lkp_metadata_ip_ttl_sbit5_ebit7}, \
-                     d.u.l4_profile_d.ip_normalize_ttl
+  sne.c3      c3, k.flow_lkp_metadata_ip_ttl, d.u.l4_profile_d.ip_normalize_ttl
   jrcf        ![c1 | c3], r7
   bcf         [c1 | c3], lb_ipv4_normalizaiton // bad packet
   nop
@@ -133,9 +131,7 @@ lb_ipv6_normalization_optimal:
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}
   seq         c3, k.control_metadata_uplink, FALSE
   sne.c3      c3, d.u.l4_profile_d.ip_normalize_ttl, r0
-  sne.c3      c3, k.{flow_lkp_metadata_ip_ttl_sbit0_ebit4, \
-                     flow_lkp_metadata_ip_ttl_sbit5_ebit7}, \
-                     d.u.l4_profile_d.ip_normalize_ttl
+  sne.c3      c3, k.flow_lkp_metadata_ip_ttl, d.u.l4_profile_d.ip_normalize_ttl
   jrcf        ![c1 | c3], r7
   jr.!c1      r7
   bcf         [c1 | c3], lb_ipv6_normalization // bad packet
@@ -311,9 +307,7 @@ lb_ipv4_norm_invalid_length_tunnel_terminate:
 lb_ipv4_norm_ttl:
   jr.c4       r7
   seq         c1, k.control_metadata_uplink, FALSE
-  sne.c1      c1, k.{flow_lkp_metadata_ip_ttl_sbit0_ebit4, \
-                     flow_lkp_metadata_ip_ttl_sbit5_ebit7}, \
-                     d.u.l4_profile_d.ip_normalize_ttl
+  sne.c1      c1, k.flow_lkp_metadata_ip_ttl, d.u.l4_profile_d.ip_normalize_ttl
   jr.!c1      r7
   nop
   // We are here means we have to edit the packet based on tunnel termination
@@ -410,9 +404,7 @@ lb_ipv6_norm_invalid_length:
 lb_ipv6_norm_hop_limit:
   jr.c4       r7
   seq         c1, k.control_metadata_uplink, FALSE
-  sne.c1      c1, k.{flow_lkp_metadata_ip_ttl_sbit0_ebit4, \
-                     flow_lkp_metadata_ip_ttl_sbit5_ebit7}, \
-                     d.u.l4_profile_d.ip_normalize_ttl
+  sne.c1      c1, k.flow_lkp_metadata_ip_ttl, d.u.l4_profile_d.ip_normalize_ttl
   jr.!c1      r7
   nop
   // We are here means we have to edit the packet based on tunnel termination

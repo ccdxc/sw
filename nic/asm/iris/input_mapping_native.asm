@@ -38,10 +38,9 @@ native_ipv4_packet_common:
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr
 
-  .assert(offsetof(p, flow_lkp_metadata_ipv4_flags) - offsetof(p, flow_lkp_metadata_ip_ttl) == 8)
-  or            r1, k.ipv4_ttl, k.ipv4_flags, 8
+  phvwr         p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags
   phvwrpair     p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr, \
-                    p.{flow_lkp_metadata_ipv4_flags,flow_lkp_metadata_ip_ttl}, r1
+                    p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
   phvwr         p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl
   phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
 

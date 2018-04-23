@@ -89,6 +89,9 @@ def get_parser():
     parser.add_argument('--single-pipe', dest='single_pipe', action='store_true',
                         help='When packet is completely processed in single pipe',
                         default=False, required=False)
+    parser.add_argument('--avoid-ki-relocation', dest='avoid_ki_relocation', action='store_true',
+                        help='Avoid relocating table k-i fields to earlier flits',
+                        default=False, required=False)
     return parser
 
 # Main back-end class that holds everything needed by the backend
