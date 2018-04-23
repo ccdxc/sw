@@ -12,6 +12,7 @@ bin/*
 *#
 .#*
 cscope.*
+__pycache__/
 *.pyc
 *.test
 *.out
