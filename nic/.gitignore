@@ -34,6 +34,9 @@ GRTAGS
 hal/third-party/snort3/export/x86_64/
 hal/third-party/snort3/export/aarch64/
 hal/third-party/isc/
+hal/third-party/lkl/export/aarch64/
+hal/third-party/lkl/export/bin/
+hal/third-party/lkl/export/x86_64/
 hal/third-party/zmq/
 hal/third-party/google/
 hal/third-party/grpc/
