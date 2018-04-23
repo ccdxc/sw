@@ -297,8 +297,10 @@ pd: pd_iris pd_stub
 
 agent:
     ifneq ($(ARCH),aarch64)
+    ifeq ($(c),0)
 	@cd ../ && mkdir -p nic/obj/agent
 	@cd ../ && go build -o nic/obj/agent/netagent github.com/pensando/sw/nic/agent/cmd/netagent
+    endif
     endif
 
 # code generation stage
