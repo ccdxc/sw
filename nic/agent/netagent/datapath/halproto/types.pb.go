@@ -375,6 +375,20 @@
 		IpsecRuleStatus
 		IpsecRuleResponse
 		IpsecRuleResponseMsg
+		IpsecRuleDeleteRequest
+		IpsecRuleDeleteRequestMsg
+		IpsecRuleDeleteResponseMsg
+		IpsecRuleGetRequest
+		IpsecRuleGetRequestMsg
+		IpsecSARequestMsg
+		IpsecSAStatus
+		IpsecSAResponse
+		IpsecSAResponseMsg
+		IpsecSADeleteRequest
+		IpsecSADeleteRequestMsg
+		IpsecSADeleteResponseMsg
+		IpsecSAGetRequest
+		IpsecSAGetRequestMsg
 		IpsecCbKeyHandle
 		IpsecCbSpec
 		IpsecCbRequestMsg
@@ -424,6 +438,7 @@
 		Svc
 		NatMappingKeyHandle
 		IpsecRuleKeyHandle
+		IpsecSAKeyHandle
 		QosClassKeyHandle
 		CoppKeyHandle
 		L2SegmentSpec

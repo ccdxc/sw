@@ -245,21 +245,45 @@ func _Key_OneofSizer(msg proto.Message) (n int) {
 
 // IPSec security association object
 type IpsecSA struct {
-	Protocol                IpsecProtocol           `protobuf:"varint,1,opt,name=protocol,proto3,enum=ipsec.IpsecProtocol" json:"protocol,omitempty"`
-	AuthenticationAlgorithm AuthenticationAlgorithm `protobuf:"varint,2,opt,name=authentication_algorithm,json=authenticationAlgorithm,proto3,enum=ipsec.AuthenticationAlgorithm" json:"authentication_algorithm,omitempty"`
-	AuthenticationKey       *Key                    `protobuf:"bytes,3,opt,name=authentication_key,json=authenticationKey" json:"authentication_key,omitempty"`
-	EncryptionAlgorithm     EncryptionAlgorithm     `protobuf:"varint,4,opt,name=encryption_algorithm,json=encryptionAlgorithm,proto3,enum=ipsec.EncryptionAlgorithm" json:"encryption_algorithm,omitempty"`
-	EncryptionKey           *Key                    `protobuf:"bytes,5,opt,name=encryption_key,json=encryptionKey" json:"encryption_key,omitempty"`
-	LocalGatewayIp          *IPAddress              `protobuf:"bytes,6,opt,name=local_gateway_ip,json=localGatewayIp" json:"local_gateway_ip,omitempty"`
-	RemoteGatewayIp         *IPAddress              `protobuf:"bytes,7,opt,name=remote_gateway_ip,json=remoteGatewayIp" json:"remote_gateway_ip,omitempty"`
-	Spi                     uint32                  `protobuf:"varint,8,opt,name=spi,proto3" json:"spi,omitempty"`
-	NatTraversalPort        uint32                  `protobuf:"varint,9,opt,name=nat_traversal_port,json=natTraversalPort,proto3" json:"nat_traversal_port,omitempty"`
+	Meta                    *ObjectMeta             `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle             *IpsecSAKeyHandle       `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	Protocol                IpsecProtocol           `protobuf:"varint,3,opt,name=protocol,proto3,enum=ipsec.IpsecProtocol" json:"protocol,omitempty"`
+	AuthenticationAlgorithm AuthenticationAlgorithm `protobuf:"varint,4,opt,name=authentication_algorithm,json=authenticationAlgorithm,proto3,enum=ipsec.AuthenticationAlgorithm" json:"authentication_algorithm,omitempty"`
+	AuthenticationKey       *Key                    `protobuf:"bytes,5,opt,name=authentication_key,json=authenticationKey" json:"authentication_key,omitempty"`
+	EncryptionAlgorithm     EncryptionAlgorithm     `protobuf:"varint,6,opt,name=encryption_algorithm,json=encryptionAlgorithm,proto3,enum=ipsec.EncryptionAlgorithm" json:"encryption_algorithm,omitempty"`
+	EncryptionKey           *Key                    `protobuf:"bytes,7,opt,name=encryption_key,json=encryptionKey" json:"encryption_key,omitempty"`
+	RekeyAuthenticationKey  *Key                    `protobuf:"bytes,8,opt,name=rekey_authentication_key,json=rekeyAuthenticationKey" json:"rekey_authentication_key,omitempty"`
+	RekeyEncryptionKey      *Key                    `protobuf:"bytes,9,opt,name=rekey_encryption_key,json=rekeyEncryptionKey" json:"rekey_encryption_key,omitempty"`
+	// Following are assumed and not configurable right now - iv_size (8 by default), icv_size (16 by default), block_size (16 by default)
+	LocalGatewayIp   *IPAddress `protobuf:"bytes,10,opt,name=local_gateway_ip,json=localGatewayIp" json:"local_gateway_ip,omitempty"`
+	RemoteGatewayIp  *IPAddress `protobuf:"bytes,11,opt,name=remote_gateway_ip,json=remoteGatewayIp" json:"remote_gateway_ip,omitempty"`
+	Spi              uint32     `protobuf:"varint,12,opt,name=spi,proto3" json:"spi,omitempty"`
+	NatTraversalPort uint32     `protobuf:"varint,13,opt,name=nat_traversal_port,json=natTraversalPort,proto3" json:"nat_traversal_port,omitempty"`
+	RekeyActive      uint32     `protobuf:"varint,14,opt,name=rekey_active,json=rekeyActive,proto3" json:"rekey_active,omitempty"`
+	RekeySpi         uint32     `protobuf:"varint,15,opt,name=rekey_spi,json=rekeySpi,proto3" json:"rekey_spi,omitempty"`
+	// Nonce = salt+iv - whether salt has to go into key (like ip xfrm ?? - lets see)
+	Salt uint32 `protobuf:"varint,16,opt,name=salt,proto3" json:"salt,omitempty"`
+	Iv   uint64 `protobuf:"varint,17,opt,name=iv,proto3" json:"iv,omitempty"`
 }
 
 func (m *IpsecSA) Reset()                    { *m = IpsecSA{} }
 func (m *IpsecSA) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSA) ProtoMessage()               {}
 func (*IpsecSA) Descriptor() ([]byte, []int) { return fileDescriptorIpsecDraft, []int{1} }
+
+func (m *IpsecSA) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *IpsecSA) GetKeyOrHandle() *IpsecSAKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
 
 func (m *IpsecSA) GetProtocol() IpsecProtocol {
 	if m != nil {
@@ -296,6 +320,20 @@ func (m *IpsecSA) GetEncryptionKey() *Key {
 	return nil
 }
 
+func (m *IpsecSA) GetRekeyAuthenticationKey() *Key {
+	if m != nil {
+		return m.RekeyAuthenticationKey
+	}
+	return nil
+}
+
+func (m *IpsecSA) GetRekeyEncryptionKey() *Key {
+	if m != nil {
+		return m.RekeyEncryptionKey
+	}
+	return nil
+}
+
 func (m *IpsecSA) GetLocalGatewayIp() *IPAddress {
 	if m != nil {
 		return m.LocalGatewayIp
@@ -320,6 +358,34 @@ func (m *IpsecSA) GetSpi() uint32 {
 func (m *IpsecSA) GetNatTraversalPort() uint32 {
 	if m != nil {
 		return m.NatTraversalPort
+	}
+	return 0
+}
+
+func (m *IpsecSA) GetRekeyActive() uint32 {
+	if m != nil {
+		return m.RekeyActive
+	}
+	return 0
+}
+
+func (m *IpsecSA) GetRekeySpi() uint32 {
+	if m != nil {
+		return m.RekeySpi
+	}
+	return 0
+}
+
+func (m *IpsecSA) GetSalt() uint32 {
+	if m != nil {
+		return m.Salt
+	}
+	return 0
+}
+
+func (m *IpsecSA) GetIv() uint64 {
+	if m != nil {
+		return m.Iv
 	}
 	return 0
 }
@@ -491,6 +557,294 @@ func (m *IpsecRuleResponseMsg) GetResponse() []*IpsecRuleResponse {
 	return nil
 }
 
+// IpsecRuleDeleteRequest is used to delete a policy rule
+type IpsecRuleDeleteRequest struct {
+	Meta        *ObjectMeta         `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *IpsecRuleKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *IpsecRuleDeleteRequest) Reset()                    { *m = IpsecRuleDeleteRequest{} }
+func (m *IpsecRuleDeleteRequest) String() string            { return proto.CompactTextString(m) }
+func (*IpsecRuleDeleteRequest) ProtoMessage()               {}
+func (*IpsecRuleDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorIpsecDraft, []int{7} }
+
+func (m *IpsecRuleDeleteRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *IpsecRuleDeleteRequest) GetKeyOrHandle() *IpsecRuleKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// IpsecRuleDeleteRequestMsg is used to delete a batch of ipsec rules
+type IpsecRuleDeleteRequestMsg struct {
+	Request []*IpsecRuleDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *IpsecRuleDeleteRequestMsg) Reset()         { *m = IpsecRuleDeleteRequestMsg{} }
+func (m *IpsecRuleDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*IpsecRuleDeleteRequestMsg) ProtoMessage()    {}
+func (*IpsecRuleDeleteRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorIpsecDraft, []int{8}
+}
+
+func (m *IpsecRuleDeleteRequestMsg) GetRequest() []*IpsecRuleDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// IpsecRuleDeleteResponseMsg is batched response to IpsecRuleDeleteRequestMsg
+type IpsecRuleDeleteResponseMsg struct {
+	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
+}
+
+func (m *IpsecRuleDeleteResponseMsg) Reset()         { *m = IpsecRuleDeleteResponseMsg{} }
+func (m *IpsecRuleDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*IpsecRuleDeleteResponseMsg) ProtoMessage()    {}
+func (*IpsecRuleDeleteResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorIpsecDraft, []int{9}
+}
+
+func (m *IpsecRuleDeleteResponseMsg) GetApiStatus() []ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return nil
+}
+
+// IpsecRuleGetRequest is used to get information about a ipsec rule
+type IpsecRuleGetRequest struct {
+	Meta        *ObjectMeta         `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *IpsecRuleKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *IpsecRuleGetRequest) Reset()                    { *m = IpsecRuleGetRequest{} }
+func (m *IpsecRuleGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*IpsecRuleGetRequest) ProtoMessage()               {}
+func (*IpsecRuleGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorIpsecDraft, []int{10} }
+
+func (m *IpsecRuleGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *IpsecRuleGetRequest) GetKeyOrHandle() *IpsecRuleKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// IpsecRuleGetRequestMsg is batched GET requests for ipsec rule
+type IpsecRuleGetRequestMsg struct {
+	Request []*IpsecRuleGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *IpsecRuleGetRequestMsg) Reset()         { *m = IpsecRuleGetRequestMsg{} }
+func (m *IpsecRuleGetRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*IpsecRuleGetRequestMsg) ProtoMessage()    {}
+func (*IpsecRuleGetRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorIpsecDraft, []int{11}
+}
+
+func (m *IpsecRuleGetRequestMsg) GetRequest() []*IpsecRuleGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// IpsecSARequestMsg is batched add or modify ipseccb request
+type IpsecSARequestMsg struct {
+	Request []*IpsecSA `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *IpsecSARequestMsg) Reset()                    { *m = IpsecSARequestMsg{} }
+func (m *IpsecSARequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*IpsecSARequestMsg) ProtoMessage()               {}
+func (*IpsecSARequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorIpsecDraft, []int{12} }
+
+func (m *IpsecSARequestMsg) GetRequest() []*IpsecSA {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// IpsecSAStatus is the operational status of a given ipseccb
+type IpsecSAStatus struct {
+	IpseccbHandle uint64 `protobuf:"fixed64,1,opt,name=ipseccb_handle,json=ipseccbHandle,proto3" json:"ipseccb_handle,omitempty"`
+}
+
+func (m *IpsecSAStatus) Reset()                    { *m = IpsecSAStatus{} }
+func (m *IpsecSAStatus) String() string            { return proto.CompactTextString(m) }
+func (*IpsecSAStatus) ProtoMessage()               {}
+func (*IpsecSAStatus) Descriptor() ([]byte, []int) { return fileDescriptorIpsecDraft, []int{13} }
+
+func (m *IpsecSAStatus) GetIpseccbHandle() uint64 {
+	if m != nil {
+		return m.IpseccbHandle
+	}
+	return 0
+}
+
+// IpsecSAResponse is response to IpsecSA
+type IpsecSAResponse struct {
+	ApiStatus     ApiStatus      `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	IpseccbStatus *IpsecSAStatus `protobuf:"bytes,2,opt,name=ipseccb_status,json=ipseccbStatus" json:"ipseccb_status,omitempty"`
+}
+
+func (m *IpsecSAResponse) Reset()                    { *m = IpsecSAResponse{} }
+func (m *IpsecSAResponse) String() string            { return proto.CompactTextString(m) }
+func (*IpsecSAResponse) ProtoMessage()               {}
+func (*IpsecSAResponse) Descriptor() ([]byte, []int) { return fileDescriptorIpsecDraft, []int{14} }
+
+func (m *IpsecSAResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *IpsecSAResponse) GetIpseccbStatus() *IpsecSAStatus {
+	if m != nil {
+		return m.IpseccbStatus
+	}
+	return nil
+}
+
+// IpsecSAResponseMsg is batched response to IpsecSARequestMsg
+type IpsecSAResponseMsg struct {
+	Response []*IpsecSAResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *IpsecSAResponseMsg) Reset()                    { *m = IpsecSAResponseMsg{} }
+func (m *IpsecSAResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*IpsecSAResponseMsg) ProtoMessage()               {}
+func (*IpsecSAResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorIpsecDraft, []int{15} }
+
+func (m *IpsecSAResponseMsg) GetResponse() []*IpsecSAResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// IpsecSADeleteRequest is used to delete a ipseccb
+type IpsecSADeleteRequest struct {
+	Meta        *ObjectMeta       `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *IpsecSAKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *IpsecSADeleteRequest) Reset()                    { *m = IpsecSADeleteRequest{} }
+func (m *IpsecSADeleteRequest) String() string            { return proto.CompactTextString(m) }
+func (*IpsecSADeleteRequest) ProtoMessage()               {}
+func (*IpsecSADeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorIpsecDraft, []int{16} }
+
+func (m *IpsecSADeleteRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *IpsecSADeleteRequest) GetKeyOrHandle() *IpsecSAKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// IpsecSADeleteRequestMsg is used to delete a batch of ipseccbs
+type IpsecSADeleteRequestMsg struct {
+	Request []*IpsecSADeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *IpsecSADeleteRequestMsg) Reset()         { *m = IpsecSADeleteRequestMsg{} }
+func (m *IpsecSADeleteRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*IpsecSADeleteRequestMsg) ProtoMessage()    {}
+func (*IpsecSADeleteRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorIpsecDraft, []int{17}
+}
+
+func (m *IpsecSADeleteRequestMsg) GetRequest() []*IpsecSADeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// IpsecSADeleteResponseMsg is batched response to IpsecSADeleteRequestMsg
+type IpsecSADeleteResponseMsg struct {
+	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
+}
+
+func (m *IpsecSADeleteResponseMsg) Reset()         { *m = IpsecSADeleteResponseMsg{} }
+func (m *IpsecSADeleteResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*IpsecSADeleteResponseMsg) ProtoMessage()    {}
+func (*IpsecSADeleteResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorIpsecDraft, []int{18}
+}
+
+func (m *IpsecSADeleteResponseMsg) GetApiStatus() []ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return nil
+}
+
+// IpsecSAGetRequest is used to get information about a ipseccb
+type IpsecSAGetRequest struct {
+	Meta        *ObjectMeta       `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *IpsecSAKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *IpsecSAGetRequest) Reset()                    { *m = IpsecSAGetRequest{} }
+func (m *IpsecSAGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*IpsecSAGetRequest) ProtoMessage()               {}
+func (*IpsecSAGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorIpsecDraft, []int{19} }
+
+func (m *IpsecSAGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *IpsecSAGetRequest) GetKeyOrHandle() *IpsecSAKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// IpsecSAGetRequestMsg is batched GET requests for ipseccbs
+type IpsecSAGetRequestMsg struct {
+	Request []*IpsecSAGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *IpsecSAGetRequestMsg) Reset()                    { *m = IpsecSAGetRequestMsg{} }
+func (m *IpsecSAGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*IpsecSAGetRequestMsg) ProtoMessage()               {}
+func (*IpsecSAGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorIpsecDraft, []int{20} }
+
+func (m *IpsecSAGetRequestMsg) GetRequest() []*IpsecSAGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Key)(nil), "ipsec.Key")
 	proto.RegisterType((*IpsecSA)(nil), "ipsec.IpsecSA")
@@ -499,6 +853,20 @@ func init() {
 	proto.RegisterType((*IpsecRuleStatus)(nil), "ipsec.IpsecRuleStatus")
 	proto.RegisterType((*IpsecRuleResponse)(nil), "ipsec.IpsecRuleResponse")
 	proto.RegisterType((*IpsecRuleResponseMsg)(nil), "ipsec.IpsecRuleResponseMsg")
+	proto.RegisterType((*IpsecRuleDeleteRequest)(nil), "ipsec.IpsecRuleDeleteRequest")
+	proto.RegisterType((*IpsecRuleDeleteRequestMsg)(nil), "ipsec.IpsecRuleDeleteRequestMsg")
+	proto.RegisterType((*IpsecRuleDeleteResponseMsg)(nil), "ipsec.IpsecRuleDeleteResponseMsg")
+	proto.RegisterType((*IpsecRuleGetRequest)(nil), "ipsec.IpsecRuleGetRequest")
+	proto.RegisterType((*IpsecRuleGetRequestMsg)(nil), "ipsec.IpsecRuleGetRequestMsg")
+	proto.RegisterType((*IpsecSARequestMsg)(nil), "ipsec.IpsecSARequestMsg")
+	proto.RegisterType((*IpsecSAStatus)(nil), "ipsec.IpsecSAStatus")
+	proto.RegisterType((*IpsecSAResponse)(nil), "ipsec.IpsecSAResponse")
+	proto.RegisterType((*IpsecSAResponseMsg)(nil), "ipsec.IpsecSAResponseMsg")
+	proto.RegisterType((*IpsecSADeleteRequest)(nil), "ipsec.IpsecSADeleteRequest")
+	proto.RegisterType((*IpsecSADeleteRequestMsg)(nil), "ipsec.IpsecSADeleteRequestMsg")
+	proto.RegisterType((*IpsecSADeleteResponseMsg)(nil), "ipsec.IpsecSADeleteResponseMsg")
+	proto.RegisterType((*IpsecSAGetRequest)(nil), "ipsec.IpsecSAGetRequest")
+	proto.RegisterType((*IpsecSAGetRequestMsg)(nil), "ipsec.IpsecSAGetRequestMsg")
 	proto.RegisterEnum("ipsec.IpsecProtocol", IpsecProtocol_name, IpsecProtocol_value)
 	proto.RegisterEnum("ipsec.EncryptionAlgorithm", EncryptionAlgorithm_name, EncryptionAlgorithm_value)
 	proto.RegisterEnum("ipsec.AuthenticationAlgorithm", AuthenticationAlgorithm_name, AuthenticationAlgorithm_value)
@@ -516,6 +884,13 @@ const _ = grpc.SupportPackageIsVersion4
 
 type IpsecClient interface {
 	IpsecRuleCreate(ctx context.Context, in *IpsecRuleRequestMsg, opts ...grpc.CallOption) (*IpsecRuleResponseMsg, error)
+	IpsecRuleUpdate(ctx context.Context, in *IpsecRuleRequestMsg, opts ...grpc.CallOption) (*IpsecRuleResponseMsg, error)
+	IpsecRuleDelete(ctx context.Context, in *IpsecRuleDeleteRequestMsg, opts ...grpc.CallOption) (*IpsecRuleDeleteResponseMsg, error)
+	IpsecRuleGet(ctx context.Context, in *IpsecRuleGetRequestMsg, opts ...grpc.CallOption) (*IpsecRuleGetRequestMsg, error)
+	IpsecSACreate(ctx context.Context, in *IpsecSARequestMsg, opts ...grpc.CallOption) (*IpsecSAResponseMsg, error)
+	IpsecSAUpdate(ctx context.Context, in *IpsecSARequestMsg, opts ...grpc.CallOption) (*IpsecSAResponseMsg, error)
+	IpsecSADelete(ctx context.Context, in *IpsecSADeleteRequestMsg, opts ...grpc.CallOption) (*IpsecSADeleteResponseMsg, error)
+	IpsecSAGet(ctx context.Context, in *IpsecSAGetRequestMsg, opts ...grpc.CallOption) (*IpsecSAGetRequestMsg, error)
 }
 
 type ipsecClient struct {
@@ -535,10 +910,80 @@ func (c *ipsecClient) IpsecRuleCreate(ctx context.Context, in *IpsecRuleRequestM
 	return out, nil
 }
 
+func (c *ipsecClient) IpsecRuleUpdate(ctx context.Context, in *IpsecRuleRequestMsg, opts ...grpc.CallOption) (*IpsecRuleResponseMsg, error) {
+	out := new(IpsecRuleResponseMsg)
+	err := grpc.Invoke(ctx, "/ipsec.Ipsec/IpsecRuleUpdate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ipsecClient) IpsecRuleDelete(ctx context.Context, in *IpsecRuleDeleteRequestMsg, opts ...grpc.CallOption) (*IpsecRuleDeleteResponseMsg, error) {
+	out := new(IpsecRuleDeleteResponseMsg)
+	err := grpc.Invoke(ctx, "/ipsec.Ipsec/IpsecRuleDelete", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ipsecClient) IpsecRuleGet(ctx context.Context, in *IpsecRuleGetRequestMsg, opts ...grpc.CallOption) (*IpsecRuleGetRequestMsg, error) {
+	out := new(IpsecRuleGetRequestMsg)
+	err := grpc.Invoke(ctx, "/ipsec.Ipsec/IpsecRuleGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ipsecClient) IpsecSACreate(ctx context.Context, in *IpsecSARequestMsg, opts ...grpc.CallOption) (*IpsecSAResponseMsg, error) {
+	out := new(IpsecSAResponseMsg)
+	err := grpc.Invoke(ctx, "/ipsec.Ipsec/IpsecSACreate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ipsecClient) IpsecSAUpdate(ctx context.Context, in *IpsecSARequestMsg, opts ...grpc.CallOption) (*IpsecSAResponseMsg, error) {
+	out := new(IpsecSAResponseMsg)
+	err := grpc.Invoke(ctx, "/ipsec.Ipsec/IpsecSAUpdate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ipsecClient) IpsecSADelete(ctx context.Context, in *IpsecSADeleteRequestMsg, opts ...grpc.CallOption) (*IpsecSADeleteResponseMsg, error) {
+	out := new(IpsecSADeleteResponseMsg)
+	err := grpc.Invoke(ctx, "/ipsec.Ipsec/IpsecSADelete", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ipsecClient) IpsecSAGet(ctx context.Context, in *IpsecSAGetRequestMsg, opts ...grpc.CallOption) (*IpsecSAGetRequestMsg, error) {
+	out := new(IpsecSAGetRequestMsg)
+	err := grpc.Invoke(ctx, "/ipsec.Ipsec/IpsecSAGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Ipsec service
 
 type IpsecServer interface {
 	IpsecRuleCreate(context.Context, *IpsecRuleRequestMsg) (*IpsecRuleResponseMsg, error)
+	IpsecRuleUpdate(context.Context, *IpsecRuleRequestMsg) (*IpsecRuleResponseMsg, error)
+	IpsecRuleDelete(context.Context, *IpsecRuleDeleteRequestMsg) (*IpsecRuleDeleteResponseMsg, error)
+	IpsecRuleGet(context.Context, *IpsecRuleGetRequestMsg) (*IpsecRuleGetRequestMsg, error)
+	IpsecSACreate(context.Context, *IpsecSARequestMsg) (*IpsecSAResponseMsg, error)
+	IpsecSAUpdate(context.Context, *IpsecSARequestMsg) (*IpsecSAResponseMsg, error)
+	IpsecSADelete(context.Context, *IpsecSADeleteRequestMsg) (*IpsecSADeleteResponseMsg, error)
+	IpsecSAGet(context.Context, *IpsecSAGetRequestMsg) (*IpsecSAGetRequestMsg, error)
 }
 
 func RegisterIpsecServer(s *grpc.Server, srv IpsecServer) {
@@ -563,6 +1008,132 @@ func _Ipsec_IpsecRuleCreate_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Ipsec_IpsecRuleUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IpsecRuleRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IpsecServer).IpsecRuleUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ipsec.Ipsec/IpsecRuleUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IpsecServer).IpsecRuleUpdate(ctx, req.(*IpsecRuleRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ipsec_IpsecRuleDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IpsecRuleDeleteRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IpsecServer).IpsecRuleDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ipsec.Ipsec/IpsecRuleDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IpsecServer).IpsecRuleDelete(ctx, req.(*IpsecRuleDeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ipsec_IpsecRuleGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IpsecRuleGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IpsecServer).IpsecRuleGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ipsec.Ipsec/IpsecRuleGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IpsecServer).IpsecRuleGet(ctx, req.(*IpsecRuleGetRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ipsec_IpsecSACreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IpsecSARequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IpsecServer).IpsecSACreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ipsec.Ipsec/IpsecSACreate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IpsecServer).IpsecSACreate(ctx, req.(*IpsecSARequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ipsec_IpsecSAUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IpsecSARequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IpsecServer).IpsecSAUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ipsec.Ipsec/IpsecSAUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IpsecServer).IpsecSAUpdate(ctx, req.(*IpsecSARequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ipsec_IpsecSADelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IpsecSADeleteRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IpsecServer).IpsecSADelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ipsec.Ipsec/IpsecSADelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IpsecServer).IpsecSADelete(ctx, req.(*IpsecSADeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ipsec_IpsecSAGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IpsecSAGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IpsecServer).IpsecSAGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ipsec.Ipsec/IpsecSAGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IpsecServer).IpsecSAGet(ctx, req.(*IpsecSAGetRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Ipsec_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "ipsec.Ipsec",
 	HandlerType: (*IpsecServer)(nil),
@@ -570,6 +1141,34 @@ var _Ipsec_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "IpsecRuleCreate",
 			Handler:    _Ipsec_IpsecRuleCreate_Handler,
+		},
+		{
+			MethodName: "IpsecRuleUpdate",
+			Handler:    _Ipsec_IpsecRuleUpdate_Handler,
+		},
+		{
+			MethodName: "IpsecRuleDelete",
+			Handler:    _Ipsec_IpsecRuleDelete_Handler,
+		},
+		{
+			MethodName: "IpsecRuleGet",
+			Handler:    _Ipsec_IpsecRuleGet_Handler,
+		},
+		{
+			MethodName: "IpsecSACreate",
+			Handler:    _Ipsec_IpsecSACreate_Handler,
+		},
+		{
+			MethodName: "IpsecSAUpdate",
+			Handler:    _Ipsec_IpsecSAUpdate_Handler,
+		},
+		{
+			MethodName: "IpsecSADelete",
+			Handler:    _Ipsec_IpsecSADelete_Handler,
+		},
+		{
+			MethodName: "IpsecSAGet",
+			Handler:    _Ipsec_IpsecSAGet_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -633,70 +1232,134 @@ func (m *IpsecSA) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Protocol != 0 {
-		dAtA[i] = 0x8
+	if m.Meta != nil {
+		dAtA[i] = 0xa
 		i++
-		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Protocol))
-	}
-	if m.AuthenticationAlgorithm != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.AuthenticationAlgorithm))
-	}
-	if m.AuthenticationKey != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.AuthenticationKey.Size()))
-		n2, err := m.AuthenticationKey.MarshalTo(dAtA[i:])
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Meta.Size()))
+		n2, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n2
 	}
-	if m.EncryptionAlgorithm != 0 {
-		dAtA[i] = 0x20
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
 		i++
-		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.EncryptionAlgorithm))
-	}
-	if m.EncryptionKey != nil {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.EncryptionKey.Size()))
-		n3, err := m.EncryptionKey.MarshalTo(dAtA[i:])
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n3, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n3
 	}
-	if m.LocalGatewayIp != nil {
-		dAtA[i] = 0x32
+	if m.Protocol != 0 {
+		dAtA[i] = 0x18
 		i++
-		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.LocalGatewayIp.Size()))
-		n4, err := m.LocalGatewayIp.MarshalTo(dAtA[i:])
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Protocol))
+	}
+	if m.AuthenticationAlgorithm != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.AuthenticationAlgorithm))
+	}
+	if m.AuthenticationKey != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.AuthenticationKey.Size()))
+		n4, err := m.AuthenticationKey.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n4
 	}
-	if m.RemoteGatewayIp != nil {
+	if m.EncryptionAlgorithm != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.EncryptionAlgorithm))
+	}
+	if m.EncryptionKey != nil {
 		dAtA[i] = 0x3a
 		i++
-		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.RemoteGatewayIp.Size()))
-		n5, err := m.RemoteGatewayIp.MarshalTo(dAtA[i:])
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.EncryptionKey.Size()))
+		n5, err := m.EncryptionKey.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n5
 	}
+	if m.RekeyAuthenticationKey != nil {
+		dAtA[i] = 0x42
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.RekeyAuthenticationKey.Size()))
+		n6, err := m.RekeyAuthenticationKey.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	if m.RekeyEncryptionKey != nil {
+		dAtA[i] = 0x4a
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.RekeyEncryptionKey.Size()))
+		n7, err := m.RekeyEncryptionKey.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n7
+	}
+	if m.LocalGatewayIp != nil {
+		dAtA[i] = 0x52
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.LocalGatewayIp.Size()))
+		n8, err := m.LocalGatewayIp.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n8
+	}
+	if m.RemoteGatewayIp != nil {
+		dAtA[i] = 0x5a
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.RemoteGatewayIp.Size()))
+		n9, err := m.RemoteGatewayIp.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
 	if m.Spi != 0 {
-		dAtA[i] = 0x40
+		dAtA[i] = 0x60
 		i++
 		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Spi))
 	}
 	if m.NatTraversalPort != 0 {
-		dAtA[i] = 0x48
+		dAtA[i] = 0x68
 		i++
 		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.NatTraversalPort))
+	}
+	if m.RekeyActive != 0 {
+		dAtA[i] = 0x70
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.RekeyActive))
+	}
+	if m.RekeySpi != 0 {
+		dAtA[i] = 0x78
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.RekeySpi))
+	}
+	if m.Salt != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Salt))
+	}
+	if m.Iv != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Iv))
 	}
 	return i, nil
 }
@@ -720,31 +1383,31 @@ func (m *IpsecRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Meta.Size()))
-		n6, err := m.Meta.MarshalTo(dAtA[i:])
+		n10, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n10
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n7, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n11, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n7
+		i += n11
 	}
 	if m.VrfKeyHandle != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.VrfKeyHandle.Size()))
-		n8, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
+		n12, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n8
+		i += n12
 	}
 	if len(m.SrcAddress) > 0 {
 		for _, msg := range m.SrcAddress {
@@ -759,21 +1422,21 @@ func (m *IpsecRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.SrcSg) > 0 {
-		dAtA10 := make([]byte, len(m.SrcSg)*10)
-		var j9 int
+		dAtA14 := make([]byte, len(m.SrcSg)*10)
+		var j13 int
 		for _, num := range m.SrcSg {
 			for num >= 1<<7 {
-				dAtA10[j9] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA14[j13] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j9++
+				j13++
 			}
-			dAtA10[j9] = uint8(num)
-			j9++
+			dAtA14[j13] = uint8(num)
+			j13++
 		}
 		dAtA[i] = 0x2a
 		i++
-		i = encodeVarintIpsecDraft(dAtA, i, uint64(j9))
-		i += copy(dAtA[i:], dAtA10[:j9])
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(j13))
+		i += copy(dAtA[i:], dAtA14[:j13])
 	}
 	if len(m.DstAddress) > 0 {
 		for _, msg := range m.DstAddress {
@@ -788,21 +1451,21 @@ func (m *IpsecRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.DstSg) > 0 {
-		dAtA12 := make([]byte, len(m.DstSg)*10)
-		var j11 int
+		dAtA16 := make([]byte, len(m.DstSg)*10)
+		var j15 int
 		for _, num := range m.DstSg {
 			for num >= 1<<7 {
-				dAtA12[j11] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA16[j15] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j11++
+				j15++
 			}
-			dAtA12[j11] = uint8(num)
-			j11++
+			dAtA16[j15] = uint8(num)
+			j15++
 		}
 		dAtA[i] = 0x3a
 		i++
-		i = encodeVarintIpsecDraft(dAtA, i, uint64(j11))
-		i += copy(dAtA[i:], dAtA12[:j11])
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(j15))
+		i += copy(dAtA[i:], dAtA16[:j15])
 	}
 	if len(m.DstPortRange) > 0 {
 		for _, msg := range m.DstPortRange {
@@ -832,11 +1495,11 @@ func (m *IpsecRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x52
 		i++
 		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.SecurityAssociation.Size()))
-		n13, err := m.SecurityAssociation.MarshalTo(dAtA[i:])
+		n17, err := m.SecurityAssociation.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n17
 	}
 	return i, nil
 }
@@ -919,11 +1582,11 @@ func (m *IpsecRuleResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Status.Size()))
-		n14, err := m.Status.MarshalTo(dAtA[i:])
+		n18, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n18
 	}
 	return i, nil
 }
@@ -945,6 +1608,465 @@ func (m *IpsecRuleResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	_ = l
 	if len(m.Response) > 0 {
 		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintIpsecDraft(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *IpsecRuleDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecRuleDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Meta.Size()))
+		n19, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n19
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n20, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n20
+	}
+	return i, nil
+}
+
+func (m *IpsecRuleDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecRuleDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintIpsecDraft(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *IpsecRuleDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecRuleDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		dAtA22 := make([]byte, len(m.ApiStatus)*10)
+		var j21 int
+		for _, num := range m.ApiStatus {
+			for num >= 1<<7 {
+				dAtA22[j21] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j21++
+			}
+			dAtA22[j21] = uint8(num)
+			j21++
+		}
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(j21))
+		i += copy(dAtA[i:], dAtA22[:j21])
+	}
+	return i, nil
+}
+
+func (m *IpsecRuleGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecRuleGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Meta.Size()))
+		n23, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n23
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n24, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n24
+	}
+	return i, nil
+}
+
+func (m *IpsecRuleGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecRuleGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintIpsecDraft(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *IpsecSARequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecSARequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintIpsecDraft(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *IpsecSAStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecSAStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.IpseccbHandle != 0 {
+		dAtA[i] = 0x9
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.IpseccbHandle))
+		i += 8
+	}
+	return i, nil
+}
+
+func (m *IpsecSAResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecSAResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.IpseccbStatus != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.IpseccbStatus.Size()))
+		n25, err := m.IpseccbStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n25
+	}
+	return i, nil
+}
+
+func (m *IpsecSAResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecSAResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintIpsecDraft(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *IpsecSADeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecSADeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Meta.Size()))
+		n26, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n26
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n27, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n27
+	}
+	return i, nil
+}
+
+func (m *IpsecSADeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecSADeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintIpsecDraft(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *IpsecSADeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecSADeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		dAtA29 := make([]byte, len(m.ApiStatus)*10)
+		var j28 int
+		for _, num := range m.ApiStatus {
+			for num >= 1<<7 {
+				dAtA29[j28] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j28++
+			}
+			dAtA29[j28] = uint8(num)
+			j28++
+		}
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(j28))
+		i += copy(dAtA[i:], dAtA29[:j28])
+	}
+	return i, nil
+}
+
+func (m *IpsecSAGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecSAGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.Meta.Size()))
+		n30, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n30
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintIpsecDraft(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n31, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n31
+	}
+	return i, nil
+}
+
+func (m *IpsecSAGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecSAGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
 			dAtA[i] = 0xa
 			i++
 			i = encodeVarintIpsecDraft(dAtA, i, uint64(msg.Size()))
@@ -994,6 +2116,14 @@ func (m *Key_KeyLocation) Size() (n int) {
 func (m *IpsecSA) Size() (n int) {
 	var l int
 	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
 	if m.Protocol != 0 {
 		n += 1 + sovIpsecDraft(uint64(m.Protocol))
 	}
@@ -1011,6 +2141,14 @@ func (m *IpsecSA) Size() (n int) {
 		l = m.EncryptionKey.Size()
 		n += 1 + l + sovIpsecDraft(uint64(l))
 	}
+	if m.RekeyAuthenticationKey != nil {
+		l = m.RekeyAuthenticationKey.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
+	if m.RekeyEncryptionKey != nil {
+		l = m.RekeyEncryptionKey.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
 	if m.LocalGatewayIp != nil {
 		l = m.LocalGatewayIp.Size()
 		n += 1 + l + sovIpsecDraft(uint64(l))
@@ -1024,6 +2162,18 @@ func (m *IpsecSA) Size() (n int) {
 	}
 	if m.NatTraversalPort != 0 {
 		n += 1 + sovIpsecDraft(uint64(m.NatTraversalPort))
+	}
+	if m.RekeyActive != 0 {
+		n += 1 + sovIpsecDraft(uint64(m.RekeyActive))
+	}
+	if m.RekeySpi != 0 {
+		n += 1 + sovIpsecDraft(uint64(m.RekeySpi))
+	}
+	if m.Salt != 0 {
+		n += 2 + sovIpsecDraft(uint64(m.Salt))
+	}
+	if m.Iv != 0 {
+		n += 2 + sovIpsecDraft(uint64(m.Iv))
 	}
 	return n
 }
@@ -1127,6 +2277,182 @@ func (m *IpsecRuleResponseMsg) Size() (n int) {
 	_ = l
 	if len(m.Response) > 0 {
 		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovIpsecDraft(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *IpsecRuleDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
+	return n
+}
+
+func (m *IpsecRuleDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovIpsecDraft(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *IpsecRuleDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		l = 0
+		for _, e := range m.ApiStatus {
+			l += sovIpsecDraft(uint64(e))
+		}
+		n += 1 + sovIpsecDraft(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *IpsecRuleGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
+	return n
+}
+
+func (m *IpsecRuleGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovIpsecDraft(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *IpsecSARequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovIpsecDraft(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *IpsecSAStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.IpseccbHandle != 0 {
+		n += 9
+	}
+	return n
+}
+
+func (m *IpsecSAResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovIpsecDraft(uint64(m.ApiStatus))
+	}
+	if m.IpseccbStatus != nil {
+		l = m.IpseccbStatus.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
+	return n
+}
+
+func (m *IpsecSAResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovIpsecDraft(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *IpsecSADeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
+	return n
+}
+
+func (m *IpsecSADeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovIpsecDraft(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *IpsecSADeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		l = 0
+		for _, e := range m.ApiStatus {
+			l += sovIpsecDraft(uint64(e))
+		}
+		n += 1 + sovIpsecDraft(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *IpsecSAGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovIpsecDraft(uint64(l))
+	}
+	return n
+}
+
+func (m *IpsecSAGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
 			l = e.Size()
 			n += 1 + l + sovIpsecDraft(uint64(l))
 		}
@@ -1277,6 +2603,72 @@ func (m *IpsecSA) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &IpsecSAKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Protocol", wireType)
 			}
@@ -1295,7 +2687,7 @@ func (m *IpsecSA) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 2:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AuthenticationAlgorithm", wireType)
 			}
@@ -1314,7 +2706,7 @@ func (m *IpsecSA) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AuthenticationKey", wireType)
 			}
@@ -1347,7 +2739,7 @@ func (m *IpsecSA) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EncryptionAlgorithm", wireType)
 			}
@@ -1366,7 +2758,7 @@ func (m *IpsecSA) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 5:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EncryptionKey", wireType)
 			}
@@ -1399,7 +2791,73 @@ func (m *IpsecSA) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RekeyAuthenticationKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.RekeyAuthenticationKey == nil {
+				m.RekeyAuthenticationKey = &Key{}
+			}
+			if err := m.RekeyAuthenticationKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RekeyEncryptionKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.RekeyEncryptionKey == nil {
+				m.RekeyEncryptionKey = &Key{}
+			}
+			if err := m.RekeyEncryptionKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LocalGatewayIp", wireType)
 			}
@@ -1432,7 +2890,7 @@ func (m *IpsecSA) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 11:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RemoteGatewayIp", wireType)
 			}
@@ -1465,7 +2923,7 @@ func (m *IpsecSA) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 8:
+		case 12:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Spi", wireType)
 			}
@@ -1484,7 +2942,7 @@ func (m *IpsecSA) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 9:
+		case 13:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NatTraversalPort", wireType)
 			}
@@ -1499,6 +2957,82 @@ func (m *IpsecSA) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.NatTraversalPort |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RekeyActive", wireType)
+			}
+			m.RekeyActive = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RekeyActive |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RekeySpi", wireType)
+			}
+			m.RekeySpi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RekeySpi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Salt", wireType)
+			}
+			m.Salt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Salt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 17:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Iv", wireType)
+			}
+			m.Iv = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Iv |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2278,6 +3812,1342 @@ func (m *IpsecRuleResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *IpsecRuleDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecRuleDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecRuleDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &IpsecRuleKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecRuleDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecRuleDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecRuleDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &IpsecRuleDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecRuleDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecRuleDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecRuleDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v ApiStatus
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowIpsecDraft
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (ApiStatus(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.ApiStatus = append(m.ApiStatus, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowIpsecDraft
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthIpsecDraft
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				for iNdEx < postIndex {
+					var v ApiStatus
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowIpsecDraft
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (ApiStatus(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.ApiStatus = append(m.ApiStatus, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecRuleGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecRuleGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecRuleGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &IpsecRuleKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecRuleGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecRuleGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecRuleGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &IpsecRuleGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecSARequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecSARequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecSARequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &IpsecSA{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecSAStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecSAStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecSAStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpseccbHandle", wireType)
+			}
+			m.IpseccbHandle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IpseccbHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecSAResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecSAResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecSAResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpseccbStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.IpseccbStatus == nil {
+				m.IpseccbStatus = &IpsecSAStatus{}
+			}
+			if err := m.IpseccbStatus.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecSAResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecSAResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecSAResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &IpsecSAResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecSADeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecSADeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecSADeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &IpsecSAKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecSADeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecSADeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecSADeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &IpsecSADeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecSADeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecSADeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecSADeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v ApiStatus
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowIpsecDraft
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (ApiStatus(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.ApiStatus = append(m.ApiStatus, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowIpsecDraft
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthIpsecDraft
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				for iNdEx < postIndex {
+					var v ApiStatus
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowIpsecDraft
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (ApiStatus(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.ApiStatus = append(m.ApiStatus, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecSAGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecSAGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecSAGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &IpsecSAKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecSAGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsecDraft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecSAGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecSAGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsecDraft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &IpsecSAGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsecDraft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsecDraft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipIpsecDraft(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2386,71 +5256,97 @@ var (
 func init() { proto.RegisterFile("ipsec.proto.draft", fileDescriptorIpsecDraft) }
 
 var fileDescriptorIpsecDraft = []byte{
-	// 1042 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x56, 0x4f, 0x6f, 0xe2, 0x46,
-	0x14, 0x8f, 0xc3, 0x9f, 0x90, 0x47, 0xc2, 0x9a, 0x21, 0x9b, 0xb8, 0xb4, 0x4b, 0x28, 0x6d, 0xa5,
-	0x34, 0xaa, 0x50, 0x97, 0x4d, 0xab, 0xcd, 0xaa, 0x52, 0x65, 0x5c, 0x1a, 0x68, 0x20, 0xa0, 0x81,
-	0x6d, 0xb5, 0xbd, 0x58, 0x8e, 0x99, 0x80, 0x17, 0x82, 0xdd, 0x99, 0x49, 0x2a, 0xdf, 0x7b, 0xed,
-	0xbd, 0x97, 0x1e, 0x7b, 0xec, 0xf7, 0xe8, 0xb1, 0x9f, 0x20, 0xaa, 0xd2, 0x5b, 0x8f, 0xfb, 0x09,
-	0xaa, 0x19, 0xdb, 0x40, 0x08, 0x24, 0x07, 0x84, 0x67, 0x7e, 0x7f, 0xde, 0xf3, 0x7b, 0x6f, 0x06,
-	0x20, 0xeb, 0x78, 0x8c, 0xd8, 0x65, 0x8f, 0xba, 0xdc, 0x2d, 0xf7, 0xa9, 0x75, 0xc1, 0x51, 0x42,
-	0x6e, 0xe5, 0xd3, 0xdc, 0xf7, 0x08, 0x0b, 0x90, 0x7c, 0x6a, 0x34, 0x0c, 0x9e, 0x4a, 0xdf, 0x41,
-	0xec, 0x94, 0xf8, 0x08, 0x41, 0x6c, 0x44, 0x7c, 0x4d, 0x29, 0x2a, 0x07, 0x5b, 0xf5, 0x35, 0x2c,
-	0x16, 0xe8, 0x23, 0xd8, 0x1a, 0x11, 0xdf, 0x1c, 0xbb, 0xb6, 0xc5, 0x1d, 0x77, 0xa2, 0xad, 0x17,
-	0x95, 0x83, 0xed, 0xfa, 0x1a, 0x4e, 0x8f, 0x88, 0xdf, 0x0c, 0x37, 0xab, 0x00, 0x29, 0x41, 0x72,
-	0x26, 0x17, 0x6e, 0xe9, 0xd7, 0x38, 0x6c, 0x34, 0x44, 0xb0, 0xae, 0x8e, 0x3e, 0x87, 0x94, 0x0c,
-	0x60, 0xbb, 0x63, 0xe9, 0x9a, 0xa9, 0xec, 0x94, 0x83, 0xdc, 0x24, 0xa3, 0x13, 0x62, 0x78, 0xca,
-	0x42, 0x6f, 0x40, 0xb3, 0xae, 0xf8, 0x90, 0x4c, 0xb8, 0x13, 0x78, 0x9b, 0xd6, 0x78, 0xe0, 0x52,
-	0x87, 0x0f, 0x2f, 0x65, 0xe8, 0x4c, 0xa5, 0x10, 0x3a, 0xe8, 0x77, 0x68, 0x7a, 0xc4, 0xc2, 0x7b,
-	0xd6, 0x72, 0x00, 0x1d, 0x03, 0x5a, 0xb0, 0x16, 0x2f, 0x1b, 0x2b, 0x2a, 0x07, 0xe9, 0x0a, 0x84,
-	0xa6, 0xa7, 0xc4, 0xc7, 0xd9, 0xbb, 0x2c, 0x51, 0x98, 0x16, 0xec, 0x90, 0x89, 0x4d, 0x7d, 0x6f,
-	0x21, 0xa3, 0xb8, 0xcc, 0x28, 0x1f, 0x8a, 0x6b, 0x53, 0xca, 0x2c, 0x9b, 0x1c, 0xb9, 0xbf, 0x89,
-	0x9e, 0x43, 0x66, 0xce, 0x4e, 0x64, 0x91, 0xb8, 0x97, 0xc5, 0xf6, 0x8c, 0x21, 0x32, 0x78, 0x05,
-	0xaa, 0x68, 0xc1, 0xd8, 0x1c, 0x58, 0x9c, 0xfc, 0x6c, 0xf9, 0xa6, 0xe3, 0x69, 0x49, 0x29, 0x52,
-	0xcb, 0x41, 0x4f, 0x1b, 0x1d, 0xbd, 0xdf, 0xa7, 0x84, 0x31, 0x9c, 0x91, 0xcc, 0x93, 0x80, 0xd8,
-	0xf0, 0xd0, 0x57, 0x90, 0xa5, 0xe4, 0xd2, 0xe5, 0x64, 0x5e, 0xbc, 0xb1, 0x42, 0xfc, 0x24, 0xa0,
-	0xce, 0xd4, 0x2a, 0xc4, 0x98, 0xe7, 0x68, 0x29, 0xd1, 0x77, 0x2c, 0x1e, 0xd1, 0x67, 0x80, 0x26,
-	0x16, 0x37, 0x39, 0xb5, 0xae, 0x09, 0x65, 0xd6, 0xd8, 0xf4, 0x5c, 0xca, 0xb5, 0x4d, 0x49, 0x50,
-	0x27, 0x16, 0xef, 0x45, 0x40, 0xc7, 0xa5, 0xbc, 0xf4, 0x7b, 0x1c, 0xb6, 0x65, 0xb7, 0xf1, 0xd5,
-	0x98, 0x74, 0x3d, 0x62, 0xa3, 0x4f, 0x20, 0x7e, 0x49, 0xb8, 0x25, 0x27, 0x22, 0x5d, 0xc9, 0x86,
-	0x29, 0xb4, 0xcf, 0xdf, 0x12, 0x9b, 0xb7, 0x08, 0xb7, 0xb0, 0x84, 0x51, 0x13, 0xb6, 0xc5, 0x50,
-	0xb9, 0xd4, 0x1c, 0x5a, 0x93, 0xfe, 0x98, 0xc8, 0xfe, 0xa7, 0x2b, 0xbb, 0xe5, 0xd1, 0xb0, 0x3c,
-	0x35, 0x3c, 0x25, 0x7e, 0x5d, 0xa2, 0x55, 0xf5, 0xdd, 0xcd, 0xfe, 0xd6, 0x35, 0x99, 0x38, 0x36,
-	0x79, 0x55, 0x1a, 0x11, 0xbf, 0x24, 0x47, 0xb4, 0x4d, 0x03, 0x18, 0x7d, 0x0b, 0x99, 0x6b, 0x7a,
-	0x21, 0x8a, 0x1d, 0xd9, 0xc5, 0xc2, 0x0a, 0x8c, 0x86, 0xe5, 0xef, 0xe9, 0xc5, 0xcc, 0x28, 0xf3,
-	0xee, 0x66, 0x1f, 0x42, 0x23, 0x4a, 0x2e, 0xf0, 0xd6, 0xf5, 0x1c, 0x8a, 0x8e, 0x20, 0xcd, 0xa8,
-	0x6d, 0x5a, 0x41, 0xb9, 0xb4, 0x78, 0x31, 0x76, 0x90, 0xae, 0xe4, 0x16, 0xcb, 0xd8, 0x3e, 0x7f,
-	0x8b, 0x81, 0x51, 0x3b, 0x5c, 0xa2, 0xa7, 0x90, 0x14, 0x2a, 0x36, 0xd0, 0x12, 0xc5, 0xd8, 0xc1,
-	0x36, 0x4e, 0x30, 0x6a, 0x77, 0x07, 0xc2, 0xac, 0xcf, 0xf8, 0xd4, 0x2c, 0xf9, 0x80, 0x59, 0x9f,
-	0xf1, 0x39, 0x33, 0xa1, 0x62, 0x03, 0x6d, 0x23, 0x30, 0xeb, 0x33, 0xde, 0x1d, 0xa0, 0x97, 0x90,
-	0x11, 0xdb, 0xa2, 0x19, 0x26, 0xb5, 0x26, 0x03, 0xa2, 0xa5, 0xa4, 0x1f, 0x0a, 0xfd, 0x9a, 0x47,
-	0xa2, 0x1f, 0x58, 0x20, 0x78, 0xab, 0xcf, 0xf8, 0x74, 0x25, 0x94, 0x22, 0xbb, 0x39, 0xe5, 0xe6,
-	0x6a, 0x25, 0xa3, 0xf6, 0x4c, 0xa9, 0xc3, 0x0e, 0x23, 0xf6, 0x15, 0x75, 0xb8, 0x6f, 0x5a, 0x8c,
-	0xb9, 0xb6, 0x13, 0xdc, 0x12, 0x20, 0x6b, 0x9b, 0x99, 0x3f, 0xec, 0x5d, 0x1d, 0xe7, 0x22, 0xae,
-	0x3e, 0xa3, 0x96, 0x6a, 0x90, 0x9b, 0x76, 0x13, 0x93, 0x9f, 0xae, 0x08, 0xe3, 0x2d, 0x36, 0x40,
-	0x65, 0xd8, 0xa0, 0xc1, 0x4a, 0x53, 0x64, 0x32, 0x77, 0x6e, 0x8e, 0x68, 0x96, 0x70, 0x44, 0x2a,
-	0x7d, 0x0a, 0x4f, 0x66, 0x08, 0xb7, 0xf8, 0x15, 0x43, 0xbb, 0x90, 0x0c, 0x5b, 0x2d, 0x26, 0x2d,
-	0x89, 0xc3, 0x55, 0xe9, 0x17, 0x05, 0xb2, 0x73, 0x21, 0x99, 0xe7, 0x4e, 0x18, 0x41, 0x5f, 0x03,
-	0x58, 0x9e, 0x63, 0x32, 0xa9, 0x0d, 0x6f, 0xab, 0xe8, 0x78, 0xe8, 0x9e, 0x13, 0x78, 0x56, 0x33,
-	0xff, 0xdd, 0xec, 0xcf, 0xf1, 0xf0, 0xa6, 0x15, 0x41, 0xa8, 0x0c, 0xc9, 0x50, 0x1c, 0x0d, 0xea,
-	0x62, 0xc2, 0x81, 0x24, 0x64, 0x95, 0x9a, 0xb0, 0x73, 0x2f, 0x0b, 0xf1, 0xe6, 0x47, 0x90, 0xa2,
-	0xe1, 0x32, 0x7c, 0x75, 0x6d, 0xd1, 0x29, 0xa2, 0xe3, 0x29, 0xf3, 0xf0, 0x87, 0xf0, 0x94, 0x45,
-	0x77, 0x2a, 0xda, 0x83, 0x5c, 0xa3, 0xd3, 0xad, 0x19, 0x66, 0x07, 0xb7, 0x7b, 0x6d, 0xa3, 0xdd,
-	0x34, 0xcf, 0xda, 0x67, 0x35, 0x75, 0x0d, 0x3d, 0x85, 0xec, 0x02, 0xa0, 0xd7, 0x55, 0x05, 0xed,
-	0x02, 0x5a, 0xd8, 0xae, 0x75, 0x3b, 0xea, 0xfa, 0xe1, 0x1f, 0x31, 0xc8, 0x2d, 0xb9, 0xd9, 0xd0,
-	0x33, 0x78, 0xaf, 0x76, 0x66, 0xe0, 0x37, 0x9d, 0x5e, 0xa3, 0x7d, 0x66, 0xea, 0xcd, 0x93, 0x36,
-	0x6e, 0xf4, 0xea, 0xad, 0x28, 0xca, 0xc7, 0x50, 0x5c, 0x0a, 0xeb, 0xb5, 0xae, 0x79, 0x62, 0xb4,
-	0xcc, 0xe7, 0x95, 0x97, 0xaa, 0xf2, 0x28, 0xab, 0xf2, 0xc5, 0x97, 0xea, 0xfa, 0x83, 0x2c, 0x23,
-	0xf4, 0x8a, 0x3d, 0xce, 0x3a, 0xae, 0xa8, 0xf1, 0x47, 0x59, 0x22, 0x62, 0xe2, 0x61, 0x56, 0xd5,
-	0x90, 0x11, 0x93, 0x8f, 0xb3, 0x8e, 0x2b, 0xea, 0xc6, 0xa3, 0x2c, 0x11, 0x31, 0xb5, 0xb2, 0x9c,
-	0xdf, 0xd4, 0xba, 0x2f, 0xd4, 0x4d, 0x54, 0x84, 0x0f, 0x96, 0xc2, 0x46, 0x5d, 0x17, 0x1f, 0x15,
-	0x0e, 0xff, 0x54, 0x60, 0x6f, 0xc5, 0x6f, 0x22, 0xfa, 0x10, 0x9e, 0xe9, 0xaf, 0x7b, 0xf5, 0xda,
-	0x59, 0xaf, 0x61, 0xe8, 0xcb, 0xfb, 0x95, 0x87, 0xdd, 0x45, 0x4a, 0xd0, 0x03, 0x55, 0x59, 0x81,
-	0x19, 0x46, 0x4b, 0x5d, 0x17, 0x63, 0xb6, 0x80, 0xd5, 0x5b, 0xba, 0xa1, 0xc6, 0x50, 0x01, 0xf2,
-	0xcb, 0x44, 0x55, 0xc3, 0xec, 0xd6, 0x75, 0x35, 0x5e, 0x79, 0x0d, 0x09, 0x39, 0xb0, 0xa8, 0x39,
-	0x77, 0x72, 0x0d, 0x4a, 0x2c, 0x4e, 0x50, 0xfe, 0xfe, 0xc0, 0x47, 0x17, 0x43, 0xfe, 0xfd, 0x55,
-	0x87, 0xa1, 0xc5, 0x06, 0xa5, 0xb5, 0x6a, 0xfe, 0xaf, 0xdb, 0x82, 0xf2, 0xf7, 0x6d, 0x41, 0xf9,
-	0xe7, 0xb6, 0xa0, 0xfc, 0xf6, 0x6f, 0x61, 0xed, 0xc7, 0xd4, 0xd0, 0x1a, 0xcb, 0xff, 0x17, 0xe7,
-	0x49, 0xf9, 0xf5, 0xe2, 0xff, 0x00, 0x00, 0x00, 0xff, 0xff, 0x03, 0x9f, 0x7c, 0x1b, 0x20, 0x09,
-	0x00, 0x00,
+	// 1469 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x58, 0x4d, 0x73, 0xdb, 0x44,
+	0x18, 0x8e, 0x63, 0xc7, 0x71, 0x5e, 0x3b, 0xae, 0xb2, 0x49, 0x13, 0xd5, 0x21, 0x89, 0x2b, 0xe8,
+	0x4c, 0xe8, 0x30, 0x2e, 0x75, 0x3f, 0x68, 0x4b, 0x19, 0x46, 0x71, 0xdd, 0x38, 0x4d, 0x1c, 0x7b,
+	0xa4, 0x14, 0x28, 0x17, 0x8d, 0x22, 0x6f, 0x1c, 0x35, 0xae, 0x2d, 0xa4, 0x8d, 0x8b, 0x87, 0x03,
+	0x17, 0x7e, 0x04, 0x17, 0x8e, 0x1c, 0xf9, 0x1f, 0x1c, 0xf9, 0x05, 0x1d, 0xa6, 0x5c, 0x18, 0x8e,
+	0xbd, 0x72, 0x61, 0x76, 0xb5, 0xfa, 0xb4, 0x9c, 0xa4, 0xed, 0x0c, 0x87, 0x4e, 0xad, 0x7d, 0x9f,
+	0xf7, 0x79, 0x3f, 0x9f, 0x95, 0x5a, 0x58, 0x30, 0x2d, 0x07, 0x1b, 0x15, 0xcb, 0x1e, 0x90, 0x41,
+	0xa5, 0x63, 0xeb, 0x47, 0x04, 0xcd, 0xb0, 0xa3, 0x52, 0x9e, 0x8c, 0x2c, 0xec, 0xb8, 0x96, 0x52,
+	0xee, 0xe4, 0xd8, 0xfd, 0x25, 0x3d, 0x81, 0xf4, 0x2e, 0x1e, 0x21, 0x04, 0xe9, 0x13, 0x3c, 0x12,
+	0x53, 0xe5, 0xd4, 0x66, 0xa1, 0x31, 0xa5, 0xd0, 0x07, 0xf4, 0x21, 0x14, 0x4e, 0xf0, 0x48, 0xeb,
+	0x0d, 0x0c, 0x9d, 0x98, 0x83, 0xbe, 0x38, 0x5d, 0x4e, 0x6d, 0xce, 0x37, 0xa6, 0x94, 0xfc, 0x09,
+	0x1e, 0xed, 0xf1, 0xc3, 0x2d, 0x80, 0x1c, 0x05, 0x99, 0xfd, 0xa3, 0x81, 0xf4, 0x77, 0x16, 0x66,
+	0x77, 0x68, 0x30, 0x55, 0x46, 0xd7, 0x20, 0xf3, 0x02, 0x13, 0x9d, 0x31, 0xe6, 0xab, 0x0b, 0x15,
+	0x37, 0x7a, 0xeb, 0xf0, 0x39, 0x36, 0x48, 0x13, 0x13, 0x5d, 0x61, 0x66, 0xf4, 0x04, 0xe6, 0xa9,
+	0xfb, 0xc0, 0xd6, 0x8e, 0xf5, 0x7e, 0xa7, 0x87, 0x59, 0x90, 0x7c, 0x75, 0xa9, 0x72, 0x72, 0x5c,
+	0xe1, 0x54, 0xbb, 0x78, 0xd4, 0x60, 0xb6, 0x2d, 0xe1, 0xcd, 0xab, 0x8d, 0xc2, 0x10, 0xf7, 0x4d,
+	0x03, 0x3f, 0x90, 0x4e, 0xf0, 0x48, 0x62, 0xa9, 0xb4, 0x6c, 0xd7, 0x8c, 0x3e, 0x85, 0x1c, 0xab,
+	0xc9, 0x18, 0xf4, 0xc4, 0x74, 0x39, 0xb5, 0x59, 0xac, 0x2e, 0x55, 0xdc, 0x76, 0x30, 0xa6, 0x36,
+	0xb7, 0x29, 0x3e, 0x0a, 0x3d, 0x03, 0x51, 0x3f, 0x25, 0xc7, 0xb8, 0x4f, 0x4c, 0xb7, 0x1c, 0x4d,
+	0xef, 0x75, 0x07, 0xb6, 0x49, 0x8e, 0x5f, 0x88, 0x19, 0xc6, 0xb0, 0xce, 0x19, 0xe4, 0x08, 0x4c,
+	0xf6, 0x50, 0xca, 0x8a, 0x9e, 0x6c, 0x40, 0xf7, 0x01, 0xc5, 0xa8, 0x69, 0x7f, 0x67, 0x58, 0x75,
+	0xc0, 0x49, 0x77, 0xf1, 0x48, 0x59, 0x88, 0xa2, 0xe8, 0x2c, 0x9a, 0xb0, 0x84, 0xfb, 0x86, 0x3d,
+	0xb2, 0x62, 0x19, 0x65, 0x59, 0x46, 0x25, 0xee, 0x5c, 0xf7, 0x21, 0x41, 0x36, 0x8b, 0x78, 0xfc,
+	0x10, 0xdd, 0x84, 0x62, 0x88, 0x8e, 0x66, 0x31, 0x3b, 0x96, 0xc5, 0x7c, 0x80, 0xa0, 0x19, 0x3c,
+	0x02, 0xd1, 0xc6, 0x74, 0x2e, 0x09, 0x25, 0xe4, 0xc6, 0x9c, 0x97, 0x19, 0x56, 0x1e, 0xab, 0xe3,
+	0x21, 0x2c, 0xb9, 0x2c, 0xb1, 0xf0, 0x73, 0x63, 0x0c, 0x88, 0xe1, 0xea, 0x91, 0x1c, 0x1e, 0x80,
+	0x40, 0x37, 0xaf, 0xa7, 0x75, 0x75, 0x82, 0x5f, 0xea, 0x23, 0xcd, 0xb4, 0x44, 0x60, 0x9e, 0x02,
+	0x5f, 0xa6, 0x9d, 0xb6, 0xdc, 0xe9, 0xd8, 0xd8, 0x71, 0x94, 0x22, 0x43, 0x6e, 0xbb, 0xc0, 0x1d,
+	0x0b, 0x3d, 0x84, 0x05, 0x1b, 0xbf, 0x18, 0x10, 0x1c, 0x76, 0xce, 0x4f, 0x70, 0xbe, 0xe4, 0x42,
+	0x03, 0x6f, 0x01, 0xd2, 0x8e, 0x65, 0x8a, 0x05, 0xba, 0xee, 0x0a, 0xfd, 0x89, 0x3e, 0x01, 0xd4,
+	0xd7, 0x89, 0x46, 0x6c, 0x7d, 0x88, 0x6d, 0x47, 0xef, 0x69, 0xd6, 0xc0, 0x26, 0xe2, 0x3c, 0x03,
+	0x08, 0x7d, 0x9d, 0x1c, 0x78, 0x86, 0xf6, 0xc0, 0x26, 0xe8, 0x2a, 0x14, 0x78, 0xf7, 0x0c, 0x62,
+	0x0e, 0xb1, 0x58, 0x64, 0xb8, 0xbc, 0xdb, 0x25, 0x76, 0x84, 0x56, 0x61, 0xce, 0x85, 0xd0, 0x40,
+	0x97, 0x98, 0x3d, 0xc7, 0x0e, 0x54, 0xcb, 0x44, 0x08, 0x32, 0x8e, 0xde, 0x23, 0xa2, 0xc0, 0xce,
+	0xd9, 0x6f, 0x54, 0x84, 0x69, 0x73, 0x28, 0x2e, 0x94, 0x53, 0x9b, 0x19, 0x65, 0xda, 0x1c, 0x4a,
+	0xbf, 0x64, 0x60, 0x9e, 0x6d, 0xb5, 0x72, 0xda, 0xc3, 0xaa, 0x85, 0x8d, 0x8b, 0x0a, 0x6e, 0x2f,
+	0x59, 0x70, 0xcb, 0xbe, 0xe0, 0x28, 0xe1, 0x85, 0x25, 0xf7, 0x18, 0x8a, 0x43, 0xfb, 0x88, 0x4e,
+	0xd5, 0xa3, 0x4b, 0xf3, 0x2e, 0x9f, 0x1c, 0x57, 0xbe, 0xb2, 0x8f, 0x02, 0xa2, 0xe2, 0x9b, 0x57,
+	0x1b, 0xc0, 0x89, 0x6c, 0x7c, 0xa4, 0x14, 0x86, 0x21, 0x2b, 0xba, 0x0d, 0x79, 0xc7, 0x36, 0x34,
+	0xdd, 0x1d, 0x89, 0x98, 0x29, 0xa7, 0x37, 0xf3, 0xd5, 0xc5, 0xf8, 0xa8, 0x5a, 0x87, 0xcf, 0x15,
+	0x70, 0x6c, 0x83, 0x3f, 0xa2, 0xcb, 0x90, 0xa5, 0x5e, 0x4e, 0x57, 0x9c, 0x29, 0xa7, 0x37, 0xe7,
+	0x95, 0x19, 0xc7, 0x36, 0xd4, 0x2e, 0x25, 0xeb, 0x38, 0xc4, 0x27, 0xcb, 0x9e, 0x41, 0xd6, 0x71,
+	0x48, 0x88, 0x8c, 0x7a, 0x39, 0x5d, 0x71, 0xd6, 0x25, 0xeb, 0x38, 0x44, 0xed, 0xa2, 0x7b, 0x50,
+	0xa4, 0xc7, 0x74, 0xe0, 0x9a, 0xad, 0xf7, 0xbb, 0x58, 0xcc, 0x31, 0x3e, 0xc4, 0xf9, 0xf6, 0x6e,
+	0xd3, 0x99, 0x2b, 0xd4, 0xa2, 0x14, 0x3a, 0x0e, 0xf1, 0x9f, 0xa8, 0x27, 0xcd, 0x2e, 0xe4, 0x39,
+	0x37, 0xd9, 0xd3, 0xb1, 0x8d, 0xc0, 0x53, 0x86, 0x25, 0x07, 0x1b, 0xa7, 0xb6, 0x49, 0x46, 0x9a,
+	0xee, 0x38, 0x03, 0xc3, 0x74, 0x2f, 0x60, 0x77, 0xfd, 0x8b, 0xe1, 0x4b, 0x4d, 0x95, 0x95, 0x45,
+	0x0f, 0x2b, 0x07, 0x50, 0xa9, 0x0e, 0x8b, 0xfe, 0x34, 0x15, 0xfc, 0xdd, 0x29, 0x76, 0x48, 0xd3,
+	0xe9, 0xa2, 0x0a, 0xcc, 0xda, 0xee, 0x93, 0x98, 0x62, 0xc9, 0x44, 0x6e, 0x48, 0x6f, 0x97, 0x14,
+	0x0f, 0x24, 0x7d, 0x0c, 0x97, 0x02, 0x0b, 0xd1, 0xc9, 0xa9, 0x83, 0x96, 0x21, 0xcb, 0x47, 0x4d,
+	0x37, 0x2d, 0xab, 0xf0, 0x27, 0xe9, 0xa7, 0x14, 0x2c, 0x84, 0x42, 0x3a, 0xd6, 0xa0, 0xef, 0x60,
+	0xf4, 0x25, 0x80, 0x6e, 0x99, 0x9a, 0xc3, 0x7c, 0x99, 0x47, 0xd1, 0x97, 0xa0, 0x6c, 0x99, 0x2e,
+	0xe7, 0x56, 0xf1, 0x9f, 0x57, 0x1b, 0x21, 0x9c, 0x32, 0xa7, 0x7b, 0x26, 0x54, 0x81, 0x2c, 0x77,
+	0xf6, 0x16, 0x35, 0x9e, 0xb0, 0xeb, 0xc2, 0x51, 0xd2, 0x1e, 0x2c, 0x8d, 0x65, 0x41, 0x2b, 0xbf,
+	0x0d, 0x39, 0x9b, 0x3f, 0xf2, 0xd2, 0xc5, 0x38, 0x93, 0x07, 0x57, 0x7c, 0xa4, 0xf4, 0x03, 0x2c,
+	0xfb, 0xe6, 0x47, 0xb8, 0x87, 0x89, 0xd7, 0xcc, 0x8b, 0xca, 0xed, 0xc1, 0x5b, 0xc9, 0x2d, 0x22,
+	0x2e, 0xe9, 0x00, 0xae, 0x24, 0x07, 0xa7, 0xf5, 0x7c, 0x16, 0x9f, 0xe4, 0x5a, 0xbc, 0x9c, 0x88,
+	0x4b, 0x30, 0xd2, 0x26, 0x94, 0xc6, 0x20, 0x41, 0x9b, 0x6e, 0xc4, 0xe6, 0x95, 0x4e, 0x9a, 0x57,
+	0x68, 0x3e, 0xd2, 0xf7, 0xa1, 0x45, 0xdb, 0xc6, 0xe4, 0x7f, 0x6c, 0xcf, 0x7e, 0x68, 0x36, 0x41,
+	0x64, 0x77, 0xd6, 0xb1, 0xde, 0x94, 0xe2, 0xbd, 0x09, 0xf0, 0x41, 0x63, 0xbe, 0xe0, 0xfb, 0xab,
+	0xca, 0x21, 0xaa, 0xcd, 0x38, 0x55, 0x5c, 0x7d, 0xbe, 0xfb, 0x5d, 0x7e, 0x21, 0xab, 0x32, 0xdf,
+	0xdc, 0x6b, 0x50, 0x64, 0x50, 0xe3, 0x50, 0x8b, 0x08, 0x66, 0x9e, 0x9f, 0xf2, 0x32, 0x7e, 0xe4,
+	0x12, 0xa3, 0x61, 0xb9, 0x68, 0x6e, 0x5c, 0x44, 0x34, 0x61, 0x91, 0x7c, 0x1e, 0x84, 0x8a, 0x88,
+	0x65, 0x29, 0x9a, 0x2c, 0x77, 0xf4, 0x12, 0xe0, 0x13, 0x6c, 0x00, 0x8a, 0x25, 0x40, 0x0b, 0xaf,
+	0x8e, 0xe9, 0x65, 0x39, 0x56, 0xf9, 0xb8, 0x5a, 0x5e, 0x72, 0xed, 0xa9, 0xf2, 0x3b, 0x69, 0xe5,
+	0xde, 0x5b, 0x7c, 0x0b, 0x46, 0x57, 0xa1, 0x0d, 0x2b, 0x49, 0x81, 0x69, 0x1d, 0x77, 0xe2, 0x03,
+	0x5c, 0x8d, 0x96, 0x31, 0x41, 0x25, 0xbb, 0x20, 0xc6, 0x00, 0xef, 0xa1, 0x11, 0xe2, 0x6f, 0xd6,
+	0xdb, 0x2b, 0xe4, 0xdd, 0x9b, 0xf2, 0xc4, 0x9f, 0x46, 0x54, 0x1d, 0xd5, 0x78, 0x47, 0xc4, 0x68,
+	0x47, 0x12, 0xb4, 0x71, 0xfd, 0x6b, 0xbe, 0xdc, 0xde, 0x37, 0x34, 0x5a, 0x81, 0xc5, 0x9d, 0xb6,
+	0x5a, 0xaf, 0x69, 0x6d, 0xa5, 0x75, 0xd0, 0xaa, 0xb5, 0xf6, 0xb4, 0xfd, 0xd6, 0x7e, 0x5d, 0x98,
+	0x42, 0x97, 0x61, 0x21, 0x66, 0x90, 0x1b, 0x42, 0x0a, 0x2d, 0x03, 0x8a, 0x1d, 0xd7, 0xd5, 0xb6,
+	0x30, 0x7d, 0xfd, 0xd7, 0x34, 0x2c, 0x26, 0x7c, 0xc9, 0xa2, 0x35, 0xb8, 0x52, 0xdf, 0xaf, 0x29,
+	0xcf, 0xda, 0x07, 0x3b, 0xad, 0x7d, 0x4d, 0xde, 0xdb, 0x6e, 0x29, 0x3b, 0x07, 0x8d, 0xa6, 0x17,
+	0xe5, 0x23, 0x28, 0x27, 0x9a, 0xe5, 0xba, 0xaa, 0x6d, 0xd7, 0x9a, 0xda, 0xcd, 0xea, 0x3d, 0x21,
+	0x75, 0x2e, 0xaa, 0x7a, 0xe7, 0xae, 0x30, 0x7d, 0x26, 0xaa, 0xc6, 0xb9, 0xd2, 0xe7, 0xa3, 0xee,
+	0x57, 0x85, 0xcc, 0xb9, 0x28, 0x1a, 0x71, 0xe6, 0x6c, 0xd4, 0x56, 0x8d, 0x45, 0xcc, 0x9e, 0x8f,
+	0xba, 0x5f, 0x15, 0x66, 0xcf, 0x45, 0xd1, 0x88, 0xb9, 0x89, 0xed, 0x7c, 0x54, 0x57, 0x6f, 0x09,
+	0x73, 0xa8, 0x0c, 0x1f, 0x24, 0x9a, 0x6b, 0x0d, 0x99, 0xfe, 0x11, 0xe0, 0xfa, 0x6f, 0x29, 0x58,
+	0x99, 0xf0, 0x6f, 0x20, 0x74, 0x15, 0xd6, 0xe4, 0xa7, 0x07, 0x8d, 0xfa, 0xfe, 0xc1, 0x4e, 0x4d,
+	0x4e, 0x9e, 0x57, 0x09, 0x96, 0xe3, 0x10, 0x77, 0x06, 0x42, 0x6a, 0x82, 0xad, 0x56, 0x6b, 0x0a,
+	0xd3, 0x74, 0xcd, 0x62, 0xb6, 0x46, 0x53, 0xae, 0x09, 0x69, 0xb4, 0x0e, 0xa5, 0x24, 0xa7, 0xad,
+	0x9a, 0xa6, 0x36, 0x64, 0x21, 0x53, 0xfd, 0x37, 0x03, 0x33, 0x6c, 0x63, 0xd1, 0x5e, 0xe8, 0x13,
+	0xa6, 0x66, 0x63, 0x9d, 0x60, 0x54, 0x1a, 0x7f, 0xf3, 0x7b, 0xea, 0x28, 0xad, 0x4e, 0xfa, 0x2a,
+	0x68, 0x3a, 0x5d, 0x69, 0x2a, 0xc2, 0xf6, 0xd4, 0xea, 0xbc, 0x27, 0xdb, 0x37, 0x21, 0x36, 0xf7,
+	0x9e, 0x41, 0xe5, 0x33, 0x5f, 0xe3, 0x94, 0xf3, 0xea, 0x24, 0x44, 0x98, 0x79, 0x1f, 0x0a, 0xe1,
+	0x97, 0x1d, 0x5a, 0x9b, 0xfc, 0x06, 0xa4, 0x9c, 0x67, 0x9b, 0xa5, 0x29, 0xf4, 0xd8, 0x7f, 0xbb,
+	0xf1, 0x1e, 0x8a, 0xf1, 0xb7, 0x81, 0xcf, 0x75, 0x25, 0xf9, 0x3d, 0x11, 0xe7, 0xe1, 0xdd, 0x7b,
+	0x47, 0x1e, 0xc5, 0xe7, 0xe1, 0x7d, 0x5b, 0x3f, 0xe3, 0x5a, 0xa7, 0x6c, 0x1b, 0xc9, 0xf6, 0x30,
+	0x67, 0x03, 0x20, 0xb8, 0x02, 0xd1, 0xea, 0xa4, 0x5b, 0x71, 0x6c, 0xae, 0x31, 0xa3, 0x34, 0xb5,
+	0x55, 0xfa, 0xfd, 0xf5, 0x7a, 0xea, 0x8f, 0xd7, 0xeb, 0xa9, 0x3f, 0x5f, 0xaf, 0xa7, 0x7e, 0xfe,
+	0x6b, 0x7d, 0xea, 0xdb, 0xdc, 0xb1, 0xde, 0x63, 0xff, 0xed, 0x70, 0x98, 0x65, 0x7f, 0xdd, 0xfa,
+	0x2f, 0x00, 0x00, 0xff, 0xff, 0x20, 0x78, 0xa0, 0xfc, 0xaa, 0x11, 0x00, 0x00,
 }

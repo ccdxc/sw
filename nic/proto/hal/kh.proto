@@ -287,6 +287,16 @@ message IpsecRuleKeyHandle {
   }
 }
 
+// IpsecSAKeyHandle uniquely identifies a IPSec CB and is used
+// to create/update/delete/get IPSec CBs 
+message IpsecSAKeyHandle {
+  oneof key_or_handle {
+    uint64     cb_id     = 1;  // CB id idenfied by a number
+    fixed64    cb_handle = 2;  // handle for IPSec CB returned by HAL
+  }
+}
+
+
 // QosGroup identifier
 enum QosGroup {
   DEFAULT                   = 0;     // Default qos group
