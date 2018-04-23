@@ -75,10 +75,10 @@ int test_setup() {
       queues::seq_queue_pdma_num_set(FLAGS_num_pdma_queues);
   }
 
-  if (run_acc_scale_tests) {
+  if (run_acc_scale_tests_map) {
       queues::seq_queue_acc_sub_num_set(FLAGS_acc_scale_submissions,
                                         FLAGS_acc_scale_chain_replica,
-                                        kAccScaleTestsMaxChains);
+                                        ACC_SCALE_TEST_MAX_TYPES);
   }
 
   // Initialize resources

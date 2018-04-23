@@ -4,8 +4,11 @@
 #include <stdint.h>
 #include <string>
 #include "dol/test/storage/dp_mem.hpp"
+#include "gflags/gflags.h"
 
 using namespace dp_mem;
+
+DECLARE_uint64(poll_interval);
 
 extern const uint32_t  kXtsQueueSize;
 
@@ -194,7 +197,8 @@ public:
   int test_seq_xts();
   void status_invalidate(void);
   int ring_doorbell();
-  int verify_doorbell(bool verify_pi=true);
+  int verify_doorbell(bool verify_pi=true,
+                      uint64_t poll_interval=FLAGS_poll_interval);
   int queue_req_n_ring_db_from_host();
 
   void* src_buf = (void*)write_buf->va();

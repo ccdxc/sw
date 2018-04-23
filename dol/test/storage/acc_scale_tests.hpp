@@ -305,7 +305,7 @@ private:
 };
 
 
-int acc_scale_tests_comp_encrypt_decrypt_decomp(void);
+int acc_scale_tests_push(void);
 
 bool acc_scale_tests_blk_size_validate(const char *flag_name,
                                        uint64_t value);

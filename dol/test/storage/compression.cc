@@ -515,7 +515,7 @@ compression_buf_init()
                                            comp_status_mem_type1(DP_MEM_TYPE_HBM).
                                            comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                            encrypt_mem_type(DP_MEM_TYPE_HOST_MEM).
-                                           destructor_free_buffers(false));
+                                           destructor_free_buffers(true));
     comp_encrypt_chain_pre_push_params_t cec_pre_push;
     comp_encrypt_chain->pre_push(cec_pre_push.caller_comp_pad_buf(comp_pad_buf).
                                               caller_xts_status_buf(xts_status_host_buf).
@@ -530,7 +530,7 @@ compression_buf_init()
                                              xts_status_mem_type1(DP_MEM_TYPE_HBM).
                                              xts_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                              decrypt_mem_type(DP_MEM_TYPE_HBM).
-                                             destructor_free_buffers(false));
+                                             destructor_free_buffers(true));
     decrypt_decomp_chain_pre_push_params_t ddc_pre_push;
     decrypt_decomp_chain->pre_push(ddc_pre_push.caller_comp_status_buf(status_host_buf).
                                                 caller_comp_opaque_buf(nullptr).
@@ -544,7 +544,7 @@ compression_buf_init()
                                         comp_mem_type2(DP_MEM_TYPE_HOST_MEM).
                                         comp_status_mem_type1(DP_MEM_TYPE_HBM).
                                         comp_status_mem_type2(DP_MEM_TYPE_HOST_MEM).
-                                        destructor_free_buffers(false));
+                                        destructor_free_buffers(true));
     max_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(kCompAppMaxSize, sizeof(cp_hdr_t),
                                                   kCompAppHashBlkSize);
     hash_status_host_vec = new dp_mem_t(max_hash_blks, CP_STATUS_PAD_ALIGNED_SIZE,
@@ -1591,6 +1591,7 @@ int seq_compress_output_hash_app_max_size() {
     // Compression and hash both using cp_queue
     comp_hash_chain->push(params.app_blk_size(kCompAppMaxSize).
                                  app_hash_size(kCompAppHashBlkSize).
+                                 integrity_type(COMP_INTEGRITY_M_ADLER32).
                                  comp_queue(cp_queue).
                                  hash_queue(cp_queue).
                                  push_type(COMP_QUEUE_PUSH_SEQUENCER).
@@ -1621,6 +1622,7 @@ int seq_compress_output_hash_app_nominal_size() {
     // Note: cp_hotq being used for compression and cp_queue for hashing
     comp_hash_chain->push(params.app_blk_size(kCompAppNominalSize).
                                  app_hash_size(kCompAppHashBlkSize).
+                                 integrity_type(COMP_INTEGRITY_M_ADLER32).
                                  comp_queue(cp_hotq).
                                  hash_queue(cp_queue).
                                  push_type(COMP_QUEUE_PUSH_SEQUENCER).

@@ -76,7 +76,7 @@ bool run_xts_perf_tests = false;
 bool run_comp_perf_tests = false;
 bool run_noc_perf_tests = false;
 bool run_rdma_perf_tests = false;
-bool run_acc_scale_tests = false;
+uint32_t run_acc_scale_tests_map = ACC_SCALE_TEST_NONE;
 
 std::vector<tests::TestEntry> test_suite;
 
@@ -220,11 +220,6 @@ std::vector<tests::TestEntry> rdma_perf_tests = {
   {&tests::test_run_perf_rdma_e2e_write, "Perf e2e rdma write", false},
 };
 
-std::vector<tests::TestEntry> acc_scale_tests = {
-  {&tests::acc_scale_tests_comp_encrypt_decrypt_decomp,
-   "Accelerator scale compress-encrypt-decrypt-decompress", false},
-};
-
 void sig_handler(int sig) {
   void *array[16];
   size_t size;
@@ -301,7 +296,7 @@ int main(int argc, char**argv) {
       run_xts_perf_tests = false;
       run_comp_perf_tests = false;
       run_pdma_tests = true;
-      run_acc_scale_tests = true;
+      run_acc_scale_tests_map = ACC_SCALE_TEST_ALL;
   } else if (FLAGS_test_group == "rtl_sanity") {
       run_unit_tests = true;
       run_nvme_tests = true;
@@ -317,7 +312,7 @@ int main(int argc, char**argv) {
       run_xts_perf_tests = false;		// Never enable this for RTL sanity
       run_comp_perf_tests = false;		// Never enable this for RTL sanity
       run_pdma_tests = false;			// Never enable this for RTL sanity
-      run_acc_scale_tests = false;
+      run_acc_scale_tests_map = ACC_SCALE_TEST_NONE;
   } else if (FLAGS_test_group == "unit") {
       run_unit_tests = true;
   } else if (FLAGS_test_group == "nvme") {
@@ -348,8 +343,17 @@ int main(int argc, char**argv) {
       run_noc_perf_tests = true;
   } else if (FLAGS_test_group == "rdma_perf") {
       run_rdma_perf_tests = true;
+  } else if (FLAGS_test_group == "acc_scale_comp_hash") {
+      run_acc_scale_tests_map |= ACC_SCALE_TEST_COMP_HASH;
+  } else if (FLAGS_test_group == "acc_scale_comp_encrypt") {
+      run_acc_scale_tests_map |= ACC_SCALE_TEST_COMP_ENCRYPT;
+  } else if (FLAGS_test_group == "acc_scale_decrypt_decomp") {
+      run_acc_scale_tests_map |= ACC_SCALE_TEST_DECRYPT_DECOMP;
+  } else if (FLAGS_test_group == "acc_scale_comp_encrypt_decrypt_decomp") {
+      run_acc_scale_tests_map |= ACC_SCALE_TEST_COMP_ENCRYPT |
+                                 ACC_SCALE_TEST_DECRYPT_DECOMP;
   } else if (FLAGS_test_group == "acc_scale") {
-      run_acc_scale_tests = true;
+      run_acc_scale_tests_map |= ACC_SCALE_TEST_ALL;
   } else if (FLAGS_test_group == "perf") {
       run_xts_perf_tests = true;
       run_noc_perf_tests = true;
@@ -549,10 +553,9 @@ int main(int argc, char**argv) {
   }
 
   // Add accelerator scale tests
-  if (run_acc_scale_tests) {
-    for (size_t i = 0; i < acc_scale_tests.size(); i++) {
-      test_suite.push_back(acc_scale_tests[i]);
-    }
+  if (run_acc_scale_tests_map) {
+    test_suite.push_back({&tests::acc_scale_tests_push,
+                          "Accelerator scale tests", false});
     printf("Added accelerator scale tests \n");
   }
 
