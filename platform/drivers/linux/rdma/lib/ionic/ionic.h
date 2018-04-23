@@ -64,10 +64,11 @@ struct ionic_sq_meta {
 	uint64_t		wrid;
 	uint32_t		len;
 	uint8_t			op;
+	bool			signal;
 };
 
+/* XXX this rq_meta will go away */
 struct ionic_rq_meta {
-	uint64_t		wrid;
 	uint32_t		len; /* XXX byte_len must come from cqe */
 };
 
@@ -77,9 +78,12 @@ struct ionic_qp {
 		struct verbs_srq	vsrq;
 	};
 
+	uint32_t		qpid;
+	bool			has_sq;
+	bool			has_rq;
 	bool			is_srq;
 
-	uint32_t		qpid;
+	bool			sig_all;
 
 	pthread_spinlock_t	sq_lock;
 	struct ionic_queue	sq;
@@ -94,7 +98,7 @@ struct ionic_qp {
 
 	pthread_spinlock_t	rq_lock;
 	struct ionic_queue	rq;
-	struct ionic_rq_meta	*rq_meta;
+	struct ionic_rq_meta	*rq_meta; /* XXX this rq_meta will go away */
 };
 
 struct ionic_ah {
@@ -163,30 +167,6 @@ static inline uint32_t ionic_get_rqe_size(uint16_t max_sge)
 	max_sge *= 16;
 
 	return 32 + max_sge;
-}
-
-static inline bool ionic_qp_has_rq(struct ionic_qp *qp)
-{
-	if (qp->is_srq)
-		return true;
-
-	if (qp->vqp.qp.qp_type == IBV_QPT_RC ||
-	    qp->vqp.qp.qp_type == IBV_QPT_UC ||
-	    qp->vqp.qp.qp_type == IBV_QPT_UD)
-		return !qp->vqp.qp.srq;
-
-	return false;
-}
-
-static inline bool ionic_qp_has_sq(struct ionic_qp *qp)
-{
-	if (qp->is_srq)
-		return false;
-
-	return qp->vqp.qp.qp_type == IBV_QPT_RC ||
-		qp->vqp.qp.qp_type == IBV_QPT_UC ||
-		qp->vqp.qp.qp_type == IBV_QPT_UD ||
-		qp->vqp.qp.qp_type == IBV_QPT_XRC_SEND;
 }
 
 static inline uint8_t ibv_to_ionic_wr_opcd(uint8_t ibv_opcd)

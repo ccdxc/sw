@@ -32,6 +32,11 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define DRIVER_DESCRIPTION "Pensando Capri RoCE HCA driver"
 #define DEVICE_DESCRIPTION "Pensando Capri RoCE HCA"
 
+/* XXX this just enables workarounds for haps, remove entirely for release */
+static bool ionic_xxx_haps = false;
+module_param_named(xxx_haps, ionic_xxx_haps, bool, 0444);
+MODULE_PARM_DESC(xxx_haps, "XXX Enable workarounds for HAPS.");
+
 static bool ionic_dbgfs_enable = true; /* XXX false for release */
 module_param_named(dbgfs, ionic_dbgfs_enable, bool, 0444);
 MODULE_PARM_DESC(eq_depth, "Enable debugfs for this driver.");
@@ -470,7 +475,10 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	ctx->fallback = req.fallback > 1;
 	if (!ctx->fallback) {
 		/* try to allocate dbid for user ctx */
-		ctx->dbid = ionic_api_get_dbid(dev->lif);
+		if (ionic_xxx_haps)
+			ctx->dbid = dev->dbid; /* XXX HAPS: kernel dbid in user space */
+		else
+			ctx->dbid = ionic_api_get_dbid(dev->lif);
 		if (ctx->dbid < 0) {
 			rc = ctx->dbid;
 			/* maybe allow fallback to kernel space */
@@ -505,7 +513,8 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	return &ctx->ibctx;
 
 err_resp:
-	ionic_api_put_dbid(dev->lif, ctx->dbid);
+	if (!ionic_xxx_haps)
+		ionic_api_put_dbid(dev->lif, ctx->dbid);
 err_dbid:
 	kfree(ctx);
 err_ctx:
@@ -522,7 +531,8 @@ static int ionic_dealloc_ucontext(struct ib_ucontext *ibctx)
 	if (WARN_ON(!list_empty(&ctx->mmap_list)))
 		list_del(&ctx->mmap_list);
 
-	ionic_api_put_dbid(dev->lif, ctx->dbid);
+	if (!ionic_xxx_haps)
+		ionic_api_put_dbid(dev->lif, ctx->dbid);
 	kfree(ctx);
 
 	return 0;
@@ -711,6 +721,14 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 	/* XXX endian? */
 	admin.cmd.create_mr.nchunks = npages;
 	admin.cmd.create_mr.pt_dma = pagedma;
+
+	/* XXX for HAPS: side-data */
+	if (ionic_xxx_haps) {
+#ifndef ADMINQ
+		admin.side_data = pagedir;
+		admin.side_data_len = pagedir_size;
+#endif
+	}
 
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)
@@ -949,6 +967,14 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	/* XXX endian? */
 	admin.cmd.create_cq.pt_size = npages;
 	admin.cmd.create_cq.pt_base_addr = pagedma;
+
+	/* XXX for HAPS: side-data */
+	if (ionic_xxx_haps) {
+#ifndef ADMINQ
+		admin.side_data = pagedir;
+		admin.side_data_len = pagedir_size;
+#endif
+	}
 
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)

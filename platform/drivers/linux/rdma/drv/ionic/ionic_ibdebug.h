@@ -3,7 +3,7 @@
 
 /* Ionic rdma debugfs directory contents:
  *
- * The debugfs contents are an informative resoure for debugging, only.  They
+ * The debugfs contents are an informative resource for debugging, only.  They
  * should not be relied on as a stable api from user space.  The location,
  * arrangement, names, internal formats and structures of these files may
  * change without warning.  Any documentation, including this, is very likely
