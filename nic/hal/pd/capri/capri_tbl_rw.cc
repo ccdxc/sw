@@ -33,6 +33,8 @@
 #include "nic/hal/pd/capri/csr/cpu_hal_if.h"
 #include "nic/hal/pd/capri/capri_loader.h"
 
+#include "sdk/asic/capri/csrlite/cap_top_csr.hpp"
+
 /* When ready to use unified memory mgmt library, change CALLOC and FREE then */
 #define CAPRI_CALLOC  calloc
 #define CAPRI_FREE    free
@@ -750,6 +752,9 @@ capri_table_rw_init (void)
     cap0_ptr->init(0);
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
     register_chip_inst("cap0", 0, 0);
+
+    // Initialize the csr-lite helper
+    sdk::lib::csrlite::cap_top_csr_helper.init();
 
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();

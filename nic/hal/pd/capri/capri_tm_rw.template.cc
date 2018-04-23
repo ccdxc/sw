@@ -17,6 +17,8 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 
+#include "sdk/asic/capri/csrlite/cap_top_csr.hpp"
+
 #ifndef HAL_GTEST
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
@@ -1795,31 +1797,35 @@ capri_tm_port_program_defaults (void)
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
     // ${pinfo["enum"]}
+    
+    sdk::lib::csrlite::cap_pbcport${p}_csr_cfg_oq_t *cfg_oq_reg_${p} = 
+        sdk::lib::csrlite::cap_top_csr_helper.pb.pbc.port_${p}.cfg_oq.get_csr_instance(0);
+
     port_type = capri_tm_get_port_type(${pinfo["enum"]});
-    pbc_csr.port_${p}.cfg_oq.read();
+    cfg_oq_reg_${p}->read();
 //::    if pinfo["type"] == "uplink":
-    pbc_csr.port_${p}.cfg_oq.num_hdr_bytes(
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
+    cfg_oq_reg_${p}->num_hdr_bytes = 
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ;
 //::    #endif
 
     if (tm_sw_init_enabled()) {
-        pbc_csr.port_${p}.cfg_oq.enable(1);
-        pbc_csr.port_${p}.cfg_oq.rewrite_enable(1);
+        cfg_oq_reg_${p}->enable = 1;
+        cfg_oq_reg_${p}->rewrite_enable = 1;
 //::    if pinfo["supports_credits"]:
-        pbc_csr.port_${p}.cfg_oq.flow_control_enable_credits(
-            tm_asic_profile()->port[port_type].uses_credits ? 1 : 0);
+        cfg_oq_reg_${p}->flow_control_enable_credits = 
+            tm_asic_profile()->port[port_type].uses_credits ? 1 : 0;
 //::    #endif
 //::    if pinfo["enum"] == "TM_PORT_INGRESS":
-        pbc_csr.port_${p}.cfg_oq.packing_msb(
+        cfg_oq_reg_${p}->packing_msb = 
             capri_tm_get_max_cell_chunks_for_island(0) >
-            capri_tm_get_max_cell_chunks_for_island(1) ? 1 : 0) ;
+            capri_tm_get_max_cell_chunks_for_island(1) ? 1 : 0 ;
 //::    #endif
 //::    if pinfo["type"] == "dma" or pinfo["type"] == "uplink":
-        pbc_csr.port_${p}.cfg_oq.flow_control_enable_xoff(1);
+        cfg_oq_reg_${p}->flow_control_enable_xoff = 1;
 //::    #endif
     }
-    pbc_csr.port_${p}.cfg_oq.show();
-    pbc_csr.port_${p}.cfg_oq.write();
+    HAL_TRACE_DEBUG("Writing pbc.port_${p}.cfg_oq {}", *cfg_oq_reg_${p});
+    cfg_oq_reg_${p}->write();
 //:: #endfor
 
     return HAL_RET_OK;
