@@ -46,13 +46,13 @@ def GetRqPktPsn (tc, pkt):
         return tc.pvtdata.sq_pre_qstate.tx_psn
 
 def GetPktExpPsn (tc, pkt, args):
-    return (tc.pvtdata.rq_pre_qstate.e_psn + args.pkt_num)
+    return (tc.pvtdata.rq_pre_qstate.e_psn + int(args.pkt_num))
 
 def GetPktMsn (tc, pkt, args):
-    return (tc.pvtdata.sq_pre_qstate.ssn + args.ack_num)
+    return (tc.pvtdata.sq_pre_qstate.ssn + int(args.ack_num))
 
 def GetCQMsn (tc, pkt, args):
-    return (tc.pvtdata.sq_pre_qstate.ssn + args.sq_wqe_num)
+    return (tc.pvtdata.sq_pre_qstate.ssn + int(args.sq_wqe_num))
 
 def GetWQEColor (tc, pkt, args):
     return (tc.pvtdata.sq_pre_qstate.color)

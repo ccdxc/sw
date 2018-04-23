@@ -842,8 +842,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     // RRQ is defined as last ring in the SQCB ring array
     // We should skip scheduling for the RRQ, so set total
     //  rings as one less than max/total
-    sqcb_p->sqcb0.ring_header.total_rings = MAX_SQ_RINGS - 1;
-    sqcb_p->sqcb0.ring_header.host_rings = MAX_SQ_RINGS - 1;
+    sqcb_p->sqcb0.ring_header.total_rings = MAX_SQ_DOORBELL_RINGS;
+    sqcb_p->sqcb0.ring_header.host_rings = MAX_SQ_HOST_RINGS;
     sqcb_p->sqcb0.poll_for_work = 0;
     sqcb_p->sqcb0.color = 1;
     if (spec.sq_in_nic_memory()) {
@@ -907,7 +907,11 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     sqcb_p->sqcb2.msn = sqcb_p->sqcb1.msn;
     sqcb_p->sqcb1.credits = 0xe; // 0x01110 - 128
     sqcb_p->sqcb2.credits = sqcb_p->sqcb1.credits;
-    sqcb_p->sqcb2.p4plus_to_p4_flags = 0xA;
+    sqcb_p->sqcb1.err_retry_count = 7; // Infinite retries
+    sqcb_p->sqcb1.rnr_retry_count = 7; // Infinite retries
+    sqcb_p->sqcb2.err_retry_ctr = 7;
+    sqcb_p->sqcb2.rnr_retry_ctr = 7;
+    //sqcb_p->sqcb2.p4plus_to_p4_flags = 0xA;
     //sqcb_p->sqcb1.p4plus_to_p4_flags = (P4PLUS_TO_P4_UPDATE_UDP_LEN |
     //                                    P4PLUS_TO_P4_UPDATE_IP_LEN);
     sqcb_p->sqcb0.pd = spec.pd();
@@ -999,7 +1003,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.header_template_size = sizeof(header_template_v4_t);
     rqcb.rqcb1.header_template_addr = rqcb.rqcb0.header_template_addr;
     rqcb.rqcb1.header_template_size = rqcb.rqcb0.header_template_size;
-    rqcb.rqcb0.p4plus_to_p4_flags = 0xA;
+    //rqcb.rqcb0.p4plus_to_p4_flags = 0xA;
     //rqcb.rqcb1.p4plus_to_p4_flags = (P4PLUS_TO_P4_UPDATE_UDP_LEN |
     //                                 P4PLUS_TO_P4_UPDATE_IP_LEN);
 

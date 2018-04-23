@@ -19,6 +19,7 @@
 #define REQ_RX_DMA_CMD_FC_DB               1
 #define REQ_RX_DMA_CMD_REXMIT_PSN          2
 #define REQ_RX_DMA_CMD_BKTRACK_DB          3
+#define REQ_RX_DMA_CMD_RNR_TIMEOUT         4
 #define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 4
 #define REQ_RX_MAX_DMA_CMDS                16
 #define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 2)
@@ -38,7 +39,10 @@ struct req_rx_phv_t {
     wakeup_dpath_data       : 64;
     rexmit_psn              : 24;
     ack_timestamp           : 48;
-    rsvd3                   : (512 - 136);
+    err_retry_ctr           : 4;
+    rnr_retry_ctr           : 4;
+    rnr_timeout             : 8;
+    rsvd3                   : (512 - 152);
 
     //flit 6
     rsvd2                   : 24;

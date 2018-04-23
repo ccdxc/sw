@@ -41,7 +41,8 @@ add_headers:
 
     // dma_cmd[0] : addr3 - p4plus_to_p4_header
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(DMA_CMD_BASE, p4plus_to_p4, p4plus_to_p4, 2);
-    phvwrpair        P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
+    phvwrpair        P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, \
+                     P4PLUS_TO_P4_FLAGS, (P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN) 
 
     // dma_cmd[1] - header_template
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_HEADER_TEMPLATE)

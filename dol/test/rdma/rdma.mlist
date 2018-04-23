@@ -228,6 +228,25 @@ modules:
     #    module  : req_tx_ud_send_only_imm
     #    spec    : req_tx_ud_send_only_imm.testspec
     #    ignore  : False
+    - module:
+        name    : RDMA_TX_NAK_SEQ_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_nak_seq_err
+        spec    : req_tx_nak_seq_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_RNR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_rnr
+        spec    : req_tx_rnr.testspec
+        ignore  : False
+       # Timers support in RTL is being added by ASIC team
+        rtl     : False
+        selectors:
+            maxrdmasessions: 1
 
     - module:
         name    : RDMA_TX_SQ_BKTRACK_WQE

@@ -442,7 +442,8 @@ load_hdr_template:
 
     // phv_p->bth.dst_qp = sqcb1_p->dst_qp if it is not UD service
     phvwr.!c3      BTH_DST_QP, d.dst_qp
-    phvwrpair      P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
+    phvwrpair      P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, \
+                   P4PLUS_TO_P4_FLAGS, (P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN)
 
    // HACK: overloading timestamp field d to store flow_index for GFT.
 #ifdef GFT

@@ -266,21 +266,21 @@ modules:
         spec    : req_rx_coalesced_atomic_resp_ack.testspec
         ignore  : False
 
-    #- module:
-    #    name    : RDMA_TX_SQ_BKTRACK_SGE3_START
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : req_tx_sq_bktrack_sge3_start
-    #    spec    : req_tx_sq_bktrack_sge3_start.testspec
-    #    ignore  : False
+    - module:
+        name    : RDMA_TX_SQ_BKTRACK_SGE3_START
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_bktrack_sge3_start
+        spec    : req_tx_sq_bktrack_sge3_start.testspec
+        ignore  : False
 
-    #- module:
-    #    name    : RDMA_TX_SQ_BKTRACK_SGE3_MID
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : req_tx_sq_bktrack_sge3_mid
-    #    spec    : req_tx_sq_bktrack_sge3_mid.testspec
-    #    ignore  : False
+    - module:
+        name    : RDMA_TX_SQ_BKTRACK_SGE3_MID
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_bktrack_sge3_mid
+        spec    : req_tx_sq_bktrack_sge3_mid.testspec
+        ignore  : False
 
     - module:
         name    : RDMA_RX_SEND_FIRST_LAST

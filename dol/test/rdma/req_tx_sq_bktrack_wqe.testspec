@@ -312,10 +312,10 @@ packets:
              bth:  
                  opcode  : 17 # Acknowledge
                  destqp  : ref://testcase/config/rdmasession/lqp/id
-                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=0
+                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=0 #(NAK first message)
              aeth:
                 syndrome : 96 #  (0110 0000 - PKT seq error)
-                msn      : callback://rdma/rdma/GetPktMsn/ack_num=0 #(NAK first message)
+                msn      : callback://rdma/rdma/GetPktMsn/ack_num=-1
              payload:
                  data    : None
 

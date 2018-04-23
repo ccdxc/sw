@@ -78,10 +78,8 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 1:
-        msn = tc.pvtdata.sq_pre_qstate.ssn - 1
-
-        # verify that msn is incremented to that of ssn of this msg
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
+        # verify that msn is incremented by 2
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'msn', 2):
             return False
 
         # verify that c_index of rrq is not incremented

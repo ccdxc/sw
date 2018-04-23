@@ -63,7 +63,7 @@ req_tx_sqcb_process:
 #   TXDMA_DMA_CMD_PTR_SET(REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_START_FLIT_CMD_ID)
 
     .brbegin
-    brpri          r7[MAX_SQ_HOST_RINGS-1: 0], [CNP_PRI, TIMER_PRI, SQ_BKTRACK_PRI, FC_PRI, SQ_PRI]
+    brpri          r7[MAX_SQ_DOORBELL_RINGS-1: 0], [CNP_PRI, TIMER_PRI, SQ_BKTRACK_PRI, FC_PRI, SQ_PRI]
     nop
 
     .brcase        SQ_RING_ID
@@ -283,7 +283,7 @@ sq_bktrack1:
         phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, pt_base_addr), d.pt_base_addr, CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, sq_in_hbm), d.sq_in_hbm
         
         add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES*2)
-        CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_process, r1)
+        CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_process, r1)
         
         // if (sqcb0_p->in_progress || sqcb0_p->bktracking)
         //     sqcb0_to_sqcb1_info_p->cur_wqe_addr = sqcb0_p->curr_wqe_ptr
@@ -360,7 +360,7 @@ sq_bktrack2:
         nop.e
         nop
 
-    .brcase        MAX_SQ_HOST_RINGS
+    .brcase        MAX_SQ_DOORBELL_RINGS
 
         crestore  [c2], d.poll_for_work, 0x1
         crestore  [c1], d.poll_in_progress, 0x1

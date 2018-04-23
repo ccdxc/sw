@@ -85,12 +85,11 @@ struct rqcb0_t {
     rsvd0: 5;
 
     curr_read_rsp_psn: 24;      //Rw by S0 ?
-    p4plus_to_p4_flags: 8;      //Ronly
 
     header_template_size: 8;    //Ronly
     ring_empty_sched_eval_done: 1;  //rw in S0
     rsvd1: 7;
-    pad: 16;   // 2B
+    pad: 24;   // 3B
 };
 
 //Rx only cb

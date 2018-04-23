@@ -129,54 +129,40 @@ check_psn:
 
     // TODO Check valid PSN
 
+check_duplicate_read_resp_mid:
     // bth.psn >= sqcb1_p->rexmit_psn, valid response
     scwlt24        c1, CAPRI_APP_DATA_BTH_PSN, d.rexmit_psn
 
     ARE_ALL_FLAGS_SET(c6, r1, REQ_RX_FLAG_AETH)
     bcf            [!c6 & c1], duplicate_read_resp_mid
-    // rexmit_psn is resp psn + 1
-    add            r5, CAPRI_APP_DATA_BTH_PSN, 1 // Branch Delay Slot
+    ARE_ALL_FLAGS_SET(c2, r1, REQ_RX_FLAG_ACK) // Branch Delay Slot
 
     // skip ack sanity checks if there is no aeth hdr
     bcf            [!c6], post_rexmit_psn
-    //phvwr        p.rexmit_psn, r1 // Branch Delay Slot
-    //tblwr.!c2      d.rexmit_psn, r1 // Branch Delay Slot
-    mincr          r5, 24, 0
  
-check_ack_sanity:
+check_msn:
     // if (msn >= sqcb1_p->ssn) invalid_pkt_msn
     scwle24        c3, d.max_ssn, CAPRI_APP_DATA_AETH_MSN
     bcf            [c3], invalid_pkt_msn
+    add            r3, CAPRI_APP_DATA_AETH_SYNDROME, r0 // Branch Delay Slot
 
-    add            r3, CAPRI_APP_DATA_AETH_SYNDROME, r0
-
-    ARE_ALL_FLAGS_SET(c2, r1, REQ_RX_FLAG_ACK) // Branch Delay Slot
     bcf            [!c1], process_aeth
-
     IS_MASKED_VAL_EQUAL_B(c5, r3, SYNDROME_MASK, ACK_SYNDROME) // Branch Delay Slot
 
+check_duplicate_resp:
     // bth.psn < sqcb1_p->rexmit_psn, duplicate and not unsolicited p_ack, drop
-    bcf            [!c2 | !c5], duplicate_ack
+    bcf            [!c2 | !c5], duplicate_resp
 
     // unsolicited ack i.e. duplicate of most recent p_ack is allowed
     sub            r4, d.rexmit_psn, -1  // Branch Delay Slot
     mincr          r4, 24, r0
     seq            c3, r4, CAPRI_APP_DATA_BTH_PSN
-    bcf            [!c3], duplicate_ack
+    bcf            [!c3], duplicate_resp
 
 process_aeth:
-    // get DMA cmd entry based on dma_cmd_index
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_MSN_CREDITS)
+    bcf            [!c5], post_msn_credits
+    phvwr          p.credits, d.credits // Branch Delay Slot
 
-    bcf            [!c5], post_rexmit_psn
-    //phvwr.!c5      p.rexmit_psn, CAPRI_APP_DATA_BTH_PSN // Branch Delay Slot
-    //tblwr          d.rexmit_psn, CAPRI_APP_DATA_BTH_PSN // Branch Delay Slot
-    add.!c5        r5, r0, CAPRI_APP_DATA_BTH_PSN // Branch Delay Slot
-
-    //tblmincri      d.rexmit_psn, 24, 1
-    // pass last completed msn to avoid posting completion again
-    add            r3, d.msn, 0 
-    tblwr          d.msn, CAPRI_APP_DATA_AETH_MSN
     tblwr          d.credits, CAPRI_APP_DATA_AETH_SYNDROME[4:0]
 
     // if (sqcb1_p->lsn != ((1 << (sqcb1_p->credits >> 1)) + sqcb1_p->msn))
@@ -185,12 +171,14 @@ process_aeth:
     mincr          r2, 24, CAPRI_APP_DATA_AETH_MSN
     sne            c1, d.lsn, r2
 
-post_credits:
+post_msn_credits:
+    // get DMA cmd entry based on dma_cmd_index
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_MSN_CREDITS)
     // dma_cmd - msn and credits
     add            r4, r7, SQCB2_MSN_OFFSET
     DMA_HBM_PHV2MEM_SETUP(r6, msn, credits, r4)
     bcf            [!c1], post_rexmit_psn
-    phvwrpair      p.msn, CAPRI_APP_DATA_AETH_MSN, p.credits, CAPRI_APP_DATA_AETH_SYNDROME[4:0]
+    phvwr          p.credits, d.credits
 
     // dma_cmd - fc_ring db data
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_FC_DB)
@@ -203,19 +191,15 @@ post_credits:
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
 
 post_rexmit_psn:
+    phvwr          p.err_retry_ctr, d.err_retry_count
     bcf            [c3], unsolicited_ack
-    phvwr          p.rexmit_psn, r5 // Branch Delay Slot
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_REXMIT_PSN)
-    bcf            [!c6], dma_rexmit_psn_only
-    add            r4, r7, SQCB2_REXMIT_PSN_OFFSET
-    // if valid ack, update rexmit_psn as well as ack timestamp in sqcb2
-    DMA_HBM_PHV2MEM_SETUP(r6, rexmit_psn, ack_timestamp, r4)
-    b              set_arg
-    nop            // Branch Delay Slot
+    phvwr          p.rnr_retry_ctr, d.rnr_retry_count
 
-dma_rexmit_psn_only:
-    // if read_resp_mid, update only rexmit_psn and not ack timestamp
-    DMA_HBM_PHV2MEM_SETUP(r6, rexmit_psn, rexmit_psn, r4)
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_REXMIT_PSN)
+    add            r4, r7, SQCB2_REXMIT_PSN_OFFSET
+    // if valid ack, update rexmit_psn as well as ack timestamp, err_retry_ctr
+    // and rnr_retry_ctr in sqcb2
+    DMA_HBM_PHV2MEM_SETUP(r6, rexmit_psn, ack_timestamp, r4)
 
 set_arg:
 
@@ -226,7 +210,7 @@ set_arg:
               CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_in_progress), d.rrq_in_progress
     phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cq_id), d.cq_id, \
               CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, e_rsp_psn_or_ssn), d.e_rsp_psn
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, msn), r3, \
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, msn), d.msn, \
               CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, dma_cmd_start_index), REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START
     phvwrpair.c4  CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, e_rsp_psn_or_ssn), d.ssn, \
               CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_empty), 1
@@ -252,7 +236,7 @@ unsolicited_ack:
     nop
 
 duplicate_read_resp_mid:
-duplicate_ack:
+duplicate_resp:
 recirc_cnt_exceed:
 recirc:
 invalid_pkt_msn:

@@ -859,6 +859,12 @@ addi._cf _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
     phvwrpi       _base_r, offsetof(DMA_CMD_PHV2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2MEM_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << PHV2MEM_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << PHV2MEM_PHV_START_OFFSET) | (DMA_CMD_TYPE_PHV2MEM << PHV2MEM_CMDTYPE_OFFSET); \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, addr), sizeof(DMA_CMD_PHV2MEM_T.addr), _addr; \
 
+#define DMA_HBM_PHV2MEM_PHV_END_SETUP(_base_r, _end) \
+    phvwrpi      _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_end), sizeof(DMA_CMD_PHV2MEM_T.phv_end), (PHV_FIELD_END_OFFSET(_end) - 1);
+
+#define DMA_HBM_PHV2MEM_PHV_END_SETUP_C(_base_r, _end, _cf) \
+    phvwrpi._cf  _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_end), sizeof(DMA_CMD_PHV2MEM_T.phv_end), (PHV_FIELD_END_OFFSET(_end) - 1);
+
 #define DMA_HBM_PHV2MEM_SETUP_F(_base_r, _start, _end, _addr)        \
     phvwrpi       _base_r, offsetof(DMA_CMD_PHV2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2MEM_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << PHV2MEM_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << PHV2MEM_PHV_START_OFFSET) | (DMA_CMD_TYPE_PHV2MEM << PHV2MEM_CMDTYPE_OFFSET) | (1 << PHV2MEM_WR_FENCE_OFFSET); \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, addr), sizeof(DMA_CMD_PHV2MEM_T.addr), _addr; \

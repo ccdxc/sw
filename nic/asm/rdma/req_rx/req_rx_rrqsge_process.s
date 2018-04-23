@@ -17,7 +17,7 @@ struct req_rx_s2_t0_k k;
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
 #define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit16_ebit23)
 #define K_NUM_VALID_SGES CAPRI_KEY_FIELD(IN_P, num_valid_sges)
-#define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit0, rexmit_psn_sbit17_ebit23)
+#define K_REXMIT_PSN_MSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit0, msn_sbit17_ebit23)
 
 
 #define LOG_PAGE_SIZE  10
@@ -106,7 +106,7 @@ sge_loop:
     
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, is_atomic, CAPRI_KEY_FIELD(IN_P, is_atomic))
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, cq_dma_cmd_index, REQ_RX_DMA_CMD_CQ)
-    CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, cq_id, K_CQ_ID)
+    //CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, cq_id, K_CQ_ID)
 
     // r4 = sge_p->len
     CAPRI_TABLE_GET_FIELD(r4, r1, SGE_T, len)
@@ -167,7 +167,7 @@ set_arg:
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_offset), r2, \
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, e_rsp_psn), K_E_RSP_PSN
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), K_REXMIT_PSN
+              CAPRI_PHV_RANGE(SQCB1_WRITE_BACK_P, rexmit_psn, msn), K_REXMIT_PSN_MSN
     phvwr.c5  CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, last_pkt), 1
 
     SQCB1_ADDR_GET(r5)

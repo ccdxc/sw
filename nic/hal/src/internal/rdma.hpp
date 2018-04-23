@@ -890,9 +890,10 @@ typedef enum rdma_pkt_opc_e {
  
 /*====================  TYPES.H ===================*/
 
-//RRQ_RING is not actually monitored by scheduler
-#define MAX_SQ_RINGS 6
-#define MAX_HOST_RINGS (MAX_SQ_RINGS - 1)
+//RRQ_RING is not visible to Doorbell
+#define MAX_SQ_RINGS           6
+#define MAX_SQ_DOORBELL_RINGS  (MAX_SQ_RINGS - 1)
+#define MAX_SQ_HOST_RINGS      1
 
 #define SQ_RING_ID      RING_ID_0
 #define FC_RING_ID      RING_ID_1
@@ -945,14 +946,14 @@ typedef struct sqcb0_s {
         uint32_t pt_base_addr;          //common
         uint32_t hbm_sq_base_addr;
     };
-    qpcb_ring_t           rings[MAX_HOST_RINGS];
+    qpcb_ring_t           rings[MAX_SQ_DOORBELL_RINGS];
     // intrinsic
     qpcb_intrinsic_base_t ring_header;
 } PACKED sqcb0_t;
     
 typedef struct sqcb1_s {
 
-    uint8_t pad[8];
+    uint8_t pad[9];
 
     uint32_t rsvd3: 7;
     uint32_t rrq_in_progress:1;
@@ -963,9 +964,7 @@ typedef struct sqcb1_s {
     uint32_t max_ssn:24;
     uint32_t max_tx_psn:24;
 
-    uint32_t rsvd2: 5;
-    uint32_t err_retry_ctr:3;
-    uint32_t rnr_retry_ctr:3;
+    uint32_t rsvd2: 3;
     uint32_t credits:5;
 
     uint32_t msn:24;
@@ -982,7 +981,9 @@ typedef struct sqcb1_s {
     uint32_t ssn:24;
     uint32_t tx_psn:24;      //tx
 
-    uint32_t rsvd1 : 14;
+    uint32_t rsvd1 : 8;
+    uint32_t rnr_retry_count : 3;
+    uint32_t err_retry_count : 3;
     uint32_t log_pmtu: 5;
     uint32_t congestion_mgmt_enable:1 ;
     uint32_t service:4;
@@ -995,13 +996,11 @@ typedef struct sqcb1_s {
 } PACKED sqcb1_t;
 
 typedef struct sqcb2_s {
-    uint8_t pad[1];
     uint16_t mss;
     uint16_t timestamp_echo;
     uint16_t timestamp;
 
     uint32_t exp_rsp_psn:24;
-    uint8_t p4plus_to_p4_flags;
 
     uint16_t rrq_pindex;
     uint16_t sq_cindex;
@@ -1020,6 +1019,9 @@ typedef struct sqcb2_s {
     uint8_t  need_credits:1;
     uint8_t  in_progress:1;
 
+    uint8_t  rnr_timeout:8;
+    uint8_t  rnr_retry_ctr:4;
+    uint8_t  err_retry_ctr:4;
     uint64_t last_ack_or_req_ts:48;
 
     uint32_t rexmit_psn:24;
@@ -1076,11 +1078,10 @@ typedef union header_template_s {
 #define MAX_RQ_RINGS          6
 
 typedef struct rqcb0_s {
-    uint16_t    pad;
+    uint8_t    pad[3];
     uint8_t     rsvd1 : 7;
     uint8_t     ring_empty_sched_eval_done : 1;
     uint8_t     header_template_size;
-    uint32_t    p4plus_to_p4_flags : 8;
     uint32_t    curr_read_rsp_psn : 24;
     uint32_t    rsvd0 : 5;
     uint32_t    rq_in_hbm : 1;

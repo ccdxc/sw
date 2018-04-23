@@ -45,7 +45,8 @@ add_headers_common:
     // common-p4+
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_COMMON_P4PLUS)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, p4plus_to_p4, p4plus_to_p4);
-    phvwrpair       P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
+    phvwrpair       P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, \
+                     P4PLUS_TO_P4_FLAGS, (P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN)
 
     bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, ack_nak_process), 1, add_ack_header
     phvwr          P4PLUS_TO_P4_VLAN_TAG, 0 //BD-slot

@@ -37,7 +37,15 @@ req_tx_bktrack_sqcb2_process:
     // event. Just write back to release busy bits
     seq            c1, d.rexmit_psn, d.tx_psn
     bcf            [c1], sqcb_write_back
-    
+
+    // Infinite retries if retry_ctr is set to 7
+    seq            c1, d.err_retry_ctr, 7 // Branch Delay Slot
+    tblsub.!c1     d.err_retry_ctr, 1
+
+    // Check err_retry_ctr for NAK (seq error), implicit NAK 
+    seq            c1, d.err_retry_ctr, 0 // Branch Delay Slot
+    bcf            [c1], err_completion
+
     phvwrpair CAPRI_PHV_FIELD(TO_S2_P, rexmit_psn), d.rexmit_psn, CAPRI_PHV_FIELD(TO_S3_P, rexmit_psn), d.rexmit_psn
 
     phvwrpair CAPRI_PHV_FIELD(TO_S4_P, rexmit_psn), d.rexmit_psn, CAPRI_PHV_FIELD(TO_S5_P, rexmit_psn), d.rexmit_psn
@@ -118,3 +126,11 @@ set_pc:
 
     nop.e
     nop
+
+err_completion:
+    phvwr   p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_0_VALID(0)
+    nop.e
+    nop
+
+

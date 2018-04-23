@@ -263,7 +263,9 @@ class RdmaSQstate(Packet):
         BitField("service", 0, 4),
         BitField("congestion_mgmt_enable", 0, 1),
         BitField("sqcb1_log_pmtu", 0xa, 5),
-        BitField("rsvd", 0, 14),
+        BitField("err_retry_count", 0, 3),
+        BitField("rnr_retry_count", 0, 3),
+        BitField("rsvd", 0, 8),
 
         X3BytesField("sqcb1_tx_psn", 0),
         X3BytesField("sqcb1_ssn", 0),
@@ -280,9 +282,7 @@ class RdmaSQstate(Packet):
         X3BytesField("msn", 0),
 
         BitField("credits", 0, 5),
-        BitField("nak_retry_ctr", 0, 3),
-        BitField("err_retry_ctr", 0, 3),
-        BitField("rsvd1", 0, 5),
+        BitField("rsvd1", 0, 3),
 
         X3BytesField("max_tx_psn", 0),
         X3BytesField("max_ssn", 0),
@@ -293,7 +293,7 @@ class RdmaSQstate(Packet):
         BitField("rrq_in_progress", 0, 1),
         BitField("rsvd2", 0, 7),
 
-        BitField("pad1", 0, 64),
+        BitField("pad1", 0, 72),
 
         #SQCB2
         X3BytesField("dst_qp", 0),
@@ -312,6 +312,9 @@ class RdmaSQstate(Packet):
         X3BytesField("sqcb2_rexmit_psn", 0),
      
         BitField("last_ack_or_req_ts", 0, 48),
+        BitField("err_retry_ctr", 0, 4),
+        BitField("rnr_retry_ctr", 0, 4),
+        ByteField("rnr_timeout", 0),
 
         BitField("sqcb2_in_progress", 0, 1),
         BitField("sqcb2_need_credits", 0, 1),
@@ -329,14 +332,12 @@ class RdmaSQstate(Packet):
         ShortField("sq_cindex", 0),
         ShortField("p_index5", 0),
 
-        ByteField("p4plus_to_p4_flags", 0),
         X3BytesField("exp_rsp_psn", 0),
 
         ShortField("timestamp", 0),
         ShortField("timestamp_echo", 0),
         ShortField("mss", 0),
 
-        BitField("pad2", 0, 8),
     ]
 
 class RdmaCQstate(Packet):

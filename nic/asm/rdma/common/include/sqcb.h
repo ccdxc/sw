@@ -3,7 +3,8 @@
 #include "capri.h"
 
 #define MAX_SQ_RINGS            6
-#define MAX_SQ_HOST_RINGS (MAX_SQ_RINGS - 1)
+#define MAX_SQ_DOORBELL_RINGS   (MAX_SQ_RINGS - 1)
+#define MAX_SQ_HOST_RINGS       1
 
 #define SQ_RING_ID              0
 #define FC_RING_ID              1
@@ -44,6 +45,7 @@
 #define SQCB2_MSN_OFFSET             FIELD_OFFSET(sqcb2_t, msn)
 #define SQCB2_REXMIT_PSN_OFFSET      FIELD_OFFSET(sqcb2_t, rexmit_psn)
 #define SQCB2_MSN_CREDITS_BYTES      4
+#define SQCB2_RNR_TIMEOUT_OFFSET     FIELD_OFFSET(sqcb2_t, rnr_timeout)
 
 #define SQCB_T struct sqcb_t
 #define SQCB0_T struct sqcb0_t
@@ -137,7 +139,9 @@ struct sqcb1_t {
     service                        : 4;  // RO S0
     congestion_mgmt_enable         : 1;  // RO S0
     log_pmtu                       : 5;  // RO S0 
-    rsvd                           : 14;
+    err_retry_count                : 3;  // RO SO
+    rnr_retry_count                : 3;  // RO S0
+    rsvd                           : 8;
 
     tx_psn                         : 24; // R0 S0 (WO S5 TXDMA)
     ssn                            : 24; // R0 S0 (WO S5 TXDMA)
@@ -154,9 +158,7 @@ struct sqcb1_t {
     msn                            : 24; // RW S0
 
     credits                        : 5;  // RW S0 
-    rnr_retry_ctr                  : 3;  // RW S0
-    err_retry_ctr                  : 3;  // RW S0
-    rsvd1                          : 5;
+    rsvd1                          : 3;
 
     max_tx_psn                     : 24; // RW S0
     max_ssn                        : 24; // RW S0
@@ -167,7 +169,7 @@ struct sqcb1_t {
     rrq_in_progress                : 1;  // RW S5
     rsvd2                          : 7;
 
-    pad                            : 64;
+    pad                            : 72;
 };
 
 struct sqcb2_t {
@@ -190,6 +192,9 @@ struct sqcb2_t {
 
     last_ack_or_req_ts             : 48; // RW S5 (WO RXDMA)
 
+    err_retry_ctr                  : 4; // RW S1 (WO RXDMA)
+    rnr_retry_ctr                  : 4; // RW S1 (WO RXDMA)
+    rnr_timeout                    : 8; // RW S1 (WO RXDMA)
     in_progress                    : 1; // RW S5
     need_credits                   : 1; // RW S5
     timer_on                       : 1; // RW S5
@@ -207,15 +212,12 @@ struct sqcb2_t {
     sq_cindex                      : 16; // RW S5
     rrq_pindex                     : 16; // RW S5
 
-    p4plus_to_p4_flags             : 8; // Not needed ???
     exp_rsp_psn                    : 24; // RW S5
 
     //Temporary use for DOL - ROCE UDP options
     timestamp                      : 16;
     timestamp_echo                 : 16;
     mss                            : 16;
-   
-    pad                            : 8;
 };
 
 struct sqcb_t {
