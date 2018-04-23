@@ -28,185 +28,141 @@ struct _reg_info {
 typedef struct _reg_info reg_info;
 
 Status
-DebugServiceImpl::DebugInvoke(ServerContext *context,
-                              const DebugRequestMsg *req,
-                              DebugResponseMsg *rsp)
+DebugServiceImpl::RegisterGet(ServerContext *context,
+                              const RegisterRequestMsg *req_msg,
+                              RegisterResponseMsg *rsp_msg)
+{
+    uint64_t val  = 0x0;
+
+    for (int i = 0; i < req_msg->request_size(); ++i) {
+        debug::RegisterRequest req = req_msg->request(i);
+
+        debug::RegisterResponse *rsp = rsp_msg->add_response();
+        debug::RegisterData     *reg_data = rsp->mutable_data();
+
+        val  = hal::pd::asic_reg_read(req.addr());
+
+        reg_data->set_value(std::to_string(val));
+        rsp->set_api_status(types::API_STATUS_OK);
+    }
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::RegisterUpdate(ServerContext *context,
+                                 const RegisterRequestMsg *req_msg,
+                                 RegisterResponseMsg *rsp_msg)
+{
+    uint32_t data = 0x0;
+
+    for (int i = 0; i < req_msg->request_size(); ++i) {
+        debug::RegisterRequest req = req_msg->request(i);
+
+        data = req.reg_data();
+
+        debug::RegisterResponse *rsp = rsp_msg->add_response();
+
+        hal::pd::asic_reg_write(req.addr(), &data);
+
+        rsp->set_api_status(types::API_STATUS_OK);
+    }
+
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::MemoryGet(ServerContext *context,
+                            const MemoryRequestMsg *req_msg,
+                            MemoryResponseMsg *rsp_msg)
 {
     hal_ret_t                               ret          = HAL_RET_OK;
-    bool                                    table_access = false;
-    bool                                    reg_access   = false;
     int                                     index        = 0;
     int                                     num_indices  = 0;
-    string                                  data;
     hal::pd::pd_debug_cli_read_args_t       args;
     hal::pd::pd_table_properties_get_args_t table_prop_args;
+    debug::MemoryResponse                   *rsp = NULL;
 
-    HAL_TRACE_DEBUG("Rcvd Debug request");
+    for (int i = 0; i < req_msg->request_size(); ++i) {
+        debug::MemoryRequest req = req_msg->request(i);
 
-    DebugSpec spec = req->request(0);
-    DebugResponse *response = rsp->add_response();
-    debug::DebugKeyHandle key_handle = spec.key_or_handle();
+        if (req.index() == 0xffffffff) {
+            table_prop_args.tableid = req.table_id();
 
-    if ((key_handle.key_or_handle_case() == debug::DebugKeyHandle::kTableId) ||
-        (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kTableName)) {
-        HAL_TRACE_DEBUG("Table: {}", key_handle.table_id());
-        table_access = true;
-    } else if ((key_handle.key_or_handle_case() == debug::DebugKeyHandle::kRegId) ||
-               (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kRegName)) {
-        HAL_TRACE_DEBUG("Reg: {}", key_handle.reg_id());
-        reg_access = true;
-    }
-    if (spec.mem_type() == debug::DEBUG_MEM_TYPE_TABLE) {
-        table_access = true;
-    } else if (spec.mem_type() == debug::DEBUG_MEM_TYPE_REG) {
-        reg_access = true;
-    }
-
-    HAL_TRACE_DEBUG("operation: {} index: {}",
-                    spec.opn_type(), spec.index());
-
-    if (table_access) {
-        if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
-
-            if (spec.index() == 0xffffffff) {
-                table_prop_args.tableid = key_handle.table_id();
-
-                ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TABLE_PROPERTIES_GET,
-                                           (void *)&table_prop_args);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_DEBUG("Failed to get table properties for"
-                                    " table: {}, err: {}",
-                                    key_handle.table_id(), ret);
-                    // TODO
-                    response->set_api_status(types::API_STATUS_HW_READ_ERROR);
-                    return Status::OK;
-                }
-                index       = 0;
-                num_indices = table_prop_args.tabledepth;
-            } else {
-                index       = spec.index();
-                num_indices = 1;
-            }
-
-            HAL_TRACE_DEBUG("index start: {}, num indices: {}",
-                            index, index + num_indices);
-
-            for (int i = index; i < index + num_indices; ++i) {
-                DebugSpec *rsp_spec = response->add_spec();
-                args.tableid = key_handle.table_id();
-                args.index = i;
-                args.swkey = (void *)spec.swkey().c_str();
-                args.swkey_mask = (void *)spec.swkey_mask().c_str();
-                args.actiondata = (void *)spec.actiondata().c_str();
-                ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_READ, (void *)&args);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_DEBUG("Hardware read failure, err: {}", ret);
-                    response->set_api_status(types::API_STATUS_HW_READ_ERROR);
-                    return Status::OK;
-                }
-
-                rsp_spec->set_swkey(spec.swkey());
-                rsp_spec->set_swkey_mask(spec.swkey_mask());
-                rsp_spec->set_actiondata(spec.actiondata());
-            }
-            response->set_api_status(types::API_STATUS_OK);
-        } else {
-            args.tableid = key_handle.table_id();
-            args.index = spec.index();
-            args.swkey = (void *)spec.swkey().c_str();
-            args.swkey_mask = (void *)spec.swkey_mask().c_str();
-            args.actiondata = (void *)spec.actiondata().c_str();
-            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_WRITE, (void *)&args);
+            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TABLE_PROPERTIES_GET,
+                                       (void *)&table_prop_args);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_DEBUG("Hardware write failure, err: {}", ret);
-                response->set_api_status(types::API_STATUS_HW_READ_ERROR);
+                HAL_TRACE_DEBUG("Failed to get table properties for"
+                                " table: {}, err: {}",
+                                req.table_id(), ret);
+                rsp = rsp_msg->add_response();
+                rsp->set_api_status(types::API_STATUS_HW_READ_ERROR);
                 return Status::OK;
             }
-            response->set_api_status(types::API_STATUS_OK);
-        }
-    } else if (reg_access) {
-        HAL_TRACE_DEBUG("Register address: {#x}", spec.addr());
-        if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
-            if (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kRegName) {
-
-                // PD-Cleanup: Don't call capri apis
-                // data = hal::pd::asic_csr_dump((char *)key_handle.reg_name().c_str());
-                debug::RegisterData *reg_data = response->add_data();
-                reg_data->set_reg_name(key_handle.reg_name());
-                reg_data->set_value(data);
-
-            } else if (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kBlockName) {
-                HAL_TRACE_DEBUG("{}: block name", (char *) key_handle.block_name().c_str());
-
-                /*char *root_path = NULL;
-                root_path = std::getenv("HAL_CONFIG_PATH");
-                string reg_file = std::string(root_path) + "reg_out" + (char *)key_handle.block_name().c_str() + ".txt";
-                HAL_TRACE_DEBUG("reg file {}", reg_file);
-                FILE *reg_fd = fopen(reg_file.c_str(), "ab+");
-
-                if (!reg_fd) {
-                    HAL_TRACE_DEBUG("Returned no file");
-                    return Status::OK;
-                }*/
-                if (strcmp((char *)key_handle.block_name().c_str() , "all") == 0) {
-                    // PD-Cleanup: Don't call capri apis
-#if 0
-                    vector<string> block_vector = hal::pd::asic_csr_list_get("cap0", 1);
-
-                    for ( auto block : block_vector) {
-                        HAL_TRACE_DEBUG("Block name: {}", block);
-                        vector < tuple < std::string, string, std::string>> reg_data;
-                        reg_data = hal::pd::asic_csr_dump_reg((char *) (block.c_str()), 1);
-                        for (auto reg : reg_data) {
-                            string reg_name;
-                            string offset;
-                            string value;
-                            std::tie(reg_name, offset, value) = reg;
-                            debug::RegisterData *reg_data = response->add_data();
-                            reg_data->set_reg_name(reg_name);
-                            reg_data->set_value(value);
-                            reg_data->set_address(offset);
-                            //std::fprintf(reg_fd, "%s, offset: %d , value: %s \n",reg_name.c_str(), offset, value.c_str());
-                        }
-                        //fflush(reg_fd);
-                    }
-#endif
-                    //fclose(reg_fd);
-                } else {
-                    string block_name = key_handle.block_name();
-                    HAL_TRACE_DEBUG("Block name: {}", block_name);
-                    vector < tuple < std::string, string, std::string>> reg_data;
-                    // PD-Cleanup: Don't call capri apis
-#if 0
-                    reg_data = hal::pd::asic_csr_dump_reg((char *) (block_name.c_str()), 1);
-                    for (auto reg : reg_data) {
-                        string reg_name;
-                        string offset;
-                        string value;
-                        std::tie(reg_name, offset, value) = reg;
-                        debug::RegisterData *reg_data = response->add_data();
-                        reg_data->set_reg_name(reg_name);
-                        reg_data->set_value(value);
-                        reg_data->set_address(offset);
-                        //std::fprintf(reg_fd, "%s, offset: %d , value: %s \n",reg_name.c_str(), offset, value.c_str());
-                    }
-#endif
-                    //fflush(reg_fd);
-                    //fclose(reg_fd);
-                }
-            }  else {
-                uint64_t val = hal::pd::asic_reg_read(spec.addr());
-                data = std::to_string(val);
-            }
+            index       = 0;
+            num_indices = table_prop_args.tabledepth;
         } else {
-            HAL_TRACE_DEBUG("Writing Data: {#x}", spec.reg_data());
-            uint32_t reg_data = spec.reg_data();
-            hal::pd::asic_reg_write(spec.addr(), &reg_data);
+            index       = req.index();
+            num_indices = 1;
         }
-        response->set_api_status(types::API_STATUS_OK);
+
+        HAL_TRACE_DEBUG("index start: {}, num indices: {}",
+                        index, index + num_indices);
+
+        for (int i = index; i < index + num_indices; ++i) {
+            rsp = rsp_msg->add_response();
+
+            memset (&args, 0, sizeof(hal::pd::pd_debug_cli_read_args_t));
+
+            args.tableid = req.table_id();
+            args.index = i;
+            args.swkey = (void *)req.swkey().c_str();
+            args.swkey_mask = (void *)req.swkey_mask().c_str();
+            args.actiondata = (void *)req.actiondata().c_str();
+            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_READ, (void *)&args);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_DEBUG("Hardware read failure, err: {}", ret);
+                rsp->set_api_status(types::API_STATUS_HW_READ_ERROR);
+                return Status::OK;
+            }
+
+            rsp->set_swkey(req.swkey());
+            rsp->set_swkey_mask(req.swkey_mask());
+            rsp->set_actiondata(req.actiondata());
+            rsp->set_api_status(types::API_STATUS_OK);
+        }
     }
 
-    response->set_api_status(types::API_STATUS_OK);
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::MemoryUpdate(ServerContext *context,
+                               const MemoryRequestMsg *req_msg,
+                               MemoryResponseMsg *rsp_msg)
+{
+    hal_ret_t                          ret = HAL_RET_OK;
+    hal::pd::pd_debug_cli_read_args_t  args;
+
+    for (int i = 0; i < req_msg->request_size(); ++i) {
+        debug::MemoryRequest req = req_msg->request(i);
+        debug::MemoryResponse *rsp = rsp_msg->add_response();
+
+        memset (&args, 0, sizeof(hal::pd::pd_debug_cli_read_args_t));
+
+        args.tableid = req.table_id();
+        args.index = req.index();
+        args.swkey = (void *)req.swkey().c_str();
+        args.swkey_mask = (void *)req.swkey_mask().c_str();
+        args.actiondata = (void *)req.actiondata().c_str();
+        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_WRITE, (void *)&args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_DEBUG("Hardware write failure, err: {}", ret);
+            rsp->set_api_status(types::API_STATUS_HW_READ_ERROR);
+            return Status::OK;
+        }
+        rsp->set_api_status(types::API_STATUS_OK);
+    }
+
     return Status::OK;
 }
 
@@ -250,9 +206,9 @@ DebugServiceImpl::SlabGet(ServerContext *context,
 }
 
 Status
-DebugServiceImpl::MpuTraceOpn(ServerContext *context,
-                              const MpuTraceRequestMsg *req,
-                              MpuTraceResponseMsg *rsp)
+DebugServiceImpl::MpuTraceUpdate(ServerContext *context,
+                                 const MpuTraceRequestMsg *req,
+                                 MpuTraceResponseMsg *rsp)
 {
     uint32_t  i     = 0;
     uint32_t  nreqs = req->request_size();

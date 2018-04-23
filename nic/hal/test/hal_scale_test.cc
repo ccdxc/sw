@@ -180,7 +180,7 @@ public:
         req->set_instructions(false);
         req->set_enable(enable);
 
-        status = debug_stub_->MpuTraceOpn(&context, req_msg, &rsp_msg);
+        status = debug_stub_->MpuTraceUpdate(&context, req_msg, &rsp_msg);
         if (status.ok()) {
             std::cout << "MPU trace "
                       << (enable ? "enable" : "disable")

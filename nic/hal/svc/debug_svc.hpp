@@ -13,10 +13,6 @@ using grpc::Status;
 
 using types::Empty;
 using debug::Debug;
-using debug::DebugSpec;
-using debug::DebugRequestMsg;
-using debug::DebugResponse;
-using debug::DebugResponseMsg;
 using debug::MemTrackGetRequest;
 using debug::MemTrackGetRequestMsg;
 using debug::MemTrackGetResponse;
@@ -31,21 +27,36 @@ using debug::TraceSpec;
 using debug::TraceRequestMsg;
 using debug::TraceResponse;
 using debug::TraceResponseMsg;
+using debug::RegisterRequestMsg;
+using debug::RegisterResponseMsg;
+using debug::MemoryRequestMsg;
+using debug::MemoryRequest;
+using debug::MemoryResponseMsg;
+using debug::MemoryResponse;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
-    Status DebugInvoke(ServerContext *context,
-                       const DebugRequestMsg *req,
-                       DebugResponseMsg *rsp) override;
+    Status RegisterGet(ServerContext *context,
+                       const RegisterRequestMsg *req,
+                       RegisterResponseMsg *rsp);
+    Status RegisterUpdate(ServerContext *context,
+                          const RegisterRequestMsg *req,
+                          RegisterResponseMsg *rsp);
+    Status MemoryGet(ServerContext *context,
+                     const MemoryRequestMsg *req,
+                     MemoryResponseMsg *rsp);
+    Status MemoryUpdate(ServerContext *context,
+                        const MemoryRequestMsg *req,
+                        MemoryResponseMsg *rsp);
     Status MemTrackGet(ServerContext *context,
                        const MemTrackGetRequestMsg *req,
                        MemTrackGetResponseMsg *rsp) override;
     Status SlabGet(ServerContext *context,
                    const SlabGetRequestMsg *req,
                    SlabGetResponseMsg *rsp) override;
-    Status MpuTraceOpn(ServerContext *context,
-                       const MpuTraceRequestMsg *req,
-                       MpuTraceResponseMsg *rsp) override;
+    Status MpuTraceUpdate(ServerContext *context,
+                          const MpuTraceRequestMsg *req,
+                          MpuTraceResponseMsg *rsp) override;
     Status TraceUpdate(ServerContext *context,
                        const TraceRequestMsg *req,
                        TraceResponseMsg *rsp) override;

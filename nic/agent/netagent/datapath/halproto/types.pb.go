@@ -159,14 +159,13 @@
 		CryptoKeyDeleteResponseMsg
 		RegisterRequest
 		RegisterRequestMsg
+		RegisterResponse
+		RegisterResponseMsg
 		MemoryRequest
 		MemoryRequestMsg
-		DebugKeyHandle
-		DebugSpec
-		DebugRequestMsg
+		MemoryResponse
+		MemoryResponseMsg
 		RegisterData
-		DebugResponse
-		DebugResponseMsg
 		MemTrackSpec
 		MemTrackGetRequest
 		MemTrackGetRequestMsg

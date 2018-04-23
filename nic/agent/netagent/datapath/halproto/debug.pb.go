@@ -21,56 +21,6 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// Debug table and register Read/Write operation
-type DebugOperationType int32
-
-const (
-	DebugOperationType_DEBUG_OP_TYPE_NONE  DebugOperationType = 0
-	DebugOperationType_DEBUG_OP_TYPE_READ  DebugOperationType = 1
-	DebugOperationType_DEBUG_OP_TYPE_WRITE DebugOperationType = 2
-)
-
-var DebugOperationType_name = map[int32]string{
-	0: "DEBUG_OP_TYPE_NONE",
-	1: "DEBUG_OP_TYPE_READ",
-	2: "DEBUG_OP_TYPE_WRITE",
-}
-var DebugOperationType_value = map[string]int32{
-	"DEBUG_OP_TYPE_NONE":  0,
-	"DEBUG_OP_TYPE_READ":  1,
-	"DEBUG_OP_TYPE_WRITE": 2,
-}
-
-func (x DebugOperationType) String() string {
-	return proto.EnumName(DebugOperationType_name, int32(x))
-}
-func (DebugOperationType) EnumDescriptor() ([]byte, []int) { return fileDescriptorDebug, []int{0} }
-
-// Debug table or register
-type DebugMemoryType int32
-
-const (
-	DebugMemoryType_DEBUG_MEM_TYPE_NONE  DebugMemoryType = 0
-	DebugMemoryType_DEBUG_MEM_TYPE_TABLE DebugMemoryType = 1
-	DebugMemoryType_DEBUG_MEM_TYPE_REG   DebugMemoryType = 2
-)
-
-var DebugMemoryType_name = map[int32]string{
-	0: "DEBUG_MEM_TYPE_NONE",
-	1: "DEBUG_MEM_TYPE_TABLE",
-	2: "DEBUG_MEM_TYPE_REG",
-}
-var DebugMemoryType_value = map[string]int32{
-	"DEBUG_MEM_TYPE_NONE":  0,
-	"DEBUG_MEM_TYPE_TABLE": 1,
-	"DEBUG_MEM_TYPE_REG":   2,
-}
-
-func (x DebugMemoryType) String() string {
-	return proto.EnumName(DebugMemoryType_name, int32(x))
-}
-func (DebugMemoryType) EnumDescriptor() ([]byte, []int) { return fileDescriptorDebug, []int{1} }
-
 type TraceLevel int32
 
 const (
@@ -93,7 +43,7 @@ var TraceLevel_value = map[string]int32{
 func (x TraceLevel) String() string {
 	return proto.EnumName(TraceLevel_name, int32(x))
 }
-func (TraceLevel) EnumDescriptor() ([]byte, []int) { return fileDescriptorDebug, []int{2} }
+func (TraceLevel) EnumDescriptor() ([]byte, []int) { return fileDescriptorDebug, []int{0} }
 
 // pipeline type for MPU trace
 type MpuTracePipelineType int32
@@ -118,7 +68,7 @@ var MpuTracePipelineType_value = map[string]int32{
 func (x MpuTracePipelineType) String() string {
 	return proto.EnumName(MpuTracePipelineType_name, int32(x))
 }
-func (MpuTracePipelineType) EnumDescriptor() ([]byte, []int) { return fileDescriptorDebug, []int{3} }
+func (MpuTracePipelineType) EnumDescriptor() ([]byte, []int) { return fileDescriptorDebug, []int{1} }
 
 type RegisterRequest struct {
 	// Types that are valid to be assigned to IdOrName:
@@ -274,6 +224,46 @@ func (m *RegisterRequestMsg) GetRequest() []*RegisterRequest {
 	return nil
 }
 
+type RegisterResponse struct {
+	ApiStatus ApiStatus     `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Data      *RegisterData `protobuf:"bytes,2,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *RegisterResponse) Reset()                    { *m = RegisterResponse{} }
+func (m *RegisterResponse) String() string            { return proto.CompactTextString(m) }
+func (*RegisterResponse) ProtoMessage()               {}
+func (*RegisterResponse) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{2} }
+
+func (m *RegisterResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *RegisterResponse) GetData() *RegisterData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type RegisterResponseMsg struct {
+	Response []*RegisterResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *RegisterResponseMsg) Reset()                    { *m = RegisterResponseMsg{} }
+func (m *RegisterResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*RegisterResponseMsg) ProtoMessage()               {}
+func (*RegisterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{3} }
+
+func (m *RegisterResponseMsg) GetResponse() []*RegisterResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
 type MemoryRequest struct {
 	// Types that are valid to be assigned to IdOrName:
 	//	*MemoryRequest_TableId
@@ -288,7 +278,7 @@ type MemoryRequest struct {
 func (m *MemoryRequest) Reset()                    { *m = MemoryRequest{} }
 func (m *MemoryRequest) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRequest) ProtoMessage()               {}
-func (*MemoryRequest) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{2} }
+func (*MemoryRequest) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{4} }
 
 type isMemoryRequest_IdOrName interface {
 	isMemoryRequest_IdOrName()
@@ -427,7 +417,7 @@ type MemoryRequestMsg struct {
 func (m *MemoryRequestMsg) Reset()                    { *m = MemoryRequestMsg{} }
 func (m *MemoryRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRequestMsg) ProtoMessage()               {}
-func (*MemoryRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{3} }
+func (*MemoryRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{5} }
 
 func (m *MemoryRequestMsg) GetRequest() []*MemoryRequest {
 	if m != nil {
@@ -436,295 +426,66 @@ func (m *MemoryRequestMsg) GetRequest() []*MemoryRequest {
 	return nil
 }
 
-// DebugKeyHandle uniquely identfies the table/register to access
-type DebugKeyHandle struct {
-	// Types that are valid to be assigned to KeyOrHandle:
-	//	*DebugKeyHandle_TableId
-	//	*DebugKeyHandle_TableName
-	//	*DebugKeyHandle_RegId
-	//	*DebugKeyHandle_RegName
-	//	*DebugKeyHandle_BlockName
-	KeyOrHandle isDebugKeyHandle_KeyOrHandle `protobuf_oneof:"key_or_handle"`
+type MemoryResponse struct {
+	ApiStatus  ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Index      uint32    `protobuf:"varint,2,opt,name=index,proto3" json:"index,omitempty"`
+	Swkey      []byte    `protobuf:"bytes,3,opt,name=swkey,proto3" json:"swkey,omitempty"`
+	SwkeyMask  []byte    `protobuf:"bytes,4,opt,name=swkey_mask,json=swkeyMask,proto3" json:"swkey_mask,omitempty"`
+	Actiondata []byte    `protobuf:"bytes,5,opt,name=actiondata,proto3" json:"actiondata,omitempty"`
 }
 
-func (m *DebugKeyHandle) Reset()                    { *m = DebugKeyHandle{} }
-func (m *DebugKeyHandle) String() string            { return proto.CompactTextString(m) }
-func (*DebugKeyHandle) ProtoMessage()               {}
-func (*DebugKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{4} }
+func (m *MemoryResponse) Reset()                    { *m = MemoryResponse{} }
+func (m *MemoryResponse) String() string            { return proto.CompactTextString(m) }
+func (*MemoryResponse) ProtoMessage()               {}
+func (*MemoryResponse) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{6} }
 
-type isDebugKeyHandle_KeyOrHandle interface {
-	isDebugKeyHandle_KeyOrHandle()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type DebugKeyHandle_TableId struct {
-	TableId uint32 `protobuf:"fixed32,1,opt,name=table_id,json=tableId,proto3,oneof"`
-}
-type DebugKeyHandle_TableName struct {
-	TableName string `protobuf:"bytes,2,opt,name=table_name,json=tableName,proto3,oneof"`
-}
-type DebugKeyHandle_RegId struct {
-	RegId uint32 `protobuf:"fixed32,3,opt,name=reg_id,json=regId,proto3,oneof"`
-}
-type DebugKeyHandle_RegName struct {
-	RegName string `protobuf:"bytes,4,opt,name=reg_name,json=regName,proto3,oneof"`
-}
-type DebugKeyHandle_BlockName struct {
-	BlockName string `protobuf:"bytes,5,opt,name=block_name,json=blockName,proto3,oneof"`
-}
-
-func (*DebugKeyHandle_TableId) isDebugKeyHandle_KeyOrHandle()   {}
-func (*DebugKeyHandle_TableName) isDebugKeyHandle_KeyOrHandle() {}
-func (*DebugKeyHandle_RegId) isDebugKeyHandle_KeyOrHandle()     {}
-func (*DebugKeyHandle_RegName) isDebugKeyHandle_KeyOrHandle()   {}
-func (*DebugKeyHandle_BlockName) isDebugKeyHandle_KeyOrHandle() {}
-
-func (m *DebugKeyHandle) GetKeyOrHandle() isDebugKeyHandle_KeyOrHandle {
+func (m *MemoryResponse) GetApiStatus() ApiStatus {
 	if m != nil {
-		return m.KeyOrHandle
+		return m.ApiStatus
 	}
-	return nil
+	return ApiStatus_API_STATUS_OK
 }
 
-func (m *DebugKeyHandle) GetTableId() uint32 {
-	if x, ok := m.GetKeyOrHandle().(*DebugKeyHandle_TableId); ok {
-		return x.TableId
-	}
-	return 0
-}
-
-func (m *DebugKeyHandle) GetTableName() string {
-	if x, ok := m.GetKeyOrHandle().(*DebugKeyHandle_TableName); ok {
-		return x.TableName
-	}
-	return ""
-}
-
-func (m *DebugKeyHandle) GetRegId() uint32 {
-	if x, ok := m.GetKeyOrHandle().(*DebugKeyHandle_RegId); ok {
-		return x.RegId
-	}
-	return 0
-}
-
-func (m *DebugKeyHandle) GetRegName() string {
-	if x, ok := m.GetKeyOrHandle().(*DebugKeyHandle_RegName); ok {
-		return x.RegName
-	}
-	return ""
-}
-
-func (m *DebugKeyHandle) GetBlockName() string {
-	if x, ok := m.GetKeyOrHandle().(*DebugKeyHandle_BlockName); ok {
-		return x.BlockName
-	}
-	return ""
-}
-
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*DebugKeyHandle) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _DebugKeyHandle_OneofMarshaler, _DebugKeyHandle_OneofUnmarshaler, _DebugKeyHandle_OneofSizer, []interface{}{
-		(*DebugKeyHandle_TableId)(nil),
-		(*DebugKeyHandle_TableName)(nil),
-		(*DebugKeyHandle_RegId)(nil),
-		(*DebugKeyHandle_RegName)(nil),
-		(*DebugKeyHandle_BlockName)(nil),
-	}
-}
-
-func _DebugKeyHandle_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*DebugKeyHandle)
-	// key_or_handle
-	switch x := m.KeyOrHandle.(type) {
-	case *DebugKeyHandle_TableId:
-		_ = b.EncodeVarint(1<<3 | proto.WireFixed32)
-		_ = b.EncodeFixed32(uint64(x.TableId))
-	case *DebugKeyHandle_TableName:
-		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
-		_ = b.EncodeStringBytes(x.TableName)
-	case *DebugKeyHandle_RegId:
-		_ = b.EncodeVarint(3<<3 | proto.WireFixed32)
-		_ = b.EncodeFixed32(uint64(x.RegId))
-	case *DebugKeyHandle_RegName:
-		_ = b.EncodeVarint(4<<3 | proto.WireBytes)
-		_ = b.EncodeStringBytes(x.RegName)
-	case *DebugKeyHandle_BlockName:
-		_ = b.EncodeVarint(5<<3 | proto.WireBytes)
-		_ = b.EncodeStringBytes(x.BlockName)
-	case nil:
-	default:
-		return fmt.Errorf("DebugKeyHandle.KeyOrHandle has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _DebugKeyHandle_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*DebugKeyHandle)
-	switch tag {
-	case 1: // key_or_handle.table_id
-		if wire != proto.WireFixed32 {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeFixed32()
-		m.KeyOrHandle = &DebugKeyHandle_TableId{uint32(x)}
-		return true, err
-	case 2: // key_or_handle.table_name
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeStringBytes()
-		m.KeyOrHandle = &DebugKeyHandle_TableName{x}
-		return true, err
-	case 3: // key_or_handle.reg_id
-		if wire != proto.WireFixed32 {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeFixed32()
-		m.KeyOrHandle = &DebugKeyHandle_RegId{uint32(x)}
-		return true, err
-	case 4: // key_or_handle.reg_name
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeStringBytes()
-		m.KeyOrHandle = &DebugKeyHandle_RegName{x}
-		return true, err
-	case 5: // key_or_handle.block_name
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeStringBytes()
-		m.KeyOrHandle = &DebugKeyHandle_BlockName{x}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _DebugKeyHandle_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*DebugKeyHandle)
-	// key_or_handle
-	switch x := m.KeyOrHandle.(type) {
-	case *DebugKeyHandle_TableId:
-		n += proto.SizeVarint(1<<3 | proto.WireFixed32)
-		n += 4
-	case *DebugKeyHandle_TableName:
-		n += proto.SizeVarint(2<<3 | proto.WireBytes)
-		n += proto.SizeVarint(uint64(len(x.TableName)))
-		n += len(x.TableName)
-	case *DebugKeyHandle_RegId:
-		n += proto.SizeVarint(3<<3 | proto.WireFixed32)
-		n += 4
-	case *DebugKeyHandle_RegName:
-		n += proto.SizeVarint(4<<3 | proto.WireBytes)
-		n += proto.SizeVarint(uint64(len(x.RegName)))
-		n += len(x.RegName)
-	case *DebugKeyHandle_BlockName:
-		n += proto.SizeVarint(5<<3 | proto.WireBytes)
-		n += proto.SizeVarint(uint64(len(x.BlockName)))
-		n += len(x.BlockName)
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
-}
-
-// DebugSpec msg is used to pass parameters for the Debug
-type DebugSpec struct {
-	KeyOrHandle *DebugKeyHandle    `protobuf:"bytes,1,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
-	OpnType     DebugOperationType `protobuf:"varint,2,opt,name=opn_type,json=opnType,proto3,enum=debug.DebugOperationType" json:"opn_type,omitempty"`
-	MemType     DebugMemoryType    `protobuf:"varint,3,opt,name=mem_type,json=memType,proto3,enum=debug.DebugMemoryType" json:"mem_type,omitempty"`
-	Addr        uint64             `protobuf:"varint,4,opt,name=addr,proto3" json:"addr,omitempty"`
-	RegData     uint32             `protobuf:"varint,5,opt,name=reg_data,json=regData,proto3" json:"reg_data,omitempty"`
-	Index       uint32             `protobuf:"varint,6,opt,name=index,proto3" json:"index,omitempty"`
-	Swkey       []byte             `protobuf:"bytes,7,opt,name=swkey,proto3" json:"swkey,omitempty"`
-	SwkeyMask   []byte             `protobuf:"bytes,8,opt,name=swkey_mask,json=swkeyMask,proto3" json:"swkey_mask,omitempty"`
-	Actiondata  []byte             `protobuf:"bytes,9,opt,name=actiondata,proto3" json:"actiondata,omitempty"`
-}
-
-func (m *DebugSpec) Reset()                    { *m = DebugSpec{} }
-func (m *DebugSpec) String() string            { return proto.CompactTextString(m) }
-func (*DebugSpec) ProtoMessage()               {}
-func (*DebugSpec) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{5} }
-
-func (m *DebugSpec) GetKeyOrHandle() *DebugKeyHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-func (m *DebugSpec) GetOpnType() DebugOperationType {
-	if m != nil {
-		return m.OpnType
-	}
-	return DebugOperationType_DEBUG_OP_TYPE_NONE
-}
-
-func (m *DebugSpec) GetMemType() DebugMemoryType {
-	if m != nil {
-		return m.MemType
-	}
-	return DebugMemoryType_DEBUG_MEM_TYPE_NONE
-}
-
-func (m *DebugSpec) GetAddr() uint64 {
-	if m != nil {
-		return m.Addr
-	}
-	return 0
-}
-
-func (m *DebugSpec) GetRegData() uint32 {
-	if m != nil {
-		return m.RegData
-	}
-	return 0
-}
-
-func (m *DebugSpec) GetIndex() uint32 {
+func (m *MemoryResponse) GetIndex() uint32 {
 	if m != nil {
 		return m.Index
 	}
 	return 0
 }
 
-func (m *DebugSpec) GetSwkey() []byte {
+func (m *MemoryResponse) GetSwkey() []byte {
 	if m != nil {
 		return m.Swkey
 	}
 	return nil
 }
 
-func (m *DebugSpec) GetSwkeyMask() []byte {
+func (m *MemoryResponse) GetSwkeyMask() []byte {
 	if m != nil {
 		return m.SwkeyMask
 	}
 	return nil
 }
 
-func (m *DebugSpec) GetActiondata() []byte {
+func (m *MemoryResponse) GetActiondata() []byte {
 	if m != nil {
 		return m.Actiondata
 	}
 	return nil
 }
 
-// Batched DEBUG request message
-type DebugRequestMsg struct {
-	Request []*DebugSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+type MemoryResponseMsg struct {
+	Response []*MemoryResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
-func (m *DebugRequestMsg) Reset()                    { *m = DebugRequestMsg{} }
-func (m *DebugRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*DebugRequestMsg) ProtoMessage()               {}
-func (*DebugRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{6} }
+func (m *MemoryResponseMsg) Reset()                    { *m = MemoryResponseMsg{} }
+func (m *MemoryResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*MemoryResponseMsg) ProtoMessage()               {}
+func (*MemoryResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{7} }
 
-func (m *DebugRequestMsg) GetRequest() []*DebugSpec {
+func (m *MemoryResponseMsg) GetResponse() []*MemoryResponse {
 	if m != nil {
-		return m.Request
+		return m.Response
 	}
 	return nil
 }
@@ -739,7 +500,7 @@ type RegisterData struct {
 func (m *RegisterData) Reset()                    { *m = RegisterData{} }
 func (m *RegisterData) String() string            { return proto.CompactTextString(m) }
 func (*RegisterData) ProtoMessage()               {}
-func (*RegisterData) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{7} }
+func (*RegisterData) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{8} }
 
 func (m *RegisterData) GetRegName() string {
 	if m != nil {
@@ -762,56 +523,6 @@ func (m *RegisterData) GetValue() string {
 	return ""
 }
 
-// DEBUG response - captures keys and data of table as well as registers
-type DebugResponse struct {
-	ApiStatus ApiStatus       `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
-	Spec      []*DebugSpec    `protobuf:"bytes,2,rep,name=spec" json:"spec,omitempty"`
-	Data      []*RegisterData `protobuf:"bytes,3,rep,name=data" json:"data,omitempty"`
-}
-
-func (m *DebugResponse) Reset()                    { *m = DebugResponse{} }
-func (m *DebugResponse) String() string            { return proto.CompactTextString(m) }
-func (*DebugResponse) ProtoMessage()               {}
-func (*DebugResponse) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{8} }
-
-func (m *DebugResponse) GetApiStatus() ApiStatus {
-	if m != nil {
-		return m.ApiStatus
-	}
-	return ApiStatus_API_STATUS_OK
-}
-
-func (m *DebugResponse) GetSpec() []*DebugSpec {
-	if m != nil {
-		return m.Spec
-	}
-	return nil
-}
-
-func (m *DebugResponse) GetData() []*RegisterData {
-	if m != nil {
-		return m.Data
-	}
-	return nil
-}
-
-// Batched DEBUG response msg
-type DebugResponseMsg struct {
-	Response []*DebugResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
-}
-
-func (m *DebugResponseMsg) Reset()                    { *m = DebugResponseMsg{} }
-func (m *DebugResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*DebugResponseMsg) ProtoMessage()               {}
-func (*DebugResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{9} }
-
-func (m *DebugResponseMsg) GetResponse() []*DebugResponse {
-	if m != nil {
-		return m.Response
-	}
-	return nil
-}
-
 type MemTrackSpec struct {
 	AllocId uint32 `protobuf:"varint,1,opt,name=alloc_id,json=allocId,proto3" json:"alloc_id,omitempty"`
 }
@@ -819,7 +530,7 @@ type MemTrackSpec struct {
 func (m *MemTrackSpec) Reset()                    { *m = MemTrackSpec{} }
 func (m *MemTrackSpec) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackSpec) ProtoMessage()               {}
-func (*MemTrackSpec) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{10} }
+func (*MemTrackSpec) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{9} }
 
 func (m *MemTrackSpec) GetAllocId() uint32 {
 	if m != nil {
@@ -837,7 +548,7 @@ type MemTrackGetRequest struct {
 func (m *MemTrackGetRequest) Reset()                    { *m = MemTrackGetRequest{} }
 func (m *MemTrackGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackGetRequest) ProtoMessage()               {}
-func (*MemTrackGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{11} }
+func (*MemTrackGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{10} }
 
 func (m *MemTrackGetRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -861,7 +572,7 @@ type MemTrackGetRequestMsg struct {
 func (m *MemTrackGetRequestMsg) Reset()                    { *m = MemTrackGetRequestMsg{} }
 func (m *MemTrackGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackGetRequestMsg) ProtoMessage()               {}
-func (*MemTrackGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{12} }
+func (*MemTrackGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{11} }
 
 func (m *MemTrackGetRequestMsg) GetRequest() []*MemTrackGetRequest {
 	if m != nil {
@@ -877,7 +588,7 @@ type MemTrackStatus struct {
 func (m *MemTrackStatus) Reset()                    { *m = MemTrackStatus{} }
 func (m *MemTrackStatus) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackStatus) ProtoMessage()               {}
-func (*MemTrackStatus) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{13} }
+func (*MemTrackStatus) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{12} }
 
 // stats per memory tracker object
 type MemTrackStats struct {
@@ -888,7 +599,7 @@ type MemTrackStats struct {
 func (m *MemTrackStats) Reset()                    { *m = MemTrackStats{} }
 func (m *MemTrackStats) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackStats) ProtoMessage()               {}
-func (*MemTrackStats) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{14} }
+func (*MemTrackStats) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{13} }
 
 func (m *MemTrackStats) GetNumAllocs() uint32 {
 	if m != nil {
@@ -915,7 +626,7 @@ type MemTrackGetResponse struct {
 func (m *MemTrackGetResponse) Reset()                    { *m = MemTrackGetResponse{} }
 func (m *MemTrackGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackGetResponse) ProtoMessage()               {}
-func (*MemTrackGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{15} }
+func (*MemTrackGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{14} }
 
 func (m *MemTrackGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -953,7 +664,7 @@ type MemTrackGetResponseMsg struct {
 func (m *MemTrackGetResponseMsg) Reset()                    { *m = MemTrackGetResponseMsg{} }
 func (m *MemTrackGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackGetResponseMsg) ProtoMessage()               {}
-func (*MemTrackGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{16} }
+func (*MemTrackGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{15} }
 
 func (m *MemTrackGetResponseMsg) GetResponse() []*MemTrackGetResponse {
 	if m != nil {
@@ -977,7 +688,7 @@ type SlabSpec struct {
 func (m *SlabSpec) Reset()                    { *m = SlabSpec{} }
 func (m *SlabSpec) String() string            { return proto.CompactTextString(m) }
 func (*SlabSpec) ProtoMessage()               {}
-func (*SlabSpec) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{17} }
+func (*SlabSpec) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{16} }
 
 func (m *SlabSpec) GetName() string {
 	if m != nil {
@@ -1042,7 +753,7 @@ type SlabStatus struct {
 func (m *SlabStatus) Reset()                    { *m = SlabStatus{} }
 func (m *SlabStatus) String() string            { return proto.CompactTextString(m) }
 func (*SlabStatus) ProtoMessage()               {}
-func (*SlabStatus) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{18} }
+func (*SlabStatus) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{17} }
 
 // per slab statistics
 type SlabStats struct {
@@ -1056,7 +767,7 @@ type SlabStats struct {
 func (m *SlabStats) Reset()                    { *m = SlabStats{} }
 func (m *SlabStats) String() string            { return proto.CompactTextString(m) }
 func (*SlabStats) ProtoMessage()               {}
-func (*SlabStats) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{19} }
+func (*SlabStats) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{18} }
 
 func (m *SlabStats) GetNumElementsInUse() uint32 {
 	if m != nil {
@@ -1102,7 +813,7 @@ type SlabGetRequest struct {
 func (m *SlabGetRequest) Reset()                    { *m = SlabGetRequest{} }
 func (m *SlabGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*SlabGetRequest) ProtoMessage()               {}
-func (*SlabGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{20} }
+func (*SlabGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{19} }
 
 func (m *SlabGetRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -1126,7 +837,7 @@ type SlabGetRequestMsg struct {
 func (m *SlabGetRequestMsg) Reset()                    { *m = SlabGetRequestMsg{} }
 func (m *SlabGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SlabGetRequestMsg) ProtoMessage()               {}
-func (*SlabGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{21} }
+func (*SlabGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{20} }
 
 func (m *SlabGetRequestMsg) GetRequest() []*SlabGetRequest {
 	if m != nil {
@@ -1146,7 +857,7 @@ type SlabGetResponse struct {
 func (m *SlabGetResponse) Reset()                    { *m = SlabGetResponse{} }
 func (m *SlabGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*SlabGetResponse) ProtoMessage()               {}
-func (*SlabGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{22} }
+func (*SlabGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{21} }
 
 func (m *SlabGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1184,7 +895,7 @@ type SlabGetResponseMsg struct {
 func (m *SlabGetResponseMsg) Reset()                    { *m = SlabGetResponseMsg{} }
 func (m *SlabGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SlabGetResponseMsg) ProtoMessage()               {}
-func (*SlabGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{23} }
+func (*SlabGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{22} }
 
 func (m *SlabGetResponseMsg) GetResponse() []*SlabGetResponse {
 	if m != nil {
@@ -1201,7 +912,7 @@ type TraceSpec struct {
 func (m *TraceSpec) Reset()                    { *m = TraceSpec{} }
 func (m *TraceSpec) String() string            { return proto.CompactTextString(m) }
 func (*TraceSpec) ProtoMessage()               {}
-func (*TraceSpec) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{24} }
+func (*TraceSpec) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{23} }
 
 func (m *TraceSpec) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -1224,7 +935,7 @@ type TraceRequestMsg struct {
 func (m *TraceRequestMsg) Reset()                    { *m = TraceRequestMsg{} }
 func (m *TraceRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TraceRequestMsg) ProtoMessage()               {}
-func (*TraceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{25} }
+func (*TraceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{24} }
 
 func (m *TraceRequestMsg) GetRequest() []*TraceSpec {
 	if m != nil {
@@ -1241,7 +952,7 @@ type TraceResponse struct {
 func (m *TraceResponse) Reset()                    { *m = TraceResponse{} }
 func (m *TraceResponse) String() string            { return proto.CompactTextString(m) }
 func (*TraceResponse) ProtoMessage()               {}
-func (*TraceResponse) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{26} }
+func (*TraceResponse) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{25} }
 
 func (m *TraceResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1264,7 +975,7 @@ type TraceResponseMsg struct {
 func (m *TraceResponseMsg) Reset()                    { *m = TraceResponseMsg{} }
 func (m *TraceResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TraceResponseMsg) ProtoMessage()               {}
-func (*TraceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{27} }
+func (*TraceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{26} }
 
 func (m *TraceResponseMsg) GetResponse() []*TraceResponse {
 	if m != nil {
@@ -1293,7 +1004,7 @@ type MpuTraceRequest struct {
 func (m *MpuTraceRequest) Reset()                    { *m = MpuTraceRequest{} }
 func (m *MpuTraceRequest) String() string            { return proto.CompactTextString(m) }
 func (*MpuTraceRequest) ProtoMessage()               {}
-func (*MpuTraceRequest) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{28} }
+func (*MpuTraceRequest) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{27} }
 
 func (m *MpuTraceRequest) GetPipelineType() MpuTracePipelineType {
 	if m != nil {
@@ -1394,7 +1105,7 @@ type MpuTraceRequestMsg struct {
 func (m *MpuTraceRequestMsg) Reset()                    { *m = MpuTraceRequestMsg{} }
 func (m *MpuTraceRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MpuTraceRequestMsg) ProtoMessage()               {}
-func (*MpuTraceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{29} }
+func (*MpuTraceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{28} }
 
 func (m *MpuTraceRequestMsg) GetRequest() []*MpuTraceRequest {
 	if m != nil {
@@ -1412,7 +1123,7 @@ type MpuTraceResponse struct {
 func (m *MpuTraceResponse) Reset()                    { *m = MpuTraceResponse{} }
 func (m *MpuTraceResponse) String() string            { return proto.CompactTextString(m) }
 func (*MpuTraceResponse) ProtoMessage()               {}
-func (*MpuTraceResponse) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{30} }
+func (*MpuTraceResponse) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{29} }
 
 func (m *MpuTraceResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1436,7 +1147,7 @@ type MpuTraceResponseMsg struct {
 func (m *MpuTraceResponseMsg) Reset()                    { *m = MpuTraceResponseMsg{} }
 func (m *MpuTraceResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MpuTraceResponseMsg) ProtoMessage()               {}
-func (*MpuTraceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{31} }
+func (*MpuTraceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorDebug, []int{30} }
 
 func (m *MpuTraceResponseMsg) GetResponse() []*MpuTraceResponse {
 	if m != nil {
@@ -1448,14 +1159,13 @@ func (m *MpuTraceResponseMsg) GetResponse() []*MpuTraceResponse {
 func init() {
 	proto.RegisterType((*RegisterRequest)(nil), "debug.RegisterRequest")
 	proto.RegisterType((*RegisterRequestMsg)(nil), "debug.RegisterRequestMsg")
+	proto.RegisterType((*RegisterResponse)(nil), "debug.RegisterResponse")
+	proto.RegisterType((*RegisterResponseMsg)(nil), "debug.RegisterResponseMsg")
 	proto.RegisterType((*MemoryRequest)(nil), "debug.MemoryRequest")
 	proto.RegisterType((*MemoryRequestMsg)(nil), "debug.MemoryRequestMsg")
-	proto.RegisterType((*DebugKeyHandle)(nil), "debug.DebugKeyHandle")
-	proto.RegisterType((*DebugSpec)(nil), "debug.DebugSpec")
-	proto.RegisterType((*DebugRequestMsg)(nil), "debug.DebugRequestMsg")
+	proto.RegisterType((*MemoryResponse)(nil), "debug.MemoryResponse")
+	proto.RegisterType((*MemoryResponseMsg)(nil), "debug.MemoryResponseMsg")
 	proto.RegisterType((*RegisterData)(nil), "debug.RegisterData")
-	proto.RegisterType((*DebugResponse)(nil), "debug.DebugResponse")
-	proto.RegisterType((*DebugResponseMsg)(nil), "debug.DebugResponseMsg")
 	proto.RegisterType((*MemTrackSpec)(nil), "debug.MemTrackSpec")
 	proto.RegisterType((*MemTrackGetRequest)(nil), "debug.MemTrackGetRequest")
 	proto.RegisterType((*MemTrackGetRequestMsg)(nil), "debug.MemTrackGetRequestMsg")
@@ -1478,8 +1188,6 @@ func init() {
 	proto.RegisterType((*MpuTraceRequestMsg)(nil), "debug.MpuTraceRequestMsg")
 	proto.RegisterType((*MpuTraceResponse)(nil), "debug.MpuTraceResponse")
 	proto.RegisterType((*MpuTraceResponseMsg)(nil), "debug.MpuTraceResponseMsg")
-	proto.RegisterEnum("debug.DebugOperationType", DebugOperationType_name, DebugOperationType_value)
-	proto.RegisterEnum("debug.DebugMemoryType", DebugMemoryType_name, DebugMemoryType_value)
 	proto.RegisterEnum("debug.TraceLevel", TraceLevel_name, TraceLevel_value)
 	proto.RegisterEnum("debug.MpuTracePipelineType", MpuTracePipelineType_name, MpuTracePipelineType_value)
 }
@@ -1495,8 +1203,11 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Debug service
 
 type DebugClient interface {
-	DebugInvoke(ctx context.Context, in *DebugRequestMsg, opts ...grpc.CallOption) (*DebugResponseMsg, error)
-	MpuTraceOpn(ctx context.Context, in *MpuTraceRequestMsg, opts ...grpc.CallOption) (*MpuTraceResponseMsg, error)
+	RegisterGet(ctx context.Context, in *RegisterRequestMsg, opts ...grpc.CallOption) (*RegisterResponseMsg, error)
+	RegisterUpdate(ctx context.Context, in *RegisterRequestMsg, opts ...grpc.CallOption) (*RegisterResponseMsg, error)
+	MemoryGet(ctx context.Context, in *MemoryRequestMsg, opts ...grpc.CallOption) (*MemoryResponseMsg, error)
+	MemoryUpdate(ctx context.Context, in *MemoryRequestMsg, opts ...grpc.CallOption) (*MemoryResponseMsg, error)
+	MpuTraceUpdate(ctx context.Context, in *MpuTraceRequestMsg, opts ...grpc.CallOption) (*MpuTraceResponseMsg, error)
 	MemTrackGet(ctx context.Context, in *MemTrackGetRequestMsg, opts ...grpc.CallOption) (*MemTrackGetResponseMsg, error)
 	SlabGet(ctx context.Context, in *SlabGetRequestMsg, opts ...grpc.CallOption) (*SlabGetResponseMsg, error)
 	TraceUpdate(ctx context.Context, in *TraceRequestMsg, opts ...grpc.CallOption) (*TraceResponseMsg, error)
@@ -1511,18 +1222,45 @@ func NewDebugClient(cc *grpc.ClientConn) DebugClient {
 	return &debugClient{cc}
 }
 
-func (c *debugClient) DebugInvoke(ctx context.Context, in *DebugRequestMsg, opts ...grpc.CallOption) (*DebugResponseMsg, error) {
-	out := new(DebugResponseMsg)
-	err := grpc.Invoke(ctx, "/debug.Debug/DebugInvoke", in, out, c.cc, opts...)
+func (c *debugClient) RegisterGet(ctx context.Context, in *RegisterRequestMsg, opts ...grpc.CallOption) (*RegisterResponseMsg, error) {
+	out := new(RegisterResponseMsg)
+	err := grpc.Invoke(ctx, "/debug.Debug/RegisterGet", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *debugClient) MpuTraceOpn(ctx context.Context, in *MpuTraceRequestMsg, opts ...grpc.CallOption) (*MpuTraceResponseMsg, error) {
+func (c *debugClient) RegisterUpdate(ctx context.Context, in *RegisterRequestMsg, opts ...grpc.CallOption) (*RegisterResponseMsg, error) {
+	out := new(RegisterResponseMsg)
+	err := grpc.Invoke(ctx, "/debug.Debug/RegisterUpdate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *debugClient) MemoryGet(ctx context.Context, in *MemoryRequestMsg, opts ...grpc.CallOption) (*MemoryResponseMsg, error) {
+	out := new(MemoryResponseMsg)
+	err := grpc.Invoke(ctx, "/debug.Debug/MemoryGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *debugClient) MemoryUpdate(ctx context.Context, in *MemoryRequestMsg, opts ...grpc.CallOption) (*MemoryResponseMsg, error) {
+	out := new(MemoryResponseMsg)
+	err := grpc.Invoke(ctx, "/debug.Debug/MemoryUpdate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *debugClient) MpuTraceUpdate(ctx context.Context, in *MpuTraceRequestMsg, opts ...grpc.CallOption) (*MpuTraceResponseMsg, error) {
 	out := new(MpuTraceResponseMsg)
-	err := grpc.Invoke(ctx, "/debug.Debug/MpuTraceOpn", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/debug.Debug/MpuTraceUpdate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1568,8 +1306,11 @@ func (c *debugClient) TraceGet(ctx context.Context, in *Empty, opts ...grpc.Call
 // Server API for Debug service
 
 type DebugServer interface {
-	DebugInvoke(context.Context, *DebugRequestMsg) (*DebugResponseMsg, error)
-	MpuTraceOpn(context.Context, *MpuTraceRequestMsg) (*MpuTraceResponseMsg, error)
+	RegisterGet(context.Context, *RegisterRequestMsg) (*RegisterResponseMsg, error)
+	RegisterUpdate(context.Context, *RegisterRequestMsg) (*RegisterResponseMsg, error)
+	MemoryGet(context.Context, *MemoryRequestMsg) (*MemoryResponseMsg, error)
+	MemoryUpdate(context.Context, *MemoryRequestMsg) (*MemoryResponseMsg, error)
+	MpuTraceUpdate(context.Context, *MpuTraceRequestMsg) (*MpuTraceResponseMsg, error)
 	MemTrackGet(context.Context, *MemTrackGetRequestMsg) (*MemTrackGetResponseMsg, error)
 	SlabGet(context.Context, *SlabGetRequestMsg) (*SlabGetResponseMsg, error)
 	TraceUpdate(context.Context, *TraceRequestMsg) (*TraceResponseMsg, error)
@@ -1580,38 +1321,92 @@ func RegisterDebugServer(s *grpc.Server, srv DebugServer) {
 	s.RegisterService(&_Debug_serviceDesc, srv)
 }
 
-func _Debug_DebugInvoke_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DebugRequestMsg)
+func _Debug_RegisterGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DebugServer).DebugInvoke(ctx, in)
+		return srv.(DebugServer).RegisterGet(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/debug.Debug/DebugInvoke",
+		FullMethod: "/debug.Debug/RegisterGet",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DebugServer).DebugInvoke(ctx, req.(*DebugRequestMsg))
+		return srv.(DebugServer).RegisterGet(ctx, req.(*RegisterRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Debug_MpuTraceOpn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Debug_RegisterUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DebugServer).RegisterUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/debug.Debug/RegisterUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DebugServer).RegisterUpdate(ctx, req.(*RegisterRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Debug_MemoryGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MemoryRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DebugServer).MemoryGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/debug.Debug/MemoryGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DebugServer).MemoryGet(ctx, req.(*MemoryRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Debug_MemoryUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MemoryRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DebugServer).MemoryUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/debug.Debug/MemoryUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DebugServer).MemoryUpdate(ctx, req.(*MemoryRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Debug_MpuTraceUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MpuTraceRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DebugServer).MpuTraceOpn(ctx, in)
+		return srv.(DebugServer).MpuTraceUpdate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/debug.Debug/MpuTraceOpn",
+		FullMethod: "/debug.Debug/MpuTraceUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DebugServer).MpuTraceOpn(ctx, req.(*MpuTraceRequestMsg))
+		return srv.(DebugServer).MpuTraceUpdate(ctx, req.(*MpuTraceRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1693,12 +1488,24 @@ var _Debug_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*DebugServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "DebugInvoke",
-			Handler:    _Debug_DebugInvoke_Handler,
+			MethodName: "RegisterGet",
+			Handler:    _Debug_RegisterGet_Handler,
 		},
 		{
-			MethodName: "MpuTraceOpn",
-			Handler:    _Debug_MpuTraceOpn_Handler,
+			MethodName: "RegisterUpdate",
+			Handler:    _Debug_RegisterUpdate_Handler,
+		},
+		{
+			MethodName: "MemoryGet",
+			Handler:    _Debug_MemoryGet_Handler,
+		},
+		{
+			MethodName: "MemoryUpdate",
+			Handler:    _Debug_MemoryUpdate_Handler,
+		},
+		{
+			MethodName: "MpuTraceUpdate",
+			Handler:    _Debug_MpuTraceUpdate_Handler,
 		},
 		{
 			MethodName: "MemTrackGet",
@@ -1808,6 +1615,69 @@ func (m *RegisterRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *RegisterResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RegisterResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintDebug(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Data != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintDebug(dAtA, i, uint64(m.Data.Size()))
+		n2, err := m.Data.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+
+func (m *RegisterResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RegisterResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintDebug(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func (m *MemoryRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1824,11 +1694,11 @@ func (m *MemoryRequest) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.IdOrName != nil {
-		nn2, err := m.IdOrName.MarshalTo(dAtA[i:])
+		nn3, err := m.IdOrName.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn2
+		i += nn3
 	}
 	if m.Index != 0 {
 		dAtA[i] = 0x18
@@ -1902,7 +1772,7 @@ func (m *MemoryRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *DebugKeyHandle) Marshal() (dAtA []byte, err error) {
+func (m *MemoryResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1912,125 +1782,35 @@ func (m *DebugKeyHandle) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DebugKeyHandle) MarshalTo(dAtA []byte) (int, error) {
+func (m *MemoryResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if m.KeyOrHandle != nil {
-		nn3, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += nn3
-	}
-	return i, nil
-}
-
-func (m *DebugKeyHandle_TableId) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	dAtA[i] = 0xd
-	i++
-	encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.TableId))
-	i += 4
-	return i, nil
-}
-func (m *DebugKeyHandle_TableName) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintDebug(dAtA, i, uint64(len(m.TableName)))
-	i += copy(dAtA[i:], m.TableName)
-	return i, nil
-}
-func (m *DebugKeyHandle_RegId) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	dAtA[i] = 0x1d
-	i++
-	encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.RegId))
-	i += 4
-	return i, nil
-}
-func (m *DebugKeyHandle_RegName) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	dAtA[i] = 0x22
-	i++
-	i = encodeVarintDebug(dAtA, i, uint64(len(m.RegName)))
-	i += copy(dAtA[i:], m.RegName)
-	return i, nil
-}
-func (m *DebugKeyHandle_BlockName) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	dAtA[i] = 0x2a
-	i++
-	i = encodeVarintDebug(dAtA, i, uint64(len(m.BlockName)))
-	i += copy(dAtA[i:], m.BlockName)
-	return i, nil
-}
-func (m *DebugSpec) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *DebugSpec) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.KeyOrHandle != nil {
-		dAtA[i] = 0xa
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
 		i++
-		i = encodeVarintDebug(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n4, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n4
-	}
-	if m.OpnType != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintDebug(dAtA, i, uint64(m.OpnType))
-	}
-	if m.MemType != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintDebug(dAtA, i, uint64(m.MemType))
-	}
-	if m.Addr != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintDebug(dAtA, i, uint64(m.Addr))
-	}
-	if m.RegData != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintDebug(dAtA, i, uint64(m.RegData))
+		i = encodeVarintDebug(dAtA, i, uint64(m.ApiStatus))
 	}
 	if m.Index != 0 {
-		dAtA[i] = 0x30
+		dAtA[i] = 0x10
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(m.Index))
 	}
 	if len(m.Swkey) > 0 {
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(len(m.Swkey)))
 		i += copy(dAtA[i:], m.Swkey)
 	}
 	if len(m.SwkeyMask) > 0 {
-		dAtA[i] = 0x42
+		dAtA[i] = 0x22
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(len(m.SwkeyMask)))
 		i += copy(dAtA[i:], m.SwkeyMask)
 	}
 	if len(m.Actiondata) > 0 {
-		dAtA[i] = 0x4a
+		dAtA[i] = 0x2a
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(len(m.Actiondata)))
 		i += copy(dAtA[i:], m.Actiondata)
@@ -2038,7 +1818,7 @@ func (m *DebugSpec) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *DebugRequestMsg) Marshal() (dAtA []byte, err error) {
+func (m *MemoryResponseMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2048,13 +1828,13 @@ func (m *DebugRequestMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DebugRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *MemoryResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
 			dAtA[i] = 0xa
 			i++
 			i = encodeVarintDebug(dAtA, i, uint64(msg.Size()))
@@ -2104,83 +1884,6 @@ func (m *RegisterData) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *DebugResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *DebugResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintDebug(dAtA, i, uint64(m.ApiStatus))
-	}
-	if len(m.Spec) > 0 {
-		for _, msg := range m.Spec {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintDebug(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	if len(m.Data) > 0 {
-		for _, msg := range m.Data {
-			dAtA[i] = 0x1a
-			i++
-			i = encodeVarintDebug(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *DebugResponseMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *DebugResponseMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, msg := range m.Response {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintDebug(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
 func (m *MemTrackSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2223,21 +1926,21 @@ func (m *MemTrackGetRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(m.Meta.Size()))
-		n5, err := m.Meta.MarshalTo(dAtA[i:])
+		n4, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n4
 	}
 	if m.Spec != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(m.Spec.Size()))
-		n6, err := m.Spec.MarshalTo(dAtA[i:])
+		n5, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n5
 	}
 	return i, nil
 }
@@ -2342,31 +2045,31 @@ func (m *MemTrackGetResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(m.Spec.Size()))
-		n7, err := m.Spec.MarshalTo(dAtA[i:])
+		n6, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n7
+		i += n6
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(m.Status.Size()))
-		n8, err := m.Status.MarshalTo(dAtA[i:])
+		n7, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n8
+		i += n7
 	}
 	if m.Stats != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(m.Stats.Size()))
-		n9, err := m.Stats.MarshalTo(dAtA[i:])
+		n8, err := m.Stats.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n8
 	}
 	return i, nil
 }
@@ -2560,11 +2263,11 @@ func (m *SlabGetRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(m.Meta.Size()))
-		n10, err := m.Meta.MarshalTo(dAtA[i:])
+		n9, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n9
 	}
 	if m.Id != 0 {
 		dAtA[i] = 0x10
@@ -2628,31 +2331,31 @@ func (m *SlabGetResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(m.Spec.Size()))
-		n11, err := m.Spec.MarshalTo(dAtA[i:])
+		n10, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n10
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(m.Status.Size()))
-		n12, err := m.Status.MarshalTo(dAtA[i:])
+		n11, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n11
 	}
 	if m.Stats != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(m.Stats.Size()))
-		n13, err := m.Stats.MarshalTo(dAtA[i:])
+		n12, err := m.Stats.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n12
 	}
 	return i, nil
 }
@@ -2706,11 +2409,11 @@ func (m *TraceSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintDebug(dAtA, i, uint64(m.Meta.Size()))
-		n14, err := m.Meta.MarshalTo(dAtA[i:])
+		n13, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n13
 	}
 	if m.TraceLevel != 0 {
 		dAtA[i] = 0x10
@@ -3072,6 +2775,31 @@ func (m *RegisterRequestMsg) Size() (n int) {
 	return n
 }
 
+func (m *RegisterResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovDebug(uint64(m.ApiStatus))
+	}
+	if m.Data != nil {
+		l = m.Data.Size()
+		n += 1 + l + sovDebug(uint64(l))
+	}
+	return n
+}
+
+func (m *RegisterResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovDebug(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *MemoryRequest) Size() (n int) {
 	var l int
 	_ = l
@@ -3121,66 +2849,11 @@ func (m *MemoryRequestMsg) Size() (n int) {
 	return n
 }
 
-func (m *DebugKeyHandle) Size() (n int) {
+func (m *MemoryResponse) Size() (n int) {
 	var l int
 	_ = l
-	if m.KeyOrHandle != nil {
-		n += m.KeyOrHandle.Size()
-	}
-	return n
-}
-
-func (m *DebugKeyHandle_TableId) Size() (n int) {
-	var l int
-	_ = l
-	n += 5
-	return n
-}
-func (m *DebugKeyHandle_TableName) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.TableName)
-	n += 1 + l + sovDebug(uint64(l))
-	return n
-}
-func (m *DebugKeyHandle_RegId) Size() (n int) {
-	var l int
-	_ = l
-	n += 5
-	return n
-}
-func (m *DebugKeyHandle_RegName) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.RegName)
-	n += 1 + l + sovDebug(uint64(l))
-	return n
-}
-func (m *DebugKeyHandle_BlockName) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.BlockName)
-	n += 1 + l + sovDebug(uint64(l))
-	return n
-}
-func (m *DebugSpec) Size() (n int) {
-	var l int
-	_ = l
-	if m.KeyOrHandle != nil {
-		l = m.KeyOrHandle.Size()
-		n += 1 + l + sovDebug(uint64(l))
-	}
-	if m.OpnType != 0 {
-		n += 1 + sovDebug(uint64(m.OpnType))
-	}
-	if m.MemType != 0 {
-		n += 1 + sovDebug(uint64(m.MemType))
-	}
-	if m.Addr != 0 {
-		n += 1 + sovDebug(uint64(m.Addr))
-	}
-	if m.RegData != 0 {
-		n += 1 + sovDebug(uint64(m.RegData))
+	if m.ApiStatus != 0 {
+		n += 1 + sovDebug(uint64(m.ApiStatus))
 	}
 	if m.Index != 0 {
 		n += 1 + sovDebug(uint64(m.Index))
@@ -3200,11 +2873,11 @@ func (m *DebugSpec) Size() (n int) {
 	return n
 }
 
-func (m *DebugRequestMsg) Size() (n int) {
+func (m *MemoryResponseMsg) Size() (n int) {
 	var l int
 	_ = l
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
 			l = e.Size()
 			n += 1 + l + sovDebug(uint64(l))
 		}
@@ -3226,39 +2899,6 @@ func (m *RegisterData) Size() (n int) {
 	l = len(m.Value)
 	if l > 0 {
 		n += 1 + l + sovDebug(uint64(l))
-	}
-	return n
-}
-
-func (m *DebugResponse) Size() (n int) {
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		n += 1 + sovDebug(uint64(m.ApiStatus))
-	}
-	if len(m.Spec) > 0 {
-		for _, e := range m.Spec {
-			l = e.Size()
-			n += 1 + l + sovDebug(uint64(l))
-		}
-	}
-	if len(m.Data) > 0 {
-		for _, e := range m.Data {
-			l = e.Size()
-			n += 1 + l + sovDebug(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *DebugResponseMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, e := range m.Response {
-			l = e.Size()
-			n += 1 + l + sovDebug(uint64(l))
-		}
 	}
 	return n
 }
@@ -3846,6 +3486,189 @@ func (m *RegisterRequestMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *RegisterResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDebug
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RegisterResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RegisterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDebug
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDebug
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDebug
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Data == nil {
+				m.Data = &RegisterData{}
+			}
+			if err := m.Data.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDebug(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDebug
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RegisterResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDebug
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RegisterResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RegisterResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDebug
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDebug
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &RegisterResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDebug(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDebug
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MemoryRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4129,7 +3952,7 @@ func (m *MemoryRequestMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DebugKeyHandle) Unmarshal(dAtA []byte) error {
+func (m *MemoryResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4152,281 +3975,32 @@ func (m *DebugKeyHandle) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DebugKeyHandle: wiretype end group for non-group")
+			return fmt.Errorf("proto: MemoryResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DebugKeyHandle: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MemoryResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TableId", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
 			}
-			var v uint32
-			if (iNdEx + 4) > l {
-				return io.ErrUnexpectedEOF
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDebug
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
 			}
-			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
-			iNdEx += 4
-			m.KeyOrHandle = &DebugKeyHandle_TableId{v}
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TableName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthDebug
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.KeyOrHandle = &DebugKeyHandle_TableName{string(dAtA[iNdEx:postIndex])}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RegId", wireType)
-			}
-			var v uint32
-			if (iNdEx + 4) > l {
-				return io.ErrUnexpectedEOF
-			}
-			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
-			iNdEx += 4
-			m.KeyOrHandle = &DebugKeyHandle_RegId{v}
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RegName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthDebug
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.KeyOrHandle = &DebugKeyHandle_RegName{string(dAtA[iNdEx:postIndex])}
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BlockName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthDebug
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.KeyOrHandle = &DebugKeyHandle_BlockName{string(dAtA[iNdEx:postIndex])}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipDebug(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthDebug
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *DebugSpec) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowDebug
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: DebugSpec: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DebugSpec: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDebug
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &DebugKeyHandle{}
-			}
-			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OpnType", wireType)
-			}
-			m.OpnType = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.OpnType |= (DebugOperationType(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MemType", wireType)
-			}
-			m.MemType = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MemType |= (DebugMemoryType(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Addr", wireType)
-			}
-			m.Addr = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Addr |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RegData", wireType)
-			}
-			m.RegData = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.RegData |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
 			}
@@ -4445,7 +4019,7 @@ func (m *DebugSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 7:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Swkey", wireType)
 			}
@@ -4476,7 +4050,7 @@ func (m *DebugSpec) Unmarshal(dAtA []byte) error {
 				m.Swkey = []byte{}
 			}
 			iNdEx = postIndex
-		case 8:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SwkeyMask", wireType)
 			}
@@ -4507,7 +4081,7 @@ func (m *DebugSpec) Unmarshal(dAtA []byte) error {
 				m.SwkeyMask = []byte{}
 			}
 			iNdEx = postIndex
-		case 9:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Actiondata", wireType)
 			}
@@ -4559,7 +4133,7 @@ func (m *DebugSpec) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DebugRequestMsg) Unmarshal(dAtA []byte) error {
+func (m *MemoryResponseMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4582,15 +4156,15 @@ func (m *DebugRequestMsg) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DebugRequestMsg: wiretype end group for non-group")
+			return fmt.Errorf("proto: MemoryResponseMsg: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DebugRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MemoryResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4614,8 +4188,8 @@ func (m *DebugRequestMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Request = append(m.Request, &DebugSpec{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Response = append(m.Response, &MemoryResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4755,218 +4329,6 @@ func (m *RegisterData) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Value = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipDebug(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthDebug
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *DebugResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowDebug
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: DebugResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DebugResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
-			}
-			m.ApiStatus = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDebug
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Spec = append(m.Spec, &DebugSpec{})
-			if err := m.Spec[len(m.Spec)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDebug
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Data = append(m.Data, &RegisterData{})
-			if err := m.Data[len(m.Data)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipDebug(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthDebug
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *DebugResponseMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowDebug
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: DebugResponseMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DebugResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDebug
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDebug
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Response = append(m.Response, &DebugResponse{})
-			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -7500,116 +6862,106 @@ var (
 func init() { proto.RegisterFile("debug.proto", fileDescriptorDebug) }
 
 var fileDescriptorDebug = []byte{
-	// 1767 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x58, 0xef, 0x6e, 0xe3, 0x5a,
-	0x11, 0xaf, 0x93, 0xb4, 0x71, 0x26, 0x49, 0xeb, 0x9e, 0x76, 0xdb, 0xb4, 0xbd, 0xdb, 0xf6, 0x9a,
-	0x0b, 0xf4, 0x56, 0xdc, 0x05, 0xba, 0x57, 0x48, 0x20, 0x21, 0x6d, 0x4b, 0xbc, 0xdd, 0xb0, 0x4d,
-	0x13, 0x9d, 0x76, 0x41, 0x17, 0x81, 0x2c, 0x37, 0x9e, 0x4d, 0x43, 0x63, 0xc7, 0xd8, 0x4e, 0xf7,
-	0x66, 0x79, 0x04, 0x1e, 0x80, 0xfd, 0x8e, 0xc4, 0x23, 0xf0, 0x95, 0x6f, 0x08, 0xbe, 0xc1, 0x0b,
-	0x20, 0x58, 0xde, 0x80, 0x27, 0x40, 0x67, 0x8e, 0x1d, 0xff, 0x49, 0x5a, 0xed, 0xe5, 0xf6, 0x53,
-	0x7c, 0x66, 0xe6, 0x8c, 0xe7, 0x37, 0xe7, 0x37, 0x73, 0xc6, 0x81, 0xaa, 0x8d, 0x57, 0xe3, 0xfe,
-	0x13, 0xcf, 0x1f, 0x85, 0x23, 0xb6, 0x48, 0x8b, 0xed, 0x6a, 0x38, 0xf1, 0x30, 0x90, 0x32, 0xfd,
-	0x0f, 0x0a, 0xac, 0x70, 0xec, 0x0f, 0x82, 0x10, 0x7d, 0x8e, 0xbf, 0x19, 0x63, 0x10, 0xb2, 0x4d,
-	0x58, 0xf2, 0xb1, 0x6f, 0x0e, 0xec, 0x86, 0xb2, 0xaf, 0x1c, 0x94, 0x5f, 0x2c, 0xf0, 0x45, 0x1f,
-	0xfb, 0x2d, 0x9b, 0xed, 0x80, 0x2a, 0x14, 0xae, 0xe5, 0x60, 0xa3, 0xb0, 0xaf, 0x1c, 0x54, 0x5e,
-	0x2c, 0xf0, 0xb2, 0x8f, 0xfd, 0x73, 0xcb, 0x41, 0xf6, 0x18, 0xe0, 0x6a, 0x38, 0xea, 0xdd, 0x48,
-	0x75, 0x51, 0xa8, 0x79, 0x85, 0x24, 0xa4, 0x66, 0x50, 0xb2, 0x6c, 0xdb, 0x6f, 0x94, 0xf6, 0x95,
-	0x83, 0x12, 0xa7, 0x67, 0xb6, 0x25, 0xfd, 0xd9, 0x56, 0x68, 0x35, 0x16, 0xf7, 0x95, 0x83, 0x3a,
-	0x79, 0x6b, 0x5a, 0xa1, 0x75, 0x52, 0x03, 0x18, 0xd8, 0xe6, 0xc8, 0x27, 0x6f, 0xfa, 0x73, 0x60,
-	0xb9, 0x20, 0xdb, 0x41, 0x9f, 0x7d, 0x0f, 0xca, 0xbe, 0x5c, 0x35, 0x94, 0xfd, 0xe2, 0x41, 0xf5,
-	0x68, 0xe3, 0x89, 0x84, 0x9b, 0xb3, 0xe5, 0xb1, 0x99, 0xfe, 0x17, 0x05, 0xea, 0x6d, 0x74, 0x46,
-	0xfe, 0x24, 0xc6, 0xba, 0x03, 0x6a, 0x68, 0x5d, 0x0d, 0x31, 0x8d, 0xb6, 0x4c, 0x92, 0x96, 0xcd,
-	0xf6, 0x00, 0xa4, 0x32, 0x83, 0xb8, 0x42, 0x32, 0x02, 0xb5, 0x0e, 0x8b, 0x03, 0xd7, 0xc6, 0x2f,
-	0x09, 0x6e, 0x9d, 0xcb, 0x85, 0x90, 0x06, 0x6f, 0x6e, 0x70, 0x42, 0x58, 0x6b, 0x5c, 0x2e, 0x44,
-	0x7e, 0xe8, 0xc1, 0x74, 0xac, 0xe0, 0x86, 0xe0, 0xd6, 0x78, 0x85, 0x24, 0x6d, 0x2b, 0xb8, 0x61,
-	0xbb, 0x00, 0x56, 0x2f, 0x1c, 0x8c, 0x5c, 0xca, 0xc6, 0x12, 0xa9, 0x53, 0x92, 0x5c, 0x42, 0x4e,
-	0x40, 0xcb, 0xe0, 0x10, 0xe9, 0x78, 0x92, 0x4f, 0xc7, 0x7a, 0x94, 0x8e, 0x8c, 0x65, 0x92, 0x8c,
-	0x3f, 0x29, 0xb0, 0xdc, 0x14, 0x06, 0x2f, 0x71, 0xf2, 0xc2, 0x72, 0xed, 0x21, 0x7e, 0xcd, 0x6c,
-	0x24, 0xbc, 0x29, 0xde, 0xcd, 0x9b, 0x52, 0x9e, 0x37, 0x7b, 0x19, 0xde, 0x2c, 0xc6, 0x6e, 0xa7,
-	0xcc, 0x39, 0x59, 0x81, 0xba, 0x48, 0xdb, 0xc8, 0x37, 0xaf, 0x29, 0x4a, 0xfd, 0x6f, 0x05, 0xa8,
-	0x50, 0xe0, 0x17, 0x1e, 0xf6, 0xd8, 0x0f, 0x73, 0x6a, 0x0a, 0xbc, 0x7a, 0xf4, 0x28, 0x02, 0x9f,
-	0x45, 0xc8, 0xab, 0x37, 0x38, 0xe9, 0xf8, 0x11, 0xdc, 0xcf, 0x41, 0x1d, 0x79, 0xae, 0x29, 0xea,
-	0x81, 0xf0, 0x2c, 0x1f, 0x6d, 0xa5, 0x77, 0x75, 0x3c, 0xf4, 0x2d, 0x71, 0x00, 0x97, 0x13, 0x0f,
-	0x79, 0x79, 0xe4, 0xd1, 0x03, 0xfb, 0x3e, 0xa8, 0x0e, 0x3a, 0x72, 0x57, 0x91, 0x76, 0x6d, 0xa4,
-	0x77, 0xc9, 0x6c, 0xcb, 0x2d, 0x0e, 0x3a, 0xb4, 0xe5, 0xab, 0x91, 0x3f, 0xa1, 0xd5, 0xd2, 0x5c,
-	0x5a, 0x95, 0xef, 0xa6, 0x95, 0x7a, 0x3f, 0xad, 0x2a, 0x79, 0x5a, 0xe9, 0x3f, 0x86, 0x15, 0x8a,
-	0x3a, 0xc5, 0xa3, 0xc3, 0x3c, 0x8f, 0xb4, 0x34, 0x3c, 0x91, 0xf3, 0x84, 0x43, 0x5f, 0x40, 0x2d,
-	0x2e, 0x36, 0x8a, 0x7c, 0x2b, 0x75, 0xd2, 0x0a, 0xb5, 0x80, 0xe9, 0x39, 0x37, 0xa0, 0x2c, 0x70,
-	0x63, 0x10, 0x48, 0xee, 0xf0, 0x78, 0x29, 0x80, 0xdd, 0x5a, 0xc3, 0x71, 0xdc, 0x34, 0xe4, 0x42,
-	0xff, 0xa3, 0x02, 0xf5, 0x28, 0xb4, 0xc0, 0x1b, 0xb9, 0x01, 0xb2, 0xe7, 0x00, 0x96, 0x37, 0x30,
-	0x83, 0xd0, 0x0a, 0xc7, 0x01, 0xb9, 0x5f, 0x3e, 0xd2, 0x9e, 0xc8, 0x6e, 0x76, 0xec, 0x0d, 0x2e,
-	0x48, 0x7e, 0xf2, 0xe8, 0xbf, 0xff, 0xdc, 0x5b, 0xbd, 0x45, 0x77, 0xd0, 0xc3, 0x1f, 0x25, 0xe6,
-	0xbc, 0x62, 0xc5, 0x16, 0xec, 0x13, 0x28, 0x05, 0x1e, 0xf6, 0x1a, 0x85, 0x3b, 0xd0, 0x91, 0x96,
-	0x7d, 0x1b, 0x4a, 0x94, 0xb3, 0x22, 0x59, 0xad, 0xe5, 0x5a, 0x8b, 0x40, 0xcb, 0xc9, 0x40, 0x6f,
-	0x82, 0x96, 0x89, 0x53, 0xb6, 0x26, 0xd5, 0x8f, 0x96, 0xb9, 0x62, 0xcc, 0x98, 0xf2, 0xa9, 0x95,
-	0xfe, 0x29, 0xd4, 0xda, 0xe8, 0x5c, 0xfa, 0x56, 0xef, 0x86, 0x68, 0xbd, 0x05, 0xaa, 0x35, 0x1c,
-	0x8e, 0x7a, 0x71, 0x29, 0xd6, 0x79, 0x99, 0xd6, 0x2d, 0x5b, 0xb7, 0x81, 0xc5, 0xa6, 0xa7, 0x18,
-	0xc6, 0x9d, 0xec, 0x9b, 0x50, 0x72, 0x30, 0xb4, 0x22, 0xfa, 0xaf, 0x46, 0x79, 0xe9, 0x5c, 0xfd,
-	0x1a, 0x7b, 0x61, 0x1b, 0x45, 0xb4, 0x42, 0x2d, 0x60, 0x45, 0xe0, 0x95, 0x14, 0xac, 0xf4, 0xab,
-	0x25, 0x7e, 0xfd, 0x0c, 0x1e, 0xcd, 0xbe, 0x45, 0x60, 0x7b, 0x9a, 0xe7, 0xc7, 0x56, 0xce, 0x49,
-	0x62, 0x9e, 0x10, 0x45, 0x83, 0xe5, 0xe9, 0x3b, 0xe8, 0x14, 0xf4, 0x97, 0xd4, 0x8a, 0xa7, 0x92,
-	0x40, 0x30, 0xd9, 0x1d, 0x3b, 0x26, 0xa1, 0x0c, 0x22, 0xcc, 0x15, 0x77, 0xec, 0x1c, 0x93, 0x80,
-	0xed, 0x80, 0x58, 0x98, 0xaf, 0x7d, 0x44, 0xc9, 0xa0, 0x3a, 0x57, 0xdd, 0xb1, 0xf3, 0x5c, 0xac,
-	0xf5, 0x7f, 0x2b, 0xb0, 0x96, 0x79, 0xfd, 0x03, 0x53, 0xe6, 0x43, 0xb3, 0xc6, 0x3e, 0x83, 0xa5,
-	0xe8, 0x65, 0xc5, 0x4c, 0x1b, 0xca, 0x82, 0xe7, 0x91, 0x11, 0x3b, 0x84, 0x45, 0xf1, 0x14, 0x50,
-	0x67, 0xc8, 0x74, 0xec, 0x24, 0x31, 0x5c, 0x9a, 0xe8, 0x5d, 0xd8, 0x98, 0x03, 0x51, 0x9c, 0xc8,
-	0x0f, 0x66, 0xd8, 0xb6, 0x3d, 0xef, 0x48, 0x66, 0x38, 0xf7, 0xfb, 0x02, 0xa8, 0x17, 0x43, 0xeb,
-	0x8a, 0x08, 0xc7, 0xa0, 0x94, 0x2a, 0x5b, 0x7a, 0x66, 0xcb, 0x50, 0x18, 0xd8, 0x51, 0xb2, 0x0b,
-	0x03, 0x9b, 0x7d, 0x0c, 0x35, 0x1c, 0xa2, 0x83, 0x6e, 0x68, 0x06, 0x83, 0xb7, 0x18, 0x5d, 0x7b,
-	0xd5, 0x48, 0x76, 0x31, 0x78, 0x8b, 0xec, 0x3b, 0xc0, 0xa2, 0x65, 0x60, 0x7a, 0xe8, 0x9b, 0xd4,
-	0xc7, 0x09, 0x5e, 0x9d, 0x6b, 0xb1, 0xa6, 0x8b, 0xfe, 0x89, 0x90, 0xb3, 0x3d, 0xa8, 0x86, 0xd7,
-	0x3e, 0x5a, 0xb6, 0x19, 0x58, 0xaf, 0x65, 0xf7, 0x57, 0x39, 0x48, 0xd1, 0x85, 0xf5, 0x1a, 0xd9,
-	0x27, 0xb0, 0xdc, 0xf7, 0x47, 0x6f, 0xcc, 0x91, 0x6b, 0xda, 0xe8, 0x58, 0xae, 0x4d, 0x3d, 0x51,
-	0xe5, 0x35, 0x21, 0xed, 0xb8, 0x4d, 0x92, 0x89, 0xb8, 0x6c, 0x1c, 0x5a, 0x13, 0xd3, 0xc6, 0x21,
-	0x86, 0x48, 0x1d, 0x52, 0xe5, 0x55, 0x92, 0x35, 0x49, 0x24, 0xe2, 0x7a, 0x8b, 0xfe, 0x48, 0x38,
-	0x22, 0x86, 0x51, 0x63, 0xa7, 0x7e, 0xa9, 0x72, 0x4d, 0x68, 0x3a, 0xee, 0xf1, 0x54, 0xae, 0xd7,
-	0x00, 0x28, 0x31, 0x92, 0xaa, 0x7f, 0x56, 0xa0, 0x12, 0x2f, 0x03, 0xf6, 0x19, 0xac, 0x09, 0x22,
-	0x4e, 0x51, 0x0e, 0x5c, 0x73, 0x1c, 0x60, 0x44, 0x58, 0xcd, 0x1d, 0x3b, 0x46, 0xa4, 0x69, 0xb9,
-	0xaf, 0x02, 0xcc, 0xd1, 0xba, 0x70, 0x2f, 0xad, 0x8b, 0x59, 0x5a, 0xb3, 0x03, 0xd0, 0xa6, 0x7b,
-	0x4d, 0xf4, 0xfd, 0x91, 0x1f, 0x44, 0xa9, 0x5c, 0x8e, 0x3d, 0x18, 0x24, 0x8d, 0xdf, 0x42, 0xd9,
-	0x0e, 0xa2, 0xfb, 0x44, 0x38, 0xa6, 0x34, 0x07, 0xfa, 0x29, 0x2c, 0x0b, 0x00, 0x5f, 0xbd, 0x5d,
-	0xe4, 0x18, 0xa0, 0x37, 0x61, 0x35, 0xeb, 0x48, 0xf0, 0xef, 0xbb, 0xf9, 0x8e, 0x10, 0xb3, 0x3e,
-	0x6b, 0x9a, 0x74, 0x83, 0x7f, 0x28, 0xb0, 0x32, 0xd5, 0x3d, 0x70, 0xa9, 0x7e, 0x23, 0x53, 0xaa,
-	0x2b, 0xa9, 0x48, 0x52, 0x65, 0xfa, 0x69, 0xae, 0x4c, 0x57, 0xd3, 0x66, 0xd9, 0x12, 0xfd, 0x56,
-	0xb6, 0x44, 0xb5, 0x9c, 0xe5, 0xb4, 0x3c, 0x5f, 0x00, 0xcb, 0x41, 0x12, 0xa9, 0x39, 0x9a, 0x29,
-	0xcd, 0x8d, 0x7c, 0x6e, 0x66, 0xca, 0xf2, 0x35, 0x54, 0x44, 0xd1, 0x22, 0x95, 0xe5, 0x07, 0x9e,
-	0xd3, 0x11, 0x54, 0x43, 0xb1, 0xc7, 0x1c, 0xe2, 0x2d, 0x0e, 0xa3, 0x69, 0x26, 0x46, 0x45, 0xde,
-	0xce, 0x84, 0x82, 0x43, 0x38, 0x7d, 0x16, 0x77, 0x3f, 0x69, 0x3e, 0xe4, 0xee, 0x9f, 0x06, 0x94,
-	0x1c, 0xe2, 0xef, 0x14, 0xa8, 0x47, 0xfb, 0x1f, 0xf8, 0x08, 0xff, 0x1f, 0x30, 0x4d, 0xd0, 0x32,
-	0xc1, 0xdc, 0x7f, 0x0b, 0x67, 0x4c, 0x53, 0xa9, 0x7f, 0x57, 0x84, 0x95, 0xb6, 0x37, 0x4e, 0xa7,
-	0x85, 0x3d, 0x83, 0xba, 0x37, 0xf0, 0x70, 0x38, 0x70, 0x51, 0x0e, 0x7d, 0x12, 0xd8, 0x4e, 0xdc,
-	0x62, 0x23, 0xf3, 0x6e, 0x64, 0x43, 0x93, 0x5f, 0xcd, 0x4b, 0xad, 0xc4, 0x5d, 0x1e, 0x84, 0x56,
-	0x9f, 0xc6, 0x6a, 0x59, 0x4a, 0x65, 0x5a, 0xb7, 0x6c, 0xa6, 0x41, 0xd1, 0xf1, 0xc6, 0x51, 0xe1,
-	0x8b, 0x47, 0xb6, 0x01, 0x4b, 0xe8, 0x8a, 0x99, 0x9a, 0x08, 0xa7, 0xf2, 0x68, 0x25, 0x7a, 0x9c,
-	0x4c, 0x4a, 0xa4, 0x95, 0xbd, 0x52, 0x26, 0xca, 0x90, 0x26, 0x3b, 0x50, 0xf1, 0xae, 0x6f, 0x4d,
-	0x8a, 0x2b, 0xea, 0x93, 0xaa, 0x77, 0x7d, 0x4b, 0x23, 0x47, 0xac, 0xa4, 0x2e, 0x12, 0x35, 0x48,
-	0xa1, 0xa4, 0xfe, 0x21, 0x22, 0x7c, 0x63, 0x85, 0xbd, 0x6b, 0xd3, 0xeb, 0x51, 0x4f, 0x2c, 0xf1,
-	0x32, 0xad, 0xbb, 0x3d, 0xb1, 0xef, 0xca, 0x0a, 0xd0, 0xa4, 0x01, 0xb6, 0x42, 0x3a, 0x55, 0x08,
-	0x8e, 0xc5, 0x10, 0xbb, 0x03, 0x72, 0xfe, 0x37, 0xc5, 0x5c, 0x0a, 0xd2, 0x29, 0x09, 0x5e, 0xe2,
-	0x84, 0xe9, 0x50, 0x1b, 0xb8, 0x41, 0xe8, 0x8f, 0x69, 0xdc, 0x0c, 0x1a, 0x55, 0xd9, 0xb9, 0xd3,
-	0x32, 0x71, 0xeb, 0xbc, 0xf1, 0x2d, 0xaf, 0x51, 0x23, 0x1d, 0x3d, 0x8b, 0x79, 0xd0, 0xc7, 0x00,
-	0xc3, 0x46, 0x9d, 0x84, 0x72, 0x21, 0xbe, 0x01, 0x73, 0x27, 0x73, 0xef, 0x37, 0x60, 0xce, 0x36,
-	0xa1, 0xed, 0x6f, 0x41, 0x4b, 0x74, 0x0f, 0x4c, 0xdc, 0xbd, 0xe8, 0x83, 0xdb, 0x94, 0xe3, 0xbb,
-	0x3c, 0x6b, 0x20, 0x51, 0x4b, 0x48, 0xf4, 0x9f, 0xc2, 0x5a, 0xfe, 0xe5, 0x72, 0xa4, 0xca, 0x13,
-	0x75, 0x73, 0x06, 0x46, 0x9e, 0xab, 0x87, 0xbf, 0x02, 0x36, 0xfb, 0x99, 0xc2, 0x36, 0x80, 0x35,
-	0x8d, 0x93, 0x57, 0xa7, 0x66, 0xa7, 0x6b, 0x5e, 0x7e, 0xd1, 0x35, 0xcc, 0xf3, 0xce, 0xb9, 0xa1,
-	0x2d, 0xcc, 0xca, 0xb9, 0x71, 0xdc, 0xd4, 0x14, 0xb6, 0x09, 0x6b, 0x59, 0xf9, 0xcf, 0x79, 0xeb,
-	0xd2, 0xd0, 0x0a, 0x87, 0xbf, 0x8c, 0xbe, 0x0c, 0x92, 0xef, 0x99, 0xc4, 0xb6, 0x6d, 0xb4, 0x33,
-	0xce, 0x1b, 0xb0, 0x9e, 0x53, 0x5c, 0x1e, 0x9f, 0x9c, 0x19, 0x9a, 0x92, 0xbc, 0x76, 0xaa, 0xe1,
-	0xc6, 0xa9, 0x56, 0x38, 0xec, 0x02, 0x24, 0x85, 0xcc, 0xd6, 0x41, 0xbb, 0xe4, 0xc7, 0x3f, 0x31,
-	0xcc, 0x33, 0xe3, 0x67, 0xc6, 0x59, 0xec, 0xf5, 0x11, 0xac, 0xa6, 0xa5, 0x06, 0xe7, 0x1d, 0xae,
-	0x29, 0x79, 0x31, 0xb9, 0xd7, 0x0a, 0x87, 0x5f, 0xc2, 0xfa, 0xbc, 0x52, 0x64, 0x3b, 0xb0, 0xd9,
-	0xee, 0xbe, 0x32, 0xe5, 0x96, 0x6e, 0xab, 0x6b, 0x9c, 0xb5, 0xce, 0xa7, 0x81, 0x7f, 0x0c, 0x8f,
-	0xe7, 0x28, 0xbb, 0x9f, 0x9b, 0xad, 0xf3, 0x53, 0x6e, 0x5c, 0x5c, 0x68, 0x0a, 0xdb, 0x87, 0x8f,
-	0xe6, 0x9b, 0x18, 0xd2, 0xa2, 0x70, 0xf4, 0xae, 0x08, 0x8b, 0xb2, 0xc6, 0x9e, 0x41, 0xb5, 0x29,
-	0x0f, 0xfb, 0x76, 0x74, 0x83, 0x6c, 0x23, 0x3b, 0xf3, 0xc7, 0xa4, 0xdd, 0xde, 0x9c, 0xf7, 0x2d,
-	0xd0, 0x0e, 0xfa, 0xfa, 0x02, 0x7b, 0x0e, 0xd5, 0x18, 0x45, 0xc7, 0x73, 0xd9, 0xd6, 0x7c, 0x36,
-	0x0b, 0x27, 0xdb, 0x77, 0x30, 0x44, 0xfa, 0x39, 0x83, 0x6a, 0x6a, 0xf6, 0x63, 0x1f, 0xdd, 0x39,
-	0xa2, 0x0b, 0x57, 0x8f, 0xef, 0x9e, 0x16, 0xa5, 0xb7, 0x67, 0x50, 0x8e, 0xae, 0x2b, 0xd6, 0x98,
-	0x7b, 0xb5, 0x0b, 0x2f, 0x5b, 0xf3, 0x2f, 0xb6, 0xd8, 0x43, 0x95, 0xa2, 0x7c, 0xe5, 0xd9, 0x56,
-	0x98, 0x64, 0x26, 0x0f, 0x6a, 0x73, 0x5e, 0x7f, 0x96, 0x1e, 0x9e, 0x82, 0x4a, 0x52, 0x11, 0x44,
-	0x2d, 0xaa, 0x4d, 0xc3, 0xf1, 0xc2, 0xc9, 0x3d, 0x9b, 0x4e, 0xb6, 0xff, 0xfa, 0x7e, 0x57, 0xf9,
-	0xfb, 0xfb, 0x5d, 0xe5, 0x5f, 0xef, 0x77, 0x95, 0x77, 0xff, 0xd9, 0x5d, 0xf8, 0x85, 0x7a, 0x6d,
-	0x0d, 0xe9, 0xaf, 0xaf, 0xab, 0x25, 0xfa, 0x79, 0xfa, 0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xe0,
-	0x7e, 0x26, 0x97, 0x24, 0x13, 0x00, 0x00,
+	// 1612 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x58, 0xdd, 0x52, 0xe3, 0x46,
+	0x16, 0x46, 0xc6, 0x60, 0xfb, 0xf8, 0x07, 0xd1, 0xfc, 0x19, 0x98, 0x01, 0x46, 0xfb, 0xc7, 0x50,
+	0x3b, 0xec, 0x2e, 0xb3, 0xb5, 0x17, 0x5b, 0xb5, 0x55, 0x03, 0x83, 0x61, 0xbc, 0x83, 0xc1, 0x25,
+	0x86, 0xad, 0xda, 0xdc, 0xa8, 0x1a, 0xeb, 0x60, 0x14, 0x6c, 0x59, 0x51, 0xcb, 0x30, 0x9e, 0x5c,
+	0xe6, 0x32, 0x0f, 0x90, 0xb9, 0xcf, 0x83, 0xe4, 0x22, 0x55, 0xa9, 0x5c, 0x26, 0x2f, 0x90, 0x4a,
+	0x26, 0x6f, 0x90, 0xbc, 0x40, 0xaa, 0x4f, 0x4b, 0xb6, 0x2c, 0x1b, 0x6a, 0x32, 0xc5, 0x95, 0x75,
+	0x7e, 0x74, 0xba, 0xcf, 0x77, 0xbe, 0x73, 0xd4, 0x6d, 0xc8, 0xdb, 0x78, 0xde, 0x6d, 0x6e, 0x7b,
+	0x7e, 0x27, 0xe8, 0xb0, 0x29, 0x12, 0x56, 0xf2, 0x41, 0xcf, 0x43, 0xa1, 0x74, 0xc6, 0x97, 0x1a,
+	0xcc, 0x98, 0xd8, 0x74, 0x44, 0x80, 0xbe, 0x89, 0x9f, 0x74, 0x51, 0x04, 0x6c, 0x09, 0xa6, 0x7d,
+	0x6c, 0x5a, 0x8e, 0x5d, 0xd6, 0x36, 0xb4, 0xcd, 0xcc, 0x8b, 0x09, 0x73, 0xca, 0xc7, 0x66, 0xd5,
+	0x66, 0xab, 0x90, 0x95, 0x06, 0x97, 0xb7, 0xb1, 0x9c, 0xda, 0xd0, 0x36, 0x73, 0x2f, 0x26, 0xcc,
+	0x8c, 0x8f, 0xcd, 0x63, 0xde, 0x46, 0xf6, 0x10, 0xe0, 0xbc, 0xd5, 0x69, 0x5c, 0x29, 0xf3, 0xa4,
+	0x34, 0x9b, 0x39, 0xd2, 0x90, 0x99, 0x41, 0x9a, 0xdb, 0xb6, 0x5f, 0x4e, 0x6f, 0x68, 0x9b, 0x69,
+	0x93, 0x9e, 0xd9, 0xb2, 0x8a, 0x67, 0xf3, 0x80, 0x97, 0xa7, 0x36, 0xb4, 0xcd, 0x22, 0x45, 0xdb,
+	0xe7, 0x01, 0xdf, 0x2b, 0x00, 0x38, 0xb6, 0xd5, 0xf1, 0x29, 0x9a, 0x71, 0x00, 0x2c, 0xb1, 0xc9,
+	0x9a, 0x68, 0xb2, 0xbf, 0x43, 0xc6, 0x57, 0x52, 0x59, 0xdb, 0x98, 0xdc, 0xcc, 0xef, 0x2c, 0x6e,
+	0xab, 0x74, 0x13, 0xbe, 0x66, 0xe4, 0x66, 0x7c, 0xa6, 0x81, 0x3e, 0x30, 0x0a, 0xaf, 0xe3, 0x0a,
+	0x64, 0x07, 0x00, 0xdc, 0x73, 0x2c, 0x11, 0xf0, 0xa0, 0x2b, 0x28, 0xe5, 0xd2, 0x8e, 0xbe, 0xad,
+	0x40, 0xda, 0xf5, 0x9c, 0x53, 0xd2, 0xef, 0x2d, 0xfc, 0xf2, 0xc3, 0xfa, 0xec, 0x35, 0xba, 0x4e,
+	0x03, 0xff, 0x3d, 0x70, 0x37, 0x73, 0x3c, 0xf2, 0x60, 0x7f, 0x81, 0x34, 0x65, 0x22, 0x91, 0xc9,
+	0xef, 0xcc, 0x25, 0xf6, 0x22, 0xb3, 0x32, 0xc9, 0xc1, 0xf8, 0x2f, 0xcc, 0x25, 0x37, 0x21, 0xd3,
+	0x79, 0x2a, 0xd1, 0x50, 0x62, 0x98, 0xcf, 0xd2, 0x48, 0x3e, 0xca, 0x6c, 0xf6, 0x1d, 0x8d, 0x6f,
+	0x34, 0x28, 0xd6, 0xb0, 0xdd, 0xf1, 0x7b, 0x51, 0xf5, 0x56, 0x21, 0x1b, 0xf0, 0xf3, 0x16, 0xc6,
+	0xeb, 0x97, 0x21, 0x4d, 0xd5, 0x66, 0xeb, 0x00, 0xca, 0x38, 0x54, 0xc3, 0x1c, 0xe9, 0xa8, 0x4c,
+	0xf3, 0x30, 0xe5, 0xb8, 0x36, 0xbe, 0xa6, 0x02, 0x16, 0x4d, 0x25, 0x48, 0xad, 0xb8, 0xb9, 0xc2,
+	0x1e, 0x55, 0xaf, 0x60, 0x2a, 0x41, 0x56, 0x9c, 0x1e, 0xac, 0x36, 0x17, 0x57, 0x54, 0xc0, 0x82,
+	0x99, 0x23, 0x4d, 0x8d, 0x8b, 0x2b, 0xb6, 0x06, 0xc0, 0x1b, 0x81, 0xd3, 0x71, 0x09, 0x95, 0x69,
+	0x32, 0xc7, 0x34, 0x89, 0x12, 0xef, 0x81, 0x3e, 0x94, 0x87, 0x44, 0x64, 0x3b, 0x59, 0xe0, 0xf9,
+	0x10, 0x90, 0x21, 0xcf, 0x41, 0x79, 0xbf, 0xd6, 0xa0, 0x14, 0x99, 0xee, 0xb9, 0xb8, 0x7d, 0x5c,
+	0x52, 0x63, 0x71, 0x99, 0xbc, 0x1d, 0x97, 0xf4, 0xdd, 0xb8, 0x4c, 0x25, 0x71, 0x31, 0x0e, 0x60,
+	0x76, 0x38, 0x09, 0x09, 0xc5, 0x3f, 0x46, 0xc8, 0xb1, 0x90, 0xc0, 0x62, 0x84, 0x1a, 0xff, 0x87,
+	0x42, 0x9c, 0x7c, 0x51, 0xb7, 0x51, 0xe5, 0x35, 0x6a, 0xcf, 0x7e, 0xef, 0x96, 0x21, 0x23, 0x1b,
+	0x12, 0x85, 0x50, 0x9c, 0x30, 0x23, 0x51, 0x66, 0x78, 0xcd, 0x5b, 0xdd, 0xa8, 0xa1, 0x95, 0x60,
+	0x3c, 0x86, 0x42, 0x0d, 0xdb, 0xaf, 0x7c, 0xde, 0xb8, 0x3a, 0xf5, 0xb0, 0x21, 0x43, 0xf3, 0x56,
+	0xab, 0xd3, 0x88, 0x38, 0x57, 0x34, 0x33, 0x24, 0x57, 0x6d, 0xc3, 0x06, 0x16, 0xb9, 0x1e, 0x62,
+	0x10, 0x91, 0xf4, 0x4f, 0x90, 0x6e, 0x63, 0xc0, 0xc9, 0x39, 0xbf, 0x33, 0x1b, 0x16, 0xe4, 0xe4,
+	0xfc, 0x63, 0x6c, 0x04, 0x35, 0x94, 0x9d, 0x22, 0xcd, 0xb2, 0xa5, 0x84, 0x87, 0x8d, 0x44, 0x4b,
+	0xc5, 0x97, 0x36, 0xc9, 0xc1, 0x38, 0x82, 0x85, 0xd1, 0x55, 0x54, 0x53, 0x25, 0x28, 0xb4, 0x9c,
+	0x08, 0x32, 0x70, 0x1f, 0xf0, 0x48, 0x27, 0x1a, 0xa9, 0x35, 0xa8, 0xfc, 0xc6, 0x4b, 0xea, 0xb2,
+	0xbe, 0x46, 0xc8, 0x1a, 0xbb, 0xdd, 0xb6, 0x45, 0x59, 0x8a, 0x30, 0xe7, 0x9c, 0xdb, 0x6d, 0xef,
+	0x92, 0x82, 0xad, 0x82, 0x14, 0xac, 0x0b, 0x1f, 0x51, 0x84, 0x94, 0xc9, 0xba, 0xdd, 0xf6, 0x81,
+	0x94, 0x8d, 0x9f, 0x34, 0x98, 0x1b, 0x5a, 0xfe, 0xfe, 0x07, 0xd1, 0x7b, 0xa1, 0xc6, 0x9e, 0xc0,
+	0x74, 0xb8, 0xd8, 0x24, 0xb9, 0x2e, 0x24, 0x5d, 0x55, 0xe8, 0xd0, 0x89, 0x6d, 0xc1, 0x94, 0x7c,
+	0x12, 0x44, 0xe9, 0xa1, 0x66, 0x1c, 0x00, 0x63, 0x2a, 0x17, 0xa3, 0x0e, 0x8b, 0x63, 0x52, 0x94,
+	0x15, 0xf9, 0xd7, 0x08, 0x93, 0x57, 0xc6, 0x95, 0x64, 0x84, 0xce, 0x5f, 0xa4, 0x20, 0x7b, 0xda,
+	0xe2, 0xe7, 0x44, 0x38, 0x06, 0xe9, 0x18, 0x8f, 0xe9, 0x99, 0x95, 0x20, 0xe5, 0xd8, 0x21, 0xd8,
+	0x29, 0xc7, 0x66, 0x8f, 0xa0, 0x80, 0x2d, 0x6c, 0xa3, 0x1b, 0x58, 0xc2, 0x79, 0x83, 0xe1, 0x44,
+	0xcb, 0x87, 0xba, 0x53, 0xe7, 0x0d, 0xb2, 0xbf, 0x02, 0x0b, 0x45, 0x61, 0x79, 0xe8, 0x5b, 0xf4,
+	0xb9, 0xa2, 0xf4, 0x8a, 0xa6, 0x1e, 0x59, 0xea, 0xe8, 0xef, 0x49, 0x3d, 0x5b, 0x87, 0x7c, 0x70,
+	0xe9, 0x23, 0xb7, 0x2d, 0xc1, 0x2f, 0x90, 0x3a, 0x37, 0x6b, 0x82, 0x52, 0x9d, 0xf2, 0x0b, 0x64,
+	0x7f, 0x84, 0x52, 0xd3, 0xef, 0xdc, 0x58, 0x1d, 0xd7, 0xb2, 0xb1, 0xcd, 0x5d, 0x9b, 0xa6, 0x5e,
+	0xd6, 0x2c, 0x48, 0xed, 0x89, 0xbb, 0x4f, 0x3a, 0xb9, 0x2f, 0x1b, 0x5b, 0xbc, 0x67, 0xd9, 0xd8,
+	0xc2, 0x00, 0xcb, 0x19, 0xf2, 0xc9, 0x93, 0x6e, 0x9f, 0x54, 0x72, 0x5f, 0x6f, 0xd0, 0xef, 0xc8,
+	0x40, 0xc4, 0x30, 0x2e, 0x87, 0x43, 0x39, 0x4b, 0x8e, 0xba, 0xb4, 0x9c, 0xb8, 0xbb, 0x7d, 0xbd,
+	0x51, 0x00, 0x20, 0x60, 0x14, 0x55, 0xbf, 0xd2, 0x20, 0x17, 0x89, 0x82, 0x3d, 0x81, 0x39, 0x49,
+	0xc4, 0x7e, 0x96, 0x8e, 0x6b, 0x75, 0x05, 0x86, 0x84, 0xd5, 0xdd, 0x6e, 0xbb, 0x12, 0x5a, 0xaa,
+	0xee, 0x99, 0xc0, 0x04, 0xad, 0x53, 0x77, 0xd2, 0x7a, 0x72, 0x98, 0xd6, 0x6c, 0x13, 0xf4, 0xfe,
+	0xbb, 0x16, 0xfa, 0x7e, 0xc7, 0x17, 0x21, 0x94, 0xa5, 0x28, 0x42, 0x85, 0xb4, 0xd1, 0x2a, 0x84,
+	0xb6, 0x08, 0xbf, 0xfc, 0x32, 0x30, 0xc1, 0x2c, 0x8c, 0x43, 0x28, 0xc9, 0x04, 0x7e, 0xff, 0xb8,
+	0x48, 0x30, 0xc0, 0xd8, 0x87, 0xd9, 0xe1, 0x40, 0x92, 0x7f, 0x7f, 0x4b, 0x4e, 0x84, 0x88, 0xf5,
+	0xc3, 0xae, 0x83, 0x69, 0xf0, 0xbd, 0x06, 0x33, 0x7d, 0xdb, 0x3d, 0xb7, 0xea, 0x1f, 0x86, 0x5a,
+	0x75, 0x26, 0xb6, 0x93, 0x58, 0x9b, 0x3e, 0x4e, 0xb4, 0xe9, 0x6c, 0xdc, 0x6d, 0xb8, 0x45, 0xff,
+	0x3c, 0xdc, 0xa2, 0x7a, 0xc2, 0xb3, 0xdf, 0x9e, 0x2f, 0x80, 0x25, 0x52, 0x92, 0xd0, 0xec, 0x8c,
+	0xb4, 0xe6, 0x62, 0x12, 0x9b, 0x91, 0xb6, 0xbc, 0x80, 0x9c, 0x6c, 0x5a, 0xa4, 0xb6, 0x7c, 0xcf,
+	0x3a, 0xed, 0x40, 0x3e, 0x90, 0xef, 0x58, 0x2d, 0xbc, 0xc6, 0x16, 0x25, 0x5f, 0xea, 0x67, 0x45,
+	0xd1, 0x8e, 0xa4, 0xc1, 0x84, 0xa0, 0xff, 0x6c, 0xfc, 0x07, 0x66, 0xc8, 0x12, 0xab, 0xe4, 0x56,
+	0xb2, 0x92, 0x7a, 0x3c, 0x04, 0x01, 0xd8, 0x2f, 0xe2, 0xe7, 0x1a, 0x14, 0xc3, 0xf7, 0xef, 0xb9,
+	0x84, 0x1f, 0x92, 0xcc, 0x3e, 0xe8, 0x43, 0x9b, 0x51, 0xa7, 0xd9, 0x24, 0xf8, 0xf3, 0xf1, 0x20,
+	0x63, 0xa0, 0x7f, 0x3b, 0x09, 0x33, 0x35, 0xaf, 0x1b, 0x87, 0x85, 0x3d, 0x83, 0xa2, 0xe7, 0x78,
+	0xd8, 0x72, 0x5c, 0xb4, 0x64, 0x2e, 0x61, 0x62, 0xab, 0xd1, 0x88, 0x0d, 0xdd, 0xeb, 0xa1, 0xcf,
+	0xab, 0x9e, 0x87, 0x66, 0xc1, 0x8b, 0x49, 0xf2, 0x5b, 0x2e, 0x02, 0xde, 0xa4, 0xf3, 0xa3, 0x6a,
+	0xa5, 0x0c, 0xc9, 0x55, 0x9b, 0xe9, 0x30, 0xd9, 0xf6, 0xba, 0x61, 0xe3, 0xcb, 0x47, 0xb6, 0x08,
+	0xd3, 0xe8, 0xca, 0xc3, 0x23, 0x11, 0x2e, 0x6b, 0x86, 0x92, 0x9c, 0x71, 0x0a, 0x94, 0xd0, 0xaa,
+	0x66, 0xa5, 0x02, 0xaa, 0xa2, 0x5c, 0x56, 0x21, 0xe7, 0x5d, 0x5e, 0x5b, 0xb4, 0xaf, 0x70, 0x4e,
+	0x66, 0xbd, 0xcb, 0xeb, 0x7d, 0x29, 0x47, 0x46, 0x9a, 0x22, 0xe1, 0x80, 0x94, 0x46, 0x9a, 0x1f,
+	0x72, 0x87, 0x37, 0x3c, 0x68, 0x5c, 0x5a, 0x5e, 0x83, 0x66, 0x62, 0xda, 0xcc, 0x90, 0x5c, 0x6f,
+	0xc8, 0xf7, 0xce, 0xb9, 0x40, 0x8b, 0xae, 0x1a, 0x39, 0xb2, 0x65, 0xa5, 0x62, 0x57, 0x5e, 0x37,
+	0x56, 0x41, 0x1d, 0x74, 0x2d, 0x79, 0x62, 0x03, 0x15, 0x94, 0x14, 0x2f, 0xb1, 0xc7, 0x0c, 0x28,
+	0x38, 0xae, 0x08, 0xfc, 0x2e, 0x1d, 0xc4, 0x44, 0x39, 0xaf, 0x26, 0x77, 0x5c, 0x27, 0xbf, 0x3a,
+	0x37, 0x3e, 0xf7, 0xca, 0x05, 0xb2, 0xd1, 0xb3, 0x3c, 0x20, 0xf9, 0x28, 0x30, 0x28, 0x17, 0x49,
+	0xa9, 0x04, 0x79, 0x61, 0x49, 0x54, 0xe6, 0xce, 0x0b, 0x4b, 0xc2, 0x77, 0x40, 0xdb, 0x4f, 0x41,
+	0x1f, 0xd8, 0xee, 0x99, 0xb8, 0xeb, 0xe1, 0xed, 0xd0, 0x8a, 0x1f, 0x6c, 0x81, 0x54, 0x55, 0xa9,
+	0x91, 0xf7, 0x94, 0xe4, 0xe2, 0x77, 0xdf, 0x53, 0x92, 0xde, 0x03, 0xae, 0x6e, 0xd5, 0x01, 0x06,
+	0xbd, 0xc0, 0xe6, 0x41, 0x7f, 0x65, 0xee, 0x3e, 0xaf, 0x58, 0x47, 0x95, 0xff, 0x55, 0x8e, 0xac,
+	0xe3, 0x93, 0xe3, 0x8a, 0x3e, 0xc1, 0x16, 0x60, 0x36, 0xae, 0xad, 0x98, 0xe6, 0x89, 0xa9, 0x6b,
+	0x49, 0xf5, 0x7e, 0x65, 0xef, 0xec, 0x50, 0x4f, 0x6d, 0xbd, 0x86, 0xf9, 0x71, 0x6c, 0x66, 0xab,
+	0xb0, 0x54, 0xab, 0x9f, 0x59, 0xea, 0x95, 0x7a, 0xb5, 0x5e, 0x39, 0xaa, 0x1e, 0x57, 0xa2, 0x25,
+	0x1e, 0xc1, 0xc3, 0x31, 0xc6, 0xfa, 0x3f, 0xad, 0xea, 0xf1, 0xa1, 0x59, 0x39, 0x3d, 0xd5, 0x35,
+	0xb6, 0x01, 0x0f, 0xc6, 0xbb, 0x54, 0x94, 0x47, 0x6a, 0xe7, 0xd7, 0x34, 0x4c, 0x29, 0x9a, 0x1e,
+	0x40, 0x3e, 0x3a, 0x62, 0x1f, 0x62, 0xc0, 0x96, 0xc7, 0xdf, 0x3f, 0x6b, 0xa2, 0xb9, 0xb2, 0x72,
+	0xcb, 0x55, 0xae, 0x26, 0x9a, 0xc6, 0x04, 0xab, 0x42, 0x29, 0x32, 0x9c, 0x79, 0x36, 0x0f, 0xf0,
+	0xc3, 0x43, 0x3d, 0x83, 0x9c, 0xba, 0x11, 0xc8, 0x0d, 0x2d, 0x8d, 0xbb, 0x2f, 0xc9, 0x18, 0xe5,
+	0xb1, 0x97, 0x07, 0x15, 0xe1, 0x39, 0x1d, 0xee, 0x3b, 0x7e, 0x2f, 0xdc, 0xca, 0x07, 0x05, 0xa9,
+	0x42, 0x29, 0xaa, 0x4e, 0x22, 0xa3, 0xd1, 0xbe, 0xe8, 0x67, 0x34, 0x86, 0x6d, 0xc6, 0x04, 0x3b,
+	0x82, 0x7c, 0xec, 0x64, 0xc8, 0x1e, 0xdc, 0x7a, 0x80, 0x97, 0xa1, 0x1e, 0xde, 0x7e, 0x96, 0x8c,
+	0xf0, 0xc9, 0x84, 0x1f, 0x33, 0x56, 0x1e, 0xfb, 0xe1, 0x97, 0x51, 0x96, 0xc7, 0x7f, 0xf6, 0xa2,
+	0x08, 0xf9, 0x78, 0x5e, 0x8b, 0xc3, 0x53, 0xba, 0x1f, 0x63, 0x69, 0xdc, 0xf4, 0x56, 0x11, 0x9e,
+	0x42, 0x96, 0xb4, 0x72, 0x13, 0x85, 0xb0, 0x73, 0x2b, 0x6d, 0x2f, 0xe8, 0xdd, 0xf1, 0xd2, 0xde,
+	0xca, 0xb7, 0xef, 0xd6, 0xb4, 0xef, 0xde, 0xad, 0x69, 0x3f, 0xbe, 0x5b, 0xd3, 0xde, 0xfe, 0xbc,
+	0x36, 0xf1, 0x51, 0xf6, 0x92, 0xb7, 0xe8, 0x5f, 0x9c, 0xf3, 0x69, 0xfa, 0x79, 0xfa, 0x5b, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x8e, 0x09, 0x60, 0xd0, 0xef, 0x11, 0x00, 0x00,
 }
