@@ -1,0 +1,68 @@
+syntax = "proto3";
+package delphi.messanger;
+
+import "nic/delphi/proto/delphi/delphi.proto";
+
+// message container for one object
+message ObjectData {
+    ObjectMeta        Meta  = 1;    // object meta of the object
+    ObjectOperation   Op    = 2;    // Operation on object
+    bytes             Data  = 3;    // message data
+}
+
+// mount data
+message MountData {
+    string        Kind         = 1;    // object kind within the category to mount (could be empty)
+    MountMode     Mode         = 2;    // mount read-only or read-write
+}
+
+// mount request
+message MountReqMsg {
+    string                ServiceName  = 1;    // unique service name for the service
+    uint32                ServiceID    = 2;    // unique id for the service
+    repeated MountData    Mounts       = 3;    // requested mount points
+}
+
+// mount response
+message MountRespMsg {
+    string                 ServiceName  = 1;    // unique service name for the service
+    uint32                 ServiceID    = 2;    // unique id for the service
+    repeated ObjectData    Objects      = 6;    // objects
+}
+
+// message types
+enum MessageType {
+    Invalid    = 0;
+    Notify     = 1;
+    ChangeReq  = 2;
+    StatusResp = 3;
+    GetReq     = 4;
+    GetResp    = 5;
+    ListReq    = 6;
+    ListResp   = 7;
+    MountReq   = 8;
+    MountResp  = 9;
+}
+
+// all messages exchanged by delphi components are in this format
+message Message {
+    MessageType            Type        = 1;
+    uint64                 MessageId   = 2;
+    uint64                 ResponseTo  = 3;
+    string                 Status      = 4;
+    repeated ObjectData    Objects     = 6;
+}
+
+message TestKey {
+    uint32 Idx = 1;
+}
+
+message TestObject {
+     ObjectMeta  Meta        = 1;
+     TestKey     Key         = 2;
+     string      TestData1   = 3;
+     string      TestData2   = 4;
+     string      TestData3   = 5;
+     string      TestData4   = 6;
+     string      TestData5   = 7;
+ }

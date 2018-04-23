@@ -1,0 +1,40 @@
+syntax = "proto3";
+package example;
+
+import "nic/delphi/proto/delphi/delphi.proto";
+
+// Interface id
+message IntfIndex {
+    uint32    Ifidx = 1;
+}
+
+// Interface
+enum IntfState {
+    InvalidIntfState   = 0;
+    IntfStateUp        = 1;
+    IntfStateDown      = 2;
+}
+
+// spec part of the object
+message InterfaceSpec {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta      Meta         = 1;
+    IntfIndex              Key          = 2;
+    IntfState              AdminState   = 3 [(delphi.event) = true];
+    string                 MacAddress   = 4;
+    uint64                 StatusHandle = 5;
+    IntfIndex              StatusIdx    = 6 [(delphi.event) = true];
+}
+
+// status part of the object
+message InterfaceStatus {
+    option (delphi.update_event) = false;
+    delphi.ObjectMeta      Meta              = 1;
+    uint32                 Key               = 2;
+    IntfState              OperState         = 3 [(delphi.event) = true];
+    string                 DummyStatusField  = 4 [(delphi.event) = false];
+    delphi.ReferList       SpecHandles       = 5 [(delphi.event) = true];
+    repeated IntfIndex     SpecIdxs          = 6 [(delphi.event) = true];
+    repeated uint32        VlanIds           = 7 [(delphi.event) = true];
+    map<string, string>    IPAddresses       = 8 [(delphi.event) = true];
+}

@@ -115,9 +115,12 @@ END
       end
 
       # install additional packages
-      node.vm.provision "shell" do |s|
-				s.inline = "sudo yum install -y softhsm libtool-ltdl-devel"
-			end
+      node.vm.provision "shell", inline: <<-EOF
+          sudo yum install -y softhsm libtool-ltdl-devel libev libev-devel
+          wget -q https://github.com/bazelbuild/bazel/releases/download/0.5.4/bazel-0.5.4-installer-linux-x86_64.sh
+          chmod +x bazel-0.5.4-installer-linux-x86_64.sh
+          ./bazel-0.5.4-installer-linux-x86_64.sh
+      EOF
 
       # port mappings
       if n == 0 then

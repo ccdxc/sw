@@ -1,0 +1,51 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+// Delphi's top level proto file that all proto definitions need to include
+// Note: If you change this file, regenerate delphi.pb.go fie in this directory. it is required by delphi protoc plugin.
+//       you can regenerate delphi.pb.go by running make in this directory
+
+syntax = "proto3";
+package delphi;
+
+import "google/protobuf/descriptor.proto";
+
+// metadata present in all objects
+message ObjectMeta {
+    string                 Kind      = 1;    // object kind within the category (endpoint, interface etc..)
+    string                 Path      = 2;    // Path for this object
+    string                 Key       = 3;    // Object key converted to string
+    uint64                 Handle    = 4;    // Globally unique identifier for the object
+}
+
+// ReferList is a list of object handles to be used for storing object references
+message ReferList {
+    repeated uint64       Handles = 1;
+}
+
+// set/delete operations
+enum ObjectOperation {
+    InvalidOp    = 0;
+    SetOp        = 1;
+    DeleteOp     = 2;
+}
+
+// mount modes
+enum MountMode {
+    InvalidMode   = 0;
+    ReadMode      = 1;
+    ReadWriteMode = 2;
+}
+
+// Delphi options applied at the message level
+extend google.protobuf.MessageOptions {
+    // update_event: if set to true, will generate object level 'update' event
+    // in addition to field level events. object level update is disabled by
+    // default.
+    bool update_event = 70000;
+}
+
+// Delphi options applied at the field level
+extend google.protobuf.FieldOptions {
+    // event: if this option is enabled, an event handler will be generated for the object
+    bool event = 70000;
+}

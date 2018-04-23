@@ -1,0 +1,68 @@
+#!/usr/bin/python
+
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+# Delphi compiler wrapper Program
+# This calls the protoc compiler with delphi plugins
+
+import argparse
+import os
+import subprocess
+
+
+# Wrapper to execute a command
+def runProcess(exe):
+    p = subprocess.Popen(exe, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    while(True):
+      retcode = p.poll() #returns None while subprocess is running
+      line = p.stdout.readline()
+      yield line
+      if(retcode is not None):
+        break
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--version', action='version', version='1.0.0')
+parser.add_argument("-workspace", default='', help="Root of the workspace")
+parser.add_argument("-outdir", required=True, help="Directory to place the generated files")
+parser.add_argument("-input", nargs='+', required=True, help="input files")
+
+print "workspace:" + os.getenv("workspace", "")
+print "GOPATH: " + os.getenv("GOPATH", "")
+print "PWD: " + os.getenv("PWD", "")
+
+# Parse the args
+args = parser.parse_args()
+
+print "Outdir: " + args.outdir
+
+# default value for some args
+if args.workspace == '':
+    if os.getenv("GOPATH", "") != '':
+        args.workspace = os.getenv("GOPATH", "") + "/src/github.com/pensando/sw/"
+    else:
+        print "Can not determine the workspace"
+        for line in runProcess("env"):
+            print line
+        exit(1)
+
+# parameters for running protoc
+protoc_exe = args.workspace + "bazel-out/host/bin/external/com_github_google_protobuf/protoc"
+delphi_path = args.workspace + "nic/delphi/proto/delphi/"
+
+# determine to import directories
+import_dir = []
+for inp in args.input:
+    impath = "-I ./" + os.path.dirname(inp) + "/"
+    import_dir.append(impath)
+
+import_dir = set(import_dir);
+
+# command to run
+runCmd = protoc_exe  + " -I ./ -I /usr/local/include/ -I /sw/nic/hal/third-party/google/include/ -I " + args.workspace + " -I " + delphi_path + " " + " ".join(import_dir) + " --cpp_out=" + args.outdir + " --go_out=" + args.outdir + " --delphi_out=logtostderr=1,v=1:" + args.outdir + " " + " ".join(str(x) for x in args.input)
+
+print "running command: " + runCmd
+
+# run the protoc with delphi plugin
+
+for line in runProcess(runCmd.split()):
+    print line
