@@ -882,10 +882,14 @@ ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
 
 hal_ret_t nwsec_policy_init();
 
-typedef struct nwsec_rule_create_app_ctxt_s {
-} __PACK__ nwsec_rule_create_app_ctxt_t;
+typedef struct nwsec_policy_create_app_ctxt_s {
+    const acl_ctx_t    *acl_ctx;
+} __PACK__ nwsec_policy_create_app_ctxt_t;
 
-
+typedef struct nwsec_policy_upd_app_ctxt_s {
+    const acl_ctx_t    *acl_ctx;
+    const acl_ctx_t    *acl_ctx_clone;
+} __PACK__ nwsec_policy_upd_app_ctxt_t;
 
 } // namespace hal
 

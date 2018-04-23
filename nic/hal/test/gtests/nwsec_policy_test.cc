@@ -17,6 +17,8 @@
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
+#include "nic/fte/acl/acl_ctx.hpp"
+#include "nic/fte/acl/list.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -56,7 +58,15 @@ protected:
 
   // will be called immediately after each test before the destructor
   virtual void TearDown() {
+        //Route acl is holding one - so increasing it to 1 till we fix that
+        EXPECT_EQ(acl_ctx_t::num_ctx_in_use(), 1);
+        EXPECT_EQ(list_t::num_lists_in_use(), 1);
+        EXPECT_EQ(list_t::num_items_in_use(), 0);
+        EXPECT_EQ(g_hal_state->nwsec_policy_ht()->num_entries(), 0);
+        EXPECT_EQ(g_hal_state->nwsec_rule_slab()->num_in_use(), 0);
+        EXPECT_EQ(g_hal_state->ipv4_rule_slab()->num_in_use(), 0);
   }
+
 
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
@@ -114,22 +124,22 @@ TEST_F(nwsec_policy_test, test1)
 
     ipv4_rule_t *rule = NULL;
     nwsec_policy_t *res_policy;
-
-
-
     res_policy = find_nwsec_policy_by_key(10, 0);
 
-    acl_classify(res_policy->acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    const char *ctx_name = nwsec_acl_ctx_name(res_policy->key.vrf_id);
+    const acl_ctx_t *acl_ctx = acl::acl_get(ctx_name);
+
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
     EXPECT_NE(rule, nullptr);
-
-
     v4_tuple.ip_dst = 0xAABB0000;
     v4_tuple.port_dst = 1000;
 
     rule = NULL;
 
-    acl_classify(res_policy->acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
     EXPECT_EQ(rule, nullptr);
+
+    acl::acl_deref(acl_ctx);
 
     // Policy Update
     rule_spec = pol_spec.add_rule();
@@ -152,8 +162,12 @@ TEST_F(nwsec_policy_test, test1)
 
     res_policy = find_nwsec_policy_by_key(10, 0);
 
-    acl_classify(res_policy->acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    acl_ctx = acl::acl_get(ctx_name);
+
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
     EXPECT_NE(rule, nullptr);
+
+    acl::acl_deref(acl_ctx);
 
     // Delete policy
     pol_del_req.mutable_policy_key_or_handle()->set_security_policy_handle(policy_handle);
