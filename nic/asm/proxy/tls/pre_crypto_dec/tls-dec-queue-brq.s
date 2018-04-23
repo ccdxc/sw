@@ -89,7 +89,7 @@ dma_cmd_brq_doorbell:
     addi        r7, r7, 1
     phvwr       p.barco_dbell_pi, r7.wx
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd7_dma_cmd, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd7_dma_cmd, CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX,
                                   barco_dbell_pi, barco_dbell_pi)
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd7_dma_cmd)
 

@@ -74,9 +74,9 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_NMPR_SMALL_TX      "nmpr-small-tx"
 #define CAPRI_HBM_REG_PAGE_SMALL_RX      "page-small-rx"
 #define CAPRI_HBM_REG_PAGE_SMALL_TX      "page-small-tx"
-#define CAPRI_HBM_REG_BRQ                "brq"
 #define CAPRI_HBM_REG_BARCO_RING_ASYM    "brq-ring-asym"
 #define CAPRI_HBM_REG_BARCO_RING_GCM0    "brq-ring-gcm0"
+#define CAPRI_HBM_REG_BRQ                CAPRI_HBM_REG_BARCO_RING_GCM0
 #define CAPRI_HBM_REG_BARCO_RING_GCM1    "brq-ring-gcm1"
 #define CAPRI_HBM_REG_BARCO_RING_XTS0    "brq-ring-xts0"
 #define CAPRI_HBM_REG_BARCO_RING_XTS1    "brq-ring-xts1"
@@ -150,6 +150,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 
 #define TLS_PROXY_PAD_BYTES_HBM_TABLE_BASE "tls_pad_table_base"
 #define TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE "tls_barco_gcm0_pi_table_base"
+#define TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE "tls_barco_gcm1_pi_table_base"
 
 #define ARQRX_BASE              "hbm_arqrx_base"
 #define ARQTX_BASE              "hbm_arqtx_base"

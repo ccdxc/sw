@@ -52,7 +52,7 @@ def TestCaseSetup(tc):
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
     #tnmpr.GetMeta()
 
-    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
+    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_GCM"])
     #brq.GetMeta()
 
     tlscbid = "TlsCb%04d" % id
@@ -93,7 +93,7 @@ def TestCaseVerify(tc):
     rnmpr = tc.pvtdata.db["RNMPR"]
     tnmdr = tc.pvtdata.db["TNMDR"]
     tnmpr = tc.pvtdata.db["TNMPR"]
-    brq = tc.pvtdata.db["BRQ_ENCRYPT"]
+    brq = tc.pvtdata.db["BRQ_ENCRYPT_GCM"]
 
     #  Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
@@ -111,7 +111,7 @@ def TestCaseVerify(tc):
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb_cur.GetObjValPd()
 
-    brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
+    brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_GCM"]
     #brq_cur.GetMeta()
 
     # Verify PI for RNMDR got incremented by 1

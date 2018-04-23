@@ -19,7 +19,7 @@ struct tx_table_s3_t0_d d;
 #define D d.u.tls_read_tls_header_d
         
 %%
-	.param      TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
+	.param      TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE
 	.param      tls_dec_read_barco_pi_process
         
 tls_dec_read_header_process:
@@ -76,8 +76,8 @@ tls_dec_read_header_process:
     /*
      * Launch a locked table-read to the Barco GCM0 PI address in HBM.
      */
-    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
-    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
+    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
 
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_read_barco_pi_process, r5, TABLE_SIZE_16_BITS)
 
@@ -112,8 +112,8 @@ tls_dec_read_header_ccm_process:
     /*
      * Launch a locked table-read to the Barco GCM0 PI address in HBM.
      */
-    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
-    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
+    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
 
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_read_barco_pi_process, r5, TABLE_SIZE_16_BITS)
 

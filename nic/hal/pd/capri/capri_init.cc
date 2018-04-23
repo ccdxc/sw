@@ -249,7 +249,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].name = "tls-dec-queue-brq.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = BRQ_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_GCM1);
     i++;
 
     symbols[i].name = "tls-enc-read-rnmdr-free-idx.bin";
@@ -683,7 +683,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].name = "tls-dec-aesgcm-newseg-queue-barco.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = BRQ_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_GCM1);
     i++;
 
     symbols[i].name = "tls-dec-aesgcm-newseg-read-tnmdr-odesc-alloc-idx.bin";
@@ -793,7 +793,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
 
     symbols[i].name = "tls-dec-read-header.bin";
     symbols[i].num_params = 1;
-    symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
+    symbols[i].params[0].name = TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE;
 
     /*
      * The 'CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE' region is provisioned for 1KB out of
@@ -801,7 +801,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
      * HBM memory from this region to store other TLS global resources.
      */
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
-                                 CAPRI_MAX_TLS_PAD_SIZE;
+                                 BARCO_GCM1_PI_HBM_TABLE_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table.bin";

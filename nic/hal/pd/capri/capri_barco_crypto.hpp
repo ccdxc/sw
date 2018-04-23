@@ -16,6 +16,9 @@ namespace pd {
 #define CRYPTO_KEY_COUNT_MAX                (64 * 1024)
 
 #define CAPRI_MAX_TLS_PAD_SIZE              512
+#define BARCO_RING_SHADOW_PI_SIZE           2
+#define BARCO_GCM0_PI_HBM_TABLE_OFFSET      CAPRI_MAX_TLS_PAD_SIZE
+#define BARCO_GCM1_PI_HBM_TABLE_OFFSET      (BARCO_GCM0_PI_HBM_TABLE_OFFSET + BARCO_RING_SHADOW_PI_SIZE)
 
 hal_ret_t capri_barco_rings_init(void);
 hal_ret_t capri_barco_res_allocator_init(void);

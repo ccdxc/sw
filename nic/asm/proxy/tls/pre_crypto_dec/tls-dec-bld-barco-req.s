@@ -77,7 +77,7 @@ table_read_QUEUE_BRQ:
     phvwrpair   p.barco_desc_header_size, r1.wx,    \
                 p.barco_desc_status_address, r2.dx
 
-    addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX
+    addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX
 
 tls_dec_bld_barco_req_process_done:
     /* FIXME: The Capri model currently does not support a read of 8 bytes from register space

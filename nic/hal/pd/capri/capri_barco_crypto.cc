@@ -13,7 +13,6 @@ namespace hal {
 
 namespace pd {
 
-char brq_region[] = CAPRI_HBM_REG_BRQ;
 char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
 
 uint64_t    key_desc_array_base = 0;

@@ -144,7 +144,7 @@ def TestCaseSetup(tc):
     elif tc.module.args.cipher_suite == "CBC":
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CBC"])
     else:
-        brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
+        brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_GCM"])
 
     tcpcb = copy.deepcopy(tcb)
     tcpcb.GetObjValPd()
@@ -288,7 +288,7 @@ def TestCaseVerify(tc):
     elif tc.module.args.cipher_suite == "CBC":
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CBC"]
     else:
-        brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
+        brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_GCM"]
     brq_cur.GetMeta()
     if brq_cur.pi > 0:
         brq_cur.GetRingEntries([brq_cur.pi - num_pkts, brq_cur.pi - 1, brq_cur.pi])
@@ -321,13 +321,13 @@ def TestCaseVerify(tc):
 
     # 7. Verify descriptor on the BRQ
     if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-num_pkts].ilist_addr - 0x40)):
-        print("RNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
+        print("RNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi-num_pkts].ilist_addr))
         return False
 
 
     # 8. Verify descriptor on the BRQ
     if (tnmdr.ringentries[tnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-num_pkts].olist_addr - 0x40)):
-        print("TNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[0].olist_addr))
+        print("TNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi-num_pkts].olist_addr))
         return False
 
 

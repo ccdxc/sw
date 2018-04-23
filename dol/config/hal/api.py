@@ -719,7 +719,7 @@ def GetBarcoRingEntries(objlist):
 def GetBarcoRingMeta(objlist):
     if not IsConfigAllowed(objlist): return
     stub = barco_rings_pb2.BarcoRingsStub(HalChannel)
-    __config(objlist, barco_rings_pb2.BarcoGetRingMetaRequestMsg,
+    __get(objlist, barco_rings_pb2.BarcoGetRingMetaRequestMsg,
              stub.BarcoGetRingMeta)
     return
 

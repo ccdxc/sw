@@ -215,7 +215,7 @@ tls_dec_aesgcm_equeue_barco:
                     K(s6_t0_to_s7_t0_producer_idx_sbit0_ebit7...s6_t0_to_s7_t0_producer_idx_sbit8_ebit31)
     phvwr           p.barco_dbell_pi, r1.wx
     CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd_barco_pi_write_dma_cmd,
-                                CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX,
+                                CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX,
                                 barco_dbell_pi, barco_dbell_pi)
 
     add             r7, r0, DMA_GROUP_BARCO_SEND

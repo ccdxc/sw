@@ -54,7 +54,7 @@ def TestCaseSetup(tc):
     tnmpr.GetMeta()
     tnmpr.GetRingEntries([tnmpr.pi])
 
-    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
+    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_GCM"])
     brq.GetMeta()
     brq.GetRingEntries([brq.pi])
 
@@ -112,8 +112,8 @@ def TestCaseVerify(tc):
         return False
 
     # 6. Verify pi/ci got update got updated for BRQ
-    brq = tc.pvtdata.db["BRQ_ENCRYPT"]
-    brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
+    brq = tc.pvtdata.db["BRQ_ENCRYPT_GCM"]
+    brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_GCM"]
     print("pre-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
     brq_cur.GetMeta()
     brq_cur.GetRingEntries([brq.pi, brq_cur.pi])

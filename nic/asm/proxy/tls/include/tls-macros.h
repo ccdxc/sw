@@ -12,6 +12,7 @@
 
 #define TLS_PROXY_PAD_BYTES_HBM_TABLE_BASE tls_pad_table_base
 #define TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE tls_barco_gcm0_pi_table_base
+#define TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE tls_barco_gcm1_pi_table_base
 
 #define TLS_WORD_SWAP(_num32) \
       (((_num32 & 0xff) << 24) | ((_num32 & 0xff00) << 8) | ((_num32 >> 8) & 0xff00) | (_num32 >> 24))

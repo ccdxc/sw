@@ -4,17 +4,17 @@ meta:
 
 entries :
     - entry:
-        name: "BRQ_ENCRYPT"
+        name: "BRQ_ENCRYPT_GCM"
         defn: "BRQ_GCM"
         count: 1024
         entry_defn: "BRQ_GCM_ENTRY"
-        type: 9
+        type: 1
     - entry:
-        name: "BRQ_DECRYPT"
+        name: "BRQ_DECRYPT_GCM"
         defn: "BRQ_GCM"
         count: 1024
         entry_defn: "BRQ_GCM_ENTRY"
-        type: 9
+        type: 2
     - entry:
         name: "BRQ_ENCRYPT_CCM"
         defn: "BRQ_CCM"

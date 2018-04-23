@@ -59,7 +59,7 @@ def TestCaseSetup(tc):
     elif tc.module.args.cipher_suite == "CBC":
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CBC"])
     else:
-        brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
+        brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_DECRYPT_GCM"])
     brq.GetMeta()
 
     tlscbid = "TlsCb%04d" % id
@@ -109,7 +109,7 @@ def TestCaseVerify(tc):
     elif tc.module.args.cipher_suite == "CBC":
         brq = tc.pvtdata.db["BRQ_ENCRYPT_CBC"]
     else:
-        brq = tc.pvtdata.db["BRQ_ENCRYPT"]
+        brq = tc.pvtdata.db["BRQ_DECRYPT_GCM"]
 
     #  Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
@@ -132,7 +132,7 @@ def TestCaseVerify(tc):
     elif tc.module.args.cipher_suite == "CBC":
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CBC"]
     else:
-        brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
+        brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_DECRYPT_GCM"]
     brq_cur.GetMeta()
     if brq_cur.pi > 0:
         brq_cur.GetRingEntries([brq_cur.pi - 1, brq_cur.pi])

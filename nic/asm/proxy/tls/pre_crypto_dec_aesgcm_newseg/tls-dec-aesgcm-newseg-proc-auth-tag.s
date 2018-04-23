@@ -95,7 +95,7 @@ tls_dec_aesgcm_first_segment:
 
 
     /* TODO: Replace the Barco PIDX read with the actual semaphore read */
-    addi            r1, r0, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX
+    addi            r1, r0, CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_aesgcm_read_barco_pidx, r1, TABLE_SIZE_32_BITS);
     nop.e
     nop

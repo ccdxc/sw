@@ -61,7 +61,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_GCM0
         BARCO_RING_GCM0_STR,
-        CAPRI_HBM_REG_BRQ,
+        CAPRI_HBM_REG_BARCO_RING_GCM0,
         0,
         BARCO_CRYPTO_DESC_ALIGN_BYTES,
         1024,
@@ -1700,11 +1700,24 @@ hal_ret_t capri_barco_ring_meta_get(types::BarcoRings ring_type, uint32_t *pi, u
 {
     cap_top_csr_t &             cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpns_csr_t &            mpns = cap0.mp.mpns;
+    cap_hens_csr_t &            hens = cap0.md.hens;
 
     /*
      * Read the PI/CI registers for the corresponding barco ring.
      */
     switch(ring_type) {
+    case types::BarcoRings::BARCO_RING_GCM0:
+        hens.dhs_crypto_ctl.gcm0_producer_idx.read();
+        *pi = hens.dhs_crypto_ctl.gcm0_producer_idx.fld().convert_to<uint32_t>();
+        hens.dhs_crypto_ctl.gcm0_consumer_idx.read();
+        *ci = hens.dhs_crypto_ctl.gcm0_consumer_idx.fld().convert_to<uint32_t>();
+        break;
+    case types::BarcoRings::BARCO_RING_GCM1:
+        hens.dhs_crypto_ctl.gcm1_producer_idx.read();
+        *pi = hens.dhs_crypto_ctl.gcm1_producer_idx.fld().convert_to<uint32_t>();
+        hens.dhs_crypto_ctl.gcm1_consumer_idx.read();
+        *ci = hens.dhs_crypto_ctl.gcm1_consumer_idx.fld().convert_to<uint32_t>();
+        break;
     case types::BarcoRings::BARCO_RING_MPP0:
       mpns.dhs_crypto_ctl.mpp0_producer_idx.read();
       *pi = mpns.dhs_crypto_ctl.mpp0_producer_idx.fld().convert_to<uint32_t>();

@@ -82,7 +82,7 @@ def TestCaseSetup(tc):
     tnmpr.GetMeta()
     tnmpr.GetRingEntries([tnmpr.pi])
 
-    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
+    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_GCM"])
     brq.GetMeta()
     brq.GetRingEntries([brq.pi])
 

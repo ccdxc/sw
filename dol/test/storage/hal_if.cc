@@ -323,7 +323,7 @@ int get_xts_ring_base_address(bool is_decr, uint64_t *addr, bool is_gcm) {
     else req->set_handle("brq-ring-gcm1");
   else
     if(!is_gcm) req->set_handle("brq-ring-xts0");
-    else req->set_handle("brq");
+    else req->set_handle("brq-ring-gcm0");
 
   auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
   if (!status.ok()) {
