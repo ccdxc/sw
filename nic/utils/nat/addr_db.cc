@@ -1,13 +1,11 @@
-/*
- * db.cc
- */
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "sdk/slab.hpp"
 #include "sdk/ht.hpp"
-#include "core.hpp"
+#include "nic/utils/nat/db.hpp"
 
 namespace hal {
-namespace plugins {
+namespace utils {
 namespace nat {
 
 #define NAT_MAX_ADDR 1024  //TODO - right value?

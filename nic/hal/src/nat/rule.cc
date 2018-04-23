@@ -111,7 +111,7 @@ hal_ret_t
 nat_cfg_rule_spec_extract (nat::NatRuleSpec& spec, nat_cfg_rule_t *rule)
 {
     hal_ret_t ret;
-    
+
     if ((ret = nat_cfg_rule_key_spec_extract(spec, &rule->key)) != HAL_RET_OK)
         return ret;
 

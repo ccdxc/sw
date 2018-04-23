@@ -56,7 +56,7 @@ static hal_ret_t
 nat_cfg_pol_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_t *pol)
 {
     hal_ret_t ret;
-    
+
     if ((ret = nat_cfg_pol_key_spec_extract(spec, &pol->key)) != HAL_RET_OK)
         return ret;
 
@@ -84,7 +84,7 @@ nat_cfg_pol_create_cfg_handle (nat::NatPolicySpec& spec,
 
     if ((pol = nat_cfg_pol_alloc()) == NULL)
         return HAL_RET_OOM;
-        
+
     if ((ret = nat_cfg_pol_spec_extract(spec, pol)) != HAL_RET_OK)
         goto end;
 
