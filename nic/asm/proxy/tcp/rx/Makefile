@@ -19,7 +19,8 @@ SRC_DIR = .
 CAPSIM_BIN = ../../../../asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
-    $(SRC_DIR)/tcp-rx-s4-bubble.s \
+    $(SRC_DIR)/tcp-ack.s \
+    $(SRC_DIR)/tcp-ack-slow.s \
     $(SRC_DIR)/tcp-rdesc-alloc.s \
     $(SRC_DIR)/tcp-read-idx.s \
     $(SRC_DIR)/tcp-read-rnmdr-alloc-idx.s \

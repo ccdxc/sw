@@ -31,7 +31,8 @@ tcp_rx_write_serq_stage_start3:
     seq         c1, k.common_phv_write_arq, 1
     seq         c2, k.common_phv_write_serq, 1
     seq         c3, k.common_phv_l7_proxy_type_redirect, 1
-    setcf       c7, [!c1 & !c2 & !c3]
+    seq         c4, k.common_phv_ooo_rcv, 1
+    setcf       c7, [!c1 & !c2 & !c3 & !c4]
     seq         c4, k.common_phv_skip_pkt_dma, 1
     setcf       c7, [c7 | c4]
     seq         c3, k.common_phv_fatal_error, 1
@@ -59,29 +60,21 @@ pkts_rcvd_stats_update_start:
     seq         c1, k.common_phv_skip_pkt_dma, 1
     bcf         [c1], tcp_write_serq3_done
 
-    CAPRI_STATS_INC(pkts_rcvd, 8, 1, d.pkts_rcvd)
-pkts_rcvd_stats_update:
-    CAPRI_STATS_INC_UPDATE(1, d.pkts_rcvd, p.to_s7_pkts_rcvd)
+    CAPRI_STATS_INC2(pkts_rcvd, 1, d.pkts_rcvd, p.to_s7_pkts_rcvd)
 pkts_rcvd_stats_update_end:
 
     seq         c1, k.common_phv_ooo_in_rx_q, 1
     bcf         [c1], tcp_write_serq_stats_end
 pages_alloced_stats_update_start:
-    CAPRI_STATS_INC(pages_alloced, 8, 1, d.pages_alloced)
-pages_alloced_stats_update:
-    CAPRI_STATS_INC_UPDATE(1, d.pages_alloced, p.to_s7_pages_alloced)
+    CAPRI_STATS_INC2(pages_alloced, 1, d.pages_alloced, p.to_s7_pages_alloced)
 pages_alloced_stats_update_end:
 
 desc_alloced_stats_update_start:
-    CAPRI_STATS_INC(desc_alloced, 8, 1, d.desc_alloced)
-desc_alloced_stats_update:
-    CAPRI_STATS_INC_UPDATE(1, d.desc_alloced, p.to_s7_desc_alloced)
+    CAPRI_STATS_INC2(desc_alloced, 1, d.desc_alloced, p.to_s7_desc_alloced)
 desc_alloced_stats_update_end:
 
 debug_num_pkt_to_mem_stats_update_start:
-    CAPRI_STATS_INC(debug_num_pkt_to_mem, 8, 1, d.debug_num_pkt_to_mem)
-debug_num_pkt_to_mem_stats_update:
-    CAPRI_STATS_INC_UPDATE(1, d.debug_num_pkt_to_mem, p.to_s7_debug_num_pkt_to_mem)
+    CAPRI_STATS_INC2(debug_num_pkt_to_mem, 1, d.debug_num_pkt_to_mem, p.to_s7_debug_num_pkt_to_mem)
 debug_num_pkt_to_mem_stats_update_end:
 tcp_write_serq_stats_end:
 

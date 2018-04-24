@@ -42,6 +42,11 @@ retx_xmit_cursor : 1
 retx_snd_una : 1
 debug_dol_tblsetaddr : 0
 serq_pi      : 0
+# pred_flags
+#   header len = 8 (32 bytes, assuming timestamp)
+#   flags = ACK
+#   window size = 1000
+pred_flags  : 0x801003e8
 
 bytes_rcvd  : 0
 pkts_rcvd   : 0

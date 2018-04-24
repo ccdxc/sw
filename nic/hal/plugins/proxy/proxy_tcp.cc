@@ -214,6 +214,11 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
     spec.set_snd_wnd(8000);
     spec.set_snd_cwnd(8000);
     spec.set_rcv_mss(9216);
+    // pred_flags
+    //   header len = 8 (32 bytes with timestamp)
+    //   flags = ACK
+    //   window size = 8000
+    spec.set_pred_flags(0x80101f40);
     return HAL_RET_OK;
 }
 
@@ -356,6 +361,7 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_dest_port(get_rsp.mutable_spec()->dest_port());
     spec->set_header_len(get_rsp.mutable_spec()->header_len());
     spec->set_l7_proxy_type(get_rsp.mutable_spec()->l7_proxy_type());
+    spec->set_pred_flags(get_rsp.mutable_spec()->pred_flags());
 
     memcpy(data,
            get_rsp.mutable_spec()->header_template().c_str(),
@@ -424,6 +430,7 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
     spec->set_dest_port(get_rsp.mutable_spec()->dest_port());
     spec->set_header_len(get_rsp.mutable_spec()->header_len());
     spec->set_l7_proxy_type(get_rsp.mutable_spec()->l7_proxy_type());
+    spec->set_pred_flags(get_rsp.mutable_spec()->pred_flags());
 
     memcpy(data,
            get_rsp.mutable_spec()->header_template().c_str(),

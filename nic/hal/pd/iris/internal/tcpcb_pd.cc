@@ -116,7 +116,7 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
                     tcpcb_pd->tcpcb->cb_id);
         // skip intrinsic 8 bytes
         data.u.read_tx2rx_d.tls_stage0_ring0_addr = htonl(tls_stage0_addr + 8);
-        HAL_TRACE_DEBUG("xxx: TCPCB tls base = 0x{0:x}, 0x{1:x}",
+        HAL_TRACE_DEBUG("TCPCB tls base = 0x{0:x}, 0x{1:x}",
                     tls_stage0_addr, data.u.read_tx2rx_d.tls_stage0_ring0_addr);
     }
     HAL_TRACE_DEBUG("Programming tx2rx at hw-id: 0x{0:x}", hwid); 
@@ -146,6 +146,7 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_rx_d.rcv_mss = htons((uint16_t)tcpcb_pd->tcpcb->rcv_mss);
         data.u.tcp_rx_d.serq_pidx = htons((uint16_t)tcpcb_pd->tcpcb->serq_pi);
         data.u.tcp_rx_d.state = (uint8_t)tcpcb_pd->tcpcb->state;
+        data.u.tcp_rx_d.pred_flags = htonl(tcpcb_pd->tcpcb->pred_flags);
         switch (data.u.tcp_rx_d.state) {
             case TCP_SYN_SENT:
             case TCP_SYN_RECV:
@@ -165,6 +166,7 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         HAL_TRACE_DEBUG("TCPCB rcv_mss: 0x{0:x}", data.u.tcp_rx_d.rcv_mss);
         HAL_TRACE_DEBUG("TCPCB serq_pi: 0x{0:x}", data.u.tcp_rx_d.serq_pidx);
         HAL_TRACE_DEBUG("TCPCB state: 0x{0:x}", data.u.tcp_rx_d.state);
+        HAL_TRACE_DEBUG("TCPCB pred_flags: 0x{0:x}", data.u.tcp_rx_d.pred_flags);
     }
     int size = sizeof(s2_t0_tcp_rx_d);
     HAL_TRACE_DEBUG("Programming tcp_rx at hw-id: 0x{0:x}", hwid);
@@ -181,8 +183,8 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 hal_ret_t 
 p4pd_add_or_del_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
-    s3_t0_tcp_rx_d    data = {0};
-    hal_ret_t          ret = HAL_RET_OK;
+    s4_t0_tcp_rx_d      data = {0};
+    hal_ret_t           ret = HAL_RET_OK;
 
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
@@ -379,6 +381,7 @@ p4pd_get_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->serq_pi = ntohs(data.u.tcp_rx_d.serq_pidx);
     tcpcb_pd->tcpcb->ts_recent = ntohl(data.u.tcp_rx_d.ts_recent);
     tcpcb_pd->tcpcb->state = data.u.tcp_rx_d.state;
+    tcpcb_pd->tcpcb->pred_flags = ntohl(data.u.tcp_rx_d.pred_flags);
 
     HAL_TRACE_DEBUG("Received rcv_nxt: 0x{0:x}", tcpcb_pd->tcpcb->rcv_nxt);
     HAL_TRACE_DEBUG("Received snd_una: 0x{0:x}", tcpcb_pd->tcpcb->snd_una);
@@ -386,6 +389,7 @@ p4pd_get_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd)
     HAL_TRACE_DEBUG("Received ts_recent: 0x{0:x}", tcpcb_pd->tcpcb->ts_recent);
     HAL_TRACE_DEBUG("Received debug_dol: 0x{0:x}", tcpcb_pd->tcpcb->debug_dol);
     HAL_TRACE_DEBUG("Received state: 0x{0:x}", tcpcb_pd->tcpcb->state);
+    HAL_TRACE_DEBUG("Received pred_flags: 0x{0:x}", tcpcb_pd->tcpcb->pred_flags);
 
     return HAL_RET_OK;
 }

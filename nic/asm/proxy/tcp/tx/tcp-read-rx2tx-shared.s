@@ -32,6 +32,8 @@ tcp_tx_read_rx2tx_shared_process:
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
 
+    add         r7, r7, r0 // debug only
+
 	.brbegin
         // priorities are 0 (highest) to 7 (lowest)
         // The rightmost value specifies the priority of r7[0]

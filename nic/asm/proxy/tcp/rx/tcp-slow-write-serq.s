@@ -50,7 +50,7 @@ dma_slow_cmd_data:
     b.c1        dma_slow_cmd_data_skip
 
     /* Set the DMA_WRITE CMD for data */
-    add         r1, k.to_s6_page, k.s6_s2s_ooo_offset
+    add         r1, k.to_s6_page, k.to_s6_ooo_offset
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
 
     /*

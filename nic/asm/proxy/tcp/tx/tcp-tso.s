@@ -116,27 +116,19 @@ dma_cmd_data:
                         1 << 4 | CAPRI_DMA_COMMAND_MEM_TO_PKT
         
 bytes_sent_stats_update_start:
-    CAPRI_STATS_INC(bytes_sent, 16, r6, d.bytes_sent)
-bytes_sent_stats_update:
-    CAPRI_STATS_INC_UPDATE(r1, d.bytes_sent, p.to_s7_bytes_sent)
+    CAPRI_STATS_INC2(bytes_sent, r6, d.bytes_sent, p.to_s7_bytes_sent)
 bytes_sent_stats_update_end:
 
 pkts_sent_stats_update_start:
-    CAPRI_STATS_INC(pkts_sent, 16, 1, d.pkts_sent)
-pkts_sent_stats_update:
-    CAPRI_STATS_INC_UPDATE(r1, d.pkts_sent, p.to_s7_pkts_sent)
+    CAPRI_STATS_INC2(pkts_sent, 1, d.pkts_sent, p.to_s7_pkts_sent)
 pkts_sent_stats_update_end:
 
 debug_num_phv_to_pkt_stats_update_start:
-    CAPRI_STATS_INC(debug_num_phv_to_pkt, 16, 2, d.debug_num_phv_to_pkt)
-debug_num_phv_to_pkt_stats_update:
-    CAPRI_STATS_INC_UPDATE(r1, d.debug_num_phv_to_pkt, p.to_s7_debug_num_phv_to_pkt)
+    CAPRI_STATS_INC2(debug_num_phv_to_pkt, 2, d.debug_num_phv_to_pkt, p.to_s7_debug_num_phv_to_pkt)
 debug_num_phv_to_pkt_stats_update_end:
 
 debug_num_mem_to_pkt_stats_update_start:
-    CAPRI_STATS_INC(debug_num_mem_to_pkt, 16, 2, d.debug_num_mem_to_pkt)
-debug_num_mem_to_pkt_stats_update:
-    CAPRI_STATS_INC_UPDATE(r1, d.debug_num_mem_to_pkt, p.to_s7_debug_num_mem_to_pkt)
+    CAPRI_STATS_INC2(debug_num_mem_to_pkt, 2, d.debug_num_mem_to_pkt, p.to_s7_debug_num_mem_to_pkt)
 debug_num_mem_to_pkt_stats_update_end:
 
 dma_cmd_write_tx2rx_shared:

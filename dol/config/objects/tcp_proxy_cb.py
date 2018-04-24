@@ -87,6 +87,7 @@ class TcpCbObject(base.ConfigObjectBase):
            req_spec.header_len                = self.header_len
            req_spec.l7_proxy_type             = self.l7_proxy_type
            req_spec.serq_pi                   = self.serq_pi
+           req_spec.pred_flags                = self.pred_flags
            if hasattr(self, 'header_template'):
                req_spec.header_template           = self.header_template
         return
@@ -121,6 +122,7 @@ class TcpCbObject(base.ConfigObjectBase):
             self.retx_xmit_cursor = resp_spec.spec.retx_xmit_cursor
             self.retx_snd_una = resp_spec.spec.retx_snd_una
             self.serq_pi = resp_spec.spec.serq_pi
+            self.pred_flags = resp_spec.spec.pred_flags
 
             self.bytes_rcvd = resp_spec.stats.bytes_rcvd
             self.pkts_rcvd = resp_spec.stats.pkts_rcvd

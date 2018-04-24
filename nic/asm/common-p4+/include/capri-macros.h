@@ -103,6 +103,17 @@
         phvwr           _p_field, _d_field; \
         tblwr           _d_field, _inc_val; \
 
+/*
+ * uses r2 and c1
+ */
+#define CAPRI_STATS_INC2(_stats_name, _inc_val, _d_field, _p_field) \
+        add             r2, _d_field, _inc_val; \
+        slt             c1, r2, 1 << sizeof(_d_field) - 1; \
+        b.c1            _stats_name##_stats_update_end; \
+        tbladd.c1       _d_field, _inc_val; \
+        phvwr.!c1       _p_field, _d_field; \
+        tblwr.!c1       _d_field, _inc_val;
+
 // shift by 27, to get upper 6 bits of 33 bit HBM address
 // Note atomic stats region can only reside within 33 bits
 // of HBM space (+ 2G)

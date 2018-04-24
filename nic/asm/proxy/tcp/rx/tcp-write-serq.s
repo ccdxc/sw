@@ -44,7 +44,7 @@ dma_cmd_data:
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
 
     /* Set the DMA_WRITE CMD for data */
-    add         r1, k.to_s6_page, k.s6_s2s_ooo_offset
+    add         r1, k.to_s6_page, k.to_s6_ooo_offset
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
 
     /*

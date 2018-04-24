@@ -251,6 +251,11 @@ def init_tcb1(tcb, session):
         print("header_template = " + str(tcb.header_template))
     # set tcb state to ESTABLISHED(1)
     tcb.state = 1
+    # pred_flags
+    #   header len = 5 (20 bytes, assuming no timestamp)
+    #   flags = ACK
+    #   window size = 1000
+    tcb.pred_flags = 0x501003e8
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA
@@ -348,6 +353,11 @@ def init_tcb_inorder(tc, tcb):
     tcb.state = 1
     tcb.serq_pi = 0
     tcb.serq_ci = 0
+    # pred_flags
+    #   header len = 5 (20 bytes, assuming no timestamp)
+    #   flags = ACK
+    #   window size = 1000
+    tcb.pred_flags = 0x501003e8
 
 def init_tcb2(tcb, session):
     tcb.rcv_nxt = 0x2ABABABA
@@ -395,6 +405,11 @@ def init_tcb2(tcb, session):
         print("header_template = " + str(tcb.header_template))
     # set tcb state to ESTABLISHED(1)
     tcb.state = 1
+    # pred_flags
+    #   header len = 5 (20 bytes, assuming no timestamp)
+    #   flags = ACK
+    #   window size = 1000
+    tcb.pred_flags = 0x501003e8
 
 def init_tcb_inorder2(tc, tcb):
     tcb.rcv_nxt = 0x2ABABABA
@@ -466,3 +481,8 @@ def init_tcb_inorder2(tc, tcb):
     tcb.state = 1
     tcb.serq_pi = 0
     tcb.serq_ci = 0
+    # pred_flags
+    #   header len = 5 (20 bytes, assuming no timestamp)
+    #   flags = ACK
+    #   window size = 1000
+    tcb.pred_flags = 0x501003e8
