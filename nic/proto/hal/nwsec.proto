@@ -534,6 +534,10 @@ message App {
     uint32    uuid            = 1;
   }
 
+  message ESPInfo {
+    uint32 spi = 1;
+  }
+
   enum TraceLevel {
     TRACE_LEVEL_NONE      = 0;
     TRACE_LEVEL_BRIEF     = 1;
@@ -552,8 +556,9 @@ message App {
     ICMPv6AppInfo icmpv6_info       = 4;
     RPCAppInfo    rpc_info          = 5;
     MSRPCAppInfo  msrpc_cinfo       = 6;
+    ESPInfo       esp_info          = 7;
   }
-  PredefinedApps    alg             = 7;
+  PredefinedApps    alg             = 8;
 
   message FTPOptions {
     bool allow_mismatch_ip_address  = 1; // pass FTP packets with mismatched IP header address and payload
@@ -580,14 +585,14 @@ message App {
     uint32 t4_timer_value                = 6;
   }
   oneof AppOptions {
-    FTPOptions    ftp_option_info        = 8;
-    DNSOptions    dns_option_info        = 9;
-    MSRPCOptions  msrp_coption_info      = 10;
-    SunRPCOptions sun_rpc_pption_info    = 11;
-    SIPOptions    sip_options            = 12;
+    FTPOptions    ftp_option_info        = 9;
+    DNSOptions    dns_option_info        = 10;
+    MSRPCOptions  msrp_coption_info      = 11;
+    SunRPCOptions sun_rpc_pption_info    = 12;
+    SIPOptions    sip_options            = 13;
   }
-  uint32            idle_timeout         = 13;
-  TraceOptions      trace_opts           = 14;
+  uint32            idle_timeout         = 14;
+  TraceOptions      trace_opts           = 15;
 }
 
 // ApplicationSpec is either a pre-defined pensando application or user-defined
