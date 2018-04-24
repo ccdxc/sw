@@ -1047,7 +1047,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
     HAL_TRACE_DEBUG("Check if this QP to be added to oif_list for LIF:{} PD:{} QP:{}, If_hdl: {}",
                     lif, spec.pd(), spec.qp_num(), spec.if_handle());
-    if (((uint8_t)spec.svc() == RDMA_SERV_TYPE_UD) && (spec.qp_num() <= 6)) {
+    if (((uint8_t)spec.svc() == RDMA_SERV_TYPE_UD) && spec.if_handle() && (spec.qp_num() <= 6)) {
         hal_if = find_if_by_handle(spec.if_handle());
         HAL_ASSERT(hal_if != NULL);
         l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
