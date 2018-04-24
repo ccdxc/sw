@@ -62,7 +62,7 @@ func (m *AutoMsgCertificateWatchHelper) Clone(into interface{}) (interface{}, er
 // Default sets up the defaults for the object
 func (m *AutoMsgCertificateWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret

@@ -497,7 +497,7 @@ func (m *AutoMsgAlertDestinationWatchHelper) Clone(into interface{}) (interface{
 // Default sets up the defaults for the object
 func (m *AutoMsgAlertDestinationWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret
@@ -522,7 +522,7 @@ func (m *AutoMsgAlertPolicyWatchHelper) Clone(into interface{}) (interface{}, er
 // Default sets up the defaults for the object
 func (m *AutoMsgAlertPolicyWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret
@@ -649,10 +649,10 @@ func (m *SNMPTrapServer) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *SNMPTrapServer) Defaults(ver string) bool {
 	var ret bool
-	for m.AuthConfig != nil {
+	if m.AuthConfig != nil {
 		ret = ret || m.AuthConfig.Defaults(ver)
 	}
-	for m.PrivacyConfig != nil {
+	if m.PrivacyConfig != nil {
 		ret = ret || m.PrivacyConfig.Defaults(ver)
 	}
 	ret = true

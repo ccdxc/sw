@@ -83,7 +83,7 @@ func (m *AutoMsgMirrorSessionWatchHelper) Clone(into interface{}) (interface{}, 
 // Default sets up the defaults for the object
 func (m *AutoMsgMirrorSessionWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret

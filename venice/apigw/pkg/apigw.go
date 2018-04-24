@@ -58,6 +58,15 @@ func initAPIGw() {
 	singletonAPIGw.hooks = make(map[string]apigw.ServiceHookCb)
 }
 
+func isSkipped(config apigw.Config, svc string) bool {
+	for _, s := range config.SkipBackends {
+		if strings.HasPrefix(svc, s+".") {
+			return true
+		}
+	}
+	return false
+}
+
 // Register a service with the APi Gateway service. Duplicate registrations
 // are not allowed and will cause a panic. Each service is expected to serve
 // non overlapping API path prefixes.
@@ -194,8 +203,35 @@ func (a *apiGw) Run(config apigw.Config) {
 	// Let all the services complete registration. All services served by this
 	// gateway should have registered themselves via their init().
 	var wg sync.WaitGroup
+
+	// Start Listening while we connect to the backends
+	if config.DebugMode {
+		m.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
+		m.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
+		m.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
+		m.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
+		m.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
+		m.Handle("/debug/pprof/block", pprof.Handler("block"))
+		m.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+		m.Handle("/debug/pprof/mutex", pprof.Handler("mutex"))
+		m.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+		m.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+		// Enable tracedumping with SIGQUIT or ^\
+		// Will dump stacktrace for all go routines
+		log.SetTraceDebug()
+	}
+	wg.Add(1)
+	go func() {
+		wg.Done()
+		a.doneCh <- http.Serve(ln, a.extractHdrInfo(a.allowCORS(a.tracerMiddleware(m))))
+	}()
+
 	for name, svc := range a.svcmap {
 		config.Logger.Log("Svc", name, "msg", "RegisterComplete")
+		if isSkipped(config, name) {
+			config.Logger.Log("Svc", name, "msg", "RegisterComplete Skipped")
+			continue
+		}
 		err := svc.CompleteRegistration(ctx, config.Logger, s, m, rslvr, &wg)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to complete registration of %v (%v)", name, err))
@@ -205,6 +241,10 @@ func (a *apiGw) Run(config apigw.Config) {
 	// Call any callbacks that may be registered for Hooks
 	for name, cb := range a.hooks {
 		config.Logger.Log("Svc", name, "msg", "RegisterHooksCb")
+		if isSkipped(config, name) {
+			config.Logger.Log("Svc", name, "msg", "RegisterHooksCb Skipped")
+			continue
+		}
 		svc, ok := a.svcmap[name]
 		if !ok {
 			a.logger.Fatalf("Invalid service name %v registered for hooks", name)
@@ -215,28 +255,14 @@ func (a *apiGw) Run(config apigw.Config) {
 		}
 	}
 	wg.Wait()
-	// Now RUN!
-	if config.DebugMode {
-		m.Handle("/_debug/pprof/", http.HandlerFunc(pprof.Index))
-		m.Handle("/_debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
-		m.Handle("/_debug/pprof/profile", http.HandlerFunc(pprof.Profile))
-		m.Handle("/_debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
-		m.Handle("/_debug/pprof/trace", http.HandlerFunc(pprof.Trace))
-		// Enable tracedumping with SIGQUIT or ^\
-		// Will dump stacktrace for all go routines
-		log.SetTraceDebug()
-	}
 
-	go func() {
-		a.runstate.cond.L.Lock()
-		a.logger.InfoLog("msg", "Http Listen Start", "address", config.HTTPAddr)
-		a.runstate.running = true
-		a.runstate.cond.Broadcast()
-		a.runstate.cond.L.Unlock()
-
-		a.doneCh <- http.Serve(ln, a.extractHdrInfo(a.allowCORS(a.tracerMiddleware(m))))
-	}()
-
+	// We are ready to set runstate we have started listening on HTTP port and
+	//  all backends are connected
+	a.runstate.cond.L.Lock()
+	a.logger.InfoLog("msg", "Http Listen Start", "address", config.HTTPAddr)
+	a.runstate.running = true
+	a.runstate.cond.Broadcast()
+	a.runstate.cond.L.Unlock()
 	a.logger.Infof("exit", <-a.doneCh)
 }
 

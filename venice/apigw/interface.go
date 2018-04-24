@@ -56,6 +56,8 @@ type Config struct {
 	HTTPAddr string
 	// GrpcServerPort on which to start listening to the external GRPC requests.
 	BackendOverride map[string]string
+	// SkipBackends is a list of backends to skip initializing
+	SkipBackends []string
 	// DebugMode enables verbose logging and stack trace dump support.
 	DebugMode bool
 	// Logger to be used for logging.

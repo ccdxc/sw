@@ -67,7 +67,7 @@ func (m *AutoMsgEventPolicyWatchHelper) Clone(into interface{}) (interface{}, er
 // Default sets up the defaults for the object
 func (m *AutoMsgEventPolicyWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret

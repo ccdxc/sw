@@ -51,6 +51,7 @@ func main() {
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:port>")
 		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")
 		override        = flag.String("override", "", "backend override map eg: 'pen-apiserver=localhost:5000,pen-search=localhost:5005'")
+		skip            = flag.String("skip", "", "comma seperated list of services to skip initializing eg: 'search,events'")
 	)
 
 	flag.Parse()
@@ -92,6 +93,9 @@ func main() {
 		if *override != "" {
 			config.BackendOverride = makeOverrideMap(*override)
 			config.Resolvers = []string{}
+		}
+		if *skip != "" {
+			config.SkipBackends = strings.Split(*skip, ",")
 		}
 	}
 	trace.Init("ApiGateway")

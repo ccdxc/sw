@@ -96,7 +96,7 @@ func (m *AutoMsgFlowExportPolicyWatchHelper) Clone(into interface{}) (interface{
 // Default sets up the defaults for the object
 func (m *AutoMsgFlowExportPolicyWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret
@@ -121,7 +121,7 @@ func (m *AutoMsgFwlogPolicyWatchHelper) Clone(into interface{}) (interface{}, er
 // Default sets up the defaults for the object
 func (m *AutoMsgFwlogPolicyWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret

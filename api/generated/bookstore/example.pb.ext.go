@@ -191,7 +191,7 @@ func (m *AutoMsgBookWatchHelper) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AutoMsgBookWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret
@@ -237,7 +237,7 @@ func (m *AutoMsgCustomerWatchHelper) Clone(into interface{}) (interface{}, error
 // Default sets up the defaults for the object
 func (m *AutoMsgCustomerWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret
@@ -262,7 +262,7 @@ func (m *AutoMsgOrderWatchHelper) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AutoMsgOrderWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret
@@ -287,7 +287,7 @@ func (m *AutoMsgPublisherWatchHelper) Clone(into interface{}) (interface{}, erro
 // Default sets up the defaults for the object
 func (m *AutoMsgPublisherWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret

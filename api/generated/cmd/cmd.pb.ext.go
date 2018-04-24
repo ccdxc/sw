@@ -117,7 +117,7 @@ func (m *AutoMsgNodeWatchHelper) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AutoMsgNodeWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret
@@ -142,7 +142,7 @@ func (m *AutoMsgSmartNICWatchHelper) Clone(into interface{}) (interface{}, error
 // Default sets up the defaults for the object
 func (m *AutoMsgSmartNICWatchHelper) Defaults(ver string) bool {
 	var ret bool
-	for m.Object != nil {
+	if m.Object != nil {
 		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret

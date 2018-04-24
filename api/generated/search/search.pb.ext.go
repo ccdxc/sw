@@ -222,7 +222,7 @@ func (m *SearchRequest) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *SearchRequest) Defaults(ver string) bool {
 	var ret bool
-	for m.Query != nil {
+	if m.Query != nil {
 		ret = ret || m.Query.Defaults(ver)
 	}
 	return ret

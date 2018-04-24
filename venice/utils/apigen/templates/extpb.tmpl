@@ -73,7 +73,7 @@ func (m *{{.Name}}) Defaults(ver string) bool { {{with index $defaults.Map (dere
 		}{{else}}
 		ret = ret || m.{{$fldk}}[k].Defaults(ver) {{end}}
 	}{{else}}{{if $defval.Pointer}}
-	for m.{{$fldk}} != nil {
+	if m.{{$fldk}} != nil {
 		ret = ret || m.{{$fldk}}.Defaults(ver)
 	}{{else}}
 	ret = ret || m.{{$fldk}}.Defaults(ver){{end}}{{end}}{{end}}{{end}}{{if eq (len .Versions) 0}}{{else}}

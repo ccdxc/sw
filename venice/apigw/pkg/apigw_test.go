@@ -356,3 +356,24 @@ func TestHandleRequest(t *testing.T) {
 		t.Errorf("expecting 1 pre call hooks got %d/%d", len(tc), mock.postCallCnt)
 	}
 }
+
+func TestIsSkipped(t *testing.T) {
+	config := apigw.Config{
+		SkipBackends: []string{"valid", "valid2"},
+	}
+	cases := []struct {
+		svc string
+		ret bool
+	}{
+		{svc: "valid.ServiceV1", ret: true},
+		{svc: "valid1.ServiceV1", ret: false},
+		{svc: "vali.dServiceV1", ret: false},
+		{svc: "valid2.ServiceV1", ret: true},
+	}
+	for _, c := range cases {
+		ret := isSkipped(config, c.svc)
+		if ret != c.ret {
+			t.Errorf("for svc [%v] expecting [%v] got [%v]", c.svc, c.ret, ret)
+		}
+	}
+}

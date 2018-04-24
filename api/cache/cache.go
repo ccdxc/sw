@@ -584,6 +584,11 @@ func (c *cache) List(ctx context.Context, prefix string, into runtime.Object) er
 }
 
 func (c *cache) listBackend(ctx context.Context, prefix string, into runtime.Object) error {
+	defer c.RUnlock()
+	c.RLock()
+	if !c.active {
+		return errorCacheInactive
+	}
 	start := time.Now()
 	c.logger.DebugLog("oper", "listBackend", "msg", "called")
 	k := c.pool.GetFromPool().(kvstore.Interface)
