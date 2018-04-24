@@ -369,7 +369,8 @@
 		SoftwarePhvInject
 		SoftwarePhvInjectMsg
 		Key
-		IpsecSA
+		IpsecSAEncrypt
+		IpsecSADecrypt
 		IpsecRuleSpec
 		IpsecRuleRequestMsg
 		IpsecRuleStatus
@@ -380,15 +381,24 @@
 		IpsecRuleDeleteResponseMsg
 		IpsecRuleGetRequest
 		IpsecRuleGetRequestMsg
-		IpsecSARequestMsg
-		IpsecSAStatus
-		IpsecSAResponse
-		IpsecSAResponseMsg
-		IpsecSADeleteRequest
-		IpsecSADeleteRequestMsg
-		IpsecSADeleteResponseMsg
-		IpsecSAGetRequest
-		IpsecSAGetRequestMsg
+		IpsecSAEncryptRequestMsg
+		IpsecSAEncryptStatus
+		IpsecSAEncryptResponse
+		IpsecSAEncryptResponseMsg
+		IpsecSAEncryptDeleteRequest
+		IpsecSAEncryptDeleteRequestMsg
+		IpsecSAEncryptDeleteResponseMsg
+		IpsecSAEncryptGetRequest
+		IpsecSAEncryptGetRequestMsg
+		IpsecSADecryptRequestMsg
+		IpsecSADecryptStatus
+		IpsecSADecryptResponse
+		IpsecSADecryptResponseMsg
+		IpsecSADecryptDeleteRequest
+		IpsecSADecryptDeleteRequestMsg
+		IpsecSADecryptDeleteResponseMsg
+		IpsecSADecryptGetRequest
+		IpsecSADecryptGetRequestMsg
 		IpsecCbKeyHandle
 		IpsecCbSpec
 		IpsecCbRequestMsg
@@ -438,7 +448,8 @@
 		Svc
 		NatMappingKeyHandle
 		IpsecRuleKeyHandle
-		IpsecSAKeyHandle
+		IpsecSAEncryptKeyHandle
+		IpsecSADecryptKeyHandle
 		QosClassKeyHandle
 		CoppKeyHandle
 		L2SegmentSpec

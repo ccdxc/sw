@@ -19,10 +19,15 @@ service Ipsec {
   rpc IpsecRuleDelete (IpsecRuleDeleteRequestMsg) returns (IpsecRuleDeleteResponseMsg) {}
   rpc IpsecRuleGet (IpsecRuleGetRequestMsg) returns (IpsecRuleGetRequestMsg) {}
 
-  rpc IpsecSACreate (IpsecSARequestMsg) returns (IpsecSAResponseMsg) {}
-  rpc IpsecSAUpdate (IpsecSARequestMsg) returns (IpsecSAResponseMsg) {}
-  rpc IpsecSADelete (IpsecSADeleteRequestMsg) returns (IpsecSADeleteResponseMsg) {}
-  rpc IpsecSAGet (IpsecSAGetRequestMsg) returns (IpsecSAGetRequestMsg) {}
+  rpc IpsecSAEncryptCreate (IpsecSAEncryptRequestMsg) returns (IpsecSAEncryptResponseMsg) {}
+  rpc IpsecSAEncryptUpdate (IpsecSAEncryptRequestMsg) returns (IpsecSAEncryptResponseMsg) {}
+  rpc IpsecSAEncryptDelete (IpsecSAEncryptDeleteRequestMsg) returns (IpsecSAEncryptDeleteResponseMsg) {}
+  rpc IpsecSAEncryptGet (IpsecSAEncryptGetRequestMsg) returns (IpsecSAEncryptGetRequestMsg) {}
+
+  rpc IpsecSADecryptCreate (IpsecSADecryptRequestMsg) returns (IpsecSADecryptResponseMsg) {}
+  rpc IpsecSADecryptUpdate (IpsecSADecryptRequestMsg) returns (IpsecSADecryptResponseMsg) {}
+  rpc IpsecSADecryptDelete (IpsecSADecryptDeleteRequestMsg) returns (IpsecSADecryptDeleteResponseMsg) {}
+  rpc IpsecSADecryptGet (IpsecSADecryptGetRequestMsg) returns (IpsecSADecryptGetRequestMsg) {}
 
 }
 
@@ -66,28 +71,45 @@ message Key {
 }
 
 // IPSec security association object
-message IpsecSA {
+message IpsecSAEncrypt {
   types.ObjectMeta               meta                      = 1;    // common object meta
-  kh.IpsecSAKeyHandle          key_or_handle               = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
+  kh.IpsecSAEncryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
   IpsecProtocol                  protocol                  = 3;    // ESP or AH
   AuthenticationAlgorithm        authentication_algorithm  = 4;   // authentication algorithm
   Key                            authentication_key        = 5;   // authenticaion key
   EncryptionAlgorithm            encryption_algorithm      = 6;   // encryption algorithm
   Key                            encryption_key            = 7;   // encryption key
-  Key                            rekey_authentication_key  = 8;   // authenticaion key
-  Key                            rekey_encryption_key      = 9;   // encryption key
   // Following are assumed and not configurable right now - iv_size (8 by default), icv_size (16 by default), block_size (16 by default)
-  types.IPAddress                local_gateway_ip          = 10;   // local VPN GW IP, helps derive local MAC as well
-  types.IPAddress                remote_gateway_ip         = 11;   // remote VPN GW IP, derive remote MAC using ARP database
-  uint32                         spi                       = 12;   // security parameters index
-  uint32                         nat_traversal_port        = 13;   // NAT-T port, if non-zero - NAT-T header is added.
+  types.IPAddress                local_gateway_ip          = 8;   // local VPN GW IP, helps derive local MAC as well
+  types.IPAddress                remote_gateway_ip         = 9;   // remote VPN GW IP, derive remote MAC using ARP database
+  uint32                         spi                       = 10;   // security parameters index
+  uint32                         nat_traversal_port        = 11;   // NAT-T port, if non-zero - NAT-T header is added.
+  // Nonce = salt+iv - whether salt has to go into key (like ip xfrm ?? - lets see)
+  uint32                         salt                      = 12;  // Initial Random number - 32 bits (need to be same on peer)
+  uint64                         iv                        = 13;  // Initial Random number that goes in packet - can be assigned from top or generated locally
+}
+
+// IPSec security association object
+message IpsecSADecrypt {
+  types.ObjectMeta               meta                      = 1;    // common object meta
+  kh.IpsecSADecryptKeyHandle     key_or_handle             = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
+  IpsecProtocol                  protocol                  = 3;    // ESP or AH
+  AuthenticationAlgorithm        authentication_algorithm  = 4;   // authentication algorithm
+  Key                            authentication_key        = 5;   // authenticaion key
+  EncryptionAlgorithm            decryption_algorithm      = 6;   // encryption algorithm
+  EncryptionAlgorithm            rekey_dec_algorithm       = 7;   // encryption algorithm
+  Key                            decryption_key            = 8;   // encryption key
+  Key                            rekey_authentication_key  = 9;   // authenticaion key
+  Key                            rekey_decryption_key      = 10;   // encryption key
+  // Following are assumed and not configurable right now - iv_size (8 by default), icv_size (16 by default), block_size (16 by default)
+  types.IPAddress                local_gateway_ip          = 11;   // local VPN GW IP, helps derive local MAC as well
+  types.IPAddress                remote_gateway_ip         = 12;   // remote VPN GW IP, derive remote MAC using ARP database
+  uint32                         spi                       = 13;   // security parameters index
   uint32                         rekey_active              = 14;
   uint32                         rekey_spi                 = 15;  // Valid when rekey is active - part of update 
   // Nonce = salt+iv - whether salt has to go into key (like ip xfrm ?? - lets see)
   uint32                         salt                      = 16;  // Initial Random number - 32 bits (need to be same on peer)
-  uint64                         iv                        = 17;  // Initial Random number that goes in packet - can be assigned from top or generated locally
 }
-
 // IpsecRuleSpec is the user intent for the IPSec rule
 message IpsecRuleSpec {
   types.ObjectMeta               meta                      = 1;    // common object meta
@@ -103,7 +125,7 @@ message IpsecRuleSpec {
   repeated types.L4PortRange     src_port_range            = 9;    // src port range
 
   // IPSec security associaton parameters
-  IpsecSA                        security_association      = 10;   // security association parameters
+  IpsecSAEncrypt                        security_association      = 10;   // security association parameters
 }
 
 // IpsecRuleRequestMsg is the batched add or modify of NAT rule request
@@ -156,51 +178,99 @@ message IpsecRuleGetRequestMsg {
 
 
 
-// IpsecSARequestMsg is batched add or modify ipseccb request
-message IpsecSARequestMsg {
-  repeated IpsecSA   request = 1;    // batched request
+// IpsecSAEncryptRequestMsg is batched add or modify ipseccb request
+message IpsecSAEncryptRequestMsg {
+  repeated IpsecSAEncrypt   request = 1;    // batched request
 }
 
-// IpsecSAStatus is the operational status of a given ipseccb
-message IpsecSAStatus {
+// IpsecSAEncryptStatus is the operational status of a given ipseccb
+message IpsecSAEncryptStatus {
   fixed64    ipseccb_handle     = 1;    // id of ipseccb returned by HAL
 }
 
-// IpsecSAResponse is response to IpsecSA
-message IpsecSAResponse {
+// IpsecSAEncryptResponse is response to IpsecSA
+message IpsecSAEncryptResponse {
   types.ApiStatus        api_status            = 1;    // API status code
-  IpsecSAStatus       ipseccb_status   = 2;    // ipseccb status, if api succeeded
+  IpsecSAEncryptStatus       ipseccb_status   = 2;    // ipseccb status, if api succeeded
 }
 
-// IpsecSAResponseMsg is batched response to IpsecSARequestMsg
-message IpsecSAResponseMsg {
-  repeated IpsecSAResponse    response = 1;    // batched response
+// IpsecSAEncryptResponseMsg is batched response to IpsecSAEncryptRequestMsg
+message IpsecSAEncryptResponseMsg {
+  repeated IpsecSAEncryptResponse    response = 1;    // batched response
 }
 
-// IpsecSADeleteRequest is used to delete a ipseccb
-message IpsecSADeleteRequest {
+// IpsecSAEncryptDeleteRequest is used to delete a ipseccb
+message IpsecSAEncryptDeleteRequest {
   types.ObjectMeta        meta          = 1;    // object meta
-  kh.IpsecSAKeyHandle     key_or_handle = 2;    // IpsecSA key or handle
+  kh.IpsecSAEncryptKeyHandle     key_or_handle = 2;    // IpsecSA key or handle
 }
 
-// IpsecSADeleteRequestMsg is used to delete a batch of ipseccbs
-message IpsecSADeleteRequestMsg {
-  repeated IpsecSADeleteRequest    request = 1;    // batched delete request
+// IpsecSAEncryptDeleteRequestMsg is used to delete a batch of ipseccbs
+message IpsecSAEncryptDeleteRequestMsg {
+  repeated IpsecSAEncryptDeleteRequest    request = 1;    // batched delete request
 }
 
-// IpsecSADeleteResponseMsg is batched response to IpsecSADeleteRequestMsg
-message IpsecSADeleteResponseMsg {
+// IpsecSAEncryptDeleteResponseMsg is batched response to IpsecSADeleteRequestMsg
+message IpsecSAEncryptDeleteResponseMsg {
   repeated types.ApiStatus    api_status = 1;    // API status code
 }
 
-// IpsecSAGetRequest is used to get information about a ipseccb
-message IpsecSAGetRequest {
+// IpsecSAEncryptGetRequest is used to get information about a ipseccb
+message IpsecSAEncryptGetRequest {
   types.ObjectMeta          meta          = 1;    // object meta
-  kh.IpsecSAKeyHandle            key_or_handle = 2;    // IpsecSA key or handle
+  kh.IpsecSAEncryptKeyHandle            key_or_handle = 2;    // IpsecSA key or handle
 }
 
-// IpsecSAGetRequestMsg is batched GET requests for ipseccbs
-message IpsecSAGetRequestMsg {
-  repeated IpsecSAGetRequest    request = 1;    // batched get request
+// IpsecSAEncryptGetRequestMsg is batched GET requests for ipseccbs
+message IpsecSAEncryptGetRequestMsg {
+  repeated IpsecSAEncryptGetRequest    request = 1;    // batched get request
 }
 
+
+// IpsecSADecryptRequestMsg is batched add or modify ipseccb request
+message IpsecSADecryptRequestMsg {
+  repeated IpsecSADecrypt   request = 1;    // batched request
+}
+
+// IpsecSADecryptStatus is the operational status of a given ipseccb
+message IpsecSADecryptStatus {
+  fixed64    ipseccb_handle     = 1;    // id of ipseccb returned by HAL
+}
+
+// IpsecSADecryptResponse is response to IpsecSA
+message IpsecSADecryptResponse {
+  types.ApiStatus        api_status            = 1;    // API status code
+  IpsecSADecryptStatus       ipseccb_status   = 2;    // ipseccb status, if api succeeded
+}
+
+// IpsecSADecryptResponseMsg is batched response to IpsecSADecryptRequestMsg
+message IpsecSADecryptResponseMsg {
+  repeated IpsecSADecryptResponse    response = 1;    // batched response
+}
+
+// IpsecSADecryptDeleteRequest is used to delete a ipseccb
+message IpsecSADecryptDeleteRequest {
+  types.ObjectMeta        meta          = 1;    // object meta
+  kh.IpsecSADecryptKeyHandle     key_or_handle = 2;    // IpsecSA key or handle
+}
+
+// IpsecSADecryptDeleteRequestMsg is used to delete a batch of ipseccbs
+message IpsecSADecryptDeleteRequestMsg {
+  repeated IpsecSADecryptDeleteRequest    request = 1;    // batched delete request
+}
+
+// IpsecSADecryptDeleteResponseMsg is batched response to IpsecSADeleteRequestMsg
+message IpsecSADecryptDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// IpsecSADecryptGetRequest is used to get information about a ipseccb
+message IpsecSADecryptGetRequest {
+  types.ObjectMeta          meta          = 1;    // object meta
+  kh.IpsecSADecryptKeyHandle            key_or_handle = 2;    // IpsecSA key or handle
+}
+
+// IpsecSADecryptGetRequestMsg is batched GET requests for ipseccbs
+message IpsecSADecryptGetRequestMsg {
+  repeated IpsecSADecryptGetRequest    request = 1;    // batched get request
+}
