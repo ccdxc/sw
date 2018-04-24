@@ -63,7 +63,7 @@ uint32_t cap_sw_csr_base::get_byte_size() const {
     x |= (x >> 4);
     x |= (x >> 8);
     x |= (x >> 16);
-    x  = (x & ~(x >> 1));    
+    x  = (x & ~(x >> 1));
     if ((uint32_t)x != my_width) {
         x <<= 1;
     }
@@ -120,16 +120,14 @@ void cap_sw_register_base::read() {
 void cap_sw_register_base::write_hw(uint8_t *write_bytes, int block_write) {
     uint32_t words = (get_width()+31)/32;
     uint64_t offset = get_offset();
-    
+
     SDK_ASSERT(block_write == 0);
 
     for(uint32_t ii = 0; ii < words; ii++) {
         uint32_t data = *((uint32_t *)&(write_bytes[ii*4]));
-        SDK_TRACE_DEBUG("cap_sw_register_base::write_hw(): Addr: {}; Data: {}\n",
+        SDK_TRACE_DEBUG("cap_sw_register_base::write_hw(): Addr: 0x%0x; Data: 0x%0x\n",
                          offset + (ii*4), data);
         sdk::lib::pal_reg_write(offset + (ii*4), &data);
-        // cpu::access()->write(get_chip_id(), offset + (ii*4), data, false,
-        //               secure_acc_e);
     }
 }
 
@@ -141,11 +139,10 @@ void cap_sw_register_base::read_hw(uint8_t *read_bytes, int block_read) {
     SDK_ASSERT(block_read == 0);
 
     for(uint32_t ii = 0; ii < words; ii++) {
-        // uint32_t data = cpu::access()->read(chip_id, offset + (ii*4), false, secure_acc_e);
         uint32_t data = 0;
         sdk::lib::pal_reg_read(offset + (ii*4), &data);
         *((uint32_t *)&(read_bytes[ii*4])) = data;
-        SDK_TRACE_DEBUG("cap_sw_register_base::read_hw(): Addr: {}; Data: {}\n",
+        SDK_TRACE_DEBUG("cap_sw_register_base::read_hw(): Addr: 0x%0x; Data: 0x%0x\n",
                          offset + (ii*4), data);
     }
 }

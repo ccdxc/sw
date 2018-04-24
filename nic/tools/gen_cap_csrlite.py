@@ -127,7 +127,7 @@ ${csrclassname} *${hlprclassname}::get_csr_instance(uint32_t chip_id) {
 """)
     c_helper_ccfile_decoder_array_info = Template("""
     for (uint32_t ii = 0; ii < get_depth_${field_name}(); ii++) {
-        ${field_name}[ii].init(base_addr + 0x${field_offset});
+        ${field_name}[ii].init(base_addr + (ii*${field_type}::s_get_width()));
     }""")
     c_helper_ccfile_decoder_info = Template("""
     $field_name.init(base_addr + 0x${field_offset});""")
@@ -688,7 +688,8 @@ std::ostream& operator<<(std::ostream& os, const ${classname}& s)
                 if field.decoder != "":
                     if field.array > 1:
                         l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_ccfile_decoder_array_info.substitute(
-                            field_name='{0}'.format(field.name), field_offset=format(field.offset, 'x')))
+                            field_name='{0}'.format(field.name), field_offset=format(field.offset, 'x'),
+                            field_type='{0}_t'.format(field.decoder)))
                     else:
                         l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_ccfile_decoder_info.substitute(
                             field_name='{0}'.format(field.name), field_offset=format(field.offset, 'x')))
