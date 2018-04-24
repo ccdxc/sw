@@ -76,6 +76,10 @@ hal_ret_t qos_class_del_lif_rx(qos_class_t *qos_class, lif_t *lif);
 hal_ret_t qos_class_add_lif_tx(qos_class_t *qos_class, lif_t *lif);
 hal_ret_t qos_class_del_lif_tx(qos_class_t *qos_class, lif_t *lif);
 
+// nexthop
+hal_ret_t nexthop_add_route (nexthop_t *nh, route_t *route);
+hal_ret_t nexthop_del_route (nexthop_t *nh, route_t *route);
+
 }    // namespace hal
 
 #endif    // __IF_UTILS_HPP__

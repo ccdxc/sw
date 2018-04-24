@@ -33,6 +33,7 @@ typedef struct route_s {
     hal_handle_t      hal_handle;           // HAL allocated handle
 
     hal_handle_t      nh_handle;            // nexthop handle
+    // TODO: Interface instead of nh??
 } __PACK__ route_t;
 
 // max. number of routes supported  (TODO: we can take this from cfg file)
@@ -162,6 +163,8 @@ void *route_get_key_func(void *entry);
 uint32_t route_compute_hash_func(void *key, uint32_t ht_size);
 bool route_compare_key_func(void *key1, void *key2);
 
+
+hal_ret_t route_clean_handle_mapping (hal_handle_t route_handle);
 }    // namespace hal
 
 #endif    // __ROUTE_HPP__

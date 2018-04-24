@@ -55,8 +55,6 @@ using namespace boost::interprocess;
 
 namespace hal {
 
-extern acl::acl_config_t route_acl_config;
-
 // global instance of all HAL state including config, operational states
 class hal_state    *g_hal_state;
 class shmmgr       *g_h2s_shmmgr, *g_h3s_shmmgr;
@@ -355,11 +353,11 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ROUTE_ACL_RULE] != NULL), false);
 
-    slabs_[HAL_SLAB_HANDLE_ID] =
-        slab::factory("hal-handle-id",
-                      HAL_SLAB_HANDLE_ID, sizeof(hal_handle_t),
+    slabs_[HAL_SLAB_ROUTE_ACL_USERDATA] =
+        slab::factory("route_acl_userdata",
+                      HAL_SLAB_ROUTE_ACL_USERDATA, sizeof(route_acl_user_data_t),
                       64, true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_ID] != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ROUTE_ACL_USERDATA] != NULL), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
@@ -888,7 +886,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   true, mmgr);
     HAL_ASSERT_RETURN((route_ht_ != NULL), false);
 
-    route_acl_ = acl_create("route_acl", &route_acl_config);
+    HAL_ASSERT_RETURN((route_acl_create() == HAL_RET_OK), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         HAL_HT_CREATE("gft-profiles",
@@ -1795,8 +1793,8 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->route_acl_rule_slab()->free(elem);
         break;
 
-    case HAL_SLAB_HANDLE_ID:
-        g_hal_state->hal_handle_id_slab()->free(elem);
+    case HAL_SLAB_ROUTE_ACL_USERDATA:
+        g_hal_state->route_acl_userdata_slab()->free(elem);
         break;
 
     default:

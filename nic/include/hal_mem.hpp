@@ -99,7 +99,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_NEXTHOP                         = 85,
     HAL_SLAB_ROUTE                           = 86,
     HAL_SLAB_ROUTE_ACL_RULE                  = 87,
-    HAL_SLAB_HANDLE_ID                       = 88,
+    HAL_SLAB_ROUTE_ACL_USERDATA              = 88,
     HAL_SLAB_PI_MAX                          = 89,  // NOTE: MUST be last PI slab id
 
     // PD Slabs

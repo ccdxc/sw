@@ -888,6 +888,62 @@ nexthop_to_str (nexthop_t *nh)
     return buf;
 }
 
+//-----------------------------------------------------------------------------
+// adds route into nh
+//-----------------------------------------------------------------------------
+hal_ret_t
+nexthop_add_route (nexthop_t *nh, route_t *route)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (nh == NULL || route == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    nexthop_lock(nh, __FILENAME__, __LINE__, __func__);
+    ret = nh->route_list->insert(&route->hal_handle);
+    nexthop_unlock(nh, __FILENAME__, __LINE__, __func__);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add route {} to nexthop {}",
+                        route_to_str(route), nexthop_to_str(nh));
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Added route {} to nh {}",
+                    route_to_str(route), nexthop_to_str(nh));
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// remove route from nh
+//-----------------------------------------------------------------------------
+hal_ret_t
+nexthop_del_route (nexthop_t *nh, route_t *route)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (nh == NULL || route == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    nexthop_lock(nh, __FILENAME__, __LINE__, __func__);
+    ret = nh->route_list->remove(&route->hal_handle);
+    nexthop_unlock(nh, __FILENAME__, __LINE__, __func__);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to remove route {} from nexthop {}, err: {}",
+                        route_to_str(route), nexthop_to_str(nh));
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Deleted route {} from nh {}",
+                    route_to_str(route), nexthop_to_str(nh));
+
+end:
+    return ret;
+}
+
 hal_ret_t
 hal_nh_init_cb (hal_cfg_t *hal_cfg)
 {

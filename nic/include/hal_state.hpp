@@ -159,7 +159,7 @@ public:
     slab *nexthop_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NEXTHOP]); }
     slab *route_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ROUTE]); }
     slab *route_acl_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ROUTE_ACL_RULE]); }
-    slab *hal_handle_id_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_ID]); }
+    slab *route_acl_userdata_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ROUTE_ACL_USERDATA]); }
 
 
 private:
@@ -233,7 +233,6 @@ public:
     ht *nat_mapping_ht(void) const { return nat_mapping_ht_; }
     ht *nexthop_id_ht(void) const { return nexthop_id_ht_; }
     ht *route_ht(void) const { return route_ht_; }
-    const acl_ctx_t *route_acl(void) const { return route_acl_; }
 
     void set_infra_vrf_handle(hal_handle_t infra_vrf_hdl) { infra_vrf_handle_ = infra_vrf_hdl; }
     hal_handle_t infra_vrf_handle(void) const { return infra_vrf_handle_; }
@@ -301,9 +300,6 @@ private:
     ip_addr_t               mytep_ip_;
     hal_forwarding_mode_t   forwarding_mode_;
     if_id_t                 app_redir_if_id_;
-
-    // Route "ACL"
-    const acl_ctx_t *route_acl_;
 
     // following comes from linux process virtual memory
     shmmgr       *mmgr_;
@@ -510,9 +506,7 @@ public:
     slab *route_slab(void) const { return cfg_db_->route_slab(); }
     slab *route_acl_rule_slab(void) const { return cfg_db_->route_acl_rule_slab(); }
     ht *route_ht(void) const { return oper_db_->route_ht(); }
-    const acl_ctx_t *route_acl(void) const { return oper_db_->route_acl(); }
-
-    slab *hal_handle_id_slab(void) const { return cfg_db_->hal_handle_id_slab(); }
+    slab *route_acl_userdata_slab(void) const { return cfg_db_->route_acl_userdata_slab(); }
 
     // forwarding mode APIs
     void set_forwarding_mode(hal_forwarding_mode_t mode) {

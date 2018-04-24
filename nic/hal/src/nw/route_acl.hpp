@@ -33,7 +33,15 @@ typedef enum route_tuple_field_e {
 // route "ACL" rule
 ACL_RULE_DEF(route_acl_rule_t, ROUTE_TUPLE_MAX);
 
+// userdata in the rule
+typedef struct route_acl_user_data_s {
+    hal_handle_t route_handle;
+    acl::ref_t   ref_count;
+} route_acl_user_data_t;
+
+
 // public APIs
+hal_ret_t route_acl_create();
 hal_ret_t route_acl_add_route(route_t *route);
 hal_ret_t route_acl_del_route(route_t *route);
 hal_ret_t route_acl_lookup(route_key_t *key, hal_handle_t *handle);

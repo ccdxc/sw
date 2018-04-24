@@ -1451,10 +1451,9 @@ vrf_add_l2seg (vrf_t *vrf, l2seg_t *l2seg)
                         l2seg->seg_id, vrf->vrf_id);
         goto end;
     }
+    HAL_TRACE_DEBUG("Added l2seg {} to vrf {}", l2seg->seg_id, vrf->vrf_id);
 
 end:
-
-    HAL_TRACE_DEBUG("Added l2seg {} to vrf {}", l2seg->seg_id, vrf->vrf_id);
     return ret;
 }
 
@@ -1482,7 +1481,6 @@ vrf_del_l2seg (vrf_t *vrf, l2seg_t *l2seg)
     HAL_TRACE_DEBUG("Deleted l2seg {} from vrf {}", l2seg->seg_id, vrf->vrf_id);
 
 end:
-
     return ret;
 }
 

@@ -88,8 +88,14 @@ route_add_to_db (route_t *route, hal_handle_t handle)
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
 
-    // TODO(bharat): Add to "ACL"
+    // add route to route "ACL"
+    ret = route_acl_add_route(route);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to add route to \"ACL\". err: {}", ret);
+        goto end;
+    }
 
+end:
     return ret;
 }
 
@@ -113,6 +119,13 @@ route_del_from_db (route_t *route)
     } else {
         HAL_TRACE_ERR("unable to find route:{}", route_to_str(route));
         ret = HAL_RET_ROUTE_NOT_FOUND;
+        goto end;
+    }
+
+    // del route from route "ACL"
+    ret = route_acl_del_route(route);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to del route from \"ACL\". err: {}", ret);
         goto end;
     }
 
@@ -191,11 +204,10 @@ route_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // add route to route "ACL"
-    ret = route_acl_add_route(route);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to add route to \"ACL\". err: {}", ret);
-        goto end;
+    // add route as back ref to nh
+    if (route->nh_handle != HAL_HANDLE_INVALID) {
+        nexthop_t *nh = nexthop_lookup_by_handle(route->nh_handle);
+        ret = nexthop_add_route(nh, route);
     }
 
     HAL_TRACE_DEBUG("added route to DB");
@@ -748,7 +760,7 @@ route_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     route_t                     *route = NULL;
-    hal_handle_t                hal_handle = 0;
+    // hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -760,12 +772,12 @@ route_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
     route = (route_t *)dhl_entry->obj;
-    hal_handle = dhl_entry->handle;
+    // hal_handle = dhl_entry->handle;
 
     HAL_TRACE_DEBUG("delete commit cb {}", route_to_str(route));
 
 
-    // Remove from nexhtop key hash table
+    // Remove from route key hash table
     ret = route_del_from_db(route);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to del route {} from db, err : {}",
@@ -773,11 +785,19 @@ route_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
+    // del route as back ref from nh
+    if (route->nh_handle != HAL_HANDLE_INVALID) {
+        nexthop_t *nh = nexthop_lookup_by_handle(route->nh_handle);
+        ret = nexthop_del_route(nh, route);
+    }
+
+#if 0
     // Remove object from handle id based hash table
     hal_handle_free(hal_handle);
 
     // Free PI route
     route_cleanup(route);
+#endif
 
 end:
     if (ret != HAL_RET_OK) {
@@ -786,6 +806,25 @@ end:
     }
     return ret;
 }
+
+hal_ret_t
+route_clean_handle_mapping (hal_handle_t route_handle)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    route_t     *route = NULL;
+
+    route = route_lookup_by_handle(route_handle);
+    HAL_ASSERT(route != NULL);
+
+    // Remove object from handle id based hash table
+    hal_handle_free(route_handle);
+
+    // Free PI route
+    route_cleanup(route);
+
+    return ret;
+}
+
 
 //------------------------------------------------------------------------------
 // If delete fails, nothing to do
