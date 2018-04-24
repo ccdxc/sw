@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 //
-// configuration handlers for types::Address & types::IPAddressObj  object
+// configuration handlers for types::Address & types::IPAddressObj object
 //-----------------------------------------------------------------------------
 
 //#include <google/protobuf/util/json_util.h>
@@ -82,34 +82,29 @@ addr_list_elem_db_del (addr_list_elem_t *addr)
 }
 
 static inline hal_ret_t
+addr_list_elem_prefix_spec_extract (const types::Address& addr,
+                                    addr_list_elem_t *addr_lelem)
+{
+    auto prefix = addr.prefix();
+    // accepting only v4 now, others are rejected in validation phase
+    if (prefix.has_ipv4_subnet()) {
+        ip_subnet_spec_to_ip_range(&addr_lelem->ip_range, prefix);
+    }
+
+    return HAL_RET_INVALID_ARG;
+}
+
+static inline hal_ret_t
 addr_list_elem_range_spec_extract (const types::Address& addr,
                                    addr_list_elem_t *addr_lelem)
 {
     auto range = addr.range();
+    // accepting only v4 now, others are rejected in validation phase
     if (range.has_ipv4_range()) {
         ip_range_spec_to_ip_range(&addr_lelem->ip_range, range);
-    } else if (range.has_ipv6_range())
-        return HAL_RET_NOT_SUPPORTED;
-    else
-        return HAL_RET_INVALID_ARG;
+    }
 
-    return HAL_RET_OK;
-}
-
-static inline hal_ret_t
-addr_list_elem_prefix_spec_extract (const types::Address& addr,
-                                    addr_list_elem_t *addr_lelem)
-{
-    // convert this subnet into a range
-    auto prefix = addr.prefix();
-    if (prefix.has_ipv4_subnet()) {
-        ip_subnet_spec_to_ip_range(&addr_lelem->ip_range, prefix);
-    } else if (prefix.has_ipv6_subnet())
-        return HAL_RET_NOT_SUPPORTED;
-    else
-        return HAL_RET_INVALID_ARG;
-
-    return HAL_RET_OK;
+    return HAL_RET_INVALID_ARG;
 }
 
 static inline hal_ret_t
@@ -128,31 +123,63 @@ addr_list_elem_address_spec_extract (const types::Address& addr,
             return ret;
     }
 
-    return HAL_RET_OK;
+    return HAL_RET_INVALID_ARG;
 }
 
 static inline hal_ret_t
-addr_list_elem_ipaddressobj_spec_extract (const types::IPAddressObj& addr,
-                                          addr_list_elem_t *addr_lelem)
+addr_list_elem_address_prefix_spec_validate (const types::Address& addr,
+                                             uint8_t *af)
 {
-    hal_ret_t ret;
+    auto prefix = addr.prefix();
 
-    if ((ret = addr_list_elem_address_spec_extract(
-            addr.address(), addr_lelem)) != HAL_RET_OK)
-        return ret;
+    *af = IP_AF_IPV4;
+    if (prefix.has_ipv4_subnet())
+        return HAL_RET_OK;
+    else if (prefix.has_ipv6_subnet())
+        return HAL_RET_NOT_SUPPORTED;
 
-    addr_lelem->negate = addr.negate();
-    return HAL_RET_OK;
+    return HAL_RET_INVALID_ARG;
+}
+
+static inline hal_ret_t
+addr_list_elem_address_range_spec_validate (const types::Address& addr,
+                                            uint8_t *af)
+{
+    auto range = addr.range();
+
+    *af = IP_AF_IPV4;
+    if (range.has_ipv4_range())
+        return HAL_RET_OK;
+    else if (range.has_ipv6_range())
+        return HAL_RET_NOT_SUPPORTED;
+
+    return HAL_RET_INVALID_ARG;
+}
+
+static inline hal_ret_t
+addr_list_elem_address_spec_validate (const types::Address& addr, uint8_t *af)
+{
+    if (addr.has_range())
+        return addr_list_elem_address_range_spec_validate(addr, af);
+    else if (addr.has_prefix())
+        return addr_list_elem_address_prefix_spec_validate(addr, af);
+
+    return HAL_RET_INVALID_ARG;
 }
 
 hal_ret_t
 addr_list_elem_address_spec_handle (const types::Address& addr,
                                     dllist_ctxt_t *head)
 {
-    hal_ret_t            ret;
-    addr_list_elem_t    *addr_lelem;
+    uint8_t af;
+    hal_ret_t ret;
+    addr_list_elem_t *addr_lelem;
 
-    if ((addr_lelem = addr_list_elem_alloc_init(0)) == NULL)
+    if ((ret = addr_list_elem_address_spec_validate(
+            addr, &af)) != HAL_RET_OK)
+        return ret;
+
+    if ((addr_lelem = addr_list_elem_alloc_init(af)) == NULL)
         return HAL_RET_OOM;
 
     if ((ret = addr_list_elem_address_spec_extract(
@@ -165,14 +192,43 @@ addr_list_elem_address_spec_handle (const types::Address& addr,
     return HAL_RET_OK;
 }
 
+static inline hal_ret_t
+addr_list_elem_ipaddressobj_spec_extract (const types::IPAddressObj& addr,
+                                          addr_list_elem_t *addr_lelem)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    //todo: deal with type
+    if (addr.has_address()) {
+        if ((ret = addr_list_elem_address_spec_extract(
+                addr.address(), addr_lelem)) != HAL_RET_OK)
+            return ret;
+    }
+
+    addr_lelem->negate = addr.negate();
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+addr_list_elem_ipaddressobj_spec_validate (const types::IPAddressObj& addr,
+                                           uint8_t *af)
+{
+    return addr_list_elem_address_spec_validate(addr.address(), af);
+}
+
 hal_ret_t
 addr_list_elem_ipaddressobj_spec_handle (const types::IPAddressObj& addr,
                                          dllist_ctxt_t *head)
 {
-    hal_ret_t            ret;
-    addr_list_elem_t    *addr_lelem;
+    uint8_t af;
+    hal_ret_t ret;
+    addr_list_elem_t *addr_lelem;
 
-    if ((addr_lelem = addr_list_elem_alloc_init(0)) == NULL)
+    if ((ret = addr_list_elem_ipaddressobj_spec_validate(
+            addr, &af)) != HAL_RET_OK)
+        return ret;
+
+    if ((addr_lelem = addr_list_elem_alloc_init(af)) == NULL)
         return HAL_RET_OOM;
 
     if ((ret = addr_list_elem_ipaddressobj_spec_extract(
