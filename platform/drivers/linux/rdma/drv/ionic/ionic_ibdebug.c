@@ -63,6 +63,10 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "size_srqid:\t%u\n", dev->size_srqid);
 	seq_printf(s, "next_srqid:\t%u\n", dev->next_srqid);
 
+	seq_printf(s, "inuse_pgtbl:\t%u\n", bitmap_weight(dev->inuse_pgtbl,
+							  dev->size_pgtbl));
+	seq_printf(s, "size_pgtbl:\t%u\n", dev->size_pgtbl);
+
 	return 0;
 }
 

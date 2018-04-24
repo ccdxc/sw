@@ -191,6 +191,22 @@ static void ionic_replace_rkey(struct ionic_ibdev *dev, u32 *rkey)
 	*rkey = (*rkey & 0xffffff) | (key << 24);
 }
 
+static int ionic_get_pgtbl(struct ionic_ibdev *dev, u32 *pos, int order)
+{
+	int rc;
+
+	mutex_lock(&dev->inuse_lock);
+	rc = bitmap_find_free_region(dev->inuse_pgtbl, dev->size_pgtbl, order);
+	mutex_unlock(&dev->inuse_lock);
+
+	if (rc < 0)
+		return rc;
+
+	*pos = (u32)rc;
+
+	return 0;
+}
+
 static int ionic_get_cqid(struct ionic_ibdev *dev, u32 *cqid)
 {
 	u32 id;
@@ -301,6 +317,11 @@ static void ionic_put_pdid(struct ionic_ibdev *dev, u32 pdid)
 static void ionic_put_mrid(struct ionic_ibdev *dev, u32 mrid)
 {
 	clear_bit(mrid / 2, dev->inuse_mrid); /* XXX see get_mrid */
+}
+
+static void ionic_put_pgtbl(struct ionic_ibdev *dev, u32 pos, int order)
+{
+	bitmap_release_region(dev->inuse_pgtbl, pos, order);
 }
 
 static void ionic_put_cqid(struct ionic_ibdev *dev, u32 cqid)
@@ -1070,6 +1091,11 @@ static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
 		goto err_umem;
 	}
 
+	mr->tbl_order = order_base_2(ib_umem_num_pages(mr->umem));
+	rc = ionic_get_pgtbl(dev, &mr->tbl_pos, mr->tbl_order);
+	if (rc)
+		goto err_pgtbl;
+
 	rc = ionic_create_mr_cmd(dev, pd, mr, start, length, addr, access);
 	if (rc)
 		goto err_cmd;
@@ -1077,6 +1103,8 @@ static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
 	return &mr->ibmr;
 
 err_cmd:
+	ionic_put_pgtbl(dev, mr->tbl_pos, mr->tbl_order);
+err_pgtbl:
 	ib_umem_release(mr->umem);
 err_umem:
 	ionic_put_mrid(dev, mr->ibmr.lkey);
@@ -1108,6 +1136,8 @@ static int ionic_dereg_mr(struct ib_mr *ibmr)
 	rc = ionic_destroy_mr_cmd(dev, mr);
 	if (rc)
 		return rc;
+
+	ionic_put_pgtbl(dev, mr->tbl_pos, mr->tbl_order);
 
 	if (mr->umem)
 		ib_umem_release(mr->umem);
@@ -1333,6 +1363,11 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 			goto err_q;
 		}
 
+		cq->tbl_order = order_base_2(ib_umem_num_pages(cq->umem));
+		rc = ionic_get_pgtbl(dev, &cq->tbl_pos, cq->tbl_order);
+		if (rc)
+			goto err_pgtbl;
+
 		cq->q.ptr = NULL;
 		cq->q.size = req.cq.size;
 		cq->q.mask = req.cq.mask;
@@ -1365,6 +1400,8 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 err_resp:
 	ionic_destroy_cq_cmd(dev, cq);
 err_cmd:
+	ionic_put_pgtbl(dev, cq->tbl_pos, cq->tbl_order);
+err_pgtbl:
 	if (cq->umem)
 		ib_umem_release(cq->umem);
 err_q:
@@ -1384,6 +1421,8 @@ static int ionic_destroy_cq(struct ib_cq *ibcq)
 	rc = ionic_destroy_cq_cmd(dev, cq);
 	if (rc)
 		return rc;
+
+	ionic_put_pgtbl(dev, cq->tbl_pos, cq->tbl_order);
 
 	if (cq->umem)
 		ib_umem_release(cq->umem);
@@ -2387,6 +2426,7 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	kfree(dev->inuse_qpid);
 	kfree(dev->inuse_cqid);
+	kfree(dev->inuse_pgtbl);
 	kfree(dev->inuse_mrid);
 	kfree(dev->inuse_pdid);
 
@@ -2436,7 +2476,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	/* XXX hardcode values, intentionally low, should come from identify */
 	dev->dev_attr.fw_ver = 0;
 	dev->dev_attr.sys_image_guid = 0;
-	dev->dev_attr.max_mr_size = 0x800000;
+	dev->dev_attr.max_mr_size = 0x800000; /* XXX ident->dev.pgtbl_size*PAGE_SIZE */
 	dev->dev_attr.page_size_cap = 0x1000;
 	dev->dev_attr.vendor_id = 0;
 	dev->dev_attr.vendor_part_id = 0;
@@ -2471,7 +2511,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_srq = 40; /* XXX ident->dev.nrdmarqs_per_lif */
 	dev->dev_attr.max_srq_wr = 0xfff;
 	dev->dev_attr.max_srq_sge = 7;
-	dev->dev_attr.max_fast_reg_page_list_len = 0;
+	dev->dev_attr.max_fast_reg_page_list_len = 0; /* XXX ident->dev.pgtbl_size */
 	dev->dev_attr.max_pkeys = 1;
 
 	/* XXX hardcode values, intentionally low, should come from identify */
@@ -2528,6 +2568,14 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	if (!dev->inuse_qpid) {
 		rc = -ENOMEM;
 		goto err_qpid;
+	}
+
+	dev->size_pgtbl = dev->dev_attr.max_mr_size / PAGE_SIZE;
+	size = sizeof(long) * BITS_TO_LONGS(dev->size_pgtbl);
+	dev->inuse_pgtbl = kzalloc(size, GFP_KERNEL);
+	if (!dev->inuse_pgtbl) {
+		rc = -ENOMEM;
+		goto err_pgtbl;
 	}
 
 	if (ionic_dbgfs_enable)
@@ -2673,6 +2721,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 err_register:
 	ionic_destroy_eqvec(dev);
 err_eqvec:
+	kfree(dev->inuse_pgtbl);
+err_pgtbl:
 	kfree(dev->inuse_qpid);
 err_qpid:
 	kfree(dev->inuse_cqid);

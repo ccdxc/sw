@@ -77,6 +77,9 @@ struct ionic_ibdev {
 	u32			size_srqid;
 	u32			next_srqid;
 
+	unsigned long		*inuse_pgtbl;
+	u32			size_pgtbl;
+
 	struct ionic_eq		**eq_vec;
 	int			eq_count;
 
@@ -140,6 +143,9 @@ struct ionic_cq {
 	spinlock_t		lock;
 	struct ionic_queue	q;
 	struct ib_umem		*umem;
+
+	u32			tbl_pos;
+	int			tbl_order;
 };
 
 struct ionic_sq_meta {
@@ -192,6 +198,9 @@ struct ionic_mr {
 	struct ib_mr		ibmr;
 
 	struct ib_umem		*umem;
+
+	u32			tbl_pos;
+	int			tbl_order;
 };
 
 static inline struct ionic_ibdev *to_ionic_ibdev(struct ib_device *ibdev)
