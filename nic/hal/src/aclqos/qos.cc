@@ -7,6 +7,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/gen/proto/hal/qos.pb.h"
+#include <google/protobuf/util/json_util.h>
 
 namespace hal {
 
@@ -386,64 +387,17 @@ qos_class_cleanup (qos_class_t *qos_class, bool free_pd)
 static hal_ret_t
 qos_class_spec_dump (QosClassSpec& spec)
 {
-    fmt::MemoryWriter   buf;
+    std::string buf;
+    google::protobuf::util::JsonPrintOptions options;
 
     if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
         return HAL_RET_OK;
     }
 
-    buf.write("QosClass Spec: ");
-    if (spec.has_key_or_handle()) {
-        auto kh = spec.key_or_handle();
-        if (kh.key_or_handle_case() == QosClassKeyHandle::kQosGroup) {
-            buf.write("qos_group:{}, ", kh.qos_group());
-        } else if (kh.key_or_handle_case() == QosClassKeyHandle::kQosClassHandle) {
-            buf.write("qos_hdl:{}, ", kh.qos_class_handle());
-        }
-    } else {
-        buf.write("qos_class_key_hdl:NULL, ");
-    }
-
-    buf.write("MTU:{}, ", spec.mtu());
-
-    if (spec.has_pfc()) {
-        buf.write("pfc cos: {}, ",
-                  spec.pfc().cos());
-        buf.write("xon_threshold: {}, xoff_threshold: {}, ",
-                  spec.pfc().xon_threshold(),
-                  spec.pfc().xoff_threshold());
-    }
-
-    if (spec.has_sched()) {
-        if (spec.sched().has_dwrr()) {
-            buf.write("sched dwrr percentage: {}, ",
-                      spec.sched().dwrr().bw_percentage());
-        } else if (spec.sched().has_strict()) {
-            buf.write("sched strict bps: {}, ",
-                      spec.sched().strict().bps());
-        }
-    }
-
-    if (spec.has_uplink_class_map()) {
-        buf.write("dot1q_pcp: {}, ",
-                  spec.uplink_class_map().dot1q_pcp());
-        buf.write("ip_dscp: [");
-        for (int i = 0; i < spec.uplink_class_map().ip_dscp_size(); i++) {
-            buf.write("{} ", spec.uplink_class_map().ip_dscp(i));
-        }
-        buf.write("], ");
-    }
-
-    if (spec.has_marking()) {
-        buf.write("dot1q_pcp_rewrite_en:{}, dot1q_pcp:{}, ",
-                  spec.marking().dot1q_pcp_rewrite_en(),
-                  spec.marking().dot1q_pcp());
-        buf.write("ip_dscp_rewrite_en:{}, ip_dscp:{}, ",
-                  spec.marking().ip_dscp_rewrite_en(),
-                  spec.marking().ip_dscp());
-    }
-
-    HAL_TRACE_DEBUG("{}", buf.c_str());
+    options.add_whitespace = false;
+    options.preserve_proto_field_names = true;
+    google::protobuf::util::MessageToJsonString(spec, &buf, options);
+    HAL_TRACE_DEBUG("QosClass Spec: {}", buf);
     return HAL_RET_OK;
 }
 
@@ -2015,37 +1969,17 @@ copp_free (copp_t *copp, bool free_pd)
 static hal_ret_t
 copp_spec_dump (CoppSpec& spec)
 {
-    fmt::MemoryWriter   buf;
+    std::string buf;
+    google::protobuf::util::JsonPrintOptions options;
 
     if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
         return HAL_RET_OK;
     }
 
-    buf.write("Copp Spec: ");
-    if (spec.has_key_or_handle()) {
-        auto kh = spec.key_or_handle();
-        if (kh.key_or_handle_case() == CoppKeyHandle::kCoppType) {
-            buf.write("copp_type:{}, ", kh.copp_type());
-        } else if (kh.key_or_handle_case() == CoppKeyHandle::kCoppHandle) {
-            buf.write("qos_hdl:{}, ", kh.copp_handle());
-        }
-    } else {
-        buf.write("copp_key_hdl:NULL, ");
-    }
-
-    if (spec.has_policer()) {
-        if (spec.policer().has_pps_policer()) {
-            buf.write("PPS : {}, burst: {}, ",
-                      spec.policer().pps_policer().packets_per_sec(),
-                      spec.policer().pps_policer().burst_packets());
-        } else {
-            buf.write("Bytes-per-sec: {}, burst: {}, ",
-                      spec.policer().bps_policer().bytes_per_sec(),
-                      spec.policer().bps_policer().burst_bytes());
-        }
-    }
-
-    HAL_TRACE_DEBUG("{}", buf.c_str());
+    options.add_whitespace = false;
+    options.preserve_proto_field_names = true;
+    google::protobuf::util::MessageToJsonString(spec, &buf, options);
+    HAL_TRACE_DEBUG("Copp Spec: {}", buf);
     return HAL_RET_OK;
 }
 

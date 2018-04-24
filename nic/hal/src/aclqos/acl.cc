@@ -10,6 +10,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/gen/proto/hal/acl.pb.h"
 #include "nic/hal/src/utils/if_utils.hpp"
+#include <google/protobuf/util/json_util.h>
 
 namespace hal {
 
@@ -142,179 +143,17 @@ acl_free (acl_t *acl, bool free_pd)
 static hal_ret_t
 acl_spec_dump (AclSpec& spec)
 {
-    fmt::MemoryWriter   buf;
+    std::string buf;
+    google::protobuf::util::JsonPrintOptions options;
 
     if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
         return HAL_RET_OK;
     }
 
-    buf.write("Acl Spec: ");
-    if (spec.has_key_or_handle()) {
-        auto kh = spec.key_or_handle();
-        if (kh.key_or_handle_case() == AclKeyHandle::kAclId) {
-            buf.write("acl_id:{}, ", kh.acl_id());
-        } else if (kh.key_or_handle_case() == AclKeyHandle::kAclHandle) {
-            buf.write("acl_hdl:{}, ", kh.acl_handle());
-        }
-    } else {
-        buf.write("acl_id_hdl:NULL, ");
-    }
-
-    buf.write("priority:{}, ",spec.priority());
-    if (spec.has_match()) {
-        const acl::AclSelector &sel = spec.match();
-
-        if (sel.has_src_if_key_handle()) {
-            auto src_if_kh = sel.src_if_key_handle();
-            if (src_if_kh.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId) {
-                buf.write("src_if_id:{}, ", src_if_kh.interface_id());
-            } else {
-                buf.write("src_if_handle:{}, ", src_if_kh.if_handle());
-            }
-        }
-
-        if (sel.has_dst_if_key_handle()) {
-            auto dst_if_kh = sel.dst_if_key_handle();
-            if (dst_if_kh.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId) {
-                buf.write("dst_if_id:{}, ", dst_if_kh.interface_id());
-            } else {
-                buf.write("dst_if_handle:{}, ", dst_if_kh.if_handle());
-            }
-        }
-
-        if (sel.has_vrf_key_handle()) {
-            auto vrf_kh = sel.vrf_key_handle();
-            if (vrf_kh.key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
-                buf.write("vrf_id:{}, ", vrf_kh.vrf_id());
-            } else {
-                buf.write("vrf_handle:{}, ",vrf_kh.vrf_handle());
-            }
-        }
-
-        if (sel.has_l2segment_key_handle()) {
-            auto l2seg_kh = sel.l2segment_key_handle();
-            if (l2seg_kh.key_or_handle_case() == kh::L2SegmentKeyHandle::kSegmentId) {
-                buf.write("l2seg_id:{}, ", l2seg_kh.segment_id());
-            } else {
-                buf.write("l2seg_handle:{}, ", l2seg_kh.l2segment_handle());
-            }
-        }
-
-        if (sel.has_eth_selector()) {
-            buf.write("ethtype:{0:x}/{1:x}, ",
-                      sel.eth_selector().eth_type_mask(),
-                      sel.eth_selector().eth_type());
-
-            mac_addr_t mac_sa, mac_sa_mask;
-            MAC_UINT64_TO_ADDR(mac_sa, sel.eth_selector().src_mac());
-            MAC_UINT64_TO_ADDR(mac_sa_mask, sel.eth_selector().src_mac_mask());
-            buf.write("mac_sa:{}/{}, ", macaddr2str(mac_sa_mask), macaddr2str(mac_sa));
-
-            mac_addr_t mac_da, mac_da_mask;
-            MAC_UINT64_TO_ADDR(mac_da, sel.eth_selector().dst_mac());
-            MAC_UINT64_TO_ADDR(mac_da_mask, sel.eth_selector().dst_mac_mask());
-            buf.write("mac_da:{}/{}, ", macaddr2str(mac_da_mask), macaddr2str(mac_da));
-        }
-
-        // TODO Add other fields
-        if (sel.has_ip_selector()) {
-            if (sel.ip_selector().has_src_prefix()) {
-                ip_prefix_t src_pfx;
-                ip_pfx_spec_to_pfx(&src_pfx, sel.ip_selector().src_prefix());
-                buf.write("src {}, ", ippfx2str(&src_pfx));
-            }
-            if (sel.ip_selector().has_dst_prefix()) {
-                ip_prefix_t dst_pfx;
-                ip_pfx_spec_to_pfx(&dst_pfx, sel.ip_selector().dst_prefix());
-                buf.write("dst {}, ", ippfx2str(&dst_pfx));
-            }
-
-            const acl::IPSelector& ip_sel = sel.ip_selector();
-            switch(ip_sel.l4_selectors_case()) {
-            case acl::IPSelector::kIpProtocol:
-                buf.write("proto {}, ", ip_sel.ip_protocol());
-                break;
-            case acl::IPSelector::kIcmpSelector:
-                buf.write("icmp code {}/{}, ",
-                          ip_sel.icmp_selector().icmp_code_mask(),
-                          ip_sel.icmp_selector().icmp_code());
-
-                buf.write("icmp type {}/{}, ",
-                          ip_sel.icmp_selector().icmp_type_mask(),
-                          ip_sel.icmp_selector().icmp_type());
-                break;
-            case acl::IPSelector::kUdpSelector:
-                buf.write("udp ");
-                if (ip_sel.udp_selector().has_src_port_range()) {
-                    buf.write("sport {}-{}, ",
-                              ip_sel.udp_selector().src_port_range().port_low(),
-                              ip_sel.udp_selector().src_port_range().port_high());
-                }
-                if (ip_sel.udp_selector().has_dst_port_range()) {
-                    buf.write("dport {}-{}, ",
-                              ip_sel.udp_selector().dst_port_range().port_low(),
-                              ip_sel.udp_selector().dst_port_range().port_high());
-                }
-                break;
-            case acl::IPSelector::kTcpSelector:
-                buf.write("tcp ");
-                if (ip_sel.tcp_selector().has_src_port_range()) {
-                    buf.write("sport {}-{}, ",
-                              ip_sel.tcp_selector().src_port_range().port_low(),
-                              ip_sel.tcp_selector().src_port_range().port_high());
-                }
-                if (ip_sel.tcp_selector().has_dst_port_range()) {
-                    buf.write("dport {}-{}, ",
-                              ip_sel.tcp_selector().dst_port_range().port_low(),
-                              ip_sel.tcp_selector().dst_port_range().port_high());
-                }
-                break;
-            default:
-                break;
-            }
-        }
-
-        if (sel.has_internal_key()) {
-            buf.write("flow_miss {}, outer_dst_mac {}, "
-                      "ip_options {}, ip_frag {}, "
-                      "tunnel_terminate {}, direction {}, from_cpu {}, ",
-                      sel.internal_key().flow_miss(),
-                      sel.internal_key().outer_dst_mac(),
-                      sel.internal_key().ip_options(),
-                      sel.internal_key().ip_frag(),
-                      sel.internal_key().tunnel_terminate(),
-                      sel.internal_key().direction(),
-                      sel.internal_key().from_cpu());
-        }
-
-        if (sel.has_internal_mask()) {
-            buf.write("flow_miss_mask {}, outer_dst_mac_mask {}, "
-                      "ip_options_mask {}, ip_frag_mask {}, "
-                      "tunnel_terminate_mask {}, direction_mask {}, from_cpu {}, ",
-                      sel.internal_mask().flow_miss(),
-                      sel.internal_mask().outer_dst_mac(),
-                      sel.internal_mask().ip_options(),
-                      sel.internal_mask().ip_frag(),
-                      sel.internal_mask().tunnel_terminate(),
-                      sel.internal_mask().direction(),
-                      sel.internal_mask().from_cpu());
-        }
-    }
-
-
-    if (spec.has_action()) {
-        buf.write("Action {} ", spec.action().action());
-        if (spec.action().has_redirect_if_key_handle()) {
-            auto redirect_if_kh = spec.action().redirect_if_key_handle();
-            if (redirect_if_kh.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId) {
-                buf.write("redirect_if_id:{}, ", redirect_if_kh.interface_id());
-            } else {
-                buf.write("redirect_if_handle:{}, ", redirect_if_kh.if_handle());
-            }
-        }
-    }
-
-    HAL_TRACE_DEBUG("{}", buf.c_str());
+    options.add_whitespace = false;
+    options.preserve_proto_field_names = true;
+    google::protobuf::util::MessageToJsonString(spec, &buf, options);
+    HAL_TRACE_DEBUG("Acl Spec: {}", buf);
     return HAL_RET_OK;
 }
 

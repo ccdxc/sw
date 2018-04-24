@@ -60,42 +60,42 @@
                 "request" :
                 [
                     {
-                        "keyOrHandle" : { "qosGroup" : "DEFAULT" },
+                        "key_or_handle" : { "qos_group" : "DEFAULT" },
                         "mtu" : 9216,
                         "sched" : { "strict" : { "bps" : 10000 } }
                     },
                     {
-                        "keyOrHandle" : { "qosGroup" : "CONTROL" },
+                        "key_or_handle" : { "qos_group" : "CONTROL" },
                         "mtu" : 9216,
                         "sched" : { "strict" : { "bps" : 10000 } }
                     },
                     {
-                        "keyOrHandle" : { "qosGroup" : "SPAN" },
+                        "key_or_handle" : { "qos_group" : "SPAN" },
                         "mtu" : 9216,
                         "sched" : { "strict" : { "bps" : 10000 } }
                     },
                     {
-                        "keyOrHandle" : { "qosGroup" : "INTERNAL_RX_PROXY_NO_DROP" },
+                        "key_or_handle" : { "qos_group" : "INTERNAL_RX_PROXY_NO_DROP" },
                         "mtu" : 9216,
                         "sched" : { "strict" : { "bps" : 10000 } }
                     },
                     {
-                        "keyOrHandle" : { "qosGroup" : "INTERNAL_RX_PROXY_DROP" },
+                        "key_or_handle" : { "qos_group" : "INTERNAL_RX_PROXY_DROP" },
                         "mtu" : 9216,
                         "sched" : { "strict" : { "bps" : 10000 } }
                     },
                     {
-                        "keyOrHandle" : { "qosGroup" : "INTERNAL_TX_PROXY_NO_DROP" },
+                        "key_or_handle" : { "qos_group" : "INTERNAL_TX_PROXY_NO_DROP" },
                         "mtu" : 9216,
                         "sched" : { "strict" : { "bps" : 10000 } }
                     },
                     {
-                        "keyOrHandle" : { "qosGroup" : "INTERNAL_TX_PROXY_DROP" },
+                        "key_or_handle" : { "qos_group" : "INTERNAL_TX_PROXY_DROP" },
                         "mtu" : 9216,
                         "sched" : { "strict" : { "bps" : 10000 } }
                     },
                     {
-                        "keyOrHandle" : { "qosGroup" : "INTERNAL_CPU_COPY" },
+                        "key_or_handle" : { "qos_group" : "INTERNAL_CPU_COPY" },
                         "mtu" : 9216,
                         "sched" : { "strict" : { "bps" : 10000 } }
                     }
@@ -106,16 +106,16 @@
                 "request" :
                 [
                     {
-                        "keyOrHandle" : { "coppType" : "COPP_TYPE_FLOW_MISS" },
-                        "policer" : { "bpsPolicer" : { "bytesPerSec" : 10000, "burstBytes" : 1000 } }
+                        "key_or_handle" : { "copp_type" : "COPP_TYPE_FLOW_MISS" },
+                        "policer" : { "bps_policer" : { "bytes_per_sec" : 10000, "burst_bytes" : 1000 } }
                     },
                     {
-                        "keyOrHandle" : { "coppType" : "COPP_TYPE_ARP" },
-                        "policer" : { "ppsPolicer" : { "packetsPerSec" : 250, "burstPackets" : 25} }
+                        "key_or_handle" : { "copp_type" : "COPP_TYPE_ARP" },
+                        "policer" : { "pps_policer" : { "packets_per_sec" : 250, "burst_packets" : 25} }
                     },
                     {
-                        "keyOrHandle" : { "coppType" : "COPP_TYPE_DHCP" },
-                        "policer" : { "ppsPolicer" : { "packetsPerSec" : 250, "burstPackets" : 25} }
+                        "key_or_handle" : { "copp_type" : "COPP_TYPE_DHCP" },
+                        "policer" : { "pps_policer" : { "packets_per_sec" : 250, "burst_packets" : 25} }
                     }
                 ]
             }
