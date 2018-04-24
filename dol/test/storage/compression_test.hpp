@@ -45,6 +45,9 @@ int seq_compress_output_hash_app_test_size();
 int seq_compress_output_hash_app_nominal_size();
 int seq_chksum_decompress_last_app_blk();
 
+int compress_clear_insert_header();
+int decompress_clear_header_present();
+
 }  // namespace tests
 
 #endif  // _COMPRESSION_TEST_HPP_

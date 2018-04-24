@@ -1590,6 +1590,64 @@ int seq_compress_output_encrypt_app_nominal_size() {
     return comp_encrypt_chain->full_verify();
 }
 
+int _compress_clear_insert_header(comp_queue_push_t push_type,
+                                  uint32_t seq_comp_qid) {
+  cp_desc_t d;
+
+  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
+          __func__, push_type, seq_comp_qid);
+
+  /* flat 64K buf in hbm */
+  compress_cp_desc_template_fill(d, uncompressed_buf, compressed_buf,
+                                 status_buf, compressed_buf, kUncompressedDataSize);
+
+  /* reset the bit not to insert the header */
+  d.cmd_bits.insert_header = 0;
+
+  if (run_cp_test(d, compressed_buf, status_buf, push_type, seq_comp_qid) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  printf("Testcase %s passed\n", __func__);
+  return 0;
+}
+
+int compress_clear_insert_header() {
+    return _compress_clear_insert_header(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+}
+
+int _decompress_clear_header_present(comp_queue_push_t push_type,
+                                       int32_t seq_comp_qid) {
+
+  cp_desc_t d;
+
+  // clear some initial area.
+  dp_mem_t *partial_buf = uncompressed_buf->fragment_find(0, 16);
+  partial_buf->clear_thru();
+
+  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
+          __func__, push_type, seq_comp_qid);
+
+  /* flat 64K buf in hbm */
+  decompress_cp_desc_template_fill(d, compressed_buf, uncompressed_buf,
+                                   status_buf, compressed_data_size,
+                                   kUncompressedDataSize);
+
+  /* reset the bit to indicate header is not present */
+  d.cmd_bits.insert_header = 0;
+
+  if (run_dc_test(d, status_buf, 0, push_type, seq_comp_qid) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  printf("Testcase %s passed\n", __func__);
+  return 0;
+}
+
+int decompress_clear_header_present() {
+    return _decompress_clear_header_present(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+}
+
 // Accelerator XTS-decrypt to decompression chaining DOLs.
 int seq_decrypt_output_decompress_last_app_blk() {
 
