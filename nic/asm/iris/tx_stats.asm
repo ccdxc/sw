@@ -56,7 +56,7 @@ tx_ucast_overflow:
   add         r7, d.tx_stats_d.tx_ucast_bytes, \
                 k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                    capri_p4_intrinsic_packet_len_sbit6_ebit13}
-  addi        r6, r0, 0x100000F
+  addi        r6, r0, 0x1000010
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
 
@@ -71,7 +71,7 @@ tx_mcast_overflow:
   add         r7, d.tx_stats_d.tx_mcast_bytes, \
                 k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                    capri_p4_intrinsic_packet_len_sbit6_ebit13}
-  addi        r6, r0, 0x100000F
+  addi        r6, r0, 0x1000010
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
 
@@ -87,7 +87,7 @@ tx_bcast_overflow:
   add         r7, d.tx_stats_d.tx_bcast_bytes, \
                 k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                    capri_p4_intrinsic_packet_len_sbit6_ebit13}
-  addi        r6, r0, 0x100000F
+  addi        r6, r0, 0x1000010
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
 

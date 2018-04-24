@@ -41,12 +41,12 @@ p4plus_app_classic_nic:
 p4plus_app_classic_nic_no_vlan_strip:
   phvwrpair   p.p4_to_p4plus_classic_nic_valid, TRUE, \
               p.capri_rxdma_intrinsic_valid, TRUE
-  phvwr       p.capri_deparser_len_udp_opt_l2_checksum_len, r6
-  phvwrpair   p.capri_rxdma_intrinsic_rx_splitter_offset, \
-              (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
-              P4PLUS_CLASSIC_NIC_HDR_SZ), \
+  phvwrpair   p.capri_deparser_len_udp_opt_l2_checksum_len, r6, \
               p.p4_to_p4plus_classic_nic_p4plus_app_id, \
               k.control_metadata_p4plus_app_id[3:0]
+  phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
+              (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+              P4PLUS_CLASSIC_NIC_HDR_SZ)
   phvwrpair.e p.capri_rxdma_intrinsic_qid, k.control_metadata_qid, \
               p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
   phvwr.f     p.p4_to_p4plus_classic_nic_packet_len, r7
@@ -98,10 +98,10 @@ p4plus_app_cpu_raw_redir_common:
   or            r1, r0, r0
   seq           c1, k.ipv4_valid, TRUE
   seq           c2, k.ipv6_valid, TRUE
-  phvwrpair.c1  p.p4_to_p4plus_cpu_ip_proto, k.ipv4_protocol, \
-                    p.p4_to_p4plus_cpu_packet_type, CPU_PACKET_TYPE_IPV4
-  phvwrpair.c2  p.p4_to_p4plus_cpu_ip_proto, k.ipv6_nextHdr, \
-                    p.p4_to_p4plus_cpu_packet_type, CPU_PACKET_TYPE_IPV6
+  phvwr.c1      p.p4_to_p4plus_cpu_ip_proto, k.ipv4_protocol
+  phvwr.c1      p.p4_to_p4plus_cpu_packet_type, CPU_PACKET_TYPE_IPV4
+  phvwr.c2      p.p4_to_p4plus_cpu_ip_proto, k.ipv6_nextHdr
+  phvwr.c2      p.p4_to_p4plus_cpu_packet_type, CPU_PACKET_TYPE_IPV6
 
   seq         c1, k.tcp_valid, TRUE
   bcf         [!c1], p4plus_app_cpu_l4_icmp
@@ -142,7 +142,9 @@ p4plus_app_cpu_common:
 p4plus_app_ipsec:
   phvwr       p.p4_to_p4plus_ipsec_valid, TRUE
   phvwr       p.p4_to_p4plus_ipsec_p4plus_app_id, k.control_metadata_p4plus_app_id
-  phvwr       p.p4_to_p4plus_ipsec_seq_no, k.ipsec_metadata_seq_no
+  or          r4, k.ipsec_metadata_seq_no_sbit24_ebit31, \
+                  k.ipsec_metadata_seq_no_sbit0_ebit23, 8 
+  phvwr       p.p4_to_p4plus_ipsec_seq_no, r4
   add         r4, k.flow_lkp_metadata_lkp_dport,k.flow_lkp_metadata_lkp_sport, 16
   phvwr       p.p4_to_p4plus_ipsec_spi, r4
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE

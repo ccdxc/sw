@@ -2,12 +2,16 @@
 #include "EGRESS_p.h"
 #include "../../p4/iris/include/defines.h"
 
+struct rx_policer_k k;
 struct rx_policer_d d;
-struct phv_             p;
+struct phv_         p;
 
 %%
 
 execute_rx_policer:
+  phvwr       p.policer_metadata_packet_len, \
+              k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                 capri_p4_intrinsic_packet_len_sbit6_ebit13}
   seq         c1, d.execute_rx_policer_d.entry_valid, TRUE
   seq.c1      c1, d.execute_rx_policer_d.tbkt[39], TRUE
   nop.!c1.e

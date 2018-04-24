@@ -545,8 +545,8 @@ lif_pd_tx_policer_deprogram_hw (pd_lif_t *pd_lif)
 }
 
 #define RX_POLICER_ACTION(_d, _arg) _d.rx_policer_action_u.rx_policer_execute_rx_policer._arg
-hal_ret_t
-lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
+static hal_ret_t
+lif_pd_rx_policer_tbl_program_hw (pd_lif_t *pd_lif, bool update)
 {
     hal_ret_t             ret = HAL_RET_OK;
     sdk_ret_t             sdk_ret;
@@ -624,8 +624,64 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
 }
 #undef RX_POLICER_ACTION
 
+static hal_ret_t
+lif_pd_rx_policer_action_tbl_reset_hw (pd_lif_t *pd_lif, bool insert)
+{
+    hal_ret_t                    ret = HAL_RET_OK;
+    sdk_ret_t                    sdk_ret;
+    lif_t                        *pi_lif = (lif_t *)pd_lif->pi_lif;
+    directmap                    *rx_policer_action_tbl = NULL;
+    rx_policer_action_actiondata d = {0};
+
+    rx_policer_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER_ACTION);
+    HAL_ASSERT_RETURN((rx_policer_action_tbl != NULL), HAL_RET_ERR);
+
+    d.actionid = RX_POLICER_ACTION_RX_POLICER_ACTION_ID;
+
+    if (insert) {
+        sdk_ret = rx_policer_action_tbl->insert_withid(&d, pd_lif->hw_lif_id);
+    } else {
+        sdk_ret = rx_policer_action_tbl->remove(pd_lif->hw_lif_id);
+    }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("rx policer action table write failure, lif {}, ret {}",
+                      lif_get_lif_id(pi_lif), ret);
+        return ret;
+    }
+    HAL_TRACE_DEBUG("lif {} hw_lif_id {} rx policer action programmed ",
+                    lif_get_lif_id(pi_lif),
+                    pd_lif->hw_lif_id);
+    return ret;
+}
+
 hal_ret_t
-lif_pd_rx_policer_deprogram_hw (pd_lif_t *pd_lif)
+lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
+{
+    hal_ret_t ret;
+    lif_t     *pi_lif = (lif_t *)pd_lif->pi_lif;
+
+    ret = lif_pd_rx_policer_tbl_program_hw(pd_lif, update);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Rx policer table write failure, lif {}, ret {}",
+                      lif_get_lif_id(pi_lif), ret);
+        return ret;
+    }
+
+    if (!update) {
+        ret = lif_pd_rx_policer_action_tbl_reset_hw(pd_lif, true);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Rx policer action table write failure, lif {}, ret {}",
+                          lif_get_lif_id(pi_lif), ret);
+            return ret;
+        }
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+lif_pd_rx_policer_tbl_deprogram_hw (pd_lif_t *pd_lif)
 {
     hal_ret_t             ret = HAL_RET_OK;
     sdk_ret_t             sdk_ret;
@@ -642,6 +698,29 @@ lif_pd_rx_policer_deprogram_hw (pd_lif_t *pd_lif)
     } else {
         HAL_TRACE_ERR("lif_id:{},deprogrammed rx policer table",
                       lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+    }
+
+    return ret;
+}
+
+hal_ret_t
+lif_pd_rx_policer_deprogram_hw (pd_lif_t *pd_lif)
+{
+    hal_ret_t ret;
+    lif_t     *pi_lif = (lif_t *)pd_lif->pi_lif;
+
+    ret = lif_pd_rx_policer_tbl_deprogram_hw(pd_lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Rx policer table write failure, lif {}, ret {}",
+                      lif_get_lif_id(pi_lif), ret);
+        return ret;
+    }
+
+    ret = lif_pd_rx_policer_action_tbl_reset_hw(pd_lif, false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Rx policer action table write failure, lif {}, ret {}",
+                      lif_get_lif_id(pi_lif), ret);
+        return ret;
     }
 
     return ret;

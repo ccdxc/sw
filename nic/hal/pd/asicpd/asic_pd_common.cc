@@ -569,16 +569,20 @@ asicpd_stats_region_init (asicpd_stats_region_info_t *region_arr, int arrlen)
     hbm_addr_t                    stats_base_addr;
     uint64_t                      stats_region_start;
     uint64_t                      stats_region_size;
+    uint64_t                      bit31_base = 0;
 
     stats_region_start = stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
     stats_region_size = (get_size_kb(JP4_ATOMIC_STATS) << 10);
 
     // reset bit 31 (saves one ASM instruction)
+    bit31_base = stats_region_start & (1<<31);
     stats_region_start &= 0x7FFFFFFF;
     stats_base_addr &= 0x7FFFFFFF;
 
     for (int i = 0; i < arrlen; i++) {
         p4pd_table_properties_get(region_arr[i].tblid, &tbl_ctx);
+        HAL_TRACE_DEBUG("Table {} stats base addr {:#x}",
+                        tbl_ctx.tablename, stats_base_addr | bit31_base);
         capri_table_constant_write(stats_base_addr,
                                    tbl_ctx.stage, tbl_ctx.stage_tableid,
                                    (tbl_ctx.gress == P4_GRESS_INGRESS));

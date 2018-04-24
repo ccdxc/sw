@@ -619,6 +619,65 @@ public:
         }
     }
 
+    void lif_policer_update(uint32_t lif_id, bool pps, uint64_t rate, uint64_t burst)
+    {
+        LifSpec           *spec;
+        LifGetRequestMsg  get_req_msg;
+        LifGetResponseMsg get_rsp_msg;
+        LifRequestMsg     req_msg;
+        LifResponseMsg    rsp_msg;
+        ClientContext     get_context;
+        ClientContext     context;
+        Status            status;
+
+        std::cout << "Policer update lif " << lif_id
+                                    << "pps " << pps
+                                    << "rate " << rate
+                                    << "burst " << burst
+                                    << std::endl;
+
+        get_req_msg.add_request()->mutable_key_or_handle()->set_lif_id(lif_id);
+        status = intf_stub_->LifGet(&get_context, get_req_msg, &get_rsp_msg);
+        if (!status.ok() || (get_rsp_msg.response_size() != 1)) {
+            std::cout << "Lif Get Failed" << std::endl;
+            return;
+        }
+
+        std::cout << "Lif Get Succeeded " << std::endl;
+
+        auto get_rsp = get_rsp_msg.response(0);
+
+        spec = req_msg.add_request();
+        *spec = get_rsp.spec();
+
+        if (pps) {
+            spec->mutable_rx_policer()->mutable_pps_policer()->set_packets_per_sec(rate);
+            spec->mutable_rx_policer()->mutable_pps_policer()->set_burst_packets(burst);
+        } else {
+            spec->mutable_rx_policer()->mutable_bps_policer()->set_bytes_per_sec(rate);
+            spec->mutable_rx_policer()->mutable_bps_policer()->set_burst_bytes(burst);
+        }
+
+        std::cout << "Calling lif update" << std::endl;
+        status = intf_stub_->LifUpdate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "Lif update succeeded, handle = "
+                      << rsp_msg.response(0).status().lif_handle()
+                      << std::endl;
+
+            std::cout << "hw_lif_id: " << rsp_msg.response(0).status().hw_lif_id() << std::endl;
+            for (int i = 0; i < rsp_msg.response(0).qstate().size(); i++) {
+                auto & qstate = rsp_msg.response(0).qstate()[i];
+                std::cout << "type_num: " << qstate.type_num()
+                          << " qstate: " << std::hex << qstate.addr()
+                          << std::endl;
+            }
+            return;
+        }
+        std::cout << "Lif update failed " << std::endl;
+    }
+
     uint64_t lif_create(uint32_t lif_id, uint32_t type_num) {
         LifSpec              *spec;
         LifRequestMsg        req_msg;
@@ -1949,6 +2008,12 @@ main (int argc, char** argv)
 
     uint32_t ip_address = 0;
 
+    bool policer_update = false;
+    bool pps;
+    uint32_t policer_lif_id;
+    uint64_t policer_rate;
+    uint64_t policer_burst;
+
     if (argc > 1) {
         if (!strcmp(argv[1], "port_test")) {
             test_port = true;
@@ -1991,6 +2056,12 @@ main (int argc, char** argv)
             session_create = true;
         } else if (!strcmp(argv[1], "session_create_cache_test")) {
             session_create_cache_test = true;
+        } else if (!strcmp(argv[1], "policer_update")) {
+            policer_update = true;
+            policer_lif_id = atoi(argv[2]);
+            pps = atoi(argv[3]);
+            policer_rate = atoi(argv[4]);
+            policer_burst = atoi(argv[5]);
         } else if (!strcmp(argv[1], "config")) {
             config = true;
         }
@@ -2099,6 +2170,8 @@ main (int argc, char** argv)
                                ::session::NAT_TYPE_NONE, 0, 0, 0, 0,
                                ::session::FlowAction::FLOW_ACTION_ALLOW,
                                0);
+    } else if (policer_update) {
+        hclient.lif_policer_update(policer_lif_id, pps, policer_rate, policer_burst);
         return 0;
     } else if (config == false) {
         std::cout << "Usage: <pgm> config" << std::endl;

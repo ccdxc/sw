@@ -1102,6 +1102,17 @@ capri_tm_hw_config_load_poll (int phase)
 hal_ret_t
 capri_tm_asic_init (void)
 {
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    // Do a sw reset prior to reconfiguring the islands etc
+    pbc_csr.cfg_pbc_control.sw_reset(1);
+    pbc_csr.cfg_pbc_control.write();
+    pbc_csr.cfg_pbc_control.read();
+
+    pbc_csr.cfg_pbc_control.sw_reset(0);
+    pbc_csr.cfg_pbc_control.write();
+    pbc_csr.cfg_pbc_control.read();
     //    cap_pb_init_start(0,0);
     //    cap_pb_init_done(0,0);
     return HAL_RET_OK;

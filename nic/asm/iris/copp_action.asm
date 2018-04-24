@@ -16,15 +16,13 @@ copp_action:
   bgti        r7, 0xF, copp_permitted_stats_overflow
   tblwr       d.copp_action_d.permitted_packets, r7[3:0]
   tbladd.e    d.copp_action_d.permitted_bytes, \
-                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
+                k.policer_metadata_packet_len
   nop
 
 copp_permitted_stats_overflow:
   add         r7, d.copp_action_d.permitted_bytes, \
-                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
-  addi        r6, r0, 0x100000F
+                k.policer_metadata_packet_len
+  addi        r6, r0, 0x1000010
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
 
@@ -40,15 +38,13 @@ copp_deny:
   bgti        r7, 0xF, copp_denied_stats_overflow
   tblwr       d.copp_action_d.denied_packets, r7[3:0]
   tbladd.e    d.copp_action_d.denied_bytes, \
-                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
+                k.policer_metadata_packet_len
   nop
 
 copp_denied_stats_overflow:
   add         r7, d.copp_action_d.denied_bytes, \
-                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
-  addi        r6, r0, 0x100000F
+                k.policer_metadata_packet_len
+  addi        r6, r0, 0x1000010
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
 

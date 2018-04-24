@@ -32,8 +32,8 @@ encap_vxlan:
   add         r2, r0, k.rewrite_metadata_entropy_hash, 48
   or          r2, r2, UDP_PORT_VXLAN, 32
   or          r2, r2, r7, 16
-  phvwrpair   p.{vxlan_flags...vxlan_reserved2}, r1, \
-                p.{udp_srcPort...udp_checksum}, r2
+  phvwr       p.{vxlan_flags...vxlan_reserved2}, r1
+  phvwr       p.{udp_srcPort...udp_checksum}, r2
 
   // set inner_ethernet_valid, vxlan_valid and udp_valid
   .assert(offsetof(p, inner_ethernet_valid) - offsetof(p, vxlan_valid) == 4)

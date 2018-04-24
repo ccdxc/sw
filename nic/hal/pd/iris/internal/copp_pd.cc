@@ -74,10 +74,50 @@ copp_pd_cleanup_copp_tbl (pd_copp_t *pd_copp)
 }
 
 static hal_ret_t
+copp_pd_reset_copp_action_tbl (pd_copp_t *pd_copp, bool insert)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    sdk_ret_t       sdk_ret;
+    copp_t          *pi_copp = pd_copp->pi_copp;
+    directmap       *copp_action_tbl = NULL;
+    copp_actiondata d = {0};
+
+    copp_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP_ACTION);
+    HAL_ASSERT_RETURN((copp_action_tbl != NULL), HAL_RET_ERR);
+
+    d.actionid = COPP_EXECUTE_COPP_ID;
+
+    if (insert) {
+        sdk_ret = copp_action_tbl->insert_withid(&d, pd_copp->hw_policer_id);
+    } else {
+        sdk_ret = copp_action_tbl->remove(pd_copp->hw_policer_id);
+    }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("copp policer action table write failure, copp {}, ret {}",
+                      pi_copp->key, ret);
+        return ret;
+    }
+    HAL_TRACE_DEBUG("Copp action : {} hw_policer_id: {} programmed",
+                    pi_copp->key,
+                    pd_copp->hw_policer_id);
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
 copp_pd_deprogram_hw (pd_copp_t *pd_copp)
 {
-    hal_ret_t   ret;
+    hal_ret_t ret;
+    copp_t    *pi_copp = pd_copp->pi_copp;
+
     ret = copp_pd_cleanup_copp_tbl(pd_copp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Copp {} error cleaning up copp tbl ret {}",
+                      pi_copp->key, ret);
+        return ret;
+    }
+
+    ret = copp_pd_reset_copp_action_tbl(pd_copp, false);
 
     return ret;
 }
@@ -180,6 +220,16 @@ copp_pd_program_hw (pd_copp_t *pd_copp, bool update)
                       "Copp {} ret {}",
                       copp->key, ret);
         return ret;
+    }
+
+    if (!update) {
+        ret = copp_pd_reset_copp_action_tbl(pd_copp, true);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the copp action table "
+                          "Copp {} ret {}",
+                          copp->key, ret);
+            return ret;
+        }
     }
 
     return HAL_RET_OK;

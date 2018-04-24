@@ -1520,6 +1520,15 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     spec->set_rdma_max_keys(lif->rdma_max_keys);
     spec->set_rdma_max_pt_entries(lif->rdma_max_pt_entries);
 
+    spec->set_vlan_strip_en(lif->vlan_strip_en);
+    spec->set_vlan_insert_en(lif->vlan_insert_en);
+    spec->mutable_pinned_uplink_if_key_handle()->set_if_handle(lif->pinned_uplink);
+    qos_policer_to_spec(&lif->qos_info.rx_policer, spec->mutable_rx_policer());
+    qos_policer_to_spec(&lif->qos_info.tx_policer, spec->mutable_tx_policer());
+    spec->mutable_rss()->set_enable(lif->rss.enable);
+    spec->mutable_rss()->set_type(lif->rss.type);
+    spec->mutable_rss()->set_key(lif->rss.key, sizeof(lif->rss.key));
+
     rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
 
     rsp->mutable_status()->set_lif_handle(lif->hal_handle);
