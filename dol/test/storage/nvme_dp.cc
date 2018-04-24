@@ -288,6 +288,8 @@ int setup_one_io_buffer(int index) {
   //       does not know the VA of the host. In production code, this buffer will be
   //       setup with the VA:PA identity mapping of the HBM buffer.
   FillWriteBackLocalBuffer(io_buf_base_addr, write_back_wqe_base);
+  // Increment the Buffer pointers after this back fill
+  IncrTargetRcvBufPtr();
 
   // Form the R2N sequencer doorbell
   uint32_t base_db_bit = (IO_BUF_SEQ_DB_OFFSET + IO_BUF_SEQ_R2N_DB_OFFSET) * 8;
@@ -303,8 +305,12 @@ int setup_one_io_buffer(int index) {
 }
 
 int setup_io_buffers() {
-  // Setup only buffer 0 for now
-  setup_one_io_buffer(0);
+  // Setup IO buffers (except the last one as it can't be added to the IOB ring)
+  for (int i = 0; i < (int) io_buf_num_entries-1; i++) {
+    setup_one_io_buffer(i);
+  }
+  // Reset the target receive buffer pointer
+  ResetTargetRcvBufPtr();
 
   return 0;
 }

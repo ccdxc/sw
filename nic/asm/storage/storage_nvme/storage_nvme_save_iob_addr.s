@@ -24,7 +24,7 @@ storage_nvme_save_iob_addr_start:
    phvwr	p.io_ctx_iob_addr, d.iob_addr
 
    // Set table 1 and program address for next stage to save the oper_status in 
-   // the I/O context. This CANNOT be the last table config in this path.
+   // the I/O context. 
    add		r7, d.iob_addr, IO_BUF_IO_CTX_OFFSET
    LOAD_TABLE1_NO_VALID_BIT_e(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE,
                               storage_nvme_save_io_ctx_start)

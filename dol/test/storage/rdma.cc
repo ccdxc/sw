@@ -610,6 +610,10 @@ void PostTargetRcvBuf1() {
   tests::test_ring_doorbell(g_rdma_hw_lif_id, kRQType, 1, 0, target_rq_va->line_get());
 }
 
+void ResetTargetRcvBufPtr() {
+  target_rcv_buf_va->line_set(0);
+}
+
 void IncrTargetRcvBufPtr() {
   target_rcv_buf_va->line_advance();
 }
@@ -689,6 +693,7 @@ bool PullCQEntry(dp_mem_t *cq_va, uint16_t *cq_cindex, uint32_t ent_size,
 //       setup with the VA:PA identity mapping of the HBM buffer.
 void FillWriteBackLocalBuffer(dp_mem_t *wqe, int base_offset) {
   dp_mem_t *write_data_buf = target_rcv_buf_va->fragment_find(kR2NDataBufOffset, kR2NDataSize);
+  printf("Using write_buf VA %lx PA %lx \n", write_data_buf->va(), write_data_buf->pa());
   wqe->write_bit_fields(base_offset+256, 64, write_data_buf->va()); // SGE-va
   wqe->write_bit_fields(base_offset+256+64, 32, (uint32_t) kR2NDataSize); // SGE-len
   wqe->write_bit_fields(base_offset+256+64+32, 32, kTargetRcvBuf1LKey); // SGE-lkey

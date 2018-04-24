@@ -57,6 +57,7 @@ dp_mem_t *rdma_get_target_write_data_buf();
 void PostTargetRcvBuf1();
 void PostInitiatorRcvBuf1();
 
+void ResetTargetRcvBufPtr();
 void IncrTargetRcvBufPtr();
 void IncrInitiatorRcvBufPtr();
 
