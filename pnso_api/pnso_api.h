@@ -14,6 +14,9 @@
  * 	This header file is in its early stage to initiate discussion
  * 	on the API -- more changes are expected.
  *
+ *	Address alignment/packing for cache line size
+ *	batching needed or not
+ *
  */
 
 /**
@@ -40,8 +43,7 @@ enum pnso_service_type {
 	PNSO_SVC_TYPE_DECOMPRESS	= 4,
 	PNSO_SVC_TYPE_HASH		= 5,
 	PNSO_SVC_TYPE_CHKSUM		= 6,
-	PNSO_SVC_TYPE_PAD		= 7,
-	PNSO_SVC_TYPE_DECOMPACT		= 8,
+	PNSO_SVC_TYPE_DECOMPACT		= 7,
 	PNSO_SVC_TYPE_MAX
 };
 
@@ -69,6 +71,14 @@ enum pnso_compressor_type {
 	PNSO_COMPRESSOR_TYPE_MAX
 };
 
+/* Algorithms for deduplication hash */
+enum pnso_hash_type {
+	PNSO_HASH_TYPE_NONE		= 0,
+	PNSO_HASH_TYPE_SHA2_512		= 1,
+	PNSO_HASH_TYPE_SHA2_256		= 2,
+	PNSO_HASH_TYPE_MAX
+};
+
 /* Algorithms for checksum */
 enum pnso_chksum_type {
 	PNSO_CHKSUM_TYPE_NONE		= 0,
@@ -77,14 +87,6 @@ enum pnso_chksum_type {
 	PNSO_CHKSUM_TYPE_ADLER32	= 3,
 	PNSO_CHKSUM_TYPE_MADLER32	= 4,
 	PNSO_CHKSUM_TYPE_MAX
-};
-
-/* Algorithms for deduplication hash */
-enum pnso_hash_type {
-	PNSO_HASH_TYPE_NONE		= 0,
-	PNSO_HASH_TYPE_SHA2_512		= 1,
-	PNSO_HASH_TYPE_SHA2_256		= 2,
-	PNSO_HASH_TYPE_MAX
 };
 
 typedef int32_t pnso_error_t;
@@ -144,7 +146,7 @@ struct pnso_buffer_list {
  * @chksum: specifies the data integrity field, i.e. the checksum calculation
  * on input data before compression.
  * @data_len: specifies the compressed length
- * @version: specifies the version of the checksum algorithm 
+ * @version: specifies the version of the compression algorithm 
  *
  * Compression operation will insert a 8-byte header (populating the compressed
  * length, the checksum and the version number) at the beginning of the
@@ -159,6 +161,34 @@ struct pnso_compression_header {
 	uint16_t data_len;
 	uint16_t version;
 };
+
+/**
+ * struct pnso_init_params - represents the initialization parameters for
+ * Pensando accelerators
+ * @cp_hdr_version: specifies the version of the compression algorithm that to
+ * be populated in compression header.
+ * @per_core_qdepth: specifies the maximum number of parallel requests per core.
+ * @block_size: specifies the size of a block in bytes.
+ *
+ */
+struct pnso_init_params {
+	uint16_t cp_hdr_version;
+	uint16_t per_core_qdepth;
+	uint32_t block_size;
+};
+
+/**
+ * pnso_init() - initializes Pensando accelerators. Before using any of the
+ * Pensando accelerator services, this must be the first function to be invoked.
+ * @init_params: specifies the initialization parameters for Pensando
+ * Offloaders.
+ *
+ * Return:
+ *	PNSO_OK - on success
+ *	-EINVAL - on invalid input parameters
+ *
+ */
+pnso_error_t pnso_init(struct pnso_init_params *init_params);
 
 /**
  * struct pnso_crypto_desc - represents the descriptor for encryption or
@@ -182,12 +212,17 @@ struct pnso_crypto_desc {
  * This is to instruct the compression operation, upon its completion, to
  * compress the buffer to a length that must be less than or equal to
  * 'threshold_len'.
+ * @zero_pad: specifies whether or not to zero fill the compressed output buffer
+ * aligning to block size.
+ * @insert_header: specifies whether or not to insert compression header.
  * @rsvd_2: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_compression_desc {
 	uint16_t rsvd_1;
 	uint16_t threshold_len;
+	bool zero_pad;
+	bool insert_header;
 	uint32_t rsvd_2;
 }; 
 
@@ -222,13 +257,6 @@ struct pnso_checksum_desc {
 };
 
 /**
- * struct pnso_pad_desc - represents the descriptor for 'padding' operation
- *
- */
-struct pnso_pad_desc {
-};
-
-/**
  * TODO: This input (i.e. header) has to come from Netapp.
  *
  * struct pnso_decompaction_desc - represents the descriptor for decompaction
@@ -255,11 +283,11 @@ struct pnso_decompaction_desc {
  * space for maximum of only 8 hashes.
  *
  */
-#define PNSO_HASH_OR_CHKSUM_TAG_LEN 64
+#define PNSO_HASH_OR_CHKSUM_TAG_LEN	64
 
 /**
  * struct pnso_hash_or_chksum_tag - represents the SHA or checksum tag
- * @hash_or_chksum: specifies an array of either a hash and checksum.
+ * @hash_or_chksum: specifies an array of either hashes or checksums.
  *
  */
 struct pnso_hash_or_chksum_tag {
@@ -274,16 +302,22 @@ struct pnso_hash_or_chksum_tag {
  * service type.
  * @output_data_len: specifies the length of the output buffer processed in
  * bytes depending on the service type.
+ * @interim_buf: specifies a temporary scatter/gather buffer list that to be
+ * used as output buffer for this service. Valid only for non-last services.
  * @num_tags: specifies number of SHAs or checksums.
  * @tags: specifies a pointer to an allocated memory for number of 'num_tags'
  * hashes or checksums.  When 'num_tags' is 0, this parameter is NULL.
+ *
+ * Note: Hash or checksum tags will be packed one after another. In other words,
+ * consequtive SHA512 and SHA256 hashes will be packed in 64 and 32-bytes apart
+ * respectively. Similarly, consequtive checksums will be packed 4-bytes apart.
  *
  */
 struct pnso_service_status {
 	pnso_error_t err;
 	uint8_t svc_type;
 	uint32_t output_data_len;
-
+	struct pnso_buffer_list *interim_buf;
 	uint16_t num_tags;
 	struct pnso_hash_or_chksum_tag *tags;
 };
@@ -316,15 +350,14 @@ struct pnso_service_result {
  * @dc_desc: specifies the descriptor for decompression service.
  * @hash_desc: specifies the descriptor for deduplication service.
  * @chksum_desc: specifies the descriptor for checksum service.
- * @pad_desc: specifies the descriptor for padding service.
  * @decompact_desc: specifies the descriptor for decompaction service.
  *
  */
 struct pnso_service {
 	uint8_t svc_type;
 	uint8_t algo_type;	/* pnso_compressor_type
-				 * pnso_chksum_type
 				 * pnso_hash_type
+				 * pnso_chksum_type
 				 */
 	union {
 		struct pnso_crypto_desc crypto_desc;
@@ -332,9 +365,8 @@ struct pnso_service {
 		struct pnso_decompression_desc dc_desc;
 		struct pnso_hash_desc hash_desc;
 		struct pnso_checksum_desc chksum_desc;
-		struct pnso_pad_desc pad_desc;
 		struct pnso_decompaction_desc decompact_desc;
-	} req;
+	} d;
 };
 
 /**
