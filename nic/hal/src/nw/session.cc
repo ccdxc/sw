@@ -32,14 +32,15 @@ namespace hal {
 
 thread_local void *g_session_timer;
 
-#define SESSION_SW_DEFAULT_TIMEOUT (3600 * TIME_NSECS_PER_SEC)
+#define SESSION_SW_DEFAULT_TIMEOUT                 (3600)
 #define SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT (120 * TIME_MSECS_PER_SEC)
-#define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT (15 * TIME_MSECS_PER_SEC)
-#define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT (15 * TIME_MSECS_PER_SEC)
-#define SESSION_DEFAULT_TCP_TICKLE_TIMEOUT      (2 * TIME_MSECS_PER_SEC)
-#define HAL_SESSION_AGE_SCAN_INTVL                   (5 * TIME_MSECS_PER_SEC)
-#define HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL        4
-#define HAL_TCP_CLOSE_WAIT_INTVL                     (10 * TIME_MSECS_PER_SEC)
+#define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT       (15 * TIME_MSECS_PER_SEC)
+#define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT    (15 * TIME_MSECS_PER_SEC)
+#define SESSION_DEFAULT_TCP_TICKLE_TIMEOUT         (2 * TIME_MSECS_PER_SEC)
+#define HAL_SESSION_AGE_SCAN_INTVL                 (5 * TIME_MSECS_PER_SEC)
+#define HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL       4
+#define HAL_TCP_CLOSE_WAIT_INTVL                   (10 * TIME_MSECS_PER_SEC)
+#define MAX_TCP_TICKLES                             3
 
 #if 0
 void *
@@ -982,7 +983,7 @@ DEFINE_ENUM(session_aged_ret_t, SESSION_AGED_RET)
  * of session aging
  */
 typedef struct tcptkle_timer_ctx_ {
-    session_t          *session;
+    hal_handle_t        session_handle;
     session_state_t     session_state;
     session_aged_ret_t  aged_flow;
     uint8_t             num_tickles;
@@ -1172,13 +1173,18 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *ctxt)
     uint64_t             ctime_ns;
     session_state_t      session_state;
     session_aged_ret_t   ret = SESSION_AGED_NONE;
+    session_t           *session = NULL;
 
-    HAL_ASSERT(ctx->session != NULL);
+    session = hal::find_session_by_handle(ctx->session_handle);
+    if (session == NULL) {
+        // Cant find session -- bail out
+        goto cleanup;    
+    }
 
     // get current time
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
-    hal_has_session_aged(ctx->session, ctime_ns, &session_state);
+    hal_has_session_aged(session, ctime_ns, &session_state);
 
     /*
      * We cannot rely on the timestamp here as our tickle would have
@@ -1199,13 +1205,16 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *ctxt)
     ctx->session_state = session_state;
     if (ret == SESSION_AGED_NONE) {
         HAL_TRACE_DEBUG("Bailing session aging on session {}", 
-                                           ctx->session->iflow->config.key);
+                                           session->iflow->config.key);
         // Session aging is stopped as we saw some packet
-        HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT, ctxt);
+        goto cleanup;
     } else {
-        fte::fte_softq_enqueue(ctx->session->fte_id, /* queue it on the right FTE thread */
+        fte::fte_softq_enqueue(session->fte_id, /* queue it on the right FTE thread */
                                build_and_send_tcp_pkt, (void *)ctxt);
     }
+
+cleanup:
+    HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT, ctxt);
 }
 
 void
@@ -1215,19 +1224,22 @@ build_and_send_tcp_pkt (void *data)
     pd::p4plus_to_p4_header_t    p4plus_header = {};
     tcptkle_timer_ctx_t         *ctxt = (tcptkle_timer_ctx_t *)data;
     uint8_t                      pkt[TCP_IPV4_PKT_SZ];
-    session_t                   *session = NULL;
     hal_ret_t                    ret = HAL_RET_OK;
+    session_t                   *session = NULL;
 
-    session = ctxt->session;
-    HAL_ASSERT(session != NULL);
-
+    session = hal::find_session_by_handle(ctxt->session_handle);
+    if (session == NULL) {
+        // Cant find session -- bail out
+        goto cleanup;
+    }
+    
     // Fill in P4Plus and CPU header info
     p4plus_header.flags = 0;
     p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
     cpu_header.src_lif = hal::SERVICE_LIF_CPU;
     cpu_header.l2_offset = 0;
 
-    if (ctxt->num_tickles <= 3) {
+    if (ctxt->num_tickles <= MAX_TCP_TICKLES) {
         // Send tickles to one or both flows
         if (ctxt->aged_flow == SESSION_AGED_IFLOW || 
             ctxt->aged_flow == SESSION_AGED_BOTH) {
@@ -1245,7 +1257,7 @@ build_and_send_tcp_pkt (void *data)
         HAL_TRACE_DEBUG("Sending another tickle and starting timer {}", 
                          session->iflow->config.key);
         ctxt->num_tickles++;
-        ctxt->session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
+        session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
                                               HAL_TIMER_ID_TCP_TICKLE_WAIT,
                                               SESSION_DEFAULT_TCP_TICKLE_TIMEOUT,
                                               (void *)ctxt,
@@ -1262,15 +1274,17 @@ build_and_send_tcp_pkt (void *data)
                              ctxt->session_state.rflow_state, &cpu_header, pkt, true);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, TCP_IPV4_PKT_SZ);
         }
-        // Free the context
-        HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT, ctxt);
         // time to clean up the session
-        ret = fte::session_delete(session);
+        ret = fte::session_delete_in_fte(session->hal_handle);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete aged session {}",
                           session->iflow->config.key);
         }
     }
+
+cleanup:
+    // Free the context
+    HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT, ctxt);
 }
 
 //------------------------------------------------------------------------------
@@ -1319,7 +1333,7 @@ session_age_cb (void *entry, void *ctxt)
                                                      sizeof(tcptkle_timer_ctx_t));
             HAL_ASSERT_RETURN((tklectx != NULL), false);
 
-            tklectx->session = session;
+            tklectx->session_handle = session->hal_handle;
             tklectx->num_tickles = 1;
             tklectx->session_state = session_state;
             tklectx->aged_flow = retval;
@@ -1374,14 +1388,18 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     dllist_ctxt_t  *curr = NULL, *next = NULL;
     dllist_for_each_safe(curr, next, &args.tcptkl_timer_ctx_list) {
         tcptkle_timer_ctx_t *tklectx = dllist_entry(curr, tcptkle_timer_ctx_t, dllist_ctxt);
-        
-        ret = fte::fte_softq_enqueue(tklectx->session->fte_id,
+        hal::session_t *session = hal::find_session_by_handle(tklectx->session_handle);
+
+        if (session) { 
+       
+            ret = fte::fte_softq_enqueue(session->fte_id,
                                      build_and_send_tcp_pkt, (void *)tklectx);
-        // If the tickle is successfully queued then
-        // return otherwise go ahead and cleanup
-        if (ret == HAL_RET_OK) {
-            HAL_TRACE_DEBUG("Successfully enqueued TCP tickle {}", 
-                              tklectx->session->iflow->config.key);
+            // If the tickle is successfully queued then
+            // return otherwise go ahead and cleanup
+            if (ret == HAL_RET_OK) {
+                HAL_TRACE_DEBUG("Successfully enqueued TCP tickle {}", 
+                                                   session->iflow->config.key);
+            }
         }
         dllist_del(&tklectx->dllist_ctxt);
     }
@@ -1439,8 +1457,16 @@ session_init (void)
 static void
 tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
-    hal_ret_t  ret;
-    session_t *session = (session_t *)ctxt;
+    hal_ret_t     ret;
+    hal_handle_t  session_handle = (hal_handle_t)ctxt;
+    session_t    *session = NULL;
+
+    session = hal::find_session_by_handle(session_handle);
+    if (session == NULL) {
+        HAL_TRACE_ERR("Cant find the session for handle {} -- bailing",
+                                                         session_handle);
+        return;
+    }
 
     HAL_TRACE_DEBUG("TCP close timer callback -- deleting session with id {}",
                     session->iflow->config.key);
@@ -1532,7 +1558,7 @@ schedule_tcp_close_timer (session_t *session)
     session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
                                      HAL_TIMER_ID_TCP_CLOSE_WAIT,
                                      get_tcp_timeout(session, TCP_CLOSE_TIMEOUT),
-                                     (void *)session, tcp_close_cb, false);
+                                     (void *)(session->hal_handle), tcp_close_cb, false);
     if (!session->tcp_cxntrack_timer) {
         return HAL_RET_ERR;
     }
@@ -1548,10 +1574,18 @@ schedule_tcp_close_timer (session_t *session)
 void
 tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
-    hal_ret_t  ret;
-    session_t *session = (session_t *)ctxt;
+    hal_ret_t                 ret;
+    hal_handle_t              session_handle = (hal_handle_t)ctxt;
+    session_t                *session = NULL;
     pd::pd_session_get_args_t args;
     session_state_t           state;
+
+    session = hal::find_session_by_handle(session_handle);
+    if (session == NULL) {
+        HAL_TRACE_ERR("Cant find the session for handle {} -- bailing", 
+                                                         session_handle);
+        return;
+    }
 
     args.session = session;
     args.session_state = &state;
@@ -1571,7 +1605,7 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
     // If we havent received bidir FIN by now then we go ahead and cleanup
     // the session
     if (state.iflow_state.state != session::FLOW_TCP_STATE_BIDIR_FIN_RCVD) {
-        tcp_close_cb(timer, timer_id, session);
+        tcp_close_cb(timer, timer_id, (void *)(session->hal_handle));
     }
 }
 
@@ -1595,7 +1629,7 @@ schedule_tcp_half_closed_timer (session_t *session)
     session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
                                      HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT,
                                      get_tcp_timeout(session, TCP_HALF_CLOSED_TIMEOUT),
-                                     (void *)session,
+                                     (void *)(session->hal_handle),
                                      tcp_half_close_cb, false);
 
     if (!session->tcp_cxntrack_timer) {
@@ -1615,9 +1649,16 @@ static void
 tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     hal_ret_t                 ret;
-    session_t                *session = (session_t *)ctxt;
+    hal_handle_t              session_handle = (hal_handle_t)ctxt;
     pd::pd_session_get_args_t args;
     session_state_t           state;
+    session_t                *session = NULL;
+
+    session = hal::find_session_by_handle(session_handle);
+    if (session == NULL) {
+        HAL_TRACE_ERR("Cant find the session for handle {} -- bailing", session_handle);
+        return;
+    }
 
     args.session = session;
     args.session_state = &state;
@@ -1660,7 +1701,7 @@ schedule_tcp_cxnsetup_timer (session_t *session)
     session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
                                         HAL_TIMER_ID_TCP_CXNSETUP_WAIT,
                                         get_tcp_timeout(session, TCP_CXNSETUP_TIMEOUT),
-                                        (void *)session,
+                                        (void *)(session->hal_handle),
                                         tcp_cxnsetup_cb, false);
 
     if (!session->tcp_cxntrack_timer) {

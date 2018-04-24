@@ -72,7 +72,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
 
 
 // Process Session delete in fte thread
-static hal_ret_t
+hal_ret_t
 session_delete_in_fte (hal_handle_t session_handle, bool force_delete)
 {
     hal_ret_t ret;
