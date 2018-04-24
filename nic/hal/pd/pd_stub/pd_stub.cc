@@ -44,6 +44,7 @@ PD_FUNC_STUB(pd_l2seg_update);
 PD_FUNC_STUB(pd_l2seg_delete);
 PD_FUNC_STUB(pd_l2seg_mem_free);
 PD_FUNC_STUB(pd_l2seg_make_clone);
+PD_FUNC_STUB(pd_l2seg_get);
 
 // misc apis for vrf and l2seg
 PD_FUNC_STUB(pd_get_object_from_flow_lkupid);

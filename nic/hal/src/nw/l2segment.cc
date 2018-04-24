@@ -1798,8 +1798,10 @@ end:
 static void
 l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
 {
-    hal_handle_t        *p_hdl_id = NULL;
-    NetworkKeyHandle    *nkh      = NULL;
+    hal_handle_t                *p_hdl_id   = NULL;
+    NetworkKeyHandle            *nkh        = NULL;
+    pd::pd_l2seg_get_args_t     args        = {0};
+    hal_ret_t                   ret         = HAL_RET_OK;
 
     // fill config spec of this L2 segment
     rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
@@ -1830,6 +1832,15 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
 
     // fill stats of this L2 segment
     rsp->mutable_stats()->set_num_endpoints(l2seg->num_ep);
+
+    // Getting PD information
+    args.l2seg = l2seg;
+    args.rsp = rsp;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_GET, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to do PD get for L2Segment id : {}. err : {}",
+                      l2seg->seg_id, ret);
+    }
 
     rsp->set_api_status(types::API_STATUS_OK);
 }

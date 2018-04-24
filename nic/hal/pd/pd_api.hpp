@@ -170,6 +170,11 @@ typedef struct pd_l2seg_make_clone_args_s {
     l2seg_t *clone;
 } __PACK__ pd_l2seg_make_clone_args_t;
 
+typedef struct pd_l2seg_get_args_s {
+    l2seg_t *l2seg;
+    L2SegmentGetResponse *rsp;
+} __PACK__ pd_l2seg_get_args_t;
+
 static inline void
 pd_l2seg_create_args_init (pd_l2seg_create_args_t *args)
 {
@@ -2642,7 +2647,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_TABLE_METADATA_GET,       227, "PD_FUNC_ID_TABLE_METADATA_GET") \
     ENTRY(PD_FUNC_ID_TABLE_GET,                228, "PD_FUNC_ID_TABLE_GET") \
     ENTRY(PD_FUNC_ID_BYPASS_FLOWID_GET,        229, "PD_FUNC_ID_BYPASS_FLOWID_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      230, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_L2SEG_GET,                230, "PD_FUNC_ID_L2SEG_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      231, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2680,6 +2686,7 @@ PD_FUNCP_TYPEDEF(pd_l2seg_update);
 PD_FUNCP_TYPEDEF(pd_l2seg_delete);
 PD_FUNCP_TYPEDEF(pd_l2seg_mem_free);
 PD_FUNCP_TYPEDEF(pd_l2seg_make_clone);
+PD_FUNCP_TYPEDEF(pd_l2seg_get);
 
 // misc apis for vrf and l2seg
 PD_FUNCP_TYPEDEF(pd_get_object_from_flow_lkupid);
@@ -3031,6 +3038,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_l2seg_delete);
         PD_UNION_FIELD(pd_l2seg_mem_free);
         PD_UNION_FIELD(pd_l2seg_make_clone);
+        PD_UNION_FIELD(pd_l2seg_get);
 
         // misc apis for vrf and l2seg
         PD_UNION_FIELD(pd_get_object_from_flow_lkupid);

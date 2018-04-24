@@ -735,6 +735,34 @@ end:
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// pd l2seg get
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_l2seg_get (pd_l2seg_get_args_t *args)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    l2seg_t                 *l2seg = args->l2seg;
+    pd_l2seg_t              *l2seg_pd = (pd_l2seg_t *)l2seg->pd;
+    L2SegmentGetResponse    *rsp = args->rsp;
+
+    auto l2seg_info = rsp->mutable_status()->mutable_epd_info();
+    l2seg_info->set_hw_l2seg_id(l2seg_pd->l2seg_hw_id);
+    l2seg_info->set_l2seg_lookup_id(l2seg_pd->l2seg_fl_lkup_id);
+    l2seg_info->set_l2seg_vlan_id_cpu(l2seg_pd->cpu_l2seg_id);
+    l2seg_info->set_inp_prop_cpu_idx(l2seg_pd->inp_prop_tbl_cpu_idx);
+    for (int i = 0; i < HAL_MAX_UPLINK_IF_PCS; i++) {
+        if (l2seg_pd->inp_prop_tbl_idx[i] != 0xFFFFFFFF) {
+            l2seg_info->add_inp_prop_idx(l2seg_pd->inp_prop_tbl_idx[i]);
+        }
+        if (l2seg_pd->inp_prop_tbl_idx_pri[i] != 0xFFFFFFFF) {
+            l2seg_info->add_inp_prop_idx_pr_tag(l2seg_pd->inp_prop_tbl_idx_pri[i]);
+        }
+    }
+
+    return ret;
+}
+
 //----------------------------------------------------------------------------
 // frees PD memory without indexer free.
 //-----------------------------------------------------------------------------

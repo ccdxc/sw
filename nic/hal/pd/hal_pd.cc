@@ -84,6 +84,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_UPDATE, pd_l2seg_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_MEM_FREE, pd_l2seg_mem_free);
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_MAKE_CLONE, pd_l2seg_make_clone);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_GET, pd_l2seg_get);
 
     // misc apis for vrf and l2seg
     PD_SYMBOL_LOAD(PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, pd_get_object_from_flow_lkupid);
@@ -446,6 +447,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_UPDATE, pd_l2seg_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_MEM_FREE, pd_l2seg_mem_free);
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_MAKE_CLONE, pd_l2seg_make_clone);
+    PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_GET, pd_l2seg_get);
 
     PD_SYMBOL_CALL(PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, pd_get_object_from_flow_lkupid);
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, pd_l2seg_get_flow_lkupid);
