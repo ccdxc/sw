@@ -393,6 +393,11 @@ comp_hash_chain_t::hash_setup(uint32_t block_no,
         hash_desc->opaque_tag_addr = caller_hash_opaque_vec->pa();
         hash_desc->opaque_tag_data = caller_hash_opaque_data;
         hash_desc->cmd_bits.opaque_tag_on = 1;
+        if (!suppress_info_log) {
+            printf("comp_hash_chain HW to possibly write hash opaque_tag_addr 0x%lx "
+                   "opaque_tag_data 0x%x\n", hash_desc->opaque_tag_addr,
+                   hash_desc->opaque_tag_data);
+        }
     }
     hash_desc_vec->write_thru();
 }
@@ -508,7 +513,7 @@ comp_hash_chain_t::verify(void)
         accum_data_len0 += hash_sgl->len0;
         accum_data_len1 += hash_sgl->len1;
         accum_data_len2 += hash_sgl->len2;
-        accum_link += hash_sgl->link;
+        accum_link |= hash_sgl->link;
         if (block_no == ((uint32_t)actual_hash_blks - 1)) {
             pad_data_len = hash_sgl->len1;
         }

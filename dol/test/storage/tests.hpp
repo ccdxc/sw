@@ -17,7 +17,19 @@ DECLARE_uint64(acc_scale_iters);
 DECLARE_string(acc_scale_verify_method);
 
 extern bool run_pdma_tests;
-extern bool run_acc_scale_tests;
+
+enum {
+  ACC_SCALE_TEST_NONE           = 0U,
+  ACC_SCALE_TEST_DECRYPT_DECOMP = 1U << 0,
+  ACC_SCALE_TEST_COMP_ENCRYPT   = 1U << 1,
+  ACC_SCALE_TEST_COMP_HASH      = 1U << 2,
+  ACC_SCALE_TEST_ALL            = ACC_SCALE_TEST_DECRYPT_DECOMP     |
+                                  ACC_SCALE_TEST_COMP_ENCRYPT       |
+                                  ACC_SCALE_TEST_COMP_HASH,
+  ACC_SCALE_TEST_MAX_TYPES      = 3U // max number of test types
+};
+
+extern uint32_t run_acc_scale_tests_map;
 
 using namespace dp_mem;
 
@@ -28,9 +40,6 @@ const static uint32_t  kDefaultNsid          = 1;
 const static uint32_t  kDefaultBufSize       = 4096;
 
 // Accelerator chaining
-
-// Set the following to the scale test with the most number of chains
-const static uint32_t   kAccScaleTestsMaxChains = 2;
 
 typedef struct {
   uint64_t next_doorbell_addr;	// Next capri doorbell address (if chaining)

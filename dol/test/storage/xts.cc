@@ -574,7 +574,8 @@ void XtsCtx::status_invalidate(void) {
     status->fragment_find(0, sizeof(uint32_t))->fill_thru(inval_byte);
 }
 
-int XtsCtx::verify_doorbell(bool verify_pi) {
+int XtsCtx::verify_doorbell(bool verify_pi,
+                            uint64_t poll_interval) {
 
   // Poll for doorbell data as XTS which runs in a different thread
   auto func = [this] () {
@@ -585,7 +586,7 @@ int XtsCtx::verify_doorbell(bool verify_pi) {
     return 0;
   };
 
-  Poller poll;
+  Poller poll(poll_interval);
   int rv = poll(func);
   if(0 != rv) {
       printf("last XTS doorbell data 0x%lx\n",

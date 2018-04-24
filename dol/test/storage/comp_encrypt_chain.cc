@@ -314,7 +314,7 @@ comp_encrypt_chain_t::verify(void)
     }
 
     // Verify XTS engine doorbell
-    if (xts_ctx.verify_doorbell(false)) {
+    if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval)) {
         printf("ERROR: comp_encrypt_chain doorbell from XTS engine never came\n");
         return -1;
     }

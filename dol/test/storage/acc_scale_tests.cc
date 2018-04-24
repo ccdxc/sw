@@ -548,6 +548,7 @@ comp_hash_chain_scale_t::completion_check(void)
     for (i = 0; i < comp_hash_chain_vec.size(); i++) {
         actual_hash_blks = 
             comp_hash_chain_vec[i]->actual_hash_blks_get(COMP_HASH_CHAIN_NON_BLOCKING_RETRIEVE);
+        hash_opaque_host_vec[i]->line_set(0);
         if ((actual_hash_blks < 0) ||
             memcmp(hash_opaque_host_vec[i]->read_thru(),
                    exp_opaque_data_buf->read_thru(),
@@ -693,6 +694,7 @@ acc_comp_hash_chain_scale_create(uint32_t num_submissions,
                                               destructor_free_buffers(true));
     comp_hash_chain_scale->push_params_set(chc_push.app_blk_size(app_blk_size).
                                                     app_hash_size(kCompAppHashBlkSize).
+                                                    integrity_type(COMP_INTEGRITY_M_ADLER32).
                                                     comp_queue(cp_queue).
                                                     hash_queue(cp_hotq).
                                                     push_type(COMP_QUEUE_PUSH_SEQUENCER_DEFER).
@@ -708,19 +710,15 @@ acc_comp_hash_chain_scale_create(uint32_t num_submissions,
  *   XTS-decrypt to decompression chaining scale
  */
 int
-acc_scale_tests_comp_encrypt_decrypt_decomp(void)
+acc_scale_tests_push(void)
 {
     std::vector<std::function<acc_scale_tests_t*(uint32_t,
                                                  uint32_t,
                                                  uint32_t,
                                                  uint32_t,
-                                                 comp_encrypt_chain_t*)>> tests_vec = { 
-        &acc_decrypt_decomp_chain_scale_create,
-        &acc_comp_encrypt_chain_scale_create,
-    };
-
-    comp_encrypt_chain_scale_t  *comp_encrypt_chain_scale_source;
-    comp_encrypt_chain_t        *comp_encrypt_chain_source;
+                                                 comp_encrypt_chain_t*)>> tests_vec;
+    comp_encrypt_chain_scale_t  *comp_encrypt_chain_scale_source = nullptr;
+    comp_encrypt_chain_t        *comp_encrypt_chain_source = nullptr;
     acc_scale_tests_list_t      tests_list;
     tests::Poller               poll(FLAGS_long_poll_interval);
     uint32_t                    num_submissions = NUM_TO_VAL(FLAGS_acc_scale_submissions);
@@ -731,41 +729,53 @@ acc_scale_tests_comp_encrypt_decrypt_decomp(void)
     int                         ret_val;
 
     /*
-     * For the 2nd test (XTS-decrypt to decompression), generate source data
+     * For the XTS-decrypt to decompression), generate source data
      * by executing one Compression to XTS-encrypt chaining test.
      */
-    comp_encrypt_chain_scale_source = (comp_encrypt_chain_scale_t *)
-                                       acc_comp_encrypt_chain_scale_create(1, app_blk_size,
-                                                                           0, 0, nullptr);
-    comp_encrypt_chain_scale_source->push();
+    if (run_acc_scale_tests_map & ACC_SCALE_TEST_DECRYPT_DECOMP) {
+        comp_encrypt_chain_scale_source = (comp_encrypt_chain_scale_t *)
+                                           acc_comp_encrypt_chain_scale_create(1, app_blk_size,
+                                                                               0, 0, nullptr);
+        comp_encrypt_chain_scale_source->push();
+
+        /*
+         * Poll for completion of source data generation
+         */
+        auto completion_poll = [&comp_encrypt_chain_scale_source] () -> int
+        {
+            return comp_encrypt_chain_scale_source->completion_check();
+        };
+
+        if (poll(completion_poll) || 
+            comp_encrypt_chain_scale_source->full_verify()) {
+
+            printf("%s source data creation failed\n", __FUNCTION__);
+            delete comp_encrypt_chain_scale_source;
+            return -1;
+        }
+        comp_encrypt_chain_source = comp_encrypt_chain_scale_source->chain_get(0);
+        tests_vec.push_back(&acc_decrypt_decomp_chain_scale_create);
+    }
 
     /*
-     * Poll for completion of source data generation
+     * Add more tests as selected
      */
-    auto completion_poll = [&comp_encrypt_chain_scale_source] () -> int
-    {
-        return comp_encrypt_chain_scale_source->completion_check();
-    };
-
-    if (poll(completion_poll) || 
-        comp_encrypt_chain_scale_source->full_verify()) {
-
-        printf("%s source data creation failed\n", __FUNCTION__);
-        delete comp_encrypt_chain_scale_source;
-        return -1;
+    if (run_acc_scale_tests_map & ACC_SCALE_TEST_COMP_ENCRYPT) {
+        tests_vec.push_back(&acc_comp_encrypt_chain_scale_create);
+    }
+    if (run_acc_scale_tests_map & ACC_SCALE_TEST_COMP_HASH) {
+        tests_vec.push_back(&acc_comp_hash_chain_scale_create);
     }
 
     /*
      * Bump up the global constant below if assert fails
      */
-    assert(tests_vec.size() <= kAccScaleTestsMaxChains);
+    assert(tests_vec.size() <= ACC_SCALE_TEST_MAX_TYPES);
 
     /*
      * Create and run test list,
      * each chain is replicated by num_replicas times
      */
-    comp_encrypt_chain_source = comp_encrypt_chain_scale_source->chain_get(0);
-
     sq_idx = 0;
     for (r = 0; r < num_replicas; r++) {
         for (v = 0; v < tests_vec.size(); v++) {
@@ -777,51 +787,10 @@ acc_scale_tests_comp_encrypt_decrypt_decomp(void)
     }
 
     ret_val = tests_list.post_push(__FUNCTION__);
-    if (ret_val == 0) {
+    if ((ret_val == 0) && comp_encrypt_chain_scale_source) {
         delete comp_encrypt_chain_scale_source;
     }
     return ret_val;
-}
-
-
-/*
- * Run the accelerator scale test group which includes
- *   Compression to hash chaining scale
- */
-int
-acc_scale_tests_comp_hash(void)
-{
-    std::vector<std::function<acc_scale_tests_t*(uint32_t,
-                                                 uint32_t,
-                                                 uint32_t,
-                                                 uint32_t,
-                                                 comp_encrypt_chain_t*)>> tests_vec = { 
-        &acc_comp_hash_chain_scale_create,
-    };
-
-    acc_scale_tests_list_t      tests_list;
-    tests::Poller               poll(FLAGS_long_poll_interval);
-    uint32_t                    num_submissions = NUM_TO_VAL(FLAGS_acc_scale_submissions);
-    uint32_t                    num_replicas = NUM_TO_VAL(FLAGS_acc_scale_chain_replica);
-    uint32_t                    app_blk_size = NUM_TO_VAL(FLAGS_acc_scale_blk_size);
-    uint32_t                    sq_idx;
-    uint32_t                    r, v;
-
-    /*
-     * Create and run test list,
-     * each chain is replicated by num_replicas times
-     */
-    sq_idx = 0;
-    for (r = 0; r < num_replicas; r++) {
-        for (v = 0; v < tests_vec.size(); v++) {
-            tests_list.push(tests_vec[v](num_submissions, app_blk_size,
-                                         sq_idx, (sq_idx * num_submissions),
-                                         nullptr));
-            sq_idx++;
-        }
-    }
-
-    return tests_list.post_push(__FUNCTION__);
 }
 
 
