@@ -524,6 +524,10 @@
 		NatMappingStatus
 		NatMappingResponse
 		NatMappingResponseMsg
+		NatMappingDeleteRequest
+		NatMappingDeleteRequestMsg
+		NatMappingDeleteResponse
+		NatMappingDeleteResponseMsg
 		NatMappingGetRequest
 		NatMappingGetRequestMsg
 		NatMappingStats

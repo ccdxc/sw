@@ -217,7 +217,7 @@ nat_pool_cleanup (nat_pool_t *pool)
 //------------------------------------------------------------------------------
 // lookup a NAT pool by its key
 //------------------------------------------------------------------------------
-nat_pool_t *
+static inline nat_pool_t *
 find_nat_pool_by_key (nat_pool_key_t *key)
 {
     hal_handle_id_ht_entry_t    *handle_id_entry;
@@ -239,7 +239,7 @@ find_nat_pool_by_key (nat_pool_key_t *key)
 //------------------------------------------------------------------------------
 // lookup a NAT pool by its handle
 //------------------------------------------------------------------------------
-nat_pool_t *
+static inline nat_pool_t *
 find_nat_pool_by_handle (hal_handle_t handle)
 {
     if (handle == HAL_HANDLE_INVALID) {
@@ -263,8 +263,8 @@ find_nat_pool_by_handle (hal_handle_t handle)
 //------------------------------------------------------------------------------
 // lookup a NAT pool by key-handle spec
 //------------------------------------------------------------------------------
-nat_pool_t *
-find_nat_pool_by_key_or_handle (NatPoolKeyHandle& kh)
+static inline nat_pool_t *
+find_nat_pool_by_key_or_handle (const NatPoolKeyHandle& kh)
 {
     nat_pool_key_t    key;
     vrf_t             *vrf;
@@ -373,15 +373,14 @@ nat_pool_del_from_db (nat_pool_t *pool)
 static inline void
 nat_pool_spec_dump (NatPoolSpec& spec)
 {
-    std::string    nat_pool_cfg;
+    std::string    pool_cfg;
 
     if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
         return;
     }
-
-    google::protobuf::util::MessageToJsonString(spec, &nat_pool_cfg);
-    HAL_TRACE_DEBUG("NAT Pool Configuration:");
-    HAL_TRACE_DEBUG("{}", nat_pool_cfg.c_str());
+    google::protobuf::util::MessageToJsonString(spec, &pool_cfg);
+    HAL_TRACE_DEBUG("NAT pool configuration:");
+    HAL_TRACE_DEBUG("{}", pool_cfg.c_str());
     return;
 }
 
@@ -695,6 +694,7 @@ end:
 hal_ret_t
 nat_pool_update (NatPoolSpec& spec, NatPoolResponse *rsp)
 {
+    HAL_TRACE_ERR("NAT pool update operation not supported");
     return HAL_RET_INVALID_OP;
 }
 
@@ -722,6 +722,7 @@ validate_nat_pool_delete_req (NatPoolDeleteRequest& req,
             return HAL_RET_INVALID_ARG;
         }
     }
+
     return HAL_RET_OK;
 }
 
@@ -785,47 +786,51 @@ nat_pool_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 //-----------------------------------------------------------------------------
+// dump nat pool delete request
+//-----------------------------------------------------------------------------
+static inline void
+nat_pool_delete_req_dump (NatPoolDeleteRequest& req)
+{
+    std::string    del_req;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(req, &del_req);
+    HAL_TRACE_DEBUG("NAT pool delete request:");
+    HAL_TRACE_DEBUG("{}", del_req.c_str());
+    return;
+}
+
+//-----------------------------------------------------------------------------
 // process a NAT pool delete request
 //-----------------------------------------------------------------------------
 hal_ret_t
-nat_pool_delete (NatPoolDeleteRequest& req,
-                 NatPoolDeleteResponse *rsp)
+nat_pool_delete (NatPoolDeleteRequest& req, NatPoolDeleteResponse *rsp)
 {
     hal_ret_t        ret;
-    vrf_t            *vrf;
     nat_pool_t       *pool;
     cfg_op_ctxt_t    cfg_ctxt = { 0 };
     dhl_entry_t      dhl_entry = { 0 };
 
-    auto pool_key = req.key_or_handle().pool_key();
     // validate the request message
     ret = validate_nat_pool_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
         goto end;
     }
 
-    // get the VRF this nat pool belongs to
-    vrf = vrf_lookup_key_or_handle(pool_key.vrf_id_or_handle());
-    if (vrf == NULL) {
-        HAL_TRACE_ERR("Failed to find vrf with key {}/handle {}",
-                      pool_key.vrf_id_or_handle().vrf_id(),
-                      pool_key.vrf_id_or_handle().vrf_handle());
-        ret = HAL_RET_VRF_NOT_FOUND;
-        goto end;
-    }
-
     // get the NAT pool
-    pool = find_nat_pool(vrf->vrf_id, req.key_or_handle());
+    pool = find_nat_pool_by_key_or_handle(req.key_or_handle());
     if (pool == NULL) {
-        HAL_TRACE_ERR("Failed to delete natpool ({}, {}), pool not found",
-                      vrf->vrf_id, pool_key.pool_id());
+        HAL_TRACE_ERR("Failed to delete natpool, pool not found");
+        nat_pool_delete_req_dump(req);
         ret = HAL_RET_NAT_POOL_NOT_FOUND;
         goto end;
     }
     HAL_TRACE_DEBUG("Deleting natpool ({}, {})",
-                    vrf->vrf_id, pool_key.pool_id());
+                    pool->key.vrf_id, pool->key.pool_id);
 
-    // TODO: check if there are NAT Mappings outstanding
+    // TODO: check if there are NAT mappings outstanding
 
     // form ctxt and handover to the HAL infra
     dhl_entry.handle = pool->hal_handle;
@@ -997,18 +1002,51 @@ nat_mapping_compare_key_func (void *key1, void *key2)
 }
 
 //------------------------------------------------------------------------------
+// allocate a NAT mapping instance
+//------------------------------------------------------------------------------
+static inline addr_entry_t *
+nat_mapping_alloc (void)
+{
+    return hal::utils::nat::addr_entry_alloc();
+}
+
+
+//------------------------------------------------------------------------------
+// initialize a NAT mapping instance
+//------------------------------------------------------------------------------
+static inline addr_entry_t *
+nat_mapping_init (addr_entry_t *mapping)
+{
+    if (!mapping) {
+        return NULL;
+    }
+    mapping->hal_handle = HAL_HANDLE_INVALID;
+    mapping->db_node.reset();
+
+    return mapping;
+}
+
+//------------------------------------------------------------------------------
+// allocate and initialize a NAT mapping instance
+//------------------------------------------------------------------------------
+static inline addr_entry_t *
+nat_mapping_alloc_init (void)
+{
+    return nat_mapping_init(nat_mapping_alloc());
+}
+
+//------------------------------------------------------------------------------
 // free NAT mapping instance back to its slab
-// TODO: fix this
 //------------------------------------------------------------------------------
 static inline hal_ret_t
 nat_mapping_free (addr_entry_t *mapping)
 {
+    hal::utils::nat::addr_entry_free(mapping);
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
 // clean up all the state associated with a NAT mapping
-// TODO: why is handle free outside at all ?
 //------------------------------------------------------------------------------
 static inline hal_ret_t
 nat_mapping_cleanup (addr_entry_t *mapping)
@@ -1039,6 +1077,33 @@ find_nat_mapping_by_handle (hal_handle_t handle)
     }
 
     return (addr_entry_t *)hal_handle_get_obj(handle);
+}
+
+//------------------------------------------------------------------------------
+// lookup a NAT mapping by key-handle spec
+//------------------------------------------------------------------------------
+static inline addr_entry_t *
+find_nat_mapping_by_key_or_handle (const NatMappingKeyHandle& kh)
+{
+    addr_entry_key_t    key;
+    vrf_t               *vrf;
+
+    if (kh.has_svc()) {
+        if (kh.svc().vrf_kh().key_or_handle_case() == VrfKeyHandle::kVrfId) {
+            key.vrf_id = kh.svc().vrf_kh().vrf_id();
+        } else {
+            vrf = vrf_lookup_by_handle(kh.svc().vrf_kh().vrf_handle());
+            if (vrf == NULL) {
+                HAL_TRACE_ERR("vrf {} not found",
+                              kh.svc().vrf_kh().vrf_handle());
+                return NULL;
+            }
+            key.vrf_id = vrf->vrf_id;
+        }
+        ip_addr_spec_to_ip_addr(&key.ip_addr, kh.svc().ip_addr());
+        return hal::utils::nat::addr_entry_get(&key);
+    }
+    return find_nat_mapping_by_handle(kh.mapping_handle());
 }
 
 //------------------------------------------------------------------------------
@@ -1338,21 +1403,19 @@ nat_mapping_create (NatMappingSpec& spec,
         goto end;
     }
 
-#if 0
     // instanitate NAT address map object
     mapping = nat_mapping_alloc_init();
     if (mapping == NULL) {
-        HAL_TRACE_ERR("Failed to alloc/init nat addr map ({}, {})",
-                      vrf->vrf_id, );
+        HAL_TRACE_ERR("Failed to alloc/init nat addr map");
+        nat_mapping_spec_dump(spec);
         ret = HAL_RET_OOM;
         goto end;
     }
-#endif
 
     // copy the config from incoming request
     ret = nat_mapping_init_from_spec(vrf, mapping, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to initialize nat mapping");
+        HAL_TRACE_ERR("Failed to initialize nat mapping, err : {}", ret);
         nat_mapping_spec_dump(spec);
         goto end;
     }
@@ -1394,6 +1457,166 @@ end:
     }
     nat_mapping_prepare_rsp(rsp, ret,
                             mapping ? mapping->hal_handle : HAL_HANDLE_INVALID);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// dump nat mapping delete request
+//-----------------------------------------------------------------------------
+static inline void
+nat_mapping_delete_req_dump (NatMappingDeleteRequest& req)
+{
+    std::string    del_req;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(req, &del_req);
+    HAL_TRACE_DEBUG("NAT mapping delete request:");
+    HAL_TRACE_DEBUG("{}", del_req.c_str());
+    return;
+}
+
+//------------------------------------------------------------------------------
+// validate a nat mapping delete request
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+validate_nat_mapping_delete_req (NatMappingDeleteRequest& req,
+                                 NatMappingDeleteResponse *rsp)
+{
+    // check if key-handle field is set or not
+    if (!req.has_key_or_handle()) {
+        HAL_TRACE_ERR("NAT mapping key/handle not set in request");
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // if key is set, make sure that VRF key/handle is set
+    auto kh = req.key_or_handle();
+    if (kh.key_or_handle_case() ==  NatMappingKeyHandle::kSvc) {
+        if (!kh.svc().has_vrf_kh()) {
+            // vrf key/handle not set in the NAT mapping key
+            HAL_TRACE_ERR("VRF id/handle missing in NAT mapping key");
+            rsp->set_api_status(types::API_STATUS_NAT_POOL_KEY_INVALID);
+            return HAL_RET_INVALID_ARG;
+        }
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// free hw resources and cleanup the hw tables, if any, for the NAT mapping
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// perform the commit operation for the NAT mapping by deleting from config db
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t       ret;
+    dllist_ctxt_t   *lnode = NULL;
+    dhl_entry_t     *dhl_entry = NULL;
+    addr_entry_t    *mapping;
+    hal_handle_t    hal_handle;
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    mapping = (addr_entry_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    ret = nat_mapping_del_from_db(mapping);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    HAL_TRACE_DEBUG("Deleted nat mapping ({}, {}) --> ({}, {}) from cfg db",
+                    mapping->key.vrf_id, ipaddr2str(&mapping->key.ip_addr),
+                    mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr));
+
+    // free all sw resources associated with this pool
+    hal_handle_free(hal_handle);
+    nat_mapping_cleanup(mapping);
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// abort NAT mapping delete operation
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    HAL_TRACE_ERR("Aborting NAT mapping delete operation");
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// cleanup any transient state that we are holding
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// process a NAT mapping delete request
+//-----------------------------------------------------------------------------
+hal_ret_t
+nat_mapping_delete (NatMappingDeleteRequest& req, NatMappingDeleteResponse *rsp)
+{
+    hal_ret_t        ret;
+    addr_entry_t     *mapping;
+    cfg_op_ctxt_t    cfg_ctxt = { 0 };
+    dhl_entry_t      dhl_entry = { 0 };
+
+    // validate the request message
+    ret = validate_nat_mapping_delete_req(req, rsp);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+
+    // get the NAT mapping
+    mapping = find_nat_mapping_by_key_or_handle(req.key_or_handle());
+    if (mapping == NULL) {
+        HAL_TRACE_ERR("Failed to delete NAT mapping, mapping not found");
+        nat_mapping_delete_req_dump(req);
+        ret = HAL_RET_NAT_MAPPING_NOT_FOUND;
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Deleting NAT mapping ({}, {}) --> ({}, {}) from cfg db",
+                    mapping->key.vrf_id, ipaddr2str(&mapping->key.ip_addr),
+                    mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr));
+
+    // TODO: handle the case where flows are using this mapping still
+
+    // form ctxt and handover to the HAL infra
+    dhl_entry.handle = mapping->hal_handle;
+    dhl_entry.obj = mapping;
+    cfg_ctxt.app_ctxt = NULL;
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_del_obj(mapping->hal_handle, &cfg_ctxt,
+                             nat_mapping_delete_del_cb,
+                             nat_mapping_delete_commit_cb,
+                             nat_mapping_delete_abort_cb,
+                             nat_mapping_delete_cleanup_cb);
+
+end:
+
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC (HAL_API_NAT_MAPPING_DELETE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC (HAL_API_NAT_MAPPING_DELETE_FAIL);
+    }
+    rsp->set_api_status(hal_prepare_rsp(ret));
     return ret;
 }
 

@@ -95,9 +95,10 @@ addr_entry_alloc (void)
     return entry;
 }
 
-static inline void
+void
 addr_entry_free (addr_entry_t *entry)
 {
+    // TODO: kalyan, shouldn't we be doing delay delete here ??
     addr_entry_slab()->free(entry);
 }
 

@@ -27,6 +27,7 @@ service Nat {
 
   // NAT mappings related APIs
   rpc NatMappingCreate (NatMappingRequestMsg) returns (NatMappingResponseMsg) {}
+  rpc NatMappingDelete (NatMappingDeleteRequestMsg) returns (NatMappingDeleteResponseMsg) {}
   rpc NatMappingGet (NatMappingGetRequestMsg) returns (NatMappingGetResponseMsg) {}
 }
 
@@ -72,7 +73,7 @@ message NatPoolResponseMsg {
 // NatPoolDeleteRequest is used to delete a NAT pool
 message NatPoolDeleteRequest {
   types.ObjectMeta       meta          = 1;    // object meta
-  kh.NatPoolKeyHandle    key_or_handle = 2;
+  kh.NatPoolKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];    // identifier of NAT pool
 }
 
 // NatPoolDeleteRequestMsg is used to delete batch of NAT pools
@@ -250,6 +251,27 @@ message NatMappingResponse {
 // NatMappingResponseMsg is batched response to NatMappingRequestMsg
 message NatMappingResponseMsg {
   repeated NatMappingResponse    response = 1;    // batched response
+}
+
+// NatMappingDeleteRequest is used to delete a NAT mapping
+message NatMappingDeleteRequest {
+  types.ObjectMeta          meta          = 1;    // object meta
+  kh.NatMappingKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];    // identifier of NAT pool
+}
+
+// NatMappingDeleteRequestMsg is used to delete batch of NAT mappings
+message NatMappingDeleteRequestMsg {
+  repeated NatMappingDeleteRequest    request = 1;    // batched delete request
+}
+
+// NatMappingDeleteResponse is response to NatMappingDeleteRequest
+message NatMappingDeleteResponse {
+  types.ApiStatus    api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+// NatMappingDeleteResponseMsg is batched response to NatMappingDeleteRequestMsg
+message NatMappingDeleteResponseMsg {
+  repeated NatMappingDeleteResponse    response = 1;    // batched delete response
 }
 
 // NatMappingGetRequest is used to get information about a NAT mapping

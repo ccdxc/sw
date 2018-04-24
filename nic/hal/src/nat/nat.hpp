@@ -44,6 +44,8 @@ using nat::NatPolicyGetResponseMsg;
 using kh::NatMappingKeyHandle;
 using nat::NatMappingSpec;
 using nat::NatMappingResponse;
+using nat::NatMappingDeleteRequest;
+using nat::NatMappingDeleteResponse;
 using nat::NatMappingGetRequest;
 using nat::NatMappingGetResponse;
 using nat::NatMappingGetResponseMsg;
@@ -103,6 +105,8 @@ hal_ret_t nat_policy_get(NatPolicyGetRequest& req,
                          NatPolicyGetResponseMsg *res);
 
 hal_ret_t nat_mapping_create(NatMappingSpec& spec, NatMappingResponse *rsp);
+hal_ret_t nat_mapping_delete(NatMappingDeleteRequest& req,
+                             NatMappingDeleteResponse *rsp);
 hal_ret_t nat_mapping_get(NatMappingGetRequest& req,
                           NatMappingGetResponseMsg *res);
 
