@@ -163,7 +163,7 @@ addr_list_elem_address_spec_handle (const types::Address& addr,
 
     addr_list_elem_db_add(head, addr_lelem);
     return HAL_RET_OK;
-} 
+}
 
 hal_ret_t
 addr_list_elem_ipaddressobj_spec_handle (const types::IPAddressObj& addr,

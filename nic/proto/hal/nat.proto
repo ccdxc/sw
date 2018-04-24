@@ -228,6 +228,7 @@ message NatMappingSpec {
   types.ObjectMeta          meta            = 1;    // common object meta
   kh.NatMappingKeyHandle    key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
   kh.NatPoolKeyHandle       nat_pool        = 3 [(gogoproto.moretags) = "venice:mandatory"];  // NAT pool to allocate mapping from
+  bool                      bidir           = 4;    // true if reverse mapping should be added as well
 }
 
 // NatMappingRequestMsg is the batched add or modify of NAT mapping request
@@ -256,7 +257,7 @@ message NatMappingResponseMsg {
 // NatMappingDeleteRequest is used to delete a NAT mapping
 message NatMappingDeleteRequest {
   types.ObjectMeta          meta          = 1;    // object meta
-  kh.NatMappingKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];    // identifier of NAT pool
+  kh.NatMappingKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];  // identifier of NAT pool
 }
 
 // NatMappingDeleteRequestMsg is used to delete batch of NAT mappings
@@ -287,18 +288,9 @@ message NatMappingGetRequestMsg {
 
 // NatMappingStats is the statistics object for each NAT mapping
 message NatMappingStats {
-  uint64    rx_bytes               = 1;
-  uint64    rx_packets             = 2;
-  uint64    tx_bytes               = 3;
-  uint64    tx_packets             = 4;
-  uint64    rx_bytes_dropped       = 5;
-  uint64    rx_packets_dropped     = 6;
-  uint64    tx_bytes_dropped       = 7;
-  uint64    tx_packets_dropped     = 8;
-  uint32    num_tcp_sessions       = 9;
-  uint32    num_udp_sessions       = 10;
-  uint32    num_other_sessions     = 11;
-  uint32    num_active_connections = 12;
+  uint32    num_tcp_sessions       = 1;
+  uint32    num_udp_sessions       = 2;
+  uint32    num_other_sessions     = 3;
 }
 
 // NatMappingGetResponse reflects all the information about a NAT mapping

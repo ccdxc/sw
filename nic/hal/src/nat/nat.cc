@@ -125,6 +125,7 @@ static inline hal_ret_t
 nat_pool_cleanup (nat_pool_t *pool)
 {
     // TODO: purge all NAT binding of this pool
+    addr_list_cleanup(&pool->addr_ranges);
     nat_pool_free(pool);
     return HAL_RET_OK;
 }
@@ -185,14 +186,14 @@ find_nat_pool_by_key_or_handle (const NatPoolKeyHandle& kh)
     vrf_t             *vrf;
 
     if (kh.has_pool_key()) {
-        if (kh.pool_key().vrf_id_or_handle().key_or_handle_case() ==
+        if (kh.pool_key().vrf_kh().key_or_handle_case() ==
                 VrfKeyHandle::kVrfId) {
-            key.vrf_id = kh.pool_key().vrf_id_or_handle().vrf_id();
+            key.vrf_id = kh.pool_key().vrf_kh().vrf_id();
         } else {
-            vrf = vrf_lookup_by_handle(kh.pool_key().vrf_id_or_handle().vrf_handle());
+            vrf = vrf_lookup_by_handle(kh.pool_key().vrf_kh().vrf_handle());
             if (vrf == NULL) {
                 HAL_TRACE_ERR("vrf {} not found",
-                              kh.pool_key().vrf_id_or_handle().vrf_handle());
+                              kh.pool_key().vrf_kh().vrf_handle());
                 return NULL;
             }
             key.vrf_id = vrf->vrf_id;
@@ -320,7 +321,7 @@ validate_nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
         return HAL_RET_INVALID_ARG;
     }
 
-    if (!kh.pool_key().has_vrf_id_or_handle()) {
+    if (!kh.pool_key().has_vrf_kh()) {
         // vrf key/handle not set in the NAT pool key
         HAL_TRACE_ERR("VRF id/handle missing in NAT pool key");
         rsp->set_api_status(types::API_STATUS_NAT_POOL_KEY_INVALID);
@@ -461,11 +462,11 @@ nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
     }
 
     // lookup the vrf
-    vrf = vrf_lookup_key_or_handle(pool_key.vrf_id_or_handle());
+    vrf = vrf_lookup_key_or_handle(pool_key.vrf_kh());
     if (vrf == NULL) {
         HAL_TRACE_ERR("Failed to find vrf with key {}/handle {}",
-                      pool_key.vrf_id_or_handle().vrf_id(),
-                      pool_key.vrf_id_or_handle().vrf_handle());
+                      pool_key.vrf_kh().vrf_id(),
+                      pool_key.vrf_kh().vrf_handle());
         ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
@@ -562,7 +563,7 @@ validate_nat_pool_delete_req (NatPoolDeleteRequest& req,
     // if key is set, make sure that VRF key/handle is set
     auto kh = req.key_or_handle();
     if (kh.key_or_handle_case() == NatPoolKeyHandle::kPoolKey) {
-        if (!kh.pool_key().has_vrf_id_or_handle()) {
+        if (!kh.pool_key().has_vrf_kh()) {
             // vrf key/handle not set in the NAT pool key
             HAL_TRACE_ERR("VRF id/handle missing in NAT pool key");
             rsp->set_api_status(types::API_STATUS_NAT_POOL_KEY_INVALID);
@@ -714,7 +715,7 @@ nat_pool_process_get (nat_pool_t *pool, NatPoolGetResponse *rsp)
 
     auto pool_key =
         rsp->mutable_spec()->mutable_key_or_handle()->mutable_pool_key();
-    pool_key->mutable_vrf_id_or_handle()->set_vrf_id(pool->key.vrf_id);
+    pool_key->mutable_vrf_kh()->set_vrf_id(pool->key.vrf_id);
     pool_key->set_pool_id(pool->key.pool_id);
 
     dllist_for_each(entry, &pool->addr_ranges) {
@@ -735,7 +736,7 @@ nat_pool_get_ht_cb (void *ht_entry, void *ctxt)
     hal_handle_id_ht_entry_t    *entry = (hal_handle_id_ht_entry_t *)ht_entry;
     NatPoolGetResponseMsg       *rsp = (NatPoolGetResponseMsg *)ctxt;
     NatPoolGetResponse          *response = rsp->add_response();
-    nat_pool_t                  *pool = NULL;
+    nat_pool_t                  *pool;
 
     pool = (nat_pool_t *)hal_handle_get_obj(entry->handle_id);
     nat_pool_process_get(pool, response);
@@ -745,11 +746,10 @@ nat_pool_get_ht_cb (void *ht_entry, void *ctxt)
 }
 
 //------------------------------------------------------------------------------
-// process a vrf get request
+// process a NAT pool get request
 //------------------------------------------------------------------------------
 hal_ret_t
-nat_pool_get (NatPoolGetRequest& req,
-              NatPoolGetResponseMsg *rsp)
+nat_pool_get (NatPoolGetRequest& req, NatPoolGetResponseMsg *rsp)
 {
     nat_pool_t    *pool;
 
@@ -1132,6 +1132,7 @@ nat_mapping_init_from_spec (vrf_t *vrf, addr_entry_t *mapping,
                             spec.key_or_handle().svc().ip_addr());
     mapping->nat_pool_id = pool->key.pool_id;
     mapping->origin = NAT_MAPPING_ORIGIN_CFG;
+    mapping->bidir = spec.bidir() ? TRUE : FALSE;
 
     return HAL_RET_OK;
 }
@@ -1277,6 +1278,8 @@ nat_mapping_create (NatMappingSpec& spec,
          ret = HAL_RET_HANDLE_INVALID;
          goto end;
     }
+
+    // TODO: allocate NAT address
 
     // form ctxt and handover to the HAL infra
     dhl_entry.handle = mapping->hal_handle;
@@ -1468,11 +1471,31 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// process a get request for a given nat mapping
+// process a get request for a given NAT mapping
 //------------------------------------------------------------------------------
 static inline void
-nat_mapping_process_get (void *mapping, NatMappingGetResponse *rsp)   // TODO: FIXME
+nat_mapping_process_get (addr_entry_t *mapping, NatMappingGetResponse *rsp)
 {
+    // fill the spec portion
+    auto spec = rsp->mutable_spec();
+    auto svc = spec->mutable_key_or_handle()->mutable_svc();
+    svc->mutable_vrf_kh()->set_vrf_id(mapping->key.vrf_id);
+    ip_addr_to_spec(svc->mutable_ip_addr(), &mapping->key.ip_addr);
+    auto pool = spec->mutable_nat_pool();
+    pool->mutable_pool_key()->mutable_vrf_kh()->set_vrf_id(mapping->tgt_vrf_id);
+    pool->mutable_pool_key()->set_pool_id(mapping->nat_pool_id);
+    spec->set_bidir(mapping->bidir == TRUE ? true : false);
+
+    // fill the status portion
+    rsp->mutable_status()->set_handle(mapping->hal_handle);
+    ip_addr_to_spec(rsp->mutable_status()->mutable_ip_addr(),
+                    &mapping->tgt_ip_addr);
+
+    // fill the stats portion
+    rsp->mutable_stats()->set_num_tcp_sessions(mapping->num_tcp_sessions);
+    rsp->mutable_stats()->set_num_udp_sessions(mapping->num_udp_sessions);
+    rsp->mutable_stats()->set_num_other_sessions(mapping->num_other_sessions);
+
     rsp->set_api_status(types::API_STATUS_OK);
 }
 
@@ -1482,21 +1505,44 @@ nat_mapping_process_get (void *mapping, NatMappingGetResponse *rsp)   // TODO: F
 static inline bool
 nat_mapping_get_ht_cb (void *ht_entry, void *ctxt)
 {
-    //hal_handle_id_ht_entry_t    *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    hal_handle_id_ht_entry_t    *entry = (hal_handle_id_ht_entry_t *)ht_entry;
     NatMappingGetResponseMsg    *rsp = (NatMappingGetResponseMsg *)ctxt;
     NatMappingGetResponse       *response = rsp->add_response();
-    void *mapping = NULL;    // TODO: FIXME
+    addr_entry_t                *mapping;
 
+    mapping = (addr_entry_t *)hal_handle_get_obj(entry->handle_id);
     nat_mapping_process_get(mapping, response);
 
     // return false here, so that we don't terminate the walk
     return false;
 }
 
+//------------------------------------------------------------------------------
+// process a NAT mapping get request
+//------------------------------------------------------------------------------
 hal_ret_t
-nat_mapping_get (NatMappingGetRequest& req,
-                 NatMappingGetResponseMsg *rsp)
+nat_mapping_get (NatMappingGetRequest& req, NatMappingGetResponseMsg *rsp)
 {
+    addr_entry_t    *mapping;
+
+    // if the NAT mapping key-handle field is not set, then this is a request
+    // for information for all mappings, so run through all pools in the db and
+    // populate the response
+    if (!req.has_key_or_handle()) {
+        g_hal_state->nat_mapping_ht()->walk(nat_mapping_get_ht_cb, rsp);
+    } else {
+        auto kh = req.key_or_handle();
+        mapping = find_nat_mapping_by_key_or_handle(kh);
+        auto response = rsp->add_response();
+        if (mapping == NULL) {
+            response->set_api_status(types::API_STATUS_NOT_FOUND);
+            HAL_API_STATS_INC(HAL_API_NAT_MAPPING_GET_FAIL);
+            return HAL_RET_NAT_MAPPING_NOT_FOUND;
+        }
+        nat_mapping_process_get(mapping, response);
+    }
+
+    HAL_API_STATS_INC(HAL_API_NAT_MAPPING_GET_SUCCESS);
     return HAL_RET_OK;
 }
 

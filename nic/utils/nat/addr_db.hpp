@@ -29,10 +29,18 @@ typedef struct addr_entry_s {
     vrf_id_t            tgt_vrf_id;    // target VRF
     ip_addr_t           tgt_ip_addr;   // mapped IP address
     nat_pool_id_t       nat_pool_id;   // nat pool this mapping belongs to
+
+    // operational state
     uint32_t            origin:1;      // 0 ==> fte path, 1 ==> cfg path
-    uint32_t            ref_cnt:31;    // ref count for this mapping
+    uint32_t            bidir:1;       // TRUE if this is bidirectional mapping
+    uint32_t            ref_cnt:30;    // ref count for this mapping
     hal_handle_t        hal_handle;    // HAL allocated unique handle
     ht_ctxt_t           db_node;       // hash table context
+
+    // stats
+    uint32_t            num_tcp_sessions;
+    uint32_t            num_udp_sessions;
+    uint32_t            num_other_sessions;
 } __PACK__ addr_entry_t;
 
 addr_entry_t *addr_entry_alloc(void);
