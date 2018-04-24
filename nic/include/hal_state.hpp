@@ -145,11 +145,15 @@ public:
     slab *gft_exact_match_flow_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY]); }
     slab *proxy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY]); }
     slab *proxy_flow_info_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY_FLOW_INFO]); }
-    slab *v4_range_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V4_RANGE_LIST_ENTRY]); }
-    slab *v6_range_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V6_RANGE_LIST_ENTRY]); }
+
+    slab *v4addr_list_elem_slab(void) const {
+        return TO_SLAB_PTR(slabs_[HAL_SLAB_V4ADDR_LIST_ELEM]); }
+    slab *v6addr_list_elem_slab(void) const {
+        return TO_SLAB_PTR(slabs_[HAL_SLAB_V6ADDR_LIST_ELEM]); }
+    slab *port_list_elem_slab(void) const {
+        return TO_SLAB_PTR(slabs_[HAL_SLAB_PORT_LIST_ELEM]); }
+
     slab *nat_pool_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_POOL]); }
-    slab *nat_cfg_port_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_CFG_PORT]); }
-    slab *nat_cfg_addr_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_CFG_ADDR]); }
     slab *nat_cfg_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_CFG_RULE]); }
     slab *nat_cfg_pol_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_CFG_POL]); }
     slab *nexthop_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NEXTHOP]); }
@@ -485,15 +489,18 @@ public:
     ht *gft_exact_match_flow_entry_id_ht(void) const { return oper_db_->gft_exact_match_flow_entry_id_ht(); }
 
     // get APIs for NAT state
-    slab *nat_cfg_port_slab(void) const { return cfg_db_->nat_cfg_port_slab(); }
-    slab *nat_cfg_addr_slab(void) const { return cfg_db_->nat_cfg_addr_slab(); }
     slab *nat_cfg_rule_slab(void) const { return cfg_db_->nat_cfg_rule_slab(); }
     slab *nat_cfg_pol_slab(void) const { return cfg_db_->nat_cfg_pol_slab(); }
     slab *nat_pool_slab(void) const { return cfg_db_->nat_pool_slab(); }
-    slab *v4_range_list_entry_slab(void) const { return cfg_db_->v4_range_list_entry_slab(); }
-    slab *v6_range_list_entry_slab(void) const { return cfg_db_->v6_range_list_entry_slab(); }
     ht *nat_pool_ht(void) const { return oper_db_->nat_pool_ht(); }
     ht *nat_mapping_ht(void) const { return oper_db_->nat_mapping_ht(); }
+
+    slab *v4addr_list_elem_slab(void) const {
+        return cfg_db_->v4addr_list_elem_slab(); }
+    slab *v6addr_list_elem_slab(void) const {
+        return cfg_db_->v6addr_list_elem_slab(); }
+    slab *port_list_elem_slab(void) const {
+        return cfg_db_->port_list_elem_slab(); }
 
     // get APIs for nexthop related state
     slab *nexthop_slab(void) const { return cfg_db_->nexthop_slab(); }
@@ -619,4 +626,3 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
 }    // namespace hal
 
 #endif    // __HAL_STATE_HPP__
-

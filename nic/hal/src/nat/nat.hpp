@@ -14,6 +14,7 @@
 #include "nic/include/ip.h"
 #include "nic/include/l4.h"
 #include "nic/fte/acl/acl.hpp"
+#include "nic/hal/src/utils/addr_list.hpp"
 #include "pol.hpp"
 
 using sdk::lib::ht_ctxt_t;
@@ -58,13 +59,6 @@ typedef struct nat_pool_key_s {
     nat_pool_id_t    pool_id;
 } __PACK__ nat_pool_key_t;
 #define HAL_MAX_NAT_POOLS        1024
-
-// address range list element used to store
-// NAT address ranges
-typedef struct addr_range_list_elem_s {
-    dllist_ctxt_t     list_ctxt;
-    ip_range_t        ip_range;
-} __PACK__ addr_range_list_elem_t;
 
 // NAT pool
 typedef struct nat_pool_s {

@@ -35,6 +35,8 @@
 #include "nic/hal/src/internal/proxyccb.hpp"
 #include "nic/hal/src/internal/crypto_cert_store.hpp"
 #include "nic/hal/src/gft/gft.hpp"
+#include "nic/hal/src/utils/addr_list.hpp"
+#include "nic/hal/src/utils/port_list.hpp"
 #include "nic/hal/src/nat/nat.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "sdk/twheel.hpp"
@@ -297,37 +299,31 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_GROUP] != NULL), false);
 
-    slabs_[HAL_SLAB_V4_RANGE_LIST_ENTRY] =
-        slab::factory("v4-range-lentry", HAL_SLAB_V4_RANGE_LIST_ENTRY,
-                      sizeof(hal::addr_range_list_elem_t) +
+    slabs_[HAL_SLAB_V4ADDR_LIST_ELEM] =
+        slab::factory("v4addr-list-elem", HAL_SLAB_V4ADDR_LIST_ELEM,
+                      sizeof(hal::addr_list_elem_t) +
                           sizeof(ipv4_range_t),
                       8, true, true, true, mmgr);
-    HAL_ASSERT_RETURN(slabs_[HAL_SLAB_V4_RANGE_LIST_ENTRY] != NULL, false);
+    HAL_ASSERT_RETURN(slabs_[HAL_SLAB_V4ADDR_LIST_ELEM] != NULL, false);
 
-    slabs_[HAL_SLAB_V6_RANGE_LIST_ENTRY] =
-        slab::factory("v6-range-lentry", HAL_SLAB_V6_RANGE_LIST_ENTRY,
-                      sizeof(hal::addr_range_list_elem_t) +
+    slabs_[HAL_SLAB_V6ADDR_LIST_ELEM] =
+        slab::factory("v6addr-list-elem", HAL_SLAB_V6ADDR_LIST_ELEM,
+                      sizeof(hal::addr_list_elem_t) +
                           sizeof(ipv6_range_t),
                       8, true, true, true, mmgr);
-    HAL_ASSERT_RETURN(slabs_[HAL_SLAB_V6_RANGE_LIST_ENTRY] != NULL, false);
+    HAL_ASSERT_RETURN(slabs_[HAL_SLAB_V6ADDR_LIST_ELEM] != NULL, false);
+
+    slabs_[HAL_SLAB_PORT_LIST_ELEM] =
+        slab::factory("port-list-elem", HAL_SLAB_PORT_LIST_ELEM,
+                      sizeof(hal::port_list_elem_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PORT_LIST_ELEM] != NULL), false);
 
     slabs_[HAL_SLAB_NAT_POOL] =
         slab::factory("natpool", HAL_SLAB_NAT_POOL,
                       sizeof(hal::nat_pool_t), 8,
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_POOL] != NULL), false);
-
-    slabs_[HAL_SLAB_NAT_CFG_PORT] =
-        slab::factory("nat_cfg_port", HAL_SLAB_NAT_CFG_PORT,
-                      sizeof(hal::nat_cfg_port_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_CFG_PORT] != NULL), false);
-
-    slabs_[HAL_SLAB_NAT_CFG_ADDR] =
-        slab::factory("nat_cfg_addr", HAL_SLAB_NAT_CFG_ADDR,
-                      sizeof(hal::nat_cfg_addr_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_CFG_ADDR] != NULL), false);
 
     slabs_[HAL_SLAB_NAT_CFG_RULE] =
         slab::factory("nat_cfg_rule", HAL_SLAB_NAT_CFG_RULE,
@@ -1763,23 +1759,22 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->gft_exact_match_flow_entry_slab()->free(elem);
         break;
 
-    case HAL_SLAB_V4_RANGE_LIST_ENTRY:
-        g_hal_state->v4_range_list_entry_slab()->free(elem);
+    case HAL_SLAB_V4ADDR_LIST_ELEM:
+        g_hal_state->v4addr_list_elem_slab()->free(elem);
         break;
 
-    case HAL_SLAB_V6_RANGE_LIST_ENTRY:
-        g_hal_state->v6_range_list_entry_slab()->free(elem);
+    case HAL_SLAB_V6ADDR_LIST_ELEM:
+        g_hal_state->v6addr_list_elem_slab()->free(elem);
         break;
 
-    case HAL_SLAB_NAT_CFG_PORT:
-        g_hal_state->nat_cfg_port_slab()->free(elem);
+    case HAL_SLAB_PORT_LIST_ELEM:
+        g_hal_state->port_list_elem_slab()->free(elem);
         break;
-    case HAL_SLAB_NAT_CFG_ADDR:
-        g_hal_state->nat_cfg_addr_slab()->free(elem);
-        break;
+
     case HAL_SLAB_NAT_CFG_RULE:
         g_hal_state->nat_cfg_rule_slab()->free(elem);
         break;
+
     case HAL_SLAB_NAT_CFG_POL:
         g_hal_state->nat_cfg_pol_slab()->free(elem);
         break;

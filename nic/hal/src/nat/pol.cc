@@ -26,10 +26,82 @@ nat_cfg_pol_alloc (void)
     return ((nat_cfg_pol_t *)g_hal_state->nat_cfg_pol_slab()->alloc());
 }
 
+static inline void
+nat_cfg_pol_free (nat_cfg_pol_t *pol)
+{
+    hal::delay_delete_to_slab(HAL_SLAB_NAT_CFG_POL, pol);
+}
+
+static inline void
+nat_cfg_pol_init (nat_cfg_pol_t *pol)
+{
+    HAL_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
+    dllist_reset(&pol->rule_list);
+    pol->hdl = HAL_HANDLE_INVALID;
+}
+
+static inline void
+nat_cfg_pol_uninit (nat_cfg_pol_t *pol)
+{
+    HAL_SPINLOCK_DESTROY(&pol->slock);
+}
+
+static inline nat_cfg_pol_t *
+nat_cfg_pol_alloc_init (void)
+{
+    nat_cfg_pol_t *pol;
+
+    if ((pol = nat_cfg_pol_alloc()) ==  NULL)
+        return NULL;
+
+    nat_cfg_pol_init(pol);
+    return pol;
+}
+
+static inline void
+nat_cfg_pol_uninit_free (nat_cfg_pol_t *pol)
+{
+    if (pol) {
+        nat_cfg_pol_uninit(pol);
+        nat_cfg_pol_free(pol);
+    }
+}
+
+static inline void
+nat_cfg_pol_db_add (dllist_ctxt_t *head, nat_cfg_pol_t *pol)
+{
+    dllist_add_tail(head, &pol->list_ctxt);
+}
+
+static inline void
+nat_cfg_pol_db_del (nat_cfg_pol_t *pol)
+{
+    dllist_del(&pol->list_ctxt);
+}
+
+static hal_ret_t
+nat_cfg_pol_rule_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_t *pol)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    for (int i = 0; i < spec.rules_size(); i++) {
+        if ((ret = nat_cfg_rule_spec_handle(
+               spec.rules(i), &pol->list_ctxt)) != HAL_RET_OK)
+            return ret;
+    }
+
+    return ret;
+}
+
 hal_ret_t
 nat_cfg_pol_data_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_t *pol)
 {
-    return HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
+
+    if ((ret = nat_cfg_pol_rule_spec_extract(spec, pol)) != HAL_RET_OK)
+        return ret;
+
+    return ret;
 }
 
 static hal_ret_t
@@ -82,7 +154,7 @@ nat_cfg_pol_create_cfg_handle (nat::NatPolicySpec& spec,
     if ((ret = nat_cfg_pol_spec_validate(spec)) != HAL_RET_OK)
         return ret;
 
-    if ((pol = nat_cfg_pol_alloc()) == NULL)
+    if ((pol = nat_cfg_pol_alloc_init()) == NULL)
         return HAL_RET_OOM;
 
     if ((ret = nat_cfg_pol_spec_extract(spec, pol)) != HAL_RET_OK)
@@ -102,4 +174,4 @@ nat_cfg_pol_rsp_build (nat::NatPolicyResponse *rsp, hal_ret_t ret,
     return HAL_RET_OK;
 }
 
-}    // namespace hal
+}  // namespace hal

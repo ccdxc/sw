@@ -1,5 +1,7 @@
 //-----------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// Declarations for NAT Policy config hierarchy
 //-----------------------------------------------------------------------------
 
 #ifndef __NAT_POL_HPP__
@@ -21,24 +23,24 @@ typedef uint64_t pol_id_t;
 //    nat_policy <policy_key> {  policy_key = pol_id + vrf_id
 //        nat_rule <rule_key> {  rule_key = rule_id
 //
-//            /* match criteria for rule match */
+//            // match criteria for rule match
 //            nat_rule_match {
-//                list of src_addr;      /* should it be a list as we already
-//                                        * have multiple rules under policy */
-//                src security group;    /* where is this used? */
-//                list of dst_addr;      /* should it be a list as we already
-//                                        * have multiple rules under policy */
-//                dst security group;    /* where is this used? */
-//                range of src-ports;    /* only for NAPT */
-//                range of dst-ports;    /* only for NAPT */
+//                list of src_addr range;
+//                list of dst_addr range;
+//
+//                list of src-ports range;
+//                list of dst-ports range;
+//
+//                list of src-security-group range;
+//                list of dst-security-group range;
 //            }
 //
-//            /* action for rule match */
+//            // action for rule match
 //            nat_rule_action {
 //                src-nat-action;
-//                src-nat-pool;          /* pool where we get the mapped addr */
+//                src-nat-pool-hal-handle;
 //                dst-nat-action;
-//                dst-nat-pool;          /* pool where we get the mapped addr */
+//                dst-nat-pool-hal-handle;
 //            }
 //        }
 //    }
@@ -60,21 +62,6 @@ typedef struct nat_cfg_rule_action_s {
     hal_handle        dst_nat_pool;
 } nat_cfg_rule_action_t;
 
-typedef struct nat_cfg_sg_s {
-    nat_sg_range_t    range;
-    dllist_ctxt_t     lentry;
-} nat_cfg_sg_t;
-
-typedef struct nat_cfg_port_s {
-    port_range_t     range;
-    dllist_ctxt_t    lentry;
-} nat_cfg_port_t;
-
-typedef struct nat_cfg_addr_s {
-    ipvx_range_t     range;
-    dllist_ctxt_t    lentry;
-} nat_cfg_addr_t;
-
 typedef struct nat_cfg_rule_match_s {
     dllist_ctxt_t    src_addr_list;
     dllist_ctxt_t    dst_addr_list;
@@ -95,6 +82,7 @@ typedef struct nat_cfg_rule_s {
 
     // operational
     ht_ctxt_t                ht_ctxt;
+    dllist_ctxt_t            list_ctxt;
 } nat_cfg_rule_t;
 
 typedef struct nat_cfg_pol_key_s {
@@ -105,21 +93,18 @@ typedef struct nat_cfg_pol_key_s {
 typedef struct nat_cfg_pol_s {
     nat_cfg_pol_key_t    key;
     dllist_ctxt_t        rule_list;
-
-    // operational
+    dllist_ctxt_t        list_ctxt;
     hal_spinlock_t       slock;
     hal_handle_t         hdl;
     ht_ctxt_t            key_ctx;
     ht_ctxt_t            hdl_ctx;
 } nat_cfg_pol_t;
 
-/* 
- * Function prototypes
- */
-hal_ret_t nat_cfg_rule_match_port_spec_extract(
-    nat::NatRuleSpec& spec, nat_cfg_rule_match_t *match);
-hal_ret_t nat_cfg_rule_match_addr_spec_extract(
-    nat::NatRuleSpec& spec, nat_cfg_rule_match_t *match);
+//-----------------------------------------------------------------------------
+// Function prototypes
+//-----------------------------------------------------------------------------
+hal_ret_t nat_cfg_rule_spec_handle(
+    const nat::NatRuleSpec& spec, dllist_ctxt_t *head);
 
 }  // namespace hal
 

@@ -15,98 +15,13 @@
 #include "nic/hal/src/nat/nat.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/utils/nat/addr_db.hpp"
+#include "nic/hal/src/utils/addr_list.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using hal::utils::nat::addr_entry_key_t;
 using hal::utils::nat::addr_entry_t;
 
 namespace hal {
-
-#if 0
-//------------------------------------------------------------------------------
-// ACL rule matching data structure is used to save the NAT rules config
-// The ACL rule is presumably faster than a linear search
-//------------------------------------------------------------------------------
-static hal_ret_t
-nat_rule_spec_validate (nat::NatRuleSpec& spec, nat::NatRuleResponse *rsp)
-{
-    return HAL_RET_OK;
-}
-
-static nat_rule_t *
-nat_rule_alloc (void)
-{
-    nat_rule_t *nat_rule;
-
-    nat_rule = (nat_rule_t *) g_hal_state->nat_rule_slab()->alloc();
-    return nat_rule;
-}
-
-static hal_ret_t
-nat_rule_spec_key_extract (nat::NatRuleSpec& spec, nat_rule_key_t *rule_key)
-{
-    rule_key->rule_id = spec.key_or_handle().rule_id();
-    rule_key->vrf_id = spec.key_or_handle().vrf_id();
-        nwsec_policy->key.vrf_id = spec.policy_key_or_handle().security_policy_key().vrf_id_or_handle().vrf_id();
-}
-
-static hal_ret_t
-nat_rule_spec_extract (nat::NatRuleSpec& spec, nat_rule_t *rule)
-{
-    nat_rule_spec_key_extract(spec, &rule->key);
-    return HAL_RET_OK;
-}
-
-static hal_ret_t
-nat_rule_db_add (nat_rule_t *rule)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-nat_rule_create (nat::NatRuleSpec& spec, nat::NatRuleResponse *rsp)
-{
-    hal_ret_t     ret;
-    nat_rule_t    *rule;
-
-    if ((ret = nat_rule_spec_validate(spec, rsp)) != HAL_RET_OK)
-        goto end;
-
-    if ((rule = nat_rule_alloc()) == NULL) {
-        ret = HAL_RET_OOM;
-        goto end;
-    }
-
-    if ((ret = nat_rule_spec_extract(spec, rule)) != HAL_RET_OK)
-        goto end;
-
-    if ((ret = nat_rule_db_add(rule)) != HAL_RET_OK)
-        goto end;
-
-end:
-
-    return HAL_RET_OK;
-
-}
-
-//------------------------------------------------------------------------------
-// process a nat rule update request
-//------------------------------------------------------------------------------
-hal_ret_t
-nat_rule_update (NatRuleSpec& spec, NatRuleResponse *rsp)
-{
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// process a nat rule get request
-//------------------------------------------------------------------------------
-hal_ret_t
-nat_rule_get (NatRuleGetRequest& req, NatRuleGetResponseMsg *rsp)
-{
-    return HAL_RET_OK;
-}
-#endif
 
 //------------------------------------------------------------------------------
 // return key for hash table that maps nat pool key to its handle
@@ -428,86 +343,18 @@ validate_nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
 static inline hal_ret_t
 nat_pool_init_from_spec (vrf_t *vrf, nat_pool_t *pool, const NatPoolSpec& spec)
 {
-    int                       i;
-    hal_ret_t                 ret;
-    addr_range_list_elem_t    *addr_range;
-    dllist_ctxt_t             *curr, *next;
-
     pool->key.vrf_id = vrf->vrf_id;
     pool->key.pool_id = spec.key_or_handle().pool_handle();
-    for (i = 0; i < spec.address_size(); i++) {
-        addr_range = NULL;
-        auto addr = spec.address(i);
-        if (addr.has_range()) {
-            auto range = addr.range();
-            if (range.has_ipv4_range()) {
-                addr_range =
-                    (addr_range_list_elem_t *)g_hal_state->v4_range_list_entry_slab()->alloc();
-                if (addr_range == NULL) {
-                    ret = HAL_RET_OOM;
-                    goto cleanup;
-                }
-                sdk::lib::dllist_reset(&addr_range->list_ctxt);
-                ip_range_spec_to_ip_range(&addr_range->ip_range,
-                                          range);
-            } else if (range.has_ipv6_range()) {
-                HAL_TRACE_ERR("IPv6 NAT range/subnets not supported, skipping");
-                continue;
-            } else {
-                HAL_TRACE_ERR("No IPv4/IPv6 range found in address obj"
-                              "in NAT pool ({}, {}), skipping",
-                              pool->key.vrf_id, pool->key.pool_id);
-                continue;
-            }
-        } else if (addr.has_prefix()) {
-            // convert this subnet into a range
-            auto prefix = addr.prefix();
-            if (prefix.has_ipv4_subnet()) {
-                addr_range =
-                    (addr_range_list_elem_t *)g_hal_state->v4_range_list_entry_slab()->alloc();
-                if (addr_range == NULL) {
-                    ret = HAL_RET_OOM;
-                    goto cleanup;
-                }
-                sdk::lib::dllist_reset(&addr_range->list_ctxt);
-                ip_subnet_spec_to_ip_range(&addr_range->ip_range, prefix);
-            } else if (prefix.has_ipv6_subnet()) {
-                HAL_TRACE_ERR("IPv6 NAT range/subnets not supported, skipping");
-                continue;
-            } else {
-                HAL_TRACE_ERR("No IPv4/IPv6 subnet found in address obj"
-                              "in NAT pool ({}, {}), skipping",
-                              pool->key.vrf_id, pool->key.pool_id);
-                continue;
-            }
-        } else {
-            HAL_TRACE_ERR("Skipping empty addr range/pfx in NAT pool ({}, {})",
-                          pool->key.vrf_id, pool->key.pool_id);
-            continue;
-        }
-        if (addr_range) {
-            // add this range to the NAT pool
-            dllist_add_tail(&pool->addr_ranges, &addr_range->list_ctxt);
+    for (int i = 0; i < spec.address_size(); i++) {
+        hal_ret_t ret = addr_list_elem_address_spec_handle(spec.address(i),
+                                                           &pool->addr_ranges);
+        if (ret == HAL_RET_OOM) {
+            addr_list_cleanup(&pool->addr_ranges);
+            return ret;
         }
     }
 
     return HAL_RET_OK;
-
-cleanup:
-
-    dllist_for_each_safe(curr, next, &pool->addr_ranges) {
-        addr_range = dllist_entry(curr, addr_range_list_elem_t, list_ctxt);
-        sdk::lib::dllist_del(&addr_range->list_ctxt);
-        if (addr_range->ip_range.af == IP_AF_IPV4) {
-             hal::delay_delete_to_slab(HAL_SLAB_V4_RANGE_LIST_ENTRY,
-                                       addr_range);
-        } else {
-             hal::delay_delete_to_slab(HAL_SLAB_V6_RANGE_LIST_ENTRY,
-                                       addr_range);
-        }
-    }
-
-    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -863,7 +710,7 @@ static inline void
 nat_pool_process_get (nat_pool_t *pool, NatPoolGetResponse *rsp)
 {
     sdk::lib::dllist_ctxt_t    *entry;
-    addr_range_list_elem_t     *addr_range;
+    addr_list_elem_t           *addr_range;
 
     auto pool_key =
         rsp->mutable_spec()->mutable_key_or_handle()->mutable_pool_key();
@@ -873,7 +720,7 @@ nat_pool_process_get (nat_pool_t *pool, NatPoolGetResponse *rsp)
     dllist_for_each(entry, &pool->addr_ranges) {
         auto addr_spec = rsp->mutable_spec()->add_address();
          addr_range =
-             dllist_entry(entry, addr_range_list_elem_t, list_ctxt);
+             dllist_entry(entry, addr_list_elem_t, list_ctxt);
          ip_range_to_spec(addr_spec->mutable_range(), &addr_range->ip_range);
     }
     rsp->set_api_status(types::API_STATUS_OK);
