@@ -380,7 +380,7 @@ nat_pool_spec_dump (NatPoolSpec& spec)
     }
 
     google::protobuf::util::MessageToJsonString(spec, &nat_pool_cfg);
-    HAL_TRACE_DEBUG("NAT Pool Configuration received:");
+    HAL_TRACE_DEBUG("NAT Pool Configuration:");
     HAL_TRACE_DEBUG("{}", nat_pool_cfg.c_str());
     return;
 }
@@ -641,6 +641,7 @@ nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
         goto end;
     }
 
+    // copy the config from incoming request
     ret = nat_pool_init_from_spec(vrf, pool, spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize natpool ({}, {})",
@@ -954,7 +955,7 @@ nat_policy_get (NatPolicyGetRequest& req, NatPolicyGetResponseMsg *res)
 // return key for hash table that maps nat mapping key to its handle
 //------------------------------------------------------------------------------
 void *
-nat_addr_map_get_key_func (void *entry)
+nat_mapping_get_key_func (void *entry)
 {
     hal_handle_id_ht_entry_t    *ht_entry = NULL;
     addr_entry_t                *mapping = NULL;
@@ -975,7 +976,7 @@ nat_addr_map_get_key_func (void *entry)
 // hash computation for nat mapping key to handle hash table
 //------------------------------------------------------------------------------
 uint32_t
-nat_addr_map_compute_hash_func (void *key, uint32_t ht_size)
+nat_mapping_compute_hash_func (void *key, uint32_t ht_size)
 {
     HAL_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key,
@@ -986,7 +987,7 @@ nat_addr_map_compute_hash_func (void *key, uint32_t ht_size)
 // key comparision for nat mapping key to handle hash table
 //------------------------------------------------------------------------------
 bool
-nat_addr_map_compare_key_func (void *key1, void *key2)
+nat_mapping_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(addr_entry_key_t))) {
@@ -1017,6 +1018,30 @@ nat_mapping_cleanup (addr_entry_t *mapping)
 }
 
 //------------------------------------------------------------------------------
+// lookup a NAT mapping by its handle
+//------------------------------------------------------------------------------
+static inline addr_entry_t *
+find_nat_mapping_by_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("Failed to find object with handle : {}", handle);
+        return NULL;
+    }
+
+    if (hal_handle->obj_id() != HAL_OBJ_ID_NAT_MAPPING) {
+        HAL_TRACE_DEBUG("Object id mismatch for handle {}, obj id found {}",
+                        handle, hal_handle->obj_id());
+        return NULL;
+    }
+
+    return (addr_entry_t *)hal_handle_get_obj(handle);
+}
+
+//------------------------------------------------------------------------------
 // lookup a NAT mapping by its key
 //------------------------------------------------------------------------------
 static inline addr_entry_t *
@@ -1029,9 +1054,7 @@ find_nat_mapping (vrf_id_t vrf_id, const NatMappingKeyHandle& kh)
         ip_addr_spec_to_ip_addr(&key.ip_addr, kh.svc().ip_addr());
         return addr_entry_get(&key);
     }
-
-    // TODO: fix me (do handle based lookup)
-    return NULL;
+    return find_nat_mapping_by_handle(kh.mapping_handle());
 }
 
 //------------------------------------------------------------------------------
@@ -1058,8 +1081,8 @@ nat_mapping_add_to_db (addr_entry_t *mapping, hal_handle_t handle)
     // add mapping from to its handle
     entry->handle_id = handle;
     sdk_ret =
-        g_hal_state->nat_addr_map_ht()->insert_with_key(&mapping->key,
-                                                        entry, &entry->ht_ctxt);
+        g_hal_state->nat_mapping_ht()->insert_with_key(&mapping->key,
+                                                       entry, &entry->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add nat mapping ({}, {}) -> ({}, {}) to "
@@ -1087,7 +1110,7 @@ nat_mapping_del_from_db (addr_entry_t *mapping)
 
     entry =
         (hal_handle_id_ht_entry_t *)
-            g_hal_state->nat_addr_map_ht()->remove(&mapping->key);
+            g_hal_state->nat_mapping_ht()->remove(&mapping->key);
 
     // free up the hash entry
     if (entry) {
@@ -1116,7 +1139,7 @@ nat_mapping_spec_dump (NatMappingSpec& spec)
     }
 
     google::protobuf::util::MessageToJsonString(spec, &nat_mapping_cfg);
-    HAL_TRACE_DEBUG("NAT mapping configuration received:");
+    HAL_TRACE_DEBUG("NAT mapping configuration:");
     HAL_TRACE_DEBUG("{}", nat_mapping_cfg.c_str());
     return;
 }
@@ -1143,8 +1166,15 @@ validate_nat_mapping_create (NatMappingSpec& spec, NatMappingResponse *rsp)
     }
 
     if (!kh.svc().has_vrf_kh()) {
-        // vrf key/handle not set in the service key
+        // vrf key/handle not set in the service
         HAL_TRACE_ERR("VRF id/handle missing in NAT mapping key");
+        rsp->set_api_status(types::API_STATUS_NAT_MAPPING_KEY_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (!kh.svc().has_ip_addr()) {
+        // IP address not set in the service
+        HAL_TRACE_ERR("Service IP in NAT mapping key");
         rsp->set_api_status(types::API_STATUS_NAT_MAPPING_KEY_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -1155,6 +1185,41 @@ validate_nat_mapping_create (NatMappingSpec& spec, NatMappingResponse *rsp)
         rsp->set_api_status(types::API_STATUS_NAT_MAPPING_KEY_INVALID);
         return HAL_RET_INVALID_ARG;
     }
+
+    // NAT pool must be set
+    if (!spec.has_nat_pool()) {
+        HAL_TRACE_ERR("NAT pool not specificed");
+        rsp->set_api_status(types::API_STATUS_NAT_MAPPING_KEY_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// initialize NAT mapping object given its configuration/spec
+//-----------------------------------------------------------------------------
+static inline hal_ret_t
+nat_mapping_init_from_spec (vrf_t *vrf, addr_entry_t *mapping,
+                            const NatMappingSpec& spec)
+{
+    nat_pool_t    *pool;
+
+    pool = find_nat_pool(vrf->vrf_id, spec.nat_pool());
+    if (!pool) {
+        HAL_TRACE_ERR("Nat pool ({}, {}) not found",
+                      vrf->vrf_id,
+                      spec.nat_pool().has_pool_key() ?
+                          spec.nat_pool().pool_key().pool_id() :
+                          spec.nat_pool().pool_handle());
+        return HAL_RET_NAT_POOL_NOT_FOUND;
+    }
+
+    mapping->key.vrf_id = vrf->vrf_id;
+    ip_addr_spec_to_ip_addr(&mapping->key.ip_addr,
+                            spec.key_or_handle().svc().ip_addr());
+    mapping->nat_pool_id = pool->key.pool_id;
+    mapping->origin = NAT_MAPPING_ORIGIN_CFG;
 
     return HAL_RET_OK;
 }
@@ -1282,14 +1347,15 @@ nat_mapping_create (NatMappingSpec& spec,
         ret = HAL_RET_OOM;
         goto end;
     }
+#endif
 
+    // copy the config from incoming request
     ret = nat_mapping_init_from_spec(vrf, mapping, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to initialize natpool ({}, {})",
-                     vrf->vrf_id, );
+        HAL_TRACE_ERR("Failed to initialize nat mapping");
+        nat_mapping_spec_dump(spec);
         goto end;
     }
-#endif
 
     // allocate HAL handle id
     mapping->hal_handle = hal_handle_alloc(HAL_OBJ_ID_NAT_MAPPING);

@@ -19,12 +19,16 @@ typedef struct addr_entry_key_s {
     ip_addr_t    ip_addr;              // original IP address
 } __PACK__ addr_entry_key_t;
 
+// NAT_MAPPING_ORIGIN_XXX will tell us how this mapping got into the DB
+#define NAT_MAPPING_ORIGIN_PKT        0
+#define NAT_MAPPING_ORIGIN_CFG        1
+
 // address mapping entry
 typedef struct addr_entry_s {
     addr_entry_key_t    key;           // Entry key
     vrf_id_t            tgt_vrf_id;    // target VRF
     ip_addr_t           tgt_ip_addr;   // mapped IP address
-    nat_pool_id_t       nat_pool;      // nat pool this mapping belongs to
+    nat_pool_id_t       nat_pool_id;   // nat pool this mapping belongs to
     uint32_t            origin:1;      // 0 ==> fte path, 1 ==> cfg path
     uint32_t            ref_cnt:31;    // ref count for this mapping
     hal_handle_t        hal_handle;    // HAL allocated unique handle

@@ -84,9 +84,9 @@ void *nat_pool_get_key_func(void *entry);
 uint32_t nat_pool_compute_hash_func(void *key, uint32_t ht_size);
 bool nat_pool_compare_key_func(void *key1, void *key2);
 
-void *nat_addr_map_get_key_func(void *entry);
-uint32_t nat_addr_map_compute_hash_func(void *key, uint32_t ht_size);
-bool nat_addr_map_compare_key_func(void *key1, void *key2);
+void *nat_mapping_get_key_func(void *entry);
+uint32_t nat_mapping_compute_hash_func(void *key, uint32_t ht_size);
+bool nat_mapping_compare_key_func(void *key1, void *key2);
 
 hal_ret_t nat_pool_create(NatPoolSpec& spec, NatPoolResponse *rsp);
 hal_ret_t nat_pool_update(NatPoolSpec& spec, NatPoolResponse *rsp);
