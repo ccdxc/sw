@@ -114,26 +114,26 @@ static int ionic_get_pdid(struct ionic_ibdev *dev, u32 *pdid)
 {
 	u32 id;
 
-	mutex_lock(&dev->free_lock);
+	mutex_lock(&dev->inuse_lock);
 
-	id = find_next_bit(dev->free_pdid, dev->size_pdid, dev->next_pdid);
+	id = find_next_zero_bit(dev->inuse_pdid, dev->size_pdid, dev->next_pdid);
 	if (id != dev->size_pdid)
 		goto found;
 
-	id = find_first_bit(dev->free_pdid, dev->next_pdid);
+	id = find_first_zero_bit(dev->inuse_pdid, dev->next_pdid);
 	if (id != dev->next_pdid)
 		goto found;
 
-	mutex_unlock(&dev->free_lock);
+	mutex_unlock(&dev->inuse_lock);
 
 	/* not found */
 	return -ENOMEM;
 
 found:
-	clear_bit(id, dev->free_pdid);
+	set_bit(id, dev->inuse_pdid);
 	dev->next_pdid = id + 1;
 
-	mutex_unlock(&dev->free_lock);
+	mutex_unlock(&dev->inuse_lock);
 
 	*pdid = id;
 
@@ -144,28 +144,28 @@ static int ionic_get_mrid(struct ionic_ibdev *dev, u32 *lkey, u32 *rkey)
 {
 	u32 id, key;
 
-	mutex_lock(&dev->free_lock);
+	mutex_lock(&dev->inuse_lock);
 
-	id = find_next_bit(dev->free_mrid, dev->size_mrid, dev->next_mrid);
+	id = find_next_zero_bit(dev->inuse_mrid, dev->size_mrid, dev->next_mrid);
 	if (id != dev->size_mrid)
 		goto found;
 
-	id = find_first_bit(dev->free_mrid, dev->next_mrid);
+	id = find_first_zero_bit(dev->inuse_mrid, dev->next_mrid);
 	if (id != dev->next_mrid)
 		goto found;
 
-	mutex_unlock(&dev->free_lock);
+	mutex_unlock(&dev->inuse_lock);
 
 	/* not found */
 	return -ENOMEM;
 
 found:
-	clear_bit(id, dev->free_mrid);
+	set_bit(id, dev->inuse_mrid);
 	dev->next_mrid = id + 1;
 
 	key = dev->next_rkey_key++;
 
-	mutex_unlock(&dev->free_lock);
+	mutex_unlock(&dev->inuse_lock);
 
 	if (0) {
 		/* XXX rkey key doesn't work yet */
@@ -184,9 +184,9 @@ static void ionic_replace_rkey(struct ionic_ibdev *dev, u32 *rkey)
 {
 	u32 key;
 
-	mutex_lock(&dev->free_lock);
+	mutex_lock(&dev->inuse_lock);
 	key = dev->next_rkey_key++;
-	mutex_unlock(&dev->free_lock);
+	mutex_unlock(&dev->inuse_lock);
 
 	*rkey = (*rkey & 0xffffff) | (key << 24);
 }
@@ -195,26 +195,26 @@ static int ionic_get_cqid(struct ionic_ibdev *dev, u32 *cqid)
 {
 	u32 id;
 
-	mutex_lock(&dev->free_lock);
+	mutex_lock(&dev->inuse_lock);
 
-	id = find_next_bit(dev->free_cqid, dev->size_cqid, dev->next_cqid);
+	id = find_next_zero_bit(dev->inuse_cqid, dev->size_cqid, dev->next_cqid);
 	if (id != dev->size_cqid)
 		goto found;
 
-	id = find_first_bit(dev->free_cqid, dev->next_cqid);
+	id = find_first_zero_bit(dev->inuse_cqid, dev->next_cqid);
 	if (id != dev->next_cqid)
 		goto found;
 
-	mutex_unlock(&dev->free_lock);
+	mutex_unlock(&dev->inuse_lock);
 
 	/* not found */
 	return -ENOMEM;
 
 found:
-	clear_bit(id, dev->free_cqid);
+	set_bit(id, dev->inuse_cqid);
 	dev->next_cqid = id + 1;
 
-	mutex_unlock(&dev->free_lock);
+	mutex_unlock(&dev->inuse_lock);
 
 	*cqid = id;
 
@@ -225,26 +225,26 @@ static int ionic_get_qpid(struct ionic_ibdev *dev, u32 *qpid)
 {
 	u32 id;
 
-	mutex_lock(&dev->free_lock);
+	mutex_lock(&dev->inuse_lock);
 
-	id = find_next_bit(dev->free_qpid, dev->size_qpid, dev->next_qpid);
+	id = find_next_zero_bit(dev->inuse_qpid, dev->size_qpid, dev->next_qpid);
 	if (id != dev->size_qpid)
 		goto found;
 
-	id = find_next_bit(dev->free_qpid, dev->next_qpid, 2);
+	id = find_next_zero_bit(dev->inuse_qpid, dev->next_qpid, 2);
 	if (id != dev->next_qpid)
 		goto found;
 
-	mutex_unlock(&dev->free_lock);
+	mutex_unlock(&dev->inuse_lock);
 
 	/* not found */
 	return -ENOMEM;
 
 found:
-	clear_bit(id, dev->free_qpid);
+	set_bit(id, dev->inuse_qpid);
 	dev->next_qpid = id + 1;
 
-	mutex_unlock(&dev->free_lock);
+	mutex_unlock(&dev->inuse_lock);
 
 	*qpid = id;
 
@@ -255,38 +255,38 @@ static int ionic_get_srqid(struct ionic_ibdev *dev, u32 *qpid)
 {
 	u32 id;
 
-	mutex_lock(&dev->free_lock);
+	mutex_lock(&dev->inuse_lock);
 
-	id = find_next_bit(dev->free_qpid, dev->size_srqid, dev->next_srqid);
+	id = find_next_zero_bit(dev->inuse_qpid, dev->size_srqid, dev->next_srqid);
 	if (id != dev->size_srqid)
 		goto found;
 
-	id = find_next_bit(dev->free_qpid, dev->next_srqid, dev->size_qpid);
+	id = find_next_zero_bit(dev->inuse_qpid, dev->next_srqid, dev->size_qpid);
 	if (id != dev->next_srqid)
 		goto found;
 
-	id = find_next_bit(dev->free_qpid, dev->size_qpid, dev->next_qpid);
+	id = find_next_zero_bit(dev->inuse_qpid, dev->size_qpid, dev->next_qpid);
 	if (id != dev->size_qpid)
 		goto found;
 
-	id = find_next_bit(dev->free_qpid, dev->next_qpid, 2);
+	id = find_next_zero_bit(dev->inuse_qpid, dev->next_qpid, 2);
 	if (id != dev->next_qpid)
 		goto found;
 
-	mutex_unlock(&dev->free_lock);
+	mutex_unlock(&dev->inuse_lock);
 
 	/* not found */
 	return -ENOMEM;
 
 found:
-	clear_bit(id, dev->free_qpid);
+	set_bit(id, dev->inuse_qpid);
 
 	if (id < dev->size_qpid)
 		dev->next_qpid = id + 1;
 	else
 		dev->next_srqid = id + 1;
 
-	mutex_unlock(&dev->free_lock);
+	mutex_unlock(&dev->inuse_lock);
 
 	*qpid = id;
 
@@ -295,27 +295,27 @@ found:
 
 static void ionic_put_pdid(struct ionic_ibdev *dev, u32 pdid)
 {
-	set_bit(pdid, dev->free_pdid);
+	clear_bit(pdid, dev->inuse_pdid);
 }
 
 static void ionic_put_mrid(struct ionic_ibdev *dev, u32 mrid)
 {
-	set_bit(mrid / 2, dev->free_mrid); /* XXX see get_mrid */
+	clear_bit(mrid / 2, dev->inuse_mrid); /* XXX see get_mrid */
 }
 
 static void ionic_put_cqid(struct ionic_ibdev *dev, u32 cqid)
 {
-	set_bit(cqid, dev->free_cqid);
+	clear_bit(cqid, dev->inuse_cqid);
 }
 
 static void ionic_put_qpid(struct ionic_ibdev *dev, u32 qpid)
 {
-	set_bit(qpid, dev->free_qpid);
+	clear_bit(qpid, dev->inuse_qpid);
 }
 
 static void ionic_put_srqid(struct ionic_ibdev *dev, u32 qpid)
 {
-	set_bit(qpid, dev->free_qpid);
+	clear_bit(qpid, dev->inuse_qpid);
 }
 
 static struct rdma_hw_stats *ionic_alloc_hw_stats(struct ib_device *ibdev,
@@ -404,13 +404,13 @@ static int ionic_add_gid(struct ib_device *ibdev, u8 port, unsigned int index,
 	if (net != RDMA_NETWORK_IPV4 && net != RDMA_NETWORK_IPV6)
 		return -EINVAL;
 
-        return 0;
+	return 0;
 }
 
 static int ionic_del_gid(struct ib_device *ibdev, u8 port, unsigned int index,
 			 void **context)
 {
-        return 0;
+	return 0;
 }
 
 static int ionic_query_pkey(struct ib_device *ibdev, u8 port, u16 index,
@@ -2385,10 +2385,10 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_destroy_eqvec(dev);
 
-	kfree(dev->free_qpid);
-	kfree(dev->free_cqid);
-	kfree(dev->free_mrid);
-	kfree(dev->free_pdid);
+	kfree(dev->inuse_qpid);
+	kfree(dev->inuse_cqid);
+	kfree(dev->inuse_mrid);
+	kfree(dev->inuse_pdid);
 
 	tbl_destroy(&dev->qp_tbl);
 	tbl_destroy(&dev->cq_tbl);
@@ -2489,54 +2489,46 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	tbl_init(&dev->qp_tbl);
 	tbl_init(&dev->cq_tbl);
 
-	mutex_init(&dev->free_lock);
+	mutex_init(&dev->inuse_lock);
 
 	dev->size_pdid = dev->dev_attr.max_pd;
 	dev->next_pdid = 0;
 	size = sizeof(long) * BITS_TO_LONGS(dev->size_pdid);
-	dev->free_pdid = kmalloc(size, GFP_KERNEL);
-	if (!dev->free_pdid) {
+	dev->inuse_pdid = kzalloc(size, GFP_KERNEL);
+	if (!dev->inuse_pdid) {
 		rc = -ENOMEM;
 		goto err_pdid;
 	}
-	memset(dev->free_pdid, ~0, size);
 
 	dev->size_mrid = dev->dev_attr.max_mr;
 	dev->next_mrid = 0;
 	dev->next_rkey_key = 0;
 	size = sizeof(long) * BITS_TO_LONGS(dev->size_mrid);
-	dev->free_mrid = kmalloc(size, GFP_KERNEL);
-	if (!dev->free_mrid) {
+	dev->inuse_mrid = kzalloc(size, GFP_KERNEL);
+	if (!dev->inuse_mrid) {
 		rc = -ENOMEM;
 		goto err_mrid;
 	}
-	memset(dev->free_mrid, ~0, size);
 
 	dev->size_cqid = dev->dev_attr.max_cq;
 	dev->next_cqid = 0;
 	size = sizeof(long) * BITS_TO_LONGS(dev->size_cqid);
-	dev->free_cqid = kmalloc(size, GFP_KERNEL);
-	if (!dev->free_cqid) {
+	dev->inuse_cqid = kzalloc(size, GFP_KERNEL);
+	if (!dev->inuse_cqid) {
 		rc = -ENOMEM;
 		goto err_cqid;
 	}
-	memset(dev->free_cqid, ~0, size);
 
 	dev->size_qpid = dev->dev_attr.max_qp;
 	dev->next_qpid = 0;
 	dev->size_srqid = dev->dev_attr.max_srq;
 	dev->next_srqid = dev->dev_attr.max_qp;
 	size = sizeof(long) * BITS_TO_LONGS(dev->size_srqid);
-	dev->free_qpid = kmalloc(size, GFP_KERNEL);
-	if (!dev->free_qpid) {
+	dev->inuse_qpid = kzalloc(size, GFP_KERNEL);
+	if (!dev->inuse_qpid) {
 		rc = -ENOMEM;
 		goto err_qpid;
 	}
-	memset(dev->free_qpid, ~0, size);
-
-	dev->free_hbm = NULL;
-	dev->inuse_hbm = NULL;
-	dev->norder_hbm = 0;
 
 	if (ionic_dbgfs_enable)
 		lif_dbgfs = ionic_api_get_debugfs(lif);
@@ -2681,13 +2673,13 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 err_register:
 	ionic_destroy_eqvec(dev);
 err_eqvec:
-	kfree(dev->free_qpid);
+	kfree(dev->inuse_qpid);
 err_qpid:
-	kfree(dev->free_cqid);
+	kfree(dev->inuse_cqid);
 err_cqid:
-	kfree(dev->free_mrid);
+	kfree(dev->inuse_mrid);
 err_mrid:
-	kfree(dev->free_pdid);
+	kfree(dev->inuse_pdid);
 err_pdid:
 	tbl_destroy(&dev->qp_tbl);
 	tbl_destroy(&dev->cq_tbl);

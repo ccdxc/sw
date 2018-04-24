@@ -36,30 +36,30 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "cq_qtype:\t%u\n", dev->cq_qtype);
 	seq_printf(s, "eq_qtype:\t%u\n", dev->eq_qtype);
 
-	seq_printf(s, "free_pdid:\t%u\n", bitmap_weight(dev->free_pdid,
-							dev->size_pdid));
+	seq_printf(s, "inuse_pdid:\t%u\n", bitmap_weight(dev->inuse_pdid,
+							 dev->size_pdid));
 	seq_printf(s, "size_pdid:\t%u\n", dev->size_pdid);
 	seq_printf(s, "next_pdid:\t%u\n", dev->next_pdid);
 
-	seq_printf(s, "free_mrid:\t%u\n", bitmap_weight(dev->free_mrid,
-							dev->size_mrid));
+	seq_printf(s, "inuse_mrid:\t%u\n", bitmap_weight(dev->inuse_mrid,
+							 dev->size_mrid));
 	seq_printf(s, "size_mrid:\t%u\n", dev->size_mrid);
 	seq_printf(s, "next_mrid:\t%u\n", dev->next_mrid);
 	seq_printf(s, "next_rkey_key:\t%u\n", dev->next_rkey_key);
 
-	seq_printf(s, "free_cqid:\t%u\n", bitmap_weight(dev->free_cqid,
-							dev->size_cqid));
+	seq_printf(s, "inuse_cqid:\t%u\n", bitmap_weight(dev->inuse_cqid,
+							 dev->size_cqid));
 	seq_printf(s, "size_cqid:\t%u\n", dev->size_cqid);
 	seq_printf(s, "next_cqid:\t%u\n", dev->next_cqid);
 
-	seq_printf(s, "free_qpid:\t%u\n", bitmap_weight(dev->free_qpid,
-							dev->size_qpid));
+	seq_printf(s, "inuse_qpid:\t%u\n", bitmap_weight(dev->inuse_qpid,
+							 dev->size_qpid));
 	seq_printf(s, "size_qpid:\t%u\n", dev->size_qpid);
 	seq_printf(s, "next_qpid:\t%u\n", dev->next_qpid);
 
-	/* includes free_qpid: subtract free_qpid to get only srqid */
-	seq_printf(s, "free_srqid:\t%u\n", bitmap_weight(dev->free_qpid,
-							 dev->size_srqid));
+	/* includes inuse_qpid: subtract inuse_qpid to get only srqid */
+	seq_printf(s, "inuse_srqid:\t%u\n", bitmap_weight(dev->inuse_qpid,
+							  dev->size_srqid));
 	seq_printf(s, "size_srqid:\t%u\n", dev->size_srqid);
 	seq_printf(s, "next_srqid:\t%u\n", dev->next_srqid);
 

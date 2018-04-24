@@ -56,30 +56,26 @@ struct ionic_ibdev {
 	struct tbl_root		qp_tbl;
 	struct tbl_root		cq_tbl;
 
-	struct mutex		free_lock; /* for id reservation */
+	struct mutex		inuse_lock; /* for id reservation */
 
-	unsigned long		*free_pdid;
+	unsigned long		*inuse_pdid;
 	u32			size_pdid;
 	u32			next_pdid;
 
-	unsigned long		*free_mrid;
+	unsigned long		*inuse_mrid;
 	u32			size_mrid;
 	u32			next_mrid;
 	u8			next_rkey_key;
 
-	unsigned long		*free_cqid;
+	unsigned long		*inuse_cqid;
 	u32			size_cqid;
 	u32			next_cqid;
 
-	unsigned long		*free_qpid;
+	unsigned long		*inuse_qpid;
 	u32			size_qpid;
 	u32			next_qpid;
 	u32			size_srqid;
 	u32			next_srqid;
-
-	struct list_head	*free_hbm;
-	struct list_head	*inuse_hbm;
-	int			norder_hbm;
 
 	struct ionic_eq		**eq_vec;
 	int			eq_count;
