@@ -682,6 +682,18 @@ bool PullCQEntry(dp_mem_t *cq_va, uint16_t *cq_cindex, uint32_t ent_size,
   return false;
 }
 
+// Write SGE: local side buffer
+// TODO: Remove the write_data_buf pointer and do this in P4+ in production code
+//       The reason it can't be done in DOL environment is because the P4+ code
+//       does not know the VA of the host. In production code, this buffer will be
+//       setup with the VA:PA identity mapping of the HBM buffer.
+void FillWriteBackLocalBuffer(dp_mem_t *wqe, int base_offset) {
+  dp_mem_t *write_data_buf = target_rcv_buf_va->fragment_find(kR2NDataBufOffset, kR2NDataSize);
+  wqe->write_bit_fields(base_offset+256, 64, write_data_buf->va()); // SGE-va
+  wqe->write_bit_fields(base_offset+256+64, 32, (uint32_t) kR2NDataSize); // SGE-len
+  wqe->write_bit_fields(base_offset+256+64+32, 32, kTargetRcvBuf1LKey); // SGE-lkey
+}
+
 void SendSmallUspaceBuf() {
   // Increment the LKey at the beginning of each API
   SendBufLKeyIncr();

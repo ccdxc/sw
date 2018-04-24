@@ -97,7 +97,7 @@ save_to_iob:
    // Setup the DMA command to save the NVME backend command header
    // into the I/O buffer to be sent to target side
    add		r7, r6, IO_BUF_NVME_BE_CMD_OFFSET 
-   DMA_PHV2MEM_SETUP_ADDR34(nvme_be_cmd_hdr_src_queue_id, nvme_be_cmd_hdr_io_priority, 
+   DMA_PHV2MEM_SETUP_ADDR34(nvme_be_cmd_hdr_src_queue_id, nvme_be_cmd_hdr_is_read, 
                             r7, dma_p2m_4)
    
    // Load the table and program for downloading the data (if it is a write 

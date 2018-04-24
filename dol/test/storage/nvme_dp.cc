@@ -22,6 +22,11 @@ namespace nvme_dp {
 
 #define IO_BUF_NVME_BE_CMD_OFFSET               3896
 
+#define IO_BUF_WRITE_REQ_OFFSET                 4032
+
+#define IO_BUF_DATA_OFFSET                      4096
+
+
 
 const static uint32_t	kIOMapEntrySize		 = 1024;
 const static uint32_t	kIOMapNumEntries	 = 8;
@@ -37,6 +42,7 @@ const static uint32_t	kIOBRingStateSize	 	 = NUM_TO_VAL(kIOBRingStateSizeLog2);
 
 
 uint32_t IOBufSendLKeyBase = 128;
+uint32_t IOBufWriteBackRKeyBase = IOBufSendLKeyBase + kIOBufNumEntries;
 
 dp_mem_t *io_map_base_addr;
 uint32_t io_map_num_entries;
@@ -185,27 +191,29 @@ int setup_one_io_buffer(int index) {
   io_buf_base_addr->write_bit_fields(0, 34, io_buf_base_addr->pa());
 
   // Get the Sequencer ROCE SQ
+  //uint32_t seq_pdma_q = queues::get_seq_pdma_sq(index);
   uint32_t seq_roce_q = queues::get_seq_roce_sq(index);
-  uint64_t seq_qaddr;
-  if (qstate_if::get_qstate_addr(queues::get_seq_lif(), SQ_TYPE, seq_roce_q, &seq_qaddr) < 0) {
+  uint64_t seq_roce_qaddr;
+  if (qstate_if::get_qstate_addr(queues::get_seq_lif(), SQ_TYPE, seq_roce_q, &seq_roce_qaddr) < 0) {
     printf("Can't get PVM's Seq ROCE SQ qaddr \n");
     return -1;
   }
 
   // SendLKey  = base value + index of the IO buffer
   uint32_t send_lkey = IOBufSendLKeyBase + index;
+  uint32_t write_back_rkey = IOBufWriteBackRKeyBase + index;
 
   // Register IO Buffer with ROCE using identity mapping. 
   // No remote access => only LKey (based on base value + offset).
   RdmaMemRegister(io_buf_base_addr->pa(), io_buf_base_addr->pa(), kIOBufEntrySize,
-                  send_lkey, 0, false);
+                  send_lkey, write_back_rkey, true);
 
 
   // Fill the write wqe
   uint32_t roce_write_wqe_base = IO_BUF_WRITE_ROCE_SQ_WQE_OFFSET * 8;
   uint64_t data_offset_pa = io_buf_base_addr->pa() + IO_BUF_NVME_BE_CMD_OFFSET;
   uint32_t data_len = kIOBufHdrXmitSize + kIOBufMaxDataSize;
-  printf("data_offset %lx, data len %u \n", data_offset_pa, data_len);
+  printf("Write data_offset %lx, data len %u \n", data_offset_pa, data_len);
   io_buf_base_addr->write_bit_fields(roce_write_wqe_base, 64, data_offset_pa); // wrid, ptr to actual xmit data
   io_buf_base_addr->write_bit_fields(roce_write_wqe_base+64, 4,  kRdmaSendOpType);  
   io_buf_base_addr->write_bit_fields(roce_write_wqe_base+72, 8,  1); // Num SGEs = 1
@@ -223,12 +231,70 @@ int setup_one_io_buffer(int index) {
   io_buf_base_addr->write_bit_fields(roce_write_wqe_base+256+64, 32, data_len);
   io_buf_base_addr->write_bit_fields(roce_write_wqe_base+256+64+32, 32, send_lkey);
 
+
+  // Fill the read wqe
+  uint32_t roce_read_wqe_base = IO_BUF_READ_ROCE_SQ_WQE_OFFSET * 8;
+  data_offset_pa = io_buf_base_addr->pa() + IO_BUF_NVME_BE_CMD_OFFSET;
+  data_len = kIOBufHdrXmitSize;
+  printf("Read data_offset %lx, data len %u \n", data_offset_pa, data_len);
+  io_buf_base_addr->write_bit_fields(roce_read_wqe_base, 64, data_offset_pa); // wrid, ptr to actual xmit data
+  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+64, 4,  kRdmaSendOpType);  
+  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+72, 8,  1); // Num SGEs = 1
+
+  // Store doorbell information of PVM's ROCE CQ in immediate data
+  if (kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
+      io_buf_base_addr->write_bit_fields(roce_read_wqe_base+96, 11, queues::get_pvm_lif());
+      io_buf_base_addr->write_bit_fields(roce_read_wqe_base+107, 3, CQ_TYPE);
+      io_buf_base_addr->write_bit_fields(roce_read_wqe_base+110, 18, get_rdma_pvm_roce_tgt_cq());
+  }
+  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+192, 32, data_len);  // data len
+
+  // Form the SGE
+  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+256, 64,  data_offset_pa); // SGE-va, same as pa
+  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+256+64, 32, data_len);
+  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+256+64+32, 32, send_lkey);
+
+  // Pre-form the (RDMA) write descriptor to point to the data buffer
+  uint32_t write_back_wqe_base = IO_BUF_WRITE_REQ_OFFSET * 8;
+  data_offset_pa = io_buf_base_addr->pa() + IO_BUF_DATA_OFFSET;
+  data_len = kIOBufMaxDataSize;
+
+  // Start the write WQE formation (WRID will be filled by P4+)
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+64, 4, RDMA_OP_TYPE_WRITE);  // op_type
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+72, 8, 1);  // Num SGEs = 1
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+192, 32, (uint32_t) data_len);  // data len
+
+#if 0
+  // RDMA will ring the next doorbell with pndx increment,
+  // print out this info to make it easy to locate in model.log
+  uint64_t db_addr;
+  uint64_t db_data;
+  queues::get_capri_doorbell_with_pndx_inc(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0,
+                                           &db_addr, &db_data);
+  printf("write_back_wqe next doorbell db_addr %lx db_data %lx\n", db_addr, db_data);
+
+  // Write WQE: remote side buffer with immediate data as doorbell
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+96, 11, queues::get_seq_lif());
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+107, 3, SQ_TYPE);
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+110, 18, seq_pdma_q);
+#endif
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+128, 64, data_offset_pa); // va == pa
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+128+64, 32, (uint32_t) data_len); // len
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+128+64+32, 32, write_back_rkey); // rkey
+
+  // Write SGE: local side buffer
+  // TODO: Remove the write_data_buf pointer and do this in P4+ in production code
+  //       The reason it can't be done in DOL environment is because the P4+ code
+  //       does not know the VA of the host. In production code, this buffer will be
+  //       setup with the VA:PA identity mapping of the HBM buffer.
+  FillWriteBackLocalBuffer(io_buf_base_addr, write_back_wqe_base);
+
   // Form the R2N sequencer doorbell
   uint32_t base_db_bit = (IO_BUF_SEQ_DB_OFFSET + IO_BUF_SEQ_R2N_DB_OFFSET) * 8;
   io_buf_base_addr->write_bit_fields(base_db_bit, 11, queues::get_seq_lif());
   io_buf_base_addr->write_bit_fields(base_db_bit+11, 3, SQ_TYPE);
   io_buf_base_addr->write_bit_fields(base_db_bit+14, 24, seq_roce_q);
-  io_buf_base_addr->write_bit_fields(base_db_bit+38, 34, seq_qaddr);
+  io_buf_base_addr->write_bit_fields(base_db_bit+38, 34, seq_roce_qaddr);
 
   // Commit to HBM
   io_buf_base_addr->write_thru();

@@ -889,7 +889,7 @@
    bcf      [!c1 | !c2], _branch_instr;                                 \
    sub      r3, _data_len, _xfer_len;                                   \
    slt      c3, r3, PRP_DATA_XFER_SIZE;                                 \
-   add.c3   r3, r0, PRP_DATA_XFER_SIZE;                                 \
+   add.!c3  r3, r0, PRP_DATA_XFER_SIZE;                                 \
    add      r4, _dst_addr, _xfer_len;                                   \
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r4, r3, 0, 0,              \
                      _src_dma_cmd)                                      \

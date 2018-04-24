@@ -140,4 +140,38 @@ int test_run_nvme_dp_write_cmd() {
   return rc;
 }
 
+int test_run_nvme_dp_read_cmd() {
+  int rc;
+  uint16_t cmd_index, status_index;
+  dp_mem_t *nvme_cmd, *nvme_status, *read_buf;
+
+  // Use non-zero queue (0 is Admin Q)
+  uint16_t nvme_sq = queues::get_host_nvme_sq(1);
+  uint16_t nvme_cq = queues::get_host_nvme_cq(1);
+
+  if (consume_nvme_sq_cq_entries(nvme_sq, nvme_cq, &nvme_cmd, &nvme_status, 
+                                 &cmd_index, &status_index) < 0) {
+    return -1;
+  }
+
+  // Form the read command
+  if ((read_buf = form_nvme_dp_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+                                                   get_next_slba(), kDefaultNlb)) == NULL) {
+    return -1;
+  }
+
+
+  // Send the NVME admin command
+  test_ring_nvme_doorbell(queues::get_nvme_lif(), SQ_TYPE, nvme_sq, 0, cmd_index);
+
+  // Poll for status
+  auto func1 = [nvme_status, nvme_cmd] () {
+    return check_nvme_dp_status(nvme_status, nvme_cmd);
+  };
+  Poller poll;
+  rc = poll(func1);
+
+  return rc;
+}
+
 }  // namespace tests

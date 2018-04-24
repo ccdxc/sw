@@ -82,6 +82,7 @@ std::vector<tests::TestEntry> test_suite;
 
 std::vector<tests::TestEntry> nvme_dp_tests = {
   {&tests::test_run_nvme_dp_write_cmd, "NVME Datapath write command", false},
+  //{&tests::test_run_nvme_dp_read_cmd, "NVME Datapath read command", false},
 };
 
 std::vector<tests::TestEntry> unit_tests = {

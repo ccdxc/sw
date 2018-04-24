@@ -71,6 +71,8 @@ void RdmaMemRegister(uint64_t va, uint64_t pa, uint32_t len, uint32_t lkey,
                      uint32_t rkey, bool remote);
 void RdmaMemRegister(dp_mem_t *mem, uint32_t lkey, uint32_t rkey, bool remote);
 
+void FillWriteBackLocalBuffer(dp_mem_t *wqe, int base_offset);
+
 int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd_ptr, uint64_t slba);
 int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_handle,
                      dp_mem_t **nvme_cmd_ptr, dp_mem_t **read_buf_ptr, uint64_t slba, 

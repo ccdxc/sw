@@ -8,8 +8,8 @@
 #include "INGRESS_p.h"
 
 
-struct s5_tbl0_k k;
-struct s5_tbl0_handle_no_prp_list_d d;
+struct s4_tbl0_k k;
+struct s4_tbl0_send_read_data_d d;
 struct phv_ p;
 
 %%
@@ -31,12 +31,12 @@ storage_nvme_send_read_data_start:
    add		r5, r0, r0
 
    // Setup DMA of PRP0 entry (macro takes care of validity)
-   NVME_DATA_XFER_TO_HOST(NVME_KIVEC_PRP_BASE_PRP0, r7, 
+   NVME_DATA_XFER_TO_HOST(d.entry0, r7, 
                           NVME_KIVEC_GLOBAL_NVME_DATA_LEN,
                           r5, dma_m2m_1, dma_m2m_2, tbl_load)
 
    // Setup DMA of PRP1 entry (macro takes care of validity)
-   NVME_DATA_XFER_TO_HOST(NVME_KIVEC_PRP_BASE_PRP1, r7, 
+   NVME_DATA_XFER_TO_HOST(d.entry1, r7, 
                           NVME_KIVEC_GLOBAL_NVME_DATA_LEN,
                           r5, dma_m2m_3, dma_m2m_4, tbl_load)
 
