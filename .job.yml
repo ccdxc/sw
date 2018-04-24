@@ -13,6 +13,7 @@ references:
   - test
   - docs
   - venice/ui
+  - test/suites/e2e
 dependencies:
   dol: nic
   nic/agent: venice

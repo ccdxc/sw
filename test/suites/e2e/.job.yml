@@ -1,0 +1,21 @@
+---
+targets:
+image:
+  bind_dir: "/go/src/github.com/pensando/sw"
+  work_dir: "/go/src/github.com/pensando/sw/test/suites/e2e"
+rebase: true
+
+warmd:
+  target: [ "go", "run", "e2e.go" ]
+  create:
+    image: build-7
+    count: 1
+    resources:
+      cpus: 32
+      memory: 64
+
+  provision:
+    username: vm
+    password: vm
+    # additional vars to pass to ansible.
+    vars:

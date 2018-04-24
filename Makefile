@@ -1,5 +1,13 @@
 # Makefile for building packages
 
+# :cached valid only for mac
+platform=$(shell uname)
+ifeq ($(platform),Darwin)
+CACHEMOUNT := ":cached"
+else
+CACHEMOUNT := 
+endif
+
 # Lists excluded patterns to "go list"
 EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|fields|vendor"
 
@@ -160,23 +168,23 @@ container-compile:
 	@echo "+++ building ui sources"
 	@if [ ! -z ${UI_FRAMEWORK} ]; then \
 		echo "+++ populating node_modules from cache for ui-framework";\
-		echo docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
-		docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
+		echo docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
+		docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
 		cd venice/ui/web-app-framework && tar zxf ../../../bin/web-app-framework-node-modules.tgz ;\
-		docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make  ui-framework; \
+		docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make  ui-framework; \
 	fi
 	@if [ ! -f bin/webapp-node-modules.tgz ]; then \
 		echo "+++ populating node_modules from cache for ui";\
-		echo docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
-		docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+		echo docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+		docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
 		cd venice/ui/webapp && tar zxf ../../../bin/webapp-node-modules.tgz ;\
 	fi
-	docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER}
+	docker run -it --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER}
 	@cp -r venice/ui/webapp/dist tools/docker-files/apigw
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
-		echo "+++ building go sources"; docker run -t --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw:cached -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash -c "make ${TARGETS}" ; \
+		echo "+++ building go sources"; docker run -t --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash -c "make ${TARGETS}" ; \
 	else \
-		echo "+++ rebuilding all go sources"; docker run -t --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash -c "make ${TARGETS}";\
+		echo "+++ rebuilding all go sources"; docker run -t --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash -c "make ${TARGETS}";\
 	fi
 
 container-qcompile:
@@ -184,12 +192,12 @@ container-qcompile:
 	mkdir -p ${PWD}/bin/pkg
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
 		echo "+++ building go sources";
-		echo docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER}; \
-		docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER}; \
+		echo docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER}; \
+		docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER}; \
 	else \
 		echo "+++ rebuilding all go sources";
-		echo docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER};\
-		docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER};\
+		echo docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER};\
+		docker run -t -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER};\
 	fi
 
 
