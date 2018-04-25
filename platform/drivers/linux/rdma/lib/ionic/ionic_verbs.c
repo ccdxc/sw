@@ -1012,7 +1012,7 @@ static int ionic_prep_rdma(struct ionic_qp *qp,
 	wqe->u.non_atomic.wqe.rdma.r_key = htobe32(wr->wr.rdma.rkey);
 
 	return ionic_prep_common(qp, wr, meta, wqe,
-				 &wqe->u.non_atomic.wqe.ud_send.length);
+				 &wqe->u.non_atomic.wqe.rdma.length);
 }
 
 static int ionic_prep_atomic(struct ionic_qp *qp,
