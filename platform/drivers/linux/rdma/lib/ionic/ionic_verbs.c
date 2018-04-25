@@ -1008,9 +1008,8 @@ static int ionic_prep_rdma(struct ionic_qp *qp,
 		return EINVAL;
 	}
 
-	/* XXX endian? */
-	wqe->u.non_atomic.wqe.rdma.va = wr->wr.rdma.remote_addr;
-	wqe->u.non_atomic.wqe.rdma.r_key = wr->wr.rdma.rkey;
+	wqe->u.non_atomic.wqe.rdma.va = htobe64(wr->wr.rdma.remote_addr);
+	wqe->u.non_atomic.wqe.rdma.r_key = htobe32(wr->wr.rdma.rkey);
 
 	return ionic_prep_common(qp, wr, meta, wqe,
 				 &wqe->u.non_atomic.wqe.ud_send.length);
@@ -1052,9 +1051,8 @@ static int ionic_prep_atomic(struct ionic_qp *qp,
 		return EINVAL;
 	}
 
-	/* XXX endian? */
-	wqe->u.atomic.r_key = wr->wr.atomic.rkey;
-	wqe->u.atomic.va = wr->wr.atomic.remote_addr;
+	wqe->u.atomic.r_key = htobe32(wr->wr.atomic.rkey);
+	wqe->u.atomic.va = htobe64(wr->wr.atomic.remote_addr);
 
 	wqe->base.num_sges = 1;
 	wqe->u.atomic.sge.va = htobe64(wr->sg_list[0].addr);
