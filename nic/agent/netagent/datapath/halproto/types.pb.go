@@ -218,6 +218,8 @@
 		EndpointSpec
 		EndpointRequestMsg
 		EndpointIpAddress
+		EndpointStatusEpd
+		EndpointStatusCpd
 		EndpointStatus
 		EndpointResponse
 		EndpointResponseMsg

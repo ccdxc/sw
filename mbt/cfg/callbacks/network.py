@@ -30,7 +30,6 @@ def PostCreateCb(data, req_spec, resp_spec):
             nw_cust_obj["ipv6"] = req_spec.request[0].key_or_handle.nw_key.ip_prefix.address.v6_addr
         else:
             nw_cust_obj["ipv4"] = req_spec.request[0].key_or_handle.nw_key.ip_prefix.address.v4_addr
-        print(nw_cust_obj)
 
 def PostGetCb(data, req_spec, resp_spec):
     data.actual_data.spec = resp_spec.response[0].spec

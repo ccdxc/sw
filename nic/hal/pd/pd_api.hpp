@@ -664,6 +664,11 @@ typedef struct pd_ep_delete_args_s {
     ep_t            *ep;
 } __PACK__ pd_ep_delete_args_t;
 
+typedef struct pd_ep_get_args_s {
+    ep_t                    *ep;
+    EndpointGetResponse     *rsp;
+} __PACK__ pd_ep_get_args_t;
+
 static inline void
 pd_ep_delete_args_init (pd_ep_delete_args_t *args)
 {
@@ -2648,7 +2653,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_TABLE_GET,                228, "PD_FUNC_ID_TABLE_GET") \
     ENTRY(PD_FUNC_ID_BYPASS_FLOWID_GET,        229, "PD_FUNC_ID_BYPASS_FLOWID_GET")\
     ENTRY(PD_FUNC_ID_L2SEG_GET,                230, "PD_FUNC_ID_L2SEG_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      231, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_EP_GET,                   231, "PD_FUNC_ID_EP_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      232, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2733,6 +2739,7 @@ PD_FUNCP_TYPEDEF(pd_ep_update);
 PD_FUNCP_TYPEDEF(pd_ep_delete);
 PD_FUNCP_TYPEDEF(pd_ep_mem_free);
 PD_FUNCP_TYPEDEF(pd_ep_make_clone);
+PD_FUNCP_TYPEDEF(pd_ep_get);
 
 // session calls
 PD_FUNCP_TYPEDEF(pd_session_create);
@@ -3085,6 +3092,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_ep_delete);
         PD_UNION_FIELD(pd_ep_mem_free);
         PD_UNION_FIELD(pd_ep_make_clone);
+        PD_UNION_FIELD(pd_ep_get);
 
         // session calls
         PD_UNION_FIELD(pd_session_create);

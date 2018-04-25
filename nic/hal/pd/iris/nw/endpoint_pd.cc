@@ -140,6 +140,30 @@ end:
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// EP Get
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_ep_get(pd_ep_get_args_t *args)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    ep_t                    *ep = args->ep;
+    pd_ep_t                 *ep_pd = (pd_ep_t *)ep->pd;
+    EndpointGetResponse     *rsp = args->rsp;
+
+    auto ep_info = rsp->mutable_status()->mutable_epd_status();
+
+    ep_info->set_reg_mac_tbl_idx(ep_pd->reg_mac_tbl_idx);
+
+    for (int i = 0; i < REWRITE_MAX_ID; i++) {
+        if (ep_pd->rw_tbl_idx[i]) {
+            ep_info->add_rw_tbl_idx(ep_pd->rw_tbl_idx[i]);
+        }
+    }
+
+    return ret;
+}
+
 //-----------------------------------------------------------------------------
 // PD Endpoint Cleanup
 //  - Release all resources

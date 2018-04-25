@@ -58,13 +58,21 @@ message EndpointRequestMsg {
 
 //Endpoint IP address information.
 message EndpointIpAddress {
-	types.IPAddress        ip_address          = 1;    // IP addresses learnt.
-	bool                   learn_source_dhcp   = 2;    // TRUE if learnt via DHCP
-  	bool                   learn_source_arp    = 3;    // TRUE if learnt via ARP/GARP
-  	bool                   learn_source_rarp   = 4;    // TRUE if learnt via RARP
-  	bool                   learn_source_config = 5;    // TRUE if learnt via configuration
-  	eplearn.EplearnStatus  learn_status        = 6;   // ep learning status
+  types.IPAddress        ip_address          = 1;    // IP addresses learnt.
+  bool                   learn_source_dhcp   = 2;    // TRUE if learnt via DHCP
+  bool                   learn_source_arp    = 3;    // TRUE if learnt via ARP/GARP
+  bool                   learn_source_rarp   = 4;    // TRUE if learnt via RARP
+  bool                   learn_source_config = 5;    // TRUE if learnt via configuration
+  eplearn.EplearnStatus  learn_status        = 6;   // ep learning status
 };
+
+message EndpointStatusEpd {
+  uint32                 reg_mac_tbl_idx     = 1;
+  repeated uint32        rw_tbl_idx          = 2;  
+}
+
+message EndpointStatusCpd {
+}
 
 // EndpointStatus has the current status of an endpoint
 // TODO: capturing aging information, if any
@@ -73,6 +81,10 @@ message EndpointStatus {
   repeated EndpointIpAddress      ip_address          = 2;    // IP addresses learnt, if any
   bool                            is_endpoint_local   = 3;    // TRUE if endpoint is local
   bool							  learn_source_config = 4;    // TRUE if ep entry was created by config.
+  oneof ep_pd_status {
+      EndpointStatusEpd  epd_status                   = 5;    // Endpoint oper state for enterprise pipeline
+      EndpointStatusCpd  cpd_status                   = 6;    // Endpoint oper state for cloud pipeline
+  }
 }
 
 // EndpointResponse is response to EndpointSpec

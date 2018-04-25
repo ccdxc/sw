@@ -2023,6 +2023,8 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     dllist_ctxt_t                      *lnode = NULL;
     ep_ip_entry_t                      *pi_ip_entry = NULL;
     EplearnStatus                      *ep_learn_status;
+    pd::pd_ep_get_args_t               args = {0};
+    hal_ret_t                          ret = HAL_RET_OK;
 
     auto vrf       = vrf_lookup_by_handle(ep->vrf_handle);
     auto interface = find_if_by_handle(ep->if_handle);
@@ -2062,6 +2064,17 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
             endpoint_ip_addr->set_learn_source_dhcp(pi_ip_entry->ip_flags & EP_FLAGS_LEARN_SRC_CFG);
             endpoint_ip_addr->set_learn_source_config(true);
         }
+    }
+
+    HAL_TRACE_DEBUG("Finished PI get");
+
+    // Getting PD information
+    args.ep = ep;
+    args.rsp = response;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_GET, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to do PD get for Endpoint err: {}",
+                      ret);
     }
 
     response->set_api_status(types::API_STATUS_OK);

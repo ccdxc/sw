@@ -11,6 +11,64 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+// MockisEndpointStatus_EpPdStatus is a mock of isEndpointStatus_EpPdStatus interface
+type MockisEndpointStatus_EpPdStatus struct {
+	ctrl     *gomock.Controller
+	recorder *MockisEndpointStatus_EpPdStatusMockRecorder
+}
+
+// MockisEndpointStatus_EpPdStatusMockRecorder is the mock recorder for MockisEndpointStatus_EpPdStatus
+type MockisEndpointStatus_EpPdStatusMockRecorder struct {
+	mock *MockisEndpointStatus_EpPdStatus
+}
+
+// NewMockisEndpointStatus_EpPdStatus creates a new mock instance
+func NewMockisEndpointStatus_EpPdStatus(ctrl *gomock.Controller) *MockisEndpointStatus_EpPdStatus {
+	mock := &MockisEndpointStatus_EpPdStatus{ctrl: ctrl}
+	mock.recorder = &MockisEndpointStatus_EpPdStatusMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockisEndpointStatus_EpPdStatus) EXPECT() *MockisEndpointStatus_EpPdStatusMockRecorder {
+	return _m.recorder
+}
+
+// isEndpointStatus_EpPdStatus mocks base method
+func (_m *MockisEndpointStatus_EpPdStatus) isEndpointStatus_EpPdStatus() {
+	_m.ctrl.Call(_m, "isEndpointStatus_EpPdStatus")
+}
+
+// isEndpointStatus_EpPdStatus indicates an expected call of isEndpointStatus_EpPdStatus
+func (_mr *MockisEndpointStatus_EpPdStatusMockRecorder) isEndpointStatus_EpPdStatus() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isEndpointStatus_EpPdStatus", reflect.TypeOf((*MockisEndpointStatus_EpPdStatus)(nil).isEndpointStatus_EpPdStatus))
+}
+
+// MarshalTo mocks base method
+func (_m *MockisEndpointStatus_EpPdStatus) MarshalTo(_param0 []byte) (int, error) {
+	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (_mr *MockisEndpointStatus_EpPdStatusMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisEndpointStatus_EpPdStatus)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (_m *MockisEndpointStatus_EpPdStatus) Size() int {
+	ret := _m.ctrl.Call(_m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (_mr *MockisEndpointStatus_EpPdStatusMockRecorder) Size() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisEndpointStatus_EpPdStatus)(nil).Size))
+}
+
 // MockisEndpointDeleteRequest_DeleteBy is a mock of isEndpointDeleteRequest_DeleteBy interface
 type MockisEndpointDeleteRequest_DeleteBy struct {
 	ctrl     *gomock.Controller
