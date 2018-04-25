@@ -167,7 +167,7 @@ addr_list_elem_address_spec_validate (const types::Address& addr, uint8_t *af)
     return HAL_RET_INVALID_ARG;
 }
 
-hal_ret_t
+addr_list_elem_t *
 addr_list_elem_address_spec_handle (const types::Address& addr,
                                     dllist_ctxt_t *head)
 {
@@ -177,19 +177,19 @@ addr_list_elem_address_spec_handle (const types::Address& addr,
 
     if ((ret = addr_list_elem_address_spec_validate(
             addr, &af)) != HAL_RET_OK)
-        return ret;
+        return NULL;
 
     if ((addr_lelem = addr_list_elem_alloc_init(af)) == NULL)
-        return HAL_RET_OOM;
+        return NULL;
 
     if ((ret = addr_list_elem_address_spec_extract(
             addr, addr_lelem)) != HAL_RET_OK) {
         addr_list_elem_uninit_free(addr_lelem);
-        return ret;
+        return NULL;
     }
 
     addr_list_elem_db_add(head, addr_lelem);
-    return HAL_RET_OK;
+    return addr_lelem;
 }
 
 static inline hal_ret_t

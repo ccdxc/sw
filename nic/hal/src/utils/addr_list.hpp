@@ -42,15 +42,16 @@ namespace hal {
 // and passed through the same logic of Address object
 //-----------------------------------------------------------------------------
 typedef struct addr_list_elem_s {
-    ip_range_t       ip_range;
+    ip_range_t       ip_range;     // IP address range
     bool             negate;
-    dllist_ctxt_t    list_ctxt;
+    uint32_t         num_addrs;    // no. of addresses in this range
+    dllist_ctxt_t    list_ctxt;    // list ctxt to link to other nodes
 } __PACK__ addr_list_elem_t;
 
 //-----------------------------------------------------------------------------
 // Function prototypes
 //-----------------------------------------------------------------------------
-hal_ret_t addr_list_elem_address_spec_handle(
+addr_list_elem_t *addr_list_elem_address_spec_handle(
     const types::Address& addr, dllist_ctxt_t *head);
 hal_ret_t addr_list_elem_ipaddressobj_spec_handle(
     const types::IPAddressObj& addr, dllist_ctxt_t *head);

@@ -169,8 +169,8 @@ bitmap::first_set_(uint32_t posn, uint32_t *first_set_p)
     // Find the word with the first set bit. For the current word,
     // apply a mask so that all bits less than the start_off are treated
     // to be 0
-    for (word = start_word; 
-         (word < num_words_) && ((bits_[word] & mask)  == 0); 
+    for (word = start_word;
+         (word < num_words_) && ((bits_[word] & mask)  == 0);
          word++) {
         mask = ALL_ONES;
     }
@@ -206,7 +206,7 @@ bitmap::first_set(uint32_t *first_set_p)
 // find the next bit set after posn
 //------------------------------------------------------------------------------
 hal_ret_t
-bitmap::next_set(uint32_t posn, uint32_t *set_p) 
+bitmap::next_set(uint32_t posn, uint32_t *set_p)
 {
     return first_set_(posn+1, set_p);
 }
@@ -231,9 +231,9 @@ bitmap::last_set_(uint32_t posn, uint32_t *last_set_p)
     lock_();
     // Find the word with the first set bit in reverse. For the current word,
     // apply a mask so that all bits greater than the start_off are treated
-    // to be already free 
-    for (word = start_word+1; 
-         (word != 0) && ((bits_[word-1] & mask) == 0); 
+    // to be already free
+    for (word = start_word+1;
+         (word != 0) && ((bits_[word-1] & mask) == 0);
          word--) {
         mask = ALL_ONES;
     }
@@ -257,7 +257,7 @@ bitmap::last_set_(uint32_t posn, uint32_t *last_set_p)
 // find the prev bit set before posn
 //------------------------------------------------------------------------------
 hal_ret_t
-bitmap::prev_set(uint32_t posn, uint32_t *set_p) 
+bitmap::prev_set(uint32_t posn, uint32_t *set_p)
 {
     if (posn == 0) {
         return HAL_RET_NO_RESOURCE;
@@ -279,9 +279,9 @@ bitmap::first_free_(uint32_t posn, uint32_t *first_free_p)
     lock_();
     // Find the word with the first free bit. For the current word,
     // apply a mask so that all bits less than the start_off are treated
-    // to be already set 
-    for (word = start_word; 
-         (word < num_words_) && (~(bits_[word] | mask) == 0); 
+    // to be already set
+    for (word = start_word;
+         (word < num_words_) && (~(bits_[word] | mask) == 0);
          word++) {
         mask = 0;
     }
@@ -316,7 +316,7 @@ bitmap::first_free(uint32_t *first_free_p)
 // find the next bit free after posn
 //------------------------------------------------------------------------------
 hal_ret_t
-bitmap::next_free(uint32_t posn, uint32_t *free_p) 
+bitmap::next_free(uint32_t posn, uint32_t *free_p)
 {
     return first_free_(posn+1, free_p);
 }
@@ -341,9 +341,9 @@ bitmap::last_free_(uint32_t posn, uint32_t *last_free_p)
     lock_();
     // Find the word with the first free bit in reverse. For the current word,
     // apply a mask so that all bits greater than the start_off are treated
-    // to be already set 
-    for (word = start_word+1; 
-         (word != 0) && (~(bits_[word-1] | mask) == 0); 
+    // to be already set
+    for (word = start_word+1;
+         (word != 0) && (~(bits_[word-1] | mask) == 0);
          word--) {
         mask = 0;
     }
@@ -368,7 +368,7 @@ bitmap::last_free_(uint32_t posn, uint32_t *last_free_p)
 // find the prev bit free before posn
 //------------------------------------------------------------------------------
 hal_ret_t
-bitmap::prev_free(uint32_t posn, uint32_t *free_p) 
+bitmap::prev_free(uint32_t posn, uint32_t *free_p)
 {
     if (posn == 0) {
         return HAL_RET_NO_RESOURCE;
@@ -407,7 +407,7 @@ bitmap::log2_floor(uint64_t v)
     return v ? 64 - __builtin_clzl(v) - 1: 64;
 #else
     // https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogLookup
-    static const char LogTable256[256] = 
+    static const char LogTable256[256] =
     {
 #define LT(n) n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n
         0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,

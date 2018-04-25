@@ -30,13 +30,77 @@
 By default, port 9007 of the docker container is exposed to the host (i.e., VM
 representing the datacenter) and hence REST APIs can be invoked using curl.
 
-Example 1 : Create a tenant
+Examples:
 
+Create a tenant:
 curl -d'{"Kind":"Tenant","meta":{"Name":"tenant-1","Tenant":"tenant-1","CreationTime":"1970-01-01T00:00:00Z","ModTime":"1970-01-01T00:00:00Z"},"spec":{},"status":{}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/tenants/
 
-Example 2: Get all tenants
-
+Get all tenants:
 curl 172.17.0.2:9007/api/tenants/
 [{"kind":"Tenant","meta":{"name":"tenant-1","tenant":"tenant-1","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"spec":{},"status":{"TenantID":3}}]
+
+Create a NAT pool:
+curl -d'{"kind":"NatPool","meta":{"name":"testNatPool","tenant":"tenant-1","namespace":"ns-1","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"spec":{"NetworkName":"default"},"status":{}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/natpools/
+
+Get all NAT pools:
+curl 172.17.0.2:9007/api/natpools/ | jq .
+[
+  {
+    "kind": "NatPool",
+    "meta": {
+      "name": "testNatPool",
+      "tenant": "tenant-1",
+      "namespace": "ns-1",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "NetworkName": "default"
+    },
+    "status": {
+      "id": 1
+    }
+  }
+]
+
+Create NAT policy:
+curl -d'{"kind":"NatPolicy","meta":{"name":"testNatPolicy","tenant":"tenant-1","namespace":"ns-1","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"spec":{"rules":[{"from":{"match-type":"IPRange","match":"10.0.0.0 - 10.0.1.0"},"to":{"match-type":"IPRange","match":"192.168.0.0 - 192.168.1.1"},"protocol":"","from-port":"","to-port":"","nat-pool":"preCreatedNatPool","action":"SNAT"}]},"status":{}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/natpolicies/
+
+Get all NAT policies:
+curl 172.17.0.2:9007/api/natpolicies/ | jq .
+[
+  {
+    "kind": "NatPolicy",
+    "meta": {
+      "name": "testNatPolicy",
+      "tenant": "tenant-1",
+      "namespace": "ns-1",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "rules": [
+        {
+          "from": {
+            "match-type": "IPRange",
+            "match": "10.0.0.0 - 10.0.1.0"
+          },
+          "to": {
+            "match-type": "IPRange",
+            "match": "192.168.0.0 - 192.168.1.1"
+          },
+          "protocol": "",
+          "from-port": "",
+          "to-port": "",
+          "nat-pool": "preCreatedNatPool",
+          "action": "SNAT"
+        }
+      ]
+    },
+    "status": {
+      "id": 1
+    }
+  }
+]
 
 Here 172.17.0.2 is IP address of the eth0 interface inside the NAPLES container

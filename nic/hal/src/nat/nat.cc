@@ -126,6 +126,9 @@ nat_pool_cleanup (nat_pool_t *pool)
 {
     // TODO: purge all NAT binding of this pool
     addr_list_cleanup(&pool->addr_ranges);
+    if (pool->addr_bmap) {
+        bitmap::destroy(pool->addr_bmap);
+    }
     nat_pool_free(pool);
     return HAL_RET_OK;
 }
@@ -344,15 +347,33 @@ validate_nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
 static inline hal_ret_t
 nat_pool_init_from_spec (vrf_t *vrf, nat_pool_t *pool, const NatPoolSpec& spec)
 {
+    addr_list_elem_t    *addr_range;
+    uint32_t            num_addrs = 0;
+
     pool->key.vrf_id = vrf->vrf_id;
     pool->key.pool_id = spec.key_or_handle().pool_handle();
     for (int i = 0; i < spec.address_size(); i++) {
-        hal_ret_t ret = addr_list_elem_address_spec_handle(spec.address(i),
-                                                           &pool->addr_ranges);
-        if (ret == HAL_RET_OOM) {
+        addr_range = addr_list_elem_address_spec_handle(spec.address(i),
+                                                        &pool->addr_ranges);
+        if (addr_range == NULL) {
             addr_list_cleanup(&pool->addr_ranges);
-            return ret;
+            return HAL_RET_OOM;
         }
+        switch (addr_range->ip_range.af) {
+        case IP_AF_IPV4:
+            addr_range->num_addrs =
+                addr_range->ip_range.vx_range[0].v4_range.ip_hi -
+                    addr_range->ip_range.vx_range[0].v4_range.ip_lo + 1;
+        case IP_AF_IPV6:
+        default:
+            continue;
+        }
+        num_addrs += addr_range->num_addrs;
+    }
+    pool->addr_bmap = bitmap::factory(num_addrs, true);
+    if (pool->addr_bmap == NULL) {
+        HAL_TRACE_ERR("Failed to allocate NAT address tracking bitmap");
+        return HAL_RET_OOM;
     }
 
     return HAL_RET_OK;

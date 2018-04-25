@@ -19,6 +19,7 @@
 
 using sdk::lib::ht_ctxt_t;
 using acl::acl_ctx_t;
+using hal::utils::bitmap;
 
 using kh::NatPoolKey;
 using kh::NatPoolKeyHandle;
@@ -67,8 +68,10 @@ typedef struct nat_pool_s {
     dllist_ctxt_t     addr_ranges;          // NAT address ranges
 
     // operational state of nat pool
-    hal_handle_t       hal_handle;          // HAL allocated handle
-    uint32_t           num_addrs_in_use;    // no. of NAT addresses in use
+    hal_handle_t      hal_handle;          // HAL allocated handle
+    uint32_t          num_addrs;           // TODO: may not need
+    uint32_t          num_free;            // no. of NAT addresses available
+    bitmap            *addr_bmap;          // bitmap to keep track of free/in-use addresses
 
     // stats
     uint32_t           num_in_use;
