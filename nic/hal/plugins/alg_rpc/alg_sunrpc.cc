@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "core.hpp"
 #include "alg_sunrpc.hpp"
 #include <string.h>

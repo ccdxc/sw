@@ -1,4 +1,9 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
 // Implementation of CAPRI LIF Manager.
+//-----------------------------------------------------------------------------
+
 #ifndef _LIF_MANAGER_HPP_
 #define _LIF_MANAGER_HPP_
 

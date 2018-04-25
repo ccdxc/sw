@@ -1,6 +1,8 @@
-/*
- * RTSP ALG core.cc
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// RTSP ALG
+//-----------------------------------------------------------------------------
 
 #include "core.hpp"
 #include "rtsp_parse.hpp"
@@ -112,7 +114,7 @@ get_app_session(const rtsp_session_key_t &key)
     return app_sess;
 }
 
-static inline hal_ret_t 
+static inline hal_ret_t
 process_req_message(fte::ctx_t& ctx, alg_utils::app_session_t *app_sess,
                     rtsp_msg_t *msg)
 {
@@ -217,7 +219,7 @@ process_control_message(fte::ctx_t& ctx, const rtsp_session_t *ctrl_sess)
     return HAL_RET_OK;
 }
 
-/* 
+/*
  * RTSP ALG completion handler - invoked when the session creation is done.
  */
 static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
@@ -236,8 +238,8 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
         if (l4_sess->isCtrl) {
             // parse the payload
             process_control_message(ctx, (rtsp_session_t *)l4_sess->info);
-        } 
-    }  
+        }
+    }
 }
 
 static hal_ret_t
@@ -257,15 +259,15 @@ rtsp_new_control_session(fte::ctx_t &ctx)
         sess_key.port = ctx.key().dport;
         app_sess = get_app_session(sess_key);
         HAL_ASSERT_RETURN(app_sess, HAL_RET_OOM);
-        
+
         ret = g_rtsp_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
         if (ret != HAL_RET_OK) {
             return ret;
         }
-        
+
         l4_sess->isCtrl = TRUE;
         l4_sess->info = app_sess->oper;
-        
+
         /*
          * Register Feature session state & completion handler
          */
@@ -302,11 +304,11 @@ fte::pipeline_action_t alg_rtsp_exec(fte::ctx_t &ctx)
     } else if (ctx.feature_session_state()) {
         // parse the packet in the completion handler
         ret = ctx.register_completion_handler(rtsp_completion_hdlr);
-    } 
+    }
 
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
-        return fte::PIPELINE_END; 
+        return fte::PIPELINE_END;
     }
 
     return fte::PIPELINE_CONTINUE;

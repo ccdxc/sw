@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -18,7 +22,7 @@ hal_ret_t   cryptokey_create(cryptokey::CryptoKeyCreateRequest &request,
     args.key_idx = &key_idx;
     // ret = pd::pd_crypto_alloc_key(&key_idx);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ALLOC_KEY, (void *)&args);
-    
+
     if ((ret != HAL_RET_OK) || (key_idx < 0)) {
         response->set_api_status(types::API_STATUS_OUT_OF_MEM);
     }

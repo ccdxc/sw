@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef _RDMA_HPP_
 #define _RDMA_HPP_
 
@@ -99,7 +103,7 @@ class RDMAManager {
 
 //pt_base_addr is 8-byte aligned as each entry in page table stores 64-bit address.
 //hence when pt_base_addr is encoded in various data structures, bottom 3 bits are not
-//stored. At the runtime pt_base_addr field is shifted left by 3 bits to get the 
+//stored. At the runtime pt_base_addr field is shifted left by 3 bits to get the
 //actual pt_base_addr.
 #define PT_BASE_ADDR_SHIFT 3
 #define HDR_TEMP_ADDR_SHIFT 3
@@ -189,7 +193,7 @@ typedef struct qpcb_intrinsic_s {
     uint8_t   total_rings:4;
     uint8_t   eval_last;
     uint8_t   cos_selector;
-    uint8_t   cosA:4; // Swapping nibbles cosA/cosB since it is accessed by doorbell-module in Little-Endian. 
+    uint8_t   cosA:4; // Swapping nibbles cosA/cosB since it is accessed by doorbell-module in Little-Endian.
     uint8_t   cosB:4;
     uint8_t   rsvd;
     uint8_t   pc;
@@ -222,7 +226,7 @@ typedef struct key_entry_s {
     uint8_t          user_key;
 } PACKED key_entry_t;
 
-   
+
 /*====================  TYPES.H ===================*/
 
 
@@ -271,7 +275,7 @@ typedef struct qpcb_s {
     uint8_t  disable_e2e_fc: 1;
     uint32_t pd;
     uint32_t xrcd;
-    uint32_t rdd; 
+    uint32_t rdd;
     uint32_t tx_psn;
     uint32_t ack_psn;
     uint32_t rx_epsn;
@@ -533,9 +537,9 @@ typedef struct sqwqe_fast_reg_s {
     uint8_t  access_ctrl;
     uint16_t rsvd;
     uint32_t num_pages;
-    uint64_t page_table_ptr; // pointer to page table in host memory which can be 
+    uint64_t page_table_ptr; // pointer to page table in host memory which can be
                         // DMA'd directly. it is the driver's responsiblity to
-                        // allocate physically contiguous pages for this 
+                        // allocate physically contiguous pages for this
                         // page table.
     // TODO: instead of page_table_ptr, accommodate minimal number of addresses
     //       directly as part of WQE itself
@@ -740,11 +744,11 @@ typedef union rdma_ext_s {
     rdma_aeth_t   aeth;
 
     rdma_atomicaeth_t atom_aeth;
-        
+
     rdma_atomiceth_t  atom_eth;
 
     raeth_atom_aeth_t aeth_atom_aeth;
-    
+
     rdma_ieth_t       ieth;
 
     rdma_rdeth_t      rdeth;
@@ -797,7 +801,7 @@ typedef union rdma_ext_s {
     } deth_immeth;
 
 } PACKED rdma_ext_t;
-    
+
 typedef struct rdma_hdr_s {
     rdma_bth_t bth;
     rdma_ext_t ext;
@@ -887,7 +891,7 @@ typedef enum rdma_pkt_opc_e {
     RDMA_PKT_OPC_SEND_LAST_WITH_INV = 0x16,
     RDMA_PKT_OPC_SEND_ONLY_WITH_INV = 0x17,
 }rdma_rc_opc_t;
- 
+
 /*====================  TYPES.H ===================*/
 
 //RRQ_RING is not visible to Doorbell
@@ -950,7 +954,7 @@ typedef struct sqcb0_s {
     // intrinsic
     qpcb_intrinsic_base_t ring_header;
 } PACKED sqcb0_t;
-    
+
 typedef struct sqcb1_s {
 
     uint8_t pad[9];
@@ -1073,7 +1077,7 @@ typedef union header_template_s {
 #define RQ_RING_ID            RING_ID_0
 #define RSQ_RING_ID           RING_ID_1
 #define ACK_NAK_RING_ID       RING_ID_2
-#define RSQ_BACKTRACK_RING_ID RING_ID_3 
+#define RSQ_BACKTRACK_RING_ID RING_ID_3
 #define CNP_RING_ID           RING_ID_4
 #define MAX_RQ_RINGS          6
 
@@ -1088,7 +1092,7 @@ typedef struct rqcb0_s {
     uint32_t    read_rsp_in_progress : 1;
     uint32_t    read_rsp_lock : 1;
     uint32_t    dst_qp : 24;
-    uint32_t    header_template_addr;   
+    uint32_t    header_template_addr;
     uint32_t    pd;
     union {
         uint32_t    rsq_base_addr;
@@ -1145,7 +1149,7 @@ typedef struct rqcb1_s {
     uint8_t     rsq_pindex_prime : 8;
     uint8_t     nxt_to_go_token_id : 8;
     uint8_t     token_id : 8;
-    uint32_t    header_template_addr;   
+    uint32_t    header_template_addr;
     uint32_t    pd;
     union {
         uint32_t    rsq_base_addr;
@@ -1185,7 +1189,7 @@ typedef struct rqcb3_s {
     uint32_t    r_key;
     uint32_t    len;
     uint64_t    va;
-    uint64_t    wrid;    
+    uint64_t    wrid;
 } PACKED rqcb3_t;
 
 typedef struct rqcb4_s {
@@ -1223,7 +1227,7 @@ typedef struct rqcb_s {
 typedef struct dcqcn_cb_s {
     uint64_t            cur_timestamp: 32; // For model testing only. Will be removed.
     uint8_t             num_sched_drop; // For model testing only. Number of times packet was scheduled
-                                        // and dropped due to insufficient tokens. 
+                                        // and dropped due to insufficient tokens.
     uint16_t            sq_cindex;
     uint64_t            token_bucket_size: 48;
     uint64_t            cur_avail_tokens: 48;
@@ -1345,8 +1349,8 @@ typedef struct mw_handle_s {
 } mw_handle_t;
 
 typedef struct eq_handle_s {
-    uint32_t                 eq; 
-    uint32_t                 pd; 
+    uint32_t                 eq;
+    uint32_t                 pd;
     uint16_t                 lif;
     eqcb_t                   *eqcb_p;
     void                     *eq_p;
@@ -1354,9 +1358,9 @@ typedef struct eq_handle_s {
 } eq_handle_t;
 
 typedef struct cq_handle_s {
-    uint32_t                 cq; 
-    uint32_t                 eq; 
-    uint32_t                 pd; 
+    uint32_t                 cq;
+    uint32_t                 eq;
+    uint32_t                 pd;
     uint16_t                 lif;
     cqcb_t                   *cqcb_p;
     void                     *cq_p;
@@ -1364,13 +1368,13 @@ typedef struct cq_handle_s {
     eq_handle_t              *eq_handle_p;
 } cq_handle_t;
 
-static inline int 
+static inline int
 get_cqid(cq_handle_t *handle_p)
 {
     assert(handle_p != NULL);
     if (handle_p == NULL) {
         return (-1);
-    }   
+    }
     return (handle_p->cq);
 }
 
@@ -1382,7 +1386,7 @@ typedef struct qp_attr_s {
     uint8_t      srq_enabled: 1;
     uint8_t      signalled_completion_enabled: 1;
     uint8_t      service;
-    uint32_t     pd; 
+    uint32_t     pd;
     uint32_t     srq;
     cq_handle_t *sq_cq;
     cq_handle_t *rq_cq;

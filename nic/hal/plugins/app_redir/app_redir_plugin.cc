@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/plugins/app_redir/app_redir_plugin.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "app_redir_scanner.hpp"

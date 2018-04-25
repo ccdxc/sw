@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/src/lif/lif_manager_base.hpp"
 #include <errno.h>
 #include <assert.h>
@@ -72,11 +76,11 @@ int32_t LIFManagerBase::InitLIFQState(uint32_t lif_id,
   uint32_t num_entries;
   uint32_t i;
   uint32_t max_size = params->type[0].size;
-  // Find the max_size of any Qstate, and make sure 
+  // Find the max_size of any Qstate, and make sure
   // beg of every qstate region is aligned to this
   // max size. It means we might allocate more Qs
   // (entries) for a qtype than what is spec'ed in
-  // the params 
+  // the params
   for (i = 1; i < kNumQTypes; i++) {
        if (params->type[i].size > max_size) {
            max_size = params->type[i].size;
@@ -94,7 +98,7 @@ int32_t LIFManagerBase::InitLIFQState(uint32_t lif_id,
     num_entries = 1 << num_entries;
 
     // Total memory for any Qstate region should be
-    // minimum of max qsize among all qtypes. 
+    // minimum of max qsize among all qtypes.
     if (num_entries * cur_size < max_size) {
         num_entries = max_size / cur_size;
     }
@@ -106,13 +110,13 @@ int32_t LIFManagerBase::InitLIFQState(uint32_t lif_id,
     // Update what was passed in.
     params->type[i].entries = __builtin_ffs(num_entries) - 1;
     qstate->type[i].num_queues = num_entries;
-    qstate->type[i].coses = ((params->type[i].cosA & 0x0f) |      
+    qstate->type[i].coses = ((params->type[i].cosA & 0x0f) |
                              ((params->type[i].cosB << 4) & 0xf0));
   }
   qstate->allocation_size = running_offset;
   // Cache the params.
   qstate->params_in = *params;
-  
+
   int32_t ret = InitLIFQStateImpl(qstate, hint_cos);
   if (ret < 0)
     return ret;
@@ -180,7 +184,7 @@ int32_t LIFManagerBase::WriteQState(
     return -EINVAL;
   if (bufsize > qstate->type[type].qsize)
     return -EINVAL;
-  
+
   // Fill in the appropriate cos values for that qtype in buf at offset 2.
   if(bufsize > 2)  {
     buf[2] = qstate->type[type].coses;

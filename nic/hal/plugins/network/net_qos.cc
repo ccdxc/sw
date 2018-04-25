@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/plugins/network/net_plugin.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/include/pd_api.hpp"
@@ -25,7 +29,7 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
 
     HAL_TRACE_DEBUG("net-qos: proxy_enabled {} proxy_flow {} "
                     "enic_dif {} enic_sif {}",
-                    proxy_enabled, proxy_flow, 
+                    proxy_enabled, proxy_flow,
                     dif && (dif->if_type == intf::IF_TYPE_ENIC),
                     sif && (sif->if_type == intf::IF_TYPE_ENIC));
 
@@ -49,7 +53,7 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
                 }
                 qos_class = find_qos_class_by_group(qos_group);
             } else if (sif && (sif->if_type == intf::IF_TYPE_ENIC)) {
-                // The flow is the proxy flow towards the uplink. Use the 
+                // The flow is the proxy flow towards the uplink. Use the
                 // qos-class of the src lif
                 qos_class = tx_qos_class;
             }

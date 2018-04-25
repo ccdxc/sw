@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __PROXYCCB_HPP__
 #define __PROXYCCB_HPP__
 
@@ -38,7 +42,7 @@ typedef struct proxyccb_s {
      * ordering defined in proxyc_txdma_p4plus_ingress.h
      * see hal/pd/iris/proxyccb_pd.cc)
      */
-    uint16_t              pi;                       // if more PI/CI's are added, 
+    uint16_t              pi;                       // if more PI/CI's are added,
     uint16_t              ci;                       // be sure to adjust HAL_PROXYCCB_NUM_RINGS_MAX below
     uint16_t              proxyccb_flags;
     uint8_t               my_txq_ring_size_shift;

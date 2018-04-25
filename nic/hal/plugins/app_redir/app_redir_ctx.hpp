@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #ifndef __APP_REDIR_CTX_H__
 #define __APP_REDIR_CTX_H__
@@ -30,7 +32,7 @@ typedef enum {
     APP_REDIR_SPAN_EGRESS,
 
     // when SPAN is applicable, this is the default type
-    APP_REDIR_SPAN_APPLIC_DEFAULT_TYPE = APP_REDIR_SPAN_INGRESS 
+    APP_REDIR_SPAN_APPLIC_DEFAULT_TYPE = APP_REDIR_SPAN_INGRESS
 } __PACK__ app_redir_span_type_t;
 
 
@@ -111,8 +113,8 @@ public:
     void set_chain_pkt_enqueued(bool yesno) { chain_pkt_enqueued_ = yesno; }
 
     app_redir_verdict_t chain_pkt_verdict() const { return chain_pkt_verdict_; }
-    void set_chain_pkt_verdict(app_redir_verdict_t verdict) 
-    { 
+    void set_chain_pkt_verdict(app_redir_verdict_t verdict)
+    {
         if (chain_pkt_verdict_ != APP_REDIR_VERDICT_BLOCK) {
             chain_pkt_verdict_ = verdict;
         }
@@ -139,7 +141,7 @@ public:
 
     app_redir_span_type_t redir_span_type() const { return redir_span_type_; }
     void set_redir_span_type(app_redir_span_type_t redir_span_type)
-    { 
+    {
         if (redir_span_type_ == APP_REDIR_SPAN_NONE) {
             redir_span_type_ = redir_span_type;
         }
@@ -302,7 +304,7 @@ inline app_redir_ctx_t& app_redir_ctxref(fte::ctx_t& ctx,
 }
 
 /*
- * Workaround (hopefully temporary) for the issue where, for a SPAN packet, 
+ * Workaround (hopefully temporary) for the issue where, for a SPAN packet,
  * P4 does not provide any parsed info beyond L2.
  */
 inline void app_redir_rx_span_parse_workaround(fte::ctx_t& ctx)
@@ -373,7 +375,7 @@ inline void app_redir_rx_span_parse_workaround(fte::ctx_t& ctx)
                             if (pkt_len > payload_len) {
                                 hdr_len = pkt_len - payload_len;
                                 if (hdr_len >= sizeof(ipv6_header_t)) {
-                                    cpu_rxhdr->l4_offset = cpu_rxhdr->l3_offset + 
+                                    cpu_rxhdr->l4_offset = cpu_rxhdr->l3_offset +
                                                            hdr_len;
                                     proto = iphdr6->nexthdr;
                                 }
@@ -388,18 +390,18 @@ inline void app_redir_rx_span_parse_workaround(fte::ctx_t& ctx)
                     switch (proto) {
 
                     case IPPROTO_TCP:
-                        cpu_rxhdr->payload_offset = cpu_rxhdr->l4_offset + 
+                        cpu_rxhdr->payload_offset = cpu_rxhdr->l4_offset +
                                                     sizeof(tcp_header_t);
                         break;
 
                     case IPPROTO_UDP:
-                        cpu_rxhdr->payload_offset = cpu_rxhdr->l4_offset + 
+                        cpu_rxhdr->payload_offset = cpu_rxhdr->l4_offset +
                                                     sizeof(udp_header_t);
                         break;
 
                     case IPPROTO_ICMP:
                     case IPPROTO_ICMPV6:
-                        cpu_rxhdr->payload_offset = cpu_rxhdr->l4_offset + 
+                        cpu_rxhdr->payload_offset = cpu_rxhdr->l4_offset +
                                                     sizeof(icmp_header_t);
                         break;
 
@@ -441,7 +443,7 @@ inline bool app_redir_pkt_tx_ownership(fte::ctx_t& ctx)
     app_redir_ctx_t *redir_ctx = app_redir_ctx(ctx, false);
 
     if (redir_ctx && redir_ctx->redir_policy_applic()) {
-        return !redir_ctx->tcp_tls_proxy_flow() && 
+        return !redir_ctx->tcp_tls_proxy_flow() &&
                !redir_ctx->chain_pkt_span_instance();
     }
 
@@ -485,7 +487,7 @@ app_to_appid(std::string app, uint32_t& appid)
             return HAL_RET_OK;
         }
     }
-    
+
     appid = 0;
     HAL_TRACE_WARN("App name {} not found", app);
     return HAL_RET_ERR;

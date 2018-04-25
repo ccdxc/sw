@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __TLSCB_HPP__
 #define __TLSCB_HPP__
 
@@ -32,13 +36,13 @@ typedef struct tlscb_s {
     tlscb_id_t            cb_id;                   // TLS CB id
     uint32_t              command;
     uint64_t              sesq_base;
-    uint64_t              serq_base;    
+    uint64_t              serq_base;
     uint16_t              serq_pi;
     uint16_t              serq_ci;
     uint16_t              bsq_pi;
     uint16_t              bsq_ci;
     uint32_t              crypto_key_idx;
-    uint32_t              debug_dol;    
+    uint32_t              debug_dol;
     uint64_t              tnmdr_alloc;
     uint64_t              tnmpr_alloc;
     uint64_t              rnmdr_free;

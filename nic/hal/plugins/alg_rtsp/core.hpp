@@ -1,6 +1,7 @@
-/*
- * core.hpp
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 #include "nic/fte/fte.hpp"
@@ -31,10 +32,10 @@ extern alg_utils::alg_state_t *g_rtsp_state;
 const std::string FTE_FEATURE_ALG_RTSP("pensando.io/alg_rtsp:alg_rtsp");
 
 struct rtsp_session_key_t {
-    vrf_id_t          vrf_id;     
+    vrf_id_t          vrf_id;
     ip_addr_t         ip;       // server ip
     uint16_t          port;     // server control port
-    rtsp_session_id_t id;       // session id    
+    rtsp_session_id_t id;       // session id
 };
 
 // spdlog formatter for session_key_t

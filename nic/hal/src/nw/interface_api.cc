@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/firewall/nwsec.hpp"

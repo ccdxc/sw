@@ -1,8 +1,8 @@
-/*
- * utils.hpp
- *
- * FTP Utility APIs and data structures
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// FTP Utility APIs and data structures
+//-----------------------------------------------------------------------------
 
 namespace hal {
 namespace plugins {
@@ -18,7 +18,7 @@ typedef struct ftp_info_ ftp_info_t;
  */
 
 #define FTP_MAX_REQ  4
-#define FTP_MAX_RSP  8 
+#define FTP_MAX_RSP  8
 
 /*
  * FTP Proto States
@@ -67,7 +67,7 @@ typedef struct ftp_info_ {
 } ftp_info_t;
 
 
-typedef int (*parse_cb_t)(const char *, uint32_t dlen, char, 
+typedef int (*parse_cb_t)(const char *, uint32_t dlen, char,
                           uint32_t *offset, ftp_info_t *ftp_info);
 
 typedef struct ftp_search_ {

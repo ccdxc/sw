@@ -1,6 +1,7 @@
-/*
- * alg_msrpc.hpp
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 #include "nic/include/fte.hpp"

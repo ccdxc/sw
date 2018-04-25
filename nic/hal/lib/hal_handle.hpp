@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #ifndef __HAL_LIB_HAL_HANDLE_HPP__
 #define __HAL_LIB_HAL_HANDLE_HPP__

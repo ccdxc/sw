@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __CRYPT_ASYM_APIS_HPP__
 #define __CRYPT_ASYM_APIS_HPP__
 
@@ -26,7 +30,7 @@ namespace hal {
 #define CRYPTO_SHA384_DIGEST_LEN 48
 #define CRYPTO_SHA512_DIGEST_LEN 64
 
-hal_ret_t cryptoapi_invoke(cryptoapis::CryptoApiRequest &req, 
+hal_ret_t cryptoapi_invoke(cryptoapis::CryptoApiRequest &req,
         cryptoapis::CryptoApiResponse *resp);
 
 }    // namespace hal

@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __RAWCCB_HPP__
 #define __RAWCCB_HPP__
 
@@ -37,7 +41,7 @@ typedef struct rawccb_s {
      * ordering defined in rawc_txdma_p4plus_ingress.h
      * see hal/pd/iris/rawccb_pd.cc)
      */
-    uint16_t              pi;                       // if more PI/CI's are added, 
+    uint16_t              pi;                       // if more PI/CI's are added,
     uint16_t              ci;                       // be sure to adjust HAL_RAWCCB_NUM_RINGS_MAX below
     uint16_t              rawccb_flags;
     uint8_t               my_txq_ring_size_shift;

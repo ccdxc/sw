@@ -1,4 +1,7 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __QOS_HPP__
 #define __QOS_HPP__
 
@@ -64,7 +67,7 @@ namespace hal {
     ENTRY(QOS_GROUP_TX_PROXY_NO_DROP,   11, "tx-proxy-no-drop") \
     ENTRY(QOS_GROUP_TX_PROXY_DROP,      12, "tx-proxy-drop")    \
     ENTRY(QOS_GROUP_CPU_COPY,           13, "cpu-copy")         \
-    ENTRY(NUM_QOS_GROUPS,               14, "num-qos-groups")         
+    ENTRY(NUM_QOS_GROUPS,               14, "num-qos-groups")
 
 DEFINE_ENUM(qos_group_t, QOS_GROUPS)
 #undef QOS_GROUOPS
@@ -166,36 +169,36 @@ static inline qos_group_t
 qos_spec_qos_group_to_qos_group (kh::QosGroup qos_group)
 {
     switch(qos_group) {
-    case kh::DEFAULT: 
+    case kh::DEFAULT:
         return QOS_GROUP_DEFAULT;
-    case kh::USER_DEFINED_1: 
+    case kh::USER_DEFINED_1:
         return QOS_GROUP_USER_DEFINED_1;
-    case kh::USER_DEFINED_2: 
+    case kh::USER_DEFINED_2:
         return QOS_GROUP_USER_DEFINED_2;
-    case kh::USER_DEFINED_3: 
+    case kh::USER_DEFINED_3:
         return QOS_GROUP_USER_DEFINED_3;
-    case kh::USER_DEFINED_4: 
+    case kh::USER_DEFINED_4:
         return QOS_GROUP_USER_DEFINED_4;
-    case kh::USER_DEFINED_5: 
+    case kh::USER_DEFINED_5:
         return QOS_GROUP_USER_DEFINED_5;
-    case kh::USER_DEFINED_6: 
+    case kh::USER_DEFINED_6:
         return QOS_GROUP_USER_DEFINED_6;
-    case kh::CONTROL: 
+    case kh::CONTROL:
         return QOS_GROUP_CONTROL;
-    case kh::SPAN: 
+    case kh::SPAN:
         return QOS_GROUP_SPAN;
-    case kh::INTERNAL_RX_PROXY_NO_DROP: 
+    case kh::INTERNAL_RX_PROXY_NO_DROP:
         return QOS_GROUP_RX_PROXY_NO_DROP;
-    case kh::INTERNAL_RX_PROXY_DROP: 
+    case kh::INTERNAL_RX_PROXY_DROP:
         return QOS_GROUP_RX_PROXY_DROP;
-    case kh::INTERNAL_TX_PROXY_NO_DROP: 
+    case kh::INTERNAL_TX_PROXY_NO_DROP:
         return QOS_GROUP_TX_PROXY_NO_DROP;
-    case kh::INTERNAL_TX_PROXY_DROP: 
+    case kh::INTERNAL_TX_PROXY_DROP:
         return QOS_GROUP_TX_PROXY_DROP;
-    case kh::INTERNAL_CPU_COPY: 
+    case kh::INTERNAL_CPU_COPY:
         return QOS_GROUP_CPU_COPY;
     default:
-        HAL_TRACE_ERR("pi-qos:{}: Invalid qos group {}", 
+        HAL_TRACE_ERR("pi-qos:{}: Invalid qos group {}",
                       __func__, qos_group);
         return NUM_QOS_GROUPS;
     }
@@ -243,7 +246,7 @@ hal_ret_t qosclass_get(qos::QosClassGetRequest& req,
 
 #define POLICER_TYPES(ENTRY) \
     ENTRY(POLICER_TYPE_PPS,                 0, "pps") \
-    ENTRY(POLICER_TYPE_BPS,                 1, "bps") 
+    ENTRY(POLICER_TYPE_BPS,                 1, "bps")
 
 DEFINE_ENUM(policer_type_t, POLICER_TYPES)
 #undef POLICER_TYPES
@@ -257,7 +260,7 @@ typedef struct policer_s {
 inline std::ostream& operator<<(std::ostream& os, const policer_t& p)
 {
     return os << fmt::format("{{type: {}, rate: {}, burst: {}}}",
-                             p.type, p.rate, p.burst); 
+                             p.type, p.rate, p.burst);
 }
 
 
@@ -294,7 +297,7 @@ qos_policer_spec_same (policer_t *p1, policer_t *p2)
 }
 
 extern hal_ret_t
-find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink, 
+find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
                             uint32_t *cos);
 
 #define COPP_TYPES(ENTRY) \

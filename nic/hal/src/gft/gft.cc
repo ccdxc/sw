@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
@@ -262,10 +264,10 @@ gft_emp_init_from_spec (gft_exact_match_profile_t *profile,
 
     }
     profile->hgem_profiles = (gft_hdr_group_exact_match_profile_t *)
-        HAL_CALLOC(HAL_MEM_ALLOC_HGEM, 
-                   num_hgem_profiles * 
+        HAL_CALLOC(HAL_MEM_ALLOC_HGEM,
+                   num_hgem_profiles *
                    sizeof(gft_hdr_group_exact_match_profile_t));
-    HAL_TRACE_DEBUG("Received {} of hdr group match profiles", 
+    HAL_TRACE_DEBUG("Received {} of hdr group match profiles",
                     num_hgem_profiles);
 
     profile->num_hdr_group_exact_match_profiles = num_hgem_profiles;
@@ -363,7 +365,7 @@ gft_emp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // PD Call to allocate PD resources and h/w programming, if any
     args.exact_match_profile = profile;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, 
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE,
                           (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create pd exact match profile, err : {}", ret);
@@ -401,7 +403,7 @@ gft_emp_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ret = gft_emp_add_to_db(prof, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to add prof {} to db, err : {}", 
+        HAL_TRACE_ERR("failed to add prof {} to db, err : {}",
                 prof->profile_id, ret);
         goto end;
     }
@@ -1381,7 +1383,7 @@ gft_exact_match_flow_entry_create (GftExactMatchFlowEntrySpec &spec,
         return HAL_RET_ENTRY_EXISTS;
     }
 
-    // instantiate the gft exact match flow entry 
+    // instantiate the gft exact match flow entry
     flow_entry = gft_exact_match_flow_entry_alloc_init();
     if (flow_entry == NULL) {
         ret = HAL_RET_OOM;
@@ -1537,8 +1539,8 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
     HAL_TRACE_DEBUG("EMP hal_handle: {}, HXP hal_handle: {}",
                     fe->gft_emp_hal_handle, fe->gft_htp_hal_handle);
     HAL_TRACE_DEBUG("table_type: {}, vport_id: {}, redirect_vport_id: {}"
-                    "ttl_one_redirect_vport_id: {}, cache_hint: {}", 
-                    gft_table_type_to_str(fe->table_type), fe->vport_id, 
+                    "ttl_one_redirect_vport_id: {}, cache_hint: {}",
+                    gft_table_type_to_str(fe->table_type), fe->vport_id,
                     fe->redirect_vport_id,
                     fe->ttl_one_redirect_vport_id,
                     fe->cache_hint);
@@ -1561,7 +1563,7 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
     for (uint32_t i = 0; i < fe->num_transpositions; i++) {
         HAL_TRACE_DEBUG("Transposition {}:", i);
         HAL_TRACE_DEBUG(" Transp. flags: {}", xpos->flags);
-        HAL_TRACE_DEBUG(" Transp. action: {}", 
+        HAL_TRACE_DEBUG(" Transp. action: {}",
                         gft_xpos_action_to_str(xpos->action));
         GFT_HDRS_FIELDS(xpos);
         xpos++;
@@ -1667,7 +1669,7 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
         HAL_TRACE_DEBUG("{}", buf.c_str());                                 \
         buf.clear();                                                        \
     }                                                                       \
-    
+
 
 void
 gft_exact_match_profile_print (gft_exact_match_profile_t *mp)
@@ -1683,7 +1685,7 @@ gft_exact_match_profile_print (gft_exact_match_profile_t *mp)
     HAL_TRACE_DEBUG("---------------------");
     HAL_TRACE_DEBUG("table_type: {}", gft_table_type_to_str(mp->table_type));
 
-    HAL_TRACE_DEBUG("num_hdr_groups: {}", 
+    HAL_TRACE_DEBUG("num_hdr_groups: {}",
                     mp->num_hdr_group_exact_match_profiles);
     hgmp = mp->hgem_profiles;
     for (uint32_t i = 0; i < mp->num_hdr_group_exact_match_profiles; i++) {

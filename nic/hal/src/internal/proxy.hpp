@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __PROXY_HPP__
 #define __PROXY_HPP__
 
@@ -56,7 +60,7 @@ inline uint16_t parse_service_lif(const char *s)
         { "SERVICE_LIF_IPFIX"    ,  SERVICE_LIF_IPFIX},
         { "SERVICE_LIF_APP_REDIR",  SERVICE_LIF_APP_REDIR},
         { "SERVICE_LIF_GC"       ,  SERVICE_LIF_GC},
-        { "SERVICE_LIF_CPU_BYPASS", SERVICE_LIF_CPU_BYPASS}, 
+        { "SERVICE_LIF_CPU_BYPASS", SERVICE_LIF_CPU_BYPASS},
     };
 
     return _map[s];
@@ -94,7 +98,7 @@ typedef struct proxy_s {
 
     // PD state
     void                  *pd;                     // all PD specific state
-   
+
     indexer               *qid_idxr_;              // Indexer to allocate qid
     ht                    *flow_ht_;               // hash table to store per flow info
 
@@ -112,10 +116,10 @@ typedef struct ipsec_host_flow_info_s {
 } ipsec_host_flow_info_t;
 
 typedef struct ipsec_flow_info_s {
-   
+
     union {
         ipsec_host_flow_info_t  host_flow;
-        ipsec_esp_flow_info_t   esp_flow;        
+        ipsec_esp_flow_info_t   esp_flow;
     } u;
 } ipsec_flow_info_t;
 
@@ -127,10 +131,10 @@ typedef struct tls_proxy_flow_info_s {
 
 typedef struct proxy_flow_info_s {
     hal_spinlock_t      slock;                   // lock to protect this structure
-    flow_key_t          flow_key;                // Flow 
+    flow_key_t          flow_key;                // Flow
     qid_t               qid1;                    // qid instance 1 (e.g. hflow)
     qid_t               qid2;                    // qid instance 2 (e.g. nflow)
-  
+
     union {
         ipsec_flow_info_t           ipsec;
         tls_proxy_flow_info_t       tlsproxy;
@@ -148,7 +152,7 @@ find_proxy_flow_info(proxy_t* proxy, const flow_key_t* flow_key)
         HAL_TRACE_ERR("Proxy is NULL");
         return NULL;
     }
-    return (proxy_flow_info_t *) proxy->flow_ht_->lookup((void *)flow_key);   
+    return (proxy_flow_info_t *) proxy->flow_ht_->lookup((void *)flow_key);
 }
 
 extern void *proxy_flow_ht_get_key_func(void *entry);
@@ -187,7 +191,7 @@ hal_ret_t proxy_flow_enable(types::ProxyType proxy_type,
                             proxy::ProxyResponse *rsp,
                             const proxy::IpsecFlowConfig *req);
 hal_ret_t
-proxy_flow_handle_tls_config(types::ProxyType proxy_type, 
+proxy_flow_handle_tls_config(types::ProxyType proxy_type,
                              const flow_key_t &flow_key,
                              const proxy::TlsProxyFlowConfig &tls_flow_config,
                              proxy::ProxyResponse *rsp);

@@ -1,4 +1,6 @@
-//------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
 // periodic thread manages few timer wheels and can carry our periodic tasks
 // as background activities. Few examples include:
 // - delay deleting memory resources to slabs or heap

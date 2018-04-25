@@ -1,8 +1,8 @@
-/*
- * headers.cc
- *
- * SIP headers functionality
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// SIP headers functionality
+//-----------------------------------------------------------------------------
 
 #include "core.hpp"
 
@@ -34,7 +34,7 @@ typedef enum sip_header_types {
  * lines begin with a whitespace character. RFC 2543 allows lines to
  * be terminated with CR, LF or CRLF, RFC 3261 allows only CRLF, we
  * support both.
- * 
+ *
  * Headers are followed by (optionally) whitespace, a colon, again
  * (optionally) whitespace and the values. Whitespace in this context
  * means any amount of tabs, spaces and continuation lines, which are
@@ -68,7 +68,7 @@ static const sip_header_t sip_hdrs[] = {
  * sip_header_search
  *
  * Search within a SIP header value, dealing with continuation lines
- */ 
+ */
 static const char * sip_header_search(const char *buf, const char *limit,
                                       const char *needle, uint32_t len)
 {
@@ -116,7 +116,7 @@ static int sip_get_header(fte::ctx_t &ctx, const char *buf,
         /*
          * Find header. Compact headers must be followed by a
          * non-alphabetic character to avoid mismatches.
-         */ 
+         */
         if (limit - buf >= hdr->len &&
             strncasecmp(buf, hdr->name, hdr->len) == 0)
             buf += hdr->len;
@@ -152,14 +152,14 @@ static int sip_get_header(fte::ctx_t &ctx, const char *buf,
             return -1;
         *matchoff = buf - start + shift;
         return 1;
-    }    
+    }
     return 0;
 }
 
 
 /*
  * sip_next_header
- * 
+ *
  * Get next header field in a list of comma separated values
  */
 static int sip_next_header(fte::ctx_t &ctx, const char *buf,
@@ -190,12 +190,12 @@ static int sip_next_header(fte::ctx_t &ctx, const char *buf,
     return 1;
 }
 
-/* 
+/*
  * sip_walk_headers
  *
  * Walk through headers until a parsable one is found or no header of the
  * given type is left
- */ 
+ */
 static int sip_walk_headers(fte::ctx_t &ctx, const char *buf,
                             uint32_t dataoff, uint32_t datalen,
                             enum sip_header_types type, int *in_header,
@@ -300,11 +300,11 @@ static int sip_parse_param(fte::ctx_t &ctx, const char *buf,
     return 1;
 }
 
-/* 
+/*
  * sip_parse_address_param
  *
  * Parse address from header parameter and return address, offset and length
- */ 
+ */
 int sip_parse_address_param(fte::ctx_t &ctx, const char *buf,
                             uint32_t dataoff, uint32_t datalen,
                             const char *name,
@@ -330,7 +330,7 @@ int sip_parse_address_param(fte::ctx_t &ctx, const char *buf,
     return 1;
 }
 
-/* 
+/*
  * sip_parse_numberical param
  *
  * Parse numerical header parameter and return value, offset and length

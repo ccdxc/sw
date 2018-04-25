@@ -1,4 +1,7 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 
 #ifndef __ENDPOINT_API_HPP__
 #define __ENDPOINT_API_HPP__
@@ -14,7 +17,7 @@ namespace hal {
 #define EP_FTE_EVENTS(ENTRY)                                                  \
      ENTRY(EP_FTE_EVENT_NONE,                   0, "ep_fte_event_none")       \
      ENTRY(EP_FTE_EVENT_IF_CHANGE,              1, "ep_fte_event_if_change")  \
-     ENTRY(EP_FTE_EVENT_CONN_TRACK_CHANGE,      2, "ep_fte_event_if_change") 
+     ENTRY(EP_FTE_EVENT_CONN_TRACK_CHANGE,      2, "ep_fte_event_if_change")
 
  DEFINE_ENUM(ep_fte_event_type_t, EP_FTE_EVENTS)
  #undef EP_FTE_EVENTS

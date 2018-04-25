@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #ifndef __APP_REDIR_PLUGIN_H__
 #define __APP_REDIR_PLUGIN_H__

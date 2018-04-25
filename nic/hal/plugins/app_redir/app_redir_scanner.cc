@@ -1,3 +1,6 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "nic/include/hal.hpp"
 #include "nic/hal/periodic/periodic.hpp"
@@ -365,7 +368,7 @@ static appid_state_t scanner_appid_state_to_local_state(int state, uint8_t id_co
 {
     if (state < MAX_SCANNER_APPID_STATE) {
         if (appid_state_map[state] == APPID_STATE_FOUND) {
-            // Snort only tells us whether discovery is FINISHED, so                                               
+            // Snort only tells us whether discovery is FINISHED, so
             //     use id_count for FOUND vs. NOT_FOUND
             return id_count > 0 ? APPID_STATE_FOUND : APPID_STATE_NOT_FOUND;
         } else {

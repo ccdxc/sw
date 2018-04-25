@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #ifndef __APP_REDIR_HEADERS_H__
 #define __APP_REDIR_HEADERS_H__
@@ -105,5 +107,5 @@ typedef struct pen_app_redir_header_v1_full_s {
     (PEN_APP_REDIR_HEADER_MIN_SIZE + PEN_RAW_REDIR_HEADER_V1_SIZE)
 #define PEN_PROXY_REDIR_HEADER_V1_FULL_SIZE  \
     (PEN_APP_REDIR_HEADER_MIN_SIZE + PEN_PROXY_REDIR_HEADER_V1_SIZE)
-    
+
 #endif      // __APP_REDIR_HEADERS_H__

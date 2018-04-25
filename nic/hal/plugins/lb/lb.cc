@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/fte/fte.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"
 
@@ -100,7 +104,7 @@ rewrite_vmac(fte::ctx_t& ctx, hal::ep_t *odep)
         // iflow - rewrite dmac to pip's mac
         // TODO(goli) - if dep is not known, we need to get the mac from lb spec
         if (ctx.dep() && odep != ctx.dep()) {
-            HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, 
+            HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac,
                            *(ether_addr *)hal::ep_get_mac_addr(ctx.dep()));
         }
     } else {
@@ -124,15 +128,15 @@ lb_exec(fte::ctx_t& ctx)
 
     if (ctx.protobuf_request()) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR){
-            ret = update_flow_from_nat_spec(ctx, 
+            ret = update_flow_from_nat_spec(ctx,
                      ctx.sess_spec()->initiator_flow().flow_data().flow_info());
         } else {
-            ret = update_flow_from_nat_spec(ctx, 
+            ret = update_flow_from_nat_spec(ctx,
                      ctx.sess_spec()->responder_flow().flow_data().flow_info());
         }
         if (ret != HAL_RET_OK) {
             ctx.set_feature_status(ret);
-            return fte::PIPELINE_END; 
+            return fte::PIPELINE_END;
         }
     } else {
         // TOTO(goli) pick a pip from l4lb service
@@ -142,7 +146,7 @@ lb_exec(fte::ctx_t& ctx)
 
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
-        return fte::PIPELINE_END; 
+        return fte::PIPELINE_END;
     }
 
     return fte::PIPELINE_CONTINUE;

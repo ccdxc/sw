@@ -1,6 +1,6 @@
-/*
- * core.cc
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "core.hpp"
 #include "utils.hpp"
@@ -39,18 +39,18 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
                 ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
                                  l4_alg_status_t, l4_sess_lentry)) == l4_sess)) {
                 /*
-                 * Clean up app session if (a) its a force delete or    
+                 * Clean up app session if (a) its a force delete or
                  * (b) if there are no expected flows or L4 data sessions
                  * hanging off of this ctrl session.
                  */
                  g_ftp_state->cleanup_app_session(l4_sess->app_session);
                  HAL_TRACE_DEBUG("Cleaned up app session");
             } else if ((ctx.session()->iflow->state >= session::FLOW_TCP_STATE_FIN_RCVD) ||
-                       (ctx.session()->rflow && 
+                       (ctx.session()->rflow &&
                         (ctx.session()->rflow->state >= session::FLOW_TCP_STATE_FIN_RCVD))) {
                 /*
                  * We received FIN/RST on the control session
-                 * We let the HAL cleanup happen while we keep the 
+                 * We let the HAL cleanup happen while we keep the
                  * app_session state if there are data sessions
                  */
                 l4_sess->session = NULL;
@@ -65,7 +65,7 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
                 HAL_TRACE_DEBUG("Data session is alive. Bailing session ageout on control");
                 return fte::PIPELINE_END;
             }
-        } 
+        }
         /*
          * Cleanup the data session that is getting timed out
          */
@@ -87,10 +87,10 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
     return fte::PIPELINE_CONTINUE;
 }
 
-/* 
- * Get port: number up to delimiter 
+/*
+ * Get port: number up to delimiter
  */
-static int __parse_port(const char *data, int start, uint32_t dlen, 
+static int __parse_port(const char *data, int start, uint32_t dlen,
                         char delim, uint16_t *port) {
     u_int16_t tmp_port = 0;
     uint32_t i;
@@ -104,9 +104,9 @@ static int __parse_port(const char *data, int start, uint32_t dlen,
             return i + 1;
         } else if (data[i] >= '0' && data[i] <= '9') {
             tmp_port = tmp_port*10 + data[i] - '0';
-        } else { 
+        } else {
             //parse error
-            HAL_TRACE_ERR("__parse_port: Invalid character"); 
+            HAL_TRACE_ERR("__parse_port: Invalid character");
             break;
         }
     }
@@ -115,11 +115,11 @@ static int __parse_port(const char *data, int start, uint32_t dlen,
 
 /*
  * Parse IPv6 address from the EPSV response/EPRT commands
- */ 
-static int __parse_ipv6(const char *src, uint32_t dlen, 
+ */
+static int __parse_ipv6(const char *src, uint32_t dlen,
                         uint8_t *dst, u_int8_t term) {
     const char *end;
-    int ret = in6_pton(src, 
+    int ret = in6_pton(src,
                 min_t(uint32_t, dlen, 0xffff), dst, term, &end);
     if (ret > 0)
         return (int)(end - src);
@@ -207,7 +207,7 @@ static int __parse_eprt_cmd(const char *data, uint32_t dlen,
     }
 
     if ((data[1] != '1') && (data[1] != '2')) {
-        //parse error 
+        //parse error
         incr_parse_error(ftp_info);
         HAL_TRACE_ERR("EPRT: invalid protocol number {}", data[1]);
         return 0;
@@ -219,7 +219,7 @@ static int __parse_eprt_cmd(const char *data, uint32_t dlen,
 
         /* Now we have IP address. */
         length = __parse_ipv4(data + 3, dlen - 3, array, 4, '.', delim);
-        if (length != 0) 
+        if (length != 0)
             ftp_info->dip.v4_addr = htonl((array[3] << 24) | (array[2] << 16)\
                                          | (array[1] << 8) | array[0]);
     } else {
@@ -250,7 +250,7 @@ static int __parse_eprt_cmd(const char *data, uint32_t dlen,
  * Parse PASV response
  */
 static int __parse_pasv_response(const char *data, uint32_t dlen,
-                                 char term, uint32_t *offset, 
+                                 char term, uint32_t *offset,
                                  ftp_info_t *ftp_info) {
     uint32_t i;
     int      ret=0;
@@ -299,7 +299,7 @@ static int __parse_epsv_response(const char *data, uint32_t dlen,
         ftp_info->add_exp_flow = true;
         memset(&ftp_info->sip, 0, sizeof(ipvx_addr_t));
     }
-    
+
     return ret;
 }
 
@@ -308,16 +308,16 @@ static int __parse_epsv_response(const char *data, uint32_t dlen,
  */
 static int find_pattern(const char *data, uint32_t dlen,
                         const char *pattern, uint32_t plen,
-                        char skip, char term, ftp_state_t state, 
-                        uint32_t *offset, uint32_t *matchlen, 
+                        char skip, char term, ftp_state_t state,
+                        uint32_t *offset, uint32_t *matchlen,
                         ftp_info_t *info, parse_cb_t cb) {
     uint32_t i = plen;
 
     HAL_TRACE_DEBUG("find_pattern {}: dlen = {}", pattern, dlen);
 
     if (dlen <= plen) {
-        /* 
-         * Short packet: try for partial? 
+        /*
+         * Short packet: try for partial?
          */
         if (strncasecmp(data, pattern, dlen) == 0) {
             return -1;
@@ -349,7 +349,7 @@ static int find_pattern(const char *data, uint32_t dlen,
     if (cb != NULL)  {
         HAL_TRACE_DEBUG("Offset: {} data: {}", *offset, (data+i));
         *matchlen = cb(data + i, dlen - i, term, offset, info);
-        if (!*matchlen) 
+        if (!*matchlen)
             return -1;
     }
 
@@ -414,7 +414,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     return HAL_RET_OK;
 }
 
-static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess, 
+static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
                                    ftp_info_t *info) {
     l4_alg_status_t *exp_flow = NULL;
     ftp_info_t      *data_ftp_info = NULL;
@@ -461,15 +461,15 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
 
 
     info->callback = __parse_ftp_req;
-    prev_state = info->state; 
-    if (info->state < FTP_MAX_RSP) 
+    prev_state = info->state;
+    if (info->state < FTP_MAX_RSP)
         cmd = ftp_rsp[info->state];
 
     data_len = (ctx.pkt_len() - payload_offset);
     if (cmd.pattern != '\0') {
         found = find_pattern((char *)&pkt[payload_offset], data_len, cmd.pattern,
                              cmd.plen, cmd.skip, cmd.term, cmd.state,
-                             &offset, &matchlen, info, cmd.cb); 
+                             &offset, &matchlen, info, cmd.cb);
         if (found <= 0) {
             /*
              * Check for any error responses
@@ -480,7 +480,7 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
                                       cmd.plen, cmd.skip, cmd.term, cmd.state,
                                       &offset, &matchlen, info, cmd.cb);
                  if (found) {
-                     /* 
+                     /*
                       * Clean up the previously added expected flow from PORT/EPRT
                       * if there is an error
                       */
@@ -502,7 +502,7 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
                     HAL_ATOMIC_INC_UINT32(&((ftp_info_t *)l4_sess->info)->login_errors, 1);
                     return;
                 }
-                
+
                 /*
                  * If no error responses found, wait for completion
                  */
@@ -518,8 +518,8 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
              */
             return;
         }
-      
-        if (info->add_exp_flow) { 
+
+        if (info->add_exp_flow) {
             add_expected_flow(ctx, l4_sess, info);
         }
     }
@@ -549,7 +549,7 @@ void __parse_ftp_req(fte::ctx_t &ctx, ftp_info_t *info) {
         found = find_pattern((char *)&pkt[payload_offset], data_len, cmd.pattern,
                              cmd.plen, cmd.skip, cmd.term, cmd.state,
                              &offset, &matchlen, info, cmd.cb);
-        if (found) break; 
+        if (found) break;
     }
 
     if (!found) {
@@ -558,10 +558,10 @@ void __parse_ftp_req(fte::ctx_t &ctx, ftp_info_t *info) {
         /*
          * Parse errors -- update ctrl session info with this
          */
-        HAL_ATOMIC_INC_UINT32(&((ftp_info_t *)l4_sess->info)->parse_errors, 1);  
+        HAL_ATOMIC_INC_UINT32(&((ftp_info_t *)l4_sess->info)->parse_errors, 1);
     } else {
         /*
-         * Found a match -- update the callback 
+         * Found a match -- update the callback
          * and wait for a response
          */
          info->callback = __parse_ftp_rsp;
@@ -570,10 +570,10 @@ void __parse_ftp_req(fte::ctx_t &ctx, ftp_info_t *info) {
          }
     }
 
-    return; 
+    return;
 }
 
-/* 
+/*
  * FTP ALG completion handler - invoked when the session creation is done.
  */
 static void ftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
@@ -594,8 +594,8 @@ static void ftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
              * session list and move it to l4 session list
              */
             g_ftp_state->move_expflow_to_l4sess(l4_sess->app_session, l4_sess);
-        } 
-    }  
+        }
+    }
 }
 
 /*
@@ -672,7 +672,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
             /*
              * We have received request for data session. Register completion
              * handler to cleanup the exp_flow and move it to l4_session list
-             */  
+             */
             ctx.register_completion_handler(ftp_completion_hdlr);
         }
     }

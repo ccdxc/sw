@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/include/periodic.hpp"
 #include "alg_db.hpp"
 
@@ -13,7 +17,7 @@ static void * expected_flow_get_key_func(void *entry)
 
 static uint32_t expected_flow_compute_hash_func(void *key, uint32_t ht_size)
 {
-    return (sdk::lib::hash_algo::fnv_hash(key, 
+    return (sdk::lib::hash_algo::fnv_hash(key,
                                             sizeof(hal::flow_key_t)) % ht_size);
 }
 
@@ -33,7 +37,7 @@ static sdk::lib::ht *expected_flow_ht()
                                 expected_flow_get_key_func,
                                 expected_flow_compute_hash_func,
                                 expected_flow_compare_key_func);
-    
+
     return ht_;
 }
 
@@ -62,11 +66,11 @@ remove_expected_flow(const hal::flow_key_t &key)
 }
 
 //------------------------------------------------------------------------------
-// Decrement the reference count once done using the entry -- needed for exp flow 
+// Decrement the reference count once done using the entry -- needed for exp flow
 // timer expiry delete handling
 //------------------------------------------------------------------------------
-void 
-dec_ref_count(expected_flow_t *entry) 
+void
+dec_ref_count(expected_flow_t *entry)
 {
     ref_dec(&entry->ref_count);
 }

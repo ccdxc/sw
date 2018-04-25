@@ -1,8 +1,9 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #ifndef __NWSEC_API_HPP__
 #define __NWSEC_API_HPP__
-
 
 namespace hal {
 

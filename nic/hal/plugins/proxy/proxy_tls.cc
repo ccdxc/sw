@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/pd/pd_api.hpp"
@@ -48,7 +52,7 @@ tls_exec(fte::ctx_t& ctx)
             // asesq_ctx = hal::pd::cpupkt_ctxt_alloc_init();
             HAL_ASSERT_RETURN(asesq_ctx != NULL, fte::PIPELINE_CONTINUE);
         }
-        
+
         hal::pd::pd_cpupkt_register_tx_queue_args_t t_args;
         t_args.ctxt = asesq_ctx;
         t_args.type = types::WRING_TYPE_ASESQ;

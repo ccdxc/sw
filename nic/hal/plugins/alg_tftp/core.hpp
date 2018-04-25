@@ -1,6 +1,7 @@
-/*
- * core.hpp
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 #include "nic/include/fte.hpp"
@@ -29,7 +30,7 @@ const std::string FTE_FEATURE_ALG_TFTP("pensando.io/alg_tftp:alg_tftp");
 /*
  * Forward declarations
  */
-typedef union tftp_info_ tftp_info_t; 
+typedef union tftp_info_ tftp_info_t;
 
 /*
  * Function prototypes

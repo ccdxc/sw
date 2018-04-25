@@ -1,4 +1,7 @@
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 
 #ifndef __ROUTE_ACL_HPP__
 #define __ROUTE_ACL_HPP__
@@ -14,7 +17,7 @@ using acl::ref_t;
 using namespace acl;
 
 #define ROUTE_ACL_FLD_DEF(typ, struct_name, fld_name)      \
-    {typ, sizeof(((struct_name*)0)->fld_name),         \
+    {typ, sizeof(((struct_name*)0)->fld_name),             \
             offsetof(struct_name, fld_name) }
 
 // route tuple for route "ACL"
@@ -39,12 +42,12 @@ typedef struct route_acl_user_data_s {
     acl::ref_t   ref_count;
 } route_acl_user_data_t;
 
-
 // public APIs
 hal_ret_t route_acl_create();
 hal_ret_t route_acl_add_route(route_t *route);
 hal_ret_t route_acl_del_route(route_t *route);
 hal_ret_t route_acl_lookup(route_key_t *key, hal_handle_t *handle);
+
 }    // namespace hal
 
 #endif    // __ROUTE_ACL_HPP__

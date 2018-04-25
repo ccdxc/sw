@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 #define PDU_REQ             0
@@ -22,10 +26,10 @@
 #define MSRPC_DEFAULT_FLOORS 3
 #define MAX_FLOORS     65535
 #define MAX_CONTEXT    255
-#define UUID_PROTO_SZ    6 
+#define UUID_PROTO_SZ    6
 #define L4_PROTO_SZ      4
 #define L3_PROTO_SZ      6
-#define DEFAULT_PROTO_SZ 2 
+#define DEFAULT_PROTO_SZ 2
 
 namespace hal {
 namespace plugins {
@@ -126,7 +130,7 @@ typedef struct msrpc_bind_ack_hdr_s {
     uint16_t        max_xmit_frag;
     uint16_t        max_recv_frag;
     uint32_t        assoc_group_id;
-    port_any_t      sec_addr; 
+    port_any_t      sec_addr;
     uint16_t        pad;
     p_result_list_t rlist;
 } msrpc_bind_ack_hdr_t;

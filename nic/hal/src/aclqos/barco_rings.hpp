@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __BARCO_RINGS_HPP__
 #define __BARCO_RINGS_HPP__
 #include "nic/include/base.h"

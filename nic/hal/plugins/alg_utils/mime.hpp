@@ -1,8 +1,10 @@
-/*
- * MIME functions for ALG parsing.  This file provides implementations
- * for basic MIME parsing.  MIME headers are used in many protocols, such as
- * HTTP, RTSP, SIP, etc.
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// MIME functions for ALG parsing.  This file provides implementations
+// for basic MIME parsing.  MIME headers are used in many protocols, such as
+// HTTP, RTSP, SIP, etc.
+//-----------------------------------------------------------------------------
 
 #pragma once
 

@@ -101,7 +101,7 @@ port_list_elem_l4portrange_spec_handle (const types::L4PortRange& port,
 
     port_list_elem_db_add(head, port_lelem);
     return HAL_RET_OK;
-} 
+}
 
 void
 port_list_cleanup (dllist_ctxt_t *head)

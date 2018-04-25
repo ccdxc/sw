@@ -1,12 +1,9 @@
-/* 
- * ----------------------------------------------------------------------------
- *
- * interface_api.hpp
- *
- * Interface APIs exported by PI to PD.
- *
- * ----------------------------------------------------------------------------
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// Interface APIs exported by PI to PD.
+//-----------------------------------------------------------------------------
+
 #ifndef __INTERFACE_API_HPP__
 #define __INTERFACE_API_HPP__
 
@@ -42,7 +39,7 @@ void if_set_pd_if(if_t *pi_if, void *pd_upif);
 void *if_get_pd_if(if_t *pi_if);
 bool is_l2seg_native(l2seg_t *l2seg, if_t *pi_if);
 lif_t *if_get_lif(if_t *pi_if);
-hal_ret_t if_l2seg_get_encap(if_t *pi_if, l2seg_t *pi_l2seg, 
+hal_ret_t if_l2seg_get_encap(if_t *pi_if, l2seg_t *pi_l2seg,
                                      uint8_t *vlan_v, uint16_t *vlan_id);
 uint32_t if_allocate_hwlif_id();
 
@@ -57,7 +54,7 @@ void *if_enicif_get_pi_nwsec(if_t *pi_if);
 uint32_t if_enicif_get_ipsg_en(if_t *pi_if);
 hal_ret_t if_enicif_get_pinned_if(if_t *pi_if,
                                   if_t **uplink_if);
-hal_ret_t if_enicif_get_native_l2seg_clsc_vlan(if_t *pi_if, 
+hal_ret_t if_enicif_get_native_l2seg_clsc_vlan(if_t *pi_if,
                                                uint32_t *vlan_id);
 
 //TODO Remove this when the above function works for all cases.

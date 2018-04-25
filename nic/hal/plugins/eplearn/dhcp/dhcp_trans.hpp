@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef FTE_EP_LEARN_DHCP_DHCP_TRANS_H_
 #define FTE_EP_LEARN_DHCP_DHCP_TRANS_H_
 #include <netinet/in.h>

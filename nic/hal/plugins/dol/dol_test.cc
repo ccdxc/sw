@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include <stdint.h>
 #include "nic/include/fte.hpp"
 #include "nic/include/asic_pd.hpp"

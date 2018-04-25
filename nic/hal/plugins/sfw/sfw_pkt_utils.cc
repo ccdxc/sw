@@ -1,4 +1,6 @@
-//{C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "nic/fte/fte.hpp"
 #include "nic/fte/fte_flow.hpp"
@@ -64,7 +66,7 @@ net_sfw_build_vxlan_hdr (uint8_t *pkt, const header_push_info_t push_info)
     outer_ip_hdr->ttl = IP_DEFAULT_TTL;
     outer_ip_hdr->protocol = IP_PROTO_UDP;
     outer_ip_hdr->check = 0;    // let P4 datapath compute checksum
-    offset += sizeof(ipv4_header_t); 
+    offset += sizeof(ipv4_header_t);
 
     outer_udp_hdr = (udp_header_t *)(pkt + offset);
     outer_udp_hdr->sport = htons((uint16_t)rand());
@@ -73,13 +75,13 @@ net_sfw_build_vxlan_hdr (uint8_t *pkt, const header_push_info_t push_info)
 
     vxlan_hdr = (vxlan_header_t *)(pkt + offset);
     vxlan_hdr->vni = push_info.vxlan.vrf_id;
-    offset += sizeof(vxlan_header_t); 
-    
+    offset += sizeof(vxlan_header_t);
+
     return offset;
 }
 
-static uint32_t 
-net_sfw_build_eth_hdr (ctx_t& ctx, uint8_t *pkt, 
+static uint32_t
+net_sfw_build_eth_hdr (ctx_t& ctx, uint8_t *pkt,
                        const header_rewrite_info_t rewrite_info)
 {
     ether_header_t   *pkt_eth_hdr = NULL, *eth_hdr = NULL;
@@ -94,7 +96,7 @@ net_sfw_build_eth_hdr (ctx_t& ctx, uint8_t *pkt,
         vlan_hdr = (vlan_header_t *)pkt;
         vlan_hdr->tpid = htons(ETH_TYPE_DOT1Q);
         vlan_hdr->vlan_tag = htons(rewrite_info.ether.vlan_id);
-        vlan_hdr->etype = etype; 
+        vlan_hdr->etype = etype;
         offset = sizeof(vlan_header_t);
         eth_hdr = (ether_header_t *)vlan_hdr;
     } else {
@@ -105,13 +107,13 @@ net_sfw_build_eth_hdr (ctx_t& ctx, uint8_t *pkt,
 
     pkt_eth_hdr = (ether_header_t *)(ctx.pkt() + l2_offset);
     if (rewrite_info.valid_flds.smac)
-        memcpy(eth_hdr->smac, rewrite_info.ether.smac.ether_addr_octet, 
+        memcpy(eth_hdr->smac, rewrite_info.ether.smac.ether_addr_octet,
                ETH_ADDR_LEN);
     else
         memcpy(eth_hdr->smac, pkt_eth_hdr->dmac, ETH_ADDR_LEN);
 
     if (rewrite_info.valid_flds.dmac)
-        memcpy(eth_hdr->dmac, rewrite_info.ether.dmac.ether_addr_octet, 
+        memcpy(eth_hdr->dmac, rewrite_info.ether.dmac.ether_addr_octet,
                ETH_ADDR_LEN);
     else
         memcpy(eth_hdr->dmac, pkt_eth_hdr->smac, ETH_ADDR_LEN);
@@ -120,7 +122,7 @@ net_sfw_build_eth_hdr (ctx_t& ctx, uint8_t *pkt,
 }
 
 //-------------------------
-// form a TCP RST packet 
+// form a TCP RST packet
 //-------------------------
 uint32_t
 net_sfw_build_tcp_rst (ctx_t& ctx, uint8_t **pkt_p,
@@ -157,14 +159,14 @@ net_sfw_build_tcp_rst (ctx_t& ctx, uint8_t **pkt_p,
     }
     pkt = (uint8_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_SFW, pkt_len);
     if (!pkt)
-        return 0; 
+        return 0;
 
     // Get the outer header
     if (vxlan_valid)
-        offset += net_sfw_build_vxlan_hdr(pkt, push_info); 
+        offset += net_sfw_build_vxlan_hdr(pkt, push_info);
 
     //get the eth type
-    offset += net_sfw_build_eth_hdr(ctx, (pkt + offset), rewrite_info); 
+    offset += net_sfw_build_eth_hdr(ctx, (pkt + offset), rewrite_info);
 
     // fix the IP header
     if (key.flow_type == FLOW_TYPE_V4) {
@@ -214,7 +216,7 @@ net_sfw_build_tcp_rst (ctx_t& ctx, uint8_t **pkt_p,
     tcp_hdr->fin = 0;
 
     *pkt_p = pkt;
-    return pkt_len; 
+    return pkt_len;
 }
 
 uint32_t
@@ -258,7 +260,7 @@ net_sfw_build_icmp_error(ctx_t& ctx, uint8_t **pkt_p,
         offset += net_sfw_build_vxlan_hdr(pkt, push_info);
 
     //get the eth type
-    offset += net_sfw_build_eth_hdr(ctx, (pkt+offset), rewrite_info); 
+    offset += net_sfw_build_eth_hdr(ctx, (pkt+offset), rewrite_info);
 
     // fix the IP header
     if (key.flow_type == FLOW_TYPE_V4) {

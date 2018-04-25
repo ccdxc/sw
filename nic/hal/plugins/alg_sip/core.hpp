@@ -1,6 +1,7 @@
-/*
- * core.hpp
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 #include "nic/include/fte.hpp"
@@ -9,7 +10,7 @@ namespace hal {
 namespace plugins {
 namespace alg_sip {
 
-/* 
+/*
  * Defines
  */
 #define SIP_PORT    5060
@@ -92,6 +93,6 @@ int sip_parse_transport(fte::ctx_t &ctx, const char *buf,
 int process_sdp(fte::ctx_t &ctx, uint32_t protoff, uint32_t dataoff,
                 const char **buf, uint32_t *datalen, uint32_t cseq);
 
-}  // namespace alg_sip 
+}  // namespace alg_sip
 }  // namespace plugins
 }  // namespace hal

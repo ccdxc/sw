@@ -1,6 +1,6 @@
-/*
- * core.cc
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "core.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"

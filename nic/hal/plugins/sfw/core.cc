@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "nic/fte/fte.hpp"
 #include "nic/hal/src/nw/session.hpp"
@@ -103,7 +105,7 @@ net_sfw_match_rules(ctx_t                  &ctx,
                                 match_rslt->action = session::FLOW_ACTION_ALLOW;
                             } else {
                                 match_rslt->action = session::FLOW_ACTION_DROP;
-                            } 
+                            }
                             match_rslt->log    = nwsec_plcy_rules->log;
                             match_rslt->sfw_action = nwsec_plcy_rules->action;
                             return HAL_RET_OK;
@@ -346,8 +348,8 @@ net_sfw_generate_reject_pkt(ctx_t& ctx, bool status)
     rewrite_info = rflow->header_rewrite_info();
     push_info = rflow->header_push_info();
 
-    p4plus_hdr.dst_lport = fwding.lport; 
- 
+    p4plus_hdr.dst_lport = fwding.lport;
+
     if (ctx.key().proto == IP_PROTO_TCP) {
         pkt_len = net_sfw_build_tcp_rst(ctx, &pkt, rewrite_info, push_info);
     } else if (ctx.key().proto == IP_PROTO_UDP) {
@@ -355,10 +357,10 @@ net_sfw_generate_reject_pkt(ctx_t& ctx, bool status)
         pkt_len = net_sfw_build_icmp_error(ctx, &pkt, rewrite_info, push_info);
     }
 
-    if (pkt_len) 
-        ctx.queue_txpkt(pkt, pkt_len, &cpu_hdr, &p4plus_hdr, hal::SERVICE_LIF_CPU, 
-                    CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ, types::WRING_TYPE_ASQ, 
-                    net_sfw_free_reject_pkt); 
+    if (pkt_len)
+        ctx.queue_txpkt(pkt, pkt_len, &cpu_hdr, &p4plus_hdr, hal::SERVICE_LIF_CPU,
+                    CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ, types::WRING_TYPE_ASQ,
+                    net_sfw_free_reject_pkt);
 }
 
 pipeline_action_t
@@ -373,7 +375,7 @@ sfw_exec(ctx_t& ctx)
 
     HAL_TRACE_DEBUG("In sfw_exec....");
 
-    // ALG Wild card entry table lookup. 
+    // ALG Wild card entry table lookup.
     if (!ctx.existing_session() && ctx.role() == hal::FLOW_ROLE_INITIATOR) {
         HAL_TRACE_DEBUG("Looking up expected flow...");
         expected_flow_t *expected_flow = lookup_expected_flow(ctx.key());
@@ -446,7 +448,7 @@ std::ostream& operator<<(std::ostream& os, const net_sfw_match_result_t& val) {
     os << " ,log=" << val.log;
     os << " ,sfw_action=" << val.sfw_action;
     return os << "}";
-} 
+}
 
 }  // namespace sfw
 }  // namespace plugins

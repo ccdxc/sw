@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "core.hpp"
 #include "alg_msrpc.hpp"
 #include "nic/include/hal_mem.hpp"
@@ -32,7 +36,7 @@ std::ostream& operator<<(std::ostream& os, const rpc_info_t& val) {
     os << " ,msrpc_64bit=" << val.msrpc_64bit;
     os << " ,num_msrpc_ctxt=" << val.num_msrpc_ctxt;
 
-    return os << "}"; 
+    return os << "}";
 }
 
 std::ostream& operator<<(std::ostream& os, const uuid_t& val) {
@@ -82,7 +86,7 @@ std::ostream& operator<<(std::ostream& os, const msrpc_dg_common_hdr_t& val) {
     os << " ,seqnum=" << val.seqnum;
     os << " ,opnum=" << val.opnum;
     os << " ,ihint=" << val.ihint;
-    os << " ,ahint=" << val.ahint; 
+    os << " ,ahint=" << val.ahint;
     os << " ,frag_len=" << val.frag_len;
     os << " ,frag_num=" << val.frag_num;
     os << " ,auth_proto=" << (int)val.auth_proto;
@@ -114,7 +118,7 @@ std::ostream& operator<<(std::ostream& os, const msrpc_map_twr_t& val) {
         os << ":=" << val.twr_arr.flrs[i];
         os << "}";
     }
-   
+
     return os << "}";
 }
 
@@ -163,10 +167,10 @@ void __parse_uuid(const uint8_t *pkt, uint32_t *offset, uuid_t *u) {
     u->clock_seq_hi = pkt[(*offset)++];
     u->clock_seq_lo = pkt[(*offset)++];
     for (int i=0; i<6; i++)
-        u->node[i] = pkt[(*offset)++];  
+        u->node[i] = pkt[(*offset)++];
 }
 
-uint8_t __parse_dg_common_hdr(const uint8_t *pkt, uint32_t offset, 
+uint8_t __parse_dg_common_hdr(const uint8_t *pkt, uint32_t offset,
                               msrpc_dg_common_hdr_t *hdr) {
     hdr->rpc_ver = pkt[offset++];
     hdr->ptype = pkt[offset++];
@@ -188,11 +192,11 @@ uint8_t __parse_dg_common_hdr(const uint8_t *pkt, uint32_t offset,
     hdr->frag_num = __pack_uint16(pkt, &offset, data_rep);
     hdr->auth_proto = pkt[offset++];
     hdr->serial_lo = pkt[offset++];
- 
-    return offset; 
+
+    return offset;
 }
 
-uint8_t __parse_cn_common_hdr(const uint8_t *pkt, uint32_t offset, 
+uint8_t __parse_cn_common_hdr(const uint8_t *pkt, uint32_t offset,
                               msrpc_cn_common_hdr_t *hdr) {
     hdr->rpc_ver = pkt[offset++];
     hdr->rpc_ver_minor = pkt[offset++];
@@ -200,24 +204,24 @@ uint8_t __parse_cn_common_hdr(const uint8_t *pkt, uint32_t offset,
     hdr->flags = pkt[offset++];
     for (int i=0; i<4; i++) hdr->drep[i] = pkt[offset++];
     if (hdr->drep[0] & DREP_LENDIAN) data_rep = 0x1;
- 
+
     hdr->frag_len = __pack_uint16(pkt, &offset, data_rep);
     hdr->auth_len = __pack_uint16(pkt, &offset, data_rep);
     hdr->call_id = __pack_uint32(pkt, &offset, data_rep);
 
-    return offset; 
+    return offset;
 }
 
 static p_cont_elem_t ctxt_elem[MAX_CONTEXT];
 static p_result_t    rslt[MAX_CONTEXT];
 
-uint32_t __parse_msrpc_bind_hdr(const uint8_t *pkt,  
+uint32_t __parse_msrpc_bind_hdr(const uint8_t *pkt,
                                uint32_t dlen, msrpc_bind_hdr_t *hdr) {
-    static uint32_t BIND_HDR_SZ = (sizeof(msrpc_bind_hdr_t) - 
+    static uint32_t BIND_HDR_SZ = (sizeof(msrpc_bind_hdr_t) -
                                    sizeof(hdr->context_list.cont_elem));
     uint32_t offset = 0;
     uint8_t ele = 0, xferele = 0;
- 
+
     if (dlen < BIND_HDR_SZ) {
         HAL_TRACE_ERR("Packet Len {} is smaller than the Bind Hdr size {}",
                        dlen, BIND_HDR_SZ);
@@ -233,22 +237,22 @@ uint32_t __parse_msrpc_bind_hdr(const uint8_t *pkt,
     hdr->context_list.rsvd2 = __pack_uint16(pkt, &offset, data_rep);
     hdr->context_list.cont_elem = ctxt_elem;
     memset(ctxt_elem, 0, sizeof(ctxt_elem));
-    
+
     while (ele < hdr->context_list.num_elm) {
        xferele = 0;
        if ((dlen-offset) < sizeof(p_cont_elem_t)) {
            HAL_TRACE_ERR("Packet Len {} is smaller than ctxt elem size {}",
                   (dlen-offset), (sizeof(p_cont_elem_t)*hdr->context_list.num_elm));
-           return 0;    
+           return 0;
        }
        hdr->context_list.cont_elem[ele].context_id = __pack_uint16(pkt, &offset, data_rep);
        hdr->context_list.cont_elem[ele].num_xfer_syn = pkt[offset++];
        hdr->context_list.cont_elem[ele].reserved = pkt[offset++];
-       (void)__parse_uuid(pkt, &offset, 
+       (void)__parse_uuid(pkt, &offset,
                            &hdr->context_list.cont_elem[ele].abs_syntax.if_uuid);
-       hdr->context_list.cont_elem[ele].abs_syntax.if_vers = 
+       hdr->context_list.cont_elem[ele].abs_syntax.if_vers =
                                             __pack_uint32(pkt, &offset, data_rep);
-       while ((xferele < hdr->context_list.cont_elem[ele].num_xfer_syn) && 
+       while ((xferele < hdr->context_list.cont_elem[ele].num_xfer_syn) &&
               ((dlen-offset) >= sizeof(p_syntax_id_t))) {
            //Parse the pointer to move it
            uuid_t xferuuid;
@@ -263,7 +267,7 @@ uint32_t __parse_msrpc_bind_hdr(const uint8_t *pkt,
     return offset;
 }
 
-uint32_t __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen, 
+uint32_t __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen,
                                    msrpc_bind_ack_hdr_t *hdr) {
     static uint32_t BIND_ACK_SZ = (sizeof(msrpc_bind_ack_hdr_t) - 4);
     uint32_t offset = 0;
@@ -280,13 +284,13 @@ uint32_t __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen,
     hdr->sec_addr.len = __pack_uint16(pkt, &offset, data_rep);
     // It is padded to be word aligned
     offset += (hdr->sec_addr.len%WORD_BYTES)?(hdr->sec_addr.len+(\
-         WORD_BYTES - hdr->sec_addr.len%WORD_BYTES)):hdr->sec_addr.len;    
+         WORD_BYTES - hdr->sec_addr.len%WORD_BYTES)):hdr->sec_addr.len;
     offset += 2; // Padding
     hdr->rlist.num_rslts = pkt[offset++];
     hdr->rlist.rsvd = pkt[offset++];
     hdr->rlist.rsvd2 = __pack_uint16(pkt, &offset, data_rep);
     hdr->rlist.rslts = rslt;
-        
+
     while (ele < hdr->rlist.num_rslts) {
         if ((dlen-offset) < sizeof(p_result_t)) {
             HAL_TRACE_ERR("Packet Len {} is smaller than bind rslt size {}",
@@ -302,7 +306,7 @@ uint32_t __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen,
 
     return offset;
 }
- 
+
 uint32_t __parse_msrpc_req_hdr(const uint8_t *pkt, uint32_t dlen,
                               msrpc_req_hdr_t *hdr, uint8_t is64bit) {
     static uint32_t REQ_PDU_SZ = sizeof(msrpc_req_hdr_t);
@@ -312,13 +316,13 @@ uint32_t __parse_msrpc_req_hdr(const uint8_t *pkt, uint32_t dlen,
         HAL_TRACE_ERR("Packet Len {} is smaller than msrpc req size {}",
                        (dlen-offset), REQ_PDU_SZ);
         return 0;
-    } 
+    }
     hdr->alloc_hint = __pack_uint32(pkt, &offset, data_rep);
     hdr->ctxt_id = __pack_uint16(pkt, &offset, data_rep);
     hdr->opnum = __pack_uint16(pkt, &offset, data_rep);
     if (is64bit)
         hdr->uuid_ptr = __pack_uint64(pkt, &offset, data_rep);
-    else 
+    else
         hdr->uuid_ptr = __pack_uint32(pkt, &offset, data_rep);
     (void)__parse_uuid(pkt, &offset, &hdr->uuid);
 
@@ -333,7 +337,7 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
         if (dlen < 16) {
             HAL_TRACE_ERR("Map twr len {} is smaller than the header size 16 bytes",
                        (dlen-offset));
-            return 0; 
+            return 0;
         }
         twr->twr_ptr = __pack_uint64(pkt, &offset, data_rep);
         twr->twr_lgth = __pack_uint64(pkt, &offset, data_rep);
@@ -346,7 +350,7 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
         twr->twr_ptr = __pack_uint32(pkt, &offset, data_rep);
         twr->twr_lgth = __pack_uint32(pkt, &offset, data_rep);
     }
-    if (!twr->twr_lgth) 
+    if (!twr->twr_lgth)
         return offset;
 
     if ((dlen-offset) < 6) {
@@ -356,7 +360,7 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
     }
     twr->twr_arr.twr_arr_len = __pack_uint32(pkt, &offset, data_rep);
     twr->twr_arr.num_floors = __pack_uint16(pkt, &offset, data_rep);
-    // Parse maximum of MAX_FLOORS as we only expect so many 
+    // Parse maximum of MAX_FLOORS as we only expect so many
     twr->twr_arr.num_floors = (twr->twr_arr.num_floors > MAX_FLOORS)?MAX_FLOORS:\
                                     twr->twr_arr.num_floors;
     for (int i=0; (i<twr->twr_arr.num_floors && (dlen-offset) > 6); i++) {
@@ -376,7 +380,7 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
                 twr->twr_arr.flrs[i].rhs_length = __pack_uint16(pkt, &offset, data_rep);
                 twr->twr_arr.flrs[i].minor_vers = __pack_uint16(pkt, &offset, data_rep);
                 break;
- 
+
             case EPM_PROTO_TCP:
             case EPM_PROTO_UDP:
                 if ((dlen-offset) < L4_PROTO_SZ) {
@@ -417,11 +421,11 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
     return offset;
 }
 
-uint32_t __parse_msrpc_epm_req_hdr(const uint8_t *pkt, uint32_t dlen, 
+uint32_t __parse_msrpc_epm_req_hdr(const uint8_t *pkt, uint32_t dlen,
                           msrpc_epm_req_hdr_t *hdr, uint8_t is64bit) {
     static uint32_t MSRPC_EPM_REQ = (sizeof(msrpc_handle_t) + sizeof(hdr->max_twrs));
     uint32_t offset = 0;
-    
+
     offset += __parse_msrpc_epm_map_twr(pkt, dlen, &hdr->twr, is64bit);
     if (!offset)
         return offset;
@@ -436,7 +440,7 @@ uint32_t __parse_msrpc_epm_req_hdr(const uint8_t *pkt, uint32_t dlen,
     hdr->max_twrs = __pack_uint32(pkt, &offset, data_rep);
 
     return offset;
-} 
+}
 
 uint32_t __parse_msrpc_rsp_hdr(const uint8_t *pkt, uint32_t dlen,
                       msrpc_rsp_hdr_t *hdr) {
@@ -454,7 +458,7 @@ uint32_t __parse_msrpc_rsp_hdr(const uint8_t *pkt, uint32_t dlen,
     hdr->cancel_cnt = pkt[offset++];
     hdr->rsvd = pkt[offset++];
 
-    return offset;   
+    return offset;
 }
 
 uint32_t __parse_msrpc_epm_rsp_hdr(const uint8_t *pkt, uint32_t dlen,
@@ -463,14 +467,14 @@ uint32_t __parse_msrpc_epm_rsp_hdr(const uint8_t *pkt, uint32_t dlen,
     static uint32_t EPM_32BIT_RSP_SZ = (EPM_RSP_SZ - 12);
     uint32_t  offset = 0, twr_offset=0;
 
-    if ((is64bit && dlen < EPM_RSP_SZ) || 
+    if ((is64bit && dlen < EPM_RSP_SZ) ||
         (!is64bit && dlen < EPM_32BIT_RSP_SZ)) {
         HAL_TRACE_ERR("EPM RESP Len {} is smaller than the header size {}",
                        dlen, (is64bit)?EPM_RSP_SZ:EPM_32BIT_RSP_SZ);
         return 0;
     }
     hdr->hdl.attr = __pack_uint32(pkt, &offset, data_rep);
-    (void)__parse_uuid(pkt, &offset, &hdr->hdl.uuid); 
+    (void)__parse_uuid(pkt, &offset, &hdr->hdl.uuid);
     hdr->num_twrs = __pack_uint32(pkt, &offset, data_rep);
     if (is64bit) {
         hdr->max_cnt = __pack_uint64(pkt, &offset, data_rep);
@@ -485,7 +489,7 @@ uint32_t __parse_msrpc_epm_rsp_hdr(const uint8_t *pkt, uint32_t dlen,
     twr_offset = __parse_msrpc_epm_map_twr(&pkt[offset], (dlen-offset), &hdr->twr, is64bit);
     if (!twr_offset)
         return twr_offset;
- 
+
     return (offset+twr_offset);
 }
 
@@ -574,11 +578,11 @@ hal_ret_t process_msrpc_data_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
 }
 
 /*
- * Initialize RPC Info 
+ * Initialize RPC Info
  */
 static void reset_rpc_info(rpc_info_t *rpc_info) {
     if (rpc_info->pkt_len && rpc_info->pkt != NULL) {
-        HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt); 
+        HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);
     }
     memset(rpc_info, 0, sizeof(rpc_info_t));
     rpc_info->pkt_type = PDU_NONE;
@@ -615,7 +619,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
     if (rpc_hdr.rpc_ver_minor == 0 || rpc_hdr.flags & PFC_LAST_FRAG) {
         rpc_info->rpc_frag_cont = 0;
 
-        // If this is the last frag of a multi-PDU 
+        // If this is the last frag of a multi-PDU
         // transmission and doesnt have the first & last frag set
         if (!(rpc_hdr.flags & PFC_FIRST_FRAG)) {
             if ((rpc_info->pkt_len + (pkt_len-pgm_offset)) < MAX_ALG_RPC_PKT_SZ) {
@@ -648,8 +652,8 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
         } else {
             HAL_TRACE_ERR("Packet len execeeded the Max ALG Fragmented packet sz");
             reset_rpc_info(rpc_info);
-        } 
-    
+        }
+
         /*
          * Store the packet until all of it is received or we hit the
          * the MAX_ALG_RPC_PKT_SZ
@@ -662,12 +666,12 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
     switch (rpc_info->pkt_type)
     {
         case PDU_NONE:
-            if (rpc_hdr.ptype == PDU_BIND || 
+            if (rpc_hdr.ptype == PDU_BIND ||
                 rpc_hdr.ptype == PDU_ALTER_CTXT) {
                 msrpc_bind_hdr_t bind_hdr;
                 uint8_t ctxt_id = 0;
 
-                pgm_offset = __parse_msrpc_bind_hdr(&pkt[pgm_offset], 
+                pgm_offset = __parse_msrpc_bind_hdr(&pkt[pgm_offset],
                                                     (pkt_len-pgm_offset), &bind_hdr);
                 if (!pgm_offset) {
                     reset_rpc_info(rpc_info);
@@ -676,9 +680,9 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
 
                 // Move to bind state if the interface UUID is
                 // for endpoint mapper.
-                for (idx = 0; idx < bind_hdr.context_list.num_elm; idx++) { 
+                for (idx = 0; idx < bind_hdr.context_list.num_elm; idx++) {
                     HAL_TRACE_DEBUG("UUID: {}", bind_hdr.context_list.cont_elem[idx].abs_syntax.if_uuid);
-                    if (!memcmp(&epm_uuid, 
+                    if (!memcmp(&epm_uuid,
                         &bind_hdr.context_list.cont_elem[idx].abs_syntax.if_uuid, UUID_BYTES)) {
                         HAL_TRACE_DEBUG("Received MSRPC BIND for EPM ctxt id: {}", idx);
                         rpc_info->msrpc_ctxt_id[ctxt_id++] = idx;
@@ -694,8 +698,8 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
             if (rpc_hdr.ptype == PDU_BIND_ACK ||
                 rpc_hdr.ptype == PDU_ALTER_CTXT_ACK) {
                 msrpc_bind_ack_hdr_t bind_ack;
- 
-                pgm_offset = __parse_msrpc_bind_ack_hdr(&pkt[pgm_offset], 
+
+                pgm_offset = __parse_msrpc_bind_ack_hdr(&pkt[pgm_offset],
                                                          (pkt_len-pgm_offset), &bind_ack);
                 if (!pgm_offset) {
                     reset_rpc_info(rpc_info);
@@ -705,10 +709,10 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                 HAL_TRACE_DEBUG("Received Bind ACK: {}", bind_ack);
                 // Check if we the result was successful
                 for (idx = 0; idx < rpc_info->num_msrpc_ctxt; idx++) {
-                    p_result_t *rslt = &bind_ack.rlist.rslts[rpc_info->msrpc_ctxt_id[idx]]; 
+                    p_result_t *rslt = &bind_ack.rlist.rslts[rpc_info->msrpc_ctxt_id[idx]];
                     if (!rslt->result) {
                         rpc_info->pkt_type = rpc_hdr.ptype;
-                        if (!memcmp(&ndr_64bit, &rslt->xfer_syn.if_uuid, UUID_BYTES)) 
+                        if (!memcmp(&ndr_64bit, &rslt->xfer_syn.if_uuid, UUID_BYTES))
                             rpc_info->msrpc_64bit = 1;
                         break;
                     } else {
@@ -726,8 +730,8 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                 msrpc_req_hdr_t     msrpc_req;
                 msrpc_epm_req_hdr_t epm_req;
                 msrpc_twr_p_t       twr_arr;
-          
-                epm_offset = __parse_msrpc_req_hdr(&pkt[pgm_offset], (pkt_len-pgm_offset), 
+
+                epm_offset = __parse_msrpc_req_hdr(&pkt[pgm_offset], (pkt_len-pgm_offset),
                                                    &msrpc_req, rpc_info->msrpc_64bit);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
@@ -735,7 +739,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                 }
                 epm_offset += pgm_offset;
 
-                epm_offset = __parse_msrpc_epm_req_hdr(&pkt[epm_offset], (pkt_len-epm_offset), 
+                epm_offset = __parse_msrpc_epm_req_hdr(&pkt[epm_offset], (pkt_len-epm_offset),
                                                        &epm_req, rpc_info->msrpc_64bit);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
@@ -743,17 +747,17 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                 }
 
                 HAL_TRACE_DEBUG("Parsed EPM REQ Header: {}", epm_req);
- 
+
                 twr_arr = epm_req.twr.twr_arr;
                 if (twr_arr.num_floors > MSRPC_DEFAULT_FLOORS) {
                     for (idx=0; idx<twr_arr.num_floors; idx++) {
-                        if (twr_arr.flrs[idx].protocol == EPM_PROTO_CN || 
+                        if (twr_arr.flrs[idx].protocol == EPM_PROTO_CN ||
                             twr_arr.flrs[idx].protocol == EPM_PROTO_DG) {
                             rpc_info->call_id = rpc_hdr.call_id;
-                            memcpy(&rpc_info->uuid, 
+                            memcpy(&rpc_info->uuid,
                                                &twr_arr.flrs[0].uuid, UUID_BYTES);
                             rpc_info->vers = twr_arr.flrs[0].version;
-                            rpc_info->prot = 
+                            rpc_info->prot =
                                        (twr_arr.flrs[idx].protocol == EPM_PROTO_CN)?\
                                            IP_PROTO_TCP:IP_PROTO_UDP;
                         }
@@ -770,7 +774,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                 msrpc_epm_rsp_hdr_t epm_rsp;
                 msrpc_twr_p_t       twr_arr;
 
-                epm_offset = __parse_msrpc_rsp_hdr(&pkt[pgm_offset], 
+                epm_offset = __parse_msrpc_rsp_hdr(&pkt[pgm_offset],
                                                    (pkt_len-pgm_offset), &msrpc_rsp);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
@@ -778,14 +782,14 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                 }
                 epm_offset += pgm_offset;
 
-                epm_offset = __parse_msrpc_epm_rsp_hdr(&pkt[epm_offset], (pkt_len-epm_offset), 
+                epm_offset = __parse_msrpc_epm_rsp_hdr(&pkt[epm_offset], (pkt_len-epm_offset),
                                                &epm_rsp, rpc_info->msrpc_64bit);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
                     return HAL_RET_ERR;
                 }
                 HAL_TRACE_DEBUG("Parsed EPM RSP Header: {}", epm_rsp);
-             
+
                 twr_arr = epm_rsp.twr.twr_arr;
                 if (rpc_info->call_id == rpc_hdr.call_id &&
                     (!memcmp(&twr_arr.flrs[0].uuid, &rpc_info->uuid, UUID_BYTES))) {
@@ -797,16 +801,16 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                                 rpc_info->dport = twr_arr.flrs[idx].port;
                                 HAL_TRACE_DEBUG("Setting Dport: {}", rpc_info->dport);
                             } else if (twr_arr.flrs[idx].protocol == EPM_PROTO_IP) {
-                               // If the IP address is not filled in we assume that the sender is the 
+                               // If the IP address is not filled in we assume that the sender is the
                                // server and use that.
-                               if (!twr_arr.flrs[idx].ip.v4_addr) 
+                               if (!twr_arr.flrs[idx].ip.v4_addr)
                                    twr_arr.flrs[idx].ip = ctx.key().sip;
                                rpc_info->ip.v4_addr = twr_arr.flrs[idx].ip.v4_addr;
                             }
                         }
                     }
                     HAL_TRACE_DEBUG("RPC INFO DPORT: {}", rpc_info->dport);
-                    if (g_rpc_state && rpc_info->dport) 
+                    if (g_rpc_state && rpc_info->dport)
                         insert_rpc_expflow(ctx, l4_sess, process_msrpc_data_flow);
                 }
                 rpc_info->pkt_type = PDU_NONE;
@@ -815,8 +819,8 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
 
         default:
             break;
-    };   
-        
+    };
+
     HAL_TRACE_DEBUG("Processed Connection-Oriented MSRPC Header");
 
     return HAL_RET_OK;
@@ -828,9 +832,9 @@ hal_ret_t parse_msrpc_dg_control_flow(fte::ctx_t& ctx, l4_alg_status_t *exp_flow
     msrpc_dg_common_hdr_t    rpc_hdr;
     rpc_info_t              *rpc_info = NULL;
 
-    if (ctx.role() != hal::FLOW_ROLE_INITIATOR) 
+    if (ctx.role() != hal::FLOW_ROLE_INITIATOR)
         return ret;
-    
+
     if (ctx.pkt_len() == rpc_msg_offset) {
         // The first iflow packet that get mcast copied could be an
         // ACK from the TCP handshake.
@@ -866,42 +870,42 @@ hal_ret_t parse_msrpc_dg_control_flow(fte::ctx_t& ctx, l4_alg_status_t *exp_flow
     } else {
         rpc_info = (rpc_info_t *)exp_flow->info;
         if ((rpc_info->pkt_type == PDU_REQ && rpc_hdr.ptype == PDU_RESP) &&
-             (rpc_info->call_id == rpc_hdr.seqnum && 
+             (rpc_info->call_id == rpc_hdr.seqnum &&
               (!memcmp(&rpc_info->act_id, &rpc_hdr.act_id, UUID_BYTES)))) {
             HAL_TRACE_DEBUG("Received matching PDU response key: {}", ctx.key());
             // Register completion handler
-            ctx.register_completion_handler(msrpc_completion_hdlr); 
+            ctx.register_completion_handler(msrpc_completion_hdlr);
         }
     }
- 
+
     return ret;
 }
 
 /*
- * MSRPC ALG 
- * Connection-less MSRPC Flow - 
+ * MSRPC ALG
+ * Connection-less MSRPC Flow -
  *  (i)  Parse the first packet for PDU_REQ
- *  (ii) If parsing is successful - Add new app session, L4 session. 
+ *  (ii) If parsing is successful - Add new app session, L4 session.
  *       Set FTE session state entry with L4 session and add completion handler.
- *  (iii) If FTE session creation is successful, add an expected flow with 
- *       rflow key and wildcarded sport. 
+ *  (iii) If FTE session creation is successful, add an expected flow with
+ *       rflow key and wildcarded sport.
  *  (iv) When the reverse flow comes in, the expected flow is hit and if the
  *       parser matches req and resp, add a completion handler.
  *  (v)  If FTE session creation is successful for data flow, move the expected
  *       flow to L4 feature state and clean up RPC info -- we dont keep RPC info
  *       for data sessions.
  * Connection-Oriented MSRPC Flow -
- * (i)  Add new app session, l4 session. Set FTE session state entry with L4 
- *      session Update flows to receive Mcast copies of control session to 
+ * (i)  Add new app session, l4 session. Set FTE session state entry with L4
+ *      session Update flows to receive Mcast copies of control session to
  *      parse the Endpoint mapper request/response.
  * (ii) For any EPM req/response, parse the packets and add new expected flows
- *      with (flow_type, dir, vrf, dport and dip) along with UUID details in 
+ *      with (flow_type, dir, vrf, dport and dip) along with UUID details in
  *      the RPC Info. Add a timer to these entries (TBD)
  * (iii) When a flow miss matches the added expected flow, skip firewall lookup
  *       and add a feature session state to the newly created session. (TBD) -
  *       validate against firewall again to see if the UUID is allowed or not.
  */
-hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info, 
+hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                          l4_alg_status_t *l4_sess) {
     hal_ret_t             ret = HAL_RET_OK;
     fte::flow_update_t    flowupd;
@@ -929,7 +933,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
             l4_sess->isCtrl = TRUE;
             l4_sess->info = rpc_info;
             reset_rpc_info(rpc_info);
-            
+
 
             // Register completion handler and feature session state
             ctx.register_completion_handler(msrpc_completion_hdlr);

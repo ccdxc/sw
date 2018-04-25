@@ -3,6 +3,7 @@
 //
 // Handles CRUD APIs for all interfaces
 //-----------------------------------------------------------------------------
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"

@@ -1,4 +1,6 @@
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #ifndef __NEXTHOP_HPP__
 #define __NEXTHOP_HPP__

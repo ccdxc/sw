@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __IPSECCB_HPP__
 #define __IPSECCB_HPP__
 
@@ -50,10 +54,10 @@ typedef struct ipseccb_s {
     uint64_t              seq_no_bmp;
     hal_handle_t          hal_handle;              // HAL allocated handle
     mac_addr_t            smac;
-    mac_addr_t            dmac; 
+    mac_addr_t            dmac;
     ip_addr_t             sip6;
     ip_addr_t             dip6;
-    uint8_t               is_v6; 
+    uint8_t               is_v6;
     uint8_t               is_nat_t;
     uint8_t               is_random;
     uint8_t               extra_pad;

@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include "nic/hal/hal.hpp"

@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -297,7 +301,7 @@ crypto_asym_api_setup_ec_priv_key(EVP_PKEY *pkey,
     uint8_t             buf_a[256] = {0}, buf_b[256] = {0};
     uint8_t             buf_da[256] = {0};
     pd::pd_capri_barco_asym_ecdsa_p256_setup_private_key_args_t args = {0};
-    
+
     if(!pkey)
         return HAL_RET_INVALID_ARG;
 
@@ -306,7 +310,7 @@ crypto_asym_api_setup_ec_priv_key(EVP_PKEY *pkey,
         HAL_TRACE_ERR("Failed to get ec key");
         return HAL_RET_ERR;
     }
-    
+
     group = EC_KEY_get0_group(ec_key);
     priv_key = EC_KEY_get0_private_key(ec_key);
     if(group == NULL || priv_key == NULL) {
@@ -337,14 +341,14 @@ crypto_asym_api_setup_ec_priv_key(EVP_PKEY *pkey,
         ret = HAL_RET_OOM;
         goto cleanup;
     }
-    
+
     if(!EC_GROUP_get_order(group, order, ctx)) {
         HAL_TRACE_ERR("Failed to get order from the group");
         ret = HAL_RET_ERR;
         goto cleanup;
     }
 
-    if (EC_METHOD_get_field_type(EC_GROUP_method_of(group)) 
+    if (EC_METHOD_get_field_type(EC_GROUP_method_of(group))
                             == NID_X9_62_prime_field) {
         HAL_TRACE_DEBUG("key field type primefield");
         if ((!EC_GROUP_get_curve_GFp(group, p, a, b, ctx)) ||
@@ -363,7 +367,7 @@ crypto_asym_api_setup_ec_priv_key(EVP_PKEY *pkey,
             goto cleanup;
         }
     }
-    
+
     BN_bn2bin(p, buf_p);
     BN_bn2bin(order, buf_n);
     BN_bn2bin(xg, buf_xg);
@@ -380,7 +384,7 @@ crypto_asym_api_setup_ec_priv_key(EVP_PKEY *pkey,
     args.b = buf_b;
     args.da = buf_da;
     args.key_idx = &key_idx;
-    
+
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY,
                           (void *) &args);
 
@@ -443,7 +447,7 @@ hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
     uint32_t            key_type = 0;
     int32_t             key_idx = -1;
 
-    // decode the key 
+    // decode the key
     bio = BIO_new_mem_buf(req.setup_priv_key().key().c_str(), -1);
     if(!bio) {
         HAL_TRACE_ERR("Failed to allocate bio");
@@ -458,7 +462,7 @@ hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
         ret = HAL_RET_ERR;
         goto end;
     }
-    
+
     // Program the key in hw
     key_type = EVP_PKEY_base_id(pkey);
 
@@ -556,7 +560,7 @@ hal_ret_t crypto_asym_api_rsa_sig_verify(cryptoapis::CryptoApiRequest &req,
 }
 
 static hal_ret_t
-crypto_asym_extract_cert_pubkey_params(crypto_cert_t *cert) 
+crypto_asym_extract_cert_pubkey_params(crypto_cert_t *cert)
 {
     hal_ret_t     ret = HAL_RET_OK;
     EVP_PKEY      *pkey = NULL;
@@ -566,7 +570,7 @@ crypto_asym_extract_cert_pubkey_params(crypto_cert_t *cert)
 
     if(!cert || !cert->x509_cert)
         return HAL_RET_INVALID_ARG;
-    
+
     pkey = X509_get0_pubkey(cert->x509_cert);
     cert->pub_key.key_type = EVP_PKEY_base_id(pkey);
     HAL_TRACE_DEBUG("Received pubkey type {}", cert->pub_key.key_type);
@@ -618,12 +622,12 @@ hal_ret_t crypto_asym_api_setup_cert(cryptoapis::CryptoApiRequest &req,
     sdk_ret_t           sdk_ret;
     BIO                 *bio = NULL;
     if(req.setup_cert().cert_id() <= 0) {
-        HAL_TRACE_ERR("Invalid cert-id: {}", 
+        HAL_TRACE_ERR("Invalid cert-id: {}",
                       req.setup_cert().cert_id());
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    
+
     //find cert with the id
     cert = find_cert_by_id(req.setup_cert().cert_id());
 
@@ -636,10 +640,10 @@ hal_ret_t crypto_asym_api_setup_cert(cryptoapis::CryptoApiRequest &req,
                 ret = HAL_RET_OOM;
                 goto end;
             }
-            
+
             cert->cert_id = req.setup_cert().cert_id();
-            
-            // Add the cert to the hashtable 
+
+            // Add the cert to the hashtable
             sdk_ret = g_hal_state->crypto_cert_store_id_ht()->
                     insert(cert, &cert->ht_ctxt);
             if(sdk_ret != sdk::SDK_RET_OK) {
@@ -703,7 +707,7 @@ end:
         }
     }
     if(bio) {
-        BIO_free(bio);    
+        BIO_free(bio);
     }
     return ret;
 }
@@ -785,7 +789,7 @@ hal_ret_t crypto_symm_api_hash_request(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
-hal_ret_t cryptoapi_invoke(cryptoapis::CryptoApiRequest &req, 
+hal_ret_t cryptoapi_invoke(cryptoapis::CryptoApiRequest &req,
         cryptoapis::CryptoApiResponse *resp)
 {
 

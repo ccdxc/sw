@@ -1,6 +1,7 @@
-/*
- * core.hpp
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 #include "nic/include/fte.hpp"
@@ -26,7 +27,7 @@ const std::string FTE_FEATURE_ALG_DNS("pensando.io/alg_dns:alg_dns");
 /*
  * Forward declarations
  */
-typedef union dns_info_ dns_info_t; 
+typedef union dns_info_ dns_info_t;
 
 /*
  * Function prototypes

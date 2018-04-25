@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "nic/include/base.h"
 #include "nic/include/mtrack.hpp"
@@ -37,7 +39,7 @@ mtrack_map_walk_cb (void *ctxt, uint32_t alloc_id,
 {
     debug::MemTrackGetResponse       *response;
     debug::MemTrackGetResponseMsg    *rsp;
-    
+
     if (!ctxt || !minfo) {
         HAL_ABORT(FALSE);
         return true;
@@ -108,7 +110,7 @@ slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
     hal_ret_t   ret = HAL_RET_OK;
     uint32_t i = 0;
     slab *s;
-   
+
     slab_id = (hal_slab_t)req.id();
 
     if (slab_id < HAL_SLAB_PI_MAX) {

@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 #include "nic/include/base.h"
@@ -34,7 +38,7 @@ private:
     static const uint32_t seq_number_diff = 2147483648U;
 
     // slab for tcp_buffer_t
-    static slab *slab_;    
+    static slab *slab_;
 
     // Compares sequence numbers as defined by RFC 1982.
     int compare_seq_numbers(uint32_t seq1, uint32_t seq2)

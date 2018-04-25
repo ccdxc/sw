@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "rtsp_parse.hpp"
 #include "core.hpp"
 #include "nic/hal/plugins/alg_utils/mime.hpp"
@@ -25,8 +29,8 @@
  * both control and for media data delivery from the RTSP server to the client.
  * The data stream is interleaved with the RTSP control stream.
  *
- * v1  https://tools.ietf.org/html/rfc2326 
- * v2  https://tools.ietf.org/html/rfc7826 
+ * v1  https://tools.ietf.org/html/rfc2326
+ * v2  https://tools.ietf.org/html/rfc7826
  */
 
 
@@ -57,7 +61,7 @@ rtsp_next_param(const char* buf, uint32_t len, uint32_t* poff,
         *paramoff = *poff;
     }
     if (paramlen) {
-        *paramlen = off;        
+        *paramlen = off;
     }
 
     *poff = off + 1;
@@ -116,9 +120,9 @@ rtsp_parse_start_line(const char *buf, uint32_t len, rtsp_msg_t *msg)
 }
 
 //------------------------------------------------------------------------
-// Parse CSEQ header 
+// Parse CSEQ header
 //
-// CSEQ = "CSeq" ":" cseq-nr 
+// CSEQ = "CSeq" ":" cseq-nr
 //------------------------------------------------------------------------
 inline bool
 rtsp_parse_cseq_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
@@ -126,7 +130,7 @@ rtsp_parse_cseq_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
     uint32_t off = 0;
 
     if (!alg_utils::alg_mime_token_cmp(buf, len, &off, RTSP_HDR_CSEQ_str(), ':', true)) {
-        return false;  
+        return false;
     }
 
     if(alg_utils::alg_mime_strtou32(buf, len, &off, &msg->hdrs.cseq) != 0) {
@@ -179,7 +183,7 @@ inline bool
 rtsp_parse_transport_proto(const char *buf, uint32_t len, uint32_t *poff, rtsp_transport_t* spec)
 {
     uint32_t off = *poff;
- 
+
     // skip proto
     if (!rtsp_next_param(buf, len, &off, '/', NULL, NULL)) {
         return false;
@@ -210,7 +214,7 @@ rtsp_parse_transport_proto(const char *buf, uint32_t len, uint32_t *poff, rtsp_t
 //    198.51.100.241:6256
 //------------------------------------------------------------------------
 inline bool
-rtsp_parse_host_port(const char *buf, uint32_t len, uint32_t *poff, 
+rtsp_parse_host_port(const char *buf, uint32_t len, uint32_t *poff,
                      ip_addr_t *addr, uint16_t *port)
 {
     uint32_t off = *poff;
@@ -223,7 +227,7 @@ rtsp_parse_host_port(const char *buf, uint32_t len, uint32_t *poff,
 
     // parse host
     if (paramlen > paramoff)
-        alg_utils::alg_mime_strtoip(buf, paramlen, &paramoff, addr);  
+        alg_utils::alg_mime_strtoip(buf, paramlen, &paramoff, addr);
 
     // parse port
     if (!alg_utils::alg_mime_strtou16(buf, len, &off, port))
@@ -296,7 +300,7 @@ rtsp_parse_addr_list(const char *buf, uint32_t len, uint32_t *poff,
 
     return true;
 }
-// 
+//
 //------------------------------------------------------------------------
 // Parse transport spec
 //
@@ -311,8 +315,8 @@ rtsp_parse_addr_list(const char *buf, uint32_t len, uint32_t *poff,
 //                       |    ";" "port" "=" port [ "-" port ]
 //                       |    ";" "client_port" "=" port [ "-" port ]
 //                       |    ";" "server_port" "=" port [ "-" port ]
-//                       |    ";" "src_addr" "=" addr-list 
-//                       |    ";" "dst_addr" "=" addr-list 
+//                       |    ";" "src_addr" "=" addr-list
+//                       |    ";" "dst_addr" "=" addr-list
 //  addr-list            = quoted-addr *(SLASH quoted-addr)
 //  quoted-addr          = DQUOTE (host-port) DQUOTE
 //  host-port            = ( host [":" port] ) | ( ":" port )
@@ -342,18 +346,18 @@ rtsp_parse_transport_spec(const char *buf, uint32_t len, rtsp_transport_t* spec)
         } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "destination", '=')) {
             alg_utils::alg_mime_strtoip(buf, paramlen, &paramoff, &spec->client_ip);
         } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "port", '=')) {
-            rtsp_parse_port_range(buf, paramlen, &paramoff, &spec->client_port_start, &spec->client_port_end); 
+            rtsp_parse_port_range(buf, paramlen, &paramoff, &spec->client_port_start, &spec->client_port_end);
         } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "client_port", '=')) {
-            rtsp_parse_port_range(buf, paramlen, &paramoff, &spec->client_port_start, &spec->client_port_end); 
+            rtsp_parse_port_range(buf, paramlen, &paramoff, &spec->client_port_start, &spec->client_port_end);
         } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "server_port", '=')) {
-            rtsp_parse_port_range(buf, paramlen, &paramoff, &spec->server_port_start, &spec->server_port_end); 
+            rtsp_parse_port_range(buf, paramlen, &paramoff, &spec->server_port_start, &spec->server_port_end);
         } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "dest_addr", '=')) {
             rtsp_parse_addr_list(buf, paramlen, &paramoff, &spec->client_ip,
                                  &spec->client_port_start, &spec->client_port_end);
         } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "src_addr", '=')) {
             rtsp_parse_addr_list(buf, paramlen, &paramoff, &spec->server_ip,
                                  &spec->server_port_start, &spec->server_port_end);
-        } 
+        }
 
         alg_utils::alg_mime_skipws(buf, len, &off);
     }
@@ -379,7 +383,7 @@ rtsp_parse_transport_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
 
     if (!alg_utils::alg_mime_token_cmp(buf, len, &off,
                                        RTSP_HDR_TRANSPORT_str(), ':', true)) {
-        return false;  
+        return false;
     }
 
     while (off < len && msg->hdrs.transport.nspecs < MAX_TRANSPORT_SPECS) {
@@ -402,7 +406,7 @@ rtsp_parse_transport_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
 }
 
 //------------------------------------------------------------------------
-// Parse session header 
+// Parse session header
 //
 // Session  = "Session" ":" session-id [ ";" "timeout" "=" delta-seconds ]
 //------------------------------------------------------------------------
@@ -413,11 +417,11 @@ rtsp_parse_session_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
     uint32_t nbytes = 0;
 
     if (!alg_utils::alg_mime_token_cmp(buf, len, &off, RTSP_HDR_SESSION_str(), ':', true)) {
-        return false;  
+        return false;
     }
 
     msg->hdrs.valid.session = 1;
-    
+
     while(off < len) {
         if (buf[off] == ';' || buf[off] == '\r' ||  buf[off] == '\n') {
             break;
@@ -446,7 +450,7 @@ rtsp_parse_session_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
 }
 
 //------------------------------------------------------------------------
-// Parse Content-Length header 
+// Parse Content-Length header
 //
 // Content-Length = "Content-Length" : length
 //------------------------------------------------------------------------
@@ -457,7 +461,7 @@ rtsp_parse_content_length_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
 
     if (!alg_utils::alg_mime_token_cmp(buf, len, &off,
                                        RTSP_HDR_CONTENT_LENGTH_str(), ':', true)) {
-        return false;  
+        return false;
     }
 
     if(alg_utils::alg_mime_strtou32(buf, len, &off, &msg->hdrs.content_length) != 0) {
@@ -502,7 +506,7 @@ rtsp_parse_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
 // Both types of messages consist of a start-line, zero or more header fields
 // (also known as "headers"), an empty line (i.e., a line with nothing preceding the
 // CRLF) indicating the end of the headers, and possibly the data of the
-// message body.  
+// message body.
 //    generic-message = start-line
 //        *(rtsp-header CRLF)
 //        CRLF
@@ -517,7 +521,7 @@ rtsp_parse_msg(const char *buf, uint32_t len, uint32_t *poff, rtsp_msg_t*msg)
     bool valid_msg = false;
 
     while (!valid_msg && *poff < len) {
-        
+
         *msg = {};
 
         // parse start line
@@ -531,7 +535,7 @@ rtsp_parse_msg(const char *buf, uint32_t len, uint32_t *poff, rtsp_msg_t*msg)
             if (linelen == 0) {
                 break;
             }
-            
+
             rtsp_parse_header(buf+lineoff, linelen, msg);
         }
 
@@ -587,7 +591,7 @@ std::ostream& operator<<(std::ostream& os, const rtsp_msg_t& msg)
     if (msg.hdrs.valid.content_length) {
         out.write(", content-length:{}", msg.hdrs.content_length);
     }
-    
+
     out.write("}}");
 
 

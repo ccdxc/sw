@@ -1,6 +1,7 @@
-/*
- * core.cc
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 
 #include "core.hpp"
 #include "nic/include/hal_mem.hpp"
@@ -21,17 +22,17 @@ void incr_parse_error(l4_alg_status_t *sess) {
 /*
  *  Session delete handler
  *
- *  If it is a data session, go ahead and cleanup the L4 session. 
+ *  If it is a data session, go ahead and cleanup the L4 session.
  *  Check if there are no more data session/expected flows hanging
  *  off of the app session. If there is none, cleanup the app session
  *
  *  If it is the ctrl session:
- *  (1) check if there are no data session or expected flows. If so, 
+ *  (1) check if there are no data session or expected flows. If so,
  *  cleanup app session.
  *  (2) Check if we got here due to TCP FIN/RST being received. If so,
  *  we want the HAL session cleanup to proceed without cleaning up the
  *  Ctrl session in ALG
- *  (3) If we got here due to session idle timout, then make sure that 
+ *  (3) If we got here due to session idle timout, then make sure that
  *  we dont clean up the HAL session as well.
  */
 fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
@@ -90,7 +91,7 @@ fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
             g_rpc_state->cleanup_app_session(l4_sess->app_session);
         }
     }
-   
+
     return fte::PIPELINE_CONTINUE;
 }
 
@@ -119,7 +120,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     return HAL_RET_OK;
 }
 
-void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb, 
+void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
                         uint32_t timeout) {
     hal::flow_key_t  key = ctx.key();
     rpc_info_t      *rpc_info = NULL, *exp_flow_info = NULL;
@@ -127,15 +128,15 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
     hal_ret_t        ret = HAL_RET_OK;
 
     rpc_info = (rpc_info_t *)l4_sess->info;
-    memset(&key.sip, 0, sizeof(ipvx_addr_t)); 
+    memset(&key.sip, 0, sizeof(ipvx_addr_t));
     /*
-     * Reason we mask out the direction is that EPM 
+     * Reason we mask out the direction is that EPM
      * query could be made by one client and other client
      * could be using this pinhole to reach the server
      * If Naples is used for firewall, the clients could be
      * from outside or inside
      */
-    key.dir   = 0; 
+    key.dir   = 0;
     key.sport = 0;
     key.dip = rpc_info->ip;
     key.dport = rpc_info->dport;
@@ -157,7 +158,7 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
     }
     exp_flow_info->vers = rpc_info->vers;
     exp_flow_info->callback = cb;
-    
+
     // Need to add the entry with a timer
     // Todo(Pavithra) add timer to every RPC ALG entry
     HAL_TRACE_DEBUG("Inserting RPC entry with key: {}", key);
@@ -174,7 +175,7 @@ void rpcinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
          * Free the packet if it was alloced
          */
         if (rpc_info->pkt_len && rpc_info->pkt)
-            HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);        
+            HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);
         g_rpc_state->alg_info_slab()->free((rpc_info_t *)l4_sess->info);
     }
 }
@@ -194,12 +195,12 @@ fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx) {
     }
 
     alg_state = ctx.feature_session_state();
-    if (alg_state != NULL) 
+    if (alg_state != NULL)
         l4_sess = (l4_alg_status_t *)alg_status(alg_state);
 
     if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC ||
         (l4_sess && l4_sess->alg == nwsec::APP_SVC_MSFT_RPC)) {
-        ret = alg_msrpc_exec(ctx, sfw_info, l4_sess); 
+        ret = alg_msrpc_exec(ctx, sfw_info, l4_sess);
     } else if (sfw_info->alg_proto == nwsec::APP_SVC_SUN_RPC ||
          (l4_sess && l4_sess->alg == nwsec::APP_SVC_SUN_RPC)) {
         ret = alg_sunrpc_exec(ctx, sfw_info, l4_sess);

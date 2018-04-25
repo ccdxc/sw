@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "arp_trans.hpp"
 #include "ndp_learn.hpp"
 #include "nic/include/eth.h"

@@ -1,6 +1,6 @@
-/*
- * plugin.cc
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "core.hpp"
 #include "utils.hpp"
@@ -27,7 +27,7 @@ extern "C" hal_ret_t alg_ftp_init() {
     };
 
     fte::register_feature(FTE_FEATURE_ALG_FTP, alg_ftp_exec, info);
-   
+
     appsess_slab_ = slab::factory("ftp_alg_appsess", HAL_SLAB_FTP_ALG_APPSESS,
                                   sizeof(app_session_t), 64,
                                   true, true, true);
@@ -42,8 +42,8 @@ extern "C" hal_ret_t alg_ftp_init() {
                                      sizeof(ftp_info_t), 64,
                                     true, true, true);
     HAL_ASSERT_RETURN((ftpinfo_slab_ != NULL), HAL_RET_OOM);
- 
-    g_ftp_state = alg_state_t::factory(FTE_FEATURE_ALG_FTP.c_str(), 
+
+    g_ftp_state = alg_state_t::factory(FTE_FEATURE_ALG_FTP.c_str(),
                                   appsess_slab_, l4sess_slab_, ftpinfo_slab_, NULL, NULL);
 
     return HAL_RET_OK;

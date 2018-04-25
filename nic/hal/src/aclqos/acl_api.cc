@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/src/aclqos/acl.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/acl_api.hpp"
@@ -8,7 +12,7 @@ namespace hal {
 // Acl API: Get Match spec in PI Acl
 // ----------------------------------------------------------------------------
 acl_match_spec_t *
-acl_get_match_spec(acl_t *pi_acl) 
+acl_get_match_spec(acl_t *pi_acl)
 {
     return &pi_acl->match_spec;
 }

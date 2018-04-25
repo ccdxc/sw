@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __PROXYRCB_HPP__
 #define __PROXYRCB_HPP__
 
@@ -37,7 +41,7 @@ typedef struct proxyrcb_s {
      * ordering defined in proxyr_rxdma_p4plus_ingress.h
      * see hal/pd/iris/proxyrcb_pd.cc)
      */
-    uint16_t              pi;                       // if more PI/CI's are added, 
+    uint16_t              pi;                       // if more PI/CI's are added,
     uint16_t              ci;                       // be sure to adjust HAL_PROXYRCB_NUM_RINGS_MAX below
     uint16_t              proxyrcb_flags;
     uint8_t               my_txq_ring_size_shift;
@@ -62,7 +66,7 @@ typedef struct proxyrcb_s {
     vrf_id_t              vrf;
     uint8_t               af;
     uint8_t               ip_proto;
-    
+
     /*
      * 64-bit statistic counters
      */

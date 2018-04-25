@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -56,7 +60,7 @@ void getprogram_address(const internal::ProgramAddressReq &req,
         args.prog_name = (char *)req.prog_name().c_str();
         args.label_name = (char *)req.label().c_str();
         args.offset = &addr;
-        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
+        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET,
                                   (void *)&args);
         if (ret != HAL_RET_OK) {
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
@@ -68,7 +72,7 @@ void getprogram_address(const internal::ProgramAddressReq &req,
         base_args.handle = req.handle().c_str();
         base_args.prog_name = (char *)req.prog_name().c_str();
         base_args.base_addr = &addr;
-        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_TO_BASE_ADDR, 
+        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_TO_BASE_ADDR,
                                   (void *)&base_args);
         if (ret != HAL_RET_OK) {
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
@@ -108,7 +112,7 @@ void configurelif_bdf(const internal::LifBdfReq &req,
     pd::pd_capri_pxb_cfg_lif_bdf_args_t args = {0};
     args.lif = req.lif();
     args.bdf = req.bdf();
-    int ret = (int)pd::hal_pd_call(pd::PD_FUNC_ID_PXB_CFG_LIF_BDF, 
+    int ret = (int)pd::hal_pd_call(pd::PD_FUNC_ID_PXB_CFG_LIF_BDF,
                                   (void *)&args);
 
     resp->set_lif(req.lif());

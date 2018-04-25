@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/p4/iris/include/defines.h"
@@ -265,18 +269,18 @@ app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
 
             /*
              * initiator host-to-network: SYN, ACK
-             *   TLS: chain_flow_id will be encrypt flow, 
+             *   TLS: chain_flow_id will be encrypt flow,
              *        chain_rev_flow_id will be decrypt flow
              *   TCP: chain_flow_id will have reverse tuple (for sending
              *           SYNACK to to host)
-             *        chain_rev_flow_id will have original tuple (for sending 
+             *        chain_rev_flow_id will have original tuple (for sending
              *           SYN to network)
              *   tcpcb[chain_flow_id] -> proxyrcb[chain_flow_id] -> ARQ ->
-             *         proxyccb[chain_flow_id] -> tlscb[chain_flow_id] -> 
+             *         proxyccb[chain_flow_id] -> tlscb[chain_flow_id] ->
              *        tcpcb[chain_rev_flow_id] -> network
              * responder network-to-host: SYNACK
-             *   tcpcb[chain_rev_flow_id] -> tlscb[chain_rev_flow_id] -> 
-             *         proxyrcb[chain_rev_flow_id] -> ARQ -> 
+             *   tcpcb[chain_rev_flow_id] -> tlscb[chain_rev_flow_id] ->
+             *         proxyrcb[chain_rev_flow_id] -> ARQ ->
              *         proxyccb[chain_rev_flow_id] -> tcpcb[chain_flow_id] -> host
              */
             ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_flow_id(),
@@ -303,19 +307,19 @@ app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
         } else {
 
             /*
-             * initiator network-to-host: SYN, ACK 
-             *   TLS: chain_flow_id will be decrypt flow, 
+             * initiator network-to-host: SYN, ACK
+             *   TLS: chain_flow_id will be decrypt flow,
              *        chain_rev_flow_id will be encrypt flow
              *   TCP: chain_flow_id will have reverse tuple (for sending
              *           SYNACK to to network)
-             *        chain_rev_flow_id will have original tuple (for sending 
+             *        chain_rev_flow_id will have original tuple (for sending
              *           SYN to host)
-             *   tcpcb[chain_flow_id] -> tlscb[chain_flow_id] -> 
-             *         proxyrcb[chain_flow_id] -> ARQ -> 
+             *   tcpcb[chain_flow_id] -> tlscb[chain_flow_id] ->
+             *         proxyrcb[chain_flow_id] -> ARQ ->
              *         proxyccb[chain_flow_id] -> tcpcb[chain_rev_flow_id] -> host
              * responder host-to-network: SYNACK
              *   tcpcb[chain_rev_flow_id] -> proxyrcb[chain_rev_flow_id] -> ARQ ->
-             *         proxyccb[chain_rev_flow_id] -> tlscb[chain_rev_flow_id] -> 
+             *         proxyccb[chain_rev_flow_id] -> tlscb[chain_rev_flow_id] ->
              *        tcpcb[chain_flow_id] -> network
              */
             ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_flow_id(),
@@ -324,7 +328,7 @@ app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
                                              redir_ctx.redir_span_type());
             if (ret == HAL_RET_OK) {
 
-                ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_flow_id(), 
+                ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_flow_id(),
                            SERVICE_LIF_TCP_PROXY, 0, redir_ctx.chain_rev_flow_id(),
                            0, redir_ctx.redir_span_type());
             }
@@ -409,8 +413,8 @@ app_redir_pkt_check_tx_enqueue(fte::ctx_t& ctx)
      * for sending packet.
      */
     cpu_rxhdr = ctx.cpu_rxhdr();
-    memset(&cpu_header, 0, sizeof(cpu_header)); 
-    memset(&p4_header, 0, sizeof(p4_header)); 
+    memset(&cpu_header, 0, sizeof(cpu_header));
+    memset(&p4_header, 0, sizeof(p4_header));
     cpu_header.flags = redir_ctx.redir_flags();
     cpu_header.src_lif = cpu_rxhdr->src_lif;
     p4_header.flags |= P4PLUS_TO_P4_FLAGS_LKP_INST;
@@ -455,7 +459,7 @@ app_redir_pkt_check_tx_enqueue(fte::ctx_t& ctx)
  */
 static void
 app_redir_flow_key_build_from_redir_hdr(fte::ctx_t& ctx,
-                                        hal::flow_direction_t dir, 
+                                        hal::flow_direction_t dir,
                                         const pen_app_redir_header_v1_full_t& app_hdr)
 {
     flow_key_t      flow_key = {0};
@@ -488,7 +492,7 @@ app_redir_flow_key_build_from_redir_hdr(fte::ctx_t& ctx,
  */
 static void
 app_redir_flow_key_build_from_proxyrcb(fte::ctx_t& ctx,
-                                       const proxyrcb_t& proxyrcb) 
+                                       const proxyrcb_t& proxyrcb)
 {
     flow_key_t      flow_key = {0};
 
@@ -661,7 +665,7 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
         HAL_TRACE_DEBUG("{} flow_id {:#x} redir_flags {:#x} vrf {}", __FUNCTION__,
                         ntohl(app_hdr->raw.flow_id), redir_flags, flow_key.svrf_id);
         if ((pkt_len < PEN_RAW_REDIR_HEADER_V1_FULL_SIZE) ||
-            ((hdr_len - PEN_APP_REDIR_VERSION_HEADER_SIZE) != 
+            ((hdr_len - PEN_APP_REDIR_VERSION_HEADER_SIZE) !=
                         PEN_RAW_REDIR_HEADER_V1_SIZE)) {
             HAL_TRACE_ERR("{} format {} invalid pkt_len {} or hdr_len {}",
                           __FUNCTION__, pkt_len, app_hdr->ver.format, hdr_len);
@@ -676,10 +680,10 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
     case PEN_PROXY_REDIR_V1_FORMAT:
         redir_flags = ntohs(app_hdr->proxy.flags);
         HAL_TRACE_DEBUG("{} flow_id {:#x} redir_flags {:#x} vrf {}", __FUNCTION__,
-                        ntohl(app_hdr->proxy.flow_id), redir_flags, 
+                        ntohl(app_hdr->proxy.flow_id), redir_flags,
                         ntohs(app_hdr->proxy.vrf));
         if ((pkt_len < PEN_PROXY_REDIR_HEADER_V1_FULL_SIZE) ||
-            ((hdr_len - PEN_APP_REDIR_VERSION_HEADER_SIZE) != 
+            ((hdr_len - PEN_APP_REDIR_VERSION_HEADER_SIZE) !=
                         PEN_PROXY_REDIR_HEADER_V1_SIZE)) {
             HAL_TRACE_ERR("{} format {} invalid pkt_len {} or hdr_len {}",
                           __FUNCTION__, pkt_len, app_hdr->ver.format, hdr_len);
@@ -694,7 +698,7 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
          * flow key on FTE's behalf.
          */
         if (ctx.app_redir_pipeline()) {
-            app_redir_flow_key_build_from_redir_hdr(ctx, 
+            app_redir_flow_key_build_from_redir_hdr(ctx,
                            (hal::flow_direction_t)cpu_rxhdr->lkp_dir, *app_hdr);
         }
 
@@ -859,7 +863,7 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
 
 /*
  * Return proxy info for the current flow if, by configuration or by certain
- * test criteria, the flow is subject to app redirect. 
+ * test criteria, the flow is subject to app redirect.
  */
 static proxy_flow_info_t *
 app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
@@ -981,12 +985,12 @@ app_redir_flow_fwding_update(fte::ctx_t& ctx,
             flowupd.mirror_info.ing_mirror_session = 0;
             flowupd.mirror_info.egr_mirror_session = 0;
             if (redir_ctx.redir_span_type() == APP_REDIR_SPAN_INGRESS) {
-                flowupd.mirror_info.proxy_ing_mirror_session = 
+                flowupd.mirror_info.proxy_ing_mirror_session =
                                               1 << visib_mirror_session_id;
                 flowupd.mirror_info.proxy_egr_mirror_session = 0;
             } else {
                 flowupd.mirror_info.proxy_ing_mirror_session = 0;
-                flowupd.mirror_info.proxy_egr_mirror_session = 
+                flowupd.mirror_info.proxy_egr_mirror_session =
                                               1 << visib_mirror_session_id;
             }
 #else
@@ -1037,7 +1041,7 @@ app_redir_proxy_flow_info_update(fte::ctx_t& ctx,
 
 
 /*
- * Set app redirct verdict for the current packet, independent of any 
+ * Set app redirct verdict for the current packet, independent of any
  * FTE drop decision made in other pipelines/features.
  */
 void
@@ -1075,7 +1079,7 @@ app_redir_policy_applic_set(fte::ctx_t& ctx,
         /*
          * Insert app redirect header for the flow miss case
          */
-        ret = app_redir_miss_hdr_insert(ctx, 
+        ret = app_redir_miss_hdr_insert(ctx,
                                  redir_ctx.tcp_tls_proxy_flow() ?
                                  PEN_PROXY_REDIR_V1_FORMAT      :
                                  PEN_RAW_REDIR_V1_FORMAT);
@@ -1128,7 +1132,7 @@ app_redir_tcp_pipeline_process(fte::ctx_t& ctx)
             break;
 
         case hal::FLOW_ROLE_RESPONDER:
-            if ((tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) == 
+            if ((tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) ==
                              (TCP_FLAG_SYN | TCP_FLAG_ACK)) {
                 redir_ctx.set_redir_policy_applic(true);
             }

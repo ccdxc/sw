@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include <arpa/inet.h>
 #include "nic/include/base.h"
 #include "arp_trans.hpp"

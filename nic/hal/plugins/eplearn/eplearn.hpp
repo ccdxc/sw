@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef HAL_PLUGINS_EPLEARN_EPLEARN_HPP_
 #define HAL_PLUGINS_EPLEARN_EPLEARN_HPP_
 #include "common/trans.hpp"

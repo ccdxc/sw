@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef HAL_PLUGINS_NETWORK_EP_LEARN_ARP_TRANS_HPP_
 #define HAL_PLUGINS_NETWORK_EP_LEARN_ARP_TRANS_HPP_
 

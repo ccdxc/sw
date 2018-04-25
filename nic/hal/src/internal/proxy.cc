@@ -1,4 +1,7 @@
-// #include "nic/hal/svc/proxy_svc.hpp"
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/include/base.h"

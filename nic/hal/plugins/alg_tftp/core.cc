@@ -1,6 +1,6 @@
-/*
- * core.cc
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "core.hpp"
 #include "sdk/list.hpp"
@@ -73,13 +73,13 @@ fte::pipeline_action_t alg_tftp_session_delete_cb(fte::ctx_t &ctx) {
             g_tftp_state->cleanup_app_session(l4_sess->app_session);
         }
     }
-    
+
     return fte::PIPELINE_CONTINUE;
 }
 
 /*
  * TFTP info cleanup handler
- */ 
+ */
 void tftpinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
     if (l4_sess->info != NULL)
         g_tftp_state->alg_info_slab()->free((tftp_info_t *)l4_sess->info);
@@ -240,10 +240,10 @@ hal_ret_t process_tftp_first_packet(fte::ctx_t& ctx, uint16_t *tftpop) {
     *tftpop = __pack_uint16(pkt, &offset);
 
     // Only act on it if there is a known opcode
-    if (*tftpop != TFTP_RRQ && *tftpop != TFTP_WRQ) { 
+    if (*tftpop != TFTP_RRQ && *tftpop != TFTP_WRQ) {
         HAL_TRACE_DEBUG("Unknown Opcode -- parse error");
         return HAL_RET_INVALID_OP;
-    } 
+    }
 
     HAL_TRACE_DEBUG("Received Opcode:{}", (*tftpop==TFTP_RRQ)?"TFTP_RRQ":"TFTP_WRQ");
 
@@ -255,7 +255,7 @@ hal_ret_t process_tftp_first_packet(fte::ctx_t& ctx, uint16_t *tftpop) {
 }
 
 /*
- * TFTP Exec 
+ * TFTP Exec
  */
 fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
     hal_ret_t                      ret = HAL_RET_OK;
@@ -267,17 +267,17 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
                                   ctx.feature_state(FTE_FEATURE_SFW);
     fte::feature_session_state_t  *alg_state = NULL;
 
-    if (ctx.protobuf_request() || 
+    if (ctx.protobuf_request() ||
         ctx.role() == hal::FLOW_ROLE_RESPONDER) {
         return fte::PIPELINE_CONTINUE;
     }
- 
+
     alg_state = ctx.feature_session_state();
     if (sfw_info->alg_proto == nwsec::APP_SVC_TFTP &&
-        (!ctx.existing_session())) { 
+        (!ctx.existing_session())) {
         HAL_TRACE_DEBUG("Alg Proto TFTP is set");
 
-        ret = process_tftp_first_packet(ctx, &tftpop); 
+        ret = process_tftp_first_packet(ctx, &tftpop);
         if (ret == HAL_RET_OK) {
             /*
              * Alloc APP session, EXP flow and TFTP info
@@ -294,7 +294,7 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
             tftp_info->tftpop = tftpop;
             tftp_info->callback = process_tftp;
             tftp_info->skip_sfw = TRUE;
-            
+
             /*
              * Register Feature session state & completion handler
              */
@@ -302,13 +302,13 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
             ctx.register_feature_session_state(&l4_sess->fte_feature_state);
         }
     } else if (alg_state != NULL) {
-        l4_sess = (l4_alg_status_t *)alg_status(alg_state); 
+        l4_sess = (l4_alg_status_t *)alg_status(alg_state);
         if (l4_sess != NULL && l4_sess->alg == nwsec::APP_SVC_TFTP) {
             HAL_TRACE_DEBUG("TFTP ALG invoking callback");
             tftp_info = (tftp_info_t *)l4_sess->info;
             HAL_ASSERT(tftp_info);
 
-            if (tftp_info->callback != NULL) {    
+            if (tftp_info->callback != NULL) {
                 tftp_info->callback(ctx, l4_sess);
             }
         }

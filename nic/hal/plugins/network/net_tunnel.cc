@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/plugins/network/net_plugin.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/include/pd_api.hpp"
@@ -21,7 +25,7 @@ update_tunnel_info(fte::ctx_t&ctx)
     HEADER_SET_FLD(flowupd.header_push, ether, smac, ether_addr{});
     HEADER_SET_FLD(flowupd.header_push, ipv4, sip, ipv4_addr_t{});
     HEADER_SET_FLD(flowupd.header_push, ipv4, dip, ipv4_addr_t{});
-    
+
     switch (ctx.dl2seg()->wire_encap.type) {
     case types::encapType::ENCAP_TYPE_VXLAN:
         HEADER_SET_FLD(flowupd.header_push, vxlan, vrf_id, ctx.dl2seg()->wire_encap.val);
@@ -41,7 +45,7 @@ tunnel_exec(fte::ctx_t& ctx)
     ret = update_tunnel_info(ctx);
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
-        return fte::PIPELINE_END; 
+        return fte::PIPELINE_END;
     }
 
     return fte::PIPELINE_CONTINUE;

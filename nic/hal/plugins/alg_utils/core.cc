@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "alg_db.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
@@ -256,7 +260,7 @@ void alg_state::init(const char* feature_name, slab *app_sess_slab,
                                          ht_get_key_func,
                                          ht_compute_hash_func,
                                          ht_compare_key_func);
-    
+
 }
 
 alg_state_t *alg_state::factory(const char* feature_name, slab *app_sess_slab,
@@ -269,13 +273,13 @@ alg_state_t *alg_state::factory(const char* feature_name, slab *app_sess_slab,
 {
     void         *mem = NULL;
     alg_state    *state = NULL;
-    
+
     mem = (alg_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
                                     sizeof(alg_state_t));
     HAL_ABORT(mem != NULL);
     state = new (mem) alg_state();
-    
-    state->init(feature_name, app_sess_slab, l4_sess_slab, 
+
+    state->init(feature_name, app_sess_slab, l4_sess_slab,
                 alg_info_slab, app_sess_clnup_hdlr, l4_sess_clnup_hdlr,
                 ht_get_key_func, ht_compute_hash_func, ht_compare_key_func);
 
@@ -306,14 +310,14 @@ void alg_state::exp_flow_timeout_cb (void *timer, uint32_t timer_id, void *ctxt)
     if (ref_is_shared(&exp_flow->entry.ref_count)) {
         // Start a grace timer
         start_expected_flow_timer(&exp_flow->entry, ALG_EXP_FLOW_GRACE_TIMER_ID,
-                                  ALG_EXP_FLOW_GRACE_TIME_INTVL, 
+                                  ALG_EXP_FLOW_GRACE_TIME_INTVL,
                                   exp_flow_timeout_cb, (void *)timer_ctxt);
         return;
     }
 
 cleanup:
     HAL_TRACE_DEBUG("Cleaning up expected flow with key: {}", exp_flow->entry.key);
-    alg_state->cleanup_exp_flow(exp_flow); 
+    alg_state->cleanup_exp_flow(exp_flow);
 
     HAL_FREE(hal::HAL_MEM_ALLOC_ALG, timer_ctxt);
 }
@@ -338,19 +342,19 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
     HAL_SPINLOCK_UNLOCK(&app_sess->slock);
 
     if (enable_timer == true) {
-        HAL_TRACE_DEBUG("Starting timer for expected flow with key: {}", key); 
+        HAL_TRACE_DEBUG("Starting timer for expected flow with key: {}", key);
         timer_ctxt = (exp_flow_timer_cb_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
                                        sizeof(exp_flow_timer_cb_t));
         timer_ctxt->exp_flow = exp_flow;
         timer_ctxt->alg_state = this;
-        start_expected_flow_timer(&exp_flow->entry, ALG_EXP_FLOW_TIMER_ID, 
-                                  time_intvl, exp_flow_timeout_cb, 
+        start_expected_flow_timer(&exp_flow->entry, ALG_EXP_FLOW_TIMER_ID,
+                                  time_intvl, exp_flow_timeout_cb,
                                   (void *)timer_ctxt);
     }
 
     *expected_flow = exp_flow;
 
-    return HAL_RET_OK; 
+    return HAL_RET_OK;
 }
 
 hal_ret_t alg_state::alloc_and_insert_l4_sess(app_session_t *app_sess,
@@ -362,8 +366,8 @@ hal_ret_t alg_state::alloc_and_insert_l4_sess(app_session_t *app_sess,
         return HAL_RET_OOM;
     }
 
-    HAL_SPINLOCK_LOCK(&app_sess->slock); 
-    alg_status->app_session = app_sess; 
+    HAL_SPINLOCK_LOCK(&app_sess->slock);
+    alg_status->app_session = app_sess;
     dllist_reset(&alg_status->l4_sess_lentry);
     dllist_add(&app_sess->l4_sess_lhead, &alg_status->l4_sess_lentry);
     HAL_SPINLOCK_UNLOCK(&app_sess->slock);
@@ -405,7 +409,7 @@ hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key, app_session_t 
     ret = lookup_app_sess(&key, app_session);
     if (ret != HAL_RET_ENTRY_NOT_FOUND) {
         return HAL_RET_ENTRY_EXISTS;
-    }   
+    }
 
     *app_session = (app_session_t *)app_sess_slab()->alloc();
     if (*app_session == NULL) {
@@ -415,7 +419,7 @@ hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key, app_session_t 
     return insert_app_sess(*app_session);
 }
 
-void alg_state::move_expflow_to_l4sess(app_session_t *app_sess, 
+void alg_state::move_expflow_to_l4sess(app_session_t *app_sess,
                                             l4_alg_status_t *exp_flow) {
     remove_expected_flow(exp_flow->entry.key);
 
@@ -484,12 +488,12 @@ void alg_state::cleanup_exp_flow(l4_alg_status_t *exp_flow) {
 void alg_state::cleanup_app_session(app_session_t *app_sess) {
     dllist_ctxt_t   *lentry, *next;
 
-    // Take the lock 
+    // Take the lock
     HAL_SPINLOCK_LOCK(&app_sess->slock);
 
     dllist_for_each_safe(lentry, next, &app_sess->exp_flow_lhead)
     {
-        l4_alg_status_t *exp_flow = dllist_entry(lentry, 
+        l4_alg_status_t *exp_flow = dllist_entry(lentry,
                                   l4_alg_status_t, exp_flow_lentry);
         cleanup_exp_flow(exp_flow);
     }
@@ -510,7 +514,7 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
 
     HAL_SPINLOCK_DESTROY(&app_sess->slock);
 
-    app_sess_slab()->free(app_sess); 
+    app_sess_slab()->free(app_sess);
 }
 
 } //namespace alg_utils

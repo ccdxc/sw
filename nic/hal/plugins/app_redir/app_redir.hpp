@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #ifndef __APP_REDIR_H__
 #define __APP_REDIR_H__
@@ -21,7 +23,7 @@ size_t app_redir_pkt_len(fte::ctx_t& ctx);
 hal_ret_t appid_cleanup_flow(appid_info_t& appid_info);
 
 
-} // namespace app_redir 
+} // namespace app_redir
 } // namespace hal
 
 #endif  // __APP_REDIR_H__

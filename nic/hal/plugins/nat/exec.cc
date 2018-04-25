@@ -1,6 +1,6 @@
-/*
- * exec.cc
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "core.hpp"
 #include "nic/utils/nat/addr_db.hpp"

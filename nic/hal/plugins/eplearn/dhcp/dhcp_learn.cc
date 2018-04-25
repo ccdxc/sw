@@ -1,9 +1,6 @@
-/*
- * dhcp.cc
- *
- *  Created on: Aug 9, 2017
- *      Author: sudhiaithal
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include <netinet/in.h>
 // clang-format off

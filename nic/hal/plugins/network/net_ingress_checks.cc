@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include <net/ethernet.h>
 #include "nic/p4/include/common_defines.h"
 #include "nic/hal/plugins/network/net_plugin.hpp"
@@ -56,7 +60,7 @@ ingress_checks_exec(fte::ctx_t& ctx)
 
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
-        return fte::PIPELINE_END; 
+        return fte::PIPELINE_END;
     }
 
     return fte::PIPELINE_CONTINUE;

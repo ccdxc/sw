@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
@@ -160,7 +164,7 @@ wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
     hal_ret_t               ret = HAL_RET_OK;
     wring_t                 wring;
     pd::pd_wring_get_entry_args_t     pd_wring_args;
-    
+
     if(req.type() <= types::WRING_TYPE_NONE) {
         HAL_TRACE_ERR("Invalid wring type");
         rsp->set_api_status(types::API_STATUS_WRING_TYPE_INVALID);
@@ -182,7 +186,7 @@ wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
         return HAL_RET_HW_FAIL;
     }
 
-    // fill config spec of this WRING 
+    // fill config spec of this WRING
     rsp->mutable_spec()->set_type(wring.wring_type);
     rsp->mutable_spec()->mutable_key_or_handle()->set_wring_id(wring.wring_id);
     rsp->set_index(wring.slot_index);
@@ -207,7 +211,7 @@ wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
             rsp->set_value(wring.slot_value);
             break;
     }
-    
+
     HAL_TRACE_DEBUG("Ring slot_index: {}, type: {}", wring.slot_index, wring.wring_type);
     // fill operational state of this WRING
     //rsp->mutable_status()->set_wring_handle(wring->hal_handle);

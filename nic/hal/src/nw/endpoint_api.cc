@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/src/nw/endpoint.hpp"
 #include "nic/include/endpoint_api.hpp"
 #include "nic/include/pd.hpp"

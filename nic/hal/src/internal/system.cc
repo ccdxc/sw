@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
@@ -464,7 +466,7 @@ system_get (SystemResponse *rsp)
     pd::pd_system_args_t    pd_system_args = { 0 };
     pd::pd_drop_stats_get_args_t d_args;
     pd::pd_table_stats_get_args_t t_args;
-    
+
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("Querying Drop Stats:");
 

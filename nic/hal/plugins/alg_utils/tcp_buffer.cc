@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "tcp_buffer.hpp"
 
 namespace hal {
@@ -54,7 +58,7 @@ tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
     // If the end of the payload ends before our current sequence number,
     // its old duplicate data
     if (compare_seq_numbers(end, cur_seq_) <= 0) {
-        return HAL_RET_OK; 
+        return HAL_RET_OK;
     }
 
     // If it starts before current sequence number, slice it
@@ -109,7 +113,7 @@ tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
     // Remember the size of reassembled payload (handler is called when there is new data)
     size_t reassembled_payload = (segments_[0].start == cur_seq_) ?
         (segments_[0].end - segments_[0].start) : 0;
-    
+
     // insert the segment in correct order
     int cur;
 
@@ -143,13 +147,13 @@ tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
         // overlapping segments
         if (compare_seq_numbers(seq, segments_[cur].start) < 0)
             segments_[cur].start = seq;
-            
+
         if (compare_seq_numbers(end, segments_[cur].end) > 0)
             segments_[cur].end = end;
 
         // merge all overlaping segments
         int next = cur + 1;
-        while(next < num_segments_ && 
+        while(next < num_segments_ &&
               compare_seq_numbers(segments_[cur].end, segments_[next].start) >= 0) {
             if (compare_seq_numbers(segments_[next].end, segments_[cur].end) > 0) {
                 segments_[cur].end = segments_[next].end;
@@ -160,14 +164,14 @@ tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
         // move the rest of the segments
         move_segments(next, cur + 1 - next);
     }
-    
+
     /* copy payload and call the handler */
     memcpy(buff_ + (seq - cur_seq_), payload, payload_len);
 
     if ((segments_[0].start == cur_seq_) &&
         (segments_[0].end - segments_[0].start) > reassembled_payload) {
         size_t processed = data_handler_(handler_ctx_, buff_, segments_[0].end - segments_[0].start);
-        
+
         HAL_ASSERT_RETURN(processed <= (segments_[0].end - segments_[0].start), HAL_RET_INVALID_ARG);
 
         if (processed > 0) {

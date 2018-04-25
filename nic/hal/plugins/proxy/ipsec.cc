@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 
@@ -8,15 +12,15 @@ static inline hal_ret_t
 update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
 {
     HAL_TRACE_DEBUG("IPSec Host flow forwarding role: {} direction: {}", ctx.role(), ctx.direction());
-    if ( 
-          ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) && 
+    if (
+          ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
            (ctx.direction() == FLOW_DIR_FROM_ENIC)) ||
-          ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) && 
+          ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
            (ctx.direction() == FLOW_DIR_FROM_UPLINK)) ||   //temporary - only
-          ((ctx.role() ==  hal::FLOW_ROLE_RESPONDER) && 
+          ((ctx.role() ==  hal::FLOW_ROLE_RESPONDER) &&
            (ctx.direction() == FLOW_DIR_FROM_UPLINK))
         ) {
-        
+
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
         HAL_TRACE_DEBUG("IPSec updating lport = {}", pfi->proxy->meta->lif_info[0].lport_id);
 
@@ -36,13 +40,13 @@ static inline hal_ret_t
 update_esp_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
 {
     HAL_TRACE_DEBUG("IPSec ESP flow forwarding role: {}  direction: {}", ctx.role(), ctx.direction());
-    if ( 
-          ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) && 
+    if (
+          ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
            (ctx.direction() == FLOW_DIR_FROM_UPLINK)) ||
-          ((ctx.role() ==  hal::FLOW_ROLE_RESPONDER) && 
+          ((ctx.role() ==  hal::FLOW_ROLE_RESPONDER) &&
            (ctx.direction() == FLOW_DIR_FROM_ENIC))
         ) {
-        
+
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
         HAL_TRACE_DEBUG("IPSec updating lport = {}", pfi->proxy->meta->lif_info[0].lport_id);
         // update fwding info
@@ -66,10 +70,10 @@ ipsec_exec(fte::ctx_t& ctx)
     // Ignore direction. Always set it to 0
     flow_key.dir = 0;
 
-    // get the flow info for the tcp proxy service 
+    // get the flow info for the tcp proxy service
     pfi = proxy_get_flow_info(types::PROXY_TYPE_IPSEC,
                               &flow_key);
-    
+
     if(pfi) {
         if(flow_key.proto == IPPROTO_ESP) {
             HAL_TRACE_DEBUG("ipsec ESP flow");
@@ -77,7 +81,7 @@ ipsec_exec(fte::ctx_t& ctx)
             // Update flow
             if (ret != HAL_RET_OK) {
                 ctx.set_feature_status(ret);
-                return fte::PIPELINE_END; 
+                return fte::PIPELINE_END;
             }
         } else {
             HAL_TRACE_DEBUG("ipsec HOST flow");
@@ -93,12 +97,12 @@ ipsec_exec(fte::ctx_t& ctx)
             ret = update_host_flow_fwding_info(ctx, pfi);
             if (ret != HAL_RET_OK) {
                 ctx.set_feature_status(ret);
-                return fte::PIPELINE_END; 
+                return fte::PIPELINE_END;
             }
         }
     } else {
         HAL_TRACE_DEBUG("ipsec is not enabled for the flow");
-    } 
+    }
     return fte::PIPELINE_CONTINUE;
 }
 

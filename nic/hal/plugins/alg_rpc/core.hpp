@@ -1,6 +1,7 @@
-/*
- * core.hpp
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #pragma once
 
 #include "nic/include/fte.hpp"
@@ -38,7 +39,7 @@ fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx);
 void rpcinfo_cleanup_hdlr(l4_alg_status_t *l4_sess);
 typedef hal_ret_t (*rpc_cb_t)(fte::ctx_t& ctx, l4_alg_status_t *l4_sess);
 hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry);
-void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, 
+void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess,
                         rpc_cb_t cb, uint32_t timeout=RPC_DEFAULT_TIMEOUT);
 hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info, l4_alg_status_t *l4_sess);
 hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info, l4_alg_status_t *l4_sess);
@@ -49,7 +50,7 @@ fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx);
  * Data Structures
  */
 typedef struct rpc_info_ {
-    /* 
+    /*
      * Ctrl Session Expected Flow Info
      */
     uint8_t           *pkt;

@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __LIF_HPP__
 #define __LIF_HPP__
 
@@ -117,21 +121,21 @@ typedef struct lif_update_app_ctxt_s {
 
 #define HAL_MAX_LIFS                                 1024
 
-static inline void 
+static inline void
 lif_lock (lif_t *lif, const char *fname,
           int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:locking lif:{} from {}:{}:{}", 
+    HAL_TRACE_DEBUG("{}:operlock:locking lif:{} from {}:{}:{}",
                     __FUNCTION__, lif->lif_id,
                     fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&lif->slock);
 }
 
-static inline void 
+static inline void
 lif_unlock (lif_t *lif, const char *fname,
             int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:unlocking lif:{} from {}:{}:{}", 
+    HAL_TRACE_DEBUG("{}:operlock:unlocking lif:{} from {}:{}:{}",
                     __FUNCTION__, lif->lif_id,
                     fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&lif->slock);
@@ -144,7 +148,7 @@ extern lif_t *find_lif_by_id(lif_id_t lif_id);
 extern lif_t *find_lif_by_handle(hal_handle_t handle);
 void lif_print_ifs(lif_t *lif);
 void lif_print(lif_t *lif);
-hal_ret_t lif_update_trigger_if(lif_t *lif, 
+hal_ret_t lif_update_trigger_if(lif_t *lif,
                                 bool vlan_strip_en_changed,
                                 bool vlan_strip_en,
                                 bool vlan_insert_en_changed,
@@ -153,7 +157,7 @@ void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
 
 // SVC APIs
-hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp, 
+hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp,
                      lif_hal_info_t *lif_hal_info);
 hal_ret_t lif_update(LifSpec& spec, LifResponse *rsp);
 hal_ret_t lif_delete(LifDeleteRequest& req,

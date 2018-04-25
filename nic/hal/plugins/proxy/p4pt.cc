@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 
@@ -20,7 +24,7 @@ p4pt_exec(fte::ctx_t& ctx)
         ret = ctx.update_flow(flowupd);
         if (ret != HAL_RET_OK) {
             ctx.set_feature_status(ret);
-            return fte::PIPELINE_END; 
+            return fte::PIPELINE_END;
         }
     }
     return fte::PIPELINE_CONTINUE;

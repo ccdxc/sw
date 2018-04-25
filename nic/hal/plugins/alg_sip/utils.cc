@@ -1,8 +1,8 @@
-/*
- * utils.cc
- *
- * SIP utility routines
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// SIP utility routines
+//-----------------------------------------------------------------------------
 
 #include "core.hpp"
 
@@ -46,7 +46,7 @@ static inline int sip_xdigit2bin(char c, int delim)
 /*
  * sip_in4_pton
  *
- * Convert IPv4 printable address to binary form 
+ * Convert IPv4 printable address to binary form
  */
 int sip_in4_pton(const char *src, int srclen, uint8_t *dst,
                  int delim, const char **end)
@@ -104,7 +104,7 @@ out:
 /*
  * sip_in6_pton
  *
- * Convert IPv6 printable address to binary form 
+ * Convert IPv6 printable address to binary form
  */
 int sip_in6_pton(const char *src, int srclen, uint8_t *dst,
                  int delim, const char **end)
@@ -241,7 +241,7 @@ static int sip_string_len(const char *buf, const char *limit, int *shift)
 /*
  * sip_digits_len
  *
- * Find the length of the (digital) string until it reaches limit 
+ * Find the length of the (digital) string until it reaches limit
  */
 int sip_digits_len(fte::ctx_t &ctx, const char *buf, const char *limit,
                    int *shift)
@@ -272,7 +272,7 @@ static int sip_iswordc(const char c)
 /*
  * sip_word_len
  *
- * Find the length of the word string until it reaches limit 
+ * Find the length of the word string until it reaches limit
  */
 static int sip_word_len(const char *buf, const char *limit)
 {
@@ -418,11 +418,11 @@ int sip_parse_addr(fte::ctx_t &ctx, const char *cp,
     return 1;
 }
 
-/* 
+/*
  * sip_epaddr_len
  *
  * Skip ip address. returns its length.
- */ 
+ */
 int sip_epaddr_len(fte::ctx_t &ctx, const char *buf, const char *limit,
                    int *shift)
 {
@@ -445,7 +445,7 @@ int sip_epaddr_len(fte::ctx_t &ctx, const char *buf, const char *limit,
  * sip_skp_epaddr_len
  *
  * Get address length, skiping user info
- */ 
+ */
 int sip_skp_epaddr_len(fte::ctx_t &ctx, const char *buf, const char *limit,
                        int *shift)
 {

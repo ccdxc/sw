@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #pragma once
 #include "alg_db.hpp"
 #include "nic/hal/src/nw/session.hpp"
@@ -111,7 +115,7 @@ inline uint32_t __le_pack_uint32(const uint8_t *buf, uint32_t *idx) {
     return val;
 }
 
-inline uint32_t __pack_uint32(const uint8_t *buf, uint32_t *idx, 
+inline uint32_t __pack_uint32(const uint8_t *buf, uint32_t *idx,
                                                 uint8_t format=0) {
     if (format == 1) {
         return (__le_pack_uint32(buf, idx));
@@ -132,7 +136,7 @@ inline uint16_t __le_pack_uint16(const uint8_t *buf, uint32_t *idx) {
     return val;
 }
 
-inline uint16_t __pack_uint16(const uint8_t *buf, uint32_t *idx, 
+inline uint16_t __pack_uint16(const uint8_t *buf, uint32_t *idx,
                                                  uint8_t format=0) {
     if (format == 1) {
         return (__le_pack_uint16(buf, idx));
@@ -141,7 +145,7 @@ inline uint16_t __pack_uint16(const uint8_t *buf, uint32_t *idx,
     }
 }
 
-inline uint64_t __pack_uint64(const uint8_t *buf, uint32_t *idx, 
+inline uint64_t __pack_uint64(const uint8_t *buf, uint32_t *idx,
                                                  uint8_t format=0) {
     if (format == 1) {
         return (__le_pack_uint64(buf, idx));
@@ -165,12 +169,12 @@ typedef struct app_session_s {
 } app_session_t;
 
 //-----------------------------------------------------------------------------
-// L4 ALG status that is (1) kept per expected flow entry until the pinhole is 
-// opened up. (2) kept per L4 HAL session after the session is created. This has 
-// back pointer to app_session that it belongs to. 
+// L4 ALG status that is (1) kept per expected flow entry until the pinhole is
+// opened up. (2) kept per L4 HAL session after the session is created. This has
+// back pointer to app_session that it belongs to.
 //-----------------------------------------------------------------------------
 typedef struct l4_alg_status {
-    expected_flow_t                 entry;                     // Flow key and handler 
+    expected_flow_t                 entry;                     // Flow key and handler
     nwsec::ALGName                  alg;                       // ALG applied on this L4-session
     bool                            isCtrl;                    // Is this a control session
     session_t                      *session;                   // Back pointer to L4-session
@@ -197,19 +201,19 @@ typedef class alg_state alg_state_t;
 //------------------------------------------------------------------
 //  Per-ALG state information
 //  - Helps keep (1) hash table of app session information
-//  (2) List of expected flows (3) APIs to clean up the app session 
+//  (2) List of expected flows (3) APIs to clean up the app session
 //  and expected flows
 //-------------------------------------------------------------------
 class alg_state {
 public:
-    static alg_state *factory(const char* feature_name, slab *app_sess_slab, 
-                              slab *l4_sess_slab, slab *alg_info_slab, 
-                              app_sess_cleanup_hdlr_t app_sess_clnup_hdlr, 
+    static alg_state *factory(const char* feature_name, slab *app_sess_slab,
+                              slab *l4_sess_slab, slab *alg_info_slab,
+                              app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
                               l4_sess_cleanup_hdlr_t exp_flow_clnup_hdlr,
                               ht::ht_get_key_func_t ht_get_key_func = NULL,
                               ht::ht_compute_hash_func_t ht_compute_hash_func = NULL,
                               ht::ht_compare_key_func_t ht_compare_key_func = NULL);
-    
+
     void init(const char* feature_name, slab *app_sess_slab,
               slab *l4_sess_slab, slab *alg_state_slab,
               app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
@@ -217,7 +221,7 @@ public:
               ht::ht_get_key_func_t ht_get_key_func = NULL,
               ht::ht_compute_hash_func_t ht_compute_hash_func = NULL,
               ht::ht_compare_key_func_t ht_compare_key_func = NULL);
-    
+
     ~alg_state();
 
     void rlock(void) { rwlock_.rlock(); }
@@ -233,18 +237,18 @@ public:
     void cleanup_exp_flow(l4_alg_status_t *exp_flow);
     void cleanup_l4_sess(l4_alg_status_t *l4_sess);
     void cleanup_app_session(app_session_t *app);
-    hal_ret_t alloc_and_insert_exp_flow(app_session_t *app_sess, 
+    hal_ret_t alloc_and_insert_exp_flow(app_session_t *app_sess,
                                         hal::flow_key_t key,
                                         l4_alg_status_t **alg_status,
                                         bool enable_timer=false,
                                         uint32_t time_intvl=0);
     hal_ret_t alloc_and_insert_l4_sess(app_session_t *app_sess,
-                                       l4_alg_status_t **alg_status); 
+                                       l4_alg_status_t **alg_status);
     hal_ret_t alloc_and_init_app_sess(hal::flow_key_t key, app_session_t **app_sess);
     hal_ret_t insert_app_sess(app_session_t *app_sess);
     hal_ret_t lookup_app_sess(const void *key, app_session_t **app_sess);
 
-    void move_expflow_to_l4sess(app_session_t *app_sess, 
+    void move_expflow_to_l4sess(app_session_t *app_sess,
                                 l4_alg_status_t *alg_status);
     l4_alg_status_t *get_next_expflow(app_session_t *app_sess);
     l4_alg_status_t *get_ctrl_l4sess(app_session_t *app_sess);
@@ -253,10 +257,10 @@ private:
     wp_rwlock                      rwlock_;                   // Read-write lock to alg_state
     const char                    *feature_;                  // Feature name for this instance
     slab                          *app_sess_slab_;            // Slab to allocate memory from for app_sess
-    slab                          *l4_sess_slab_;             // L4 Session slab to allocate memory from    
+    slab                          *l4_sess_slab_;             // L4 Session slab to allocate memory from
     slab                          *alg_info_slab_;            // per-ALG L4 sess oper status & info slab
     ht                            *app_sess_ht_;              // App session hash table for the feature
-    l4_sess_cleanup_hdlr_t         l4_sess_cleanup_hdlr_;     // Callback to cleanup any feature specific info 
+    l4_sess_cleanup_hdlr_t         l4_sess_cleanup_hdlr_;     // Callback to cleanup any feature specific info
     app_sess_cleanup_hdlr_t        app_sess_cleanup_hdlr_;    // Callback to cleanup any feature specific info
 
     static void exp_flow_timeout_cb (void *timer, uint32_t timer_id, void *ctxt);

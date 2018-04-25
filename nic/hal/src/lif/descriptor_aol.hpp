@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __DESCRIPTOR_AOL_HPP__
 #define __DESCRIPTOR_AOL_HPP__
 
@@ -13,7 +17,7 @@ using descraol::DescrAolRequestMsg;
 using descraol::DescrAolResponseMsg;
 
 namespace hal {
-hal_ret_t descraol_get(descraol::DescrAolRequest& request, 
+hal_ret_t descraol_get(descraol::DescrAolRequest& request,
                        descraol::DescrAolResponseMsg *response);
 }
 #endif /* __DESCRIPTOR_AOL_HPP__ */

@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __CRYPTO_SESSION_KEYS_HPP__
 #define __CRYPTO_SESSION_KEYS_HPP__
 #include "nic/include/base.h"
@@ -56,7 +60,7 @@ hal_ret_t   cryptokey_delete(cryptokey::CryptoKeyDeleteRequest &request,
 
 
 typedef struct crypto_asym_key_s {
-    uint64_t                key_param_list;     /* Address to the DMA 
+    uint64_t                key_param_list;     /* Address to the DMA
                                                    descriptor that contains the
                                                    key/param */
     uint32_t                command_reg;        /* Command associated with this

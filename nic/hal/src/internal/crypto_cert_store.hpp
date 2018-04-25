@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef __CRYPTO_CERT_STORE_HPP__
 #define __CRYPTO_CERT_STORE_HPP__
 
@@ -48,7 +52,7 @@ static inline crypto_cert_t*
 crypto_cert_alloc(void)
 {
     crypto_cert_t    *cert;
-    
+
     cert = (crypto_cert_t *)g_hal_state->crypto_cert_store_slab()->alloc();
     if(cert == NULL) {
         return NULL;
@@ -62,7 +66,7 @@ crypto_cert_init(crypto_cert_t *cert)
     if(!cert) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&cert->slock, PTHREAD_PROCESS_PRIVATE);    
+    HAL_SPINLOCK_INIT(&cert->slock, PTHREAD_PROCESS_PRIVATE);
     cert->ht_ctxt.reset();
     return cert;
 }

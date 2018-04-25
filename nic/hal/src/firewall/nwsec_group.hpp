@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #ifndef __NWSEC_GROUP_HPP__
 #define __NWSEC_GROUP_HPP__
@@ -55,7 +57,7 @@ namespace hal {
 //            each rule has list of services defined by - nwsec_policy_svc_t;
 //
 //
-// OPER_DB: 
+// OPER_DB:
 //     nwsec_policy_entry_t
 //        We need to key in (src sg_id, dst sg_id)
 //        Define a structure nwsec_policy_entry_t and this will point to the rules list
@@ -325,7 +327,7 @@ nwsec_policy_cfg_lookup_by_key(nwsec_policy_key_t plcy_key)
          g_hal_state->nwsec_policy_cfg_ht()->lookup(&plcy_key);
 }
 
-/** 
+/**
   * Security Group related config
   *
 **/
@@ -371,7 +373,7 @@ nwsec_group_init (nwsec_group_t *nwsec_grp)
     dllist_reset(&nwsec_grp->nw_list_head);
     dllist_reset(&nwsec_grp->ep_list_head);
     HAL_SPINLOCK_INIT(&nwsec_grp->slock, PTHREAD_PROCESS_SHARED);
- 
+
     return nwsec_grp;
 }
 
@@ -702,7 +704,7 @@ del_nwsec_policy_from_db (nwsec_policy_t *policy)
 
     HAL_TRACE_DEBUG("removing policy from hash table");
 
-    entry = (hal_handle_id_ht_entry_t *) 
+    entry = (hal_handle_id_ht_entry_t *)
              g_hal_state->nwsec_policy_ht()->remove(&policy->key);
     if (entry) {
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);

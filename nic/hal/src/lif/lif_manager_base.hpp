@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #ifndef _LIF_MANAGER_BASE_HPP_
 #define _LIF_MANAGER_BASE_HPP_
 
@@ -79,11 +83,11 @@ class LIFManagerBase {
   //   -errno- failure.
   int32_t ReadQState(uint32_t lif_id, uint32_t type, uint32_t qid,
                      uint8_t *buf, uint32_t bufsize);
- 
+
   // Set QState for a LIF/Type/QID. The user must pass in the buffer
   // to write the state. Its ok to pass a buffer of smaller size (> 0).
   // If the passed in buffer is larger than the queue size, the call will
-  // fail. 
+  // fail.
   // Returns:
   //   0     - success.
   //   -errno- failure.

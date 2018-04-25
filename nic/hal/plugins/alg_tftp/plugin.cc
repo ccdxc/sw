@@ -1,6 +1,6 @@
-/*
- * plugin.cc
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "core.hpp"
 #include "sdk/slab.hpp"
@@ -21,7 +21,7 @@ extern "C" hal_ret_t alg_tftp_init() {
     slab *tftpinfo_slab_ = NULL;
     fte::feature_info_t info = {
         state_size:  0,
-        state_init_fn: NULL,        
+        state_init_fn: NULL,
         sess_del_cb: alg_tftp_session_delete_cb
     };
 

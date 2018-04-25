@@ -1,8 +1,10 @@
-/*
- * MIME functions for ALG parsing.  This file provides implementations
- * for basic MIME parsing.  MIME headers are used in many protocols, such as
- * HTTP, RTSP, SIP, etc.
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// MIME functions for ALG parsing.  This file provides implementations
+// for basic MIME parsing.  MIME headers are used in many protocols, such as
+// HTTP, RTSP, SIP, etc.
+//-----------------------------------------------------------------------------
 
 #include "mime.hpp"
 
@@ -27,7 +29,7 @@ alg_mime_skipws(const char *buf, uint32_t len, uint32_t *offset)
         if (*offset >= len) {
             return;
         }
-    }    
+    }
 }
 
 //------------------------------------------------------------------------
@@ -211,7 +213,7 @@ alg_mime_strtoip(const char* buf, uint32_t len, uint32_t *poff, ip_addr_t* pval 
 
     strncpy(str, buf+off, len-off);
     str[len-off] = '\0';
-    
+
     ret = inet_pton(AF_INET, str, &pval->addr.v4_addr);
     if (ret > 0) {
         pval->af = IP_AF_IPV4;

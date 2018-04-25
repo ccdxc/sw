@@ -1,8 +1,8 @@
-/*
- * sdp.cc
- *
- * SDP functionality
- */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// SDP functionality
+//-----------------------------------------------------------------------------
 
 #include "core.hpp"
 
@@ -47,7 +47,7 @@ static int sdp_parse_addr(fte::ctx_t &ctx, const char *cp,
  * sdp_addr_len
  *
  * Skip ip address. returns its length
- */ 
+ */
 static int sdp_addr_len(fte::ctx_t &ctx, const char *buf,
                         const char *limit, int *shift)
 {
@@ -282,7 +282,7 @@ int process_sdp(fte::ctx_t &ctx, uint32_t protoff, uint32_t dataoff,
      * The connection information is contained in the session
      * description and/or once per media description. The first
      * media description marks the end of the session description
-     */ 
+     */
     caddr_len = maddr_len = 0;
     if (sip_parse_sdp_addr(ctx, *buf, sdpoff, *datalen,
                            SDP_HDR_CONNECTION, SDP_HDR_MEDIA,
@@ -299,7 +299,7 @@ int process_sdp(fte::ctx_t &ctx, uint32_t protoff, uint32_t dataoff,
         /*
          * Get media type and port number. A media port value of
          * zero indicates an inactive stream.
-         */ 
+         */
         media = sdp_media_type(*buf, mediaoff, medialen);
         if (!media) {
             mediaoff += medialen;
