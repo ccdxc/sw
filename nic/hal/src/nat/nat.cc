@@ -523,7 +523,6 @@ nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
          HAL_TRACE_ERR("Failed to alloc handle for natpool ({}, {})",
                        vrf->vrf_id, pool->key.pool_id);
          rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
-         nat_pool_cleanup(pool);
          ret = HAL_RET_HANDLE_INVALID;
          goto end;
     }
@@ -545,7 +544,7 @@ end:
 
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
         if (pool) {
-            // abort callback will take care of cleaning up
+            nat_pool_cleanup(pool);
             pool = NULL;
         }
         HAL_API_STATS_INC(HAL_API_NAT_POOL_CREATE_FAIL);
@@ -919,6 +918,15 @@ nat_mapping_free (addr_entry_t *mapping)
 static inline hal_ret_t
 nat_mapping_cleanup (addr_entry_t *mapping)
 {
+    if (mapping->rentry) {
+        if (mapping->rentry->in_db) {
+            addr_entry_db_remove(&mapping->rentry->key);
+        }
+        nat_mapping_free(mapping->rentry);
+    }
+    if (mapping->in_db) {
+        addr_entry_db_remove(&mapping->key);
+    }
     nat_mapping_free(mapping);
     return HAL_RET_OK;
 }
@@ -1133,21 +1141,10 @@ validate_nat_mapping_create (NatMappingSpec& spec, NatMappingResponse *rsp)
 // initialize NAT mapping object given its configuration/spec
 //-----------------------------------------------------------------------------
 static inline hal_ret_t
-nat_mapping_init_from_spec (vrf_t *vrf, addr_entry_t *mapping,
+nat_mapping_init_from_spec (vrf_t *vrf, nat_pool_t *pool,
+                            addr_entry_t *mapping,
                             const NatMappingSpec& spec)
 {
-    nat_pool_t    *pool;
-
-    pool = find_nat_pool(vrf->vrf_id, spec.nat_pool());
-    if (!pool) {
-        HAL_TRACE_ERR("Nat pool ({}, {}) not found",
-                      vrf->vrf_id,
-                      spec.nat_pool().has_pool_key() ?
-                          spec.nat_pool().pool_key().pool_id() :
-                          spec.nat_pool().pool_handle());
-        return HAL_RET_NAT_POOL_NOT_FOUND;
-    }
-
     mapping->key.vrf_id = vrf->vrf_id;
     ip_addr_spec_to_ip_addr(&mapping->key.ip_addr,
                             spec.key_or_handle().svc().ip_addr());
@@ -1185,7 +1182,24 @@ nat_mapping_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     mapping = (addr_entry_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    // add nat pool to the cfg db
+    // add the mapping(s) to the db
+    ret = addr_entry_db_insert(mapping);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("NAT mapping create commit failure, err : {}", ret);
+        return ret;
+    }
+    mapping->in_db = TRUE;
+    if (mapping->rentry) {
+        ret = addr_entry_db_insert(mapping->rentry);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add reverse NAT mapping to db, err : {}",
+                          ret);
+            return ret;
+        }
+        mapping->rentry->in_db = TRUE;
+    }
+
+    // and add handle to NAT mapping to cfg db
     ret = nat_mapping_add_to_db(mapping, hal_handle);
     return ret;
 }
@@ -1223,10 +1237,12 @@ nat_mapping_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 //-----------------------------------------------------------------------------
 static inline hal_ret_t
 nat_mapping_prepare_rsp (NatMappingResponse *rsp, hal_ret_t ret,
-                         hal_handle_t hal_handle)
+                         addr_entry_t *mapping)
 {
     if ((ret == HAL_RET_OK) || (ret == HAL_RET_ENTRY_EXISTS)) {
-        rsp->mutable_status()->set_handle(hal_handle);
+        rsp->mutable_status()->set_handle(mapping->hal_handle);
+        ip_addr_to_spec(rsp->mutable_status()->mutable_mapped_ip(),
+                        &mapping->tgt_ip_addr);
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
     return HAL_RET_OK;
@@ -1236,12 +1252,12 @@ nat_mapping_prepare_rsp (NatMappingResponse *rsp, hal_ret_t ret,
 // process a NAT mapping create request
 //-----------------------------------------------------------------------------
 hal_ret_t
-nat_mapping_create (NatMappingSpec& spec,
-                    NatMappingResponse *rsp)
+nat_mapping_create (NatMappingSpec& spec, NatMappingResponse *rsp)
 {
     hal_ret_t        ret;
     vrf_t            *vrf;
     addr_entry_t     *mapping = NULL;
+    nat_pool_t       *pool;
     dhl_entry_t      dhl_entry = { 0 };
     cfg_op_ctxt_t    cfg_ctxt  = { 0 };
 
@@ -1272,6 +1288,18 @@ nat_mapping_create (NatMappingSpec& spec,
         goto end;
     }
 
+    // look up for the NAT pool
+    pool = find_nat_pool(vrf->vrf_id, spec.nat_pool());
+    if (!pool) {
+        HAL_TRACE_ERR("NAT pool ({}, {}) not found",
+                      vrf->vrf_id,
+                      spec.nat_pool().has_pool_key() ?
+                          spec.nat_pool().pool_key().pool_id() :
+                          spec.nat_pool().pool_handle());
+        ret = HAL_RET_NAT_POOL_NOT_FOUND;
+        goto end;
+    }
+
     // instanitate NAT address map object
     mapping = nat_mapping_alloc_init();
     if (mapping == NULL) {
@@ -1282,11 +1310,43 @@ nat_mapping_create (NatMappingSpec& spec,
     }
 
     // copy the config from incoming request
-    ret = nat_mapping_init_from_spec(vrf, mapping, spec);
+    ret = nat_mapping_init_from_spec(vrf, pool, mapping, spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize nat mapping, err : {}", ret);
         nat_mapping_spec_dump(spec);
         goto end;
+    }
+
+    // allocate NAT address from the NAT pool
+    ret = nat_pool_address_alloc(pool, &mapping->tgt_ip_addr);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+    mapping->tgt_vrf_id = pool->key.vrf_id;
+
+    // if bi-directional mapping is requested, set up the reverse mapping
+    if (mapping->bidir) {
+        mapping->rentry = nat_mapping_alloc_init();
+        if (mapping->rentry == NULL) {
+            HAL_TRACE_ERR("Failed ot allocate memory for reverse NAT mapping of {}, {}",
+                          vrf->vrf_id, ipaddr2str(&mapping->key.ip_addr));
+            ret = HAL_RET_OOM;
+            goto end;
+        }
+        mapping->rentry->key.vrf_id = mapping->tgt_vrf_id;
+        memcpy(&mapping->rentry->key.ip_addr, &mapping->tgt_ip_addr,
+               sizeof(ip_addr_t));
+        mapping->rentry->tgt_vrf_id = vrf->vrf_id;
+        memcpy(&mapping->rentry->tgt_ip_addr, &mapping->key.ip_addr,
+               sizeof(ip_addr_t));
+        mapping->rentry->rentry = mapping;
+        mapping->rentry->origin = NAT_MAPPING_ORIGIN_CFG;
+        mapping->rentry->bidir = TRUE;
+        // for reverse entries, don't allocate handle (and don't insert into the
+        // handle --> mapping hash table as well) as these are always paired
+        // with the primary NAT mapping entry and their life cycle is tied with
+        // the primary entry
+        mapping->rentry->hal_handle = HAL_HANDLE_INVALID;
     }
 
     // allocate HAL handle id
@@ -1295,12 +1355,9 @@ nat_mapping_create (NatMappingSpec& spec,
          HAL_TRACE_ERR("Failed to alloc handle for NAT mapping ({}, {})",
                        vrf->vrf_id, ipaddr2str(&mapping->key.ip_addr));
          rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
-         nat_mapping_cleanup(mapping);
          ret = HAL_RET_HANDLE_INVALID;
          goto end;
     }
-
-    // TODO: allocate NAT address
 
     // form ctxt and handover to the HAL infra
     dhl_entry.handle = mapping->hal_handle;
@@ -1319,15 +1376,13 @@ end:
 
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
         if (mapping) {
-            // abort callback will take care of cleaning up
-            mapping = NULL;
+            nat_mapping_cleanup(mapping);
         }
         HAL_API_STATS_INC(HAL_API_NAT_MAPPING_CREATE_FAIL);
     } else {
         HAL_API_STATS_INC(HAL_API_NAT_MAPPING_CREATE_SUCCESS);
     }
-    nat_mapping_prepare_rsp(rsp, ret,
-                            mapping ? mapping->hal_handle : HAL_HANDLE_INVALID);
+    nat_mapping_prepare_rsp(rsp, ret, mapping);
     return ret;
 }
 
@@ -1509,7 +1564,7 @@ nat_mapping_process_get (addr_entry_t *mapping, NatMappingGetResponse *rsp)
 
     // fill the status portion
     rsp->mutable_status()->set_handle(mapping->hal_handle);
-    ip_addr_to_spec(rsp->mutable_status()->mutable_ip_addr(),
+    ip_addr_to_spec(rsp->mutable_status()->mutable_mapped_ip(),
                     &mapping->tgt_ip_addr);
 
     // fill the stats portion

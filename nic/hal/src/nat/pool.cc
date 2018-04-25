@@ -18,8 +18,7 @@ namespace hal {
 // given a NAT pool, allocate a free address from the pool
 //-----------------------------------------------------------------------------
 hal_ret_t
-nat_pool_address_alloc (addr_entry_key_t *key, nat_pool_t *pool,
-                        addr_entry_key_t *mapping)
+nat_pool_address_alloc (nat_pool_t *pool, ip_addr_t *nat_addr)
 {
     hal_ret_t           ret;
     dllist_ctxt_t       *curr;
@@ -64,15 +63,16 @@ nat_pool_address_alloc (addr_entry_key_t *key, nat_pool_t *pool,
     }
 
     // allocate the NAT address now
-    mapping->vrf_id = pool->key.vrf_id;
     switch (addr_range->ip_range.af) {
     case IP_AF_IPV4:
-        mapping->ip_addr.af = IP_AF_IPV4;
-        mapping->ip_addr.addr.v4_addr =
+        nat_addr->af = IP_AF_IPV4;
+        nat_addr->addr.v4_addr =
             addr_range->ip_range.vx_range[0].v4_range.ip_lo + free_idx;
         break;
+
     case IP_AF_IPV6:
     default:
+        HAL_TRACE_ERR("NAT address allocation failure, address family not supported");
         ret = HAL_RET_NO_RESOURCE;
         goto error;
     }

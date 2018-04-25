@@ -60,7 +60,7 @@ addr_entry_db_lookup (addr_entry_key_t *key)
     return (addr_entry_t *)addr_db()->lookup(key);
 }
 
-static inline hal_ret_t
+hal_ret_t
 addr_entry_db_insert (addr_entry_t *entry)
 {
     sdk_ret_t ret;
@@ -74,7 +74,7 @@ addr_entry_db_insert (addr_entry_t *entry)
     return HAL_RET_ERR;
 }
 
-static inline addr_entry_t *
+addr_entry_t *
 addr_entry_db_remove (addr_entry_key_t *key)
 {
     return ((addr_entry_t *)(addr_db()->remove(key)));

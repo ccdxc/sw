@@ -634,10 +634,10 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
                              vrf_create_cleanup_cb);
 
 end:
+
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
         if (vrf) {
-            // Free vrf. Moved from create abort as alloc is
-            //           happening here.
+            // free vrf
             vrf_cleanup(vrf);
             vrf = NULL;
         }

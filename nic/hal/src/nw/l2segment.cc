@@ -889,9 +889,10 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                              l2seg_create_cleanup_cb);
 
 end:
+
     if (ret != HAL_RET_OK && (ret != HAL_RET_ENTRY_EXISTS)) {
         if (l2seg) {
-            // Free l2seg: Moved from create abort as alloc happened here
+            // free l2seg
             l2seg_cleanup(l2seg);
             l2seg = NULL;
         }
