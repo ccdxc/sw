@@ -62,7 +62,7 @@ message NaplesSpec {
 message NaplesStatus {
 
     // Current phase of the NIC adapter in the system
-    cmd.SmartNICSpec.SmartNICPhase Phase = 1 [(gogoproto.nullable) = true,
+    cluster.SmartNICSpec.SmartNICPhase Phase = 1 [(gogoproto.nullable) = true,
                                              (gogoproto.jsontag) = "phase,omitempty"];
 }
 

@@ -2,6 +2,7 @@ basepath: "github.com/pensando/sw/venice/utils/apigen/templates"
 templates:
   - template: "doc.tmpl"
     outputpath: "{FILE}_doc.go"
+    once: true
   - template: "endpoints.tmpl"
     outputpath: "{FILE}_endpoints.go"
   - template: "services.tmpl"
@@ -10,27 +11,35 @@ templates:
     outputpath: "{FILE}_transport.go"
   - template: "common.tmpl"
     outputpath: "common.go"
+    once: true
   - template: "grpcserver.tmpl"
     outputpath: "grpc/server/{FILE}_server.go"
   - template: "grpcservercommon.tmpl"
     outputpath: "grpc/server/server_common.go"
+    once: true
   - template: "gateway.tmpl"
     outputpath: "gateway/{FILE}_gateway.go"
   - template: "gatewaycommon.tmpl"
     outputpath: "gateway/gateway_common.go"
+    once: true
   - template: "grpcclient.tmpl"
     outputpath: "grpc/client/{FILE}_client.go"
   - template: "grpcclientcommon.tmpl"
     outputpath: "grpc/client/client_common.go"
+    once: true
   - template: "extpb.tmpl"
     outputpath: "{FILE}.pb.ext.go"
   - template: "apisrvbackends.tmpl"
     outputpath: "../exports/apiserver/backends.go"
+    once: true
   - template: "apigwservices.tmpl"
     outputpath: "../exports/apigw/services.go"
+    once: true
   - template: "genobjrelations.tmpl"
     outputpath: "../relations.json"
+    once: true
   - template: "crudinterface.tmpl"
     outputpath: "{FILE}_crudinterface.go"
   - template: "apiclient.tmpl"
     outputpath: "../apiclient/client.go"
+    once: true

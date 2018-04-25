@@ -1,44 +1,4 @@
 {
-  "alerts": {
-    "Svcs": {
-      "AlertDestinationV1": {
-        "Version": "v1",
-        "Messages": [
-          "AlertDestination"
-        ]
-      },
-      "AlertPolicyV1": {
-        "Version": "v1",
-        "Messages": [
-          "AlertPolicy"
-        ]
-      },
-      "AlertsV1": {
-        "Version": "v1",
-        "Messages": [
-          "Alert"
-        ]
-      }
-    },
-    "Files": [
-      "protos/alerts.proto"
-    ]
-  },
-  "app": {
-    "Svcs": {
-      "AppV1": {
-        "Version": "v1",
-        "Messages": [
-          "App",
-          "AppUser",
-          "AppUserGrp"
-        ]
-      }
-    },
-    "Files": [
-      "protos/app.proto"
-    ]
-  },
   "auth": {
     "Svcs": {
       "AuthV1": {
@@ -52,7 +12,7 @@
       }
     },
     "Files": [
-      "protos/auth.proto"
+      "svc_auth.proto"
     ]
   },
   "bookstore": {
@@ -70,35 +30,24 @@
       }
     },
     "Files": [
-      "protos/example.proto"
+      "example.proto"
     ]
   },
-  "cmd": {
+  "cluster": {
     "Svcs": {
-      "CmdV1": {
+      "ClusterV1": {
         "Version": "v1",
         "Messages": [
           "Cluster",
           "Node",
-          "SmartNIC"
+          "SmartNIC",
+          "Tenant"
         ]
       }
     },
     "Files": [
-      "protos/cmd.proto"
-    ]
-  },
-  "events": {
-    "Svcs": {
-      "EventPolicyV1": {
-        "Version": "v1",
-        "Messages": [
-          "EventPolicy"
-        ]
-      }
-    },
-    "Files": [
-      "protos/events.proto"
+      "svc_cluster.proto",
+      "tenant.proto"
     ]
   },
   "monitoring": {
@@ -108,110 +57,73 @@
         "Messages": [
           "MirrorSession"
         ]
+      },
+      "MonitoringV1": {
+        "Version": "v1",
+        "Messages": [
+          "Event",
+          "EventPolicy",
+          "StatsPolicy",
+          "FwlogPolicy",
+          "FlowExportPolicy",
+          "Alert",
+          "AlertPolicy",
+          "AlertDestination"
+        ]
       }
     },
     "Files": [
-      "protos/mirror.proto"
+      "mirror.proto",
+      "svc_monitoring.proto",
+      "telemetry.proto"
     ]
   },
   "network": {
     "Svcs": {
-      "EndpointV1": {
-        "Version": "v1",
-        "Messages": [
-          "Endpoint"
-        ]
-      },
-      "LbPolicyV1": {
-        "Version": "v1",
-        "Messages": [
-          "LbPolicy"
-        ]
-      },
       "NetworkV1": {
         "Version": "v1",
         "Messages": [
-          "Network"
-        ]
-      },
-      "SecurityGroupV1": {
-        "Version": "v1",
-        "Messages": [
-          "SecurityGroup"
-        ]
-      },
-      "ServiceV1": {
-        "Version": "v1",
-        "Messages": [
-          "Service"
-        ]
-      },
-      "SgpolicyV1": {
-        "Version": "v1",
-        "Messages": [
-          "Sgpolicy"
-        ]
-      },
-      "TenantV1": {
-        "Version": "v1",
-        "Messages": [
-          "Tenant"
+          "Network",
+          "Service",
+          "LbPolicy"
         ]
       }
     },
     "Files": [
-      "protos/network.proto"
+      "svc_network.proto"
     ]
   },
-  "networkencryption": {
+  "security": {
     "Svcs": {
-      "TrafficEncryptionPolicyV1": {
+      "SecurityV1": {
         "Version": "v1",
         "Messages": [
+          "SecurityGroup",
+          "Sgpolicy",
+          "App",
+          "AppUser",
+          "AppUserGrp",
+          "Certificate",
           "TrafficEncryptionPolicy"
         ]
       }
     },
     "Files": [
-      "protos/networkencryption.proto"
+      "svc_security.proto",
+      "x509.proto"
     ]
   },
-  "telemetry": {
+  "workload": {
     "Svcs": {
-      "FlowExportPolicyV1": {
+      "WorkloadV1": {
         "Version": "v1",
         "Messages": [
-          "FlowExportPolicy"
-        ]
-      },
-      "FwlogPolicyV1": {
-        "Version": "v1",
-        "Messages": [
-          "FwlogPolicy"
-        ]
-      },
-      "StatsPolicyV1": {
-        "Version": "v1",
-        "Messages": [
-          "StatsPolicy"
+          "Endpoint"
         ]
       }
     },
     "Files": [
-      "protos/telemetry.proto"
-    ]
-  },
-  "x509": {
-    "Svcs": {
-      "CertificateV1": {
-        "Version": "v1",
-        "Messages": [
-          "Certificate"
-        ]
-      }
-    },
-    "Files": [
-      "protos/x509.proto"
+      "svc_workload.proto"
     ]
   }
 }

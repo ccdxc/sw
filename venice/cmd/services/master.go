@@ -11,7 +11,7 @@ import (
 	k8srest "k8s.io/client-go/rest"
 
 	api "github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cmd"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/ops"
 

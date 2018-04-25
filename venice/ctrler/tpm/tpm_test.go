@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/api/generated/telemetry"
+	"github.com/pensando/sw/api/generated/cluster"
+	telemetry "github.com/pensando/sw/api/generated/monitoring"
 	mockapi "github.com/pensando/sw/api/mock"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	mockkvs "github.com/pensando/sw/venice/utils/kvstore/mock"
@@ -130,36 +130,56 @@ func TestProcessExportPolicy(t *testing.T) {
 
 }
 
-type mockStatsV1 struct {
-	mStat telemetry.StatsPolicyV1StatsPolicyInterface
+type mockMonitoringV1 struct {
+	mStat telemetry.MonitoringV1StatsPolicyInterface
+	mFw   telemetry.MonitoringV1FwlogPolicyInterface
+	mExp  telemetry.MonitoringV1FlowExportPolicyInterface
 }
 
-func (m *mockStatsV1) StatsPolicy() telemetry.StatsPolicyV1StatsPolicyInterface {
+func (m *mockMonitoringV1) StatsPolicy() telemetry.MonitoringV1StatsPolicyInterface {
 	return m.mStat
 }
 
-type mockFwlogV1 struct {
-	mFw telemetry.FwlogPolicyV1FwlogPolicyInterface
+func (m *mockMonitoringV1) Event() telemetry.MonitoringV1EventInterface {
+	return nil
 }
-
-func (m *mockFwlogV1) FwlogPolicy() telemetry.FwlogPolicyV1FwlogPolicyInterface {
+func (m *mockMonitoringV1) EventPolicy() telemetry.MonitoringV1EventPolicyInterface {
+	return nil
+}
+func (m *mockMonitoringV1) FwlogPolicy() telemetry.MonitoringV1FwlogPolicyInterface {
 	return m.mFw
 }
-
-type mockExportV1 struct {
-	mExp telemetry.FlowExportPolicyV1FlowExportPolicyInterface
-}
-
-func (m *mockExportV1) FlowExportPolicy() telemetry.FlowExportPolicyV1FlowExportPolicyInterface {
+func (m *mockMonitoringV1) FlowExportPolicy() telemetry.MonitoringV1FlowExportPolicyInterface {
 	return m.mExp
 }
-
-type mockTenantV1 struct {
-	mTnt network.TenantV1TenantInterface
+func (m *mockMonitoringV1) Alert() telemetry.MonitoringV1AlertInterface {
+	return nil
+}
+func (m *mockMonitoringV1) AlertPolicy() telemetry.MonitoringV1AlertPolicyInterface {
+	return nil
+}
+func (m *mockMonitoringV1) AlertDestination() telemetry.MonitoringV1AlertDestinationInterface {
+	return nil
 }
 
-func (m mockTenantV1) Tenant() network.TenantV1TenantInterface {
+type mockClusterV1 struct {
+	mTnt cluster.ClusterV1TenantInterface
+}
+
+func (m mockClusterV1) Tenant() cluster.ClusterV1TenantInterface {
 	return m.mTnt
+}
+
+func (m mockClusterV1) Cluster() cluster.ClusterV1ClusterInterface {
+	return nil
+}
+
+func (m mockClusterV1) Node() cluster.ClusterV1NodeInterface {
+	return nil
+}
+
+func (m mockClusterV1) SmartNIC() cluster.ClusterV1SmartNICInterface {
+	return nil
 }
 
 func TestProcessEvents(t *testing.T) {
@@ -172,25 +192,21 @@ func TestProcessEvents(t *testing.T) {
 	pa := &PolicyManager{}
 	opts := &api.ListWatchOptions{}
 
-	sV1 := &mockStatsV1{}
-	mSp := mockapi.NewMockStatsPolicyV1StatsPolicyInterface(ctrl)
-	mSp.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("failed to watch stats")).Times(1)
+	sV1 := &mockMonitoringV1{}
+	mSp := mockapi.NewMockMonitoringV1StatsPolicyInterface(ctrl)
+	mFp := mockapi.NewMockMonitoringV1FwlogPolicyInterface(ctrl)
+	mEvp := mockapi.NewMockMonitoringV1FlowExportPolicyInterface(ctrl)
 	sV1.mStat = mSp
+	sV1.mFw = mFp
+	sV1.mExp = mEvp
 
-	fV1 := &mockFwlogV1{}
-	mFp := mockapi.NewMockFwlogPolicyV1FwlogPolicyInterface(ctrl)
-	fV1.mFw = mFp
-
-	eV1 := &mockExportV1{}
-	mEvp := mockapi.NewMockFlowExportPolicyV1FlowExportPolicyInterface(ctrl)
-	eV1.mExp = mEvp
-
-	tV1 := &mockTenantV1{}
-	mTnt := mockapi.NewMockTenantV1TenantInterface(ctrl)
+	tV1 := &mockClusterV1{}
+	mTnt := mockapi.NewMockClusterV1TenantInterface(ctrl)
 	tV1.mTnt = mTnt
 
+	mSp.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("failed to watch stats")).Times(1)
 	mapi := mockapi.NewMockServices(ctrl)
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	pa.client = mapi
 
 	err := pa.processEvents(parentCtx)
@@ -202,8 +218,7 @@ func TestProcessEvents(t *testing.T) {
 
 	mSp.EXPECT().Watch(ctx, opts).Return(statsEvent, nil).Times(1)
 	mFp.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("failed to watch fwlog")).Times(1)
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
-	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(2)
 	err = pa.processEvents(parentCtx)
 	tu.Assert(t, err != nil, "missed fwlog failure")
 
@@ -215,10 +230,7 @@ func TestProcessEvents(t *testing.T) {
 	mSp.EXPECT().Watch(ctx, opts).Return(statsEvent, nil).Times(1)
 	mFp.EXPECT().Watch(ctx, opts).Return(fwlogEvent, nil).Times(1)
 	mEvp.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("mock flowexport failure")).Times(1)
-
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
-	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
-	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(3)
 
 	err = pa.processEvents(parentCtx)
 	tu.Assert(t, err != nil, "missed export failure")
@@ -234,10 +246,8 @@ func TestProcessEvents(t *testing.T) {
 	mEvp.EXPECT().Watch(ctx, opts).Return(flowExpEvent, nil).Times(1)
 	mTnt.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("mock tenant failure")).Times(1)
 
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
-	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
-	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
-	mapi.EXPECT().TenantV1().Return(tV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(3)
+	mapi.EXPECT().ClusterV1().Return(tV1).Times(1)
 
 	err = pa.processEvents(parentCtx)
 	tu.Assert(t, err != nil, "missed tenant failure")
@@ -257,22 +267,17 @@ func TestEventLoop(t *testing.T) {
 
 	opts := &api.ListWatchOptions{}
 
-	sV1 := &mockStatsV1{}
-	mSp := mockapi.NewMockStatsPolicyV1StatsPolicyInterface(ctrl)
+	sV1 := &mockMonitoringV1{}
+	mSp := mockapi.NewMockMonitoringV1StatsPolicyInterface(ctrl)
+	mFp := mockapi.NewMockMonitoringV1FwlogPolicyInterface(ctrl)
+	mEvp := mockapi.NewMockMonitoringV1FlowExportPolicyInterface(ctrl)
 	sV1.mStat = mSp
+	sV1.mFw = mFp
+	sV1.mExp = mEvp
 
-	fV1 := &mockFwlogV1{}
-	mFp := mockapi.NewMockFwlogPolicyV1FwlogPolicyInterface(ctrl)
-	fV1.mFw = mFp
-
-	eV1 := &mockExportV1{}
-	mEvp := mockapi.NewMockFlowExportPolicyV1FlowExportPolicyInterface(ctrl)
-	eV1.mExp = mEvp
-
-	tV1 := mockTenantV1{}
-	mTenant := mockapi.NewMockTenantV1TenantInterface(ctrl)
+	tV1 := &mockClusterV1{}
+	mTenant := mockapi.NewMockClusterV1TenantInterface(ctrl)
 	tV1.mTnt = mTenant
-
 	mapi := mockapi.NewMockServices(ctrl)
 	pa.client = mapi
 
@@ -280,25 +285,25 @@ func TestEventLoop(t *testing.T) {
 	statsCh := make(chan *kvstore.WatchEvent, 2)
 	statsEvent := mockkvs.NewMockWatcher(ctrl)
 	statsEvent.EXPECT().EventChan().Return(statsCh).Times(1)
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mSp.EXPECT().Watch(gomock.Any(), opts).Return(statsEvent, nil).Times(1)
 
 	// fwlog watch
 	fwlogEvent := mockkvs.NewMockWatcher(ctrl)
 	fwlogEvent.EXPECT().EventChan().Return(nil).Times(1)
-	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mFp.EXPECT().Watch(gomock.Any(), opts).Return(fwlogEvent, nil).Times(1)
 
 	// export watch
 	expEvent := mockkvs.NewMockWatcher(ctrl)
 	expEvent.EXPECT().EventChan().Return(nil).Times(1)
-	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mEvp.EXPECT().Watch(gomock.Any(), opts).Return(expEvent, nil).Times(1)
 
 	// tenant watch
 	tenantWatch := mockkvs.NewMockWatcher(ctrl)
 	tenantWatch.EXPECT().EventChan().Return(nil).Times(1)
-	mapi.EXPECT().TenantV1().Return(tV1).Times(1)
+	mapi.EXPECT().ClusterV1().Return(tV1).Times(1)
 	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
 
 	// close stats channel
@@ -310,25 +315,25 @@ func TestEventLoop(t *testing.T) {
 	// test event types
 	statsCh = make(chan *kvstore.WatchEvent, 2)
 	statsEvent.EXPECT().EventChan().Return(statsCh).Times(1)
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mSp.EXPECT().Watch(gomock.Any(), opts).Return(statsEvent, nil).Times(1)
 
 	// fwlog watch
 	fwlogCh := make(chan *kvstore.WatchEvent, 2)
 	fwlogEvent.EXPECT().EventChan().Return(fwlogCh).Times(1)
-	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mFp.EXPECT().Watch(gomock.Any(), opts).Return(fwlogEvent, nil).Times(1)
 
 	// exp watch
 	flowExpCh := make(chan *kvstore.WatchEvent, 2)
 	expEvent.EXPECT().EventChan().Return(flowExpCh).Times(1)
-	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mEvp.EXPECT().Watch(gomock.Any(), opts).Return(expEvent, nil).Times(1)
 
 	// watch tenants
 	tenantCh := make(chan *kvstore.WatchEvent, 2)
 	tenantWatch.EXPECT().EventChan().Return(tenantCh).Times(1)
-	mapi.EXPECT().TenantV1().Return(tV1).Times(1)
+	mapi.EXPECT().ClusterV1().Return(tV1).Times(1)
 	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
 
 	// stats event
@@ -341,7 +346,7 @@ func TestEventLoop(t *testing.T) {
 	flowExpCh <- &kvstore.WatchEvent{Object: &telemetry.FlowExportPolicy{}}
 
 	// tenant event
-	tenantCh <- &kvstore.WatchEvent{Object: &network.Tenant{}}
+	tenantCh <- &kvstore.WatchEvent{Object: &cluster.Tenant{}}
 
 	// send invalid event type
 	statsCh <- &kvstore.WatchEvent{}
@@ -350,22 +355,22 @@ func TestEventLoop(t *testing.T) {
 
 	// event errors
 	statsEvent.EXPECT().EventChan().Return(statsCh).Times(1)
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mSp.EXPECT().Watch(gomock.Any(), opts).Return(statsEvent, nil).Times(1)
 
 	// fwlog watch
 	fwlogEvent.EXPECT().EventChan().Return(fwlogCh).Times(1)
-	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mFp.EXPECT().Watch(gomock.Any(), opts).Return(fwlogEvent, nil).Times(1)
 
 	// exp watch
 	expEvent.EXPECT().EventChan().Return(flowExpCh).Times(1)
-	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mEvp.EXPECT().Watch(gomock.Any(), opts).Return(expEvent, nil).Times(1)
 
 	// tenant watch
 	tenantWatch.EXPECT().EventChan().Return(tenantCh).Times(1)
-	mapi.EXPECT().TenantV1().Return(tV1).Times(1)
+	mapi.EXPECT().ClusterV1().Return(tV1).Times(1)
 	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
 
 	// cancel context
@@ -379,22 +384,22 @@ func TestEventLoop(t *testing.T) {
 
 	// invalid event in stats channel
 	statsEvent.EXPECT().EventChan().Return(statsCh).Times(1)
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mSp.EXPECT().Watch(gomock.Any(), opts).Return(statsEvent, nil).Times(1)
 
 	// fwlog watch
 	fwlogEvent.EXPECT().EventChan().Return(fwlogCh).Times(1)
-	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mFp.EXPECT().Watch(gomock.Any(), opts).Return(fwlogEvent, nil).Times(1)
 
 	// exp watch
 	expEvent.EXPECT().EventChan().Return(flowExpCh).Times(1)
-	mapi.EXPECT().FlowExportPolicyV1().Return(eV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mEvp.EXPECT().Watch(gomock.Any(), opts).Return(expEvent, nil).Times(1)
 
 	// tenant watch
 	tenantWatch.EXPECT().EventChan().Return(tenantCh).Times(1)
-	mapi.EXPECT().TenantV1().Return(tV1).Times(1)
+	mapi.EXPECT().ClusterV1().Return(tV1).Times(1)
 	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
 
 	nCtx, nCancel := context.WithCancel(context.Background())
@@ -425,18 +430,18 @@ func TestProcessTenant(t *testing.T) {
 	mapi := mockapi.NewMockServices(ctrl)
 	pa.client = mapi
 
-	sV1 := &mockStatsV1{}
-	mSp := mockapi.NewMockStatsPolicyV1StatsPolicyInterface(ctrl)
+	sV1 := &mockMonitoringV1{}
+	mSp := mockapi.NewMockMonitoringV1StatsPolicyInterface(ctrl)
+	mFp := mockapi.NewMockMonitoringV1FwlogPolicyInterface(ctrl)
+	mEvp := mockapi.NewMockMonitoringV1FlowExportPolicyInterface(ctrl)
 	sV1.mStat = mSp
+	sV1.mFw = mFp
+	sV1.mExp = mEvp
 
-	fV1 := &mockFwlogV1{}
-	mFp := mockapi.NewMockFwlogPolicyV1FwlogPolicyInterface(ctrl)
-	fV1.mFw = mFp
-
-	tenant := &network.Tenant{ObjectMeta: api.ObjectMeta{Name: "test-tenant"}}
+	tenant := &cluster.Tenant{ObjectMeta: api.ObjectMeta{Name: "test-tenant"}}
 
 	// create failure
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(2)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(2)
 	mSp.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("no stats policy"))
 	mSp.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock stats error"))
 
@@ -444,10 +449,9 @@ func TestProcessTenant(t *testing.T) {
 	tu.Assert(t, err != nil, "failed to handle stats policy create error")
 
 	// create
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(3)
 	mSp.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, nil)
 
-	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(2)
 	mFp.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fwlog error"))
 	mFp.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fwlog error"))
 
@@ -459,17 +463,16 @@ func TestProcessTenant(t *testing.T) {
 	tu.AssertOk(t, err, "failed to porcess tenant update")
 
 	// delete failure
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
 	mSp.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("stats policy error"))
 
 	err = pa.processTenants(parentCtx, kvstore.Deleted, tenant)
 	tu.Assert(t, err != nil, "failed to handle stats policy delete error")
 
 	// delete failure
-	mapi.EXPECT().StatsPolicyV1().Return(sV1).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(2)
 	mSp.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
 
-	mapi.EXPECT().FwlogPolicyV1().Return(fV1).Times(1)
 	mFp.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fwlog policy error")).Times(1)
 
 	err = pa.processTenants(parentCtx, kvstore.Deleted, tenant)

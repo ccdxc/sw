@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	evtsapi "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/writers"
 	"github.com/pensando/sw/venice/utils/log"

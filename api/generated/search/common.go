@@ -2,7 +2,7 @@
 
 /*
 Package search is a auto generated package.
-Input file: protos/search.proto
+Input file: search.proto
 */
 package search
 

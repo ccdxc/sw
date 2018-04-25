@@ -9,7 +9,10 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
@@ -29,19 +32,19 @@ func (d *dummyWriter) WriteNetwork(nw *network.Network) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteEndpoint(ep *network.Endpoint, update bool) error {
+func (d *dummyWriter) WriteEndpoint(ep *workload.Endpoint, update bool) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteSecurityGroup(sg *network.SecurityGroup) error {
+func (d *dummyWriter) WriteSecurityGroup(sg *security.SecurityGroup) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
+func (d *dummyWriter) WriteSgPolicy(sgp *security.Sgpolicy) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteTenant(tn *network.Tenant) error {
+func (d *dummyWriter) WriteTenant(tn *cluster.Tenant) error {
 	return nil
 }
 
@@ -72,7 +75,7 @@ func createRPCServerClient(t *testing.T) (*statemgr.Statemgr, *RPCServer, *rpcki
 		Status: network.NetworkStatus{},
 	}
 
-	tn := network.Tenant{
+	tn := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "testTenant",
@@ -319,13 +322,13 @@ func TestSecurityGroupRPC(t *testing.T) {
 	sgRPCClient := netproto.NewSecurityApiClient(rpcClient.ClientConn)
 
 	// sg params
-	sgp := network.SecurityGroup{
+	sgp := security.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   "testsg",
 		},
-		Spec: network.SecurityGroupSpec{
+		Spec: security.SecurityGroupSpec{
 			WorkloadSelector: labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}),
 		},
 	}
@@ -358,21 +361,21 @@ func TestSecurityGroupRPC(t *testing.T) {
 	Assert(t, reflect.DeepEqual(&evt.SecurityGroup.ObjectMeta, &sgp.ObjectMeta), "Received invalid sg", evt.SecurityGroup)
 
 	// create a sgpolicy
-	pol := network.Sgpolicy{
+	pol := security.Sgpolicy{
 		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   "pol1",
 		},
-		Spec: network.SgpolicySpec{
+		Spec: security.SgpolicySpec{
 			AttachGroups: []string{"testsg"},
-			InRules: []network.SGRule{
+			InRules: []security.SGRule{
 				{
 					Ports:  "tcp/80",
 					Action: "allow",
 				},
 			},
-			OutRules: []network.SGRule{
+			OutRules: []security.SGRule{
 				{
 					Ports:  "tcp/80",
 					Action: "allow",
@@ -390,13 +393,13 @@ func TestSecurityGroupRPC(t *testing.T) {
 	Assert(t, (len(evt.SecurityGroup.Spec.Rules) == 2), "Invalid rules in sg", evt.SecurityGroup)
 
 	// create second network and verify we receive a watch event
-	sgp2 := network.SecurityGroup{
+	sgp2 := security.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
 			Name:   "testsg2",
 			Tenant: "default",
 		},
-		Spec: network.SecurityGroupSpec{
+		Spec: security.SecurityGroupSpec{
 			WorkloadSelector: labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}),
 		},
 	}

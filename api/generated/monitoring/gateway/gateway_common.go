@@ -2,7 +2,7 @@
 
 /*
 Package monitoringGwService is a auto generated package.
-Input file: protos/mirror.proto
+Input file: alerts.proto
 */
 package monitoringGwService
 
@@ -25,12 +25,12 @@ var fileCount int
 const codecSize = 1024 * 1024
 
 func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
-	box, err := rice.FindBox("../../../../../sw/api/generated/monitoring/swagger")
+	box, err := rice.FindBox("../../../../api/protos/../generated/monitoring/swagger")
 	if err != nil {
 		err = errors.Wrap(err, "error opening rice.Box")
 		return err
 	}
-	content, err := box.Bytes("mirror.swagger.json")
+	content, err := box.Bytes("alerts.swagger.json")
 	if err != nil {
 		err = errors.Wrap(err, "error opening rice.File")
 		return err

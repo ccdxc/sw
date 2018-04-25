@@ -15,5 +15,5 @@ bld_proto:
 	@protoc -I/usr/local/include -I. -I../../../../../vendor \
 		-I${GOPATH}/src/ \
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
-		--gofast_out=plugins=grpc,Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor,Mgithub.com/pensando/sw/api/protos/events.proto=github.com/pensando/sw/api/generated/events:. \
+		--gofast_out=plugins=grpc,Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor,Mgithub.com/pensando/sw/api/protos/events.proto=github.com/pensando/sw/api/generated/monitoring:. \
 		evtsmgr.proto

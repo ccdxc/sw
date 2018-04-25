@@ -2,7 +2,7 @@
 
 syntax = "proto3";
 // Service name
-package events;
+package monitoring;
 
 import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
@@ -33,7 +33,7 @@ message EventPolicy {
                                     (gogoproto.jsontag) = "status,omitempty"];
 }
 
-enum EventExportFormat {
+enum MonitoringExportFormat {
         SYSLOG_BSD = 0;
         SYSLOG_RFC5424 = 1;
 }
@@ -43,7 +43,7 @@ message EventExport {
     repeated api.ExportConfig Targets = 1 [(gogoproto.jsontag) = "targets,omitempty"];
 
     // event export format, SYSLOG_BSD default
-    string Format = 2 [(venice.check) = "StrEnum(EventExportFormat)", (gogoproto.jsontag) = "format, omitempty"];
+    string Format = 2 [(venice.check) = "StrEnum(MonitoringExportFormat)", (gogoproto.jsontag) = "format, omitempty"];
 
     // export events matched by the selector
     fields.Selector Selector = 3 [(gogoproto.jsontag) = "selector,omitempty"];
@@ -68,23 +68,6 @@ message EventPolicySpec {
 // EventPolicyStatus
 message EventPolicyStatus {
 }
-
-// EventPolicy REST API
-service EventPolicyV1 {
-
-    // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "eventPolicy";
-    // API Version.
-    option (venice.apiVersion) = "v1";
-
-    option (venice.apiGrpcCrudService) = "EventPolicy";
-
-    option (venice.apiRestService) = {
-        Object: "EventPolicy"
-        Method: [ "get", "put", "delete", "post" ]
-    };
-}
-
 
 // -------------------------- Event -----------------------------
 // Severity Level of an event
@@ -158,23 +141,6 @@ message EventSource {
 }
 
 // list of events
-message EventList {
+message EventsList {
   repeated Event Events = 1 [(gogoproto.nullable) = true];
-}
-
-// Event object REST API definition
-// Events are internally created by the venice and naples sub-system
-// Users are only allowed to GET & LIST events
-service EventV1 {
-
-    // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "events";
-    // API Version.
-    option (venice.apiVersion) = "v1";
-
-    // GET and LIST calls are handled by API gateway -> Query processor -> elastic DB(or events manager)
-    option(venice.apiRestService) = {
-        Object: "Event"
-        Method: ["get", "list"]
-    };
 }

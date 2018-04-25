@@ -2,20 +2,18 @@
 
 /*
 Package authApiServer is a auto generated package.
-Input file: protos/auth.proto
+Input file: auth.proto
 */
 package authApiServer
 
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
-	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	auth "github.com/pensando/sw/api/generated/auth"
@@ -36,42 +34,12 @@ var _ fmt.Stringer
 type sauthAuthBackend struct {
 	Services map[string]apiserver.Service
 	Messages map[string]apiserver.Message
-
-	endpointsAuthV1 *eAuthV1Endpoints
+	logger   log.Logger
+	scheme   *runtime.Scheme
 }
 
-type eAuthV1Endpoints struct {
-	Svc sauthAuthBackend
-
-	fnAutoAddAuthenticationPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddRole                    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddRoleBinding             func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddUser                    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteAuthenticationPolicy func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteRole                 func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteRoleBinding          func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteUser                 func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetAuthenticationPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetRole                    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetRoleBinding             func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetUser                    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListAuthenticationPolicy   func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListRole                   func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListRoleBinding            func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListUser                   func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateAuthenticationPolicy func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateRole                 func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateRoleBinding          func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateUser                 func(ctx context.Context, t interface{}) (interface{}, error)
-
-	fnAutoWatchUser                 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchAuthenticationPolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchRole                 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchRoleBinding          func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-}
-
-func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
-	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
+func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
+	l.Infof("registering message for sauthAuthBackend")
 	s.Messages = map[string]apiserver.Message{
 
 		"auth.AuthenticationPolicy": apisrvpkg.NewMessage("auth.AuthenticationPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -107,7 +75,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
 					if r.ResourceVersion != "" {
-						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
 					} else {
 						err = kvs.Update(ctx, key, &r)
@@ -171,30 +139,14 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 			return nil
 		}),
 
-		"auth.AuthenticationPolicyList": apisrvpkg.NewMessage("auth.AuthenticationPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := auth.AuthenticationPolicyList{}
-			r := auth.AuthenticationPolicy{}
-			r.ObjectMeta = options.ObjectMeta
-			key := r.MakeKey(prefix)
-			err := kvs.ListFiltered(ctx, key, &into, *options)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
-		"auth.AuthenticationPolicySpec":               apisrvpkg.NewMessage("auth.AuthenticationPolicySpec"),
-		"auth.AuthenticationPolicyStatus":             apisrvpkg.NewMessage("auth.AuthenticationPolicyStatus"),
-		"auth.Authenticators":                         apisrvpkg.NewMessage("auth.Authenticators"),
-		"auth.AutoMsgAuthenticationPolicyWatchHelper": apisrvpkg.NewMessage("auth.AutoMsgAuthenticationPolicyWatchHelper"),
-		"auth.AutoMsgRoleBindingWatchHelper":          apisrvpkg.NewMessage("auth.AutoMsgRoleBindingWatchHelper"),
-		"auth.AutoMsgRoleWatchHelper":                 apisrvpkg.NewMessage("auth.AutoMsgRoleWatchHelper"),
-		"auth.AutoMsgUserWatchHelper":                 apisrvpkg.NewMessage("auth.AutoMsgUserWatchHelper"),
-		"auth.Ldap":                                   apisrvpkg.NewMessage("auth.Ldap"),
-		"auth.LdapAttributeMapping":                   apisrvpkg.NewMessage("auth.LdapAttributeMapping"),
-		"auth.Local":                                  apisrvpkg.NewMessage("auth.Local"),
-		"auth.Permission":                             apisrvpkg.NewMessage("auth.Permission"),
-		"auth.Radius":                                 apisrvpkg.NewMessage("auth.Radius"),
+		"auth.AuthenticationPolicySpec":   apisrvpkg.NewMessage("auth.AuthenticationPolicySpec"),
+		"auth.AuthenticationPolicyStatus": apisrvpkg.NewMessage("auth.AuthenticationPolicyStatus"),
+		"auth.Authenticators":             apisrvpkg.NewMessage("auth.Authenticators"),
+		"auth.Ldap":                       apisrvpkg.NewMessage("auth.Ldap"),
+		"auth.LdapAttributeMapping":       apisrvpkg.NewMessage("auth.LdapAttributeMapping"),
+		"auth.Local":                      apisrvpkg.NewMessage("auth.Local"),
+		"auth.Permission":                 apisrvpkg.NewMessage("auth.Permission"),
+		"auth.Radius":                     apisrvpkg.NewMessage("auth.Radius"),
 		"auth.Role": apisrvpkg.NewMessage("auth.Role").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := auth.Role{}
@@ -228,7 +180,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
 					if r.ResourceVersion != "" {
-						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
 					} else {
 						err = kvs.Update(ctx, key, &r)
@@ -325,7 +277,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
 					if r.ResourceVersion != "" {
-						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
 					} else {
 						err = kvs.Update(ctx, key, &r)
@@ -389,35 +341,11 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 			return nil
 		}),
 
-		"auth.RoleBindingList": apisrvpkg.NewMessage("auth.RoleBindingList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := auth.RoleBindingList{}
-			r := auth.RoleBinding{}
-			r.ObjectMeta = options.ObjectMeta
-			key := r.MakeKey(prefix)
-			err := kvs.ListFiltered(ctx, key, &into, *options)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
 		"auth.RoleBindingSpec":   apisrvpkg.NewMessage("auth.RoleBindingSpec"),
 		"auth.RoleBindingStatus": apisrvpkg.NewMessage("auth.RoleBindingStatus"),
-		"auth.RoleList": apisrvpkg.NewMessage("auth.RoleList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := auth.RoleList{}
-			r := auth.Role{}
-			r.ObjectMeta = options.ObjectMeta
-			key := r.MakeKey(prefix)
-			err := kvs.ListFiltered(ctx, key, &into, *options)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
-		"auth.RoleSpec":   apisrvpkg.NewMessage("auth.RoleSpec"),
-		"auth.RoleStatus": apisrvpkg.NewMessage("auth.RoleStatus"),
-		"auth.TLSOptions": apisrvpkg.NewMessage("auth.TLSOptions"),
+		"auth.RoleSpec":          apisrvpkg.NewMessage("auth.RoleSpec"),
+		"auth.RoleStatus":        apisrvpkg.NewMessage("auth.RoleStatus"),
+		"auth.TLSOptions":        apisrvpkg.NewMessage("auth.TLSOptions"),
 		"auth.User": apisrvpkg.NewMessage("auth.User").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := auth.User{}
@@ -451,7 +379,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
 					if r.ResourceVersion != "" {
-						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
 					} else {
 						err = kvs.Update(ctx, key, &r)
@@ -515,18 +443,6 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 			return nil
 		}),
 
-		"auth.UserList": apisrvpkg.NewMessage("auth.UserList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := auth.UserList{}
-			r := auth.User{}
-			r.ObjectMeta = options.ObjectMeta
-			key := r.MakeKey(prefix)
-			err := kvs.ListFiltered(ctx, key, &into, *options)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
 		"auth.UserSpec":   apisrvpkg.NewMessage("auth.UserSpec"),
 		"auth.UserStatus": apisrvpkg.NewMessage("auth.UserStatus"),
 		// Add a message handler for ListWatch options
@@ -539,626 +455,46 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 		&auth.RoleBinding{},
 		&auth.User{},
 	)
-
 	apisrv.RegisterMessages("auth", s.Messages)
-
-	{
-		srv := apisrvpkg.NewService("AuthV1")
-
-		s.endpointsAuthV1.fnAutoAddAuthenticationPolicy = srv.AddMethod("AutoAddAuthenticationPolicy",
-			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoAddAuthenticationPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.AuthenticationPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoAddRole = srv.AddMethod("AutoAddRole",
-			apisrvpkg.NewMethod(s.Messages["auth.Role"], s.Messages["auth.Role"], "auth", "AutoAddRole")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.Role)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/roles/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoAddRoleBinding = srv.AddMethod("AutoAddRoleBinding",
-			apisrvpkg.NewMethod(s.Messages["auth.RoleBinding"], s.Messages["auth.RoleBinding"], "auth", "AutoAddRoleBinding")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.RoleBinding)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/role-bindings/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoAddUser = srv.AddMethod("AutoAddUser",
-			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoAddUser")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.User)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoDeleteAuthenticationPolicy = srv.AddMethod("AutoDeleteAuthenticationPolicy",
-			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoDeleteAuthenticationPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.AuthenticationPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoDeleteRole = srv.AddMethod("AutoDeleteRole",
-			apisrvpkg.NewMethod(s.Messages["auth.Role"], s.Messages["auth.Role"], "auth", "AutoDeleteRole")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.Role)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/roles/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoDeleteRoleBinding = srv.AddMethod("AutoDeleteRoleBinding",
-			apisrvpkg.NewMethod(s.Messages["auth.RoleBinding"], s.Messages["auth.RoleBinding"], "auth", "AutoDeleteRoleBinding")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.RoleBinding)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/role-bindings/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoDeleteUser = srv.AddMethod("AutoDeleteUser",
-			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoDeleteUser")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.User)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoGetAuthenticationPolicy = srv.AddMethod("AutoGetAuthenticationPolicy",
-			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoGetAuthenticationPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.AuthenticationPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoGetRole = srv.AddMethod("AutoGetRole",
-			apisrvpkg.NewMethod(s.Messages["auth.Role"], s.Messages["auth.Role"], "auth", "AutoGetRole")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.Role)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/roles/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoGetRoleBinding = srv.AddMethod("AutoGetRoleBinding",
-			apisrvpkg.NewMethod(s.Messages["auth.RoleBinding"], s.Messages["auth.RoleBinding"], "auth", "AutoGetRoleBinding")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.RoleBinding)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/role-bindings/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoGetUser = srv.AddMethod("AutoGetUser",
-			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoGetUser")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.User)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoListAuthenticationPolicy = srv.AddMethod("AutoListAuthenticationPolicy",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["auth.AuthenticationPolicyList"], "auth", "AutoListAuthenticationPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoListRole = srv.AddMethod("AutoListRole",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["auth.RoleList"], "auth", "AutoListRole")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(api.ListWatchOptions)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/roles/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoListRoleBinding = srv.AddMethod("AutoListRoleBinding",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["auth.RoleBindingList"], "auth", "AutoListRoleBinding")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(api.ListWatchOptions)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/role-bindings/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoListUser = srv.AddMethod("AutoListUser",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["auth.UserList"], "auth", "AutoListUser")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(api.ListWatchOptions)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoUpdateAuthenticationPolicy = srv.AddMethod("AutoUpdateAuthenticationPolicy",
-			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoUpdateAuthenticationPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.AuthenticationPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoUpdateRole = srv.AddMethod("AutoUpdateRole",
-			apisrvpkg.NewMethod(s.Messages["auth.Role"], s.Messages["auth.Role"], "auth", "AutoUpdateRole")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.Role)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/roles/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoUpdateRoleBinding = srv.AddMethod("AutoUpdateRoleBinding",
-			apisrvpkg.NewMethod(s.Messages["auth.RoleBinding"], s.Messages["auth.RoleBinding"], "auth", "AutoUpdateRoleBinding")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.RoleBinding)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/role-bindings/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoUpdateUser = srv.AddMethod("AutoUpdateUser",
-			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoUpdateUser")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.User)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsAuthV1.fnAutoWatchUser = s.Messages["auth.User"].WatchFromKv
-
-		s.endpointsAuthV1.fnAutoWatchAuthenticationPolicy = s.Messages["auth.AuthenticationPolicy"].WatchFromKv
-
-		s.endpointsAuthV1.fnAutoWatchRole = s.Messages["auth.Role"].WatchFromKv
-
-		s.endpointsAuthV1.fnAutoWatchRoleBinding = s.Messages["auth.RoleBinding"].WatchFromKv
-
-		s.Services = map[string]apiserver.Service{
-			"auth.AuthV1": srv,
-		}
-		apisrv.RegisterService("auth.AuthV1", srv)
-		endpoints := auth.MakeAuthV1ServerEndpoints(s.endpointsAuthV1, logger)
-		server := auth.MakeGRPCServerAuthV1(ctx, endpoints, logger)
-		auth.RegisterAuthV1Server(grpcserver.GrpcServer, server)
+	// add messages to package.
+	if pkgMessages == nil {
+		pkgMessages = make(map[string]apiserver.Message)
 	}
-	// Add Watchers
-	{
-
-		s.Messages["auth.User"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := auth.User{}
-			key := o.MakeKey(svcprefix)
-			if strings.HasSuffix(key, "//") {
-				key = strings.TrimSuffix(key, "/")
-			}
-			wstream := stream.(auth.AuthV1_AutoWatchUserServer)
-			nctx, cancel := context.WithCancel(wstream.Context())
-			defer cancel()
-			if kvs == nil {
-				return fmt.Errorf("Nil KVS")
-			}
-			watcher, err := kvs.WatchFiltered(nctx, key, *options)
-			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "User")
-				return err
-			}
-			for {
-				select {
-				case ev, ok := <-watcher.EventChan():
-					if !ok {
-						l.DebugLog("Channel closed for User Watcher")
-						return nil
-					}
-					in, ok := ev.Object.(*auth.User)
-					if !ok {
-						status, ok := ev.Object.(*api.Status)
-						if !ok {
-							return errors.New("unknown error")
-						}
-						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
-					}
-
-					strEvent := auth.AutoMsgUserWatchHelper{
-						Type:   string(ev.Type),
-						Object: in,
-					}
-					l.DebugLog("msg", "received User watch event from KV", "type", ev.Type)
-					if version != in.APIVersion {
-						i, err := txfn(in.APIVersion, version, in)
-						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "User", "fromver", in.APIVersion, "tover", version)
-							break
-						}
-						strEvent.Object = i.(*auth.User)
-					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for User", "error", err)
-						return err
-					}
-				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for User Watcher")
-					return wstream.Context().Err()
-				}
-			}
-		})
-
-		s.Messages["auth.AuthenticationPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := auth.AuthenticationPolicy{}
-			key := o.MakeKey(svcprefix)
-			if strings.HasSuffix(key, "//") {
-				key = strings.TrimSuffix(key, "/")
-			}
-			wstream := stream.(auth.AuthV1_AutoWatchAuthenticationPolicyServer)
-			nctx, cancel := context.WithCancel(wstream.Context())
-			defer cancel()
-			if kvs == nil {
-				return fmt.Errorf("Nil KVS")
-			}
-			watcher, err := kvs.WatchFiltered(nctx, key, *options)
-			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "AuthenticationPolicy")
-				return err
-			}
-			for {
-				select {
-				case ev, ok := <-watcher.EventChan():
-					if !ok {
-						l.DebugLog("Channel closed for AuthenticationPolicy Watcher")
-						return nil
-					}
-					in, ok := ev.Object.(*auth.AuthenticationPolicy)
-					if !ok {
-						status, ok := ev.Object.(*api.Status)
-						if !ok {
-							return errors.New("unknown error")
-						}
-						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
-					}
-
-					strEvent := auth.AutoMsgAuthenticationPolicyWatchHelper{
-						Type:   string(ev.Type),
-						Object: in,
-					}
-					l.DebugLog("msg", "received AuthenticationPolicy watch event from KV", "type", ev.Type)
-					if version != in.APIVersion {
-						i, err := txfn(in.APIVersion, version, in)
-						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "AuthenticationPolicy", "fromver", in.APIVersion, "tover", version)
-							break
-						}
-						strEvent.Object = i.(*auth.AuthenticationPolicy)
-					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for AuthenticationPolicy", "error", err)
-						return err
-					}
-				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for AuthenticationPolicy Watcher")
-					return wstream.Context().Err()
-				}
-			}
-		})
-
-		s.Messages["auth.Role"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := auth.Role{}
-			key := o.MakeKey(svcprefix)
-			if strings.HasSuffix(key, "//") {
-				key = strings.TrimSuffix(key, "/")
-			}
-			wstream := stream.(auth.AuthV1_AutoWatchRoleServer)
-			nctx, cancel := context.WithCancel(wstream.Context())
-			defer cancel()
-			if kvs == nil {
-				return fmt.Errorf("Nil KVS")
-			}
-			watcher, err := kvs.WatchFiltered(nctx, key, *options)
-			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Role")
-				return err
-			}
-			for {
-				select {
-				case ev, ok := <-watcher.EventChan():
-					if !ok {
-						l.DebugLog("Channel closed for Role Watcher")
-						return nil
-					}
-					in, ok := ev.Object.(*auth.Role)
-					if !ok {
-						status, ok := ev.Object.(*api.Status)
-						if !ok {
-							return errors.New("unknown error")
-						}
-						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
-					}
-
-					strEvent := auth.AutoMsgRoleWatchHelper{
-						Type:   string(ev.Type),
-						Object: in,
-					}
-					l.DebugLog("msg", "received Role watch event from KV", "type", ev.Type)
-					if version != in.APIVersion {
-						i, err := txfn(in.APIVersion, version, in)
-						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Role", "fromver", in.APIVersion, "tover", version)
-							break
-						}
-						strEvent.Object = i.(*auth.Role)
-					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Role", "error", err)
-						return err
-					}
-				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Role Watcher")
-					return wstream.Context().Err()
-				}
-			}
-		})
-
-		s.Messages["auth.RoleBinding"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := auth.RoleBinding{}
-			key := o.MakeKey(svcprefix)
-			if strings.HasSuffix(key, "//") {
-				key = strings.TrimSuffix(key, "/")
-			}
-			wstream := stream.(auth.AuthV1_AutoWatchRoleBindingServer)
-			nctx, cancel := context.WithCancel(wstream.Context())
-			defer cancel()
-			if kvs == nil {
-				return fmt.Errorf("Nil KVS")
-			}
-			watcher, err := kvs.WatchFiltered(nctx, key, *options)
-			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "RoleBinding")
-				return err
-			}
-			for {
-				select {
-				case ev, ok := <-watcher.EventChan():
-					if !ok {
-						l.DebugLog("Channel closed for RoleBinding Watcher")
-						return nil
-					}
-					in, ok := ev.Object.(*auth.RoleBinding)
-					if !ok {
-						status, ok := ev.Object.(*api.Status)
-						if !ok {
-							return errors.New("unknown error")
-						}
-						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
-					}
-
-					strEvent := auth.AutoMsgRoleBindingWatchHelper{
-						Type:   string(ev.Type),
-						Object: in,
-					}
-					l.DebugLog("msg", "received RoleBinding watch event from KV", "type", ev.Type)
-					if version != in.APIVersion {
-						i, err := txfn(in.APIVersion, version, in)
-						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "RoleBinding", "fromver", in.APIVersion, "tover", version)
-							break
-						}
-						strEvent.Object = i.(*auth.RoleBinding)
-					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for RoleBinding", "error", err)
-						return err
-					}
-				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for RoleBinding Watcher")
-					return wstream.Context().Err()
-				}
-			}
-		})
-
+	for k, v := range s.Messages {
+		pkgMessages[k] = v
 	}
+}
 
+func (s *sauthAuthBackend) regSvcsFunc(ctx context.Context, logger log.Logger, grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) {
+
+}
+
+func (s *sauthAuthBackend) regWatchersFunc(ctx context.Context, logger log.Logger, grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) {
+
+}
+
+func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
+	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
+	// register all messages in the package if not done already
+	s.logger = logger
+	s.scheme = scheme
+	registerMessages(logger, scheme)
+	registerServices(ctx, logger, grpcserver, scheme)
+	registerWatchers(ctx, logger, grpcserver, scheme)
 	return nil
 }
 
-func (e *eAuthV1Endpoints) AutoAddAuthenticationPolicy(ctx context.Context, t auth.AuthenticationPolicy) (auth.AuthenticationPolicy, error) {
-	r, err := e.fnAutoAddAuthenticationPolicy(ctx, t)
-	if err == nil {
-		return r.(auth.AuthenticationPolicy), err
-	}
-	return auth.AuthenticationPolicy{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoAddRole(ctx context.Context, t auth.Role) (auth.Role, error) {
-	r, err := e.fnAutoAddRole(ctx, t)
-	if err == nil {
-		return r.(auth.Role), err
-	}
-	return auth.Role{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoAddRoleBinding(ctx context.Context, t auth.RoleBinding) (auth.RoleBinding, error) {
-	r, err := e.fnAutoAddRoleBinding(ctx, t)
-	if err == nil {
-		return r.(auth.RoleBinding), err
-	}
-	return auth.RoleBinding{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoAddUser(ctx context.Context, t auth.User) (auth.User, error) {
-	r, err := e.fnAutoAddUser(ctx, t)
-	if err == nil {
-		return r.(auth.User), err
-	}
-	return auth.User{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoDeleteAuthenticationPolicy(ctx context.Context, t auth.AuthenticationPolicy) (auth.AuthenticationPolicy, error) {
-	r, err := e.fnAutoDeleteAuthenticationPolicy(ctx, t)
-	if err == nil {
-		return r.(auth.AuthenticationPolicy), err
-	}
-	return auth.AuthenticationPolicy{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoDeleteRole(ctx context.Context, t auth.Role) (auth.Role, error) {
-	r, err := e.fnAutoDeleteRole(ctx, t)
-	if err == nil {
-		return r.(auth.Role), err
-	}
-	return auth.Role{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoDeleteRoleBinding(ctx context.Context, t auth.RoleBinding) (auth.RoleBinding, error) {
-	r, err := e.fnAutoDeleteRoleBinding(ctx, t)
-	if err == nil {
-		return r.(auth.RoleBinding), err
-	}
-	return auth.RoleBinding{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoDeleteUser(ctx context.Context, t auth.User) (auth.User, error) {
-	r, err := e.fnAutoDeleteUser(ctx, t)
-	if err == nil {
-		return r.(auth.User), err
-	}
-	return auth.User{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoGetAuthenticationPolicy(ctx context.Context, t auth.AuthenticationPolicy) (auth.AuthenticationPolicy, error) {
-	r, err := e.fnAutoGetAuthenticationPolicy(ctx, t)
-	if err == nil {
-		return r.(auth.AuthenticationPolicy), err
-	}
-	return auth.AuthenticationPolicy{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoGetRole(ctx context.Context, t auth.Role) (auth.Role, error) {
-	r, err := e.fnAutoGetRole(ctx, t)
-	if err == nil {
-		return r.(auth.Role), err
-	}
-	return auth.Role{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoGetRoleBinding(ctx context.Context, t auth.RoleBinding) (auth.RoleBinding, error) {
-	r, err := e.fnAutoGetRoleBinding(ctx, t)
-	if err == nil {
-		return r.(auth.RoleBinding), err
-	}
-	return auth.RoleBinding{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoGetUser(ctx context.Context, t auth.User) (auth.User, error) {
-	r, err := e.fnAutoGetUser(ctx, t)
-	if err == nil {
-		return r.(auth.User), err
-	}
-	return auth.User{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoListAuthenticationPolicy(ctx context.Context, t api.ListWatchOptions) (auth.AuthenticationPolicyList, error) {
-	r, err := e.fnAutoListAuthenticationPolicy(ctx, t)
-	if err == nil {
-		return r.(auth.AuthenticationPolicyList), err
-	}
-	return auth.AuthenticationPolicyList{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoListRole(ctx context.Context, t api.ListWatchOptions) (auth.RoleList, error) {
-	r, err := e.fnAutoListRole(ctx, t)
-	if err == nil {
-		return r.(auth.RoleList), err
-	}
-	return auth.RoleList{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoListRoleBinding(ctx context.Context, t api.ListWatchOptions) (auth.RoleBindingList, error) {
-	r, err := e.fnAutoListRoleBinding(ctx, t)
-	if err == nil {
-		return r.(auth.RoleBindingList), err
-	}
-	return auth.RoleBindingList{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoListUser(ctx context.Context, t api.ListWatchOptions) (auth.UserList, error) {
-	r, err := e.fnAutoListUser(ctx, t)
-	if err == nil {
-		return r.(auth.UserList), err
-	}
-	return auth.UserList{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoUpdateAuthenticationPolicy(ctx context.Context, t auth.AuthenticationPolicy) (auth.AuthenticationPolicy, error) {
-	r, err := e.fnAutoUpdateAuthenticationPolicy(ctx, t)
-	if err == nil {
-		return r.(auth.AuthenticationPolicy), err
-	}
-	return auth.AuthenticationPolicy{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoUpdateRole(ctx context.Context, t auth.Role) (auth.Role, error) {
-	r, err := e.fnAutoUpdateRole(ctx, t)
-	if err == nil {
-		return r.(auth.Role), err
-	}
-	return auth.Role{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoUpdateRoleBinding(ctx context.Context, t auth.RoleBinding) (auth.RoleBinding, error) {
-	r, err := e.fnAutoUpdateRoleBinding(ctx, t)
-	if err == nil {
-		return r.(auth.RoleBinding), err
-	}
-	return auth.RoleBinding{}, err
-
-}
-func (e *eAuthV1Endpoints) AutoUpdateUser(ctx context.Context, t auth.User) (auth.User, error) {
-	r, err := e.fnAutoUpdateUser(ctx, t)
-	if err == nil {
-		return r.(auth.User), err
-	}
-	return auth.User{}, err
-
-}
-
-func (e *eAuthV1Endpoints) AutoWatchUser(in *api.ListWatchOptions, stream auth.AuthV1_AutoWatchUserServer) error {
-	return e.fnAutoWatchUser(in, stream, "auth")
-}
-func (e *eAuthV1Endpoints) AutoWatchAuthenticationPolicy(in *api.ListWatchOptions, stream auth.AuthV1_AutoWatchAuthenticationPolicyServer) error {
-	return e.fnAutoWatchAuthenticationPolicy(in, stream, "auth")
-}
-func (e *eAuthV1Endpoints) AutoWatchRole(in *api.ListWatchOptions, stream auth.AuthV1_AutoWatchRoleServer) error {
-	return e.fnAutoWatchRole(in, stream, "auth")
-}
-func (e *eAuthV1Endpoints) AutoWatchRoleBinding(in *api.ListWatchOptions, stream auth.AuthV1_AutoWatchRoleBindingServer) error {
-	return e.fnAutoWatchRoleBinding(in, stream, "auth")
+func (s *sauthAuthBackend) Reset() {
+	cleanupRegistration()
 }
 
 func init() {
 	apisrv = apisrvpkg.MustGetAPIServer()
 
 	svc := sauthAuthBackend{}
+	addMsgRegFunc(svc.regMsgsFunc)
+	addSvcRegFunc(svc.regSvcsFunc)
+	addWatcherRegFunc(svc.regWatchersFunc)
 
-	{
-		e := eAuthV1Endpoints{Svc: svc}
-		svc.endpointsAuthV1 = &e
-	}
-	apisrv.Register("auth.protos/auth.proto", &svc)
+	apisrv.Register("auth.auth.proto", &svc)
 }

@@ -10,7 +10,7 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cmd"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/cmd/types"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
@@ -595,17 +595,22 @@ type APIClient struct {
 }
 
 // Cluster returns mock ClusterInterface
-func (ma *APIClient) Cluster() cmd.CmdV1ClusterInterface {
+func (ma *APIClient) Cluster() cmd.ClusterV1ClusterInterface {
 	return &ma.DummyCluster
 }
 
 // Node return mock NodeInterface - nil till we need this functionality
-func (ma *APIClient) Node() cmd.CmdV1NodeInterface {
+func (ma *APIClient) Node() cmd.ClusterV1NodeInterface {
 	return nil
 }
 
 // SmartNIC returns mock SmartNICInterface - nill till we need this functionality
-func (ma *APIClient) SmartNIC() cmd.CmdV1SmartNICInterface {
+func (ma *APIClient) SmartNIC() cmd.ClusterV1SmartNICInterface {
+	return nil
+}
+
+// Tenant returns mock Tenant - nill till we need this functionality
+func (ma *APIClient) Tenant() cmd.ClusterV1TenantInterface {
 	return nil
 }
 
@@ -634,7 +639,7 @@ func (c *CfgWatcherService) SetSmartNICEventHandler(types.SmartNICEventHandler) 
 
 // APIClient returns a valid interface once the APIServer is good and
 // accepting requests
-func (c *CfgWatcherService) APIClient() cmd.CmdV1Interface { return &c.DummyAPIClient }
+func (c *CfgWatcherService) APIClient() cmd.ClusterV1Interface { return &c.DummyAPIClient }
 
 // NodeService is the interface for starting/stopping/configuring services running on all controller nodes
 type NodeService struct {

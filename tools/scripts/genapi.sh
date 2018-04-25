@@ -29,32 +29,37 @@ if [ -e ${curdir}/generated/apiclient/svcmanifest.json ]; then
 fi
 
 echo "++ generating manifest"
-for protofile in ${protopath}/*.proto
+cd ${curdir}/${protopath}
+echo "changed path to ${curdir}/${protopath} - $(pwd)"
+for protofile in *.proto
 do
     protoc -I/usr/local/include -I. \
         -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/pensando/sw/api/protos \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --grpc-gateway_out=logtostderr=false,v=7,gengw=false,templates=github.com/pensando/sw/venice/utils/apigen/manifest.yaml,log_dir=${curdir}/tmp:${curdir}/generated/ \
-        ${protofile} || { echo "grpc-gateway generation failed" ; exit -1; }
+        ${protofile} || { echo "manifest generation failed" ; exit -1; }
 done
 
 cd ${curdir}
+cd ${curdir}/${protopath}
 while read -r line || [[ -n "$line" ]];
 do
-    protofile=$(echo $line | awk '{ print $1 }')
+    protofiles=$(echo $line | awk  '{ for (i = 3; i <= NF; i++) { printf("%s ", $i) } }')
     pkg=$(echo $line | awk '{ print $2 }')
     [[ -z "${protofile// }" ]] || [[ -z "${pkg// }" ]] && continue
-    echo "++ parsing ${protofile} for pkg ${pkg}"
+    echo "++ parsing ${protofiles} for pkg ${pkg}"
     protoc -I/usr/local/include -I. \
         -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/pensando/sw/api \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --grpc-gateway_out=request_context=true,logtostderr=false,gengw=true,v=7,templates=github.com/pensando/sw/venice/utils/apigen/config.yaml,log_dir=${curdir}/tmp:${curdir}/generated/${pkg} \
-        ${protopath}/${protofile} || { echo "grpc-gateway generation failed" ; exit -1; }
-done < ${curdir}/generated/manifest
+        ${protofiles} || { echo "grpc-gateway generation failed" ; exit -1; }
+done < ${curdir}/generated/pkgmanifest
 
 cd ${curdir}
 PROTOSUBST=Mgoogle/api/annotations.proto=github.com/pensando/grpc-gateway/third_party/googleapis/google/api,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types
@@ -67,31 +72,34 @@ do
 done < ${curdir}/generated/manifest
 
 cd ${curdir}
+# cd ${curdir}/${protopath}
 cd $protopath && while read -r line || [[ -n "$line" ]];
 do
-    protofile=$(echo $line | awk '{ print $1 }')
+    protofiles=$(echo $line | awk '{ for (i = 3; i <= NF; i++) { printf("%s ", $i) } }')
     pkg=$(echo $line | awk '{ print $2 }')
     [[ -z "${protofile// }" ]] || [[ -z "${pkg// }" ]] && continue
-    echo "++ parsing ${protofile} for pkg ${pkg}"
+    echo "++ parsing ${protofiles} for pkg ${pkg}"
 
     protoc -I/usr/local/include -I. \
         -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/pensando/sw/api/protos \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
-        --swagger_out=logtostderr=true:../generated/${pkg}/swagger \
-        ${protofile} || { echo "swagger generation failed" ; exit -1; }
+        --swagger_out=logtostderr=true:${curdir}/generated/${pkg}/swagger \
+        ${protofiles} || { echo "swagger generation failed" ; exit -1; }
     protoc -I/usr/local/include -I. \
         -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/pensando/sw/api/protos \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --pensando_out=plugins=grpc,logtostderr=false,log_dir=${curdir}/tmp,${PROTOSUBST}:${curdir}/generated/${pkg} \
-        ${protofile} || { echo "Protobuf generation failed" ; exit -1; }
+        ${protofiles} || { echo "Protobuf generation failed" ; exit -1; }
         echo ++ Generating swagger for ${curdir}/generated/${pkg}/gateway
         tempdir=$(pwd)&& cd ${curdir}/generated/${pkg}/gateway && rice embed-go && go generate .
         cd $tempdir
-done < ${curdir}/generated/manifest
+done < ${curdir}/generated/pkgmanifest
 cd ${curdir}
 echo "++ running goimports"
 # Go format code

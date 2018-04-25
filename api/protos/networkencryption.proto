@@ -2,7 +2,7 @@
 
 syntax = "proto3";
 // Service name
-package networkencryption;
+package security;
 
 // Mandatory imports.
 import "google/api/annotations.proto";
@@ -73,19 +73,3 @@ message TrafficEncryptionPolicy {
      // Status contains the current state of the encryption policy.
      TrafficEncryptionPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
-
-// TrafficEncryptionPolicy REST API
-service TrafficEncryptionPolicyV1 {
-    // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "trafficEncryptionPolicy";
-    // API Version.
-    option (venice.apiVersion) = "v1";
-
-    option (venice.apiGrpcCrudService) = "TrafficEncryptionPolicy";
-
-    option (venice.apiRestService) = {
-        Object: "TrafficEncryptionPolicy"
-        Method: [ "get", "put", "delete", "post" ]
-    };
-}
-

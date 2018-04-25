@@ -1,0 +1,1727 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Service name",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/cluster": {
+      "get": {
+        "operationId": "AutoListCluster",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterClusterList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      }
+    },
+    "/cluster/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetCluster",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterCluster"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.QuorumNodes",
+            "description": "QuorumNodes contains the list of hostnames for nodes configured to be quorum\nnodes in the cluster.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.VirtualIP",
+            "description": "VirtualIP is the IP address for managing the cluster. It will be hosted by\nthe winner of election between quorum nodes.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.NTPServers",
+            "description": "NTPServers contains the list of NTP servers for the cluster.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.DNSSubDomain",
+            "description": "DNSSubDomain is the DNS subdomain for the default tenant.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.AutoAdmitNICs",
+            "description": "AutoAdmitNICs when enabled auto-admits NICs that are validated\ninto Venice Cluster. When it is disabled, NICs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "Status.Leader",
+            "description": "Leader contains the node name of the cluster leader.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.LastLeaderTransitionTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteCluster",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterCluster"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateCluster",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterCluster"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterCluster"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      }
+    },
+    "/nodes": {
+      "get": {
+        "operationId": "AutoListNode",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterNodeList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddNode",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterNode"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterNode"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      }
+    },
+    "/nodes/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetNode",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterNode"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Roles",
+            "description": "Current lifecycle phase of the node.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.Phase",
+            "description": "Type indicates a certain node condition.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Nics",
+            "description": "The last time the condition transitioned.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteNode",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterNode"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateNode",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterNode"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterNode"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      }
+    },
+    "/smartnics": {
+      "get": {
+        "operationId": "AutoListSmartNIC",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterSmartNICList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddSmartNIC",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterSmartNIC"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterSmartNIC"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      }
+    },
+    "/smartnics/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetSmartNIC",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterSmartNIC"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Phase",
+            "description": "Mac address of the Port, which is key identifier of the port.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.MgmtIp",
+            "description": "LinkSpeed of the Port.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.NodeName",
+            "description": "List of current Port conditions.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.SerialNum",
+            "description": "Condition Status.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.PrimaryMacAddress",
+            "description": "The last time the condition transitioned.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteSmartNIC",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterSmartNIC"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateSmartNIC",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterSmartNIC"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterSmartNIC"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      }
+    },
+    "/tenants": {
+      "get": {
+        "operationId": "AutoListTenant",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterTenantList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddTenant",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterTenant"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterTenant"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      }
+    },
+    "/tenants/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetTenant",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterTenant"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.AdminUser",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteTenant",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterTenant"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateTenant",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterTenant"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterTenant"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiListMeta": {
+      "type": "object",
+      "properties": {
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version of object store at the time of list generation."
+        }
+      },
+      "description": "ListMeta contains the metadata for list of objects."
+    },
+    "apiListWatchOptions": {
+      "type": "object",
+      "properties": {
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "LabelSelector": {
+          "type": "string"
+        },
+        "FieldSelector": {
+          "type": "string"
+        },
+        "PrefixWatch": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "FieldChangeSelector": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "UUID": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+        },
+        "CreationTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "CreationTime is the creation time of Object"
+        },
+        "ModTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "ModTime is the Last Modification time of Object"
+        },
+        "SelfLink": {
+          "type": "string",
+          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiTimestamp": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "APIVersion": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "clusterAutoMsgClusterWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/clusterCluster"
+        }
+      }
+    },
+    "clusterAutoMsgNodeWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/clusterNode"
+        }
+      }
+    },
+    "clusterAutoMsgSmartNICWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/clusterSmartNIC"
+        }
+      }
+    },
+    "clusterAutoMsgTenantWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/clusterTenant"
+        }
+      }
+    },
+    "clusterCluster": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/clusterClusterSpec",
+          "description": "Spec contains the configuration of the cluster."
+        },
+        "Status": {
+          "$ref": "#/definitions/clusterClusterStatus",
+          "description": "Status contains the current state of the cluster."
+        }
+      },
+      "description": "Cluster represents a full cluster venice and workload nodes\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o NetOps-admin\n             - initial cluster creation\n     Modify:\n         o NetOps-admin\n             - update spec attributes\n         o CMD\n             - update status attributes\n     Delete:\n         o NetOps-admin\n             - TBD",
+      "title": "--------------------------------- CLUSTER ---------------------------------------------"
+    },
+    "clusterClusterList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterCluster"
+          }
+        }
+      }
+    },
+    "clusterClusterSpec": {
+      "type": "object",
+      "properties": {
+        "QuorumNodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "QuorumNodes contains the list of hostnames for nodes configured to be quorum\nnodes in the cluster."
+        },
+        "VirtualIP": {
+          "type": "string",
+          "description": "VirtualIP is the IP address for managing the cluster. It will be hosted by\nthe winner of election between quorum nodes."
+        },
+        "NTPServers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "NTPServers contains the list of NTP servers for the cluster."
+        },
+        "DNSSubDomain": {
+          "type": "string",
+          "description": "DNSSubDomain is the DNS subdomain for the default tenant."
+        },
+        "AutoAdmitNICs": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "AutoAdmitNICs when enabled auto-admits NICs that are validated\ninto Venice Cluster. When it is disabled, NICs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster."
+        }
+      },
+      "description": "ClusterSpec contains the configuration of the cluster."
+    },
+    "clusterClusterStatus": {
+      "type": "object",
+      "properties": {
+        "Leader": {
+          "type": "string",
+          "description": "Leader contains the node name of the cluster leader."
+        },
+        "LastLeaderTransitionTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "LastLeaderTransitionTime is when the leadership changed last time"
+        }
+      },
+      "description": "ClusterStatus contains the current state of the Cluster."
+    },
+    "clusterNode": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/clusterNodeSpec",
+          "description": "Spec contains the configuration of the node."
+        },
+        "Status": {
+          "$ref": "#/definitions/clusterNodeStatus",
+          "description": "Status contains the current state of the node."
+        }
+      },
+      "description": "Node is representation of a single node in the system.\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o NetOps-admin\n             - initial node creation for Baremetal node\n         o CMD\n             - auto created when Hypervisor Node and NIC are\n               discovered via Orchestrator interface, NIC registration\n     Modify:\n         o NetOps-admin\n             - update spec for Baremetal node\n         o CMD\n             - update spec attributes for Hypervisor node\n             - update status attributes\n     Delete:\n         o NetOps-admin\n             - when Baremetal node is decommissioned\n         o CMD\n             - TBD",
+      "title": "---------------------------------- NODE -------------------------------------------"
+    },
+    "clusterNodeCondition": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "description": "Roles is of list of roles a node can be configured with."
+        },
+        "Status": {
+          "type": "string"
+        },
+        "LastTransitionTime": {
+          "type": "string"
+        },
+        "Reason": {
+          "type": "string"
+        },
+        "Message": {
+          "type": "string"
+        }
+      },
+      "description": "NodeSpec contains the configuration of the node."
+    },
+    "clusterNodeList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterNode"
+          }
+        }
+      }
+    },
+    "clusterNodeSpec": {
+      "type": "object",
+      "properties": {
+        "Roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Current lifecycle phase of the node."
+        }
+      },
+      "description": "NodeStatus contains the current state of the node."
+    },
+    "clusterNodeStatus": {
+      "type": "object",
+      "properties": {
+        "Phase": {
+          "type": "string",
+          "title": "Type indicates a certain node condition"
+        },
+        "Conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterNodeCondition"
+          },
+          "title": "Condition Status"
+        },
+        "Nics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "The last time the condition transitioned"
+        }
+      },
+      "description": "NodeCondition describes the state of a Node at a certain point."
+    },
+    "clusterPortCondition": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Status": {
+          "type": "string",
+          "title": "Object name is Serial-Number of the SmartNIC"
+        },
+        "LastTransitionTime": {
+          "type": "string",
+          "description": "SmartNICSpec contains the configuration of the network adapter."
+        },
+        "Reason": {
+          "type": "string",
+          "description": "SmartNICStatus contains the current state of the network adapter."
+        },
+        "Message": {
+          "type": "string"
+        }
+      },
+      "description": "SmartNIC represents the Naples I/O subsystem\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o CMD\n             - created as part of NIC registration, Admittance\n     Modify:\n         o CMD\n             - update spec attributes\n             - update status attributes\n     Delete:\n         o CMD\n             - aging out stale or rejected NICs (TBD)\n         o NetOps, SecOps\n             - Decomission a NIC (TBD)",
+      "title": "------------------------------------ SMART NIC  -------------------------------------------"
+    },
+    "clusterPortSpec": {
+      "type": "object",
+      "properties": {
+        "MacAddress": {
+          "type": "string",
+          "description": "Current phase of the SmartNIC.\nWhen auto-admission is enabled, Phase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, Phase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet."
+        }
+      },
+      "title": "SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)"
+    },
+    "clusterPortStatus": {
+      "type": "object",
+      "properties": {
+        "MacAddress": {
+          "type": "string",
+          "title": "List of current NIC conditions"
+        },
+        "LinkSpeed": {
+          "type": "string",
+          "title": "Serial number"
+        },
+        "Conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterPortCondition"
+          },
+          "title": "Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC"
+        }
+      },
+      "title": "SmartNICStatus contains current status of a SmartNIC"
+    },
+    "clusterSmartNIC": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "Type indicates a certain NIC condition"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "Condition Status"
+        },
+        "Spec": {
+          "$ref": "#/definitions/clusterSmartNICSpec",
+          "title": "The last time the condition transitioned"
+        },
+        "Status": {
+          "$ref": "#/definitions/clusterSmartNICStatus",
+          "title": "The reason for the condition's last transition"
+        }
+      },
+      "description": "SmartNICCondition describes the state of a SmartNIC at a certain point."
+    },
+    "clusterSmartNICCondition": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "title": "Mac address of the Port, which is key identifier of the port"
+        },
+        "Status": {
+          "type": "string"
+        },
+        "LastTransitionTime": {
+          "type": "string"
+        },
+        "Reason": {
+          "type": "string"
+        },
+        "Message": {
+          "type": "string"
+        }
+      },
+      "title": "PortSpec contains configuration of a port in SmartNIC"
+    },
+    "clusterSmartNICList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterSmartNIC"
+          }
+        }
+      }
+    },
+    "clusterSmartNICSpec": {
+      "type": "object",
+      "properties": {
+        "Phase": {
+          "type": "string",
+          "title": "Mac address of the Port, which is key identifier of the port"
+        },
+        "MgmtIp": {
+          "type": "string",
+          "title": "LinkSpeed of the Port"
+        },
+        "NodeName": {
+          "type": "string",
+          "title": "List of current Port conditions"
+        },
+        "Ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterPortSpec"
+          }
+        }
+      },
+      "title": "PortStatus contains current status of a Port"
+    },
+    "clusterSmartNICStatus": {
+      "type": "object",
+      "properties": {
+        "Conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterSmartNICCondition"
+          },
+          "title": "Type indicates a certain Port condition"
+        },
+        "SerialNum": {
+          "type": "string",
+          "title": "Condition Status"
+        },
+        "PrimaryMacAddress": {
+          "type": "string",
+          "title": "The last time the condition transitioned"
+        },
+        "Ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterPortStatus"
+          },
+          "title": "The reason for the condition's last transition"
+        }
+      },
+      "description": "PortCondition describes the state of a Port at a certain point."
+    },
+    "clusterTenant": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "Tenant admin user"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/clusterTenantSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/clusterTenantStatus"
+        }
+      },
+      "title": "spec part of tenant object"
+    },
+    "clusterTenantList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterTenant"
+          }
+        }
+      }
+    },
+    "clusterTenantSpec": {
+      "type": "object",
+      "properties": {
+        "AdminUser": {
+          "type": "string"
+        }
+      },
+      "title": "status part of tenant object"
+    },
+    "clusterTenantStatus": {
+      "type": "object",
+      "title": "Tenant represents an org or a tenant"
+    }
+  }
+}

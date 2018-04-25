@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/monitoring"
 )
 
 // TODO:
@@ -27,14 +27,14 @@ func NewEvtsProxyRPCHandler() (*EvtsProxyRPCHandler, error) {
 }
 
 // ForwardEvent forwards the given event to the dispatcher.
-func (e *EvtsProxyRPCHandler) ForwardEvent(ctx context.Context, event *events.Event) (*api.Empty, error) {
+func (e *EvtsProxyRPCHandler) ForwardEvent(ctx context.Context, event *monitoring.Event) (*api.Empty, error) {
 	// TODO: call dispatcher action
 	// e.dispatcher.Action(*event)
 	return &api.Empty{}, nil
 }
 
 // ForwardEvents forwards the given list of events to the dispatcher.
-func (e *EvtsProxyRPCHandler) ForwardEvents(ctx context.Context, events *events.EventList) (*api.Empty, error) {
+func (e *EvtsProxyRPCHandler) ForwardEvents(ctx context.Context, events *monitoring.EventsList) (*api.Empty, error) {
 	// TODO: call dispatcher action
 	// for each event  {
 	// e.dispatcher.Action(*event)

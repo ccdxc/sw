@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	evtsapi "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/utils"
 	memcache "github.com/pensando/sw/venice/utils/cache"
 	"github.com/pensando/sw/venice/utils/events"

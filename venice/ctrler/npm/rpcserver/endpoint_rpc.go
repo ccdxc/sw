@@ -9,7 +9,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,10 +33,10 @@ func (ep *EndpointRPCHandler) CreateEndpoint(ctx context.Context, epinfo *netpro
 	}
 
 	// build the endpoint params
-	epp := network.Endpoint{
+	epp := workload.Endpoint{
 		TypeMeta:   epinfo.TypeMeta,
 		ObjectMeta: epinfo.ObjectMeta,
-		Status: network.EndpointStatus{
+		Status: workload.EndpointStatus{
 			EndpointUUID:   epinfo.Spec.EndpointUUID,
 			WorkloadUUID:   epinfo.Spec.WorkloadUUID,
 			WorkloadName:   epinfo.Spec.WorkloadName,

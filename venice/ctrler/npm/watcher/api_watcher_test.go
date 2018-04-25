@@ -9,6 +9,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/network"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
@@ -90,7 +91,7 @@ func TestApiWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating api server client")
 
 	// create a default tenant
-	tenant := network.Tenant{
+	tenant := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "testTenant",
@@ -98,7 +99,7 @@ func TestApiWatcher(t *testing.T) {
 		},
 	}
 
-	tn, err := apicl.TenantV1().Tenant().Create(context.Background(), &tenant)
+	tn, err := apicl.ClusterV1().Tenant().Create(context.Background(), &tenant)
 	AssertOk(t, err, "failed to create tenant")
 	AssertEquals(t, "testTenant", tn.Name, "tenant names did not match")
 

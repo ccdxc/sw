@@ -17,7 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 
-	cmdclient "github.com/pensando/sw/api/generated/cmd/grpc/client"
+	cmdclient "github.com/pensando/sw/api/generated/cluster/grpc/client"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -192,7 +192,7 @@ func (tu *TestUtils) Init() {
 	}
 
 	ginkgo.By(fmt.Sprintf("apiGwAddr : %+v ", tu.apiGwAddr))
-	cmdClient := cmdclient.NewRestCrudClientCmdV1(tu.apiGwAddr)
+	cmdClient := cmdclient.NewRestCrudClientClusterV1(tu.apiGwAddr)
 	clusterIf := cmdClient.Cluster()
 	obj := api.ObjectMeta{Name: "testCluster"}
 	cl, err := clusterIf.Get(context.Background(), &obj)

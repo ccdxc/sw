@@ -2,7 +2,7 @@
 
 /*
 Package bookstoreGwService is a auto generated package.
-Input file: protos/example.proto
+Input file: example.proto
 */
 package bookstoreGwService
 
@@ -25,7 +25,7 @@ var fileCount int
 const codecSize = 1024 * 1024
 
 func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
-	box, err := rice.FindBox("../../../../../sw/api/generated/bookstore/swagger")
+	box, err := rice.FindBox("../../../../api/protos/../generated/bookstore/swagger")
 	if err != nil {
 		err = errors.Wrap(err, "error opening rice.Box")
 		return err

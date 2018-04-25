@@ -2,7 +2,7 @@
 
 syntax = "proto3";
 // Service name
-package app;
+package security;
 
 // Mandatory imports.
 import "google/api/annotations.proto";
@@ -49,7 +49,7 @@ message AppUserStatus {
 }
 
 // AppUser is derived from application payload such as database login or
-// other application authentication mechanisms. 
+// other application authentication mechanisms.
 // Created by Venice Admin or Tenant Admin
 message AppUser {
   option (venice.objectPrefix) = {Collection:"app-users", Path: "/{O.Tenant}"};
@@ -81,30 +81,4 @@ message AppUserGrp {
 
   AppUserGrpSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
   AppUserGrpStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-// App, AppUser and AppUserGrp REST API
-service AppV1 {
-  // Prefix for all resources served by this service.
-  option (venice.apiPrefix) = "app";
-  // API Version.
-  option (venice.apiVersion) = "v1";
-
-  option (venice.apiGrpcCrudService) = "App";
-  option (venice.apiRestService) = {
-    Object: "App"
-    Method: [ "get", "list"]
-  };
-
-  option (venice.apiGrpcCrudService) = "AppUser";
-  option (venice.apiRestService) = {
-    Object: "AppUser"
-    Method: [ "get", "put", "delete", "post", "list" ]
-  };
-
-  option (venice.apiGrpcCrudService) = "AppUserGrp";
-  option (venice.apiRestService) = {
-    Object: "AppUserGrp"
-    Method: [ "get", "put", "delete", "post", "list" ]
-  };
 }

@@ -1,0 +1,72 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package monitoring;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/export.proto";
+import "telemetry.proto";
+import "alerts.proto";
+import "events.proto";
+
+service MonitoringV1 {
+
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "monitoring";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    option (venice.apiGrpcCrudService) = "Event";
+    option (venice.apiGrpcCrudService) = "EventPolicy";
+    option (venice.apiGrpcCrudService) = "StatsPolicy";
+    option (venice.apiGrpcCrudService) = "FwlogPolicy";
+    option (venice.apiGrpcCrudService) = "FlowExportPolicy";
+    option (venice.apiGrpcCrudService) = "Alert";
+    option (venice.apiGrpcCrudService) = "AlertPolicy";
+    option (venice.apiGrpcCrudService) = "AlertDestination";
+
+
+    // GET and LIST calls are handled by API gateway -> Query processor -> elastic DB(or events manager)
+    option (venice.apiRestService) = {
+        Object: "Event"
+        Method: ["get", "list"]
+    };
+
+    option (venice.apiRestService) = {
+        Object: "EventPolicy"
+        Method: [ "get", "put", "delete", "post" ]
+    };
+
+    option (venice.apiRestService) = {
+        Object: "StatsPolicy"
+        Method: [ "get", "put", "list" ]
+    };
+
+    option (venice.apiRestService) = {
+        Object: "FwlogPolicy"
+        Method: [ "get", "put", "list" ]
+    };
+
+    option (venice.apiRestService) = {
+        Object: "FlowExportPolicy"
+        Method: [ "get", "put", "delete", "post", "list" ]
+    };
+
+    option (venice.apiRestService) = {
+        Object: "Alert"
+        Method: [ "list", "put", "get" ]
+    };
+    option (venice.apiRestService) = {
+        Object: "AlertPolicy"
+        Method: [ "get", "put", "delete", "post", "list" ]
+    };
+    option (venice.apiRestService) = {
+        Object: "AlertDestination"
+        Method: [ "get", "put", "delete", "post", "list" ]
+    };
+}

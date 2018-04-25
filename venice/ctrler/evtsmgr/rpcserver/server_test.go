@@ -11,7 +11,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/events"
+	events "github.com/pensando/sw/api/generated/monitoring"
 	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -75,7 +75,7 @@ func TestEvtsMgrRPCServer(t *testing.T) {
 	ctx := context.Background()
 
 	// send single event
-	_, err := client.SendEvents(ctx, &events.EventList{Events: evts})
+	_, err := client.SendEvents(ctx, &events.EventsList{Events: evts})
 	tu.AssertOk(t, err, "failed to send event")
 
 	// send bulk events
@@ -104,11 +104,11 @@ func TestEvtsMgrRPCServer(t *testing.T) {
 	}
 
 	// send bulk events
-	_, err = client.SendEvents(ctx, &events.EventList{Events: evts})
+	_, err = client.SendEvents(ctx, &events.EventsList{Events: evts})
 	tu.AssertOk(t, err, "failed to bulk events")
 
 	// send empty events list
-	_, err = client.SendEvents(ctx, &events.EventList{})
+	_, err = client.SendEvents(ctx, &events.EventsList{})
 	tu.AssertOk(t, err, "failed to send event")
 
 	rpcClient.ClientConn.Close()

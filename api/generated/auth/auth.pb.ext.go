@@ -2,7 +2,7 @@
 
 /*
 Package auth is a auto generated package.
-Input file: protos/auth.proto
+Input file: auth.proto
 */
 package auth
 
@@ -46,54 +46,6 @@ func (m *User) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
 }
 
-// MakeKey generates a KV store key for the object
-func (m *AuthenticationPolicyList) MakeKey(prefix string) string {
-	obj := AuthenticationPolicy{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *RoleBindingList) MakeKey(prefix string) string {
-	obj := RoleBinding{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *RoleList) MakeKey(prefix string) string {
-	obj := Role{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *UserList) MakeKey(prefix string) string {
-	obj := User{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgAuthenticationPolicyWatchHelper) MakeKey(prefix string) string {
-	obj := AuthenticationPolicy{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgRoleBindingWatchHelper) MakeKey(prefix string) string {
-	obj := RoleBinding{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgRoleWatchHelper) MakeKey(prefix string) string {
-	obj := Role{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgUserWatchHelper) MakeKey(prefix string) string {
-	obj := User{}
-	return obj.MakeKey(prefix)
-}
-
 // Clone clones the object into into or creates one of into is nil
 func (m *AuthenticationPolicy) Clone(into interface{}) (interface{}, error) {
 	var out *AuthenticationPolicy
@@ -114,33 +66,6 @@ func (m *AuthenticationPolicy) Clone(into interface{}) (interface{}, error) {
 func (m *AuthenticationPolicy) Defaults(ver string) bool {
 	var ret bool
 	ret = ret || m.Spec.Defaults(ver)
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AuthenticationPolicyList) Clone(into interface{}) (interface{}, error) {
-	var out *AuthenticationPolicyList
-	var ok bool
-	if into == nil {
-		out = &AuthenticationPolicyList{}
-	} else {
-		out, ok = into.(*AuthenticationPolicyList)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AuthenticationPolicyList) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Items {
-		if m.Items[k] != nil {
-			ret = ret || m.Items[k].Defaults(ver)
-		}
-	}
 	return ret
 }
 
@@ -213,102 +138,6 @@ func (m *Authenticators) Defaults(ver string) bool {
 		for k := range m.AuthenticatorOrder {
 			m.AuthenticatorOrder[k] = Authenticators_AuthenticatorType_name[0]
 		}
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgAuthenticationPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgAuthenticationPolicyWatchHelper
-	var ok bool
-	if into == nil {
-		out = &AutoMsgAuthenticationPolicyWatchHelper{}
-	} else {
-		out, ok = into.(*AutoMsgAuthenticationPolicyWatchHelper)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgAuthenticationPolicyWatchHelper) Defaults(ver string) bool {
-	var ret bool
-	if m.Object != nil {
-		ret = ret || m.Object.Defaults(ver)
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgRoleBindingWatchHelper) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgRoleBindingWatchHelper
-	var ok bool
-	if into == nil {
-		out = &AutoMsgRoleBindingWatchHelper{}
-	} else {
-		out, ok = into.(*AutoMsgRoleBindingWatchHelper)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgRoleBindingWatchHelper) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgRoleWatchHelper) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgRoleWatchHelper
-	var ok bool
-	if into == nil {
-		out = &AutoMsgRoleWatchHelper{}
-	} else {
-		out, ok = into.(*AutoMsgRoleWatchHelper)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgRoleWatchHelper) Defaults(ver string) bool {
-	var ret bool
-	if m.Object != nil {
-		ret = ret || m.Object.Defaults(ver)
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgUserWatchHelper) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgUserWatchHelper
-	var ok bool
-	if into == nil {
-		out = &AutoMsgUserWatchHelper{}
-	} else {
-		out, ok = into.(*AutoMsgUserWatchHelper)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgUserWatchHelper) Defaults(ver string) bool {
-	var ret bool
-	if m.Object != nil {
-		ret = ret || m.Object.Defaults(ver)
 	}
 	return ret
 }
@@ -472,27 +301,6 @@ func (m *RoleBinding) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *RoleBindingList) Clone(into interface{}) (interface{}, error) {
-	var out *RoleBindingList
-	var ok bool
-	if into == nil {
-		out = &RoleBindingList{}
-	} else {
-		out, ok = into.(*RoleBindingList)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *RoleBindingList) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *RoleBindingSpec) Clone(into interface{}) (interface{}, error) {
 	var out *RoleBindingSpec
 	var ok bool
@@ -532,33 +340,6 @@ func (m *RoleBindingStatus) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *RoleBindingStatus) Defaults(ver string) bool {
 	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *RoleList) Clone(into interface{}) (interface{}, error) {
-	var out *RoleList
-	var ok bool
-	if into == nil {
-		out = &RoleList{}
-	} else {
-		out, ok = into.(*RoleList)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *RoleList) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Items {
-		if m.Items[k] != nil {
-			ret = ret || m.Items[k].Defaults(ver)
-		}
-	}
-	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -652,33 +433,6 @@ func (m *User) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *UserList) Clone(into interface{}) (interface{}, error) {
-	var out *UserList
-	var ok bool
-	if into == nil {
-		out = &UserList{}
-	} else {
-		out, ok = into.(*UserList)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *UserList) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Items {
-		if m.Items[k] != nil {
-			ret = ret || m.Items[k].Defaults(ver)
-		}
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *UserSpec) Clone(into interface{}) (interface{}, error) {
 	var out *UserSpec
 	var ok bool
@@ -735,15 +489,6 @@ func (m *AuthenticationPolicy) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *AuthenticationPolicyList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
-		}
-	}
-	return true
-}
-
 func (m *AuthenticationPolicySpec) Validate(ver string, ignoreStatus bool) bool {
 	if !m.Authenticators.Validate(ver, ignoreStatus) {
 		return false
@@ -768,31 +513,6 @@ func (m *Authenticators) Validate(ver string, ignoreStatus bool) bool {
 				return false
 			}
 		}
-	}
-	return true
-}
-
-func (m *AutoMsgAuthenticationPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
-	}
-	return true
-}
-
-func (m *AutoMsgRoleBindingWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *AutoMsgRoleWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
-	}
-	return true
-}
-
-func (m *AutoMsgUserWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
 	}
 	return true
 }
@@ -841,24 +561,11 @@ func (m *RoleBinding) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *RoleBindingList) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
 func (m *RoleBindingSpec) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
 func (m *RoleBindingStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *RoleList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
-		}
-	}
 	return true
 }
 
@@ -882,15 +589,6 @@ func (m *TLSOptions) Validate(ver string, ignoreStatus bool) bool {
 func (m *User) Validate(ver string, ignoreStatus bool) bool {
 	if !m.Spec.Validate(ver, ignoreStatus) {
 		return false
-	}
-	return true
-}
-
-func (m *UserList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
-		}
 	}
 	return true
 }

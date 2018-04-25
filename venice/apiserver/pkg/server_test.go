@@ -26,6 +26,9 @@ func (t *testAPISrvBackend) CompleteRegistration(ctx context.Context,
 	return nil
 }
 
+func (t *testAPISrvBackend) Reset() {
+}
+
 type testAPISrvService struct {
 	hookcbCalled int
 }

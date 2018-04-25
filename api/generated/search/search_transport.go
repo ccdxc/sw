@@ -2,7 +2,7 @@
 
 /*
 Package search is a auto generated package.
-Input file: protos/search.proto
+Input file: search.proto
 */
 package search
 
@@ -11,57 +11,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	grpctransport "github.com/go-kit/kit/transport/grpc"
-	oldcontext "golang.org/x/net/context"
-
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
-
-type grpcServerSearchV1 struct {
-	Endpoints EndpointsSearchV1Server
-
-	QueryHdlr grpctransport.Handler
-}
-
-// MakeGRPCServerSearchV1 creates a GRPC server for SearchV1 service
-func MakeGRPCServerSearchV1(ctx context.Context, endpoints EndpointsSearchV1Server, logger log.Logger) SearchV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
-	return &grpcServerSearchV1{
-		Endpoints: endpoints,
-		QueryHdlr: grpctransport.NewServer(
-			endpoints.QueryEndpoint,
-			DecodeGrpcReqSearchRequest,
-			EncodeGrpcRespSearchResponse,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Query", logger)))...,
-		),
-	}
-}
-
-func (s *grpcServerSearchV1) Query(ctx oldcontext.Context, req *SearchRequest) (*SearchResponse, error) {
-	_, resp, err := s.QueryHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSearchV1Query).V
-	return &r, resp.(respSearchV1Query).Err
-}
-
-func decodeHTTPrespSearchV1Query(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp SearchResponse
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
 
 func encodeHTTPAggregation(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)

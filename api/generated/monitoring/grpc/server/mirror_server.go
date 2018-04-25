@@ -2,7 +2,7 @@
 
 /*
 Package monitoringApiServer is a auto generated package.
-Input file: protos/mirror.proto
+Input file: mirror.proto
 */
 package monitoringApiServer
 
@@ -36,6 +36,8 @@ var _ fmt.Stringer
 type smonitoringMirrorBackend struct {
 	Services map[string]apiserver.Service
 	Messages map[string]apiserver.Message
+	logger   log.Logger
+	scheme   *runtime.Scheme
 
 	endpointsMirrorSessionV1 *eMirrorSessionV1Endpoints
 }
@@ -52,8 +54,8 @@ type eMirrorSessionV1Endpoints struct {
 	fnAutoWatchMirrorSession func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
-func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
-	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
+func (s *smonitoringMirrorBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
+	l.Infof("registering message for smonitoringMirrorBackend")
 	s.Messages = map[string]apiserver.Message{
 
 		"monitoring.AppProtoSelector":                apisrvpkg.NewMessage("monitoring.AppProtoSelector"),
@@ -94,7 +96,7 @@ func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, log
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
 					if r.ResourceVersion != "" {
-						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
 					} else {
 						err = kvs.Update(ctx, key, &r)
@@ -182,14 +184,23 @@ func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, log
 	scheme.AddKnownTypes(
 		&monitoring.MirrorSession{},
 	)
-
 	apisrv.RegisterMessages("monitoring", s.Messages)
+	// add messages to package.
+	if pkgMessages == nil {
+		pkgMessages = make(map[string]apiserver.Message)
+	}
+	for k, v := range s.Messages {
+		pkgMessages[k] = v
+	}
+}
+
+func (s *smonitoringMirrorBackend) regSvcsFunc(ctx context.Context, logger log.Logger, grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) {
 
 	{
 		srv := apisrvpkg.NewService("MirrorSessionV1")
 
 		s.endpointsMirrorSessionV1.fnAutoAddMirrorSession = srv.AddMethod("AutoAddMirrorSession",
-			apisrvpkg.NewMethod(s.Messages["monitoring.MirrorSession"], s.Messages["monitoring.MirrorSession"], "MirrorSession", "AutoAddMirrorSession")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "MirrorSession", "AutoAddMirrorSession")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.MirrorSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -198,7 +209,7 @@ func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, log
 		}).HandleInvocation
 
 		s.endpointsMirrorSessionV1.fnAutoDeleteMirrorSession = srv.AddMethod("AutoDeleteMirrorSession",
-			apisrvpkg.NewMethod(s.Messages["monitoring.MirrorSession"], s.Messages["monitoring.MirrorSession"], "MirrorSession", "AutoDeleteMirrorSession")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "MirrorSession", "AutoDeleteMirrorSession")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.MirrorSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -207,7 +218,7 @@ func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, log
 		}).HandleInvocation
 
 		s.endpointsMirrorSessionV1.fnAutoGetMirrorSession = srv.AddMethod("AutoGetMirrorSession",
-			apisrvpkg.NewMethod(s.Messages["monitoring.MirrorSession"], s.Messages["monitoring.MirrorSession"], "MirrorSession", "AutoGetMirrorSession")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "MirrorSession", "AutoGetMirrorSession")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.MirrorSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -216,7 +227,7 @@ func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, log
 		}).HandleInvocation
 
 		s.endpointsMirrorSessionV1.fnAutoListMirrorSession = srv.AddMethod("AutoListMirrorSession",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["monitoring.MirrorSessionList"], "MirrorSession", "AutoListMirrorSession")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.MirrorSessionList"], "MirrorSession", "AutoListMirrorSession")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -225,7 +236,7 @@ func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, log
 		}).HandleInvocation
 
 		s.endpointsMirrorSessionV1.fnAutoUpdateMirrorSession = srv.AddMethod("AutoUpdateMirrorSession",
-			apisrvpkg.NewMethod(s.Messages["monitoring.MirrorSession"], s.Messages["monitoring.MirrorSession"], "MirrorSession", "AutoUpdateMirrorSession")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "MirrorSession", "AutoUpdateMirrorSession")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.MirrorSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -233,7 +244,7 @@ func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, log
 			return fmt.Sprint("/v1/", "MirrorSession/", in.Tenant, "/MirrorSession/", in.Name), nil
 		}).HandleInvocation
 
-		s.endpointsMirrorSessionV1.fnAutoWatchMirrorSession = s.Messages["monitoring.MirrorSession"].WatchFromKv
+		s.endpointsMirrorSessionV1.fnAutoWatchMirrorSession = pkgMessages["monitoring.MirrorSession"].WatchFromKv
 
 		s.Services = map[string]apiserver.Service{
 			"monitoring.MirrorSessionV1": srv,
@@ -243,10 +254,14 @@ func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, log
 		server := monitoring.MakeGRPCServerMirrorSessionV1(ctx, endpoints, logger)
 		monitoring.RegisterMirrorSessionV1Server(grpcserver.GrpcServer, server)
 	}
+}
+
+func (s *smonitoringMirrorBackend) regWatchersFunc(ctx context.Context, logger log.Logger, grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) {
+
 	// Add Watchers
 	{
 
-		s.Messages["monitoring.MirrorSession"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+		pkgMessages["monitoring.MirrorSession"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := monitoring.MirrorSession{}
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
@@ -306,7 +321,21 @@ func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, log
 
 	}
 
+}
+
+func (s *smonitoringMirrorBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
+	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
+	// register all messages in the package if not done already
+	s.logger = logger
+	s.scheme = scheme
+	registerMessages(logger, scheme)
+	registerServices(ctx, logger, grpcserver, scheme)
+	registerWatchers(ctx, logger, grpcserver, scheme)
 	return nil
+}
+
+func (s *smonitoringMirrorBackend) Reset() {
+	cleanupRegistration()
 }
 
 func (e *eMirrorSessionV1Endpoints) AutoAddMirrorSession(ctx context.Context, t monitoring.MirrorSession) (monitoring.MirrorSession, error) {
@@ -358,10 +387,13 @@ func init() {
 	apisrv = apisrvpkg.MustGetAPIServer()
 
 	svc := smonitoringMirrorBackend{}
+	addMsgRegFunc(svc.regMsgsFunc)
+	addSvcRegFunc(svc.regSvcsFunc)
+	addWatcherRegFunc(svc.regWatchersFunc)
 
 	{
 		e := eMirrorSessionV1Endpoints{Svc: svc}
 		svc.endpointsMirrorSessionV1 = &e
 	}
-	apisrv.Register("monitoring.protos/mirror.proto", &svc)
+	apisrv.Register("monitoring.mirror.proto", &svc)
 }

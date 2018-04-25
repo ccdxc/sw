@@ -2,7 +2,7 @@
 
 syntax = "proto3";
 // Service name
-package telemetry;
+package monitoring;
 
 // Mandatory imports.
 import "google/api/annotations.proto";
@@ -66,32 +66,13 @@ message StatsPolicy {
     StatsStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
-// StatsPolicy REST API
-service StatsPolicyV1 {
-    // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "statsPolicy";
-    // API Version.
-    option (venice.apiVersion) = "v1";
 
-    option (venice.apiGrpcCrudService) = "StatsPolicy";
-
-    option (venice.apiRestService) = {
-        Object: "StatsPolicy"
-        Method: [ "get", "put", "list" ]
-    };
-}
 
 //=========================================================================================
 //  firewall log policy
 //=========================================================================================
 
 message FwlogStatus {
-}
-
-// firewall log export formats
-enum FwlogExportFormat {
-        SYSLOG_BSD = 0;
-        SYSLOG_RFC5424 = 1;
 }
 
 enum FwlogFilter {
@@ -107,7 +88,7 @@ message FwlogExport {
     repeated api.ExportConfig Targets = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "targets,omitempty"];
 
      // fwlog format, SYSLOG_BSD default
-    string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FwlogExportFormat)"];
+    string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(MonitoringExportFormat)"];
 
     // filter firewall logs, FWLOG_ALL default
     repeated string Filter = 3 [(gogoproto.jsontag) = "export-filter,omitempty", (venice.check) = "StrEnum(FwlogFilter)"];
@@ -141,20 +122,6 @@ message FwlogPolicy {
     FwlogStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
-// FwlogPolicy REST API
-service FwlogPolicyV1 {
-    // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "fwlogPolicy";
-    // API Version.
-    option (venice.apiVersion) = "v1";
-
-    option (venice.apiGrpcCrudService) = "FwlogPolicy";
-
-    option (venice.apiRestService) = {
-        Object: "FwlogPolicy"
-        Method: [ "get", "put", "list" ]
-    };
-}
 
 //========================================================================================
 //  flow export policy
@@ -190,19 +157,4 @@ message FlowExportPolicy {
 
     // Status contains the current state of the export policy.
     FlowExportStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-// FlowExportPolicyV1 REST API
-service FlowExportPolicyV1 {
-    // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "flowExportPolicy";
-    // API Version.
-    option (venice.apiVersion) = "v1";
-
-    option (venice.apiGrpcCrudService) = "FlowExportPolicy";
-
-    option (venice.apiRestService) = {
-        Object: "FlowExportPolicy"
-        Method: [ "get", "put", "delete", "post", "list" ]
-    };
 }

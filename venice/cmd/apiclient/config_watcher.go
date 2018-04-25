@@ -9,7 +9,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	svcsclient "github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/cmd"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
@@ -120,11 +120,11 @@ func (k *CfgWatcherService) WatchObjects(kind string, watchChan chan memdb.Event
 }
 
 // APIClient returns an interface to APIClient for cmdV1
-func (k *CfgWatcherService) APIClient() cmd.CmdV1Interface {
+func (k *CfgWatcherService) APIClient() cmd.ClusterV1Interface {
 	k.Lock()
 	defer k.Unlock()
 	if k.svcsClient != nil {
-		return k.svcsClient.CmdV1()
+		return k.svcsClient.ClusterV1()
 	}
 	return nil
 }
@@ -185,7 +185,7 @@ func (k *CfgWatcherService) waitForAPIServerOrCancel() {
 			if err != nil {
 				break
 			}
-			_, err = c.CmdV1().Cluster().List(k.ctx, &opts)
+			_, err = c.ClusterV1().Cluster().List(k.ctx, &opts)
 			if err == nil {
 				k.Lock()
 				k.svcsClient = c
@@ -224,13 +224,13 @@ func (k *CfgWatcherService) runUntilCancel() {
 	opts := api.ListWatchOptions{}
 
 	// Init Node watcher
-	k.nodeWatcher, err = k.svcsClient.CmdV1().Node().Watch(k.ctx, &opts)
+	k.nodeWatcher, err = k.svcsClient.ClusterV1().Node().Watch(k.ctx, &opts)
 	ii := 0
 	for err != nil {
 		select {
 		case <-time.After(time.Second):
 
-			k.nodeWatcher, err = k.svcsClient.CmdV1().Node().Watch(k.ctx, &opts)
+			k.nodeWatcher, err = k.svcsClient.ClusterV1().Node().Watch(k.ctx, &opts)
 			ii++
 			if ii%10 == 0 {
 				k.logger.Errorf("Waiting for Node watch to succeed for %v seconds", ii)
@@ -241,13 +241,13 @@ func (k *CfgWatcherService) runUntilCancel() {
 	}
 
 	// Init Cluster watcher
-	k.clusterWatcher, err = k.svcsClient.CmdV1().Cluster().Watch(k.ctx, &opts)
+	k.clusterWatcher, err = k.svcsClient.ClusterV1().Cluster().Watch(k.ctx, &opts)
 	ii = 0
 	for err != nil {
 		select {
 		case <-time.After(time.Second):
 
-			k.clusterWatcher, err = k.svcsClient.CmdV1().Cluster().Watch(k.ctx, &opts)
+			k.clusterWatcher, err = k.svcsClient.ClusterV1().Cluster().Watch(k.ctx, &opts)
 			ii++
 			if ii%10 == 0 {
 				k.logger.Errorf("Waiting for Cluster watch to succeed for %v seconds", ii)
@@ -259,13 +259,13 @@ func (k *CfgWatcherService) runUntilCancel() {
 	}
 
 	// Init SmartNIC watcher
-	k.smartNICWatcher, err = k.svcsClient.CmdV1().SmartNIC().Watch(k.ctx, &opts)
+	k.smartNICWatcher, err = k.svcsClient.ClusterV1().SmartNIC().Watch(k.ctx, &opts)
 	ii = 0
 	for err != nil {
 		select {
 		case <-time.After(time.Second):
 
-			k.smartNICWatcher, err = k.svcsClient.CmdV1().SmartNIC().Watch(k.ctx, &opts)
+			k.smartNICWatcher, err = k.svcsClient.ClusterV1().SmartNIC().Watch(k.ctx, &opts)
 			ii++
 			if ii%10 == 0 {
 				k.logger.Errorf("Waiting for SmartNIC watch to succeed for %v seconds", ii)

@@ -26,8 +26,8 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
-	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}"
-	"{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}/grpc/client"
+	{{.GoPkg.Name}} "{{getRelPath .}}/generated/{{.GoPkg.Name}}"
+	grpcclient "{{getRelPath .}}/generated/{{.GoPkg.Name}}/grpc/client"
 )
 
 
@@ -118,7 +118,7 @@ func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 	}
 	muxMutex.Unlock()
 	e.setupSvcProfile()
-	{{$manifest := (getSvcManifest "generated/apiclient/svcmanifest.json")}}{{$pkgs := (index $manifest $pkgname)}}{{$fileCount := (len $pkgs.Files)}}
+	{{$manifest := (getSvcManifest "../generated/apiclient/svcmanifest.json")}}{{$pkgs := (index $manifest $pkgname)}}{{$fileCount := (len $pkgs.Files)}}
 	fileCount++
 	{{if eq ($index) 0}}
 	if fileCount == {{$fileCount}} {
@@ -194,7 +194,8 @@ func (e *s{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, rs
 }{{end}}
 
 func init() {
-	apigw := apigwpkg.MustGetAPIGateway()
+	{{if gt (len .Services) 0}}
+	apigw := apigwpkg.MustGetAPIGateway(){{end}}
 	{{range .Services}}{{$svcparams := (getSvcParams .)}}
 	svc{{.Name}} := s{{.Name}}GwService {}
 	apigw.Register("{{$pkgname}}.{{.Name}}", "{{$svcparams.Prefix}}/", &svc{{.Name}}){{end}}

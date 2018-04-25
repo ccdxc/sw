@@ -11,7 +11,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch/simapi"
 	"github.com/pensando/sw/venice/utils/log"
@@ -28,13 +28,13 @@ func createVM(grpcClient apiclient.Services, hostsimURL, nodeID, ipAddr, macAddr
 	epName := fmt.Sprintf("ep-%s", ipAddr)
 
 	// endpoint info
-	ep := network.Endpoint{
+	ep := workload.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:   epName,
 			Tenant: tenant,
 		},
-		Status: network.EndpointStatus{
+		Status: workload.EndpointStatus{
 			NodeUUID:         nodeID,
 			MacAddress:       macAddr,
 			IPv4Address:      ipAddr,
@@ -42,7 +42,7 @@ func createVM(grpcClient apiclient.Services, hostsimURL, nodeID, ipAddr, macAddr
 			Network:          netName,
 		},
 	}
-	_, err := grpcClient.EndpointV1().Endpoint().Create(context.Background(), &ep)
+	_, err := grpcClient.WorkloadV1().Endpoint().Create(context.Background(), &ep)
 	if err != nil {
 		log.Errorf("Error creating endpoint. Err: %v", err)
 		return err
@@ -76,7 +76,7 @@ func deleteVM(grpcClient apiclient.Services, hostsimURL, ipAddr, macAddr, tenant
 		Tenant: tenant,
 	}
 
-	_, err := grpcClient.EndpointV1().Endpoint().Delete(context.Background(), &ometa)
+	_, err := grpcClient.WorkloadV1().Endpoint().Delete(context.Background(), &ometa)
 	if err != nil {
 		log.Errorf("Error deleting endpoint. Err: %v", err)
 	}

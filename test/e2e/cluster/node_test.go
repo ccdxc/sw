@@ -11,15 +11,15 @@ import (
 	. "github.com/onsi/gomega"
 
 	api "github.com/pensando/sw/api"
-	cmd "github.com/pensando/sw/api/generated/cmd"
-	cmdclient "github.com/pensando/sw/api/generated/cmd/grpc/client"
+	cmd "github.com/pensando/sw/api/generated/cluster"
+	cmdclient "github.com/pensando/sw/api/generated/cluster/grpc/client"
 	"github.com/pensando/sw/venice/globals"
 )
 
 var _ = Describe("node tests", func() {
 	Context("When a non-quorum node is added", func() {
 		var (
-			nodeIf   cmd.CmdV1NodeInterface
+			nodeIf   cmd.ClusterV1NodeInterface
 			nonQnode string // the node being added and remove from cluster
 			err      error
 		)
@@ -31,7 +31,7 @@ var _ = Describe("node tests", func() {
 			nonQnode = "node" + strconv.Itoa(ts.tu.NumQuorumNodes+1+numAvailNodes)
 
 			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
-			cmdClient := cmdclient.NewRestCrudClientCmdV1(apiGwAddr)
+			cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)
 			nodeIf = cmdClient.Node()
 			node := &cmd.Node{
 				TypeMeta: api.TypeMeta{

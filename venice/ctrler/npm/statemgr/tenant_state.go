@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
@@ -12,12 +12,12 @@ import (
 // TenantState is a wrapper for tenant object
 type TenantState struct {
 	sync.Mutex
-	network.Tenant           // embedding tenant object
+	cluster.Tenant           // embedding tenant object
 	stateMgr       *Statemgr // state manager
 }
 
 // newTenantState returns a new tenant state object
-func newTenantState(tn *network.Tenant, stateMgr *Statemgr) (*TenantState, error) {
+func newTenantState(tn *cluster.Tenant, stateMgr *Statemgr) (*TenantState, error) {
 	// build the tenant state
 	ts := TenantState{
 		Tenant:   *tn,
@@ -28,7 +28,7 @@ func newTenantState(tn *network.Tenant, stateMgr *Statemgr) (*TenantState, error
 }
 
 // CreateTenant creates a tenant based on watch event
-func (sm *Statemgr) CreateTenant(tn *network.Tenant) error {
+func (sm *Statemgr) CreateTenant(tn *cluster.Tenant) error {
 	oldTn, err := sm.FindObject("Tenant", tn.ObjectMeta.Tenant, tn.ObjectMeta.Name)
 	if err == nil {
 		// FIXME: how do we handle an existing tenant object changing?

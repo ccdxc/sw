@@ -3,50 +3,12 @@
 package grpcclient
 
 import (
-	"github.com/go-kit/kit/endpoint"
-	grpctransport "github.com/go-kit/kit/transport/grpc"
-	"google.golang.org/grpc"
-
 	api "github.com/pensando/sw/api"
-	search "github.com/pensando/sw/api/generated/search"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
-	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
 var _ listerwatcher.WatcherClient
 var _ kvstore.Interface
-
-// NewSearchV1 sets up a new client for SearchV1
-func NewSearchV1(conn *grpc.ClientConn, logger log.Logger) search.ServiceSearchV1Client {
-
-	var lQueryEndpoint endpoint.Endpoint
-	{
-		lQueryEndpoint = grpctransport.NewClient(
-			conn,
-			"search.SearchV1",
-			"Query",
-			search.EncodeGrpcReqSearchRequest,
-			search.DecodeGrpcRespSearchResponse,
-			&search.SearchResponse{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lQueryEndpoint = trace.ClientEndPoint("SearchV1:Query")(lQueryEndpoint)
-	}
-	return search.EndpointsSearchV1Client{
-		Client: search.NewSearchV1Client(conn),
-
-		QueryEndpoint: lQueryEndpoint,
-	}
-}
-
-// NewSearchV1Backend creates an instrumented client with middleware
-func NewSearchV1Backend(conn *grpc.ClientConn, logger log.Logger) search.ServiceSearchV1Client {
-	cl := NewSearchV1(conn, logger)
-	cl = search.LoggingSearchV1MiddlewareClient(logger)(cl)
-	return cl
-}

@@ -3,7 +3,7 @@
 /*
 Package search is a auto generated package.
 
-Input file: protos/search.proto
+Input file: search.proto
 
 The following Messages are defined.
 
@@ -20,9 +20,6 @@ The following Messages are defined.
   TextRequirement
 
 The following Services and Methods are defined.
-
- Service: SearchV1
-   Query
 
 */
 package search

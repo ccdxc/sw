@@ -6,14 +6,15 @@ import (
 	"context"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/api/generated/telemetry"
 )
 
 // createTenant creates a tenant using REST api
-func (it *veniceIntegSuite) createTenant(tenantName string) (*network.Tenant, error) {
+func (it *veniceIntegSuite) createTenant(tenantName string) (*cluster.Tenant, error) {
 	// build network object
-	ten := network.Tenant{
+	ten := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
 			Name: tenantName,
@@ -21,18 +22,18 @@ func (it *veniceIntegSuite) createTenant(tenantName string) (*network.Tenant, er
 	}
 
 	// create it
-	return it.restClient.TenantV1().Tenant().Create(context.Background(), &ten)
+	return it.restClient.ClusterV1().Tenant().Create(context.Background(), &ten)
 }
 
 // deleteTenant deletes a tenant using REST api
-func (it *veniceIntegSuite) deleteTenant(tenantName string) (*network.Tenant, error) {
+func (it *veniceIntegSuite) deleteTenant(tenantName string) (*cluster.Tenant, error) {
 	// build network object
 	meta := api.ObjectMeta{
 		Name: tenantName,
 	}
 
 	// delete it
-	return it.restClient.TenantV1().Tenant().Delete(context.Background(), &meta)
+	return it.restClient.ClusterV1().Tenant().Delete(context.Background(), &meta)
 }
 
 // createNetwork creates a network using REST api
@@ -70,7 +71,7 @@ func (it *veniceIntegSuite) deleteNetwork(tenant, net string) (*network.Network,
 }
 
 // getStatsPolicy gets a stats policy
-func (it *veniceIntegSuite) getStatsPolicy(tenantName string) (*telemetry.StatsPolicy, error) {
+func (it *veniceIntegSuite) getStatsPolicy(tenantName string) (*monitoring.StatsPolicy, error) {
 	// build meta object
 	ometa := api.ObjectMeta{
 		Name:   tenantName,
@@ -78,11 +79,11 @@ func (it *veniceIntegSuite) getStatsPolicy(tenantName string) (*telemetry.StatsP
 	}
 
 	// TODO: use rest api
-	return it.apisrvClient.StatsPolicyV1().StatsPolicy().Get(context.Background(), &ometa)
+	return it.apisrvClient.MonitoringV1().StatsPolicy().Get(context.Background(), &ometa)
 }
 
 // getFwlogPolicy gets a fwlog policy
-func (it *veniceIntegSuite) getFwlogPolicy(tenantName string) (*telemetry.FwlogPolicy, error) {
+func (it *veniceIntegSuite) getFwlogPolicy(tenantName string) (*monitoring.FwlogPolicy, error) {
 	// build meta object
 	ometa := api.ObjectMeta{
 		Name:   tenantName,
@@ -90,5 +91,5 @@ func (it *veniceIntegSuite) getFwlogPolicy(tenantName string) (*telemetry.FwlogP
 	}
 
 	// TODO: use rest api
-	return it.apisrvClient.FwlogPolicyV1().FwlogPolicy().Get(context.Background(), &ometa)
+	return it.apisrvClient.MonitoringV1().FwlogPolicy().Get(context.Background(), &ometa)
 }

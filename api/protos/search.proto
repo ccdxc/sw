@@ -42,7 +42,7 @@ import "github.com/pensando/sw/api/labels/selector.proto";
 //        RoleBinding
 //        ClusterUser
 //        ClusterRole
-//        
+//
 // Network
 //        Network
 //        Service
@@ -79,7 +79,7 @@ message Category {
         Alerts      = 8;
 
         // special categories
-        AuditTrail  = 9;    
+        AuditTrail  = 9;
         Log         = 10; // Debug log, not exposed to user
         Config      = 11; // User configured objects (TBD)
     }
@@ -89,7 +89,7 @@ message Category {
 // TODO: Define a list/map of Kinds per Category
 // TODO: generate these enums if possible and use it for validation per Category
 //       This is a placeholder enum until we have a way to auto-generate list
-//       of all kinds 
+//       of all kinds
 message Kind {
     enum Type {
         Cluster                 = 0;
@@ -150,12 +150,12 @@ message TextRequirement {
 
 // SearchQuery contains various search clauses, modifiers and its associated requirements.
 // This is intended to be used in advanced query use-cases, specified in a GET/POST Body.
-// All the clauses & modifiers (words, phrases, category, kind, field, label) at top level 
+// All the clauses & modifiers (words, phrases, category, kind, field, label) at top level
 // specified here are AND'ed by default.
 //
 // Currently we don't plan to support exclude option on Words, Phrases, Categories & Kinds.
 // If there is a customer ask, we can add this support using the "-" prefix that is commonly
-// used for exclusion. 
+// used for exclusion.
 //
 // Texts:
 //      production staging                     (match production OR staging)
@@ -166,7 +166,7 @@ message TextRequirement {
 //      category:category1,category2           (match category1 OR category2)
 // Kinds: are scoped within the Categories, if specified
 //      kind:kind1 kind:kind2                  (match kind1 OR kind2)
-//      kind:kind1,kind2                       (match kind1 OR kind2) 
+//      kind:kind1,kind2                       (match kind1 OR kind2)
 // Field selector: scoped within the Kind modifier, if specified
 //      field:x=a,y=b,z!=c      (match on field selector requirements)
 // Label selector: scoped within Kinds, Categories if specified in that order
@@ -177,11 +177,11 @@ message SearchQuery {
   // OR of Text-requirements to be matched, Exclude is not supported for Text search
   repeated TextRequirement Texts    = 1 [(gogoproto.jsontag) = "texts,omitempty"];
 
- 
+
   // OR of Categories to be matched, AND and Exclude are not supported for this type
   repeated string Categories        = 2 [(venice.check) = "StrEnum(Category.Type)",
                                          (gogoproto.jsontag) = "categories,omitempty"];
- 
+
   // OR of Kinds to be matched, AND and Exclude are not supported for this type
   repeated string Kinds             = 3 [(venice.check) = "StrEnum(Kind.Type)",
                                          (gogoproto.jsontag) = "kinds,omitempty"];
@@ -248,7 +248,7 @@ message NestedAggregation {
 //
 // Examples of search query in query-string format:
 //
-//  1. Find all occurrences matching text “Network” 
+//  1. Find all occurrences matching text “Network”
 //     Network
 //  2. Find all occurrences matching phrase “link down”
 //     “link down”
@@ -268,7 +268,7 @@ message NestedAggregation {
 //  9. Find all events with text matching “disconnected”
 //     category:events disconnected
 // 10. Find all Critical events for Network objects
-//     category:events kind:Network field:severity=CRITICAL 
+//     category:events kind:Network field:severity=CRITICAL
 // 11. Find all Alerts generated from Naples MAC1
 //     category:alerts field:status.source.node=MAC1
 //     category:alerts MAC1
@@ -303,7 +303,7 @@ message SearchRequest {
     // Search query contains the search requirements
     // This is intended for advanced query use cases involving
     // boolean query, structured term query and supports various
-    // combinations of text, phrase strings and search modifiers 
+    // combinations of text, phrase strings and search modifiers
     // for specific categories, kinds, fields and labels.
     // This cannot be specified as URI parameter.
     SearchQuery Query           = 4 [(gogoproto.nullable) = true,
@@ -345,28 +345,4 @@ message SearchResponse {
     // Grouped by tenant, category and kind in that order.
     NestedAggregation AggregatedEntries = 8 [(gogoproto.nullable) = true,
                                             (gogoproto.jsontag) = "aggregated-entries,omitempty"];
-}
-
-// fileGrpcDest is the gRPC destination for this service
-option (venice.fileGrpcDest) = "pen-spyglass";
-// fileApiServerBacked should be set to false to indicate that the set of services defined in this
-// file are not backed by the API server.
-option (venice.fileApiServerBacked) = false;
-
-// Search service API
-service SearchV1 {
-    option (venice.apiPrefix) = "search";
-
-    // API Version.
-    option (venice.apiVersion) = "v1";
-
-    // In the example below a query like
-    //    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
-    //  generates a RPC call Query with the parameter as
-    //  SearchRequest{ QueryString: "XXXXX", MaxResults:100}
-    rpc Query (SearchRequest) returns (SearchResponse) {
-        option (google.api.http) = {
-		    get: "/query"
-		};
-    }
 }

@@ -1,0 +1,57 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package network;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
+import "github.com/pensando/sw/api/protos/tenant.proto";
+
+// ----------------------------- LbPolicy Object -----------------------------
+
+message HealthCheckSpec {
+    // Health check interval
+    uint32    Interval            = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "interval,omitempty"];
+    // # of probes per interval
+    uint32    ProbesPerInterval   = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "probes-per-interval,omitempty"];
+    // probe URL
+    string    ProbePortOrUrl      = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "probe-port-or-url,omitempty"];
+    // timeout for declaring backend down
+    uint32    MaxTimeouts         = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "max-timeouts,omitempty"];
+    // # of successful probes before we declare the backend back up
+    uint32    DeclareHealthyCount = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "declare-healthy-count,omitempty"];
+}
+
+message LbPolicySpec {
+    // load balancing type
+    string Type                      = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "type,omitempty"];
+    // load balancing algorithm
+    string Algorithm                 = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "algorithm,omitempty"];
+    // session affinity
+    string SessionAffinity           = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "session-affinity,omitempty"];
+    // health check policy
+    HealthCheckSpec HealthCheck      = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "health-check,omitempty"];
+}
+
+message LbPolicyStatus {
+    // list of service objects referring this lb-policy
+    repeated string Services = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "type,omitempty"];
+}
+
+// LbPolicy represents a load balancer policy
+message LbPolicy {
+    option (venice.objectPrefix) = {Collection: "lb-policy", Path: "/{O.Tenant}"};
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the LbPolicy.
+    LbPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the LbPolicy.
+    LbPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

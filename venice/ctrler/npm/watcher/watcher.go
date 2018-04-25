@@ -7,7 +7,10 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/debug"
@@ -69,7 +72,7 @@ func (w *Watcher) handleNetworkEvent(et kvstore.WatchEventType, nw *network.Netw
 }
 
 // handleEndpointEvent handles endpoint event
-func (w *Watcher) handleEndpointEvent(et kvstore.WatchEventType, ep *network.Endpoint) {
+func (w *Watcher) handleEndpointEvent(et kvstore.WatchEventType, ep *workload.Endpoint) {
 	// find the network
 	nw, err := w.statemgr.FindNetwork(ep.ObjectMeta.Tenant, ep.Status.Network)
 	if err != nil {
@@ -99,7 +102,7 @@ func (w *Watcher) handleEndpointEvent(et kvstore.WatchEventType, ep *network.End
 }
 
 // handleSgEvent handles security group events
-func (w *Watcher) handleSgEvent(et kvstore.WatchEventType, sg *network.SecurityGroup) {
+func (w *Watcher) handleSgEvent(et kvstore.WatchEventType, sg *security.SecurityGroup) {
 	switch et {
 	case kvstore.Created:
 		// ask statemgr to create the network
@@ -121,7 +124,7 @@ func (w *Watcher) handleSgEvent(et kvstore.WatchEventType, sg *network.SecurityG
 }
 
 // handleSgPolicyEvent handles sg policy events
-func (w *Watcher) handleSgPolicyEvent(et kvstore.WatchEventType, sgp *network.Sgpolicy) {
+func (w *Watcher) handleSgPolicyEvent(et kvstore.WatchEventType, sgp *security.Sgpolicy) {
 	switch et {
 	case kvstore.Created:
 		// ask statemgr to create the network
@@ -143,7 +146,7 @@ func (w *Watcher) handleSgPolicyEvent(et kvstore.WatchEventType, sgp *network.Sg
 }
 
 // handleTenantEvent handles tenant event
-func (w *Watcher) handleTenantEvent(et kvstore.WatchEventType, tn *network.Tenant) {
+func (w *Watcher) handleTenantEvent(et kvstore.WatchEventType, tn *cluster.Tenant) {
 	switch et {
 	case kvstore.Created:
 		w.debugStats.Increment("CreateTenant")
@@ -236,10 +239,10 @@ func (w *Watcher) runVmmEpwatcher() {
 			}
 
 			// convert to endpoint object
-			var ep *network.Endpoint
+			var ep *workload.Endpoint
 			switch tp := evt.Object.(type) {
-			case *network.Endpoint:
-				ep = evt.Object.(*network.Endpoint)
+			case *workload.Endpoint:
+				ep = evt.Object.(*workload.Endpoint)
 			default:
 				log.Fatalf("vmm watcher Found object of invalid type: %v", tp)
 				return
@@ -277,10 +280,10 @@ func (w *Watcher) runSgwatcher() {
 			}
 
 			// convert to sg object
-			var ep *network.SecurityGroup
+			var ep *security.SecurityGroup
 			switch tp := evt.Object.(type) {
-			case *network.SecurityGroup:
-				ep = evt.Object.(*network.SecurityGroup)
+			case *security.SecurityGroup:
+				ep = evt.Object.(*security.SecurityGroup)
 			default:
 				log.Fatalf("sg watcher Found object of invalid type: %v", tp)
 				return
@@ -317,10 +320,10 @@ func (w *Watcher) runSgPolicyWatcher() {
 			}
 
 			// convert to sg policy object
-			var sgp *network.Sgpolicy
+			var sgp *security.Sgpolicy
 			switch tp := evt.Object.(type) {
-			case *network.Sgpolicy:
-				sgp = evt.Object.(*network.Sgpolicy)
+			case *security.Sgpolicy:
+				sgp = evt.Object.(*security.Sgpolicy)
 			default:
 				log.Fatalf("sg policy watcher Found object of invalid type: %v", tp)
 				return
@@ -359,10 +362,10 @@ func (w *Watcher) runTenantwatcher() {
 			}
 
 			// convert to tenant object
-			var tn *network.Tenant
+			var tn *cluster.Tenant
 			switch tp := evt.Object.(type) {
-			case *network.Tenant:
-				tn = evt.Object.(*network.Tenant)
+			case *cluster.Tenant:
+				tn = evt.Object.(*cluster.Tenant)
 			default:
 				log.Fatalf("tenant watcher Found object of invalid type: %v, %v", tp, evt)
 				return
@@ -495,15 +498,15 @@ func (w *Watcher) DeleteNetwork(tenant, net string) error {
 
 // CreateEndpoint injects an endpoint create event
 func (w *Watcher) CreateEndpoint(tenant, namespace, net, epName, vmName, macAddr, hostName, hostAddr string, attr map[string]string, usegVlan uint32) error {
-	epInfo := network.Endpoint{
+	epInfo := workload.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      epName,
 			Tenant:    tenant,
 			Namespace: namespace,
 		},
-		Spec: network.EndpointSpec{},
-		Status: network.EndpointStatus{
+		Spec: workload.EndpointSpec{},
+		Status: workload.EndpointStatus{
 			Network:            net,
 			EndpointUUID:       epName,
 			WorkloadName:       vmName,
@@ -529,14 +532,14 @@ func (w *Watcher) CreateEndpoint(tenant, namespace, net, epName, vmName, macAddr
 
 // DeleteEndpoint injects an endpoint delete event
 func (w *Watcher) DeleteEndpoint(tenant, net, epName, vmName, macAddr, hostName, hostAddr string) error {
-	epInfo := network.Endpoint{
+	epInfo := workload.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:   epName,
 			Tenant: tenant,
 		},
-		Spec: network.EndpointSpec{},
-		Status: network.EndpointStatus{
+		Spec: workload.EndpointSpec{},
+		Status: workload.EndpointStatus{
 			Network:        net,
 			EndpointUUID:   epName,
 			WorkloadName:   vmName,
@@ -563,14 +566,14 @@ func (w *Watcher) DeleteEndpoint(tenant, net, epName, vmName, macAddr, hostName,
 // CreateSecurityGroup injects a create sg event on the watcher
 func (w *Watcher) CreateSecurityGroup(tenant, namespace, sgname string, selector *labels.Selector) error {
 	// build sg object
-	sg := network.SecurityGroup{
+	sg := security.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    tenant,
 			Namespace: namespace,
 			Name:      sgname,
 		},
-		Spec: network.SecurityGroupSpec{
+		Spec: security.SecurityGroupSpec{
 			WorkloadSelector: selector,
 		},
 	}
@@ -588,7 +591,7 @@ func (w *Watcher) CreateSecurityGroup(tenant, namespace, sgname string, selector
 // DeleteSecurityGroup injects a delete sg event to the watcher
 func (w *Watcher) DeleteSecurityGroup(tenant, sgname string) error {
 	// build a sg object
-	sg := network.SecurityGroup{
+	sg := security.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
 			Name:   sgname,
@@ -609,16 +612,16 @@ func (w *Watcher) DeleteSecurityGroup(tenant, sgname string) error {
 }
 
 // CreateSgpolicy injects a create sg policy event on the watcher
-func (w *Watcher) CreateSgpolicy(tenant, namespace, pname string, attachGroups []string, inrules, outrules []network.SGRule) error {
+func (w *Watcher) CreateSgpolicy(tenant, namespace, pname string, attachGroups []string, inrules, outrules []security.SGRule) error {
 	// build sg object
-	sgp := network.Sgpolicy{
+	sgp := security.Sgpolicy{
 		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    tenant,
 			Namespace: namespace,
 			Name:      pname,
 		},
-		Spec: network.SgpolicySpec{
+		Spec: security.SgpolicySpec{
 			AttachGroups: attachGroups,
 			InRules:      inrules,
 			OutRules:     outrules,
@@ -639,7 +642,7 @@ func (w *Watcher) CreateSgpolicy(tenant, namespace, pname string, attachGroups [
 // DeleteSgpolicy injects a delete sg policy event to the watcher
 func (w *Watcher) DeleteSgpolicy(tenant, pname string) error {
 	// build a sg object
-	sgp := network.Sgpolicy{
+	sgp := security.Sgpolicy{
 		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Name:   pname,
@@ -662,7 +665,7 @@ func (w *Watcher) DeleteSgpolicy(tenant, pname string) error {
 // CreateTenant injects a create tenant event on the watcher
 func (w *Watcher) CreateTenant(tenant, namespace string) error {
 	// build network object
-	tn := network.Tenant{
+	tn := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    tenant,
@@ -684,7 +687,7 @@ func (w *Watcher) CreateTenant(tenant, namespace string) error {
 // DeleteTenant injects a delete network event to the watcher
 func (w *Watcher) DeleteTenant(tenant string) error {
 	// create a dummy tenant object
-	tn := network.Tenant{
+	tn := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
 			Name:   tenant,

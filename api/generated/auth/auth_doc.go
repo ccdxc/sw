@@ -3,19 +3,14 @@
 /*
 Package auth is a auto generated package.
 
-Input file: protos/auth.proto
+Input file: auth.proto
 
 The following Messages are defined.
 
   AuthenticationPolicy
-  AuthenticationPolicyList
   AuthenticationPolicySpec
   AuthenticationPolicyStatus
   Authenticators
-  AutoMsgAuthenticationPolicyWatchHelper
-  AutoMsgRoleBindingWatchHelper
-  AutoMsgRoleWatchHelper
-  AutoMsgUserWatchHelper
   Ldap
   LdapAttributeMapping
   Local
@@ -23,45 +18,16 @@ The following Messages are defined.
   Radius
   Role
   RoleBinding
-  RoleBindingList
   RoleBindingSpec
   RoleBindingStatus
-  RoleList
   RoleSpec
   RoleStatus
   TLSOptions
   User
-  UserList
   UserSpec
   UserStatus
 
 The following Services and Methods are defined.
-
- Service: AuthV1
-   AutoAddAuthenticationPolicy
-   AutoAddRole
-   AutoAddRoleBinding
-   AutoAddUser
-   AutoDeleteAuthenticationPolicy
-   AutoDeleteRole
-   AutoDeleteRoleBinding
-   AutoDeleteUser
-   AutoGetAuthenticationPolicy
-   AutoGetRole
-   AutoGetRoleBinding
-   AutoGetUser
-   AutoListAuthenticationPolicy
-   AutoListRole
-   AutoListRoleBinding
-   AutoListUser
-   AutoUpdateAuthenticationPolicy
-   AutoUpdateRole
-   AutoUpdateRoleBinding
-   AutoUpdateUser
-   AutoWatchAuthenticationPolicy
-   AutoWatchRole
-   AutoWatchRoleBinding
-   AutoWatchUser
 
 */
 package auth

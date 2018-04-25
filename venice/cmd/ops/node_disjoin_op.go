@@ -5,7 +5,7 @@ import (
 
 	"github.com/pensando/sw/venice/utils/log"
 
-	cmd "github.com/pensando/sw/api/generated/cmd"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/utils/errors"
 )

@@ -1,0 +1,68 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package workload;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
+
+// ----------------------------- Endpoint Object -----------------------------
+
+// spec part of Endpoint object
+message EndpointSpec {
+    // empty
+}
+
+// status part of Endpoint object
+message EndpointStatus {
+    // endpoint UUID
+    string EndpointUUID   = 1  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "endpoint-uuid,omitempty"];
+    // VM or container UUID
+    string WorkloadUUID   = 2  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-uuid,omitempty"];
+    // VM or container name
+    string WorkloadName   = 3  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-name,omitempty"];
+    // network this endpoint belogs to
+    string Network        = 4  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "network,omitempty"];
+    // host address of the host where this endpoint exists
+    string HomingHostAddr = 5  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "homing-host-addr,omitempty"];
+    // host name of the host where this endpoint exists
+    string HomingHostName = 6  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "homing-host-name,omitempty"];
+    // IPv4 address of the endpoint
+    string IPv4Address    = 7  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-address,omitempty"];
+    // IPv4 gateway for the endpoint
+    string IPv4Gateway    = 8  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-gateway,omitempty"];
+    // IPv6 address for the endpoint
+    string IPv6Address    = 9  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-address,omitempty"];
+    // IPv6 gateway
+    string IPv6Gateway    = 10 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-gateway,omitempty"];
+    // Mac address of the endpoint
+    string MacAddress     = 11 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "mac-address,omitempty"];
+    // homing host's UUID
+    string NodeUUID       = 12 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "node-uuid,omitempty"];
+    // endpoint FSM state
+    string EndpointState  = 13;
+    // security groups
+    repeated string SecurityGroups = 14;
+    // micro-segment VLAN
+    uint32 MicroSegmentVlan = 15 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "micro-segment-vlan,omitempty"];
+    // VM or container attribute/labels
+    map<string, string> WorkloadAttributes  = 16 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
+}
+
+// Endpoint represents a network endpoint
+message Endpoint {
+    option (venice.objectPrefix) = { Collection: "endpoints", Path: "/{O.Tenant}"};
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the Endpoint.
+    EndpointSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the Endpoint.
+    EndpointStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

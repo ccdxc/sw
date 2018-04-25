@@ -4,7 +4,7 @@ package events
 
 import (
 	"github.com/pensando/sw/api"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	evtsapi "github.com/pensando/sw/api/generated/monitoring"
 )
 
 // from Venice, Events Recorder -> Events Proxy -> {Events Dispatcher -> Events Writers}

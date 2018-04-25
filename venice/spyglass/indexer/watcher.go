@@ -80,21 +80,21 @@ func (idr *Indexer) createWatchers() error {
 	var err error
 	opts := api.ListWatchOptions{}
 
-	idr.watchers["App"], err = idr.apiClient.AppV1().App().Watch(idr.ctx, &opts)
+	idr.watchers["App"], err = idr.apiClient.SecurityV1().App().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for app.App object, err: %v", err)
 		return err
 	}
 	idr.channels["App"] = idr.watchers["App"].EventChan()
 
-	idr.watchers["AppUser"], err = idr.apiClient.AppV1().AppUser().Watch(idr.ctx, &opts)
+	idr.watchers["AppUser"], err = idr.apiClient.SecurityV1().AppUser().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for app.AppUser object, err: %v", err)
 		return err
 	}
 	idr.channels["AppUser"] = idr.watchers["AppUser"].EventChan()
 
-	idr.watchers["AppUserGrp"], err = idr.apiClient.AppV1().AppUserGrp().Watch(idr.ctx, &opts)
+	idr.watchers["AppUserGrp"], err = idr.apiClient.SecurityV1().AppUserGrp().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for app.AppUser object, err: %v", err)
 		return err
@@ -115,42 +115,42 @@ func (idr *Indexer) createWatchers() error {
 	}
 	idr.channels["AuthenticationPolicy"] = idr.watchers["AuthenticationPolicy"].EventChan()
 
-	idr.watchers["Cluster"], err = idr.apiClient.CmdV1().Cluster().Watch(idr.ctx, &opts)
+	idr.watchers["Cluster"], err = idr.apiClient.ClusterV1().Cluster().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for cmd.Cluster object, err: %v", err)
 		return err
 	}
 	idr.channels["Cluster"] = idr.watchers["Cluster"].EventChan()
 
-	idr.watchers["Node"], err = idr.apiClient.CmdV1().Node().Watch(idr.ctx, &opts)
+	idr.watchers["Node"], err = idr.apiClient.ClusterV1().Node().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for cmd.Node object, err: %v", err)
 		return err
 	}
 	idr.channels["Node"] = idr.watchers["Node"].EventChan()
 
-	idr.watchers["SmartNIC"], err = idr.apiClient.CmdV1().SmartNIC().Watch(idr.ctx, &opts)
+	idr.watchers["SmartNIC"], err = idr.apiClient.ClusterV1().SmartNIC().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for cmd.SmartNIC object, err: %v", err)
 		return err
 	}
 	idr.channels["SmartNIC"] = idr.watchers["SmartNIC"].EventChan()
 
-	idr.watchers["EventPolicy"], err = idr.apiClient.EventPolicyV1().EventPolicy().Watch(idr.ctx, &opts)
+	idr.watchers["EventPolicy"], err = idr.apiClient.MonitoringV1().EventPolicy().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for events.EventPolicy object, err: %v", err)
 		return err
 	}
 	idr.channels["EventPolicy"] = idr.watchers["EventPolicy"].EventChan()
 
-	idr.watchers["Endpoint"], err = idr.apiClient.EndpointV1().Endpoint().Watch(idr.ctx, &opts)
+	idr.watchers["Endpoint"], err = idr.apiClient.WorkloadV1().Endpoint().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for network.Endpoint object, err: %v", err)
 		return err
 	}
 	idr.channels["Endpoint"] = idr.watchers["Endpoint"].EventChan()
 
-	idr.watchers["LbPolicy"], err = idr.apiClient.LbPolicyV1().LbPolicy().Watch(idr.ctx, &opts)
+	idr.watchers["LbPolicy"], err = idr.apiClient.NetworkV1().LbPolicy().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for network.LbPolicy object, err: %v", err)
 		return err
@@ -164,63 +164,63 @@ func (idr *Indexer) createWatchers() error {
 	}
 	idr.channels["Network"] = idr.watchers["Network"].EventChan()
 
-	idr.watchers["SecurityGroup"], err = idr.apiClient.SecurityGroupV1().SecurityGroup().Watch(idr.ctx, &opts)
+	idr.watchers["SecurityGroup"], err = idr.apiClient.SecurityV1().SecurityGroup().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for network.SecurityGroup object, err: %v", err)
 		return err
 	}
 	idr.channels["SecurityGroup"] = idr.watchers["SecurityGroup"].EventChan()
 
-	idr.watchers["Service"], err = idr.apiClient.ServiceV1().Service().Watch(idr.ctx, &opts)
+	idr.watchers["Service"], err = idr.apiClient.NetworkV1().Service().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for network.Service object, err: %v", err)
 		return err
 	}
 	idr.channels["Service"] = idr.watchers["Service"].EventChan()
 
-	idr.watchers["Sgpolicy"], err = idr.apiClient.SgpolicyV1().Sgpolicy().Watch(idr.ctx, &opts)
+	idr.watchers["Sgpolicy"], err = idr.apiClient.SecurityV1().Sgpolicy().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for network.Sgpolicy object, err: %v", err)
 		return err
 	}
 	idr.channels["Sgpolicy"] = idr.watchers["Sgpolicy"].EventChan()
 
-	idr.watchers["Tenant"], err = idr.apiClient.TenantV1().Tenant().Watch(idr.ctx, &opts)
+	idr.watchers["Tenant"], err = idr.apiClient.ClusterV1().Tenant().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for network.Tenant object, err: %v", err)
 		return err
 	}
 	idr.channels["Tenant"] = idr.watchers["Tenant"].EventChan()
 
-	idr.watchers["TrafficEncryptionPolicy"], err = idr.apiClient.TrafficEncryptionPolicyV1().TrafficEncryptionPolicy().Watch(idr.ctx, &opts)
+	idr.watchers["TrafficEncryptionPolicy"], err = idr.apiClient.SecurityV1().TrafficEncryptionPolicy().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for networkencryption.TrafficEncryptionPolicy object, err: %v", err)
 		return err
 	}
 	idr.channels["TrafficEncryptionPolicy"] = idr.watchers["TrafficEncryptionPolicy"].EventChan()
 
-	idr.watchers["StatsPolicy"], err = idr.apiClient.StatsPolicyV1().StatsPolicy().Watch(idr.ctx, &opts)
+	idr.watchers["StatsPolicy"], err = idr.apiClient.MonitoringV1().StatsPolicy().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for telemetry.StatsPolicy object, err: %v", err)
 		return err
 	}
 	idr.channels["StatsPolicy"] = idr.watchers["StatsPolicy"].EventChan()
 
-	idr.watchers["FwlogPolicy"], err = idr.apiClient.FwlogPolicyV1().FwlogPolicy().Watch(idr.ctx, &opts)
+	idr.watchers["FwlogPolicy"], err = idr.apiClient.MonitoringV1().FwlogPolicy().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for telemetry.FwlogPolicy object, err: %v", err)
 		return err
 	}
 	idr.channels["FwlogPolicy"] = idr.watchers["FwlogPolicy"].EventChan()
 
-	idr.watchers["FlowExportPolicy"], err = idr.apiClient.TrafficEncryptionPolicyV1().TrafficEncryptionPolicy().Watch(idr.ctx, &opts)
+	idr.watchers["FlowExportPolicy"], err = idr.apiClient.MonitoringV1().FlowExportPolicy().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for telemetry.FlowExportPolicy object, err: %v", err)
 		return err
 	}
 	idr.channels["FlowExportPolicy"] = idr.watchers["FlowExportPolicy"].EventChan()
 
-	idr.watchers["Certificate"], err = idr.apiClient.CertificateV1().Certificate().Watch(idr.ctx, &opts)
+	idr.watchers["Certificate"], err = idr.apiClient.SecurityV1().Certificate().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for x509.Certificate object, err: %v", err)
 		return err

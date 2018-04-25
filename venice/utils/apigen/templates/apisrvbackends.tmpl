@@ -4,8 +4,8 @@
 Package apisrvbackends is a auto generated package.
 */
 package apisrvbackends
-{{$relpath := .GoPkg.RelPath}}{{$pkg := .GoPkg.Name}}{{$x := (genManifest . "./generated/manifest" .GoPkg.Name .Name)}}{{if ne (len $x) 0 }}
+{{$relpath := getRelPath .}}{{$x := (genPkgManifest . "../generated/pkgmanifest" .GoPkg.Name .Name)}}{{if ne (len $x) 0 }}
 import ( {{range $key, $value := $x}}
-    // blank import to pull in {{$value.Pkg}} service into api server
-    _ "{{$relpath}}/generated/{{$value.Pkg}}/grpc/server"{{end}}
+    // blank import to pull in {{$key}} service into api server
+    _ "{{$relpath}}/generated/{{$key}}/grpc/server"{{end}}
     ){{end}}

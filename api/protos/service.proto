@@ -1,0 +1,113 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package network;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
+
+// ----------------------------- Service Object -----------------------------
+
+// The Service TLS configuration for inbound connections.
+// It is used on all ports specified in the Service spec.
+// Multiple Service objects can select the same workload and provide different
+// server TLS configurations for disjoint sets of ports.
+message TLSServerPolicySpec {
+    enum ClientAuthTypes {
+      Mandatory = 0;
+      Optional = 1;
+      None = 2;
+    }
+
+    // List of names of certificates to present to clients.
+    // The certificates "usage" field must contain "server".
+    // If multiple certificates names are provided, system tries to choose the
+    // correct one using SNI, otherwise it picks the first one in the list.
+    repeated string Certificates = 1 [(gogoproto.jsontag) = "tls-server-certificates,omitempty"];
+
+    // Client authentication
+    // "None" means that server does not request and will not validate a client certificate.
+    // "Mandatory" means that server requests and validates client certificate.
+    // "Optional" means that server requests client certificate but proceeds even
+    // if client does not present it.
+    // Default is "Mandatory".
+    string ClientAuthentication = 2 [(venice.check) = "StrEnum(TLSServerPolicySpec.ClientAuthTypes)",
+                                     (gogoproto.jsontag) = "client-authentication,omitempty"];
+
+    // The list of root certificates used to validate a trust chain presented by client.
+    // If the list is empty, all roots certificates in the tenant scope are considered.
+    repeated string TrustRoots = 3 [(gogoproto.jsontag) = "tls-server-trust-roots,omitempty"];
+
+    // Valid DNS names or IP addresses that must appear in the client certificate
+    // SubjAltName or Common Name (if SAN is not specified).
+    // If client auth is enabled and AllowedPeerId is not specified, server accepts any
+    // client certificate as long as it is valid  (not expired and with a valid trust chain).
+    repeated string AllowedPeerId = 4 [(gogoproto.jsontag) = "tls-server-allowed-peer-id,omitempty"];
+}
+
+// Service TLS configuration for connections initiated by the workload towards
+// destinations inside or outside the cluster.
+message TLSClientPolicySpec {
+    // A map containing the certificate to use for a set of destinations.
+    // The key is a selector for workloads that exist either inside or
+    // outside the cluster. It can be based on labels, hostnames or "IP:port" pairs.
+    // The value is the name of the certificate to use for the selected destinations.
+    // The certificates "usage" field must contain "client".
+    // TODO: replace the first "string" type with proper selector type when available.
+    // A single "default" certificate which matches all destinations is allowed.
+    // If a destination matches multiple non-default map keys, an error is returned.
+    // If a destination does not match any map key (and there is no default),
+    // the outbound connection is initiated without TLS.
+    map<string, string> CertificatesSelector = 1 [(gogoproto.jsontag) = "tls-client-certificates-selector,omitempty"];
+
+    // The list of root certificates used to validate a trust chain presented by a server.
+    // If the list is empty, all roots certificates in the tenant scope are considered.
+    repeated string TrustRoots = 2 [(gogoproto.jsontag) = "tls-client-trust-roots,omitempty"];
+
+    // Valid DNS names or IP addresses that must appear in the server certificate
+    // SubjAltName or Common Name (if SAN is not specified). If not specified,
+    // client validates the IP address of the server.
+    repeated string AllowedPeerId = 3 [(gogoproto.jsontag) = "tls-client-allowed-peer-id,omitempty"];
+}
+
+// spec part of service object
+message ServiceSpec {
+    // FIXME: maps are not working. change this after its fixed
+    // map<string, string> WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-labels,omitempty"];
+    // workload selector for the service (list of labels to match)
+    repeated string WorkloadSelector     = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-labels,omitempty"];
+    // Virtual IP of the load balancer
+    string VirtualIp                     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "virtual-ip,omitempty"];
+    // load balancer port
+    string Ports                         = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ports,omitempty"];
+    // load balancing policy (reference to LbPolicy object)
+    string LBPolicy                      = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "lb-policy,omitempty"];
+    // TLS configuration for inbound connections
+    TLSServerPolicySpec TLSServerPolicy  = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tls-server-policy,omitempty"];
+    // TLS configuration for outbound connections
+    TLSClientPolicySpec TLSClientPolicy  = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tls-client-policy,omitempty"];
+}
+
+// status part of service object
+message ServiceStatus {
+    // list of workloads that are backends of this service
+    repeated string Workloads = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workloads,omitempty"];
+}
+
+// Service represents a group of identical endpoints, such as servers in an app tier
+message Service {
+    option (venice.objectPrefix) =  {Collection: "services", Path: "/{O.Tenant}"};
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the Service.
+    ServiceSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the Service.
+    ServiceStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

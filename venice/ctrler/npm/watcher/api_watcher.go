@@ -8,7 +8,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -33,7 +33,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	defer netWatcher.Stop()
 
 	// sg watcher
-	sgWatcher, err := apicl.SecurityGroupV1().SecurityGroup().Watch(ctx, &opts)
+	sgWatcher, err := apicl.SecurityV1().SecurityGroup().Watch(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to start watch (%s)\n", err)
 		return
@@ -41,7 +41,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	defer sgWatcher.Stop()
 
 	// sg policy watcher
-	sgpWatcher, err := apicl.SgpolicyV1().Sgpolicy().Watch(ctx, &opts)
+	sgpWatcher, err := apicl.SecurityV1().Sgpolicy().Watch(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to start watch (%s)\n", err)
 		return
@@ -49,7 +49,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	defer sgpWatcher.Stop()
 
 	// ep object watcher
-	epWatcher, err := apicl.EndpointV1().Endpoint().Watch(ctx, &opts)
+	epWatcher, err := apicl.WorkloadV1().Endpoint().Watch(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to start watch (%s)\n", err)
 		return
@@ -57,7 +57,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	defer epWatcher.Stop()
 
 	// tenant object watcher
-	tnWatcher, err := apicl.TenantV1().Tenant().Watch(ctx, &opts)
+	tnWatcher, err := apicl.ClusterV1().Tenant().Watch(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to start watch (%s)\n", err)
 		return
@@ -65,7 +65,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	defer tnWatcher.Stop()
 
 	// get all current tenants
-	tnList, err := apicl.TenantV1().Tenant().List(ctx, &opts)
+	tnList, err := apicl.ClusterV1().Tenant().List(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to list tenants (%s)\n", err)
 		return
@@ -97,7 +97,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	}
 
 	// get all current sgs
-	sgList, err := apicl.SecurityGroupV1().SecurityGroup().List(ctx, &opts)
+	sgList, err := apicl.SecurityV1().SecurityGroup().List(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to list sgs (%s)\n", err)
 		return
@@ -113,7 +113,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	}
 
 	// get all current sg policies
-	sgpList, err := apicl.SgpolicyV1().Sgpolicy().List(ctx, &opts)
+	sgpList, err := apicl.SecurityV1().Sgpolicy().List(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to list sg policies (%s)\n", err)
 		return
@@ -236,14 +236,14 @@ func (w *Watcher) handleVmmEvents(stream orch.OrchApi_WatchNwIFsClient) {
 			log.Infof("VMM watcher: Got VMM NWIf event %v, Nwif: %+v", evtType, nif)
 
 			// convert Nw IF to an endpoint
-			ep := network.Endpoint{
+			ep := workload.Endpoint{
 				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 				ObjectMeta: api.ObjectMeta{
 					Name:   nif.ObjectMeta.UUID,
 					Tenant: nif.ObjectMeta.Tenant,
 				},
-				Spec: network.EndpointSpec{},
-				Status: network.EndpointStatus{
+				Spec: workload.EndpointSpec{},
+				Status: workload.EndpointStatus{
 					Network:            nif.Status.Network,
 					EndpointUUID:       nif.ObjectMeta.UUID,
 					WorkloadName:       nif.Status.WlName,

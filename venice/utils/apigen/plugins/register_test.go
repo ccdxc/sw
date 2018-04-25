@@ -1076,6 +1076,91 @@ func TestGetManifest(t *testing.T) {
 	}
 }
 
+func TestGenPkgManifest(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example1.proto'
+		package: 'example'
+		syntax: 'proto3'
+		options:<[venice.fileGrpcDest]: "localhost:8082">
+		`,
+		`
+		name: 'example2.proto'
+		package: 'example'
+		syntax: 'proto3'
+		options:<[venice.fileApiServerBacked]: false>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example1.proto", "example2.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed (%s)", err)
+	}
+	file, err := r.LookupFile("example1.proto")
+	if err != nil {
+		t.Fatalf("Could not find file in request")
+	}
+	filepath := "/nonexistent/filenameXXXX"
+	manifest, err := genPkgManifest(file, filepath, "example", "example1.proto")
+	// Was empty file so we need to have a PkgManifest with single element.
+	if err != nil {
+		t.Errorf("genManifest failed (%s)", err)
+	}
+	if len(manifest) != 1 {
+		t.Fatalf("expecting 1 entry found %d", len(manifest))
+	}
+	if p, ok := manifest["example"]; !ok {
+		t.Errorf("did not find package in manifest")
+	} else {
+		if len(p.Files) != 1 {
+			t.Errorf("unexpected number of files, exp 1 got %d[%s]", len(p.Files), p.Files)
+		}
+		if p.Files[0] != "example1.proto" {
+			t.Errorf("Unexpected file in manifest [%s]", p.Files)
+		}
+		if p.APIServer != true {
+			t.Errorf("invalid APIServer flag")
+		}
+	}
+	fileinput := []byte("\ntrue example example1.proto example2.proto\ntrue example2 example2.proto xxx.proto yyy.proto zzz.proto\n")
+	manifest = parsePkgManifest(fileinput)
+	if err != nil {
+		t.Errorf("genManifest failed (%s)", err)
+	}
+	if len(manifest) != 2 {
+		t.Fatalf("invalid number of manifest entries while parsing %d[%v]", len(manifest), manifest)
+	}
+	if p, ok := manifest["example"]; !ok {
+		t.Errorf("did not find package example in manifest")
+	} else {
+		if len(p.Files) != 2 {
+			t.Errorf("expecting 2 files got %d", len(p.Files))
+		}
+		exp := []string{"example1.proto", "example2.proto"}
+		if !reflect.DeepEqual(exp, p.Files) {
+			t.Errorf("manigest files do not match [%v][%v]", p.Files, exp)
+		}
+	}
+	if p, ok := manifest["example2"]; !ok {
+		t.Errorf("did not find package example in manifest")
+	} else {
+		if len(p.Files) != 4 {
+			t.Errorf("expecting 2 files got %d", len(p.Files))
+		}
+		exp := []string{"example2.proto", "xxx.proto", "yyy.proto", "zzz.proto"}
+		if !reflect.DeepEqual(exp, p.Files) {
+			t.Errorf("manigest files do not match [%v][%v]", p.Files, exp)
+		}
+	}
+}
+
 func TestGetSvcManifest(t *testing.T) {
 	var req gogoplugin.CodeGeneratorRequest
 	for _, src := range []string{
@@ -2628,4 +2713,44 @@ func TestStorageTransformerNegativeCases(t *testing.T) {
 	}
 
 	storageTransformerArgMap = scratchMap
+}
+
+func TestGetRelPath(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example1.proto'
+		package: 'example'
+		syntax: 'proto3'
+		options:<[venice.fileGrpcDest]: "localhost:8082">
+		`,
+		`
+		name: 'example2.proto'
+		package: 'example'
+		syntax: 'proto3'
+		options:<[venice.fileApiServerBacked]: false>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example1.proto", "example2.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed (%s)", err)
+	}
+	file, err := r.LookupFile("example1.proto")
+	if err != nil {
+		t.Fatalf("Could not find file in request")
+	}
+	ret, err := getRelPath(file)
+	if err != nil {
+		t.Errorf("error getting relPath (%s)", err)
+	}
+	if ret != "github.com/pensando/sw/api" {
+		t.Fatalf("relpath does not match [%s]", ret)
+	}
 }

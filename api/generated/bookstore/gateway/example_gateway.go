@@ -2,7 +2,7 @@
 
 /*
 Package bookstoreGwService is a auto generated package.
-Input file: protos/example.proto
+Input file: example.proto
 */
 package bookstoreGwService
 
@@ -20,7 +20,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
-	"github.com/pensando/sw/api/generated/bookstore/grpc/client"
+	grpcclient "github.com/pensando/sw/api/generated/bookstore/grpc/client"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -825,6 +825,7 @@ func (e *sBookstoreV1GwService) newClient(ctx context.Context, grpcAddr string, 
 }
 
 func init() {
+
 	apigw := apigwpkg.MustGetAPIGateway()
 
 	svcBookstoreV1 := sBookstoreV1GwService{}

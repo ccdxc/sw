@@ -4,8 +4,8 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 
-	"github.com/pensando/sw/api/generated/cmd"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/api/generated/cluster"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -266,13 +266,13 @@ type ResolverService interface {
 }
 
 // NodeEventHandler handles watch events for Node object
-type NodeEventHandler func(et kvstore.WatchEventType, node *cmd.Node)
+type NodeEventHandler func(et kvstore.WatchEventType, node *cluster.Node)
 
 // ClusterEventHandler handles watch events for Cluster object
-type ClusterEventHandler func(et kvstore.WatchEventType, cluster *cmd.Cluster)
+type ClusterEventHandler func(et kvstore.WatchEventType, cluster *cluster.Cluster)
 
 // SmartNICEventHandler handles watch events for SmartNIC object
-type SmartNICEventHandler func(et kvstore.WatchEventType, nic *cmd.SmartNIC)
+type SmartNICEventHandler func(et kvstore.WatchEventType, nic *cluster.SmartNIC)
 
 // CfgWatcherService watches for changes to config from API Server
 type CfgWatcherService interface {
@@ -292,7 +292,7 @@ type CfgWatcherService interface {
 
 	// APIClient returns a valid interface once the APIServer is good and
 	// accepting requests
-	APIClient() cmd.CmdV1Interface
+	APIClient() cluster.ClusterV1Interface
 }
 
 // SmartNICService is responsible for lifecycle management of SmartNIC object
@@ -303,14 +303,14 @@ type SmartNICService interface {
 
 	// InitiateNICRegistration initiates post to naples config to switch to
 	// managed mode
-	InitiateNICRegistration(nic *cmd.SmartNIC)
+	InitiateNICRegistration(nic *cluster.SmartNIC)
 
 	// UpdateNicInRetryDB adds or updates a smartNIC in RetryDB that has NICs in
 	// active retry for initiating NIC registration to switch to managed mode
-	UpdateNicInRetryDB(nic *cmd.SmartNIC)
+	UpdateNicInRetryDB(nic *cluster.SmartNIC)
 
 	// DeleteNicFromRetryDB removes a smartNIC from RetryDB
-	DeleteNicFromRetryDB(nic *cmd.SmartNIC)
+	DeleteNicFromRetryDB(nic *cluster.SmartNIC)
 }
 
 // ServiceTracker tracks location of a service

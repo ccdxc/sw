@@ -14,6 +14,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
@@ -208,7 +209,7 @@ func (ns *NetworkState) ListEndpoints() []*EndpointState {
 }
 
 // CreateEndpoint creates an endpoint
-func (ns *NetworkState) CreateEndpoint(epinfo *network.Endpoint) (*EndpointState, error) {
+func (ns *NetworkState) CreateEndpoint(epinfo *workload.Endpoint) (*EndpointState, error) {
 	// see if we already have this endpoint
 	oldEps, ok := ns.FindEndpoint(epinfo.ObjectMeta.Name)
 	if ok {

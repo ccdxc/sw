@@ -6,7 +6,10 @@ import (
 	"context"
 
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -17,10 +20,10 @@ import (
 // Writer is the api provided by writer object
 type Writer interface {
 	WriteNetwork(nw *network.Network) error
-	WriteEndpoint(ep *network.Endpoint, update bool) error
-	WriteTenant(tn *network.Tenant) error
-	WriteSecurityGroup(sg *network.SecurityGroup) error
-	WriteSgPolicy(sgp *network.Sgpolicy) error
+	WriteEndpoint(ep *workload.Endpoint, update bool) error
+	WriteTenant(tn *cluster.Tenant) error
+	WriteSecurityGroup(sg *security.SecurityGroup) error
+	WriteSgPolicy(sgp *security.Sgpolicy) error
 	Close() error
 }
 
@@ -83,7 +86,7 @@ func (wr *APISrvWriter) WriteNetwork(nw *network.Network) error {
 }
 
 // WriteEndpoint writes endpoint object
-func (wr *APISrvWriter) WriteEndpoint(ep *network.Endpoint, update bool) error {
+func (wr *APISrvWriter) WriteEndpoint(ep *workload.Endpoint, update bool) error {
 	// if we have no URL, we are done
 	if wr.apisrvURL == "" {
 		return nil
@@ -100,19 +103,19 @@ func (wr *APISrvWriter) WriteEndpoint(ep *network.Endpoint, update bool) error {
 
 	// write it
 	if update {
-		_, err = apicl.EndpointV1().Endpoint().Update(context.Background(), ep)
+		_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), ep)
 	} else {
-		_, err = apicl.EndpointV1().Endpoint().Create(context.Background(), ep)
+		_, err = apicl.WorkloadV1().Endpoint().Create(context.Background(), ep)
 		// if create fails, try update instead
 		if err != nil {
-			_, err = apicl.EndpointV1().Endpoint().Update(context.Background(), ep)
+			_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), ep)
 		}
 	}
 	return err
 }
 
 // WriteTenant writes tenant object
-func (wr *APISrvWriter) WriteTenant(tn *network.Tenant) error {
+func (wr *APISrvWriter) WriteTenant(tn *cluster.Tenant) error {
 	// if we have no URL, we are done
 	if wr.apisrvURL == "" {
 		return nil
@@ -128,12 +131,12 @@ func (wr *APISrvWriter) WriteTenant(tn *network.Tenant) error {
 	tn.ObjectMeta.ResourceVersion = ""
 
 	// write it
-	_, err = apicl.TenantV1().Tenant().Update(context.Background(), tn)
+	_, err = apicl.ClusterV1().Tenant().Update(context.Background(), tn)
 	return err
 }
 
 // WriteSecurityGroup writes security group object
-func (wr *APISrvWriter) WriteSecurityGroup(sg *network.SecurityGroup) error {
+func (wr *APISrvWriter) WriteSecurityGroup(sg *security.SecurityGroup) error {
 	// if we have no URL, we are done
 	if wr.apisrvURL == "" {
 		return nil
@@ -149,12 +152,12 @@ func (wr *APISrvWriter) WriteSecurityGroup(sg *network.SecurityGroup) error {
 	sg.ObjectMeta.ResourceVersion = ""
 
 	// write it
-	_, err = apicl.SecurityGroupV1().SecurityGroup().Update(context.Background(), sg)
+	_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), sg)
 	return err
 }
 
 // WriteSgPolicy write sg policy object
-func (wr *APISrvWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
+func (wr *APISrvWriter) WriteSgPolicy(sgp *security.Sgpolicy) error {
 	// if we have no URL, we are done
 	if wr.apisrvURL == "" {
 		return nil
@@ -170,7 +173,7 @@ func (wr *APISrvWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
 	sgp.ObjectMeta.ResourceVersion = ""
 
 	// write it
-	_, err = apicl.SgpolicyV1().Sgpolicy().Update(context.Background(), sgp)
+	_, err = apicl.SecurityV1().Sgpolicy().Update(context.Background(), sgp)
 	return err
 }
 

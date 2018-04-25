@@ -6,7 +6,7 @@ import (
 	"path"
 	"time"
 
-	cmd "github.com/pensando/sw/api/generated/cmd"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/satori/go.uuid"

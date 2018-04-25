@@ -15,7 +15,7 @@ import (
 	api "github.com/pensando/sw/api"
 	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/cmd"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	nmd "github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
@@ -59,8 +59,8 @@ type testInfo struct {
 	smartNICServer *RPCServer
 }
 
-func (t testInfo) APIClient() cmd.CmdV1Interface {
-	return t.apiClient.CmdV1()
+func (t testInfo) APIClient() cmd.ClusterV1Interface {
+	return t.apiClient.ClusterV1()
 }
 
 var tInfo testInfo
@@ -296,7 +296,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			clRef.ObjectMeta.Name = "testCluster"
 			clRef.ObjectMeta.ResourceVersion = refObj.ObjectMeta.ResourceVersion
 			clRef.Spec.AutoAdmitNICs = tc.autoAdmit
-			clObj, err := tInfo.apiClient.CmdV1().Cluster().Update(context.Background(), &clRef)
+			clObj, err := tInfo.apiClient.ClusterV1().Cluster().Update(context.Background(), &clRef)
 			if err != nil || clObj == nil {
 				t.Fatalf("Error updating cluster auto-admit status: %v %v", clObj, err)
 			}
@@ -618,7 +618,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 		},
 	}
 
-	_, err = tInfo.apiClient.CmdV1().SmartNIC().Create(context.Background(), &nic)
+	_, err = tInfo.apiClient.ClusterV1().SmartNIC().Create(context.Background(), &nic)
 	if err != nil {
 		t.Errorf("Failed to created smartnic: %+v, err: %v", nic, err)
 	}
@@ -668,7 +668,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 		meta := api.ObjectMeta{
 			Name: nodeID,
 		}
-		nicObj, err := tInfo.apiClient.CmdV1().SmartNIC().Get(context.Background(), &meta)
+		nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
 		if err != nil || nicObj == nil || nicObj.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
 			log.Errorf("Failed to validate phase of SmartNIC object, mac:%s, phase: %s err: %v",
 				nodeID, nicObj.Spec.Phase, err)
@@ -685,7 +685,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 		meta := api.ObjectMeta{
 			Name: nodeID,
 		}
-		nodeObj, err := tInfo.apiClient.CmdV1().Node().Get(context.Background(), &meta)
+		nodeObj, err := tInfo.apiClient.ClusterV1().Node().Get(context.Background(), &meta)
 		if err != nil || nodeObj == nil {
 			log.Errorf("Failed to GET Node object, mac:%s, %v", nodeID, err)
 			return false, nil
@@ -763,7 +763,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 		},
 	}
 
-	_, err = tInfo.apiClient.CmdV1().SmartNIC().Create(context.Background(), &nic)
+	_, err = tInfo.apiClient.ClusterV1().SmartNIC().Create(context.Background(), &nic)
 	if err != nil {
 		t.Errorf("Failed to created smartnic: %+v, err: %v", nic, err)
 	}
@@ -774,7 +774,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 		meta := api.ObjectMeta{
 			Name: nodeID,
 		}
-		nicObj, err := tInfo.apiClient.CmdV1().SmartNIC().Get(context.Background(), &meta)
+		nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
 		if err != nil || nicObj == nil || len(nicObj.Status.Conditions) == 0 ||
 			nicObj.Status.Conditions[0].Type != cmd.SmartNICCondition_UNREACHABLE.String() ||
 			nicObj.Status.Conditions[0].Status != cmd.ConditionStatus_TRUE.String() {
@@ -863,7 +863,7 @@ func testSetup() {
 			AutoAdmitNICs: true,
 		},
 	}
-	_, err = tInfo.apiClient.CmdV1().Cluster().Create(context.Background(), clRef)
+	_, err = tInfo.apiClient.ClusterV1().Cluster().Create(context.Background(), clRef)
 	if err != nil {
 		fmt.Printf("Error creating Cluster object, %v", err)
 		os.Exit(-1)
@@ -878,7 +878,7 @@ func testTeardown() {
 			Name: "testCluster",
 		},
 	}
-	_, err := tInfo.apiClient.CmdV1().Cluster().Delete(context.Background(), &clRef.ObjectMeta)
+	_, err := tInfo.apiClient.ClusterV1().Cluster().Delete(context.Background(), &clRef.ObjectMeta)
 	if err != nil {
 		fmt.Printf("Error deleting Cluster object, %v", err)
 		os.Exit(-1)

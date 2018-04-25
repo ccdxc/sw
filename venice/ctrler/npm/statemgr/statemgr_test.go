@@ -8,7 +8,10 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -36,15 +39,15 @@ func createNetwork(stateMgr *Statemgr, tenant, net, subnet, gw string) error {
 	return stateMgr.CreateNetwork(&np)
 }
 
-func createSg(stateMgr *Statemgr, tenant, sgname string, selector *labels.Selector) (*network.SecurityGroup, error) {
+func createSg(stateMgr *Statemgr, tenant, sgname string, selector *labels.Selector) (*security.SecurityGroup, error) {
 	// sg object
-	sg := network.SecurityGroup{
+	sg := security.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: tenant,
 			Name:   sgname,
 		},
-		Spec: network.SecurityGroupSpec{
+		Spec: security.SecurityGroupSpec{
 			WorkloadSelector: selector,
 		},
 	}
@@ -58,7 +61,7 @@ func createSg(stateMgr *Statemgr, tenant, sgname string, selector *labels.Select
 // createTenant utility function to create a tenant
 func createTenant(stateMgr *Statemgr, tenant string) error {
 	// network params
-	tn := network.Tenant{
+	tn := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: tenant,
@@ -73,15 +76,15 @@ func createTenant(stateMgr *Statemgr, tenant string) error {
 // createEndpoint utility function to create an endpoint
 func createEndpoint(stateMgr *Statemgr, tenant, endpoint, net string) (*EndpointState, error) {
 	// network params
-	ep := network.Endpoint{
+	ep := workload.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      endpoint,
 			Namespace: "",
 			Tenant:    tenant,
 		},
-		Spec: network.EndpointSpec{},
-		Status: network.EndpointStatus{
+		Spec: workload.EndpointSpec{},
+		Status: workload.EndpointStatus{
 			EndpointUUID:   "testEndpointUUID",
 			WorkloadUUID:   "testContainerUUID",
 			WorkloadName:   "testContainerName",
@@ -108,19 +111,19 @@ func (d *dummyWriter) WriteNetwork(nw *network.Network) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteEndpoint(ep *network.Endpoint, update bool) error {
+func (d *dummyWriter) WriteEndpoint(ep *workload.Endpoint, update bool) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteSecurityGroup(sg *network.SecurityGroup) error {
+func (d *dummyWriter) WriteSecurityGroup(sg *security.SecurityGroup) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
+func (d *dummyWriter) WriteSgPolicy(sgp *security.Sgpolicy) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteTenant(tn *network.Tenant) error {
+func (d *dummyWriter) WriteTenant(tn *cluster.Tenant) error {
 	return nil
 }
 
@@ -220,15 +223,15 @@ func TestEndpointCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating the network")
 
 	// endpoint params
-	epinfo := network.Endpoint{
+	epinfo := workload.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "testEndpoint",
 			Namespace: "",
 			Tenant:    "default",
 		},
-		Spec: network.EndpointSpec{},
-		Status: network.EndpointStatus{
+		Spec: workload.EndpointSpec{},
+		Status: workload.EndpointStatus{
 			EndpointUUID:   "testEndpointUUID",
 			WorkloadUUID:   "testContainerUUID",
 			WorkloadName:   "testContainerName",
@@ -264,14 +267,14 @@ func TestEndpointCreateDelete(t *testing.T) {
 	Assert(t, (err != nil), "Was able to create duplicate endpoint", epinfo)
 
 	// verify creating new EP after ip addr have run out fails
-	newEP := network.Endpoint{
+	newEP := workload.Endpoint{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "newEndpoint",
 			Namespace: "",
 			Tenant:    "default",
 		},
-		Spec: network.EndpointSpec{},
-		Status: network.EndpointStatus{
+		Spec: workload.EndpointSpec{},
+		Status: workload.EndpointStatus{
 			EndpointUUID:   "newEndpointUUID",
 			WorkloadUUID:   "newContainerUUID",
 			WorkloadName:   "newContainerName",
@@ -314,13 +317,13 @@ func TestEndpointCreateFailure(t *testing.T) {
 	AssertOk(t, err, "Error creating the network")
 
 	// endpoint params
-	epinfo := network.Endpoint{
+	epinfo := workload.Endpoint{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "testEndpoint",
 			Namespace: "",
 			Tenant:    "default",
 		},
-		Status: network.EndpointStatus{
+		Status: workload.EndpointStatus{
 			EndpointUUID:   "testEndpointUUID",
 			WorkloadUUID:   "testContainerUUID",
 			WorkloadName:   "testContainerName",
@@ -340,13 +343,13 @@ func TestEndpointCreateFailure(t *testing.T) {
 	Assert(t, (eps.Status.IPv4Address == "10.1.1.1/30"), "Endpoint address did not match", eps)
 
 	// verify creating new EP after ip addr have run out fails
-	newEP := network.Endpoint{
+	newEP := workload.Endpoint{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "newEndpoint",
 			Namespace: "",
 			Tenant:    "default",
 		},
-		Status: network.EndpointStatus{
+		Status: workload.EndpointStatus{
 			EndpointUUID:   "newEndpointUUID",
 			WorkloadUUID:   "newContainerUUID",
 			WorkloadName:   "newContainerName",
@@ -385,15 +388,15 @@ func TestEndpointListWatch(t *testing.T) {
 	stateMgr.WatchObjects("Endpoint", watchChan)
 
 	// endpoint params
-	epinfo := network.Endpoint{
+	epinfo := workload.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "testEndpoint",
 			Namespace: "",
 			Tenant:    "default",
 		},
-		Spec: network.EndpointSpec{},
-		Status: network.EndpointStatus{
+		Spec: workload.EndpointSpec{},
+		Status: workload.EndpointStatus{
 			EndpointUUID:   "testEndpointUUID",
 			WorkloadUUID:   "testContainerUUID",
 			WorkloadName:   "testContainerName",
@@ -477,15 +480,15 @@ func TestSgAttachEndpoint(t *testing.T) {
 	AssertOk(t, err, "Error creating the network")
 
 	// endpoint object
-	epinfo := network.Endpoint{
+	epinfo := workload.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "testEndpoint",
 			Namespace: "",
 			Tenant:    "default",
 		},
-		Spec: network.EndpointSpec{},
-		Status: network.EndpointStatus{
+		Spec: workload.EndpointSpec{},
+		Status: workload.EndpointStatus{
 			EndpointUUID:       "testEndpointUUID",
 			WorkloadUUID:       "testContainerUUID",
 			WorkloadName:       "testContainerName",
@@ -557,15 +560,15 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating security group")
 
 	// sg policy
-	sgp := network.Sgpolicy{
+	sgp := security.Sgpolicy{
 		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   "test-sgpolicy",
 		},
-		Spec: network.SgpolicySpec{
+		Spec: security.SgpolicySpec{
 			AttachGroups: []string{"procurement"},
-			InRules: []network.SGRule{
+			InRules: []security.SGRule{
 				{
 					Ports:     "tcp/80",
 					Action:    "allow",
@@ -595,15 +598,15 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	Assert(t, (prsg.Status.Policies[0] == sgps.Name), "Policy not found in sg status", prsg)
 
 	// verify we can not attach a policy to unknown sg
-	sgp2 := network.Sgpolicy{
+	sgp2 := security.Sgpolicy{
 		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   "sgpolicy2",
 		},
-		Spec: network.SgpolicySpec{
+		Spec: security.SgpolicySpec{
 			AttachGroups: []string{"unknown"},
-			InRules: []network.SGRule{
+			InRules: []security.SGRule{
 				{
 					Ports:     "tcp/80",
 					Action:    "allow",
@@ -652,14 +655,14 @@ func TestEndpointConcurrency(t *testing.T) {
 	for i := 0; i < concurrency; i++ {
 		go func(idx int) {
 			// endpoint object
-			epinfo := network.Endpoint{
+			epinfo := workload.Endpoint{
 				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 				ObjectMeta: api.ObjectMeta{
 					Name:   fmt.Sprintf("testEndpoint-%d", idx),
 					Tenant: "default",
 				},
-				Spec: network.EndpointSpec{},
-				Status: network.EndpointStatus{
+				Spec: workload.EndpointSpec{},
+				Status: workload.EndpointStatus{
 					EndpointUUID:       "testEndpointUUID",
 					WorkloadUUID:       "testContainerUUID",
 					WorkloadName:       "testContainerName",

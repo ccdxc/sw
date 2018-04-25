@@ -49,6 +49,8 @@ const (
 type ServiceBackend interface {
 	// CompleteRegistration is invoked after the API server is done initializing.
 	CompleteRegistration(ctx context.Context, logger log.Logger, grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error
+	// Reset provides a trigger to cleanup any backend state needed.
+	Reset()
 }
 
 // ServiceHookCb is a callback registered with the ApiServer for the purpose of registering Hooks for services.

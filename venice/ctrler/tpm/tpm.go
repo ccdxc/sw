@@ -14,8 +14,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/api/generated/telemetry"
+	"github.com/pensando/sw/api/generated/cluster"
+	telemetry "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/debug"
@@ -117,7 +117,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 	selCases := []reflect.SelectCase{}
 
 	// stats
-	watcher, err := pm.client.StatsPolicyV1().StatsPolicy().Watch(ctx, &opts)
+	watcher, err := pm.client.MonitoringV1().StatsPolicy().Watch(ctx, &opts)
 	if err != nil {
 		pmLog.Errorf("failed to watch stats policy, error: {%s}", err)
 		return err
@@ -129,7 +129,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
 	// fwlog
-	watcher, err = pm.client.FwlogPolicyV1().FwlogPolicy().Watch(ctx, &opts)
+	watcher, err = pm.client.MonitoringV1().FwlogPolicy().Watch(ctx, &opts)
 	if err != nil {
 		pmLog.Errorf("failed to watch fwlog policy, error: {%s}", err)
 		return err
@@ -141,7 +141,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
 	// export
-	watcher, err = pm.client.FlowExportPolicyV1().FlowExportPolicy().Watch(ctx, &opts)
+	watcher, err = pm.client.MonitoringV1().FlowExportPolicy().Watch(ctx, &opts)
 	if err != nil {
 		pmLog.Errorf("failed to watch export policy, error: {%s}", err)
 		return err
@@ -153,7 +153,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
 	// watch tenants
-	watcher, err = pm.client.TenantV1().Tenant().Watch(ctx, &opts)
+	watcher, err = pm.client.ClusterV1().Tenant().Watch(ctx, &opts)
 	if err != nil {
 		pmLog.Errorf("failed to watch tenant, error: {%s}", err)
 		return err
@@ -194,7 +194,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 		case *telemetry.FwlogPolicy:
 			pm.processFwlogPolicy(event.Type, polObj)
 
-		case *network.Tenant:
+		case *cluster.Tenant:
 			pm.processTenants(ctx, event.Type, polObj)
 
 		default:
@@ -276,7 +276,7 @@ var DefaultFwlogSpec = telemetry.FwlogSpec{
 }
 
 // process tenants
-func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.WatchEventType, tenant *network.Tenant) error {
+func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.WatchEventType, tenant *cluster.Tenant) error {
 	pmLog.Infof("process tenant event:{%v} {%#v} ", eventType, tenant)
 
 	switch eventType {
@@ -290,8 +290,8 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 			Spec: DefaultStatsSpec,
 		}
 
-		if _, err := pm.client.StatsPolicyV1().StatsPolicy().Get(ctx, &statsPolicy.ObjectMeta); err != nil {
-			if _, err := pm.client.StatsPolicyV1().StatsPolicy().Create(ctx, statsPolicy); err != nil {
+		if _, err := pm.client.MonitoringV1().StatsPolicy().Get(ctx, &statsPolicy.ObjectMeta); err != nil {
+			if _, err := pm.client.MonitoringV1().StatsPolicy().Create(ctx, statsPolicy); err != nil {
 				pmLog.Errorf("failed to create stats policy for tenant %s, error: %s", tenant.GetName(), err)
 				return err
 			}
@@ -306,8 +306,8 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 			Spec: DefaultFwlogSpec,
 		}
 
-		if _, err := pm.client.FwlogPolicyV1().FwlogPolicy().Get(ctx, &fwlogPolicy.ObjectMeta); err != nil {
-			if _, err := pm.client.FwlogPolicyV1().FwlogPolicy().Create(ctx, fwlogPolicy); err != nil {
+		if _, err := pm.client.MonitoringV1().FwlogPolicy().Get(ctx, &fwlogPolicy.ObjectMeta); err != nil {
+			if _, err := pm.client.MonitoringV1().FwlogPolicy().Create(ctx, fwlogPolicy); err != nil {
 				pmLog.Errorf("failed to create fwlog policy for tenant %s, error: %s", tenant.GetName(), err)
 				return err
 			}
@@ -321,13 +321,13 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 			Tenant: tenant.GetName(),
 		}
 
-		if _, err := pm.client.StatsPolicyV1().StatsPolicy().Delete(ctx, objMeta); err != nil {
+		if _, err := pm.client.MonitoringV1().StatsPolicy().Delete(ctx, objMeta); err != nil {
 			pmLog.Errorf("failed to delete stats policy for tenant %s, error: %s", tenant.GetName(), err)
 			return err
 		}
 
 		// delete fwlog policy
-		if _, err := pm.client.FwlogPolicyV1().FwlogPolicy().Delete(ctx, objMeta); err != nil {
+		if _, err := pm.client.MonitoringV1().FwlogPolicy().Delete(ctx, objMeta); err != nil {
 			pmLog.Errorf("failed to delete fwlog policy for tenant %s, error: %s", tenant.GetName(), err)
 			return err
 		}

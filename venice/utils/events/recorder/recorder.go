@@ -12,7 +12,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	evtsapi "github.com/pensando/sw/api/generated/monitoring"
 	evtsproxygrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"

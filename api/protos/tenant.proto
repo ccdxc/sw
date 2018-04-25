@@ -1,0 +1,38 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package cluster;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
+
+// ----------------------------- Tenant Object -----------------------------
+
+// spec part of tenant object
+message TenantSpec {
+    // Tenant admin user
+    string AdminUser = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "admin-user,omitempty"];
+}
+
+// status part of tenant object
+message TenantStatus {
+
+}
+
+// Tenant represents an org or a tenant
+message Tenant {
+     option (venice.objectPrefix) = {Collection: "tenants"};
+     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+     // Spec contains the configuration of the tenant.
+     TenantSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+     // Status contains the current state of the tenant.
+     TenantStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

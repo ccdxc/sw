@@ -11,8 +11,9 @@ import (
 
 	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -27,20 +28,20 @@ var (
 	// Namespaces for testing
 	Namespaces = [...]string{"staging", "production"}
 
-	healthy = cmd.SmartNICCondition{
-		Type:   cmd.SmartNICCondition_HEALTHY.String(),
-		Status: cmd.ConditionStatus_TRUE.String(),
+	healthy = cluster.SmartNICCondition{
+		Type:   cluster.SmartNICCondition_HEALTHY.String(),
+		Status: cluster.ConditionStatus_TRUE.String(),
 	}
-	unhealthy = cmd.SmartNICCondition{
-		Type:   cmd.SmartNICCondition_HEALTHY.String(),
-		Status: cmd.ConditionStatus_FALSE.String(),
+	unhealthy = cluster.SmartNICCondition{
+		Type:   cluster.SmartNICCondition_HEALTHY.String(),
+		Status: cluster.ConditionStatus_FALSE.String(),
 	}
 )
 
-func createTenant(name string) *network.Tenant {
+func createTenant(name string) *cluster.Tenant {
 
 	creationTime, _ := types.TimestampProto(time.Now())
-	tnt := network.Tenant{
+	tnt := cluster.Tenant{
 		TypeMeta: api.TypeMeta{
 			Kind:       "Tenant",
 			APIVersion: "v1",
@@ -66,10 +67,10 @@ func createTenant(name string) *network.Tenant {
 	return &tnt
 }
 
-func createNIC(mac, phase, node string, condition *cmd.SmartNICCondition) *cmd.SmartNIC {
+func createNIC(mac, phase, node string, condition *cluster.SmartNICCondition) *cluster.SmartNIC {
 
 	creationTime, _ := types.TimestampProto(time.Now())
-	nic := cmd.SmartNIC{
+	nic := cluster.SmartNIC{
 		TypeMeta: api.TypeMeta{
 			Kind:       "SmartNIC",
 			APIVersion: "v1",
@@ -90,13 +91,13 @@ func createNIC(mac, phase, node string, condition *cmd.SmartNICCondition) *cmd.S
 				"Location": "us-west-zone3",
 			},
 		},
-		Spec: cmd.SmartNICSpec{
+		Spec: cluster.SmartNICSpec{
 			Phase:    phase,
 			NodeName: node,
 			MgmtIp:   "0.0.0.0",
 		},
-		Status: cmd.SmartNICStatus{
-			Conditions: []*cmd.SmartNICCondition{
+		Status: cluster.SmartNICStatus{
+			Conditions: []*cluster.SmartNICCondition{
 				condition,
 			},
 		},
@@ -141,10 +142,10 @@ func createNetwork(tenant, namespace, name, subnet, gw string) *network.Network 
 	return &net
 }
 
-func createSg(tenant, namespace, name string, selectors *labels.Selector) *network.SecurityGroup {
+func createSg(tenant, namespace, name string, selectors *labels.Selector) *security.SecurityGroup {
 	// sg object
 	creationTime, _ := types.TimestampProto(time.Now())
-	sg := network.SecurityGroup{
+	sg := security.SecurityGroup{
 		TypeMeta: api.TypeMeta{
 			Kind:       "SecurityGroup",
 			APIVersion: "v1",
@@ -166,7 +167,7 @@ func createSg(tenant, namespace, name string, selectors *labels.Selector) *netwo
 				"Application": "SAP-HANA",
 			},
 		},
-		Spec: network.SecurityGroupSpec{
+		Spec: security.SecurityGroupSpec{
 			WorkloadSelector: selectors,
 		},
 	}
@@ -183,7 +184,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 
 		tnt := createTenant(tenant)
 		log.Infof("Creating Tenant uuid: %s name: %s", tnt.ObjectMeta.UUID, tnt.Name)
-		if _, err := apiClient.TenantV1().Tenant().Create(ctx, tnt); err != nil {
+		if _, err := apiClient.ClusterV1().Tenant().Create(ctx, tnt); err != nil {
 			log.Errorf("Failed to create tenant object: %s err: %v", tenant, err)
 		}
 	}
@@ -193,17 +194,17 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 	for i = 0; i < objCount; i++ {
 
 		// Create SmartNIC object
-		phase := cmd.SmartNICSpec_ADMITTED.String()
+		phase := cluster.SmartNICSpec_ADMITTED.String()
 		condition := &healthy
 		if i%2 == 0 {
-			phase = cmd.SmartNICSpec_PENDING.String()
+			phase = cluster.SmartNICSpec_PENDING.String()
 			condition = &unhealthy
 		}
 		mac := fmt.Sprintf("44.44.44.00.%02x.%02x", i/256, i%256)
 		node := fmt.Sprintf("esx-%05x", i)
 		nic := createNIC(mac, phase, node, condition)
 		log.Infof("Creating SmartNIC uuid: %s name: %s", nic.ObjectMeta.UUID, nic.Name)
-		if _, err := apiClient.CmdV1().SmartNIC().Create(ctx, nic); err != nil {
+		if _, err := apiClient.ClusterV1().SmartNIC().Create(ctx, nic); err != nil {
 			log.Errorf("Failed to create smartNIC object: %s err: %v", nic.Name, err)
 		}
 
@@ -224,7 +225,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			fmt.Sprintf("sg%02x", i),
 			labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 		log.Infof("\nCreating Security-Group uuid: %s name: %s", sg.ObjectMeta.UUID, sg.Name)
-		if _, err := apiClient.SecurityGroupV1().SecurityGroup().Create(ctx, sg); err != nil {
+		if _, err := apiClient.SecurityV1().SecurityGroup().Create(ctx, sg); err != nil {
 			log.Errorf("Failed to create Security-Group object: %s err: %v", sg.Name, err)
 		}
 	}

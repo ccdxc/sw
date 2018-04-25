@@ -9,7 +9,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/pensando/sw/api/generated/cmd"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/utils/emstore"
 )

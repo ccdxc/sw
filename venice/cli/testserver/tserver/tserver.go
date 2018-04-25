@@ -14,8 +14,10 @@ import (
 	"github.com/go-martini/martini"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 
 	"github.com/satori/go.uuid"
 
@@ -33,29 +35,29 @@ var (
 func Start(port string) {
 	s := runtime.NewScheme()
 
-	s.AddKnownTypes(&cmd.Cluster{}, &cmd.ClusterList{})
+	s.AddKnownTypes(&cluster.Cluster{}, &cluster.ClusterList{})
 
-	s.AddKnownTypes(&network.Endpoint{}, &network.EndpointList{})
+	s.AddKnownTypes(&workload.Endpoint{}, &workload.EndpointList{})
 
 	s.AddKnownTypes(&network.LbPolicy{}, &network.LbPolicyList{})
 
 	s.AddKnownTypes(&network.Network{}, &network.NetworkList{})
 
-	s.AddKnownTypes(&cmd.Node{}, &cmd.NodeList{})
+	s.AddKnownTypes(&cluster.Node{}, &cluster.NodeList{})
 
 	s.AddKnownTypes(&api.Permission{}, &api.PermissionList{})
 
 	s.AddKnownTypes(&api.Role{}, &api.RoleList{})
 
-	s.AddKnownTypes(&network.SecurityGroup{}, &network.SecurityGroupList{})
+	s.AddKnownTypes(&security.SecurityGroup{}, &security.SecurityGroupList{})
 
 	s.AddKnownTypes(&network.Service{}, &network.ServiceList{})
 
-	s.AddKnownTypes(&network.Sgpolicy{}, &network.SgpolicyList{})
+	s.AddKnownTypes(&security.Sgpolicy{}, &security.SgpolicyList{})
 
-	s.AddKnownTypes(&cmd.SmartNIC{}, &cmd.SmartNICList{})
+	s.AddKnownTypes(&cluster.SmartNIC{}, &cluster.SmartNICList{})
 
-	s.AddKnownTypes(&network.Tenant{}, &network.TenantList{})
+	s.AddKnownTypes(&cluster.Tenant{}, &cluster.TenantList{})
 
 	s.AddKnownTypes(&api.User{}, &api.UserList{})
 
@@ -203,8 +205,8 @@ func ClusterCreateHandler(w http.ResponseWriter, req *http.Request) (int, string
 	decoder := json.NewDecoder(req.Body)
 	defer req.Body.Close()
 
-	clusterObj := cmd.Cluster{}
-	oldcluster := cmd.Cluster{}
+	clusterObj := cluster.Cluster{}
+	oldcluster := cluster.Cluster{}
 	if err := decoder.Decode(&clusterObj); err != nil {
 		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
 	}
@@ -290,7 +292,7 @@ func ClusterDeleteHandler(w http.ResponseWriter, params martini.Params, dryRun b
 	}
 
 	key := path.Join(api.Objs["cluster"].URL, objUUID)
-	cluster := cmd.Cluster{}
+	cluster := cluster.Cluster{}
 	if err := kvStore.Get(context.Background(), key, &cluster); err != nil {
 		return http.StatusNotFound, fmt.Sprintf("Cluster %q deletion failed: %v\n", objName, err)
 	}
@@ -329,7 +331,7 @@ func ClusterGetHandler(w http.ResponseWriter, params martini.Params) (int, strin
 
 	key := path.Join(api.Objs["cluster"].URL, objUUID)
 
-	cluster := cmd.Cluster{}
+	cluster := cluster.Cluster{}
 
 	if err := kvStore.Get(context.Background(), key, &cluster); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
@@ -347,7 +349,7 @@ func ClusterGetHandler(w http.ResponseWriter, params martini.Params) (int, strin
 
 // ClusterListHandler lists all clusters.
 func ClusterListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
-	clusters := cmd.ClusterList{}
+	clusters := cluster.ClusterList{}
 
 	// FIXME: URL tenant messup bug
 	url := api.Objs["cluster"].URL
@@ -407,8 +409,8 @@ func EndpointCreateHandler(w http.ResponseWriter, req *http.Request) (int, strin
 	decoder := json.NewDecoder(req.Body)
 	defer req.Body.Close()
 
-	endpointObj := network.Endpoint{}
-	oldendpoint := network.Endpoint{}
+	endpointObj := workload.Endpoint{}
+	oldendpoint := workload.Endpoint{}
 	if err := decoder.Decode(&endpointObj); err != nil {
 		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
 	}
@@ -494,7 +496,7 @@ func EndpointDeleteHandler(w http.ResponseWriter, params martini.Params, dryRun 
 	}
 
 	key := path.Join(api.Objs["endpoint"].URL, objUUID)
-	endpoint := network.Endpoint{}
+	endpoint := workload.Endpoint{}
 	if err := kvStore.Get(context.Background(), key, &endpoint); err != nil {
 		return http.StatusNotFound, fmt.Sprintf("Endpoint %q deletion failed: %v\n", objName, err)
 	}
@@ -533,7 +535,7 @@ func EndpointGetHandler(w http.ResponseWriter, params martini.Params) (int, stri
 
 	key := path.Join(api.Objs["endpoint"].URL, objUUID)
 
-	endpoint := network.Endpoint{}
+	endpoint := workload.Endpoint{}
 
 	if err := kvStore.Get(context.Background(), key, &endpoint); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
@@ -551,7 +553,7 @@ func EndpointGetHandler(w http.ResponseWriter, params martini.Params) (int, stri
 
 // EndpointListHandler lists all endpoints.
 func EndpointListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
-	endpoints := network.EndpointList{}
+	endpoints := workload.EndpointList{}
 
 	// FIXME: URL tenant messup bug
 	url := api.Objs["endpoint"].URL
@@ -1019,8 +1021,8 @@ func NodeCreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
 	decoder := json.NewDecoder(req.Body)
 	defer req.Body.Close()
 
-	nodeObj := cmd.Node{}
-	oldnode := cmd.Node{}
+	nodeObj := cluster.Node{}
+	oldnode := cluster.Node{}
 	if err := decoder.Decode(&nodeObj); err != nil {
 		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
 	}
@@ -1106,7 +1108,7 @@ func NodeDeleteHandler(w http.ResponseWriter, params martini.Params, dryRun bool
 	}
 
 	key := path.Join(api.Objs["node"].URL, objUUID)
-	node := cmd.Node{}
+	node := cluster.Node{}
 	if err := kvStore.Get(context.Background(), key, &node); err != nil {
 		return http.StatusNotFound, fmt.Sprintf("Node %q deletion failed: %v\n", objName, err)
 	}
@@ -1145,7 +1147,7 @@ func NodeGetHandler(w http.ResponseWriter, params martini.Params) (int, string) 
 
 	key := path.Join(api.Objs["node"].URL, objUUID)
 
-	node := cmd.Node{}
+	node := cluster.Node{}
 
 	if err := kvStore.Get(context.Background(), key, &node); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
@@ -1163,7 +1165,7 @@ func NodeGetHandler(w http.ResponseWriter, params martini.Params) (int, string) 
 
 // NodeListHandler lists all nodes.
 func NodeListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
-	nodes := cmd.NodeList{}
+	nodes := cluster.NodeList{}
 
 	// FIXME: URL tenant messup bug
 	url := api.Objs["node"].URL
@@ -1631,8 +1633,8 @@ func SecurityGroupCreateHandler(w http.ResponseWriter, req *http.Request) (int, 
 	decoder := json.NewDecoder(req.Body)
 	defer req.Body.Close()
 
-	securityGroupObj := network.SecurityGroup{}
-	oldsecurityGroup := network.SecurityGroup{}
+	securityGroupObj := security.SecurityGroup{}
+	oldsecurityGroup := security.SecurityGroup{}
 	if err := decoder.Decode(&securityGroupObj); err != nil {
 		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
 	}
@@ -1718,7 +1720,7 @@ func SecurityGroupDeleteHandler(w http.ResponseWriter, params martini.Params, dr
 	}
 
 	key := path.Join(api.Objs["securityGroup"].URL, objUUID)
-	securityGroup := network.SecurityGroup{}
+	securityGroup := security.SecurityGroup{}
 	if err := kvStore.Get(context.Background(), key, &securityGroup); err != nil {
 		return http.StatusNotFound, fmt.Sprintf("SecurityGroup %q deletion failed: %v\n", objName, err)
 	}
@@ -1757,7 +1759,7 @@ func SecurityGroupGetHandler(w http.ResponseWriter, params martini.Params) (int,
 
 	key := path.Join(api.Objs["securityGroup"].URL, objUUID)
 
-	securityGroup := network.SecurityGroup{}
+	securityGroup := security.SecurityGroup{}
 
 	if err := kvStore.Get(context.Background(), key, &securityGroup); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
@@ -1775,7 +1777,7 @@ func SecurityGroupGetHandler(w http.ResponseWriter, params martini.Params) (int,
 
 // SecurityGroupListHandler lists all securityGroups.
 func SecurityGroupListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
-	securityGroups := network.SecurityGroupList{}
+	securityGroups := security.SecurityGroupList{}
 
 	// FIXME: URL tenant messup bug
 	url := api.Objs["securityGroup"].URL
@@ -2039,8 +2041,8 @@ func SgpolicyCreateHandler(w http.ResponseWriter, req *http.Request) (int, strin
 	decoder := json.NewDecoder(req.Body)
 	defer req.Body.Close()
 
-	sgpolicyObj := network.Sgpolicy{}
-	oldsgpolicy := network.Sgpolicy{}
+	sgpolicyObj := security.Sgpolicy{}
+	oldsgpolicy := security.Sgpolicy{}
 	if err := decoder.Decode(&sgpolicyObj); err != nil {
 		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
 	}
@@ -2126,7 +2128,7 @@ func SgpolicyDeleteHandler(w http.ResponseWriter, params martini.Params, dryRun 
 	}
 
 	key := path.Join(api.Objs["sgpolicy"].URL, objUUID)
-	sgpolicy := network.Sgpolicy{}
+	sgpolicy := security.Sgpolicy{}
 	if err := kvStore.Get(context.Background(), key, &sgpolicy); err != nil {
 		return http.StatusNotFound, fmt.Sprintf("Sgpolicy %q deletion failed: %v\n", objName, err)
 	}
@@ -2165,7 +2167,7 @@ func SgpolicyGetHandler(w http.ResponseWriter, params martini.Params) (int, stri
 
 	key := path.Join(api.Objs["sgpolicy"].URL, objUUID)
 
-	sgpolicy := network.Sgpolicy{}
+	sgpolicy := security.Sgpolicy{}
 
 	if err := kvStore.Get(context.Background(), key, &sgpolicy); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
@@ -2183,7 +2185,7 @@ func SgpolicyGetHandler(w http.ResponseWriter, params martini.Params) (int, stri
 
 // SgpolicyListHandler lists all sgpolicys.
 func SgpolicyListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
-	sgpolicys := network.SgpolicyList{}
+	sgpolicys := security.SgpolicyList{}
 
 	// FIXME: URL tenant messup bug
 	url := api.Objs["sgpolicy"].URL
@@ -2243,8 +2245,8 @@ func SmartNICCreateHandler(w http.ResponseWriter, req *http.Request) (int, strin
 	decoder := json.NewDecoder(req.Body)
 	defer req.Body.Close()
 
-	smartNICObj := cmd.SmartNIC{}
-	oldsmartNIC := cmd.SmartNIC{}
+	smartNICObj := cluster.SmartNIC{}
+	oldsmartNIC := cluster.SmartNIC{}
 	if err := decoder.Decode(&smartNICObj); err != nil {
 		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
 	}
@@ -2330,7 +2332,7 @@ func SmartNICDeleteHandler(w http.ResponseWriter, params martini.Params, dryRun 
 	}
 
 	key := path.Join(api.Objs["smartNIC"].URL, objUUID)
-	smartNIC := cmd.SmartNIC{}
+	smartNIC := cluster.SmartNIC{}
 	if err := kvStore.Get(context.Background(), key, &smartNIC); err != nil {
 		return http.StatusNotFound, fmt.Sprintf("SmartNIC %q deletion failed: %v\n", objName, err)
 	}
@@ -2369,7 +2371,7 @@ func SmartNICGetHandler(w http.ResponseWriter, params martini.Params) (int, stri
 
 	key := path.Join(api.Objs["smartNIC"].URL, objUUID)
 
-	smartNIC := cmd.SmartNIC{}
+	smartNIC := cluster.SmartNIC{}
 
 	if err := kvStore.Get(context.Background(), key, &smartNIC); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
@@ -2387,7 +2389,7 @@ func SmartNICGetHandler(w http.ResponseWriter, params martini.Params) (int, stri
 
 // SmartNICListHandler lists all smartNICs.
 func SmartNICListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
-	smartNICs := cmd.SmartNICList{}
+	smartNICs := cluster.SmartNICList{}
 
 	// FIXME: URL tenant messup bug
 	url := api.Objs["smartNIC"].URL
@@ -2447,8 +2449,8 @@ func TenantCreateHandler(w http.ResponseWriter, req *http.Request) (int, string)
 	decoder := json.NewDecoder(req.Body)
 	defer req.Body.Close()
 
-	tenantObj := network.Tenant{}
-	oldtenant := network.Tenant{}
+	tenantObj := cluster.Tenant{}
+	oldtenant := cluster.Tenant{}
 	if err := decoder.Decode(&tenantObj); err != nil {
 		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
 	}
@@ -2534,7 +2536,7 @@ func TenantDeleteHandler(w http.ResponseWriter, params martini.Params, dryRun bo
 	}
 
 	key := path.Join(api.Objs["tenant"].URL, objUUID)
-	tenant := network.Tenant{}
+	tenant := cluster.Tenant{}
 	if err := kvStore.Get(context.Background(), key, &tenant); err != nil {
 		return http.StatusNotFound, fmt.Sprintf("Tenant %q deletion failed: %v\n", objName, err)
 	}
@@ -2573,7 +2575,7 @@ func TenantGetHandler(w http.ResponseWriter, params martini.Params) (int, string
 
 	key := path.Join(api.Objs["tenant"].URL, objUUID)
 
-	tenant := network.Tenant{}
+	tenant := cluster.Tenant{}
 
 	if err := kvStore.Get(context.Background(), key, &tenant); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
@@ -2591,7 +2593,7 @@ func TenantGetHandler(w http.ResponseWriter, params martini.Params) (int, string
 
 // TenantListHandler lists all tenants.
 func TenantListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
-	tenants := network.TenantList{}
+	tenants := cluster.TenantList{}
 
 	// FIXME: URL tenant messup bug
 	url := api.Objs["tenant"].URL

@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cmd"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/utils/log"

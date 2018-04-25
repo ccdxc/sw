@@ -271,33 +271,3 @@ message RoleBinding {
     // Status contains the current state of the role binding.
     RoleBindingStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
-
-// Auth REST API
-service AuthV1 {
-    // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "auth";
-    // API Version.
-    option (venice.apiVersion) = "v1";
-    option (venice.apiGrpcCrudService) = "User";
-    option (venice.apiGrpcCrudService) = "AuthenticationPolicy";
-    option (venice.apiGrpcCrudService) = "Role";
-    option (venice.apiGrpcCrudService) = "RoleBinding";
-    
-    option (venice.apiRestService) = {
-         Object: "User"
-         Method: [ "get", "put", "delete", "post", "list" ]
-     };
-
-    option (venice.apiRestService) = {
-         Object: "AuthenticationPolicy"
-         Method: [ "get", "put", "delete", "post" ]
-     };
-    option (venice.apiRestService) = {
-         Object: "Role"
-         Method: [ "get", "put", "delete", "post", "list" ]
-     };
-    option (venice.apiRestService) = {
-         Object: "RoleBinding"
-         Method: [ "get", "put", "delete", "post", "list" ]
-     };
-}

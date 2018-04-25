@@ -17,7 +17,7 @@ import (
 	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/monitoring"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -47,17 +47,17 @@ var (
 
 	cTime           = time.Now()
 	creationTime, _ = types.TimestampProto(cTime)
-	event           = events.Event{}
+	event           = monitoring.Event{}
 
 	logConfig = log.GetDefaultConfig("elastic-client-test")
 
 	// generate elastic mapping and settings for event
-	eventObj = events.Event{
-		EventAttributes: events.EventAttributes{
+	eventObj = monitoring.Event{
+		EventAttributes: monitoring.EventAttributes{
 			// Need to make sure pointer fields are valid to
 			// generate right mappings using reflect
 			ObjectRef: &api.ObjectRef{},
-			Source:    &events.EventSource{},
+			Source:    &monitoring.EventSource{},
 		},
 	}
 
@@ -360,12 +360,12 @@ func constructEvent() {
 		ResourceVersion: "2",
 		UUID:            "adfadf-sadfasdf-adfsdf-sadf",
 	}
-	event.EventAttributes = events.EventAttributes{
+	event.EventAttributes = monitoring.EventAttributes{
 		Severity: *severity,
 		Type:     *eventType,
 		Message:  fmt.Sprintf("%s - tenant[default]", *eventType),
 		Count:    1,
-		Source: &events.EventSource{
+		Source: &monitoring.EventSource{
 			Component: "CMD",
 			NodeName:  "test",
 		},

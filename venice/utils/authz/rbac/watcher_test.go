@@ -9,7 +9,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -86,14 +86,14 @@ func TestWatcher(t *testing.T) {
 	Assert(t, len(userPermCache.getRoleBindingCache()) == 0, "tenant cache for role bindings is not empty")
 
 	// create tenant
-	tenant := network.Tenant{
+	tenant := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "testTenant",
 			Name:   "testTenant",
 		},
 	}
-	_, err := apicl.TenantV1().Tenant().Create(context.Background(), &tenant)
+	_, err := apicl.ClusterV1().Tenant().Create(context.Background(), &tenant)
 	AssertOk(t, err, "failed to create tenant")
 
 	// verify the tenant cache got created
@@ -171,7 +171,7 @@ func TestWatcher(t *testing.T) {
 	}, fmt.Sprintf("[%v] role not deleted", role.GetName()))
 
 	// delete tenant
-	_, err = apicl.TenantV1().Tenant().Delete(context.Background(), tenant.GetObjectMeta())
+	_, err = apicl.ClusterV1().Tenant().Delete(context.Background(), tenant.GetObjectMeta())
 	AssertOk(t, err, "failed to delete tenant")
 
 	// verify the tenant cache got deleted

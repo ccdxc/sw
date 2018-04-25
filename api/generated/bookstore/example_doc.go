@@ -3,7 +3,7 @@
 /*
 Package bookstore is a auto generated package.
 
-Input file: protos/example.proto
+Input file: example.proto
 
 The following Messages are defined.
 

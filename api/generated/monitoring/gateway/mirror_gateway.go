@@ -2,7 +2,7 @@
 
 /*
 Package monitoringGwService is a auto generated package.
-Input file: protos/mirror.proto
+Input file: mirror.proto
 */
 package monitoringGwService
 
@@ -20,7 +20,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/api/generated/monitoring/grpc/client"
+	grpcclient "github.com/pensando/sw/api/generated/monitoring/grpc/client"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -191,7 +191,7 @@ func (e *sMirrorSessionV1GwService) CompleteRegistration(ctx context.Context,
 
 	fileCount++
 
-	if fileCount == 1 {
+	if fileCount == 3 {
 		err := registerSwaggerDef(m, logger)
 		if err != nil {
 			logger.ErrorLog("msg", "failed to register swagger spec", "service", "monitoring.MirrorSessionV1", "error", err)
@@ -263,6 +263,7 @@ func (e *sMirrorSessionV1GwService) newClient(ctx context.Context, grpcAddr stri
 }
 
 func init() {
+
 	apigw := apigwpkg.MustGetAPIGateway()
 
 	svcMirrorSessionV1 := sMirrorSessionV1GwService{}

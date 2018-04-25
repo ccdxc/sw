@@ -2,7 +2,7 @@
 
 /*
 Package authGwService is a auto generated package.
-Input file: protos/auth.proto
+Input file: auth.proto
 */
 package authGwService
 
@@ -25,7 +25,7 @@ var fileCount int
 const codecSize = 1024 * 1024
 
 func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
-	box, err := rice.FindBox("../../../../../sw/api/generated/auth/swagger")
+	box, err := rice.FindBox("../../../../api/protos/../generated/auth/swagger")
 	if err != nil {
 		err = errors.Wrap(err, "error opening rice.Box")
 		return err

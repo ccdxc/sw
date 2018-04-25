@@ -3,7 +3,7 @@
 syntax = "proto3";
 
 // Service name
-package alerts;
+package monitoring;
 
 import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
@@ -13,12 +13,6 @@ import "github.com/pensando/sw/api/meta.proto";
 // -------------------------- Alert Object -------------------------------------
 // Alert is a notification to a user of a fault or condition that needs
 // user attention. Alerts are persisted by API Server and are objects.
-
-// Severity of an alert
-enum AlertSeverity {
-  WARNING     = 0;
-  CRITICAL    = 1;
-}
 
 // Source of an alert; for alerts generated from events, it maps to event.Source
 message AlertSource {
@@ -85,7 +79,7 @@ message AlertSpec {
 message AlertStatus {
   // Severity of an alert
   string Severity                 = 1 [(gogoproto.nullable) = true,
-                                       (venice.check) = "StrEnum(AlertSeverity)",
+                                       (venice.check) = "StrEnum(SeverityLevel)",
                                        (gogoproto.jsontag) = "severity, omitempty"];
 
   // Alert source or origin
@@ -132,29 +126,6 @@ message Alert {
 
   AlertStatus Status    = 4 [(gogoproto.nullable) = false,
                              (gogoproto.jsontag) = "status, omitempty"];
-}
-
-//-------------------------------- R E S T  A P I ------------------------------
-service AlertsV1 {
-    // Prefix for all resources served by this service
-    option (venice.apiPrefix) = "alerts";
-
-    // API Version
-    option (venice.apiVersion) = "v1";
-
-    option(venice.apiGrpcCrudService) = "Alert";
-
-    option(venice.apiRestService) = {
-        Object: "Alert"
-        Method: ["list"]
-        Pattern: "/{O.Tenant}/alerts"
-    };
-
-    option(venice.apiRestService) = {
-        Object: "Alert"
-        Method: ["put", "get"]
-        Pattern: "/{O.Tenant}/alerts/{O.Name}"
-    };
 }
 
 
@@ -258,7 +229,7 @@ message AlertPolicySpec {
 
   // Severity to be set for an alert that gets triggered from this rule
   string Severity                   = 2 [(gogoproto.nullable) = true,
-                                         (venice.check) = "StrEnum(AlertSeverity)",
+                                         (venice.check) = "StrEnum(SeverityLevel)",
                                          (gogoproto.jsontag) = "severity, omitempty"];
 
   // Message to be used while generating the alert
@@ -325,28 +296,6 @@ message AlertPolicy {
                                     (gogoproto.jsontag) = "status, omitempty"];
 }
 
-//-------------------------------- R E S T  A P I ------------------------------
-service AlertPolicyV1 {
-    // Prefix for all resources served by this service
-    option (venice.apiPrefix) = "alertPolicies";
-
-    // API Version
-    option (venice.apiVersion) = "v1";
-
-    option(venice.apiGrpcCrudService) = "AlertPolicy";
-
-    option(venice.apiRestService) = {
-        Object: "AlertPolicy"
-        Method: ["post", "list"]
-        Pattern: "/{O.Tenant}/alertPolicies"
-    };
-
-    option(venice.apiRestService) = {
-        Object: "AlertPolicy"
-        Method: ["put", "get", "delete"]
-        Pattern: "/{O.Tenant}/alertPolicies/{O.Name}"
-    };
-}
 
 // -------------------------- Alert Destination Object ------------------------
 // Alert Destination is a user-defined object which captures the details of all
@@ -457,28 +406,4 @@ message AlertDestination {
 
   AlertDestinationStatus Status  = 4 [(gogoproto.nullable) = false,
                                       (gogoproto.jsontag) = "status, omitempty"];
-}
-
-
-//-------------------------------- R E S T  A P I ------------------------------
-service AlertDestinationV1 {
-    // Prefix for all resources served by this service
-    option (venice.apiPrefix) = "alertDestinations";
-
-    // API Version
-    option (venice.apiVersion) = "v1";
-
-    option(venice.apiGrpcCrudService) = "AlertDestination";
-
-    option(venice.apiRestService) = {
-        Object: "AlertDestination"
-        Method: ["post", "list"]
-        Pattern: "/{O.Tenant}/alertDestinations"
-    };
-
-    option(venice.apiRestService) = {
-        Object: "AlertDestination"
-        Method: ["put", "get", "delete"]
-        Pattern: "/{O.Tenant}/alertDestinations/{O.Name}"
-    };
 }

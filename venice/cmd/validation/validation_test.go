@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
-	cmd "github.com/pensando/sw/api/generated/cmd"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 )
 
 func testCluster(name string, spec *cmd.ClusterSpec, status *cmd.ClusterStatus) *cmd.Cluster {

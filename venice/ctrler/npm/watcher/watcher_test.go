@@ -7,7 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/debug"
@@ -23,19 +26,19 @@ func (d *dummyWriter) WriteNetwork(nw *network.Network) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteEndpoint(ep *network.Endpoint, update bool) error {
+func (d *dummyWriter) WriteEndpoint(ep *workload.Endpoint, update bool) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteSecurityGroup(sg *network.SecurityGroup) error {
+func (d *dummyWriter) WriteSecurityGroup(sg *security.SecurityGroup) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
+func (d *dummyWriter) WriteSgPolicy(sgp *security.Sgpolicy) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteTenant(tn *network.Tenant) error {
+func (d *dummyWriter) WriteTenant(tn *cluster.Tenant) error {
 	return nil
 }
 
@@ -264,13 +267,13 @@ func TestSgPolicyWatcher(t *testing.T) {
 	}, "Sg not found in statemgr")
 
 	// rules
-	inrules := []network.SGRule{
+	inrules := []security.SGRule{
 		{
 			Ports:  "tcp/80",
 			Action: "Allow",
 		},
 	}
-	outrules := []network.SGRule{
+	outrules := []security.SGRule{
 		{
 			Ports:  "tcp/80",
 			Action: "Allow",
@@ -412,13 +415,13 @@ func TestRestartWatchers(t *testing.T) {
 	}, "Sg not found in statemgr")
 
 	// rules
-	inrules := []network.SGRule{
+	inrules := []security.SGRule{
 		{
 			Ports:  "tcp/80",
 			Action: "Allow",
 		},
 	}
-	outrules := []network.SGRule{
+	outrules := []security.SGRule{
 		{
 			Ports:  "tcp/80",
 			Action: "Allow",

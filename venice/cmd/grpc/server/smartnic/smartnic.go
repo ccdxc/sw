@@ -12,7 +12,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/generated/cluster"
 	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/cmd/cache"
@@ -65,7 +65,7 @@ type RPCServer struct {
 	// Map of smartNICs in active retry, which are
 	// marked unreachable due to failure to post naples
 	// config to the NMD agent.
-	RetryNicDB map[string]*cmd.SmartNIC
+	RetryNicDB map[string]*cluster.SmartNIC
 
 	// reference to state manager
 	stateMgr *cache.Statemgr
@@ -73,7 +73,7 @@ type RPCServer struct {
 
 // APIClientGetter is an interface that returns an API Client.
 type APIClientGetter interface {
-	APIClient() cmd.CmdV1Interface
+	APIClient() cluster.ClusterV1Interface
 }
 
 // NewRPCServer returns a SmartNIC RPC server object
@@ -86,24 +86,24 @@ func NewRPCServer(clientGetter APIClientGetter, healthInvl, deadInvl time.Durati
 		HealthWatchIntvl: healthInvl,
 		DeadIntvl:        deadInvl,
 		RestPort:         restPort,
-		RetryNicDB:       make(map[string]*cmd.SmartNIC),
+		RetryNicDB:       make(map[string]*cluster.SmartNIC),
 		stateMgr:         stateMgr,
 	}, nil
 }
 
-func (s *RPCServer) getNicKey(nic *cmd.SmartNIC) string {
+func (s *RPCServer) getNicKey(nic *cluster.SmartNIC) string {
 	return fmt.Sprintf("%s|%s", nic.Tenant, nic.Name)
 }
 
 // UpdateNicInRetryDB updates NIC entry in RetryDB
-func (s *RPCServer) UpdateNicInRetryDB(nic *cmd.SmartNIC) {
+func (s *RPCServer) UpdateNicInRetryDB(nic *cluster.SmartNIC) {
 	s.Lock()
 	defer s.Unlock()
 	s.RetryNicDB[s.getNicKey(nic)] = nic
 }
 
 // NicExistsInRetryDB checks whether NIC exists in RetryDB
-func (s *RPCServer) NicExistsInRetryDB(nic *cmd.SmartNIC) bool {
+func (s *RPCServer) NicExistsInRetryDB(nic *cluster.SmartNIC) bool {
 	s.Lock()
 	defer s.Unlock()
 	_, exists := s.RetryNicDB[s.getNicKey(nic)]
@@ -111,14 +111,14 @@ func (s *RPCServer) NicExistsInRetryDB(nic *cmd.SmartNIC) bool {
 }
 
 // DeleteNicFromRetryDB deletes NIC from RetryDB
-func (s *RPCServer) DeleteNicFromRetryDB(nic *cmd.SmartNIC) {
+func (s *RPCServer) DeleteNicFromRetryDB(nic *cluster.SmartNIC) {
 	s.Lock()
 	defer s.Unlock()
 	delete(s.RetryNicDB, s.getNicKey(nic))
 }
 
 // GetNicInRetryDB returns NIC object with match key
-func (s *RPCServer) GetNicInRetryDB(key string) *cmd.SmartNIC {
+func (s *RPCServer) GetNicInRetryDB(key string) *cluster.SmartNIC {
 	s.Lock()
 	defer s.Unlock()
 	nicObj, ok := s.RetryNicDB[key]
@@ -142,7 +142,7 @@ func (s *RPCServer) IsValidFactoryCert(cert []byte) bool {
 }
 
 // GetCluster fetches the Cluster object based on object meta
-func (s *RPCServer) GetCluster() (*cmd.Cluster, error) {
+func (s *RPCServer) GetCluster() (*cluster.Cluster, error) {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return nil, errAPIServerDown
@@ -158,20 +158,20 @@ func (s *RPCServer) GetCluster() (*cmd.Cluster, error) {
 }
 
 // CreateNode creates the Node object based on object meta
-func (s *RPCServer) CreateNode(ometa api.ObjectMeta) (*cmd.Node, error) {
+func (s *RPCServer) CreateNode(ometa api.ObjectMeta) (*cluster.Node, error) {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return nil, errAPIServerDown
 	}
 
-	node := &cmd.Node{
+	node := &cluster.Node{
 		TypeMeta:   api.TypeMeta{Kind: "Node"},
 		ObjectMeta: ometa,
-		Spec: cmd.NodeSpec{
-			Roles: []string{cmd.NodeSpec_WORKLOAD.String()},
+		Spec: cluster.NodeSpec{
+			Roles: []string{cluster.NodeSpec_WORKLOAD.String()},
 		},
-		Status: cmd.NodeStatus{
-			Phase: cmd.NodeStatus_JOINED.String(),
+		Status: cluster.NodeStatus{
+			Phase: cluster.NodeStatus_JOINED.String(),
 		},
 	}
 
@@ -184,7 +184,7 @@ func (s *RPCServer) CreateNode(ometa api.ObjectMeta) (*cmd.Node, error) {
 }
 
 // GetNode fetches the Node object based on object meta
-func (s *RPCServer) GetNode(om api.ObjectMeta) (*cmd.Node, error) {
+func (s *RPCServer) GetNode(om api.ObjectMeta) (*cluster.Node, error) {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return nil, errAPIServerDown
@@ -200,14 +200,14 @@ func (s *RPCServer) GetNode(om api.ObjectMeta) (*cmd.Node, error) {
 
 // UpdateNode updates the list of Nics in status of Node object
 // Node object is  created if it does not exist.
-func (s *RPCServer) UpdateNode(nic *cmd.SmartNIC) (*cmd.Node, error) {
+func (s *RPCServer) UpdateNode(nic *cluster.SmartNIC) (*cluster.Node, error) {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return nil, errAPIServerDown
 	}
 
 	// Check if object exists
-	var nodeObj *cmd.Node
+	var nodeObj *cluster.Node
 	ometa := api.ObjectMeta{
 		Name: nic.Spec.NodeName,
 	}
@@ -215,17 +215,17 @@ func (s *RPCServer) UpdateNode(nic *cmd.SmartNIC) (*cmd.Node, error) {
 	if err != nil || refObj == nil {
 
 		// Create Node object
-		node := &cmd.Node{
+		node := &cluster.Node{
 			TypeMeta: api.TypeMeta{Kind: "Node"},
 			ObjectMeta: api.ObjectMeta{
 				Name: nic.Spec.NodeName,
 			},
-			Spec: cmd.NodeSpec{
-				Roles: []string{cmd.NodeSpec_WORKLOAD.String()},
+			Spec: cluster.NodeSpec{
+				Roles: []string{cluster.NodeSpec_WORKLOAD.String()},
 			},
-			Status: cmd.NodeStatus{
+			Status: cluster.NodeStatus{
 				Nics:  []string{nic.ObjectMeta.Name},
-				Phase: cmd.NodeStatus_JOINED.String(),
+				Phase: cluster.NodeStatus_JOINED.String(),
 			},
 		}
 
@@ -258,7 +258,7 @@ func (s *RPCServer) DeleteNode(om api.ObjectMeta) error {
 }
 
 // GetSmartNIC fetches the SmartNIC object based on object meta
-func (s *RPCServer) GetSmartNIC(om api.ObjectMeta) (*cmd.SmartNIC, error) {
+func (s *RPCServer) GetSmartNIC(om api.ObjectMeta) (*cluster.SmartNIC, error) {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return nil, errAPIServerDown
@@ -273,14 +273,14 @@ func (s *RPCServer) GetSmartNIC(om api.ObjectMeta) (*cmd.SmartNIC, error) {
 }
 
 // UpdateSmartNIC creates or updates the smartNIC object
-func (s *RPCServer) UpdateSmartNIC(obj *cmd.SmartNIC) (*cmd.SmartNIC, error) {
+func (s *RPCServer) UpdateSmartNIC(obj *cluster.SmartNIC) (*cluster.SmartNIC, error) {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return nil, errAPIServerDown
 	}
 
 	// Check if object exists
-	var nicObj *cmd.SmartNIC
+	var nicObj *cluster.SmartNIC
 	refObj, err := s.GetSmartNIC(obj.ObjectMeta)
 	if err != nil || refObj == nil {
 
@@ -336,14 +336,14 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 		// Reject NIC if the certificate is not valid
 		// TODO: Add exact reason to the response once CKM api is used
 		log.Errorf("Invalid certificate, NIC rejected mac: %v", mac)
-		return &grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_REJECTED.String(), Reason: string("Invalid Cert")}, nil
+		return &grpc.RegisterNICResponse{Phase: cluster.SmartNICSpec_REJECTED.String(), Reason: string("Invalid Cert")}, nil
 	}
 
 	// Get the Cluster object
 	clusterObj, err := s.GetCluster()
 	if err != nil {
 		log.Errorf("Error getting Cluster object, err: %v", err)
-		return &grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_UNKNOWN.String()}, err
+		return &grpc.RegisterNICResponse{Phase: cluster.SmartNICSpec_UNKNOWN.String()}, err
 	}
 
 	// Process the request based on the configured admission mode
@@ -351,17 +351,17 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 	if clusterObj.Spec.AutoAdmitNICs == true {
 
 		// Admit NIC if autoAdmission is enabled
-		phase = cmd.SmartNICSpec_ADMITTED.String()
+		phase = cluster.SmartNICSpec_ADMITTED.String()
 	} else {
 
 		// Set the NIC to pendingState for Manual Approval
-		phase = cmd.SmartNICSpec_PENDING.String()
+		phase = cluster.SmartNICSpec_PENDING.String()
 	}
 
 	log.Infof("Validated NIC: %s, phase: %s", mac, phase)
 
 	// Create SmartNIC object, if the status is either admitted or pending.
-	if phase == cmd.SmartNICSpec_ADMITTED.String() || phase == cmd.SmartNICSpec_PENDING.String() {
+	if phase == cluster.SmartNICSpec_ADMITTED.String() || phase == cluster.SmartNICSpec_PENDING.String() {
 		nic := req.GetNic()
 		nic.Spec.Phase = phase
 		_, err = s.UpdateSmartNIC(&nic)
@@ -402,8 +402,8 @@ func (s *RPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (
 }
 
 //ListSmartNICs lists all smartNICs matching object selector
-func (s *RPCServer) ListSmartNICs(ctx context.Context, sel *api.ObjectMeta) ([]cmd.SmartNIC, error) {
-	var niclist []cmd.SmartNIC
+func (s *RPCServer) ListSmartNICs(ctx context.Context, sel *api.ObjectMeta) ([]cluster.SmartNIC, error) {
+	var niclist []cluster.SmartNIC
 	// get all smartnics
 	nics, err := s.stateMgr.ListSmartNICs()
 	if err != nil {
@@ -527,7 +527,7 @@ func (s *RPCServer) MonitorHealth() {
 					condition := nic.Status.Conditions[i]
 
 					// Inspect HEALTH condition with status that is marked healthy or unhealthy (i.e not unknown)
-					if condition.Type == cmd.SmartNICCondition_HEALTHY.String() && condition.Status != cmd.ConditionStatus_UNKNOWN.String() {
+					if condition.Type == cluster.SmartNICCondition_HEALTHY.String() && condition.Status != cluster.ConditionStatus_UNKNOWN.String() {
 
 						// parse the last reported time
 						t, err := time.Parse(time.RFC3339, condition.LastTransitionTime)
@@ -543,7 +543,7 @@ func (s *RPCServer) MonitorHealth() {
 							// update the nic health status to unknown
 							log.Infof("Updating NIC health to unknown, nic: %s", nic.Name)
 							lastUpdateTime := nic.Status.Conditions[i].LastTransitionTime
-							nic.Status.Conditions[i].Status = cmd.ConditionStatus_UNKNOWN.String()
+							nic.Status.Conditions[i].Status = cluster.ConditionStatus_UNKNOWN.String()
 							nic.Status.Conditions[i].LastTransitionTime = time.Now().Format(time.RFC3339)
 							nic.Status.Conditions[i].Reason = fmt.Sprintf("NIC health update not received since %s", lastUpdateTime)
 							_, err := cl.SmartNIC().Update(context.Background(), nic)
@@ -567,7 +567,7 @@ func (s *RPCServer) MonitorHealth() {
 // UNREACHABLE.
 // Further retries for UNREACHABLE nics will be handled by
 // NIC health watcher which runs periodically.
-func (s *RPCServer) InitiateNICRegistration(nic *cmd.SmartNIC) {
+func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 
 	var retryInterval time.Duration
 	retryInterval = 1
@@ -626,14 +626,14 @@ func (s *RPCServer) InitiateNICRegistration(nic *cmd.SmartNIC) {
 			// the REST port would have been shutdown (hence unreachable) after it is
 			// admitted in managed mode.
 			log.Errorf("Retrying, failed to post naples config, nic: %s err: %+v resp: %+v", nic.Name, err, resp)
-			nic := cmd.SmartNIC{
+			nic := cluster.SmartNIC{
 				TypeMeta:   nicObj.TypeMeta,
 				ObjectMeta: nicObj.ObjectMeta,
-				Status: cmd.SmartNICStatus{
-					Conditions: []*cmd.SmartNICCondition{
+				Status: cluster.SmartNICStatus{
+					Conditions: []*cluster.SmartNICCondition{
 						{
-							Type:               cmd.SmartNICCondition_UNREACHABLE.String(),
-							Status:             cmd.ConditionStatus_TRUE.String(),
+							Type:               cluster.SmartNICCondition_UNREACHABLE.String(),
+							Status:             cluster.ConditionStatus_TRUE.String(),
 							LastTransitionTime: time.Now().Format(time.RFC3339),
 							Reason:             fmt.Sprintf("Failed to post naples config after several attempts, response: %+v", resp),
 							Message:            fmt.Sprintf("Naples REST endpoint: %s:%s is not reachable", nic.Spec.MgmtIp, s.RestPort),

@@ -13,8 +13,10 @@ import (
 
 	swapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 
 	api2 "github.com/pensando/sw/api"
@@ -27,10 +29,10 @@ func getObj(ctx *context) (obj interface{}, objList interface{}) {
 	switch ctx.subcmd {
 
 	case "cluster":
-		return &cmd.Cluster{}, &cmd.ClusterList{}
+		return &cluster.Cluster{}, &cluster.ClusterList{}
 
 	case "endpoint":
-		return &network.Endpoint{}, &network.EndpointList{}
+		return &workload.Endpoint{}, &workload.EndpointList{}
 
 	case "lbPolicy":
 		return &network.LbPolicy{}, &network.LbPolicyList{}
@@ -39,7 +41,7 @@ func getObj(ctx *context) (obj interface{}, objList interface{}) {
 		return &network.Network{}, &network.NetworkList{}
 
 	case "node":
-		return &cmd.Node{}, &cmd.NodeList{}
+		return &cluster.Node{}, &cluster.NodeList{}
 
 	case "permission":
 		return &api.Permission{}, &api.PermissionList{}
@@ -48,19 +50,19 @@ func getObj(ctx *context) (obj interface{}, objList interface{}) {
 		return &api.Role{}, &api.RoleList{}
 
 	case "securityGroup":
-		return &network.SecurityGroup{}, &network.SecurityGroupList{}
+		return &security.SecurityGroup{}, &security.SecurityGroupList{}
 
 	case "service":
 		return &network.Service{}, &network.ServiceList{}
 
 	case "sgpolicy":
-		return &network.Sgpolicy{}, &network.SgpolicyList{}
+		return &security.Sgpolicy{}, &security.SgpolicyList{}
 
 	case "smartNIC":
-		return &cmd.SmartNIC{}, &cmd.SmartNICList{}
+		return &cluster.SmartNIC{}, &cluster.SmartNICList{}
 
 	case "tenant":
-		return &network.Tenant{}, &network.TenantList{}
+		return &cluster.Tenant{}, &cluster.TenantList{}
 
 	case "user":
 		return &api.User{}, &api.UserList{}
@@ -81,15 +83,15 @@ func getSubObj(kind string) interface{} {
 		return v
 
 	case "NodeCondition":
-		var v cmd.NodeCondition
+		var v cluster.NodeCondition
 		return v
 
 	case "PortCondition":
-		var v cmd.PortCondition
+		var v cluster.PortCondition
 		return v
 
 	case "ConditionStatus":
-		var v cmd.ConditionStatus
+		var v cluster.ConditionStatus
 		return v
 
 	case "Selector":
@@ -109,19 +111,19 @@ func getSubObj(kind string) interface{} {
 		return v
 
 	case "SGRule":
-		var v network.SGRule
+		var v security.SGRule
 		return v
 
 	case "PortSpec":
-		var v cmd.PortSpec
+		var v cluster.PortSpec
 		return v
 
 	case "PortStatus":
-		var v cmd.PortStatus
+		var v cluster.PortStatus
 		return v
 
 	case "SmartNICCondition":
-		var v cmd.SmartNICCondition
+		var v cluster.SmartNICCondition
 		return v
 
 	case "UserAuditLog":
@@ -134,12 +136,12 @@ func getSubObj(kind string) interface{} {
 
 func getObjFromList(objList interface{}, idx int) interface{} {
 
-	if ol, ok := objList.(*cmd.ClusterList); ok {
+	if ol, ok := objList.(*cluster.ClusterList); ok {
 		cluster := ol.Items[idx]
 		return cluster
 	}
 
-	if ol, ok := objList.(*network.EndpointList); ok {
+	if ol, ok := objList.(*workload.EndpointList); ok {
 		endpoint := ol.Items[idx]
 		return endpoint
 	}
@@ -154,7 +156,7 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 		return network
 	}
 
-	if ol, ok := objList.(*cmd.NodeList); ok {
+	if ol, ok := objList.(*cluster.NodeList); ok {
 		node := ol.Items[idx]
 		return node
 	}
@@ -169,7 +171,7 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 		return role
 	}
 
-	if ol, ok := objList.(*network.SecurityGroupList); ok {
+	if ol, ok := objList.(*security.SecurityGroupList); ok {
 		securityGroup := ol.Items[idx]
 		return securityGroup
 	}
@@ -179,17 +181,17 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 		return service
 	}
 
-	if ol, ok := objList.(*network.SgpolicyList); ok {
+	if ol, ok := objList.(*security.SgpolicyList); ok {
 		sgpolicy := ol.Items[idx]
 		return sgpolicy
 	}
 
-	if ol, ok := objList.(*cmd.SmartNICList); ok {
+	if ol, ok := objList.(*cluster.SmartNICList); ok {
 		smartNIC := ol.Items[idx]
 		return smartNIC
 	}
 
-	if ol, ok := objList.(*network.TenantList); ok {
+	if ol, ok := objList.(*cluster.TenantList); ok {
 		tenant := ol.Items[idx]
 		return tenant
 	}
@@ -204,16 +206,16 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 
 func removeObjOper(obj interface{}) error {
 
-	if v, ok := obj.(*cmd.Cluster); ok {
+	if v, ok := obj.(*cluster.Cluster); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
-		v.Status = cmd.ClusterStatus{}
+		v.Status = cluster.ClusterStatus{}
 	}
 
-	if v, ok := obj.(*network.Endpoint); ok {
+	if v, ok := obj.(*workload.Endpoint); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
-		v.Status = network.EndpointStatus{}
+		v.Status = workload.EndpointStatus{}
 	}
 
 	if v, ok := obj.(*network.LbPolicy); ok {
@@ -228,10 +230,10 @@ func removeObjOper(obj interface{}) error {
 		v.Status = network.NetworkStatus{}
 	}
 
-	if v, ok := obj.(*cmd.Node); ok {
+	if v, ok := obj.(*cluster.Node); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
-		v.Status = cmd.NodeStatus{}
+		v.Status = cluster.NodeStatus{}
 	}
 
 	if v, ok := obj.(*api.Permission); ok {
@@ -246,10 +248,10 @@ func removeObjOper(obj interface{}) error {
 		v.Status = api.RoleStatus{}
 	}
 
-	if v, ok := obj.(*network.SecurityGroup); ok {
+	if v, ok := obj.(*security.SecurityGroup); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
-		v.Status = network.SecurityGroupStatus{}
+		v.Status = security.SecurityGroupStatus{}
 	}
 
 	if v, ok := obj.(*network.Service); ok {
@@ -258,22 +260,22 @@ func removeObjOper(obj interface{}) error {
 		v.Status = network.ServiceStatus{}
 	}
 
-	if v, ok := obj.(*network.Sgpolicy); ok {
+	if v, ok := obj.(*security.Sgpolicy); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
-		v.Status = network.SgpolicyStatus{}
+		v.Status = security.SgpolicyStatus{}
 	}
 
-	if v, ok := obj.(*cmd.SmartNIC); ok {
+	if v, ok := obj.(*cluster.SmartNIC); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
-		v.Status = cmd.SmartNICStatus{}
+		v.Status = cluster.SmartNICStatus{}
 	}
 
-	if v, ok := obj.(*network.Tenant); ok {
+	if v, ok := obj.(*cluster.Tenant); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
-		v.Status = network.TenantStatus{}
+		v.Status = cluster.TenantStatus{}
 	}
 
 	if v, ok := obj.(*api.User); ok {
@@ -287,11 +289,11 @@ func removeObjOper(obj interface{}) error {
 
 func writeObj(obj interface{}, objmKvs, specKvs map[string]ref.FInfo) interface{} {
 
-	if v, ok := obj.(*cmd.Cluster); ok {
+	if v, ok := obj.(*cluster.Cluster); ok {
 		return writeClusterObj(*v, objmKvs, specKvs)
 	}
 
-	if v, ok := obj.(*network.Endpoint); ok {
+	if v, ok := obj.(*workload.Endpoint); ok {
 		return writeEndpointObj(*v, objmKvs, specKvs)
 	}
 
@@ -303,7 +305,7 @@ func writeObj(obj interface{}, objmKvs, specKvs map[string]ref.FInfo) interface{
 		return writeNetworkObj(*v, objmKvs, specKvs)
 	}
 
-	if v, ok := obj.(*cmd.Node); ok {
+	if v, ok := obj.(*cluster.Node); ok {
 		return writeNodeObj(*v, objmKvs, specKvs)
 	}
 
@@ -315,7 +317,7 @@ func writeObj(obj interface{}, objmKvs, specKvs map[string]ref.FInfo) interface{
 		return writeRoleObj(*v, objmKvs, specKvs)
 	}
 
-	if v, ok := obj.(*network.SecurityGroup); ok {
+	if v, ok := obj.(*security.SecurityGroup); ok {
 		return writeSecurityGroupObj(*v, objmKvs, specKvs)
 	}
 
@@ -323,15 +325,15 @@ func writeObj(obj interface{}, objmKvs, specKvs map[string]ref.FInfo) interface{
 		return writeServiceObj(*v, objmKvs, specKvs)
 	}
 
-	if v, ok := obj.(*network.Sgpolicy); ok {
+	if v, ok := obj.(*security.Sgpolicy); ok {
 		return writeSgpolicyObj(*v, objmKvs, specKvs)
 	}
 
-	if v, ok := obj.(*cmd.SmartNIC); ok {
+	if v, ok := obj.(*cluster.SmartNIC); ok {
 		return writeSmartNICObj(*v, objmKvs, specKvs)
 	}
 
-	if v, ok := obj.(*network.Tenant); ok {
+	if v, ok := obj.(*cluster.Tenant); ok {
 		return writeTenantObj(*v, objmKvs, specKvs)
 	}
 
@@ -352,7 +354,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 	switch ctx.subcmd {
 
 	case "cluster":
-		clusterList := objList.(*cmd.ClusterList)
+		clusterList := objList.(*cluster.ClusterList)
 		for idx, o := range clusterList.Items {
 			objmKvs = append(objmKvs, make(map[string]ref.FInfo))
 			specKvs = append(specKvs, make(map[string]ref.FInfo))
@@ -373,7 +375,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 		}
 
 	case "endpoint":
-		endpointList := objList.(*network.EndpointList)
+		endpointList := objList.(*workload.EndpointList)
 		for idx, o := range endpointList.Items {
 			objmKvs = append(objmKvs, make(map[string]ref.FInfo))
 			specKvs = append(specKvs, make(map[string]ref.FInfo))
@@ -436,7 +438,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 		}
 
 	case "node":
-		nodeList := objList.(*cmd.NodeList)
+		nodeList := objList.(*cluster.NodeList)
 		for idx, o := range nodeList.Items {
 			objmKvs = append(objmKvs, make(map[string]ref.FInfo))
 			specKvs = append(specKvs, make(map[string]ref.FInfo))
@@ -499,7 +501,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 		}
 
 	case "securityGroup":
-		securityGroupList := objList.(*network.SecurityGroupList)
+		securityGroupList := objList.(*security.SecurityGroupList)
 		for idx, o := range securityGroupList.Items {
 			objmKvs = append(objmKvs, make(map[string]ref.FInfo))
 			specKvs = append(specKvs, make(map[string]ref.FInfo))
@@ -541,7 +543,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 		}
 
 	case "sgpolicy":
-		sgpolicyList := objList.(*network.SgpolicyList)
+		sgpolicyList := objList.(*security.SgpolicyList)
 		for idx, o := range sgpolicyList.Items {
 			objmKvs = append(objmKvs, make(map[string]ref.FInfo))
 			specKvs = append(specKvs, make(map[string]ref.FInfo))
@@ -562,7 +564,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 		}
 
 	case "smartNIC":
-		smartNICList := objList.(*cmd.SmartNICList)
+		smartNICList := objList.(*cluster.SmartNICList)
 		for idx, o := range smartNICList.Items {
 			objmKvs = append(objmKvs, make(map[string]ref.FInfo))
 			specKvs = append(specKvs, make(map[string]ref.FInfo))
@@ -583,7 +585,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 		}
 
 	case "tenant":
-		tenantList := objList.(*network.TenantList)
+		tenantList := objList.(*cluster.TenantList)
 		for idx, o := range tenantList.Items {
 			objmKvs = append(objmKvs, make(map[string]ref.FInfo))
 			specKvs = append(specKvs, make(map[string]ref.FInfo))
@@ -649,32 +651,32 @@ func writeHealthCheckSpecObj(obj network.HealthCheckSpec, specKvs map[string]ref
 	return &newHealthCheckSpec
 }
 
-func writeNodeConditionObj(obj cmd.NodeCondition, specKvs map[string]ref.FInfo) *cmd.NodeCondition {
+func writeNodeConditionObj(obj cluster.NodeCondition, specKvs map[string]ref.FInfo) *cluster.NodeCondition {
 
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
-	newNodeCondition := new.(cmd.NodeCondition)
+	newNodeCondition := new.(cluster.NodeCondition)
 
 	return &newNodeCondition
 }
 
-func writePortConditionObj(obj cmd.PortCondition, specKvs map[string]ref.FInfo) *cmd.PortCondition {
+func writePortConditionObj(obj cluster.PortCondition, specKvs map[string]ref.FInfo) *cluster.PortCondition {
 
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
-	newPortCondition := new.(cmd.PortCondition)
+	newPortCondition := new.(cluster.PortCondition)
 
 	return &newPortCondition
 }
 
-func writeConditionStatusObj(obj cmd.ConditionStatus, specKvs map[string]ref.FInfo) *cmd.ConditionStatus {
+func writeConditionStatusObj(obj cluster.ConditionStatus, specKvs map[string]ref.FInfo) *cluster.ConditionStatus {
 
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
-	newConditionStatus := new.(cmd.ConditionStatus)
+	newConditionStatus := new.(cluster.ConditionStatus)
 
 	return &newConditionStatus
 }
@@ -719,42 +721,42 @@ func writeTLSClientPolicySpecObj(obj network.TLSClientPolicySpec, specKvs map[st
 	return &newTLSClientPolicySpec
 }
 
-func writeSGRuleObj(obj network.SGRule, specKvs map[string]ref.FInfo) *network.SGRule {
+func writeSGRuleObj(obj security.SGRule, specKvs map[string]ref.FInfo) *security.SGRule {
 
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
-	newSGRule := new.(network.SGRule)
+	newSGRule := new.(security.SGRule)
 
 	return &newSGRule
 }
 
-func writePortSpecObj(obj cmd.PortSpec, specKvs map[string]ref.FInfo) *cmd.PortSpec {
+func writePortSpecObj(obj cluster.PortSpec, specKvs map[string]ref.FInfo) *cluster.PortSpec {
 
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
-	newPortSpec := new.(cmd.PortSpec)
+	newPortSpec := new.(cluster.PortSpec)
 
 	return &newPortSpec
 }
 
-func writePortStatusObj(obj cmd.PortStatus, specKvs map[string]ref.FInfo) *cmd.PortStatus {
+func writePortStatusObj(obj cluster.PortStatus, specKvs map[string]ref.FInfo) *cluster.PortStatus {
 
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
-	newPortStatus := new.(cmd.PortStatus)
+	newPortStatus := new.(cluster.PortStatus)
 
 	return &newPortStatus
 }
 
-func writeSmartNICConditionObj(obj cmd.SmartNICCondition, specKvs map[string]ref.FInfo) *cmd.SmartNICCondition {
+func writeSmartNICConditionObj(obj cluster.SmartNICCondition, specKvs map[string]ref.FInfo) *cluster.SmartNICCondition {
 
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
-	newSmartNICCondition := new.(cmd.SmartNICCondition)
+	newSmartNICCondition := new.(cluster.SmartNICCondition)
 
 	return &newSmartNICCondition
 }
@@ -769,30 +771,30 @@ func writeUserAuditLogObj(obj api.UserAuditLog, specKvs map[string]ref.FInfo) *a
 	return &newUserAuditLog
 }
 
-func writeClusterObj(obj cmd.Cluster, metaKvs, specKvs map[string]ref.FInfo) *cmd.Cluster {
+func writeClusterObj(obj cluster.Cluster, metaKvs, specKvs map[string]ref.FInfo) *cluster.Cluster {
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
 
-	newCluster := &cmd.Cluster{
+	newCluster := &cluster.Cluster{
 		TypeMeta:   swapi.TypeMeta{Kind: "cluster"},
 		ObjectMeta: newObjm.(swapi.ObjectMeta),
-		Spec:       newSpec.(cmd.ClusterSpec),
+		Spec:       newSpec.(cluster.ClusterSpec),
 	}
 	return newCluster
 }
 
-func writeEndpointObj(obj network.Endpoint, metaKvs, specKvs map[string]ref.FInfo) *network.Endpoint {
+func writeEndpointObj(obj workload.Endpoint, metaKvs, specKvs map[string]ref.FInfo) *workload.Endpoint {
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
 
-	newEndpoint := &network.Endpoint{
+	newEndpoint := &workload.Endpoint{
 		TypeMeta:   swapi.TypeMeta{Kind: "endpoint"},
 		ObjectMeta: newObjm.(swapi.ObjectMeta),
-		Spec:       newSpec.(network.EndpointSpec),
+		Spec:       newSpec.(workload.EndpointSpec),
 	}
 	return newEndpoint
 }
@@ -825,16 +827,16 @@ func writeNetworkObj(obj network.Network, metaKvs, specKvs map[string]ref.FInfo)
 	return newNetwork
 }
 
-func writeNodeObj(obj cmd.Node, metaKvs, specKvs map[string]ref.FInfo) *cmd.Node {
+func writeNodeObj(obj cluster.Node, metaKvs, specKvs map[string]ref.FInfo) *cluster.Node {
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
 
-	newNode := &cmd.Node{
+	newNode := &cluster.Node{
 		TypeMeta:   swapi.TypeMeta{Kind: "node"},
 		ObjectMeta: newObjm.(swapi.ObjectMeta),
-		Spec:       newSpec.(cmd.NodeSpec),
+		Spec:       newSpec.(cluster.NodeSpec),
 	}
 	return newNode
 }
@@ -867,16 +869,16 @@ func writeRoleObj(obj api.Role, metaKvs, specKvs map[string]ref.FInfo) *api.Role
 	return newRole
 }
 
-func writeSecurityGroupObj(obj network.SecurityGroup, metaKvs, specKvs map[string]ref.FInfo) *network.SecurityGroup {
+func writeSecurityGroupObj(obj security.SecurityGroup, metaKvs, specKvs map[string]ref.FInfo) *security.SecurityGroup {
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
 
-	newSecurityGroup := &network.SecurityGroup{
+	newSecurityGroup := &security.SecurityGroup{
 		TypeMeta:   swapi.TypeMeta{Kind: "securityGroup"},
 		ObjectMeta: newObjm.(swapi.ObjectMeta),
-		Spec:       newSpec.(network.SecurityGroupSpec),
+		Spec:       newSpec.(security.SecurityGroupSpec),
 	}
 	return newSecurityGroup
 }
@@ -895,44 +897,44 @@ func writeServiceObj(obj network.Service, metaKvs, specKvs map[string]ref.FInfo)
 	return newService
 }
 
-func writeSgpolicyObj(obj network.Sgpolicy, metaKvs, specKvs map[string]ref.FInfo) *network.Sgpolicy {
+func writeSgpolicyObj(obj security.Sgpolicy, metaKvs, specKvs map[string]ref.FInfo) *security.Sgpolicy {
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
 
-	newSgpolicy := &network.Sgpolicy{
+	newSgpolicy := &security.Sgpolicy{
 		TypeMeta:   swapi.TypeMeta{Kind: "sgpolicy"},
 		ObjectMeta: newObjm.(swapi.ObjectMeta),
-		Spec:       newSpec.(network.SgpolicySpec),
+		Spec:       newSpec.(security.SgpolicySpec),
 	}
 	return newSgpolicy
 }
 
-func writeSmartNICObj(obj cmd.SmartNIC, metaKvs, specKvs map[string]ref.FInfo) *cmd.SmartNIC {
+func writeSmartNICObj(obj cluster.SmartNIC, metaKvs, specKvs map[string]ref.FInfo) *cluster.SmartNIC {
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
 
-	newSmartNIC := &cmd.SmartNIC{
+	newSmartNIC := &cluster.SmartNIC{
 		TypeMeta:   swapi.TypeMeta{Kind: "smartNIC"},
 		ObjectMeta: newObjm.(swapi.ObjectMeta),
-		Spec:       newSpec.(cmd.SmartNICSpec),
+		Spec:       newSpec.(cluster.SmartNICSpec),
 	}
 	return newSmartNIC
 }
 
-func writeTenantObj(obj network.Tenant, metaKvs, specKvs map[string]ref.FInfo) *network.Tenant {
+func writeTenantObj(obj cluster.Tenant, metaKvs, specKvs map[string]ref.FInfo) *cluster.Tenant {
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
 
-	newTenant := &network.Tenant{
+	newTenant := &cluster.Tenant{
 		TypeMeta:   swapi.TypeMeta{Kind: "tenant"},
 		ObjectMeta: newObjm.(swapi.ObjectMeta),
-		Spec:       newSpec.(network.TenantSpec),
+		Spec:       newSpec.(cluster.TenantSpec),
 	}
 	return newTenant
 }
@@ -995,7 +997,7 @@ func createObjFromBytes(ctx *context, objName, inp string) error {
 }
 
 func createEndpointFromBytes(ctx *context, inp string) error {
-	endpoint := &network.Endpoint{}
+	endpoint := &workload.Endpoint{}
 	if err := json.Unmarshal([]byte(inp), endpoint); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1040,7 +1042,7 @@ func createNetworkFromBytes(ctx *context, inp string) error {
 }
 
 func createNodeFromBytes(ctx *context, inp string) error {
-	node := &cmd.Node{}
+	node := &cluster.Node{}
 	if err := json.Unmarshal([]byte(inp), node); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1085,7 +1087,7 @@ func createRoleFromBytes(ctx *context, inp string) error {
 }
 
 func createSecurityGroupFromBytes(ctx *context, inp string) error {
-	securityGroup := &network.SecurityGroup{}
+	securityGroup := &security.SecurityGroup{}
 	if err := json.Unmarshal([]byte(inp), securityGroup); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1115,7 +1117,7 @@ func createServiceFromBytes(ctx *context, inp string) error {
 }
 
 func createSgpolicyFromBytes(ctx *context, inp string) error {
-	sgpolicy := &network.Sgpolicy{}
+	sgpolicy := &security.Sgpolicy{}
 	if err := json.Unmarshal([]byte(inp), sgpolicy); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1130,7 +1132,7 @@ func createSgpolicyFromBytes(ctx *context, inp string) error {
 }
 
 func createSmartNICFromBytes(ctx *context, inp string) error {
-	smartNIC := &cmd.SmartNIC{}
+	smartNIC := &cluster.SmartNIC{}
 	if err := json.Unmarshal([]byte(inp), smartNIC); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1145,7 +1147,7 @@ func createSmartNICFromBytes(ctx *context, inp string) error {
 }
 
 func createTenantFromBytes(ctx *context, inp string) error {
-	tenant := &network.Tenant{}
+	tenant := &cluster.Tenant{}
 	if err := json.Unmarshal([]byte(inp), tenant); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1221,7 +1223,7 @@ func updateObjFromBytes(ctx *context, objName, inp string) error {
 }
 
 func updateClusterFromBytes(ctx *context, inp string) error {
-	cluster := &cmd.Cluster{}
+	cluster := &cluster.Cluster{}
 	if err := json.Unmarshal([]byte(inp), cluster); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1236,7 +1238,7 @@ func updateClusterFromBytes(ctx *context, inp string) error {
 }
 
 func updateEndpointFromBytes(ctx *context, inp string) error {
-	endpoint := &network.Endpoint{}
+	endpoint := &workload.Endpoint{}
 	if err := json.Unmarshal([]byte(inp), endpoint); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1281,7 +1283,7 @@ func updateNetworkFromBytes(ctx *context, inp string) error {
 }
 
 func updateNodeFromBytes(ctx *context, inp string) error {
-	node := &cmd.Node{}
+	node := &cluster.Node{}
 	if err := json.Unmarshal([]byte(inp), node); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1326,7 +1328,7 @@ func updateRoleFromBytes(ctx *context, inp string) error {
 }
 
 func updateSecurityGroupFromBytes(ctx *context, inp string) error {
-	securityGroup := &network.SecurityGroup{}
+	securityGroup := &security.SecurityGroup{}
 	if err := json.Unmarshal([]byte(inp), securityGroup); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1356,7 +1358,7 @@ func updateServiceFromBytes(ctx *context, inp string) error {
 }
 
 func updateSgpolicyFromBytes(ctx *context, inp string) error {
-	sgpolicy := &network.Sgpolicy{}
+	sgpolicy := &security.Sgpolicy{}
 	if err := json.Unmarshal([]byte(inp), sgpolicy); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1371,7 +1373,7 @@ func updateSgpolicyFromBytes(ctx *context, inp string) error {
 }
 
 func updateSmartNICFromBytes(ctx *context, inp string) error {
-	smartNIC := &cmd.SmartNIC{}
+	smartNIC := &cluster.SmartNIC{}
 	if err := json.Unmarshal([]byte(inp), smartNIC); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1386,7 +1388,7 @@ func updateSmartNICFromBytes(ctx *context, inp string) error {
 }
 
 func updateTenantFromBytes(ctx *context, inp string) error {
-	tenant := &network.Tenant{}
+	tenant := &cluster.Tenant{}
 	if err := json.Unmarshal([]byte(inp), tenant); err != nil {
 		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
 		return err
@@ -1417,11 +1419,11 @@ func updateUserFromBytes(ctx *context, inp string) error {
 
 func updateLabel(obj interface{}, newLabels map[string]string) error {
 
-	if o, ok := obj.(*cmd.Cluster); ok {
+	if o, ok := obj.(*cluster.Cluster); ok {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
-	if o, ok := obj.(*network.Endpoint); ok {
+	if o, ok := obj.(*workload.Endpoint); ok {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
@@ -1433,7 +1435,7 @@ func updateLabel(obj interface{}, newLabels map[string]string) error {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
-	if o, ok := obj.(*cmd.Node); ok {
+	if o, ok := obj.(*cluster.Node); ok {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
@@ -1445,7 +1447,7 @@ func updateLabel(obj interface{}, newLabels map[string]string) error {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
-	if o, ok := obj.(*network.SecurityGroup); ok {
+	if o, ok := obj.(*security.SecurityGroup); ok {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
@@ -1453,15 +1455,15 @@ func updateLabel(obj interface{}, newLabels map[string]string) error {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
-	if o, ok := obj.(*network.Sgpolicy); ok {
+	if o, ok := obj.(*security.Sgpolicy); ok {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
-	if o, ok := obj.(*cmd.SmartNIC); ok {
+	if o, ok := obj.(*cluster.SmartNIC); ok {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
-	if o, ok := obj.(*network.Tenant); ok {
+	if o, ok := obj.(*cluster.Tenant); ok {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
@@ -1488,20 +1490,20 @@ func restGet(url, tenant string, obj interface{}) error {
 	}
 	ctx := contxt.Background()
 
-	if v, ok := obj.(*cmd.Cluster); ok {
+	if v, ok := obj.(*cluster.Cluster); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
 		objm.Tenant = tenant
-		nv, err := restcl.CmdV1().Cluster().Get(ctx, &objm)
+		nv, err := restcl.ClusterV1().Cluster().Get(ctx, &objm)
 		if err != nil {
 			return err
 		}
 		*v = *nv
 		return nil
 	}
-	if v, ok := obj.(*cmd.ClusterList); ok {
+	if v, ok := obj.(*cluster.ClusterList); ok {
 		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
-		nlist, err := restcl.CmdV1().Cluster().List(ctx, &opts)
+		nlist, err := restcl.ClusterV1().Cluster().List(ctx, &opts)
 		if err != nil {
 			return err
 		}
@@ -1509,20 +1511,20 @@ func restGet(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*network.Endpoint); ok {
+	if v, ok := obj.(*workload.Endpoint); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
 		objm.Tenant = tenant
-		nv, err := restcl.EndpointV1().Endpoint().Get(ctx, &objm)
+		nv, err := restcl.WorkloadV1().Endpoint().Get(ctx, &objm)
 		if err != nil {
 			return err
 		}
 		*v = *nv
 		return nil
 	}
-	if v, ok := obj.(*network.EndpointList); ok {
+	if v, ok := obj.(*workload.EndpointList); ok {
 		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
-		nlist, err := restcl.EndpointV1().Endpoint().List(ctx, &opts)
+		nlist, err := restcl.WorkloadV1().Endpoint().List(ctx, &opts)
 		if err != nil {
 			return err
 		}
@@ -1534,7 +1536,7 @@ func restGet(url, tenant string, obj interface{}) error {
 		objm := v.ObjectMeta
 		objm.Name = objName
 		objm.Tenant = tenant
-		nv, err := restcl.LbPolicyV1().LbPolicy().Get(ctx, &objm)
+		nv, err := restcl.NetworkV1().LbPolicy().Get(ctx, &objm)
 		if err != nil {
 			return err
 		}
@@ -1543,7 +1545,7 @@ func restGet(url, tenant string, obj interface{}) error {
 	}
 	if v, ok := obj.(*network.LbPolicyList); ok {
 		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
-		nlist, err := restcl.LbPolicyV1().LbPolicy().List(ctx, &opts)
+		nlist, err := restcl.NetworkV1().LbPolicy().List(ctx, &opts)
 		if err != nil {
 			return err
 		}
@@ -1572,20 +1574,20 @@ func restGet(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*cmd.Node); ok {
+	if v, ok := obj.(*cluster.Node); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
 		objm.Tenant = tenant
-		nv, err := restcl.CmdV1().Node().Get(ctx, &objm)
+		nv, err := restcl.ClusterV1().Node().Get(ctx, &objm)
 		if err != nil {
 			return err
 		}
 		*v = *nv
 		return nil
 	}
-	if v, ok := obj.(*cmd.NodeList); ok {
+	if v, ok := obj.(*cluster.NodeList); ok {
 		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
-		nlist, err := restcl.CmdV1().Node().List(ctx, &opts)
+		nlist, err := restcl.ClusterV1().Node().List(ctx, &opts)
 		if err != nil {
 			return err
 		}
@@ -1593,20 +1595,20 @@ func restGet(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*network.SecurityGroup); ok {
+	if v, ok := obj.(*security.SecurityGroup); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
 		objm.Tenant = tenant
-		nv, err := restcl.SecurityGroupV1().SecurityGroup().Get(ctx, &objm)
+		nv, err := restcl.SecurityV1().SecurityGroup().Get(ctx, &objm)
 		if err != nil {
 			return err
 		}
 		*v = *nv
 		return nil
 	}
-	if v, ok := obj.(*network.SecurityGroupList); ok {
+	if v, ok := obj.(*security.SecurityGroupList); ok {
 		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
-		nlist, err := restcl.SecurityGroupV1().SecurityGroup().List(ctx, &opts)
+		nlist, err := restcl.SecurityV1().SecurityGroup().List(ctx, &opts)
 		if err != nil {
 			return err
 		}
@@ -1618,7 +1620,7 @@ func restGet(url, tenant string, obj interface{}) error {
 		objm := v.ObjectMeta
 		objm.Name = objName
 		objm.Tenant = tenant
-		nv, err := restcl.ServiceV1().Service().Get(ctx, &objm)
+		nv, err := restcl.NetworkV1().Service().Get(ctx, &objm)
 		if err != nil {
 			return err
 		}
@@ -1627,7 +1629,7 @@ func restGet(url, tenant string, obj interface{}) error {
 	}
 	if v, ok := obj.(*network.ServiceList); ok {
 		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
-		nlist, err := restcl.ServiceV1().Service().List(ctx, &opts)
+		nlist, err := restcl.NetworkV1().Service().List(ctx, &opts)
 		if err != nil {
 			return err
 		}
@@ -1635,20 +1637,20 @@ func restGet(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*network.Sgpolicy); ok {
+	if v, ok := obj.(*security.Sgpolicy); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
 		objm.Tenant = tenant
-		nv, err := restcl.SgpolicyV1().Sgpolicy().Get(ctx, &objm)
+		nv, err := restcl.SecurityV1().Sgpolicy().Get(ctx, &objm)
 		if err != nil {
 			return err
 		}
 		*v = *nv
 		return nil
 	}
-	if v, ok := obj.(*network.SgpolicyList); ok {
+	if v, ok := obj.(*security.SgpolicyList); ok {
 		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
-		nlist, err := restcl.SgpolicyV1().Sgpolicy().List(ctx, &opts)
+		nlist, err := restcl.SecurityV1().Sgpolicy().List(ctx, &opts)
 		if err != nil {
 			return err
 		}
@@ -1656,20 +1658,20 @@ func restGet(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*cmd.SmartNIC); ok {
+	if v, ok := obj.(*cluster.SmartNIC); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
 		objm.Tenant = tenant
-		nv, err := restcl.CmdV1().SmartNIC().Get(ctx, &objm)
+		nv, err := restcl.ClusterV1().SmartNIC().Get(ctx, &objm)
 		if err != nil {
 			return err
 		}
 		*v = *nv
 		return nil
 	}
-	if v, ok := obj.(*cmd.SmartNICList); ok {
+	if v, ok := obj.(*cluster.SmartNICList); ok {
 		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
-		nlist, err := restcl.CmdV1().SmartNIC().List(ctx, &opts)
+		nlist, err := restcl.ClusterV1().SmartNIC().List(ctx, &opts)
 		if err != nil {
 			return err
 		}
@@ -1677,20 +1679,20 @@ func restGet(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*network.Tenant); ok {
+	if v, ok := obj.(*cluster.Tenant); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
 		objm.Tenant = tenant
-		nv, err := restcl.TenantV1().Tenant().Get(ctx, &objm)
+		nv, err := restcl.ClusterV1().Tenant().Get(ctx, &objm)
 		if err != nil {
 			return err
 		}
 		*v = *nv
 		return nil
 	}
-	if v, ok := obj.(*network.TenantList); ok {
+	if v, ok := obj.(*cluster.TenantList); ok {
 		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
-		nlist, err := restcl.TenantV1().Tenant().List(ctx, &opts)
+		nlist, err := restcl.ClusterV1().Tenant().List(ctx, &opts)
 		if err != nil {
 			return err
 		}
@@ -1721,7 +1723,7 @@ func restDelete(objKind, url, tenant string) error {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
 		objm.Tenant = tenant
-		obj, err := restcl.CmdV1().Cluster().Delete(ctx, &objm)
+		obj, err := restcl.ClusterV1().Cluster().Delete(ctx, &objm)
 		if err != nil {
 			return err
 		}
@@ -1738,7 +1740,7 @@ func restDelete(objKind, url, tenant string) error {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
 		objm.Tenant = tenant
-		obj, err := restcl.EndpointV1().Endpoint().Delete(ctx, &objm)
+		obj, err := restcl.WorkloadV1().Endpoint().Delete(ctx, &objm)
 		if err != nil {
 			return err
 		}
@@ -1755,7 +1757,7 @@ func restDelete(objKind, url, tenant string) error {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
 		objm.Tenant = tenant
-		obj, err := restcl.LbPolicyV1().LbPolicy().Delete(ctx, &objm)
+		obj, err := restcl.NetworkV1().LbPolicy().Delete(ctx, &objm)
 		if err != nil {
 			return err
 		}
@@ -1789,7 +1791,7 @@ func restDelete(objKind, url, tenant string) error {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
 		objm.Tenant = tenant
-		obj, err := restcl.CmdV1().Node().Delete(ctx, &objm)
+		obj, err := restcl.ClusterV1().Node().Delete(ctx, &objm)
 		if err != nil {
 			return err
 		}
@@ -1806,7 +1808,7 @@ func restDelete(objKind, url, tenant string) error {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
 		objm.Tenant = tenant
-		obj, err := restcl.SecurityGroupV1().SecurityGroup().Delete(ctx, &objm)
+		obj, err := restcl.SecurityV1().SecurityGroup().Delete(ctx, &objm)
 		if err != nil {
 			return err
 		}
@@ -1823,7 +1825,7 @@ func restDelete(objKind, url, tenant string) error {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
 		objm.Tenant = tenant
-		obj, err := restcl.ServiceV1().Service().Delete(ctx, &objm)
+		obj, err := restcl.NetworkV1().Service().Delete(ctx, &objm)
 		if err != nil {
 			return err
 		}
@@ -1840,7 +1842,7 @@ func restDelete(objKind, url, tenant string) error {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
 		objm.Tenant = tenant
-		obj, err := restcl.SgpolicyV1().Sgpolicy().Delete(ctx, &objm)
+		obj, err := restcl.SecurityV1().Sgpolicy().Delete(ctx, &objm)
 		if err != nil {
 			return err
 		}
@@ -1857,7 +1859,7 @@ func restDelete(objKind, url, tenant string) error {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
 		objm.Tenant = tenant
-		obj, err := restcl.CmdV1().SmartNIC().Delete(ctx, &objm)
+		obj, err := restcl.ClusterV1().SmartNIC().Delete(ctx, &objm)
 		if err != nil {
 			return err
 		}
@@ -1874,7 +1876,7 @@ func restDelete(objKind, url, tenant string) error {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
 		objm.Tenant = tenant
-		obj, err := restcl.TenantV1().Tenant().Delete(ctx, &objm)
+		obj, err := restcl.ClusterV1().Tenant().Delete(ctx, &objm)
 		if err != nil {
 			return err
 		}
@@ -1905,18 +1907,18 @@ func restPost(url, tenant string, obj interface{}) error {
 	}
 	ctx := contxt.Background()
 
-	if v, ok := obj.(*cmd.Cluster); ok {
+	if v, ok := obj.(*cluster.Cluster); ok {
 		v.Tenant = tenant
-		_, err := restcl.CmdV1().Cluster().Create(ctx, v)
+		_, err := restcl.ClusterV1().Cluster().Create(ctx, v)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
 
-	if v, ok := obj.(*network.Endpoint); ok {
+	if v, ok := obj.(*workload.Endpoint); ok {
 		v.Tenant = tenant
-		_, err := restcl.EndpointV1().Endpoint().Create(ctx, v)
+		_, err := restcl.WorkloadV1().Endpoint().Create(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -1925,7 +1927,7 @@ func restPost(url, tenant string, obj interface{}) error {
 
 	if v, ok := obj.(*network.LbPolicy); ok {
 		v.Tenant = tenant
-		_, err := restcl.LbPolicyV1().LbPolicy().Create(ctx, v)
+		_, err := restcl.NetworkV1().LbPolicy().Create(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -1941,18 +1943,18 @@ func restPost(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*cmd.Node); ok {
+	if v, ok := obj.(*cluster.Node); ok {
 		v.Tenant = tenant
-		_, err := restcl.CmdV1().Node().Create(ctx, v)
+		_, err := restcl.ClusterV1().Node().Create(ctx, v)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
 
-	if v, ok := obj.(*network.SecurityGroup); ok {
+	if v, ok := obj.(*security.SecurityGroup); ok {
 		v.Tenant = tenant
-		_, err := restcl.SecurityGroupV1().SecurityGroup().Create(ctx, v)
+		_, err := restcl.SecurityV1().SecurityGroup().Create(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -1961,34 +1963,34 @@ func restPost(url, tenant string, obj interface{}) error {
 
 	if v, ok := obj.(*network.Service); ok {
 		v.Tenant = tenant
-		_, err := restcl.ServiceV1().Service().Create(ctx, v)
+		_, err := restcl.NetworkV1().Service().Create(ctx, v)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
 
-	if v, ok := obj.(*network.Sgpolicy); ok {
+	if v, ok := obj.(*security.Sgpolicy); ok {
 		v.Tenant = tenant
-		_, err := restcl.SgpolicyV1().Sgpolicy().Create(ctx, v)
+		_, err := restcl.SecurityV1().Sgpolicy().Create(ctx, v)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
 
-	if v, ok := obj.(*cmd.SmartNIC); ok {
+	if v, ok := obj.(*cluster.SmartNIC); ok {
 		v.Tenant = tenant
-		_, err := restcl.CmdV1().SmartNIC().Create(ctx, v)
+		_, err := restcl.ClusterV1().SmartNIC().Create(ctx, v)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
 
-	if v, ok := obj.(*network.Tenant); ok {
+	if v, ok := obj.(*cluster.Tenant); ok {
 		v.Tenant = tenant
-		_, err := restcl.TenantV1().Tenant().Create(ctx, v)
+		_, err := restcl.ClusterV1().Tenant().Create(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -2014,10 +2016,10 @@ func restPut(url, tenant string, obj interface{}) error {
 	}
 	ctx := contxt.Background()
 
-	if v, ok := obj.(*cmd.Cluster); ok {
+	if v, ok := obj.(*cluster.Cluster); ok {
 		v.Tenant = tenant
 		v.Name = objName
-		nv, err := restcl.CmdV1().Cluster().Update(ctx, v)
+		nv, err := restcl.ClusterV1().Cluster().Update(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -2025,10 +2027,10 @@ func restPut(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*network.Endpoint); ok {
+	if v, ok := obj.(*workload.Endpoint); ok {
 		v.Tenant = tenant
 		v.Name = objName
-		nv, err := restcl.EndpointV1().Endpoint().Update(ctx, v)
+		nv, err := restcl.WorkloadV1().Endpoint().Update(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -2039,7 +2041,7 @@ func restPut(url, tenant string, obj interface{}) error {
 	if v, ok := obj.(*network.LbPolicy); ok {
 		v.Tenant = tenant
 		v.Name = objName
-		nv, err := restcl.LbPolicyV1().LbPolicy().Update(ctx, v)
+		nv, err := restcl.NetworkV1().LbPolicy().Update(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -2058,10 +2060,10 @@ func restPut(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*cmd.Node); ok {
+	if v, ok := obj.(*cluster.Node); ok {
 		v.Tenant = tenant
 		v.Name = objName
-		nv, err := restcl.CmdV1().Node().Update(ctx, v)
+		nv, err := restcl.ClusterV1().Node().Update(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -2069,10 +2071,10 @@ func restPut(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*network.SecurityGroup); ok {
+	if v, ok := obj.(*security.SecurityGroup); ok {
 		v.Tenant = tenant
 		v.Name = objName
-		nv, err := restcl.SecurityGroupV1().SecurityGroup().Update(ctx, v)
+		nv, err := restcl.SecurityV1().SecurityGroup().Update(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -2083,7 +2085,7 @@ func restPut(url, tenant string, obj interface{}) error {
 	if v, ok := obj.(*network.Service); ok {
 		v.Tenant = tenant
 		v.Name = objName
-		nv, err := restcl.ServiceV1().Service().Update(ctx, v)
+		nv, err := restcl.NetworkV1().Service().Update(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -2091,10 +2093,10 @@ func restPut(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*network.Sgpolicy); ok {
+	if v, ok := obj.(*security.Sgpolicy); ok {
 		v.Tenant = tenant
 		v.Name = objName
-		nv, err := restcl.SgpolicyV1().Sgpolicy().Update(ctx, v)
+		nv, err := restcl.SecurityV1().Sgpolicy().Update(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -2102,10 +2104,10 @@ func restPut(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*cmd.SmartNIC); ok {
+	if v, ok := obj.(*cluster.SmartNIC); ok {
 		v.Tenant = tenant
 		v.Name = objName
-		nv, err := restcl.CmdV1().SmartNIC().Update(ctx, v)
+		nv, err := restcl.ClusterV1().SmartNIC().Update(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -2113,10 +2115,10 @@ func restPut(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*network.Tenant); ok {
+	if v, ok := obj.(*cluster.Tenant); ok {
 		v.Tenant = tenant
 		v.Name = objName
-		nv, err := restcl.TenantV1().Tenant().Update(ctx, v)
+		nv, err := restcl.ClusterV1().Tenant().Update(ctx, v)
 		if err != nil {
 			return err
 		}

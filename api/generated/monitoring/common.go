@@ -2,7 +2,7 @@
 
 /*
 Package monitoring is a auto generated package.
-Input file: protos/mirror.proto
+Input file: alerts.proto
 */
 package monitoring
 

@@ -3,7 +3,7 @@
 package state
 
 import (
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/grpc"
 )
 
@@ -19,37 +19,37 @@ import (
 type CmdAPI interface {
 
 	// SmartNIC register api
-	RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, error)
+	RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error)
 
 	// SmartNIC update api
-	UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error)
+	UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.SmartNIC, error)
 }
 
 // NmdAPI is the API provided by NMD to CMD
 type NmdAPI interface {
 	RegisterCMD(cmd CmdAPI) error
 	GetAgentID() string
-	GetSmartNIC() (*cmd.SmartNIC, error)
-	SetSmartNIC(*cmd.SmartNIC) error
-	CreateSmartNIC(nic *cmd.SmartNIC) error
-	UpdateSmartNIC(nic *cmd.SmartNIC) error
-	DeleteSmartNIC(nic *cmd.SmartNIC) error
+	GetSmartNIC() (*cluster.SmartNIC, error)
+	SetSmartNIC(*cluster.SmartNIC) error
+	CreateSmartNIC(nic *cluster.SmartNIC) error
+	UpdateSmartNIC(nic *cluster.SmartNIC) error
+	DeleteSmartNIC(nic *cluster.SmartNIC) error
 }
 
 // PlatformAPI is the API provided by PlatformAgent to NMD
 type PlatformAPI interface {
 	RegisterNMD(nmd NmdPlatformAPI) error
-	CreateSmartNIC(nic *cmd.SmartNIC) error
-	UpdateSmartNIC(nic *cmd.SmartNIC) error
-	DeleteSmartNIC(nic *cmd.SmartNIC) error
+	CreateSmartNIC(nic *cluster.SmartNIC) error
+	UpdateSmartNIC(nic *cluster.SmartNIC) error
+	DeleteSmartNIC(nic *cluster.SmartNIC) error
 }
 
 // NmdPlatformAPI is the API provided by NMD to Platform agent
 type NmdPlatformAPI interface {
 
 	// SmartNIC register api
-	RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, error)
+	RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error)
 
 	// SmartNIC update api
-	UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error)
+	UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.SmartNIC, error)
 }

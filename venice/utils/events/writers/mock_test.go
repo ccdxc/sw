@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	evtsapi "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )

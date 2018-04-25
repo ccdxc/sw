@@ -10,7 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -47,7 +47,7 @@ type watcher struct {
 	cache       permissionCache
 }
 
-func (w *watcher) processTenantEvent(evt *kvstore.WatchEvent, tenant *network.Tenant) {
+func (w *watcher) processTenantEvent(evt *kvstore.WatchEvent, tenant *cluster.Tenant) {
 	// update cache
 	switch evt.Type {
 	case kvstore.Created:
@@ -84,8 +84,8 @@ func (w *watcher) processRoleBindingEvent(evt *kvstore.WatchEvent, roleBinding *
 
 func (w *watcher) processEvent(evt *kvstore.WatchEvent) {
 	switch tp := evt.Object.(type) {
-	case *network.Tenant:
-		tenant := evt.Object.(*network.Tenant)
+	case *cluster.Tenant:
+		tenant := evt.Object.(*cluster.Tenant)
 		w.processTenantEvent(evt, tenant)
 	case *auth.Role:
 		role := evt.Object.(*auth.Role)
@@ -111,7 +111,7 @@ func (w *watcher) initiateWatches(apicl apiclient.Services) {
 
 	// tenant watcher
 	opts := api.ListWatchOptions{}
-	tenantWatcher, err := apicl.TenantV1().Tenant().Watch(ctx, &opts)
+	tenantWatcher, err := apicl.ClusterV1().Tenant().Watch(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to start tenant watch: Err: %v", err)
 		return

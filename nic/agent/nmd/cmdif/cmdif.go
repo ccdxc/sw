@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/globals"
@@ -270,12 +270,12 @@ func (client *CmdClient) Stop() {
 }
 
 // RegisterSmartNICReq send a register request for SmartNIC to CMD
-func (client *CmdClient) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, error) {
+func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error) {
 
 	// initialize rpc client
 	err := client.initRegistrationRPC()
 	if err != nil {
-		return grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_UNKNOWN.String()}, err
+		return grpc.RegisterNICResponse{Phase: cluster.SmartNICSpec_UNKNOWN.String()}, err
 	}
 	defer client.closeRegistrationRPC()
 
@@ -296,7 +296,7 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNI
 }
 
 // UpdateSmartNICReq send a status update of SmartNIC to CMD
-func (client *CmdClient) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error) {
+func (client *CmdClient) UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.SmartNIC, error) {
 
 	if client.getUpdatesRPCClient() == nil {
 		// initialize rpc client

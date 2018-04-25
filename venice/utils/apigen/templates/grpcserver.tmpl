@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
-	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}"
+	{{.GoPkg.Name}} "{{getRelPath .}}/generated/{{.GoPkg.Name}}"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -36,6 +36,9 @@ var _ fmt.Stringer
 type s{{$pkgname}}{{$flname}}Backend struct {
 	Services  map[string]apiserver.Service
 	Messages  map[string]apiserver.Message
+	logger log.Logger
+	scheme *runtime.Scheme
+
 	{{range .Services}}
 	endpoints{{.Name}} *e{{.Name}}Endpoints{{end}}
 }
@@ -48,8 +51,8 @@ type e{{.Name}}Endpoints struct {
 	fnAutoWatch{{.}} func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {{end}}{{end}}
 }{{end}}
 
-func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Context, logger log.Logger,
-	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
+func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
+	l.Infof("registering message for s{{$pkgname}}{{$flname}}Backend")
 	s.Messages = map[string]apiserver.Message{
 		{{range .Messages}}{{if isNestedMessage .}}{{else}}
 		"{{$pkgname}}.{{.Name}}":     apisrvpkg.NewMessage("{{$pkgname}}.{{.Name}}"){{if ne (len (getDbKey .)) 0}}.WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -85,7 +88,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else { {{end}}
 				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+					l.Infof("resource version is specified %s\n", r.ResourceVersion)
 					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
 				} else {
 					err = kvs.Update(ctx, key, &r)
@@ -171,14 +174,23 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 	scheme.AddKnownTypes({{range  .Messages}}{{if (len (getDbKey .)) ne 0}}
 		&{{$pkgname}}.{{.Name}}{},{{end}}{{end}}
 	)
-
 	apisrv.RegisterMessages("{{$pkgname}}", s.Messages)
+	// add messages to package.
+	if 	pkgMessages == nil {
+		pkgMessages = make(map[string]apiserver.Message)
+	}
+	for k, v := range s.Messages {
+		pkgMessages[k] = v
+	}
+}
+
+func (s *s{{$pkgname}}{{$flname}}Backend) regSvcsFunc(ctx context.Context, logger log.Logger, grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) {
 	{{range .Services}}{{$svcname := .Name}}{{$svcparams := (getSvcParams .)}}{{$svcver := $svcparams.Version}}{{$svcprefix := $svcparams.Prefix}}
 	{
 		srv := apisrvpkg.NewService("{{.Name}}")
 		{{range .Methods}}{{$methparams := (getMethodParams .)}}{{if (strEq $methparams.Oper "WatchOper")}}{{else}}
 		s.endpoints{{$svcname}}.fn{{.Name}} = srv.AddMethod("{{.Name}}",
-			apisrvpkg.NewMethod(s.Messages["{{getInputType $pkgname . true}}"], s.Messages["{{getOutputType $pkgname . true}}"], "{{$svcprefix}}", "{{.Name}}")).WithOper(apiserver.{{$methparams.Oper}}){{if isAutoList .}}{{else}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+			apisrvpkg.NewMethod(pkgMessages["{{getInputType $pkgname . true}}"], pkgMessages["{{getOutputType $pkgname . true}}"], "{{$svcprefix}}", "{{.Name}}")).WithOper(apiserver.{{$methparams.Oper}}){{if isAutoList .}}{{else}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
 			return i, false, nil
 		}){{end}}{{end}}.WithVersion("{{$svcver}}").WithMakeURI(func(i interface{}) (string, error) { {{if isRestExposed .}}{{$uri := getURIKey . false}}{{if $uri.Ref}}
 			in, ok := i.({{getInputType $pkgname . true}})
@@ -190,7 +202,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 		}).HandleInvocation
 		{{end}}{{end}}
 		{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
-		s.endpoints{{$svcname}}.fnAutoWatch{{.}} = s.Messages["{{$pkgname}}.{{.}}"].WatchFromKv
+		s.endpoints{{$svcname}}.fnAutoWatch{{.}} = pkgMessages["{{$pkgname}}.{{.}}"].WatchFromKv
 		{{end}}{{end}}
 		s.Services = map[string]apiserver.Service{
 			"{{$pkgname}}.{{.Name}}": srv,
@@ -199,11 +211,15 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 		endpoints := {{$pkgname}}.Make{{$svcname}}ServerEndpoints(s.endpoints{{$svcname}}, logger)
 		server := {{$pkgname}}.MakeGRPCServer{{$svcname}}(ctx, endpoints, logger)
 		{{$pkgname}}.Register{{.Name}}Server(grpcserver.GrpcServer, server)
-	}
+	}{{end}}
+}
+
+func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, logger log.Logger, grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) {
+	{{range .Services}}{{$svcname := .Name}}{{$svcparams := (getSvcParams .)}}{{$svcver := $svcparams.Version}}{{$svcprefix := $svcparams.Prefix}}
 	// Add Watchers
 	{
 		{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
-		s.Messages["{{$pkgname}}.{{.}}"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+		pkgMessages["{{$pkgname}}.{{.}}"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := {{$pkgname}}.{{.}}{}
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
@@ -270,9 +286,23 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 		{{end}}{{end}}
 	}
 	{{end}}
+}
+
+
+func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Context, logger log.Logger,
+	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
+	// register all messages in the package if not done already
+	s.logger = logger
+	s.scheme = scheme
+	registerMessages(logger, scheme)
+	registerServices(ctx, logger, grpcserver, scheme)
+	registerWatchers(ctx, logger, grpcserver, scheme)
 	return nil
 }
 
+func (s *s{{$pkgname}}{{$flname}}Backend) Reset() {
+	cleanupRegistration()
+}
 {{range .Services}}{{$svcname := .Name}}{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
 func (e *e{{$svcname}}Endpoints) {{.Name}}(ctx context.Context, t {{getInputType $pkgname . true}}) ( {{getOutputType $pkgname . true}}, error) {
 	r, err := e.fn{{.Name}}(ctx, t)
@@ -291,6 +321,9 @@ func init() {
 	apisrv = apisrvpkg.MustGetAPIServer()
 
 	svc := s{{$pkgname}}{{$flname}}Backend{}
+	addMsgRegFunc(svc.regMsgsFunc)
+	addSvcRegFunc(svc.regSvcsFunc)
+	addWatcherRegFunc(svc.regWatchersFunc)
 
 	{{range .Services}}
 	{

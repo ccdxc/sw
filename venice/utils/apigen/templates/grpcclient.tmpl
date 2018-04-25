@@ -11,7 +11,7 @@ import (
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
 
-	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}"
+	{{.GoPkg.Name}} "{{getRelPath .}}/generated/{{.GoPkg.Name}}"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
 	"github.com/pensando/sw/venice/utils/kvstore"

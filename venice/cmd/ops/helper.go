@@ -9,7 +9,7 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-	cmd "github.com/pensando/sw/api/generated/cmd"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"

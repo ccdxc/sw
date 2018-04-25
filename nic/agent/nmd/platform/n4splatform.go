@@ -3,7 +3,7 @@
 package platform
 
 import (
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 )
 
@@ -27,16 +27,16 @@ func (np *NaplesPlatformAgent) RegisterNMD(nmd state.NmdPlatformAPI) error {
 }
 
 // CreateSmartNIC creates a SmartNIC in platform
-func (np *NaplesPlatformAgent) CreateSmartNIC(nw *cmd.SmartNIC) error {
+func (np *NaplesPlatformAgent) CreateSmartNIC(nw *cluster.SmartNIC) error {
 	return nil
 }
 
 // UpdateSmartNIC updates a SmartNIC in platform
-func (np *NaplesPlatformAgent) UpdateSmartNIC(nw *cmd.SmartNIC) error {
+func (np *NaplesPlatformAgent) UpdateSmartNIC(nw *cluster.SmartNIC) error {
 	return nil
 }
 
 // DeleteSmartNIC deletes a SmartNIC from platform
-func (np *NaplesPlatformAgent) DeleteSmartNIC(nw *cmd.SmartNIC) error {
+func (np *NaplesPlatformAgent) DeleteSmartNIC(nw *cluster.SmartNIC) error {
 	return nil
 }

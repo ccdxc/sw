@@ -5,7 +5,7 @@ package dispatcher
 import (
 	"sync"
 
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	evtsapi "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/utils/events"
 )
 

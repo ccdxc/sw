@@ -1,0 +1,3255 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Service name",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/{O.Tenant}/alertDestinations": {
+      "get": {
+        "operationId": "AutoListAlertDestination",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertDestinationList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddAlertDestination",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertDestination"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertDestination"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/alertDestinations/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetAlertDestination",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertDestination"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Default",
+            "description": "List of requirements from the alert policy with it's matched value.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "Spec.EmailList",
+            "description": "Alert Policy ID that matched.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.totalNotificationsSent",
+            "description": "Name of the user performed some action.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteAlertDestination",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertDestination"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateAlertDestination",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertDestination"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertDestination"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/alertPolicies": {
+      "get": {
+        "operationId": "AutoListAlertPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertPolicyList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddAlertPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/alertPolicies/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetAlertPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Resource",
+            "description": "Severity of an alert.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Severity",
+            "description": "Alert source or origin.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Message",
+            "description": "Affected object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.PersistenceDuration",
+            "description": "Captures all the requirements from the alert policy rule with matched value.\nAll these requirements must be cleared to auto-resolve an alert.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.ClearDuration",
+            "description": "Username and time at which the alert was acknowledged.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Enable",
+            "description": "Username and time at which the alert was resolved.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "Spec.AutoResolve",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "Spec.Destinations",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.TotalHits",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "Status.OpenAlerts",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "Status.AcknowledgedAlerts",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteAlertPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateAlertPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/alerts": {
+      "get": {
+        "operationId": "AutoListAlert",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlertList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/alerts/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetAlert",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlert"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.State",
+            "description": "Total hits on this policy.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Severity",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Source.Component",
+            "description": "Resource type - target resource to run this policy.\ne.g. Network, Endpoint - object based alert policy\n     Event - event based alert policy\n     EndpointMetrics - metric based alert policy\nbased on the resource type, the policy gets interpreted.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Source.NodeName",
+            "description": "Severity to be set for an alert that gets triggered from this rule.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.ObjectRef.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.ObjectRef.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.ObjectRef.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Message",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Reason.PolicyID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Acknowledged.User",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Acknowledged.Time.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "Status.Resolved.User",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Resolved.Time.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateAlert",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringAlert"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringAlert"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/eventPolicy": {
+      "post": {
+        "operationId": "AutoAddEventPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringEventPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringEventPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/eventPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetEventPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringEventPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.MaxRetentionTime",
+            "description": "ObjectMeta.Name will be the UUID for an event object.\nTODO: Should there be a predefined list of labels or keep it free form ?.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteEventPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringEventPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateEventPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringEventPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringEventPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/events": {
+      "get": {
+        "operationId": "AutoListEvent",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringEventList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/events/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetEvent",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringEvent"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Attributes.Severity",
+            "description": "export target ip/port/protocol.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Attributes.Type",
+            "description": "event export format, SYSLOG_BSD default.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Attributes.Message",
+            "description": "export events matched by the selector.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Attributes.ObjectRef.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Attributes.ObjectRef.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Attributes.ObjectRef.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Attributes.Source.Component",
+            "description": "Component from which the event is generated.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Attributes.Source.NodeName",
+            "description": "Name of the venice or workload node which is generating the event.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Attributes.Count",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Attributes.FirstTimestamp",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Attributes.LastTimestamp",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/flowExportPolicy": {
+      "get": {
+        "operationId": "AutoListFlowExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFlowExportPolicyList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddFlowExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFlowExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringFlowExportPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/flowExportPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetFlowExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFlowExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteFlowExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFlowExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateFlowExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFlowExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringFlowExportPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/fwlogPolicy": {
+      "get": {
+        "operationId": "AutoListFwlogPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFwlogPolicyList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/fwlogPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetFwlogPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFwlogPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.RetentionTime",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Filter",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateFwlogPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFwlogPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringFwlogPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/statsPolicy": {
+      "get": {
+        "operationId": "AutoListStatsPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsPolicyList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "FieldChangeSelector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/statsPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetStatsPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.CompactionInterval",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.RetentionTime",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.DownSampleRetentionTime",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateStatsPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiExportConfig": {
+      "type": "object",
+      "properties": {
+        "Destination": {
+          "type": "string",
+          "title": "IP address or URL of the collector/entity to which the data is to be exported"
+        },
+        "Transport": {
+          "type": "string",
+          "title": "protocol and Port number where an external collector is gathering the data\nexample \"TCP/2055\""
+        },
+        "Credentials": {
+          "$ref": "#/definitions/apiExternalCred",
+          "title": "Credentials provide secure access to the collector"
+        }
+      },
+      "title": "----------------------------- Export Config -----------------------------\nExport Config specifies server address and user credentials"
+    },
+    "apiExternalCred": {
+      "type": "object",
+      "properties": {
+        "UserName": {
+          "type": "string",
+          "title": "UserName is the login id to be used towards the external entity"
+        },
+        "Password": {
+          "type": "string",
+          "title": "Password is one time specified, not visibile on read operations\nOnly valid when UserName is defined\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "BearerToken": {
+          "type": "string",
+          "title": "External entity supports bearer tokens for authentication and authorization\nToken refresh is not supported using OAuth2\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "CertData": {
+          "type": "string",
+          "format": "byte",
+          "description": "CertData holds PEM-encoded bytes (typically read from a client certificate file)."
+        },
+        "KeyData": {
+          "type": "string",
+          "format": "byte",
+          "title": "KeyData holds PEM-encoded bytes (typically read from a client certificate key file).\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "CaData": {
+          "type": "string",
+          "format": "byte",
+          "description": "CaData holds PEM-encoded bytes (typically read from a root certificates bundle)."
+        }
+      },
+      "title": "------------------------ ExternalCred Object ----------------------------\nExternalCred defines credentials required to access an external entity, such as\na stats collector, compute orchestration entity, or a syslog server.\nExternal entity may support a variety of methods, like username/password,\nTLS Client authentication, or Bearer Token based authentication. User is\nexpected to configure one of the methods"
+    },
+    "apiListMeta": {
+      "type": "object",
+      "properties": {
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version of object store at the time of list generation."
+        }
+      },
+      "description": "ListMeta contains the metadata for list of objects."
+    },
+    "apiListWatchOptions": {
+      "type": "object",
+      "properties": {
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "LabelSelector": {
+          "type": "string"
+        },
+        "FieldSelector": {
+          "type": "string"
+        },
+        "PrefixWatch": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "FieldChangeSelector": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "UUID": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+        },
+        "CreationTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "CreationTime is the creation time of Object"
+        },
+        "ModTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "ModTime is the Last Modification time of Object"
+        },
+        "SelfLink": {
+          "type": "string",
+          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiSyslogExportConfig": {
+      "type": "object",
+      "properties": {
+        "FacilityOverride": {
+          "type": "string",
+          "title": "override default facility with this in exported logs"
+        },
+        "Prefix": {
+          "type": "string",
+          "title": "add prefix in exported logs"
+        }
+      },
+      "title": "syslog export configurations"
+    },
+    "apiTimestamp": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "APIVersion": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "fieldsRequirement": {
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "string",
+          "description": "The label key that the condition applies to."
+        },
+        "Operator": {
+          "type": "string",
+          "description": "Condition checked for the key."
+        },
+        "Values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Values contains one or more values corresponding to the label key. \"equals\" and\n\"notEquals\" operators need a single Value. \"in\" and \"notIn\" operators can have\none or more values."
+        }
+      },
+      "description": "Requirement defines a single matching condition for a selector."
+    },
+    "fieldsSelector": {
+      "type": "object",
+      "properties": {
+        "Requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/fieldsRequirement"
+          },
+          "description": "Requirements are ANDed."
+        }
+      },
+      "description": "Selector is used to select objects by fields. Requirements in the selector are ANDed.\nA selector with no Requirements does not select anything."
+    },
+    "monitoringAlert": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/monitoringAlertSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/monitoringAlertStatus"
+        }
+      },
+      "title": "Source of an alert; for alerts generated from events, it maps to event.Source"
+    },
+    "monitoringAlertDestination": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "Requirement from the alert rule that was met"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "The value at which the requirement was met.\nsame as Requirement.value for operator `Equals` but could vary for other operators\ne.g. requirement - CPU;Gt;90 could have a matching value 96"
+        },
+        "Spec": {
+          "$ref": "#/definitions/monitoringAlertDestinationSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/monitoringAlertDestinationStatus"
+        }
+      },
+      "title": "One of the requirement from the expression that was met"
+    },
+    "monitoringAlertDestinationList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAlertDestination"
+          }
+        }
+      }
+    },
+    "monitoringAlertDestinationSpec": {
+      "type": "object",
+      "properties": {
+        "Default": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "List of requirements from the alert policy with it's matched value"
+        },
+        "EmailList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Alert Policy ID that matched"
+        },
+        "SNMPTrapServers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringSNMPTrapServer"
+          }
+        }
+      },
+      "title": "AlertReason captures all the requirements with matched value from the alert policy rule\nat the time of creating an alert.\ne.g. \"matched-requirements\": [{\"field\": \"cpu\", \"operator\": \"Gt\", \"values\": [90], \"observed-value\": 95}]"
+    },
+    "monitoringAlertDestinationStatus": {
+      "type": "object",
+      "properties": {
+        "totalNotificationsSent": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Name of the user performed some action."
+        }
+      },
+      "description": "AuditInfo captures the user performed the action and the time at which the\naction was performed."
+    },
+    "monitoringAlertList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAlert"
+          }
+        }
+      }
+    },
+    "monitoringAlertPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/monitoringAlertPolicySpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/monitoringAlertPolicyStatus"
+        }
+      },
+      "title": "User can change the state of the alert by changing the spec"
+    },
+    "monitoringAlertPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAlertPolicy"
+          }
+        }
+      }
+    },
+    "monitoringAlertPolicySpec": {
+      "type": "object",
+      "properties": {
+        "Resource": {
+          "type": "string",
+          "title": "Severity of an alert"
+        },
+        "Severity": {
+          "type": "string",
+          "title": "Alert source or origin"
+        },
+        "Message": {
+          "type": "string",
+          "title": "Affected object"
+        },
+        "Requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringRequirement"
+          },
+          "title": "Message from the alert rule that triggered the alert"
+        },
+        "PersistenceDuration": {
+          "type": "string",
+          "description": "Captures all the requirements from the alert policy rule with matched value.\nAll these requirements must be cleared to auto-resolve an alert."
+        },
+        "ClearDuration": {
+          "type": "string",
+          "title": "Username and time at which the alert was acknowledged"
+        },
+        "Enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Username and time at which the alert was resolved"
+        },
+        "AutoResolve": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "Destinations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Status part of the alert object"
+    },
+    "monitoringAlertPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "TotalHits": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "OpenAlerts": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "AcknowledgedAlerts": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Alert defines an alert object"
+    },
+    "monitoringAlertReason": {
+      "type": "object",
+      "properties": {
+        "MatchedRequirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringMatchedRequirement"
+          },
+          "title": "name of the field or metric"
+        },
+        "PolicyID": {
+          "type": "string"
+        }
+      },
+      "title": "Requirement specifies each\n{\"field\": \"Status.Phase\", \"operator\":\"Equals\", \"values\":[\"JOINED\"]}"
+    },
+    "monitoringAlertSource": {
+      "type": "object",
+      "properties": {
+        "Component": {
+          "type": "string",
+          "description": "Resource type - target resource to run this policy.\ne.g. Network, Endpoint - object based alert policy\n     Event - event based alert policy\n     EndpointMetrics - metric based alert policy\nbased on the resource type, the policy gets interpreted."
+        },
+        "NodeName": {
+          "type": "string",
+          "title": "Severity to be set for an alert that gets triggered from this rule"
+        }
+      }
+    },
+    "monitoringAlertSpec": {
+      "type": "object",
+      "properties": {
+        "State": {
+          "type": "string",
+          "title": "Total hits on this policy"
+        }
+      }
+    },
+    "monitoringAlertStatus": {
+      "type": "object",
+      "properties": {
+        "Severity": {
+          "type": "string"
+        },
+        "Source": {
+          "$ref": "#/definitions/monitoringAlertSource"
+        },
+        "ObjectRef": {
+          "$ref": "#/definitions/apiObjectRef"
+        },
+        "Message": {
+          "type": "string"
+        },
+        "Reason": {
+          "$ref": "#/definitions/monitoringAlertReason"
+        },
+        "Acknowledged": {
+          "$ref": "#/definitions/monitoringAuditInfo"
+        },
+        "Resolved": {
+          "$ref": "#/definitions/monitoringAuditInfo"
+        }
+      },
+      "title": "AlertPolicy - tenant scoped"
+    },
+    "monitoringAuditInfo": {
+      "type": "object",
+      "properties": {
+        "User": {
+          "type": "string"
+        },
+        "Time": {
+          "$ref": "#/definitions/apiTimestamp",
+          "description": "Password contains the authentication password."
+        }
+      },
+      "description": "AuthConfig contains the configuration for SNMP Trap authentication."
+    },
+    "monitoringAuthConfig": {
+      "type": "object",
+      "properties": {
+        "Algo": {
+          "type": "string"
+        },
+        "Password": {
+          "type": "string",
+          "description": "Password contains the privacy password."
+        }
+      },
+      "description": "PrivacyConfig contains the configuration for SNMP Trap encryption."
+    },
+    "monitoringAutoMsgAlertDestinationWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/monitoringAlertDestination"
+        }
+      }
+    },
+    "monitoringAutoMsgAlertPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/monitoringAlertPolicy"
+        }
+      }
+    },
+    "monitoringAutoMsgAlertWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/monitoringAlert"
+        }
+      }
+    },
+    "monitoringAutoMsgEventPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/monitoringEventPolicy"
+        }
+      }
+    },
+    "monitoringAutoMsgEventWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/monitoringEvent"
+        }
+      }
+    },
+    "monitoringAutoMsgFlowExportPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/monitoringFlowExportPolicy"
+        }
+      }
+    },
+    "monitoringAutoMsgFwlogPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/monitoringFwlogPolicy"
+        }
+      }
+    },
+    "monitoringAutoMsgStatsPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/monitoringStatsPolicy"
+        }
+      }
+    },
+    "monitoringEvent": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Attributes": {
+          "$ref": "#/definitions/monitoringEventAttributes",
+          "description": "Spec contains the configuration of an event policy."
+        }
+      },
+      "description": "-------------------------- Event Policy -----------------------------\nEvent Policy represents the policy definition for Events.\nEvent Client module will be consumer of this policy."
+    },
+    "monitoringEventAttributes": {
+      "type": "object",
+      "properties": {
+        "Severity": {
+          "type": "string",
+          "title": "export target ip/port/protocol"
+        },
+        "Type": {
+          "type": "string",
+          "title": "event export format, SYSLOG_BSD default"
+        },
+        "Message": {
+          "type": "string",
+          "title": "export events matched by the selector"
+        },
+        "ObjectRef": {
+          "$ref": "#/definitions/apiObjectRef",
+          "title": "syslog specific configuration"
+        },
+        "Source": {
+          "$ref": "#/definitions/monitoringEventSource"
+        },
+        "Count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "FirstTimestamp": {
+          "type": "string"
+        },
+        "LastTimestamp": {
+          "type": "string"
+        }
+      }
+    },
+    "monitoringEventExport": {
+      "type": "object",
+      "properties": {
+        "Targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiExportConfig"
+          },
+          "title": "export configuration"
+        },
+        "Format": {
+          "type": "string",
+          "title": "MaxRetentionTime defines for how long to keep the data before it is deleted\nThe value is specified as a string format e.g. 30d (30 days)"
+        },
+        "Selector": {
+          "$ref": "#/definitions/fieldsSelector"
+        },
+        "SyslogConfig": {
+          "$ref": "#/definitions/apiSyslogExportConfig"
+        }
+      },
+      "description": "EventPolicySpec is the specification of an Event Policy,\nIt consists of Retention and Export."
+    },
+    "monitoringEventList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringEvent"
+          }
+        }
+      }
+    },
+    "monitoringEventPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/monitoringEventPolicySpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/monitoringEventPolicyStatus"
+        }
+      },
+      "title": "EventPolicyStatus"
+    },
+    "monitoringEventPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringEventPolicy"
+          }
+        }
+      }
+    },
+    "monitoringEventPolicySpec": {
+      "type": "object",
+      "properties": {
+        "Exports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringEventExport"
+          }
+        },
+        "MaxRetentionTime": {
+          "type": "string",
+          "title": "ObjectMeta.Name will be the UUID for an event object.\nTODO: Should there be a predefined list of labels or keep it free form ?"
+        }
+      },
+      "description": "Event is a system notification of a fault, condition or configuration\nthat should be user visible. These objects are created internally by\nEvent client and persisted in EventDB."
+    },
+    "monitoringEventPolicyStatus": {
+      "type": "object",
+      "title": "EventAttributes contains all the event attributes"
+    },
+    "monitoringEventSource": {
+      "type": "object",
+      "properties": {
+        "Component": {
+          "type": "string",
+          "description": "Component from which the event is generated."
+        },
+        "NodeName": {
+          "type": "string",
+          "description": "Name of the venice or workload node which is generating the event."
+        }
+      },
+      "title": "EventSource has info about the component and\nhost/node that generated the event"
+    },
+    "monitoringFlowExportPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/monitoringFlowExportSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/monitoringFlowExportStatus"
+        }
+      },
+      "description": "=========================================================================================\n stats policy\n=========================================================================================",
+      "title": "telemetry policies:\n-------------------------------------------------------------------------------\npolicy name         |  intended for        |     description                 |\n-------------------------------------------------------------------------------\nstats               |  sys admins          |    for all stats other than     |\n                    |                      |    fwlog/netflow.               |\n                    |                      |    includes retention,compaction|\n-------------------------------------------------------------------------------\nfwlog               |  security admins     |    firewall log policy          |\n                    |                      |    includes retention,          |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------\n                    |                      |                                 |\nflowexport          |  network admins      |    netflow export policy        |\n                    |                      |    includes interval,           |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------"
+    },
+    "monitoringFlowExportPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringFlowExportPolicy"
+          }
+        }
+      }
+    },
+    "monitoringFlowExportSpec": {
+      "type": "object",
+      "properties": {
+        "Targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringFlowExportTarget"
+          },
+          "title": "Compaction Interval is the down sampling interval in minutes, hours or days\nthis would be mapped to GROUP BY TIME() in influxdb CQ\nexample: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host"
+        }
+      },
+      "title": "compaction method will be selected by Venice based on the mesaurement/table\ncollection interval will be selected by Venice based on workloads"
+    },
+    "monitoringFlowExportStatus": {
+      "type": "object"
+    },
+    "monitoringFlowExportTarget": {
+      "type": "object",
+      "properties": {
+        "Interval": {
+          "type": "string"
+        },
+        "Format": {
+          "type": "string"
+        },
+        "Exports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiExportConfig"
+          }
+        }
+      }
+    },
+    "monitoringFwlogExport": {
+      "type": "object",
+      "properties": {
+        "Targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiExportConfig"
+          },
+          "title": "Target contains ip/port/protocol"
+        },
+        "Format": {
+          "type": "string",
+          "title": "fwlog format, SYSLOG_BSD default"
+        },
+        "Filter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "filter firewall logs, FWLOG_ALL default"
+        },
+        "SyslogConfig": {
+          "$ref": "#/definitions/apiSyslogExportConfig",
+          "title": "configuration to use for syslog format\ndefault facility is set to \"local4\", can be overridden with FacilityOverride\nfwlog serverity is set to \"Informational\""
+        }
+      },
+      "title": "firewall log export config"
+    },
+    "monitoringFwlogPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "RetentionTime defines for how long to keep the fwlog before it is deleted"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "filter firewall logs for venice, FWLOG_ALL default"
+        },
+        "Spec": {
+          "$ref": "#/definitions/monitoringFwlogSpec",
+          "title": "Export contains the export config"
+        },
+        "Status": {
+          "$ref": "#/definitions/monitoringFwlogStatus"
+        }
+      },
+      "title": "Venice collects fwlog irrespective of the export config"
+    },
+    "monitoringFwlogPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringFwlogPolicy"
+          }
+        }
+      }
+    },
+    "monitoringFwlogSpec": {
+      "type": "object",
+      "properties": {
+        "RetentionTime": {
+          "type": "string"
+        },
+        "Filter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Exports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringFwlogExport"
+          }
+        }
+      }
+    },
+    "monitoringFwlogStatus": {
+      "type": "object",
+      "title": "========================================================================================\n flow export policy\n========================================================================================"
+    },
+    "monitoringMatchedRequirement": {
+      "type": "object",
+      "properties": {
+        "Requirement": {
+          "$ref": "#/definitions/monitoringRequirement",
+          "description": "Host where the trap needs to be sent."
+        },
+        "ObservedValue": {
+          "type": "string",
+          "description": "Port on the Host where the trap needs to be sent, default is 162."
+        }
+      },
+      "description": "SNMPTrapServer contains the configuration for sending SNMP traps to a receiver."
+    },
+    "monitoringPrivacyConfig": {
+      "type": "object",
+      "properties": {
+        "Algo": {
+          "type": "string",
+          "description": "If set, this will be the default notification option for the alert policies unless otherwise\nsomething else is mentioned."
+        },
+        "Password": {
+          "type": "string",
+          "title": "Email notification"
+        }
+      }
+    },
+    "monitoringRequirement": {
+      "type": "object",
+      "properties": {
+        "FieldOrMetric": {
+          "type": "string",
+          "title": "total number of notifications sent using this notification mechanism"
+        },
+        "Operator": {
+          "type": "string"
+        },
+        "Values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "monitoringSNMPTrapServer": {
+      "type": "object",
+      "properties": {
+        "Host": {
+          "type": "string"
+        },
+        "Port": {
+          "type": "string"
+        },
+        "Version": {
+          "type": "string"
+        },
+        "CommunityOrUser": {
+          "type": "string"
+        },
+        "AuthConfig": {
+          "$ref": "#/definitions/monitoringAuthConfig"
+        },
+        "PrivacyConfig": {
+          "$ref": "#/definitions/monitoringPrivacyConfig"
+        }
+      },
+      "title": "AlertDestination - tenant scoped"
+    },
+    "monitoringStatsPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/monitoringStatsSpec",
+          "description": "Export contains export parameters."
+        },
+        "Status": {
+          "$ref": "#/definitions/monitoringStatsStatus"
+        }
+      }
+    },
+    "monitoringStatsPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringStatsPolicy"
+          }
+        }
+      }
+    },
+    "monitoringStatsSpec": {
+      "type": "object",
+      "properties": {
+        "CompactionInterval": {
+          "type": "string"
+        },
+        "RetentionTime": {
+          "type": "string"
+        },
+        "DownSampleRetentionTime": {
+          "type": "string"
+        }
+      }
+    },
+    "monitoringStatsStatus": {
+      "type": "object"
+    }
+  }
+}

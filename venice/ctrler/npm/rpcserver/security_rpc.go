@@ -11,7 +11,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
@@ -24,7 +24,7 @@ type SecurityRPCServer struct {
 }
 
 // convertRule converts a single rule
-func convertRule(rl *network.SGRule, dir string) netproto.SecurityRule {
+func convertRule(rl *security.SGRule, dir string) netproto.SecurityRule {
 	var proto = "tcp"
 	var port int
 	svcs := strings.Split(rl.Ports, "/")

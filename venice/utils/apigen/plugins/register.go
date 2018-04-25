@@ -515,6 +515,71 @@ func genManifest(desc *descriptor.File, path, pkg, file string) (map[string]mani
 	return manifest, nil
 }
 
+type pkgManifest struct {
+	Files     []string
+	APIServer bool
+}
+
+func parsePkgManifest(raw []byte) map[string]pkgManifest {
+	manifest := make(map[string]pkgManifest)
+	lines := bytes.Split(raw, []byte("\n"))
+	for _, line := range lines {
+		fields := bytes.Fields(line)
+		if len(fields) > 2 {
+			apiserver, err := strconv.ParseBool(string(fields[0]))
+			if err != nil {
+				glog.Fatalf("malformed pkg manifest [%s]", string(line))
+			}
+			pkg := string(fields[1])
+			files := []string{}
+			for i := 2; i < len(fields); i++ {
+				files = append(files, string(fields[i]))
+			}
+			manifest[pkg] = pkgManifest{
+				APIServer: apiserver,
+				Files:     files,
+			}
+		}
+	}
+	return manifest
+}
+
+func genPkgManifest(desc *descriptor.File, path, pkg, file string) (map[string]pkgManifest, error) {
+	var manifest map[string]pkgManifest
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		glog.V(1).Infof("manifest [%s] not found", path)
+		manifest = make(map[string]pkgManifest)
+	} else {
+		glog.V(1).Infof("manifest exists, reading from manifest")
+		raw, err := ioutil.ReadFile(path)
+		if err != nil {
+			glog.V(1).Infof("Reading Manifest failed (%s)", err)
+			return nil, err
+		}
+		manifest = parsePkgManifest(raw)
+	}
+	apiserver, _ := isAPIServerServed(desc)
+	file = filepath.Base(file)
+	var ok bool
+	var m pkgManifest
+	if m, ok = manifest[pkg]; !ok {
+		m = pkgManifest{APIServer: apiserver}
+	}
+	found := false
+	for i := range m.Files {
+		if m.Files[i] == file {
+			found = true
+			break
+		}
+	}
+	if !found {
+		m.Files = append(m.Files, file)
+	}
+
+	manifest[pkg] = m
+	return manifest, nil
+}
+
 //
 type packageDef struct {
 	Svcs  map[string]serviceDef
@@ -1556,6 +1621,10 @@ func isAPIServerServed(file *descriptor.File) (bool, error) {
 	return true, nil
 }
 
+func getRelPath(file *descriptor.File) (string, error) {
+	return "github.com/pensando/sw/api", nil
+}
+
 //getGrpcDestination returns the gRPC destination specified.
 func getGrpcDestination(file *descriptor.File) string {
 	if v, err := reg.GetExtension("venice.fileGrpcDest", file); err == nil {
@@ -1607,6 +1676,7 @@ func init() {
 	reg.RegisterFunc("getSwaggerFileName", getSwaggerFileName)
 	reg.RegisterFunc("createDir", createDir)
 	reg.RegisterFunc("genManifest", genManifest)
+	reg.RegisterFunc("genPkgManifest", genPkgManifest)
 	reg.RegisterFunc("genSvcManifest", genServiceManifest)
 	reg.RegisterFunc("getSvcManifest", getServiceManifest)
 	reg.RegisterFunc("addRelations", addRelations)
@@ -1642,6 +1712,7 @@ func init() {
 	reg.RegisterFunc("isAPIServerServed", isAPIServerServed)
 	reg.RegisterFunc("getSvcActionEndpoints", getSvcActionEndpoints)
 	reg.RegisterFunc("getDefaulterManifest", getDefaulterManifest)
+	reg.RegisterFunc("getRelPath", getRelPath)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

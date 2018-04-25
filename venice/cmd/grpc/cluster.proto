@@ -114,7 +114,7 @@ service SmartNICUpdates {
 message RegisterNICRequest {
 
 	// SmartNIC object
-	cmd.SmartNIC Nic    = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
+	cluster.SmartNIC Nic    = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 
 	// Factory Certificate
 	bytes Cert          = 2 [(gogoproto.jsontag) = "cert,omitempty"];
@@ -123,7 +123,7 @@ message RegisterNICRequest {
 // Register NIC response
 message RegisterNICResponse {
 
-	// Admission Status of NIC - string enum of cmd.SmartNICSpec.SmartNICPhase
+	// Admission Status of NIC - string enum of cluster.SmartNICSpec.SmartNICPhase
 	string Phase = 1 [(gogoproto.jsontag) = "phase,omitempty"];
 
 	// Reason is an optional field. It is populated with reason
@@ -135,19 +135,18 @@ message RegisterNICResponse {
 message UpdateNICRequest {
 
 	// SmartNIC object
-	cmd.SmartNIC Nic = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
+	cluster.SmartNIC Nic = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 }
 
 // Update NIC response
 message UpdateNICResponse {
 
 	// SmartNIC object
-	cmd.SmartNIC Nic = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "nic,omitempty"];
+	cluster.SmartNIC Nic = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "nic,omitempty"];
 }
 
 // SmartNIC watch event
 message SmartNICEvent {
 	api.EventType EventType = 1 [(gogoproto.jsontag) = "eventType,omitempty"];
-	cmd.SmartNIC  Nic       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
+	cluster.SmartNIC  Nic       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 }
-

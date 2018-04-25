@@ -5,7 +5,7 @@ package statemgr
 import (
 	"fmt"
 
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -13,10 +13,10 @@ import (
 
 // SecurityGroupState security group state
 type SecurityGroupState struct {
-	network.SecurityGroup                           // embedded security group object
-	policies              map[string]*SgpolicyState // list of policies attached to this security group
-	endpoints             map[string]*EndpointState // list of all matching endpoints in this security group
-	stateMgr              *Statemgr                 // pointer to network manager
+	security.SecurityGroup                           // embedded security group object
+	policies               map[string]*SgpolicyState // list of policies attached to this security group
+	endpoints              map[string]*EndpointState // list of all matching endpoints in this security group
+	stateMgr               *Statemgr                 // pointer to network manager
 }
 
 // Write writes the object to api server
@@ -122,7 +122,7 @@ func SecurityGroupStateFromObj(obj memdb.Object) (*SecurityGroupState, error) {
 }
 
 // NewSecurityGroupState creates a new security group state object
-func NewSecurityGroupState(sg *network.SecurityGroup, stateMgr *Statemgr) (*SecurityGroupState, error) {
+func NewSecurityGroupState(sg *security.SecurityGroup, stateMgr *Statemgr) (*SecurityGroupState, error) {
 	// create sg state object
 	sgs := SecurityGroupState{
 		SecurityGroup: *sg,
@@ -163,7 +163,7 @@ func (sm *Statemgr) ListSecurityGroups() ([]*SecurityGroupState, error) {
 }
 
 // CreateSecurityGroup creates a security group
-func (sm *Statemgr) CreateSecurityGroup(sg *network.SecurityGroup) error {
+func (sm *Statemgr) CreateSecurityGroup(sg *security.SecurityGroup) error {
 	// see if we already have it
 	esg, err := sm.FindObject("SecurityGroup", sg.ObjectMeta.Tenant, sg.ObjectMeta.Name)
 	if err == nil {

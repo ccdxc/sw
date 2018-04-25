@@ -1,0 +1,2 @@
+{{$x := (genPkgManifest . "../generated/pkgmanifest" .GoPkg.Name .Name)}}{{range $key, $value := $x}}
+{{$value.APIServer}} {{$key}} {{range .Files}}{{.}} {{end}}{{end}}

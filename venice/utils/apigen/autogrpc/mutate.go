@@ -3,6 +3,7 @@ package autogrpc
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -407,14 +408,29 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 
 // AddAutoGrpcEndpoints adds gRPC endpoints and types to the generation request
 func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
-	crudMsgMap := make(map[string]bool)
+
+	msgMap := make(map[string]*descriptor.DescriptorProto)
+	pkgMap := make(map[string]string)
+	protoRe := regexp.MustCompile(`protos/([a-z]|[A-Z]|[0-9]|_|.)+.proto$`)
+	for _, f := range req.GetProtoFile() {
+		glog.V(1).Infof("Got Importsin [%s] as {%v}", *f.Name, f.GetDependency())
+		if str := protoRe.FindString(f.GetName()); str != "" {
+			pkgMap[str] = f.GetPackage()
+		}
+		for _, m := range f.MessageType {
+			msgMap[*m.Name] = m
+		}
+	}
+	glog.V(1).Infof("Got PkgMap as {%+v}", pkgMap)
 	for _, files := range req.GetFileToGenerate() {
 		for _, f := range req.GetProtoFile() {
 			if files != *f.Name {
 				continue
 			}
+			crudMsgMap := make(map[string]bool)
 			glog.V(1).Infof("File is %s [%s]\n", *f.Name, *f.Package)
-			msgMap := make(map[string]*descriptor.DescriptorProto)
+			glog.V(1).Infof("Before Mutation file is %+v", f)
+
 			for _, m := range f.MessageType {
 				msgMap[*m.Name] = m
 				glog.V(1).Infof("Message [%s] - \n %+v\n\n", *m.Name, m)
@@ -454,7 +470,7 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 									glog.Fatalf("unsupported REST verb %s", meth)
 								}
 								if m, ok := msgMap[r.Object]; !ok {
-									glog.Fatalf("unknown message [%s] in REST service definition", r.Object)
+									// glog.Fatalf("unknown message [%s] in REST service definition", r.Object)
 								} else {
 									switch meth {
 									case "list":
@@ -509,7 +525,7 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 					return *s.Method[x].Name < *s.Method[y].Name
 				})
 			}
+			glog.V(1).Infof("Mutated file is %+v", f)
 		}
 	}
-
 }

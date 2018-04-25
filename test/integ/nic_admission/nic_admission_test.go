@@ -21,7 +21,7 @@ import (
 	api "github.com/pensando/sw/api"
 	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/cmd"
+	pencluster "github.com/pensando/sw/api/generated/cluster"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	nmd "github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
@@ -90,8 +90,8 @@ type nmdInfo struct {
 
 var tInfo testInfo
 
-func (t testInfo) APIClient() cmd.CmdV1Interface {
-	return t.apiClient.CmdV1()
+func (t testInfo) APIClient() pencluster.ClusterV1Interface {
+	return t.apiClient.ClusterV1()
 }
 
 func getNodeID(index int) string {
@@ -311,7 +311,7 @@ func TestCreateNMDs(t *testing.T) {
 						}
 
 						// Verify NIC is admitted
-						if nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+						if nic.Spec.Phase != pencluster.SmartNICSpec_ADMITTED.String() {
 							log.Errorf("NIC is not admitted")
 							return false, nil
 						}
@@ -337,7 +337,7 @@ func TestCreateNMDs(t *testing.T) {
 						meta := api.ObjectMeta{
 							Name: nodeID,
 						}
-						nicObj, err := tInfo.apiClient.CmdV1().SmartNIC().Get(context.Background(), &meta)
+						nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
 						if err != nil || nicObj == nil {
 							log.Errorf("Failed to GET SmartNIC object, mac:%s, %v", nodeID, err)
 							return false, nil
@@ -353,7 +353,7 @@ func TestCreateNMDs(t *testing.T) {
 						meta := api.ObjectMeta{
 							Name: nodeID,
 						}
-						nodeObj, err := tInfo.apiClient.CmdV1().Node().Get(context.Background(), &meta)
+						nodeObj, err := tInfo.apiClient.ClusterV1().Node().Get(context.Background(), &meta)
 						if err != nil || nodeObj == nil {
 							log.Errorf("Failed to GET Node object, mac:%s, %v", nodeID, err)
 							return false, nil
@@ -473,15 +473,15 @@ func Setup(m *testing.M) {
 	}
 
 	// Create test cluster object
-	clRef := &cmd.Cluster{
+	clRef := &pencluster.Cluster{
 		ObjectMeta: api.ObjectMeta{
 			Name: "testCluster",
 		},
-		Spec: cmd.ClusterSpec{
+		Spec: pencluster.ClusterSpec{
 			AutoAdmitNICs: true,
 		},
 	}
-	_, err = tInfo.apiClient.CmdV1().Cluster().Create(context.Background(), clRef)
+	_, err = tInfo.apiClient.ClusterV1().Cluster().Create(context.Background(), clRef)
 	if err != nil {
 		fmt.Printf("Error creating Cluster object, %v", err)
 		os.Exit(-1)

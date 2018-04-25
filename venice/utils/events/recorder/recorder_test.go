@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	evtsapi "github.com/pensando/sw/api/generated/monitoring"
 	epgrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver"
 	"github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
 	"github.com/pensando/sw/venice/globals"

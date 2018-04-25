@@ -13,8 +13,10 @@ import (
 
 	"fmt"
 
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/cli/api"
 	"github.com/pensando/sw/venice/cli/testserver/tserver"
 	"github.com/pensando/sw/venice/utils/log"
@@ -55,12 +57,12 @@ func TestStartServer(t *testing.T) {
 	tserver.Start(":" + testServerPort)
 
 	// initiaize cluster with default cluster
-	cluster := &cmd.Cluster{}
+	cluster := &cluster.Cluster{}
 	cluster.Kind = "cluster"
 	cluster.Name = "dc-az-cluster1"
 
 	count := 5
-	url := "http://localhost:" + testServerPort + "/v1/cmd/cluster"
+	url := "http://localhost:" + testServerPort + "/v1/cluster/cluster"
 	for {
 		var response map[string]string
 		err = netutils.HTTPPost(url, cluster, &response)
@@ -86,7 +88,7 @@ func TestClusterCreate(t *testing.T) {
 		t.Fatalf("update: garbled output '%s'", out)
 	}
 	out = veniceCLI("read cluster dc-az-cluster1")
-	cluster := &cmd.Cluster{}
+	cluster := &cluster.Cluster{}
 	if err := json.Unmarshal([]byte(out), cluster); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -111,7 +113,7 @@ func TestClusterUpdate(t *testing.T) {
 	}
 
 	out = veniceCLI("read cluster dc-az-cluster1")
-	cluster := &cmd.Cluster{}
+	cluster := &cluster.Cluster{}
 	if err := json.Unmarshal([]byte(out), cluster); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -123,8 +125,8 @@ func TestClusterUpdate(t *testing.T) {
 }
 
 func TestSmartNICCreate(t *testing.T) {
-	addSnic := func(t *testing.T, snic *cmd.SmartNIC) error {
-		url := "http://localhost:" + testServerPort + "/v1/cmd/smartnics"
+	addSnic := func(t *testing.T, snic *cluster.SmartNIC) error {
+		url := "http://localhost:" + testServerPort + "/v1/cluster/smartnics"
 		if err := httpPost(url, snic); err != nil {
 			t.Fatalf("error posting smart nic: %+v", snic)
 			return err
@@ -132,7 +134,7 @@ func TestSmartNICCreate(t *testing.T) {
 		return nil
 	}
 
-	snic := &cmd.SmartNIC{}
+	snic := &cluster.SmartNIC{}
 	snic.Kind = "smartnic"
 
 	snic.Name = "naples1"
@@ -142,11 +144,11 @@ func TestSmartNICCreate(t *testing.T) {
 
 	/*
 		out := veniceCLI("read smartNIC naples2")
-		snic = &cmd.SmartNIC{}
+		snic = &cluster.SmartNIC{}
 		if err := json.Unmarshal([]byte(out), snic); err != nil {
 			t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 		}
-		if snic.Spec.Phase != cmd.SmartNICSpec_UNKNOWN.String() {
+		if snic.Spec.Phase != cluster.SmartNICSpec_UNKNOWN.String() {
 			t.Fatalf("Read operation failed: %+v \n", snic)
 		}
 	*/
@@ -164,27 +166,27 @@ func TestSmartNICCreate(t *testing.T) {
 }
 
 func TestNodeCreate(t *testing.T) {
-	out := veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s --roles %s vm233", cmd.NodeSpec_QUORUM.String(), cmd.NodeSpec_WORKLOAD))
+	out := veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s --roles %s vm233", cluster.NodeSpec_QUORUM.String(), cluster.NodeSpec_WORKLOAD))
 
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("update: garbled output '%s'", out)
 	}
 
 	out = veniceCLI("read node vm233")
-	node := &cmd.Node{}
+	node := &cluster.Node{}
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cmd.NodeSpec_QUORUM.String() || node.Spec.Roles[1] != cmd.NodeSpec_WORKLOAD.String() {
+	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_QUORUM.String() || node.Spec.Roles[1] != cluster.NodeSpec_WORKLOAD.String() {
 		t.Fatalf("Create operation failed: %+v \n", node)
 	}
 
 	out = veniceCLI("read node")
-	node = &cmd.Node{}
+	node = &cluster.Node{}
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cmd.NodeSpec_QUORUM.String() || node.Spec.Roles[1] != cmd.NodeSpec_WORKLOAD.String() {
+	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_QUORUM.String() || node.Spec.Roles[1] != cluster.NodeSpec_WORKLOAD.String() {
 		t.Fatalf("Single read read failed: %+v \n", node)
 	}
 
@@ -196,34 +198,34 @@ func TestNodeCreate(t *testing.T) {
 }
 
 func TestNodeUpdate(t *testing.T) {
-	out := veniceCLI(fmt.Sprintf("update node --roles %s vm233", cmd.NodeSpec_CONTROLLER.String()))
+	out := veniceCLI(fmt.Sprintf("update node --roles %s vm233", cluster.NodeSpec_CONTROLLER.String()))
 
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("Update: garbled output '%s'", out)
 	}
 	out = veniceCLI("read node vm233")
-	node := &cmd.Node{}
+	node := &cluster.Node{}
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || len(node.Spec.Roles) != 1 || node.Spec.Roles[0] != cmd.NodeSpec_CONTROLLER.String() {
+	if node.Labels["vCenter"] != "vc2" || len(node.Spec.Roles) != 1 || node.Spec.Roles[0] != cluster.NodeSpec_CONTROLLER.String() {
 		t.Fatalf("Update operation failed: %+v \n", node)
 	}
 }
 
 func TestSmartNICUpdate(t *testing.T) {
 	/*
-		out := veniceCLI(fmt.Sprintf("update smartNIC --phase %s naples2", cmd.SmartNICSpec_ADMITTED.String()))
+		out := veniceCLI(fmt.Sprintf("update smartNIC --phase %s naples2", cluster.SmartNICSpec_ADMITTED.String()))
 
 		if !fmtOutput && strings.TrimSpace(out) != "" {
 			t.Fatalf("Update: garbled output '%s'", out)
 		}
 			out = veniceCLI("read smartNIC naples2")
-			snic := &cmd.SmartNIC{}
+			snic := &cluster.SmartNIC{}
 			if err := json.Unmarshal([]byte(out), snic); err != nil {
 				t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 			}
-			if snic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+			if snic.Spec.Phase != cluster.SmartNICSpec_ADMITTED.String() {
 				t.Fatalf("Update operation failed: %+v \n", snic)
 			}
 	*/
@@ -236,7 +238,7 @@ func TestTenantCreate(t *testing.T) {
 	}
 
 	out = veniceCLI("read tenant newco")
-	tenant := &network.Tenant{}
+	tenant := &cluster.Tenant{}
 	if err := json.Unmarshal([]byte(out), tenant); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -258,7 +260,7 @@ func TestTenantUpdate(t *testing.T) {
 	}
 
 	out = veniceCLI("read tenant newco")
-	tenant := &network.Tenant{}
+	tenant := &cluster.Tenant{}
 	if err := json.Unmarshal([]byte(out), tenant); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -315,7 +317,7 @@ func TestSecurityGroupCreate(t *testing.T) {
 	}
 
 	out = veniceCLI("read securityGroup sg10")
-	sg := &network.SecurityGroup{}
+	sg := &security.SecurityGroup{}
 	if err := json.Unmarshal([]byte(out), sg); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -338,7 +340,7 @@ func TestSecurityGroupUpdate(t *testing.T) {
 	}
 
 	out = veniceCLI("read securityGroup sg10")
-	sg := &network.SecurityGroup{}
+	sg := &security.SecurityGroup{}
 	if err := json.Unmarshal([]byte(out), sg); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -360,7 +362,7 @@ func TestSecurityGroupPolicyCreate(t *testing.T) {
 	}
 
 	out = veniceCLI("read sgpolicy sg10-ingress")
-	sgp := &network.Sgpolicy{}
+	sgp := &security.Sgpolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -384,7 +386,7 @@ func TestSecurityGroupPolicyUpdate(t *testing.T) {
 	}
 
 	out = veniceCLI("read sgpolicy sg10-ingress")
-	sgp := &network.Sgpolicy{}
+	sgp := &security.Sgpolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -400,7 +402,7 @@ func TestSecurityGroupPolicyUpdate(t *testing.T) {
 	}
 
 	out = veniceCLI("read sgpolicy sg10-ingress")
-	sgp = &network.Sgpolicy{}
+	sgp = &security.Sgpolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -500,7 +502,7 @@ func TestEndpointCreate(t *testing.T) {
 	}
 
 	out = veniceCLI("read endpoint vm23")
-	ep := &network.Endpoint{}
+	ep := &workload.Endpoint{}
 	if err := json.Unmarshal([]byte(out), ep); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -532,7 +534,7 @@ func TestEndpointUpdate(t *testing.T) {
 	}
 
 	out = veniceCLI("read endpoint vm23")
-	ep := &network.Endpoint{}
+	ep := &workload.Endpoint{}
 	if err := json.Unmarshal([]byte(out), ep); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -918,7 +920,7 @@ spec:
 	}
 
 	out = veniceCLI("read sgpolicy test-sgpolicy")
-	sgp := &network.Sgpolicy{}
+	sgp := &security.Sgpolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -962,7 +964,7 @@ spec:
 	}
 
 	out = veniceCLI("read sgpolicy test-sgpolicy")
-	sgp = &network.Sgpolicy{}
+	sgp = &security.Sgpolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -1010,7 +1012,7 @@ spec:
 	}
 
 	out = veniceCLI("read sgpolicy test-sgpolicy")
-	sgp = &network.Sgpolicy{}
+	sgp = &security.Sgpolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -1071,7 +1073,7 @@ func TestEditCommand(t *testing.T) {
 
 	// make sure that the resource version has been updated
 	out := veniceCLI("read securityGroup editsg")
-	sg := &network.SecurityGroup{}
+	sg := &security.SecurityGroup{}
 	if err := json.Unmarshal([]byte(out), sg); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -1090,7 +1092,7 @@ func TestEditCommand(t *testing.T) {
 	veniceCLI("update securityGroup -f tmp-3772.json")
 
 	out = veniceCLI("read securityGroup editsg")
-	sg = &network.SecurityGroup{}
+	sg = &security.SecurityGroup{}
 	if err := json.Unmarshal([]byte(out), sg); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -1173,8 +1175,8 @@ func matchLineFields(out string, fields []string) bool {
 }
 
 func TestList(t *testing.T) {
-	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s test1", cmd.NodeSpec_QUORUM.String()))
-	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s test2", cmd.NodeSpec_WORKLOAD.String()))
+	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s test1", cluster.NodeSpec_QUORUM.String()))
+	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s test2", cluster.NodeSpec_WORKLOAD.String()))
 
 	out := veniceCLI("read node")
 	if !matchLineFields(out, []string{"test1", "vCenter:vc2", "test1", "QUORUM"}) {
@@ -1320,7 +1322,7 @@ func TestSnapshot(t *testing.T) {
 	veniceCLI("create tenant snap-tenant --admin-user snap-admin")
 	veniceCLI("create lbPolicy --algorithm llatency --probe-port-or-url /healthStatus --session-affinity yes --type l4 --interval 5 --max-timeouts 25 snap-lbpolicy")
 	//veniceCLI("create node --label vCenter:vc2 --roles 1 snap-node")
-	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s snap-node", cmd.NodeSpec_WORKLOAD.String()))
+	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s snap-node", cluster.NodeSpec_WORKLOAD.String()))
 
 	// take a snapshot
 	out := veniceCLI("snapshot -f " + snapshotDir)
@@ -1334,7 +1336,7 @@ func TestSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error reading file contents: %s", err)
 	}
-	tenant := &network.Tenant{}
+	tenant := &cluster.Tenant{}
 	if err := json.Unmarshal([]byte(b), tenant); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -1359,11 +1361,11 @@ func TestSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error reading file contents: %s", err)
 	}
-	node := &cmd.Node{}
+	node := &cluster.Node{}
 	if err := json.Unmarshal([]byte(b), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cmd.NodeSpec_WORKLOAD.String() {
+	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_WORKLOAD.String() {
 		t.Fatalf("Unable to decode object: %+v \n", node)
 	}
 
@@ -1383,11 +1385,11 @@ func TestSnapshot(t *testing.T) {
 
 	// now read the objects and confirm if modified objects work as expected
 	out = veniceCLI("read node snap-node")
-	node = &cmd.Node{}
+	node = &cluster.Node{}
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "modified-vc1" || node.Spec.Roles[0] != cmd.NodeSpec_WORKLOAD.String() {
+	if node.Labels["vCenter"] != "modified-vc1" || node.Spec.Roles[0] != cluster.NodeSpec_WORKLOAD.String() {
 		t.Fatalf("Restore object different from expectation: %+v \n", node)
 	}
 	os.RemoveAll(snapshotDir)
@@ -1407,7 +1409,7 @@ func TestDefinition(t *testing.T) {
 
 func TestSecurityGroupDelete(t *testing.T) {
 	out := veniceCLI("delete securityGroup sg10")
-	sg := &network.SecurityGroup{}
+	sg := &security.SecurityGroup{}
 	if err := json.Unmarshal([]byte(out), sg); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -1419,7 +1421,7 @@ func TestSecurityGroupDelete(t *testing.T) {
 
 func TestSecurityGroupPolicyDelete(t *testing.T) {
 	out := veniceCLI("delete sgpolicy sg10-ingress")
-	sgp := &network.Sgpolicy{}
+	sgp := &security.Sgpolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -1472,7 +1474,7 @@ func TestLbPolicyDelete(t *testing.T) {
 
 func TestEndpointDelete(t *testing.T) {
 	out := veniceCLI("delete endpoint vm23")
-	ep := &network.Endpoint{}
+	ep := &workload.Endpoint{}
 	if err := json.Unmarshal([]byte(out), ep); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -1546,7 +1548,7 @@ func TestNetworkDelete(t *testing.T) {
 
 func TestTenantDelete(t *testing.T) {
 	out := veniceCLI("delete tenant newco")
-	net := &network.Tenant{}
+	net := &cluster.Tenant{}
 	if err := json.Unmarshal([]byte(out), net); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
@@ -1563,11 +1565,11 @@ func TestTenantDelete(t *testing.T) {
 func TestNodeDelete(t *testing.T) {
 	out := veniceCLI("delete node vm233")
 
-	node := &cmd.Node{}
+	node := &cluster.Node{}
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cmd.NodeSpec_CONTROLLER.String() {
+	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cluster.NodeSpec_CONTROLLER.String() {
 		t.Fatalf("Update operation failed: %+v \n", node)
 	}
 
@@ -1580,7 +1582,7 @@ func TestNodeDelete(t *testing.T) {
 func TestClusterDelete(t *testing.T) {
 	out := veniceCLI("delete cluster dc-az-cluster1")
 
-	cluster := &cmd.Cluster{}
+	cluster := &cluster.Cluster{}
 	if err := json.Unmarshal([]byte(out), cluster); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}

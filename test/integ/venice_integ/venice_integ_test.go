@@ -38,6 +38,7 @@ import (
 	"github.com/pensando/sw/venice/utils/testenv"
 	"github.com/pensando/sw/venice/utils/tsdb"
 
+	_ "github.com/pensando/sw/api/generated/cluster/gateway"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/generated/network/gateway"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
@@ -177,7 +178,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	// create api server
 	it.apiSrv = apisrvpkg.MustGetAPIServer()
 	go it.apiSrv.Run(apisrvConfig)
-	time.Sleep(time.Millisecond * 100)
+	it.apiSrv.WaitRunning()
 
 	// api gw config
 	apigwConfig := apigw.Config{
@@ -189,6 +190,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	// create apigw
 	it.apiGw = apigwpkg.MustGetAPIGateway()
 	go it.apiGw.Run(apigwConfig)
+	it.apiGw.WaitRunning()
 
 	// create a controller
 	rc := resolver.New(&resolver.Config{Name: globals.Npm, Servers: []string{resolverServer.GetListenURL()}})

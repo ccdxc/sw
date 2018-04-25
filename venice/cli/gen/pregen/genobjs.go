@@ -5,8 +5,10 @@ package pregen
 
 import (
 	api2 "github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/cli/api"
 )
@@ -16,10 +18,10 @@ func GetObjSpec(objName string) interface{} {
 	switch objName {
 
 	case "cluster":
-		return cmd.ClusterSpec{}
+		return cluster.ClusterSpec{}
 
 	case "endpoint":
-		return network.EndpointSpec{}
+		return workload.EndpointSpec{}
 
 	case "lbPolicy":
 		return network.LbPolicySpec{}
@@ -28,7 +30,7 @@ func GetObjSpec(objName string) interface{} {
 		return network.NetworkSpec{}
 
 	case "node":
-		return cmd.NodeSpec{}
+		return cluster.NodeSpec{}
 
 	case "permission":
 		return api.PermissionSpec{}
@@ -37,19 +39,19 @@ func GetObjSpec(objName string) interface{} {
 		return api.RoleSpec{}
 
 	case "securityGroup":
-		return network.SecurityGroupSpec{}
+		return security.SecurityGroupSpec{}
 
 	case "service":
 		return network.ServiceSpec{}
 
 	case "sgpolicy":
-		return network.SgpolicySpec{}
+		return security.SgpolicySpec{}
 
 	case "smartNIC":
-		return cmd.SmartNICSpec{}
+		return cluster.SmartNICSpec{}
 
 	case "tenant":
-		return network.TenantSpec{}
+		return cluster.TenantSpec{}
 
 	case "user":
 		return api.UserSpec{}
@@ -71,15 +73,15 @@ func GetSubObj(kind string) interface{} {
 		return &v
 
 	case "NodeCondition":
-		var v cmd.NodeCondition
+		var v cluster.NodeCondition
 		return &v
 
 	case "PortCondition":
-		var v cmd.PortCondition
+		var v cluster.PortCondition
 		return &v
 
 	case "ConditionStatus":
-		var v cmd.ConditionStatus
+		var v cluster.ConditionStatus
 		return &v
 
 	case "Selector":
@@ -99,19 +101,19 @@ func GetSubObj(kind string) interface{} {
 		return &v
 
 	case "SGRule":
-		var v network.SGRule
+		var v security.SGRule
 		return &v
 
 	case "PortSpec":
-		var v cmd.PortSpec
+		var v cluster.PortSpec
 		return &v
 
 	case "PortStatus":
-		var v cmd.PortStatus
+		var v cluster.PortStatus
 		return &v
 
 	case "SmartNICCondition":
-		var v cmd.SmartNICCondition
+		var v cluster.SmartNICCondition
 		return &v
 
 	case "UserAuditLog":
@@ -127,11 +129,11 @@ func GetObjStatus(objName string) interface{} {
 	switch objName {
 
 	case "cluster":
-		o := cmd.Cluster{}
+		o := cluster.Cluster{}
 		return o.Status
 
 	case "endpoint":
-		o := network.Endpoint{}
+		o := workload.Endpoint{}
 		return o.Status
 
 	case "lbPolicy":
@@ -143,7 +145,7 @@ func GetObjStatus(objName string) interface{} {
 		return o.Status
 
 	case "node":
-		o := cmd.Node{}
+		o := cluster.Node{}
 		return o.Status
 
 	case "permission":
@@ -155,7 +157,7 @@ func GetObjStatus(objName string) interface{} {
 		return o.Status
 
 	case "securityGroup":
-		o := network.SecurityGroup{}
+		o := security.SecurityGroup{}
 		return o.Status
 
 	case "service":
@@ -163,15 +165,15 @@ func GetObjStatus(objName string) interface{} {
 		return o.Status
 
 	case "sgpolicy":
-		o := network.Sgpolicy{}
+		o := security.Sgpolicy{}
 		return o.Status
 
 	case "smartNIC":
-		o := cmd.SmartNIC{}
+		o := cluster.SmartNIC{}
 		return o.Status
 
 	case "tenant":
-		o := network.Tenant{}
+		o := cluster.Tenant{}
 		return o.Status
 
 	case "user":

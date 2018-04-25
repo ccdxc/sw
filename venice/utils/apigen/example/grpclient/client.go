@@ -10,7 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/bookstore"
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -171,7 +171,7 @@ func main() {
 	fmt.Printf("Store object is %+v\n", str)
 
 	// Add a tenant
-	tenant := network.Tenant{
+	tenant := cluster.Tenant{
 		TypeMeta: api.TypeMeta{
 			Kind:       "tenant",
 			APIVersion: "v1",
@@ -180,7 +180,7 @@ func main() {
 			Tenant: "tenant2",
 			Name:   "tenant2",
 		},
-		Spec: network.TenantSpec{
+		Spec: cluster.TenantSpec{
 			AdminUser: "admin",
 		},
 	}
@@ -189,10 +189,10 @@ func main() {
 
 	meta.Name = "tenant2"
 	// Delete if one exists already
-	_, err = apicl.TenantV1().Tenant().Delete(ctx, &meta)
+	_, err = apicl.ClusterV1().Tenant().Delete(ctx, &meta)
 
 	// Add now.
-	_, err = apicl.TenantV1().Tenant().Create(ctx, &tenant)
+	_, err = apicl.ClusterV1().Tenant().Create(ctx, &tenant)
 	if err != nil {
 		l.Errorf("failed to add tenant object")
 	}

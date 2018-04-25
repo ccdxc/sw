@@ -8,17 +8,13 @@
 
 	It is generated from these files:
 		auth.proto
+		svc_auth.proto
 
 	It has these top-level messages:
 		AuthenticationPolicy
-		AuthenticationPolicyList
 		AuthenticationPolicySpec
 		AuthenticationPolicyStatus
 		Authenticators
-		AutoMsgAuthenticationPolicyWatchHelper
-		AutoMsgRoleBindingWatchHelper
-		AutoMsgRoleWatchHelper
-		AutoMsgUserWatchHelper
 		Ldap
 		LdapAttributeMapping
 		Local
@@ -26,17 +22,22 @@
 		Radius
 		Role
 		RoleBinding
-		RoleBindingList
 		RoleBindingSpec
 		RoleBindingStatus
-		RoleList
 		RoleSpec
 		RoleStatus
 		TLSOptions
 		User
-		UserList
 		UserSpec
 		UserStatus
+		AuthenticationPolicyList
+		AutoMsgAuthenticationPolicyWatchHelper
+		AutoMsgRoleBindingWatchHelper
+		AutoMsgRoleWatchHelper
+		AutoMsgUserWatchHelper
+		RoleBindingList
+		RoleList
+		UserList
 */
 package auth
 
@@ -47,11 +48,6 @@ import _ "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 import _ "github.com/pensando/sw/venice/utils/apigen/annotations"
 import _ "github.com/gogo/protobuf/gogoproto"
 import api "github.com/pensando/sw/api"
-
-import (
-	context "golang.org/x/net/context"
-	grpc "google.golang.org/grpc"
-)
 
 import io "io"
 
@@ -89,47 +85,38 @@ func (x Authenticators_AuthenticatorType) String() string {
 	return proto.EnumName(Authenticators_AuthenticatorType_name, int32(x))
 }
 func (Authenticators_AuthenticatorType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorAuth, []int{4, 0}
+	return fileDescriptorAuth, []int{3, 0}
 }
 
-// ResourceKind is a resource kind for which permission is defined
 type Permission_ResrcKind int32
 
 const (
-	// Reserved keyword to imply all resources
 	Permission_ALL_RESOURCE_KINDS Permission_ResrcKind = 0
-	// Cluster wide resources
-	Permission_TENANT      Permission_ResrcKind = 1
-	Permission_CLUSTER     Permission_ResrcKind = 2
-	Permission_NODE        Permission_ResrcKind = 3
-	Permission_SMARTNIC    Permission_ResrcKind = 4
-	Permission_CERTIFICATE Permission_ResrcKind = 5
-	// Network related resources
-	Permission_NETWORK  Permission_ResrcKind = 6
-	Permission_SERVICE  Permission_ResrcKind = 7
-	Permission_LBPOLICY Permission_ResrcKind = 8
-	// Workload
-	Permission_ENDPOINT Permission_ResrcKind = 9
-	// Security related resources
-	Permission_SECURITYGROUP    Permission_ResrcKind = 10
-	Permission_SGPOLICY         Permission_ResrcKind = 11
-	Permission_APP              Permission_ResrcKind = 12
-	Permission_ENCRYPTIONPOLICY Permission_ResrcKind = 13
-	// Monitoring related resources
-	Permission_ALERT            Permission_ResrcKind = 14
-	Permission_ALERTPOLICY      Permission_ResrcKind = 15
-	Permission_ALERTDESTINATION Permission_ResrcKind = 16
-	Permission_EVENTPOLICY      Permission_ResrcKind = 17
-	Permission_STATSPOLICY      Permission_ResrcKind = 18
-	Permission_FWLOGPOLICY      Permission_ResrcKind = 19
-	Permission_FLOWEXPORTPOLICY Permission_ResrcKind = 20
-	// User management related resources
-	Permission_USER        Permission_ResrcKind = 21
-	Permission_AUTHPOLICY  Permission_ResrcKind = 22
-	Permission_ROLE        Permission_ResrcKind = 23
-	Permission_ROLEBINDING Permission_ResrcKind = 24
-	// Arbitrary API endpoint as a resource
-	Permission_APIENDPOINT Permission_ResrcKind = 25
+	Permission_TENANT             Permission_ResrcKind = 1
+	Permission_CLUSTER            Permission_ResrcKind = 2
+	Permission_NODE               Permission_ResrcKind = 3
+	Permission_SMARTNIC           Permission_ResrcKind = 4
+	Permission_CERTIFICATE        Permission_ResrcKind = 5
+	Permission_NETWORK            Permission_ResrcKind = 6
+	Permission_SERVICE            Permission_ResrcKind = 7
+	Permission_LBPOLICY           Permission_ResrcKind = 8
+	Permission_ENDPOINT           Permission_ResrcKind = 9
+	Permission_SECURITYGROUP      Permission_ResrcKind = 10
+	Permission_SGPOLICY           Permission_ResrcKind = 11
+	Permission_APP                Permission_ResrcKind = 12
+	Permission_ENCRYPTIONPOLICY   Permission_ResrcKind = 13
+	Permission_ALERT              Permission_ResrcKind = 14
+	Permission_ALERTPOLICY        Permission_ResrcKind = 15
+	Permission_ALERTDESTINATION   Permission_ResrcKind = 16
+	Permission_EVENTPOLICY        Permission_ResrcKind = 17
+	Permission_STATSPOLICY        Permission_ResrcKind = 18
+	Permission_FWLOGPOLICY        Permission_ResrcKind = 19
+	Permission_FLOWEXPORTPOLICY   Permission_ResrcKind = 20
+	Permission_USER               Permission_ResrcKind = 21
+	Permission_AUTHPOLICY         Permission_ResrcKind = 22
+	Permission_ROLE               Permission_ResrcKind = 23
+	Permission_ROLEBINDING        Permission_ResrcKind = 24
+	Permission_APIENDPOINT        Permission_ResrcKind = 25
 )
 
 var Permission_ResrcKind_name = map[int32]string{
@@ -192,20 +179,17 @@ var Permission_ResrcKind_value = map[string]int32{
 func (x Permission_ResrcKind) String() string {
 	return proto.EnumName(Permission_ResrcKind_name, int32(x))
 }
-func (Permission_ResrcKind) EnumDescriptor() ([]byte, []int) { return fileDescriptorAuth, []int{12, 0} }
+func (Permission_ResrcKind) EnumDescriptor() ([]byte, []int) { return fileDescriptorAuth, []int{7, 0} }
 
-// ActionType is an action on a resource that a permission allows
 type Permission_ActionType int32
 
 const (
-	// Reserved keyword to imply all action types
 	Permission_ALL_ACTIONS Permission_ActionType = 0
 	Permission_CREATE      Permission_ActionType = 1
 	Permission_READ        Permission_ActionType = 2
 	Permission_UPDATE      Permission_ActionType = 3
 	Permission_DELETE      Permission_ActionType = 4
-	// Commit action on staging buffer
-	Permission_COMMIT Permission_ActionType = 5
+	Permission_COMMIT      Permission_ActionType = 5
 )
 
 var Permission_ActionType_name = map[int32]string{
@@ -228,7 +212,7 @@ var Permission_ActionType_value = map[string]int32{
 func (x Permission_ActionType) String() string {
 	return proto.EnumName(Permission_ActionType_name, int32(x))
 }
-func (Permission_ActionType) EnumDescriptor() ([]byte, []int) { return fileDescriptorAuth, []int{12, 1} }
+func (Permission_ActionType) EnumDescriptor() ([]byte, []int) { return fileDescriptorAuth, []int{7, 1} }
 
 type UserSpec_UserType int32
 
@@ -249,7 +233,7 @@ var UserSpec_UserType_value = map[string]int32{
 func (x UserSpec_UserType) String() string {
 	return proto.EnumName(UserSpec_UserType_name, int32(x))
 }
-func (UserSpec_UserType) EnumDescriptor() ([]byte, []int) { return fileDescriptorAuth, []int{25, 0} }
+func (UserSpec_UserType) EnumDescriptor() ([]byte, []int) { return fileDescriptorAuth, []int{17, 0} }
 
 // spec part of user object
 type AuthenticationPolicy struct {
@@ -279,25 +263,6 @@ func (m *AuthenticationPolicy) GetStatus() AuthenticationPolicyStatus {
 }
 
 // status part of user object
-type AuthenticationPolicyList struct {
-	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
-	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*AuthenticationPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
-}
-
-func (m *AuthenticationPolicyList) Reset()                    { *m = AuthenticationPolicyList{} }
-func (m *AuthenticationPolicyList) String() string            { return proto.CompactTextString(m) }
-func (*AuthenticationPolicyList) ProtoMessage()               {}
-func (*AuthenticationPolicyList) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{1} }
-
-func (m *AuthenticationPolicyList) GetItems() []*AuthenticationPolicy {
-	if m != nil {
-		return m.Items
-	}
-	return nil
-}
-
-// User could be local or external
 type AuthenticationPolicySpec struct {
 	Authenticators Authenticators `protobuf:"bytes,1,opt,name=Authenticators" json:"authenticators,omitempty"`
 	Secret         []byte         `protobuf:"bytes,2,opt,name=Secret,proto3" json:"secret,omitempty"`
@@ -306,7 +271,7 @@ type AuthenticationPolicySpec struct {
 func (m *AuthenticationPolicySpec) Reset()                    { *m = AuthenticationPolicySpec{} }
 func (m *AuthenticationPolicySpec) String() string            { return proto.CompactTextString(m) }
 func (*AuthenticationPolicySpec) ProtoMessage()               {}
-func (*AuthenticationPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{2} }
+func (*AuthenticationPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{1} }
 
 func (m *AuthenticationPolicySpec) GetAuthenticators() Authenticators {
 	if m != nil {
@@ -322,27 +287,28 @@ func (m *AuthenticationPolicySpec) GetSecret() []byte {
 	return nil
 }
 
-// spec part of authentication policy object
+// User could be local or external
 type AuthenticationPolicyStatus struct {
 }
 
 func (m *AuthenticationPolicyStatus) Reset()                    { *m = AuthenticationPolicyStatus{} }
 func (m *AuthenticationPolicyStatus) String() string            { return proto.CompactTextString(m) }
 func (*AuthenticationPolicyStatus) ProtoMessage()               {}
-func (*AuthenticationPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{3} }
+func (*AuthenticationPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{2} }
 
+// spec part of authentication policy object
 type Authenticators struct {
-	Ldap   *Ldap   `protobuf:"bytes,1,opt,name=Ldap" json:"ldap,omitempty"`
-	Local  *Local  `protobuf:"bytes,2,opt,name=Local" json:"local,omitempty"`
-	Radius *Radius `protobuf:"bytes,3,opt,name=Radius" json:"radius,omitempty"`
-	// Order in which authenticators are applied. If an authenticator returns success, others are skipped
+	Ldap *Ldap `protobuf:"bytes,1,opt,name=Ldap" json:"ldap,omitempty"`
+	// Secret used to sign JWT token
+	Local              *Local   `protobuf:"bytes,2,opt,name=Local" json:"local,omitempty"`
+	Radius             *Radius  `protobuf:"bytes,3,opt,name=Radius" json:"radius,omitempty"`
 	AuthenticatorOrder []string `protobuf:"bytes,9,rep,name=AuthenticatorOrder" json:"authenticator-order,omitempty"`
 }
 
 func (m *Authenticators) Reset()                    { *m = Authenticators{} }
 func (m *Authenticators) String() string            { return proto.CompactTextString(m) }
 func (*Authenticators) ProtoMessage()               {}
-func (*Authenticators) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{4} }
+func (*Authenticators) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{3} }
 
 func (m *Authenticators) GetLdap() *Ldap {
 	if m != nil {
@@ -372,117 +338,11 @@ func (m *Authenticators) GetAuthenticatorOrder() []string {
 	return nil
 }
 
-type AutoMsgAuthenticationPolicyWatchHelper struct {
-	Type   string                `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	Object *AuthenticationPolicy `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
-}
-
-func (m *AutoMsgAuthenticationPolicyWatchHelper) Reset() {
-	*m = AutoMsgAuthenticationPolicyWatchHelper{}
-}
-func (m *AutoMsgAuthenticationPolicyWatchHelper) String() string { return proto.CompactTextString(m) }
-func (*AutoMsgAuthenticationPolicyWatchHelper) ProtoMessage()    {}
-func (*AutoMsgAuthenticationPolicyWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorAuth, []int{5}
-}
-
-func (m *AutoMsgAuthenticationPolicyWatchHelper) GetType() string {
-	if m != nil {
-		return m.Type
-	}
-	return ""
-}
-
-func (m *AutoMsgAuthenticationPolicyWatchHelper) GetObject() *AuthenticationPolicy {
-	if m != nil {
-		return m.Object
-	}
-	return nil
-}
-
-type AutoMsgRoleBindingWatchHelper struct {
-	// StartTLS determines if ldap connection uses TLS
-	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	// SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name.
-	// If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.
-	// In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.
-	Object *RoleBinding `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
-}
-
-func (m *AutoMsgRoleBindingWatchHelper) Reset()         { *m = AutoMsgRoleBindingWatchHelper{} }
-func (m *AutoMsgRoleBindingWatchHelper) String() string { return proto.CompactTextString(m) }
-func (*AutoMsgRoleBindingWatchHelper) ProtoMessage()    {}
-func (*AutoMsgRoleBindingWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorAuth, []int{6}
-}
-
-func (m *AutoMsgRoleBindingWatchHelper) GetType() string {
-	if m != nil {
-		return m.Type
-	}
-	return ""
-}
-
-func (m *AutoMsgRoleBindingWatchHelper) GetObject() *RoleBinding {
-	if m != nil {
-		return m.Object
-	}
-	return nil
-}
-
-type AutoMsgRoleWatchHelper struct {
-	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	// UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search
-	Object *Role `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
-}
-
-func (m *AutoMsgRoleWatchHelper) Reset()                    { *m = AutoMsgRoleWatchHelper{} }
-func (m *AutoMsgRoleWatchHelper) String() string            { return proto.CompactTextString(m) }
-func (*AutoMsgRoleWatchHelper) ProtoMessage()               {}
-func (*AutoMsgRoleWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{7} }
-
-func (m *AutoMsgRoleWatchHelper) GetType() string {
-	if m != nil {
-		return m.Type
-	}
-	return ""
-}
-
-func (m *AutoMsgRoleWatchHelper) GetObject() *Role {
-	if m != nil {
-		return m.Object
-	}
-	return nil
-}
-
-type AutoMsgUserWatchHelper struct {
-	Type   string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	Object *User  `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
-}
-
-func (m *AutoMsgUserWatchHelper) Reset()                    { *m = AutoMsgUserWatchHelper{} }
-func (m *AutoMsgUserWatchHelper) String() string            { return proto.CompactTextString(m) }
-func (*AutoMsgUserWatchHelper) ProtoMessage()               {}
-func (*AutoMsgUserWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{8} }
-
-func (m *AutoMsgUserWatchHelper) GetType() string {
-	if m != nil {
-		return m.Type
-	}
-	return ""
-}
-
-func (m *AutoMsgUserWatchHelper) GetObject() *User {
-	if m != nil {
-		return m.Object
-	}
-	return nil
-}
-
 type Ldap struct {
-	Enabled          bool                  `protobuf:"varint,1,opt,name=Enabled,proto3" json:"enabled,omitempty"`
-	Url              string                `protobuf:"bytes,2,opt,name=Url,proto3" json:"url,omitempty"`
-	TLSOptions       *TLSOptions           `protobuf:"bytes,3,opt,name=TLSOptions" json:"tls-options,omitempty"`
+	Enabled    bool        `protobuf:"varint,1,opt,name=Enabled,proto3" json:"enabled,omitempty"`
+	Url        string      `protobuf:"bytes,2,opt,name=Url,proto3" json:"url,omitempty"`
+	TLSOptions *TLSOptions `protobuf:"bytes,3,opt,name=TLSOptions" json:"tls-options,omitempty"`
+	// Order in which authenticators are applied. If an authenticator returns success, others are skipped
 	BaseDN           string                `protobuf:"bytes,4,opt,name=BaseDN,proto3" json:"base-dn,omitempty"`
 	BindDN           string                `protobuf:"bytes,5,opt,name=BindDN,proto3" json:"bind-dn,omitempty"`
 	BindPassword     string                `protobuf:"bytes,6,opt,name=BindPassword,proto3" json:"bind-password,omitempty"`
@@ -492,7 +352,7 @@ type Ldap struct {
 func (m *Ldap) Reset()                    { *m = Ldap{} }
 func (m *Ldap) String() string            { return proto.CompactTextString(m) }
 func (*Ldap) ProtoMessage()               {}
-func (*Ldap) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{9} }
+func (*Ldap) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{4} }
 
 func (m *Ldap) GetEnabled() bool {
 	if m != nil {
@@ -543,7 +403,6 @@ func (m *Ldap) GetAttributeMapping() *LdapAttributeMapping {
 	return nil
 }
 
-// status part of authentication policy object
 type LdapAttributeMapping struct {
 	User             string `protobuf:"bytes,1,opt,name=User,proto3" json:"user,omitempty"`
 	UserObjectClass  string `protobuf:"bytes,2,opt,name=UserObjectClass,proto3" json:"user-object-class,omitempty"`
@@ -557,7 +416,7 @@ type LdapAttributeMapping struct {
 func (m *LdapAttributeMapping) Reset()                    { *m = LdapAttributeMapping{} }
 func (m *LdapAttributeMapping) String() string            { return proto.CompactTextString(m) }
 func (*LdapAttributeMapping) ProtoMessage()               {}
-func (*LdapAttributeMapping) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{10} }
+func (*LdapAttributeMapping) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{5} }
 
 func (m *LdapAttributeMapping) GetUser() string {
 	if m != nil {
@@ -608,15 +467,15 @@ func (m *LdapAttributeMapping) GetFullname() string {
 	return ""
 }
 
-// AuthenticationPolicy defines various authentication mechanisms available and order in which they are used
 type Local struct {
+	// StartTLS determines if ldap connection uses TLS
 	Enabled bool `protobuf:"varint,1,opt,name=Enabled,proto3" json:"enabled,omitempty"`
 }
 
 func (m *Local) Reset()                    { *m = Local{} }
 func (m *Local) String() string            { return proto.CompactTextString(m) }
 func (*Local) ProtoMessage()               {}
-func (*Local) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{11} }
+func (*Local) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{6} }
 
 func (m *Local) GetEnabled() bool {
 	if m != nil {
@@ -625,27 +484,21 @@ func (m *Local) GetEnabled() bool {
 	return false
 }
 
-// Permission defines if actions are allowed on resource group, resource type, resource name or arbitrary API endpoints.
 type Permission struct {
-	// ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant
-	// to which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant.
 	ResourceTenant string `protobuf:"bytes,1,opt,name=ResourceTenant,proto3" json:"resource-tenant,omitempty"`
-	// ResourceGroup is grouping of resource types for which a permission is defined
-	ResourceGroup string `protobuf:"bytes,2,opt,name=ResourceGroup,proto3" json:"resource-group,omitempty"`
-	// ResourceKind is a resource kind for which permission is defined. It can be an API Server object or an arbitrary API endpoint
-	ResourceKind string `protobuf:"bytes,3,opt,name=ResourceKind,proto3" json:"resource-kind,omitempty"`
-	// ResourceNamespace is a namespace to which a resource (API Server object) belongs
+	// UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search
+	ResourceGroup     string `protobuf:"bytes,2,opt,name=ResourceGroup,proto3" json:"resource-group,omitempty"`
+	ResourceKind      string `protobuf:"bytes,3,opt,name=ResourceKind,proto3" json:"resource-kind,omitempty"`
 	ResourceNamespace string `protobuf:"bytes,4,opt,name=ResourceNamespace,proto3" json:"resource-namespace,omitempty"`
-	// ResourceNames identify specific objects on which this permission applies.
+	// GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search
 	ResourceNames []string `protobuf:"bytes,5,rep,name=ResourceNames" json:"resource-names,omitempty"`
-	// Actions are actions on a resource that a permission allows
-	Actions []string `protobuf:"bytes,6,rep,name=Actions" json:"actions,omitempty"`
+	Actions       []string `protobuf:"bytes,6,rep,name=Actions" json:"actions,omitempty"`
 }
 
 func (m *Permission) Reset()                    { *m = Permission{} }
 func (m *Permission) String() string            { return proto.CompactTextString(m) }
 func (*Permission) ProtoMessage()               {}
-func (*Permission) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{12} }
+func (*Permission) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{7} }
 
 func (m *Permission) GetResourceTenant() string {
 	if m != nil {
@@ -689,9 +542,7 @@ func (m *Permission) GetActions() []string {
 	return nil
 }
 
-// spec part of role object
 type Radius struct {
-	// Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint
 	Enabled bool   `protobuf:"varint,1,opt,name=Enabled,proto3" json:"enabled,omitempty"`
 	Ip      string `protobuf:"bytes,2,opt,name=Ip,proto3" json:"ip,omitempty"`
 	Port    string `protobuf:"bytes,3,opt,name=Port,proto3" json:"port,omitempty"`
@@ -702,7 +553,7 @@ type Radius struct {
 func (m *Radius) Reset()                    { *m = Radius{} }
 func (m *Radius) String() string            { return proto.CompactTextString(m) }
 func (*Radius) ProtoMessage()               {}
-func (*Radius) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{13} }
+func (*Radius) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{8} }
 
 func (m *Radius) GetEnabled() bool {
 	if m != nil {
@@ -739,7 +590,6 @@ func (m *Radius) GetSecret() string {
 	return ""
 }
 
-// status part of role object
 type Role struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
@@ -750,7 +600,7 @@ type Role struct {
 func (m *Role) Reset()                    { *m = Role{} }
 func (m *Role) String() string            { return proto.CompactTextString(m) }
 func (*Role) ProtoMessage()               {}
-func (*Role) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{14} }
+func (*Role) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{9} }
 
 func (m *Role) GetSpec() RoleSpec {
 	if m != nil {
@@ -766,20 +616,18 @@ func (m *Role) GetStatus() RoleStatus {
 	return RoleStatus{}
 }
 
-// Role is a collection of permissions
+// status part of authentication policy object
 type RoleBinding struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
-	// Spec contains the configuration of the role.
-	Spec RoleBindingSpec `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
-	// Status contains the current state of the role.
-	Status RoleBindingStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+	Spec           RoleBindingSpec   `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
+	Status         RoleBindingStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
 }
 
 func (m *RoleBinding) Reset()                    { *m = RoleBinding{} }
 func (m *RoleBinding) String() string            { return proto.CompactTextString(m) }
 func (*RoleBinding) ProtoMessage()               {}
-func (*RoleBinding) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{15} }
+func (*RoleBinding) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{10} }
 
 func (m *RoleBinding) GetSpec() RoleBindingSpec {
 	if m != nil {
@@ -795,36 +643,18 @@ func (m *RoleBinding) GetStatus() RoleBindingStatus {
 	return RoleBindingStatus{}
 }
 
-// spec part of role binding object
-type RoleBindingList struct {
-	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
-	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*RoleBinding `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
-}
-
-func (m *RoleBindingList) Reset()                    { *m = RoleBindingList{} }
-func (m *RoleBindingList) String() string            { return proto.CompactTextString(m) }
-func (*RoleBindingList) ProtoMessage()               {}
-func (*RoleBindingList) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{16} }
-
-func (m *RoleBindingList) GetItems() []*RoleBinding {
-	if m != nil {
-		return m.Items
-	}
-	return nil
-}
-
-// status part of role binding object
+// AuthenticationPolicy defines various authentication mechanisms available and order in which they are used
 type RoleBindingSpec struct {
 	Users      []string `protobuf:"bytes,1,rep,name=Users" json:"users,omitempty"`
 	UserGroups []string `protobuf:"bytes,2,rep,name=UserGroups" json:"user-groups,omitempty"`
-	Role       string   `protobuf:"bytes,3,opt,name=Role,proto3" json:"role,omitempty"`
+	// Spec contains configuration of authentication mechanisms.
+	Role string `protobuf:"bytes,3,opt,name=Role,proto3" json:"role,omitempty"`
 }
 
 func (m *RoleBindingSpec) Reset()                    { *m = RoleBindingSpec{} }
 func (m *RoleBindingSpec) String() string            { return proto.CompactTextString(m) }
 func (*RoleBindingSpec) ProtoMessage()               {}
-func (*RoleBindingSpec) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{17} }
+func (*RoleBindingSpec) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{11} }
 
 func (m *RoleBindingSpec) GetUsers() []string {
 	if m != nil {
@@ -847,41 +677,25 @@ func (m *RoleBindingSpec) GetRole() string {
 	return ""
 }
 
-// RoleBinding is an assignment of a role to users or groups
+// Permission defines if actions are allowed on resource group, resource type, resource name or arbitrary API endpoints.
 type RoleBindingStatus struct {
 }
 
 func (m *RoleBindingStatus) Reset()                    { *m = RoleBindingStatus{} }
 func (m *RoleBindingStatus) String() string            { return proto.CompactTextString(m) }
 func (*RoleBindingStatus) ProtoMessage()               {}
-func (*RoleBindingStatus) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{18} }
+func (*RoleBindingStatus) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{12} }
 
-type RoleList struct {
-	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
-	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Role `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
-}
-
-func (m *RoleList) Reset()                    { *m = RoleList{} }
-func (m *RoleList) String() string            { return proto.CompactTextString(m) }
-func (*RoleList) ProtoMessage()               {}
-func (*RoleList) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{19} }
-
-func (m *RoleList) GetItems() []*Role {
-	if m != nil {
-		return m.Items
-	}
-	return nil
-}
-
+// spec part of role object
 type RoleSpec struct {
+	// Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint
 	Permissions []Permission `protobuf:"bytes,1,rep,name=Permissions" json:"permissions,omitempty"`
 }
 
 func (m *RoleSpec) Reset()                    { *m = RoleSpec{} }
 func (m *RoleSpec) String() string            { return proto.CompactTextString(m) }
 func (*RoleSpec) ProtoMessage()               {}
-func (*RoleSpec) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{20} }
+func (*RoleSpec) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{13} }
 
 func (m *RoleSpec) GetPermissions() []Permission {
 	if m != nil {
@@ -890,25 +704,29 @@ func (m *RoleSpec) GetPermissions() []Permission {
 	return nil
 }
 
+// status part of role object
 type RoleStatus struct {
 }
 
 func (m *RoleStatus) Reset()                    { *m = RoleStatus{} }
 func (m *RoleStatus) String() string            { return proto.CompactTextString(m) }
 func (*RoleStatus) ProtoMessage()               {}
-func (*RoleStatus) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{21} }
+func (*RoleStatus) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{14} }
 
+// Role is a collection of permissions
 type TLSOptions struct {
-	StartTLS                   bool   `protobuf:"varint,1,opt,name=StartTLS,proto3" json:"start-tls,omitempty"`
-	SkipServerCertVerification bool   `protobuf:"varint,2,opt,name=SkipServerCertVerification,proto3" json:"skip-server-cert-verification,omitempty"`
-	ServerName                 string `protobuf:"bytes,3,opt,name=ServerName,proto3" json:"server-name,omitempty"`
-	TrustedCerts               string `protobuf:"bytes,4,opt,name=TrustedCerts,proto3" json:"trusted-certs,omitempty"`
+	StartTLS                   bool `protobuf:"varint,1,opt,name=StartTLS,proto3" json:"start-tls,omitempty"`
+	SkipServerCertVerification bool `protobuf:"varint,2,opt,name=SkipServerCertVerification,proto3" json:"skip-server-cert-verification,omitempty"`
+	// Spec contains the configuration of the role.
+	ServerName string `protobuf:"bytes,3,opt,name=ServerName,proto3" json:"server-name,omitempty"`
+	// Status contains the current state of the role.
+	TrustedCerts string `protobuf:"bytes,4,opt,name=TrustedCerts,proto3" json:"trusted-certs,omitempty"`
 }
 
 func (m *TLSOptions) Reset()                    { *m = TLSOptions{} }
 func (m *TLSOptions) String() string            { return proto.CompactTextString(m) }
 func (*TLSOptions) ProtoMessage()               {}
-func (*TLSOptions) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{22} }
+func (*TLSOptions) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{15} }
 
 func (m *TLSOptions) GetStartTLS() bool {
 	if m != nil {
@@ -938,6 +756,7 @@ func (m *TLSOptions) GetTrustedCerts() string {
 	return ""
 }
 
+// spec part of role binding object
 type User struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
@@ -948,7 +767,7 @@ type User struct {
 func (m *User) Reset()                    { *m = User{} }
 func (m *User) String() string            { return proto.CompactTextString(m) }
 func (*User) ProtoMessage()               {}
-func (*User) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{23} }
+func (*User) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{16} }
 
 func (m *User) GetSpec() UserSpec {
 	if m != nil {
@@ -964,24 +783,7 @@ func (m *User) GetStatus() UserStatus {
 	return UserStatus{}
 }
 
-type UserList struct {
-	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
-	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*User `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
-}
-
-func (m *UserList) Reset()                    { *m = UserList{} }
-func (m *UserList) String() string            { return proto.CompactTextString(m) }
-func (*UserList) ProtoMessage()               {}
-func (*UserList) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{24} }
-
-func (m *UserList) GetItems() []*User {
-	if m != nil {
-		return m.Items
-	}
-	return nil
-}
-
+// status part of role binding object
 type UserSpec struct {
 	Fullname string `protobuf:"bytes,1,opt,name=Fullname,proto3" json:"fullname,omitempty"`
 	Email    string `protobuf:"bytes,2,opt,name=Email,proto3" json:"email,omitempty"`
@@ -992,7 +794,7 @@ type UserSpec struct {
 func (m *UserSpec) Reset()                    { *m = UserSpec{} }
 func (m *UserSpec) String() string            { return proto.CompactTextString(m) }
 func (*UserSpec) ProtoMessage()               {}
-func (*UserSpec) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{25} }
+func (*UserSpec) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{17} }
 
 func (m *UserSpec) GetFullname() string {
 	if m != nil {
@@ -1022,16 +824,18 @@ func (m *UserSpec) GetType() string {
 	return ""
 }
 
+// RoleBinding is an assignment of a role to users or groups
 type UserStatus struct {
-	Roles               []string       `protobuf:"bytes,1,rep,name=Roles" json:"roles,omitempty"`
-	UserGroups          []string       `protobuf:"bytes,2,rep,name=UserGroups" json:"user-groups,omitempty"`
+	Roles      []string `protobuf:"bytes,1,rep,name=Roles" json:"roles,omitempty"`
+	UserGroups []string `protobuf:"bytes,2,rep,name=UserGroups" json:"user-groups,omitempty"`
+	// Spec contains the configuration of the role binding.
 	LastSuccessfulLogin *api.Timestamp `protobuf:"bytes,3,opt,name=LastSuccessfulLogin" json:"last-successful-login,omitempty"`
 }
 
 func (m *UserStatus) Reset()                    { *m = UserStatus{} }
 func (m *UserStatus) String() string            { return proto.CompactTextString(m) }
 func (*UserStatus) ProtoMessage()               {}
-func (*UserStatus) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{26} }
+func (*UserStatus) Descriptor() ([]byte, []int) { return fileDescriptorAuth, []int{18} }
 
 func (m *UserStatus) GetRoles() []string {
 	if m != nil {
@@ -1056,14 +860,9 @@ func (m *UserStatus) GetLastSuccessfulLogin() *api.Timestamp {
 
 func init() {
 	proto.RegisterType((*AuthenticationPolicy)(nil), "auth.AuthenticationPolicy")
-	proto.RegisterType((*AuthenticationPolicyList)(nil), "auth.AuthenticationPolicyList")
 	proto.RegisterType((*AuthenticationPolicySpec)(nil), "auth.AuthenticationPolicySpec")
 	proto.RegisterType((*AuthenticationPolicyStatus)(nil), "auth.AuthenticationPolicyStatus")
 	proto.RegisterType((*Authenticators)(nil), "auth.Authenticators")
-	proto.RegisterType((*AutoMsgAuthenticationPolicyWatchHelper)(nil), "auth.AutoMsgAuthenticationPolicyWatchHelper")
-	proto.RegisterType((*AutoMsgRoleBindingWatchHelper)(nil), "auth.AutoMsgRoleBindingWatchHelper")
-	proto.RegisterType((*AutoMsgRoleWatchHelper)(nil), "auth.AutoMsgRoleWatchHelper")
-	proto.RegisterType((*AutoMsgUserWatchHelper)(nil), "auth.AutoMsgUserWatchHelper")
 	proto.RegisterType((*Ldap)(nil), "auth.Ldap")
 	proto.RegisterType((*LdapAttributeMapping)(nil), "auth.LdapAttributeMapping")
 	proto.RegisterType((*Local)(nil), "auth.Local")
@@ -1071,15 +870,12 @@ func init() {
 	proto.RegisterType((*Radius)(nil), "auth.Radius")
 	proto.RegisterType((*Role)(nil), "auth.Role")
 	proto.RegisterType((*RoleBinding)(nil), "auth.RoleBinding")
-	proto.RegisterType((*RoleBindingList)(nil), "auth.RoleBindingList")
 	proto.RegisterType((*RoleBindingSpec)(nil), "auth.RoleBindingSpec")
 	proto.RegisterType((*RoleBindingStatus)(nil), "auth.RoleBindingStatus")
-	proto.RegisterType((*RoleList)(nil), "auth.RoleList")
 	proto.RegisterType((*RoleSpec)(nil), "auth.RoleSpec")
 	proto.RegisterType((*RoleStatus)(nil), "auth.RoleStatus")
 	proto.RegisterType((*TLSOptions)(nil), "auth.TLSOptions")
 	proto.RegisterType((*User)(nil), "auth.User")
-	proto.RegisterType((*UserList)(nil), "auth.UserList")
 	proto.RegisterType((*UserSpec)(nil), "auth.UserSpec")
 	proto.RegisterType((*UserStatus)(nil), "auth.UserStatus")
 	proto.RegisterEnum("auth.Authenticators_AuthenticatorType", Authenticators_AuthenticatorType_name, Authenticators_AuthenticatorType_value)
@@ -1087,947 +883,6 @@ func init() {
 	proto.RegisterEnum("auth.Permission_ActionType", Permission_ActionType_name, Permission_ActionType_value)
 	proto.RegisterEnum("auth.UserSpec_UserType", UserSpec_UserType_name, UserSpec_UserType_value)
 }
-
-// Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
-
-// Client API for AuthV1 service
-
-type AuthV1Client interface {
-	AutoAddAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
-	AutoAddRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
-	AutoAddRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
-	AutoAddUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
-	AutoDeleteAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
-	AutoDeleteRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
-	AutoDeleteRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
-	AutoDeleteUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
-	AutoGetAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
-	AutoGetRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
-	AutoGetRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
-	AutoGetUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
-	AutoListAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AuthenticationPolicyList, error)
-	AutoListRole(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RoleList, error)
-	AutoListRoleBinding(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RoleBindingList, error)
-	AutoListUser(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*UserList, error)
-	AutoUpdateAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
-	AutoUpdateRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
-	AutoUpdateRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
-	AutoUpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
-	AutoWatchAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchAuthenticationPolicyClient, error)
-	AutoWatchRole(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchRoleClient, error)
-	AutoWatchRoleBinding(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchRoleBindingClient, error)
-	AutoWatchUser(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchUserClient, error)
-}
-
-type authV1Client struct {
-	cc *grpc.ClientConn
-}
-
-func NewAuthV1Client(cc *grpc.ClientConn) AuthV1Client {
-	return &authV1Client{cc}
-}
-
-func (c *authV1Client) AutoAddAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error) {
-	out := new(AuthenticationPolicy)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoAddAuthenticationPolicy", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoAddRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error) {
-	out := new(Role)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoAddRole", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoAddRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error) {
-	out := new(RoleBinding)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoAddRoleBinding", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoAddUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error) {
-	out := new(User)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoAddUser", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoDeleteAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error) {
-	out := new(AuthenticationPolicy)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoDeleteAuthenticationPolicy", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoDeleteRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error) {
-	out := new(Role)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoDeleteRole", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoDeleteRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error) {
-	out := new(RoleBinding)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoDeleteRoleBinding", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoDeleteUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error) {
-	out := new(User)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoDeleteUser", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoGetAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error) {
-	out := new(AuthenticationPolicy)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoGetAuthenticationPolicy", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoGetRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error) {
-	out := new(Role)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoGetRole", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoGetRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error) {
-	out := new(RoleBinding)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoGetRoleBinding", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoGetUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error) {
-	out := new(User)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoGetUser", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoListAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AuthenticationPolicyList, error) {
-	out := new(AuthenticationPolicyList)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoListAuthenticationPolicy", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoListRole(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RoleList, error) {
-	out := new(RoleList)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoListRole", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoListRoleBinding(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RoleBindingList, error) {
-	out := new(RoleBindingList)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoListRoleBinding", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoListUser(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*UserList, error) {
-	out := new(UserList)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoListUser", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoUpdateAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error) {
-	out := new(AuthenticationPolicy)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoUpdateAuthenticationPolicy", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoUpdateRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error) {
-	out := new(Role)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoUpdateRole", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoUpdateRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error) {
-	out := new(RoleBinding)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoUpdateRoleBinding", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoUpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error) {
-	out := new(User)
-	err := grpc.Invoke(ctx, "/auth.AuthV1/AutoUpdateUser", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authV1Client) AutoWatchAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchAuthenticationPolicyClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_AuthV1_serviceDesc.Streams[0], c.cc, "/auth.AuthV1/AutoWatchAuthenticationPolicy", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &authV1AutoWatchAuthenticationPolicyClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type AuthV1_AutoWatchAuthenticationPolicyClient interface {
-	Recv() (*AutoMsgAuthenticationPolicyWatchHelper, error)
-	grpc.ClientStream
-}
-
-type authV1AutoWatchAuthenticationPolicyClient struct {
-	grpc.ClientStream
-}
-
-func (x *authV1AutoWatchAuthenticationPolicyClient) Recv() (*AutoMsgAuthenticationPolicyWatchHelper, error) {
-	m := new(AutoMsgAuthenticationPolicyWatchHelper)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *authV1Client) AutoWatchRole(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchRoleClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_AuthV1_serviceDesc.Streams[1], c.cc, "/auth.AuthV1/AutoWatchRole", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &authV1AutoWatchRoleClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type AuthV1_AutoWatchRoleClient interface {
-	Recv() (*AutoMsgRoleWatchHelper, error)
-	grpc.ClientStream
-}
-
-type authV1AutoWatchRoleClient struct {
-	grpc.ClientStream
-}
-
-func (x *authV1AutoWatchRoleClient) Recv() (*AutoMsgRoleWatchHelper, error) {
-	m := new(AutoMsgRoleWatchHelper)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *authV1Client) AutoWatchRoleBinding(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchRoleBindingClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_AuthV1_serviceDesc.Streams[2], c.cc, "/auth.AuthV1/AutoWatchRoleBinding", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &authV1AutoWatchRoleBindingClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type AuthV1_AutoWatchRoleBindingClient interface {
-	Recv() (*AutoMsgRoleBindingWatchHelper, error)
-	grpc.ClientStream
-}
-
-type authV1AutoWatchRoleBindingClient struct {
-	grpc.ClientStream
-}
-
-func (x *authV1AutoWatchRoleBindingClient) Recv() (*AutoMsgRoleBindingWatchHelper, error) {
-	m := new(AutoMsgRoleBindingWatchHelper)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *authV1Client) AutoWatchUser(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchUserClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_AuthV1_serviceDesc.Streams[3], c.cc, "/auth.AuthV1/AutoWatchUser", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &authV1AutoWatchUserClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type AuthV1_AutoWatchUserClient interface {
-	Recv() (*AutoMsgUserWatchHelper, error)
-	grpc.ClientStream
-}
-
-type authV1AutoWatchUserClient struct {
-	grpc.ClientStream
-}
-
-func (x *authV1AutoWatchUserClient) Recv() (*AutoMsgUserWatchHelper, error) {
-	m := new(AutoMsgUserWatchHelper)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-// Server API for AuthV1 service
-
-type AuthV1Server interface {
-	AutoAddAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
-	AutoAddRole(context.Context, *Role) (*Role, error)
-	AutoAddRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
-	AutoAddUser(context.Context, *User) (*User, error)
-	AutoDeleteAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
-	AutoDeleteRole(context.Context, *Role) (*Role, error)
-	AutoDeleteRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
-	AutoDeleteUser(context.Context, *User) (*User, error)
-	AutoGetAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
-	AutoGetRole(context.Context, *Role) (*Role, error)
-	AutoGetRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
-	AutoGetUser(context.Context, *User) (*User, error)
-	AutoListAuthenticationPolicy(context.Context, *api.ListWatchOptions) (*AuthenticationPolicyList, error)
-	AutoListRole(context.Context, *api.ListWatchOptions) (*RoleList, error)
-	AutoListRoleBinding(context.Context, *api.ListWatchOptions) (*RoleBindingList, error)
-	AutoListUser(context.Context, *api.ListWatchOptions) (*UserList, error)
-	AutoUpdateAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
-	AutoUpdateRole(context.Context, *Role) (*Role, error)
-	AutoUpdateRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
-	AutoUpdateUser(context.Context, *User) (*User, error)
-	AutoWatchAuthenticationPolicy(*api.ListWatchOptions, AuthV1_AutoWatchAuthenticationPolicyServer) error
-	AutoWatchRole(*api.ListWatchOptions, AuthV1_AutoWatchRoleServer) error
-	AutoWatchRoleBinding(*api.ListWatchOptions, AuthV1_AutoWatchRoleBindingServer) error
-	AutoWatchUser(*api.ListWatchOptions, AuthV1_AutoWatchUserServer) error
-}
-
-func RegisterAuthV1Server(s *grpc.Server, srv AuthV1Server) {
-	s.RegisterService(&_AuthV1_serviceDesc, srv)
-}
-
-func _AuthV1_AutoAddAuthenticationPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthenticationPolicy)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoAddAuthenticationPolicy(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoAddAuthenticationPolicy",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoAddAuthenticationPolicy(ctx, req.(*AuthenticationPolicy))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoAddRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Role)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoAddRole(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoAddRole",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoAddRole(ctx, req.(*Role))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoAddRoleBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RoleBinding)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoAddRoleBinding(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoAddRoleBinding",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoAddRoleBinding(ctx, req.(*RoleBinding))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoAddUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(User)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoAddUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoAddUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoAddUser(ctx, req.(*User))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoDeleteAuthenticationPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthenticationPolicy)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoDeleteAuthenticationPolicy(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoDeleteAuthenticationPolicy",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoDeleteAuthenticationPolicy(ctx, req.(*AuthenticationPolicy))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoDeleteRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Role)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoDeleteRole(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoDeleteRole",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoDeleteRole(ctx, req.(*Role))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoDeleteRoleBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RoleBinding)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoDeleteRoleBinding(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoDeleteRoleBinding",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoDeleteRoleBinding(ctx, req.(*RoleBinding))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoDeleteUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(User)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoDeleteUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoDeleteUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoDeleteUser(ctx, req.(*User))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoGetAuthenticationPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthenticationPolicy)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoGetAuthenticationPolicy(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoGetAuthenticationPolicy",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoGetAuthenticationPolicy(ctx, req.(*AuthenticationPolicy))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoGetRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Role)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoGetRole(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoGetRole",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoGetRole(ctx, req.(*Role))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoGetRoleBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RoleBinding)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoGetRoleBinding(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoGetRoleBinding",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoGetRoleBinding(ctx, req.(*RoleBinding))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoGetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(User)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoGetUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoGetUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoGetUser(ctx, req.(*User))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoListAuthenticationPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(api.ListWatchOptions)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoListAuthenticationPolicy(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoListAuthenticationPolicy",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoListAuthenticationPolicy(ctx, req.(*api.ListWatchOptions))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoListRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(api.ListWatchOptions)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoListRole(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoListRole",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoListRole(ctx, req.(*api.ListWatchOptions))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoListRoleBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(api.ListWatchOptions)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoListRoleBinding(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoListRoleBinding",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoListRoleBinding(ctx, req.(*api.ListWatchOptions))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoListUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(api.ListWatchOptions)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoListUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoListUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoListUser(ctx, req.(*api.ListWatchOptions))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoUpdateAuthenticationPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthenticationPolicy)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoUpdateAuthenticationPolicy(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoUpdateAuthenticationPolicy",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoUpdateAuthenticationPolicy(ctx, req.(*AuthenticationPolicy))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoUpdateRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Role)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoUpdateRole(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoUpdateRole",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoUpdateRole(ctx, req.(*Role))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoUpdateRoleBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RoleBinding)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoUpdateRoleBinding(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoUpdateRoleBinding",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoUpdateRoleBinding(ctx, req.(*RoleBinding))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoUpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(User)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthV1Server).AutoUpdateUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthV1/AutoUpdateUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthV1Server).AutoUpdateUser(ctx, req.(*User))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthV1_AutoWatchAuthenticationPolicy_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(api.ListWatchOptions)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(AuthV1Server).AutoWatchAuthenticationPolicy(m, &authV1AutoWatchAuthenticationPolicyServer{stream})
-}
-
-type AuthV1_AutoWatchAuthenticationPolicyServer interface {
-	Send(*AutoMsgAuthenticationPolicyWatchHelper) error
-	grpc.ServerStream
-}
-
-type authV1AutoWatchAuthenticationPolicyServer struct {
-	grpc.ServerStream
-}
-
-func (x *authV1AutoWatchAuthenticationPolicyServer) Send(m *AutoMsgAuthenticationPolicyWatchHelper) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _AuthV1_AutoWatchRole_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(api.ListWatchOptions)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(AuthV1Server).AutoWatchRole(m, &authV1AutoWatchRoleServer{stream})
-}
-
-type AuthV1_AutoWatchRoleServer interface {
-	Send(*AutoMsgRoleWatchHelper) error
-	grpc.ServerStream
-}
-
-type authV1AutoWatchRoleServer struct {
-	grpc.ServerStream
-}
-
-func (x *authV1AutoWatchRoleServer) Send(m *AutoMsgRoleWatchHelper) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _AuthV1_AutoWatchRoleBinding_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(api.ListWatchOptions)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(AuthV1Server).AutoWatchRoleBinding(m, &authV1AutoWatchRoleBindingServer{stream})
-}
-
-type AuthV1_AutoWatchRoleBindingServer interface {
-	Send(*AutoMsgRoleBindingWatchHelper) error
-	grpc.ServerStream
-}
-
-type authV1AutoWatchRoleBindingServer struct {
-	grpc.ServerStream
-}
-
-func (x *authV1AutoWatchRoleBindingServer) Send(m *AutoMsgRoleBindingWatchHelper) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _AuthV1_AutoWatchUser_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(api.ListWatchOptions)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(AuthV1Server).AutoWatchUser(m, &authV1AutoWatchUserServer{stream})
-}
-
-type AuthV1_AutoWatchUserServer interface {
-	Send(*AutoMsgUserWatchHelper) error
-	grpc.ServerStream
-}
-
-type authV1AutoWatchUserServer struct {
-	grpc.ServerStream
-}
-
-func (x *authV1AutoWatchUserServer) Send(m *AutoMsgUserWatchHelper) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-var _AuthV1_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "auth.AuthV1",
-	HandlerType: (*AuthV1Server)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "AutoAddAuthenticationPolicy",
-			Handler:    _AuthV1_AutoAddAuthenticationPolicy_Handler,
-		},
-		{
-			MethodName: "AutoAddRole",
-			Handler:    _AuthV1_AutoAddRole_Handler,
-		},
-		{
-			MethodName: "AutoAddRoleBinding",
-			Handler:    _AuthV1_AutoAddRoleBinding_Handler,
-		},
-		{
-			MethodName: "AutoAddUser",
-			Handler:    _AuthV1_AutoAddUser_Handler,
-		},
-		{
-			MethodName: "AutoDeleteAuthenticationPolicy",
-			Handler:    _AuthV1_AutoDeleteAuthenticationPolicy_Handler,
-		},
-		{
-			MethodName: "AutoDeleteRole",
-			Handler:    _AuthV1_AutoDeleteRole_Handler,
-		},
-		{
-			MethodName: "AutoDeleteRoleBinding",
-			Handler:    _AuthV1_AutoDeleteRoleBinding_Handler,
-		},
-		{
-			MethodName: "AutoDeleteUser",
-			Handler:    _AuthV1_AutoDeleteUser_Handler,
-		},
-		{
-			MethodName: "AutoGetAuthenticationPolicy",
-			Handler:    _AuthV1_AutoGetAuthenticationPolicy_Handler,
-		},
-		{
-			MethodName: "AutoGetRole",
-			Handler:    _AuthV1_AutoGetRole_Handler,
-		},
-		{
-			MethodName: "AutoGetRoleBinding",
-			Handler:    _AuthV1_AutoGetRoleBinding_Handler,
-		},
-		{
-			MethodName: "AutoGetUser",
-			Handler:    _AuthV1_AutoGetUser_Handler,
-		},
-		{
-			MethodName: "AutoListAuthenticationPolicy",
-			Handler:    _AuthV1_AutoListAuthenticationPolicy_Handler,
-		},
-		{
-			MethodName: "AutoListRole",
-			Handler:    _AuthV1_AutoListRole_Handler,
-		},
-		{
-			MethodName: "AutoListRoleBinding",
-			Handler:    _AuthV1_AutoListRoleBinding_Handler,
-		},
-		{
-			MethodName: "AutoListUser",
-			Handler:    _AuthV1_AutoListUser_Handler,
-		},
-		{
-			MethodName: "AutoUpdateAuthenticationPolicy",
-			Handler:    _AuthV1_AutoUpdateAuthenticationPolicy_Handler,
-		},
-		{
-			MethodName: "AutoUpdateRole",
-			Handler:    _AuthV1_AutoUpdateRole_Handler,
-		},
-		{
-			MethodName: "AutoUpdateRoleBinding",
-			Handler:    _AuthV1_AutoUpdateRoleBinding_Handler,
-		},
-		{
-			MethodName: "AutoUpdateUser",
-			Handler:    _AuthV1_AutoUpdateUser_Handler,
-		},
-	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "AutoWatchAuthenticationPolicy",
-			Handler:       _AuthV1_AutoWatchAuthenticationPolicy_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "AutoWatchRole",
-			Handler:       _AuthV1_AutoWatchRole_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "AutoWatchRoleBinding",
-			Handler:       _AuthV1_AutoWatchRoleBinding_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "AutoWatchUser",
-			Handler:       _AuthV1_AutoWatchUser_Handler,
-			ServerStreams: true,
-		},
-	},
-	Metadata: "auth.proto",
-}
-
 func (m *AuthenticationPolicy) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2078,52 +933,6 @@ func (m *AuthenticationPolicy) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *AuthenticationPolicyList) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AuthenticationPolicyList) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintAuth(dAtA, i, uint64(m.TypeMeta.Size()))
-	n5, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n5
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintAuth(dAtA, i, uint64(m.ListMeta.Size()))
-	n6, err := m.ListMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n6
-	if len(m.Items) > 0 {
-		for _, msg := range m.Items {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintAuth(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
 func (m *AuthenticationPolicySpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2142,11 +951,11 @@ func (m *AuthenticationPolicySpec) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.Authenticators.Size()))
-	n7, err := m.Authenticators.MarshalTo(dAtA[i:])
+	n5, err := m.Authenticators.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n7
+	i += n5
 	if len(m.Secret) > 0 {
 		dAtA[i] = 0x12
 		i++
@@ -2193,31 +1002,31 @@ func (m *Authenticators) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintAuth(dAtA, i, uint64(m.Ldap.Size()))
-		n8, err := m.Ldap.MarshalTo(dAtA[i:])
+		n6, err := m.Ldap.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n8
+		i += n6
 	}
 	if m.Local != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintAuth(dAtA, i, uint64(m.Local.Size()))
-		n9, err := m.Local.MarshalTo(dAtA[i:])
+		n7, err := m.Local.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n7
 	}
 	if m.Radius != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintAuth(dAtA, i, uint64(m.Radius.Size()))
-		n10, err := m.Radius.MarshalTo(dAtA[i:])
+		n8, err := m.Radius.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n8
 	}
 	if len(m.AuthenticatorOrder) > 0 {
 		for _, s := range m.AuthenticatorOrder {
@@ -2233,142 +1042,6 @@ func (m *Authenticators) MarshalTo(dAtA []byte) (int, error) {
 			i++
 			i += copy(dAtA[i:], s)
 		}
-	}
-	return i, nil
-}
-
-func (m *AutoMsgAuthenticationPolicyWatchHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgAuthenticationPolicyWatchHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Type) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintAuth(dAtA, i, uint64(len(m.Type)))
-		i += copy(dAtA[i:], m.Type)
-	}
-	if m.Object != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintAuth(dAtA, i, uint64(m.Object.Size()))
-		n11, err := m.Object.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n11
-	}
-	return i, nil
-}
-
-func (m *AutoMsgRoleBindingWatchHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgRoleBindingWatchHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Type) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintAuth(dAtA, i, uint64(len(m.Type)))
-		i += copy(dAtA[i:], m.Type)
-	}
-	if m.Object != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintAuth(dAtA, i, uint64(m.Object.Size()))
-		n12, err := m.Object.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n12
-	}
-	return i, nil
-}
-
-func (m *AutoMsgRoleWatchHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgRoleWatchHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Type) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintAuth(dAtA, i, uint64(len(m.Type)))
-		i += copy(dAtA[i:], m.Type)
-	}
-	if m.Object != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintAuth(dAtA, i, uint64(m.Object.Size()))
-		n13, err := m.Object.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n13
-	}
-	return i, nil
-}
-
-func (m *AutoMsgUserWatchHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgUserWatchHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Type) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintAuth(dAtA, i, uint64(len(m.Type)))
-		i += copy(dAtA[i:], m.Type)
-	}
-	if m.Object != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintAuth(dAtA, i, uint64(m.Object.Size()))
-		n14, err := m.Object.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n14
 	}
 	return i, nil
 }
@@ -2408,11 +1081,11 @@ func (m *Ldap) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintAuth(dAtA, i, uint64(m.TLSOptions.Size()))
-		n15, err := m.TLSOptions.MarshalTo(dAtA[i:])
+		n9, err := m.TLSOptions.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n15
+		i += n9
 	}
 	if len(m.BaseDN) > 0 {
 		dAtA[i] = 0x22
@@ -2436,11 +1109,11 @@ func (m *Ldap) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x3a
 		i++
 		i = encodeVarintAuth(dAtA, i, uint64(m.AttributeMapping.Size()))
-		n16, err := m.AttributeMapping.MarshalTo(dAtA[i:])
+		n10, err := m.AttributeMapping.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n16
+		i += n10
 	}
 	return i, nil
 }
@@ -2675,35 +1348,35 @@ func (m *Role) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.TypeMeta.Size()))
-	n17, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n11, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n17
+	i += n11
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n18, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n12, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n18
+	i += n12
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.Spec.Size()))
-	n19, err := m.Spec.MarshalTo(dAtA[i:])
+	n13, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n19
+	i += n13
 	dAtA[i] = 0x22
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.Status.Size()))
-	n20, err := m.Status.MarshalTo(dAtA[i:])
+	n14, err := m.Status.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n20
+	i += n14
 	return i, nil
 }
 
@@ -2725,81 +1398,35 @@ func (m *RoleBinding) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.TypeMeta.Size()))
-	n21, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n15, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n21
+	i += n15
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n22, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n16, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n22
+	i += n16
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.Spec.Size()))
-	n23, err := m.Spec.MarshalTo(dAtA[i:])
+	n17, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n23
+	i += n17
 	dAtA[i] = 0x22
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.Status.Size()))
-	n24, err := m.Status.MarshalTo(dAtA[i:])
+	n18, err := m.Status.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n24
-	return i, nil
-}
-
-func (m *RoleBindingList) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *RoleBindingList) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintAuth(dAtA, i, uint64(m.TypeMeta.Size()))
-	n25, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n25
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintAuth(dAtA, i, uint64(m.ListMeta.Size()))
-	n26, err := m.ListMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n26
-	if len(m.Items) > 0 {
-		for _, msg := range m.Items {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintAuth(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
+	i += n18
 	return i, nil
 }
 
@@ -2872,52 +1499,6 @@ func (m *RoleBindingStatus) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	return i, nil
-}
-
-func (m *RoleList) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *RoleList) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintAuth(dAtA, i, uint64(m.TypeMeta.Size()))
-	n27, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n27
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintAuth(dAtA, i, uint64(m.ListMeta.Size()))
-	n28, err := m.ListMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n28
-	if len(m.Items) > 0 {
-		for _, msg := range m.Items {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintAuth(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
 	return i, nil
 }
 
@@ -3037,81 +1618,35 @@ func (m *User) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.TypeMeta.Size()))
-	n29, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n19, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n29
+	i += n19
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n30, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n20, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n30
+	i += n20
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.Spec.Size()))
-	n31, err := m.Spec.MarshalTo(dAtA[i:])
+	n21, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n31
+	i += n21
 	dAtA[i] = 0x22
 	i++
 	i = encodeVarintAuth(dAtA, i, uint64(m.Status.Size()))
-	n32, err := m.Status.MarshalTo(dAtA[i:])
+	n22, err := m.Status.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n32
-	return i, nil
-}
-
-func (m *UserList) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *UserList) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintAuth(dAtA, i, uint64(m.TypeMeta.Size()))
-	n33, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n33
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintAuth(dAtA, i, uint64(m.ListMeta.Size()))
-	n34, err := m.ListMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n34
-	if len(m.Items) > 0 {
-		for _, msg := range m.Items {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintAuth(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
+	i += n22
 	return i, nil
 }
 
@@ -3206,11 +1741,11 @@ func (m *UserStatus) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintAuth(dAtA, i, uint64(m.LastSuccessfulLogin.Size()))
-		n35, err := m.LastSuccessfulLogin.MarshalTo(dAtA[i:])
+		n23, err := m.LastSuccessfulLogin.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n35
+		i += n23
 	}
 	return i, nil
 }
@@ -3235,22 +1770,6 @@ func (m *AuthenticationPolicy) Size() (n int) {
 	n += 1 + l + sovAuth(uint64(l))
 	l = m.Status.Size()
 	n += 1 + l + sovAuth(uint64(l))
-	return n
-}
-
-func (m *AuthenticationPolicyList) Size() (n int) {
-	var l int
-	_ = l
-	l = m.TypeMeta.Size()
-	n += 1 + l + sovAuth(uint64(l))
-	l = m.ListMeta.Size()
-	n += 1 + l + sovAuth(uint64(l))
-	if len(m.Items) > 0 {
-		for _, e := range m.Items {
-			l = e.Size()
-			n += 1 + l + sovAuth(uint64(l))
-		}
-	}
 	return n
 }
 
@@ -3292,62 +1811,6 @@ func (m *Authenticators) Size() (n int) {
 			l = len(s)
 			n += 1 + l + sovAuth(uint64(l))
 		}
-	}
-	return n
-}
-
-func (m *AutoMsgAuthenticationPolicyWatchHelper) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.Type)
-	if l > 0 {
-		n += 1 + l + sovAuth(uint64(l))
-	}
-	if m.Object != nil {
-		l = m.Object.Size()
-		n += 1 + l + sovAuth(uint64(l))
-	}
-	return n
-}
-
-func (m *AutoMsgRoleBindingWatchHelper) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.Type)
-	if l > 0 {
-		n += 1 + l + sovAuth(uint64(l))
-	}
-	if m.Object != nil {
-		l = m.Object.Size()
-		n += 1 + l + sovAuth(uint64(l))
-	}
-	return n
-}
-
-func (m *AutoMsgRoleWatchHelper) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.Type)
-	if l > 0 {
-		n += 1 + l + sovAuth(uint64(l))
-	}
-	if m.Object != nil {
-		l = m.Object.Size()
-		n += 1 + l + sovAuth(uint64(l))
-	}
-	return n
-}
-
-func (m *AutoMsgUserWatchHelper) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.Type)
-	if l > 0 {
-		n += 1 + l + sovAuth(uint64(l))
-	}
-	if m.Object != nil {
-		l = m.Object.Size()
-		n += 1 + l + sovAuth(uint64(l))
 	}
 	return n
 }
@@ -3515,22 +1978,6 @@ func (m *RoleBinding) Size() (n int) {
 	return n
 }
 
-func (m *RoleBindingList) Size() (n int) {
-	var l int
-	_ = l
-	l = m.TypeMeta.Size()
-	n += 1 + l + sovAuth(uint64(l))
-	l = m.ListMeta.Size()
-	n += 1 + l + sovAuth(uint64(l))
-	if len(m.Items) > 0 {
-		for _, e := range m.Items {
-			l = e.Size()
-			n += 1 + l + sovAuth(uint64(l))
-		}
-	}
-	return n
-}
-
 func (m *RoleBindingSpec) Size() (n int) {
 	var l int
 	_ = l
@@ -3556,22 +2003,6 @@ func (m *RoleBindingSpec) Size() (n int) {
 func (m *RoleBindingStatus) Size() (n int) {
 	var l int
 	_ = l
-	return n
-}
-
-func (m *RoleList) Size() (n int) {
-	var l int
-	_ = l
-	l = m.TypeMeta.Size()
-	n += 1 + l + sovAuth(uint64(l))
-	l = m.ListMeta.Size()
-	n += 1 + l + sovAuth(uint64(l))
-	if len(m.Items) > 0 {
-		for _, e := range m.Items {
-			l = e.Size()
-			n += 1 + l + sovAuth(uint64(l))
-		}
-	}
 	return n
 }
 
@@ -3624,22 +2055,6 @@ func (m *User) Size() (n int) {
 	n += 1 + l + sovAuth(uint64(l))
 	l = m.Status.Size()
 	n += 1 + l + sovAuth(uint64(l))
-	return n
-}
-
-func (m *UserList) Size() (n int) {
-	var l int
-	_ = l
-	l = m.TypeMeta.Size()
-	n += 1 + l + sovAuth(uint64(l))
-	l = m.ListMeta.Size()
-	n += 1 + l + sovAuth(uint64(l))
-	if len(m.Items) > 0 {
-		for _, e := range m.Items {
-			l = e.Size()
-			n += 1 + l + sovAuth(uint64(l))
-		}
-	}
 	return n
 }
 
@@ -3846,147 +2261,6 @@ func (m *AuthenticationPolicy) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAuth(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthAuth
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AuthenticationPolicyList) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAuth
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AuthenticationPolicyList: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AuthenticationPolicyList: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Items = append(m.Items, &AuthenticationPolicy{})
-			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4328,454 +2602,6 @@ func (m *Authenticators) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.AuthenticatorOrder = append(m.AuthenticatorOrder, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAuth(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthAuth
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AutoMsgAuthenticationPolicyWatchHelper) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAuth
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgAuthenticationPolicyWatchHelper: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgAuthenticationPolicyWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Type = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Object == nil {
-				m.Object = &AuthenticationPolicy{}
-			}
-			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAuth(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthAuth
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AutoMsgRoleBindingWatchHelper) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAuth
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgRoleBindingWatchHelper: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgRoleBindingWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Type = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Object == nil {
-				m.Object = &RoleBinding{}
-			}
-			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAuth(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthAuth
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AutoMsgRoleWatchHelper) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAuth
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgRoleWatchHelper: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgRoleWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Type = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Object == nil {
-				m.Object = &Role{}
-			}
-			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAuth(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthAuth
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AutoMsgUserWatchHelper) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAuth
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgUserWatchHelper: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgUserWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Type = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Object == nil {
-				m.Object = &User{}
-			}
-			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -6123,147 +3949,6 @@ func (m *RoleBinding) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *RoleBindingList) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAuth
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: RoleBindingList: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RoleBindingList: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Items = append(m.Items, &RoleBinding{})
-			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAuth(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthAuth
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *RoleBindingSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -6430,147 +4115,6 @@ func (m *RoleBindingStatus) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: RoleBindingStatus: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAuth(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthAuth
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *RoleList) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAuth
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: RoleList: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RoleList: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Items = append(m.Items, &Role{})
-			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAuth(dAtA[iNdEx:])
@@ -7041,147 +4585,6 @@ func (m *User) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UserList) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAuth
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: UserList: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UserList: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuth
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuth
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Items = append(m.Items, &User{})
-			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAuth(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthAuth
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *UserSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -7597,180 +5000,129 @@ var (
 func init() { proto.RegisterFile("auth.proto", fileDescriptorAuth) }
 
 var fileDescriptorAuth = []byte{
-	// 2790 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x5a, 0xcd, 0x6f, 0x1b, 0xc7,
-	0x15, 0xf7, 0x92, 0x22, 0x25, 0x8d, 0x28, 0x69, 0x35, 0x96, 0x6c, 0x2e, 0x23, 0x5b, 0xca, 0x26,
-	0x4d, 0x6c, 0xc7, 0x94, 0xec, 0xc4, 0x0d, 0x1a, 0x37, 0x29, 0xc0, 0x8f, 0xb5, 0xc3, 0x86, 0x22,
-	0x59, 0x7e, 0xd8, 0xc9, 0xa1, 0x75, 0x56, 0xe4, 0x58, 0xda, 0x9a, 0xdc, 0x5d, 0xec, 0x87, 0x03,
-	0x23, 0x0d, 0x0a, 0x44, 0xb2, 0x0f, 0x2d, 0x7a, 0x49, 0x2e, 0x45, 0xd1, 0x53, 0x50, 0xa0, 0x80,
-	0xda, 0x93, 0x2f, 0xed, 0x9f, 0x90, 0xde, 0x82, 0xf4, 0x96, 0x83, 0x10, 0x04, 0xed, 0xc5, 0x40,
-	0xaf, 0xbd, 0xb6, 0x98, 0x37, 0xc3, 0xe5, 0xec, 0xf2, 0x23, 0x54, 0x93, 0xb8, 0x27, 0xed, 0xce,
-	0xbc, 0xf7, 0x7b, 0x1f, 0xbf, 0x79, 0x6f, 0x66, 0x96, 0x42, 0x48, 0xf7, 0xbd, 0xfd, 0x2d, 0xdb,
-	0xb1, 0x3c, 0x0b, 0xcf, 0xd0, 0xe7, 0xcc, 0xfa, 0x9e, 0x65, 0xed, 0x75, 0xc9, 0xb6, 0x6e, 0x1b,
-	0xdb, 0xba, 0x69, 0x5a, 0x9e, 0xee, 0x19, 0x96, 0xe9, 0x32, 0x99, 0x8c, 0xb6, 0x67, 0x78, 0xfb,
-	0xfe, 0xee, 0x56, 0xdb, 0xea, 0x6d, 0xdb, 0xc4, 0x74, 0x75, 0xb3, 0x63, 0x6d, 0xbb, 0xef, 0x6d,
-	0xdf, 0x27, 0xa6, 0xd1, 0x26, 0xdb, 0xbe, 0x67, 0x74, 0x5d, 0xaa, 0xba, 0x47, 0x4c, 0x51, 0x7b,
-	0xdb, 0x30, 0xdb, 0x5d, 0xbf, 0x43, 0xfa, 0x30, 0x59, 0x01, 0x66, 0xcf, 0xda, 0xb3, 0xb6, 0x61,
-	0x78, 0xd7, 0xbf, 0x0b, 0x6f, 0xf0, 0x02, 0x4f, 0x5c, 0xfc, 0x7b, 0x63, 0xac, 0x52, 0x1f, 0x7b,
-	0xc4, 0xd3, 0x99, 0x98, 0xfa, 0x97, 0x18, 0x5a, 0xcd, 0xf9, 0xde, 0x3e, 0x31, 0x3d, 0xa3, 0x0d,
-	0x86, 0x6b, 0x56, 0xd7, 0x68, 0x3f, 0xc0, 0x57, 0x90, 0xd4, 0x4c, 0x4b, 0x9b, 0xd2, 0x85, 0x85,
-	0x97, 0x17, 0xb7, 0x74, 0xdb, 0xd8, 0x6a, 0x3e, 0xb0, 0xc9, 0x0e, 0xf1, 0xf4, 0xfc, 0xe9, 0x4f,
-	0x8f, 0x37, 0x4e, 0x7d, 0x76, 0xbc, 0x21, 0x3d, 0x39, 0xde, 0x98, 0xbd, 0x6c, 0x98, 0x5d, 0xc3,
-	0x24, 0x75, 0xa9, 0x89, 0x5f, 0x43, 0x52, 0x35, 0x1d, 0x03, 0x8d, 0x65, 0xd0, 0xa8, 0xee, 0xfe,
-	0x9c, 0xb4, 0x3d, 0xd0, 0xc9, 0x08, 0x3a, 0x4b, 0xd4, 0xfc, 0x65, 0xab, 0x67, 0x78, 0xa4, 0x67,
-	0x7b, 0x0f, 0xea, 0x52, 0x15, 0xff, 0x18, 0xcd, 0x34, 0x6c, 0xd2, 0x4e, 0xc7, 0x41, 0xfb, 0xfc,
-	0x16, 0x64, 0x78, 0x94, 0x5b, 0x54, 0x2a, 0x7f, 0x86, 0x82, 0x51, 0x20, 0xd7, 0x26, 0x6d, 0x01,
-	0x08, 0x30, 0x70, 0x1d, 0x25, 0x1b, 0x9e, 0xee, 0xf9, 0x6e, 0x7a, 0x06, 0xd0, 0x36, 0x27, 0xa0,
-	0x81, 0x5c, 0x3e, 0xcd, 0xf1, 0x64, 0x17, 0xde, 0x05, 0x44, 0x8e, 0x74, 0x1d, 0x7f, 0xfe, 0x50,
-	0x59, 0xc2, 0x29, 0x0a, 0x64, 0x66, 0x6d, 0xd0, 0x55, 0xff, 0x20, 0xa1, 0xf4, 0x28, 0xd0, 0xb2,
-	0xe1, 0x7a, 0x58, 0xa5, 0xd9, 0x8b, 0x8d, 0xca, 0xde, 0x5c, 0x3f, 0x13, 0xf8, 0x22, 0x9a, 0xa3,
-	0xb2, 0x74, 0x94, 0x07, 0xce, 0x44, 0xfb, 0x83, 0x21, 0xd1, 0x44, 0xc9, 0x23, 0x3d, 0x1a, 0x52,
-	0xfc, 0xc2, 0xc2, 0xcb, 0x99, 0xf1, 0x21, 0x5d, 0x5f, 0xfa, 0xe2, 0xa1, 0x82, 0xba, 0x86, 0xeb,
-	0xed, 0x93, 0xae, 0x4d, 0x1c, 0xf5, 0xcf, 0x63, 0xdc, 0x84, 0x5c, 0xfd, 0x0c, 0x2d, 0x09, 0x73,
-	0x96, 0xe3, 0x72, 0xc6, 0x57, 0x87, 0x0c, 0x58, 0x8e, 0x9b, 0xdf, 0xe4, 0x79, 0x4a, 0xeb, 0xa1,
-	0x71, 0x21, 0x5f, 0x11, 0x34, 0x7c, 0x05, 0x25, 0x1b, 0xa4, 0xed, 0x10, 0x0f, 0x72, 0x91, 0x82,
-	0x4c, 0x4b, 0x90, 0x69, 0x18, 0x0d, 0x65, 0x1a, 0x46, 0xd4, 0x75, 0x94, 0x19, 0xcf, 0x94, 0xfa,
-	0x9f, 0x58, 0xd4, 0x61, 0xfc, 0x2a, 0x9a, 0x29, 0x77, 0x74, 0x9b, 0x3b, 0x8e, 0x98, 0xe3, 0x74,
-	0x04, 0x96, 0x09, 0xac, 0xb7, 0x6e, 0x47, 0xb7, 0xc5, 0x65, 0x42, 0x67, 0xf1, 0x75, 0x94, 0x28,
-	0x5b, 0x6d, 0xbd, 0xcb, 0x59, 0x5a, 0xe0, 0x8a, 0x74, 0x28, 0x7f, 0x96, 0x6b, 0x2e, 0x77, 0xe9,
-	0xab, 0xa0, 0xca, 0x54, 0xf0, 0x8f, 0x50, 0xb2, 0xae, 0x77, 0x0c, 0xdf, 0xe5, 0xbc, 0xa5, 0x98,
-	0x32, 0x1b, 0x1b, 0x04, 0xe9, 0xc0, 0xbb, 0x18, 0x24, 0x93, 0xc0, 0x1f, 0x4a, 0x08, 0x87, 0xc2,
-	0xa8, 0x3a, 0x1d, 0xe2, 0xa4, 0xe7, 0x37, 0xe3, 0x17, 0xe6, 0xf3, 0xf5, 0xa3, 0x47, 0xca, 0xc5,
-	0x86, 0xe7, 0x68, 0xa6, 0xdf, 0xbb, 0x10, 0x0e, 0x36, 0x4c, 0x08, 0x5d, 0x52, 0x17, 0xb9, 0xad,
-	0x73, 0x21, 0x4a, 0xb2, 0x16, 0xc5, 0x13, 0x0c, 0x8f, 0xb0, 0xa6, 0x5e, 0x43, 0x2b, 0x43, 0x70,
-	0x78, 0x1e, 0x25, 0xca, 0xd5, 0x42, 0xae, 0x2c, 0x9f, 0xc2, 0x73, 0x68, 0xa6, 0x5c, 0xcc, 0xd5,
-	0x64, 0x09, 0x23, 0x94, 0xac, 0xe7, 0x8a, 0xa5, 0x56, 0x43, 0x8e, 0xa9, 0x2e, 0x7a, 0x21, 0xe7,
-	0x7b, 0xd6, 0x8e, 0xbb, 0x37, 0x8a, 0xa6, 0xdb, 0xba, 0xd7, 0xde, 0x7f, 0x13, 0x16, 0x1e, 0x4e,
-	0xa1, 0x19, 0x0a, 0x09, 0xc4, 0xcc, 0xe3, 0x4b, 0x28, 0xc9, 0xda, 0x01, 0xcf, 0xf7, 0xa4, 0x25,
-	0xbc, 0xfc, 0xc5, 0x43, 0x65, 0xe1, 0x3d, 0x0a, 0xc5, 0xd7, 0xb0, 0x8e, 0xce, 0x71, 0xa3, 0x75,
-	0xab, 0x4b, 0xf2, 0x86, 0xd9, 0x31, 0xcc, 0xbd, 0xf1, 0xb6, 0x9e, 0x8d, 0xd8, 0x5a, 0xe1, 0xf4,
-	0x0c, 0x74, 0x87, 0x4d, 0x34, 0xd0, 0x19, 0xc1, 0xc4, 0x78, 0xec, 0x4c, 0x04, 0x1b, 0x0d, 0xb0,
-	0x27, 0x81, 0xb6, 0x5c, 0xe2, 0x9c, 0x18, 0x94, 0x2a, 0x0d, 0x83, 0xfe, 0x2d, 0xce, 0x56, 0x3c,
-	0xde, 0x46, 0xb3, 0x9a, 0xa9, 0xef, 0x76, 0x49, 0x07, 0x60, 0xe6, 0xf2, 0x6b, 0x4f, 0x8e, 0x37,
-	0x56, 0x08, 0x1b, 0x12, 0xc8, 0xef, 0x4b, 0xe1, 0x17, 0x51, 0xbc, 0xe5, 0xb0, 0x05, 0x3f, 0x9f,
-	0x5f, 0xe3, 0x2b, 0x67, 0xd1, 0x77, 0xc4, 0x15, 0x4e, 0x25, 0x70, 0x15, 0xa1, 0x66, 0xb9, 0x51,
-	0xb5, 0x61, 0x1f, 0xe2, 0x6b, 0x5c, 0x66, 0x3e, 0x0d, 0xc6, 0xf3, 0xe7, 0x38, 0xc2, 0x9a, 0xd7,
-	0x75, 0xb3, 0x16, 0x1b, 0x14, 0x90, 0x04, 0x08, 0x7c, 0x15, 0x25, 0xf3, 0xba, 0x4b, 0x8a, 0x15,
-	0xe8, 0xc9, 0xf3, 0x79, 0x85, 0xab, 0xae, 0xec, 0xea, 0x2e, 0xc9, 0x76, 0x4c, 0xb1, 0x46, 0x98,
-	0x20, 0xa8, 0x18, 0x66, 0xa7, 0x58, 0x49, 0x27, 0x22, 0x2a, 0x86, 0xd9, 0x89, 0xaa, 0x80, 0x20,
-	0x2e, 0xa0, 0x14, 0x7d, 0xaa, 0xe9, 0xae, 0xfb, 0x9e, 0xe5, 0x74, 0xd2, 0x49, 0x50, 0xdc, 0xe0,
-	0x8a, 0x67, 0x41, 0xd1, 0xe6, 0x93, 0x82, 0x7a, 0x48, 0x09, 0xdf, 0x43, 0x72, 0xce, 0xf3, 0x1c,
-	0x63, 0xd7, 0xf7, 0xc8, 0x8e, 0x6e, 0xdb, 0x86, 0xb9, 0x97, 0x9e, 0x15, 0x97, 0x2c, 0xcd, 0x7d,
-	0x54, 0x22, 0xff, 0x1c, 0x37, 0xf2, 0x8c, 0xde, 0x9f, 0xc9, 0xf6, 0xd8, 0x94, 0x60, 0x68, 0x08,
-	0x58, 0xfd, 0x53, 0x1c, 0xad, 0x8e, 0xc2, 0xc3, 0x97, 0xd0, 0x0c, 0x65, 0x9f, 0xad, 0x8f, 0x41,
-	0x27, 0xf3, 0xdd, 0x50, 0x59, 0x83, 0x0c, 0xde, 0x41, 0xcb, 0xf4, 0x2f, 0x5b, 0x41, 0x85, 0xae,
-	0xee, 0xba, 0x9c, 0xe2, 0xc0, 0x29, 0xaa, 0x96, 0xb5, 0x60, 0x3e, 0xdb, 0xa6, 0x02, 0x02, 0x46,
-	0x54, 0x97, 0xf6, 0xec, 0x26, 0x31, 0x75, 0xd3, 0x03, 0xe2, 0xe7, 0x07, 0xed, 0xcc, 0x83, 0x51,
-	0x31, 0xef, 0x4c, 0x0e, 0x67, 0x51, 0xe2, 0xa6, 0x63, 0xf9, 0x36, 0x27, 0x37, 0xe8, 0x9e, 0x7b,
-	0x74, 0x50, 0xec, 0x9e, 0x20, 0x85, 0x6b, 0x48, 0x86, 0x07, 0xd1, 0x61, 0xc6, 0xf1, 0xf3, 0x5c,
-	0x73, 0x1d, 0x34, 0xc7, 0x79, 0x3c, 0xa4, 0x4d, 0x1d, 0xd0, 0x7a, 0xba, 0xd1, 0xe5, 0x8c, 0x07,
-	0x0e, 0x10, 0x3a, 0x28, 0x3a, 0x00, 0x52, 0xf8, 0x55, 0x34, 0x77, 0xc3, 0xef, 0x76, 0x4d, 0xbd,
-	0x47, 0x80, 0xda, 0x79, 0x38, 0x9e, 0x50, 0x0d, 0x7c, 0x97, 0x8f, 0x0b, 0x4a, 0x81, 0xac, 0xfa,
-	0x03, 0xbe, 0x65, 0x9c, 0xb8, 0xf2, 0xd4, 0x2f, 0x67, 0x11, 0xaa, 0x11, 0xa7, 0x67, 0xb8, 0xae,
-	0x61, 0x99, 0x58, 0x43, 0x4b, 0x75, 0xe2, 0x5a, 0xbe, 0xd3, 0x26, 0x3c, 0xd5, 0x8c, 0xe7, 0x73,
-	0x4f, 0x8e, 0x37, 0x14, 0x87, 0xcf, 0x64, 0x87, 0xf2, 0x1d, 0x51, 0xc2, 0x79, 0xb4, 0xd8, 0x1f,
-	0x61, 0xf9, 0x67, 0xb4, 0xaf, 0xd3, 0x2d, 0x3a, 0x40, 0x89, 0x92, 0x10, 0x56, 0xc1, 0xef, 0xa2,
-	0x54, 0x7f, 0xe0, 0x2d, 0xc3, 0xec, 0x70, 0xce, 0x5f, 0x3f, 0x7a, 0xa4, 0x9c, 0xeb, 0xef, 0x41,
-	0x03, 0xc7, 0xb7, 0xea, 0xc4, 0x75, 0xda, 0x54, 0xee, 0x22, 0x2d, 0xa8, 0xc0, 0xc6, 0x3d, 0xc3,
-	0x0c, 0x15, 0x94, 0x88, 0x88, 0x2b, 0x68, 0xa5, 0xff, 0x5e, 0xd1, 0x7b, 0xc4, 0xb5, 0xf5, 0x36,
-	0xe1, 0x2b, 0x65, 0x93, 0x72, 0x1d, 0xa0, 0x98, 0xfd, 0x59, 0x01, 0x6a, 0x58, 0x15, 0xdf, 0x18,
-	0x44, 0x0d, 0x83, 0xe9, 0x04, 0x6c, 0x9b, 0x9b, 0x9c, 0xc2, 0x74, 0x18, 0x6f, 0x54, 0xe4, 0xa0,
-	0x86, 0x5b, 0x68, 0x36, 0xd7, 0x66, 0x1d, 0x2e, 0x09, 0x08, 0x3f, 0x3c, 0x7a, 0xa4, 0x9c, 0x1f,
-	0x11, 0x34, 0x93, 0x12, 0x77, 0xdb, 0x15, 0xbd, 0x1d, 0xed, 0x76, 0x7d, 0x2c, 0xf5, 0xf7, 0x71,
-	0x34, 0x1f, 0xa4, 0x09, 0x9f, 0x41, 0x38, 0x57, 0x2e, 0xdf, 0xa9, 0x6b, 0x8d, 0x6a, 0xab, 0x5e,
-	0xd0, 0xee, 0xbc, 0x55, 0xaa, 0x14, 0x1b, 0xf2, 0x29, 0xba, 0xa5, 0x36, 0xb5, 0x4a, 0xae, 0xd2,
-	0x94, 0x25, 0xbc, 0x80, 0x66, 0x0b, 0xe5, 0x56, 0xa3, 0xa9, 0xd5, 0xe5, 0x18, 0xdd, 0x75, 0x2b,
-	0xd5, 0xa2, 0x26, 0xc7, 0x71, 0x0a, 0xcd, 0x35, 0x76, 0x72, 0xf5, 0x66, 0xa5, 0x54, 0x90, 0x67,
-	0xf0, 0x32, 0x5a, 0x28, 0x68, 0xf5, 0x66, 0xe9, 0x46, 0xa9, 0x90, 0x6b, 0x6a, 0x72, 0x82, 0x6a,
-	0x55, 0xb4, 0xe6, 0xed, 0x6a, 0xfd, 0x2d, 0x39, 0x49, 0x5f, 0x1a, 0x5a, 0xfd, 0x56, 0xa9, 0xa0,
-	0xc9, 0xb3, 0x54, 0xb1, 0x9c, 0xaf, 0x55, 0xcb, 0xa5, 0xc2, 0x3b, 0xf2, 0x1c, 0x7d, 0xd3, 0x2a,
-	0xc5, 0x5a, 0xb5, 0x54, 0x69, 0xca, 0xf3, 0x78, 0x05, 0x2d, 0x36, 0xb4, 0x42, 0xab, 0x5e, 0x6a,
-	0xbe, 0x73, 0xb3, 0x5e, 0x6d, 0xd5, 0x64, 0x04, 0x76, 0x6e, 0x72, 0xf1, 0x05, 0x3c, 0x8b, 0xe2,
-	0xb9, 0x5a, 0x4d, 0x4e, 0xe1, 0x55, 0x24, 0x6b, 0x95, 0x42, 0xfd, 0x9d, 0x5a, 0xb3, 0x54, 0xad,
-	0xf0, 0xe9, 0x45, 0x7a, 0x3e, 0xc8, 0x95, 0xb5, 0x7a, 0x53, 0x5e, 0xa2, 0x1e, 0xc1, 0x23, 0x9f,
-	0x5b, 0xa6, 0x1a, 0x30, 0x50, 0xd4, 0x1a, 0xcd, 0x52, 0x25, 0x47, 0xf5, 0x64, 0x99, 0x8a, 0x69,
-	0xb7, 0xb4, 0x4a, 0x5f, 0x6c, 0x85, 0x0e, 0x34, 0x9a, 0xb9, 0x66, 0x83, 0x0f, 0x60, 0x3a, 0x70,
-	0xe3, 0x76, 0xb9, 0xda, 0xf7, 0xe1, 0x34, 0x05, 0xba, 0x51, 0xae, 0xde, 0xd6, 0xde, 0xae, 0x55,
-	0x03, 0xf8, 0x55, 0x9a, 0x99, 0x56, 0x43, 0xab, 0xcb, 0x6b, 0x78, 0x09, 0xa1, 0x5c, 0xab, 0xf9,
-	0x26, 0x9f, 0x39, 0x43, 0x67, 0xea, 0xd5, 0xb2, 0x26, 0x9f, 0xa5, 0x50, 0xf4, 0x29, 0x5f, 0xaa,
-	0x14, 0x4b, 0x95, 0x9b, 0x72, 0x1a, 0x9c, 0xac, 0x95, 0x82, 0x04, 0x28, 0xea, 0x6d, 0x84, 0x06,
-	0x7c, 0xb2, 0x18, 0xca, 0x77, 0x72, 0x05, 0xea, 0x2c, 0xe7, 0xa5, 0x50, 0xd7, 0x68, 0x86, 0x25,
-	0x80, 0xd5, 0x72, 0x45, 0x39, 0x46, 0x47, 0x5b, 0xb5, 0x22, 0x1d, 0x8d, 0xd3, 0xe7, 0xa2, 0x56,
-	0xd6, 0x9a, 0x9a, 0x3c, 0x03, 0xd2, 0xd5, 0x9d, 0x9d, 0x52, 0x53, 0x4e, 0xa8, 0xff, 0x92, 0xfa,
-	0x87, 0xc2, 0x93, 0x6f, 0xcc, 0xcf, 0xa3, 0x58, 0xa9, 0x5f, 0xbd, 0xab, 0x7c, 0x8d, 0xa5, 0x0c,
-	0xb1, 0x6a, 0x63, 0x25, 0x9b, 0xee, 0x09, 0x35, 0xcb, 0xe9, 0xb7, 0xe5, 0x60, 0x4f, 0xb0, 0x2d,
-	0x47, 0x6c, 0x12, 0x20, 0x83, 0xb7, 0x50, 0xa2, 0xa2, 0xbb, 0xa5, 0x7e, 0x4b, 0x0e, 0x7a, 0xb8,
-	0xa9, 0xbb, 0xd9, 0x10, 0x30, 0x13, 0x13, 0x0e, 0xea, 0x89, 0xb0, 0xc2, 0xd8, 0x83, 0xfa, 0x6f,
-	0x62, 0x68, 0x86, 0x9e, 0x7a, 0x9e, 0xee, 0x45, 0xf1, 0x7a, 0xe8, 0xa2, 0xb8, 0x34, 0x38, 0x7c,
-	0x4d, 0x71, 0x31, 0xcc, 0x47, 0x2e, 0x86, 0xb2, 0xa0, 0x3d, 0xed, 0x45, 0x30, 0xfd, 0xf9, 0x43,
-	0x65, 0x15, 0x2d, 0x6c, 0xbf, 0x5f, 0xdd, 0x62, 0x4d, 0xf8, 0x03, 0x9c, 0x70, 0xac, 0x2e, 0x71,
-	0xd5, 0xa3, 0x18, 0x5a, 0x10, 0x4e, 0x98, 0x4f, 0x37, 0x2d, 0xb9, 0x50, 0x5a, 0xd6, 0x86, 0xce,
-	0xbb, 0x53, 0x64, 0xa7, 0x14, 0xc9, 0xce, 0xd9, 0x61, 0x90, 0x69, 0x93, 0xb4, 0xf9, 0xf9, 0x43,
-	0x65, 0x3d, 0x9c, 0xa4, 0x45, 0x9a, 0xa4, 0xec, 0x2e, 0x03, 0x72, 0xd5, 0x8f, 0x24, 0xb4, 0x2c,
-	0x20, 0x7f, 0x17, 0x57, 0xe6, 0xcd, 0xf0, 0x95, 0x79, 0xc4, 0x1d, 0x20, 0x7a, 0x53, 0xfe, 0x63,
-	0xd8, 0x29, 0xc8, 0x4a, 0x16, 0x25, 0xe8, 0xf9, 0x88, 0xde, 0x8b, 0xe3, 0xe2, 0xc9, 0x82, 0x9e,
-	0xa8, 0xc4, 0xd0, 0x99, 0x14, 0x7e, 0x03, 0x21, 0xfa, 0x00, 0x5b, 0x2b, 0x3d, 0x85, 0x51, 0x9d,
-	0xe0, 0x98, 0x0c, 0xa7, 0x30, 0xd8, 0x8e, 0x43, 0xc7, 0xe4, 0x81, 0x02, 0x7e, 0x81, 0x95, 0x14,
-	0xaf, 0x70, 0x4c, 0xb9, 0xa2, 0x79, 0x13, 0xb9, 0xa2, 0xf3, 0xea, 0x69, 0xb4, 0x32, 0xc4, 0x8b,
-	0x7a, 0x28, 0xa1, 0x39, 0x3a, 0xfa, 0x5d, 0x24, 0x53, 0x09, 0x27, 0x53, 0xbc, 0xf4, 0x44, 0xb3,
-	0xf8, 0x53, 0xe6, 0x05, 0x64, 0xef, 0x27, 0x68, 0x61, 0xb0, 0x8f, 0xb2, 0x1c, 0x06, 0x65, 0x37,
-	0x98, 0x80, 0x0c, 0xd1, 0x15, 0xb5, 0x66, 0x0f, 0x84, 0x85, 0x98, 0x45, 0x0c, 0x35, 0x85, 0xd0,
-	0xa0, 0x60, 0xd5, 0xc7, 0x31, 0xf1, 0xa6, 0x82, 0x5f, 0x41, 0x73, 0x0d, 0x4f, 0x77, 0xbc, 0x66,
-	0xb9, 0xc1, 0x3b, 0xef, 0xd9, 0x27, 0xc7, 0x1b, 0xa7, 0x5d, 0x3a, 0x96, 0xf5, 0xba, 0x22, 0x68,
-	0x20, 0x88, 0xef, 0xa1, 0x4c, 0xe3, 0x9e, 0x61, 0x37, 0x88, 0x73, 0x9f, 0x38, 0x05, 0xe2, 0x78,
-	0xb7, 0x88, 0x63, 0xdc, 0xe5, 0x37, 0x52, 0xc8, 0xe1, 0x5c, 0xfe, 0xa5, 0x27, 0xc7, 0x1b, 0x2f,
-	0xba, 0xf7, 0x0c, 0x3b, 0xeb, 0x82, 0x58, 0xb6, 0x4d, 0x1c, 0x2f, 0x7b, 0x5f, 0x10, 0x14, 0xa0,
-	0x27, 0xc0, 0xd1, 0x05, 0xc2, 0x66, 0xe8, 0x19, 0x84, 0xf3, 0x1c, 0x2c, 0x10, 0x8e, 0x1d, 0x39,
-	0x7f, 0x0a, 0x0a, 0xf4, 0x86, 0xd3, 0x74, 0x7c, 0xd7, 0x23, 0x1d, 0x8a, 0xec, 0xf2, 0xee, 0x1e,
-	0xdc, 0x70, 0x3c, 0x36, 0x07, 0xde, 0x89, 0xc1, 0x86, 0x94, 0xa0, 0x73, 0xc3, 0xc5, 0xe1, 0xff,
-	0xdf, 0xb9, 0xa9, 0x1b, 0xff, 0x7b, 0xe7, 0x06, 0xed, 0x6f, 0xd2, 0xb9, 0xa1, 0x8a, 0xa1, 0x70,
-	0x28, 0xd4, 0xd3, 0x2b, 0x1c, 0xb8, 0xd8, 0x47, 0x0b, 0xe7, 0xb7, 0x31, 0xe6, 0x06, 0x44, 0x2c,
-	0x5e, 0x51, 0xa4, 0xe9, 0xaf, 0x28, 0x83, 0x9b, 0x50, 0x6c, 0xda, 0x9b, 0x50, 0x70, 0x5b, 0x8e,
-	0x87, 0xcd, 0x8c, 0xb8, 0x28, 0x07, 0xb2, 0xf8, 0x4d, 0xfe, 0xf9, 0x82, 0xad, 0xbf, 0x6b, 0x47,
-	0x8f, 0x94, 0x4c, 0xff, 0xe0, 0xdc, 0x0f, 0x01, 0x82, 0x14, 0x0f, 0xcd, 0x4b, 0xde, 0x03, 0x3b,
-	0xd4, 0xca, 0xe8, 0xa4, 0xfa, 0x1c, 0x0b, 0x3a, 0xfa, 0xf1, 0x89, 0x9e, 0x5a, 0xdf, 0x6e, 0x6a,
-	0xf5, 0x4a, 0xae, 0x2c, 0x4b, 0xea, 0x3f, 0x25, 0xd6, 0x57, 0x19, 0x95, 0x34, 0x48, 0xda, 0x03,
-	0x86, 0x9a, 0x32, 0x6c, 0xc4, 0x62, 0x90, 0x20, 0xf5, 0x4d, 0x9b, 0xb2, 0x81, 0x4e, 0x97, 0x75,
-	0xd7, 0x6b, 0xf8, 0xed, 0x36, 0x71, 0xdd, 0xbb, 0x7e, 0xb7, 0x6c, 0xed, 0x19, 0xe6, 0x60, 0x1d,
-	0xd3, 0x35, 0x62, 0xf4, 0x88, 0xeb, 0xe9, 0x3d, 0x3b, 0xff, 0x22, 0xc7, 0xdd, 0xe8, 0xea, 0xae,
-	0x97, 0x75, 0x03, 0x9d, 0x6c, 0x97, 0x2a, 0x09, 0x16, 0x46, 0x61, 0xbe, 0xfc, 0xf1, 0x19, 0x94,
-	0xcc, 0xf9, 0xde, 0xfe, 0xad, 0xab, 0xf8, 0x97, 0xe8, 0x99, 0x9c, 0xef, 0x59, 0xb9, 0x4e, 0x67,
-	0xe4, 0xd7, 0xf9, 0x09, 0x9f, 0xcf, 0x32, 0x13, 0xe6, 0xd4, 0x0b, 0x8f, 0x0f, 0x95, 0x64, 0xdb,
-	0x21, 0xba, 0x47, 0xfe, 0x7a, 0xa8, 0x48, 0x1f, 0xfe, 0xfd, 0x1f, 0x1f, 0xc7, 0x56, 0xd1, 0xa9,
-	0xeb, 0xd2, 0x25, 0x75, 0x71, 0x5b, 0xfc, 0xbc, 0x8d, 0x1b, 0x68, 0x81, 0x3b, 0x00, 0xa7, 0x3c,
-	0xa1, 0xe5, 0x67, 0x84, 0x67, 0xf5, 0xf2, 0x08, 0xc0, 0x34, 0x03, 0x5c, 0x11, 0x6a, 0x6d, 0x1b,
-	0xb8, 0xc1, 0x36, 0x7c, 0xf7, 0xec, 0x83, 0xf6, 0x8f, 0x4a, 0xc3, 0x7b, 0x73, 0x66, 0x78, 0x48,
-	0xbd, 0x36, 0xc2, 0xd2, 0x26, 0xb3, 0xa4, 0x44, 0x2d, 0x05, 0x27, 0x0d, 0x21, 0x0c, 0x68, 0x79,
-	0x42, 0x01, 0x66, 0x84, 0xe7, 0xa9, 0xc3, 0x80, 0x8e, 0x81, 0x7f, 0x25, 0xa1, 0xf3, 0x14, 0xb5,
-	0x48, 0xba, 0xc4, 0x23, 0xdf, 0x2a, 0x41, 0x57, 0xa8, 0x23, 0x1d, 0xc0, 0x0d, 0x1c, 0x59, 0x47,
-	0xa7, 0xae, 0x9f, 0xba, 0x74, 0x26, 0xc4, 0x0f, 0x75, 0x8a, 0x6e, 0x09, 0x1f, 0xf0, 0x6f, 0xf8,
-	0xdc, 0x97, 0x89, 0x5c, 0x5d, 0x1b, 0x81, 0xbd, 0x09, 0xd8, 0x99, 0x21, 0xaa, 0x06, 0xf8, 0xef,
-	0xa3, 0xb5, 0x30, 0xfe, 0xc9, 0x68, 0x7b, 0x7d, 0x84, 0xd1, 0x0b, 0x60, 0x54, 0x1d, 0xcb, 0xda,
-	0x98, 0xe0, 0x26, 0x32, 0x38, 0x65, 0x70, 0x40, 0xe0, 0x00, 0xff, 0x50, 0x62, 0x75, 0x76, 0x93,
-	0x78, 0xdf, 0x2a, 0x8d, 0xd9, 0xc7, 0x87, 0x4a, 0x7c, 0x8f, 0x78, 0x61, 0x0e, 0xf1, 0x38, 0x0e,
-	0xdf, 0x66, 0xab, 0xf4, 0x26, 0xf1, 0x26, 0x12, 0x78, 0x35, 0x8a, 0x0a, 0x01, 0xe2, 0x49, 0xec,
-	0xf9, 0xac, 0xe2, 0x38, 0xf2, 0xc9, 0xa8, 0x7b, 0x2d, 0x6a, 0x0e, 0x78, 0xc3, 0xd3, 0xf0, 0x36,
-	0x08, 0x68, 0x22, 0x69, 0xd3, 0x04, 0x14, 0x61, 0xac, 0x8d, 0xd6, 0x29, 0x32, 0xdd, 0x6b, 0x47,
-	0x32, 0xb6, 0x16, 0x6c, 0xc5, 0xf0, 0xbd, 0x9d, 0x1f, 0x0d, 0x33, 0x13, 0x7e, 0x53, 0xa4, 0xb2,
-	0x6a, 0xea, 0xf1, 0xa1, 0x32, 0x43, 0x77, 0x63, 0xea, 0x0a, 0x7e, 0x17, 0xa5, 0xfa, 0x46, 0x80,
-	0x90, 0x31, 0xa0, 0xc2, 0xfd, 0x13, 0x40, 0x2e, 0x8a, 0x20, 0x10, 0xcf, 0x59, 0x88, 0x67, 0x44,
-	0x27, 0xbc, 0x8f, 0x4e, 0x8b, 0x16, 0xfa, 0xc4, 0x8c, 0x31, 0x34, 0x7c, 0xa3, 0x03, 0x7b, 0x57,
-	0x87, 0xec, 0x6d, 0x80, 0xbd, 0x09, 0xfd, 0x50, 0x88, 0x0c, 0x98, 0x99, 0x1c, 0x59, 0xff, 0x58,
-	0x34, 0x5d, 0x64, 0xac, 0x39, 0xfe, 0x9a, 0x37, 0xc7, 0x96, 0xdd, 0xd1, 0xbf, 0xe5, 0xe6, 0x48,
-	0xe3, 0x4d, 0xfa, 0x80, 0x1b, 0xf8, 0x71, 0x0e, 0xba, 0x74, 0x66, 0x5c, 0x65, 0xdd, 0x61, 0x0d,
-	0x84, 0x39, 0x33, 0xb1, 0xb8, 0xbe, 0x3f, 0x02, 0xfc, 0x59, 0x06, 0x3e, 0xa9, 0xc0, 0x7e, 0xc1,
-	0xda, 0xe3, 0xc0, 0xc0, 0xc9, 0x6a, 0xec, 0x8d, 0x11, 0x56, 0x2f, 0x32, 0xab, 0xd3, 0xd4, 0x59,
-	0x28, 0xbc, 0x89, 0xa5, 0x36, 0x6d, 0x78, 0x91, 0x72, 0xf3, 0xd9, 0x4f, 0x6f, 0xb0, 0x38, 0x4e,
-	0x52, 0x6f, 0x97, 0x03, 0x1a, 0xa7, 0xf8, 0xad, 0x50, 0x5d, 0x7c, 0x7c, 0xa8, 0x24, 0xe0, 0x47,
-	0x2e, 0xea, 0xdb, 0x15, 0x09, 0xb7, 0xd0, 0x62, 0x60, 0x76, 0x52, 0x05, 0xae, 0x87, 0xcc, 0x44,
-	0x7e, 0xba, 0x1b, 0x86, 0x6d, 0xc3, 0x3f, 0x3b, 0x0c, 0x60, 0xbf, 0xa6, 0xec, 0x9e, 0x1b, 0x42,
-	0x1f, 0xfe, 0xed, 0x71, 0xb2, 0xef, 0x93, 0x6a, 0x2c, 0xec, 0x7b, 0xe4, 0x17, 0xc2, 0x21, 0xd8,
-	0xcc, 0xbf, 0xa5, 0x8f, 0x0e, 0x94, 0xd8, 0xfd, 0xab, 0xbf, 0x3b, 0x50, 0xe0, 0xbf, 0x4e, 0x3e,
-	0x39, 0x50, 0xe0, 0x1a, 0xf7, 0xc9, 0x81, 0x32, 0xf2, 0x3f, 0x38, 0xe8, 0x3c, 0x75, 0xf9, 0x93,
-	0x03, 0x45, 0xfc, 0x30, 0x75, 0x74, 0xa0, 0x3c, 0xcf, 0xef, 0x7f, 0xb4, 0xf3, 0xe2, 0xb8, 0xed,
-	0x7b, 0x98, 0x6f, 0x9c, 0x78, 0xc6, 0xb6, 0x5c, 0x0f, 0x43, 0xa1, 0x1f, 0x1d, 0x28, 0x5b, 0x63,
-	0xfe, 0x35, 0x64, 0x8c, 0x1e, 0x43, 0x06, 0xb6, 0xbe, 0x0e, 0xf9, 0xa5, 0xf0, 0xb7, 0xb2, 0x89,
-	0xe2, 0xf9, 0xd4, 0xa7, 0x5f, 0x9d, 0x97, 0x3e, 0xfb, 0xea, 0xbc, 0xf4, 0xe5, 0x57, 0xe7, 0xa5,
-	0x9a, 0xb4, 0x9b, 0x84, 0xff, 0x5c, 0x79, 0xe5, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xe9, 0x5e,
-	0x19, 0xb2, 0x88, 0x23, 0x00, 0x00,
+	// 1983 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x58, 0x4f, 0x6f, 0xdc, 0xc6,
+	0x15, 0x37, 0xf7, 0x8f, 0xa4, 0x1d, 0xad, 0x24, 0x6a, 0x2c, 0xd9, 0xbb, 0xaa, 0x2d, 0x09, 0x4c,
+	0x5a, 0xdb, 0x6d, 0x56, 0x9b, 0x36, 0x41, 0xd0, 0xba, 0x7f, 0x80, 0xfd, 0x43, 0x39, 0x5b, 0x53,
+	0xe4, 0x96, 0xe4, 0xda, 0xf1, 0xa1, 0x75, 0x29, 0xee, 0x58, 0x66, 0xc5, 0x25, 0x09, 0x0e, 0xd7,
+	0x81, 0x51, 0xf4, 0x52, 0xc0, 0xbe, 0xf5, 0xde, 0x43, 0xef, 0x05, 0xd4, 0x9e, 0x7a, 0xe9, 0x57,
+	0x48, 0x6f, 0x81, 0x3f, 0x80, 0x10, 0x18, 0xe8, 0x45, 0x40, 0x3f, 0x43, 0x8b, 0x37, 0x1c, 0x72,
+	0x87, 0x2b, 0x29, 0x50, 0x1a, 0x20, 0x39, 0x89, 0xf3, 0xe6, 0xfd, 0x7e, 0xf3, 0xe6, 0xf7, 0x66,
+	0xde, 0xbc, 0x15, 0x42, 0xce, 0x34, 0x79, 0xbe, 0x17, 0xc5, 0x61, 0x12, 0xe2, 0x0a, 0x7c, 0x6f,
+	0xdd, 0x3a, 0x0a, 0xc3, 0x23, 0x9f, 0xb4, 0x9d, 0xc8, 0x6b, 0x3b, 0x41, 0x10, 0x26, 0x4e, 0xe2,
+	0x85, 0x01, 0x4d, 0x7d, 0xb6, 0xd4, 0x23, 0x2f, 0x79, 0x3e, 0x3d, 0xdc, 0x73, 0xc3, 0x49, 0x3b,
+	0x22, 0x01, 0x75, 0x82, 0x71, 0xd8, 0xa6, 0x9f, 0xb6, 0x5f, 0x90, 0xc0, 0x73, 0x49, 0x7b, 0x9a,
+	0x78, 0x3e, 0x05, 0xe8, 0x11, 0x09, 0x44, 0x74, 0xdb, 0x0b, 0x5c, 0x7f, 0x3a, 0x26, 0x19, 0x4d,
+	0x4b, 0xa0, 0x39, 0x0a, 0x8f, 0xc2, 0x36, 0x33, 0x1f, 0x4e, 0x9f, 0xb1, 0x11, 0x1b, 0xb0, 0x2f,
+	0xee, 0xfe, 0xdd, 0x4b, 0x56, 0x85, 0x18, 0x27, 0x24, 0x71, 0x52, 0x37, 0xe5, 0x9f, 0x25, 0xb4,
+	0xd1, 0x99, 0x26, 0xcf, 0x49, 0x90, 0x78, 0x2e, 0x5b, 0x78, 0x18, 0xfa, 0x9e, 0xfb, 0x12, 0xbf,
+	0x8f, 0x24, 0xbb, 0x21, 0xed, 0x4a, 0x77, 0x97, 0x7f, 0xb4, 0xb2, 0xe7, 0x44, 0xde, 0x9e, 0xfd,
+	0x32, 0x22, 0x07, 0x24, 0x71, 0xba, 0xd7, 0x3f, 0x3b, 0xdd, 0xb9, 0xf6, 0xf9, 0xe9, 0x8e, 0x74,
+	0x76, 0xba, 0xb3, 0xf8, 0x9e, 0x17, 0xf8, 0x5e, 0x40, 0x4c, 0xc9, 0xc6, 0x3f, 0x41, 0x92, 0xd1,
+	0x28, 0x31, 0xc4, 0x1a, 0x43, 0x18, 0x87, 0xbf, 0x23, 0x6e, 0xc2, 0x30, 0x5b, 0x02, 0x66, 0x15,
+	0x96, 0x7f, 0x2f, 0x9c, 0x78, 0x09, 0x99, 0x44, 0xc9, 0x4b, 0x53, 0x32, 0xf0, 0x2f, 0x51, 0xc5,
+	0x8a, 0x88, 0xdb, 0x28, 0x33, 0xf4, 0xf6, 0x1e, 0x53, 0xf8, 0xa2, 0xb0, 0xc0, 0xab, 0x7b, 0x03,
+	0xc8, 0x80, 0x88, 0x46, 0xc4, 0x15, 0x88, 0x18, 0x07, 0x36, 0xd1, 0x82, 0x95, 0x38, 0xc9, 0x94,
+	0x36, 0x2a, 0x8c, 0x6d, 0xf7, 0x4b, 0xd8, 0x98, 0x5f, 0xb7, 0xc1, 0xf9, 0x64, 0xca, 0xc6, 0x02,
+	0x23, 0x67, 0xba, 0x8f, 0xdf, 0xbc, 0x6a, 0xae, 0xe2, 0x3a, 0x10, 0x05, 0xad, 0x88, 0x61, 0x95,
+	0xbf, 0x4b, 0xa8, 0x71, 0x59, 0x88, 0xf8, 0x37, 0x68, 0x55, 0x98, 0x0b, 0x63, 0xca, 0xa5, 0xdc,
+	0x38, 0x17, 0x4c, 0x18, 0xd3, 0xee, 0x2e, 0x0f, 0xa0, 0xe1, 0x14, 0xec, 0x42, 0x20, 0x73, 0x6c,
+	0xf8, 0x7d, 0xb4, 0x60, 0x11, 0x37, 0x26, 0x09, 0x13, 0xbc, 0xce, 0xb6, 0x20, 0xb1, 0x2d, 0x30,
+	0x6b, 0x61, 0x0b, 0xcc, 0xa2, 0xdc, 0x42, 0x5b, 0x97, 0x4b, 0xa0, 0xfc, 0xb7, 0x34, 0x1f, 0x30,
+	0xfe, 0x08, 0x55, 0xb4, 0xb1, 0x13, 0xf1, 0xc0, 0x51, 0x1a, 0x38, 0x58, 0x98, 0xfe, 0x2c, 0x91,
+	0xfe, 0xd8, 0x89, 0x44, 0xfd, 0x61, 0x16, 0xdf, 0x47, 0x55, 0x2d, 0x74, 0x1d, 0x9f, 0x1f, 0x85,
+	0x65, 0x0e, 0x04, 0x53, 0xf7, 0x26, 0x47, 0xae, 0xf9, 0x30, 0x14, 0xa0, 0x29, 0x04, 0xff, 0x02,
+	0x2d, 0x98, 0xce, 0xd8, 0x9b, 0x52, 0x7e, 0x12, 0xea, 0x29, 0x38, 0xb5, 0xcd, 0x36, 0x19, 0xb3,
+	0xb1, 0xb8, 0xc9, 0xd4, 0x03, 0xff, 0x51, 0x42, 0xb8, 0xb0, 0x0d, 0x23, 0x1e, 0x93, 0xb8, 0x51,
+	0xdb, 0x2d, 0xdf, 0xad, 0x75, 0xcd, 0x93, 0xd7, 0xcd, 0x7b, 0x56, 0x12, 0xab, 0xc1, 0x74, 0x72,
+	0xb7, 0xb8, 0xd9, 0x62, 0x42, 0xe0, 0xa4, 0xdf, 0xe3, 0x6b, 0xdd, 0x2e, 0xa4, 0xa4, 0x15, 0x02,
+	0x9f, 0xb0, 0xf0, 0x05, 0xab, 0x29, 0x1f, 0xa2, 0xf5, 0x73, 0x74, 0xb8, 0x86, 0xaa, 0x9a, 0xd1,
+	0xeb, 0x68, 0xf2, 0x35, 0xbc, 0x84, 0x2a, 0x5a, 0xbf, 0x33, 0x94, 0x25, 0x8c, 0xd0, 0x82, 0xd9,
+	0xe9, 0x0f, 0x46, 0x96, 0x5c, 0x52, 0xfe, 0x55, 0x4e, 0xf5, 0xc6, 0x6d, 0xb4, 0xa8, 0x06, 0xce,
+	0xa1, 0x4f, 0xc6, 0x4c, 0xfa, 0xa5, 0xee, 0xe6, 0xd9, 0xe9, 0xce, 0x3a, 0x49, 0x4d, 0xc2, 0xd2,
+	0x99, 0x17, 0xbe, 0x83, 0xca, 0xa3, 0x38, 0x95, 0xbb, 0xd6, 0xdd, 0xe4, 0x71, 0xaf, 0x4c, 0x63,
+	0x51, 0x5f, 0xf0, 0xc0, 0x06, 0x42, 0xb6, 0x66, 0x19, 0x11, 0x2b, 0x2f, 0x5c, 0x61, 0x39, 0x55,
+	0x78, 0x66, 0xef, 0xde, 0xe6, 0x0c, 0x9b, 0x89, 0x4f, 0x5b, 0x61, 0x6a, 0x14, 0x98, 0x04, 0x0a,
+	0xfc, 0x43, 0xb4, 0xd0, 0x75, 0x28, 0xe9, 0xeb, 0xec, 0xaa, 0xd5, 0xba, 0x4d, 0x0e, 0x5d, 0x3f,
+	0x74, 0x28, 0x69, 0x8d, 0x03, 0x31, 0x43, 0xa9, 0x23, 0x83, 0x78, 0xc1, 0xb8, 0xaf, 0x37, 0xaa,
+	0x73, 0x10, 0x2f, 0x18, 0xcf, 0x43, 0x98, 0x23, 0xee, 0xa1, 0x3a, 0x7c, 0x0d, 0x1d, 0x4a, 0x3f,
+	0x0d, 0xe3, 0x71, 0x63, 0x81, 0x01, 0x77, 0x38, 0xf0, 0x26, 0x03, 0x46, 0x7c, 0x52, 0x80, 0x17,
+	0x40, 0xf8, 0x18, 0xc9, 0x9d, 0x24, 0x89, 0xbd, 0xc3, 0x69, 0x42, 0x0e, 0x9c, 0x28, 0xf2, 0x82,
+	0xa3, 0xc6, 0x22, 0x53, 0x60, 0x6b, 0x76, 0xb2, 0xe7, 0x3d, 0xba, 0xef, 0xf0, 0x45, 0xbe, 0xe3,
+	0x64, 0x33, 0xad, 0x49, 0x3a, 0x25, 0x2c, 0x74, 0x8e, 0x58, 0xf9, 0x5b, 0x19, 0x6d, 0x5c, 0xc4,
+	0x87, 0xbf, 0x8f, 0x2a, 0x23, 0x4a, 0x62, 0x96, 0xd8, 0xda, 0xec, 0x1e, 0x4d, 0x69, 0xe1, 0x50,
+	0x31, 0x1f, 0x7c, 0x80, 0xd6, 0xe0, 0x6f, 0x5a, 0x44, 0x7b, 0xbe, 0x43, 0x29, 0x4f, 0x71, 0x1e,
+	0x14, 0xc0, 0x5a, 0x21, 0x9b, 0x6f, 0xb9, 0xe0, 0x20, 0x70, 0xcc, 0x63, 0xa1, 0x62, 0xd8, 0x24,
+	0x70, 0x82, 0x84, 0x25, 0xbe, 0x36, 0xbb, 0x4c, 0x09, 0xb3, 0x8a, 0xba, 0xa7, 0x7e, 0xb8, 0x85,
+	0xaa, 0x0f, 0xe2, 0x70, 0x1a, 0xf1, 0xe4, 0xe6, 0x77, 0xf7, 0x08, 0x8c, 0xe2, 0xdd, 0x65, 0x5e,
+	0x78, 0x88, 0x64, 0xf6, 0x21, 0x06, 0x9c, 0xe6, 0xf8, 0x5d, 0x8e, 0xbc, 0xc5, 0x90, 0x97, 0x45,
+	0x7c, 0x0e, 0x0d, 0x01, 0xa8, 0x13, 0xc7, 0xf3, 0x79, 0xc6, 0xf3, 0x00, 0x08, 0x18, 0xc5, 0x00,
+	0x98, 0x17, 0xfe, 0x08, 0x2d, 0xed, 0x4f, 0x7d, 0x3f, 0x70, 0x26, 0x84, 0xa5, 0xb6, 0xc6, 0x5e,
+	0x1d, 0x40, 0xe0, 0x67, 0xdc, 0x2e, 0x80, 0x72, 0x5f, 0xe5, 0xc7, 0xbc, 0x60, 0x7d, 0xe5, 0x9b,
+	0xa7, 0x7c, 0xb1, 0x88, 0xd0, 0x90, 0xc4, 0x13, 0x8f, 0x52, 0x2f, 0x0c, 0xb0, 0x8a, 0x56, 0x4d,
+	0x42, 0xc3, 0x69, 0xec, 0x12, 0x2e, 0x75, 0x9a, 0xe7, 0xdb, 0x67, 0xa7, 0x3b, 0xcd, 0x98, 0xcf,
+	0xb4, 0xce, 0xe9, 0x3d, 0x07, 0xc2, 0x5d, 0xb4, 0x92, 0x59, 0x52, 0xfd, 0xd3, 0xb4, 0xdf, 0x82,
+	0x07, 0x22, 0x67, 0x99, 0x4f, 0x42, 0x11, 0x82, 0x7f, 0x8b, 0xea, 0x99, 0xe1, 0xa1, 0x17, 0x8c,
+	0x79, 0xce, 0x7f, 0x76, 0xf2, 0xba, 0x79, 0x3b, 0xab, 0x80, 0xb3, 0xc0, 0xf7, 0x4c, 0x42, 0x63,
+	0x17, 0xfc, 0xee, 0xc1, 0x85, 0xca, 0xd7, 0x38, 0xf6, 0x82, 0xc2, 0x85, 0x12, 0x19, 0xb1, 0x8e,
+	0xd6, 0xb3, 0xb1, 0xee, 0x4c, 0x08, 0x8d, 0x1c, 0x97, 0xf0, 0x93, 0xb2, 0x0b, 0xb9, 0xce, 0x59,
+	0x82, 0x6c, 0x56, 0xa0, 0x3a, 0x0f, 0xc5, 0xfb, 0xb3, 0x5d, 0x33, 0x63, 0xa3, 0xca, 0x8a, 0xf6,
+	0x2e, 0x4f, 0x61, 0xa3, 0xc8, 0x77, 0xd1, 0xce, 0x19, 0x0c, 0x8f, 0xd0, 0x62, 0xc7, 0x4d, 0x2b,
+	0xdc, 0x02, 0x63, 0xf8, 0xe9, 0xc9, 0xeb, 0xe6, 0xf6, 0x05, 0x9b, 0x4e, 0xbd, 0xc4, 0x5a, 0xbf,
+	0xee, 0xb8, 0xf3, 0xd5, 0x2e, 0xe3, 0x52, 0xfe, 0x52, 0x46, 0xb5, 0x5c, 0x26, 0x7c, 0x03, 0xe1,
+	0x8e, 0xa6, 0x3d, 0x35, 0x55, 0xcb, 0x18, 0x99, 0x3d, 0xf5, 0xe9, 0xc3, 0x81, 0xde, 0xb7, 0xe4,
+	0x6b, 0x50, 0xd0, 0x6d, 0x55, 0xef, 0xe8, 0xb6, 0x2c, 0xe1, 0x65, 0xb4, 0xd8, 0xd3, 0x46, 0x96,
+	0xad, 0x9a, 0x72, 0x09, 0x6a, 0xbe, 0x6e, 0xf4, 0x55, 0xb9, 0x8c, 0xeb, 0x68, 0xc9, 0x3a, 0xe8,
+	0x98, 0xb6, 0x3e, 0xe8, 0xc9, 0x15, 0xbc, 0x86, 0x96, 0x7b, 0xaa, 0x69, 0x0f, 0xf6, 0x07, 0xbd,
+	0x8e, 0xad, 0xca, 0x55, 0x40, 0xe9, 0xaa, 0xfd, 0xd8, 0x30, 0x1f, 0xca, 0x0b, 0x30, 0xb0, 0x54,
+	0xf3, 0xd1, 0xa0, 0xa7, 0xca, 0x8b, 0x00, 0xd4, 0xba, 0x43, 0x43, 0x1b, 0xf4, 0x9e, 0xc8, 0x4b,
+	0x30, 0x52, 0xf5, 0xfe, 0xd0, 0x18, 0xe8, 0xb6, 0x5c, 0xc3, 0xeb, 0x68, 0xc5, 0x52, 0x7b, 0x23,
+	0x73, 0x60, 0x3f, 0x79, 0x60, 0x1a, 0xa3, 0xa1, 0x8c, 0xd8, 0x3a, 0x0f, 0xb8, 0xfb, 0x32, 0x5e,
+	0x44, 0xe5, 0xce, 0x70, 0x28, 0xd7, 0xf1, 0x06, 0x92, 0x55, 0xbd, 0x67, 0x3e, 0x19, 0xda, 0x03,
+	0x43, 0xe7, 0xd3, 0x2b, 0xf0, 0x3a, 0x75, 0x34, 0xd5, 0xb4, 0xe5, 0x55, 0x88, 0x88, 0x7d, 0xf2,
+	0xb9, 0x35, 0x40, 0x30, 0x43, 0x5f, 0xb5, 0xec, 0x81, 0xde, 0x01, 0x9c, 0x2c, 0x83, 0x9b, 0xfa,
+	0x48, 0xd5, 0x33, 0xb7, 0x75, 0x30, 0x58, 0x76, 0xc7, 0xb6, 0xb8, 0x01, 0x83, 0x61, 0xff, 0xb1,
+	0x66, 0x64, 0x31, 0x5c, 0x07, 0xa2, 0x7d, 0xcd, 0x78, 0xac, 0x7e, 0x32, 0x34, 0x72, 0xfa, 0x0d,
+	0x50, 0x66, 0x64, 0xa9, 0xa6, 0xbc, 0x89, 0x57, 0x11, 0xea, 0x8c, 0xec, 0x8f, 0xf9, 0xcc, 0x0d,
+	0x98, 0x31, 0x0d, 0x4d, 0x95, 0x6f, 0x02, 0x15, 0x7c, 0x75, 0x07, 0x7a, 0x7f, 0xa0, 0x3f, 0x90,
+	0x1b, 0x2c, 0xc8, 0xe1, 0x20, 0x17, 0xa0, 0xa9, 0x3c, 0x46, 0x68, 0x96, 0xcf, 0x74, 0x0f, 0xda,
+	0xd3, 0x4e, 0x0f, 0x82, 0xe5, 0x79, 0xe9, 0x99, 0x2a, 0x28, 0x2c, 0x31, 0x5a, 0xb5, 0xd3, 0x97,
+	0x4b, 0x60, 0x1d, 0x0d, 0xfb, 0x60, 0x2d, 0xc3, 0x77, 0x5f, 0xd5, 0x54, 0x5b, 0x95, 0x2b, 0xcc,
+	0xdb, 0x38, 0x38, 0x18, 0xd8, 0x72, 0x55, 0xf9, 0x8f, 0x94, 0xb5, 0x24, 0x5f, 0xfd, 0x61, 0x7e,
+	0x17, 0x95, 0x06, 0xd9, 0xed, 0xdd, 0xe0, 0x67, 0xac, 0xee, 0x89, 0xb7, 0xb6, 0x34, 0x88, 0xe0,
+	0x4d, 0x18, 0x86, 0x71, 0x56, 0x96, 0xf3, 0x37, 0x21, 0x0a, 0x63, 0xb1, 0x48, 0x30, 0x1f, 0xbc,
+	0x87, 0xaa, 0xba, 0x43, 0x07, 0x59, 0x49, 0xce, 0x6b, 0x78, 0xe0, 0xd0, 0x56, 0x81, 0x38, 0x75,
+	0x13, 0xda, 0xc4, 0x6a, 0x11, 0x70, 0x69, 0x9b, 0xf8, 0xa7, 0x12, 0xaa, 0x98, 0xa1, 0x4f, 0xbe,
+	0xd9, 0xfe, 0xff, 0x7e, 0xa1, 0xff, 0x5f, 0xe5, 0x5d, 0x5f, 0xe8, 0x93, 0x2b, 0xf4, 0xfb, 0xdd,
+	0xb9, 0x7e, 0x5f, 0x16, 0xd0, 0x57, 0xed, 0xef, 0x1b, 0x6f, 0x5e, 0x35, 0x37, 0xd0, 0x72, 0xfb,
+	0xf7, 0xc6, 0x5e, 0x5a, 0x84, 0xff, 0x80, 0xab, 0x71, 0xe8, 0x13, 0xaa, 0x9c, 0x94, 0xd0, 0x32,
+	0x50, 0x41, 0x33, 0x01, 0x2f, 0xf8, 0x37, 0x2a, 0x4b, 0xa7, 0x20, 0xcb, 0xe6, 0x6c, 0x63, 0x3c,
+	0x9a, 0x2b, 0xa8, 0x33, 0x98, 0x53, 0xe7, 0xe6, 0x79, 0x92, 0xab, 0x8a, 0xb4, 0xfb, 0xe6, 0x55,
+	0xf3, 0x56, 0x51, 0xa4, 0x15, 0x10, 0xa9, 0x75, 0x98, 0x12, 0x51, 0xe5, 0xaf, 0x12, 0x5a, 0x9b,
+	0x0b, 0x0f, 0x1e, 0x71, 0x68, 0x45, 0xe0, 0x07, 0x50, 0x59, 0x7c, 0xc4, 0xa1, 0x79, 0x11, 0x57,
+	0x49, 0xbd, 0xf0, 0xcf, 0x11, 0x82, 0x0f, 0xf6, 0x8a, 0x41, 0xc3, 0x03, 0x98, 0xbc, 0x23, 0x65,
+	0x0d, 0x0f, 0x7b, 0xf9, 0x0a, 0x1d, 0xe9, 0x0c, 0x80, 0xbf, 0x97, 0x9e, 0x5e, 0x7e, 0x99, 0x30,
+	0xc8, 0x02, 0x21, 0x8a, 0xb2, 0xc0, 0xbc, 0x72, 0x1d, 0xad, 0x9f, 0x93, 0x40, 0xf9, 0x35, 0x5a,
+	0xca, 0xce, 0x1c, 0xfe, 0x15, 0x5a, 0x9e, 0xbd, 0x15, 0x69, 0xf0, 0xf9, 0xd1, 0x9a, 0x4d, 0xb0,
+	0xd0, 0x40, 0xb5, 0xcd, 0x68, 0xe6, 0x2c, 0x2c, 0x26, 0x72, 0x28, 0x75, 0x84, 0x66, 0x87, 0x52,
+	0xf9, 0x47, 0x49, 0xec, 0xc6, 0xf1, 0x07, 0x68, 0xc9, 0x4a, 0x9c, 0x38, 0xb1, 0x35, 0x8b, 0x57,
+	0x97, 0x9b, 0x67, 0xa7, 0x3b, 0xd7, 0x29, 0xd8, 0x5a, 0x89, 0x2f, 0x92, 0xe6, 0x8e, 0xf8, 0x18,
+	0x6d, 0x59, 0xc7, 0x5e, 0x64, 0x91, 0xf8, 0x05, 0x89, 0x7b, 0x24, 0x4e, 0x1e, 0x91, 0xd8, 0x7b,
+	0xc6, 0x7f, 0xdf, 0xb1, 0x33, 0xb7, 0xd4, 0xfd, 0xc1, 0xd9, 0xe9, 0xce, 0x1d, 0x7a, 0xec, 0x45,
+	0x2d, 0xca, 0xdc, 0x5a, 0x2e, 0x89, 0x93, 0xd6, 0x0b, 0xc1, 0x51, 0xa0, 0xfe, 0x12, 0x3a, 0xc8,
+	0x4c, 0x3a, 0x03, 0xef, 0x2c, 0x17, 0x38, 0xcf, 0x0c, 0xe7, 0x9e, 0xeb, 0xb1, 0x04, 0x00, 0x74,
+	0xf1, 0x76, 0x3c, 0xa5, 0x09, 0x19, 0x03, 0x33, 0xe5, 0x15, 0x2c, 0xef, 0xe2, 0x93, 0x74, 0x8e,
+	0x45, 0x27, 0x6e, 0xb6, 0x00, 0x62, 0xd5, 0x89, 0x35, 0xc7, 0xdf, 0x7e, 0x75, 0x82, 0x30, 0xfe,
+	0xff, 0xea, 0xc4, 0xd0, 0x5f, 0xa7, 0x3a, 0xb1, 0xeb, 0xa3, 0xfc, 0xb9, 0x84, 0x96, 0xb2, 0x40,
+	0x0a, 0xfd, 0xaf, 0x74, 0xf5, 0xfe, 0x77, 0xd6, 0x66, 0x97, 0xae, 0xda, 0x66, 0xe7, 0x3f, 0xc5,
+	0xca, 0xc5, 0x65, 0x2e, 0xf8, 0x15, 0x96, 0xfb, 0xe2, 0x8f, 0x51, 0x05, 0x92, 0xc4, 0x13, 0xff,
+	0xe1, 0xc9, 0xeb, 0xe6, 0x56, 0xd6, 0x95, 0x65, 0x5b, 0x60, 0xb2, 0x88, 0x1d, 0xd9, 0x6a, 0xf2,
+	0x32, 0x2a, 0x5c, 0x5e, 0x98, 0x54, 0xde, 0x49, 0x37, 0x3d, 0xff, 0xbb, 0x1a, 0x5a, 0xa2, 0x4f,
+	0x6c, 0xd5, 0xd4, 0x3b, 0x9a, 0x2c, 0x29, 0xff, 0x96, 0xd2, 0x4a, 0x92, 0x6a, 0x08, 0x9b, 0x84,
+	0xcb, 0x77, 0xae, 0x0c, 0xb1, 0x2a, 0x2f, 0x6e, 0x92, 0x79, 0x7d, 0xdd, 0x32, 0xe4, 0xa1, 0xeb,
+	0x9a, 0x43, 0x13, 0x6b, 0xea, 0xba, 0x84, 0xd2, 0x67, 0x53, 0x5f, 0x0b, 0x8f, 0xbc, 0x60, 0x76,
+	0x80, 0xe0, 0xc0, 0x7a, 0x13, 0x42, 0x13, 0x67, 0x12, 0x75, 0xef, 0x70, 0xde, 0x1d, 0xdf, 0xa1,
+	0x49, 0x8b, 0xe6, 0x98, 0x96, 0x0f, 0x20, 0x61, 0x85, 0x8b, 0x38, 0xbb, 0xf5, 0xcf, 0xde, 0x6e,
+	0x4b, 0x9f, 0xbf, 0xdd, 0x96, 0xbe, 0x78, 0xbb, 0x2d, 0x0d, 0xa5, 0xc3, 0x05, 0xf6, 0x7f, 0xbd,
+	0x0f, 0xfe, 0x17, 0x00, 0x00, 0xff, 0xff, 0x6e, 0x74, 0x49, 0x29, 0xa6, 0x14, 0x00, 0x00,
 }

@@ -7,29 +7,31 @@ import (
 	"context"
 	"path"
 
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 
 	"github.com/pensando/sw/venice/cli/api"
 )
 
 // GetClusterByName is
-func GetClusterByName(objName string) (*cmd.Cluster, error) {
+func GetClusterByName(objName string) (*cluster.Cluster, error) {
 	obj, err := GetObjByName("cluster", objName)
 	if err != nil {
 		return nil, err
 	}
-	clusterObj := obj.(*cmd.Cluster)
+	clusterObj := obj.(*cluster.Cluster)
 	return clusterObj, nil
 }
 
 // GetEndpointByName is
-func GetEndpointByName(objName string) (*network.Endpoint, error) {
+func GetEndpointByName(objName string) (*workload.Endpoint, error) {
 	obj, err := GetObjByName("endpoint", objName)
 	if err != nil {
 		return nil, err
 	}
-	endpointObj := obj.(*network.Endpoint)
+	endpointObj := obj.(*workload.Endpoint)
 	return endpointObj, nil
 }
 
@@ -54,12 +56,12 @@ func GetNetworkByName(objName string) (*network.Network, error) {
 }
 
 // GetNodeByName is
-func GetNodeByName(objName string) (*cmd.Node, error) {
+func GetNodeByName(objName string) (*cluster.Node, error) {
 	obj, err := GetObjByName("node", objName)
 	if err != nil {
 		return nil, err
 	}
-	nodeObj := obj.(*cmd.Node)
+	nodeObj := obj.(*cluster.Node)
 	return nodeObj, nil
 }
 
@@ -84,12 +86,12 @@ func GetRoleByName(objName string) (*api.Role, error) {
 }
 
 // GetSecurityGroupByName is
-func GetSecurityGroupByName(objName string) (*network.SecurityGroup, error) {
+func GetSecurityGroupByName(objName string) (*security.SecurityGroup, error) {
 	obj, err := GetObjByName("securityGroup", objName)
 	if err != nil {
 		return nil, err
 	}
-	securityGroupObj := obj.(*network.SecurityGroup)
+	securityGroupObj := obj.(*security.SecurityGroup)
 	return securityGroupObj, nil
 }
 
@@ -104,32 +106,32 @@ func GetServiceByName(objName string) (*network.Service, error) {
 }
 
 // GetSgpolicyByName is
-func GetSgpolicyByName(objName string) (*network.Sgpolicy, error) {
+func GetSgpolicyByName(objName string) (*security.Sgpolicy, error) {
 	obj, err := GetObjByName("sgpolicy", objName)
 	if err != nil {
 		return nil, err
 	}
-	sgpolicyObj := obj.(*network.Sgpolicy)
+	sgpolicyObj := obj.(*security.Sgpolicy)
 	return sgpolicyObj, nil
 }
 
 // GetSmartNICByName is
-func GetSmartNICByName(objName string) (*cmd.SmartNIC, error) {
+func GetSmartNICByName(objName string) (*cluster.SmartNIC, error) {
 	obj, err := GetObjByName("smartNIC", objName)
 	if err != nil {
 		return nil, err
 	}
-	smartNICObj := obj.(*cmd.SmartNIC)
+	smartNICObj := obj.(*cluster.SmartNIC)
 	return smartNICObj, nil
 }
 
 // GetTenantByName is
-func GetTenantByName(objName string) (*network.Tenant, error) {
+func GetTenantByName(objName string) (*cluster.Tenant, error) {
 	obj, err := GetObjByName("tenant", objName)
 	if err != nil {
 		return nil, err
 	}
-	tenantObj := obj.(*network.Tenant)
+	tenantObj := obj.(*cluster.Tenant)
 	return tenantObj, nil
 }
 
@@ -144,7 +146,7 @@ func GetUserByName(objName string) (*api.User, error) {
 }
 
 // UpdateCluster is
-func UpdateCluster(obj *cmd.Cluster) error {
+func UpdateCluster(obj *cluster.Cluster) error {
 	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
 	if err != nil {
 		return err
@@ -158,7 +160,7 @@ func UpdateCluster(obj *cmd.Cluster) error {
 }
 
 // UpdateEndpoint is
-func UpdateEndpoint(obj *network.Endpoint) error {
+func UpdateEndpoint(obj *workload.Endpoint) error {
 	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
 	if err != nil {
 		return err
@@ -200,7 +202,7 @@ func UpdateNetwork(obj *network.Network) error {
 }
 
 // UpdateNode is
-func UpdateNode(obj *cmd.Node) error {
+func UpdateNode(obj *cluster.Node) error {
 	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
 	if err != nil {
 		return err
@@ -242,7 +244,7 @@ func UpdateRole(obj *api.Role) error {
 }
 
 // UpdateSecurityGroup is
-func UpdateSecurityGroup(obj *network.SecurityGroup) error {
+func UpdateSecurityGroup(obj *security.SecurityGroup) error {
 	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
 	if err != nil {
 		return err
@@ -270,7 +272,7 @@ func UpdateService(obj *network.Service) error {
 }
 
 // UpdateSgpolicy is
-func UpdateSgpolicy(obj *network.Sgpolicy) error {
+func UpdateSgpolicy(obj *security.Sgpolicy) error {
 	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
 	if err != nil {
 		return err
@@ -284,7 +286,7 @@ func UpdateSgpolicy(obj *network.Sgpolicy) error {
 }
 
 // UpdateSmartNIC is
-func UpdateSmartNIC(obj *cmd.SmartNIC) error {
+func UpdateSmartNIC(obj *cluster.SmartNIC) error {
 	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
 	if err != nil {
 		return err
@@ -298,7 +300,7 @@ func UpdateSmartNIC(obj *cmd.SmartNIC) error {
 }
 
 // UpdateTenant is
-func UpdateTenant(obj *network.Tenant) error {
+func UpdateTenant(obj *cluster.Tenant) error {
 	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
 	if err != nil {
 		return err
@@ -329,10 +331,10 @@ func getEmptyObj(kind string) (obj interface{}, objList interface{}) {
 	switch kind {
 
 	case "cluster":
-		return &cmd.Cluster{}, &cmd.ClusterList{}
+		return &cluster.Cluster{}, &cluster.ClusterList{}
 
 	case "endpoint":
-		return &network.Endpoint{}, &network.EndpointList{}
+		return &workload.Endpoint{}, &workload.EndpointList{}
 
 	case "lbPolicy":
 		return &network.LbPolicy{}, &network.LbPolicyList{}
@@ -341,7 +343,7 @@ func getEmptyObj(kind string) (obj interface{}, objList interface{}) {
 		return &network.Network{}, &network.NetworkList{}
 
 	case "node":
-		return &cmd.Node{}, &cmd.NodeList{}
+		return &cluster.Node{}, &cluster.NodeList{}
 
 	case "permission":
 		return &api.Permission{}, &api.PermissionList{}
@@ -350,19 +352,19 @@ func getEmptyObj(kind string) (obj interface{}, objList interface{}) {
 		return &api.Role{}, &api.RoleList{}
 
 	case "securityGroup":
-		return &network.SecurityGroup{}, &network.SecurityGroupList{}
+		return &security.SecurityGroup{}, &security.SecurityGroupList{}
 
 	case "service":
 		return &network.Service{}, &network.ServiceList{}
 
 	case "sgpolicy":
-		return &network.Sgpolicy{}, &network.SgpolicyList{}
+		return &security.Sgpolicy{}, &security.SgpolicyList{}
 
 	case "smartNIC":
-		return &cmd.SmartNIC{}, &cmd.SmartNICList{}
+		return &cluster.SmartNIC{}, &cluster.SmartNICList{}
 
 	case "tenant":
-		return &network.Tenant{}, &network.TenantList{}
+		return &cluster.Tenant{}, &cluster.TenantList{}
 
 	case "user":
 		return &api.User{}, &api.UserList{}
@@ -373,12 +375,12 @@ func getEmptyObj(kind string) (obj interface{}, objList interface{}) {
 
 func getObjFromList(objList interface{}, idx int) interface{} {
 
-	if ol, ok := objList.(*cmd.ClusterList); ok {
+	if ol, ok := objList.(*cluster.ClusterList); ok {
 		cluster := ol.Items[idx]
 		return &cluster
 	}
 
-	if ol, ok := objList.(*network.EndpointList); ok {
+	if ol, ok := objList.(*workload.EndpointList); ok {
 		endpoint := ol.Items[idx]
 		return &endpoint
 	}
@@ -393,7 +395,7 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 		return &network
 	}
 
-	if ol, ok := objList.(*cmd.NodeList); ok {
+	if ol, ok := objList.(*cluster.NodeList); ok {
 		node := ol.Items[idx]
 		return &node
 	}
@@ -408,7 +410,7 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 		return &role
 	}
 
-	if ol, ok := objList.(*network.SecurityGroupList); ok {
+	if ol, ok := objList.(*security.SecurityGroupList); ok {
 		securityGroup := ol.Items[idx]
 		return &securityGroup
 	}
@@ -418,17 +420,17 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 		return &service
 	}
 
-	if ol, ok := objList.(*network.SgpolicyList); ok {
+	if ol, ok := objList.(*security.SgpolicyList); ok {
 		sgpolicy := ol.Items[idx]
 		return &sgpolicy
 	}
 
-	if ol, ok := objList.(*cmd.SmartNICList); ok {
+	if ol, ok := objList.(*cluster.SmartNICList); ok {
 		smartNIC := ol.Items[idx]
 		return &smartNIC
 	}
 
-	if ol, ok := objList.(*network.TenantList); ok {
+	if ol, ok := objList.(*cluster.TenantList); ok {
 		tenant := ol.Items[idx]
 		return &tenant
 	}

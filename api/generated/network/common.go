@@ -2,7 +2,7 @@
 
 /*
 Package network is a auto generated package.
-Input file: protos/network.proto
+Input file: lb.proto
 */
 package network
 

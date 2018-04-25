@@ -57,7 +57,7 @@ func (g *generator) Generate(targets []*descriptor.File) ([]*plugin.CodeGenerato
 	return files, nil
 }
 
-func (g *generator) GenerateFromTemplates(targets *descriptor.File, paths []gen.TemplateDef) ([]*plugin.CodeGeneratorResponse_File, error) {
+func (g *generator) GenerateFromTemplates(targets *descriptor.File, paths []gen.TemplateDef, index int) ([]*plugin.CodeGeneratorResponse_File, error) {
 	var ret []*plugin.CodeGeneratorResponse_File
 	return ret, nil
 }

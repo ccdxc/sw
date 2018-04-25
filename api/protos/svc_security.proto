@@ -1,0 +1,69 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package security;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
+import "sgpolicy.proto";
+import "securitygroup.proto";
+import "app.proto";
+import "x509.proto";
+import "networkencryption.proto";
+
+
+// SecurityGroup REST API
+service SecurityV1 {
+ // Prefix for all resources served by this service.
+ option (venice.apiPrefix) = "security";
+ // API Version.
+ option (venice.apiVersion) = "v1";
+
+ option (venice.apiGrpcCrudService) = "SecurityGroup";
+ option (venice.apiGrpcCrudService) = "Sgpolicy";
+ option (venice.apiGrpcCrudService) = "App";
+ option (venice.apiGrpcCrudService) = "AppUser";
+ option (venice.apiGrpcCrudService) = "AppUserGrp";
+ option (venice.apiGrpcCrudService) = "Certificate";
+ option (venice.apiGrpcCrudService) = "TrafficEncryptionPolicy";
+
+ option (venice.apiRestService) = {
+   Object: "SecurityGroup"
+   Method: [ "get", "put", "delete", "post", "list" ]
+ };
+
+ option (venice.apiRestService) = {
+     Object: "Sgpolicy"
+     Method: [ "get", "put", "delete", "post", "list" ]
+ };
+
+ option (venice.apiRestService) = {
+   Object: "App"
+   Method: [ "get", "list"]
+ };
+
+ option (venice.apiRestService) = {
+   Object: "AppUser"
+   Method: [ "get", "put", "delete", "post", "list" ]
+ };
+
+ option (venice.apiRestService) = {
+   Object: "AppUserGrp"
+   Method: [ "get", "put", "delete", "post", "list" ]
+ };
+
+ option (venice.apiRestService) = {
+     Object: "Certificate"
+     Method: [ "get", "put", "delete", "post", "list" ]
+ };
+
+ option (venice.apiRestService) = {
+     Object: "TrafficEncryptionPolicy"
+     Method: [ "get", "put", "delete", "post" ]
+ };
+}

@@ -5,7 +5,7 @@ package statemgr
 import (
 	"sync"
 
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -13,10 +13,10 @@ import (
 
 // EndpointState is a wrapper for endpoint object
 type EndpointState struct {
-	network.Endpoint                                // embedding endpoint object
-	sync.Mutex                                      // lock for the ep object
-	groups           map[string]*SecurityGroupState // list of security groups
-	stateMgr         *Statemgr                      // state manager
+	workload.Endpoint                                // embedding endpoint object
+	sync.Mutex                                       // lock for the ep object
+	groups            map[string]*SecurityGroupState // list of security groups
+	stateMgr          *Statemgr                      // state manager
 }
 
 // endpointKey returns endpoint key
@@ -146,7 +146,7 @@ func (eps *EndpointState) Delete() error {
 }
 
 // NewEndpointState returns a new endpoint object
-func NewEndpointState(epinfo network.Endpoint, stateMgr *Statemgr) (*EndpointState, error) {
+func NewEndpointState(epinfo workload.Endpoint, stateMgr *Statemgr) (*EndpointState, error) {
 	// build the endpoint state
 	eps := EndpointState{
 		Endpoint: epinfo,

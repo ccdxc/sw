@@ -6,15 +6,15 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
 
 // SmartNICState security policy state
 type SmartNICState struct {
-	cmd.SmartNIC           // smartnic policy object
-	stateMgr     *Statemgr // pointer to state manager
+	cluster.SmartNIC           // smartnic policy object
+	stateMgr         *Statemgr // pointer to state manager
 }
 
 // SmartNICStateFromObj converts from memdb object to SmartNIC state
@@ -29,7 +29,7 @@ func SmartNICStateFromObj(obj memdb.Object) (*SmartNICState, error) {
 }
 
 // NewSmartNICState creates a new security policy state object
-func NewSmartNICState(sn *cmd.SmartNIC, stateMgr *Statemgr) (*SmartNICState, error) {
+func NewSmartNICState(sn *cluster.SmartNIC, stateMgr *Statemgr) (*SmartNICState, error) {
 	// create smartnic state object
 	sns := SmartNICState{
 		SmartNIC: *sn,
@@ -68,7 +68,7 @@ func (sm *Statemgr) ListSmartNICs() ([]*SmartNICState, error) {
 }
 
 // CreateSmartNIC creates a smartNIC object
-func (sm *Statemgr) CreateSmartNIC(sn *cmd.SmartNIC) error {
+func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC) error {
 	// see if we already have it
 	esn, err := sm.FindObject("SmartNIC", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name)
 	if err == nil {
@@ -98,7 +98,7 @@ func (sm *Statemgr) CreateSmartNIC(sn *cmd.SmartNIC) error {
 }
 
 // UpdateSmartNIC updates a smartNIC object
-func (sm *Statemgr) UpdateSmartNIC(sn *cmd.SmartNIC) error {
+func (sm *Statemgr) UpdateSmartNIC(sn *cluster.SmartNIC) error {
 
 	// see if we already have it
 	_, err := sm.FindObject("SmartNIC", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name)

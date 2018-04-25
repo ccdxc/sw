@@ -2,7 +2,7 @@
 
 package apiclient
 
-{{$pkgs := (getSvcManifest "generated/apiclient/svcmanifest.json")}}
+{{$pkgs := (getSvcManifest "../generated/apiclient/svcmanifest.json")}}
 import (
     "github.com/pensando/sw/venice/utils/log"
     "github.com/pensando/sw/venice/utils/rpckit"{{range $key, $value := $pkgs}}

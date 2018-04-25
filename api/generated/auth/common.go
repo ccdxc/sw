@@ -2,7 +2,7 @@
 
 /*
 Package auth is a auto generated package.
-Input file: protos/auth.proto
+Input file: auth.proto
 */
 package auth
 

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/monitoring"
 	epgrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -47,10 +47,10 @@ func TestEventsProxyRPCServer(t *testing.T) {
 	tu.Assert(t, proxyClient != nil, "failed to created events proxy client")
 
 	ctx := context.Background()
-	_, err := proxyClient.ForwardEvent(ctx, &events.Event{})
+	_, err := proxyClient.ForwardEvent(ctx, &monitoring.Event{})
 	tu.AssertOk(t, err, "failed to forward event")
 
-	_, err = proxyClient.ForwardEvents(ctx, &events.EventList{})
+	_, err = proxyClient.ForwardEvents(ctx, &monitoring.EventsList{})
 	tu.AssertOk(t, err, "failed to forward events")
 
 	// TODO test dispatcher and writers

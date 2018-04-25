@@ -313,6 +313,11 @@ func (a *apiSrv) Stop() {
 	}
 	a.kvPool = []kvstore.Interface{}
 	a.nextKvMutex.Unlock()
+	// Let all the services cleanup.
+	for name, svc := range a.svcmap {
+		svc.Reset()
+		a.Logger.Log("msg", "Reset complete", "backend", name)
+	}
 	reinitAPIServer()
 }
 

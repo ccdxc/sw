@@ -9,10 +9,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	api "github.com/pensando/sw/api"
-	cmd "github.com/pensando/sw/api/generated/cmd"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/globals"
 
-	cmdclient "github.com/pensando/sw/api/generated/cmd/grpc/client"
+	cmdclient "github.com/pensando/sw/api/generated/cluster/grpc/client"
 )
 
 var _ = Describe("cluster tests", func() {
@@ -59,7 +59,7 @@ var _ = Describe("cluster tests", func() {
 		)
 		BeforeEach(func() {
 			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
-			cmdClient := cmdclient.NewRestCrudClientCmdV1(apiGwAddr)
+			cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)
 			nodeIf := cmdClient.Node()
 			nodes, err = nodeIf.List(context.Background(), &api.ListWatchOptions{})
 		})
@@ -87,7 +87,7 @@ var _ = Describe("cluster tests", func() {
 		)
 		BeforeEach(func() {
 			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
-			cmdClient := cmdclient.NewRestCrudClientCmdV1(apiGwAddr)
+			cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)
 			clusterIf := cmdClient.Cluster()
 			obj = api.ObjectMeta{Name: "testCluster"}
 			cl, err = clusterIf.Get(context.Background(), &obj)
@@ -103,7 +103,7 @@ var _ = Describe("cluster tests", func() {
 		var (
 			obj         api.ObjectMeta
 			cl          *cmd.Cluster
-			clusterIf   cmd.CmdV1ClusterInterface
+			clusterIf   cmd.ClusterV1ClusterInterface
 			err         error
 			oldLeader   string
 			oldLeaderIP string
@@ -113,7 +113,7 @@ var _ = Describe("cluster tests", func() {
 				Skip(fmt.Sprintf("Skipping failover test: %d quorum nodes found, need >= 3", ts.tu.NumQuorumNodes))
 			}
 			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
-			cmdClient := cmdclient.NewRestCrudClientCmdV1(apiGwAddr)
+			cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)
 			clusterIf = cmdClient.Cluster()
 			obj = api.ObjectMeta{Name: "testCluster"}
 			cl, err = clusterIf.Get(context.Background(), &obj)

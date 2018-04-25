@@ -4,13 +4,17 @@ package writer
 
 import (
 	"context"
+	"net"
 	"testing"
 	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/apiserver"
@@ -24,10 +28,10 @@ import (
 )
 
 const (
-	apisrvURL = "localhost:9194"
+	apisrvURL = ":0"
 )
 
-func createAPIServer(url string) apiserver.Server {
+func createAPIServer(t *testing.T, url string) (apiserver.Server, string) {
 	logger := log.WithContext("Pkg", "writer_test")
 
 	// api server config
@@ -47,23 +51,29 @@ func createAPIServer(url string) apiserver.Server {
 	apiSrv := apisrvpkg.MustGetAPIServer()
 	go apiSrv.Run(apisrvConfig)
 	time.Sleep(time.Millisecond * 100)
+	addr, err := apiSrv.GetAddr()
+	AssertOk(t, err, "error getting address for API server")
 
-	return apiSrv
+	_, port, err := net.SplitHostPort(addr)
+	AssertOk(t, err, "error getting port for API server")
+
+	returl := "localhost:" + port
+	return apiSrv, returl
 }
 
 func TestNetworkWriter(t *testing.T) {
+	// api server
+	apiSrv, url := createAPIServer(t, apisrvURL)
+	Assert(t, (apiSrv != nil), "Error creating api server")
+
 	// create network state manager
-	wr, err := NewAPISrvWriter(apisrvURL, nil)
+	wr, err := NewAPISrvWriter(url, nil)
 	AssertOk(t, err, "Error creating apisrv writer")
 	defer wr.Close()
 
-	// api server
-	apiSrv := createAPIServer(apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server")
-
 	// api server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, logger)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, url, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
@@ -100,28 +110,28 @@ func TestNetworkWriter(t *testing.T) {
 }
 
 func TestEndpointWriter(t *testing.T) {
+	// api server
+	apiSrv, url := createAPIServer(t, apisrvURL)
+	Assert(t, (apiSrv != nil), "Error creating api server")
+
 	// create network state manager
-	wr, err := NewAPISrvWriter(apisrvURL, nil)
+	wr, err := NewAPISrvWriter(url, nil)
 	AssertOk(t, err, "Error creating apisrv writer")
 	defer wr.Close()
 
-	// api server
-	apiSrv := createAPIServer(apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server")
-
 	// app server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, logger)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, url, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
-	ep := network.Endpoint{
+	ep := workload.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   "testep",
 		},
-		Status: network.EndpointStatus{
+		Status: workload.EndpointStatus{
 			IPv4Address: "10.1.1.2",
 			MacAddress:  "00:01:02:03:04:05",
 		},
@@ -132,7 +142,7 @@ func TestEndpointWriter(t *testing.T) {
 	AssertOk(t, err, "Error writing to apisrv")
 
 	// get the values back from api server
-	eps, err := apicl.EndpointV1().Endpoint().Get(context.Background(), &ep.ObjectMeta)
+	eps, err := apicl.WorkloadV1().Endpoint().Get(context.Background(), &ep.ObjectMeta)
 	AssertOk(t, err, "Error getting endpoint")
 	Assert(t, (eps.Status.IPv4Address == ep.Status.IPv4Address), "Endpoint params did not match", eps)
 
@@ -142,7 +152,7 @@ func TestEndpointWriter(t *testing.T) {
 	AssertOk(t, err, "Error writing to apisrv")
 
 	// get the endpoint again and verify the new values
-	eps, err = apicl.EndpointV1().Endpoint().Get(context.Background(), &ep.ObjectMeta)
+	eps, err = apicl.WorkloadV1().Endpoint().Get(context.Background(), &ep.ObjectMeta)
 	AssertOk(t, err, "Error getting endpoint")
 	Assert(t, (eps.Status.EndpointState == ep.Status.EndpointState), "Endpoint state wasnt updated", eps)
 
@@ -151,45 +161,45 @@ func TestEndpointWriter(t *testing.T) {
 }
 
 func TestSgWriter(t *testing.T) {
+	// api server
+	apiSrv, url := createAPIServer(t, apisrvURL)
+	Assert(t, (apiSrv != nil), "Error creating api server")
+
 	// create network state manager
-	wr, err := NewAPISrvWriter(apisrvURL, nil)
+	wr, err := NewAPISrvWriter(url, nil)
 	AssertOk(t, err, "Error creating apisrv writer")
 	defer wr.Close()
 
-	// api server
-	apiSrv := createAPIServer(apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server")
-
 	// api server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, logger)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, url, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
-	sg := network.SecurityGroup{
+	sg := security.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   "testsg",
 		},
-		Spec: network.SecurityGroupSpec{
+		Spec: security.SecurityGroupSpec{
 			WorkloadSelector: labels.SelectorFromSet(labels.Set{"env": "prod", "tier": "front"}),
 		},
 	}
 
 	// create the network object in api server
-	_, err = apicl.SecurityGroupV1().SecurityGroup().Create(context.Background(), &sg)
+	_, err = apicl.SecurityV1().SecurityGroup().Create(context.Background(), &sg)
 	AssertOk(t, err, "Error creating sg")
 
 	// write the update
-	sg.Status = network.SecurityGroupStatus{
+	sg.Status = security.SecurityGroupStatus{
 		Workloads: []string{"test1", "test2"},
 	}
 	err = wr.WriteSecurityGroup(&sg)
 	AssertOk(t, err, "Error writing to apisrv")
 
 	// get the values back from api server
-	sgs, err := apicl.SecurityGroupV1().SecurityGroup().Get(context.Background(), &sg.ObjectMeta)
+	sgs, err := apicl.SecurityV1().SecurityGroup().Get(context.Background(), &sg.ObjectMeta)
 	AssertOk(t, err, "Error getting sg")
 	Assert(t, (len(sgs.Status.Workloads) == len(sg.Status.Workloads)), "Sg params did not match", sgs)
 
@@ -198,30 +208,30 @@ func TestSgWriter(t *testing.T) {
 }
 
 func TestSgPolicyWriter(t *testing.T) {
+	// api server
+	apiSrv, url := createAPIServer(t, apisrvURL)
+	Assert(t, (apiSrv != nil), "Error creating api server")
+
 	// create network state manager
-	wr, err := NewAPISrvWriter(apisrvURL, nil)
+	wr, err := NewAPISrvWriter(url, nil)
 	AssertOk(t, err, "Error creating apisrv writer")
 	defer wr.Close()
 
-	// api server
-	apiSrv := createAPIServer(apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server")
-
 	// api server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, logger)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, url, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
-	sgp := network.Sgpolicy{
+	sgp := security.Sgpolicy{
 		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   "testsgpolicy",
 		},
-		Spec: network.SgpolicySpec{
+		Spec: security.SgpolicySpec{
 			AttachGroups: []string{"testsg"},
-			InRules: []network.SGRule{
+			InRules: []security.SGRule{
 				{
 					PeerGroup: "testsg2",
 					Action:    "allow",
@@ -231,18 +241,18 @@ func TestSgPolicyWriter(t *testing.T) {
 	}
 
 	// create the network object in api server
-	_, err = apicl.SgpolicyV1().Sgpolicy().Create(context.Background(), &sgp)
+	_, err = apicl.SecurityV1().Sgpolicy().Create(context.Background(), &sgp)
 	AssertOk(t, err, "Error creating sgpolicy")
 
 	// write the update
-	sgp.Status = network.SgpolicyStatus{
+	sgp.Status = security.SgpolicyStatus{
 		Workloads: []string{"test1", "test2"},
 	}
 	err = wr.WriteSgPolicy(&sgp)
 	AssertOk(t, err, "Error writing to apisrv")
 
 	// get the values back from api server
-	sgps, err := apicl.SgpolicyV1().Sgpolicy().Get(context.Background(), &sgp.ObjectMeta)
+	sgps, err := apicl.SecurityV1().Sgpolicy().Get(context.Background(), &sgp.ObjectMeta)
 	AssertOk(t, err, "Error getting sg")
 	Assert(t, (len(sgps.Status.Workloads) == len(sgp.Status.Workloads)), "Sgpolicy params did not match", sgps)
 
@@ -251,21 +261,21 @@ func TestSgPolicyWriter(t *testing.T) {
 }
 
 func TestTenantWriter(t *testing.T) {
+	// api server
+	apiSrv, url := createAPIServer(t, apisrvURL)
+	Assert(t, (apiSrv != nil), "Error creating api server")
+
 	// create network state manager
-	wr, err := NewAPISrvWriter(apisrvURL, nil)
+	wr, err := NewAPISrvWriter(url, nil)
 	AssertOk(t, err, "Error creating apisrv writer")
 	defer wr.Close()
 
-	// api server
-	apiSrv := createAPIServer(apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server")
-
 	// api server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, logger)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, url, logger)
 	AssertOk(t, err, "Error creating api client")
 
-	tn := network.Tenant{
+	tn := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "testPostTenant",
@@ -274,7 +284,7 @@ func TestTenantWriter(t *testing.T) {
 	}
 
 	// create the tenant object in api server
-	_, err = apicl.TenantV1().Tenant().Create(context.Background(), &tn)
+	_, err = apicl.ClusterV1().Tenant().Create(context.Background(), &tn)
 	AssertOk(t, err, "Error creating network")
 
 	// write the update
@@ -283,7 +293,7 @@ func TestTenantWriter(t *testing.T) {
 	AssertOk(t, err, "Error writing to apisrv")
 
 	// get the values back from api server
-	ts, err := apicl.TenantV1().Tenant().Get(context.Background(), &tn.ObjectMeta)
+	ts, err := apicl.ClusterV1().Tenant().Get(context.Background(), &tn.ObjectMeta)
 	AssertOk(t, err, "Error getting network")
 	AssertEquals(t, "testUser", ts.Spec.AdminUser, "Tenant admin user did not match")
 

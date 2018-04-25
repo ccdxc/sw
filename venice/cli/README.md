@@ -6,7 +6,7 @@ CLI registry can be found in `venice/cli/api/types.go`. Modify following structu
 an entry for your proto definition objects.
 ```
     var Objs = map[string]ObjectInfo{
-	"node": {Name: "node", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/nodes",
+	"node": {Name: "node", Package: "clusterClient", GrpcService: "cluster", URL: "/v1/cluster/nodes",
 		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"NodeCondition", "PortCondition", "ConditionStatus"}},
 ```

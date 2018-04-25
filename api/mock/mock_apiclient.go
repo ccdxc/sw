@@ -8,17 +8,13 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 
-	alerts "github.com/pensando/sw/api/generated/alerts"
-	app "github.com/pensando/sw/api/generated/app"
 	auth "github.com/pensando/sw/api/generated/auth"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
-	cmd "github.com/pensando/sw/api/generated/cmd"
-	events "github.com/pensando/sw/api/generated/events"
+	cluster "github.com/pensando/sw/api/generated/cluster"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	network "github.com/pensando/sw/api/generated/network"
-	networkencryption "github.com/pensando/sw/api/generated/networkencryption"
-	telemetry "github.com/pensando/sw/api/generated/telemetry"
-	x509 "github.com/pensando/sw/api/generated/x509"
+	security "github.com/pensando/sw/api/generated/security"
+	workload "github.com/pensando/sw/api/generated/workload"
 )
 
 // MockServices is a mock of Services interface
@@ -56,54 +52,6 @@ func (_mr *MockServicesMockRecorder) Close() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Close", reflect.TypeOf((*MockServices)(nil).Close))
 }
 
-// AlertDestinationV1 mocks base method
-func (_m *MockServices) AlertDestinationV1() alerts.AlertDestinationV1Interface {
-	ret := _m.ctrl.Call(_m, "AlertDestinationV1")
-	ret0, _ := ret[0].(alerts.AlertDestinationV1Interface)
-	return ret0
-}
-
-// AlertDestinationV1 indicates an expected call of AlertDestinationV1
-func (_mr *MockServicesMockRecorder) AlertDestinationV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "AlertDestinationV1", reflect.TypeOf((*MockServices)(nil).AlertDestinationV1))
-}
-
-// AlertPolicyV1 mocks base method
-func (_m *MockServices) AlertPolicyV1() alerts.AlertPolicyV1Interface {
-	ret := _m.ctrl.Call(_m, "AlertPolicyV1")
-	ret0, _ := ret[0].(alerts.AlertPolicyV1Interface)
-	return ret0
-}
-
-// AlertPolicyV1 indicates an expected call of AlertPolicyV1
-func (_mr *MockServicesMockRecorder) AlertPolicyV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "AlertPolicyV1", reflect.TypeOf((*MockServices)(nil).AlertPolicyV1))
-}
-
-// AlertsV1 mocks base method
-func (_m *MockServices) AlertsV1() alerts.AlertsV1Interface {
-	ret := _m.ctrl.Call(_m, "AlertsV1")
-	ret0, _ := ret[0].(alerts.AlertsV1Interface)
-	return ret0
-}
-
-// AlertsV1 indicates an expected call of AlertsV1
-func (_mr *MockServicesMockRecorder) AlertsV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "AlertsV1", reflect.TypeOf((*MockServices)(nil).AlertsV1))
-}
-
-// AppV1 mocks base method
-func (_m *MockServices) AppV1() app.AppV1Interface {
-	ret := _m.ctrl.Call(_m, "AppV1")
-	ret0, _ := ret[0].(app.AppV1Interface)
-	return ret0
-}
-
-// AppV1 indicates an expected call of AppV1
-func (_mr *MockServicesMockRecorder) AppV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "AppV1", reflect.TypeOf((*MockServices)(nil).AppV1))
-}
-
 // AuthV1 mocks base method
 func (_m *MockServices) AuthV1() auth.AuthV1Interface {
 	ret := _m.ctrl.Call(_m, "AuthV1")
@@ -128,28 +76,16 @@ func (_mr *MockServicesMockRecorder) BookstoreV1() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "BookstoreV1", reflect.TypeOf((*MockServices)(nil).BookstoreV1))
 }
 
-// CmdV1 mocks base method
-func (_m *MockServices) CmdV1() cmd.CmdV1Interface {
-	ret := _m.ctrl.Call(_m, "CmdV1")
-	ret0, _ := ret[0].(cmd.CmdV1Interface)
+// ClusterV1 mocks base method
+func (_m *MockServices) ClusterV1() cluster.ClusterV1Interface {
+	ret := _m.ctrl.Call(_m, "ClusterV1")
+	ret0, _ := ret[0].(cluster.ClusterV1Interface)
 	return ret0
 }
 
-// CmdV1 indicates an expected call of CmdV1
-func (_mr *MockServicesMockRecorder) CmdV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "CmdV1", reflect.TypeOf((*MockServices)(nil).CmdV1))
-}
-
-// EventPolicyV1 mocks base method
-func (_m *MockServices) EventPolicyV1() events.EventPolicyV1Interface {
-	ret := _m.ctrl.Call(_m, "EventPolicyV1")
-	ret0, _ := ret[0].(events.EventPolicyV1Interface)
-	return ret0
-}
-
-// EventPolicyV1 indicates an expected call of EventPolicyV1
-func (_mr *MockServicesMockRecorder) EventPolicyV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "EventPolicyV1", reflect.TypeOf((*MockServices)(nil).EventPolicyV1))
+// ClusterV1 indicates an expected call of ClusterV1
+func (_mr *MockServicesMockRecorder) ClusterV1() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ClusterV1", reflect.TypeOf((*MockServices)(nil).ClusterV1))
 }
 
 // MirrorSessionV1 mocks base method
@@ -164,28 +100,16 @@ func (_mr *MockServicesMockRecorder) MirrorSessionV1() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MirrorSessionV1", reflect.TypeOf((*MockServices)(nil).MirrorSessionV1))
 }
 
-// EndpointV1 mocks base method
-func (_m *MockServices) EndpointV1() network.EndpointV1Interface {
-	ret := _m.ctrl.Call(_m, "EndpointV1")
-	ret0, _ := ret[0].(network.EndpointV1Interface)
+// MonitoringV1 mocks base method
+func (_m *MockServices) MonitoringV1() monitoring.MonitoringV1Interface {
+	ret := _m.ctrl.Call(_m, "MonitoringV1")
+	ret0, _ := ret[0].(monitoring.MonitoringV1Interface)
 	return ret0
 }
 
-// EndpointV1 indicates an expected call of EndpointV1
-func (_mr *MockServicesMockRecorder) EndpointV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "EndpointV1", reflect.TypeOf((*MockServices)(nil).EndpointV1))
-}
-
-// LbPolicyV1 mocks base method
-func (_m *MockServices) LbPolicyV1() network.LbPolicyV1Interface {
-	ret := _m.ctrl.Call(_m, "LbPolicyV1")
-	ret0, _ := ret[0].(network.LbPolicyV1Interface)
-	return ret0
-}
-
-// LbPolicyV1 indicates an expected call of LbPolicyV1
-func (_mr *MockServicesMockRecorder) LbPolicyV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "LbPolicyV1", reflect.TypeOf((*MockServices)(nil).LbPolicyV1))
+// MonitoringV1 indicates an expected call of MonitoringV1
+func (_mr *MockServicesMockRecorder) MonitoringV1() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MonitoringV1", reflect.TypeOf((*MockServices)(nil).MonitoringV1))
 }
 
 // NetworkV1 mocks base method
@@ -200,110 +124,26 @@ func (_mr *MockServicesMockRecorder) NetworkV1() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "NetworkV1", reflect.TypeOf((*MockServices)(nil).NetworkV1))
 }
 
-// SecurityGroupV1 mocks base method
-func (_m *MockServices) SecurityGroupV1() network.SecurityGroupV1Interface {
-	ret := _m.ctrl.Call(_m, "SecurityGroupV1")
-	ret0, _ := ret[0].(network.SecurityGroupV1Interface)
+// SecurityV1 mocks base method
+func (_m *MockServices) SecurityV1() security.SecurityV1Interface {
+	ret := _m.ctrl.Call(_m, "SecurityV1")
+	ret0, _ := ret[0].(security.SecurityV1Interface)
 	return ret0
 }
 
-// SecurityGroupV1 indicates an expected call of SecurityGroupV1
-func (_mr *MockServicesMockRecorder) SecurityGroupV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityGroupV1", reflect.TypeOf((*MockServices)(nil).SecurityGroupV1))
+// SecurityV1 indicates an expected call of SecurityV1
+func (_mr *MockServicesMockRecorder) SecurityV1() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityV1", reflect.TypeOf((*MockServices)(nil).SecurityV1))
 }
 
-// ServiceV1 mocks base method
-func (_m *MockServices) ServiceV1() network.ServiceV1Interface {
-	ret := _m.ctrl.Call(_m, "ServiceV1")
-	ret0, _ := ret[0].(network.ServiceV1Interface)
+// WorkloadV1 mocks base method
+func (_m *MockServices) WorkloadV1() workload.WorkloadV1Interface {
+	ret := _m.ctrl.Call(_m, "WorkloadV1")
+	ret0, _ := ret[0].(workload.WorkloadV1Interface)
 	return ret0
 }
 
-// ServiceV1 indicates an expected call of ServiceV1
-func (_mr *MockServicesMockRecorder) ServiceV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ServiceV1", reflect.TypeOf((*MockServices)(nil).ServiceV1))
-}
-
-// SgpolicyV1 mocks base method
-func (_m *MockServices) SgpolicyV1() network.SgpolicyV1Interface {
-	ret := _m.ctrl.Call(_m, "SgpolicyV1")
-	ret0, _ := ret[0].(network.SgpolicyV1Interface)
-	return ret0
-}
-
-// SgpolicyV1 indicates an expected call of SgpolicyV1
-func (_mr *MockServicesMockRecorder) SgpolicyV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SgpolicyV1", reflect.TypeOf((*MockServices)(nil).SgpolicyV1))
-}
-
-// TenantV1 mocks base method
-func (_m *MockServices) TenantV1() network.TenantV1Interface {
-	ret := _m.ctrl.Call(_m, "TenantV1")
-	ret0, _ := ret[0].(network.TenantV1Interface)
-	return ret0
-}
-
-// TenantV1 indicates an expected call of TenantV1
-func (_mr *MockServicesMockRecorder) TenantV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "TenantV1", reflect.TypeOf((*MockServices)(nil).TenantV1))
-}
-
-// TrafficEncryptionPolicyV1 mocks base method
-func (_m *MockServices) TrafficEncryptionPolicyV1() networkencryption.TrafficEncryptionPolicyV1Interface {
-	ret := _m.ctrl.Call(_m, "TrafficEncryptionPolicyV1")
-	ret0, _ := ret[0].(networkencryption.TrafficEncryptionPolicyV1Interface)
-	return ret0
-}
-
-// TrafficEncryptionPolicyV1 indicates an expected call of TrafficEncryptionPolicyV1
-func (_mr *MockServicesMockRecorder) TrafficEncryptionPolicyV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "TrafficEncryptionPolicyV1", reflect.TypeOf((*MockServices)(nil).TrafficEncryptionPolicyV1))
-}
-
-// FlowExportPolicyV1 mocks base method
-func (_m *MockServices) FlowExportPolicyV1() telemetry.FlowExportPolicyV1Interface {
-	ret := _m.ctrl.Call(_m, "FlowExportPolicyV1")
-	ret0, _ := ret[0].(telemetry.FlowExportPolicyV1Interface)
-	return ret0
-}
-
-// FlowExportPolicyV1 indicates an expected call of FlowExportPolicyV1
-func (_mr *MockServicesMockRecorder) FlowExportPolicyV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "FlowExportPolicyV1", reflect.TypeOf((*MockServices)(nil).FlowExportPolicyV1))
-}
-
-// FwlogPolicyV1 mocks base method
-func (_m *MockServices) FwlogPolicyV1() telemetry.FwlogPolicyV1Interface {
-	ret := _m.ctrl.Call(_m, "FwlogPolicyV1")
-	ret0, _ := ret[0].(telemetry.FwlogPolicyV1Interface)
-	return ret0
-}
-
-// FwlogPolicyV1 indicates an expected call of FwlogPolicyV1
-func (_mr *MockServicesMockRecorder) FwlogPolicyV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "FwlogPolicyV1", reflect.TypeOf((*MockServices)(nil).FwlogPolicyV1))
-}
-
-// StatsPolicyV1 mocks base method
-func (_m *MockServices) StatsPolicyV1() telemetry.StatsPolicyV1Interface {
-	ret := _m.ctrl.Call(_m, "StatsPolicyV1")
-	ret0, _ := ret[0].(telemetry.StatsPolicyV1Interface)
-	return ret0
-}
-
-// StatsPolicyV1 indicates an expected call of StatsPolicyV1
-func (_mr *MockServicesMockRecorder) StatsPolicyV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "StatsPolicyV1", reflect.TypeOf((*MockServices)(nil).StatsPolicyV1))
-}
-
-// CertificateV1 mocks base method
-func (_m *MockServices) CertificateV1() x509.CertificateV1Interface {
-	ret := _m.ctrl.Call(_m, "CertificateV1")
-	ret0, _ := ret[0].(x509.CertificateV1Interface)
-	return ret0
-}
-
-// CertificateV1 indicates an expected call of CertificateV1
-func (_mr *MockServicesMockRecorder) CertificateV1() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "CertificateV1", reflect.TypeOf((*MockServices)(nil).CertificateV1))
+// WorkloadV1 indicates an expected call of WorkloadV1
+func (_mr *MockServicesMockRecorder) WorkloadV1() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "WorkloadV1", reflect.TypeOf((*MockServices)(nil).WorkloadV1))
 }

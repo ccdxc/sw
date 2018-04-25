@@ -7,7 +7,7 @@ import (
 
 	. "gopkg.in/check.v1"
 
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -27,13 +27,13 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	}
 
 	// incoming rule
-	inrules := []network.SGRule{
+	inrules := []security.SGRule{
 		{
 			Ports:  "tcp/80",
 			Action: "Allow",
 		},
 	}
-	outrules := []network.SGRule{
+	outrules := []security.SGRule{
 		{
 			Ports:  "tcp/80",
 			Action: "Allow",

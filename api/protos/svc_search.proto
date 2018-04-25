@@ -1,0 +1,36 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package search;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "search.proto";
+
+// fileGrpcDest is the gRPC destination for this service
+option (venice.fileGrpcDest) = "pen-spyglass";
+// fileApiServerBacked should be set to false to indicate that the set of services defined in this
+// file are not backed by the API server.
+option (venice.fileApiServerBacked) = false;
+
+// Search service API
+service SearchV1 {
+    option (venice.apiPrefix) = "search";
+
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    // In the example below a query like
+    //    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
+    //  generates a RPC call Query with the parameter as
+    //  SearchRequest{ QueryString: "XXXXX", MaxResults:100}
+    rpc Query (SearchRequest) returns (SearchResponse) {
+        option (google.api.http) = {
+		    get: "/query"
+		};
+    }
+}

@@ -159,8 +159,8 @@ func main() {
 		}
 		glog.V(1).Infof("Parsed Config %+v", cfg.Templates)
 		var templateOut []*plugin.CodeGeneratorResponse_File
-		for _, t := range targets {
-			out1, err := g.GenerateFromTemplates(t, cfg.Templates)
+		for index, t := range targets {
+			out1, err := g.GenerateFromTemplates(t, cfg.Templates, index)
 			if err != nil {
 				emitError(err)
 				return

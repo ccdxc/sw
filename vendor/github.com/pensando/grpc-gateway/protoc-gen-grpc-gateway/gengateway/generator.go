@@ -139,7 +139,7 @@ func getFieldName(in string) string {
 }
 
 // GenerateFromTemplates processes each element in paths agains input .proto and outputs as per TemplateDef.
-func (g *generator) GenerateFromTemplates(target *descriptor.File, paths []gen.TemplateDef) ([]*plugin.CodeGeneratorResponse_File, error) {
+func (g *generator) GenerateFromTemplates(target *descriptor.File, paths []gen.TemplateDef, index int) ([]*plugin.CodeGeneratorResponse_File, error) {
 	var files []*plugin.CodeGeneratorResponse_File
 	tmpls := []string{}
 
@@ -175,6 +175,9 @@ func (g *generator) GenerateFromTemplates(target *descriptor.File, paths []gen.T
 		return nil, err
 	}
 	for _, p := range paths {
+		if p.Once == true && index != 0 {
+			continue
+		}
 		_, file := filepath.Split(p.Template)
 		t := tmpl.Lookup(file)
 		if t == nil {

@@ -4,4 +4,4 @@ default:
 		-I${GOPATH}/src \
 		-I../../../../vendor/github.com/pensando/grpc-gateway/third_party \
 		-I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
-		--gofast_out=Mgithub.com/pensando/sw/api/protos/cmd.proto=github.com/pensando/sw/api/generated/cmd,grpc:. nmd.proto
+		--gofast_out=Mgithub.com/pensando/sw/api/protos/cmd.proto=github.com/pensando/sw/api/generated/cluster,grpc:. nmd.proto

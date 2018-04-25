@@ -5,16 +5,16 @@ package statemgr
 import (
 	"fmt"
 
-	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
 
 // SgpolicyState security policy state
 type SgpolicyState struct {
-	network.Sgpolicy                                // embedded security policy object
-	groups           map[string]*SecurityGroupState // list of groups this policy is attached to
-	stateMgr         *Statemgr                      // pointer to state manager
+	security.Sgpolicy                                // embedded security policy object
+	groups            map[string]*SecurityGroupState // list of groups this policy is attached to
+	stateMgr          *Statemgr                      // pointer to state manager
 }
 
 // Write writes the object to api server
@@ -71,7 +71,7 @@ func SgpolicyStateFromObj(obj memdb.Object) (*SgpolicyState, error) {
 }
 
 // NewSgpolicyState creates a new security policy state object
-func NewSgpolicyState(sgp *network.Sgpolicy, stateMgr *Statemgr) (*SgpolicyState, error) {
+func NewSgpolicyState(sgp *security.Sgpolicy, stateMgr *Statemgr) (*SgpolicyState, error) {
 	// create sg state object
 	sgps := SgpolicyState{
 		Sgpolicy: *sgp,
@@ -111,7 +111,7 @@ func (sm *Statemgr) ListSgpolicies() ([]*SgpolicyState, error) {
 }
 
 // CreateSgpolicy creates a sg policy
-func (sm *Statemgr) CreateSgpolicy(sgp *network.Sgpolicy) error {
+func (sm *Statemgr) CreateSgpolicy(sgp *security.Sgpolicy) error {
 	// see if we already have it
 	esgp, err := sm.FindObject("Sgpolicy", sgp.ObjectMeta.Tenant, sgp.ObjectMeta.Name)
 	if err == nil {

@@ -2,7 +2,7 @@
 
 /*
 Package networkGwService is a auto generated package.
-Input file: protos/network.proto
+Input file: lb.proto
 */
 package networkGwService
 
@@ -25,12 +25,12 @@ var fileCount int
 const codecSize = 1024 * 1024
 
 func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
-	box, err := rice.FindBox("../../../../../sw/api/generated/network/swagger")
+	box, err := rice.FindBox("../../../../api/protos/../generated/network/swagger")
 	if err != nil {
 		err = errors.Wrap(err, "error opening rice.Box")
 		return err
 	}
-	content, err := box.Bytes("network.swagger.json")
+	content, err := box.Bytes("lb.swagger.json")
 	if err != nil {
 		err = errors.Wrap(err, "error opening rice.File")
 		return err

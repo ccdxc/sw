@@ -23,9 +23,9 @@ service EventsProxyAPI {
     // dispatcher where the event gets deduped and distributed to the writers
     // (events manager, events exporter, etc.). event recorder connects only
     // with proxy; proxy handles rest of the workflow.
-    rpc ForwardEvent (events.Event) returns (api.Empty) {};
+    rpc ForwardEvent (monitoring.Event) returns (api.Empty) {};
 
     // recorder can buffer events when the proxy is unavailable and send
     // all of them at once when the proxy comes back online.
-    rpc ForwardEvents (events.EventList) returns (api.Empty) {};
+    rpc ForwardEvents (monitoring.EventsList) returns (api.Empty) {};
 }

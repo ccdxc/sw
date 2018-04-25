@@ -2,7 +2,7 @@
 
 syntax = "proto3";
 // Service name
-package x509;
+package security;
 
 // Mandatory imports.
 import "google/api/annotations.proto";
@@ -79,20 +79,3 @@ message Certificate {
      // Status contains the current state of the certificate.
      CertificateStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
-
-// Certificate REST API
-service CertificateV1 {
-     // Prefix for all resources served by this service.
-     option (venice.apiPrefix) = "certificate";
-
-     // API Version.
-     option (venice.apiVersion) = "v1";
-
-     option (venice.apiGrpcCrudService) = "Certificate";
-
-     option (venice.apiRestService) = {
-         Object: "Certificate"
-         Method: [ "get", "put", "delete", "post", "list" ]
-     };
-}
-
