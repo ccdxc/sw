@@ -2560,7 +2560,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	}
 
 	dev->size_qpid = dev->dev_attr.max_qp;
-	dev->next_qpid = 0;
+	dev->next_qpid = 2;
 	dev->size_srqid = dev->dev_attr.max_srq;
 	dev->next_srqid = dev->dev_attr.max_qp;
 	size = sizeof(long) * BITS_TO_LONGS(dev->size_srqid);
