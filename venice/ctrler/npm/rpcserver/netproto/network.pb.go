@@ -56,6 +56,7 @@
 		NatPool
 		NatPoolList
 		NatPoolEvent
+		MatchSelector
 		NatRule
 		NatPolicySpec
 		NatPolicyStatus

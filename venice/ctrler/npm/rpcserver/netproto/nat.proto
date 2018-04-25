@@ -54,7 +54,7 @@ service NatPoolApi {
     option(venice.naplesRestService) = {
         Object: "NatPool",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}//{ObjectMeta.NameSpaceName}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}"
     };
 
     rpc GetNatPool (api.ObjectMeta) returns (NatPool) {};
@@ -62,6 +62,20 @@ service NatPoolApi {
     rpc WatchNatPools (api.ObjectMeta) returns (stream NatPoolEvent) {};
 }
 
+message MatchSelector {
+    enum Type
+    {
+        NONE            = 0;
+        IP              = 1; // IP nat rule src/dst selector
+        IPPrefix        = 2; // IP Prefix nat rule src/dst seclector
+        IPRange         = 3; // IP Range nat rule src/dst selector
+        SecurityGroup   = 4; // Security group nat rule src/dst selector
+
+    }
+    string MatchType    = 1 [(venice.check) = "StrEnum(MatchSelector.Type)",
+                             (gogoproto.jsontag) = "match-type"];
+    string Match        = 2 [(gogoproto.jsontag) = "match"];
+}
 // nat rule
 message NatRule {
     enum NatAction 
@@ -72,27 +86,27 @@ message NatRule {
         DPAT = 3;  // destination port address translation
     }
     
-    // From ip/ip-prefix/ip-range/security-group
-    string From     = 1;
-    
-    // To ip/ip-prefix/ip-range/security-group
-    string To       = 2;
+    // Nat Rule From match selector.
+    MatchSelector Src  = 1 [(gogoproto.jsontag) = "source,omitempty"];
+
+    // Nat Rule To match selector.
+    MatchSelector Dst    = 2 [(gogoproto.jsontag) = "destination,omitempty"];
     
     // IP Protocol
-    string Protocol = 3;
+    string Protocol     = 3 [(gogoproto.jsontag) = "protocol,omitempty"];
 
-    // From tcp/udp port
-    string FromPort = 4;
+    // From tcp/udp port. Can be a single port or a port range separated by a hyphen
+    string FromPort     = 4 [(gogoproto.jsontag) = "from-port,omitempty"];
 
-    // To tcp/udp port
-    string ToPort   = 5;
+    // To tcp/udp port. Can be a single port or a port range separated by a hyphen
+    string ToPort       = 5 [(gogoproto.jsontag) = "to-port,omitempty"];
 
     // NAT pool to use
-    string NatPool  = 6;
+    string NatPool      = 6 [(gogoproto.jsontag) = "nat-pool,omitempty"];
     
     // Nat action 
-    string Action   = 7 [(venice.check) = "StrEnum(NatRule.NatAction)",
-                         (gogoproto.jsontag) = "action"];
+    string Action       = 7 [(venice.check) = "StrEnum(NatRule.NatAction)",
+                             (gogoproto.jsontag) = "action,omitempty"];
 }
 
 message NatPolicySpec {
@@ -100,6 +114,7 @@ message NatPolicySpec {
 }
 
 message NatPolicyStatus {
+    uint64 NatPolicyID = 1  [(gogoproto.jsontag) = "id,omitempty"];
 }
 
 // nat policy object
@@ -127,7 +142,7 @@ service NatPolicyApi {
     option(venice.naplesRestService) = {
         Object: "NatPolicy",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}//{ObjectMeta.NameSpaceName}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}"
     };
 
     rpc GetNatPolicy (api.ObjectMeta) returns (NatPolicy) {};
