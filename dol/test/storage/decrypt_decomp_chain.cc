@@ -66,14 +66,14 @@ decrypt_decomp_chain_t::decrypt_decomp_chain_t(decrypt_decomp_chain_params_t par
 
     // XTS AOL must be 512 byte aligned
     xts_in_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
-                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM, 512);
+                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
     xts_out_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
-                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM, 512);
+                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
     xts_desc_buf = new dp_mem_t(1, sizeof(xts::xts_desc_t),
-                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                 sizeof(xts::xts_desc_t));
     xts_decomp_cp_desc = new dp_mem_t(1, sizeof(cp_desc_t), DP_MEM_ALIGN_SPEC,
-                                      DP_MEM_TYPE_HBM, sizeof(cp_desc_t));
+                                      DP_MEM_TYPE_HOST_MEM, sizeof(cp_desc_t));
 }
 
 
@@ -264,12 +264,15 @@ decrypt_decomp_chain_t::decrypt_setup(acc_chain_params_t& chain_params)
     xts_ctx.desc_write_seq_xts(xts_desc_buf);
 }
 
+
 /*
  * Test result verification
  */
 int 
 decrypt_decomp_chain_t::verify(void)
 {
+    uint32_t    poll_factor = app_blk_size / kCompAppMinSize;
+
     // Don't call xts_ctx.verify_doorbell() as XTS completion would go
     // to XTS status sequenceer in the decrypt chaining case.
 
@@ -281,7 +284,7 @@ decrypt_decomp_chain_t::verify(void)
       return 1;
     };
 
-    tests::Poller xts_poll;
+    tests::Poller xts_poll(FLAGS_long_poll_interval * poll_factor);
     if (xts_poll(xts_status_poll_func) != 0) {
       uint64_t curr_xts_status = *((uint64_t *)xts_status_buf2->read());
       printf("ERROR: decrypt_decomp_chain XTS decrypt error 0x%lx\n", curr_xts_status);

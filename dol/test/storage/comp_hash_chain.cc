@@ -59,7 +59,7 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
         comp_buf2 = comp_buf1;
     }
     seq_sgl_pdma = new dp_mem_t(1, sizeof(cp_sq_ent_sgl_t),
-                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                 sizeof(cp_sq_ent_sgl_t));
 
     // for comp status, caller can elect to have 2 status buffers, e.g.
@@ -84,10 +84,10 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     max_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(app_max_size, sizeof(cp_hdr_t),
                                                   app_hash_size);
     hash_desc_vec = new dp_mem_t(max_hash_blks, sizeof(cp_desc_t),
-                                 DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                                 DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                  sizeof(cp_desc_t));
     hash_sgl_vec = new dp_mem_t(max_hash_blks, sizeof(cp_sgl_t),
-                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                 sizeof(cp_sgl_t));
     // Pre-fill input buffers.
     uint64_t *p64 = (uint64_t *)uncomp_buf->read();
@@ -394,9 +394,9 @@ comp_hash_chain_t::hash_setup(uint32_t block_no,
         hash_desc->opaque_tag_data = caller_hash_opaque_data;
         hash_desc->cmd_bits.opaque_tag_on = 1;
         if (!suppress_info_log) {
-            printf("comp_hash_chain HW to possibly write hash opaque_tag_addr 0x%lx "
-                   "opaque_tag_data 0x%x\n", hash_desc->opaque_tag_addr,
-                   hash_desc->opaque_tag_data);
+            printf("comp_hash_chain HW to potentially write hash "
+                   "opaque_tag_addr 0x%lx opaque_tag_data 0x%x\n",
+                   hash_desc->opaque_tag_addr, hash_desc->opaque_tag_data);
         }
     }
     hash_desc_vec->write_thru();

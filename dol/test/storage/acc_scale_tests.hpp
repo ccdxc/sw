@@ -6,6 +6,7 @@
 #include "decrypt_decomp_chain.hpp"
 #include "comp_encrypt_chain.hpp"
 #include "comp_hash_chain.hpp"
+#include "chksum_decomp_chain.hpp"
 
 /*
  * Accelerator scale tests DOL
@@ -22,10 +23,15 @@ public:
     acc_scale_tests_t() :
         run_count(0)
     {
+        /*
+         * Allocate a scratch buffer for use by verification_time_advance().
+         */
+        scratch_buf = new dp_mem_t(1, sizeof(uint64_t));
     }
 
     virtual ~acc_scale_tests_t()
     {
+        delete scratch_buf;
     }
 
     // Pure virtual functions.
@@ -40,7 +46,31 @@ public:
         return run_count;
     }
 
+    /*
+     * Advance verification time:
+     *
+     * This function is intended for support of the RTL --skipverify option.
+     * When --skipverify is in effect, all calls to step_doorbell() become
+     * non-blocking, allowing many doorbell events to be submitted concurrently
+     * before the RTL actually starts them. This is a desired feature for scaled/stress
+     * testing. There are 2 ways to trigger the RTL start:
+     *   1) Caller invokes exit_simulation() which would then start all the events
+     *      and ensure they all finish. However, this would also end the simulation
+     *      upon completion which is not what we want from a stress test perspective.
+     *   2) Some sort of HBM access occurs, which would advance verification time.
+     *      Note: polling on host memory does not advance time.
+     *
+     * This function provides non-blocking poll on an HBM location in use by the test to
+     * ensure that simulation time advances.
+     */
+    virtual void verification_time_advance(void)
+    {
+        assert(scratch_buf->is_mem_type_hbm());
+        scratch_buf->read_thru();
+    }
+
 protected:
+    dp_mem_t        *scratch_buf;
     uint64_t        run_count;
 };
 
@@ -202,6 +232,93 @@ private:
 
     dp_mem_t        *exp_opaque_data_buf;
     uint32_t        exp_opaque_data;
+
+    bool            destructor_free_buffers;
+    bool            success;
+};
+
+
+/*
+ * Emulate named parameters support for chksum_decomp_chain_scale_t constructor
+ */
+class chksum_decomp_chain_scale_params_t
+{
+public:
+
+    chksum_decomp_chain_scale_params_t() :
+        num_chains_(0),
+        actual_hash_blks_(0),
+        destructor_free_buffers_(false)
+    {
+    }
+
+    uint32_t                        num_chains_;
+    uint32_t                        actual_hash_blks_;
+    chksum_decomp_chain_params_t    cdc_params_;
+    bool                            destructor_free_buffers_;
+
+    chksum_decomp_chain_scale_params_t&
+    num_chains(uint32_t num_chains)
+    {
+        num_chains_ = num_chains;
+        return *this;
+    }
+    chksum_decomp_chain_scale_params_t&
+    actual_hash_blks(uint32_t actual_hash_blks)
+    {
+        actual_hash_blks_ = actual_hash_blks;
+        return *this;
+    }
+    chksum_decomp_chain_scale_params_t&
+    cdc_params(chksum_decomp_chain_params_t cdc_params)
+    {
+        cdc_params_ = cdc_params;
+        return *this;
+    }
+    chksum_decomp_chain_scale_params_t&
+    destructor_free_buffers(bool destructor_free_buffers)
+    {
+        destructor_free_buffers_ = destructor_free_buffers;
+        return *this;
+    }
+};
+
+
+/*
+ * Accelerator checksum to decompression chaining scale
+ */
+class chksum_decomp_chain_scale_t : public acc_scale_tests_t
+{
+public:
+    chksum_decomp_chain_scale_t(chksum_decomp_chain_scale_params_t params);
+    ~chksum_decomp_chain_scale_t();
+
+    void push_params_set(chksum_decomp_chain_push_params_t params);
+
+    virtual int push(void);
+    virtual int completion_check(void);
+    virtual int fast_verify(void);
+    virtual int full_verify(void);
+
+    virtual const char *scale_test_name_get(void)
+    {
+        return scale_test_name;
+    }
+
+private:
+    std::vector<chksum_decomp_chain_t*>  chksum_decomp_chain_vec;
+
+    const char      *scale_test_name;
+    chksum_decomp_chain_push_params_t    push_params;
+
+    std::vector<dp_mem_t*> chksum_status_host_vec;
+    std::vector<dp_mem_t*> chksum_opaque_host_vec;
+
+    dp_mem_t        *decomp_status_host_buf;
+    dp_mem_t        *decomp_opaque_host_buf;
+    dp_mem_t        *exp_opaque_data_buf;
+    uint32_t        exp_opaque_data;
+    uint32_t        actual_hash_blks;
 
     bool            destructor_free_buffers;
     bool            success;

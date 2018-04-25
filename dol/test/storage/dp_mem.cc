@@ -99,14 +99,7 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
                 assert(cache);
             }
 
-            /*
-             * total_size can potentially be very large which needs
-             * to be broken up for write_mem.
-             */
-            for (curr_line = 0; curr_line < num_lines; curr_line++) {
-                clear_thru();
-            }
-            curr_line = 0;
+            all_lines_clear_thru();
             break;
 
         case DP_MEM_TYPE_HOST_MEM:
@@ -273,6 +266,22 @@ void
 dp_mem_t::clear_thru(void)
 {
     fill_thru(0);
+}
+
+
+/*
+ * Clear memory at all cache lines and their corresponding
+ * datapath memory.
+ */
+void
+dp_mem_t::all_lines_clear_thru(void)
+{
+    uint32_t    save_curr_line = curr_line;
+
+    for (curr_line = 0; curr_line < num_lines; curr_line++) {
+        clear_thru();
+    }
+    curr_line = save_curr_line;
 }
 
 

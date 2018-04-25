@@ -67,11 +67,11 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
 
     // XTS AOL must be 512 byte aligned
     xts_in_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
-                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM, 512);
+                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
     xts_out_aol = new dp_mem_t(1, sizeof(xts::xts_aol_t),
-                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM, 512);
+                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, 512);
     xts_desc_buf = new dp_mem_t(1, sizeof(xts::xts_desc_t),
-                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HBM,
+                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                 sizeof(xts::xts_desc_t));
     // Pre-fill input buffers.
     uint64_t *p64 = (uint64_t *)uncomp_buf->read();
@@ -296,6 +296,8 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
 int 
 comp_encrypt_chain_t::verify(void)
 {
+    uint32_t    poll_factor = app_blk_size / kCompAppMinSize;
+
     // Poll for comp status
     if (!comp_status_poll(comp_status_buf2, suppress_info_log)) {
       printf("ERROR: comp_encrypt_chain compression status never came\n");
@@ -314,7 +316,7 @@ comp_encrypt_chain_t::verify(void)
     }
 
     // Verify XTS engine doorbell
-    if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval)) {
+    if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
         printf("ERROR: comp_encrypt_chain doorbell from XTS engine never came\n");
         return -1;
     }

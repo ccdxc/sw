@@ -15,6 +15,7 @@ DECLARE_uint64(acc_scale_submissions);
 DECLARE_uint64(acc_scale_blk_size);
 DECLARE_uint64(acc_scale_iters);
 DECLARE_string(acc_scale_verify_method);
+DECLARE_bool(with_rtl_skipverify);
 
 extern bool run_pdma_tests;
 
@@ -23,9 +24,11 @@ enum {
   ACC_SCALE_TEST_DECRYPT_DECOMP = 1U << 0,
   ACC_SCALE_TEST_COMP_ENCRYPT   = 1U << 1,
   ACC_SCALE_TEST_COMP_HASH      = 1U << 2,
+  ACC_SCALE_TEST_CHKSUM_DECOMP  = 1U << 3,
   ACC_SCALE_TEST_ALL            = ACC_SCALE_TEST_DECRYPT_DECOMP     |
                                   ACC_SCALE_TEST_COMP_ENCRYPT       |
-                                  ACC_SCALE_TEST_COMP_HASH,
+                                  ACC_SCALE_TEST_COMP_HASH          |
+                                  ACC_SCALE_TEST_CHKSUM_DECOMP,
   ACC_SCALE_TEST_MAX_TYPES      = 3U // max number of test types
 };
 

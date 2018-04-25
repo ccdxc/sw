@@ -58,6 +58,7 @@ public:
 
     void clear(void);
     void clear_thru(void);
+    void all_lines_clear_thru(void);
     void fill(uint8_t fill_byte);
     void fill_thru(uint8_t fill_byte);
     uint8_t *read(void);
