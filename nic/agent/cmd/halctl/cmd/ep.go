@@ -70,11 +70,11 @@ func epShowHeader(cmd *cobra.Command, args []string) {
 
 func epShowOneResp(resp *halproto.EndpointGetResponse) {
 	epAddr := resp.GetStatus().GetIpAddress()
-	ipStr := IPAddrToStr(epAddr[0].GetIpAddress())
+	ipStr := utils.IPAddrToStr(epAddr[0].GetIpAddress())
 	if len(epAddr) > 0 {
 		for i := 1; i < len(epAddr); i++ {
 			ipStr += ", "
-			ipStr += IPAddrToStr(epAddr[i].GetIpAddress())
+			ipStr += utils.IPAddrToStr(epAddr[i].GetIpAddress())
 		}
 	}
 	macStr := utils.MactoStr(resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetMacAddress())

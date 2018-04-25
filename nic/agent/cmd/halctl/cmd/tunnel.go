@@ -2,9 +2,7 @@ package cmd
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
-	"net"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -96,15 +94,15 @@ func tunnelShowOneResp(resp *halproto.InterfaceGetResponse) {
 		resp.GetSpec().GetKeyOrHandle().GetInterfaceId(),
 		resp.GetStatus().GetIfHandle(),
 		ifTypeToStr(ifType),
-		tnnlEncTypeToStr(encType))
+		utils.TnnlEncTypeToStr(encType))
 	if encType == halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_VXLAN {
 		fmt.Printf("%-10s%-10s",
-			IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetLocalTep()),
-			IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetRemoteTep()))
+			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetLocalTep()),
+			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetRemoteTep()))
 	} else {
 		fmt.Printf("%-10s%-10s",
-			IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetSource()),
-			IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetDestination()))
+			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetSource()),
+			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetDestination()))
 	}
 
 	imnIndices := resp.GetStatus().GetTunnelInfo().GetInpMapNatIdx()
@@ -113,45 +111,4 @@ func tunnelShowOneResp(resp *halproto.InterfaceGetResponse) {
 	imtStr := fmt.Sprintf("%d,%d,%d", imtIndices[0], imtIndices[1], imtIndices[2])
 	fmt.Printf("%-10s%-10s%-10d\n", imnStr, imtStr,
 		resp.GetStatus().GetTunnelInfo().GetTunnelRwIdx())
-}
-
-// IPAddrToStr converts HAL proto IP address to string
-func IPAddrToStr(ipAddr *halproto.IPAddress) string {
-	if ipAddr.GetIpAf() == halproto.IPAddressFamily_IP_AF_INET {
-		v4Addr := ipAddr.GetV4Addr()
-		ip := make(net.IP, 4)
-		binary.BigEndian.PutUint32(ip, v4Addr)
-		return ip.String()
-		/*
-			v4Addr := ipAddr.GetV4Addr()
-			v4Str := fmt.Sprintf("%d.%d.%d.%d", ((v4Addr >> 24) & 0xff), ((v4Addr >> 16) & 0xff),
-				((v4Addr >> 8) & 0xff), (v4Addr & 0xff))
-			return v4Str
-		*/
-	}
-	v6Addr := ipAddr.GetV6Addr()
-	ip := make(net.IP, 16)
-	copy(ip, v6Addr)
-	return ip.String()
-	/*
-		v6Addr := ipAddr.GetV6Addr()
-		v6Str := fmt.Sprintf("%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
-			v6Addr[0], v6Addr[1], v6Addr[2], v6Addr[3],
-			v6Addr[4], v6Addr[5], v6Addr[6], v6Addr[7],
-			v6Addr[8], v6Addr[9], v6Addr[10], v6Addr[11],
-			v6Addr[12], v6Addr[13], v6Addr[14], v6Addr[15])
-		return v6Str
-	*/
-
-}
-
-func tnnlEncTypeToStr(encType halproto.IfTunnelEncapType) string {
-	switch encType {
-	case halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_VXLAN:
-		return "Vxlan"
-	case halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_GRE:
-		return "Gre"
-	default:
-		return "Invalid"
-	}
 }

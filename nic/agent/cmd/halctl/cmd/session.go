@@ -163,8 +163,8 @@ func flowShow(spec *halproto.SessionSpec, flowSpec *halproto.FlowSpec, flowStr s
 		keyType = "IPv6"
 		v6Key := flowKey.GetV6Key()
 		id = spec.GetMeta().GetVrfId()
-		src = IPAddrToStr(v6Key.GetSip())
-		dst = IPAddrToStr(v6Key.GetDip())
+		src = utils.IPAddrToStr(v6Key.GetSip())
+		dst = utils.IPAddrToStr(v6Key.GetDip())
 		l4 := v6Key.GetL4Fields()
 		switch l4.(type) {
 		case *halproto.FlowKeyV6_TcpUdp:
