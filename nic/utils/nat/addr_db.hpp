@@ -46,7 +46,7 @@ typedef struct addr_entry_s {
 addr_entry_t *addr_entry_alloc(void);
 void addr_entry_free(addr_entry_t *entry);
 hal_ret_t addr_db_init(uint32_t db_size);
-hal_ret_t addr_entry_add(addr_entry_key_t *key, ip_addr_t tgt_ip_addr);
+hal_ret_t addr_entry_add(addr_entry_key_t *key, vrf_id_t tgt_vrf_id, ip_addr_t tgt_ip_addr);
 void addr_entry_del(addr_entry_key_t *key);
 addr_entry_t *addr_entry_get(addr_entry_key_t *key);
 

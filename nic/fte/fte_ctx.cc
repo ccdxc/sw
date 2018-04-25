@@ -57,7 +57,7 @@ ctx_t::extract_flow_key()
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
-    if (ret != HAL_RET_OK && obj_id != hal::HAL_OBJ_ID_L2SEG) {
+    if (ret != HAL_RET_OK || obj_id != hal::HAL_OBJ_ID_L2SEG) {
         HAL_TRACE_ERR("fte: Invalid obj id: {}, ret: {}", obj_id, ret);
         return HAL_RET_L2SEG_NOT_FOUND;
     }
@@ -156,7 +156,7 @@ ctx_t::lookup_flow_objs()
         dvrf_ = svrf_;
     } else {
         dvrf_ = hal::vrf_lookup_by_id(key_.dvrf_id);
-        if (svrf_ == NULL) {
+        if (dvrf_ == NULL) {
             HAL_TRACE_ERR("fte: dvrf not found, key {}", key_);
             return HAL_RET_VRF_NOT_FOUND;
         }
@@ -184,7 +184,7 @@ ctx_t::lookup_flow_objs()
         args.obj_id = &obj_id;
         args.pi_obj = &obj;
         ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, (void *)&args);
-        if (ret != HAL_RET_OK && obj_id != hal::HAL_OBJ_ID_L2SEG) {
+        if (ret != HAL_RET_OK || obj_id != hal::HAL_OBJ_ID_L2SEG) {
             HAL_TRACE_ERR("fte: Invalid obj id: {}, ret:{}", obj_id, ret);
             return HAL_RET_L2SEG_NOT_FOUND;
         }

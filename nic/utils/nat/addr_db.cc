@@ -104,14 +104,15 @@ addr_entry_free (addr_entry_t *entry)
 
 static inline void
 addr_entry_fill (addr_entry_t *entry, addr_entry_key_t *key,
-                 ip_addr_t tgt_ip_addr)
+                 vrf_id_t tgt_vrf_id, ip_addr_t tgt_ip_addr)
 {
     memcpy(&entry->key, key, sizeof(addr_entry_key_t));
     entry->tgt_ip_addr = tgt_ip_addr;
+    entry->tgt_vrf_id = tgt_vrf_id;
 }
 
 hal_ret_t
-addr_entry_add (addr_entry_key_t *key, ip_addr_t tgt_ip_addr)
+addr_entry_add (addr_entry_key_t *key, vrf_id_t tgt_vrf_id, ip_addr_t tgt_ip_addr)
 {
     addr_entry_t *entry;
 
@@ -123,7 +124,7 @@ addr_entry_add (addr_entry_key_t *key, ip_addr_t tgt_ip_addr)
         return HAL_RET_OOM;
     }
 
-    addr_entry_fill(entry, key, tgt_ip_addr);
+    addr_entry_fill(entry, key, tgt_vrf_id, tgt_ip_addr);
 
     return addr_entry_db_insert(entry);
 }
