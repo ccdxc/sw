@@ -201,6 +201,66 @@ func (ag *fakeAgent) GetHwInterfaces() error {
 	return nil
 }
 
+// CreateNatPool creates a NAT Pool. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateNatPool(np *netproto.NatPool) error {
+
+	return nil
+}
+
+// FindNatPool finds a NAT Pool. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error) {
+
+	return nil, nil
+}
+
+// ListNatPool lists a NAT Pool. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListNatPool() []*netproto.NatPool {
+
+	return nil
+}
+
+// UpdateNatPool updates a NAT Pool. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateNatPool(np *netproto.NatPool) error {
+
+	return nil
+}
+
+// DeleteNatPool deletes a NAT Pool. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteNatPool(np *netproto.NatPool) error {
+
+	return nil
+}
+
+// CreateNatPolicy creates a NAT Policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
+
+	return nil
+}
+
+// FindNatPolicy finds a NAT Policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindNatPolicy(meta api.ObjectMeta) (*netproto.NatPolicy, error) {
+
+	return nil, nil
+}
+
+// ListNatPolicy lists a NAT Policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListNatPolicy() []*netproto.NatPolicy {
+
+	return nil
+}
+
+// UpdateNatPolicy updates a NAT Policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateNatPolicy(np *netproto.NatPolicy) error {
+
+	return nil
+}
+
+// DeleteNatPolicy deletes a NAT Policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteNatPolicy(np *netproto.NatPolicy) error {
+
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network

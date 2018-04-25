@@ -22,7 +22,7 @@ message NatPoolStatus {
     message NatBinding {
         string LocalAddress = 1;
         uint32 LocalPort = 2;
-        string GlobalAddress = 3;  
+        string GlobalAddress = 3;
         uint32 GlobalPort = 4;
         uint32 Protocol = 5;
     }
@@ -78,20 +78,20 @@ message MatchSelector {
 }
 // nat rule
 message NatRule {
-    enum NatAction 
+    enum NatAction
     {
         SNAT = 0;  // source address translation
         DNAT = 1;  // destination address translation
         SPAT = 2;  // source port address translation
         DPAT = 3;  // destination port address translation
     }
-    
+
     // Nat Rule From match selector.
     MatchSelector Src  = 1 [(gogoproto.jsontag) = "source,omitempty"];
 
     // Nat Rule To match selector.
     MatchSelector Dst    = 2 [(gogoproto.jsontag) = "destination,omitempty"];
-    
+
     // IP Protocol
     string Protocol     = 3 [(gogoproto.jsontag) = "protocol,omitempty"];
 
@@ -103,8 +103,8 @@ message NatRule {
 
     // NAT pool to use
     string NatPool      = 6 [(gogoproto.jsontag) = "nat-pool,omitempty"];
-    
-    // Nat action 
+
+    // Nat action
     string Action       = 7 [(venice.check) = "StrEnum(NatRule.NatAction)",
                              (gogoproto.jsontag) = "action,omitempty"];
 }
@@ -149,11 +149,3 @@ service NatPolicyApi {
     rpc ListNatPolicies (api.ObjectMeta) returns (NatPolicyList) {};
     rpc WatchNatPolicies (api.ObjectMeta) returns (stream NatPolicyEvent) {};
 }
-
-
-
-
-
-
-
-

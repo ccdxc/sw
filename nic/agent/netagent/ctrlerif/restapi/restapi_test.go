@@ -128,6 +128,47 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 		return
 	}
 
+	natPool := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			NetworkName: "preCreatedNetwork",
+		},
+	}
+	err = nagent.CreateNatPool(&natPool)
+	if err != nil {
+		log.Errorf("Failed to create nat pool. {%v}", sg)
+		return
+	}
+
+	natPolicy := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedNatPolicy",
+		},
+		Spec: netproto.NatPolicySpec{
+			Rules: []netproto.NatRule{
+				{
+					Src:     &netproto.MatchSelector{},
+					Dst:     &netproto.MatchSelector{},
+					NatPool: "preCreatedNatPool",
+					Action:  "SNAT",
+				},
+			},
+		},
+	}
+	err = nagent.CreateNatPolicy(&natPolicy)
+	if err != nil {
+		log.Errorf("Failed to create nat policy. {%v}", sg)
+		return
+	}
+
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{

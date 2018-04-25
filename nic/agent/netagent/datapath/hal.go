@@ -48,6 +48,7 @@ type Hal struct {
 	Sgclient    halproto.NwSecurityClient
 	Sessclient  halproto.SessionClient
 	Tnclient    halproto.VrfClient
+	Natclient   halproto.NatClient
 }
 
 // MockClients stores references for mockclients to be used for setting expectations
@@ -60,6 +61,7 @@ type mockClients struct {
 	MockSgclient    *halproto.MockNwSecurityClient
 	MockSessclient  *halproto.MockSessionClient
 	MockTnclient    *halproto.MockVrfClient
+	MockNatClient   *halproto.MockNatClient
 }
 
 // DB holds all the state information.
@@ -1142,10 +1144,6 @@ func (hd *Datapath) CreateVrf(vrfID uint64) error {
 		}
 	}
 
-	//// save tenant create request message.
-	//hd.Lock()
-	//hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &vrfReqMsg
-	//hd.Unlock()
 	return nil
 }
 
@@ -1169,12 +1167,6 @@ func (hd *Datapath) DeleteVrf(vrfID uint64) error {
 		return err
 	}
 
-	//// save the tenant delete message
-	//hd.Lock()
-	//hd.DB.TenantDelDB[objectKey(&tn.ObjectMeta)] = &vrfDelReqMsg
-	//delete(hd.DB.TenantDB, objectKey(&tn.ObjectMeta))
-	//hd.Unlock()
-
 	return nil
 }
 
@@ -1195,12 +1187,6 @@ func (hd *Datapath) UpdateVrf(vrfID uint64) error {
 		log.Errorf("Error deleting tenant. Err: %v", err)
 		return err
 	}
-
-	//// save the tenant delete message
-	//hd.Lock()
-	//hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &vrfReqMsg
-	//delete(hd.DB.TenantDB, objectKey(&tn.ObjectMeta))
-	//hd.Unlock()
 
 	return nil
 }
@@ -1486,6 +1472,42 @@ func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.Int
 	// ToDo Remove the List Mock prior to FCS
 	lifs, uplinks, err := generateMockHwState()
 	return lifs, uplinks, err
+}
+
+// CreateNatPool creates a NAT Pool in the datapath
+func (hd *Datapath) CreateNatPool(np *netproto.NatPool) error {
+
+	return nil
+}
+
+// UpdateNatPool updates a NAT Pool in the datapath
+func (hd *Datapath) UpdateNatPool(np *netproto.NatPool) error {
+
+	return nil
+}
+
+// DeleteNatPool deletes a NAT Pool in the datapath
+func (hd *Datapath) DeleteNatPool(np *netproto.NatPool) error {
+
+	return nil
+}
+
+// CreateNatPolicy creates a NAT Policy in the datapath
+func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy) error {
+
+	return nil
+}
+
+// UpdateNatPolicy updates a NAT Policy in the datapath
+func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy) error {
+
+	return nil
+}
+
+// DeleteNatPolicy deletes a NAT Policy in the datapath
+func (hd *Datapath) DeleteNatPolicy(np *netproto.NatPolicy) error {
+
+	return nil
 }
 
 func (hd *Datapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule) (*halproto.SecurityGroupPolicySpec, error) {

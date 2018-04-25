@@ -163,6 +163,42 @@ func (dp *mockDatapath) UpdateInterface(intf *netproto.Interface, tn *netproto.T
 	return nil
 }
 
+// CreateNatPool creates a NAT Pool in the datapath. Stubbed out to satisfy datapath interface
+func (dp *mockDatapath) CreateNatPool(np *netproto.NatPool) error {
+
+	return nil
+}
+
+// UpdateNatPool updates a NAT Pool in the datapath. Stubbed out to satisfy datapath interface
+func (dp *mockDatapath) UpdateNatPool(np *netproto.NatPool) error {
+
+	return nil
+}
+
+// DeleteNatPool deletes a NAT Pool in the datapath. Stubbed out to satisfy datapath interface
+func (dp *mockDatapath) DeleteNatPool(np *netproto.NatPool) error {
+
+	return nil
+}
+
+// CreateNatPolicy creates a NAT Policy in the datapath. Stubbed out to satisfy datapath interface
+func (dp *mockDatapath) CreateNatPolicy(np *netproto.NatPolicy) error {
+
+	return nil
+}
+
+// UpdateNatPolicy updates a NAT Policy in the datapath. Stubbed out to satisfy datapath interface
+func (dp *mockDatapath) UpdateNatPolicy(np *netproto.NatPolicy) error {
+
+	return nil
+}
+
+// DeleteNatPolicy deletes a NAT Policy in the datapath. Stubbed out to satisfy datapath interface
+func (dp *mockDatapath) DeleteNatPolicy(np *netproto.NatPolicy) error {
+
+	return nil
+}
+
 func (dp *mockDatapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error) {
 	var lifs halproto.LifGetResponseMsg
 	var uplinks halproto.InterfaceGetResponseMsg
@@ -1457,4 +1493,196 @@ func TestNamespaceUpdate(t *testing.T) {
 
 	err = ag.UpdateNamespace(&ns)
 	AssertOk(t, err, "Error updating namespace")
+}
+
+func TestNatPoolCreateDelete(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// namespace
+	np := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			NetworkName: "default",
+		},
+	}
+
+	// create nat pool
+	err := ag.CreateNatPool(&np)
+	AssertOk(t, err, "Error creating nat pool")
+	natPool, err := ag.FindNatPool(np.ObjectMeta)
+	AssertOk(t, err, "Nat Pool was not found in DB")
+	Assert(t, natPool.Name == "testNatPool", "NatPool names did not match", natPool)
+
+	// verify duplicate tenant creations succeed
+	err = ag.CreateNatPool(&np)
+	AssertOk(t, err, "Error creating duplicate nat pool")
+
+	// verify list api works.
+	npList := ag.ListNatPool()
+	Assert(t, len(npList) == 1, "Incorrect number of nat pools")
+
+	// delete the natpool and verify its gone from db
+	err = ag.DeleteNatPool(&np)
+	AssertOk(t, err, "Error deleting nat pool")
+	_, err = ag.FindNatPool(np.ObjectMeta)
+	Assert(t, err != nil, "Nat Pool was still found in database after deleting", ag)
+
+	// verify you can not delete non-existing tenant
+	err = ag.DeleteNatPool(&np)
+	Assert(t, err != nil, "deleting non-existing nat pool succeeded", ag)
+}
+
+func TestNatPoolUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// namespace
+	np := netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "updateNatPool",
+		},
+		Spec: netproto.NatPoolSpec{
+			NetworkName: "default",
+		},
+	}
+
+	// create nat pool
+	err := ag.CreateNatPool(&np)
+	AssertOk(t, err, "Error creating nat pool")
+	natPool, err := ag.FindNatPool(np.ObjectMeta)
+	AssertOk(t, err, "Tenant was not found in DB")
+	Assert(t, natPool.Name == "updateNatPool", "Nat Pool names did not match", natPool)
+
+	npSpec := netproto.NatPoolSpec{
+		NetworkName: "default",
+	}
+
+	np.Spec = npSpec
+
+	err = ag.UpdateNatPool(&np)
+	AssertOk(t, err, "Error updating nat pool")
+}
+
+func TestNatPolicyCreateDelete(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// nat policy
+	np := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPolicy",
+		},
+		Spec: netproto.NatPolicySpec{
+			Rules: []netproto.NatRule{
+				{
+					Src: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "10.0.0.0 - 10.0.1.0",
+					},
+					Dst: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "192.168.0.0 - 192.168.1.1",
+					},
+					NatPool: "preCreatedNatPool",
+					Action:  "SNAT",
+				},
+			},
+		},
+	}
+
+	// create nat policy
+	err := ag.CreateNatPolicy(&np)
+	AssertOk(t, err, "Error creating nat policy")
+	natPool, err := ag.FindNatPolicy(np.ObjectMeta)
+	AssertOk(t, err, "Nat Pool was not found in DB")
+	Assert(t, natPool.Name == "testNatPolicy", "NatPolicy names did not match", natPool)
+
+	// verify duplicate tenant creations succeed
+	err = ag.CreateNatPolicy(&np)
+	AssertOk(t, err, "Error creating duplicate nat policy")
+
+	// verify list api works.
+	npList := ag.ListNatPolicy()
+	Assert(t, len(npList) == 1, "Incorrect number of nat policies")
+
+	// delete the nat policy and verify its gone from db
+	err = ag.DeleteNatPolicy(&np)
+	AssertOk(t, err, "Error deleting nat policy")
+	_, err = ag.FindNatPolicy(np.ObjectMeta)
+	Assert(t, err != nil, "Nat Pool was still found in database after deleting", ag)
+
+	// verify you can not delete non-existing tenant
+	err = ag.DeleteNatPolicy(&np)
+	Assert(t, err != nil, "deleting non-existing nat policy succeeded", ag)
+}
+
+func TestNatPolicyUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// nat policy
+	np := netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatPolicy",
+		},
+		Spec: netproto.NatPolicySpec{
+			Rules: []netproto.NatRule{
+				{
+					Src: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "10.0.0.0 - 10.0.1.0",
+					},
+					Dst: &netproto.MatchSelector{
+						MatchType: "IPRange",
+						Match:     "192.168.0.0 - 192.168.1.1",
+					},
+					NatPool: "preCreatedNatPool",
+					Action:  "SNAT",
+				},
+			},
+		},
+	}
+
+	// create nat policy
+	err := ag.CreateNatPolicy(&np)
+	AssertOk(t, err, "Error creating nat policy")
+	natPool, err := ag.FindNatPolicy(np.ObjectMeta)
+	AssertOk(t, err, "Tenant was not found in DB")
+	Assert(t, natPool.Name == "testNatPolicy", "Nat Pool names did not match", natPool)
+
+	npSpec := netproto.NatPolicySpec{
+		Rules: []netproto.NatRule{
+			{
+				NatPool: "updatedNatPool",
+			},
+		},
+	}
+
+	np.Spec = npSpec
+
+	err = ag.UpdateNatPolicy(&np)
+	AssertOk(t, err, "Error updating nat policy")
 }
