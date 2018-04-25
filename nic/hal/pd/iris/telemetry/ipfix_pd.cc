@@ -153,7 +153,7 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
     qstate.total_rings = 1;
 
     // first records start 16B after ipfix header
-    qstate.pktaddr = htobe64(pktaddr);
+    qstate.pktaddr = pktaddr;
     qstate.pktsize = (payload_size > 1500) ? 1500 : payload_size;
     qstate.ipfix_hdr_offset = payload_start;
     qstate.next_record_offset = qstate.ipfix_hdr_offset + 16;

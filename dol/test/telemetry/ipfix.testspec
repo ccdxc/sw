@@ -936,8 +936,8 @@ packets:
                 sport           : 32007
                 dport           : 4739
             ipfix   :
-                version         : 0
-                len             : 0
+                version         : 10
+                len             : 1376
                 export_time     : 0
                 seq_num         : 0
                 domain_id       : 0
@@ -974,10 +974,10 @@ packets:
                 sport           : 32007
                 dport           : 4739
             ipfix   :
-                version         : 0
-                len             : 0
+                version         : 10
+                len             : 152
                 export_time     : 0
-                seq_num         : 0
+                seq_num         : 1
                 domain_id       : 0
                 records         :
                     - record: ref://testcase/packets/id=IPV4_REC2_11/rawbytes
@@ -1003,8 +1003,8 @@ packets:
                 sport           : 32007
                 dport           : 4739
             ipfix   :
-                version         : 0
-                len             : 0
+                version         : 10
+                len             : 1376
                 export_time     : 0
                 seq_num         : 0
                 domain_id       : 0
@@ -1041,10 +1041,10 @@ packets:
                 sport           : 32007
                 dport           : 4739
             ipfix   :
-                version         : 0
-                len             : 0
+                version         : 10
+                len             : 152
                 export_time     : 0
-                seq_num         : 0
+                seq_num         : 1
                 domain_id       : 0
                 records         :
                     - record: ref://testcase/packets/id=IPV4_REC3_11/rawbytes
@@ -1071,8 +1071,8 @@ packets:
                 sport           : 32007
                 dport           : 4739
             ipfix   :
-                version         : 0
-                len             : 0
+                version         : 10
+                len             : 1376
                 export_time     : 0
                 seq_num         : 0
                 domain_id       : 0
@@ -1110,10 +1110,10 @@ packets:
                 sport           : 32007
                 dport           : 4739
             ipfix   :
-                version         : 0
-                len             : 0
+                version         : 10
+                len             : 152
                 export_time     : 0
-                seq_num         : 0
+                seq_num         : 1
                 domain_id       : 0
                 records         :
                     - record: ref://testcase/packets/id=IPV4_REC2_11/rawbytes
@@ -1140,8 +1140,8 @@ packets:
                 sport           : 32007
                 dport           : 4739
             ipfix   :
-                version         : 0
-                len             : 0
+                version         : 10
+                len             : 1376
                 export_time     : 0
                 seq_num         : 0
                 domain_id       : 0
@@ -1179,10 +1179,10 @@ packets:
                 sport           : 32007
                 dport           : 4739
             ipfix   :
-                version         : 0
-                len             : 0
+                version         : 10
+                len             : 152
                 export_time     : 0
-                seq_num         : 0
+                seq_num         : 1
                 domain_id       : 0
                 records         :
                     - record: ref://testcase/packets/id=IPV4_REC3_11/rawbytes

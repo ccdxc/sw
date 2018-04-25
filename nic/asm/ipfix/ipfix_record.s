@@ -24,7 +24,7 @@ ipfix_create_record:
     bbeq        k.ipfix_metadata_scan_complete, TRUE, ipfix_header_fixups
 
     // setup record start address
-    add         r1, d.u.ipfix_create_record_d.pktaddr, \
+    add         r1, d.{u.ipfix_create_record_d.pktaddr}.dx, \
                     d.{u.ipfix_create_record_d.next_record_offset}.hx
 
     seq         c1, k.ipfix_metadata_flow_type, FLOW_KEY_LOOKUP_TYPE_IPV4
@@ -116,20 +116,26 @@ ipfix_header_fixups:
 
     // IPFIX header fixups before sending the packet out
     phvwr       p.ipfix_record_header_version, IPFIX_VERSION
-    add         r1, r1, IPFIX_HEADER_SIZE
+    sub         r1, d.{u.ipfix_create_record_d.next_record_offset}.hx, \
+                    d.{u.ipfix_create_record_d.ipfix_hdr_offset}.hx
     phvwr       p.ipfix_record_header_len, r1
-    phvwr       p.ipfix_record_header_export_time, r4[63:32]
-    phvwr       p.ipfix_record_header_seq_num, 1
-    phvwr       p.ipfix_record_header_domain_id, 1
+    phvwr       p.ipfix_record_header_export_time, 0
+    phvwr       p.ipfix_record_header_seq_num, \
+                    d.{u.ipfix_create_record_d.seq_no}.wx
+    phvwr       p.ipfix_record_header_domain_id, \
+                    d.{u.ipfix_create_record_d.domain_id}.wx
 
     phvwr       p.phv2mem_cmd3_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.phv2mem_cmd3_dma_cmd_phv_start_addr, \
                     CAPRI_PHV_START_OFFSET(ipfix_record_header_version)
     phvwr       p.phv2mem_cmd3_dma_cmd_phv_end_addr, \
                     CAPRI_PHV_END_OFFSET(ipfix_record_header_domain_id)
-    add         r1, d.u.ipfix_create_record_d.pktaddr, \
-                    d.u.ipfix_create_record_d.ipfix_hdr_offset
+    add         r1, d.{u.ipfix_create_record_d.pktaddr}.dx, \
+                    d.{u.ipfix_create_record_d.ipfix_hdr_offset}.hx
     phvwr       p.phv2mem_cmd3_dma_cmd_addr, r1
+
+    // increment sequence number
+    tbladd      d.{u.ipfix_create_record_d.seq_no}.wx, 1
 
     // disable doorbell (self)
     addi        r1, r0, DB_ADDR_BASE
