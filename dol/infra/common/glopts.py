@@ -87,6 +87,8 @@ parser.add_argument('--model_ip', dest='model_ip', default=None,
                     help='Model IP Address.')
 parser.add_argument('--agent', dest='agent', action='store_true',
                     help='Start DOL with Agent')
+parser.add_argument('--savepcap', dest='savepcap', action='store_true',
+                    help='Save all the packets to PCAP instead.')
 
 
 GlobalOptions = parser.parse_args()
@@ -157,3 +159,6 @@ def ValidateGlopts():
         for k,v in GlobalOptions.__dict__.items():
             print ("  %s = " % k, v)
         print("========================================================")
+
+    if GlobalOptions.savepcap:
+        GlobalOptions.skipverify=True

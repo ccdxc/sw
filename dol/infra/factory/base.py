@@ -36,5 +36,10 @@ class FactoryObjectBase(objects.FrameworkObject):
         logger.warn("GetTxPktByteStats(): Base class implmentation called !!!")
         return (None,None)
 
+    def GetTxPacket(self):
+        # Base class implementation.
+        logger.warn("GetTxPacket(): Base class implmentation called !!!")
+        return None
+
     def GetLif(self):
         return None

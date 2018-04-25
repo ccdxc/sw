@@ -38,6 +38,8 @@ import infra.config.config      as config
 import config.generator         as generator
 import infra.e2e.main           as e2e
 
+from infra.asic.pktcollector    import PacketCollector
+
 def Main():
     logger.info("Initializing Config Infra")
     config.init()
@@ -72,7 +74,10 @@ def Main():
     
     if glopts.GlobalOptions.e2e:
         e2e.Stop()
-    
+   
+    if glopts.GlobalOptions.savepcap:
+        PacketCollector.Write()
+
     return status
 
 

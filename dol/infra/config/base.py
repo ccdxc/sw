@@ -133,6 +133,7 @@ class AgentObjectMeta:
     def __init__(self):
         self.Name = None
         self.Tenant = None
+        self.Namespace = None
         return
 
 class AgentObjectBase:
@@ -141,4 +142,5 @@ class AgentObjectBase:
         self.meta = AgentObjectMeta()
         self.meta.Name = name
         self.meta.Tenant = ten
+        self.meta.Namespace = ten
         return

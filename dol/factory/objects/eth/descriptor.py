@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-
+import pdb
 from pprint import pformat
 from scapy.all import *
 import config.resmgr            as resmgr
@@ -263,6 +263,15 @@ class EthTxDescriptorObject(EthDescriptorObject):
         if nbytes is None:
             return (None, None)
         return (1, nbytes)
+
+    def GetTxPacket(self):
+        flds = getattr(self.spec, 'fields', None)
+        if flds is None:
+            return None
+        buf = getattr(flds, '_buf', None)
+        if buf is not None:
+            return buf.spec.fields.data
+        return None
 
 class EthTxSgDescriptorObject(EthDescriptorObject):
     __data_class__ = EthTxSgDescriptor

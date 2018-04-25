@@ -2,12 +2,13 @@
 import pdb
 import time
 
-import infra.asic.model as model
 import infra.common.defs as defs
 
-from infra.common.logging   import logger as logger
-from infra.common.glopts    import GlobalOptions
-from infra.asic.model       import ModelConnector
+from infra.common.logging       import logger as logger
+from infra.common.glopts        import GlobalOptions
+from infra.asic.model           import ModelConnector
+from infra.asic.pktcollector    import PacketCollector
+
 import infra.e2e.main as E2E 
 
 class TriggerEngineObject:
@@ -75,7 +76,7 @@ class DolTriggerEngineObject(TriggerEngineObject):
         return
 
     def __trigger_descriptors(self, tc, step):
-        if GlobalOptions.dryrun:
+        if GlobalOptions.dryrun and not GlobalOptions.savepcap:
             return
 
         if step.trigger.descriptors == None:
@@ -88,9 +89,12 @@ class DolTriggerEngineObject(TriggerEngineObject):
             ring = dbsp.descriptor.ring
             descr = dbsp.descriptor.object
 
-            logger.info("Posting Descriptor:%s on Ring:%s" %\
-                    (ring.GID(), descr.GID()))
-            ring.Post(descr)
+            if GlobalOptions.savepcap:
+                PacketCollector.SaveTx(descr.GetTxPacket(), ring.GetLif())
+            else:
+                logger.info("Posting Descriptor:%s on Ring:%s" %\
+                        (ring.GID(), descr.GID()))
+                ring.Post(descr)
         return
 
     def __trigger_packets(self, step):
@@ -103,7 +107,10 @@ class DolTriggerEngineObject(TriggerEngineObject):
             port = p.ports[0]
             logger.info("Sending Input Packet:%s of Length:%d on Port:%d" %\
                         (p.packet.GID(), len(rawpkt), port))
-            ModelConnector.Transmit(rawpkt, port)
+            if GlobalOptions.savepcap:
+                PacketCollector.Save(p.packet.GetScapyPacket(), port)
+            else:
+                ModelConnector.Transmit(rawpkt, port)
         return
 
     def __ring_doorbell(self, step):
