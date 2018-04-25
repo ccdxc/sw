@@ -112,6 +112,17 @@ entries:
             port : const/47802
 
     - entry:
+        label: tcp-proxy-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        tls_sess_profile: ref://factory/templates/id=TLS_PROXY_SESS_PROFILE_ECDSA
+        responder: 
+            port : const/85
+        initiator: 
+            port : const/47802
+
+    - entry:
         label: proxy-redir-e2e
         tracking: False
         timestamp: False

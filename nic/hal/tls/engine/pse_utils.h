@@ -10,8 +10,6 @@ void pse_log(const char* format, ...);
 
 #define LOG(level, fmt_str, ...)            \
     do {                                    \
-        printf("[%s][%s:%d:%s()] "fmt_str"\n",  \
-                level, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
         pse_log("[%s][%s:%d:%s()] "fmt_str"\n",                      \
                 level, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
     } while (0)

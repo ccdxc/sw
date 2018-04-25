@@ -45,9 +45,13 @@ sock_stats = []
 
 hntap_log = nic_dir + "/hntap.log"
 tls_svr_log = nic_dir + "/tls_server.log"
+tls_clt_log = nic_dir + "/tls_client.log"
 tcp_svr_log = nic_dir + "/tcp_server.log"
 tcp_clt_log = nic_dir + "/tcp_client.log"
 HalChannel = None
+
+DIR_HOST = 'from-host'
+DIR_NET = 'from-net'
 
 TLS_GCM_CIPHER = "ECDHE-ECDSA-AES128-GCM-SHA256"
 TLS_GCM_CERTFILE = "e2etests/proxy/ca.crt"
@@ -132,6 +136,18 @@ def run_tls_server(tcp_port, cipher, certfile, keyfile, clientCAfile):
     time.sleep(10)
     return
 
+def run_tls_client(tcp_port, direction='from-host'):
+    log = open(tls_clt_log, "a")
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tls-client',
+                 '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world",
+                 '-m', direction]
+    p = Popen(cmd, stdout=log, stderr=log)
+    print("* Starting TLS Client on port %s, pid (%s)" % (tcp_port, str(p.pid)))
+    print("    - Log file: " + tls_clt_log + "\n")
+    p.communicate()
+    p.wait()
+    return p.returncode
+
 def run_tcp_server(tcp_port):
     log = open(tcp_svr_log, "a")
     cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tcp-server', tcp_port ]
@@ -144,9 +160,9 @@ def run_tcp_server(tcp_port):
     return
 
 
-def run_tcp_client(tcp_port):
+def run_tcp_client(tcp_port, direction='from-host'):
     log = open(tcp_clt_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tcp-client', '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world", '-m', 'from-host']
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tcp-client', '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world", '-m', direction]
     p = Popen(cmd, stdout=log, stderr=log)
     print("* Starting TCP Client on port %s, pid (%s)" % (tcp_port, str(p.pid)))
     print("    - Log file: " + tcp_clt_log + "\n")
@@ -231,20 +247,33 @@ def print_logs():
       for line in sock_stats:
           print("    " + line)
 
-def run_test(testnum, testname, tcp_port, bypass_tls, cipher, certfile, keyfile, clientCAfile):
+def run_test(testnum, testname, tcp_port, bypass_tls, cipher, certfile, keyfile, clientCAfile, client_dir):
     print("Test %d: Running E2E %s test, tcp-port %s\n" % (testnum, testname, tcp_port))
     start_time = time.time()
 
     run_hntap(tcp_port)
+    
+    if client_dir == DIR_HOST:    
+        if (bypass_tls == 1):
+            set_proxy_tls_bypass_mode(True)
+            run_tcp_server(tcp_port)
+        else:
+            set_proxy_tls_bypass_mode(False)
+            run_tls_server(tcp_port, cipher, certfile, keyfile, clientCAfile)
 
-    if (bypass_tls == 1):
-        set_proxy_tls_bypass_mode(True)
+        status = run_tcp_client(tcp_port)
+    elif client_dir == DIR_NET:
         run_tcp_server(tcp_port)
-    else:
-        set_proxy_tls_bypass_mode(False)
-        run_tls_server(tcp_port, cipher, certfile, keyfile, clientCAfile)
 
-    status = run_tcp_client(tcp_port)
+        if(bypass_tls == 1):
+            set_proxy_tls_bypass_mode(True)
+            status = run_tcp_client(tcp_port, direction='from-net')
+        else:
+            set_proxy_tls_bypass_mode(False)
+            status = run_tls_client(tcp_port, direction='from-net')
+    else:
+        print("Unsupported direction: %s" %(client_dir))
+        return -1
 
     print_logs()
     print("\n- Test %d: run time: %s seconds\n" % (testnum, round(time.time() - start_time, 1)))
@@ -275,45 +304,50 @@ def main():
     log.close()
     log = open(tls_svr_log, "w")
     log.close()
+    log = open(tls_clt_log, "w")
+    log.close()
     log = open(hntap_log, "w")
     log.close()
-
     TESTS = [
              {
                 'id': 1, 'name': "TLS Proxy-GCM", 'port': 80, 'bypass_tls': 0,
                 'cipher': TLS_GCM_CIPHER, 'certfile': TLS_GCM_CERTFILE,
-                'keyfile': TLS_GCM_KEYFILE, 'clientCAfile': None 
+                'keyfile': TLS_GCM_KEYFILE, 'clientCAfile': None, 'client_dir': DIR_HOST
              },
              {
                 'id': 2, 'name': "TCP Proxy", 'port': 81, 'bypass_tls': 1,
                 'cipher': None, 'certfile': None, 'keyfile': None,
-                'clientCAfile': None 
+                'clientCAfile': None, 'client_dir': DIR_HOST
              },
              {
                 'id': 3, 'name': "TLS Proxy with APP-redirect", 'port': 89,
                 'bypass_tls': 0, 'cipher': TLS_GCM_CIPHER, 
                 'certfile': TLS_GCM_CERTFILE, 'keyfile': TLS_GCM_KEYFILE,
-                'clientCAfile': None 
+                'clientCAfile': None, 'client_dir': DIR_HOST
              },
              {
                 'id': 4, 'name': "TLS Proxy with APP-redirect(SPAN mode)",
                 'port': 8089, 'bypass_tls': 0, 'cipher': TLS_GCM_CIPHER, 
                 'certfile': TLS_GCM_CERTFILE, 'keyfile': TLS_GCM_KEYFILE,
-                'clientCAfile': None 
+                'clientCAfile': None, 'client_dir': DIR_HOST
              },
              {
                 'id': 5, 'name': "TLS Proxy - RSA",
                 'port': 82, 'bypass_tls': 0, 'cipher': TLS_RSA_CIPHER, 
                 'certfile': TLS_RSA_CERTFILE, 'keyfile': TLS_RSA_KEYFILE,
-                'clientCAfile': None 
+                'clientCAfile': None, 'client_dir': DIR_HOST 
+             },
+             {
+                'id': 6, 'name': "TCP Server Proxy - GCM", 'port': 85, 'bypass_tls': 1,
+                'cipher': None, 'certfile': None, 'keyfile': None, 'clientCAfile': None,
+                'client_dir': DIR_NET
              },
             ]
-    
     for test in TESTS:
         status = run_test(test['id'], test['name'], str(test['port']),
                           test['bypass_tls'], test['cipher'],
                           test['certfile'], test['keyfile'],
-                          test['clientCAfile'])
+                          test['clientCAfile'], test['client_dir'])
         if status != 0:
             break;
         else:

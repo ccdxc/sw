@@ -379,7 +379,7 @@ lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb,
                                         hal::flow_direction_t dir,
                                         uint32_t iqid, uint32_t rqid, 
                                         uint16_t src_lif, uint16_t hw_vlan_id,
-                                        proxy_flow_info_t *pfi)
+                                        uint16_t rencap_vlan, proxy_flow_info_t *pfi)
 {
     lklshim_flow_t      *flow;
     lklshim_flow_key_t  flow_key;
@@ -401,6 +401,7 @@ lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb,
      */
     flow->itor_dir = dir;
     flow->hw_vlan_id = hw_vlan_id;
+    flow->rencap_vlan = rencap_vlan;
     flow->iqid = iqid;
     lklshim_flow_by_qid[iqid] = flow;
     flow->rqid = rqid;
@@ -409,9 +410,9 @@ lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb,
     flow->pfi = pfi;
 
     proxy::tcp_create_cb_v6(flow->iqid, flow->src_lif, eth, vlan, ip6, tcp, true, hw_vlan_id,
-                            proxyccb_tcpcb_l7_proxy_type_eval(flow->iqid));
+                            proxyccb_tcpcb_l7_proxy_type_eval(flow->iqid), flow->rencap_vlan);
     proxy::tcp_create_cb_v6(flow->rqid, flow->src_lif, eth, vlan, ip6, tcp, false, hw_vlan_id,
-                            proxyccb_tcpcb_l7_proxy_type_eval(flow->rqid));
+                            proxyccb_tcpcb_l7_proxy_type_eval(flow->rqid), flow->rencap_vlan);
 
     // create tlscb
     hal::tls::tls_api_init_flow(flow->iqid, false);

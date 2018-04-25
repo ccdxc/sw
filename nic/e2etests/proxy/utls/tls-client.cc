@@ -1,30 +1,69 @@
 #include "nic/e2etests/proxy/ntls.hpp"
+#include <netinet/tcp.h>
 
 int bytes_recv;
 int port;
 char* test_data;
-
+bool from_localhost=true;
 
 pthread_t server_thread;
 
 void *main_server(void*);
 int main_tls_client(void);
 
-int main(int argv, char* argc[]) {
+static void 
+usage() 
+{
+    TLOG("usage: ./tls -p port -d test_data_file -m from-host|from-net\n");
+}
 
-  if (argv != 3) {
-    TLOG("usage: ./tls port test_data_file\n");
-    exit(-1);
+int main(int argc, char* argv[]) {
+  int opt = 0;
+
+  setlinebuf(stdout);
+  setlinebuf(stderr);
+
+  if (argc != 7 && argc != 8) {
+      usage();
+      exit(-1);
   }
-  port = atoi(argc[1]);
-  TLOG("Connecting to port %i\n", port);
-  test_data = argc[2];
+
+  while ((opt = getopt(argc, argv, "p:d:m:c")) != -1) {
+    switch (opt) {
+    case 'p':
+        port = atoi(optarg);
+	TLOG( "port=%d\n", port);
+	break;
+    case 'd':
+        test_data = optarg;
+	break;
+    case 'm':
+        if (!strncmp(optarg, "from-host", 10)) {
+            from_localhost = true;
+        } else if (!strncmp(optarg, "from-net", 10)) {
+	    from_localhost = false;
+	} else {
+        usage();
+        exit(-1);
+	}
+        break;
+    case '?':
+    default:
+        usage();
+     	exit(-1);
+        break;
+    }
+
+  }
 
   SSL_library_init();
   OpenSSL_add_all_algorithms();
   ERR_load_BIO_strings();
   ERR_load_crypto_strings();
   SSL_load_error_strings();/* load all error messages */
+
+  TLOG("Connecting to port %i, test-data file %s, %s\n", port, test_data,
+	  from_localhost ? "from host" : "from network");
 
   main_tls_client();
   return 0;
@@ -33,14 +72,43 @@ int main(int argv, char* argc[]) {
 int create_socket() {
   int sockfd;
   struct sockaddr_in dest_addr;
+  struct sockaddr_in src_addr;
 
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+  memset(&(src_addr), '\0', sizeof(src_addr));
+  src_addr.sin_family=AF_INET;
+  src_addr.sin_port=htons(0xbaba);
+
+  if (from_localhost) {
+      inet_pton(AF_INET, "64.1.0.4", &src_addr.sin_addr.s_addr);
+  } else {
+      inet_pton(AF_INET, "64.0.0.2", &src_addr.sin_addr.s_addr);
+  }
+
+  int optval = 1;
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval, sizeof(optval));
+
+  optval = 8;
+  if (setsockopt(sockfd, IPPROTO_TCP, TCP_SYNCNT, &optval, sizeof(optval)) != 0) {
+      TLOG("can't bind port - %s", strerror(errno));
+      exit(-1);
+  }
+
+  if ( bind(sockfd, (const struct sockaddr*)&src_addr, sizeof(src_addr)) != 0 ) {
+      TLOG("can't bind port - %s", strerror(errno));
+      exit(-1);
+  }
 
   memset(&(dest_addr), '\0', sizeof(dest_addr));
   dest_addr.sin_family=AF_INET;
   dest_addr.sin_port=htons(port);
 
-  inet_pton(AF_INET, "10.0.100.2", &dest_addr.sin_addr.s_addr);
+  if (from_localhost) {
+      inet_pton(AF_INET, "64.0.0.1", &dest_addr.sin_addr.s_addr);
+  } else {
+      inet_pton(AF_INET, "64.1.0.3", &dest_addr.sin_addr.s_addr);
+  }
 
   if ( connect(sockfd, (struct sockaddr *) &dest_addr,
                sizeof(struct sockaddr_in)) == -1 ) {
@@ -125,6 +193,9 @@ int main_tls_client()
     TLOG("Error: Could not build a SSL session\n");
     exit(-1);
   }
+
+  TLOG("Client: Connected ! - transport fd %d\n", transport_fd);
+
 
   // Start tests
   test_tls(ssl);
