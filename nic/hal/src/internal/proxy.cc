@@ -42,11 +42,16 @@ proxy_meta_init() {
         (proxy_meta_t) {false, 1, {SERVICE_LIF_IPSEC_ESP, 2, {{0, 2, 4}, {1, 2, 4}}},
                         types::PROXY_TYPE_NONE, false};
 
-    // CB size 64 bytes, num_entries = 2
-    //  QID 0 : RNMDR
-    //  QID 1 : TNMDR
+    // num qtype = 2 (RNMDR, TNMDR)
+    // CB size 64 bytes
+    // num_entries = 8 (number of producers - tcp, tls etc.)
+    //  QID 0 : TCP Producer
+    //  QID 1 : TLS Producer
+    //  QID 2 : IPSEC Producer
+    //  QID 3 : CPU Producer
+    //  QID 4 : ...
     g_meta[types::PROXY_TYPE_GC] =
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 1, {0, 1, 1}}, types::PROXY_TYPE_NONE, false};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 2, {{0, 1, 3}, {1, 1, 3}}}, types::PROXY_TYPE_NONE, false};
 
     g_meta[types::PROXY_TYPE_CPU] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 2, (uint8_t)ceil(log2(types::CpucbId_ARRAYSIZE))}},

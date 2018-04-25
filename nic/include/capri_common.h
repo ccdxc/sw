@@ -211,9 +211,9 @@
 #define CAPRI_RNMDR_GC_RING_SIZE                1024
 #define CAPRI_TNMDR_GC_RING_SIZE                1024
 
-#define CAPRI_HBM_GC_RNMDR_QID                  0
-#define CAPRI_HBM_GC_TNMDR_QID                  1
-#define CAPRI_HBM_GC_NUM_QID                    2
+#define CAPRI_HBM_GC_RNMDR_QTYPE                0
+#define CAPRI_HBM_GC_TNMDR_QTYPE                1
+#define CAPRI_HBM_GC_NUM_QTYPE                  2
 
 #define CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE     256
 #define CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT    8

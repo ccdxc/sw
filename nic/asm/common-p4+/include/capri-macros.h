@@ -260,6 +260,9 @@
         or              r3, r3, _qid, DB_QID_SHFT;\
         or              r3, r3, _ring, DB_RING_SHFT;
 
+#define CAPRI_RING_DOORBELL_DATA_QID(_qid) \
+        add             r3, r0, _qid, DB_QID_SHFT;\
+
 #define CAPRI_DMA_COMMAND_SIZE            128
 
 #define CAPRI_DMA_COMMAND_MEM_TO_PKT      1

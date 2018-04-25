@@ -439,9 +439,9 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
     // Ring doorbell
     pd_cpupkt_program_send_ring_doorbell_args_t d_args = {0};
     d_args.dest_lif = SERVICE_LIF_GC;
-    d_args.qtype = 0;
-    d_args.qid = CAPRI_HBM_GC_RNMDR_QID;
-    d_args.ring_number = CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER;
+    d_args.qtype = CAPRI_HBM_GC_RNMDR_QTYPE;
+    d_args.qid = CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER;
+    d_args.ring_number = 0;
     ret = pd_cpupkt_program_send_ring_doorbell(&d_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to ring doorbell");

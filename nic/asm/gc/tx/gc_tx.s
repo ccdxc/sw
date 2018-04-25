@@ -12,115 +12,86 @@ struct gc_tx_initial_action_initial_action_d d;
 
 /*
  * Each ring (RNMDR, TNMDR etc.) that needs to be garbage collected, gets its
- * own QID, and hence its own start offset.
+ * own Qtype, and hence its own start offset.
  *
- * Each QID, can contain upto 8 rings.
- * Each ring stands for a producer (TCP, TLS, IPSEC etc.) producing into the GC
- * ring
+ * Each producer (TCP, TLS, IPSEC etc.) that need to free to a ring, gets a QID
+ * The ring id is always 0
  */
-
-.align
-gc_tx_rnmdr_s0_start:
-    .brbegin
-        brpri       r7[3:0], [0, 1, 2, 3]
-        nop
-            .brcase CAPRI_RNMDR_GC_TCP_RING_PRODUCER
-                b gc_tx_handle_rnmdr_tcp
-                nop
-            .brcase CAPRI_RNMDR_GC_TLS_RING_PRODUCER 
-                b gc_tx_abort
-                nop
-            .brcase CAPRI_RNMDR_GC_IPSEC_RING_PRODUCER 
-                b gc_tx_abort
-                nop
-            .brcase CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER
-                b gc_tx_handle_rnmdr_arm
-                nop
-            .brcase CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER + 1
-                b gc_tx_abort
-                nop
-
-    .brend
-
-
-.align
-gc_tx_tnmdr_s0_start:
-    .brbegin
-        brpri       r7[0:0], [0]
-        nop
-            .brcase CAPRI_TNMDR_GC_TCP_RING_PRODUCER
-                b gc_tx_handle_tnmdr_tcp
-                nop
-            .brcase CAPRI_TNMDR_GC_TCP_RING_PRODUCER + 1
-                b gc_tx_abort
-                nop
-    .brend
-
 
 /*
- * TCP freeing a descriptor into RNMDR
+ * free a descriptor into RNMDR
  */
-gc_tx_handle_rnmdr_tcp:
+.align
+gc_tx_rnmdr_s0_start:
     CAPRI_OPERAND_DEBUG(d.ring_base)
-    CAPRI_OPERAND_DEBUG(d.ring_shift)
+
     /*
-     * Ring 0 is the ring that TCP writes to when freeing a descriptor
-     *
+     * Check pi == ci and exit if no work to be done
+     */
+    seq             c1, d.{ci_0}, d.{pi_0}
+    b.c1            gc_tx_abort
+
+    /*
      * r5 = Address to read from descriptor GC ring
      * 
      * r4 = doorbell address
      * r3 = doorbell data
      */
-    add             r5, d.{ring_base}.dx, RNMDR_GC_PRODUCER_TCP, RNMDR_GC_PER_PRODUCER_SHIFT
-    add             r5, r5, d.{ci_0}.hx, RNMDR_TABLE_ENTRY_SIZE_SHFT
+    add             r5, d.{ring_base}.dx, d.{ci_0}.hx, RNMDR_TABLE_ENTRY_SIZE_SHFT
     tblmincri.f     d.{ci_0}.hx, RNMDR_GC_PER_PRODUCER_SHIFT, 1
     nop
     
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, gc_tx_read_rnmdr_addr, r5, TABLE_SIZE_64_BITS)
 
     /*
-     * Ring doorbell to set CI if pi == ci
+     * Ring doorbell to EVAL if pi == ci
      */
     seq             c1, d.{ci_0}.hx, d.{pi_0}.hx
     b.!c1           gc_tx_end
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_GC)
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, \
+                        DB_SCHED_UPD_EVAL, CAPRI_HBM_GC_RNMDR_QTYPE, LIF_GC)
     /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, CAPRI_HBM_GC_RNMDR_QID, CAPRI_RNMDR_GC_TCP_RING_PRODUCER, 0)
+    CAPRI_RING_DOORBELL_DATA_QID(k.p4_txdma_intr_qid)
     memwr.dx        r4, r3
 
     nop.e
     nop
 
+
 /*
- * TCP freeing a descriptor into TNMDR
+ * free a descriptor into TNMDR
  */
-gc_tx_handle_tnmdr_tcp:
+.align
+gc_tx_tnmdr_s0_start:
     CAPRI_OPERAND_DEBUG(d.ring_base)
-    CAPRI_OPERAND_DEBUG(d.ring_shift)
+
     /*
-     * Ring 0 is the ring that TCP writes to when freeing a descriptor
-     *
+     * Check pi == ci and exit if no work to be done
+     */
+    seq             c1, d.{ci_0}, d.{pi_0}
+    b.c1            gc_tx_abort
+
+    /*
      * r5 = Address to read from descriptor GC ring
      * 
      * r4 = doorbell address
      * r3 = doorbell data
      */
-    add             r5, d.{ring_base}.dx, TNMDR_GC_PRODUCER_TCP, TNMDR_GC_PER_PRODUCER_SHIFT
-    add             r5, r5, d.{ci_0}.hx, TNMDR_TABLE_ENTRY_SIZE_SHFT
+    add             r5, d.{ring_base}.dx, d.{ci_0}.hx, TNMDR_TABLE_ENTRY_SIZE_SHFT
     tblmincri.f     d.{ci_0}.hx, TNMDR_GC_PER_PRODUCER_SHIFT, 1
     nop
 
-    add             r3, d.{ring_base}.dx, TNMDR_GC_PRODUCER_TCP, TNMDR_GC_PER_PRODUCER_SHIFT
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, gc_tx_read_tnmdr_addr, r5, TABLE_SIZE_64_BITS)
 
     /*
-     * Ring doorbell to set CI if pi == ci
+     * Ring doorbell to EVAL if pi == ci
      */
     seq             c1, d.{ci_0}.hx, d.{pi_0}.hx
     b.!c1           gc_tx_end
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_GC)
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, \
+                        DB_SCHED_UPD_EVAL, CAPRI_HBM_GC_TNMDR_QTYPE, LIF_GC)
     /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, CAPRI_HBM_GC_TNMDR_QID, CAPRI_TNMDR_GC_TCP_RING_PRODUCER, 0)
+    CAPRI_RING_DOORBELL_DATA_QID(k.p4_txdma_intr_qid)
     memwr.dx        r4, r3
 
     nop.e
@@ -134,37 +105,3 @@ gc_tx_abort:
     nop.e
     phvwr           p.p4_intr_global_drop, 1
     
-/*
- * ARM freeing a descriptor into RNMDR
- */
-gc_tx_handle_rnmdr_arm:
-    CAPRI_OPERAND_DEBUG(d.ring_base)
-    CAPRI_OPERAND_DEBUG(d.ring_shift)
-    /*
-     * Ring 3 is the ring that ARM writes to when freeing a descriptor
-     *
-     * r5 = Address to read from descriptor GC ring
-     * 
-     * r4 = doorbell address
-     * r3 = doorbell data
-     */
-    add             r5, d.{ring_base}.dx, RNMDR_GC_PRODUCER_ARM, (RNMDR_GC_PER_PRODUCER_SHIFT + RNMDR_TABLE_ENTRY_SIZE_SHFT)
-    add             r5, r5, d.{ci_3}.hx, RNMDR_TABLE_ENTRY_SIZE_SHFT
-    tblmincri.f     d.{ci_3}.hx, RNMDR_GC_PER_PRODUCER_SHIFT, 1
-    nop
-    
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, gc_tx_read_rnmdr_addr, r5, TABLE_SIZE_64_BITS)
-
-    /*
-     * Ring doorbell to set CI if pi == ci
-     */
-    seq             c1, d.{ci_3}.hx, d.{pi_3}.hx
-    b.!c1           gc_tx_end
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_GC)
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, CAPRI_HBM_GC_RNMDR_QID, CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER, 0)
-    memwr.dx        r4, r3
-
-    nop.e
-    nop
-

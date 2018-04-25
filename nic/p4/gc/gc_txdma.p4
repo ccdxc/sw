@@ -44,7 +44,6 @@ header_type gc_txdma_initial_action_t {
         CAPRI_QSTATE_HEADER_RING(5) // Total 32 bytes
 
         ring_base               : 64;
-        ring_shift              : 8;
     }    
 }
 
@@ -150,7 +149,7 @@ metadata dma_cmd_phv2mem_t ci_4_dma;            // dma cmd 8
  */
 action initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
                              pi_0, ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3,
-                             pi_4, ci_4, pi_5, ci_5, ring_base, ring_shift) {
+                             pi_4, ci_4, pi_5, ci_5, ring_base) {
     // k + i for stage 0
 
     // from intrinsic
@@ -187,7 +186,6 @@ action initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     modify_field(gc_txdma_initial_d.ci_5, ci_5);
 
     modify_field(gc_txdma_initial_d.ring_base, ring_base);
-    modify_field(gc_txdma_initial_d.ring_shift, ring_shift);
 }
 
 /*

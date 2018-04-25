@@ -19,18 +19,18 @@ namespace pd {
  * Garbage collector TxDMA
  * ******************************************/
 hal_ret_t
-p4pd_get_gc_tx_stage0_prog_offset(int qid, uint64_t* offset)
+p4pd_get_gc_tx_stage0_prog_offset(int qtype, uint64_t* offset)
 {
     char progname[] = "txdma_stage0.bin";
-    const char *labelname[CAPRI_HBM_GC_NUM_QID] = {
+    const char *labelname[CAPRI_HBM_GC_NUM_QTYPE] = {
         "gc_tx_rnmdr_stage0",
         "gc_tx_tnmdr_stage0"
     };
-    HAL_ABORT(qid < CAPRI_HBM_GC_NUM_QID);
+    HAL_ABORT(qtype < CAPRI_HBM_GC_NUM_QTYPE);
 
     int ret = capri_program_label_to_offset("p4plus",
                                             progname,
-                                            (char *)labelname[qid],
+                                            (char *)labelname[qtype],
                                             offset);
     if(ret < 0) {
         return HAL_RET_HW_FAIL;
@@ -40,7 +40,8 @@ p4pd_get_gc_tx_stage0_prog_offset(int qid, uint64_t* offset)
 }
 
 static hal_ret_t
-p4pd_add_or_del_gc_tx_stage0_entry(int qid, uint64_t ring_base, int ring_shift, bool del)
+p4pd_add_or_del_gc_tx_stage0_entry(int qtype, int qid, uint64_t ring_base,
+        bool del)
 {
     gc_tx_initial_action_d                      data = {0};
     hal_ret_t                                   ret = HAL_RET_OK;
@@ -48,26 +49,23 @@ p4pd_add_or_del_gc_tx_stage0_entry(int qid, uint64_t ring_base, int ring_shift, 
     uint64_t                                    addr;
 
     // hardware index for this entry
-    addr = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_GC, 0, qid);
+    addr = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_GC, qtype, qid);
 
     if(!del) {
         // get pc address
-        if(p4pd_get_gc_tx_stage0_prog_offset(qid, &pc_offset) != HAL_RET_OK) {
+        if(p4pd_get_gc_tx_stage0_prog_offset(qtype, &pc_offset) != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to get pc address");
             ret = HAL_RET_HW_FAIL;
         }
         pc_offset = (pc_offset >> 6);
         HAL_TRACE_DEBUG("programming action-id: {:#x}", pc_offset);
         data.action_id = pc_offset;
-        data.u.initial_action_d.total = 5;
+        data.u.initial_action_d.total = 1;
         data.u.initial_action_d.ring_base = ring_base;
-        data.u.initial_action_d.ring_shift = ring_shift;
     }
 
-    HAL_TRACE_DEBUG("Programming gc tx qid {0} stage0 at addr: 0x{1:x}",
-            qid, addr);
-    HAL_TRACE_DEBUG("ring_base 0x{0:x}, ring_shift 0x{1:x}",
-            ring_base, ring_shift);
+    HAL_TRACE_DEBUG("Programming gc tx qtype {0} qid {1} stage0 at addr: 0x{2:x}",
+            qtype, qid, addr);
     if(!p4plus_hbm_write(addr,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for addr");
@@ -76,35 +74,142 @@ p4pd_add_or_del_gc_tx_stage0_entry(int qid, uint64_t ring_base, int ring_shift, 
     return ret;
 }
 
+/*
+ * Program GC CB for 
+ *  LIF (SERVICE_LIF_GC)
+ *  type (type of ring RNMDR/TNMDR)
+ *  qid (producer - tcp, tls, ipsec etc.)
+ *
+ * CB is programmed with
+ *  PC = action for type of ring
+ *  ring_base (per producer ring base)
+ */
+static hal_ret_t
+p4pd_init_gc_cb(types::WRingType wring, int qtype,
+        int producer_id)
+{
+    hal_ret_t           ret;
+    wring_hw_id_t       ring_base;
+
+    ret = wring_pd_get_base_addr(wring, producer_id, &ring_base);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get ring base for wring_type {}", wring);
+        return ret;
+    }
+
+    ret = p4pd_add_or_del_gc_tx_stage0_entry(qtype, producer_id,
+            ring_base, false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program GC CB for qtype {} qid {}",
+                qtype, producer_id);
+        return ret;
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+p4pd_init_rnmdr_gc_cbs(void)
+{
+    hal_ret_t ret;
+
+    /*
+     * TCP producer to RNMDR
+     */
+    ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_RX_GC,
+            CAPRI_HBM_GC_RNMDR_QTYPE, CAPRI_RNMDR_GC_TCP_RING_PRODUCER);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    /*
+     * TLS producer to RNMDR
+     */
+    ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_RX_GC,
+            CAPRI_HBM_GC_RNMDR_QTYPE, CAPRI_RNMDR_GC_TLS_RING_PRODUCER);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    /*
+     * IPSEC producer to RNMDR
+     */
+    ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_RX_GC,
+            CAPRI_HBM_GC_RNMDR_QTYPE, CAPRI_RNMDR_GC_IPSEC_RING_PRODUCER);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    /*
+     * CPU producer to RNMDR
+     */
+    ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_RX_GC,
+            CAPRI_HBM_GC_RNMDR_QTYPE, CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+p4pd_init_tnmdr_gc_cbs(void)
+{
+    hal_ret_t ret;
+
+    /*
+     * TCP producer to TNMDR
+     */
+    ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_TX_GC,
+            CAPRI_HBM_GC_TNMDR_QTYPE, CAPRI_TNMDR_GC_TCP_RING_PRODUCER);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    /*
+     * TLS producer to TNMDR
+     */
+    ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_TX_GC,
+            CAPRI_HBM_GC_TNMDR_QTYPE, CAPRI_TNMDR_GC_TLS_RING_PRODUCER);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    /*
+     * IPSEC producer to TNMDR
+     */
+    ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_TX_GC,
+            CAPRI_HBM_GC_TNMDR_QTYPE, CAPRI_TNMDR_GC_IPSEC_RING_PRODUCER);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    return ret;
+}
+
+
 hal_ret_t
 p4pd_init_gc_cbs(void)
 {
-    wring_hw_id_t       ring_base;
     hal_ret_t           ret;
 
     /*
-     * QID 0 is for RNMDR
+     * Qtype 0
      */
-    ret = wring_pd_get_base_addr(types::WRING_TYPE_NMDR_RX_GC, 0, &ring_base);
+    ret = p4pd_init_rnmdr_gc_cbs();
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get ring base for NMDR_RX");
         return ret;
     }
-    p4pd_add_or_del_gc_tx_stage0_entry(P4PD_HBM_GC_RNMDR_QID, 
-            ring_base, P4PD_HBM_GC_PER_PRODUCER_RING_SHIFT, false);
 
     /*
-     * QID 1 is for TNMDR
+     * Qtype 1
      */
-    ret = wring_pd_get_base_addr(types::WRING_TYPE_NMDR_TX_GC, 0, &ring_base);
+    ret = p4pd_init_tnmdr_gc_cbs();
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get ring base for NMDR_RX");
         return ret;
     }
-    p4pd_add_or_del_gc_tx_stage0_entry(P4PD_HBM_GC_TNMDR_QID, 
-            ring_base, P4PD_HBM_GC_PER_PRODUCER_RING_SHIFT, false);
 
-    return HAL_RET_OK;
+    return ret;
 }
 
 }    // namespace pd
