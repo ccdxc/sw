@@ -67,6 +67,10 @@ nat_cfg_pol_uninit_free (nat_cfg_pol_t *pol)
     }
 }
 
+//-----------------------------------------------------------------------------
+// Configuration handling
+//-----------------------------------------------------------------------------
+
 static inline void
 nat_cfg_pol_db_add (dllist_ctxt_t *head, nat_cfg_pol_t *pol)
 {
@@ -173,5 +177,6 @@ nat_cfg_pol_rsp_build (nat::NatPolicyResponse *rsp, hal_ret_t ret,
     rsp->set_api_status(hal_prepare_rsp(ret));
     return HAL_RET_OK;
 }
+
 
 }  // namespace hal
