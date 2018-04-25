@@ -1166,9 +1166,9 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
 void build_and_send_tcp_pkt(void *);
 
 static void
-tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *ctxt)
+tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
 {
-    tcptkle_timer_ctx_t *ctx = (tcptkle_timer_ctx_t *)ctxt;
+    tcptkle_timer_ctx_t *ctx = (tcptkle_timer_ctx_t *)timer_ctxt;
     timespec_t           ctime;
     uint64_t             ctime_ns;
     session_state_t      session_state;
@@ -1210,11 +1210,11 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *ctxt)
         goto cleanup;
     } else {
         fte::fte_softq_enqueue(session->fte_id, /* queue it on the right FTE thread */
-                               build_and_send_tcp_pkt, (void *)ctxt);
+                               build_and_send_tcp_pkt, (void *)ctx);
     }
 
 cleanup:
-    HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT, ctxt);
+    HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT, ctx);
 }
 
 void
