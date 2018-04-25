@@ -175,6 +175,19 @@ construct(char *namearg, const char *type, pciehdevice_resources_t *pres)
             printf("pciehdev_pciestress_new failed\n");
             return NULL;
         }
+    } else if (strcmp(type, "rcdev") == 0) {
+        if (namearg == NULL) {
+            static int rcdev_instance;
+            snprintf(lname, sizeof(lname), "rcdev%d", rcdev_instance++);
+            name = lname;
+        } else {
+            name = namearg;
+        }
+        pdev = pciehdev_rcdev_new(name, pres);
+        if (pdev == NULL) {
+            printf("pciehdev_rcdev_new failed\n");
+            return NULL;
+        }
     } else if (strcmp(type, "debug") == 0) {
         if (namearg == NULL) {
             static int debug_instance;

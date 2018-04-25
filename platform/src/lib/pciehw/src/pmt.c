@@ -400,6 +400,60 @@ pmt_load_bar(pciehwbar_t *phwbar)
                 spmt);
 }
 
+static void
+pmt_load_cfg_rcdev(pciehwdev_t *phwdev)
+{
+    const pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
+    const u_int64_t cfgpa = 0x800000000ULL; /* rc address */
+    const u_int16_t addr = 0;
+    const u_int16_t addrm = 0; /* don't care - match any cfg addr */
+    const u_int8_t romsksel = 0; /* all writable */
+    const u_int8_t notify = 0; /* no notify */
+    const u_int8_t indirect = 0; /* no indirect */
+    int pmti;
+    pmt_t pmt;
+
+    pmti = pmt_alloc(hwdevh);
+    assert(pmti >= 0);
+
+    pmt_make_cfg(&pmt, phwdev, cfgpa, addr, addrm, romsksel, notify, indirect);
+    pmt.pmre.cfg.vfbase = 200;
+    pmt_set(pmti, &pmt);
+}
+
+static void
+pmt_load_bar_rcdev(pciehwbar_t *phwbar)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    const u_int32_t pmti = phwbar->pmti;
+    pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+    pciehw_sprt_t *sprt = &phwmem->sprt[spmt->prtbase];
+    const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
+    pmt_t pmt;
+
+    /*
+     * Set res addr to baraddr so full address gets forwarded to RC.
+     */
+    sprt->resaddr = spmt->baraddr;
+
+    /*
+     * Load PRT first, then load PMT so PMT tcam search hit
+     * will find valid PRT entries.
+     */
+    pciehw_prt_load(spmt->prtbase, spmt->prtcount);
+
+    //pmt_load_bar(phwbar);
+    pmt_make_bar(&pmt, phwdev->port, phwdev->bdf, spmt);
+    pmt.pmre.bar.vfbase = 201;
+    pmt.pmre.bar.vflimit = 0x7ff; /* make 201 within range */
+    pmt_set(pmti, &pmt);
+
+    if (!spmt->loaded) {
+        spmt->loaded = 1;
+    }
+}
+
 /******************************************************************
  * apis
  */
@@ -412,6 +466,11 @@ pciehw_pmt_load_cfg(pciehwdev_t *phwdev)
     const pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
     const u_int64_t cfgpa = pal_mem_vtop(&phwmem->cfgcur[hwdevh]);
     int pmti, i;
+
+    if (strncmp(pciehwdev_get_name(phwdev), "rcdev", 5) == 0) {
+        pmt_load_cfg_rcdev(phwdev);
+        return 0;
+    }
 
     for (i = 0; i < PCIEHW_ROMSKSZ; i++) {
         const int romsk = phwdev->romsksel[i];
@@ -546,6 +605,12 @@ pciehw_pmt_load_bar(pciehwbar_t *phwbar)
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     const u_int32_t pmti = phwbar->pmti;
     pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+    const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
+
+    if (strncmp(pciehwdev_get_name(phwdev), "rcdev", 5) == 0) {
+        pmt_load_bar_rcdev(phwbar);
+        return;
+    }
 
     /*
      * Load PRT first, then load PMT so PMT tcam search hit

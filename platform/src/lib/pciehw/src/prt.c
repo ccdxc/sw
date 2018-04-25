@@ -162,15 +162,14 @@ prt_size_decode(const u_int32_t size_enc)
 }
 
 static void
-prt_set_res(const int prti,
-            const u_int64_t addr,
-            const u_int64_t size,
-            const u_int8_t notify,
-            const u_int8_t indirect,
-            const u_int8_t pmvdis)
+prt_make_res(prt_t *prt,
+             const u_int64_t addr,
+             const u_int64_t size,
+             const u_int8_t notify,
+             const u_int8_t indirect,
+             const u_int8_t pmvdis)
 {
-    prt_t prt = { 0 };
-    prt_res_t *p = &prt.res;
+    prt_res_t *p = &prt->res;
     const u_int32_t size_enc = prt_size_encode(size);
 
     p->valid     = 1;
@@ -182,7 +181,19 @@ prt_set_res(const int prti,
     p->addrdw    = addr >> 2;
     p->sizedw    = size_enc;
     p->pmvdis    = pmvdis;
+}
 
+static void
+prt_set_res(const int prti,
+            const u_int64_t addr,
+            const u_int64_t size,
+            const u_int8_t notify,
+            const u_int8_t indirect,
+            const u_int8_t pmvdis)
+{
+    prt_t prt = { 0 };
+
+    prt_make_res(&prt, addr, size, notify, indirect, pmvdis);
     prt_set(prti, &prt);
 }
 
@@ -372,18 +383,56 @@ pciehw_prt_free(const int prtbase, const int prtcount)
     prt_free(prtbase, prtcount);
 }
 
+static void
+prt_load_rcdev(const int prtbase, const int prtcount)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    const int prtend = prtbase + prtcount;
+    pciehw_sprt_t *sprt;
+    int prti;
+
+    sprt = &phwmem->sprt[prtbase];
+    for (prti = prtbase; prti < prtend; prti++, sprt++) {
+        switch (sprt->type) {
+        case PRT_TYPE_RES: {
+            prt_t prt = { 0 };
+
+            prt_make_res(&prt,
+                         sprt->resaddr, sprt->ressize,
+                         sprt->notify, sprt->indirect,
+                         sprt->pmvdis);
+            prt.res.aspace = 1;
+            prt_set(prti, &prt);
+            break;
+        }
+        default:
+            assert(0);
+            break;
+        }
+    }
+}
+
 int
 pciehw_prt_load(const int prtbase, const int prtcount)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
-    pciehw_sprt_t *sprt;
     const int prtend = prtbase + prtcount;
+    pciehw_sprt_t *sprt;
+    pciehwdev_t *phwdev;
     int prti;
 
     sprt = &phwmem->sprt[prtbase];
+    phwdev = pciehwdev_get(sprt->owner);
+
+    if (strncmp(pciehwdev_get_name(phwdev), "rcdev", 5) == 0) {
+        prt_load_rcdev(prtbase, prtcount);
+        return 0;
+    }
+
     for (prti = prtbase; prti < prtend; prti++, sprt++) {
-        const pciehwdev_t *phwdev = pciehwdev_get(sprt->owner);
+        phwdev = pciehwdev_get(sprt->owner);
 
         switch (sprt->type) {
         case PRT_TYPE_RES:

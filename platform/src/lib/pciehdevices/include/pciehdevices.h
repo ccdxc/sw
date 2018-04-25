@@ -40,8 +40,11 @@ pciehdev_t *pciehdev_accel_new(const char *name,
 pciehdev_t *pciehdev_virtio_new(const char *name,
                                 const pciehdevice_resources_t *pres);
 
-pciehdev_t * pciehdev_pciestress_new(const char *name,
-                                     const pciehdevice_resources_t *pres);
+pciehdev_t *pciehdev_pciestress_new(const char *name,
+                                    const pciehdevice_resources_t *pres);
+
+pciehdev_t *pciehdev_rcdev_new(const char *name,
+                               const pciehdevice_resources_t *pres);
 
 pciehdev_t *pciehdev_debug_new(const char *name,
                                const pciehdevice_resources_t *pres);
