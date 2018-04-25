@@ -87,7 +87,7 @@ error:
 // given a NAT pool and NAT address, free the NAT address back to the pool
 //-----------------------------------------------------------------------------
 hal_ret_t
-nat_pool_address_free (addr_entry_key_t *key, nat_pool_t *pool)
+nat_pool_address_free (nat_pool_t *pool, ip_addr_t *nat_addr)
 {
     return HAL_RET_OK;
 }

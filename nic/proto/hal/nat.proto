@@ -240,7 +240,6 @@ message NatMappingRequestMsg {
 message NatMappingStatus  {
   fixed64            handle        = 1;    // id of the NAT mapping returned by HAL
   types.IPAddress    mapped_ip     = 2;    // NAT address allocated
-  uint32             port          = 3;    // NAT port allocated, if any
 }
 
 // NatMappingResponse is the response to NatMappingSpec

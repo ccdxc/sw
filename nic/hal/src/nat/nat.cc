@@ -23,6 +23,10 @@ using hal::utils::nat::addr_entry_t;
 
 namespace hal {
 
+typedef struct nat_mapping_app_ctxt_s {
+    nat_pool_t    *pool;
+} __PACK__ nat_mapping_app_ctxt_t;
+
 //------------------------------------------------------------------------------
 // return key for hash table that maps nat pool key to its handle
 //------------------------------------------------------------------------------
@@ -1210,14 +1214,25 @@ nat_mapping_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 static inline hal_ret_t
 nat_mapping_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    dllist_ctxt_t    *lnode = NULL;
-    dhl_entry_t      *dhl_entry = NULL;
-    addr_entry_t     *mapping;
+    hal_ret_t                 ret;
+    dllist_ctxt_t             *lnode = NULL;
+    dhl_entry_t               *dhl_entry = NULL;
+    addr_entry_t              *mapping;
+    nat_mapping_app_ctxt_t    *app_ctxt;
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     mapping = (addr_entry_t *)dhl_entry->obj;
+    app_ctxt = (nat_mapping_app_ctxt_t *)cfg_ctxt->app_ctxt;
     hal_handle_free(dhl_entry->handle);
+
+    // free NAT address back to the NAT pool
+    ret = nat_pool_address_free(app_ctxt->pool, &mapping->tgt_ip_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to release ({}, {}) to NAT pool {}, err : {}",
+                      mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr),
+                      mapping->nat_pool_id, ret);
+    }
     nat_mapping_cleanup(mapping);
 
     return HAL_RET_OK;
@@ -1249,17 +1264,64 @@ nat_mapping_prepare_rsp (NatMappingResponse *rsp, hal_ret_t ret,
 }
 
 //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+static inline hal_ret_t
+nat_address_map_alloc (nat_pool_t *pool, addr_entry_t *mapping)
+{
+    hal_ret_t    ret;
+
+    // if bi-directional mapping is requested, allocate reverse mapping entry
+    if (mapping->bidir) {
+        mapping->rentry = nat_mapping_alloc_init();
+        if (mapping->rentry == NULL) {
+            HAL_TRACE_ERR("Failed to allocate memory for reverse NAT mapping "
+                          "of {}, {}", mapping->key.vrf_id,
+                          ipaddr2str(&mapping->key.ip_addr));
+            return HAL_RET_OOM;
+        }
+    }
+
+    // allocate NAT address from the NAT pool
+    ret = nat_pool_address_alloc(pool, &mapping->tgt_ip_addr);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    mapping->tgt_vrf_id = pool->key.vrf_id;
+
+    // if bi-directional mapping is requested, set up the reverse mapping
+    if (mapping->bidir) {
+        mapping->rentry->key.vrf_id = mapping->tgt_vrf_id;
+        memcpy(&mapping->rentry->key.ip_addr, &mapping->tgt_ip_addr,
+               sizeof(ip_addr_t));
+        mapping->rentry->tgt_vrf_id = mapping->key.vrf_id;
+        memcpy(&mapping->rentry->tgt_ip_addr, &mapping->key.ip_addr,
+               sizeof(ip_addr_t));
+        mapping->rentry->rentry = mapping;
+        mapping->rentry->origin = NAT_MAPPING_ORIGIN_CFG;
+        mapping->rentry->bidir = TRUE;
+        // for reverse entries, don't allocate handle (and don't insert into the
+        // handle --> mapping hash table as well) as these are always paired
+        // with the primary NAT mapping entry and their life cycle is tied with
+        // the primary entry
+        mapping->rentry->hal_handle = HAL_HANDLE_INVALID;
+    }
+
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
 // process a NAT mapping create request
 //-----------------------------------------------------------------------------
 hal_ret_t
 nat_mapping_create (NatMappingSpec& spec, NatMappingResponse *rsp)
 {
-    hal_ret_t        ret;
-    vrf_t            *vrf;
-    addr_entry_t     *mapping = NULL;
-    nat_pool_t       *pool;
-    dhl_entry_t      dhl_entry = { 0 };
-    cfg_op_ctxt_t    cfg_ctxt  = { 0 };
+    hal_ret_t                 ret;
+    vrf_t                     *vrf;
+    addr_entry_t              *mapping = NULL;
+    nat_pool_t                *pool;
+    dhl_entry_t               dhl_entry = { 0 };
+    cfg_op_ctxt_t             cfg_ctxt  = { 0 };
+    nat_mapping_app_ctxt_t    app_ctxt = { 0 };
 
     // dump the incoming config
     nat_mapping_spec_dump(spec);
@@ -1317,38 +1379,6 @@ nat_mapping_create (NatMappingSpec& spec, NatMappingResponse *rsp)
         goto end;
     }
 
-    // allocate NAT address from the NAT pool
-    ret = nat_pool_address_alloc(pool, &mapping->tgt_ip_addr);
-    if (ret != HAL_RET_OK) {
-        goto end;
-    }
-    mapping->tgt_vrf_id = pool->key.vrf_id;
-
-    // if bi-directional mapping is requested, set up the reverse mapping
-    if (mapping->bidir) {
-        mapping->rentry = nat_mapping_alloc_init();
-        if (mapping->rentry == NULL) {
-            HAL_TRACE_ERR("Failed ot allocate memory for reverse NAT mapping of {}, {}",
-                          vrf->vrf_id, ipaddr2str(&mapping->key.ip_addr));
-            ret = HAL_RET_OOM;
-            goto end;
-        }
-        mapping->rentry->key.vrf_id = mapping->tgt_vrf_id;
-        memcpy(&mapping->rentry->key.ip_addr, &mapping->tgt_ip_addr,
-               sizeof(ip_addr_t));
-        mapping->rentry->tgt_vrf_id = vrf->vrf_id;
-        memcpy(&mapping->rentry->tgt_ip_addr, &mapping->key.ip_addr,
-               sizeof(ip_addr_t));
-        mapping->rentry->rentry = mapping;
-        mapping->rentry->origin = NAT_MAPPING_ORIGIN_CFG;
-        mapping->rentry->bidir = TRUE;
-        // for reverse entries, don't allocate handle (and don't insert into the
-        // handle --> mapping hash table as well) as these are always paired
-        // with the primary NAT mapping entry and their life cycle is tied with
-        // the primary entry
-        mapping->rentry->hal_handle = HAL_HANDLE_INVALID;
-    }
-
     // allocate HAL handle id
     mapping->hal_handle = hal_handle_alloc(HAL_OBJ_ID_NAT_MAPPING);
     if (mapping->hal_handle == HAL_HANDLE_INVALID) {
@@ -1359,10 +1389,17 @@ nat_mapping_create (NatMappingSpec& spec, NatMappingResponse *rsp)
          goto end;
     }
 
+    // allocate NAT address from the NAT pool
+    ret = nat_address_map_alloc(pool, mapping);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+
     // form ctxt and handover to the HAL infra
+    app_ctxt.pool = pool;
     dhl_entry.handle = mapping->hal_handle;
     dhl_entry.obj = mapping;
-    cfg_ctxt.app_ctxt = NULL;
+    cfg_ctxt.app_ctxt = &app_ctxt;
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
@@ -1446,15 +1483,17 @@ nat_mapping_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 static inline hal_ret_t
 nat_mapping_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t       ret;
-    dllist_ctxt_t   *lnode = NULL;
-    dhl_entry_t     *dhl_entry = NULL;
-    addr_entry_t    *mapping;
-    hal_handle_t    hal_handle;
+    hal_ret_t                 ret;
+    dllist_ctxt_t             *lnode = NULL;
+    dhl_entry_t               *dhl_entry = NULL;
+    addr_entry_t              *mapping;
+    hal_handle_t              hal_handle;
+    nat_mapping_app_ctxt_t    *app_ctxt;
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     mapping = (addr_entry_t *)dhl_entry->obj;
+    app_ctxt = (nat_mapping_app_ctxt_t *)cfg_ctxt->app_ctxt;
     hal_handle = dhl_entry->handle;
 
     ret = nat_mapping_del_from_db(mapping);
@@ -1465,8 +1504,16 @@ nat_mapping_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                     mapping->key.vrf_id, ipaddr2str(&mapping->key.ip_addr),
                     mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr));
 
-    // free all sw resources associated with this pool
+    // free all sw resources associated with this mapping
     hal_handle_free(hal_handle);
+
+    // free NAT address back to the NAT pool
+    ret = nat_pool_address_free(app_ctxt->pool, &mapping->tgt_ip_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to release ({}, {}) to NAT pool {}, err : {}",
+                      mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr),
+                      mapping->nat_pool_id, ret);
+    }
     nat_mapping_cleanup(mapping);
 
     return ret;
@@ -1497,10 +1544,13 @@ nat_mapping_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 hal_ret_t
 nat_mapping_delete (NatMappingDeleteRequest& req, NatMappingDeleteResponse *rsp)
 {
-    hal_ret_t        ret;
-    addr_entry_t     *mapping;
-    cfg_op_ctxt_t    cfg_ctxt = { 0 };
-    dhl_entry_t      dhl_entry = { 0 };
+    hal_ret_t                 ret;
+    addr_entry_t              *mapping;
+    cfg_op_ctxt_t             cfg_ctxt = { 0 };
+    dhl_entry_t               dhl_entry = { 0 };
+    nat_pool_key_t            pool_key;
+    nat_pool_t                *pool;
+    nat_mapping_app_ctxt_t    app_ctxt = { 0 };
 
     // validate the request message
     ret = validate_nat_mapping_delete_req(req, rsp);
@@ -1520,12 +1570,27 @@ nat_mapping_delete (NatMappingDeleteRequest& req, NatMappingDeleteResponse *rsp)
                     mapping->key.vrf_id, ipaddr2str(&mapping->key.ip_addr),
                     mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr));
 
+    // find the relevant NAT pool
+    pool_key.vrf_id = mapping->tgt_vrf_id;
+    pool_key.pool_id = mapping->nat_pool_id;
+    pool = find_nat_pool_by_key(&pool_key);
+    if (pool == NULL) {
+        HAL_TRACE_ERR("Failed to find NAT pool ({}, {}) to release NAT mapping "
+                      "({}, {}) -> ({}, {})",
+                      pool->key.vrf_id, pool->key.pool_id,
+                      mapping->key.vrf_id, ipaddr2str(&mapping->key.ip_addr),
+                      mapping->tgt_vrf_id, ipaddr2str(&mapping->tgt_ip_addr));
+        ret = HAL_RET_NAT_POOL_NOT_FOUND;
+        goto end;
+    }
+
     // TODO: handle the case where flows are using this mapping still
 
     // form ctxt and handover to the HAL infra
+    app_ctxt.pool = pool;
     dhl_entry.handle = mapping->hal_handle;
     dhl_entry.obj = mapping;
-    cfg_ctxt.app_ctxt = NULL;
+    cfg_ctxt.app_ctxt = &app_ctxt;
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
