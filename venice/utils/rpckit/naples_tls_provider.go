@@ -3,6 +3,8 @@
 package rpckit
 
 import (
+	"time"
+
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
@@ -25,11 +27,23 @@ func SetN4STLSProvider() {
 	}
 	log.Infof("Setting TLS provider to point to: %v", naplesCertSrvURL)
 	tlsProvider := func(svcName string) (TLSProvider, error) {
-		p, err := tlsproviders.NewDefaultCMDBasedProvider(naplesCertSrvURL, svcName)
+		mu.Lock()
+		defer mu.Unlock()
+		if defaultTLSProvider != nil {
+			return defaultTLSProvider, nil
+		}
+		// FIXME
+		// Right now in E2E tests the NAPLES containers can start few mins before Venice cluster is formed.
+		// For the moment we just use long retries here, but eventually client should retry
+		tp, err := tlsproviders.NewDefaultCMDBasedProvider(naplesCertSrvURL, svcName,
+			tlsproviders.WithConnRetryInterval(5*time.Second),
+			tlsproviders.WithConnMaxRetries(60))
 		if err != nil {
+			log.Errorf("Error getting CMD-based TLS provider for service %s at %s", svcName, certSrvEndpoint)
 			return nil, err
 		}
-		return p, nil
+		defaultTLSProvider = tp
+		return defaultTLSProvider, nil
 	}
 	testenv.EnableRpckitTestMode()
 	SetTestModeDefaultTLSProvider(tlsProvider)

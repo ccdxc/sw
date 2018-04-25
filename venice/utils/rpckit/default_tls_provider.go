@@ -5,6 +5,8 @@
 package rpckit
 
 import (
+	"sync"
+
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
@@ -13,21 +15,31 @@ import (
 
 var certSrvEndpoint = "localhost:" + globals.CMDCertAPIPort
 
+var mu sync.Mutex
+var defaultTLSProvider TLSProvider
+
 // GetDefaultTLSProvider returns the default TLS provider.
 // svcName is needed by the TLS provider to acquire a valid certificate
 func GetDefaultTLSProvider(svcName string) (TLSProvider, error) {
 	if testenv.GetRpckitTestMode() {
 		if testModeDefaultTLSProvider != nil {
-			return testModeDefaultTLSProvider(svcName)
+			tp, err := testModeDefaultTLSProvider(svcName)
+			return tp, err
 		}
 		return nil, nil
 	}
-	tlsProvider, err := tlsproviders.NewDefaultCMDBasedProvider(certSrvEndpoint, svcName)
+	mu.Lock()
+	defer mu.Unlock()
+	if defaultTLSProvider != nil {
+		return defaultTLSProvider, nil
+	}
+	tp, err := tlsproviders.NewDefaultCMDBasedProvider(certSrvEndpoint, svcName)
 	if err != nil {
 		log.Errorf("Error getting CMD-based TLS provider for service %s at %s", svcName, certSrvEndpoint)
 		return nil, err
 	}
-	return tlsProvider, nil
+	defaultTLSProvider = tp
+	return defaultTLSProvider, nil
 }
 
 // ********** FOR TESTING ONLY **********

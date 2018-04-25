@@ -23,14 +23,16 @@ import (
 )
 
 const (
-	retryInterval = 500 * time.Millisecond
-	maxRetries    = 5
+	defaultRetryInterval  = 500 * time.Millisecond
+	defaultConnTimeout    = 3 * time.Second
+	defaultConnMaxRetries = 5
 )
 
 // CMDBasedProvider is a TLS Provider which generates private keys locally and retrieves
 // corresponding certificates from the Cluster Management Daemon (CMD)
 type CMDBasedProvider struct {
 	// the KeyMgr instance used to generate and store keys and certificates
+	// KeyMgr is thread-safe
 	keyMgr *keymgr.KeyMgr
 
 	// the remote URL of the CMD endpoint
@@ -55,6 +57,15 @@ type CMDBasedProvider struct {
 	// Lock for serverCertificates map
 	srvCertMapMutex sync.Mutex
 
+	// Lock for clientCertificate
+	clientCertMutex sync.Mutex
+
+	// True when provider is ready to serve requests
+	running bool
+
+	// Lock for Connection
+	runMutex sync.Mutex
+
 	// CaTrustChain is used to form the bundles presented to the peer
 	caTrustChain []*x509.Certificate
 
@@ -70,6 +81,17 @@ type cmdProviderOptions struct {
 	// At present it needs to be passed in explicitly.
 	// In the future it will be instantiated automatically.
 	balancer grpc.Balancer
+
+	// The time the provider waits for the CMD endpoint to respond before throwing an error.
+	// It is passed to the grpc layer using the WithTimeout() option
+	connTimeout time.Duration
+
+	// The time the provider waits to reconnect to CMD after an error
+	connRetryInterval time.Duration
+
+	// The maximum number of times the provider tries to contact CMD before giving up
+	// and returning an error to the caller
+	connMaxRetries int
 }
 
 // CMDProviderOption fills the optional params for CMDBasedProvider
@@ -82,9 +104,38 @@ func WithBalancer(b grpc.Balancer) CMDProviderOption {
 	}
 }
 
+// WithConnTimeout specified the timeout for opening the connection to CMD
+func WithConnTimeout(t time.Duration) CMDProviderOption {
+	return func(o *cmdProviderOptions) {
+		o.connTimeout = t
+	}
+}
+
+// WithConnRetryInterval specifies the time to wait before retrying to connect to CMD
+func WithConnRetryInterval(i time.Duration) CMDProviderOption {
+	return func(o *cmdProviderOptions) {
+		o.connRetryInterval = i
+	}
+}
+
+// WithConnMaxRetries specifies the maximum number of connection attempts to CMD
+func WithConnMaxRetries(n int) CMDProviderOption {
+	return func(o *cmdProviderOptions) {
+		o.connMaxRetries = n
+	}
+}
+
+func defaultOptions() *cmdProviderOptions {
+	return &cmdProviderOptions{
+		connTimeout:       defaultConnTimeout,
+		connRetryInterval: defaultRetryInterval,
+		connMaxRetries:    defaultConnMaxRetries,
+	}
+}
+
 func (p *CMDBasedProvider) getCkmDialOptions() []grpc.DialOption {
 	// The CMD API is not authenticated. We cannot use TLS because the API itself is meant to supply TLS certificates.
-	dialOptions := []grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(time.Second * 3)}
+	dialOptions := []grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(p.connTimeout)}
 	if p.balancer != nil {
 		dialOptions = append(dialOptions, grpc.WithBalancer(p.balancer))
 	}
@@ -178,6 +229,7 @@ func NewCMDBasedProvider(cmdEpNameOrURL, endpointID string, km *keymgr.KeyMgr, o
 		endpointID:         endpointID,
 		serverCertificates: make(map[string](*tls.Certificate)),
 		trustRoots:         x509.NewCertPool(),
+		cmdProviderOptions: *defaultOptions(),
 	}
 
 	// add custom options
@@ -194,7 +246,7 @@ func NewCMDBasedProvider(cmdEpNameOrURL, endpointID string, km *keymgr.KeyMgr, o
 	// Connect to CMD Endpoint and create RPC client
 	var success bool
 	var conn *grpc.ClientConn
-	for i := 0; i < maxRetries; i++ {
+	for i := 0; i < provider.connMaxRetries; i++ {
 		log.Infof("Connecting to CMD Endpoint: %v", provider.cmdEndpointURL)
 		conn, err = grpc.Dial(provider.cmdEndpointURL, provider.getCkmDialOptions()...)
 		if err == nil {
@@ -202,7 +254,7 @@ func NewCMDBasedProvider(cmdEpNameOrURL, endpointID string, km *keymgr.KeyMgr, o
 			provider.cmdClient = certapi.NewCertificatesClient(conn)
 			break
 		}
-		time.Sleep(retryInterval)
+		time.Sleep(provider.connRetryInterval)
 	}
 	if !success {
 		return nil, errors.Wrapf(err, "Failed to dial CMD Endpoint %s", provider.cmdEndpointURL)
@@ -214,6 +266,7 @@ func NewCMDBasedProvider(cmdEpNameOrURL, endpointID string, km *keymgr.KeyMgr, o
 		log.Fatalf("Error fetching trust roots from %s: %v", cmdEpNameOrURL, err)
 	}
 
+	provider.running = true
 	return provider, nil
 }
 
@@ -245,6 +298,12 @@ func (p *CMDBasedProvider) getServerCertificate(clientHelloInfo *tls.ClientHello
 	// FIXME: we should not mint certificates based on what client is asking but
 	// have server explicitly declare which names are allowed and provide default
 	// if client is asking for something we don't have
+
+	p.runMutex.Lock()
+	defer p.runMutex.Unlock()
+	if !p.running {
+		return nil, fmt.Errorf("Shutting down")
+	}
 
 	serverName := clientHelloInfo.ServerName
 	if serverName == "" {
@@ -287,6 +346,13 @@ func (p *CMDBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, e
 	// It is not a big problem because DialOptions are associated to a single outgoing connection
 	// (as opposed to ServerOptions, which are used for all incoming connections) and rpckit
 	// reinvokes GetDialOptions() if client performs a Reconnect() call on an existing RPCClient
+	p.runMutex.Lock()
+	defer p.runMutex.Unlock()
+	if !p.running {
+		return nil, fmt.Errorf("Shutting down")
+	}
+	p.clientCertMutex.Lock()
+	defer p.clientCertMutex.Unlock()
 	if p.clientCertificate == nil {
 		cert, err := p.getTLSCertificate(p.endpointID)
 		if err != nil {
@@ -301,6 +367,9 @@ func (p *CMDBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, e
 
 // Close closes the client.
 func (p *CMDBasedProvider) Close() {
+	p.runMutex.Lock()
+	p.running = false
+	p.runMutex.Unlock()
 	if p.conn != nil {
 		log.Infof("Closing client conn: %+v", p.conn)
 		p.conn.Close()

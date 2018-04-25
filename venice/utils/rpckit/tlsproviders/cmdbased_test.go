@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
@@ -45,7 +46,7 @@ func TestCMDBasedProviderInit(t *testing.T) {
 	Assert(t, err != nil, "CMDBasedProvider instantiation succceeded while expected to fail")
 
 	// unavailable CMD Endpoint
-	_, err = NewCMDBasedProvider("localhost:123", "ep", km)
+	_, err = NewCMDBasedProvider("localhost:123", "ep", km, WithConnTimeout(20*time.Millisecond), WithConnRetryInterval(20*time.Millisecond))
 	Assert(t, err != nil, "CMDBasedProvider instantiation succceeded while expected to fail")
 
 	// good CMD but nil KeyMgr

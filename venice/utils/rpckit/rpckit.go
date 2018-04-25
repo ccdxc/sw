@@ -247,7 +247,8 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 	// save the grpc server instance
 	server = grpc.NewServer(grpcOpts...)
 	if server == nil {
-		log.Fatalf("Error creating grpc server")
+		log.Errorf("Error creating grpc server")
+		return nil, fmt.Errorf("Error creating grpc server")
 	}
 	rpcServer.GrpcServer = server
 	return rpcServer, nil
@@ -462,11 +463,7 @@ func (c *RPCClient) Close() error {
 		c.ClientConn = nil
 	}
 
-	// release resources held by TLS provider, if any
-	if c.tlsProvider != nil {
-		c.tlsProvider.Close()
-		c.tlsProvider = nil
-	}
+	// do not invoke Close() on the TLS provider because it is shared
 
 	if c.balancer != nil {
 		c.balancer.Close()
