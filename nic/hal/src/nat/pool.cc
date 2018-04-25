@@ -6,8 +6,7 @@
 
 #include "nic/include/base.h"
 #include "nic/hal/src/nat/nat.hpp"
-#include "nic/hal/src/utils/utils.hpp"
-#include "nic/utils/nat/addr_db.hpp"
+//#include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/addr_list.hpp"
 
 using hal::utils::nat::addr_entry_key_t;

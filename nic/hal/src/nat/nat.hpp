@@ -16,10 +16,10 @@
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/src/utils/addr_list.hpp"
 #include "pol.hpp"
+#include "pool.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using acl::acl_ctx_t;
-using hal::utils::bitmap;
 
 using kh::NatPoolKey;
 using kh::NatPoolKeyHandle;
@@ -54,34 +54,7 @@ using nat::NatMappingGetResponseMsg;
 
 namespace hal {
 
-// NAT pool key
-typedef struct nat_pool_key_s {
-    vrf_id_t         vrf_id;
-    nat_pool_id_t    pool_id;
-} __PACK__ nat_pool_key_t;
-#define HAL_MAX_NAT_POOLS        1024
-
-// NAT pool
-typedef struct nat_pool_s {
-    hal_spinlock_t    slock;                // lock to protect this structure
-    nat_pool_key_t    key;                  // key for the nat pool
-    dllist_ctxt_t     addr_ranges;          // NAT address ranges
-
-    // operational state of nat pool
-    hal_handle_t      hal_handle;          // HAL allocated handle
-    uint32_t          num_addrs;           // TODO: may not need
-    uint32_t          num_free;            // no. of NAT addresses available
-    bitmap            *addr_bmap;          // bitmap to keep track of free/in-use addresses
-
-    // stats
-    uint32_t           num_in_use;
-} __PACK__ nat_pool_t;
-
 #define HAL_MAX_NAT_ADDR_MAP        8192
-
-void *nat_pool_get_key_func(void *entry);
-uint32_t nat_pool_compute_hash_func(void *key, uint32_t ht_size);
-bool nat_pool_compare_key_func(void *key1, void *key2);
 
 void *nat_mapping_get_key_func(void *entry);
 uint32_t nat_mapping_compute_hash_func(void *key, uint32_t ht_size);
