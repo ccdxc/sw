@@ -196,7 +196,7 @@ func (w *watchedPrefixes) Add(path string) WatchEventQ {
 	ret.refCount = 1
 	ret.cond = &sync.Cond{L: &sync.Mutex{}}
 	ret.stopCh = make(chan error)
-	ret.notifyCh = make(chan error)
+	ret.notifyCh = make(chan error, 1)
 	ret.path = path
 	ret.store = w.store
 	ret.config = w.watchConfig
@@ -385,7 +385,6 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 	}
 
 	condCh := make(chan error, 1)
-	w.log.InfoLog("oper", "WatchEventQDequeue", "prefix", w.path, "msg", "starting dequeue monitor")
 	wg.Add(1)
 	deferCh := make(chan bool)
 	go func() {
@@ -413,6 +412,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 	<-deferCh
 	// Kickstart the dequeue monitor
 	w.notify()
+	w.log.InfoLog("oper", "WatchEventQDequeue", "prefix", w.path, "msg", "starting dequeue monitor")
 	for {
 		select {
 		case <-condCh:

@@ -277,7 +277,9 @@ func (a *backendWatcher) Stop() {
 	defer a.Unlock()
 	a.Lock()
 	for _, v := range a.prefixes {
-		v.cancel()
+		if v.cancel != nil {
+			v.cancel()
+		}
 	}
 	a.wg.Wait()
 }
@@ -720,6 +722,9 @@ func (c *cache) Close() {
 	c.active = false
 	if c.cancel != nil {
 		c.cancel()
+	}
+	if c.argus != nil {
+		c.argus.Stop()
 	}
 	c.Clear()
 	for {
