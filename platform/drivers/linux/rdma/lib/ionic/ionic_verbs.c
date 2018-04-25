@@ -214,12 +214,12 @@ static int ionic_poll_send(struct ionic_qp *qp, struct ibv_wc *wc,
 	wc->opcode = ionic_to_ibv_wc_opcd(cqe->op_type);
 	wc->byte_len = meta->len; /* XXX byte_len should come from cqe */
 
+out:
 	if (ionic_op_is_local(cqe->op_type))
 		qp->sq_local = (qp->sq_local + 1) & 0xffffff;
 	else
 		qp->sq_msn = (qp->sq_msn + 1) & 0xffffff;
 
-out:
 	ionic_queue_consume(&qp->sq);
 
 	return npolled;
@@ -249,6 +249,7 @@ static int ionic_poll_send_ok(struct ionic_qp *qp, struct ibv_wc *wc)
 	wc->opcode = ionic_to_ibv_wc_opcd(meta->op);
 	wc->byte_len = be32toh(meta->len);
 
+out:
 	if (ionic_op_is_local(meta->op))
 		qp->sq_local = (qp->sq_local + 1) & 0xffffff;
 	else
@@ -256,7 +257,6 @@ static int ionic_poll_send_ok(struct ionic_qp *qp, struct ibv_wc *wc)
 
 	ionic_queue_consume(&qp->sq);
 
-out:
 	return npolled;
 }
 
