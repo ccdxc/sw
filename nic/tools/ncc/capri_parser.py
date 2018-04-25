@@ -2133,6 +2133,17 @@ class capri_parser:
                     _hvb = max_hv_bits - 1 - self.be.hw_model['parser']['hv_pkt_trunc_location']
                     self.hv_bit_header[_hvb] = None
 
+                if 'deparser_pad_header' in hdr._parsed_pragmas:
+                    hf_name = hdr.name + '.pad'
+                    cf = self.be.pa.get_field(hf_name, self.d)
+                    assert cf and cf.is_hv, pdb.set_trace()
+                    # point to copy of hv_bits in flit0
+                    cf.phv_bit = self.be.hw_model['parser']['phv_pad_hdr_location']
+                    self.be.pa.replace_hv_field(cf.phv_bit, cf, self.d)
+                    self.hdr_hv_bit[hdr] =  self.be.hw_model['parser']['hv_pad_hdr_location']
+                    _hvb = max_hv_bits - 1 - self.be.hw_model['parser']['hv_pad_hdr_location']
+                    self.hv_bit_header[_hvb] = None
+
         if not self.be.args.p4_plus:
             #Assign special payload len HV bits
             hf_name = 'capri_intrinsic' + '.payload'

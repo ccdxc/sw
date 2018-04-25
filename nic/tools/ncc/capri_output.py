@@ -1481,6 +1481,9 @@ def capri_deparser_cfg_output(deparser):
     cfg_sel = deparser.be.hw_model['deparser']['dpa_src_cfg']
     pkt_sel = deparser.be.hw_model['deparser']['dpa_src_pkt']
     max_hv_bit_idx = deparser.be.hw_model['parser']['max_hv_bits'] - 1
+    payload_hv_bit_idx = deparser.be.hw_model['parser']['hv_pkt_len_location']
+    trunc_hv_bit_idx = deparser.be.hw_model['parser']['hv_pkt_trunc_location']
+    pad_hv_bit_idx = deparser.be.hw_model['parser']['hv_pad_hdr_location']
 
     # Last header field slot is reserved for payload len.
     # Hence max available hdr-field slot is one less.
@@ -1494,15 +1497,15 @@ def capri_deparser_cfg_output(deparser):
             ['ohi_slot_payload_ptr_bm']['value'] = str('0x%x' % payload_offset_ohi_bit)
         dpp_json['cap_dpp']['registers']['cap_dpp_csr_cfg_ohi_payload']['_modified'] = True
 
-        # Because header bit 127 is used for payload, use hdrfld_info slot 255 (last slot)
+        # Because header bit 126 is used for payload, use hdrfld_info slot 254 (last slot)
         # for specifying packet payload ohi information. OHI slot contains payload offset,
         # len comes from fram_len phv
-        rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx)
-        dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-1)
-        dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(0)
+        rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (payload_hv_bit_idx)
+        dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-2)
+        dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(1)
         dpp_json['cap_dpp']['registers'][rstr]['_modified'] = True
-        dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
-        dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
+        dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-2)
+        dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-2)
         dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
         dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
         # hw gets total frame len from frame_size phv, needs the ohi_slot carrying payload_offset
@@ -1521,12 +1524,12 @@ def capri_deparser_cfg_output(deparser):
                 hf_name = hdr.name + '.trunc'
                 cf = deparser.be.pa.get_field(hf_name, deparser.d)
                 assert cf, pdb.set_trace()
-                rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx - 1)
-                dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-2)
-                dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(1)
+                rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (trunc_hv_bit_idx)
+                dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-3)
+                dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(2)
                 dpp_json['cap_dpp']['registers'][rstr]['_modified'] = True
-                dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-2)
-                dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-2)
+                dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-3)
+                dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-3)
                 dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
                 dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
                 dpp_rstr['size_sel']['value'] = str(phv_sel)
@@ -1541,6 +1544,39 @@ def capri_deparser_cfg_output(deparser):
                 dpr_rstr['source_oft']['value'] = str(payload_offset_len_ohi_id)
                 dpr_rstr['_modified'] = True
                 dpp_rstr['_modified'] = True
+
+            if 'deparser_pad_header' in hdr._parsed_pragmas:
+                hf_name = hdr.name + '.pad'
+                cf = deparser.be.pa.get_field(hf_name, deparser.d)
+                assert cf, pdb.set_trace()
+                rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (pad_hv_bit_idx)
+                dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-1)
+                dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(0)
+                dpp_json['cap_dpp']['registers'][rstr]['_modified'] = True
+                dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
+                dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
+                dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
+                dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
+                dpp_rstr['size_sel']['value'] = str(phv_sel)
+                hf_name = hdr.name + '.pad_len'
+                cf = deparser.be.pa.get_field(hf_name, deparser.d)
+                assert cf, pdb.set_trace()
+                dpr_slot = cf.phv_bit - deparser.be.hw_model['phv']['flit_size']
+                dpr_slot = dpr_slot / 16
+                dpp_rstr['size_val']['value'] = str(dpr_slot)
+                dpr_rstr['source_sel']['value'] = str(cfg_sel)
+                dpr_rstr['source_oft']['value'] = str(0) #cap_dprcfg_csr_cfg_static_field
+                                                         #register has to be set to zero
+                dpr_rstr['_modified'] = True
+                dpp_rstr['_modified'] = True
+
+                #Configure config register from which pad bytes are sourced.
+                #Setting this register to zero will make pad bytes as zero value.
+                for idx in range(0, 64):
+                    dpr_rstr_name = 'cap_dprcfg_csr_cfg_static_field[%d]' % (idx)
+                    dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
+                    dpr_rstr['data']['value'] = str(0)
+                    dpr_rstr['_modified'] = True
 
     # Fill in all header fields information.
     for hvb in range(max_hv_bit_idx, -1, -1):
@@ -1685,6 +1721,25 @@ def capri_deparser_cfg_output(deparser):
                                             csum_hv_fld_slots, dpp_json)
     deparser.be.icrc.IcrcDeParserConfigGenerate(deparser, \
                                             icrc_hv_fld_slots, dpp_json)
+
+    # Configure minimum packet size on all network ports 0 to 7.
+    # Pad profile #1 is set to size 88 Bytes  (60B + 22Bytes). 4B CRC is not
+    # included in min size calculation. MAC adds 4Bytes.
+    # Pad profile #0 is configured to pad upto 0 bytes..which means no padding.
+    # For ports 0 to 7, profile 1 is set. For all other ports profile 0
+    # is configured.
+    dpr_rstr_name = 'cap_dpr_csr_cfg_global_1'
+    dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
+    dpr_rstr['padding_en']['value'] = str(1)
+    dpr_rstr['_modified'] = True
+    dpr_rstr_name = 'cap_dpr_csr_cfg_pkt_padding'
+    dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
+    dpr_rstr['padding_profile_sel']['value'] = str(0x5555)
+    p4_intrinsic_size = get_header_size(deparser.be.h.p4_header_instances['capri_p4_intrinsic'])
+    intrinsic_size = get_header_size(deparser.be.h.p4_header_instances['capri_intrinsic'])
+    min_size = (p4_intrinsic_size + intrinsic_size + 60) << 8 # 64B - 4B CRC
+    dpr_rstr['min_size']['value'] = str(min_size) #Profile #1 starts from bit 8
+    dpr_rstr['_modified'] = True
 
     json.dump(dpp_json['cap_dpp']['registers'],
                 dpp_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
@@ -2503,7 +2558,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
     if nxt_cs.is_end:
         # phv_hv_bits are between 384(hv_location)-511
-        hv_location = parser.be.hw_model['parser']['hv_location']
+        hv_location = parser.be.hw_model['parser']['phv_pkt_len_location']
         max_hv_bit_idx = hv_location # Use last bit in BE order for payload len hv_en
         hv_byte = max_hv_bit_idx / 8
         boff = max_hv_bit_idx % 8

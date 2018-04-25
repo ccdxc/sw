@@ -38,6 +38,12 @@ header_type capri_deparser_len_t {
     }
 }
 
+header_type capri_deparser_pad_t {
+    fields {
+        pad_len           : 16;
+    }
+}
+
 header_type capri_gso_csum_phv_loc_t {
     fields {
         // For packet in TxDir (to uplink), this field
@@ -293,6 +299,10 @@ header_type scratch_metadata_t {
         discard_drop                  : 1;
     }
 }
+
+@pragma deparser_pad_header
+@pragma dont_trim
+metadata capri_deparser_pad_t capri_deparser_pad;
 
 @pragma deparser_variable_length_header
 @pragma dont_trim

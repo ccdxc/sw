@@ -43,9 +43,6 @@ class capri_deparser:
     def generate_output(self):
         capri_deparser_logical_output(self)
         capri_deparser_cfg_output(self)#, self.hv_fld_slots)
-        #if self.d == xgress.EGRESS:
-        #    self.be.checksum.CsumDeParserConfigGenerate(self, \
-        #                                         self.hv_fld_slots)
 
     def build_field_dictionary(self):
         headers = self.be.parsers[self.d].headers
@@ -70,7 +67,7 @@ class capri_deparser:
                     assert(0), pdb.set_trace()
 
             cur_offset = 0
-            
+
             for f in hdr.fields:
                 cf = self.be.pa.gress_pa[self.d].get_field(get_hfname(f))
                 assert cf, "unknown field %s" % (hdr.name + f.name)

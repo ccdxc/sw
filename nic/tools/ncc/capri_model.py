@@ -90,17 +90,21 @@ capri_model = {
         'flit_reserve' : 128,       # reserve 128bit in case some field crosses 512b boundary
                                     # capasm does not allow it
         'max_hv_bits' : 128,
-        'hv_location' : 384,        # [511:384]
-        'hv_start_offset' : 4,      #First four hdr valid bits can be used for special
-                                    #purpose to rewrite phv in deparser. Use case is GSO
+        'hv_start_offset' : 4,      # First four hdr valid bits can be used for special
+                                    # purpose to rewrite phv in deparser. Use case is GSO
         'rw_phv_hv_start_offset' : 0, #First four hdr valid bits can be used for special
                                       #purpose to rewrite phv in deparser. Use case is GSO
         'max_rw_phv_hv_bits' : 4,     #First four hdr valid bits can be used for special
                                       #purpose to rewrite phv in deparser. Use case is GSO
-        'phv_pkt_len_location' : 384,
-        'phv_pkt_trunc_location' : 385,
-        'hv_pkt_len_location' : 127,
-        'hv_pkt_trunc_location' : 126,
+
+        'hv_location' : 384,        # [511:384] 384th bit is used to pad packet after inserting payload
+        'phv_pad_hdr_location' : 384,
+        'phv_pkt_len_location' : 385,
+        'phv_pkt_trunc_location' : 386,
+        'hv_pad_hdr_location' : 127,
+        'hv_pkt_len_location' : 126,
+        'hv_pkt_trunc_location' : 125,
+
         #'flit_hv_bits' : [40, 40, 24, 16, 4, 4], # total must be 128
         # hv bit logic in hw has changed, so reserving # bits per flit is not needed anymore
         # XXX remove this logic from add_cfield()
@@ -127,7 +131,8 @@ capri_model = {
         'dpa_src_phv' : 1,
         'dpa_src_ohi' : 2,
         'dpa_src_pkt' : 3,
-        'len_phv_start' : 528,  #Has to be 16b slots in first flit phv
+        'pad_phv_start' : 528,  #Has to be 16b slots in first flit phv
+        'len_phv_start' : 544,  #Has to be 16b slots in first flit phv
         'max_csum_engines' : 5,
         'dpa_start_hvb_in_phv' : 511,
         'max_crc_hdrs' : 16,

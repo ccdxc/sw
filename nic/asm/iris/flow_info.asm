@@ -35,9 +35,9 @@ flow_info:
   phvwr         p.control_metadata_dst_lport, d.u.flow_info_d.dst_lport
 
   /* rewrite and info */
-  phvwrpair     p.tunnel_metadata_tunnel_originate[0], \
-                    d.u.flow_info_d.tunnel_originate, \
-                p.rewrite_metadata_rewrite_index[11:0], \
+  phvwr         p.tunnel_metadata_tunnel_originate[0], \
+                    d.u.flow_info_d.tunnel_originate
+  phvwr         p.rewrite_metadata_rewrite_index[11:0], \
                     d.u.flow_info_d.rewrite_index
   phvwr         p.rewrite_metadata_tunnel_rewrite_index[9:0], \
                     d.u.flow_info_d.tunnel_rewrite_index
@@ -127,9 +127,9 @@ flow_miss_multicast:
   phvwrpair.c1  p.capri_intrinsic_tm_replicate_ptr, \
                     k.control_metadata_flow_miss_idx, \
                     p.capri_intrinsic_tm_replicate_en, 1
-  phvwrpair     p.tunnel_metadata_tunnel_originate[0], \
-                    k.flow_miss_metadata_tunnel_originate, \
-                p.rewrite_metadata_rewrite_index[11:0], \
+  phvwr         p.tunnel_metadata_tunnel_originate[0], \
+                    k.flow_miss_metadata_tunnel_originate
+  phvwr         p.rewrite_metadata_rewrite_index[11:0], \
                     k.flow_miss_metadata_rewrite_index
   phvwr.e       p.rewrite_metadata_tunnel_vnid, k.flow_miss_metadata_tunnel_vnid
   phvwr.f       p.rewrite_metadata_tunnel_rewrite_index[9:0], \

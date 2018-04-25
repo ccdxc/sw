@@ -668,6 +668,7 @@ class capri_gress_pa:
         self.capri_intr_hdr = None
         self.capri_p4_intr_hdr = None
         self.capri_deparser_len_hdr = None
+        self.capri_deparser_pad_hdr = None
         self.capri_gso_csum_hdr = None
         self.parser_end_off_cf = None
 
@@ -1221,6 +1222,16 @@ class capri_gress_pa:
         cf.is_hv = True
         return cf
 
+    def allocate_hv_padhdr_len_field(self, hdr_name):
+        hfname = hdr_name + '.pad'
+        if hfname not in self.fields:
+            cf = capri_field(None, self.d, 1, hfname)
+            self.fields[hfname] = cf
+        else:
+            cf = self.fields[hfname]
+        cf.is_hv = True
+        return cf
+
     def allocate_hv_payload_len_field(self, hdr_name):
         hfname = hdr_name + '.payload'
         if hfname not in self.fields:
@@ -1403,6 +1414,13 @@ class capri_gress_pa:
                                              dpa_variable_len_phv_start_bit, 0, 0, 1, False)
             assert phv_bit == dpa_variable_len_phv_start_bit, pdb.set_trace()
             self.assign_phv_to_hdr_flds(flit, self.capri_deparser_len_hdr, phv_bit)
+
+        if self.capri_deparser_pad_hdr:
+            dpa_pad_hdr_phv_start_bit = self.pa.be.hw_model['deparser']['pad_phv_start']
+            phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_deparser_pad_hdr) * 8),\
+                                             dpa_pad_hdr_phv_start_bit, 0, 0, 1, False)
+            assert phv_bit == dpa_pad_hdr_phv_start_bit, pdb.set_trace()
+            self.assign_phv_to_hdr_flds(flit, self.capri_deparser_pad_hdr, phv_bit)
 
 
         # add cfields used for predication
@@ -1715,6 +1733,13 @@ class capri_gress_pa:
                                              dpa_variable_len_phv_start_bit, 0, 0, 1, False)
             assert phv_bit == dpa_variable_len_phv_start_bit, pdb.set_trace()
             self.assign_phv_to_hdr_flds(flit, self.capri_deparser_len_hdr, phv_bit)
+
+        if self.capri_deparser_pad_hdr:
+            dpa_pad_hdr_phv_start_bit = self.pa.be.hw_model['deparser']['pad_phv_start']
+            phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_deparser_pad_hdr) * 8),\
+                                             dpa_pad_hdr_phv_start_bit, 0, 0, 1, False)
+            assert phv_bit == dpa_pad_hdr_phv_start_bit, pdb.set_trace()
+            self.assign_phv_to_hdr_flds(flit, self.capri_deparser_pad_hdr, phv_bit)
 
         '''
         if self.capri_gso_csum_hdr:
@@ -2772,6 +2797,7 @@ class capri_pa:
         self.hdr_unions = OrderedDict() # {hdr: (direction, [hdrs_in_union], destination)}
         self.gress_pa = [capri_gress_pa(self, d) for d in xgress]
         self.dprsr_len_hdr = None
+        self.dprsr_pad_hdr = None
         self.ig_gso_csum_hdr = None
         self.eg_gso_csum_hdr = None
 
@@ -2813,6 +2839,11 @@ class capri_pa:
                     self.dprsr_len_hdr = hdr
                     for d in xgress:
                         cf = self.allocate_hv_truncate_field(hdr.name, d)
+
+                if 'deparser_pad_header' in hdr._parsed_pragmas:
+                    self.dprsr_pad_hdr = hdr
+                    for d in xgress:
+                        cf = self.allocate_hv_padhdr_len_field(hdr.name, d)
 
                 #For GSO checksum, allocate HV to enable/disable GSO
                 #csum result into packet.
@@ -2886,6 +2917,23 @@ class capri_pa:
             self.gress_pa[xgress.INGRESS].capri_deparser_len_hdr = self.dprsr_len_hdr
             self.gress_pa[xgress.EGRESS].capri_deparser_len_hdr = self.dprsr_len_hdr
 
+        if self.dprsr_pad_hdr != None:
+            for p4f in self.dprsr_pad_hdr.fields:
+                cf = self.get_field(get_hfname(p4f), xgress.INGRESS)
+                if not cf:
+                    cf = self.allocate_field(p4f, xgress.INGRESS)
+                cf.is_ohi = False
+                cf.is_intrinsic = False
+
+                ecf = self.get_field(get_hfname(p4f), xgress.EGRESS)
+                if not ecf:
+                    ecf = self.allocate_field(p4f, xgress.EGRESS)
+                ecf.is_ohi = False
+                ecf.is_intrinsic = False
+
+            self.gress_pa[xgress.INGRESS].capri_deparser_pad_hdr = self.dprsr_pad_hdr
+            self.gress_pa[xgress.EGRESS].capri_deparser_pad_hdr = self.dprsr_pad_hdr
+
         if self.ig_gso_csum_hdr != None:
             for p4f in self.ig_gso_csum_hdr.fields:
                 cf = self.get_field(get_hfname(p4f), xgress.INGRESS)
@@ -2931,6 +2979,8 @@ class capri_pa:
                     _ = self.gress_pa[xgress.EGRESS].allocate_field(f)
                     continue
             if self.dprsr_len_hdr and f.instance.name == self.dprsr_len_hdr.name:
+                continue
+            if self.dprsr_pad_hdr and f.instance.name == self.dprsr_pad_hdr.name:
                 continue
             if self.ig_gso_csum_hdr and f.instance.name == self.ig_gso_csum_hdr.name:
                 continue
@@ -3174,6 +3224,9 @@ class capri_pa:
 
     def allocate_hv_truncate_field(self, hdr_name, d):
         return self.gress_pa[d].allocate_hv_truncate_field(hdr_name)
+
+    def allocate_hv_padhdr_len_field(self, hdr_name, d):
+        return self.gress_pa[d].allocate_hv_padhdr_len_field(hdr_name)
 
     def allocate_hv_payload_len_field(self, hdr_name, d):
         return self.gress_pa[d].allocate_hv_payload_len_field(hdr_name)
