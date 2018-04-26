@@ -57,6 +57,7 @@ dp_mem_t *rdma_get_target_write_data_buf();
 void PostTargetRcvBuf1();
 void PostInitiatorRcvBuf1();
 
+void ResetTargetRcvBufPtr();
 void IncrTargetRcvBufPtr();
 void IncrInitiatorRcvBufPtr();
 
@@ -70,6 +71,8 @@ uint32_t get_rdma_pvm_roce_tgt_cq();
 void RdmaMemRegister(uint64_t va, uint64_t pa, uint32_t len, uint32_t lkey,
                      uint32_t rkey, bool remote);
 void RdmaMemRegister(dp_mem_t *mem, uint32_t lkey, uint32_t rkey, bool remote);
+
+void FillWriteBackLocalBuffer(dp_mem_t *wqe, int base_offset);
 
 int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd_ptr, uint64_t slba);
 int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_handle,

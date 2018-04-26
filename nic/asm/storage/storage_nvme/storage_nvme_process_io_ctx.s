@@ -50,12 +50,12 @@ storage_nvme_process_io_ctx_start:
    // dont involve large I/O xfers
    seq		c3, d.is_read, 1
    sle		c4, d.nvme_data_len, NVME_READ_MAX_INLINE_DATA_SIZE
-   andcf	c1, [c3 & c4]
-   phvwr.c1	p.nvme_kivec_t0_s2s_is_read, 1
-   phvwr.c1	p.nvme_kivec_global_nvme_data_len, d.nvme_data_len
+   setcf	c5, [c3 & c4]
+   phvwr.c5	p.nvme_kivec_t0_s2s_is_read, 1
+   phvwr.c5	p.nvme_kivec_global_nvme_data_len, d.nvme_data_len
 
    // TODO: Branch to kickstart sequencer PDMA for large data xfers 
-   //       based on [c2 & c3 & c4]
+   //       based on [c3 & !c4]
 
    // Load the PRP list for the next stage to send Read data for 
    // small xfers

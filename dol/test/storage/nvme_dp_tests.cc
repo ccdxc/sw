@@ -15,6 +15,7 @@
 #include "dol/test/storage/nvme.hpp"
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/tests.hpp"
+#include "dol/test/storage/rdma.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
 
 
@@ -46,7 +47,7 @@ dp_mem_t* form_nvme_dp_read_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint
                                          uint64_t slba, uint16_t nlb)
 {
   dp_mem_t *read_buf;
-  read_buf = new dp_mem_t(1, kDefaultBufSize, DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
+  read_buf = new dp_mem_t(1, size, DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
   read_buf->clear_thru();
   nvme_cmd->clear();
   struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd->read();
@@ -68,8 +69,8 @@ dp_mem_t* form_nvme_dp_write_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uin
 {
   uint8_t byte_val = get_next_byte();
   dp_mem_t *write_buf;
-  write_buf = new dp_mem_t(1, kDefaultBufSize, DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
-  memset(write_buf->read(), byte_val, kDefaultBufSize);
+  write_buf = new dp_mem_t(1, size, DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
+  memset(write_buf->read(), byte_val, size);
   write_buf->write_thru();
   nvme_cmd->clear();
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd->read();
@@ -126,6 +127,39 @@ int test_run_nvme_dp_write_cmd() {
     return -1;
   }
 
+  // Send the NVME admin command
+  test_ring_nvme_doorbell(queues::get_nvme_lif(), SQ_TYPE, nvme_sq, 0, cmd_index);
+
+  // Poll for status
+  auto func1 = [nvme_status, nvme_cmd] () {
+    return check_nvme_dp_status(nvme_status, nvme_cmd);
+  };
+  Poller poll;
+  rc = poll(func1);
+
+  return rc;
+}
+
+int test_run_nvme_dp_read_cmd() {
+  int rc;
+  uint16_t cmd_index, status_index;
+  dp_mem_t *nvme_cmd, *nvme_status, *read_buf;
+
+  // Use non-zero queue (0 is Admin Q)
+  uint16_t nvme_sq = queues::get_host_nvme_sq(1);
+  uint16_t nvme_cq = queues::get_host_nvme_cq(1);
+
+  if (consume_nvme_sq_cq_entries(nvme_sq, nvme_cq, &nvme_cmd, &nvme_status, 
+                                 &cmd_index, &status_index) < 0) {
+    return -1;
+  }
+
+  // Form the read command
+  if ((read_buf = form_nvme_dp_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+                                                   get_next_slba(), kDefaultNlb)) == NULL) {
+    return -1;
+  }
+
 
   // Send the NVME admin command
   test_ring_nvme_doorbell(queues::get_nvme_lif(), SQ_TYPE, nvme_sq, 0, cmd_index);
@@ -140,4 +174,86 @@ int test_run_nvme_dp_write_cmd() {
   return rc;
 }
 
+int test_run_nvme_dp_e2e_test() {
+  int rc;
+  uint16_t cmd_index, status_index;
+  dp_mem_t *nvme_cmd, *nvme_status, *write_buf, *read_buf;
+  uint64_t slba;
+
+  // Use non-zero queue (0 is Admin Q)
+  uint16_t nvme_sq = queues::get_host_nvme_sq(1);
+  uint16_t nvme_cq = queues::get_host_nvme_cq(1);
+
+  // Init the SLBA once and use it for Read & Write commands
+  slba = get_next_slba();
+
+  // Consume for write
+  if (consume_nvme_sq_cq_entries(nvme_sq, nvme_cq, &nvme_cmd, &nvme_status, 
+                                 &cmd_index, &status_index) < 0) {
+    return -1;
+  }
+
+  // Form the write command
+  if ((write_buf = form_nvme_dp_write_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+                                                   slba, kDefaultNlb)) == NULL) {
+    return -1;
+  }
+
+  // Send the NVME admin command
+  test_ring_nvme_doorbell(queues::get_nvme_lif(), SQ_TYPE, nvme_sq, 0, cmd_index);
+
+  // Poll for status
+  auto func1 = [nvme_status, nvme_cmd] () {
+    return check_nvme_dp_status(nvme_status, nvme_cmd);
+  };
+  Poller poll;
+  rc = poll(func1);
+
+  // Write status successful ?
+  if (rc < 0) {
+    printf("Write status failed \n");
+    return rc;
+  }
+
+  // Consume again for read
+  if (consume_nvme_sq_cq_entries(nvme_sq, nvme_cq, &nvme_cmd, &nvme_status, 
+                                 &cmd_index, &status_index) < 0) {
+    return -1;
+  }
+
+  // Form the read command
+  if ((read_buf = form_nvme_dp_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+                                                 slba, kDefaultNlb)) == NULL) {
+    return -1;
+  }
+
+
+  // Send the NVME admin command
+  test_ring_nvme_doorbell(queues::get_nvme_lif(), SQ_TYPE, nvme_sq, 0, cmd_index);
+
+  // Poll for status
+  auto func2 = [nvme_status, nvme_cmd] () {
+    return check_nvme_dp_status(nvme_status, nvme_cmd);
+  };
+  rc = poll(func2);
+
+  // Read status successful ?
+  if (rc < 0) {
+    printf("Read status failed \n");
+    return rc;
+  }
+
+  // Compare the read and write buffers
+  if (memcmp(read_buf->read(), write_buf->read(), kDefaultBufSize) != 0) {
+    utils::dump(read_buf->read(), 16);
+    utils::dump(write_buf->read(), 16);
+    printf("Buffer comparison failed \n");
+    rc = -1;
+  } else {
+    printf("Buffer comparison succeded \n");
+    rc = 0;
+  }
+
+  return rc;
+}
 }  // namespace tests

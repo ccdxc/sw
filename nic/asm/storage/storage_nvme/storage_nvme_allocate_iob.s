@@ -20,11 +20,15 @@ struct phv_ p;
    .param storage_nvme_save_iob_addr_start
 
 storage_nvme_allocate_iob_start:
-   // Is ring empty
-   seq		c1, d.p_ndx, d.c_ndx
+   // Is this a skip stage as there is nothing to process ? 
+   seq		c1, NVME_KIVEC_GLOBAL_OPER_STATUS, IO_CTX_OPER_STATUS_NON_STARTER
    bcf		[c1], tbl_load
+
+   // Is ring empty
+   seq		c2, d.p_ndx, d.c_ndx      // delay slot
+   bcf		[c2], tbl_load
    // delay slot
-   phvwr.c1	p.nvme_kivec_global_oper_status, IO_CTX_OPER_STATUS_NON_STARTER
+   phvwr.c2	p.nvme_kivec_global_oper_status, IO_CTX_OPER_STATUS_NO_FREE_IOB
 
    // Get the address of IOB pointed to by the c_ndx in the ring
    // Macro stores return value in GPR: r7
