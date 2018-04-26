@@ -13,7 +13,7 @@ gl_ignore_fields = {
 #    'ICMP'  : [ 'chksum' ],
     'CRC'       : [ 'crc' ],
     'ESP'       : [ 'data' ],
-    'PADDING'   : [ 'data' ],
+#    'PADDING'   : [ 'data' ],
 }
 
 class DOLTestCaseTxRxStatsEntry:

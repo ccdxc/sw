@@ -36,6 +36,9 @@ def TestCaseSetup(tc):
         asp.CloneFields(profile)
         asp.Update()
         tc.module.pvtdata.profile = pfname
+    
+    if pfname == 'SEC_PROF_TCP_RST_WITH_DATA_ACTION_EDIT':
+        tc.AddIgnorePacketField('PADDING', 'data')
 
     return
 

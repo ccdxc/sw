@@ -331,7 +331,7 @@ class PacketComparator:
         #    return spkt
         newpkt = spkt
         if ports and len(spkt) < MIN_PACKET_SIZE:
-            newpkt = spkt + (bytes([0x0]) * (MIN_PACKET_SIZE - len(spkt)))
+            newpkt = spkt + (bytes([defs.PAD_BYTE]) * (MIN_PACKET_SIZE - len(spkt)))
         return newpkt
         
 

@@ -443,7 +443,7 @@ class ScapyPacketObject:
         if padsize < 0:
             self.rawbytes = self.rawbytes[:len(self.rawbytes) + padsize]
         else:  
-            self.rawbytes += bytes([0xff] * padsize)
+            self.rawbytes += bytes([defs.PAD_BYTE] * padsize)
     
     def __update_pcap_packet_headers(self, packet):
         for hdr in packet.headers.__dict__.values():
