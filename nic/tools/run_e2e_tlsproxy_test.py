@@ -56,11 +56,11 @@ DIR_NET = 'from-net'
 TLS_GCM_CIPHER = "ECDHE-ECDSA-AES128-GCM-SHA256"
 TLS_GCM_CERTFILE = "e2etests/proxy/ca.crt"
 TLS_GCM_KEYFILE = "e2etests/proxy/ca.pem"
-TLS_GCM_CLIENTCA_FILE = "conf/openssl/certs/ca.crt"
+TLS_GCM_CLIENTCA_FILE = "conf/openssl/certs/ecdsa/ca.crt"
 TLS_RSA_CIPHER = "AES128-GCM-SHA256"
 TLS_RSA_CERTFILE = "e2etests/proxy/rsa.crt"
 TLS_RSA_KEYFILE = "e2etests/proxy/rsa.key"
-TLS_RSA_CLIENTCA_FILE = "conf/openssl/certs/ca.crt"
+TLS_RSA_CLIENTCA_FILE = "conf/openssl/certs/rsa/ca.crt"
 
 def hal_init():
     global HalChannel
@@ -308,6 +308,7 @@ def main():
     log.close()
     log = open(hntap_log, "w")
     log.close()
+    
     TESTS = [
              {
                 'id': 1, 'name': "TLS Proxy-GCM", 'port': 80, 'bypass_tls': 0,
@@ -338,11 +339,22 @@ def main():
                 'clientCAfile': None, 'client_dir': DIR_HOST 
              },
              {
-                'id': 6, 'name': "TCP Server Proxy - GCM", 'port': 85, 'bypass_tls': 1,
+                'id': 6, 'name': "TLS Proxy - RSA - Client Auth", 'port': 83, 'bypass_tls': 0,
+                'cipher': TLS_RSA_CIPHER, 'certfile': TLS_RSA_CERTFILE,
+                'keyfile': TLS_RSA_KEYFILE, 'clientCAfile': TLS_RSA_CLIENTCA_FILE, 'client_dir': DIR_HOST
+             },
+             {
+                'id': 7, 'name': "TLS Proxy - ECDSA - Client Auth", 'port': 84, 'bypass_tls': 0,
+                'cipher': TLS_GCM_CIPHER, 'certfile': TLS_GCM_CERTFILE, 'keyfile': TLS_GCM_KEYFILE,
+                'clientCAfile': TLS_GCM_CLIENTCA_FILE, 'client_dir': DIR_HOST
+             },
+             {
+                'id': 8, 'name': "TCP Server Proxy - GCM", 'port': 85, 'bypass_tls': 1,
                 'cipher': None, 'certfile': None, 'keyfile': None, 'clientCAfile': None,
                 'client_dir': DIR_NET
              },
             ]
+
     for test in TESTS:
         status = run_test(test['id'], test['name'], str(test['port']),
                           test['bypass_tls'], test['cipher'],

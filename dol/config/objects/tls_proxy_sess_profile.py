@@ -13,8 +13,6 @@ import config.hal.defs          as haldefs
 import config.hal.api           as halapi
 import crypto_apis_pb2          as crypto_apis_pb2
 
-CERT_DIR="nic/conf/openssl/certs"
-
 class CryptoCertObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
@@ -27,7 +25,7 @@ class CryptoCertObject(base.ConfigObjectBase):
         self.GID(gid)
         logger.info("  - %s" % self)
         # read cert from the file
-        self.path = os.path.join(os.environ['WS_TOP'], CERT_DIR, certfile)
+        self.path = certfile.Get()
         logger.info("  - file %s" % self.path)
         f = open(self.path, "r")
         assert(f != None)
@@ -92,7 +90,7 @@ class CryptoAsymKeyObject(base.ConfigObjectBase):
         self.GID(gid)
         logger.info("  - %s" % self)
         # read key from the file
-        self.path = os.path.join(os.environ['WS_TOP'], CERT_DIR, keyfile)
+        self.path = keyfile.Get()
         logger.info("  - file %s" % self.path)
         f = open(self.path, "r")
         assert(f != None)

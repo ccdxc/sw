@@ -5,5 +5,5 @@ meta:
         - iris
 
 id              : 0
-cert_file       : client_ecdsa.crt
-key_file        : client_ecdsa.key
+cert_file       : file://../nic/conf/openssl/certs/ecdsa/client.crt
+key_file        : file://../nic/conf/openssl/certs/ecdsa/client.key 
