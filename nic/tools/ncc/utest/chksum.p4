@@ -1,7 +1,23 @@
+
+header_type parser_ohi_t {
+    fields {
+        ipv4___start_off            : 16;
+        ipv6___start_off            : 16;
+        udp___start_off             : 16;
+        tcp___start_off             : 16;
+        l4_len                      : 16;
+    }
+}
+
+
+@pragma parser_write_only
+metadata parser_ohi_t ohi;
+
+
 header_type deparser_len_t {
     fields {
+        trunc_pkt_len   : 16;
         l4_payload_len  : 16;
-        inner_l4_payload_len  : 16;
     }
 }
 
@@ -121,6 +137,7 @@ field_list ipv4_checksum_list {
 }
 
 @pragma checksum hdr_len_expr parser_metadata.ipv4hdr_len + 20
+@pragma checksum verify_len ohi.l4_len
 field_list_calculation ipv4_checksum {
     input {
         ipv4_checksum_list;
@@ -146,7 +163,8 @@ field_list udp_checksum_list {
     payload;
 }
 
-@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum verify_len ohi.l4_len
 field_list_calculation ipv4_udp_checksum {
     input {
         udp_checksum_list;
@@ -166,7 +184,8 @@ field_list v6_udp_checksum_list {
     payload;
 }
 
-@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum verify_len ohi.l4_len
 field_list_calculation ipv6_udp_checksum {
     input {
         v6_udp_checksum_list;
@@ -204,7 +223,8 @@ field_list tcp_checksum_list {
     payload;
 }
 
-@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum verify_len ohi.l4_len
 field_list_calculation ipv4_tcp_checksum {
     input {
         tcp_checksum_list;
@@ -231,7 +251,8 @@ field_list v6_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum verify_len ohi.l4_len
 field_list_calculation ipv6_tcp_checksum {
     input {
         v6_tcp_checksum_list;

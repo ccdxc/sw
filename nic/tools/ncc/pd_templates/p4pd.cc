@@ -2800,7 +2800,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
 //::                    fldcontainer, fldukeys = fld_un_containers
 //::                    for fields in fldukeys:
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields[1]
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
 //::                            for kmbyte, kbit, _, _ in key_byte_format:
 //::                                tablebyte = kmbyte
@@ -2843,7 +2843,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
 //::                    fldcontainer, fldukeys = fld_un_containers
 //::                    for fields in fldukeys:
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields[1]
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_bit_format):
 //::                            for kmbit, kbit in key_bit_format:
 //::                                tablebit = kmbit
@@ -4021,7 +4021,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                    for fields in fldukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, _, _ in key_byte_format:
 //::                                kbyte = kbit / 8
 //::                                tablebyte = kmbyte
 //::                                if p4fldwidth <= 32:

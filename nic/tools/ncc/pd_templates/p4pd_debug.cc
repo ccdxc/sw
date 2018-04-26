@@ -50,13 +50,11 @@ using ::debug::RegisterResponseMsg;
 //::        tableid += 1
 //::     #endfor
 //::
-//::    if len(tabledict):
-//::        if pddict['p4plus']:
-//::            api_prefix = 'p4pd_' + pddict['p4program']
-//::        else:
-//::            api_prefix = 'p4pd'
-//::        #endif
-//::    #endif
+//::     if pddict['p4plus']:
+//::         api_prefix = 'p4pd_' + pddict['p4program']
+//::     else:
+//::         api_prefix = 'p4pd'
+//::     #endif
 
 static std::shared_ptr<Channel>     channel;
 static std::unique_ptr<Debug::Stub> stub;

@@ -69,15 +69,15 @@
 //::     #endfor
 //::     index_max = tableid - 1
 //::     mpu_min = tableid
-//::     max_min = tableid
+//::     mpu_max = tableid
 //::     for table in pddict['tables']:
 //::        if pddict['tables'][table]['type'] == 'Mpu':
 //::            tabledict[table] = tableid
 //::            tableid += 1
 //::        #endif
 //::        mpu_max = tableid - 1
-//::        tblid_max = tableid
 //::     #endfor
+//::    tblid_max = tableid
 //::    table_min_dict = {}
 //::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_HASH_MIN'] = hash_min
 //::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_HASH_MAX'] = hash_max

@@ -1735,8 +1735,8 @@ def capri_deparser_cfg_output(deparser):
     dpr_rstr_name = 'cap_dpr_csr_cfg_pkt_padding'
     dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
     dpr_rstr['padding_profile_sel']['value'] = str(0x5555)
-    p4_intrinsic_size = get_header_size(deparser.be.h.p4_header_instances['capri_p4_intrinsic'])
-    intrinsic_size = get_header_size(deparser.be.h.p4_header_instances['capri_intrinsic'])
+    p4_intrinsic_size = get_header_size(deparser.be.h.p4_header_instances['capri_p4_intrinsic']) if 'capri_p4_intrinsic' in deparser.be.h.p4_header_instances.keys()  else 0
+    intrinsic_size =  get_header_size(deparser.be.h.p4_header_instances['capri_intrinsic']) if 'capri_intrinsic' in deparser.be.h.p4_header_instances.keys() else 0
     min_size = (p4_intrinsic_size + intrinsic_size + 60) << 8 # 64B - 4B CRC
     dpr_rstr['min_size']['value'] = str(min_size) #Profile #1 starts from bit 8
     dpr_rstr['_modified'] = True
