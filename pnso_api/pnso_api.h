@@ -205,57 +205,69 @@ struct pnso_crypto_desc {
 	uint64_t iv_addr;
 };
 
+/*  list of descriptor flags */
+#define PNSO_DESC_FLAG_ZERO_PAD		(1 << 0)
+#define PNSO_DESC_FLAG_INSERT_HEADER	(1 << 1)
+#define PNSO_DESC_FLAG_PER_BLOCK	(1 << 2)
+
 /**
  * struct pnso_compression_desc - represents the descriptor for compression
  * service
- * @rsvd_1: specifies a 'reserved' field meant to be used by Pensando.
  * @threshold_len: specifies the expected compressed buffer length in
- * bytes.
- * This is to instruct the compression operation, upon its completion, to
- * compress the buffer to a length that must be less than or equal to
- * 'threshold_len'.
- * @zero_pad: specifies whether or not to zero fill the compressed output
- * buffer aligning to block size.
- * @insert_header: specifies whether or not to insert compression header.
- * @rsvd_2: specifies a 'reserved' field meant to be used by Pensando.
+ * bytes. This is to instruct the compression operation, upon its
+ * completion, to compress the buffer to a length that must be less
+ * than or equal to 'threshold_len'.
+ * @flags: specifies the following applicable descriptor flags to
+ * compression descriptor.
+ *	PNSO_DESC_FLAG_ZERO_PAD - whether or not to zero fill the
+ *	compressred output buffer aligning to block size.
+ *	PNSO_DESC_FLAG_INSERT_HEADER - whether or not to insert
+ *	compression header compressed output buffer.
  *
  */
 struct pnso_compression_desc {
-	uint16_t rsvd_1;
 	uint16_t threshold_len;
-	bool zero_pad;
-	bool insert_header;
-	uint32_t rsvd_2;
+	uint16_t flags;
 };
 
 /**
  * struct pnso_decompression_desc - represents the descriptor for
  * decompression operation
+ * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_decompression_desc {
+	uint32_t rsvd;
 };
 
 /**
  * struct pnso_hash_desc - represents the descriptor for data deduplication
  * operation
- * @per_block: specifies whether to produce one hash per block or one for
- * the entire buffer.
+ * @flags: specifies the following applicable descriptor flags to
+ * hash descriptor.
+ *	PNSO_DESC_FLAG_PER_BLOCK - whether to produce one hash per block
+ *	or one for the entire buffer.
+ * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_hash_desc {
-	bool per_block;
+	uint16_t flags;
+	uint16_t rsvd;
 };
 
 /**
  * struct pnso_checksum_desc - represents the descriptor for checksum
  * operation
- * @per_block: specifies whether to produce one checksum per block or
- * one for the entire buffer.
+ * @flags: specifies the following applicable descriptor flags to
+ * checksum descriptor.
+ *	PNSO_DESC_FLAG_PER_BLOCK - whether to produce one checksum per
+ *	block or one for the entire buffer.
+ * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_checksum_desc {
-	bool per_block;
+	uint16_t flags;
+	uint16_t rsvd;
 };
 
 /**
