@@ -33,10 +33,32 @@ pcieport_rx_credit_init(const int nports)
 }
 
 static void
+pcieport_macfifo_thres(const int thres)
+{
+    union {
+        struct {
+            u_int32_t macfifo_thres:5;
+            u_int32_t rd_sgl_pnd:1;
+            u_int32_t tag_avl_guardband:3;
+            u_int32_t cnxt_avl_guardband:3;
+        } __attribute__((packed));
+        u_int32_t w;
+    } v;
+    const u_int64_t itr_tx_req =
+        (CAP_ADDR_BASE_PXB_PXB_OFFSET + 
+         CAP_PXB_CSR_CFG_ITR_TX_REQ_BYTE_ADDRESS);
+
+    v.w = pal_reg_rd32(itr_tx_req);
+    v.macfifo_thres = thres;
+    pal_reg_wr32(itr_tx_req, v.w);
+}
+
+static void
 pcieport_link_init(void)
 {
     pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x2222); /* 4 port x4 linkwidth mode */
     pcieport_rx_credit_init(4);
+    pcieport_macfifo_thres(5);
 }
 
 static int
