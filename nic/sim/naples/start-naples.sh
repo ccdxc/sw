@@ -4,7 +4,7 @@ echo "Bringing up NAPLES services/processes ..."
 
 export NIC_DIR=/naples/nic
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
-export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:/usr/local/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:$HAL_CONFIG_PATH/sdk:$HAL_CONFIG_PATH/sdk/external:/usr/local/lib:$LD_LIBRARY_PATH
 export MODEL_ZMQ_TYPE_TCP=1
 export ZMQ_SOC_DIR=$NIC_DIR
 ulimit -c unlimited

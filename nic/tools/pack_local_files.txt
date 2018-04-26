@@ -7,6 +7,4 @@ nic/gen/iris/cli/iris_debug_cli.py                               /nic/cli/
 nic/gen/iris/cli/iris.py                                         /nic/cli/
 nic/gen/iris/cli/debugshell.py                                   /nic/cli/
 nic/gen/iris/cli/_iris.so                                        /nic/cli/
-nic/sdk/obj/lib/*.so                                             /nic/lib/
-nic/sdk/obj/lib/external/*.so                                    /nic/lib/
 bazel-bin/nic/hal/third-party/isc-dhcp/libisc-dhcp.so            /nic/lib/

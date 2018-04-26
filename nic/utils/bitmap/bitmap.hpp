@@ -1,3 +1,5 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 #ifndef __BITMAP_HPP__
 #define __BITMAP_HPP__
 

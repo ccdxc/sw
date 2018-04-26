@@ -1,3 +1,5 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/hal_mem.hpp"
 #include "nic/utils/bitmap/bitmap.hpp"
 
@@ -430,7 +432,6 @@ bitmap::log2_floor(uint64_t v)
     return r;
 #endif
 }
-
 
 }    // namespace utils
 }    // namespace hal
