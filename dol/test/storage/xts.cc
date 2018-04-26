@@ -1935,14 +1935,14 @@ done:
 }
 
 int xts_multi_blk_noc_stress_from_host_hw_chain() {
-  kTotalReqs = 64;
+  kTotalReqs = 32;
   kInitReqs = 4;
   kBatchSize = 4;
   return xts_multi_blk_noc_stress_hw_daisy_chain();
 }
 
 int xts_multi_blk_noc_stress_from_hbm_hw_chain() {
-  kTotalReqs = 64;
+  kTotalReqs = 32;
   kInitReqs = 4;
   kBatchSize = 4;
   return xts_multi_blk_noc_stress_hw_daisy_chain(true);
@@ -1950,14 +1950,14 @@ int xts_multi_blk_noc_stress_from_hbm_hw_chain() {
 
 
 int xts_multi_blk_noc_stress_from_host() {
-  kTotalReqs = 64;
+  kTotalReqs = 32;
   kInitReqs = 4;
   kBatchSize = 4;
   return xts_multi_blk_noc_stress();
 }
 
 int xts_multi_blk_noc_stress_from_hbm() {
-  kTotalReqs = 64;
+  kTotalReqs = 32;
   kInitReqs = 4;
   kBatchSize = 4;
   return xts_multi_blk_noc_stress(true);

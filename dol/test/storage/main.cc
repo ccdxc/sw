@@ -270,11 +270,6 @@ int main(int argc, char**argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   signal(SIGSEGV, sig_handler);
 
-  if (setenv("MODEL_TIMEOUT", "1800", 1) < 0) {
-    printf("Can't set model timeout \n");
-    return 1;
-  }
-
   std::cout << "Input - hal_port: "   << FLAGS_hal_port 
             << "\nInput - hal_ip: "   << FLAGS_hal_ip 
             << "\nTest group: "       << FLAGS_test_group
