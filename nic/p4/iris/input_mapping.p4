@@ -192,7 +192,8 @@ table input_mapping_native {
 //              to GIPo with this VNID.
 action input_properties(vrf, dir, flow_miss_action, flow_miss_qos_class_id,
                         flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
-                        dst_lport, src_lport, allow_flood, bounce_vnid) {
+                        dst_lport, src_lport, allow_flood, bounce_vnid,
+                        clear_promiscuous_repl) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
     modify_field(control_metadata.flow_miss_action, flow_miss_action);
@@ -205,6 +206,7 @@ action input_properties(vrf, dir, flow_miss_action, flow_miss_qos_class_id,
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(control_metadata.allow_flood, allow_flood);
     modify_field(flow_miss_metadata.tunnel_vnid, bounce_vnid);
+    modify_field(control_metadata.clear_promiscuous_repl, clear_promiscuous_repl);
 
     // write nic mode (table constant)
     modify_field(control_metadata.nic_mode, scratch_metadata.flag);
@@ -282,7 +284,7 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
 
     input_properties(vrf, dir, flow_miss_action, flow_miss_qos_class_id,
                      flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
-                     dst_lport, src_lport, allow_flood, tunnel_vnid);
+                     dst_lport, src_lport, allow_flood, tunnel_vnid, 0);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);

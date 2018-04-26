@@ -66,10 +66,16 @@ input_properties_mac_vlan:
                     d.input_properties_mac_vlan_d.flow_miss_action
   phvwr         p.control_metadata_flow_miss_qos_class_id, \
                     d.input_properties_mac_vlan_d.flow_miss_qos_class_id
+  phvwr         p.control_metadata_ipsg_enable, \
+                    d.input_properties_mac_vlan_d.ipsg_enable
+  phvwr         p.control_metadata_allow_flood, \
+                    d.input_properties_mac_vlan_d.allow_flood
+#if 0
   phvwrpair     p.control_metadata_ipsg_enable, \
                     d.input_properties_mac_vlan_d.ipsg_enable, \
                     p.control_metadata_allow_flood, \
                     d.input_properties_mac_vlan_d.allow_flood
+#endif /* 0 */
   phvwr.e       p.flow_lkp_metadata_lkp_dir, \
                     d.input_properties_mac_vlan_d.dir
   phvwr.f       p.l4_metadata_profile_idx, d.input_properties_mac_vlan_d.l4_profile_idx

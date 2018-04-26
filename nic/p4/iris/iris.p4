@@ -93,6 +93,7 @@ header_type control_metadata_t {
         rdma_enabled                   : 1;
         src_lport                      : 11;
         dst_lport                      : 11;
+        clear_promiscuous_repl         : 1;
         flow_miss                      : 1;
         flow_miss_ingress              : 1;  // NCC workaround for predication
         flow_miss_egress               : 1;  // NCC workaround for predication

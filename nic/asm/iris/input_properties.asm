@@ -31,12 +31,16 @@ input_properties:
                     d.input_properties_d.flow_miss_action
   phvwr         p.control_metadata_flow_miss_qos_class_id, \
                     d.input_properties_d.flow_miss_qos_class_id
+  phvwr         p.control_metadata_ipsg_enable, d.input_properties_d.ipsg_enable
+  phvwr         p.control_metadata_allow_flood, d.input_properties_d.allow_flood
+#if 0
   phvwrpair     p.control_metadata_ipsg_enable, d.input_properties_d.ipsg_enable, \
                     p.control_metadata_allow_flood, d.input_properties_d.allow_flood
+#endif /* 0 */
   phvwr         p.flow_miss_metadata_tunnel_vnid, \
                     d.input_properties_d.bounce_vnid
-  phvwr.e           p.control_metadata_flow_miss_idx, \
-                    d.input_properties_d.flow_miss_idx
+  phvwr         p.control_metadata_clear_promiscuous_repl, d.input_properties_d.clear_promiscuous_repl
+  phvwr.e           p.control_metadata_flow_miss_idx, d.input_properties_d.flow_miss_idx
   phvwr.f       p.l4_metadata_profile_idx, d.input_properties_d.l4_profile_idx
 
 /*****************************************************************************/

@@ -13,6 +13,15 @@ struct phv_               p;
 ingress_tx_stats:
   K_DBG_WR(0xc0)
   phvwr       p.capri_p4_intrinsic_valid, TRUE
+  seq         c2, k.control_metadata_clear_promiscuous_repl, TRUE
+  // c3 is used later too.
+  seq         c3, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
+  setcf       c2, [c2 & c3]
+  phvwr.c2    p.capri_intrinsic_tm_replicate_en, 0
+  seq         c2, k.control_metadata_uplink, TRUE
+  seq.c2      c2, k.control_metadata_nic_mode, TRUE
+  setcf       c2, [c2 & !c3]
+  phvwr.c2    p.control_metadata_dst_lport, 0
   seq         c2, k.capri_intrinsic_drop, 0
   b.c2        tcp_options_fixup
   add         r7, d.ingress_tx_stats_d.tx_ingress_drops, k.capri_intrinsic_drop

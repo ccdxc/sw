@@ -4,6 +4,28 @@
 action ingress_tx_stats(tx_ingress_drops) {
     tcp_options_fixup();
     add_header(capri_p4_intrinsic);
+
+    // Since we couldn't get the clear_promiscuous_repl as I field into
+    // registered_mac table, adding this check here.
+    // This will make sure that we don't go through replication
+    // in PB if all we have to send is one copy for this packet
+    // which could be
+    // 1. Uplink port for packets coming from Host side OR
+    // 2. Host Port (when there is one PF to Uplink mapping) and
+    //    the PF is always in promiscuous mode.
+    if (control_metadata.clear_promiscuous_repl == TRUE and 
+        flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
+        modify_field(capri_intrinsic.tm_replicate_en, FALSE);
+    }
+    if (control_metadata.uplink == TRUE and 
+        control_metadata.nic_mode == NIC_MODE_CLASSIC and
+        (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST or 
+         flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST)) {
+        modify_field(control_metadata.dst_lport, 0);
+    }
+          
+         
+
     if (capri_intrinsic.drop == TRUE) {
         modify_field(scratch_metadata.tx_drop_count, tx_ingress_drops);
     }
