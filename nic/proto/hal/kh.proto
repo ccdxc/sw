@@ -30,7 +30,7 @@ message VrfKeyHandle {
 
 // NetworkKey uniquely identifies a network by its key
 message NetworkKey {
-  VrfKeyHandle      vrf_key_handle = 1 [(gogoproto.moretags) = "venice:ref"];;    // VRF key or handle
+  VrfKeyHandle      vrf_key_handle = 1 [(gogoproto.moretags) = "venice:ref"];    // VRF key or handle
   types.IPPrefix    ip_prefix      = 2;    // IP prefix
 }
 
@@ -52,7 +52,7 @@ message NexthopKeyHandle {
 
 // RouteKey uniquely identifies a route by its key
 message RouteKey {
-  VrfKeyHandle      vrf_key_handle = 1;    // VRF key or handle
+  VrfKeyHandle      vrf_key_handle = 1 [(gogoproto.moretags) = "venice:ref"];    // VRF key or handle
   types.IPPrefix    ip_prefix      = 2;    // IP prefix
 }
 
