@@ -69,9 +69,10 @@ debug_hbm_read_write (uint64_t start_addr, uint32_t num_bytes, bool read)
 int main (int argc, char **argv)
 {
     sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HW);
+    uint64_t addr = 0x0;
+    uint64_t data = 0x0;
 
-
-    if (argc != 2) {
+    if (argc < 2) {
         printf("Usage: %s <hbm_read/hbm_write/tcam_read>\n", argv[0]);
         return 0;
     }
@@ -84,9 +85,27 @@ int main (int argc, char **argv)
         printf("HBM WRITE\n");
         debug_hbm_read_write(0x0C0000000, 0x200*8, false);
 
+    } else if (!strcmp (argv[1], "hbm_test")) {
+        printf("HBM TEST\n");
+        sdk::lib::pal_mem_read(0x0C0000000, (uint8_t *)&data, sizeof(data));
+        printf ("Read data: 0x%lx\n", data);
+
     } else if (!strcmp (argv[1], "tcam_read")) {
         printf("TCAM DUMP\n");
         egress_parser_tcam_dump();
+
+    } else if (!strcmp (argv[1], "doorbell_ring")) {
+        if (argc != 4) {
+            printf ("Usage: %s doorbell_ring <addr> <data>\n", argv[0]);
+            return 0;
+        }
+
+        sscanf(argv[2], "%" SCNx64, &addr);
+        sscanf(argv[3], "%" SCNx64, &data);
+
+        printf ("Addr: 0x%lx, data: 0x%lx\n", addr, data);
+
+        sdk::lib::pal_ring_doorbell(addr, data);
 
     } else {
         printf("Usage: %s <hbm_read/hbm_write/tcam_read>\n", argv[0]);

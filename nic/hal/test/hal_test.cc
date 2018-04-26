@@ -856,6 +856,9 @@ public:
         spec->mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(if_id);
         if (ip_addr) {
             for (int i = 0; i < num_ips; ++i) {
+                std::cout << "ep_create with ip: "
+                          << std::hex << ip_addr[i] << std::dec
+                          << std::endl;
                 ip = spec->mutable_endpoint_attrs()->add_ip_address();
                 ip->set_ip_af(types::IPAddressFamily::IP_AF_INET);
                 ip->set_v4_addr(ip_addr[i]);
@@ -2110,15 +2113,15 @@ main (int argc, char** argv)
         std::cout << "session_create" << std::endl;
 
         // create a session
-        hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a0104,
+        hclient.session_create(1, vrf_id, 0x0a0a01FD, 0x0a0a0105,
                                ::types::IPProtocol::IPPROTO_UDP,
-                               10000, 10001, 1,
+                               32007, 2055, 1,
                                ::session::NAT_TYPE_NONE, 0, 0, 0, 0,
                                ::session::FlowAction::FLOW_ACTION_ALLOW,
-                               1);
+                               0);
         return 0;
     } else if (ep_create == true) {
-        ip_address = 0x0a0a0102;
+        ip_address = 0x0a0a01FD;
         hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x0cc47a2a7b61, &ip_address, 1);
 
         return 0;
@@ -2228,10 +2231,10 @@ main (int argc, char** argv)
     // bringup this L2seg on all uplinks
     hclient.add_l2seg_on_uplinks(if_id, 4, dest_l2seg_id);
 
-    uint32_t ip_addr[2] = { 0x0a0a0102, 0x0a0a01FE };
+    uint32_t ip_addr[3] = { 0x0a0a0102, 0x0a0a01FD, 0x0a0a01FE };
 
     // endpoint for PEER00
-    hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x0cc47a2a7b61, ip_addr, 2);
+    hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x0cc47a2a7b61, ip_addr, 3);
 
     ip_addr[0] = 0x0a0a0104;
     ip_addr[1] = 0x0a0a0105;
