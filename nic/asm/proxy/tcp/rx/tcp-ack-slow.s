@@ -20,6 +20,10 @@ struct s3_t0_tcp_rx_tcp_ack_d d;
     .param          tcp_rx_rtt_start
 
 tcp_ack_slow:
+#ifdef CAPRI_IGNORE_TIMESTAMP
+    add             r4, r0, r0
+    add             r6, r0, r0
+#endif
     seq             c1, d.state, TCP_ESTABLISHED
     sne             c2, k.s1_s2s_snd_nxt, k.s1_s2s_ack_seq
     bcf             [c1 | c2], tcp_ack_established_slow
