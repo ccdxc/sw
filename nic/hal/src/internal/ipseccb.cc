@@ -5,6 +5,8 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
+#include "nic/hal/src/nw/session.hpp"
+#include "nic/include/fte.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/internal/ipseccb.hpp"
 #include "nic/hal/src/nw/vrf.hpp"
@@ -106,6 +108,8 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     mac_addr_t *smac = NULL, *dmac = NULL;
     vrf_t   *vrf;
     vrf_id_t tid = 0;
+    mac_addr_t smac1 = {0x0, 0xee, 0xff, 0x0, 0x0, 0x02};
+    mac_addr_t dmac1 = {0x0, 0xee, 0xff, 0x0, 0x0, 0x03};
 
     // validate the request message
     ret = validate_ipseccb_create(spec, rsp);
@@ -137,6 +141,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     vrf = vrf_get_infra_vrf();
     if (vrf) {
         tid = vrf->vrf_id;
+        HAL_TRACE_DEBUG("infra_vrf success tid = {}", tid);
     }
 
     sep = find_ep_by_v4_key(tid, htonl(spec.tunnel_sip4()));
@@ -146,6 +151,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
             memcpy(ipseccb->smac, smac, ETH_ADDR_LEN);
         }
     } else {
+        memcpy(ipseccb->smac, smac1, ETH_ADDR_LEN);
         HAL_TRACE_DEBUG("Src EP Lookup failed \n");
     }
     dep = find_ep_by_v4_key(tid, htonl(spec.tunnel_dip4()));
@@ -155,6 +161,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
             memcpy(ipseccb->dmac, dmac, ETH_ADDR_LEN);
         }
     } else {
+        memcpy(ipseccb->dmac, dmac1, ETH_ADDR_LEN);
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
 
@@ -169,6 +176,12 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {} \n", ipaddr2str(&ipseccb->sip6), ipaddr2str(&ipseccb->dip6));
 
     ipseccb->hal_handle = hal_alloc_handle();
+
+    uint64_t sess_hdl = 0;
+    SessionSpec sess_spec;
+    SessionResponse sess_rsp;
+    ::google::protobuf::uint32  ip1 = ipseccb->tunnel_sip4;
+    ::google::protobuf::uint32  ip2 = ipseccb->tunnel_dip4;
 
     // allocate all PD resources and finish programming
     pd::pd_ipseccb_create_args_init(&pd_ipseccb_args);
@@ -194,6 +207,25 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->mutable_ipseccb_status()->set_ipseccb_handle(ipseccb->hal_handle);
+
+    sess_spec.mutable_meta()->set_vrf_id(1);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_ip_proto(types::IPPROTO_ESP); 
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->mutable_esp()->set_spi(0);
+    sess_spec.mutable_initiator_flow()->mutable_flow_data()->mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
+
+
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip2);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_ip_proto(types::IPPROTO_ESP); 
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->mutable_esp()->set_spi(0);
+    sess_spec.mutable_responder_flow()->mutable_flow_data()->mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
+    ret = fte::session_create(sess_spec, &sess_rsp);
+
+    sess_hdl = sess_rsp.mutable_status()->session_handle();
+    HAL_TRACE_DEBUG("Session Handle: {}", sess_hdl);
+
     return HAL_RET_OK;
 
 cleanup:

@@ -120,7 +120,7 @@ modules:
             - flow: filter://type=IPV4,proto=UDP
     - module:
         name    : NAT_T_PKT_FROM_UPLINK
-        enable  : True 
+        enable  : False 
         package : test.ipsec-proxy
         module  : nat_t_pkt_from_uplink
         spec    : nat_t_pkt_from_uplink.testspec
@@ -220,7 +220,7 @@ modules:
             - flow: filter://type=IPV4
     - module:
         name    : TCP_V4_EXTRA_PAD 
-        enable  : True 
+        enable  : False 
         package : test.ipsec-proxy
         module  : tcp_v4_extra_pad 
         spec    : tcp_v4_extra_pad.testspec 
@@ -230,7 +230,7 @@ modules:
             - flow: filter://type=IPV4,proto=TCP
     - module:
         name    : MULTI_PKT_TCP 
-        enable  : False 
+        enable  : True 
         package : test.ipsec-proxy
         module  : multi_pkt_tcp 
         spec    : multi_pkt_tcp.testspec

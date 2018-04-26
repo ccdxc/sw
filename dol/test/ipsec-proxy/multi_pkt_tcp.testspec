@@ -19,7 +19,7 @@ selectors:
 # Packet section defines the set of input and output packets. Input packets
 # will be used in triggers and output packets will be used in expect
 #
-scale_factor : 1100 
+scale_factor : 1100
 packets:
     - packet:
         id          : BASE_PKT_IN1 

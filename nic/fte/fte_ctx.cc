@@ -213,6 +213,10 @@ ctx_t::lookup_flow_objs()
         HAL_TRACE_INFO("fte: dest ep unknown, key={}", key_);
     }
 
+    if ((key_.sip.v4_addr == (0x0a010001)) && (key_.proto == IPPROTO_ESP)) {
+        HAL_TRACE_ERR("Ramesh : overwriting direction 1");
+        key_.dir = FLOW_DIR_FROM_DMA;
+    }
     return HAL_RET_OK;
 }
 
