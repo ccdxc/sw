@@ -4,14 +4,9 @@
 // configuration handlers for types::Address & types::IPAddressObj object
 //-----------------------------------------------------------------------------
 
-//#include <google/protobuf/util/json_util.h>
 #include "nic/include/base.h"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/hal.hpp"
-#include "nic/include/hal_lock.hpp"
-#include "nic/include/hal_state.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
-#include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "utils.hpp"
 #include "addr_list.hpp"
 
@@ -252,6 +247,48 @@ addr_list_cleanup (dllist_ctxt_t *head)
         addr_list_elem_db_del(addr);
         addr_list_elem_free(addr);
     }
+}
+
+bool
+addr_in_addr_list_elem (ip_addr_t *addr, addr_list_elem_t *addr_list_elem)
+{
+    if (addr->af != addr_list_elem->ip_range.af) {
+        return false;
+    }
+    switch (addr->af) {
+    case IP_AF_IPV4:
+        if ((addr->addr.v4_addr >=
+                 addr_list_elem->ip_range.vx_range[0].v4_range.ip_lo) &&
+            (addr->addr.v4_addr <=
+                 addr_list_elem->ip_range.vx_range[0].v4_range.ip_hi)) {
+            return true;
+        }
+        return false;
+
+    case IP_AF_IPV6:
+    default:
+        return false;
+        break;
+    }
+}
+
+hal_ret_t
+addr_offset (ip_addr_t *addr, addr_list_elem_t *addr_list_elem,
+             uint32_t *offset)
+{
+    switch (addr->af) {
+    case IP_AF_IPV4:
+        *offset =
+            addr->addr.v4_addr -
+                addr_list_elem->ip_range.vx_range[0].v4_range.ip_lo;
+        return HAL_RET_OK;
+        break;
+
+    case IP_AF_IPV6:
+    default:
+        break;
+    }
+    return HAL_RET_NOT_SUPPORTED;
 }
 
 } // namespace hal

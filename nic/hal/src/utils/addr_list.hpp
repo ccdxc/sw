@@ -56,6 +56,9 @@ addr_list_elem_t *addr_list_elem_address_spec_handle(
 hal_ret_t addr_list_elem_ipaddressobj_spec_handle(
     const types::IPAddressObj& addr, dllist_ctxt_t *head);
 void addr_list_cleanup(dllist_ctxt_t *head);
+bool addr_in_addr_list_elem(ip_addr_t *addr, addr_list_elem_t *addr_list_elem);
+hal_ret_t addr_offset(ip_addr_t *addr, addr_list_elem_t *addr_list_elem,
+                      uint32_t *offset);
 
 } // namespace hal
 

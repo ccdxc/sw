@@ -6,7 +6,6 @@
 
 #include "nic/include/base.h"
 #include "nic/hal/src/nat/nat.hpp"
-//#include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/addr_list.hpp"
 
 using hal::utils::nat::addr_entry_key_t;
@@ -89,7 +88,40 @@ error:
 hal_ret_t
 nat_pool_address_free (nat_pool_t *pool, ip_addr_t *nat_addr)
 {
-    return HAL_RET_OK;
+    hal_ret_t           ret;
+    dllist_ctxt_t       *curr;
+    addr_list_elem_t    *addr_range;
+    uint32_t            num_addrs, offset;
+
+    dllist_for_each(curr, &pool->addr_ranges) {
+        addr_range = dllist_entry(curr, addr_list_elem_t, list_ctxt);
+        if (addr_in_addr_list_elem(nat_addr, addr_range)) {
+            break;
+        }
+        num_addrs += addr_range->num_addrs;
+    }
+    if (addr_range == NULL) {
+        HAL_TRACE_DEBUG("Failed to free address {} to NAT pool ({}, {})",
+                        ipaddr2str(nat_addr),
+                        pool->key.vrf_id, pool->key.pool_id);
+        return HAL_RET_ERR;
+    }
+    ret = addr_offset(nat_addr, addr_range, &offset);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to compute offset of addr {} in NAT pool "
+                      "({}, {}), err : {}", ipaddr2str(nat_addr),
+                      pool->key.vrf_id, pool->key.pool_id, ret);
+        return ret;
+    }
+
+    // reset the bit corresponding to this address in the NAT pool
+    ret = pool->addr_bmap->clear(num_addrs + offset);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to reset the bit corresponding to the addr {} in "
+                      "NAT pool ({}, {}), err : {}", ipaddr2str(nat_addr),
+                      pool->key.vrf_id, pool->key.pool_id, ret);
+    }
+    return ret;
 }
 
 }    // namespace hal
