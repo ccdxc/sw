@@ -92,9 +92,11 @@ struct ionic_qp {
 	void			*sq_hbm_ptr;
 	uint16_t		sq_hbm_prod;
 
-	/* next sequence number to complete, 24bit, initialized to 1 */
-	uint32_t		sq_local;
-	uint32_t		sq_msn;
+	/* last sequence number produced, next sequence number to complete */
+	uint32_t		sq_prod_local;
+	uint32_t		sq_cons_local;
+	uint32_t		sq_prod_msn;
+	uint32_t		sq_cons_msn;
 
 	pthread_spinlock_t	rq_lock;
 	struct ionic_queue	rq;

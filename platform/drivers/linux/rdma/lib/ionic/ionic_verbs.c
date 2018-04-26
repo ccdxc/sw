@@ -216,9 +216,9 @@ static int ionic_poll_send(struct ionic_qp *qp, struct ibv_wc *wc,
 
 out:
 	if (ionic_op_is_local(cqe->op_type))
-		qp->sq_local = (qp->sq_local + 1) & 0xffffff;
+		qp->sq_cons_local = (qp->sq_cons_local + 1) & 0xffffff;
 	else
-		qp->sq_msn = (qp->sq_msn + 1) & 0xffffff;
+		qp->sq_cons_msn = (qp->sq_cons_msn + 1) & 0xffffff;
 
 	ionic_queue_consume(&qp->sq);
 
@@ -251,9 +251,9 @@ static int ionic_poll_send_ok(struct ionic_qp *qp, struct ibv_wc *wc)
 
 out:
 	if (ionic_op_is_local(meta->op))
-		qp->sq_local = (qp->sq_local + 1) & 0xffffff;
+		qp->sq_cons_local = (qp->sq_cons_local + 1) & 0xffffff;
 	else
-		qp->sq_msn = (qp->sq_msn + 1) & 0xffffff;
+		qp->sq_cons_msn = (qp->sq_cons_msn + 1) & 0xffffff;
 
 	ionic_queue_consume(&qp->sq);
 
@@ -264,9 +264,16 @@ static int ionic_poll_send_local_ok(struct ionic_qp *qp, struct ibv_wc *wc,
 				    int nwc, uint32_t stop_local)
 {
 	int rc = 0, npolled = 0;
+	uint32_t local_comp, local_out;
+
+	local_comp = (stop_local - qp->sq_cons_local + 1) & 0xffffff;
+	local_out = (qp->sq_prod_local - qp->sq_cons_local + 1) & 0xffffff;
+	if (local_comp > local_out) {
+		return -EIO;
+	}
 
 	while (npolled < nwc) {
-		if (qp->sq_local == stop_local)
+		if (qp->sq_cons_local == stop_local)
 			break;
 
 		rc = ionic_poll_send_ok(qp, wc);
@@ -284,9 +291,16 @@ static int ionic_poll_send_msn_ok(struct ionic_qp *qp, struct ibv_wc *wc,
 				  int nwc, uint32_t stop_msn)
 {
 	int rc = 0, npolled = 0;
+	uint32_t msgs_comp, msgs_out;
+
+	msgs_comp = (stop_msn - qp->sq_cons_msn + 1) & 0xffffff;
+	msgs_out = (qp->sq_prod_msn - qp->sq_cons_msn + 1) & 0xffffff;
+	if (msgs_comp > msgs_out) {
+		return -EIO;
+	}
 
 	while (npolled < nwc) {
-		if (qp->sq_msn == stop_msn)
+		if (qp->sq_cons_msn == stop_msn)
 			break;
 
 		rc = ionic_poll_send_ok(qp, wc);
@@ -622,8 +636,10 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 	if (rc)
 		goto err_queues;
 
-	qp->sq_msn = 1;
-	qp->sq_local = 1;
+	qp->sq_prod_msn = 0;
+	qp->sq_cons_msn = 1;
+	qp->sq_prod_local = 0;
+	qp->sq_cons_local = 1;
 
 	req.sq.addr = (uintptr_t)qp->sq.ptr;
 	req.sq.size = qp->sq.size;
@@ -703,8 +719,10 @@ static int ionic_modify_qp(struct ibv_qp *ibqp,
 		if (attr_mask & IBV_QP_STATE) {
 			/* transition to reset */
 			if (attr->qp_state == IBV_QPS_RESET) {
-				qp->sq_msn = 1;
-				qp->sq_local = 1;
+				qp->sq_prod_msn = 0;
+				qp->sq_cons_msn = 1;
+				qp->sq_prod_local = 0;
+				qp->sq_cons_local = 1;
 				qp->sq.prod = 0;
 				qp->sq.cons = 0;
 				qp->rq.prod = 0;
@@ -1170,6 +1188,8 @@ static int ionic_post_send(struct ibv_qp *ibqp,
 			if (rc)
 				goto out;
 
+			++qp->sq_prod_msn;
+
 			ionic_dbg(ctx, "post send prod %d", qp->sq.prod);
 			ionic_dbg_xdump(ctx, "wqe", ionic_queue_at_prod(&qp->sq), qp->sq.stride);
 
@@ -1188,6 +1208,11 @@ static int ionic_post_send(struct ibv_qp *ibqp,
 			rc = ionic_prep_one_rc(qp, wr);
 			if (rc)
 				goto out;
+
+			if (ionic_op_is_local(qp->sq_meta[qp->sq.prod].op))
+				++qp->sq_prod_local;
+			else
+				++qp->sq_prod_msn;
 
 			ionic_dbg(ctx, "post send prod %d", qp->sq.prod);
 			ionic_dbg_xdump(ctx, "wqe", ionic_queue_at_prod(&qp->sq), qp->sq.stride);
