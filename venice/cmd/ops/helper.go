@@ -38,7 +38,7 @@ func makeQuorumNode(name string) *cmd.Node {
 		ret.CreationTime.Timestamp = *ts
 		ret.ModTime.Timestamp = *ts
 	}
-	ret.SelfLink = ret.MakeKey("cmd")
+	ret.SelfLink = ret.MakeKey("cluster")
 	ret.Spec.Roles = append(ret.Spec.Roles, cmd.NodeSpec_CONTROLLER.String(), cmd.NodeSpec_QUORUM.String())
 	ret.Status.Phase = cmd.NodeStatus_JOINED.String()
 	return ret
