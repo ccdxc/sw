@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 /*
@@ -48,9 +47,9 @@ func (a ByKey) Less(i, j int) bool { return a[i].Key < a[j].Key }
 // (2) Values can be one or more depending on the operator. Equals, NotEquals
 //     require one Value. In, NotIn require one or more Values.
 // (3) The key is invalid due to its length, or sequence
-//     of characters. See validateLabelKey for more details.
+//     of characters. See validateFieldKey for more details.
 func NewRequirement(key string, op Operator, vals []string) (*Requirement, error) {
-	if err := validateLabelKey(key); err != nil {
+	if err := validateFieldKey(key); err != nil {
 		return nil, err
 	}
 	switch op {
@@ -225,7 +224,7 @@ func isEscapeSymbol(ch byte) bool {
 	return false
 }
 
-// Lexer represents the Lexer struct for label selector.
+// Lexer represents the Lexer struct for field selector.
 // It contains necessary informationt to tokenize the input string
 type Lexer struct {
 	// s stores the string to be tokenized
@@ -335,7 +334,7 @@ func (l *Lexer) Lex() (tok Token, lit string) {
 	}
 }
 
-// Parser data structure contains the label selector parser data structure
+// Parser data structure contains the field selector parser data structure
 type Parser struct {
 	l            *Lexer
 	scannedItems []ScannedItem
@@ -458,7 +457,7 @@ func (p *Parser) parseKeyAndInferOperator() (string, Operator, error) {
 		err := fmt.Errorf("found '%s', expected: identifier", literal)
 		return "", -1, err
 	}
-	if err := validateLabelKey(literal); err != nil {
+	if err := validateFieldKey(literal); err != nil {
 		return "", -1, err
 	}
 	return literal, operator, nil
@@ -576,11 +575,12 @@ func (p *Parser) parseExactValue() (sets.String, error) {
 //  <values>                  ::= VALUE | VALUE "," <values>
 //  <exact-match-restriction> ::= ["="|"!="] VALUE
 //
-// KEY is a sequence of one or more characters following [ DNS_SUBDOMAIN "/" ] DNS_LABEL. Max length is 63 characters.
+// KEY is a sequence of one or more characters, which may be "." separated. For slices and maps,
+// there is support for indexing. Please see validation.go for those requirements.
 // VALUE is a sequence of zero or more characters "([A-Za-z0-9_-\.])". Max length is 63 characters.
 // Delimiter is white space: (' ', '\t')
 // Example of valid syntax:
-//  "x in (foo,,baz),z notin ()"
+//  "x.x in (foo,,baz),z notin ()"
 //
 // Note:
 //  (1) Inclusion - " in " - denotes that the KEY exists and is equal to any of the
@@ -601,28 +601,14 @@ func Parse(selector string) (*Selector, error) {
 	}, nil
 }
 
-func validateLabelKey(k string) error {
-	if errs := validation.IsQualifiedName(k); len(errs) != 0 {
-		return fmt.Errorf("invalid label key %q: %s", k, strings.Join(errs, "; "))
-	}
-	return nil
-}
-
-func validateLabelValue(v string) error {
-	if errs := validation.IsValidLabelValue(v); len(errs) != 0 {
-		return fmt.Errorf("invalid label value: %q: %s", v, strings.Join(errs, "; "))
-	}
-	return nil
-}
-
 // SelectorFromSet returns a Selector which will match exactly the given Set.
-func SelectorFromSet(ls Set) *Selector {
-	if ls == nil || len(ls) == 0 {
+func SelectorFromSet(fs Set) *Selector {
+	if fs == nil || len(fs) == 0 {
 		return &Selector{}
 	}
 	requirements := make([]*Requirement, 0)
-	for label, value := range ls {
-		r, err := NewRequirement(label, Operator_equals, []string{value})
+	for field, value := range fs {
+		r, err := NewRequirement(field, Operator_equals, []string{value})
 		if err == nil {
 			requirements = append(requirements, r)
 		}
@@ -636,13 +622,13 @@ func SelectorFromSet(ls Set) *Selector {
 
 // SelectorFromValidatedSet returns a Selector which will match exactly the given Set.
 // It assumes that Set is already validated and doesn't do any validation.
-func SelectorFromValidatedSet(ls Set) *Selector {
-	if ls == nil || len(ls) == 0 {
+func SelectorFromValidatedSet(fs Set) *Selector {
+	if fs == nil || len(fs) == 0 {
 		return &Selector{}
 	}
 	requirements := make([]*Requirement, 0)
-	for label, value := range ls {
-		requirements = append(requirements, &Requirement{Key: label, Operator: Operator_name[int32(Operator_equals)], Values: []string{value}})
+	for field, value := range fs {
+		requirements = append(requirements, &Requirement{Key: field, Operator: Operator_name[int32(Operator_equals)], Values: []string{value}})
 	}
 	// sort to have deterministic string representation
 	sort.Sort(ByKey(requirements))
@@ -651,10 +637,11 @@ func SelectorFromValidatedSet(ls Set) *Selector {
 	}
 }
 
-// SelectorParser implements ref.CustomParser for label selector.
+// SelectorParser implements ref.CustomParser for field selector.
 type SelectorParser struct {
 }
 
+// Print prints a selector
 func (s *SelectorParser) Print(v reflect.Value) string {
 	if v.Kind() == reflect.Ptr {
 		v = reflect.Indirect(v)
@@ -666,6 +653,7 @@ func (s *SelectorParser) Print(v reflect.Value) string {
 	return (&sel).Print()
 }
 
+// Parse parses in to a selector
 func (s *SelectorParser) Parse(in string) (reflect.Value, error) {
 	sel, err := Parse(in)
 	return reflect.ValueOf(*sel), err

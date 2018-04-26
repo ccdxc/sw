@@ -29,31 +29,37 @@ limitations under the License.
 func TestSelectorParse(t *testing.T) {
 	testGoodStrings := []string{
 		"",
-		"x=a,y=b,z=c",
-		"x!=a,y=b",
+		"x.a=a,y.b=b,z.c=c",
+		"x.c!=a,y.c=b",
 	}
 	testGoodSetStrings := []string{
-		"x in (a,b,c)",
-		"x in (a,b),y in (c,d)",
-		"x notin (a,b,c)",
-		"x in (a,b),y notin (a,b)",
+		"x.y in (a,b,c)",
+		"x.x in (a,b),y.y in (c,d)",
+		"x.x notin (a,b,c)",
+		"x.x in (a,b),y.y notin (a,b)",
 	}
 	testBadStrings := []string{
-		"x=a||y=b",
-		"x==a==b",
-		"!x=a",
-		"x<a",
-		"!x",
-		"x>1",
-		"x>1,z<5",
+		"x.x=a||y.y=b",
+		"x.x==a==b",
+		"!x.x=a",
+		"x.x<a",
+		"!x.x",
+		"x.x>1",
+		"x.x>1,z<5",
 		"x=",
-		"x= ",
-		"x=,z= ",
-		"x= ,z= ",
-		"x in a",
-		"x in (a",
-		"x in (a,b",
-		"x=(a,b)",
+		"x.x= ",
+		"x.x=,z.z= ",
+		"x.x= ,z.z= ",
+		"x.x in a",
+		"x.x in (a",
+		"x.x in (a,b",
+		"x.x=(a,b)",
+		"x. in (a,b)",
+		"x..x in (a,b)",
+		".x. in (a,b)",
+		"x in in",
+		"x in .",
+		". in (a)",
 	}
 	for _, test := range testGoodStrings {
 		lq, err := Parse(test)
@@ -84,22 +90,22 @@ func TestSelectorParse(t *testing.T) {
 func TestSelectorParseWithEscape(t *testing.T) {
 	testGoodStrings := []string{
 		"",
-		"x=a\\=1,y=b\\\\2,z=c\\,3",
-		"x!=a\\=1,y=b\\\\2",
+		"x.x=a\\=1,y.y=b\\\\2,z.z=c\\,3",
+		"x.x!=a\\=1,y.y=b\\\\2",
 	}
 	testGoodSetStrings := []string{
-		"x in (a\\=1,b\\\\2,c\\,3)",
-		"x in (a\\=1,b\\\\2),y in (c\\,3,d\\=4)",
-		"x notin (a\\=1,b\\\\2,c\\,3)",
-		"x in (a\\=1,b\\\\2),y notin (a\\=1,b\\\\2)",
+		"x.x in (a\\=1,b\\\\2,c\\,3)",
+		"x.x in (a\\=1,b\\\\2),y.y in (c\\,3,d\\=4)",
+		"x.x notin (a\\=1,b\\\\2,c\\,3)",
+		"x.x in (a\\=1,b\\\\2),y.y notin (a\\=1,b\\\\2)",
 	}
 	testBadStrings := []string{
-		"x=a\\a||y=b",
-		"x=a\\b",
-		"x=(a\\\\1,b",
-		"x=\\",
-		"x in \\",
-		"x in (=\\)",
+		"x.x=a\\a||y.y=b",
+		"x.x=a\\b",
+		"x.x=(a\\\\1,b",
+		"x.x=\\",
+		"x.x in \\",
+		"x.x in (=\\)",
 	}
 	for _, test := range testGoodStrings {
 		lq, err := Parse(test)
@@ -128,8 +134,8 @@ func TestSelectorParseWithEscape(t *testing.T) {
 }
 
 func TestDeterministicParse(t *testing.T) {
-	s1, err := Parse("x=a,a=x")
-	s2, err2 := Parse("a=x,x=a")
+	s1, err := Parse("x.x=a,a.a=x")
+	s2, err2 := Parse("a.a=x,x.x=a")
 	if err != nil || err2 != nil {
 		t.Errorf("Unexpected parse error")
 	}
@@ -162,29 +168,29 @@ func expectNoMatch(t *testing.T, selector string, fs Set) {
 
 func TestSelectorMatches(t *testing.T) {
 	expectNoMatch(t, "", Set{"x": "y"})
-	expectMatch(t, "x=y", Set{"x": "y"})
-	expectMatch(t, "x=y,z=w", Set{"x": "y", "z": "w"})
-	expectMatch(t, "x!=y,z!=w", Set{"x": "z", "z": "a"})
-	expectMatch(t, "notin=in", Set{"notin": "in"}) // in and notin in exactMatch
-	expectNoMatch(t, "x=z", Set{})
-	expectNoMatch(t, "x=y", Set{"x": "z"})
-	expectNoMatch(t, "x=y,z=w", Set{"x": "w", "z": "w"})
-	expectNoMatch(t, "x!=y,z!=w", Set{"x": "z", "z": "w"})
-	expectMatch(t, "x in (z)", Set{"x": "z"})
-	expectMatch(t, "x in (a,b,z)", Set{"x": "z"})
-	expectNoMatch(t, "x in (z)", Set{"x": "d"})
-	expectNoMatch(t, "x in (a,b,z)", Set{"x": "d"})
+	expectMatch(t, "x.x=y", Set{"x.x": "y"})
+	expectMatch(t, "x.x=y,z.z=w", Set{"x.x": "y", "z.z": "w"})
+	expectMatch(t, "x.x!=y,z.z!=w", Set{"x.x": "z", "z.z": "a"})
+	expectMatch(t, "notin.notin=in", Set{"notin.notin": "in"}) // in and notin in exactMatch
+	expectNoMatch(t, "x.x=z", Set{})
+	expectNoMatch(t, "x.x=y", Set{"x.x": "z"})
+	expectNoMatch(t, "x.x=y,z.z=w", Set{"x.x": "w", "z.z": "w"})
+	expectNoMatch(t, "x.x!=y,z.z!=w", Set{"x.x": "z", "z.z": "w"})
+	expectMatch(t, "x.x in (z)", Set{"x.x": "z"})
+	expectMatch(t, "x.x in (a,b,z)", Set{"x.x": "z"})
+	expectNoMatch(t, "x.x in (z)", Set{"x.x": "d"})
+	expectNoMatch(t, "x.x in (a,b,z)", Set{"x.x": "d"})
 
 	fieldset := Set{
-		"foo": "bar",
-		"baz": "blah",
+		"foo.foo": "bar",
+		"baz.baz": "blah",
 	}
-	expectMatch(t, "foo=bar", fieldset)
-	expectMatch(t, "baz=blah", fieldset)
-	expectMatch(t, "foo=bar,baz=blah", fieldset)
-	expectNoMatch(t, "foo=blah", fieldset)
-	expectNoMatch(t, "baz=bar", fieldset)
-	expectNoMatch(t, "foo=bar,foobar=bar,baz=blah", fieldset)
+	expectMatch(t, "foo.foo=bar", fieldset)
+	expectMatch(t, "baz.baz=blah", fieldset)
+	expectMatch(t, "foo.foo=bar,baz.baz=blah", fieldset)
+	expectNoMatch(t, "foo.foo=blah", fieldset)
+	expectNoMatch(t, "baz.baz=bar", fieldset)
+	expectNoMatch(t, "foo.foo=bar,foobar.foobar=bar,baz.baz=blah", fieldset)
 }
 
 func expectMatchDirect(t *testing.T, selector, ls Set) {
@@ -201,15 +207,15 @@ func expectNoMatchDirect(t *testing.T, selector, ls Set) {
 
 func TestSetMatches(t *testing.T) {
 	fieldset := Set{
-		"foo": "bar",
-		"baz": "blah",
+		"foo.foo": "bar",
+		"baz.baz": "blah",
 	}
 	expectNoMatchDirect(t, Set{}, fieldset)
-	expectNoMatchDirect(t, Set{"foo": "blah"}, fieldset)
-	expectNoMatchDirect(t, Set{"baz": "baz"}, fieldset)
-	expectMatchDirect(t, Set{"foo": "bar"}, fieldset)
-	expectMatchDirect(t, Set{"baz": "blah"}, fieldset)
-	expectMatchDirect(t, Set{"foo": "bar", "baz": "blah"}, fieldset)
+	expectNoMatchDirect(t, Set{"foo.foo": "blah"}, fieldset)
+	expectNoMatchDirect(t, Set{"baz.baz": "baz"}, fieldset)
+	expectMatchDirect(t, Set{"foo.foo": "bar"}, fieldset)
+	expectMatchDirect(t, Set{"baz.baz": "blah"}, fieldset)
+	expectMatchDirect(t, Set{"foo.foo": "bar", "baz.baz": "blah"}, fieldset)
 }
 
 func TestLexer(t *testing.T) {
@@ -368,14 +374,14 @@ func TestRequirementConstructor(t *testing.T) {
 		Vals    sets.String
 		Success bool
 	}{
-		{"x", Operator_equals, nil, false},
-		{"x", Operator_notEquals, sets.NewString(), false},
-		{"x", Operator_equals, sets.NewString("foo"), true},
-		{"x", Operator_in, sets.NewString("foo", "bar"), true},
-		{"x", Operator_notEquals, sets.NewString("foo"), true},
-		{"x", Operator_notIn, sets.NewString("foo", "bar"), true},
-		{"1foo", Operator_equals, sets.NewString("bar"), true},
-		{"1234", Operator_equals, sets.NewString("bar"), true},
+		{"x.x", Operator_equals, nil, false},
+		{"x.x", Operator_notEquals, sets.NewString(), false},
+		{"x.x", Operator_equals, sets.NewString("foo"), true},
+		{"x.x", Operator_in, sets.NewString("foo", "bar"), true},
+		{"x.x", Operator_notEquals, sets.NewString("foo"), true},
+		{"x.x", Operator_notIn, sets.NewString("foo", "bar"), true},
+		{"1foo.1foo", Operator_equals, sets.NewString("bar"), false},
+		{"1234.1234", Operator_equals, sets.NewString("bar"), false},
 	}
 	for _, rc := range requirementConstructorTests {
 		if _, err := NewRequirement(rc.Key, rc.Op, rc.Vals.List()); err == nil && !rc.Success {
