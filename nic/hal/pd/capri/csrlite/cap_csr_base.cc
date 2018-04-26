@@ -53,9 +53,8 @@ void cap_sw_csr_base::unpack(uint8_t *bytes, uint32_t start) {
     SDK_TRACE_ERR("cap_sw_csr_base::unpack() should not be used\n");
 }
 
-uint32_t cap_sw_csr_base::get_byte_size() const {
+uint32_t cap_sw_csr_base::s_get_byte_size(uint32_t my_width) {
     int x;
-    uint32_t my_width = get_width();
     if(my_width < 32) my_width = 32;
     x  = (int) my_width;
     x |= (x >> 1);
@@ -68,6 +67,10 @@ uint32_t cap_sw_csr_base::get_byte_size() const {
         x <<= 1;
     }
     return (x/8);
+}
+
+uint32_t cap_sw_csr_base::get_byte_size() const {
+    return s_get_byte_size(get_width());
 }
 
 void cap_sw_csr_base::write() {

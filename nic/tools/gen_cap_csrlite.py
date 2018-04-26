@@ -75,6 +75,7 @@ public:
     ${hlprclassname}()=default;
     ~${hlprclassname}()=default;
     void init(uint32_t _addr);
+    uint32_t get_byte_size(void);
     ${csrclassname} *get_csr_instance(uint32_t chip_id);""")
     c_helper_headerfile_class_tail = Template("""
 }; //  ${hlprclassname}()
@@ -127,17 +128,25 @@ ${csrclassname} *${hlprclassname}::get_csr_instance(uint32_t chip_id) {
 """)
     c_helper_ccfile_decoder_array_info = Template("""
     for (uint32_t ii = 0; ii < get_depth_${field_name}(); ii++) {
-        ${field_name}[ii].init(base_addr + (ii*${field_type}::s_get_width()));
+        ${field_name}[ii].init(base_addr + 0x${field_offset} + (${field_name}[ii].get_byte_size()*ii));
     }""")
     c_helper_ccfile_decoder_info = Template("""
     $field_name.init(base_addr + 0x${field_offset});""")
+    c_helper_ccfile_size_declare = Template("""
+uint32_t ${classname}::get_byte_size(void) {
+    return cap_sw_csr_base::s_get_byte_size(${csrclassname}::s_get_width());
+}""")
+    c_helper_ccfile_fixed_size_declare = Template("""
+uint32_t ${classname}::get_byte_size(void) {
+    return 0x${field_byte_size};
+}""")
 
     c_ccfile_class_declare = Template("""
 ${classname}::${classname}()=default;
 ${classname}::~${classname}()=default;""")
     c_ccfile_class_declare_add_byte_size = Template("""
 ${classname}::${classname}():cap_sw_${base}_base()  { 
-    set_byte_size(${field_byte_size});
+    set_byte_size(0x${field_byte_size});
 }
 ${classname}::~${classname}()=default;
 """)
@@ -559,11 +568,11 @@ std::ostream& operator<<(std::ostream& os, const ${classname}& s)
                     if self.subtype == 'block':
                         head_str = '{0}{1}'.format(head_str, self.c_ccfile_class_declare_add_byte_size.substitute(
                             classname='{0}_t'.format(self.name), field_size=self.size, base=self.subtype,
-                            field_byte_size=self.byte_size, field_optional_init=''))
+                            field_byte_size=format(self.byte_size, 'x'), field_optional_init=''))
                     else:
                         head_str = '{0}{1}'.format(head_str, self.c_ccfile_class_declare_add_byte_size.substitute(
                             classname='{0}_t'.format(self.name), field_size=self.size, base=self.subtype,
-                            field_byte_size=self.byte_size, field_optional_init=''))
+                            field_byte_size=format(self.byte_size, 'x'), field_optional_init=''))
                 else:
                     head_str = '{0}{1}'.format(head_str, self.c_ccfile_class_declare.substitute(
                         classname='{0}_t'.format(self.name), field_size=self.size, base=self.subtype))
@@ -682,6 +691,13 @@ std::ostream& operator<<(std::ostream& os, const ${classname}& s)
 
         if len(self.fields) > 0:
             if self.name != 'root':
+                if self.byte_size != 0:
+                    l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_ccfile_fixed_size_declare.substitute(
+                        classname='{0}_helper_t'.format(self.name), field_byte_size=format(self.byte_size, 'x')))
+                else:
+                    l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_ccfile_size_declare.substitute(
+                        classname='{0}_helper_t'.format(self.name), csrclassname='{0}_t'.format(self.name)))
+
                 l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_ccfile_init_declare.substitute(
                     classname='{0}_helper_t'.format(self.name)))
             for field in self.fields:

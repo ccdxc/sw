@@ -45,6 +45,7 @@ class cap_sw_csr_base {
         virtual uint32_t get_width() const;
         virtual uint32_t get_byte_size() const;
         virtual uint32_t get_chip_id() const;
+        static uint32_t s_get_byte_size(uint32_t my_width);
 
         virtual void set_csr_type(csr_type_t _type);
         virtual void set_offset(uint32_t _offset);
