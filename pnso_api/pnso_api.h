@@ -9,16 +9,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/*
- * WORK_IN_PROGRESS/TODO:
- *	This header file is in its early stage to initiate discussion
- *	on the API -- more changes are expected.
- *
- *	Address alignment/packing for cache line size
- *	batching needed or not
- *
- */
-
 /**
  * Pensando offloaders for storage and security
  *
@@ -205,10 +195,12 @@ struct pnso_crypto_desc {
 	uint64_t iv_addr;
 };
 
-/*  list of descriptor flags */
-#define PNSO_DESC_FLAG_ZERO_PAD		(1 << 0)
-#define PNSO_DESC_FLAG_INSERT_HEADER	(1 << 1)
-#define PNSO_DESC_FLAG_PER_BLOCK	(1 << 2)
+/*  descriptor flags */
+#define PNSO_DFLAG_ZERO_PAD		(1 << 0)
+#define PNSO_DFLAG_INSERT_HEADER	(1 << 1)
+#define PNSO_DFLAG_HEADER_PRESENT	(1 << 2)
+#define PNSO_DFLAG_HASH_PER_BLOCK	(1 << 3)
+#define PNSO_DFLAG_CHKSUM_PER_BLOCK	(1 << 4)
 
 /**
  * struct pnso_compression_desc - represents the descriptor for compression
@@ -219,9 +211,10 @@ struct pnso_crypto_desc {
  * than or equal to 'threshold_len'.
  * @flags: specifies the following applicable descriptor flags to
  * compression descriptor.
- *	PNSO_DESC_FLAG_ZERO_PAD - whether or not to zero fill the
- *	compressred output buffer aligning to block size.
- *	PNSO_DESC_FLAG_INSERT_HEADER - whether or not to insert
+ *	PNSO_DFLAG_ZERO_PAD - indicates whether or not to zero fill
+ *	the compressred output buffer aligning to block size.
+ *
+ *	PNSO_DFLAG_INSERT_HEADER - indicates whether or not to insert
  *	compression header compressed output buffer.
  *
  */
@@ -233,11 +226,16 @@ struct pnso_compression_desc {
 /**
  * struct pnso_decompression_desc - represents the descriptor for
  * decompression operation
+ * @flags: specifies the following applicable descriptor flags to
+ * decompression descriptor.
+ *	PNSO_DFLAG_HEADER_PRESENT - indicates whether or not the
+ *	compression header is present.
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
 struct pnso_decompression_desc {
-	uint32_t rsvd;
+	uint16_t flags;
+	uint16_t rsvd;
 };
 
 /**
@@ -245,8 +243,8 @@ struct pnso_decompression_desc {
  * operation
  * @flags: specifies the following applicable descriptor flags to
  * hash descriptor.
- *	PNSO_DESC_FLAG_PER_BLOCK - whether to produce one hash per block
- *	or one for the entire buffer.
+ *	PNSO_DFLAG_HASH_PER_BLOCK - indicates whether to produce one
+ *	hash per block or one for the entire buffer.
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
@@ -260,8 +258,8 @@ struct pnso_hash_desc {
  * operation
  * @flags: specifies the following applicable descriptor flags to
  * checksum descriptor.
- *	PNSO_DESC_FLAG_PER_BLOCK - whether to produce one checksum per
- *	block or one for the entire buffer.
+ *	PNSO_DFLAG_CHKSUM_PER_BLOCK - indicates whether to produce one
+ *	checksum per block or one for the entire buffer.
  * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  *
  */
@@ -321,10 +319,7 @@ struct pnso_hash_or_chksum_tag {
  * 'num_tags' hashes or checksums.  When 'num_tags' is 0, this parameter is
  * NULL.
  *
- * Note: Hash or checksum tags will be packed one after another. In other
- * words, consecutive SHA512 and SHA256 hashes will be packed in 64 and
- * 32-bytes apart respectively. Similarly, consecutive checksums will be
- * packed 4-bytes apart.
+ * Note: Hash or checksum tags will be packed one after another.
  *
  */
 struct pnso_service_status {
