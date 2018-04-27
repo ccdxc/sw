@@ -78,16 +78,19 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 1:
-        # verify that msn is incremented to that of ssn of this msg
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'msn', 2):
+        msn = tc.pvtdata.sq_pre_qstate.ssn - 3
+
+        # verify that msn is incremented to that of ssn of  msg before read_req
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
             return False
 
         # verify that c_index of rrq is not incremented
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index5', tc.pvtdata.sq_post_qstate, 'c_index5'):
             return False
 
+        rexmit_psn = tc.pvtdata.sq_pre_qstate.tx_psn - 2
         # verify rexmit_psn is incremented by 3
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'rexmit_psn', 3):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rexmit_psn', rexmit_psn):
             return False
 
         # verify that busy is 0
@@ -115,8 +118,9 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 2:
-        # verify that msn is incremented to that of ssn of this msg
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'msn', 1):
+        msn = tc.pvtdata.sq_pre_qstate.ssn - 2
+        # verify that msn is incremented to that of ssn of read_req
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
             return False
 
         # verify that c_index of rrq is incremented by 1
@@ -152,8 +156,9 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 3:
-        # verify that msn is incremented to that of ssn of this msg
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'msn', 1):
+        msn = tc.pvtdata.sq_pre_qstate.ssn - 1
+        # verify that msn is incremented to that of ssn of last msg
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
             return False
 
         # verify that c_index of is not incremented

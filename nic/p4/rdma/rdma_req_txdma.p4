@@ -137,7 +137,7 @@ header_type phv_global_common_t {
         cb_addr                          :   25;
         pt_base_addr_page_id             :   22;
         log_num_pt_entries               :    5;
-        pad                              :   23;
+        pad                              :   22;
         error_disable_qp                 :    1;
         ud_service                       :    1;
     }

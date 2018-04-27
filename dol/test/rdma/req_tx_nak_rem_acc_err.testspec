@@ -1,0 +1,176 @@
+# Test Spec
+selectors:
+#    src:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=False
+#        interface   : filter://any
+#    dst:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=True
+#        interface   : filter://any
+#    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+        base        : filter://any
+#    maxflows    : 1
+#    maxrdmasessions     : 1
+
+packets:
+    - packet:
+        id          : WRITE_PYLD # Base packet
+        payloadsize : 64
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : pattern-random://0/255/1
+
+
+    - packet:
+        id          : WRITE_ONLY # Base packet
+        payloadsize : 64
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
+        icrc        : True
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 10 # RDMA Write Only
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+                a       : 1
+            reth:
+                va      : ref://testcase/pvtdata/va
+                dma_len : ref://testcase/packets/id=WRITE_PYLD/size
+                r_key   : ref://testcase/pvtdata/r_key
+            payload:
+                data    : ref://testcase/packets/id=WRITE_PYLD/rawbytes
+
+    - packet:
+        id          : NAK_REM_ACC_ERR # Base packet
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 17 # Acknowledge
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+            aeth:
+               syndrome : 98 # (0110 0010) NAK remote access error
+               msn      : callback://rdma/rdma/GetPktMsn/ack_num=-1
+            payload:
+                data    : None
+
+buffers:
+    - buffer:
+        id      : BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : callback://rdma/rdma/GetNewSlab
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=WRITE_PYLD/size
+                 data    : ref://testcase/packets/id=WRITE_PYLD/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC
+        template: ref://factory/templates/id=DESC_RDMA_SQ
+        fields:
+            op_type : 4  # OP_TYPE_WRITE
+            wrid    : 6
+            num_sges: 1
+
+            write    :
+                  va     : ref://testcase/pvtdata/va
+                  len    : ref://testcase/packets/id=WRITE_PYLD/size
+                  r_key  : ref://testcase/pvtdata/r_key
+
+            sges:
+                - va  : ref://testcase/buffers/id=BUF/address
+                  len : ref://testcase/buffers/id=BUF/size
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
+
+    - descriptor:
+        id      : EXP_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ
+        fields:
+            wrid:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
+            qp: ref://testcase/config/rdmasession/lqp/id
+            op_type: 0
+            status : 9  # CQ_STATUS_REMOTE_ACC_ERR
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
+            smac: callback://rdma/rdma/GetZeroMAC
+
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+            
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
+                fields:
+                    upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+       
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=WRITE_ONLY
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=NAK_REM_ACC_ERR
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+            
+        expect:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ

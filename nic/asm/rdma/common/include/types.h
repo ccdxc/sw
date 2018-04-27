@@ -376,10 +376,11 @@ struct resp_rx_flags_t {
 struct req_tx_flags_t {
     error_disable_qp: 1;
     ud_service: 1;
+    rsvd_flags: 14;
 };
 
-#define REQ_TX_FLAG_ERR_DIS_QP          0x0001
-#define REQ_TX_FLAG_UD_SERVICE          0x0002
+#define REQ_TX_FLAG_ERR_DIS_QP          0x8000
+#define REQ_TX_FLAG_UD_SERVICE          0x4000
 
 struct resp_tx_flags_t {
     error_disable_qp: 1;

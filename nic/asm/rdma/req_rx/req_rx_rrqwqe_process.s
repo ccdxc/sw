@@ -135,8 +135,31 @@ nak_or_rnr:
 nak:
     // SQ backtrack if NAK is due to SEQ_ERR    
     IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_SEQ_ERR)
+    bcf            [c3], nak_completion
     phvwr.c3       CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_bktrack), 1
 
+    // If its invalid nak code (reserved or Invalid_rd_request
+    // 0110 0100 - 0110 1111), just drop the ack. This results in
+    // retransmission at a later time and eventual error disabling of the QP
+    // on exceeding num err retry count. Invalid_rd_Request is also not a valid
+    // nak code for RC service 
+    bgti           r1, 0x63, invalid_nak_code
+    IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_INV_REQ)
+    phvwr.c3       p.cqwqe.status, CQ_STATUS_REMOTE_INV_REQ_ERR
+
+    IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_REM_ACC_ERR)
+    phvwr.c3       p.cqwqe.status, CQ_STATUS_REMOTE_ACC_ERR
+
+    IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_REM_OP_ERR)
+    phvwr.c3       p.cqwqe.status, CQ_STATUS_REMOTE_OPER_ERR
+
+    // post err completion for msn one more than the one last completed
+    // as specified in NAK
+    setcf          c1, [!c0]
+    add            r3, K_AETH_MSN, 1
+    phvwr          p.cqwqe.id.msn, r3
+
+nak_completion:
     bcf            [!c1], set_cqcb_arg
     phvwrpair      CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), K_BTH_PSN, \
                    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
@@ -298,6 +321,7 @@ end:
 out_of_order_rsp:
 invalid_syndrome:
 invalid_rsp_msn:
+invalid_nak_code:
     phvwr         p.common.p4_intr_global_drop, 1
     CAPRI_SET_TABLE_0_VALID(0)
 
