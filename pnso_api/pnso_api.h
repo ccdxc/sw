@@ -48,12 +48,12 @@ enum pnso_service_type {
 };
 
 /**
- * Pensando accelerators can be exercised by submitting one request at a time
- * or a batch of requests.
+ * Pensando accelerators can be exercised by submitting one request at a
+ * time or a batch of requests.
  *
- * Following constants enable to distinguish the mode of request submission.
- * When requests are submitted in batch mode, the beginning and ending phase
- * is indicated by start/continue/end markers.
+ * Following constants enable to distinguish the mode of request
+ * submission.  When requests are submitted in batch mode, the beginning
+ * and ending phase is indicated by start/continue/end markers.
  *
  */
 enum pnso_batch_request {
@@ -140,19 +140,19 @@ struct pnso_buffer_list {
 };
 
 /**
- * struct pnso_compression_header - represents the result of compression and
- * decompression operation
- * @chksum: specifies the data integrity field, i.e. the checksum calculation
- * on input data before compression.
+ * struct pnso_compression_header - represents the result of compression
+ * and decompression operation
+ * @chksum: specifies the data integrity field, i.e. the checksum
+ * calculation on input data before compression.
  * @data_len: specifies the compressed length
  * @version: specifies the version of the compression algorithm 
  *
- * Compression operation will insert a 8-byte header (populating the compressed
- * length, the checksum and the version number) at the beginning of the
- * compressed buffer.
+ * Compression operation will insert a 8-byte header (populating the
+ * compressed length, the checksum and the version number) at the beginning
+ * of the compressed buffer.
  *
- * Decompression operation will extract the 'checksum' and remove the header.
- * The 'data_len' does not include the length of the header.
+ * Decompression operation will extract the 'checksum' and remove the
+ * header. The 'data_len' does not include the length of the header.
  *
  */
 struct pnso_compression_header {
@@ -164,9 +164,10 @@ struct pnso_compression_header {
 /**
  * struct pnso_init_params - represents the initialization parameters for
  * Pensando accelerators
- * @cp_hdr_version: specifies the version of the compression algorithm that to
- * be populated in compression header.
- * @per_core_qdepth: specifies the maximum number of parallel requests per core.
+ * @cp_hdr_version: specifies the version of the compression algorithm
+ * that to be populated in compression header.
+ * @per_core_qdepth: specifies the maximum number of parallel requests per
+ * core.
  * @block_size: specifies the size of a block in bytes.
  *
  */
@@ -178,7 +179,8 @@ struct pnso_init_params {
 
 /**
  * pnso_init() - initializes Pensando accelerators. Before using any of the
- * Pensando accelerator services, this must be the first function to be invoked.
+ * Pensando accelerator services, this must be the first function to be
+ * invoked.
  * @init_params: specifies the initialization parameters for Pensando
  * Offloaders.
  *
@@ -207,12 +209,13 @@ struct pnso_crypto_desc {
  * struct pnso_compression_desc - represents the descriptor for compression
  * service 
  * @rsvd_1: specifies a 'reserved' field meant to be used by Pensando.
- * @threshold_len: specifies the expected compressed buffer length in bytes.
+ * @threshold_len: specifies the expected compressed buffer length in
+ * bytes.
  * This is to instruct the compression operation, upon its completion, to
  * compress the buffer to a length that must be less than or equal to
  * 'threshold_len'.
- * @zero_pad: specifies whether or not to zero fill the compressed output buffer
- * aligning to block size.
+ * @zero_pad: specifies whether or not to zero fill the compressed output
+ * buffer aligning to block size.
  * @insert_header: specifies whether or not to insert compression header.
  * @rsvd_2: specifies a 'reserved' field meant to be used by Pensando.
  *
@@ -226,8 +229,8 @@ struct pnso_compression_desc {
 }; 
 
 /**
- * struct pnso_decompression_desc - represents the descriptor for decompression
- * operation
+ * struct pnso_decompression_desc - represents the descriptor for
+ * decompression operation
  *
  */
 struct pnso_decompression_desc {
@@ -256,8 +259,8 @@ struct pnso_checksum_desc {
 };
 
 /**
- * struct pnso_decompaction_desc - represents the descriptor for decompaction
- * operation
+ * struct pnso_decompaction_desc - represents the descriptor for
+ * decompaction operation
  * @vvbn: specifies the block number within the Netapp's packed block
  * header, with which the offset and length of data can be retrieved.
  *
@@ -268,14 +271,15 @@ struct pnso_decompaction_desc {
 };
 
 /*
- * SHA512 and SHA256 hash need 64 and 32 bytes respectively.  Checksum need a
- * maximum of 4 bytes.
+ * SHA512 and SHA256 hash need 64 and 32 bytes respectively.  Checksum
+ * need a maximum of 4 bytes.
  *
  * Depending on the hash and checksum algorithm, Pensando accelerator can 
- * produce either 64 or 32-byte hash, and 4-byte checksums for every 4KB block.
+ * produce either 64 or 32-byte hash, and 4-byte checksums for every 4KB
+ * block.
  *
- * NOTE: Netapp will specify a max of 32KB buffer per request, so will require
- * space for maximum of only 8 hashes.
+ * NOTE: Netapp will specify a max of 32KB buffer per request, so will
+ * require space for maximum of only 8 hashes.
  *
  */
 #define PNSO_HASH_OR_CHKSUM_TAG_LEN	64
@@ -297,15 +301,18 @@ struct pnso_hash_or_chksum_tag {
  * service type.
  * @output_data_len: specifies the length of the output buffer processed in
  * bytes depending on the service type.
- * @interim_buf: specifies a temporary scatter/gather buffer list that to be
- * used as output buffer for this service. Valid only for non-last services.
+ * @interim_buf: specifies a temporary scatter/gather buffer list that to
+ * be used as output buffer for this service. Valid only for non-last
+ * services.
  * @num_tags: specifies number of SHAs or checksums.
- * @tags: specifies a pointer to an allocated memory for number of 'num_tags'
- * hashes or checksums.  When 'num_tags' is 0, this parameter is NULL.
+ * @tags: specifies a pointer to an allocated memory for number of
+ * 'num_tags' hashes or checksums.  When 'num_tags' is 0, this parameter is
+ * NULL.
  *
- * Note: Hash or checksum tags will be packed one after another. In other words,
- * consequtive SHA512 and SHA256 hashes will be packed in 64 and 32-bytes apart
- * respectively. Similarly, consequtive checksums will be packed 4-bytes apart.
+ * Note: Hash or checksum tags will be packed one after another. In other
+ * words, consecutive SHA512 and SHA256 hashes will be packed in 64 and
+ * 32-bytes apart respectively. Similarly, consecutive checksums will be
+ * packed 4-bytes apart.
  *
  */
 struct pnso_service_status {
@@ -338,9 +345,11 @@ struct pnso_service_result {
  * @svc_type: specifies one of the enumerated values for the accelerator
  * service type.
  * @algo_type: specifies one of the enumerated values of the compressor or
- * dedupe or chksum algorithm (i.e. enum pnso_compressor_type/pnso_chksum_type/
- * pnso_hash_type) based on the chosen accelerator service type.
- * @crypto_desc: specifies the descriptor for encryption/decryption service.
+ * dedupe or chksum algorithm (i.e. enum pnso_compressor_type/
+ * pnso_chksum_type/pnso_hash_type) based on the chosen accelerator
+ * service type.
+ * @crypto_desc: specifies the descriptor for encryption/decryption
+ * service.
  * @cp_desc: specifies the descriptor for compression service.
  * @dc_desc: specifies the descriptor for decompression service.
  * @hash_desc: specifies the descriptor for deduplication service.
@@ -365,8 +374,8 @@ struct pnso_service {
 };
 
 /**
- * struct pnso_service_request - represents an array of services that are to be
- * handled in a request.
+ * struct pnso_service_request - represents an array of services that are
+ * to be handled in a request.
  * @src_buf: specifies input buffer on which the request will operate on.
  * @dst_buf: specifies output buffer on which the request will operate on.
  * @num_services: specifies the number of services in the input service
@@ -398,7 +407,8 @@ typedef void (*completion_t)(void *cb_ctx,
 /**
  * pnso_poll_fn: the caller to use this polling function to detect
  * completion of a request
- * @pnso_poll_ctx: specifies the context passed as arg to the polling function
+ * @pnso_poll_ctx: specifies the context passed as arg to the polling
+ * function
  *
  */
 typedef void (*pnso_poller_fn)(void *pnso_poll_ctx);
@@ -406,17 +416,16 @@ typedef void (*pnso_poller_fn)(void *pnso_poll_ctx);
 /**
  * pnso_submit_request() - routine that accepts one or more service(s) as a
  * request, and batches two or more such requests internally.
- * @batch_req: specifies whether the request is an independent one or belongs
- * to a group of requests.
+ * @batch_req: specifies whether the request is an independent one or
+ * belongs to a group of requests.
  * @svc_req: specifies a set of service requests that to be used to
  * complete the services within the request.
  * @svc_res: specifies a set of service results structures to report the
- * status of each service within a request upon its completion. (?? not needed
- * as input at all)
+ * status of each service within a request upon its completion. 
  * @cb: specifies the caller-supplied completion callback routine.
  * @cb_ctx: specifies the caller-supplied context information.
- * @pnso_poll_fn: specifies the polling function, which the caller will use to
- * poll for completion of the request.
+ * @pnso_poll_fn: specifies the polling function, which the caller will
+ * use to poll for completion of the request.
  * @pnso_poll_ctx: specifies the context for the polling function.
  *
  * Return:
@@ -435,7 +444,8 @@ pnso_error_t pnso_submit_request(enum pnso_batch_request batch_req,
 /**
  * pnso_set_key_desc_idx() - sets the key descriptor index
  * @key1: specifies the key that will be used to encrypt the data.
- * @key2: specifies the key that will be used to encrypt initialization vector.
+ * @key2: specifies the key that will be used to encrypt initialization
+ * vector.
  * @key_size: specifies the size of the key in bytes -- 16 and 32 bytes for
  * AES128 and AES256 respectively.
  * @key_idx: specifies the key index in the descriptor table.
