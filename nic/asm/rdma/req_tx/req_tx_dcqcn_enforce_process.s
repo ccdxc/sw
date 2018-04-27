@@ -16,6 +16,9 @@ struct req_tx_s3_t2_k k;
 #define IN_P t2_s2s_sqcb_write_back_info
 #define IN_TO_S_P to_s3_sq_to_stage
 
+#define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
+#define SQCB_WRITE_BACK_INFO_RD t3_s2s_sqcb_write_back_info_rd
+
 #define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_PKT_LEN     CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
 #define K_S2S_DATA    k.{common_t2_s2s_s2s_data_sbit0_ebit7...common_t2_s2s_s2s_data_sbit152_ebit159}
@@ -154,13 +157,16 @@ poll_fail:
 spec_fail:
 drop_phv:
     // DCQCN rate-enforcement failed. Drop PHV. Loading writeback to adjust spec_cindex
-    phvwr CAPRI_PHV_FIELD(TO_S5_P, rate_enforce_failed), 1
+    phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, rate_enforce_failed), 1
 
     SQCB0_ADDR_GET(r2)
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)
 
     SQCB2_ADDR_GET(r2)
-    phvwr          p.common.common_t3_s2s_s2s_data, K_S2S_DATA 
+    phvwr       p.common.common_t3_s2s_s2s_data, K_S2S_DATA
+    phvwr       CAPRI_PHV_FIELD(SQCB_WRITE_BACK_INFO_RD, rate_enforce_failed), 1
+    phvwr       CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, rate_enforce_failed), 1
+
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
 
     /* 

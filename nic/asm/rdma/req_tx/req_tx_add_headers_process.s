@@ -53,12 +53,16 @@ req_tx_add_headers_process:
     bbeq           CAPRI_KEY_FIELD(IN_P, poll_failed), 1, poll_fail
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1 // Branch Delay Slot
 
-    bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, rate_enforce_failed), 1, rate_enforce_fail
+    bbeq           CAPRI_KEY_FIELD(IN_P, rate_enforce_failed), 1, rate_enforce_fail
     seq            c2, CAPRI_KEY_FIELD(IN_P, first), 1 // Branch Delay Slot
 
+    bbeq          CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence
+    nop // Branch Delay Slot
+
+    tblwr          d.fence, 0
     // sqcb0 maintains copy of sq_cindex to enable speculation check. Increment
     //the copy on completion of wqe and write it into sqcb0
-    tblmincri.c1    d.sq_cindex, d.log_sq_size, 1
+    tblmincri.c1    d.sq_cindex, d.log_sq_size, 1 
 
     // get DMA cmd entry based on dma_cmd_index
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_HEADERS)
@@ -464,6 +468,10 @@ load_hdr_template:
     nop.e
     nop
 
+fence:
+    tblwr           d.fence, 1
+    tblwr           d.fence_done, 0
+    //fall-through
 poll_fail:
 rate_enforce_fail:
 spec_fail:

@@ -56,7 +56,7 @@
 #define tx_table_s1_t0_action3 req_tx_bktrack_sqcb2_process
 #define tx_table_s1_t0_action4 req_tx_timer_process
 #define tx_table_s1_t0_action4 req_tx_sqcb2_cnp_process
-
+#define tx_table_s1_t0_action5 req_tx_sqcb2_fence_process
 #define tx_table_s1_t2_action req_tx_sqsge_iterate_process
 
 #define tx_table_s2_t0_action  req_tx_sqwqe_process
@@ -282,7 +282,8 @@ header_type req_tx_sqcb_write_back_info_t {
         poll_in_progress                 :    1;
         color                            :    1;
         poll_failed                      :    1;
-        rsvd                             :    6;
+        rate_enforce_failed              :    1;
+        rsvd                             :    5;
         op_info                          :   64;
     }
 }
@@ -307,7 +308,8 @@ header_type req_tx_sqcb_write_back_info_rd_t {
         poll_in_progress                 :    1;
         color                            :    1;
         poll_failed                      :    1;
-        rsvd                             :    8;
+        rate_enforce_failed              :    1;
+        rsvd                             :    7;
         op_rd_read_len                   :   32;
         op_rd_log_pmtu                   :    5;
         op_rd_pad                        :   27;
@@ -334,7 +336,8 @@ header_type req_tx_sqcb_write_back_info_send_wr_t {
         poll_in_progress                 :    1;
         color                            :    1;
         poll_failed                      :    1;
-        rsvd                             :    8;
+        rate_enforce_failed              :    1;
+        rsvd                             :    7;
         op_send_wr_imm_data              :   32;
         op_send_wr_inv_key_or_ah_handle  :   32;
     }
@@ -361,7 +364,8 @@ header_type req_tx_sqcb_to_wqe_info_t {
         pd                               :   32;
         poll_in_progress                 :    1;
         color                            :    1;
-        pad                              :   47;
+        fence_done                       :    1;
+        pad                              :   46;
     }
 }
 
@@ -372,7 +376,7 @@ header_type req_tx_sq_to_stage_t {
         header_template_addr             :   32;
         packet_len                       :   14;
         congestion_mgmt_enable           :    1;
-        rate_enforce_failed              :    1;
+        fence                            :    1;
     }
 }
 
@@ -431,7 +435,6 @@ header_type req_tx_sge_to_lkey_info_t {
         pad                              :   64;
     }
 }
-
 
 /**** header unions and scratch ****/
 
@@ -591,8 +594,9 @@ metadata req_tx_lkey_to_ptseg_info_t t1_s2s_lkey_to_ptseg_info;
 @pragma scratch_metadata
 metadata req_tx_lkey_to_ptseg_info_t t1_s2s_lkey_to_ptseg_info_scr;
 
+
 //Table-2
-@pragma pa_header_union ingress common_t2_s2s t2_s2s_wqe_to_sge_info t2_s2s_sqcb_write_back_info t2_s2s_sqcb_write_back_info_rd t2_s2s_sqcb_write_back_info_send_wr
+@pragma pa_header_union ingress common_t2_s2s t2_s2s_wqe_to_sge_info t2_s2s_sqcb_write_back_info t2_s2s_sqcb_write_back_info_rd t2_s2s_sqcb_write_back_info_send_wr 
 
 metadata req_tx_wqe_to_sge_info_t t2_s2s_wqe_to_sge_info;
 @pragma scratch_metadata
@@ -611,7 +615,7 @@ metadata req_tx_sqcb_write_back_info_send_wr_t t2_s2s_sqcb_write_back_info_send_
 metadata req_tx_sqcb_write_back_info_send_wr_t t2_s2s_sqcb_write_back_info_send_wr_scr;
 
 //Table-3
-@pragma pa_header_union ingress common_t3_s2s t3_s2s_sqcb_write_back_info_rd t3_s2s_sqcb_write_back_info_send_wr t3_s2s_add_hdr_info
+@pragma pa_header_union ingress common_t3_s2s t3_s2s_sqcb_write_back_info_rd t3_s2s_sqcb_write_back_info_send_wr t3_s2s_add_hdr_info 
 
 metadata req_tx_sqcb_write_back_info_rd_t t3_s2s_sqcb_write_back_info_rd;
 @pragma scratch_metadata
@@ -1036,6 +1040,7 @@ action req_tx_bktrack_write_back_process_s2 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_in_progress, t0_s2s_sqcb_write_back_info.poll_in_progress);
     modify_field(t0_s2s_sqcb_write_back_info_scr.color, t0_s2s_sqcb_write_back_info.color);
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_failed, t0_s2s_sqcb_write_back_info.poll_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -1073,6 +1078,7 @@ action req_tx_bktrack_write_back_process_s3 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_in_progress, t0_s2s_sqcb_write_back_info.poll_in_progress);
     modify_field(t0_s2s_sqcb_write_back_info_scr.color, t0_s2s_sqcb_write_back_info.color);
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_failed, t0_s2s_sqcb_write_back_info.poll_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -1109,6 +1115,7 @@ action req_tx_bktrack_write_back_process_s4 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_in_progress, t0_s2s_sqcb_write_back_info.poll_in_progress);
     modify_field(t0_s2s_sqcb_write_back_info_scr.color, t0_s2s_sqcb_write_back_info.color);
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_failed, t0_s2s_sqcb_write_back_info.poll_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -1145,6 +1152,7 @@ action req_tx_bktrack_write_back_process_s5 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_in_progress, t0_s2s_sqcb_write_back_info.poll_in_progress);
     modify_field(t0_s2s_sqcb_write_back_info_scr.color, t0_s2s_sqcb_write_back_info.color);
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_failed, t0_s2s_sqcb_write_back_info.poll_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -1182,6 +1190,7 @@ action req_tx_bktrack_write_back_process_s6 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_in_progress, t0_s2s_sqcb_write_back_info.poll_in_progress);
     modify_field(t0_s2s_sqcb_write_back_info_scr.color, t0_s2s_sqcb_write_back_info.color);
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_failed, t0_s2s_sqcb_write_back_info.poll_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -1219,6 +1228,7 @@ action req_tx_bktrack_write_back_process_s7 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_in_progress, t0_s2s_sqcb_write_back_info.poll_in_progress);
     modify_field(t0_s2s_sqcb_write_back_info_scr.color, t0_s2s_sqcb_write_back_info.color);
     modify_field(t0_s2s_sqcb_write_back_info_scr.poll_failed, t0_s2s_sqcb_write_back_info.poll_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -1363,7 +1373,7 @@ action req_tx_sqsge_process () {
     modify_field(to_s3_sq_to_stage_scr.header_template_addr, to_s3_sq_to_stage.header_template_addr);
     modify_field(to_s3_sq_to_stage_scr.packet_len, to_s3_sq_to_stage.packet_len);
     modify_field(to_s3_sq_to_stage_scr.congestion_mgmt_enable, to_s3_sq_to_stage.congestion_mgmt_enable);
-    modify_field(to_s3_sq_to_stage_scr.rate_enforce_failed, to_s3_sq_to_stage.rate_enforce_failed);
+    modify_field(to_s3_sq_to_stage_scr.fence, to_s3_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t0_s2s_wqe_to_sge_info_scr.in_progress, t0_s2s_wqe_to_sge_info.in_progress);
@@ -1393,7 +1403,7 @@ action req_tx_sqsge_process_recirc () {
     modify_field(to_s0_sq_to_stage_scr.header_template_addr, to_s0_sq_to_stage.header_template_addr);
     modify_field(to_s0_sq_to_stage_scr.packet_len, to_s0_sq_to_stage.packet_len);
     modify_field(to_s0_sq_to_stage_scr.congestion_mgmt_enable, to_s0_sq_to_stage.congestion_mgmt_enable);
-    modify_field(to_s0_sq_to_stage_scr.rate_enforce_failed, to_s0_sq_to_stage.rate_enforce_failed);
+    modify_field(to_s0_sq_to_stage_scr.fence, to_s0_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t2_s2s_wqe_to_sge_info_scr.in_progress, t2_s2s_wqe_to_sge_info.in_progress);
@@ -1431,6 +1441,7 @@ action req_tx_dummy_sqpt_process () {
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.pd, t0_s2s_sqcb_to_wqe_info.pd);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.poll_in_progress, t0_s2s_sqcb_to_wqe_info.poll_in_progress);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.color, t0_s2s_sqcb_to_wqe_info.color);
+    modify_field(t0_s2s_sqcb_to_wqe_info_scr.fence_done, t0_s2s_sqcb_to_wqe_info.fence_done);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.pad, t0_s2s_sqcb_to_wqe_info.pad);
 
 }
@@ -1445,7 +1456,7 @@ action req_tx_add_headers_process_rd () {
     modify_field(to_s5_sq_to_stage_scr.header_template_addr, to_s5_sq_to_stage.header_template_addr);
     modify_field(to_s5_sq_to_stage_scr.packet_len, to_s5_sq_to_stage.packet_len);
     modify_field(to_s5_sq_to_stage_scr.congestion_mgmt_enable, to_s5_sq_to_stage.congestion_mgmt_enable);
-    modify_field(to_s5_sq_to_stage_scr.rate_enforce_failed, to_s5_sq_to_stage.rate_enforce_failed);
+    modify_field(to_s5_sq_to_stage_scr.fence, to_s5_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t3_s2s_sqcb_write_back_info_rd_scr.hdr_template_inline, t3_s2s_sqcb_write_back_info_rd.hdr_template_inline);
@@ -1466,6 +1477,7 @@ action req_tx_add_headers_process_rd () {
     modify_field(t3_s2s_sqcb_write_back_info_rd_scr.poll_in_progress, t3_s2s_sqcb_write_back_info_rd.poll_in_progress);
     modify_field(t3_s2s_sqcb_write_back_info_rd_scr.color, t3_s2s_sqcb_write_back_info_rd.color);
     modify_field(t3_s2s_sqcb_write_back_info_rd_scr.poll_failed, t3_s2s_sqcb_write_back_info_rd.poll_failed);
+    modify_field(t3_s2s_sqcb_write_back_info_rd.rate_enforce_failed, t3_s2s_sqcb_write_back_info_rd.rate_enforce_failed);
     modify_field(t3_s2s_sqcb_write_back_info_rd_scr.rsvd, t3_s2s_sqcb_write_back_info_rd.rsvd);
     modify_field(t3_s2s_sqcb_write_back_info_rd_scr.op_rd_read_len, t3_s2s_sqcb_write_back_info_rd.op_rd_read_len);
     modify_field(t3_s2s_sqcb_write_back_info_rd_scr.op_rd_log_pmtu, t3_s2s_sqcb_write_back_info_rd.op_rd_log_pmtu);
@@ -1482,7 +1494,7 @@ action req_tx_add_headers_process_send_wr () {
     modify_field(to_s5_sq_to_stage_scr.header_template_addr, to_s5_sq_to_stage.header_template_addr);
     modify_field(to_s5_sq_to_stage_scr.packet_len, to_s5_sq_to_stage.packet_len);
     modify_field(to_s5_sq_to_stage_scr.congestion_mgmt_enable, to_s5_sq_to_stage.congestion_mgmt_enable);
-    modify_field(to_s5_sq_to_stage_scr.rate_enforce_failed, to_s5_sq_to_stage.rate_enforce_failed);
+    modify_field(to_s5_sq_to_stage_scr.fence, to_s5_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t3_s2s_sqcb_write_back_info_send_wr_scr.hdr_template_inline, t3_s2s_sqcb_write_back_info_send_wr.hdr_template_inline);
@@ -1503,6 +1515,7 @@ action req_tx_add_headers_process_send_wr () {
     modify_field(t3_s2s_sqcb_write_back_info_send_wr_scr.poll_in_progress, t3_s2s_sqcb_write_back_info_send_wr.poll_in_progress);
     modify_field(t3_s2s_sqcb_write_back_info_send_wr_scr.color, t3_s2s_sqcb_write_back_info_send_wr.color);
     modify_field(t3_s2s_sqcb_write_back_info_send_wr_scr.poll_failed, t3_s2s_sqcb_write_back_info_send_wr.poll_failed);
+    modify_field(t3_s2s_sqcb_write_back_info_send_wr.rate_enforce_failed, t3_s2s_sqcb_write_back_info_send_wr.rate_enforce_failed);
     modify_field(t3_s2s_sqcb_write_back_info_send_wr_scr.rsvd, t3_s2s_sqcb_write_back_info_send_wr.rsvd);
     modify_field(t3_s2s_sqcb_write_back_info_send_wr_scr.op_send_wr_imm_data, t3_s2s_sqcb_write_back_info_send_wr.op_send_wr_imm_data);
     modify_field(t3_s2s_sqcb_write_back_info_send_wr_scr.op_send_wr_inv_key_or_ah_handle, t3_s2s_sqcb_write_back_info_send_wr.op_send_wr_inv_key_or_ah_handle);
@@ -1519,7 +1532,7 @@ action req_tx_dcqcn_enforce_process_s3 () {
     modify_field(to_s3_sq_to_stage_scr.header_template_addr, to_s3_sq_to_stage.header_template_addr);
     modify_field(to_s3_sq_to_stage_scr.packet_len, to_s3_sq_to_stage.packet_len);
     modify_field(to_s3_sq_to_stage_scr.congestion_mgmt_enable, to_s3_sq_to_stage.congestion_mgmt_enable);
-    modify_field(to_s3_sq_to_stage_scr.rate_enforce_failed, to_s3_sq_to_stage.rate_enforce_failed);
+    modify_field(to_s3_sq_to_stage_scr.fence, to_s3_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t2_s2s_sqcb_write_back_info_scr.hdr_template_inline, t2_s2s_sqcb_write_back_info.hdr_template_inline);
@@ -1540,6 +1553,7 @@ action req_tx_dcqcn_enforce_process_s3 () {
     modify_field(t2_s2s_sqcb_write_back_info_scr.poll_in_progress, t2_s2s_sqcb_write_back_info.poll_in_progress);
     modify_field(t2_s2s_sqcb_write_back_info_scr.color, t2_s2s_sqcb_write_back_info.color);
     modify_field(t2_s2s_sqcb_write_back_info_scr.poll_failed, t2_s2s_sqcb_write_back_info.poll_failed);
+    modify_field(t2_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t2_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t2_s2s_sqcb_write_back_info_scr.rsvd, t2_s2s_sqcb_write_back_info.rsvd);
 
 }
@@ -1554,7 +1568,7 @@ action req_tx_dcqcn_enforce_process_s4 () {
     modify_field(to_s4_sq_to_stage_scr.header_template_addr, to_s4_sq_to_stage.header_template_addr);
     modify_field(to_s4_sq_to_stage_scr.packet_len, to_s4_sq_to_stage.packet_len);
     modify_field(to_s4_sq_to_stage_scr.congestion_mgmt_enable, to_s4_sq_to_stage.congestion_mgmt_enable);
-    modify_field(to_s4_sq_to_stage_scr.rate_enforce_failed, to_s4_sq_to_stage.rate_enforce_failed);
+    modify_field(to_s4_sq_to_stage_scr.fence, to_s4_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t2_s2s_sqcb_write_back_info_scr.hdr_template_inline, t2_s2s_sqcb_write_back_info.hdr_template_inline);
@@ -1575,6 +1589,7 @@ action req_tx_dcqcn_enforce_process_s4 () {
     modify_field(t2_s2s_sqcb_write_back_info_scr.poll_in_progress, t2_s2s_sqcb_write_back_info.poll_in_progress);
     modify_field(t2_s2s_sqcb_write_back_info_scr.color, t2_s2s_sqcb_write_back_info.color);
     modify_field(t2_s2s_sqcb_write_back_info_scr.poll_failed, t2_s2s_sqcb_write_back_info.poll_failed);
+    modify_field(t2_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t2_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t2_s2s_sqcb_write_back_info_scr.rsvd, t2_s2s_sqcb_write_back_info.rsvd);
 
 }
@@ -1607,7 +1622,7 @@ action req_tx_sqwqe_process () {
     modify_field(to_s2_sq_to_stage_scr.header_template_addr, to_s2_sq_to_stage.header_template_addr);
     modify_field(to_s2_sq_to_stage_scr.packet_len, to_s2_sq_to_stage.packet_len);
     modify_field(to_s2_sq_to_stage_scr.congestion_mgmt_enable, to_s2_sq_to_stage.congestion_mgmt_enable);
-    modify_field(to_s2_sq_to_stage_scr.rate_enforce_failed, to_s2_sq_to_stage.rate_enforce_failed);
+    modify_field(to_s2_sq_to_stage_scr.fence, to_s2_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.in_progress, t0_s2s_sqcb_to_wqe_info.in_progress);
@@ -1621,6 +1636,7 @@ action req_tx_sqwqe_process () {
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.pd, t0_s2s_sqcb_to_wqe_info.pd);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.poll_in_progress, t0_s2s_sqcb_to_wqe_info.poll_in_progress);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.color, t0_s2s_sqcb_to_wqe_info.color);
+    modify_field(t0_s2s_sqcb_to_wqe_info_scr.fence_done, t0_s2s_sqcb_to_wqe_info.fence_done);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.pad, t0_s2s_sqcb_to_wqe_info.pad);
 
 }
@@ -1635,7 +1651,7 @@ action req_tx_write_back_process () {
     modify_field(to_s5_sq_to_stage_scr.header_template_addr, to_s5_sq_to_stage.header_template_addr);
     modify_field(to_s5_sq_to_stage_scr.packet_len, to_s5_sq_to_stage.packet_len);
     modify_field(to_s5_sq_to_stage_scr.congestion_mgmt_enable, to_s5_sq_to_stage.congestion_mgmt_enable);
-    modify_field(to_s5_sq_to_stage_scr.rate_enforce_failed, to_s5_sq_to_stage.rate_enforce_failed);
+    modify_field(to_s5_sq_to_stage_scr.fence, to_s5_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t2_s2s_sqcb_write_back_info_scr.hdr_template_inline, t2_s2s_sqcb_write_back_info.hdr_template_inline);
@@ -1656,6 +1672,7 @@ action req_tx_write_back_process () {
     modify_field(t2_s2s_sqcb_write_back_info_scr.poll_in_progress, t2_s2s_sqcb_write_back_info.poll_in_progress);
     modify_field(t2_s2s_sqcb_write_back_info_scr.color, t2_s2s_sqcb_write_back_info.color);
     modify_field(t2_s2s_sqcb_write_back_info_scr.poll_failed, t2_s2s_sqcb_write_back_info.poll_failed);
+    modify_field(t2_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t2_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t2_s2s_sqcb_write_back_info_scr.rsvd, t2_s2s_sqcb_write_back_info.rsvd);
 
 }
@@ -1670,7 +1687,7 @@ action req_tx_write_back_process_rd () {
     modify_field(to_s5_sq_to_stage_scr.header_template_addr, to_s5_sq_to_stage.header_template_addr);
     modify_field(to_s5_sq_to_stage_scr.packet_len, to_s5_sq_to_stage.packet_len);
     modify_field(to_s5_sq_to_stage_scr.congestion_mgmt_enable, to_s5_sq_to_stage.congestion_mgmt_enable);
-    modify_field(to_s5_sq_to_stage_scr.rate_enforce_failed, to_s5_sq_to_stage.rate_enforce_failed);
+    modify_field(to_s5_sq_to_stage_scr.fence, to_s5_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.hdr_template_inline, t2_s2s_sqcb_write_back_info_rd.hdr_template_inline);
@@ -1691,6 +1708,7 @@ action req_tx_write_back_process_rd () {
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.poll_in_progress, t2_s2s_sqcb_write_back_info_rd.poll_in_progress);
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.color, t2_s2s_sqcb_write_back_info_rd.color);
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.poll_failed, t2_s2s_sqcb_write_back_info_rd.poll_failed);
+    modify_field(t2_s2s_sqcb_write_back_info_rd_scr.rate_enforce_failed, t2_s2s_sqcb_write_back_info_rd.rate_enforce_failed);
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.rsvd, t2_s2s_sqcb_write_back_info_rd.rsvd);
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.op_rd_read_len, t2_s2s_sqcb_write_back_info_rd.op_rd_read_len);
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.op_rd_log_pmtu, t2_s2s_sqcb_write_back_info_rd.op_rd_log_pmtu);
@@ -1707,7 +1725,7 @@ action req_tx_write_back_process_send_wr () {
     modify_field(to_s5_sq_to_stage_scr.header_template_addr, to_s5_sq_to_stage.header_template_addr);
     modify_field(to_s5_sq_to_stage_scr.packet_len, to_s5_sq_to_stage.packet_len);
     modify_field(to_s5_sq_to_stage_scr.congestion_mgmt_enable, to_s5_sq_to_stage.congestion_mgmt_enable);
-    modify_field(to_s5_sq_to_stage_scr.rate_enforce_failed, to_s5_sq_to_stage.rate_enforce_failed);
+    modify_field(to_s5_sq_to_stage_scr.fence, to_s5_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.hdr_template_inline, t2_s2s_sqcb_write_back_info_send_wr.hdr_template_inline);
@@ -1728,6 +1746,7 @@ action req_tx_write_back_process_send_wr () {
     modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.poll_in_progress, t2_s2s_sqcb_write_back_info_send_wr.poll_in_progress);
     modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.color, t2_s2s_sqcb_write_back_info_send_wr.color);
     modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.poll_failed, t2_s2s_sqcb_write_back_info_send_wr.poll_failed);
+    modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.rate_enforce_failed, t2_s2s_sqcb_write_back_info_send_wr.rate_enforce_failed);
     modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.rsvd, t2_s2s_sqcb_write_back_info_send_wr.rsvd);
     modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.op_send_wr_imm_data, t2_s2s_sqcb_write_back_info_send_wr.op_send_wr_imm_data);
     modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.op_send_wr_inv_key_or_ah_handle, t2_s2s_sqcb_write_back_info_send_wr.op_send_wr_inv_key_or_ah_handle);
@@ -1743,7 +1762,7 @@ action req_tx_sqsge_iterate_process () {
     modify_field(to_s1_sq_to_stage_scr.header_template_addr, to_s1_sq_to_stage.header_template_addr);
     modify_field(to_s1_sq_to_stage_scr.packet_len, to_s1_sq_to_stage.packet_len);
     modify_field(to_s1_sq_to_stage_scr.congestion_mgmt_enable, to_s1_sq_to_stage.congestion_mgmt_enable);
-    modify_field(to_s1_sq_to_stage_scr.rate_enforce_failed, to_s1_sq_to_stage.rate_enforce_failed);
+    modify_field(to_s1_sq_to_stage_scr.fence, to_s1_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t2_s2s_wqe_to_sge_info_scr.in_progress, t2_s2s_wqe_to_sge_info.in_progress);
@@ -1761,5 +1780,20 @@ action req_tx_sqsge_iterate_process () {
     modify_field(t2_s2s_wqe_to_sge_info_scr.imm_data, t2_s2s_wqe_to_sge_info.imm_data);
     modify_field(t2_s2s_wqe_to_sge_info_scr.inv_key_or_ah_handle, t2_s2s_wqe_to_sge_info.inv_key_or_ah_handle);
 
+}
+
+action req_tx_sqcb2_fence_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s1_sq_to_stage_scr.wqe_addr, to_s1_sq_to_stage.wqe_addr);
+    modify_field(to_s1_sq_to_stage_scr.spec_cindex, to_s1_sq_to_stage.spec_cindex);
+    modify_field(to_s1_sq_to_stage_scr.header_template_addr, to_s1_sq_to_stage.header_template_addr);
+    modify_field(to_s1_sq_to_stage_scr.packet_len, to_s1_sq_to_stage.packet_len);
+    modify_field(to_s1_sq_to_stage_scr.congestion_mgmt_enable, to_s1_sq_to_stage.congestion_mgmt_enable);
+    modify_field(to_s1_sq_to_stage_scr.fence, to_s1_sq_to_stage.fence);
+
+    // stage to stage
 }
 

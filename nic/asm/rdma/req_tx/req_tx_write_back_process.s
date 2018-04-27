@@ -30,10 +30,13 @@ req_tx_write_back_process:
     bcf           [!c1], spec_fail
     nop           // Branch Delay Slot    
 
-    bbeq          CAPRI_KEY_FIELD(IN_TO_S_P, rate_enforce_failed), 1, rate_enforce_fail
+    bbeq          CAPRI_KEY_FIELD(IN_P, rate_enforce_failed), 1, rate_enforce_fail
     nop           // Branch Delay Slot
     
     bbeq          CAPRI_KEY_FIELD(IN_P, poll_failed), 1, poll_fail
+    nop           // Branch Delay Slot
+
+    bbeq          CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence
     nop           // Branch Delay Slot
 
 write_back:
@@ -42,6 +45,7 @@ write_back:
     tblwr         d.current_sge_id, K_CURRENT_SGE_ID
     tblwr         d.current_sge_offset, K_CURRENT_SGE_OFFSET
     tblwr         d.curr_wqe_ptr, K_WQE_ADDR
+    tblwr         d.fence, 0
     bbeq          CAPRI_KEY_FIELD(IN_P, poll_in_progress), 0, skip_poll_success
     seq           c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1 // Branch Delay Slot
     tblwr         d.poll_in_progress, 0
@@ -85,6 +89,13 @@ exit:
     CAPRI_SET_TABLE_2_VALID(0)
     nop.e
     nop
+
+fence:
+    // Set fence bit and curr_wqe_ptr for stage0.
+    tblwr        d.fence, 1
+    tblwr        d.curr_wqe_ptr, K_WQE_ADDR
+    phvwr.e      p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_2_VALID(0)
 
 poll_fail:
     DOORBELL_NO_UPDATE(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, r1, r2)

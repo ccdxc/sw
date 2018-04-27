@@ -1000,17 +1000,24 @@ typedef struct sqcb1_s {
 } PACKED sqcb1_t;
 
 typedef struct sqcb2_s {
+    uint8_t pad;
     uint16_t mss;
     uint16_t timestamp_echo;
     uint16_t timestamp;
 
     uint32_t exp_rsp_psn:24;
 
+    uint16_t rrq_cindex;
     uint16_t rrq_pindex;
     uint16_t sq_cindex;
+    uint8_t  rsvd:6;
+    uint8_t  fence_done:1;
+    uint8_t  fence:1;
 
-    uint32_t inv_key;
-    uint32_t imm_data;
+    union {
+        uint32_t inv_key;
+        uint32_t imm_data;
+    };
 
     uint8_t curr_op_type;
     uint32_t wqe_start_psn:24;

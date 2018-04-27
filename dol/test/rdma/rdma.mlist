@@ -198,6 +198,22 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_SEND_FENCE_WQE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_fence_wqe
+        spec    : req_tx_send_fence_wqe.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_WRITE_FENCE_WQE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_write_fence_wqe
+        spec    : req_tx_write_fence_wqe.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_REQ_RX_ATOMIC_CMPSWAP
         enable  : True
         package : test.rdma
@@ -243,7 +259,7 @@ modules:
         module  : req_tx_rnr
         spec    : req_tx_rnr.testspec
         ignore  : False
-       # Timers support in RTL is being added by ASIC team
+        #Timers support in RTL is being added by ASIC team
         rtl     : False
         selectors:
             maxrdmasessions: 1

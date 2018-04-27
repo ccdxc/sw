@@ -26,6 +26,7 @@ struct sqcb2_t d;
 #define K_CURRENT_SGE_ID   CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit5, current_sge_id_sbit6_ebit7) 
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit5, current_sge_offset_sbit30_ebit31) 
 #define K_LOG_SQ_PAGE_SIZE CAPRI_KEY_RANGE(IN_TO_S_P, log_sq_page_size_sbit0_ebit2, log_sq_page_size_sbit3_ebit4)
+#define K_LOG_NUM_WQES CAPRI_KEY_RANGE(IN_TO_S_P, log_num_wqes_sbit0_ebit0, log_num_wqes_sbit1_ebit4)
 %%
     .param req_tx_bktrack_sqwqe_process
     .param req_tx_bktrack_sqpt_process
@@ -180,7 +181,7 @@ sqcb_write_back:
     phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, sq_c_index), K_SQ_C_INDEX // Branch Delay Slot
     
     add            r1, K_SQ_C_INDEX, 1
-    mincr          r1, 24, r0
+    mincr          r1, K_LOG_NUM_WQES, r0
     phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, sq_c_index), r1
 
 set_pc:

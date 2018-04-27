@@ -37,6 +37,7 @@ struct req_tx_s0_t0_k k;
     .param    req_tx_bktrack_sqcb2_process
     .param    req_tx_sqcb2_cnp_process
     .param    req_tx_timer_process
+    .param    req_tx_sqcb2_fence_process
 
 .align
 req_tx_sqcb_process:
@@ -400,10 +401,33 @@ process_sge_recirc:
     nop
 
 fence:
-    CAPRI_RESET_TABLE_0_ARG()
-    phvwr CAPRI_PHV_FIELD(SQCB_TO_WQE_P, log_pmtu), d.log_pmtu
 
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqpt_process, d.curr_wqe_ptr)
+    // Reset spec-cindex to cindex to re-process wqe.
+    tblwr       SPEC_SQ_C_INDEX, SQ_C_INDEX
+
+    // Setup to-stage info.
+    phvwr       CAPRI_PHV_FIELD(TO_S4_P, spec_cindex), SPEC_SQ_C_INDEX
+    phvwr       CAPRI_PHV_FIELD(TO_S1_P, wqe_addr), d.curr_wqe_ptr
+    phvwrpair   CAPRI_PHV_FIELD(TO_S5_P, wqe_addr), d.curr_wqe_ptr, \
+                CAPRI_PHV_FIELD(TO_S5_P, spec_cindex), SPEC_SQ_C_INDEX
+
+    // Set up s2s info.
+    CAPRI_RESET_TABLE_0_ARG()
+
+    // remaining_payload_bytes = (1 << sqcb0_p->log_pmtu), to start with
+    sll            r4, 1, d.log_pmtu
+
+    phvwrpair   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, log_pmtu), d.log_pmtu, \
+                CAPRI_PHV_FIELD(SQCB_TO_WQE_P, poll_in_progress), d.poll_in_progress
+    phvwrpair   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, remaining_payload_bytes), r4, \
+                CAPRI_PHV_FIELD(SQCB_TO_WQE_P, color), d.color
+    phvwr       CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), d.read_req_adjust
+
+
+    // Invoke sqcb1 to fetch rrq_cindex
+    add         r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_fence_process, r2)
+    tblmincri   SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
 
 end:
     nop.e

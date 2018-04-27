@@ -113,8 +113,8 @@ struct sqcb0_t {
 
     poll_in_progress              : 1;  // WO S5, RW S0
     color                         : 1;  // WO S5, R0 S0
-    fence                         : 1;  // WO S5, RW S0
-    li_fence                      : 1;  // WO S5, RW S0
+    fence                         : 1;  // WO S5, RO S0
+    li_fence                      : 1;  // WO S5, RO S0
     state                         : 3;
     busy                          : 1;
 
@@ -206,11 +206,17 @@ struct sqcb2_t {
     wqe_start_psn                  : 24; // RW S5
     curr_op_type                   : 8;  // RW S5
 
-    imm_data                       : 32; // RW S5
-    inv_key                        : 32; // RW S5
+    union {
+        imm_data                       : 32; // RW S5
+        inv_key                        : 32; // RW S5
+    };
 
+    fence                          : 1;  // WO S5, RO S1
+    fence_done                     : 1;  // RW S1, WO S5
+    rsvd                           : 6;
     sq_cindex                      : 16; // RW S5
     rrq_pindex                     : 16; // RW S5
+    rrq_cindex                     : 16; // RO S1 (WO RXDMA)
 
     exp_rsp_psn                    : 24; // RW S5
 
@@ -218,6 +224,7 @@ struct sqcb2_t {
     timestamp                      : 16;
     timestamp_echo                 : 16;
     mss                            : 16;
+    pad                            : 8;
 };
 
 struct sqcb_t {

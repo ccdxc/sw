@@ -327,17 +327,21 @@ class RdmaSQstate(Packet):
         X3BytesField("wqe_start_psn", 0),
         ByteField("curr_op_type", 0),
 
-        IntField("imm_data", 0),
-        IntField("inv_key", 0),
+        IntField("imm_data_or_inv_key", 0),
+
+        BitField("fence", 0, 1),
+        BitField("fence_done", 0, 1),
+        BitField("pad2", 0, 6),
         ShortField("sq_cindex", 0),
         ShortField("p_index5", 0),
+        ShortField("sqcb2_c_index5", 0),
 
         X3BytesField("exp_rsp_psn", 0),
 
         ShortField("timestamp", 0),
         ShortField("timestamp_echo", 0),
         ShortField("mss", 0),
-
+        ByteField("pad3", 0)
     ]
 
 class RdmaCQstate(Packet):

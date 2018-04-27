@@ -31,8 +31,19 @@ req_rx_sqcb1_write_back_process:
     seq            c1, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), 1
     tblmincri.c1   d.nxt_to_go_token_id, SIZEOF_TOKEN_ID_BITS, 1
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1
-    tblmincri.c1   RRQ_C_INDEX, d.log_rrq_size, 1 
+    bcf            [!c1], skip_cindex_update
+    SQCB2_ADDR_GET(r5) //BD-slot
+    tblmincri      RRQ_C_INDEX, d.log_rrq_size, 1 
 
+    /*
+     * Update rrq_cindex in sqcb2. This will be used by fence-wqe to check for any outstanding
+     * read/atomic requests. Ideally this should be updated after posting completion entry!
+     * Since completion entry will always be posted after this point, doing it here doesn't hurt.
+     */
+    add            r6, FIELD_OFFSET(sqcb2_t, rrq_cindex), r5
+    memwr.h        r6, RRQ_C_INDEX
+
+skip_cindex_update:
     bbne           CAPRI_KEY_FIELD(IN_P, post_bktrack), 1, end
     nop            // Branch Delay Slot
 

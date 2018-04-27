@@ -201,10 +201,11 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         inline_data_vld = self.spec.fields.inline_data_vld if hasattr(self.spec.fields, 'inline_data_vld') else 0
         num_sges = self.spec.fields.num_sges if hasattr(self.spec.fields, 'num_sges') else 0
         color = self.spec.fields.color if hasattr(self.spec.fields, 'color') else 0
-        logger.info("Writing SQ Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d color: %d" % 
-                       (self.address, self.spec.fields.op_type, self.wrid, inline_data_vld, num_sges, color))
+        fence = self.spec.fields.fence if hasattr(self.spec.fields, 'fence') else 0
+        logger.info("Writing SQ Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d color: %d fence: %d" % 
+                       (self.address, self.spec.fields.op_type, self.wrid, inline_data_vld, num_sges, color, fence))
         desc = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.wrid,
-                                    inline_data_vld = inline_data_vld, num_sges=num_sges, color=color)
+                                    inline_data_vld = inline_data_vld, num_sges=num_sges, color=color, fence=fence)
         inline_data_len = 0
         inline_data = None
 
@@ -303,8 +304,9 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         self.wrid = desc.wrid
         self.num_sges = desc.num_sges
         self.op_type = desc.op_type
-        logger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d op_type: %d" % 
-                       (self.address, self.wrid, self.num_sges, self.op_type))
+        self.fence   = desc.fence
+        logger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d op_type: %d fence: %d" % 
+                       (self.address, self.wrid, self.num_sges, self.op_type, self.fence))
         self.sges = []
         if self.mem_handle:
             mem_handle.va += 32

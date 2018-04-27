@@ -15,11 +15,13 @@ struct req_tx_s2_t0_k k;
 #define IN_TO_S_P to_s2_sq_to_stage
 
 #define TO_S4_P to_s4_sq_to_stage
+#define TO_S5_P to_s5_sq_to_stage
 
 #define K_LOG_PMTU CAPRI_KEY_FIELD(IN_P, log_pmtu)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit0, remaining_payload_bytes_sbit9_ebit15)
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 #define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit0, current_sge_offset_sbit25_ebit31)
+
 
 %%
     .param    req_tx_sqsge_process
@@ -29,15 +31,16 @@ struct req_tx_s2_t0_k k;
 req_tx_sqwqe_process:
 
     bbne           CAPRI_KEY_FIELD(IN_P, poll_in_progress), 1, skip_color_check
-
     //color check
-    seq            c1, CAPRI_KEY_FIELD(IN_P, color), d.base.color //BD Slot
+    seq            c1, CAPRI_KEY_FIELD(IN_P, color), d.base.color  // BD-slot
     bcf            [!c1], clear_poll_in_progress
 
 skip_color_check:
+    bbeq           CAPRI_KEY_FIELD(IN_P, fence_done), 1, skip_fence_check
+    add            r1, r0, d.base.op_type  //BD-slot
+    phvwr          CAPRI_PHV_FIELD(TO_S5_P, fence), d.base.fence 
 
-    add            r1, r0, d.base.op_type
-
+skip_fence_check:
     .brbegin
     br             r1[2:0]
     nop            // Branch Delay Slot
