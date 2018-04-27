@@ -186,7 +186,7 @@ func TestMockElasticServerRestart(t *testing.T) {
 				mes.Stop()
 				mr.DeleteServiceInstance(si)
 
-				time.Sleep(60 * time.Millisecond)
+				time.Sleep(20 * time.Millisecond)
 
 				mes = NewElasticServer()
 				mes.Start()
@@ -194,7 +194,7 @@ func TestMockElasticServerRestart(t *testing.T) {
 				si.URL = mes.GetElasticURL()
 				mr.AddServiceInstance(si)
 
-				time.Sleep(500 * time.Millisecond)
+				time.Sleep(1*time.Second + 100*time.Millisecond)
 			}
 		}
 	}()
@@ -219,8 +219,6 @@ func TestMockElasticServerRestart(t *testing.T) {
 			&elastic.BulkRequest{RequestType: "index", Index: indexName, IndexType: indexType, Obj: "{}", ID: "dummy2"},
 		})
 		tu.AssertOk(t, err, "failed to perform bulk operation")
-
-		time.Sleep(20 * time.Millisecond)
 	}
 
 	close(stopServerRestarts)
