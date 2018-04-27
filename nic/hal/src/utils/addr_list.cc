@@ -84,6 +84,7 @@ addr_list_elem_prefix_spec_extract (const types::Address& addr,
     // accepting only v4 now, others are rejected in validation phase
     if (prefix.has_ipv4_subnet()) {
         ip_subnet_spec_to_ip_range(&addr_lelem->ip_range, prefix);
+        return HAL_RET_OK;
     }
 
     return HAL_RET_INVALID_ARG;
@@ -97,6 +98,7 @@ addr_list_elem_range_spec_extract (const types::Address& addr,
     // accepting only v4 now, others are rejected in validation phase
     if (range.has_ipv4_range()) {
         ip_range_spec_to_ip_range(&addr_lelem->ip_range, range);
+        return HAL_RET_OK;
     }
 
     return HAL_RET_INVALID_ARG;
@@ -118,7 +120,7 @@ addr_list_elem_address_spec_extract (const types::Address& addr,
             return ret;
     }
 
-    return HAL_RET_INVALID_ARG;
+    return HAL_RET_OK;
 }
 
 static inline hal_ret_t

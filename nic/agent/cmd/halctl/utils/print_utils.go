@@ -100,3 +100,21 @@ func IPAddrToStr(ipAddr *halproto.IPAddress) string {
 func IPPrefixToStr(pfx *halproto.IPPrefix) string {
 	return fmt.Sprintf("%s/%d", IPAddrToStr(pfx.GetAddress()), pfx.GetPrefixLen())
 }
+
+// AddressRangeToStr converts range to string
+func AddressRangeToStr(addrRange *halproto.AddressRange) string {
+	return fmt.Sprintf("%s-%s", IPAddrToStr(addrRange.GetIpv4Range().GetLowIpaddr()), IPAddrToStr(addrRange.GetIpv4Range().GetHighIpaddr()))
+}
+
+// AddressToStr converts Address to string
+func AddressToStr(addr *halproto.Address) string {
+	if addr.GetPrefix() != nil {
+		return IPPrefixToStr(addr.GetPrefix().GetIpv4Subnet())
+	}
+	return AddressRangeToStr(addr.GetRange())
+}
+
+// L4PortRangeToStr convers L4 Port range to string
+func L4PortRangeToStr(portR *halproto.L4PortRange) string {
+	return fmt.Sprintf("%d-%d", portR.GetPortLow(), portR.GetPortHigh())
+}

@@ -355,7 +355,7 @@ nat_pool_init_from_spec (vrf_t *vrf, nat_pool_t *pool, const NatPoolSpec& spec)
     uint32_t            num_addrs = 0;
 
     pool->key.vrf_id = vrf->vrf_id;
-    pool->key.pool_id = spec.key_or_handle().pool_handle();
+    pool->key.pool_id = spec.key_or_handle().pool_key().pool_id();
     for (int i = 0; i < spec.address_size(); i++) {
         addr_range = addr_list_elem_address_spec_handle(spec.address(i),
                                                         &pool->addr_ranges);
@@ -748,6 +748,9 @@ nat_pool_process_get (nat_pool_t *pool, NatPoolGetResponse *rsp)
              dllist_entry(entry, addr_list_elem_t, list_ctxt);
          ip_range_to_spec(addr_spec->mutable_range(), &addr_range->ip_range);
     }
+
+    rsp->mutable_status()->set_pool_handle(pool->hal_handle);
+
     rsp->set_api_status(types::API_STATUS_OK);
 }
 

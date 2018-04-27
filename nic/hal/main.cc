@@ -63,6 +63,7 @@
 #include "nic/gen/hal/svc/crypto_apis_svc_gen.hpp"
 #include "nic/gen/hal/svc/multicast_svc_gen.hpp"
 #include "nic/gen/hal/svc/gft_svc_gen.hpp"
+#include "nic/gen/hal/svc/nat_svc_gen.hpp"
 
 #include "nic/hal/lkl/lkl_api.hpp"
 
@@ -112,6 +113,7 @@ svc_reg (const std::string& server_addr,
     GftServiceImpl           gft_svc;
     SystemServiceImpl        system_svc;
     SoftwarePhvServiceImpl   swphv_svc;
+    NatServiceImpl           nat_svc;
 
     grpc_init();
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
@@ -157,6 +159,7 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&multicast_svc);
         server_builder.RegisterService(&system_svc);
         server_builder.RegisterService(&swphv_svc);
+        server_builder.RegisterService(&nat_svc);
     } else if (feature_set == hal::HAL_FEATURE_SET_GFT) {
         server_builder.RegisterService(&vrf_svc);
         server_builder.RegisterService(&if_svc);

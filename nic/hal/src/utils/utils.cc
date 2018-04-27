@@ -139,7 +139,9 @@ ip_range_to_spec (types::AddressRange *spec, ip_range_t *range)
 {
     if (range->af == IP_AF_IPV4) {
         auto v4_range = spec->mutable_ipv4_range();
+        v4_range->mutable_low_ipaddr()->set_ip_af(types::IP_AF_INET);
         v4_range->mutable_low_ipaddr()->set_v4_addr(range->vx_range[0].v4_range.ip_lo);
+        v4_range->mutable_high_ipaddr()->set_ip_af(types::IP_AF_INET);
         v4_range->mutable_high_ipaddr()->set_v4_addr(range->vx_range[0].v4_range.ip_hi);
     } else if (range->af == IP_AF_IPV6) {
         return HAL_RET_NOT_SUPPORTED;

@@ -42,10 +42,10 @@ namespace hal {
 // and passed through the same logic of Address object
 //-----------------------------------------------------------------------------
 typedef struct addr_list_elem_s {
-    ip_range_t       ip_range;     // IP address range
     bool             negate;
     uint32_t         num_addrs;    // no. of addresses in this range
     dllist_ctxt_t    list_ctxt;    // list ctxt to link to other nodes
+    ip_range_t       ip_range;     // IP address range
 } __PACK__ addr_list_elem_t;
 
 //-----------------------------------------------------------------------------
