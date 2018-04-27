@@ -84,13 +84,5 @@ cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -cf ../nic/nic.tar *'
 call(cmd, shell=True)
 
 # create tar.gz
-cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -czf ../nic/nic.tgz *'
-call(cmd, shell=True)
-
-# create naples.tgz
-cmd = 'cd nic/sim/naples/ && tar -cf ../../naples.tar README install.sh uninstall.sh'
-call(cmd, shell=True)
-cmd = 'cd nic && tar -uf naples.tar nic.tgz'
-call(cmd, shell=True)
-cmd = 'gzip nic/naples.tar && mv nic/naples.tar.gz nic/naples.tgz'
+cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -czf ../nic/nic.tgz * && chmod 766 ../nic/nic.tgz'
 call(cmd, shell=True)

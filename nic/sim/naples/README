@@ -32,38 +32,60 @@ representing the datacenter) and hence REST APIs can be invoked using curl.
 
 Examples:
 
-Create a tenant:
-curl -d'{"Kind":"Tenant","meta":{"Name":"tenant-1","Tenant":"tenant-1","CreationTime":"1970-01-01T00:00:00Z","ModTime":"1970-01-01T00:00:00Z"},"spec":{},"status":{}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/tenants/
+In this example, we will use the pre-created "default" tenant. The following
+config is to be posted on NAT VPN gateway in "kingdom-1".
+Here 172.17.0.2 is IP address of the eth0 interface inside the NAPLES container.
 
-Get all tenants:
+Use default tenant:
+
 curl 172.17.0.2:9007/api/tenants/
-[{"kind":"Tenant","meta":{"name":"tenant-1","tenant":"tenant-1","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"spec":{},"status":{"TenantID":3}}]
+[{"kind":"Tenant","meta":{"name":"default","tenant":"default","namespace":"default","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"spec":{},"status":{"TenantID":1}}]
 
-Create a NAT pool:
-curl -d'{"kind":"NatPool","meta":{"name":"testNatPool","tenant":"tenant-1","namespace":"ns-1","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"spec":{"NetworkName":"default"},"status":{}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/natpools/
+To use non-default tenant, do:
 
-Get all NAT pools:
-curl 172.17.0.2:9007/api/natpools/ | jq .
-[
-  {
-    "kind": "NatPool",
-    "meta": {
-      "name": "testNatPool",
-      "tenant": "tenant-1",
-      "namespace": "ns-1",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "NetworkName": "default"
-    },
-    "status": {
-      "id": 1
-    }
-  }
-]
+curl -d'{"Kind":"Tenant","meta":{"Name":"tenant-1"}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/tenants/
+
+Create Namespaces:
+
+[vagrant@localhost:~]curl -d'{"Kind":"Namespace","meta":{"Name":"kingdom-1","Tenant":"default"}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/namespaces/
+[vagrant@localhost:~]curl -d'{"Kind":"Namespace","meta":{"Name":"kingdom-2","Tenant":"default"}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/namespaces/
+[vagrant@localhost:~]curl -d'{"Kind":"Namespace","meta":{"Name":"public","Tenant":"default"}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/namespaces/
+
+Create Network object for local Kingdom (kingdom-1) and "public" Network:
+
+curl -d'{"Kind":"Network","meta":{"Name":"kingdom-1","Tenant":"default","Namespace":"kingdom-1"}, "spec:":{"IPv4Subet": "10.1.1.0/24", "IPv4Gateway":"10.1.1.1", "VlanID":100}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/networks/
+
+curl -d'{"Kind":"Network","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec:":{"IPv4Subet": "20.1.1.0/24", "IPv4Gateway":"20.1.1.1", "VlanID":200}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/networks/
+
+Create (remote) GW EPs:
+
+curl -d'{"Kind":"Endpoint","Meta":{"Name":"kingdom1-router","Tenant":"default","Namespace":"kingdom-1"},"spec":{"NetworkName":"kingdom-1","Interface":"Uplink0"},"status":{"IPv4Address":"10.1.1.1/24","MacAddress":"00:22:22:22:22:22","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/endpoints/
+
+curl -d'{"kind":"Endpoint","Meta":{"Name":"public-router","Tenant":"default","Namespace":"public"},"spec":{"NetworkName":"public","Interface":"Uplink1"},"status":{"IPv4Address":"20.1.1.1/24","MacAddress":"00:33:33:33:33:33","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/endpoints/
+
+Create Routes:
+
+curl -d'{"Kind":"Route","meta":{"Name":"kingdom-1","Tenant":"default","Namespace":"kingdom-1"}, "spec:":{"IPPrefix": "10.1.1.0/24", "GatewayIP":"10.1.1.1"}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/routes/
+curl -d'{"Kind":"Route","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec:":{"IPPrefix": "20.1.1.0/24", "GatewayIP":"20.1.1.1"}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/routes/
+curl -d'{"Kind":"Route","meta":{"Name":"kingdom-2","Tenant":"default","Namespace":"kingdom-2"}, "spec:":{"IPPrefix": "0.0.0.0/24", "Interface":"kingdom2-IPSecTunnel"}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/routes/
+curl -d'{"Kind":"Route","meta":{"Name":"kingdom-3","Tenant":"default","Namespace":"kingdom-3"}, "spec:":{"IPPrefix": "0.0.0.0/24", "Interface":"kingdom3-IPSecTunnel"}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/routes/
+...
+...
+
+Create NAT pool:
+
+curl -d'{"kind":"NatPool","meta":{"name":"kingdom1-natpool","tenant":"default","namespace":"kingdom-1"},"spec":{"IPRange":"10.1.2.1-10.1.2.200"}' -X POST -H "Content-Type: application/json" localhost:9007/api/natpools/
+
+Create NAT Mappings for remote services (running in kingdom-2):
+
+TBD
+
+Create NAT Policy:
+
+TBD
 
 Create NAT policy:
+
 curl -d'{"kind":"NatPolicy","meta":{"name":"testNatPolicy","tenant":"tenant-1","namespace":"ns-1","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"spec":{"rules":[{"from":{"match-type":"IPRange","match":"10.0.0.0 - 10.0.1.0"},"to":{"match-type":"IPRange","match":"192.168.0.0 - 192.168.1.1"},"protocol":"","from-port":"","to-port":"","nat-pool":"preCreatedNatPool","action":"SNAT"}]},"status":{}}' -X POST -H "Content-Type: application/json" 172.17.0.2:9007/api/natpolicies/
 
 Get all NAT policies:
@@ -103,4 +125,3 @@ curl 172.17.0.2:9007/api/natpolicies/ | jq .
   }
 ]
 
-Here 172.17.0.2 is IP address of the eth0 interface inside the NAPLES container

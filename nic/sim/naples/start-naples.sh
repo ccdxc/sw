@@ -40,7 +40,7 @@ else
 fi
 
 echo "Starting netagent ..."
-$NIC_DIR/bin/netagent -hostif lo -logtofile agent.log -datapath mock &
+$NIC_DIR/bin/netagent -hostif lo -logtofile agent.log -datapath hal &
 PID=`ps -eaf | grep nic_infra_hntap | grep -v grep | awk '{print $2}'`
 if [[ "" ==  "$PID" ]]; then
     echo "Failed to start netagent"

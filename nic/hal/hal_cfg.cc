@@ -42,7 +42,7 @@ hal_cpu_if_create (uint32_t lif_id)
 {
     InterfaceSpec      spec;
     InterfaceResponse  response;
-    hal_ret_t          ret = HAL_RET_OK;
+    hal_ret_t          ret;
 
     spec.mutable_key_or_handle()->set_interface_id(IF_ID_CPU);
     spec.set_type(::intf::IfType::IF_TYPE_CPU);
@@ -52,10 +52,37 @@ hal_cpu_if_create (uint32_t lif_id)
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = interface_create(spec, &response);
     if ((ret == HAL_RET_OK) || (ret == HAL_RET_ENTRY_EXISTS)) {
-        HAL_TRACE_ERR("{}: CPU if create success, handle = {}",
-                      __FUNCTION__, response.status().if_handle());
+        HAL_TRACE_DEBUG("CPU interface {} create success, handle {}",
+                        IF_ID_CPU, response.status().if_handle());
     } else {
-        HAL_TRACE_DEBUG("{}: CPU if create failed", __FUNCTION__);
+        HAL_TRACE_ERR("CPU interface {} create failed, err : {}",
+                      IF_ID_CPU, ret);
+    }
+    hal::hal_cfg_db_close();
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+hal_uplink_if_create (uint64_t if_id, uint32_t port_num)
+{
+    InterfaceSpec        spec;
+    InterfaceResponse    response;
+    hal_ret_t            ret;
+
+    spec.mutable_key_or_handle()->set_interface_id(if_id);
+    spec.set_type(::intf::IfType::IF_TYPE_UPLINK);
+    spec.set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+    spec.mutable_if_uplink_info()->set_port_num(port_num);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = interface_create(spec, &response);
+    if (ret == HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Uplink interface {}/port {} create success, handle {}",
+                        if_id, port_num, response.status().if_handle());
+    } else {
+        HAL_TRACE_ERR("Uplink interface {}/port {} create failed, err : {}",
+                      if_id, port_num, ret);
     }
     hal::hal_cfg_db_close();
 
