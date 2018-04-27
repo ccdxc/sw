@@ -24,7 +24,6 @@ namespace pd {
 #define HAL_QOS_ADMIN_COS                   1
 
 #define HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS  2
-#define HAL_PD_QOS_MAX_QUEUES_PER_CLASS     (1 + HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS)
 
 #define HAL_DEFAULT_POLICER_REFRESH_INTERVAL 4000 // us
 #define HAL_MAX_POLICER_TOKENS_PER_INTERVAL ((1ull<<39)-1)
@@ -44,6 +43,9 @@ DEFINE_ENUM(pd_qos_iq_type_e, HAL_PD_QOS_IQS)
     ENTRY(HAL_PD_QOS_OQ_RXDMA,                  1, "rxdma")
 DEFINE_ENUM(pd_qos_oq_type_e, HAL_PD_QOS_OQS)
 #undef HAL_PD_QOS_OQS
+
+#define HAL_PD_QOS_MAX_IQS_PER_CLASS    (TM_NUM_PORTS*HAL_PD_QOS_NUM_IQ_TYPES)
+#define HAL_PD_QOS_MAX_OQS_PER_CLASS    (TM_NUM_PORTS*HAL_PD_QOS_NUM_IQ_TYPES)
 
 typedef struct pd_qos_uplink_iq_s {
     tm_q_t   iq;

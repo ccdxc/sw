@@ -13,9 +13,11 @@
 #include <cmath>
 
 #include "nic/include/base.h"
+#include "nic/include/hal_lock.hpp"
 #include "nic/p4/iris/include/defines.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "nic/utils/pack_bytes/pack_bytes.hpp"
 
 #include "sdk/asic/capri/csrlite/cap_top_csr.hpp"
 
@@ -26,6 +28,10 @@
 #include "nic/asic/capri/verif/apis/cap_pb_api.h"
 #include "nic/asic/capri/model/cap_pb/cap_pbc_decoders.h"
 #endif
+
+using namespace hal::utils;
+using sdk::lib::csrlite::cap_top_csr_helper;
+using sdk::lib::csrlite::cap_pbc_csr_helper_t;
 
 typedef struct capri_tm_cfg_profile_s {
     uint32_t num_qs[NUM_TM_PORT_TYPES];
@@ -68,10 +74,25 @@ typedef struct capri_tm_buf_cfgs_s {
     capri_tm_buf_hbm_cfg_t hbm_fifo[NUM_TM_HBM_FIFO_TYPES][HAL_TM_MAX_HBM_CONTEXTS];
 } __PACK__ capri_tm_buf_cfg_t;
 
+typedef struct capri_tm_hbm_context_stats_s {
+    uint64_t good_pkts_in;
+    uint64_t good_pkts_out;
+    uint64_t errored_pkts_in;
+    uint32_t max_oflow_fifo_depth;
+} __PACK__ capri_tm_hbm_context_stats_t;
+
+typedef struct capri_tm_shadow_stats_s {
+    hal_spinlock_t slock; // Lock for accessing the stats
+    capri_tm_hbm_context_stats_t cur_vals[NUM_TM_HBM_FIFO_TYPES][HAL_TM_MAX_HBM_CONTEXTS];
+    capri_tm_hbm_context_stats_t prev_vals[NUM_TM_HBM_FIFO_TYPES][HAL_TM_MAX_HBM_CONTEXTS];
+} __PACK__ capri_tm_shadow_stats_t;
+
 typedef struct capri_tm_ctx_s {
     capri_tm_asic_profile_t asic_profile;
     capri_tm_cfg_profile_t  cfg_profile;
     capri_tm_buf_cfg_t      buf_cfg;
+    capri_tm_shadow_stats_t stats;
+    std::atomic<bool>       init_complete;
 } capri_tm_ctx_t;
 
 capri_tm_ctx_t g_tm_ctx_;
@@ -84,6 +105,7 @@ set_tm_ctx (capri_tm_cfg_profile_t *tm_cfg_profile,
     if (!g_tm_ctx) {
         g_tm_ctx_.cfg_profile = *tm_cfg_profile;
         g_tm_ctx_.asic_profile = *asic_profile;
+        HAL_SPINLOCK_INIT(&g_tm_ctx_.stats.slock, PTHREAD_PROCESS_PRIVATE);
         g_tm_ctx = &g_tm_ctx_;
     }
 }
@@ -305,6 +327,22 @@ capri_tm_get_island_for_port_type (tm_port_type_e port_type)
     return 0;
 }
 
+static inline tm_hbm_fifo_type_e
+capri_tm_get_fifo_type_for_port (tm_port_t port)
+{
+    switch(capri_tm_get_port_type(port)) {
+        case TM_PORT_TYPE_UPLINK:
+            return TM_HBM_FIFO_TYPE_UPLINK;
+        case TM_PORT_TYPE_DMA:
+            return TM_HBM_FIFO_TYPE_TXDMA;
+        case TM_PORT_TYPE_P4EG:
+        case TM_PORT_TYPE_P4IG:
+        case NUM_TM_PORT_TYPES:
+            return NUM_TM_HBM_FIFO_TYPES;
+    }
+    return NUM_TM_HBM_FIFO_TYPES;
+}
+
 //:: from collections import OrderedDict
 //:: import math
 //:: TM_PORTS = 12
@@ -456,7 +494,7 @@ capri_tm_port_is_dma_port (uint32_t port)
 }
 
 static bool
-is_valid_tm_port (uint32_t port)
+capri_tm_is_valid_port (uint32_t port)
 {
     return ((port >= TM_PORT_UPLINK_0) && (port <= TM_PORT_INGRESS));
 }
@@ -889,7 +927,7 @@ capri_tm_scheduler_map_update (uint32_t port,
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    if (!is_valid_tm_port(port)) {
+    if (!capri_tm_is_valid_port(port)) {
         HAL_TRACE_ERR("{} is not a valid TM port",
                       port);
         return HAL_RET_INVALID_ARG;
@@ -988,6 +1026,43 @@ capri_tm_get_hbm_occupancy(tm_hbm_fifo_type_e fifo_type, uint32_t context)
 
     return occupancy;
 }
+
+static uint32_t 
+capri_tm_get_buffer_occupancy (tm_port_t port, tm_q_t iq)
+{
+    cap_pbc_csr_helper_t &pbc_csr = cap_top_csr_helper.pb.pbc;
+    uint32_t cell_occupancy = 0;
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+        case ${pinfo["enum"]}:
+            {
+                // ${pinfo["enum"]}
+                sdk::lib::csrlite::cap_pbcport${p}_csr_sta_account_t *sta_account_reg;
+                sta_account_reg = pbc_csr.port_${p}.sta_account.get_csr_instance(0);
+                sta_account_reg->read();
+                switch (iq) {
+//::        for pg in range(pinfo["pgs"]):
+                    case ${pg}:
+                        {
+                            cell_occupancy = sta_account_reg->occupancy_${pg};
+                            break;
+                        }
+//::        #endfor
+                    default:
+                        return HAL_RET_ERR;
+                }
+                break;
+            }
+//:: #endfor
+        default:
+            break;
+    }
+
+    return cell_occupancy;
+}
+
 
 static hal_ret_t
 capri_tm_drain_uplink_port (tm_port_t port)
@@ -1809,34 +1884,34 @@ capri_tm_port_program_defaults (void)
 //::    pinfo = port_info[p]
     // ${pinfo["enum"]}
     
-    sdk::lib::csrlite::cap_pbcport${p}_csr_cfg_oq_t *cfg_oq_reg_${p} = 
-        sdk::lib::csrlite::cap_top_csr_helper.pb.pbc.port_${p}.cfg_oq.get_csr_instance(0);
+    sdk::lib::csrlite::cap_pbcport${p}_csr_cfg_oq_t *cfg_oq_${p}_reg = 
+        cap_top_csr_helper.pb.pbc.port_${p}.cfg_oq.get_csr_instance(0);
 
     port_type = capri_tm_get_port_type(${pinfo["enum"]});
-    cfg_oq_reg_${p}->read();
+    cfg_oq_${p}_reg->read();
 //::    if pinfo["type"] == "uplink":
-    cfg_oq_reg_${p}->num_hdr_bytes = 
+    cfg_oq_${p}_reg->num_hdr_bytes = 
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ;
 //::    #endif
 
     if (tm_sw_init_enabled()) {
-        cfg_oq_reg_${p}->enable = 1;
-        cfg_oq_reg_${p}->rewrite_enable = 1;
+        cfg_oq_${p}_reg->enable = 1;
+        cfg_oq_${p}_reg->rewrite_enable = 1;
 //::    if pinfo["supports_credits"]:
-        cfg_oq_reg_${p}->flow_control_enable_credits = 
+        cfg_oq_${p}_reg->flow_control_enable_credits = 
             tm_asic_profile()->port[port_type].uses_credits ? 1 : 0;
 //::    #endif
 //::    if pinfo["enum"] == "TM_PORT_INGRESS":
-        cfg_oq_reg_${p}->packing_msb = 
+        cfg_oq_${p}_reg->packing_msb = 
             capri_tm_get_max_cell_chunks_for_island(0) >
             capri_tm_get_max_cell_chunks_for_island(1) ? 1 : 0 ;
 //::    #endif
 //::    if pinfo["type"] == "dma" or pinfo["type"] == "uplink":
-        cfg_oq_reg_${p}->flow_control_enable_xoff = 1;
+        cfg_oq_${p}_reg->flow_control_enable_xoff = 1;
 //::    #endif
     }
-    HAL_TRACE_DEBUG("Writing pbc.port_${p}.cfg_oq {}", *cfg_oq_reg_${p});
-    cfg_oq_reg_${p}->write();
+    HAL_TRACE_DEBUG("Writing pbc.port_${p}.cfg_oq {}", *cfg_oq_${p}_reg);
+    cfg_oq_${p}_reg->write();
 //:: #endfor
 
     return HAL_RET_OK;
@@ -2336,6 +2411,7 @@ capri_tm_init (sdk::lib::catalog* catalog)
         }
     }
     HAL_TRACE_DEBUG("Init completed");
+    tm_ctx()->init_complete.store(true);
 
     return ret;
 }
@@ -2389,3 +2465,207 @@ capri_tm_get_clock_tick (uint64_t *tick)
 #endif
     return HAL_RET_OK;
 }
+
+#define CHECK_OVERFLOW_AND_UPDATE(c, p, n)       \
+{                                                \
+    c += (p > n) ? (UINT32_MAX - p) + n : n - p; \
+    p = n;                                       \
+}
+
+hal_ret_t
+capri_tm_periodic_stats_update (void)
+{
+    uint32_t port_in, port_out;
+    uint32_t fifo_type;
+    uint32_t context;
+    capri_tm_hbm_context_stats_t *cur_vals;
+    capri_tm_hbm_context_stats_t *new_val;
+    capri_tm_hbm_context_stats_t *prev_vals;
+
+    capri_tm_hbm_context_stats_t new_vals[NUM_TM_HBM_FIFO_TYPES][HAL_TM_MAX_HBM_CONTEXTS] = {};
+    cpp_int good_count_in;
+    cpp_int errored_count_in;
+    cpp_int watermark_in;
+    cpp_int good_count_out;
+    cpp_int errored_count_out;
+    cpp_int watermark_out;
+
+    if (!tm_ctx() || !tm_ctx()->init_complete.load()) {
+        return HAL_RET_OK;
+    }
+    
+    // Read from asic
+    for (fifo_type = 0; fifo_type < NUM_TM_HBM_FIFO_TYPES; fifo_type++) {
+        for (context = 0; context < capri_tm_max_hbm_contexts_for_fifo(fifo_type);
+             context++) {
+            if (fifo_type == TM_HBM_FIFO_TYPE_UPLINK) {
+                port_in = 13;
+                port_out = 12;
+            } else {
+                port_in = 15;
+                port_out = 14;
+            }
+            new_val = &new_vals[fifo_type][context];
+            cap_pb_read_hbm_ctx_stat(0, 0, port_in, context, good_count_in, 
+                                     errored_count_in, watermark_in);
+            cap_pb_read_hbm_ctx_stat(0, 0, port_out, context, good_count_out, 
+                                     errored_count_out, watermark_out);
+            new_val->good_pkts_in = good_count_in.convert_to<uint32_t>();
+            new_val->good_pkts_out = good_count_out.convert_to<uint32_t>();
+            new_val->errored_pkts_in = errored_count_in.convert_to<uint32_t>();
+            new_val->max_oflow_fifo_depth = watermark_in.convert_to<uint32_t>();
+        }
+    }
+    // Take lock and update
+    HAL_SPINLOCK_LOCK(&tm_ctx()->stats.slock);
+    for (fifo_type = 0; fifo_type < NUM_TM_HBM_FIFO_TYPES; fifo_type++) {
+        for (context = 0; context < capri_tm_max_hbm_contexts_for_fifo(fifo_type);
+             context++) {
+            cur_vals = &tm_ctx()->stats.cur_vals[fifo_type][context];
+            prev_vals = &tm_ctx()->stats.prev_vals[fifo_type][context];
+            new_val = &new_vals[fifo_type][context];
+            CHECK_OVERFLOW_AND_UPDATE(cur_vals->good_pkts_in, 
+                                      prev_vals->good_pkts_in, 
+                                      new_val->good_pkts_in);
+            CHECK_OVERFLOW_AND_UPDATE(cur_vals->good_pkts_out,
+                                      prev_vals->good_pkts_out,
+                                      new_val->good_pkts_out);
+            CHECK_OVERFLOW_AND_UPDATE(cur_vals->errored_pkts_in, 
+                                      prev_vals->errored_pkts_in, 
+                                      new_val->errored_pkts_in);
+            cur_vals->max_oflow_fifo_depth = new_val->max_oflow_fifo_depth;
+        }
+    }
+    HAL_SPINLOCK_UNLOCK(&tm_ctx()->stats.slock);
+    return HAL_RET_OK;
+}
+
+static void 
+capri_tm_get_context_stats (tm_hbm_fifo_type_e fifo_type, uint32_t context,
+                            capri_tm_hbm_context_stats_t *context_stats)
+{
+    if ((fifo_type >= NUM_TM_HBM_FIFO_TYPES) || 
+        (context >= capri_tm_max_hbm_contexts_for_fifo(fifo_type)))  {
+        *context_stats = {0};
+        return;
+    }
+    HAL_SPINLOCK_LOCK(&tm_ctx()->stats.slock);
+    *context_stats = tm_ctx()->stats.cur_vals[fifo_type][context];
+    HAL_SPINLOCK_UNLOCK(&tm_ctx()->stats.slock);
+}
+
+static void 
+capri_tm_reset_context_stats (tm_hbm_fifo_type_e fifo_type, uint32_t context)
+{
+    if ((fifo_type >= NUM_TM_HBM_FIFO_TYPES) || 
+        (context >= capri_tm_max_hbm_contexts_for_fifo(fifo_type)))  {
+        return;
+    }
+    HAL_SPINLOCK_LOCK(&tm_ctx()->stats.slock);
+    tm_ctx()->stats.cur_vals[fifo_type][context] = 
+                                    (const capri_tm_hbm_context_stats_t) {0};
+    HAL_SPINLOCK_UNLOCK(&tm_ctx()->stats.slock);
+}
+
+hal_ret_t
+capri_tm_get_iq_stats(tm_port_t port, tm_q_t iq, tm_iq_stats_t *iq_stats)
+{
+    uint32_t num_hbm_contexts_per_port;
+    uint32_t context;
+    tm_port_type_e port_type;
+    tm_hbm_fifo_type_e fifo_type;
+    capri_tm_hbm_context_stats_t context_stats = {0};
+
+    if (!capri_tm_is_valid_port(port)) {
+        HAL_TRACE_ERR("{} is not a valid TM port",
+                      port);
+        return HAL_RET_INVALID_ARG;
+    }
+    *iq_stats = (const tm_iq_stats_t) {0};
+
+    // Read the registers to figure out the current stats
+    
+    if (port_supports_hbm_contexts(port)) {
+        port_type = capri_tm_get_port_type(port);
+        if (port_type == TM_PORT_TYPE_UPLINK) {
+            num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
+            context = (port * num_hbm_contexts_per_port) + iq;
+        } else {
+            context = iq;
+        }
+        fifo_type = capri_tm_get_fifo_type_for_port(port);
+
+        // Update the context stats
+        capri_tm_periodic_stats_update();
+        // Get the context stats from shadow
+        capri_tm_get_context_stats(fifo_type, context, &context_stats);
+
+        iq_stats->good_pkts_in = context_stats.good_pkts_in;
+        iq_stats->good_pkts_out = context_stats.good_pkts_out;
+        iq_stats->errored_pkts_in = context_stats.errored_pkts_in;
+        iq_stats->max_oflow_fifo_depth = HAL_TM_HBM_FIFO_ALLOC_SIZE * 
+                                            context_stats.max_oflow_fifo_depth;
+
+        // Get the current occupancy
+        iq_stats->oflow_fifo_depth = HAL_TM_HBM_FIFO_ALLOC_SIZE * 
+                                        capri_tm_get_hbm_occupancy(fifo_type, context);
+    }
+    iq_stats->buffer_occupancy = HAL_TM_CELL_SIZE * 
+                                    capri_tm_get_buffer_occupancy(port, iq);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_tm_reset_iq_stats(tm_port_t port, tm_q_t iq)
+{
+    uint32_t num_hbm_contexts_per_port;
+    uint32_t context;
+    tm_port_type_e port_type;
+    tm_hbm_fifo_type_e fifo_type;
+
+    if (!capri_tm_is_valid_port(port)) {
+        HAL_TRACE_ERR("{} is not a valid TM port",
+                      port);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (port_supports_hbm_contexts(port)) {
+        port_type = capri_tm_get_port_type(port);
+        if (port_type == TM_PORT_TYPE_UPLINK) {
+            num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
+            context = (port * num_hbm_contexts_per_port) + iq;
+        } else {
+            context = iq;
+        }
+        fifo_type = capri_tm_get_fifo_type_for_port(port);
+
+        // Reset the context stats in shadow
+        capri_tm_reset_context_stats(fifo_type, context);
+
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats)
+{
+    cap_pbc_csr_helper_t &pbc_csr = cap_top_csr_helper.pb.pbc;
+    sdk::lib::csrlite::cap_pbc_csr_sta_oq_t *sta_oq_reg;
+
+    if (!capri_tm_is_valid_port(port)) {
+        HAL_TRACE_ERR("{} is not a valid TM port",
+                      port);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    sta_oq_reg = pbc_csr.sta_oq[port].get_csr_instance(0);
+
+    sta_oq_reg->read();
+
+    // 16 bits per oq
+    oq_stats->queue_depth = pack_bytes_unpack((uint8_t *)sta_oq_reg->depth_value,
+                                              oq*16, 16);
+    return HAL_RET_OK;
+}
+

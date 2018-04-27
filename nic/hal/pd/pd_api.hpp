@@ -1326,6 +1326,9 @@ typedef struct pd_qos_class_get_args_s {
     QosClassGetResponse *rsp;
 } __PACK__ pd_qos_class_get_args_t;
 
+typedef struct pd_qos_class_periodic_stats_update_args_s {
+} __PACK__ pd_qos_class_periodic_stats_update_args_t;
+
 // copp
 typedef struct pd_copp_create_args_s {
     copp_t    *copp;
@@ -2654,7 +2657,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_BYPASS_FLOWID_GET,        229, "PD_FUNC_ID_BYPASS_FLOWID_GET")\
     ENTRY(PD_FUNC_ID_L2SEG_GET,                230, "PD_FUNC_ID_L2SEG_GET")\
     ENTRY(PD_FUNC_ID_EP_GET,                   231, "PD_FUNC_ID_EP_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      232, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE, 232, "PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE") \
+    ENTRY(PD_FUNC_ID_MAX,                      233, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2813,6 +2817,7 @@ PD_FUNCP_TYPEDEF(pd_qos_class_update);
 PD_FUNCP_TYPEDEF(pd_qos_class_mem_free);
 PD_FUNCP_TYPEDEF(pd_qos_class_make_clone);
 PD_FUNCP_TYPEDEF(pd_qos_class_get);
+PD_FUNCP_TYPEDEF(pd_qos_class_periodic_stats_update);
 
 // copp
 PD_FUNCP_TYPEDEF(pd_copp_create);
@@ -3166,6 +3171,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_qos_class_make_clone);
         PD_UNION_FIELD(pd_qos_class_mem_free);
         PD_UNION_FIELD(pd_qos_class_get);
+        PD_UNION_FIELD(pd_qos_class_periodic_stats_update);
 
         // copp
         PD_UNION_FIELD(pd_copp_create);

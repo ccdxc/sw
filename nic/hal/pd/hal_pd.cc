@@ -206,6 +206,8 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, pd_qos_class_make_clone);
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_MEM_FREE, pd_qos_class_mem_free);
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_GET, pd_qos_class_get);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE, 
+                   pd_qos_class_periodic_stats_update);
 
     // copp
     PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_CREATE, pd_copp_create);
@@ -569,6 +571,8 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, pd_qos_class_make_clone);
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_MEM_FREE, pd_qos_class_mem_free);
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_GET, pd_qos_class_get);
+    PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE, 
+                   pd_qos_class_periodic_stats_update);
 
     // copp
     PD_SYMBOL_CALL(PD_FUNC_ID_COPP_CREATE, pd_copp_create);

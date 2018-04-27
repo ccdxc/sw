@@ -5,6 +5,7 @@
 #include "nic/hal/src/stats/stats.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/pd_api.hpp"
 
 namespace hal {
 
@@ -18,7 +19,12 @@ static thread_local void *t_stats_timer;
 static void
 stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
+    hal_ret_t ret;
     HAL_TRACE_DEBUG("Collecting stats ...");
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE, NULL);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error in updating qos periodic stats, ret {}", ret);
+    }
 }
 
 //------------------------------------------------------------------------------

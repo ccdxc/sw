@@ -182,13 +182,13 @@ message QosClassDeleteResponseMsg {
 }
 
 message QosClassInputQueueStats {
-  QosClassInputQueue input_queue      = 1;    // Input queue identifier
-  uint64             good_pkts_in     = 2;    // Cumulative count of good packets in
-  uint64             good_pkts_out    = 3;    // Cumulative count of good packets out
-  uint64             errored_pkts_in  = 4;    // Cumulative count of errored packets in
-  uint32             hbm_fifo_depth   = 5;    // Instantaneous HBM fifo depth in bytes
-  uint32             max_fifo_depth   = 6;    // Maximum HBM fifo depth observed in bytes
-  uint32             buffer_occupancy = 7;    // Instantaneous buffer occupancy in bytes
+  QosClassInputQueue input_queue          = 1;    // Input queue identifier
+  uint64             good_pkts_in         = 2;    // Cumulative count of good packets in
+  uint64             good_pkts_out        = 3;    // Cumulative count of good packets out
+  uint64             errored_pkts_in      = 4;    // Cumulative count of errored packets in
+  uint32             oflow_fifo_depth     = 5;    // Instantaneous Overflow fifo depth in bytes
+  uint32             max_oflow_fifo_depth = 6;    // Maximum Overflow fifo depth observed in bytes
+  uint32             buffer_occupancy     = 7;    // Instantaneous buffer occupancy in bytes
 }
 
 message QosClassOutputQueueStats {

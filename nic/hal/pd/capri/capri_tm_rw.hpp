@@ -247,4 +247,29 @@ capri_tm_dump_config_regs(void);
 void
 capri_tm_dump_all_regs(void);
 
+typedef struct tm_iq_stats_s {
+    uint64_t good_pkts_in;
+    uint64_t good_pkts_out;
+    uint64_t errored_pkts_in;
+    uint32_t oflow_fifo_depth;
+    uint32_t max_oflow_fifo_depth;
+    uint32_t buffer_occupancy;
+} __PACK__ tm_iq_stats_t;
+
+hal_ret_t
+capri_tm_get_iq_stats(tm_port_t port, tm_q_t iq, tm_iq_stats_t *iq_stats);
+
+hal_ret_t
+capri_tm_reset_iq_stats(tm_port_t port, tm_q_t iq);
+
+typedef struct tm_oq_stats_s {
+    uint32_t queue_depth;
+} __PACK__ tm_oq_stats_t;
+
+hal_ret_t
+capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats);
+
+hal_ret_t
+capri_tm_periodic_stats_update(void);
+
 #endif
