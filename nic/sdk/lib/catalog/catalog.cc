@@ -190,43 +190,43 @@ sdk_ret_t
 catalog::populate_mac_profiles(ptree &prop_tree)
 {
     populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x100g]),
-                         "mx_prog.mode_1x100g",
+                         "mx.mode_1x100g",
                          prop_tree);
 
     populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_2x25g_1x50g]),
-                         "mx_prog.mode_2x25g_1x50g",
+                         "mx.mode_2x25g_1x50g",
                          prop_tree);
 
     populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x40g]),
-                         "mx_prog.mode_1x40g",
+                         "mx.mode_1x40g",
                          prop_tree);
 
     populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x50g]),
-                         "mx_prog.mode_1x50g",
+                         "mx.mode_1x50g",
                          prop_tree);
 
     populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_2x40g]),
-                         "mx_prog.mode_2x40g",
+                         "mx.mode_2x40g",
                          prop_tree);
 
     populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_2x50g]),
-                         "mx_prog.mode_2x50g",
+                         "mx.mode_2x50g",
                          prop_tree);
 
     populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x50g_2x25g]),
-                         "mx_prog.mode_1x50g_2x25g",
+                         "mx.mode_1x50g_2x25g",
                          prop_tree);
 
     populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_4x25g]),
-                         "mx_prog.mode_4x25g",
+                         "mx.mode_4x25g",
                          prop_tree);
 
     populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_4x10g]),
-                         "mx_prog.mode_4x10g",
+                         "mx.mode_4x10g",
                          prop_tree);
 
     populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_4x1g]),
-                         "mx_prog.mode_4x1g",
+                         "mx.mode_4x1g",
                          prop_tree);
     return SDK_RET_OK;
 }

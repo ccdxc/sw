@@ -41,7 +41,7 @@
         {"port_num" : "8", "asic" : "0", "asic_port" : "7" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" }
     ],
 
-    "mx_prog" : {
+    "mx" : {
        "mode_1x100g" : {
           "glbl_mode" : "0x0",
           "channel"   : "0x1",
