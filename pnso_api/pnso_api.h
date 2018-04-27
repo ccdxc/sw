@@ -256,19 +256,15 @@ struct pnso_checksum_desc {
 };
 
 /**
- * TODO: This input (i.e. header) has to come from Netapp.
- *
  * struct pnso_decompaction_desc - represents the descriptor for decompaction
  * operation
- * @key:
- * @hdr_offset:
- * @rsvd: 
+ * @vvbn: specifies the block number within the Netapp's packed block
+ * header, with which the offset and length of data can be retrieved.
  *
  */
 struct pnso_decompaction_desc {
-	uint32_t key;
-	uint16_t hdr_offset;
-	uint16_t rsvd;
+	uint64_t vvbn:48,
+		 rsvd_1:16;
 };
 
 /*
