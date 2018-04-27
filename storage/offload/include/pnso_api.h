@@ -113,6 +113,15 @@ typedef int32_t pnso_error_t;
 #define PNSO_ERR_XTS_AXI_STATUS_ERROR		30004
 #define PNSO_ERR_XTS_AOL_DESC_ERROR		30005
 
+/* Error codes for hash/chksum */
+#define PNSO_ERR_HASH_BAD_PARAM                 40001
+#define PNSO_ERR_HASH_BAD_INPUT                 40002
+#define PNSO_ERR_HASH_UNSUPPORTED               40003
+
+/* Error codes for decompaction */
+#define PNSO_ERR_DECOMPACT_BAD_PARAM            50001
+#define PNSO_ERR_DECOMPACT_BAD_INPUT            50002
+
 /**
  * struct pnso_flat_buffer - describes a buffer with 'address and length'
  * @buf: contains the physical address of a buffer
@@ -192,7 +201,8 @@ struct pnso_crypto_desc {
  *
  */
 struct pnso_compression_desc {
-	uint16_t rsvd_1;
+	uint8_t do_pad;
+	uint8_t header_len;
 	uint16_t threshold_len;
 	uint32_t rsvd_2;
 }; 
@@ -203,6 +213,10 @@ struct pnso_compression_desc {
  *
  */
 struct pnso_decompression_desc {
+	uint8_t rsvd_1;
+	uint8_t header_len;
+	uint16_t rsvd_2;
+	uint32_t rsvd_3;
 }; 
 
 /**
@@ -239,9 +253,9 @@ struct pnso_pad_desc {
  *
  */
 struct pnso_decompaction_desc {
-	uint32_t key;
-	uint16_t hdr_offset;
-	uint16_t rsvd;
+	uint64_t key:48;
+	uint64_t is_uncompressed:1;
+	uint64_t rsvd:15;
 };
 
 /*
@@ -358,14 +372,18 @@ typedef void (*completion_t)(void *cb_ctx,
 /**
  * pnso_poll_fn: the caller to use this polling function to detect
  * completion of a request
+ * @sess_id: the session on which the request was submitted
  * @pnso_poll_ctx: specifies the context passed as arg to the polling function
  *
+ * Return:
+ *	bool
  */
-typedef void (*pnso_poller_fn)(void *pnso_poll_ctx);
+typedef bool (*poller_t)(uint32_t sess_id, void *poll_ctx);
 
 /**
  * pnso_submit_request() - routine that accepts one or more service(s) as a
  * request, and batches two or more such requests internally.
+ * @sess_id: session id, should be unique per thread or core
  * @batch_req: specifies whether the request is independent or belongs to a 
  * group of requests.
  * @num_services: specifies the number of services in the request.
@@ -383,13 +401,15 @@ typedef void (*pnso_poller_fn)(void *pnso_poll_ctx);
  *	EINVAL
  *
  */
-pnso_error_t pnso_submit_request(enum pnso_batch_request batch_req,
+pnso_error_t pnso_submit_request(uint32_t sess_id,
+		enum pnso_batch_request batch_req,
 		struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res,
 		completion_t cb,
 		void *cb_ctx,
-		void *pnso_poll_fn,
-		void *pnso_poll_ctx);
+		poller_t *poll_fn,
+		void **poll_ctx);
+
 /**
  * pnso_set_key_desc_idx() - sets the key descriptor index
  * @key1: specifies the key that was used to encrypt the data
@@ -402,8 +422,8 @@ pnso_error_t pnso_submit_request(enum pnso_batch_request batch_req,
  *	EINVAL
  *
  */
-pnso_error_t pnso_set_key_desc_idx(void *key1,
-		void *key2,
+pnso_error_t pnso_set_key_desc_idx(const void *key1,
+		const void *key2,
 		uint32_t key_size,
 		uint32_t key_idx);
 

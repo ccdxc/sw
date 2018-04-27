@@ -1,17 +1,9 @@
 #include <gtest/gtest.h>
 #include <vector>
+#include <unistd.h>
 
-#include "pnso_api.h"
-
-extern "C" int pnso_sim_init(uint32_t sess_count, uint8_t* scratch, uint32_t scratch_sz);
-extern "C" void *pnso_sim_get_session(uint32_t sess_id);
-extern "C" pnso_error_t pnso_sim_execute_request(
-                void *sess_handle,
-                struct pnso_service_request *svc_req,
-		struct pnso_service_result *svc_res,
-		completion_t cb,
-		void *cb_ctx);
-
+//#include "pnso_api.h"
+#include "storage/offload/src/sim/pnso_sim.h"
 
 using namespace std;
 
@@ -59,10 +51,10 @@ static inline void fill_data(uint8_t* data, uint32_t data_len)
     }    
 }
 
-TEST_F(pnso_sim_test, one_request) {
+TEST_F(pnso_sim_test, sync_request) {
     int rc;
     size_t alloc_sz;
-    void *sess;
+    uint32_t sess_id;
     struct pnso_service_request *svc_req;
     struct pnso_service_result *svc_res;
     struct pnso_buffer_list *src_buflist, *dst_buflist;
@@ -70,6 +62,7 @@ TEST_F(pnso_sim_test, one_request) {
     struct pnso_flat_buffer *buf;
     struct pnso_hash_or_chksum_tag tags[16];
     uint8_t output[16 * 4096];
+    char xts_iv[16] = "";
 
     memset(tags, 0, sizeof(tags));
 
@@ -80,8 +73,17 @@ TEST_F(pnso_sim_test, one_request) {
     /* Initialize session */
     rc = pnso_sim_init(2, session_mem, PNSO_TEST_SESSION_MEM);
     EXPECT_EQ(rc, 0);
-    sess = pnso_sim_get_session(1);
-    EXPECT_NE(sess, nullptr);
+    sess_id = 1;
+
+    /* Initialize key store */
+    char *tmp_key = nullptr;
+    uint32_t tmp_key_size = 0;
+    char abcd[] = "abcd";
+    pnso_sim_key_store_init((uint8_t*)malloc(64*1024), 64*1024);
+    pnso_set_key_desc_idx(abcd, abcd, 4, 1);
+    pnso_sim_get_key_desc_idx((void**)&tmp_key, (void**)&tmp_key, &tmp_key_size, 1);
+    EXPECT_EQ(tmp_key_size, 4);
+    EXPECT_EQ(0, memcmp(tmp_key, "abcd", 4));
 
     /* Allocate request and response */
     alloc_sz = sizeof(struct pnso_service_request) + PNSO_SVC_TYPE_MAX*sizeof(struct pnso_service);
@@ -124,6 +126,8 @@ TEST_F(pnso_sim_test, one_request) {
     /* Setup compression service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
     svc_req->svc[0].algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
+    svc_req->svc[0].req.cp_desc.do_pad = 0;
+    svc_req->svc[0].req.cp_desc.header_len = sizeof(struct pnso_compression_header);
     svc_req->svc[0].req.cp_desc.threshold_len = sizeof(g_data1) - 8;
 
     /* Setup pad service */
@@ -136,7 +140,7 @@ TEST_F(pnso_sim_test, one_request) {
     svc_res->status[2].tags = tags;
 
     /* Execute synchronously */
-    rc = pnso_sim_execute_request(sess, svc_req, svc_res, nullptr, nullptr);
+    rc = pnso_submit_request(sess_id, PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(svc_res->err, 0);
 
@@ -184,6 +188,9 @@ TEST_F(pnso_sim_test, one_request) {
     /* Setup encryption service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_ENCRYPT;
     svc_req->svc[0].algo_type = 0; /* TODO */
+    svc_req->svc[0].req.crypto_desc.key_desc_idx = 1;
+    svc_req->svc[0].req.crypto_desc.iv_addr = (uint64_t) xts_iv;
+
 
     /* Setup hash service */
     svc_req->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
@@ -192,7 +199,7 @@ TEST_F(pnso_sim_test, one_request) {
     svc_res->status[1].tags = tags;
 
     /* Execute synchronously */
-    rc = pnso_sim_execute_request(sess, svc_req, svc_res, nullptr, nullptr);
+    rc = pnso_submit_request(sess_id, PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(svc_res->err, 0);
 
@@ -231,6 +238,8 @@ TEST_F(pnso_sim_test, one_request) {
     /* Setup compression service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
     svc_req->svc[0].algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
+    svc_req->svc[0].req.cp_desc.do_pad = 0;
+    svc_req->svc[0].req.cp_desc.header_len = sizeof(struct pnso_compression_header);
     svc_req->svc[0].req.cp_desc.threshold_len = sizeof(g_data1) - 8;
 
     /* Setup pad service */
@@ -239,9 +248,11 @@ TEST_F(pnso_sim_test, one_request) {
     /* Setup encryption service */
     svc_req->svc[2].svc_type = PNSO_SVC_TYPE_ENCRYPT;
     svc_req->svc[2].algo_type = 0; /* TODO */
+    svc_req->svc[2].req.crypto_desc.key_desc_idx = 1;
+    svc_req->svc[2].req.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
     /* Execute synchronously */
-    rc = pnso_sim_execute_request(sess, svc_req, svc_res, nullptr, nullptr);
+    rc = pnso_submit_request(sess_id, PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(svc_res->err, 0);
 
@@ -289,6 +300,8 @@ TEST_F(pnso_sim_test, one_request) {
     /* Setup compression service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
     svc_req->svc[0].algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
+    svc_req->svc[0].req.cp_desc.do_pad = 0;
+    svc_req->svc[0].req.cp_desc.header_len = sizeof(struct pnso_compression_header);
     svc_req->svc[0].req.cp_desc.threshold_len = sizeof(g_data2) - 8;
 
     /* Setup pad service */
@@ -303,9 +316,11 @@ TEST_F(pnso_sim_test, one_request) {
     /* Setup encryption service */
     svc_req->svc[3].svc_type = PNSO_SVC_TYPE_ENCRYPT;
     svc_req->svc[3].algo_type = 0; /* TODO */
+    svc_req->svc[3].req.crypto_desc.key_desc_idx = 1;
+    svc_req->svc[3].req.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
     /* Execute synchronously */
-    rc = pnso_sim_execute_request(sess, svc_req, svc_res, nullptr, nullptr);
+    rc = pnso_submit_request(sess_id, PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(svc_res->err, 0);
 
@@ -359,6 +374,8 @@ TEST_F(pnso_sim_test, one_request) {
     /* Setup decryption service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_DECRYPT;
     svc_req->svc[0].algo_type = 0; /* TODO */
+    svc_req->svc[0].req.crypto_desc.key_desc_idx = 1;
+    svc_req->svc[0].req.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
     /* Setup hash service */
     svc_req->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
@@ -369,9 +386,10 @@ TEST_F(pnso_sim_test, one_request) {
     /* Setup decompression service */
     svc_req->svc[2].svc_type = PNSO_SVC_TYPE_DECOMPRESS;
     svc_req->svc[2].algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
+    svc_req->svc[2].req.dc_desc.header_len = sizeof(struct pnso_compression_header);
 
     /* Execute synchronously */
-    rc = pnso_sim_execute_request(sess, svc_req, svc_res, nullptr, nullptr);
+    rc = pnso_submit_request(sess_id, PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(svc_res->err, 0);
 
@@ -399,6 +417,141 @@ TEST_F(pnso_sim_test, one_request) {
     fill_data(g_data2, sizeof(g_data2));
 
 }
+
+static void completion_cb(void* cb_ctx, struct pnso_service_result *svc_res)
+{
+    int *cb_count = (int*) cb_ctx;
+    (*cb_count)++;
+}
+
+TEST_F(pnso_sim_test, async_request) {
+    int rc;
+    int cb_count = 0;
+    size_t alloc_sz;
+    uint32_t sess_id;
+    struct pnso_service_request *svc_req;
+    struct pnso_service_result *svc_res;
+    struct pnso_buffer_list *src_buflist, *dst_buflist;
+    uint32_t buflist_sz;
+    struct pnso_flat_buffer *buf;
+    struct pnso_hash_or_chksum_tag tags[16];
+    uint8_t output[16 * 4096];
+
+    memset(tags, 0, sizeof(tags));
+
+    /* Initialize input */
+    fill_data(g_data1, sizeof(g_data1));
+    fill_data(g_data2, sizeof(g_data2));
+
+    /* Initialize session */
+    rc = pnso_sim_init(2, session_mem, PNSO_TEST_SESSION_MEM);
+    EXPECT_EQ(rc, 0);
+    sess_id = 1;
+
+    /* Allocate request and response */
+    alloc_sz = sizeof(struct pnso_service_request) + PNSO_SVC_TYPE_MAX*sizeof(struct pnso_service);
+    svc_req = (struct pnso_service_request*) malloc(alloc_sz);
+    EXPECT_NE(svc_req, nullptr);
+    memset(svc_req, 0, alloc_sz);
+
+    alloc_sz = sizeof(struct pnso_service_result) + PNSO_SVC_TYPE_MAX*sizeof(struct pnso_service_status);
+    svc_res = (struct pnso_service_result*) malloc(alloc_sz);
+    EXPECT_NE(svc_res, nullptr);
+    memset(svc_res, 0, alloc_sz);
+
+    /* Allocate buffer descriptors */
+    buflist_sz = sizeof(struct pnso_buffer_list) + 16*sizeof(struct pnso_flat_buffer);
+    src_buflist = (struct pnso_buffer_list*) malloc(buflist_sz);
+    EXPECT_NE(src_buflist, nullptr);
+    dst_buflist = (struct pnso_buffer_list*) malloc(buflist_sz);
+    EXPECT_NE(dst_buflist, nullptr);
+
+    /* -------------- Test 1: Compression + Hash, single block -------------- */
+
+    /* Initialize request buffers */
+    memset(src_buflist, 0, buflist_sz);
+    memset(dst_buflist, 0, buflist_sz);
+    svc_req->src_buf = src_buflist;
+    svc_req->dst_buf = dst_buflist;
+    svc_req->src_buf->count = 1;
+    svc_req->src_buf->buffers[0].buf = (uint64_t) g_data1;
+    svc_req->src_buf->buffers[0].len = sizeof(g_data1);
+    svc_req->dst_buf->count = 16;
+    for (int i = 0; i < 16; i++) {
+        svc_req->dst_buf->buffers[i].buf = (uint64_t) (output + (4096 * i));
+        svc_req->dst_buf->buffers[i].len = 4096;
+    }
+
+    /* Setup 3 services */
+    svc_req->num_services = 3;
+    svc_res->num_services = 3;
+
+    /* Setup compression service */
+    svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
+    svc_req->svc[0].algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
+    svc_req->svc[0].req.cp_desc.do_pad = 0;
+    svc_req->svc[0].req.cp_desc.header_len = sizeof(struct pnso_compression_header);
+    svc_req->svc[0].req.cp_desc.threshold_len = sizeof(g_data1) - 8;
+
+    /* Setup pad service */
+    svc_req->svc[1].svc_type = PNSO_SVC_TYPE_PAD;
+
+    /* Setup hash service */
+    svc_req->svc[2].svc_type = PNSO_SVC_TYPE_HASH;
+    svc_req->svc[2].algo_type = PNSO_HASH_TYPE_SHA2_512;
+    svc_res->status[2].num_tags = 16;
+    svc_res->status[2].tags = tags;
+
+    /* Start worker thread */
+    pnso_sim_start_worker_thread(sess_id);
+
+    /* Submit async request */
+    void* poll_ctx;
+    poller_t poller;
+    rc = pnso_submit_request(sess_id, PNSO_BATCH_REQ_FLUSH, svc_req, svc_res, completion_cb, &cb_count, &poller, &poll_ctx);
+    EXPECT_EQ(rc, 0);
+
+    /* TODO: add gtest for batching + async */
+
+    /* Poll for completion */
+    int sleep_count = 0;
+    while (!poller(sess_id, poll_ctx)) {
+        usleep(1);
+        sleep_count++;
+    }
+    EXPECT_GT(sleep_count, 1);
+    EXPECT_LT(sleep_count, 1000);
+
+    /* Check that callback was called exactly once */
+    EXPECT_EQ(cb_count, 1);
+
+    /* Check compression status */
+    EXPECT_EQ(svc_req->dst_buf->count, 1);
+    EXPECT_EQ(svc_res->status[0].err, 0);
+    EXPECT_EQ(svc_res->status[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
+    EXPECT_GT(svc_res->status[0].output_data_len, 8);
+    EXPECT_LT(svc_res->status[0].output_data_len, sizeof(g_data1));
+
+    /* Check pad status */
+    EXPECT_EQ(svc_res->status[1].err, 0);
+    EXPECT_EQ(svc_res->status[1].svc_type, PNSO_SVC_TYPE_PAD);
+    buf = &svc_req->dst_buf->buffers[0];
+    EXPECT_EQ(buf->len, 4096);
+    EXPECT_EQ(((uint8_t*)buf->buf)[4095], 0);
+
+    /* Check hash status */
+    EXPECT_EQ(svc_res->status[2].err, 0);
+    EXPECT_EQ(svc_res->status[2].svc_type, PNSO_SVC_TYPE_HASH);
+    EXPECT_EQ(svc_res->status[2].num_tags, 1);
+    EXPECT_NE(svc_res->status[2].tags->hash_or_chksum[0], 0);
+
+
+    /* ---- Cleanup ----- */
+
+    /* Stop worker thread */
+    pnso_sim_stop_worker_thread(sess_id);
+}
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
