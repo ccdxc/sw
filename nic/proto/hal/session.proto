@@ -212,19 +212,39 @@ message FlowStatus {
 
 // TFTPInfo captures the operational status of TFTP ALG session
 message TFTPALGInfo {
-  uint32               parse_error    = 1; // Number of parse errors recorded for this session
-  uint32               unknown_opcode = 2; // Number of unknown opcode received
+  bool                 iscontrol      = 1; // Is this flow control/data TFTP flow
+  uint32               parse_error    = 2; // Number of parse errors recorded for this session
+  uint32               unknown_opcode = 3; // Number of unknown opcode received
 }
 
 // RPCInfo captures the operational status of SUNRPC/MSFT RPC ALG session
 message RPCALGInfo {
-  uint32               parse_error    = 1; // Number of parse errors recorded for this session
-  uint32               num_data_sess  = 2; // Number of active data sessions associated with this control session
+  bool                 iscontrol            = 1; // Is this flow control/data TFTP flow
+  uint32               parse_error          = 2; // Number of parse errors recorded for this session
+  uint32               num_data_sess        = 3; // Number of active data sessions associated with this control session
+  uint32               num_exp_flows        = 4; // Number of expected flows opened by this session
+  uint32               maxpkt_size_exceeded = 5; // Number of packets that exceeded maximum packet size while L7 reassembly 
 } 
 
 // SIPInfo captures the operational status of SIP ALG session
 message SIPALGInfo {
   uint32               parse_error    = 1; // Number of parse errors recorded for this session
+}
+
+// FTPInfo captures the operational status of FTP ALG session
+message FTPALGInfo {
+  bool                 iscontrol      = 1; // Is this flow control/data TFTP flow
+  uint32               parse_error    = 2; // Number of parse errors recorded for this session
+}
+
+// RTSPALGInfo captures the operational status of RTSP ALG session
+message RTSPALGInfo {
+  bool                 iscontrol      = 1; // Is this flow control/data TFTP flow
+}
+
+// DNSALGInfo captures the operational status of DNS ALG session
+message DNSALGInfo {
+  bool                 iscontrol      = 1; // Is this flow control/data TFTP flow
 }
 
 // SessionStatus captures the operational status of the session
@@ -239,6 +259,9 @@ message SessionStatus {
       TFTPALGInfo        tftp_info         = 7;   
       RPCALGInfo         rpc_info          = 8;
       SIPALGInfo         sip_info          = 9;
+      RTSPALGInfo        rtsp_info         = 10;
+      DNSALGInfo         dns_info          = 11;
+      FTPALGInfo         ftp_info          = 12;
   } 
 }
 

@@ -22,7 +22,8 @@ extern "C" hal_ret_t alg_rpc_init() {
     fte::feature_info_t info = {
         state_size:  0,
         state_init_fn: NULL,
-        sess_del_cb: alg_rpc_session_delete_cb
+        sess_del_cb: alg_rpc_session_delete_cb,
+        sess_get_cb: alg_rpc_session_get_cb,
     };
 
     fte::register_feature(FTE_FEATURE_ALG_RPC, alg_rpc_exec, info);

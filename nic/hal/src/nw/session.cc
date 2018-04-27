@@ -562,13 +562,15 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
 {
     vrf_t   *vrf = vrf_lookup_by_handle(session->vrf_handle);
 
+    response->mutable_status()->set_session_handle(session->hal_handle);
     response->mutable_spec()->mutable_meta()->set_vrf_id(vrf->vrf_id);
     //response->mutable_spec()->set_session_id(session->config.session_id);
     response->mutable_spec()->set_conn_track_en(session->config.conn_track_en);
     response->mutable_spec()->set_tcp_ts_option(session->config.tcp_ts_option);
 
     flow_to_flow_spec(session->iflow, response->mutable_spec()->mutable_initiator_flow());
-    flow_to_flow_spec(session->rflow, response->mutable_spec()->mutable_responder_flow());
+    if (session->rflow) 
+        flow_to_flow_spec(session->rflow, response->mutable_spec()->mutable_responder_flow());
 }
 
 static void
@@ -612,8 +614,9 @@ system_get_fill_rsp (session_t *session, SessionGetResponse *response)
     session_to_session_get_response(session, response);
     session_state_to_session_get_response(&session_state, response);
     response->set_api_status(types::API_STATUS_OK);
+    ret = fte::session_get(session, response);
 
-    return HAL_RET_OK;
+    return ret;
 }
 
 hal_ret_t

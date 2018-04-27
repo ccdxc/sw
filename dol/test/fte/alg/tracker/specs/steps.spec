@@ -443,6 +443,21 @@ steps:
             iflow   :
 
     - step:
+        id          : RFLOW_FTP_DATA_SYN
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 0
+        paddingsize : 6
+        fields      :
+            flags   : syn
+            seq     : 5000
+            ack     : 0
+            sport   : 20
+            dport   : 37075
+
+        state       :
+            rflow   :
+
+    - step:
         id          : RFLOW_FTP_DATA_SYN_ACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
@@ -456,6 +471,21 @@ steps:
       
         state       :
             rflow   :
+
+    - step:
+        id          : IFLOW_FTP_DATA_SYN_ACK
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
+        paddingsize : 6
+        fields      :
+            flags   : syn,ack
+            seq     : 6000
+            ack     : 5001
+            sport   : 37075
+            dport   : 20
+
+        state       :
+            iflow   :
 
     - step:
         id          : IFLOW_FTP_DATA_ACK
@@ -473,8 +503,23 @@ steps:
             iflow   :
 
     - step:
-        id          : IFLOW_FTP_DATA_FIN
-        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        id          : RFLOW_FTP_DATA_ACK
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 0
+        paddingsize : 6
+        fields      :
+            flags   : ack
+            seq     : 5001
+            ack     : 6001
+            sport   : 20
+            dport   : 37075
+
+        state       :
+            rflow   :
+
+    - step:
+        id          : RFLOW_FTP_DATA_FIN
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
         paddingsize : 6
         fields      :
@@ -488,8 +533,8 @@ steps:
             iflow   :
 
     - step:
-        id          : RFLOW_FTP_DATA_FIN
-        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        id          : IFLOW_FTP_DATA_FIN
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 0
         paddingsize : 6
         fields      :
@@ -503,8 +548,8 @@ steps:
             rflow   : 
  
     - step:
-        id          : IFLOW_FTP_DATA_FIN_ACK
-        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        id          : RFLOW_FTP_DATA_FIN_ACK
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
         paddingsize : 6
         fields      :

@@ -21,8 +21,9 @@ extern "C" hal_ret_t alg_tftp_init() {
     slab *tftpinfo_slab_ = NULL;
     fte::feature_info_t info = {
         state_size:  0,
-        state_init_fn: NULL,
-        sess_del_cb: alg_tftp_session_delete_cb
+        state_init_fn: NULL,        
+        sess_del_cb: alg_tftp_session_delete_cb,
+        sess_get_cb: alg_tftp_session_get_cb,
     };
 
     fte::register_feature(FTE_FEATURE_ALG_TFTP, alg_tftp_exec, info);

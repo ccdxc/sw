@@ -234,7 +234,7 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
             g_rtsp_state->cleanup_l4_sess(l4_sess);
         }
     } else {
-        l4_sess->session = ctx.session();
+        l4_sess->sess_hdl = ctx.session()->hal_handle;
         if (l4_sess->isCtrl) {
             // parse the payload
             process_control_message(ctx, (rtsp_session_t *)l4_sess->info);

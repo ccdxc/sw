@@ -33,12 +33,12 @@ modules:
               pkttemplate : ETH_IPV4_TCP
             - step        : ref://trackerstore/steps/id=RFLOW_FTP_PORT_RSP
               pkttemplate : ETH_IPV4_TCP
-            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_SYN
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_SYN
               cpu         : True
               pkttemplate : ETH_IPV4_TCP
-            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_SYN_ACK
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_SYN_ACK
               pkttemplate : ETH_IPV4_TCP
-            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_ACK
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_ACK
               pkttemplate : ETH_IPV4_TCP
             - step        : ref://trackerstore/steps/id=IFLOW_FIN
               pkttemplate : ETH_IPV4_TCP
@@ -48,13 +48,13 @@ modules:
               cpu         : True
             - step        : ref://trackerstore/steps/id=IFLOW_ACK
               pkttemplate : ETH_IPV4_TCP
-            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_FIN
-              cpu         : True
-              pkttemplate : ETH_IPV4_TCP
             - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_FIN
               cpu         : True
               pkttemplate : ETH_IPV4_TCP
-            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_FIN_ACK
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_FIN
+              cpu         : True
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_FIN_ACK
               pkttemplate : ETH_IPV4_TCP
               fte_done    : True
   
@@ -80,12 +80,12 @@ modules:
               pkttemplate : ETH_IPV6_TCP
             - step        : ref://trackerstore/steps/id=RFLOW_FTP_EPRT_RSP
               pkttemplate : ETH_IPV6_TCP
-            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_SYN
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_SYN
               cpu         : True
               pkttemplate : ETH_IPV6_TCP
-            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_SYN_ACK
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_SYN_ACK
               pkttemplate : ETH_IPV6_TCP
-            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_ACK
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_ACK
               pkttemplate : ETH_IPV6_TCP
               fte_done    : True
 

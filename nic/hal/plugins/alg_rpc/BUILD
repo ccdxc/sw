@@ -30,17 +30,13 @@ cc_library(
 
 cc_test(
     name = "alg_rpc_test",
-    srcs = glob(["test/*.cc"]),
+    srcs = glob(["test/*.cc", "test/*.hpp"]),
     deps = [
-           "@sdk//obj:sdk_thread",
-           "//nic:gen_proto_includes",
-           "//nic:grpc_includes",
-           "//nic:google_includes",
-           "@sdk//obj:sdk_logger",
            "//nic/hal/plugins/alg_utils:alg_utils",
-           "//nic/hal/plugins/alg_rpc:alg_rpc",
+           ":alg_rpc",
+           "//nic/fte:fte_base_test",
            ] + gl_deps_list + test_deps_list,
-    linkopts = gl_linkopts_list,
+    linkopts =  ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
     tags = ["gtests"],
-    copts = sdk_copts
+    copts = sdk_copts,
 )

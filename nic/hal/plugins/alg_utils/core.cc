@@ -20,6 +20,7 @@ namespace alg_utils {
  */
 static inline int xdigit2bin(char c, int delim)
 {
+    HAL_TRACE_DEBUG("Char {} delim {}", c, delim);
     if (c == delim || c == '\0')
         return IN6PTON_DELIM;
     if (c == ':')
@@ -195,6 +196,7 @@ cont:
         }
         s++;
         srclen--;
+        HAL_TRACE_DEBUG("Dst: {}", *d);
     }
 
     i = 15; d--;
@@ -288,7 +290,7 @@ alg_state_t *alg_state::factory(const char* feature_name, slab *app_sess_slab,
 
 static bool app_sess_walk_cb(void *entry, void *ctxt) {
      ((alg_state_t *)ctxt)->cleanup_app_session((app_session_t *)entry);
-     return TRUE;
+     return true;
 }
 
 alg_state::~alg_state() {
@@ -462,8 +464,10 @@ l4_alg_status_t *alg_state::get_ctrl_l4sess(app_session_t *app_sess) {
         l4_alg_status_t *l4_sess = dllist_entry(lentry,
                                   l4_alg_status_t, l4_sess_lentry);
         HAL_ASSERT(l4_sess != NULL);
-        if (l4_sess->isCtrl == TRUE)
+        if (l4_sess->isCtrl == true) {
+            HAL_SPINLOCK_UNLOCK(&app_sess->slock);            
             return l4_sess;
+        }
     }
     HAL_SPINLOCK_UNLOCK(&app_sess->slock);
 

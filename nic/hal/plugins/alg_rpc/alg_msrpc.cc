@@ -215,14 +215,15 @@ uint8_t __parse_cn_common_hdr(const uint8_t *pkt, uint32_t offset,
 static p_cont_elem_t ctxt_elem[MAX_CONTEXT];
 static p_result_t    rslt[MAX_CONTEXT];
 
-uint32_t __parse_msrpc_bind_hdr(const uint8_t *pkt,
-                               uint32_t dlen, msrpc_bind_hdr_t *hdr) {
-    static uint32_t BIND_HDR_SZ = (sizeof(msrpc_bind_hdr_t) -
+uint32_t __parse_msrpc_bind_hdr(const uint8_t *pkt, uint32_t dlen, 
+                        msrpc_bind_hdr_t *hdr, rpc_info_t *rpc_info) {
+    static uint32_t BIND_HDR_SZ = (sizeof(msrpc_bind_hdr_t) - 
                                    sizeof(hdr->context_list.cont_elem));
     uint32_t offset = 0;
     uint8_t ele = 0, xferele = 0;
 
     if (dlen < BIND_HDR_SZ) {
+        incr_parse_error(rpc_info);
         HAL_TRACE_ERR("Packet Len {} is smaller than the Bind Hdr size {}",
                        dlen, BIND_HDR_SZ);
         return 0;
@@ -241,6 +242,7 @@ uint32_t __parse_msrpc_bind_hdr(const uint8_t *pkt,
     while (ele < hdr->context_list.num_elm) {
        xferele = 0;
        if ((dlen-offset) < sizeof(p_cont_elem_t)) {
+           incr_parse_error(rpc_info);
            HAL_TRACE_ERR("Packet Len {} is smaller than ctxt elem size {}",
                   (dlen-offset), (sizeof(p_cont_elem_t)*hdr->context_list.num_elm));
            return 0;
@@ -267,13 +269,14 @@ uint32_t __parse_msrpc_bind_hdr(const uint8_t *pkt,
     return offset;
 }
 
-uint32_t __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen,
-                                   msrpc_bind_ack_hdr_t *hdr) {
+uint32_t __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen, 
+                          msrpc_bind_ack_hdr_t *hdr, rpc_info_t *rpc_info) {
     static uint32_t BIND_ACK_SZ = (sizeof(msrpc_bind_ack_hdr_t) - 4);
     uint32_t offset = 0;
     uint8_t ele = 0;
 
     if (dlen < BIND_ACK_SZ) {
+        incr_parse_error(rpc_info);
         HAL_TRACE_ERR("Packet Len {} is smaller than bind ack size {}",
                        (dlen-offset), BIND_ACK_SZ);
         return 0;
@@ -293,6 +296,7 @@ uint32_t __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen,
 
     while (ele < hdr->rlist.num_rslts) {
         if ((dlen-offset) < sizeof(p_result_t)) {
+            incr_parse_error(rpc_info);
             HAL_TRACE_ERR("Packet Len {} is smaller than bind rslt size {}",
                        (dlen-offset), (sizeof(p_result_t)*hdr->rlist.num_rslts));
             return 0;
@@ -308,11 +312,13 @@ uint32_t __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen,
 }
 
 uint32_t __parse_msrpc_req_hdr(const uint8_t *pkt, uint32_t dlen,
-                              msrpc_req_hdr_t *hdr, uint8_t is64bit) {
+                               msrpc_req_hdr_t *hdr, uint8_t is64bit, 
+                               rpc_info_t *rpc_info) {
     static uint32_t REQ_PDU_SZ = sizeof(msrpc_req_hdr_t);
     uint32_t offset = 0;
 
     if (dlen < REQ_PDU_SZ) {
+        incr_parse_error(rpc_info);
         HAL_TRACE_ERR("Packet Len {} is smaller than msrpc req size {}",
                        (dlen-offset), REQ_PDU_SZ);
         return 0;
@@ -330,11 +336,13 @@ uint32_t __parse_msrpc_req_hdr(const uint8_t *pkt, uint32_t dlen,
 }
 
 uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
-                          msrpc_map_twr_t *twr, uint8_t is64bit) {
+                                   msrpc_map_twr_t *twr, uint8_t is64bit, 
+                                   rpc_info_t *rpc_info) {
     uint32_t offset = 0;
 
     if (is64bit) {
         if (dlen < 16) {
+            incr_parse_error(rpc_info);       
             HAL_TRACE_ERR("Map twr len {} is smaller than the header size 16 bytes",
                        (dlen-offset));
             return 0;
@@ -343,6 +351,7 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
         twr->twr_lgth = __pack_uint64(pkt, &offset, data_rep);
     } else {
         if (dlen < 8) {
+            incr_parse_error(rpc_info);
             HAL_TRACE_ERR("Map twr Len {} is smaller than the header size 8 bytes",
                        (dlen-offset));
             return 0;
@@ -354,6 +363,7 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
         return offset;
 
     if ((dlen-offset) < 6) {
+        incr_parse_error(rpc_info);
         HAL_TRACE_ERR("Map floors len {} is smaller than the header size 6 bytes",
                        (dlen-offset));
         return 0;
@@ -371,6 +381,7 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
         switch (twr->twr_arr.flrs[i].protocol) {
             case EPM_PROTO_UUID:
                 if ((dlen-offset) < UUID_PROTO_SZ) {
+                    incr_parse_error(rpc_info);
                     HAL_TRACE_ERR("Proto UUID Len {} is smaller than the header size {}",
                        (dlen-offset), UUID_PROTO_SZ);
                     return 0;
@@ -384,6 +395,7 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
             case EPM_PROTO_TCP:
             case EPM_PROTO_UDP:
                 if ((dlen-offset) < L4_PROTO_SZ) {
+                    incr_parse_error(rpc_info);
                     HAL_TRACE_ERR("L4 Proto Len {} is smaller than the header size {}",
                        (dlen-offset), L4_PROTO_SZ);
                     return 0;
@@ -394,6 +406,7 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
 
             case EPM_PROTO_IP:
                 if ((dlen-offset) < L3_PROTO_SZ) {
+                    incr_parse_error(rpc_info);
                     HAL_TRACE_ERR("L3 Proto Len {} is smaller than the header size {}",
                        (dlen-offset), L3_PROTO_SZ);
                     return 0;
@@ -408,6 +421,7 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
                 offset += (twr->twr_arr.flrs[i].lhs_length - 1);
                 if ((dlen-offset) < (uint32_t)(\
                            (twr->twr_arr.flrs[i].lhs_length - 1) + DEFAULT_PROTO_SZ)) {
+                    incr_parse_error(rpc_info);
                     HAL_TRACE_ERR("Default Proto Len {} is smaller than the header size {}",
                        (dlen-offset), (uint32_t)((twr->twr_arr.flrs[i].lhs_length - 1) + DEFAULT_PROTO_SZ));
                     return 0;
@@ -421,16 +435,18 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
     return offset;
 }
 
-uint32_t __parse_msrpc_epm_req_hdr(const uint8_t *pkt, uint32_t dlen,
-                          msrpc_epm_req_hdr_t *hdr, uint8_t is64bit) {
+uint32_t __parse_msrpc_epm_req_hdr(const uint8_t *pkt, uint32_t dlen, 
+                                   msrpc_epm_req_hdr_t *hdr, uint8_t is64bit, 
+                                   rpc_info_t *rpc_info) {
     static uint32_t MSRPC_EPM_REQ = (sizeof(msrpc_handle_t) + sizeof(hdr->max_twrs));
     uint32_t offset = 0;
-
-    offset += __parse_msrpc_epm_map_twr(pkt, dlen, &hdr->twr, is64bit);
+    
+    offset += __parse_msrpc_epm_map_twr(pkt, dlen, &hdr->twr, is64bit, rpc_info);
     if (!offset)
         return offset;
 
     if ((dlen-offset) < MSRPC_EPM_REQ) {
+        incr_parse_error(rpc_info); 
         HAL_TRACE_ERR("MSRPC REQ Len {} is smaller than the header size {}",
                        (dlen-offset), MSRPC_EPM_REQ);
         return 0;
@@ -443,11 +459,12 @@ uint32_t __parse_msrpc_epm_req_hdr(const uint8_t *pkt, uint32_t dlen,
 }
 
 uint32_t __parse_msrpc_rsp_hdr(const uint8_t *pkt, uint32_t dlen,
-                      msrpc_rsp_hdr_t *hdr) {
+                               msrpc_rsp_hdr_t *hdr, rpc_info_t *rpc_info) {
     static uint32_t RSP_PDU_SZ = sizeof(msrpc_rsp_hdr_t);
     uint32_t offset = 0;
 
     if (dlen < RSP_PDU_SZ) {
+        incr_parse_error(rpc_info);
         HAL_TRACE_ERR("PDU Response Len {} is smaller than the header size {}",
                        dlen, RSP_PDU_SZ);
         return 0;
@@ -462,13 +479,16 @@ uint32_t __parse_msrpc_rsp_hdr(const uint8_t *pkt, uint32_t dlen,
 }
 
 uint32_t __parse_msrpc_epm_rsp_hdr(const uint8_t *pkt, uint32_t dlen,
-                      msrpc_epm_rsp_hdr_t *hdr, uint8_t is64bit) {
-    static uint32_t EPM_RSP_SZ = (sizeof(msrpc_epm_rsp_hdr_t) - sizeof(msrpc_map_twr_t));
+                                   msrpc_epm_rsp_hdr_t *hdr, uint8_t is64bit, 
+                                   rpc_info_t *rpc_info) {
+    static uint32_t EPM_RSP_SZ = (sizeof(msrpc_epm_rsp_hdr_t) - \
+                                  sizeof(msrpc_map_twr_t));
     static uint32_t EPM_32BIT_RSP_SZ = (EPM_RSP_SZ - 12);
     uint32_t  offset = 0, twr_offset=0;
 
     if ((is64bit && dlen < EPM_RSP_SZ) ||
         (!is64bit && dlen < EPM_32BIT_RSP_SZ)) {
+        incr_parse_error(rpc_info);
         HAL_TRACE_ERR("EPM RESP Len {} is smaller than the header size {}",
                        dlen, (is64bit)?EPM_RSP_SZ:EPM_32BIT_RSP_SZ);
         return 0;
@@ -486,7 +506,8 @@ uint32_t __parse_msrpc_epm_rsp_hdr(const uint8_t *pkt, uint32_t dlen,
         hdr->actual_cnt = __pack_uint32(pkt, &offset, data_rep);
     }
 
-    twr_offset = __parse_msrpc_epm_map_twr(&pkt[offset], (dlen-offset), &hdr->twr, is64bit);
+    twr_offset = __parse_msrpc_epm_map_twr(&pkt[offset], (dlen-offset), 
+                                           &hdr->twr, is64bit, rpc_info);
     if (!twr_offset)
         return twr_offset;
 
@@ -512,31 +533,37 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
             g_rpc_state->cleanup_l4_sess(l4_sess);
         }
     } else {
-        l4_sess->session = ctx.session();
-        if (l4_sess->isCtrl == TRUE &&  /* Control session */
-            (ctx.key().proto == IP_PROTO_UDP)) {
-            // Connection-Less MSRPC
-            // Set the responder flow key & mark sport as 0
-            key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
-            key.sport = 0;
+        l4_sess->sess_hdl = ctx.session()->hal_handle;
+        if (l4_sess->isCtrl == true) {  /* Control session */
+            if (ctx.key().proto == IP_PROTO_UDP) {
+                // Connection-Less MSRPC
+                // Set the responder flow key & mark sport as 0
+                key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
+                key.sport = 0;
 
-            /*
-             * Add an expected flow here for control session
-             */
-            ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session,
-                                                       key, &exp_flow);
-            HAL_ASSERT(ret == HAL_RET_OK);
-            exp_flow->entry.handler = expected_flow_handler;
-            exp_flow->alg = nwsec::APP_SVC_MSFT_RPC;
-            /*
-             * Move the RPC info for expected flow from L4 session
-             * to Expected flow
-             */
-            exp_flow->info = l4_sess->info;
-            HAL_TRACE_DEBUG("Setting expected flow {:p}", (void *)exp_flow);
-            l4_sess->info = (rpc_info_t *)g_rpc_state->alg_info_slab()->alloc();
-            HAL_ASSERT(l4_sess->info != NULL);
+                /*
+                 * Add an expected flow here for control session
+                 */
+                ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session,
+                                                             key, &exp_flow);
+                HAL_ASSERT(ret == HAL_RET_OK);
+                exp_flow->entry.handler = expected_flow_handler;
+                exp_flow->alg = nwsec::APP_SVC_MSFT_RPC;
+                /*
+                 * Move the RPC info for expected flow from L4 session
+                 * to Expected flow
+                 */
+                exp_flow->info = l4_sess->info;
+                HAL_TRACE_DEBUG("Setting expected flow {:p}", (void *)exp_flow);
+                l4_sess->info = (rpc_info_t *)g_rpc_state->alg_info_slab()->alloc();
+                HAL_ASSERT(l4_sess->info != NULL);
+            }
         } else { /* Data session */
+            l4_alg_status_t   *ctrl_sess =  g_rpc_state->get_ctrl_l4sess(\
+                                                 l4_sess->app_session);
+ 
+            HAL_ASSERT(ctrl_sess);
+            incr_data_sess((rpc_info_t *)ctrl_sess->info); 
             if (ctx.key().proto == IP_PROTO_UDP) {
                 /*
                  * Connection-Less MSRPC - Data session flow has been
@@ -545,8 +572,8 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
                  * l4 session list
                  */
                 g_rpc_state->move_expflow_to_l4sess(l4_sess->app_session, l4_sess);
-                l4_sess->alg = nwsec::APP_SVC_NONE;
-                memset(&(l4_sess->info), 0, sizeof(rpc_info_t));
+                memset(l4_sess->info, 0, sizeof(rpc_info_t));
+                l4_sess->alg = nwsec::APP_SVC_MSFT_RPC;
                 HAL_TRACE_DEBUG("Move expected flow to l4 session");
             }
         }
@@ -584,7 +611,7 @@ static void reset_rpc_info(rpc_info_t *rpc_info) {
     if (rpc_info->pkt_len && rpc_info->pkt != NULL) {
         HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);
     }
-    memset(rpc_info, 0, sizeof(rpc_info_t));
+    //memset(rpc_info, 0, sizeof(rpc_info_t));
     rpc_info->pkt_type = PDU_NONE;
     rpc_info->callback = parse_msrpc_cn_control_flow;
 }
@@ -629,6 +656,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                 pkt_len = rpc_info->pkt_len;
             } else {
                 HAL_TRACE_ERR("Packet len execeeded the Max ALG Fragmented packet sz");
+                incr_max_pkt_sz(rpc_info);
                 reset_rpc_info(rpc_info);
             }
         }
@@ -651,6 +679,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
             rpc_info->pkt_len += (pkt_len-pgm_offset);
         } else {
             HAL_TRACE_ERR("Packet len execeeded the Max ALG Fragmented packet sz");
+            incr_max_pkt_sz(rpc_info);
             reset_rpc_info(rpc_info);
         }
 
@@ -671,8 +700,8 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                 msrpc_bind_hdr_t bind_hdr;
                 uint8_t ctxt_id = 0;
 
-                pgm_offset = __parse_msrpc_bind_hdr(&pkt[pgm_offset],
-                                                    (pkt_len-pgm_offset), &bind_hdr);
+                pgm_offset = __parse_msrpc_bind_hdr(&pkt[pgm_offset], 
+                                        (pkt_len-pgm_offset), &bind_hdr, rpc_info);
                 if (!pgm_offset) {
                     reset_rpc_info(rpc_info);
                     return HAL_RET_ERR;
@@ -698,9 +727,9 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
             if (rpc_hdr.ptype == PDU_BIND_ACK ||
                 rpc_hdr.ptype == PDU_ALTER_CTXT_ACK) {
                 msrpc_bind_ack_hdr_t bind_ack;
-
-                pgm_offset = __parse_msrpc_bind_ack_hdr(&pkt[pgm_offset],
-                                                         (pkt_len-pgm_offset), &bind_ack);
+ 
+                pgm_offset = __parse_msrpc_bind_ack_hdr(&pkt[pgm_offset], 
+                                             (pkt_len-pgm_offset), &bind_ack, rpc_info);
                 if (!pgm_offset) {
                     reset_rpc_info(rpc_info);
                     return HAL_RET_ERR;
@@ -730,17 +759,17 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                 msrpc_req_hdr_t     msrpc_req;
                 msrpc_epm_req_hdr_t epm_req;
                 msrpc_twr_p_t       twr_arr;
-
-                epm_offset = __parse_msrpc_req_hdr(&pkt[pgm_offset], (pkt_len-pgm_offset),
-                                                   &msrpc_req, rpc_info->msrpc_64bit);
+          
+                epm_offset = __parse_msrpc_req_hdr(&pkt[pgm_offset], (pkt_len-pgm_offset), 
+                                              &msrpc_req, rpc_info->msrpc_64bit, rpc_info);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
                     return HAL_RET_ERR;
                 }
                 epm_offset += pgm_offset;
 
-                epm_offset = __parse_msrpc_epm_req_hdr(&pkt[epm_offset], (pkt_len-epm_offset),
-                                                       &epm_req, rpc_info->msrpc_64bit);
+                epm_offset = __parse_msrpc_epm_req_hdr(&pkt[epm_offset], (pkt_len-epm_offset), 
+                                                       &epm_req, rpc_info->msrpc_64bit, rpc_info);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
                     return HAL_RET_ERR;
@@ -774,16 +803,16 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                 msrpc_epm_rsp_hdr_t epm_rsp;
                 msrpc_twr_p_t       twr_arr;
 
-                epm_offset = __parse_msrpc_rsp_hdr(&pkt[pgm_offset],
-                                                   (pkt_len-pgm_offset), &msrpc_rsp);
+                epm_offset = __parse_msrpc_rsp_hdr(&pkt[pgm_offset], 
+                                                 (pkt_len-pgm_offset), &msrpc_rsp, rpc_info);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
                     return HAL_RET_ERR;
                 }
                 epm_offset += pgm_offset;
 
-                epm_offset = __parse_msrpc_epm_rsp_hdr(&pkt[epm_offset], (pkt_len-epm_offset),
-                                               &epm_rsp, rpc_info->msrpc_64bit);
+                epm_offset = __parse_msrpc_epm_rsp_hdr(&pkt[epm_offset], (pkt_len-epm_offset), 
+                                               &epm_rsp, rpc_info->msrpc_64bit, rpc_info);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
                     return HAL_RET_ERR;
@@ -843,9 +872,11 @@ hal_ret_t parse_msrpc_dg_control_flow(fte::ctx_t& ctx, l4_alg_status_t *exp_flow
     }
 
     HAL_TRACE_DEBUG("Payload offset: {}", rpc_msg_offset);
+    rpc_info = (rpc_info_t *)exp_flow->info;
     if (ctx.pkt_len() < (rpc_msg_offset + sizeof(msrpc_dg_common_hdr_t))) {
         HAL_TRACE_ERR("Cannot process further -- packet len: {} is smaller than expected: {}",
                        ctx.pkt_len(), (rpc_msg_offset + sizeof(msrpc_dg_common_hdr_t)));
+        incr_parse_error(rpc_info);
         return HAL_RET_ERR;
     }
 
@@ -853,7 +884,6 @@ hal_ret_t parse_msrpc_dg_control_flow(fte::ctx_t& ctx, l4_alg_status_t *exp_flow
 
     HAL_TRACE_DEBUG("Parsed MSRPC Connectionless header: {}", rpc_hdr);
 
-    rpc_info = (rpc_info_t *)exp_flow->info;
     if (rpc_info->pkt_type == PDU_NONE) {
         /*
          * Possibly the first packet received

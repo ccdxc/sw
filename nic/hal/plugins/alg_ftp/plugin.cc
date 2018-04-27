@@ -23,7 +23,8 @@ extern "C" hal_ret_t alg_ftp_init() {
     fte::feature_info_t info = {
         state_size:  0,
         state_init_fn: NULL,
-        sess_del_cb: alg_ftp_session_delete_cb
+        sess_del_cb: alg_ftp_session_delete_cb,
+        sess_get_cb: alg_ftp_session_get_cb,
     };
 
     fte::register_feature(FTE_FEATURE_ALG_FTP, alg_ftp_exec, info);
@@ -43,8 +44,8 @@ extern "C" hal_ret_t alg_ftp_init() {
                                     true, true, true);
     HAL_ASSERT_RETURN((ftpinfo_slab_ != NULL), HAL_RET_OOM);
 
-    g_ftp_state = alg_state_t::factory(FTE_FEATURE_ALG_FTP.c_str(),
-                                  appsess_slab_, l4sess_slab_, ftpinfo_slab_, NULL, NULL);
+    g_ftp_state = alg_state_t::factory(FTE_FEATURE_ALG_FTP.c_str(), 
+                                  appsess_slab_, l4sess_slab_, ftpinfo_slab_, NULL, ftpinfo_cleanup_hdlr);
 
     return HAL_RET_OK;
 }

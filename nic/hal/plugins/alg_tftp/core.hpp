@@ -41,6 +41,7 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx);
 void tftpinfo_cleanup_hdlr(l4_alg_status_t *l4_sess);
 typedef hal_ret_t (*tftp_cb_t)(fte::ctx_t& ctx, l4_alg_status_t *exp_flow);
 fte::pipeline_action_t alg_tftp_session_delete_cb(fte::ctx_t &ctx);
+fte::pipeline_action_t alg_tftp_session_get_cb(fte::ctx_t &ctx);
 
 /*
  * Data Structures

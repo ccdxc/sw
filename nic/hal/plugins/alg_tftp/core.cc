@@ -26,6 +26,41 @@ static void incr_unknown_opcode(l4_alg_status_t *sess) {
 }
 
 /*
+ * APP Session get handler
+ */
+fte::pipeline_action_t alg_tftp_session_get_cb(fte::ctx_t &ctx) {
+    fte::feature_session_state_t  *alg_state = NULL;
+    SessionGetResponse            *sess_resp = ctx.sess_get_resp();
+    l4_alg_status_t               *l4_sess = NULL;
+
+    if (!ctx.sess_get_resp() || ctx.role() != hal::FLOW_ROLE_INITIATOR)
+        return fte::PIPELINE_CONTINUE;
+
+    alg_state = ctx.feature_session_state();
+    if (alg_state != NULL) {
+        l4_sess = (l4_alg_status_t *)alg_status(alg_state);
+        sess_resp->mutable_status()->set_alg(nwsec::APP_SVC_TFTP);
+        
+        if (l4_sess->isCtrl == TRUE) {
+            tftp_info_t *info = ((tftp_info_t *)l4_sess->info);
+            if (info) {
+                sess_resp->mutable_status()->mutable_tftp_info()->\
+                                 set_parse_error(info->parse_errors);
+                sess_resp->mutable_status()->mutable_tftp_info()->\
+                                set_unknown_opcode(info->unknown_opcode);
+            }
+            sess_resp->mutable_status()->mutable_tftp_info()->\
+                                set_iscontrol(true);
+        } else {
+            sess_resp->mutable_status()->mutable_tftp_info()->\
+                                set_iscontrol(false);
+        }
+    }
+
+    return fte::PIPELINE_CONTINUE;
+}
+
+/*
  *  APP Session delete handler
  */
 fte::pipeline_action_t alg_tftp_session_delete_cb(fte::ctx_t &ctx) {
@@ -48,6 +83,7 @@ fte::pipeline_action_t alg_tftp_session_delete_cb(fte::ctx_t &ctx) {
                  * hanging off of this ctrl session.
                  */
                  g_tftp_state->cleanup_app_session(l4_sess->app_session);
+                 return fte::PIPELINE_CONTINUE;
             } else {
                  /*
                   * Dont cleanup if control session is timed out
@@ -64,7 +100,7 @@ fte::pipeline_action_t alg_tftp_session_delete_cb(fte::ctx_t &ctx) {
         if (dllist_empty(&app_sess->exp_flow_lhead) &&
             dllist_count(&app_sess->l4_sess_lhead) == 1 &&
             ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
-                      l4_alg_status_t, l4_sess_lentry))->session == NULL) {
+                      l4_alg_status_t, l4_sess_lentry))->sess_hdl == HAL_HANDLE_INVALID) {
             /*
              * If this was the last session hanging and there is no
              * HAL session for control session. This is the right time
@@ -83,6 +119,9 @@ fte::pipeline_action_t alg_tftp_session_delete_cb(fte::ctx_t &ctx) {
 void tftpinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
     if (l4_sess->info != NULL)
         g_tftp_state->alg_info_slab()->free((tftp_info_t *)l4_sess->info);
+
+    if (l4_sess->sess_hdl != HAL_HANDLE_INVALID) 
+        dllist_del(&l4_sess->fte_feature_state.session_feature_lentry);
 }
 
 /*
@@ -125,7 +164,7 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
         }
     } else {
         HAL_TRACE_DEBUG("In TFTP Completion handler ctrl");
-        l4_sess->session = ctx.session();
+        l4_sess->sess_hdl = ctx.session()->hal_handle;
         if (l4_sess->isCtrl == TRUE) { /* Control session */
             // Set the responder flow key & mark sport as 0
             key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);

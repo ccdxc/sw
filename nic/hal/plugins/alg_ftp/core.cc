@@ -22,12 +22,60 @@ static void incr_parse_error(ftp_info_t *info) {
 }
 
 /*
+ * FTP Info cleanup handler
+ */
+void ftpinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
+    if (l4_sess->info != NULL)
+        g_ftp_state->alg_info_slab()->free((ftp_info_t *)l4_sess->info);
+
+    if (l4_sess->sess_hdl != HAL_HANDLE_INVALID)
+        dllist_del(&l4_sess->fte_feature_state.session_feature_lentry);
+}
+
+/*
+ * APP Session get handler
+ */
+fte::pipeline_action_t alg_ftp_session_get_cb(fte::ctx_t &ctx) {
+    fte::feature_session_state_t  *alg_state = NULL;
+    SessionGetResponse            *sess_resp = ctx.sess_get_resp();
+    l4_alg_status_t               *l4_sess = NULL;
+
+    if (!ctx.sess_get_resp() || ctx.role() != hal::FLOW_ROLE_INITIATOR)
+        return fte::PIPELINE_CONTINUE;
+
+    alg_state = ctx.feature_session_state();
+    if (alg_state != NULL) {
+        l4_sess = (l4_alg_status_t *)alg_status(alg_state);
+        sess_resp->mutable_status()->set_alg(nwsec::APP_SVC_FTP);
+
+        if (l4_sess->isCtrl == TRUE) {
+            ftp_info_t *info = ((ftp_info_t *)l4_sess->info);
+            if (info) {
+                sess_resp->mutable_status()->mutable_ftp_info()->\
+                                 set_parse_error(info->parse_errors);
+            }
+            sess_resp->mutable_status()->mutable_ftp_info()->\
+                                set_iscontrol(true);
+        } else {
+            sess_resp->mutable_status()->mutable_ftp_info()->\
+                                set_iscontrol(false);
+        }
+    }
+
+    return fte::PIPELINE_CONTINUE;
+}
+
+/*
  * APP session delete handler
  */
 fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
     fte::feature_session_state_t  *alg_state = NULL;
     l4_alg_status_t               *l4_sess =  NULL;
     app_session_t                 *app_sess = NULL;
+
+    if (ctx.role() != hal::FLOW_ROLE_INITIATOR) {
+        return fte::PIPELINE_CONTINUE;
+    }
 
     alg_state = ctx.feature_session_state();
     if (alg_state != NULL) {
@@ -44,7 +92,7 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
                  * hanging off of this ctrl session.
                  */
                  g_ftp_state->cleanup_app_session(l4_sess->app_session);
-                 HAL_TRACE_DEBUG("Cleaned up app session");
+                 return fte::PIPELINE_CONTINUE;
             } else if ((ctx.session()->iflow->state >= session::FLOW_TCP_STATE_FIN_RCVD) ||
                        (ctx.session()->rflow &&
                         (ctx.session()->rflow->state >= session::FLOW_TCP_STATE_FIN_RCVD))) {
@@ -53,7 +101,7 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
                  * We let the HAL cleanup happen while we keep the
                  * app_session state if there are data sessions
                  */
-                l4_sess->session = NULL;
+                l4_sess->sess_hdl = HAL_HANDLE_INVALID;
                 HAL_TRACE_DEBUG("Received FIN/RST.. keeping the control context");
                 return fte::PIPELINE_CONTINUE;
             } else {
@@ -73,14 +121,13 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
         if (dllist_empty(&app_sess->exp_flow_lhead) &&
             dllist_count(&app_sess->l4_sess_lhead) == 1 &&
             ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
-                      l4_alg_status_t, l4_sess_lentry))->session == NULL) {
+                      l4_alg_status_t, l4_sess_lentry))->sess_hdl == HAL_HANDLE_INVALID) {
             /*
              * If this was the last session hanging and there is no
              * HAL session for control session. This is the right time
              * to clean it
              */
             g_ftp_state->cleanup_app_session(l4_sess->app_session);
-            HAL_TRACE_DEBUG("Cleaned up app session");
         }
     }
 
@@ -585,7 +632,7 @@ static void ftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
             g_ftp_state->cleanup_app_session(l4_sess->app_session);
         }
     } else {
-        l4_sess->session = ctx.session();
+        l4_sess->sess_hdl = ctx.session()->hal_handle;
         if (l4_sess && l4_sess->isCtrl == FALSE) {
             HAL_TRACE_DEBUG("In FTP Completion handler");
             /*
@@ -637,7 +684,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
             l4_sess->info = ftp_info;
             ftp_info->state = FTP_INIT;
             ftp_info->callback = __parse_ftp_req;
-            ftp_info->sip = ctx.key().sip;
+            ftp_info->sip = ctx.key().dip;
             ftp_info->add_exp_flow = false;
             /*
              * Register Feature session state & completion handler

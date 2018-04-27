@@ -15,8 +15,59 @@ namespace alg_rpc {
 using namespace hal::plugins::sfw;
 using namespace hal::plugins::alg_utils;
 
-void incr_parse_error(l4_alg_status_t *sess) {
-    HAL_ATOMIC_INC_UINT32(&((rpc_info_t *)sess->info)->parse_errors, 1);
+void incr_parse_error(rpc_info_t *info) {
+    HAL_ATOMIC_INC_UINT32(&info->parse_errors, 1);
+}
+
+void incr_data_sess(rpc_info_t *info) {
+    HAL_ATOMIC_INC_UINT32(&info->data_sess, 1);
+}
+
+void incr_max_pkt_sz(rpc_info_t  *info) {
+    HAL_ATOMIC_INC_UINT32(&info->maxpkt_sz_exceeded, 1);
+}
+
+void incr_num_exp_flows(rpc_info_t *info) {
+    HAL_ATOMIC_INC_UINT32(&info->num_exp_flows, 1);
+}
+
+/*
+ * APP Session get handler
+ */
+fte::pipeline_action_t alg_rpc_session_get_cb(fte::ctx_t &ctx) {
+    fte::feature_session_state_t  *alg_state = NULL;
+    SessionGetResponse            *sess_resp = ctx.sess_get_resp();
+    l4_alg_status_t               *l4_sess =  NULL;
+
+    if (!ctx.sess_get_resp() || ctx.role() != hal::FLOW_ROLE_INITIATOR)
+        return fte::PIPELINE_CONTINUE;
+
+    alg_state = ctx.feature_session_state();
+    if (alg_state != NULL) {
+        l4_sess = (l4_alg_status_t *)alg_status(alg_state);
+        sess_resp->mutable_status()->set_alg(l4_sess->alg);
+
+        if (l4_sess->isCtrl == TRUE) {
+            rpc_info_t *info = ((rpc_info_t *)l4_sess->info);
+            if (info) {
+                sess_resp->mutable_status()->mutable_rpc_info()->\
+                                 set_parse_error(info->parse_errors);
+                sess_resp->mutable_status()->mutable_rpc_info()->\
+                                 set_num_data_sess(info->data_sess);
+                sess_resp->mutable_status()->mutable_rpc_info()->\
+                    set_maxpkt_size_exceeded(info->maxpkt_sz_exceeded);
+                sess_resp->mutable_status()->mutable_rpc_info()->\
+                                 set_num_exp_flows(info->num_exp_flows); 
+            }
+            sess_resp->mutable_status()->mutable_rpc_info()->\
+                                set_iscontrol(true);
+        } else {
+            sess_resp->mutable_status()->mutable_rpc_info()->\
+                                set_iscontrol(false);
+        }
+    }
+
+    return fte::PIPELINE_CONTINUE;
 }
 
 /*
@@ -39,6 +90,10 @@ fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
     fte::feature_session_state_t  *alg_state = NULL;
     l4_alg_status_t               *l4_sess =  NULL;
     app_session_t                 *app_sess = NULL;
+
+    if (ctx.role() != hal::FLOW_ROLE_INITIATOR) {
+        return fte::PIPELINE_CONTINUE;
+    }
 
     alg_state = ctx.feature_session_state();
     if (alg_state != NULL) {
@@ -64,7 +119,7 @@ fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
                  * We let the HAL cleanup happen while we keep the
                  * app_session state if there are data sessions
                  */
-                l4_sess->session = NULL;
+                l4_sess->sess_hdl = HAL_HANDLE_INVALID;
                 return fte::PIPELINE_CONTINUE;
             } else {
                /*
@@ -82,7 +137,7 @@ fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
         if (dllist_empty(&app_sess->exp_flow_lhead) &&
             dllist_count(&app_sess->l4_sess_lhead) == 1 &&
             ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
-                      l4_alg_status_t, l4_sess_lentry))->session == NULL) {
+                      l4_alg_status_t, l4_sess_lentry))->sess_hdl == HAL_HANDLE_INVALID) {
             /*
              * If this was the last session hanging and there is no
              * HAL session for control session. This is the right time
@@ -158,7 +213,8 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
     }
     exp_flow_info->vers = rpc_info->vers;
     exp_flow_info->callback = cb;
-
+    incr_num_exp_flows(rpc_info);
+    
     // Need to add the entry with a timer
     // Todo(Pavithra) add timer to every RPC ALG entry
     HAL_TRACE_DEBUG("Inserting RPC entry with key: {}", key);
@@ -178,6 +234,9 @@ void rpcinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
             HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);
         g_rpc_state->alg_info_slab()->free((rpc_info_t *)l4_sess->info);
     }
+
+    if (l4_sess->sess_hdl != HAL_HANDLE_INVALID)
+        dllist_del(&l4_sess->fte_feature_state.session_feature_lentry);
 }
 
 /*

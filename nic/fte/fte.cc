@@ -27,6 +27,7 @@ struct feature_s {
     uint32_t                    state_offset;   // Offset of the feature state in fte::ctx_t
     exec_handler_t              exec_handler;   // Feature exec handler
     session_delete_handler_t    sess_del_cb;    // Session delete handler callback
+    session_get_handler_t       sess_get_cb;    // Session get handler callback
 };
 
 static std::map<std::string, feature_t*> g_feature_map_;
@@ -176,6 +177,7 @@ hal_ret_t register_feature(const std::string& name,
 
     feature->state_init_fn = feature_info.state_init_fn;
     feature->sess_del_cb   = feature_info.sess_del_cb;
+    feature->sess_get_cb   = feature_info.sess_get_cb;
     feature->registered = true;
 
     return HAL_RET_OK;
@@ -273,13 +275,20 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
 
         ctx.set_feature_name(feature->name.c_str());
         ctx.set_feature_status(HAL_RET_OK);
-        if (ctx.pipeline_event() == FTE_SESSION_DELETE) {
+        switch (ctx.pipeline_event()) {
+        case FTE_SESSION_DELETE:
             if (feature->sess_del_cb) {
                 rc = feature->sess_del_cb(ctx);
             }
-        } else {
+            break;
+        case FTE_SESSION_GET:
+            if (feature->sess_get_cb) {
+                rc = feature->sess_get_cb(ctx);
+            }
+            break;
+        default:
             rc = feature->exec_handler(ctx);
-        }
+        };
         HAL_TRACE_DEBUG("fte:exec_handler feature={} pipeline={} event={} action={}", 
                         feature->name, pipeline->name, ctx.pipeline_event(), rc);
 

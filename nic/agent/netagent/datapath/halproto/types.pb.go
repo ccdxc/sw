@@ -849,6 +849,9 @@
 		TFTPALGInfo
 		RPCALGInfo
 		SIPALGInfo
+		FTPALGInfo
+		RTSPALGInfo
+		DNSALGInfo
 		SessionStatus
 		SessionResponse
 		SessionResponseMsg

@@ -458,8 +458,8 @@ ctx_t::update_flow_table()
     hal_ret_t       ret = HAL_RET_OK;
     hal_handle_t    session_handle;
     hal::session_t *session = NULL;
-	hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
-	hal::pd::pd_tunnelif_get_rw_idx_args_t t_args;
+    hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
+    hal::pd::pd_tunnelif_get_rw_idx_args_t t_args;
 
     hal::session_args_t session_args = {};
     hal::session_cfg_t session_cfg = {};

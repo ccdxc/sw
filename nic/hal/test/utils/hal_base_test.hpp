@@ -1,12 +1,14 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
+#pragma once 
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-void
+static void
 hal_initialize (const char c_file[])
 {
     char 			cfg_file[32];
@@ -55,7 +57,7 @@ hal_initialize (const char c_file[])
     printf("HAL Initialized\n");
 }
 
-void
+static void
 hal_uninitialize (void)
 {
     // uninitialize HAL

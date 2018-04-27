@@ -18,6 +18,7 @@ namespace fte {
     ENTRY(FTE_SESSION_CREATE,   0, "create")        \
     ENTRY(FTE_SESSION_UPDATE,   1, "update")        \
     ENTRY(FTE_SESSION_DELETE,   2, "delete")        \
+    ENTRY(FTE_SESSION_GET,      3, "get")           \
 
 DEFINE_ENUM(pipeline_event_t, FTE_PIPELINE_EVENT_ENTRIES)
 #undef FTE_PIPELINE_EVENT_ENTRIES
@@ -477,6 +478,8 @@ public:
     bool protobuf_request() { return sess_spec_ != NULL; }
     session::SessionSpec* sess_spec() {return sess_spec_; }
     session::SessionResponse* sess_resp() {return sess_resp_; }
+    session::SessionGetResponse* sess_get_resp() { return sess_get_resp_; }
+    void set_sess_get_resp(session::SessionGetResponse* val) { sess_get_resp_ = val; }
     hal::session_t* session() { return session_; }
     bool existing_session() const { return session_ != NULL; }
 
@@ -603,6 +606,7 @@ private:
 
     session::SessionSpec           *sess_spec_;
     session::SessionResponse       *sess_resp_;
+    session::SessionGetResponse    *sess_get_resp_;
 
     const char*           feature_name_;   // Name of the feature being executed (for logging)
     uint16_t              feature_id_;     // ID of the feature being executed

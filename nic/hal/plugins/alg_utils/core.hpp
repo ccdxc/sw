@@ -45,7 +45,7 @@ isNullip(ipvx_addr_t ip, uint8_t addr_family) {
 
     memset(null_ipv6, 0, sizeof(null_ipv6));
     if ((addr_family == IP_PROTO_IPV6 &&
-        memcmp(ip.v6_addr.addr8, null_ipv6, sizeof(null_ipv6))) ||
+        !memcmp(ip.v6_addr.addr8, null_ipv6, sizeof(null_ipv6))) ||
         (addr_family == IP_PROTO_IPV4 && !ip.v4_addr)) {
         return 1;
     }
@@ -177,7 +177,7 @@ typedef struct l4_alg_status {
     expected_flow_t                 entry;                     // Flow key and handler
     nwsec::ALGName                  alg;                       // ALG applied on this L4-session
     bool                            isCtrl;                    // Is this a control session
-    session_t                      *session;                   // Back pointer to L4-session
+    hal_handle_t                    sess_hdl;                  // Back pointer to L4-session
     void                           *info;                      // Per-ALG L4 session oper_status/info
     app_session_t                  *app_session;               // Back pointer to app session this L4 session is part of
     fte::feature_session_state_t    fte_feature_state;         // Feature session state to link this to actual L4 sess

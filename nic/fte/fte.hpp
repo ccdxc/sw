@@ -21,6 +21,7 @@ DEFINE_ENUM(pipeline_action_t, FTE_PIPELINE_ACTION_ENTRIES)
 typedef std::function<pipeline_action_t(ctx_t &ctx)> exec_handler_t;
 typedef void (*feature_state_init_t)(void *state); // Init calback for feature specific state
 typedef pipeline_action_t (*session_delete_handler_t)(ctx_t &ctx); // Session delete callback
+typedef pipeline_action_t (*session_get_handler_t)(ctx_t &ctx); // Session get callback
 
 typedef struct feature_info_s {
     // feature speicific per ctx state (this is not persisited
@@ -28,6 +29,7 @@ typedef struct feature_info_s {
     size_t                    state_size; 
     feature_state_init_t      state_init_fn;
     session_delete_handler_t  sess_del_cb;
+    session_get_handler_t     sess_get_cb;
 
     // TODO(goli) need to define these
     // grpc_session_create_handler_t
@@ -58,6 +60,7 @@ void unregister_features_and_pipelines();
 // grpc session request
 hal_ret_t session_create(SessionSpec& spec, SessionResponse *rsp);
 hal_ret_t session_delete(SessionDeleteRequest& spec, SessionDeleteResponse *rsp);
+hal_ret_t session_get(hal::session_t *session, SessionGetResponse *response);
 
 //Session delete request
 hal_ret_t session_delete_in_fte(hal_handle_t session_handle, bool force_delete=false);

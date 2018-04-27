@@ -45,6 +45,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info, l4_alg_status_t 
 hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info, l4_alg_status_t *l4_sess);
 uint8_t *alloc_rpc_pkt(void);
 fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx);
+fte::pipeline_action_t alg_rpc_session_get_cb(fte::ctx_t &ctx);
 
 /*
  * Data Structures
@@ -85,7 +86,14 @@ typedef struct rpc_info_ {
      */
     uint32_t data_sess;
     uint32_t parse_errors;
+    uint32_t maxpkt_sz_exceeded;
+    uint32_t num_exp_flows;
 } rpc_info_t;
+
+void incr_parse_error(rpc_info_t *info);
+void incr_data_sess(rpc_info_t *info);
+void incr_max_pkt_sz(rpc_info_t  *info);
+void incr_num_exp_flows(rpc_info_t *info);
 
 }  // namespace alg_rpc
 }  // namespace plugins

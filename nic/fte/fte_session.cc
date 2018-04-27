@@ -157,8 +157,50 @@ session_delete (SessionDeleteRequest& spec, SessionDeleteResponse *rsp)
 
     ret = session_delete(session);
 
- end:
+end:
     rsp->set_api_status(hal::hal_prepare_rsp(ret));
+
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return ret;
+}
+
+hal_ret_t
+session_get (hal::session_t *session, SessionGetResponse *response)
+{
+    hal_ret_t        ret;
+    ctx_t            ctx = {};
+    uint16_t         num_features;
+    size_t           fstate_size = feature_state_size(&num_features);
+    feature_state_t *feature_state = NULL;
+    flow_t           iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("fte::{}: Session handle {} Get in Vrf id {}", __FUNCTION__,
+                     session->hal_handle, 
+                     (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id);
+
+    feature_state = (feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
+    if (!feature_state) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    //Init context
+    ret = ctx.init(session, iflow, rflow, feature_state, num_features);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
+        goto end;
+    }
+    ctx.set_pipeline_event(FTE_SESSION_GET);
+    ctx.set_sess_get_resp(response);
+
+    // Execute pipeline without any changes to the session
+    ctx.set_ignore_session_create(true);
+
+    ret = ctx.process();
+
+end:
+    response->set_api_status(hal::hal_prepare_rsp(ret));
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;

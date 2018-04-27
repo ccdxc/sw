@@ -321,7 +321,7 @@ nic:
 	$(MAKE) stage2
 	$(MAKE) stage3
 
-all: nic
+all:    nic
 	$(MAKE) tests
 
 clean: platform-clean capsim-master-clean

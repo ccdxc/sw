@@ -11,10 +11,12 @@ namespace hal {
 namespace plugins {
 namespace alg_ftp {
 
+using namespace hal::plugins::alg_utils;
+
 /*
  * Externs
  */
-extern hal::plugins::alg_utils::alg_state_t *g_ftp_state;
+extern alg_state_t *g_ftp_state;
 
 /*
  * Constants
@@ -28,6 +30,9 @@ const std::string FTE_FEATURE_ALG_FTP("pensando.io/alg_ftp:alg_ftp");
 // plugin.cc
 fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx);
+fte::pipeline_action_t alg_ftp_session_get_cb(fte::ctx_t &ctx);
+
+void ftpinfo_cleanup_hdlr(l4_alg_status_t *l4_sess);
 
 }  // namespace alg_ftp
 }  // namespace plugins
