@@ -1,0 +1,34 @@
+# Feature Test Modules List
+#
+feature:
+    id          : proxy_asym2
+    sub         : proxy
+    package     : test.tcp_tls_proxy
+    module      : None
+    spec        : None
+    enable      : True
+    rtl         : True
+    ignore      : False
+    runorder    : 10
+
+modules:
+    - module:
+        name    : CRYPTO_API_ASYM_RSA2K_CRT_DECRYPT
+        package : test.tcp_tls_proxy
+        module  : crypto_apis
+        args    :
+            api:    CRYPTO_API_ASYM_RSA2K_CRT_DECRYPT
+
+    - module:
+        name    : CRYPTO_API_ASYM_RSA2K_SIG_GEN
+        package : test.tcp_tls_proxy
+        module  : crypto_apis
+        args    :
+            api:    CRYPTO_API_ASYM_RSA2K_SIG_GEN
+
+    - module:
+        name    : CRYPTO_API_ASYM_RSA2K_SIG_VERIFY
+        package : test.tcp_tls_proxy
+        module  : crypto_apis
+        args    :
+            api:    CRYPTO_API_ASYM_RSA2K_SIG_VERIFY

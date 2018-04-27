@@ -16,7 +16,7 @@ targets:
   norm: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo norm --feature norm ; ret=$? ; make sanity_logs ; exit $ret" ]
   eth:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo eth --feature eth ; ret=$? ; make sanity_logs ; exit $ret" ]
   acl:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo acl --feature acl ; ret=$? ; make sanity_logs ; exit $ret" ]
-  proxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy,proxy_fte,proxy_asym ; ret=$? ; make sanity_logs ; exit $ret" ]
+  proxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy,proxy_fte,proxy_asym1,proxy_asym2 ; ret=$? ; make sanity_logs ; exit $ret" ]
   e2etlsproxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --e2e-tls-dol ; ret=$? ; make sanity_logs ; exit $ret" ]
   v6e2etlsproxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --v6-e2e-tls-dol ; ret=$? ; make sanity_logs ; exit $ret" ]
   e2eeplearn: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py --topo e2e_eplearn --feature e2e_learn --e2e-mode dol-auto --cfgjson conf/dol.conf; ret=$? ; make sanity_logs ; exit $ret" ]

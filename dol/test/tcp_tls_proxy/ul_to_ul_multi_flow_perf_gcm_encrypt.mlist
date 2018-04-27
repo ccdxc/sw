@@ -18,7 +18,7 @@ modules:
         rtl     : True
         args    :
             cipher_suite: GCM
-            key_size : 16
+            key_size : 32
             maxflows : 10
             snd_cwnd : 1000
             skip_verify : True
@@ -28,10 +28,10 @@ modules:
         spec    : uplink_to_uplink_multi_flow_brq.testspec
         module  : pkt_to_bsq_encrypt
         rtl     : True
-        modscale: 30
+        modscale: 100
         args    :
             cipher_suite: GCM
-            key_size : 16
+            key_size : 32
             maxflows : 10
             skip_config : True
             skip_verify : True
