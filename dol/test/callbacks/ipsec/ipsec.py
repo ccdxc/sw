@@ -12,6 +12,10 @@ def GetSpi (tc, pkt):
 def GetSeqNo (tc, pkt):
     return 1 
 
+def GetNextSeqNo (tc, pkt):
+    tc.pvtdata.seqNo += 1
+    return tc.pvtdata.seqNo 
+    
 def GetLt63SeqNo (tc, pkt):
     return 35
 

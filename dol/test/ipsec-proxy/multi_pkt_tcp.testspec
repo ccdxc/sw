@@ -79,6 +79,9 @@ packets:
         id          : PKT2
         clone       : ref://testcase/packets/id=BASE_PKT_IN2
         scale       : True
+        headers     :
+            esp:
+                seq    : callback://ipsec/ipsec/GetNextSeqNo
 
 trigger:
     packets:

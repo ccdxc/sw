@@ -35,6 +35,7 @@ def TestCaseSetup(tc):
     global seq
 
     tc.pvtdata = ObjectDatabase()
+    tc.pvtdata.seqNo = 0
     print("TestCaseSetup(): Sample Implementation.")
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
