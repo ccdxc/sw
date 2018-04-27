@@ -134,7 +134,7 @@ package-clean:
 	@rm -f nic.tgz
 	@rm -f nic.tar
 
-package: swig-cli package-clean hntap
+package: package-clean
     ifeq ($(ARCH),aarch64)
 		cd ../ && python nic/tools/package.py
     else
@@ -310,7 +310,7 @@ stage0: p4 gen-proto csrlite go-proto utils capsim-master
 stage1: asm capmodel build-proto sdk third-party agent
 
 # app building stage
-stage2: plugins linkmgr platform pd hal
+stage2: plugins linkmgr platform pd hal swig-cli hntap
 
 # post build stage
 stage3: post-make package package-size-check halctl
