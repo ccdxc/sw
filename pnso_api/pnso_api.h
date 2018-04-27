@@ -11,8 +11,8 @@
 
 /*
  * WORK_IN_PROGRESS/TODO:
- * 	This header file is in its early stage to initiate discussion
- * 	on the API -- more changes are expected.
+ *	This header file is in its early stage to initiate discussion
+ *	on the API -- more changes are expected.
  *
  *	Address alignment/packing for cache line size
  *	batching needed or not
@@ -91,7 +91,7 @@ enum pnso_chksum_type {
 typedef int32_t pnso_error_t;
 
 /* Generic error codes */
-#define PNSO_OK 				0
+#define PNSO_OK				0
 
 /* Error codes for compression/decompression */
 #define PNSO_ERR_CPDC_AXI_TIMEOUT		20001
@@ -145,7 +145,7 @@ struct pnso_buffer_list {
  * @chksum: specifies the data integrity field, i.e. the checksum
  * calculation on input data before compression.
  * @data_len: specifies the compressed length
- * @version: specifies the version of the compression algorithm 
+ * @version: specifies the version of the compression algorithm
  *
  * Compression operation will insert a 8-byte header (populating the
  * compressed length, the checksum and the version number) at the beginning
@@ -207,7 +207,7 @@ struct pnso_crypto_desc {
 
 /**
  * struct pnso_compression_desc - represents the descriptor for compression
- * service 
+ * service
  * @rsvd_1: specifies a 'reserved' field meant to be used by Pensando.
  * @threshold_len: specifies the expected compressed buffer length in
  * bytes.
@@ -226,7 +226,7 @@ struct pnso_compression_desc {
 	bool zero_pad;
 	bool insert_header;
 	uint32_t rsvd_2;
-}; 
+};
 
 /**
  * struct pnso_decompression_desc - represents the descriptor for
@@ -234,7 +234,7 @@ struct pnso_compression_desc {
  *
  */
 struct pnso_decompression_desc {
-}; 
+};
 
 /**
  * struct pnso_hash_desc - represents the descriptor for data deduplication
@@ -274,7 +274,7 @@ struct pnso_decompaction_desc {
  * SHA512 and SHA256 hash need 64 and 32 bytes respectively.  Checksum
  * need a maximum of 4 bytes.
  *
- * Depending on the hash and checksum algorithm, Pensando accelerator can 
+ * Depending on the hash and checksum algorithm, Pensando accelerator can
  * produce either 64 or 32-byte hash, and 4-byte checksums for every 4KB
  * block.
  *
@@ -326,7 +326,7 @@ struct pnso_service_status {
 
 /**
  * struct pnso_service_result - represents the result of the request upon
- * completion of a service within the service request 
+ * completion of a service within the service request
  * @err: specifies the error code of the service request.
  * @num_services: specifies the number of services in the request.
  * @svc: specifies an array of service status structures to report the
@@ -392,7 +392,7 @@ struct pnso_service_request {
 };
 
 /**
- * completion_t: caller-supplied completion callback 
+ * completion_t: caller-supplied completion callback
  * @cb_ctx: specifies the callback args for the caller-supplied callback
  * routine.
  * @svc_res: specifies a set of service results structures to report the
@@ -421,7 +421,7 @@ typedef void (*pnso_poller_fn)(void *pnso_poll_ctx);
  * @svc_req: specifies a set of service requests that to be used to
  * complete the services within the request.
  * @svc_res: specifies a set of service results structures to report the
- * status of each service within a request upon its completion. 
+ * status of each service within a request upon its completion.
  * @cb: specifies the caller-supplied completion callback routine.
  * @cb_ctx: specifies the caller-supplied context information.
  * @pnso_poll_fn: specifies the polling function, which the caller will
