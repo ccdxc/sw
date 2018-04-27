@@ -66,8 +66,7 @@ enum pnso_batch_request {
 /* Algorithms for compression/decompression */
 enum pnso_compressor_type {
 	PNSO_COMPRESSOR_TYPE_NONE	= 0,
-	PNSO_COMPRESSOR_TYPE_LZRW1A	= 1,	/* TODO: Get value for the
-						   algorithm from Netapp */
+	PNSO_COMPRESSOR_TYPE_LZRW1A	= 1,
 	PNSO_COMPRESSOR_TYPE_MAX
 };
 
@@ -248,8 +247,8 @@ struct pnso_hash_desc {
 /**
  * struct pnso_checksum_desc - represents the descriptor for checksum
  * operation
- * @per_block: specifies whether to produce one hash per block or one for
- * the entire buffer.
+ * @per_block: specifies whether to produce one checksum per block or
+ * one for the entire buffer.
  *
  */
 struct pnso_checksum_desc {
