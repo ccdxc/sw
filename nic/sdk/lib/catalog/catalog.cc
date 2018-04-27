@@ -143,6 +143,95 @@ catalog::populate_qos_profile(ptree &prop_tree)
 }
 
 sdk_ret_t
+catalog::populate_mac_ch_profile(ch_profile_t *ch_profile,
+                                 std::string  profile_str,
+                                 ptree        &prop_tree)
+{
+    ch_profile->speed = prop_tree.get<uint32_t>(profile_str + ".speed", 0);
+
+    std::string val = prop_tree.get<std::string>(profile_str + ".ch_mode", "");
+    ch_profile->ch_mode = strtoul(val.c_str(), NULL, 16);
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+catalog::populate_mac_profile(mac_profile_t *mac_profile,
+                              std::string   profile_str,
+                              ptree         &prop_tree)
+{
+    std::string val =
+        prop_tree.get<std::string>(profile_str + ".glbl_mode", "");
+    mac_profile->glbl_mode = strtoul(val.c_str(), NULL, 16);
+
+    val = prop_tree.get<std::string>(profile_str + ".channel", "");
+    mac_profile->channel = strtoul(val.c_str(), NULL, 16);
+
+    val = prop_tree.get<std::string>(profile_str + ".tdm_slot", "");
+    mac_profile->tdm_slot = strtoul(val.c_str(), NULL, 16);
+
+    populate_mac_ch_profile(&(mac_profile->ch_profile[0]),
+                            profile_str + ".0",
+                            prop_tree);
+    populate_mac_ch_profile(&(mac_profile->ch_profile[1]),
+                            profile_str + ".1",
+                            prop_tree);
+    populate_mac_ch_profile(&(mac_profile->ch_profile[2]),
+                            profile_str + ".2",
+                            prop_tree);
+    populate_mac_ch_profile(&(mac_profile->ch_profile[3]),
+                            profile_str + ".3",
+                            prop_tree);
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+catalog::populate_mac_profiles(ptree &prop_tree)
+{
+    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x100g]),
+                         "mx_prog.mode_1x100g",
+                         prop_tree);
+
+    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_2x25g_1x50g]),
+                         "mx_prog.mode_2x25g_1x50g",
+                         prop_tree);
+
+    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x40g]),
+                         "mx_prog.mode_1x40g",
+                         prop_tree);
+
+    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x50g]),
+                         "mx_prog.mode_1x50g",
+                         prop_tree);
+
+    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_2x40g]),
+                         "mx_prog.mode_2x40g",
+                         prop_tree);
+
+    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_2x50g]),
+                         "mx_prog.mode_2x50g",
+                         prop_tree);
+
+    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x50g_2x25g]),
+                         "mx_prog.mode_1x50g_2x25g",
+                         prop_tree);
+
+    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_4x25g]),
+                         "mx_prog.mode_4x25g",
+                         prop_tree);
+
+    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_4x10g]),
+                         "mx_prog.mode_4x10g",
+                         prop_tree);
+
+    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_4x1g]),
+                         "mx_prog.mode_4x1g",
+                         prop_tree);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 catalog::populate_catalog(ptree &prop_tree)
 {
     catalog_db_.card_index = prop_tree.get<uint32_t>("card_index", 0);
@@ -167,6 +256,8 @@ catalog::populate_catalog(ptree &prop_tree)
                             prop_tree.get<uint32_t>("num_uplink_ports", 0);
     populate_asics(prop_tree);
     populate_uplink_ports(prop_tree);
+
+    populate_mac_profiles(prop_tree);
 
     populate_qos_profile(prop_tree);
 

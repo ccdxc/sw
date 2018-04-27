@@ -41,7 +41,251 @@
         {"port_num" : "8", "asic" : "0", "asic_port" : "7" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" }
     ],
 
-    "qos" : 
+    "mx_prog" : {
+       "mode_1x100g" : {
+          "glbl_mode" : "0x0",
+          "channel"   : "0x1",
+          "tdm_slot"  : "0x000",
+          "0" : {
+             "speed"   : "100",
+             "ch_mode" : "0x14"
+          },
+          "1" : {
+             "speed"   : "0",
+             "ch_mode" : "0x3c"
+          },
+          "2" : {
+             "speed"   : "0",
+             "ch_mode" : "0x3c"
+          },
+          "3" : {
+             "speed"   : "0",
+             "ch_mode" : "0x3c"
+          }
+       },
+
+       "mode_2x25g_1x50g" : {
+          "glbl_mode" : "0x2",
+          "channel"   : "0x7",
+          "tdm_slot"  : "0x488",
+          "0" : {
+             "speed"   : "25",
+             "ch_mode" : "0xc"
+          },
+          "1" : {
+             "speed"   : "25",
+             "ch_mode" : "0xc"
+          },
+          "2" : {
+             "speed"   : "50",
+             "ch_mode" : "0x10"
+          },
+          "3" : {
+             "speed"   : "0",
+             "ch_mode" : "0x3c"
+          }
+       },
+
+       "mode_1x40g" : {
+          "glbl_mode" : "0x4",
+          "channel"   : "0x1",
+          "tdm_slot"  : "0x410",
+          "0" : {
+             "speed"   : "40",
+             "ch_mode" : "0x14"
+          },
+          "1" : {
+             "speed"   : "0",
+             "ch_mode" : "0x3c"
+          },
+          "2" : {
+             "speed"   : "0",
+             "ch_mode" : "0x3c"
+          },
+          "3" : {
+             "speed"   : "0",
+             "ch_mode" : "0x3c"
+          }
+       },
+
+       "mode_1x50g" : {
+          "glbl_mode"  : "0x4",
+          "channel"  : "0x1",
+          "tdm_slot"  : "0x410",
+          "0" : {
+             "speed"  : "50",
+             "ch_mode" : "0x10"
+          },
+          "1" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          },
+          "2" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          },
+          "3" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          }
+       },
+
+       "mode_2x40g" : {
+          "glbl_mode"  : "0x6",
+          "channel"  : "0x5",
+          "tdm_slot"  : "0x410",
+          "0" : {
+             "speed"  : "40",
+             "ch_mode" : "0x10"
+          },
+          "2" : {
+             "speed"  : "40",
+             "ch_mode" : "0x10"
+          },
+          "1" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          },
+          "3" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          }
+       },
+
+       "mode_2x50g" : {
+          "glbl_mode"  : "0x6",
+          "channel"  : "0x5",
+          "tdm_slot"  : "0x410",
+          "0" : {
+             "speed"  : "50",
+             "ch_mode" : "0x10"
+          },
+          "2" : {
+             "speed"  : "50",
+             "ch_mode" : "0x10"
+          },
+          "1" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          },
+          "3" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          }
+       },
+
+       "mode_1x50g_2x25g" : {
+          "glbl_mode"  : "0x7",
+          "channel"  : "0xd",
+          "tdm_slot"  : "0x610",
+          "0" : {
+             "speed"  : "50",
+             "ch_mode" : "0x10"
+          },
+          "1" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          },
+          "2" : {
+             "speed"  : "25",
+             "ch_mode" : "0xc"
+          },
+          "3" : {
+             "speed"  : "25",
+             "ch_mode" : "0xc"
+          }
+       },
+
+       "mode_4x25g" : {
+          "glbl_mode"  : "0x8",
+          "channel"  : "0xf",
+          "tdm_slot"  : "0x680",
+          "0" : {
+             "speed"  : "25",
+             "ch_mode" : "0xc"
+          },
+          "1" : {
+             "speed"  : "25",
+             "ch_mode" : "0xc"
+          },
+          "2" : {
+             "speed"  : "25",
+             "ch_mode" : "0xc"
+          },
+          "3" : {
+             "speed"  : "25",
+             "ch_mode" : "0xc"
+          }
+       },
+
+       "mode_4x10g" : {
+          "glbl_mode"  : "0x8",
+          "channel"  : "0xf",
+          "tdm_slot"  : "0x680",
+          "0" : {
+             "speed"  : "10",
+             "ch_mode" : "0xc"
+          },
+          "1" : {
+             "speed"  : "10",
+             "ch_mode" : "0xc"
+          },
+          "2" : {
+             "speed"  : "10",
+             "ch_mode" : "0xc"
+          },
+          "3" : {
+             "speed"  : "10",
+             "ch_mode" : "0xc"
+          }
+       },
+
+       "mode_4x1g" : {
+          "glbl_mode"  : "0x8",
+          "channel"  : "0xf",
+          "tdm_slot"  : "0x680",
+          "0" : {
+             "speed"  : "1",
+             "ch_mode" : "0xc"
+          },
+          "1" : {
+             "speed"  : "1",
+             "ch_mode" : "0xc"
+          },
+          "2" : {
+             "speed"  : "1",
+             "ch_mode" : "0xc"
+          },
+          "3" : {
+             "speed"  : "1",
+             "ch_mode" : "0xc"
+          }
+       },
+
+       "mode_rsvd" : {
+          "glbl_mode"  : "0xf",
+          "channel"  : "0x0",
+          "tdm_slot"  : "0xfff",
+          "0" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          },
+          "1" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          },
+          "2" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          },
+          "3" : {
+             "speed"  : "0",
+             "ch_mode" : "0x3c"
+          }
+       }
+    },
+
+    "qos" :
     {
         "profile" :
         {
@@ -53,9 +297,9 @@
             "num_p4eg_qs" : 27,
             "num_dma_qs" : 16
         },
-        "configs" : 
+        "configs" :
         {
-            "qos_class" : 
+            "qos_class" :
             {
                 "request" :
                 [
@@ -101,7 +345,7 @@
                     }
                 ]
             },
-            "copp" : 
+            "copp" :
             {
                 "request" :
                 [

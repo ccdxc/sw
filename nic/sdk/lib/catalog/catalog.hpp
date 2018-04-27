@@ -13,9 +13,38 @@ namespace lib {
 
 using boost::property_tree::ptree;
 
-#define MAX_ASICS                                    1
-#define MAX_ASIC_PORTS                               8
-#define MAX_UPLINK_PORTS                             8
+#define MAX_ASICS          1
+#define MAX_ASIC_PORTS     8
+#define MAX_UPLINK_PORTS   8
+
+#define MAX_MAC_PROFILES   11
+#define MAX_PORT_LANES     4
+
+typedef enum mac_mode_ {
+    MAC_MODE_1x100g,
+    MAC_MODE_1x40g,
+    MAC_MODE_1x50g,
+    MAC_MODE_2x40g,
+    MAC_MODE_2x50g,
+    MAC_MODE_1x50g_2x25g,
+    MAC_MODE_2x25g_1x50g,
+    MAC_MODE_4x25g,
+    MAC_MODE_4x10g,
+    MAC_MODE_4x1g
+} mac_mode_t;
+
+typedef struct ch_profile_ {
+   uint32_t ch_mode;
+   uint32_t speed;
+   uint32_t port_enable;
+} ch_profile_t;
+
+typedef struct mac_profile_ {
+   uint32_t     glbl_mode;
+   uint32_t     channel;
+   uint32_t     tdm_slot;
+   ch_profile_t ch_profile[MAX_PORT_LANES];
+} mac_profile_t;
 
 typedef struct catalog_uplink_port_s {
     uint32_t          asic;
@@ -60,6 +89,7 @@ typedef struct catalog_s {
     catalog_asic_t           asics[MAX_ASICS];                  // per asic information
     catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
     qos_profile_t            qos_profile;                       // qos asic profile 
+    mac_profile_t            mac_profiles[MAX_MAC_PROFILES];    // MAC profiles
 } catalog_t;
 
 class catalog {
@@ -140,6 +170,16 @@ private:
 
     // populate qos asic profile
     sdk_ret_t populate_qos_profile(ptree &prop_tree);
+
+    sdk_ret_t populate_mac_profile(mac_profile_t *mac_profile,
+                                   std::string   str,
+                                   ptree         &prop_tree);
+
+    sdk_ret_t populate_mac_profiles(ptree &prop_tree);
+
+    sdk_ret_t populate_mac_ch_profile(ch_profile_t *ch_profile,
+                                      std::string  profile_str,
+                                      ptree        &prop_tree);
 
     static sdk_ret_t get_ptree_(std::string& catalog_file, ptree& prop_tree);
 };
