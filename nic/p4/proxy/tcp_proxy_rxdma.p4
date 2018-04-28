@@ -170,7 +170,7 @@ header_type tcp_rx_d_t {
         fastopen_rsk            : 1;
         pingpong                : 1;
         ooo_in_rx_q             : 1;
-        alloc_descr             : 1;
+        alloc_descr             : 1;    // used with .l not written back
     }
 }
 

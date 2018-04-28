@@ -98,6 +98,9 @@ run: $(BIN_FILES)
 	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-fastretx-alert-cwr-end.ctl $(OBJ_DIR)/tcp-fastretx-alert.bin \
 	    	-P tcp_rx_cc_stage4_start=0x100000 > $(SRC_DIR)/run/tcp-fastretx-alert-cwr-end.run
 
+asm_tests:
+	(cd test; py.test -v)
+
 myclean:
 	@rm -fR $(OBJ_DIR)/*.bin
 	@rm -fR $(GEN_DIR)/.tcp_rx_asm
