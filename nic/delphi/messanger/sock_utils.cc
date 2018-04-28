@@ -25,34 +25,34 @@ using namespace google::protobuf::io;
 
 
 // ------ utility functions
-google::protobuf::uint32
-readHdr(char *buf)
+int
+readHdr(char *buf, google::protobuf::uint32 *size)
 {
-  google::protobuf::uint32 size;
   google::protobuf::io::ArrayInputStream ais(buf, 4);
   CodedInputStream coded_input(&ais);
-  coded_input.ReadVarint32(&size);//Decode the HDR and get the size
+  coded_input.ReadVarint32(size);
+  int read = coded_input.CurrentPosition();
 
-  return size;
+  return read;
 }
 
 // readBody reads a message from socket
 MessagePtr
-readBody(int csock,google::protobuf::uint32 siz)
+readBody(int csock, int headerSize, google::protobuf::uint32 siz)
 {
     int bytecount;
     MessagePtr msg(make_shared<Message>());
-    char buffer [siz+4];//size of the payload and hdr
+    char buffer [headerSize + siz];//size of the payload and hdr
     assert(msg != NULL);
 
     //Read the entire buffer including the hdr
-    if((bytecount = recv(csock, (void *)buffer, 4+siz, MSG_WAITALL))== -1){
+    if((bytecount = recv(csock, (void *)buffer, headerSize + siz, MSG_WAITALL))== -1){
       LogError("Error receiving data {}", errno);
       assert(0);
     }
 
     //Assign ArrayInputStream with enough memory
-    google::protobuf::io::ArrayInputStream ais(buffer,siz+4);
+    google::protobuf::io::ArrayInputStream ais(buffer, headerSize + siz);
     CodedInputStream coded_input(&ais);
 
     //Read an unsigned integer with Varint encoding, truncating to 32 bits.
@@ -82,19 +82,21 @@ readBody(int csock,google::protobuf::uint32 siz)
 
 // sendMsg sends a message on a socket
 error sendMsg(int sock, MessagePtr msg) {
-    int len = msg->ByteSize()+4;
+    int len = msg->ByteSize() + 8; // 8 is the maximum size of the Varint
     char *pkt = (char *)malloc(len);
+    int packetLength = 0; // packetLength is the size of the message + the size of the length, which is varint
 
     // encode the size of the message followed by the message itself
     google::protobuf::io::ArrayOutputStream aos(pkt, len);
     CodedOutputStream *coded_output = new CodedOutputStream(&aos);
     coded_output->WriteVarint32(msg->ByteSize());
     msg->SerializeToCodedStream(coded_output);
+    packetLength = coded_output->ByteCount();
 
     // send the message
     char *buffer = pkt;
-    while(len > 0) {
-        int nsent = send(sock, buffer, len, 0);
+    while(packetLength > 0) {
+        int nsent = send(sock, buffer, packetLength, 0);
         if (nsent == -1) {
             LogError("Error sending data {}", errno);
             assert(nsent != -1);
@@ -104,7 +106,7 @@ error sendMsg(int sock, MessagePtr msg) {
             return error::New("Remote side closed socket");
         } else {
             buffer += nsent;
-            len -= nsent;
+            packetLength -= nsent;
         }
     }
 

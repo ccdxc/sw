@@ -15,8 +15,8 @@ namespace messanger {
 
 // TCP utility functions implemented in tcp_utils.cc
 error sendMsg(int sock, MessagePtr msg);
-google::protobuf::uint32 readHdr(char *buf);
-MessagePtr readBody(int csock,google::protobuf::uint32 siz);
+int readHdr(char *buf, google::protobuf::uint32 *size);
+MessagePtr readBody(int csock, int haederSize, google::protobuf::uint32 siz);
 
 } // namespace messanger
 } // namespace delphi

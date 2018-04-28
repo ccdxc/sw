@@ -42,6 +42,8 @@ void SockReceiver::ReadSocket(ev::io &watcher, int revents) {
 
     char buffer[4];
     int bytecount = 0;
+    int headerSize = 0;
+    google::protobuf::uint32 messageSize = 0;
     memset(buffer, '\0', 4);
 
     //Peek into the socket and get the packet size
@@ -62,7 +64,8 @@ void SockReceiver::ReadSocket(ev::io &watcher, int revents) {
     }
 
     // read the body
-    MessagePtr msg = readBody(watcher.fd, readHdr(buffer));
+    headerSize = readHdr(buffer, &messageSize);
+    MessagePtr msg = readBody(watcher.fd, headerSize, messageSize);
     assert(msg != NULL);
 
     // handle the message
