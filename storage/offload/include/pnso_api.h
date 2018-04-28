@@ -198,9 +198,10 @@ struct pnso_crypto_desc {
 /*  descriptor flags */
 #define PNSO_DFLAG_ZERO_PAD		(1 << 0)
 #define PNSO_DFLAG_INSERT_HEADER	(1 << 1)
-#define PNSO_DFLAG_HEADER_PRESENT	(1 << 2)
-#define PNSO_DFLAG_HASH_PER_BLOCK	(1 << 3)
-#define PNSO_DFLAG_CHKSUM_PER_BLOCK	(1 << 4)
+#define PNSO_DFLAG_BYPASS_ONFAIL	(1 << 2)
+#define PNSO_DFLAG_HEADER_PRESENT	(1 << 3)
+#define PNSO_DFLAG_HASH_PER_BLOCK	(1 << 4)
+#define PNSO_DFLAG_CHKSUM_PER_BLOCK	(1 << 5)
 
 /**
  * struct pnso_compression_desc - represents the descriptor for compression
@@ -216,6 +217,12 @@ struct pnso_crypto_desc {
  *
  *	PNSO_DFLAG_INSERT_HEADER - indicates whether or not to insert
  *	compression header compressed output buffer.
+ *
+ *	PNSO_DFLAG_BYPASS_ONFAIL - indicates whether or not to use
+ *	the source buffer as input buffer to hash and/or checksum,
+ *	services, when compression operation fails.  This flag is
+ *	effective only when compression, hash and/or checksum operation
+ *	is requested.
  *
  */
 struct pnso_compression_desc {
@@ -240,7 +247,7 @@ struct pnso_decompression_desc {
 
 /**
  * struct pnso_hash_desc - represents the descriptor for data deduplication
- * operation
+ * hash operation
  * @flags: specifies the following applicable descriptor flags to
  * hash descriptor.
  *	PNSO_DFLAG_HASH_PER_BLOCK - indicates whether to produce one
