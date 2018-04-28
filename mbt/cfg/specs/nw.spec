@@ -42,9 +42,9 @@ objects:
             pre_cb   : None
             post_cb  : None
         update:
-            api      : NexthopUpdate
-            request  : NexthopRequestMsg
-            response : NexthopResponseMsg
+            api      : None
+            request  : None
+            response : None
             pre_cb   : None
             post_cb  : None
         delete:
@@ -70,9 +70,9 @@ objects:
             pre_cb   : None
             post_cb  : None
         update:
-            api      : RouteUpdate
-            request  : RouteRequestMsg
-            response : RouteResponseMsg
+            api      : None
+            request  : None
+            response : None
             pre_cb   : None
             post_cb  : None
         delete:

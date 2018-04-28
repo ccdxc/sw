@@ -134,7 +134,7 @@ enum IPAddressFamily {
 
 // IP address object
 message IPAddress {
-  IPAddressFamily    ip_af   = 1;      // IP address family
+  IPAddressFamily    ip_af   = 1[(gogoproto.moretags) = "venice:mandatory"];      // IP address family
   oneof v4_or_v6 {
     fixed32          v4_addr = 2;      // IPv4 address
     bytes            v6_addr = 3;      // IPv6 address  (TODO: need better representation here)
