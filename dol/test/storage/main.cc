@@ -32,6 +32,7 @@ void queues_shutdown();
 DEFINE_uint64(hal_port, 50054, "TCP port of the HAL's gRPC server");
 DEFINE_string(hal_ip, "localhost", "IP of HAL's gRPC server");
 DEFINE_string(test_group, "", "Test group to run");
+DEFINE_string(acc_scale_test, "", "Accelerator test(s) to run");
 DEFINE_uint64(poll_interval, 60, "Polling interval in seconds");
 DEFINE_uint64(long_poll_interval, 300,
               "Polling interval for longer running tests in seconds");
@@ -58,6 +59,9 @@ DEFINE_uint64(acc_scale_iters, 1,
 // Verification method for accelerator scale testing
 DEFINE_string(acc_scale_verify_method, "full",
               "Per-iteration verification method for accelerator scale testing: fast, or full");
+
+DEFINE_bool(with_rtl_skipverify, false,
+            "Test being run under RTL with --skipverify in effect");
 
 bool run_nvme_dp_tests = false;
 bool run_unit_tests = false;
@@ -264,6 +268,74 @@ int common_setup() {
   return 0;
 }
 
+// Vector of supported accelerator scale test names
+
+struct acc_scale_test_name_t {
+  const std::string name;
+  uint32_t          map_bit;
+};
+std::vector<acc_scale_test_name_t> acc_scale_test_names = {
+    {"compress-encrypt", ACC_SCALE_TEST_COMP_ENCRYPT},
+    {"decrypt-decompress", ACC_SCALE_TEST_DECRYPT_DECOMP},
+    {"compress-hash", ACC_SCALE_TEST_COMP_HASH},
+    {"checksum-decompress", ACC_SCALE_TEST_CHKSUM_DECOMP},
+};
+
+// Parse and convert the argument string into a bitmap of recognized tests
+void acc_scale_test_help_print(void)
+{
+    printf("Available accelerator scale tests: ");
+    for (uint32_t i = 0; i < acc_scale_test_names.size(); i++) {
+        printf("%s%s", acc_scale_test_names[i].name.c_str(),
+               i == (acc_scale_test_names.size() - 1) ?
+               "\n" : ", ");
+    }
+}
+
+// Parse and convert the argument string into a bitmap of recognized tests
+int acc_scale_test_str_parse(std::string& acc_scale_test_str)
+{
+    std::string elem;
+    size_t      cur_pos, sep_pos, elem_len;
+    uint32_t    i;
+
+    cur_pos = 0;
+    while (cur_pos != std::string::npos) {
+        sep_pos = acc_scale_test_str.find_first_of(", \t", cur_pos);
+
+        if (sep_pos == std::string::npos) {
+            sep_pos = acc_scale_test_str.length();
+        }
+
+        elem_len = sep_pos - cur_pos;
+        if (elem_len == 0) {
+            break;
+        }
+
+        elem.assign(acc_scale_test_str.substr(cur_pos, elem_len));
+        if (elem == "help") {
+            acc_scale_test_help_print();
+
+        } else {
+            for (i = 0; i < acc_scale_test_names.size(); i++) {
+                if (elem == acc_scale_test_names[i].name) {
+                    run_acc_scale_tests_map |= acc_scale_test_names[i].map_bit;
+                    break;
+                }
+            }
+
+            if (i == acc_scale_test_names.size()) {
+                acc_scale_test_help_print();
+                printf("Usage: unrecognized acc_scale_test %s\n", elem.c_str());
+                return -1;
+            }
+        }
+
+        cur_pos = acc_scale_test_str.find_first_not_of(", \t", sep_pos);
+    }
+
+    return 0;
+}
 
 size_t tcid = 0;
 int main(int argc, char**argv) {
@@ -280,6 +352,8 @@ int main(int argc, char**argv) {
             << "\nBlock size for accelerator scale testing (in power of 2): " << FLAGS_acc_scale_blk_size 
             << "\n# Iterations for accelerator scale testing (0 = infinite): " << FLAGS_acc_scale_iters 
             << "\nVerification method for accelerator scale testing: " << FLAGS_acc_scale_verify_method 
+            << "\nAccelerator scale tests: " << FLAGS_acc_scale_test
+            << "\nWith RTL --skipverify in effect: " << FLAGS_with_rtl_skipverify
             << std::endl;
 
   // Set the test group based on flags. Default is to allow all.
@@ -345,17 +419,14 @@ int main(int argc, char**argv) {
       run_noc_perf_tests = true;
   } else if (FLAGS_test_group == "rdma_perf") {
       run_rdma_perf_tests = true;
-  } else if (FLAGS_test_group == "acc_scale_comp_hash") {
-      run_acc_scale_tests_map |= ACC_SCALE_TEST_COMP_HASH;
-  } else if (FLAGS_test_group == "acc_scale_comp_encrypt") {
-      run_acc_scale_tests_map |= ACC_SCALE_TEST_COMP_ENCRYPT;
-  } else if (FLAGS_test_group == "acc_scale_decrypt_decomp") {
-      run_acc_scale_tests_map |= ACC_SCALE_TEST_DECRYPT_DECOMP;
-  } else if (FLAGS_test_group == "acc_scale_comp_encrypt_decrypt_decomp") {
-      run_acc_scale_tests_map |= ACC_SCALE_TEST_COMP_ENCRYPT |
-                                 ACC_SCALE_TEST_DECRYPT_DECOMP;
   } else if (FLAGS_test_group == "acc_scale") {
-      run_acc_scale_tests_map |= ACC_SCALE_TEST_ALL;
+      if (FLAGS_acc_scale_test.empty()) {
+          run_acc_scale_tests_map |= ACC_SCALE_TEST_ALL;
+      } else {
+          if (acc_scale_test_str_parse(FLAGS_acc_scale_test)) {
+              return -1;
+          }
+      }
   } else if (FLAGS_test_group == "perf") {
       run_xts_perf_tests = true;
       run_noc_perf_tests = true;
@@ -368,7 +439,8 @@ int main(int argc, char**argv) {
     return -1;
   }
 
-  printf("Starting configuration \n");
+  printf("Starting configuration: run_acc_scale_tests_map 0x%x\n",
+         run_acc_scale_tests_map);
   if (common_setup() < 0)  {
     printf("Common setup failed\n");
     return 1;

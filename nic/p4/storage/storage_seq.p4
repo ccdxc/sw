@@ -318,6 +318,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
  *****************************************************************************/
 
 //@pragma little_endian src_hbm_pa dst_hbm_pa sgl_pdma_in_pa sgl_pdma_out_pa data_len sgl_vec_pa pad_buf_pa
+@pragma little_endian pad_buf_pa
 action seq_comp_status_desc1_handler(src_hbm_pa, dst_hbm_pa, sgl_pdma_in_pa, sgl_pdma_out_pa, 
                                      sgl_vec_pa, pad_buf_pa,
                                      data_len, pad_len_shift, stop_chain_on_error,

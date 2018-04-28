@@ -9,6 +9,7 @@
 #include "decrypt_decomp_chain.hpp"
 #include "comp_encrypt_chain.hpp"
 #include "comp_hash_chain.hpp"
+#include "chksum_decomp_chain.hpp"
 #include "nic/asic/capri/design/common/cap_addr_define.h"
 #include "nic/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
 
@@ -120,6 +121,7 @@ static dp_mem_t *status_host_buf2;
 static dp_mem_t *opaque_host_buf;
 static dp_mem_t *hash_status_host_vec;
 static dp_mem_t *hash_opaque_host_vec;
+static dp_mem_t *decomp_status_host;
 
 static dp_mem_t *host_sgl1;
 static dp_mem_t *host_sgl2;
@@ -132,6 +134,7 @@ static dp_mem_t *xts_status_host_buf;
 static comp_encrypt_chain_t   *comp_encrypt_chain;
 static comp_hash_chain_t      *comp_hash_chain;
 static decrypt_decomp_chain_t *decrypt_decomp_chain;
+static chksum_decomp_chain_t  *chksum_decomp_chain;
 
 static dp_mem_t *comp_pad_buf;
 
@@ -558,6 +561,17 @@ compression_buf_init()
                                            caller_hash_status_vec(hash_status_host_vec).
                                            caller_hash_opaque_vec(hash_opaque_host_vec).
                                            caller_hash_opaque_data(kCompHashIntrData));
+    // Create and initialize checksum-decompression chaining
+    chksum_decomp_chain_params_t cdc_ctor;
+    chksum_decomp_chain = 
+         new chksum_decomp_chain_t(cdc_ctor.app_max_size(kCompAppMaxSize).
+                                            uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
+                                            destructor_free_buffers(true));
+    decomp_status_host = new dp_mem_t(1, sizeof(cp_status_sha512_t),
+                                      DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
+                                      kMinHostMemAllocSize);
+    chksum_decomp_chain_pre_push_params_t cdc_pre_push;
+    chksum_decomp_chain->pre_push(cdc_pre_push.caller_decomp_status_buf(decomp_status_host));
 }
 
 void
@@ -583,7 +597,7 @@ compression_init()
   cp_queue = new comp_queue_t(cp_cfg_q_base, cp_cfg_q_pd_idx, cp_queue_size);
   cp_hotq = new comp_queue_t(cp_cfg_hotq_base, cp_cfg_hotq_pd_idx, cp_hotq_size);
   dc_queue = new comp_queue_t(dc_cfg_q_base, dc_cfg_q_pd_idx, dc_queue_size);
-  dc_hotq = new comp_queue_t(dc_cfg_hotq_base, dc_cfg_hotq_base, dc_hotq_size);
+  dc_hotq = new comp_queue_t(dc_cfg_hotq_base, dc_cfg_hotq_pd_idx, dc_hotq_size);
 
   compression_buf_init();
 
@@ -1630,6 +1644,22 @@ int seq_compress_output_hash_app_nominal_size() {
                                  seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
     comp_hash_chain->post_push();
     return comp_hash_chain->verify();
+}
+
+// Accelerator checksum to decompression chaining DOLs.
+int seq_chksum_decompress_last_app_blk() {
+
+    // Execute checksum-decompression on the last compress-hash block,
+    // i.e., the block size is whatever was last compressed.
+    chksum_decomp_chain_push_params_t  params;
+    chksum_decomp_chain->push(params.comp_hash_chain(comp_hash_chain).
+                                     chksum_queue(dc_hotq).
+                                     decomp_queue(dc_queue).
+                                     push_type(COMP_QUEUE_PUSH_SEQUENCER).
+                                     seq_chksum_qid(queues::get_seq_comp_sq(0)).
+                                     seq_decomp_qid(queues::get_seq_comp_sq(1)));
+    chksum_decomp_chain->post_push();
+    return chksum_decomp_chain->verify();
 }
 
 }  // namespace tests

@@ -271,14 +271,54 @@ public:
         return app_blk_size;
     }
 
+    uint32_t app_hash_size_get(void)
+    {
+        return app_hash_size;
+    }
+
     uint32_t cp_output_data_len_get(void)
     {
         return last_cp_output_data_len;
     }
 
-    uint8_t *uncomp_data_get(void)
+    dp_mem_t *uncomp_buf_get(void)
     {
-        return uncomp_buf->read_thru();
+        return uncomp_buf;
+    }
+
+    dp_mem_t *comp_buf1_get(void)
+    {
+        return comp_buf1;
+    }
+
+    dp_mem_t *comp_buf2_get(void)
+    {
+        return comp_buf2;
+    }
+
+    dp_mem_t *hash_status_vec_get(void)
+    {
+        return caller_hash_status_vec;
+    }
+
+    uint8_t sha_en_get(void)
+    {
+        return sha_en;
+    }
+
+    uint8_t sha_type_get(void)
+    {
+        return sha_type;
+    }
+
+    uint8_t integrity_src_get(void)
+    {
+        return integrity_src;
+    }
+
+    uint8_t integrity_type_get(void)
+    {
+        return integrity_type;
     }
 
     int actual_hash_blks_get(comp_hash_chain_retrieve_method_t method);

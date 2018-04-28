@@ -619,6 +619,20 @@ void IncrTargetRcvBufPtr() {
 }
 
 void RegisterTargetRcvBufs() {
+
+  /*
+   * WARNING: A descendant of invokes test_ring_doorbell() which, when 
+   * RTL --skipverify is in effect, can trigger simulation to commence
+   * prematurely during init time. This would cause all subsequent
+   * tests setup to execute in simulation time (as opposed to zero time)
+   * which is extremely slow. We use flags to instruct us to skip this
+   * function, i.e., when we run certain tests under RTL which we know
+   * do not need RDMA.
+   */
+  if (FLAGS_with_rtl_skipverify && run_acc_scale_tests_map) {
+    return;
+  }
+
   RdmaMemRegister(target_rcv_buf_va->va(), target_rcv_buf_va->pa(), 
                   kR2NNumBufs * kR2NBufSize, kTargetRcvBuf1LKey, kTargetRcvBuf1RKey, true);
 
@@ -656,6 +670,14 @@ void IncrInitiatorRcvBufPtr() {
 }
 
 void RegisterInitiatorRcvBufs() {
+
+  /*
+   * See WARNING in RegisterTargetRcvBufs()
+   */
+  if (FLAGS_with_rtl_skipverify && run_acc_scale_tests_map) {
+    return;
+  }
+
   RdmaMemRegister(initiator_rcv_buf_va->va(), initiator_rcv_buf_va->pa(), 
                   kR2NNumBufs * kR2NBufSize, kInitiatorRcvBuf1LKey, kInitiatorRcvBuf1RKey, true);
   // Init the initiator recv buffer pointer
