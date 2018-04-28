@@ -10,11 +10,5 @@
     "local"   : false,
     "port"    : 3,
     "lif_id"  : 0
-  },
-  {
-    "name"    : "pen-host0",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 1
   }
 ]

@@ -133,7 +133,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint32_t cos;
             /* Get output packet from the model */
             if (!env->get_next_pkt(out_pkt, port, cos)) {
-    	        std::cout << "get_next_pkt: no packet" << std::endl;
+    	        //std::cout << "get_next_pkt: no packet" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
