@@ -7,8 +7,9 @@ rebase: true
 
 warmd:
   target: [ "go", "run", "e2e.go" ]
+  repo_dir: "/tmp"
   create:
-    image: build-7
+    image: build-8
     count: 1
     resources:
       cpus: 32
