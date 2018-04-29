@@ -86,7 +86,7 @@ TEST_F(nwsec_policy_test, test1)
     hal_ret_t                               ret;
     SecurityPolicySpec                      pol_spec;
     SecurityPolicyResponse                  res;
-    SecurityRuleSpec                        *rule_spec, rule_spec2;
+    SecurityRule                           *rule_spec, rule_spec2;
     SecurityPolicyDeleteRequest             pol_del_req;
     SecurityPolicyDeleteResponse            pol_del_rsp;
     //slab_stats_t                            *pre = NULL, *post = NULL;
@@ -102,13 +102,13 @@ TEST_F(nwsec_policy_test, test1)
     // Create nwsec
     rule_spec->set_rule_id(1);
     rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+    types::RuleMatch *match = rule_spec->mutable_match();
 
-    types::IPAddressObj *dst_addr = rule_spec->add_dst_address();
-
+    types::IPAddressObj *dst_addr = match->add_dst_address();
     dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0xAABBCC00);
 
-    types::L4PortRange *port_range = rule_spec->add_dst_port_range();
+    types::L4PortRange *port_range = match->add_app_match()->mutable_port_info()->add_dst_port_range();
     port_range->set_port_low(1000);
     port_range->set_port_high(2000);
 
@@ -121,40 +121,34 @@ TEST_F(nwsec_policy_test, test1)
     ipv4_tuple v4_tuple = {};
     v4_tuple.ip_dst = 0xAABBCC00;
     v4_tuple.port_dst = 1000;
-
     ipv4_rule_t *rule = NULL;
     nwsec_policy_t *res_policy;
     res_policy = find_nwsec_policy_by_key(10, 0);
-
     const char *ctx_name = nwsec_acl_ctx_name(res_policy->key.vrf_id);
     const acl_ctx_t *acl_ctx = acl::acl_get(ctx_name);
-
     acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
     EXPECT_NE(rule, nullptr);
+
     v4_tuple.ip_dst = 0xAABB0000;
     v4_tuple.port_dst = 1000;
-
     rule = NULL;
-
     acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
     EXPECT_EQ(rule, nullptr);
-
     acl::acl_deref(acl_ctx);
 
     // Policy Update
     rule_spec = pol_spec.add_rule();
     rule_spec->set_rule_id(1);
     rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
-
-    dst_addr = rule_spec->add_dst_address();
-
+    match = rule_spec->mutable_match();
+    dst_addr = match->add_dst_address();
     dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0xAABB0000);
 
-    port_range = rule_spec->add_dst_port_range();
+    port_range = match->add_app_match()->mutable_port_info()->add_dst_port_range();
     port_range->set_port_low(1000);
     port_range->set_port_high(2000);
-
+ 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securitypolicy_update(pol_spec, &res);
     hal::hal_cfg_db_close();
@@ -163,10 +157,8 @@ TEST_F(nwsec_policy_test, test1)
     res_policy = find_nwsec_policy_by_key(10, 0);
 
     acl_ctx = acl::acl_get(ctx_name);
-
     acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
     EXPECT_NE(rule, nullptr);
-
     acl::acl_deref(acl_ctx);
 
     // Delete policy
@@ -174,46 +166,6 @@ TEST_F(nwsec_policy_test, test1)
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securitypolicy_delete(pol_del_req, &pol_del_rsp);
     hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    //uint64_t nwsec_hdl = rule_rsp.mutable_status()->security_rule_handle();
-    //HAL_TRACE_DEBUG("handl {}", nwsec_hdl);
-#if 0
-    // Update nwsec without id or handle
-    // sp_spec.mutable_key_or_handle()->set_profile_id(1);
-    sp_spec1.set_ipsg_en(true);
-    sp_spec1.set_ip_normalization_en(false);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_update(sp_spec1, &sp_rsp1);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
-
-    // Update nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
-    sp_spec.set_ipsg_en(true);
-    sp_spec.set_ip_normalization_en(false);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_update(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-
-    // Update nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_handle(nwsec_hdl);
-    sp_spec.set_ipsg_en(false);
-    sp_spec.set_ip_normalization_en(false);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_update(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-
-
-    // Delete nwsec
-    del_req.mutable_key_or_handle()->set_profile_id(1);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_delete(del_req, &del_rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-#endif
-    ret = HAL_RET_OK;
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding

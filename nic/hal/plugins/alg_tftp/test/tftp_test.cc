@@ -43,13 +43,13 @@ protected:
                         to: {},
                         app: { proto:IPPROTO_UDP,
                                dport_low: TFTP_PORT, dport_high: TFTP_PORT,
-                               alg: nwsec::APP_NAME_TFTP } },
+                               alg: nwsec::APP_SVC_TFTP } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_UDP,
                                dport_low: 0, dport_high: 0xFFFF,
-                               alg: nwsec::APP_NAME_NONE} },
+                               alg: nwsec::APP_SVC_NONE} },
         };
 
         add_nwsec_policy(vrfh, rules);

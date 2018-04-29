@@ -44,13 +44,13 @@ protected:
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: FTP_PORT, dport_high: FTP_PORT,
-                               alg: nwsec::APP_NAME_FTP } },
+                               alg: nwsec::APP_SVC_FTP } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_UDP,
                                dport_low: 0, dport_high: 0xFFFF,
-                               alg: nwsec::APP_NAME_NONE} },
+                               alg: nwsec::APP_SVC_NONE} },
         };
 
         add_nwsec_policy(vrfh, rules);

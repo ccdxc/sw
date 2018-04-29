@@ -210,6 +210,21 @@ message SecurityProfileSpec {
   bool                         multicast_src_drop                 = 101 [(gogoproto.moretags) = "venice:default=true"];
 }
 
+// Applicaion Layer Gateway (ALG) names for invoking appropriate ALG
+enum ALGName {
+  APP_SVC_NONE        = 0;
+  APP_SVC_TFTP        = 1;    // Trivial File Transfer Protocol
+  APP_SVC_FTP         = 2;    // File Transfer Protocol
+  APP_SVC_DNS         = 3;    // Domain Name System
+  APP_SVC_SIP         = 4;    // Session Initiation Protocol
+  APP_SVC_SUN_RPC     = 5;    // SUN Remote Procedure Call
+  APP_SVC_MSFT_RPC    = 6;    // Microsoft Remote Procedure Call
+  APP_SVC_RTSP        = 7;    // Real-Time Streaming Protocol
+  APP_SVC_TRACEROUTE  = 8;    // TRACEROUTE ALG
+  APP_SVC_IP          = 9;    // IP ALG (uni-directional flow per session)
+  APP_SVC_ANY         = 10;   // "any" app
+}
+
 // SecurityProfileRequestMsg is batched add or modify profile request
 message SecurityProfileRequestMsg {
   repeated SecurityProfileSpec    request = 1;    // batched request
@@ -301,18 +316,6 @@ message Service {
     types.ICMPMsgType        icmp_msg_type   = 3;
   }
   ALGName                    alg             = 4;                //  Identifies ALG name
-}
-
-// Applicaion Layer Gateway (ALG) names for invoking appropriate ALG
-enum ALGName {
-  APP_SVC_NONE       = 0;
-  APP_SVC_TFTP       = 1;    // Trivial File Transfer Protocol
-  APP_SVC_FTP        = 2;    // File Transfer Protocol
-  APP_SVC_DNS        = 3;    // Domain Name System
-  APP_SVC_SIP        = 4;    // Session Initiation Protocol
-  APP_SVC_SUN_RPC    = 5;    // SUN Remote Procedure Call
-  APP_SVC_MSFT_RPC   = 6;    // Microsoft Remote Procedure Call
-  APP_SVC_RTSP       = 7;    // Real-Time Streaming Protocol
 }
 
 // FirewallRuleSpec defines a stateful firewall rule that is part of a
@@ -497,47 +500,9 @@ message SecurityGroupGetResponseMsg {
   types.ApiStatus                      api_status = 2;    // batch status
 }
 
-// predefined apps - default apps for which ALG functionality is invoked
-enum PredefinedApps {
-  APP_NAME_NONE           = 0;
-  APP_NAME_TFTP           = 1;  // TFTP ALG
-  APP_NAME_FTP            = 2;  // FTP ALG
-  APP_NAME_SUNRPC_TCP     = 3;  // SUNRPC ALG
-  APP_NAME_MSRPC          = 4;  // MSRPC ALG
-  APP_NAME_DNS            = 5;  // DNS ALG
-  APP_NAME_SIP            = 6;  // SIP ALG
-  APP_NAME_RTSP           = 7;  // RTSP ALG
-  APP_NAME_TRACEROUTE     = 8;  // TRACEROUTE ALG
-  APP_NAME_IP             = 9;  // IP ALG (uni-directional flow per session)
-  APP_NAME_ANY            = 10; // "any" app
-}
-
-// App - represents an application defined by (Protocol, port) combination
-// along with all applicable parameters
-message App {
-  message AppPortInfo {
-    repeated types.L4PortRange    dst_port_range = 1; // dst port range low, high value
-    repeated types.L4PortRange    src_port_range = 2; // src port range low, high value
-  }
-  message ICMPAppInfo {
-    uint32    icmp_type        = 1;
-    uint32    icmp_code        = 2;
-  }
-  message ICMPv6AppInfo {
-    uint32    icmpv6_type      = 1;
-    uint32    icmpv6_code      = 2;
-  }
-  message RPCAppInfo {
-    uint32    program_number   = 1;
-  }
-  message MSRPCAppInfo {
-    uint32    uuid            = 1;
-  }
-
-  message ESPInfo {
-    uint32 spi = 1;
-  }
-
+// AppData- identifies app data specific to security plugin
+message AppData {
+  ALGName           alg                  = 1;
   enum TraceLevel {
     TRACE_LEVEL_NONE      = 0;
     TRACE_LEVEL_BRIEF     = 1;
@@ -548,18 +513,6 @@ message App {
   message TraceOptions {
     TraceLevel    level = 1;
   }
-
-  types.IPProtocol    protocol      = 1;
-  oneof L4AppInfo {
-    AppPortInfo   port_info         = 2;
-    ICMPAppInfo   icmp_info         = 3;
-    ICMPv6AppInfo icmpv6_info       = 4;
-    RPCAppInfo    rpc_info          = 5;
-    MSRPCAppInfo  msrpc_cinfo       = 6;
-    ESPInfo       esp_info          = 7;
-  }
-  PredefinedApps    alg             = 8;
-
   message FTPOptions {
     bool allow_mismatch_ip_address  = 1; // pass FTP packets with mismatched IP header address and payload
   }
@@ -585,49 +538,18 @@ message App {
     uint32 t4_timer_value                = 6;
   }
   oneof AppOptions {
-    FTPOptions    ftp_option_info        = 9;
-    DNSOptions    dns_option_info        = 10;
-    MSRPCOptions  msrp_coption_info      = 11;
-    SunRPCOptions sun_rpc_pption_info    = 12;
-    SIPOptions    sip_options            = 13;
+    FTPOptions    ftp_option_info        = 2;
+    DNSOptions    dns_option_info        = 3;
+    MSRPCOptions  msrp_coption_info      = 4;
+    SunRPCOptions sun_rpc_pption_info    = 5;
+    SIPOptions    sip_options            = 6;
   }
-  uint32            idle_timeout         = 14;
-  TraceOptions      trace_opts           = 15;
+  uint32            idle_timeout         = 7;
+  TraceOptions      trace_opts           = 8;
+  bool              conn_track_en        = 9;   // Enable connection tracking
 }
 
-// ApplicationSpec is either a pre-defined pensando application or user-defined
-// custom application
-message ApplicationSpec {
-  oneof apps {
-    PredefinedApps    predefined_apps        = 1; //  Predefined apps
-    App               application            = 2;
-  }
-}
-
-message ApplicationStatus {
-}
-
-message Application {
-  types.ObjectMeta     meta   = 1;
-  ApplicationSpec      spec   = 2;
-  ApplicationStatus    status = 3;
-}
-
-// group of applications to apply same policy on
-message AppGroupSpec {
-  repeated Application Apps = 2;
-}
-
-message AppGroupStatus {
-}
-
-message AppGroup {
-  types.ObjectMeta    meta      = 1;
-  AppGroupSpec        spec      = 2;
-  AppGroupStatus      status    = 3;
-}
-
-// AppSec represents an application
+// Action to be takn on hitting a rule
 enum SecurityAction {
   SECURITY_RULE_ACTION_NONE   = 0;
   SECURITY_RULE_ACTION_ALLOW  = 1;
@@ -643,32 +565,23 @@ enum LogAction {
 }
 
 message SecurityRuleAction {
-  SecurityAction  sec_action = 1;  // Identifies the security action related to the rule
-  LogAction       log_action = 2;  // Identifies log actions related to the rule
+  SecurityAction       sec_action = 1;  // Identifies the security action related to the rule
+  LogAction            log_action = 2;  // Identifies log actions related to the rule
+  repeated AppData     app_data   = 3;  // Contains app related data - data for ALG.
 }
 
-message SecurityRuleSpec {
-  uint64                          rule_id            = 1;
-  bool                            enable             = 2;        // enable/disable
-  SecurityRuleAction              action             = 3;        // action related to the rule 
-  bool                            count              = 4;        // Enable count of packets hitting the rule
-  repeated Application            app                = 5;        // applications, if any, to invoke ALG
-  repeated AppGroup               app_group          = 6;        // Comment TBD
-  repeated types.IPAddressObj     src_address        = 7;        // source address(es)
-  repeated uint32                 src_sg             = 8;        // source security group
-  repeated types.IPAddressObj     dst_address        = 9;        // destination address(es)
-  repeated uint32                 dst_sg             = 10;       // destination security group
-  repeated types.L4PortRange      dst_port_range     = 11;       // dst port
-  repeated types.L4PortRange      src_port_range     = 12;       // src port range
-
-  bool                            conn_track_en      = 13;       // Enable connection tracking
+message SecurityRule {
+  uint64                          rule_id            = 1;      // Identifier supplied by agent
+  types.RuleMatch                 match              = 2;      // match conditions 
+  SecurityRuleAction              action             = 3;      // action related to the rule 
+  repeated string                 appid              = 4;      // Future For appid based policy enforcment - can be moved into RuleMatch 
 }
 
 // SecurityPolicySpec that contains set of SecurityRules
 message SecurityPolicySpec {
   types.ObjectMeta              meta                   = 1;
   kh.SecurityPolicyKeyHandle    policy_key_or_handle   = 2;      // Policy Name that identifies the security Policy
-  repeated SecurityRuleSpec     rule                   = 3;      // List of security rules
+  repeated SecurityRule         rule                   = 3;      // List of security rules
 }
 
 // SecurityPolicyRequestMsg is batched add or modify security policy request

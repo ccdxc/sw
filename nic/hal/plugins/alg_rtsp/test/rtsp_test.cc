@@ -39,13 +39,13 @@ protected:
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: RTSP_PORT, dport_high: RTSP_PORT,
-                               alg: nwsec::APP_NAME_RTSP } },
+                               alg: nwsec::APP_SVC_RTSP } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: 0, dport_high: 0xFFFF,
-                               alg: nwsec::APP_NAME_NONE} },
+                               alg: nwsec::APP_SVC_NONE} },
         };
 
         add_nwsec_policy(vrfh, rules);

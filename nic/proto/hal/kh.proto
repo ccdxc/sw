@@ -347,3 +347,10 @@ message CoppKeyHandle {
   }
 }
 
+message AppKeyHandle {
+    oneof key_or_handle {
+        fixed64 app_id     = 1;      // Number assigned by upper layers to identify app
+        fixed64 app_handle = 2;      // id of app returned by HAL
+    }
+}
+

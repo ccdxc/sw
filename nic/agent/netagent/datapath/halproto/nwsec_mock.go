@@ -69,41 +69,41 @@ func (_mr *MockisService_L4InfoMockRecorder) Size() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisService_L4Info)(nil).Size))
 }
 
-// MockisApp_L4AppInfo is a mock of isApp_L4AppInfo interface
-type MockisApp_L4AppInfo struct {
+// MockisAppData_AppOptions is a mock of isAppData_AppOptions interface
+type MockisAppData_AppOptions struct {
 	ctrl     *gomock.Controller
-	recorder *MockisApp_L4AppInfoMockRecorder
+	recorder *MockisAppData_AppOptionsMockRecorder
 }
 
-// MockisApp_L4AppInfoMockRecorder is the mock recorder for MockisApp_L4AppInfo
-type MockisApp_L4AppInfoMockRecorder struct {
-	mock *MockisApp_L4AppInfo
+// MockisAppData_AppOptionsMockRecorder is the mock recorder for MockisAppData_AppOptions
+type MockisAppData_AppOptionsMockRecorder struct {
+	mock *MockisAppData_AppOptions
 }
 
-// NewMockisApp_L4AppInfo creates a new mock instance
-func NewMockisApp_L4AppInfo(ctrl *gomock.Controller) *MockisApp_L4AppInfo {
-	mock := &MockisApp_L4AppInfo{ctrl: ctrl}
-	mock.recorder = &MockisApp_L4AppInfoMockRecorder{mock}
+// NewMockisAppData_AppOptions creates a new mock instance
+func NewMockisAppData_AppOptions(ctrl *gomock.Controller) *MockisAppData_AppOptions {
+	mock := &MockisAppData_AppOptions{ctrl: ctrl}
+	mock.recorder = &MockisAppData_AppOptionsMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockisApp_L4AppInfo) EXPECT() *MockisApp_L4AppInfoMockRecorder {
+func (_m *MockisAppData_AppOptions) EXPECT() *MockisAppData_AppOptionsMockRecorder {
 	return _m.recorder
 }
 
-// isApp_L4AppInfo mocks base method
-func (_m *MockisApp_L4AppInfo) isApp_L4AppInfo() {
-	_m.ctrl.Call(_m, "isApp_L4AppInfo")
+// isAppData_AppOptions mocks base method
+func (_m *MockisAppData_AppOptions) isAppData_AppOptions() {
+	_m.ctrl.Call(_m, "isAppData_AppOptions")
 }
 
-// isApp_L4AppInfo indicates an expected call of isApp_L4AppInfo
-func (_mr *MockisApp_L4AppInfoMockRecorder) isApp_L4AppInfo() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isApp_L4AppInfo", reflect.TypeOf((*MockisApp_L4AppInfo)(nil).isApp_L4AppInfo))
+// isAppData_AppOptions indicates an expected call of isAppData_AppOptions
+func (_mr *MockisAppData_AppOptionsMockRecorder) isAppData_AppOptions() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isAppData_AppOptions", reflect.TypeOf((*MockisAppData_AppOptions)(nil).isAppData_AppOptions))
 }
 
 // MarshalTo mocks base method
-func (_m *MockisApp_L4AppInfo) MarshalTo(_param0 []byte) (int, error) {
+func (_m *MockisAppData_AppOptions) MarshalTo(_param0 []byte) (int, error) {
 	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
@@ -111,136 +111,20 @@ func (_m *MockisApp_L4AppInfo) MarshalTo(_param0 []byte) (int, error) {
 }
 
 // MarshalTo indicates an expected call of MarshalTo
-func (_mr *MockisApp_L4AppInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisApp_L4AppInfo)(nil).MarshalTo), arg0)
+func (_mr *MockisAppData_AppOptionsMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisAppData_AppOptions)(nil).MarshalTo), arg0)
 }
 
 // Size mocks base method
-func (_m *MockisApp_L4AppInfo) Size() int {
+func (_m *MockisAppData_AppOptions) Size() int {
 	ret := _m.ctrl.Call(_m, "Size")
 	ret0, _ := ret[0].(int)
 	return ret0
 }
 
 // Size indicates an expected call of Size
-func (_mr *MockisApp_L4AppInfoMockRecorder) Size() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisApp_L4AppInfo)(nil).Size))
-}
-
-// MockisApp_AppOptions is a mock of isApp_AppOptions interface
-type MockisApp_AppOptions struct {
-	ctrl     *gomock.Controller
-	recorder *MockisApp_AppOptionsMockRecorder
-}
-
-// MockisApp_AppOptionsMockRecorder is the mock recorder for MockisApp_AppOptions
-type MockisApp_AppOptionsMockRecorder struct {
-	mock *MockisApp_AppOptions
-}
-
-// NewMockisApp_AppOptions creates a new mock instance
-func NewMockisApp_AppOptions(ctrl *gomock.Controller) *MockisApp_AppOptions {
-	mock := &MockisApp_AppOptions{ctrl: ctrl}
-	mock.recorder = &MockisApp_AppOptionsMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockisApp_AppOptions) EXPECT() *MockisApp_AppOptionsMockRecorder {
-	return _m.recorder
-}
-
-// isApp_AppOptions mocks base method
-func (_m *MockisApp_AppOptions) isApp_AppOptions() {
-	_m.ctrl.Call(_m, "isApp_AppOptions")
-}
-
-// isApp_AppOptions indicates an expected call of isApp_AppOptions
-func (_mr *MockisApp_AppOptionsMockRecorder) isApp_AppOptions() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isApp_AppOptions", reflect.TypeOf((*MockisApp_AppOptions)(nil).isApp_AppOptions))
-}
-
-// MarshalTo mocks base method
-func (_m *MockisApp_AppOptions) MarshalTo(_param0 []byte) (int, error) {
-	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// MarshalTo indicates an expected call of MarshalTo
-func (_mr *MockisApp_AppOptionsMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisApp_AppOptions)(nil).MarshalTo), arg0)
-}
-
-// Size mocks base method
-func (_m *MockisApp_AppOptions) Size() int {
-	ret := _m.ctrl.Call(_m, "Size")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// Size indicates an expected call of Size
-func (_mr *MockisApp_AppOptionsMockRecorder) Size() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisApp_AppOptions)(nil).Size))
-}
-
-// MockisApplicationSpec_Apps is a mock of isApplicationSpec_Apps interface
-type MockisApplicationSpec_Apps struct {
-	ctrl     *gomock.Controller
-	recorder *MockisApplicationSpec_AppsMockRecorder
-}
-
-// MockisApplicationSpec_AppsMockRecorder is the mock recorder for MockisApplicationSpec_Apps
-type MockisApplicationSpec_AppsMockRecorder struct {
-	mock *MockisApplicationSpec_Apps
-}
-
-// NewMockisApplicationSpec_Apps creates a new mock instance
-func NewMockisApplicationSpec_Apps(ctrl *gomock.Controller) *MockisApplicationSpec_Apps {
-	mock := &MockisApplicationSpec_Apps{ctrl: ctrl}
-	mock.recorder = &MockisApplicationSpec_AppsMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockisApplicationSpec_Apps) EXPECT() *MockisApplicationSpec_AppsMockRecorder {
-	return _m.recorder
-}
-
-// isApplicationSpec_Apps mocks base method
-func (_m *MockisApplicationSpec_Apps) isApplicationSpec_Apps() {
-	_m.ctrl.Call(_m, "isApplicationSpec_Apps")
-}
-
-// isApplicationSpec_Apps indicates an expected call of isApplicationSpec_Apps
-func (_mr *MockisApplicationSpec_AppsMockRecorder) isApplicationSpec_Apps() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isApplicationSpec_Apps", reflect.TypeOf((*MockisApplicationSpec_Apps)(nil).isApplicationSpec_Apps))
-}
-
-// MarshalTo mocks base method
-func (_m *MockisApplicationSpec_Apps) MarshalTo(_param0 []byte) (int, error) {
-	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// MarshalTo indicates an expected call of MarshalTo
-func (_mr *MockisApplicationSpec_AppsMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisApplicationSpec_Apps)(nil).MarshalTo), arg0)
-}
-
-// Size mocks base method
-func (_m *MockisApplicationSpec_Apps) Size() int {
-	ret := _m.ctrl.Call(_m, "Size")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// Size indicates an expected call of Size
-func (_mr *MockisApplicationSpec_AppsMockRecorder) Size() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisApplicationSpec_Apps)(nil).Size))
+func (_mr *MockisAppData_AppOptionsMockRecorder) Size() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisAppData_AppOptions)(nil).Size))
 }
 
 // MockNwSecurityClient is a mock of NwSecurityClient interface

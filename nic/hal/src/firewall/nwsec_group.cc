@@ -1060,7 +1060,7 @@ calculate_hash_value(void *key, uint32_t keylen, uint32_t hv)
 
 //nwsec_rule related
 hal_ret_t
-extract_nwsec_rule_from_spec(nwsec::SecurityRuleSpec spec, nwsec_rule_t *rule)
+extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
 {
     hal_ret_t              ret = HAL_RET_OK;
     uint32_t               hv = 2166136261;
@@ -1077,39 +1077,19 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRuleSpec spec, nwsec_rule_t *rule)
 
     // Parse APPs (set alg name only for now)
     rule->alg = nwsec::APP_SVC_NONE;
-    for (int i = 0; i < spec.app_size() && rule->alg == nwsec::APP_SVC_NONE; i++) {
-        auto app = spec.app(i).spec().predefined_apps();
-        if (app == nwsec::APP_NAME_TFTP) {
-            rule->alg = nwsec::APP_SVC_TFTP;
-        } else if (app == nwsec::APP_NAME_FTP) {
-            rule->alg = nwsec::APP_SVC_FTP;
-        } else if (app == nwsec::APP_NAME_DNS) {
-            rule->alg = nwsec::APP_SVC_DNS;
-        } else if (app == nwsec::APP_NAME_SIP) {
-            rule->alg = nwsec::APP_SVC_SIP;
-        } else if (app == nwsec::APP_NAME_SUNRPC_TCP) {
-            rule->alg = nwsec::APP_SVC_SUN_RPC;
-        } else if (app == nwsec::APP_NAME_MSRPC) {
-            rule->alg = nwsec::APP_SVC_MSFT_RPC;
-        } else if (app == nwsec::APP_NAME_RTSP) {
-            rule->alg = nwsec::APP_SVC_RTSP;
-        }
+    for (int i = 0; i < spec.action().app_data_size() && rule->alg == nwsec::APP_SVC_NONE; i++) {
+        auto app = spec.action().app_data(i).alg();
+        rule->alg = app;
     }
 
-    //Fill in the hash value
-
-    uint32_t  sz = spec.src_address_size();
+    uint32_t  sz = spec.match().src_address_size();
     HAL_TRACE_DEBUG("Policy_rules:: src address Size {}", sz);
     for (uint32_t i = 0; i < sz; i++) {
-        if (spec.src_address(i).has_address()) {
-            if (spec.src_address(i).address().has_prefix()) {
-                rule->src_address.addr[i].ip_lo.v4_addr =  spec.src_address(i).address().prefix().ipv4_subnet().address().v4_addr();
+        if (spec.match().src_address(i).has_address()) {
+            if (spec.match().src_address(i).address().has_prefix()) {
+                rule->src_address.addr[i].ip_lo.v4_addr =  spec.match().src_address(i).address().prefix().ipv4_subnet().address().v4_addr();
                 rule->src_address.addr[i].af = IP_AF_IPV4;
-
-                rule->src_address.addr[i].ip_hi.v4_addr =  spec.src_address(i).address().prefix().ipv4_subnet().address().v4_addr();
-
-
-                //rule->src_address[index].ip_hi.v4_addr = <Derive from mask length>
+                rule->src_address.addr[i].ip_hi.v4_addr =  spec.match().src_address(i).address().prefix().ipv4_subnet().address().v4_addr();
                 hv = calculate_hash_value(&rule->src_address.addr[i].ip_lo.v4_addr, sizeof(rule->src_address.addr[i].ip_lo.v4_addr), hv);
                 hv = calculate_hash_value(&rule->src_address.addr[i].ip_hi.v4_addr, sizeof(rule->src_address.addr[i].ip_hi.v4_addr), hv);
             }
@@ -1117,17 +1097,15 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRuleSpec spec, nwsec_rule_t *rule)
     }
     rule->src_addr_len = sz;
 
-    sz = spec.dst_address_size();
+    sz = spec.match().dst_address_size();
     // Allocate as much as address needed.
     HAL_TRACE_DEBUG("Policy_rules:: dst addrss size {}", sz);
     for (uint32_t i = 0; i < sz; i++) {
-        if (spec.dst_address(i).has_address()) {
-            if (spec.dst_address(i).address().has_prefix()) {
-                rule->dst_address.addr[i].ip_lo.v4_addr =  spec.dst_address(i).address().prefix().ipv4_subnet().address().v4_addr();
+        if (spec.match().dst_address(i).has_address()) {
+            if (spec.match().dst_address(i).address().has_prefix()) {
+                rule->dst_address.addr[i].ip_lo.v4_addr =  spec.match().dst_address(i).address().prefix().ipv4_subnet().address().v4_addr();
                 rule->dst_address.addr[i].af = IP_AF_IPV4;
-
-                rule->dst_address.addr[i].ip_hi.v4_addr =  spec.dst_address(i).address().prefix().ipv4_subnet().address().v4_addr();
-                rule->dst_address.addr[i].af = IP_AF_IPV4;
+                rule->dst_address.addr[i].ip_hi.v4_addr =  spec.match().dst_address(i).address().prefix().ipv4_subnet().address().v4_addr();
                 hv = calculate_hash_value(&rule->dst_address.addr[i].ip_lo.v4_addr, sizeof(rule->dst_address.addr[i].ip_lo.v4_addr), hv);
                 hv = calculate_hash_value(&rule->dst_address.addr[i].ip_hi.v4_addr, sizeof(rule->dst_address.addr[i].ip_hi.v4_addr), hv);
             }
@@ -1135,52 +1113,55 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRuleSpec spec, nwsec_rule_t *rule)
     }
     rule->dst_addr_len = sz;
 
-    sz = spec.src_sg_size();
+    sz = spec.match().src_sg_size();
     HAL_TRACE_DEBUG("Policy_rules:: src  sg Size {}", sz);
     for (uint32_t i = 0; i < sz; i++) {
-        rule->src_sg.sg[i].sg_hi =  spec.src_sg(i);
-        rule->src_sg.sg[i].sg_lo = spec.src_sg(i);
+        rule->src_sg.sg[i].sg_hi =  spec.match().src_sg(i);
+        rule->src_sg.sg[i].sg_lo =  spec.match().src_sg(i);
         hv = calculate_hash_value(&rule->src_sg.sg[i], sizeof(rule->src_sg.sg[i]), hv);
     }
     rule->src_sg_len = sz;
 
-    sz = spec.dst_sg_size();
+    sz = spec.match().dst_sg_size();
     HAL_TRACE_DEBUG("Policy_rules:: dst sg Size {}", sz);
     for (uint32_t i = 0; i < sz; i++) {
-        rule->dst_sg.sg[i].sg_hi =  spec.dst_sg(i);
-        rule->dst_sg.sg[i].sg_lo =  spec.dst_sg(i);
+        rule->dst_sg.sg[i].sg_hi =  spec.match().dst_sg(i);
+        rule->dst_sg.sg[i].sg_lo =  spec.match().dst_sg(i);
         hv = calculate_hash_value(&rule->dst_sg.sg[i], sizeof(rule->dst_sg.sg[i]), hv);
     }
-
     rule->dst_sg_len = sz;
-    sz  = spec.dst_port_range_size();
-    HAL_TRACE_DEBUG("Policy_rules:: dst port range Size {}", sz);
-    for (uint32_t i = 0; i < sz; i++) {
-        rule->dst_port_range.port[i].port_hi  =
-             spec.dst_port_range(i).port_high();
-        rule->dst_port_range.port[i].port_lo =
-             spec.dst_port_range(i).port_low();
 
-        hv = calculate_hash_value(&rule->dst_port_range.port[i].port_hi, sizeof(rule->dst_port_range.port[i].port_hi), hv);
-        hv = calculate_hash_value(&rule->dst_port_range.port[i].port_lo, sizeof(rule->dst_port_range.port[i].port_lo), hv);
+    uint32_t  app_sz = spec.match().app_match_size();
+    for (uint32_t i = 0; i < app_sz; i++) {
+        const types::RuleMatch_AppMatchInfo  app = spec.match().app_match(i);
+        if (app.App_case() == types::RuleMatch_AppMatchInfo::kPortInfo) {
+            const types::RuleMatch_L4PortAppInfo port_info = app.port_info();
+            sz  = port_info.dst_port_range_size();
+            HAL_TRACE_DEBUG("Policy_rules:: dst port range Size {}", sz);
+            for (uint32_t i = 0; i < sz; i++) {
+                rule->dst_port_range.port[i].port_hi  =
+                        port_info.dst_port_range(i).port_high();
+                rule->dst_port_range.port[i].port_lo =
+                        port_info.dst_port_range(i).port_low();
+                hv = calculate_hash_value(&rule->dst_port_range.port[i].port_hi, sizeof(rule->dst_port_range.port[i].port_hi), hv);
+                hv = calculate_hash_value(&rule->dst_port_range.port[i].port_lo, sizeof(rule->dst_port_range.port[i].port_lo), hv);
+            }
+            rule->dst_port_len = sz;
+            sz = port_info.src_port_range_size();
+            HAL_TRACE_DEBUG("Policy_rules::src port range Size {}", sz);
+            for (uint32_t i = 0; i < sz; i++) {
+                rule->src_port_range.port[i].port_hi  =
+                    port_info.src_port_range(i).port_high();
+                rule->src_port_range.port[i].port_lo =
+                    port_info.src_port_range(i).port_low();
 
+                hv = calculate_hash_value(&rule->src_port_range.port[i].port_hi, sizeof(rule->src_port_range.port[i].port_hi), hv);
+                hv = calculate_hash_value(&rule->src_port_range.port[i].port_lo, sizeof(rule->src_port_range.port[i].port_lo), hv);
+            }
+            rule->src_port_len = sz;
+            rule->hash_value = hv;
+        }
     }
-    rule->dst_port_len = sz;
-
-
-    sz = spec.src_port_range_size();
-    HAL_TRACE_DEBUG("Policy_rules::src port range Size {}", sz);
-    for (uint32_t i = 0; i < sz; i++) {
-        rule->src_port_range.port[i].port_hi  =
-            spec.src_port_range(i).port_high();
-        rule->src_port_range.port[i].port_lo =
-            spec.src_port_range(i).port_low();
-
-        hv = calculate_hash_value(&rule->src_port_range.port[i].port_hi, sizeof(rule->src_port_range.port[i].port_hi), hv);
-        hv = calculate_hash_value(&rule->src_port_range.port[i].port_lo, sizeof(rule->src_port_range.port[i].port_lo), hv);
-    }
-    rule->src_port_len = sz;
-    rule->hash_value = hv;
     return ret;
 
 }
@@ -1761,4 +1742,5 @@ securitypolicy_get(nwsec::SecurityPolicyGetRequest&         req,
 {
     return HAL_RET_OK;
 }
+
 }    // namespace hal

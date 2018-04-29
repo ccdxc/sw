@@ -28,7 +28,7 @@ public:
             uint16_t proto;
             uint16_t dport_low;
             uint16_t dport_high;
-            nwsec::PredefinedApps alg;
+            nwsec::ALGName alg;
         } app;
     };
 

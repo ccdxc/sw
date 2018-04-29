@@ -38,19 +38,19 @@ protected:
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: SUNRPC_PORT, dport_high: SUNRPC_PORT,
-                               alg: nwsec::APP_NAME_SUNRPC_TCP } },
+                               alg: nwsec::APP_SVC_SUN_RPC } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: MSRPC_PORT, dport_high: MSRPC_PORT,
-                               alg: nwsec::APP_NAME_MSRPC } },
+                               alg: nwsec::APP_SVC_MSFT_RPC } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: 0, dport_high: 0xFFFF,
-                               alg: nwsec::APP_NAME_NONE} },
+                               alg: nwsec::APP_SVC_NONE} },
         };
 
         add_nwsec_policy(vrfh, rules);

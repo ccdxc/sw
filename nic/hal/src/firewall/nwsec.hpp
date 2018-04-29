@@ -234,7 +234,6 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&   req,
 hal_ret_t
 securitypolicy_get(nwsec::SecurityPolicyGetRequest&      req,
                    nwsec::SecurityPolicyGetResponseMsg   *res);
-
 }    // namespace hal
 
 #endif    // __NWSEC_HPP__

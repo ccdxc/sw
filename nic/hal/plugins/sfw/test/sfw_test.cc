@@ -45,19 +45,19 @@ protected:
                         to: { addr: g_eps[1].ip, plen: 32},
                         app: { proto:IPPROTO_TCP,
                                dport_low: 22, dport_high: 22,
-                               alg: nwsec::APP_NAME_NONE} },
+                               alg: nwsec::APP_SVC_NONE} },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: 80, dport_high: 80,
-                               alg: nwsec::APP_NAME_NONE} },
+                               alg: nwsec::APP_SVC_NONE} },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: 0, dport_high: 0xFFFF,
-                               alg: nwsec::APP_NAME_NONE} },
+                               alg: nwsec::APP_SVC_NONE} },
         };
 
         nwsech_ = add_nwsec_policy(vrfh_, rules);

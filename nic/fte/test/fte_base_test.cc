@@ -150,13 +150,14 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<v4_r
 
     uint32_t rule_id = 0;
     for (auto &rule: rules) {
-        nwsec::SecurityRuleSpec *rule_spec = spec.add_rule();
+        nwsec::SecurityRule *rule_spec = spec.add_rule();
 
         rule_spec->set_rule_id(++rule_id);
         rule_spec->mutable_action()->set_sec_action(rule.action);
+        types::RuleMatch *match = rule_spec->mutable_match();
 
         if (rule.to.addr) {
-            types::IPPrefix *prefix = rule_spec->add_dst_address()->
+            types::IPPrefix *prefix = match->add_dst_address()->
                 mutable_address()->mutable_prefix()->mutable_ipv4_subnet();
 
             prefix->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
@@ -165,20 +166,20 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<v4_r
         }
 
         if (rule.from.addr) {
-            types::IPPrefix *prefix = rule_spec->add_src_address()->
+            types::IPPrefix *prefix = match->add_src_address()->
                 mutable_address()->mutable_prefix()->mutable_ipv4_subnet();
             prefix->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
             prefix->mutable_address()->set_v4_addr(rule.from.addr);
             prefix->set_prefix_len(rule.from.plen ?: 32);
         }
 
-        types::L4PortRange *port_range = rule_spec->add_dst_port_range();
+        types::L4PortRange *port_range = match->add_app_match()->mutable_port_info()->add_dst_port_range();
         port_range->set_port_low(rule.app.dport_low);
         port_range->set_port_high(rule.app.dport_high);
 
         if (rule.app.alg) {
-            nwsec::ApplicationSpec *app_spec = rule_spec->add_app()->mutable_spec();
-            app_spec->set_predefined_apps(rule.app.alg);
+            nwsec::AppData *app_data = rule_spec->mutable_action()->add_app_data();
+            app_data->set_alg(rule.app.alg);
         }
     }
 
