@@ -717,9 +717,9 @@ func (c *cache) NewTxn() kvstore.Txn {
 // Close closes the cache by shutting down backend watches and backend connections.
 //   This probably needs clearing the cache itself, which will be done by a call to Clear.
 func (c *cache) Close() {
-	defer c.Unlock()
 	c.Lock()
 	c.active = false
+	c.Unlock()
 	if c.cancel != nil {
 		c.cancel()
 	}
@@ -727,6 +727,8 @@ func (c *cache) Close() {
 		c.argus.Stop()
 	}
 	c.Clear()
+	defer c.Unlock()
+	c.Lock()
 	for {
 		i := c.pool.GetFromPool()
 		if i == nil {
