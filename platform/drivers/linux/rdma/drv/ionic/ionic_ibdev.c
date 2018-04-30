@@ -1,17 +1,3 @@
-
-#if 0
-#include <linux/if_ether.h>
-#include <linux/pci.h> /* XXX can we do without? */
-#include <linux/printk.h>
-#include <linux/rculist.h>
-#include <linux/spinlock.h>
-#include <net/dcbnl.h>
-#include <net/ipv6.h>
-#include <rdma/ib_umem.h>
-#include <rdma/ib_user_verbs.h>
-#include <rdma/ib_verbs.h>
-#endif
-
 #include <linux/interrupt.h>
 #include <linux/module.h>
 #include <linux/mman.h>
@@ -1480,14 +1466,8 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			.opcode = CMD_OPCODE_RDMA_CREATE_QP,
 			.sq_wqe_size = qp->sq.stride,
 			.rq_wqe_size = qp->rq.stride,
-#if 1
-			/* XXX is this right? */
-			.num_sq_wqes = (uint32_t)qp->sq.mask,
-			.num_rq_wqes = (uint32_t)qp->rq.mask,
-#else
 			.num_sq_wqes = (uint32_t)qp->sq.mask + 1,
 			.num_rq_wqes = (uint32_t)qp->rq.mask + 1,
-#endif
 			.num_rsq_wqes = IONIC_NUM_RSQ_WQE,
 			.num_rrq_wqes = IONIC_NUM_RRQ_WQE,
 			.pd = pd->pdid,
