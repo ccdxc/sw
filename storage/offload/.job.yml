@@ -1,0 +1,10 @@
+---
+targets:
+  test: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build :all && /sw/bazel-bin/storage/offload/pnso_offloader -t 2 -m 0x3; ret=$?; exit $ret" ]
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/storage/offload"
+rebase: true

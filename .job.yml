@@ -15,6 +15,7 @@ references:
   - venice/ui
   - test/suites/e2e
   - test/suites/e2esanities
+  - storage/offload
 dependencies:
   dol: nic
   nic/agent: venice

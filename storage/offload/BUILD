@@ -22,3 +22,16 @@ cc_library(
         "include/pnso_wafl.h"
     ],
 )
+
+cc_library(
+    name = "spdk",
+    deps = ["//storage/offload/third-party:spdk"],
+)
+
+cc_binary(
+    name = "pnso_offloader",
+    srcs = ["src/linux/uspace/offloader.c"],
+    deps = ["//storage/offload:spdk"],
+		copts = [ "-g" ],
+    linkopts = [ "-lpthread", "-lrt", "-ldl", "-lnuma", "-luuid"],
+)
