@@ -99,6 +99,35 @@ void ionic_api_put_intr(struct lif *lif, int intr)
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_intr);
 
+int ionic_api_get_hbm(struct lif *lif, u32 *pgid, phys_addr_t *pgaddr, int order)
+{
+	struct ionic_dev *idev = &lif->ionic->idev;
+	int ret;
+
+	mutex_lock(&idev->hbm_inuse_lock);
+	ret = bitmap_find_free_region(idev->hbm_inuse, idev->hbm_npages, order);
+	mutex_unlock(&idev->hbm_inuse_lock);
+
+	if (ret < 0)
+		return ret;
+
+	*pgid = (u32)ret;
+	*pgaddr = idev->phy_hbm_pages + ret * PAGE_SIZE;
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(ionic_api_get_hbm);
+
+void ionic_api_put_hbm(struct lif *lif, u32 pgid, int order)
+{
+	struct ionic_dev *idev = &lif->ionic->idev;
+
+	mutex_lock(&idev->hbm_inuse_lock);
+	bitmap_release_region(idev->hbm_inuse, pgid, order);
+	mutex_unlock(&idev->hbm_inuse_lock);
+}
+EXPORT_SYMBOL_GPL(ionic_api_put_hbm);
+
 void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
 			   phys_addr_t *phys_dbpage_base,
 			   u32 __iomem **intr_ctrl)

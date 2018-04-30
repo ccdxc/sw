@@ -255,6 +255,10 @@ struct ionic_dev {
 	dma_addr_t phy_db_pages;
 	struct intr_ctrl __iomem *intr_ctrl;
 	struct intr_status __iomem *intr_status;
+	struct mutex hbm_inuse_lock; /* for hbm_inuse */
+	unsigned long *hbm_inuse;
+	dma_addr_t phy_hbm_pages;
+	uint32_t hbm_npages;
 #ifdef HAPS
 	union identity __iomem *ident;
 #endif

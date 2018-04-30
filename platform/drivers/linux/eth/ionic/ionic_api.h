@@ -103,6 +103,27 @@ int ionic_api_get_intr(struct lif *lif, int *irq);
  */
 void ionic_api_put_intr(struct lif *lif, int intr);
 
+/** ionic_api_get_hbm - Reserve hbm pages.
+ * @lif:		Handle to lif.
+ * @pgid:		First page index.
+ * @pgaddr:		First page bus addr (contiguous).
+ * @order:		Log base two number of pages (PAGE_SIZE).
+ *
+ * Reserve hbm pages.
+ *
+ * Return: zero or negative error status.
+ */
+int ionic_api_get_hbm(struct lif *lif, u32 *pgid, phys_addr_t *pgaddr, int order);
+
+/** ionic_api_put_hbm - Release hbm pages.
+ * @lif:		Handle to lif.
+ * @pgid:		First page index.
+ * @order:		Log base two number of pages (PAGE_SIZE).
+ *
+ * Release hbm pages.
+ */
+void ionic_api_put_hbm(struct lif *lif, u32 pgid, int order);
+
 /** ionic_api_get_dbpages - Get doorbell page information for kernel space.
  * @lif:		Handle to lif.
  * @dbid:		Doorbell id for use in kernel space.

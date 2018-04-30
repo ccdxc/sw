@@ -20,6 +20,7 @@
 #include <linux/types.h>
 #include <linux/errno.h>
 #include <linux/io.h>
+#include <linux/slab.h>
 
 #include "ionic_dev.h"
 
@@ -70,6 +71,28 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 
 	idev->db_pages = bar->vaddr;
 	idev->phy_db_pages = bar->bus_addr;
+
+	/* BAR2 resources
+	*/
+
+	mutex_init(&idev->hbm_inuse_lock);
+
+	bar++;
+	if (num_bars < 3) {
+		idev->phy_hbm_pages = 0;
+		idev->hbm_npages = 0;
+		idev->hbm_inuse = NULL;
+		return 0;
+	}
+
+	idev->phy_hbm_pages = bar->bus_addr;
+	idev->hbm_npages = bar->len / PAGE_SIZE;
+	idev->hbm_inuse = kzalloc(BITS_TO_LONGS(idev->hbm_npages) * sizeof(long),
+				  GFP_KERNEL);
+	if (!idev->hbm_inuse) {
+		idev->phy_hbm_pages = 0;
+		idev->hbm_npages = 0;
+	}
 
 	return 0;
 }
