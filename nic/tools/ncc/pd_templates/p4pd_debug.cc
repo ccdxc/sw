@@ -30,6 +30,7 @@
 #include "nic/gen/proto/hal/debug.grpc.pb.h"
 #include <grpc++/grpc++.h>
 #include "nic/gen/${hdrdir}/include/${p4prog}p4pd.h"
+#include "nic/include/hal_pd_error.hpp"
 
 using grpc::Channel;
 using grpc::ClientContext;

@@ -4363,7 +4363,6 @@ class capri_stage:
                 pass
 
         if len(launch_any_time):
-            pdb.set_trace() # Need test case
             launch_seq[cycle-1].adv_flit = False
 
         for ct in launch_any_time:

@@ -62,6 +62,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "nic/gen/${hdrdir}/include/${p4prog}p4pd.h"
+#include "nic/include/hal_pd_error.hpp"
 
 #define P4PD_MAX_ACTION_DATA_LEN (512)
 #define P4PD_MAX_MATCHKEY_LEN    (512) /* When multiple flits can be
@@ -783,7 +784,7 @@ ${table}_pack_action_data(uint32_t tableid,
 //::                for actionfld in actionfldlist:
 //::                    actionfldname, actionfldwidth = actionfld
             if ((*actiondata_len_before_key + *actiondata_len_after_key + ${actionfldwidth})
-                >= P4PD_MAX_ACTION_DATA_LEN) {
+                > P4PD_MAX_ACTION_DATA_LEN) {
                 assert(0);
             }
             source_start_bit = 0;
@@ -908,7 +909,7 @@ ${table}_pack_action_data(uint32_t tableid,
 //::                for actionfld in actionfldlist:
 //::                    actionfldname, actionfldwidth = actionfld
             if ((dest_start_bit + ${actionfldwidth})
-                >= P4PD_MAX_ACTION_DATA_LEN) {
+                > P4PD_MAX_ACTION_DATA_LEN) {
                 assert(0);
             }
             p4pd_copy_le_src_to_be_dest(packed_actiondata,
@@ -2338,7 +2339,7 @@ ${table}_unpack_action_data(uint32_t tableid,
 //::                for actionfld in actionfldlist:
 //::                    actionfldname, actionfldwidth = actionfld
             if ((src_start_bit + ${actionfldwidth})
-                >= P4PD_MAX_ACTION_DATA_LEN) {
+                > P4PD_MAX_ACTION_DATA_LEN) {
                 assert(0);
             }
             p4pd_copy_be_adata_to_le_dest(
