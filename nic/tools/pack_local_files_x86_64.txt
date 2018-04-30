@@ -22,5 +22,6 @@ nic/model_sim/libs/*.so                                          /nic/lib/
 nic/hal/third-party/zmq/x86_64/libzmq.so                         /nic/lib/
 nic/gen/iris/dbg_out/model_debug.json                            /nic/conf/
 nic/obj/agent/netagent                                           /nic/bin/
-../../../../bin/halctl                                           /nic/bin/
+nic/obj/halctl                                                   /nic/bin/
+bazel-bin/nic/hal/test/nic_mgr_app                               /nic/bin/
 nic/sim/naples/hntap-cfg.json                                    /nic/conf

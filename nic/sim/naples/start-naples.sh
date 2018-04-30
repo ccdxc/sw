@@ -16,7 +16,7 @@ ulimit -c unlimited
 mkdir -p $LOG_DIR
 
 echo "Starting NAPLES model ..."
-$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json 2>&1 | tee $LOG_DIR/model.log &
+$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
 PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
 if [[ "" ==  "$PID" ]]; then
     echo "Failed to start NAPLES model"
@@ -26,7 +26,7 @@ else
 fi
 
 echo "Starting HAL ..."
-$NIC_DIR/bin/hal -c hal.json &
+$NIC_DIR/bin/hal -c hal.json > /dev/null 2>&1 &
 PID=`ps -eaf | grep hal | grep -v grep | awk '{print $2}'`
 if [[ "" ==  "$PID" ]]; then
     echo "Failed to start HAL"
@@ -69,6 +69,14 @@ done
 if [ $i -eq $MAX_RETRIES ]; then
     echo "HAL server failed to come up"
     #exit 1
+fi
+
+# start NIC manager and allow it to create uplinks
+echo "Starting nicmgr ..."
+$NIC_DIR/bin/nic_mgr_app
+if [ $? -neq 0]; then
+    echo "Failed to start nic mgr"
+    #exit $?
 fi
 
 echo "Starting netagent ..."

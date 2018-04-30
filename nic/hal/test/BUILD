@@ -72,7 +72,7 @@ cc_binary(
 )
 
 cc_binary(
-    name = "fake_nic_mgr",
+    name = "nic_mgr_app",
     srcs = [
         "fake_nic_mgr.cc",
     ],

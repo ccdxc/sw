@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <iostream>
 #include <thread>
 #include <math.h>
@@ -12,7 +13,6 @@
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-using vrf::Vrf;
 using intf::Interface;
 using intf::InterfaceSpec;
 using intf::InterfaceRequestMsg;
@@ -25,57 +25,23 @@ using intf::LifRequestMsg;
 using intf::LifResponseMsg;
 using intf::LifQStateMapEntry;
 using intf::QStateSetReq;
-using sys::ApiStatsResponse;
-using sys::ApiStatsEntry;
-using sys::System;
-using sys::SystemResponse;
-using sys::Stats;
-using sys::DropStats;
-using sys::DropStatsEntry;
-using sys::TableStats;
-using sys::TableStatsEntry;
 using types::Empty;
-using debug::Debug;
-using event::Event;
-using event::EventRequest;
-using event::EventResponse;
-
-std::string  hal_svc_endpoint_     = "localhost:50054";
 
 class hal_client {
 public:
-    hal_client(std::shared_ptr<Channel> channel) : vrf_stub_(Vrf::NewStub(channel)),
-    event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)),
-    debug_stub_(Debug::NewStub(channel)), intf_stub_(Interface::NewStub(channel)) {}
-
-    int api_stats_get() {
-        ClientContext       context;
-        Empty               request;
-        ApiStatsResponse    response;
-        int                 count;
-        Status              status;
-
-        std::cout << "API Stats Get" << std::endl;
-
-        status = system_stub_->ApiStatsGet(&context, request, &response);
-        if (status.ok()) {
-            count = response.api_entries_size();
-
-            std::cout << "\nAPI Statistics:\n";
-
-            for (int i = 0; i < count; i ++) {
-                ApiStatsEntry entry = response.api_entries(i);
-                std::cout << "Stats " << entry.api_type() << ": "
-                << entry.num_api_call() << "\t"
-                << entry.num_api_success() << "\t"
-                << entry.num_api_fail() << "\n";
-            }
-        }
-
-        return 0;
+    hal_client(std::shared_ptr<Channel> channel) :
+        intf_stub_(Interface::NewStub(channel)) {
+        channel_ = channel;
     }
 
-    void lif_get_all() {
+    void wait_until_ready(void) {
+        while (channel_->GetState(true) != GRPC_CHANNEL_READY) {
+            std::cout << "Waiting for HAL to be ready ..." << std::endl;
+            sleep(5);
+        }
+    }
+
+    void lif_get_all (void) {
         LifGetRequestMsg    req_msg;
         LifGetResponseMsg   rsp_msg;
         ClientContext       context;
@@ -140,70 +106,80 @@ public:
         return 0;
     }
 
-       // create few uplinks and return the handle for the 1st one
-        uint64_t uplinks_create(uint64_t if_id_start, uint32_t num_uplinks) {
-            InterfaceSpec           *spec;
-            InterfaceRequestMsg     req_msg;
-            InterfaceResponseMsg    rsp_msg;
-            ClientContext           context;
-            Status                  status;
-            static uint64_t         port_num = 1;
+   // create few uplinks and return the handle for the 1st one
+    uint64_t uplinks_create(uint64_t if_id_start, uint32_t num_uplinks) {
+        InterfaceSpec           *spec;
+        InterfaceRequestMsg     req_msg;
+        InterfaceResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+        static uint64_t         port_num = 1;
 
+        for (uint32_t i = 0; i < num_uplinks; i++) {
+            spec = req_msg.add_request();
+            spec->mutable_key_or_handle()->set_interface_id(if_id_start++);
+            spec->set_type(::intf::IfType::IF_TYPE_UPLINK);
+            spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+            spec->mutable_if_uplink_info()->set_port_num(port_num++);
+        }
+        status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
             for (uint32_t i = 0; i < num_uplinks; i++) {
-                spec = req_msg.add_request();
-                spec->mutable_key_or_handle()->set_interface_id(if_id_start++);
-                spec->set_type(::intf::IfType::IF_TYPE_UPLINK);
-                spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
-                spec->mutable_if_uplink_info()->set_port_num(port_num++);
+                assert(rsp_msg.response(i).api_status() == types::API_STATUS_OK);
+                std::cout << "Uplink interface create succeeded, handle = "
+                          << rsp_msg.response(i).status().if_handle()
+                          << std::endl;
             }
-            status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
-            if (status.ok()) {
-                for (uint32_t i = 0; i < num_uplinks; i++) {
-                    assert(rsp_msg.response(i).api_status() == types::API_STATUS_OK);
-                    std::cout << "Uplink interface create succeeded, handle = "
-                              << rsp_msg.response(i).status().if_handle()
-                              << std::endl;
-                }
-                return rsp_msg.response(0).status().if_handle();
-            } else {
-                for (uint32_t i = 0; i < num_uplinks; i++) {
-                    std::cout << "Uplink interface create failed, error = "
-                              << rsp_msg.response(i).api_status()
-                              << std::endl;
-                }
+            return rsp_msg.response(0).status().if_handle();
+        } else {
+            for (uint32_t i = 0; i < num_uplinks; i++) {
+                std::cout << "Uplink interface create failed, error = "
+                          << rsp_msg.response(i).api_status()
+                          << std::endl;
             }
-
-            return 0;
         }
 
+        return 0;
+    }
+
 private:
-    std::unique_ptr<Vrf::Stub> vrf_stub_;
-    std::unique_ptr<Event::Stub> event_stub_;
-    std::unique_ptr<System::Stub> system_stub_;
-    std::unique_ptr<Debug::Stub> debug_stub_;
     std::unique_ptr<Interface::Stub> intf_stub_;
+    std::shared_ptr<Channel> channel_;
 };
 
-// main test driver
 int
 main (int argc, char** argv)
 {
-    uint64_t     uplink_if_handle; //, session_handle;
-    uint64_t     lif_handle;
-    uint64_t     if_id = 1;
-    std::string  svc_endpoint = hal_svc_endpoint_;
-    uint64_t num_uplinks    = 4;
+    uint64_t       uplink_if_handle;
+    uint64_t       lif_handle;
+    uint64_t       if_id = 1;
+    uint64_t       num_uplinks = 2;
+    std::string    svc_endpoint;
+
+    grpc_init();
+    if (getenv("HAL_GRPC_PORT")) {
+        svc_endpoint = "localhost:" + std::string(getenv("HAL_GRPC_PORT"));
+    } else {
+        svc_endpoint = "localhost:50054";
+    }
+
+    // create gRPC channel to connect to HAL and wait until it is ready
     hal_client hclient(grpc::CreateChannel(svc_endpoint,
                                            grpc::InsecureChannelCredentials()));
+    //hclient.wait_until_ready();
+
     // create uplinks
     uplink_if_handle = hclient.uplinks_create(if_id, num_uplinks);
-    assert(uplink_if_handle != 0);
+    if (uplink_if_handle == 0) {
+        exit(1);
+    }
 
     // create a lif
     lif_handle = hclient.lif_create(100, 1);
-    assert(lif_handle != 0);
-
+    if (lif_handle == 0) {
+        exit(1);
+    }
     hclient.lif_get_all();
-    hclient.api_stats_get();
+
     return 0;
 }

@@ -291,6 +291,8 @@ halctl:
 	# Disable halctl for coverage
     ifeq ($(c),0)
 		$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/cmd/halctl
+		# need to copy to nic/obj for packaging
+		cp ${GOPATH}/bin/halctl obj/
     endif
 
 pd: pd_iris pd_stub

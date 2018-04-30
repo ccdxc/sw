@@ -12,4 +12,4 @@ export LUA_PATH="$SNORT_EXPORT_DIR/lua/?.lua;;"
 export SNORT_DAQ_PATH=$SNORT_EXPORT_DIR/x86_64/lib/
 
 echo "STARTING HAL: `date +%x_%H:%M:%S:%N`"
-$GDB $NIC_DIR/../bazel-bin/nic/hal/test/fake_nic_mgr 2>&1 | tee fake_nic_mgr.log
+$GDB $NIC_DIR/../bazel-bin/nic/hal/test/nic_mgr_app 2>&1 | tee fake_nic_mgr.log
