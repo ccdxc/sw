@@ -38,12 +38,6 @@ type CMDBasedProvider struct {
 	// the remote URL of the CMD endpoint
 	cmdEndpointURL string
 
-	// conn is the gRPC client connection
-	conn *grpc.ClientConn
-
-	// the CMD gRPC client
-	cmdClient certapi.CertificatesClient
-
 	// Client/Server Name. Used when asking for certificate
 	endpointID string
 
@@ -133,18 +127,57 @@ func defaultOptions() *cmdProviderOptions {
 	}
 }
 
-func (p *CMDBasedProvider) getCkmDialOptions() []grpc.DialOption {
-	// The CMD API is not authenticated. We cannot use TLS because the API itself is meant to supply TLS certificates.
-	dialOptions := []grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(p.connTimeout)}
+func (p *CMDBasedProvider) getCmdDialOptions() []grpc.DialOption {
+	// The CMD API is not authenticated.
+	// We cannot use TLS because the API itself is meant to supply TLS certificates.
+	//
+	// A component may request multiple certificates back-to-back, for example because
+	// it hosts multiple servers or because it needs to work both as a client and as a server.
+	// Since we use a single balancer for all requests but a new connection for each,
+	// the balancer may still be holding to connections that are not fully closed when a new
+	// request comes along. The default gRPC behavior in this case is to fail the RPC immediately
+	// and let the client retry later. In our case it is better to wait for the old connection to
+	// terminate cleanly and for the new one to be established. This is accomplished by
+	// setting the FailFast to false on all RPCs.
+	// See https://github.com/grpc/grpc/blob/master/doc/wait-for-ready.md
+
+	dialOptions := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+		grpc.WithTimeout(p.connTimeout),
+		grpc.WithDefaultCallOptions(grpc.FailFast(false))}
+
 	if p.balancer != nil {
 		dialOptions = append(dialOptions, grpc.WithBalancer(p.balancer))
 	}
 	return dialOptions
 }
 
+// Connect to CMD Endpoint
+func (p *CMDBasedProvider) openCmdConnection() (*grpc.ClientConn, error) {
+	var err error
+	var conn *grpc.ClientConn
+	for i := 0; i < p.connMaxRetries; i++ {
+		conn, err = grpc.Dial(p.cmdEndpointURL, p.getCmdDialOptions()...)
+		if err == nil {
+			return conn, nil
+		}
+		time.Sleep(p.connRetryInterval)
+	}
+	return nil, err
+}
+
 func (p *CMDBasedProvider) fetchCaCertificates() error {
+	conn, err := p.openCmdConnection()
+	if err != nil {
+		log.Errorf("Error opening CMD Connection, URL: %v, balancer: %+v", p.cmdEndpointURL, p.balancer)
+		return err
+	}
+	defer conn.Close()
+	cmdClient := certapi.NewCertificatesClient(conn)
+
 	// Fetch CA trust chain
-	tcs, err := p.cmdClient.GetCaTrustChain(context.Background(), &certapi.Empty{})
+	tcs, err := cmdClient.GetCaTrustChain(context.Background(), &certapi.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "Error fetching CA trust chain")
 	}
@@ -157,7 +190,7 @@ func (p *CMDBasedProvider) fetchCaCertificates() error {
 	}
 
 	// Fetch additional trust roots
-	rootsResp, err := p.cmdClient.GetTrustRoots(context.Background(), &certapi.Empty{})
+	rootsResp, err := cmdClient.GetTrustRoots(context.Background(), &certapi.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "Error fetching trust roots")
 	}
@@ -174,6 +207,14 @@ func (p *CMDBasedProvider) fetchCaCertificates() error {
 }
 
 func (p *CMDBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certificate, error) {
+	conn, err := p.openCmdConnection()
+	if err != nil {
+		log.Errorf("Error opening CMD Connection, URL: %v, balancer: %+v", p.cmdEndpointURL, p.balancer)
+		return nil, err
+	}
+	defer conn.Close()
+	cmdClient := certapi.NewCertificatesClient(conn)
+
 	privateKey, err := p.keyMgr.GetObject(subjAltName, keymgr.ObjectTypeKeyPair)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error reading key pair from keymgr")
@@ -190,7 +231,7 @@ func (p *CMDBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certifica
 	}
 
 	// Get the CSR signed
-	csrResp, err := p.cmdClient.SignCertificateRequest(context.Background(), &certapi.CertificateSignReq{Csr: csr.Raw})
+	csrResp, err := cmdClient.SignCertificateRequest(context.Background(), &certapi.CertificateSignReq{Csr: csr.Raw})
 	if err != nil {
 		return nil, errors.Wrap(err, "Error issuing sign request")
 	}
@@ -243,27 +284,10 @@ func NewCMDBasedProvider(cmdEpNameOrURL, endpointID string, km *keymgr.KeyMgr, o
 		return nil, fmt.Errorf("Require a balancer to resolve %v", cmdEpNameOrURL)
 	}
 
-	// Connect to CMD Endpoint and create RPC client
-	var success bool
-	var conn *grpc.ClientConn
-	for i := 0; i < provider.connMaxRetries; i++ {
-		log.Infof("Connecting to CMD Endpoint: %v", provider.cmdEndpointURL)
-		conn, err = grpc.Dial(provider.cmdEndpointURL, provider.getCkmDialOptions()...)
-		if err == nil {
-			success = true
-			provider.cmdClient = certapi.NewCertificatesClient(conn)
-			break
-		}
-		time.Sleep(provider.connRetryInterval)
-	}
-	if !success {
-		return nil, errors.Wrapf(err, "Failed to dial CMD Endpoint %s", provider.cmdEndpointURL)
-	}
-	provider.conn = conn
-
 	err = provider.fetchCaCertificates()
 	if err != nil {
-		log.Fatalf("Error fetching trust roots from %s: %v", cmdEpNameOrURL, err)
+		log.Errorf("Error fetching trust roots from %s: %v", cmdEpNameOrURL, err)
+		return nil, err
 	}
 
 	provider.running = true
@@ -317,7 +341,7 @@ func (p *CMDBasedProvider) getServerCertificate(clientHelloInfo *tls.ClientHello
 		var err error
 		tlsCert, err = p.getTLSCertificate(serverName)
 		if err != nil {
-			return nil, fmt.Errorf("Error getting dial options for server %s: %v", serverName, err)
+			return nil, fmt.Errorf("Error getting TLS certificate for server %s: %v", serverName, err)
 		}
 		p.srvCertMapMutex.Lock()
 		p.serverCertificates[serverName] = tlsCert
@@ -370,11 +394,6 @@ func (p *CMDBasedProvider) Close() {
 	p.runMutex.Lock()
 	p.running = false
 	p.runMutex.Unlock()
-	if p.conn != nil {
-		log.Infof("Closing client conn: %+v", p.conn)
-		p.conn.Close()
-		p.conn = nil
-	}
 	if p.keyMgr != nil {
 		p.keyMgr.Close()
 		p.keyMgr = nil

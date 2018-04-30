@@ -83,7 +83,7 @@ func TestCMDBasedProviderRPC(t *testing.T) {
 	rpcServer.Start()
 
 	// create client
-	rpcClient, err := rpckit.NewRPCClient("testClient", rpcServer.GetListenURL(), rpckit.WithTLSProvider(tlsProvider), rpckit.WithTracerEnabled(true), rpckit.WithRemoteServerName("test"))
+	rpcClient, err := rpckit.NewRPCClient("testClient", rpcServer.GetListenURL(), rpckit.WithTLSProvider(tlsProvider), rpckit.WithTracerEnabled(false), rpckit.WithRemoteServerName("test"))
 	defer rpcClient.Close()
 	AssertOk(t, err, "Error creating test client")
 	testClient := rpckit.NewTestClient(rpcClient.ClientConn)
@@ -155,10 +155,10 @@ func TestRPCBalancing(t *testing.T) {
 	AssertOk(t, err, "Error instantiating CMDBasedProvider")
 	defer tlsProvider.Close()
 
-	// Wait until grpc connects to both the servers
+	// Wait until initial connections are down
 	AssertEventually(t, func() (bool, interface{}) {
-		return b.NumUpConns() == 2, nil
-	}, "Unexpected up servers")
+		return srv1.GetActiveConnCount() == 0 && srv2.GetActiveConnCount() == 0, nil
+	}, fmt.Sprintf("Unexpected up connections: SRV1: %v, SRV2: %v", srv1.GetActiveConnCount(), srv2.GetActiveConnCount()))
 
 	// Clear the counters for the 2 RPCs that were triggered by NewCMDBasedProvider
 	srv1.ClearRPCCounts()
@@ -167,13 +167,26 @@ func TestRPCBalancing(t *testing.T) {
 	// getServerCertificate() is the callback that is invoked by the server to get a certificate
 	// to present to the client during the TLS handshake.
 	// Directly invoke getServerCertificate() and check that the requests are load-balanced.
-	for i := uint64(0); i < 20; i++ {
+	numRPCs := uint64(20)
+	for i := uint64(0); i < numRPCs; i++ {
 		_, err = tlsProvider.GetServerCertificate(&tls.ClientHelloInfo{ServerName: fmt.Sprintf("Hello-%d", i)})
 		AssertOk(t, err, "Error getting certificate from CMD")
+		// Verify that connections to both backends are closed
+		AssertEventually(t, func() (bool, interface{}) {
+			return srv1.GetActiveConnCount() == 0 && srv2.GetActiveConnCount() == 0, nil
+		}, fmt.Sprintf("Unexpected up backend connections: SRV1: %v, SRV2: %v", srv1.GetActiveConnCount(), srv2.GetActiveConnCount()))
 	}
 
+	// Connections to certsrv are established/torn down before/after each RPC.
+	// Even if we use the same balancer for all RPCs, the distribution of the RPCs depends on the timing of connection
+	// establishment, so it will not be exactly 50% - %50%.
 	srv1RPCCount := srv1.GetRPCSuccessCount()
 	srv2RPCCount := srv2.GetRPCSuccessCount()
-	Assert(t, (srv1RPCCount > 0) && (srv1RPCCount == srv2RPCCount),
+	Assert(t, (srv1RPCCount >= 2) && (srv2RPCCount >= 2) && (srv1RPCCount+srv2RPCCount == numRPCs),
 		fmt.Sprintf("Unexpected number of RPC calls. SRV1: %d SRV2: %d", srv1RPCCount, srv2RPCCount))
+
+	srv1ConnCount := srv1.GetCompletedConnCount()
+	srv2ConnCount := srv2.GetCompletedConnCount()
+	Assert(t, srv1ConnCount >= 2, fmt.Sprintf("SRV1 got only %d connections", srv1ConnCount))
+	Assert(t, srv2ConnCount >= 2, fmt.Sprintf("SRV2 got only %d connections", srv2ConnCount))
 }

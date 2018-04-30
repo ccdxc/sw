@@ -6,17 +6,49 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/x509"
+	"fmt"
 	"net"
 	"sync/atomic"
 
 	"github.com/pkg/errors"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/stats"
 
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/log"
 )
+
+type statsHandler struct {
+	certSrv *CertSrv
+}
+
+// TagRPC can attach some information to the given RPC context. Unused.
+func (*statsHandler) TagRPC(c context.Context, t *stats.RPCTagInfo) context.Context {
+	return c
+}
+
+// HandleRPC updates RPC-level stats. Unused.
+func (*statsHandler) HandleRPC(context.Context, stats.RPCStats) {
+}
+
+// TagConn can attach some information to the given connection context. Unused.
+func (*statsHandler) TagConn(c context.Context, t *stats.ConnTagInfo) context.Context {
+	return c
+}
+
+// HandleRPC updates connection-level stats. Used to track active and completed connections.
+func (h *statsHandler) HandleConn(c context.Context, s stats.ConnStats) {
+	switch v := s.(type) {
+	case *stats.ConnBegin:
+		h.certSrv.incrementConnBegin()
+	case *stats.ConnEnd:
+		h.certSrv.incrementConnEnd()
+	default:
+		panic(fmt.Sprintf("Unknown ConnStats type: %T", v))
+	}
+}
 
 // CertSrv is a mock instance of the CMD certificates server
 type CertSrv struct {
@@ -29,6 +61,8 @@ type CertSrv struct {
 	// counters
 	rpcSuccess uint64
 	rpcError   uint64
+	connBegin  uint64
+	connEnd    uint64
 }
 
 func (c *CertSrv) incrementRPCSuccess() {
@@ -37,6 +71,14 @@ func (c *CertSrv) incrementRPCSuccess() {
 
 func (c *CertSrv) incrementRPCError() {
 	atomic.AddUint64(&c.rpcError, 1)
+}
+
+func (c *CertSrv) incrementConnBegin() {
+	atomic.AddUint64(&c.connBegin, 1)
+}
+
+func (c *CertSrv) incrementConnEnd() {
+	atomic.AddUint64(&c.connEnd, 1)
 }
 
 // SignCertificateRequest is the handler for the RPC method with the same name
@@ -146,7 +188,7 @@ func NewCertSrv(listenURL, certPath, keyPath, rootsPath string) (*CertSrv, error
 	if err != nil {
 		return nil, errors.Wrapf(err, "Could start listening at %s", listenURL)
 	}
-	server := grpc.NewServer()
+	server := grpc.NewServer(grpc.StatsHandler(&statsHandler{certSrv: ctrler}))
 	certapi.RegisterCertificatesServer(server, ctrler)
 	ctrler.RPCServer = server
 	ctrler.listenURL = listener.Addr().String()
@@ -180,4 +222,22 @@ func (c *CertSrv) GetRPCErrorCount() uint64 {
 func (c *CertSrv) ClearRPCCounts() {
 	atomic.StoreUint64(&c.rpcSuccess, 0)
 	atomic.StoreUint64(&c.rpcError, 0)
+}
+
+// GetActiveConnCount returns the number of active connections
+func (c *CertSrv) GetActiveConnCount() uint64 {
+	// Currently there is no function in sync/atomic to subtract two atomic variables.
+	// In theory connEnd could be incremented after connBegin has been loaded, resulting
+	// in a negative value. It should not happen, but it's better to handle it just in case.
+	connBegin := atomic.LoadUint64(&c.connBegin)
+	connEnd := atomic.LoadUint64(&c.connEnd)
+	if connEnd > connBegin {
+		return connEnd - connBegin
+	}
+	return 0
+}
+
+// GetCompletedConnCount returns the total number of connections that have been completed
+func (c *CertSrv) GetCompletedConnCount() uint64 {
+	return atomic.LoadUint64(&c.connEnd)
 }
