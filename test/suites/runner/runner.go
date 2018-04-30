@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	scriptPath = "/tmp/sw/test/suites/run.sh "
+	scriptPath = "/tmp/git/pensando/sw/test/suites/run.sh "
 	jsonPath   = "/warmd.json"
 )
 

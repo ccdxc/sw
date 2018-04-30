@@ -1,3 +1,3 @@
 #!/bin/bash
-cd /tmp/sw
+cd /tmp/git/pensando/sw
 make $1
