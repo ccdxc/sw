@@ -292,7 +292,7 @@ export class MockDataUtil {
   public static mockAlerttable(): any {
     const list = [];
     const total = (environment.mockdata && environment.mockdata.alert_table_total !== undefined) ? environment.mockdata.alert_table_total : 10;
-    const len = Utility.getRandomInt(0, total);
+    const len = Utility.getRandomInt(1, total);
     for (let i = 0; i < len; i++) {
       const date = Utility.getRandomDate(Utility.getRandomInt(0, 10), Utility.getRandomInt(0, 24), Utility.getRandomInt(0, 24));
       const severity = this.getRandomItemFromList(['critical', 'warning', 'info']);
@@ -319,7 +319,7 @@ export class MockDataUtil {
 
   public static mockAlertlist(): any {
     const total = (environment.mockdata && environment.mockdata.alert_list_total !== undefined) ? environment.mockdata.alert_list_total : 20;
-    const len = Utility.getRandomInt(0, total);
+    const len = Utility.getRandomInt(1, total);
     const list = [];
     for (let i = 0; i < len; i++) {
       const user = this.getRandomItemFromList(['admin', 'operator', 'super-admin', 'security-admin']);
