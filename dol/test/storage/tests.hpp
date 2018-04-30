@@ -25,11 +25,22 @@ enum {
   ACC_SCALE_TEST_COMP_ENCRYPT   = 1U << 1,
   ACC_SCALE_TEST_COMP_HASH      = 1U << 2,
   ACC_SCALE_TEST_CHKSUM_DECOMP  = 1U << 3,
+  ACC_SCALE_TEST_ENCRYPT_ONLY   = 1U << 4,
   ACC_SCALE_TEST_ALL            = ACC_SCALE_TEST_DECRYPT_DECOMP     |
                                   ACC_SCALE_TEST_COMP_ENCRYPT       |
                                   ACC_SCALE_TEST_COMP_HASH          |
-                                  ACC_SCALE_TEST_CHKSUM_DECOMP,
-  ACC_SCALE_TEST_MAX_TYPES      = 3U // max number of test types
+                                  ACC_SCALE_TEST_ENCRYPT_ONLY       |
+                                  0, // ACC_SCALE_TEST_CHKSUM_DECOMP      |
+  ACC_SCALE_TEST_MAX            = 5,
+
+  /*
+   * IMPORTANT: specify the number of scale tests that truly deploy P4+
+   * chaining using sequencer status queues. For example, Decrypt-decomp
+   * is one such test, but checksum-decompress is not (because there is
+   * no inter-dependency between checksum and decompression so both
+   * operations would be submitted simultaneously to HW).
+   */
+   ACC_SCALE_TEST_NUM_TRUE_CHAINING_TESTS = 3
 };
 
 extern uint32_t run_acc_scale_tests_map;

@@ -42,8 +42,8 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     success(false)
 {
     uncomp_buf = new dp_mem_t(1, app_max_size,
-                              DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_);
-
+                              DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
+                              DP_MEM_ALLOC_NO_FILL);
     // Size of compressed buffers accounts any for compression failure,
     // i.e., must be as large as uncompressed buffer plus cp_hdr_t.
     // 
@@ -51,10 +51,12 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     // one in HBM for lower latency P4+ processing, and another in host
     // memory which P4+ will PDMA transfer into for the application.
     comp_buf1 = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
-                             DP_MEM_ALIGN_PAGE, params.comp_mem_type1_);
+                             DP_MEM_ALIGN_PAGE, params.comp_mem_type1_,
+                             DP_MEM_ALLOC_NO_FILL);
     if (params.comp_mem_type2_ != DP_MEM_TYPE_VOID) {
         comp_buf2 = new dp_mem_t(1, comp_buf1->line_size_get(),
-                                 DP_MEM_ALIGN_PAGE, params.comp_mem_type2_);
+                                 DP_MEM_ALIGN_PAGE, params.comp_mem_type2_,
+                                 DP_MEM_ALLOC_NO_FILL);
     } else {
         comp_buf2 = comp_buf1;
     }
@@ -67,11 +69,11 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     // memory which P4+ will copy into for the application.
     comp_status_buf1 = new dp_mem_t(1, sizeof(cp_status_sha512_t),
                            DP_MEM_ALIGN_SPEC, params.comp_status_mem_type1_,
-                           kMinHostMemAllocSize);
+                           kMinHostMemAllocSize, DP_MEM_ALLOC_NO_FILL);
     if (params.comp_status_mem_type2_ != DP_MEM_TYPE_VOID) {
         comp_status_buf2 = new dp_mem_t(1, sizeof(cp_status_sha512_t),
                                DP_MEM_ALIGN_SPEC, params.comp_status_mem_type2_,
-                               kMinHostMemAllocSize);
+                               kMinHostMemAllocSize, DP_MEM_ALLOC_NO_FILL);
     } else {
         comp_status_buf2 = comp_status_buf1;
     }
@@ -225,8 +227,7 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
      * Partially overwrite destination buffers to prevent left over
      * data from a previous run
      */
-    comp_buf1->fragment_find(0, 64)->fill_thru(0xff);
-    comp_buf2->fragment_find(0, 64)->fill_thru(0xff);
+    comp_buf2->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
 
     comp_queue = params.comp_queue_;
     hash_queue = params.hash_queue_;
@@ -261,8 +262,8 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
     chain_params.chain_ent.push_entry.barco_desc_addr = hash_desc_vec->pa();
     chain_params.chain_ent.sgl_vec_pa = hash_sgl_vec->pa();
 
-    comp_status_buf1->clear_thru();
-    comp_status_buf2->clear_thru();
+    comp_status_buf1->fragment_find(0, sizeof(uint64_t))->clear_thru();
+    comp_status_buf2->fragment_find(0, sizeof(uint64_t))->clear_thru();
     chain_params.chain_ent.status_hbm_pa = comp_status_buf1->pa();
     if (comp_status_buf1 != comp_status_buf2) {
         chain_params.chain_ent.status_dma_en = 1;
@@ -349,7 +350,7 @@ comp_hash_chain_t::hash_setup(uint32_t block_no,
 
     hash_sgl_vec->clear();
     hash_desc_vec->clear();
-    caller_hash_status_vec->clear_thru();
+    caller_hash_status_vec->fragment_find(0, sizeof(uint64_t))->clear_thru();
 
     // Note that hash is a follow-on operation after compression.
     // For this to work, the cfg_ueng CSR must have sha_data_src
@@ -419,7 +420,7 @@ comp_hash_chain_t::actual_hash_blks_get(comp_hash_chain_retrieve_method_t method
         case COMP_HASH_CHAIN_BLOCKING_RETRIEVE:
 
             // Poll for comp status
-            if (!comp_status_poll(comp_status_buf2, suppress_info_log)) {
+            if (!comp_status_poll(comp_status_buf2, cp_desc, suppress_info_log)) {
               printf("ERROR: comp_hash_chain compression status never came\n");
               return -1;
             }
@@ -493,7 +494,7 @@ comp_hash_chain_t::verify(void)
         hash_desc_vec->line_set(block_no);
         hash_desc = (cp_desc_t *)hash_desc_vec->read_thru();
 
-        if (!comp_status_poll(caller_hash_status_vec, suppress_info_log)) {
+        if (!comp_status_poll(caller_hash_status_vec, *hash_desc, suppress_info_log)) {
             printf("ERROR: comp_hash_chain block %u hash status never came\n",
                    block_no);
             return -1;

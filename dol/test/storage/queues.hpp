@@ -31,7 +31,8 @@ int seq_queues_setup();
 
 void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
                                uint64_t& acc_scale_chain_replica,
-                               uint32_t acc_scale_tests_max_chains);
+                               uint32_t acc_scale_test_max,
+                               uint32_t acc_scale_test_num_true_chaining_tests);
 int arm_queues_setup();
 
 int pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, 

@@ -35,6 +35,20 @@ typedef enum {
 
 
 /*
+ * Fill instruction on allocation. Note that for HBM, DP_MEM_ALLOC_FILL_ZERO
+ * can take significant RTL simulation time, particularly when run with
+ * --skipverify in effect.
+ *
+ * Memory fill for host memory, on the other hand, should not affect
+ * RTL simulation time.
+ */
+typedef enum {
+    DP_MEM_ALLOC_NO_FILL,
+    DP_MEM_ALLOC_FILL_ZERO
+} dp_mem_alloc_fill_t;
+
+
+/*
  * DataPath memory
  */
 class dp_mem_t
@@ -45,7 +59,8 @@ public:
              uint32_t spec_line_size,
              dp_mem_align_t mem_align = DP_MEM_ALIGN_NONE,
              dp_mem_type_t mem_type = DP_MEM_TYPE_HBM,
-             uint32_t spec_align_size = 0);
+             uint32_t spec_align_size = 0,
+             dp_mem_alloc_fill_t alloc_fill = DP_MEM_ALLOC_FILL_ZERO);
 
     ~dp_mem_t();
 

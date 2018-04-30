@@ -41,22 +41,23 @@ decrypt_decomp_chain_t::decrypt_decomp_chain_t(decrypt_decomp_chain_params_t par
     success(false)
 {
     uncomp_buf = new dp_mem_t(1, app_max_size,
-                              DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_);
-
+                              DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
+                              DP_MEM_ALLOC_NO_FILL);
     // size of compressed buffers accounts any for compression failure,
     // i.e., must be as large as uncompressed buffer plus cp_hdr_t
     xts_decrypt_buf = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
-                          DP_MEM_ALIGN_PAGE, params.decrypt_mem_type_);
+                          DP_MEM_ALIGN_PAGE, params.decrypt_mem_type_,
+                          DP_MEM_ALLOC_NO_FILL);
     // for XTS status, caller can elect to have 2 status buffers, e.g.
     // one in HBM for lower latency P4+ processing, and another in host
     // memory which P4+ will copy into for the application.
     xts_status_buf1 = new dp_mem_t(1, sizeof(uint64_t),
                           DP_MEM_ALIGN_SPEC, params.xts_status_mem_type1_,
-                          kMinHostMemAllocSize);
+                          kMinHostMemAllocSize, DP_MEM_ALLOC_NO_FILL);
     if (params.xts_status_mem_type2_ != DP_MEM_TYPE_VOID) {
         xts_status_buf2 = new dp_mem_t(1, sizeof(uint64_t),
                               DP_MEM_ALIGN_SPEC, params.xts_status_mem_type2_,
-                              kMinHostMemAllocSize);
+                              kMinHostMemAllocSize, DP_MEM_ALLOC_NO_FILL);
     } else {
         xts_status_buf2 = xts_status_buf1;
     }
@@ -138,8 +139,8 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
      * Partially overwrite destination buffers to prevent left over
      * data from a previous run
      */
-    xts_decrypt_buf->fragment_find(0, 64)->fill_thru(0xff);
-    uncomp_buf->fragment_find(0, 64)->fill_thru(0xff);
+    xts_decrypt_buf->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
+    uncomp_buf->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
 
     comp_encrypt_chain = params.comp_encrypt_chain_;
     decomp_queue = params.decomp_queue_;
@@ -284,6 +285,7 @@ decrypt_decomp_chain_t::verify(void)
       return 1;
     };
 
+    assert(poll_factor);
     tests::Poller xts_poll(FLAGS_long_poll_interval * poll_factor);
     if (xts_poll(xts_status_poll_func) != 0) {
       uint64_t curr_xts_status = *((uint64_t *)xts_status_buf2->read());
@@ -292,7 +294,7 @@ decrypt_decomp_chain_t::verify(void)
     }
 
     // Poll for decomp status
-    if (!comp_status_poll(caller_comp_status_buf, suppress_info_log)) {
+    if (!comp_status_poll(caller_comp_status_buf, cp_desc, suppress_info_log)) {
       printf("ERROR: decrypt_decomp_chain decompression status never came\n");
       return -1;
     }

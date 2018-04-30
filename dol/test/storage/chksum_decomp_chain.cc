@@ -44,7 +44,8 @@ chksum_decomp_chain_t::chksum_decomp_chain_t(chksum_decomp_chain_params_t params
     success(false)
 {
     uncomp_buf = new dp_mem_t(1, app_max_size,
-                              DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_);
+                              DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
+                              DP_MEM_ALLOC_NO_FILL);
     /*
      * Allocate enough chksum status for the worst case
      */
@@ -238,7 +239,7 @@ chksum_decomp_chain_t::chksum_setup(uint32_t block_no)
     cp_desc_t   chksum_desc = {0};
 
     caller_chksum_status_vec->line_set(block_no);
-    caller_chksum_status_vec->clear_thru();
+    caller_chksum_status_vec->fragment_find(0, sizeof(uint64_t))->clear_thru();
 
     chksum_desc.cmd_bits.integrity_src = comp_hash_chain->integrity_src_get();
     chksum_desc.cmd_bits.integrity_type = comp_hash_chain->integrity_type_get();
@@ -278,7 +279,7 @@ cp_desc_t&
 chksum_decomp_chain_t::decomp_setup(void)
 {
     memset(&dc_desc, 0, sizeof(dc_desc));
-    caller_decomp_status_buf->clear_thru();
+    caller_decomp_status_buf->fragment_find(0, sizeof(uint64_t))->clear_thru();
     decompress_cp_desc_template_fill(dc_desc, caller_comp_buf,
                                      uncomp_buf, caller_decomp_status_buf,
                                      comp_hash_chain->cp_output_data_len_get(),
@@ -320,17 +321,18 @@ chksum_decomp_chain_t::verify(void)
      */
     exp_hash_status_vec = comp_hash_chain->hash_status_vec_get();
     for (block_no = 0; block_no < num_hash_blks; block_no++) {
+        cp_desc_t& chksum_desc = chksum_desc_vec.at(block_no);
         caller_chksum_status_vec->line_set(block_no);
         exp_hash_status_vec->line_set(block_no);
 
-        if (!comp_status_poll(caller_chksum_status_vec, suppress_info_log)) {
+        if (!comp_status_poll(caller_chksum_status_vec, chksum_desc,
+                              suppress_info_log)) {
             printf("ERROR: chksum_decomp_chain block %u checksum status never came\n",
                    block_no);
             return -1;
         }
 
-        if (compress_status_verify(caller_chksum_status_vec, nullptr,
-                                   chksum_desc_vec.at(block_no))) {
+        if (compress_status_verify(caller_chksum_status_vec, nullptr, chksum_desc)) {
             printf("ERROR: chksum_decomp_chain checksum block %u status "
                    "verification failed\n", block_no);
             return -1;
@@ -351,7 +353,7 @@ chksum_decomp_chain_t::verify(void)
     /*
      * Verify decompression status
      */
-    if (!comp_status_poll(caller_decomp_status_buf, suppress_info_log)) {
+    if (!comp_status_poll(caller_decomp_status_buf, dc_desc, suppress_info_log)) {
         printf("ERROR: chksum_decomp_chain decompression status never came\n");
         return -1;
     }
