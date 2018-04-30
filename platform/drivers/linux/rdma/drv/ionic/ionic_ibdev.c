@@ -54,6 +54,14 @@ static u16 ionic_eq_work_budget = 1000; /* XXX needs tuning */
 module_param_named(work_budget, ionic_eq_work_budget, ushort, 0644);
 MODULE_PARM_DESC(work_budget, "Max events to poll per round in work context.");
 
+static bool ionic_sqhbm_inline = true;
+module_param_named(sqhbm_inline, ionic_sqhbm_inline, bool, 0644);
+MODULE_PARM_DESC(sqhbm_size, "Only alloc sq hbm for inline data capability.");
+
+static int ionic_sqhbm_order = 0; /* XXX needs tuning */
+module_param_named(sqhbm_order, ionic_sqhbm_order, int, 0644);
+MODULE_PARM_DESC(sqhbm_order, "Only alloc sq hbm less than order.");
+
 static struct workqueue_struct *ionic_workq;
 
 /* access single-threaded thru ionic_workq cpu 0 */
@@ -1491,14 +1499,16 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			.sq_cq_num = send_cq->cqid,
 			.rq_cq_num = recv_cq->cqid,
 			.host_pg_size = PAGE_SIZE,
-			/* XXX create qp should be one command */
-			.sq_lkey = qp->sq_mr->lkey,
-			.rq_lkey = qp->rq_mr->lkey,
 		},
 	};
 	int rc;
 
-	/* TODO: pagedir for queue mem, see ionic_create_mr_cmd */
+	/* XXX create qp should be one command, no create MR for queue mem */
+	if (!qp->sq_mr || !qp->rq_mr || qp->sq_is_hbm)
+		rc = -ENOSYS;
+
+	admin.cmd.create_qp.sq_lkey = qp->sq_mr->lkey;
+	admin.cmd.create_qp.rq_lkey = qp->rq_mr->lkey;
 
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)
@@ -1638,6 +1648,50 @@ err_cmd:
 #endif
 }
 
+static void ionic_qp_alloc_sq_hbm(struct ionic_ibdev *dev,
+				  struct ionic_ctx *ctx,
+				  struct ionic_qp *qp,
+				  bool cap_inline)
+{
+	int rc;
+
+	INIT_LIST_HEAD(&qp->sq_hbm_mmap.ctx_ent);
+
+	if (!qp->has_sq)
+		goto err_hbm;
+
+	if (ionic_sqhbm_inline && !cap_inline)
+		goto err_hbm;
+
+	qp->sq_hbm_order = order_base_2(qp->sq.size / PAGE_SIZE);
+
+	if (qp->sq_hbm_order >= ionic_sqhbm_order)
+		goto err_hbm;
+
+	rc = ionic_api_get_hbm(dev->lif, &qp->sq_hbm_pgid,
+			       &qp->sq_hbm_addr, qp->sq_hbm_order);
+	if (rc)
+		goto err_hbm;
+
+	if (!ctx) {
+		qp->sq_hbm_ptr = ioremap(qp->sq_hbm_addr, qp->sq.size);
+		if (!qp->sq_hbm_ptr)
+			goto err_map;
+	}
+
+	qp->sq_is_hbm = true;
+
+	return;
+
+err_map:
+	ionic_api_put_hbm(dev->lif, qp->sq_hbm_pgid, qp->sq_hbm_order);
+err_hbm:
+	qp->sq_hbm_pgid = 0;
+	qp->sq_hbm_addr = 0;
+	qp->sq_hbm_order = -1;
+	qp->sq_is_hbm = false;
+}
+
 static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 				     struct ib_qp_init_attr *attr,
 				     struct ib_udata *udata)
@@ -1749,7 +1803,7 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 		goto err_sq;
 	}
 
-	/* TODO alloc sq HBM */
+	ionic_qp_alloc_sq_hbm(dev, ctx, qp, attr->cap.max_inline_data > 0);
 
 	spin_lock_init(&qp->sq_lock);
 	spin_lock_init(&qp->rq_lock);
@@ -1764,6 +1818,19 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	if (ctx) {
 		resp.qpid = qp->qpid;
 
+		if (qp->sq_is_hbm) {
+			qp->sq_hbm_mmap.size = qp->sq.size;
+			qp->sq_hbm_mmap.pfn = PHYS_PFN(qp->sq_hbm_addr);
+
+			mutex_lock(&ctx->mmap_mut);
+			qp->sq_hbm_mmap.offset = ctx->mmap_off;
+			ctx->mmap_off += qp->sq.size;
+			list_add(&qp->sq_hbm_mmap.ctx_ent, &ctx->mmap_list);
+			mutex_unlock(&ctx->mmap_mut);
+
+			resp.sq_hbm_offset = qp->sq_hbm_mmap.offset;
+		}
+
 		rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
 		if (rc)
 			goto err_resp;
@@ -1776,6 +1843,18 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 err_resp:
 	ionic_destroy_qp_cmd(dev, qp);
 err_cmd:
+	if (qp->sq_is_hbm) {
+		if (ctx) {
+			mutex_lock(&ctx->mmap_mut);
+			list_del(&qp->sq_hbm_mmap.ctx_ent);
+			mutex_unlock(&ctx->mmap_mut);
+		} else {
+			iounmap(&qp->sq_hbm_ptr);
+		}
+
+		ionic_api_put_hbm(dev->lif, qp->sq_hbm_pgid, qp->sq_hbm_order);
+	}
+
 	if (qp->rq_mr)
 		ib_dereg_mr(qp->rq_mr);
 err_rq:
@@ -1815,6 +1894,7 @@ static int ionic_query_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 static int ionic_destroy_qp(struct ib_qp *ibqp)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibqp->device);
+	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibqp->uobject);
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
 	int rc;
 
@@ -1822,7 +1902,17 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 	if (rc)
 		return rc;
 
-	/* TODO dealloc sq HBM */
+	if (qp->sq_is_hbm) {
+		if (ctx) {
+			mutex_lock(&ctx->mmap_mut);
+			list_del(&qp->sq_hbm_mmap.ctx_ent);
+			mutex_unlock(&ctx->mmap_mut);
+		} else {
+			iounmap(&qp->sq_hbm_ptr);
+		}
+
+		ionic_api_put_hbm(dev->lif, qp->sq_hbm_pgid, qp->sq_hbm_order);
+	}
 
 	if (qp->rq_mr)
 		ib_dereg_mr(qp->rq_mr);

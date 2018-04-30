@@ -179,7 +179,10 @@ struct ionic_qp {
 	struct ionic_queue	rq;
 
 	/* infrequently accessed, keep at end */
-	struct ionic_buddy	*sq_hbm_buddy;
+	bool			sq_is_hbm;
+	int			sq_hbm_order;
+	u32			sq_hbm_pgid;
+	phys_addr_t		sq_hbm_addr;
 	struct ionic_mmap_info	sq_hbm_mmap;
 
 	/* XXX cleanup */
