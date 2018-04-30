@@ -3,6 +3,7 @@ LIBDIRS = \
           common-p4+ \
           proxy \
           rdma \
+          smbdc \
           ipsec-p4+ \
           storage \
           cpu-p4plus \
@@ -21,6 +22,7 @@ IRIS_SUBDIRS = \
           common-p4+ \
           proxy \
           rdma \
+          smbdc \
           ipsec-p4+ \
           storage \
           cpu-p4plus \
@@ -37,6 +39,7 @@ MSFT_GFT_SUBDIRS= \
           common-p4+ \
           proxy \
           rdma \
+          smbdc \
           ipsec-p4+ \
           storage \
           cpu-p4plus \

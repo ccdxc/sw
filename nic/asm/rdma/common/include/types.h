@@ -478,6 +478,7 @@ struct sge_t {
 #define OP_TYPE_LOCAL_INV           9
 #define OP_TYPE_BIND_MW             10
 #define OP_TYPE_SEND_INV_IMM        11 // vendor specific
+#define OP_TYPE_FRMR                12
 
 #define OP_TYPE_RDMA_OPER_WITH_IMM 16
 #define OP_TYPE_SEND_RCVD          17
@@ -543,6 +544,15 @@ struct sqwqe_read_t {
     r_key              : 32;
 };
 
+// FRMR
+struct sqwqe_frmr_t {
+    mr_id              : 24;
+    type               :  3;
+    dma_src_address    : 64;
+    num_entries        : 32;
+    pad                : 37;
+};
+
 struct sqwqe_t {
     struct sqwqe_base_t base;
     union {
@@ -553,6 +563,7 @@ struct sqwqe_t {
                 struct sqwqe_ud_send_t ud_send;
                 struct sqwqe_write_t write;
                 struct sqwqe_read_t read;
+                struct sqwqe_frmr_t frmr;
             };
             union {
                 pad : 256;

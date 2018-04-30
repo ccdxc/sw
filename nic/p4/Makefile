@@ -9,6 +9,7 @@ SUBDIRS = \
           ipsec-p4+ \
           storage \
           rdma \
+          smbdc \
           cpu-p4+ \
           gc \
           app-redir-p4+ \
@@ -28,6 +29,7 @@ IRIS_SUBDIRS = \
           ipsec-p4+ \
           storage \
           rdma \
+          smbdc \
           cpu-p4+ \
           gc \
           app-redir-p4+ \
@@ -44,6 +46,7 @@ MSFT_GFT_SUBDIRS = \
           ipsec-p4+ \
           storage \
           rdma \
+          smbdc \
           cpu-p4+ \
           gc \
           app-redir-p4+ \
