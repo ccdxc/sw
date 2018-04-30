@@ -40,7 +40,7 @@ MODULE_PARM_DESC(xxx_haps, "XXX Enable workarounds for HAPS.");
 
 static bool ionic_dbgfs_enable = true; /* XXX false for release */
 module_param_named(dbgfs, ionic_dbgfs_enable, bool, 0444);
-MODULE_PARM_DESC(eq_depth, "Enable debugfs for this driver.");
+MODULE_PARM_DESC(dbgfs, "Enable debugfs for this driver.");
 
 static u16 ionic_eq_depth = 0x1ff; /* XXX needs tuning */
 module_param_named(eq_depth, ionic_eq_depth, ushort, 0444);
@@ -48,11 +48,11 @@ MODULE_PARM_DESC(eq_depth, "Min depth for event queues.");
 
 static u16 ionic_eq_isr_budget = 10; /* XXX needs tuning */
 module_param_named(isr_budget, ionic_eq_isr_budget, ushort, 0644);
-MODULE_PARM_DESC(eq_depth, "Max events to poll per round in isr context.");
+MODULE_PARM_DESC(isr_budget, "Max events to poll per round in isr context.");
 
 static u16 ionic_eq_work_budget = 1000; /* XXX needs tuning */
 module_param_named(work_budget, ionic_eq_work_budget, ushort, 0644);
-MODULE_PARM_DESC(eq_depth, "Max events to poll per round in work context.");
+MODULE_PARM_DESC(work_budget, "Max events to poll per round in work context.");
 
 static struct workqueue_struct *ionic_workq;
 
