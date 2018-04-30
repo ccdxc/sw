@@ -72,7 +72,7 @@ typedef struct nat_cfg_rule_match_s {
 } nat_cfg_rule_match_t;
 
 typedef struct nat_cfg_rule_key_s {
-    rule_id_t   rule_id;
+    rule_id_t    rule_id;
 } __PACK__ nat_cfg_rule_key_t;
 
 typedef struct nat_cfg_rule_s {
@@ -81,8 +81,8 @@ typedef struct nat_cfg_rule_s {
     nat_cfg_rule_action_t    action;
 
     // operational
-    ht_ctxt_t                ht_ctxt;
     dllist_ctxt_t            list_ctxt;
+    acl::ref_t               ref_count;
 } nat_cfg_rule_t;
 
 typedef struct nat_cfg_pol_key_s {
@@ -90,21 +90,39 @@ typedef struct nat_cfg_pol_key_s {
     vrf_id_t    vrf_id;
 } __PACK__ nat_cfg_pol_key_t;
 
+typedef struct nat_cfg_pol_create_app_ctxt_s {
+    const acl::acl_ctx_t    *acl_ctx;
+} __PACK__ nat_cfg_pol_create_app_ctxt_t;
+
 typedef struct nat_cfg_pol_s {
     nat_cfg_pol_key_t    key;
     dllist_ctxt_t        rule_list;
     dllist_ctxt_t        list_ctxt;
+
+    // operational
     hal_spinlock_t       slock;
-    hal_handle_t         hdl;
-    ht_ctxt_t            key_ctx;
-    ht_ctxt_t            hdl_ctx;
+    hal_handle_t         hal_hdl;
 } nat_cfg_pol_t;
 
 //-----------------------------------------------------------------------------
 // Function prototypes
 //-----------------------------------------------------------------------------
+
+// pol.cc
+hal_ret_t nat_cfg_pol_create_cfg_handle(
+    nat::NatPolicySpec& spec, nat_cfg_pol_t **out_pol);
+void nat_cfg_pol_rsp_build(
+    nat::NatPolicyResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle);
+hal_ret_t nat_cfg_pol_create_oper_handle(nat_cfg_pol_t *pol);
+hal_ret_t nat_cfg_pol_get_cfg_handle(
+    nat::NatPolicyGetRequest& req, nat::NatPolicyGetResponseMsg *res);
+
+// rule.cc
 hal_ret_t nat_cfg_rule_spec_handle(
     const nat::NatRuleSpec& spec, dllist_ctxt_t *head);
+hal_ret_t nat_cfg_rule_create_oper_handle(
+    nat_cfg_rule_t *rule, nat_cfg_pol_create_app_ctxt_t *app_ctxt);
+const acl::acl_ctx_t * nat_cfg_pol_create_app_ctxt_init(nat_cfg_pol_t *pol);
 
 }  // namespace hal
 

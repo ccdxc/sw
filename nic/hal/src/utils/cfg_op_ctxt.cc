@@ -128,6 +128,13 @@ cfg_op_ctxt_dhl_entry_handle (cfg_op_ctxt_t *cfg_ctxt,
 
 //-----------------------------------------------------------------------------
 // cfg_op_ctxt routines
+//
+// The flow of operations : 
+//     - Add/Delete a hal handle for the given object (along with callbacks)
+//     - Allocate a DHL entry with the above  HAL handle and the object
+//     - Add the DHL entry to a list maintained in cfg_op_ctxt
+//     - The cfg_op_ctxt state will be passed around in the callbacks for
+//       actual processing on the object of interest
 //-----------------------------------------------------------------------------
 
 static inline void
@@ -143,7 +150,7 @@ cfg_op_ctxt_uninit (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 hal_ret_t
-cfg_ctxt_op_create_handle (hal_obj_id_t obj_id, void *obj,
+cfg_ctxt_op_create_handle (hal_obj_id_t obj_id, void *obj, void *app_ctxt,
                            hal_cfg_op_cb_t add_cb,
                            hal_cfg_commit_cb_t commit_cb,
                            hal_cfg_abort_cb_t abort_cb,

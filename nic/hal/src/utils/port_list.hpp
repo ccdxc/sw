@@ -14,7 +14,7 @@ using sdk::lib::dllist_ctxt_t;
 
 namespace hal {
 
-typedef struct port_range_list_elem_s {
+typedef struct port_list_elem_s {
     port_range_t     port_range;
     dllist_ctxt_t    list_ctxt;
 } __PACK__ port_list_elem_t;

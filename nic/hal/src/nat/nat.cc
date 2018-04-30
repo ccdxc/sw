@@ -808,6 +808,17 @@ nat_pool_get (NatPoolGetRequest& req, NatPoolGetResponseMsg *rsp)
 hal_ret_t
 nat_policy_create (NatPolicySpec& spec, NatPolicyResponse *rsp)
 {
+    hal_ret_t ret;
+    nat_cfg_pol_t *pol;
+
+    if ((ret = nat_cfg_pol_create_cfg_handle(spec, &pol)) != HAL_RET_OK)
+        goto end;
+
+    if ((ret = nat_cfg_pol_create_oper_handle(pol)) != HAL_RET_OK)
+        goto end;
+
+end:
+    nat_cfg_pol_rsp_build(rsp, ret, pol->hal_hdl);
     return HAL_RET_OK;
 }
 
@@ -827,6 +838,11 @@ nat_policy_delete (NatPolicyDeleteRequest& req,
 hal_ret_t
 nat_policy_get (NatPolicyGetRequest& req, NatPolicyGetResponseMsg *res)
 {
+    hal_ret_t ret;
+
+    if ((ret = nat_cfg_pol_get_cfg_handle(req, res)) != HAL_RET_OK)
+        return ret;
+
     return HAL_RET_OK;
 }
 
