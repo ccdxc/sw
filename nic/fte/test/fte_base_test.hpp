@@ -17,7 +17,9 @@ public:
     static hal_handle_t add_uplink(uint8_t port_num);
     static hal_handle_t add_endpoint(hal_handle_t l2segh, hal_handle_t intfh,
                                      uint32_t ip, uint64_t mac, uint16_t useg_vlan);
-
+    static hal_handle_t add_route(hal_handle_t vrfh,
+                                  uint32_t v4_addr, uint8_t prefix_len,
+                                  hal_handle_t eph);
     struct v4_rule_t {
         nwsec::SecurityAction action;
         struct {
@@ -36,7 +38,9 @@ public:
 
 
     static hal_ret_t inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len);
-
+    static hal_ret_t inject_eth_pkt(const fte::lifqid_t &lifq,
+                                    hal_handle_t src_ifh, hal_handle_t src_l2segh,
+                                    Tins::EthernetII &eth);
     static hal_ret_t inject_ipv4_pkt(const fte::lifqid_t &lifq,
                                      hal_handle_t dep, hal_handle_t sep, Tins::PDU &l4pdu);
 
@@ -63,7 +67,7 @@ protected:
     static fte::ctx_t ctx_;
 
 private:
-    static uint32_t vrf_id_, l2seg_id_, intf_id_, nwsec_id_;
+    static uint32_t vrf_id_, l2seg_id_, intf_id_, nwsec_id_, nh_id_;
     static uint16_t num_features_;
     static fte::feature_state_t *feature_state_;
 };

@@ -7,6 +7,9 @@
 #include "nic/hal/plugins/network/net_plugin.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/hal/src/nw/route.hpp"
+#include "nic/hal/src/nw/nh.hpp"
+#include "nic/hal/src/nw/route_acl.hpp"
 
 namespace hal {
 namespace net {
@@ -43,8 +46,59 @@ update_rewrite_info(fte::ctx_t&ctx)
 }
 
 static inline hal_ret_t
+route_lookup(const hal::flow_key_t *flow_key, hal::ep_t **nh_ep,
+             hal::if_t **nh_if, hal::l2seg_t **nh_l2seg)
+{
+    hal_ret_t ret;
+    hal::route_key_t route_key;
+    hal_handle_t route_handle;
+
+    // TODO - only v4 routes are supported
+    if (flow_key->flow_type != FLOW_TYPE_V4) {
+        return HAL_RET_ROUTE_NOT_FOUND;
+    }
+
+    route_key.vrf_id = flow_key->dvrf_id;
+    route_key.pfx.addr.addr = flow_key->dip;
+    route_key.pfx.addr.af = IP_AF_IPV4;
+    route_key.pfx.len = 32;
+    ret = hal::route_acl_lookup(&route_key, &route_handle);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    hal::route_t *route = hal::route_lookup_by_handle(route_handle);
+    if (route == NULL) {
+        return HAL_RET_ROUTE_NOT_FOUND;
+    }
+
+    hal::nexthop_t *nh = hal::nexthop_lookup_by_handle(route->nh_handle);
+    if (nh == NULL) {
+        return HAL_RET_NEXTHOP_NOT_FOUND;
+    }
+
+    *nh_ep = hal::find_ep_by_handle(nh->ep_handle);
+    if (*nh_ep == NULL) {
+        return HAL_RET_EP_NOT_FOUND;
+    }
+
+    *nh_l2seg = hal::l2seg_lookup_by_handle((*nh_ep)->l2seg_handle);
+    if (*nh_l2seg == NULL){
+        return HAL_RET_L2SEG_NOT_FOUND;
+    }
+
+    *nh_if = hal::find_if_by_handle((*nh_ep)->if_handle);
+    if (*nh_if == NULL) {
+        return HAL_RET_IF_NOT_FOUND;
+    }
+
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
 update_fwding_info(fte::ctx_t&ctx)
 {
+    hal_ret_t ret;
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
     hal::if_t *dif = ctx.dif();
 
@@ -64,10 +118,16 @@ update_fwding_info(fte::ctx_t&ctx)
             flowupd.fwding.dif = dif;
             flowupd.fwding.dl2seg = ctx.sl2seg();
         }
-    }
+    } 
 
     if (dif == NULL) {
-        return HAL_RET_IF_NOT_FOUND;
+        ret = route_lookup(&ctx.get_key(), &flowupd.fwding.dep,
+                           &flowupd.fwding.dif, &flowupd.fwding.dl2seg);
+        dif = flowupd.fwding.dif;
+        if (ret != HAL_RET_OK){
+            HAL_TRACE_INFO("net_fwding: Route lookup failed ret={}", ret);
+            return ret;
+        }
     }
 
     // update fwding info

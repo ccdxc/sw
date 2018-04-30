@@ -228,6 +228,10 @@ ctx_t::get_key(hal::flow_role_t role)
 {
     flow_t *flow = NULL;
 
+    if (role == hal::FLOW_ROLE_NONE) {
+        role = role_;
+    }
+
     if (role == hal::FLOW_ROLE_INITIATOR) {
         flow = iflow_[istage_];
     } else {
@@ -1007,6 +1011,9 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         ret = flow->set_fwding(flowupd.fwding);
         if (ret == HAL_RET_OK) {
             LOG_FLOW_UPDATE(fwding);
+            if (flowupd.fwding.dep) {
+                dep_ = flowupd.fwding.dep;
+            }
             if (flowupd.fwding.dif) {
                 dif_ = flowupd.fwding.dif;
             }
@@ -1463,6 +1470,11 @@ std::ostream& operator<<(std::ostream& os, const fwding_info_t& val)
         os << " ,qtype=" << val.qtype;
         os << ", qid=" << val.qid;
     }
+
+    if (val.dep) {
+        os << " ,dep=" << val.dep->hal_handle;
+    }
+
     if (val.dif) {
         os << " ,dif=" << val.dif->if_id;
     }

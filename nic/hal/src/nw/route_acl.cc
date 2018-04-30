@@ -240,13 +240,17 @@ route_acl_lookup(route_key_t *key, hal_handle_t *handle)
     tuple.vrf_id = key->vrf_id;
     tuple.ip_pfx = key->pfx.addr.addr.v4_addr;
     acl_classify(acl_ctx, (const uint8_t*)&tuple, (const acl_rule_t **)&rule, 0x01);
-    acl_deref(acl_ctx);
 
+    if (rule == NULL) {
+        ret = HAL_RET_ROUTE_NOT_FOUND;
+        goto end;
+    }
 
-    // Deref
     udata = (route_acl_user_data_t *)rule->data.userdata;
     *handle = udata->route_handle;
+
 end:
+    acl_deref(acl_ctx);
     return ret;
 }
 

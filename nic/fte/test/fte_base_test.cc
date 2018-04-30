@@ -18,6 +18,7 @@ uint32_t fte_base_test::vrf_id_ = 0;
 uint32_t fte_base_test::l2seg_id_ = 0;
 uint32_t fte_base_test::intf_id_ = 0;
 uint32_t fte_base_test::nwsec_id_ = 0;
+uint32_t fte_base_test::nh_id_ = 0;
 fte::ctx_t fte_base_test::ctx_ = {};
 uint16_t fte_base_test::num_features_ = 0;
 fte::feature_state_t *fte_base_test::feature_state_ = NULL;
@@ -191,6 +192,40 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<v4_r
     return resp.policy_status().security_policy_handle();
 }
 
+hal_handle_t fte_base_test::add_route(hal_handle_t vrfh,
+                                      uint32_t v4_addr, uint8_t prefix_len,
+                                      hal_handle_t eph)
+{
+    hal_ret_t                          ret;
+    nw::RouteSpec                   route_spec;
+    nw::RouteResponse               route_rsp;
+    nw::NexthopSpec                 nh_spec;
+    nw::NexthopResponse             nh_rsp;
+
+     // Create a nexthop with EP
+    nh_spec.mutable_key_or_handle()->set_nexthop_id(++nh_id_);
+    nh_spec.mutable_ep_key_or_handle()->set_endpoint_handle(eph);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::nexthop_create(nh_spec, &nh_rsp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    hal_handle_t nhh = nh_rsp.mutable_status()->nexthop_handle();
+
+    // Create a route
+    route_spec.mutable_key_or_handle()->mutable_route_key()->mutable_vrf_key_handle()->set_vrf_handle(vrfh);
+    route_spec.mutable_key_or_handle()->mutable_route_key()->mutable_ip_prefix()->set_prefix_len(prefix_len);
+    route_spec.mutable_key_or_handle()->mutable_route_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    route_spec.mutable_key_or_handle()->mutable_route_key()->mutable_ip_prefix()->mutable_address()->set_v4_addr(v4_addr);
+    route_spec.mutable_nh_key_or_handle()->set_nexthop_handle(nhh);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::route_create(route_spec, &route_rsp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    return route_rsp.mutable_status()->route_handle();
+}
+
 hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
                                     uint8_t *pkt, size_t pkt_len)
 {
@@ -220,21 +255,14 @@ static inline ip_addr_t ep_ip(hal::ep_t *ep) {
 }
 
 hal_ret_t
-fte_base_test::inject_ipv4_pkt(const fte::lifqid_t &lifq,
-                               hal_handle_t deph, hal_handle_t seph,
-                               Tins::PDU &l4pdu)
+fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
+                              hal_handle_t src_ifh, hal_handle_t src_l2segh,
+                              Tins::EthernetII &eth)
 {
-    hal::ep_t *sep = hal::find_ep_by_handle(seph);
-    EXPECT_NE(sep, nullptr);
-    ip_addr_t sip =  dllist_entry(sep->ip_list_head.next, hal::ep_ip_entry_t, ep_ip_lentry)->ip_addr;
-    hal::if_t *sif = hal::find_if_by_handle(sep->if_handle);
-
-    hal::ep_t *dep = hal::find_ep_by_handle(deph);
-    EXPECT_NE(dep, nullptr);
-    ip_addr_t dip =  dllist_entry(dep->ip_list_head.next, hal::ep_ip_entry_t, ep_ip_lentry)->ip_addr;
-
-    hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(sep->l2seg_handle);
+    hal::if_t *sif = hal::find_if_by_handle(src_ifh);
+    hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(src_l2segh);
     EXPECT_NE(l2seg, nullptr);
+
     uint8_t vlan_valid;
     uint16_t vlan_id;
     hal::if_l2seg_get_encap(sif, l2seg, &vlan_valid, &vlan_id);
@@ -244,29 +272,61 @@ fte_base_test::inject_ipv4_pkt(const fte::lifqid_t &lifq,
     hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
     hal::pd::l2seg_hw_id_t hwid = args.hwid;
 
-    Tins::EthernetII eth = Tins::EthernetII(dep->l2_key.mac_addr, sep->l2_key.mac_addr) /
-        Tins::Dot1Q(vlan_id) /
-        Tins::IP(Tins::IPv4Address(htonl(dip.addr.v4_addr)),
-                 Tins::IPv4Address(htonl(sip.addr.v4_addr))) /
-        l4pdu;
-
     fte::cpu_rxhdr_t cpu_rxhdr = {};
     cpu_rxhdr.src_lif = sif->if_id;
     cpu_rxhdr.lif = lifq.lif;
     cpu_rxhdr.qtype = lifq.qtype;
     cpu_rxhdr.qid = lifq.qid;
     cpu_rxhdr.lkp_vrf = hwid;
-    cpu_rxhdr.lkp_dir = (sep->ep_flags & EP_FLAGS_LOCAL)? FLOW_DIR_FROM_DMA :
+    cpu_rxhdr.lkp_dir = sif->if_type == intf::IF_TYPE_ENIC ? FLOW_DIR_FROM_DMA :
         FLOW_DIR_FROM_UPLINK;
     cpu_rxhdr.lkp_inst = 0;
     cpu_rxhdr.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
     cpu_rxhdr.l2_offset = 0;
+
     cpu_rxhdr.l3_offset = eth.header_size() + eth.find_pdu<Tins::Dot1Q>()->header_size();
     cpu_rxhdr.l4_offset = cpu_rxhdr.l3_offset + eth.find_pdu<Tins::IP>()->header_size();
-    cpu_rxhdr.payload_offset = cpu_rxhdr.l4_offset + l4pdu.header_size();
+    cpu_rxhdr.payload_offset = cpu_rxhdr.l4_offset;
+
+    auto l4pdu = eth.find_pdu<Tins::IP>()->inner_pdu();
+    if (l4pdu) {
+        cpu_rxhdr.payload_offset +=  l4pdu->header_size();
+    }
+
     cpu_rxhdr.flags = 0;
 
     std::vector<uint8_t> buffer = eth.serialize();
 
     return inject_pkt(&cpu_rxhdr, &buffer[0], buffer.size());
+}
+
+
+
+hal_ret_t
+fte_base_test::inject_ipv4_pkt(const fte::lifqid_t &lifq,
+                               hal_handle_t deph, hal_handle_t seph,
+                               Tins::PDU &l4pdu)
+{
+    hal::ep_t *sep = hal::find_ep_by_handle(seph);
+    EXPECT_NE(sep, nullptr);
+    ip_addr_t sip =  ep_ip(sep);
+    hal::if_t *sif = hal::find_if_by_handle(sep->if_handle);
+
+    hal::ep_t *dep = hal::find_ep_by_handle(deph);
+    EXPECT_NE(dep, nullptr);
+    ip_addr_t dip =  ep_ip(dep);
+
+    hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(sep->l2seg_handle);
+    EXPECT_NE(l2seg, nullptr);
+    uint8_t vlan_valid;
+    uint16_t vlan_id;
+    hal::if_l2seg_get_encap(sif, l2seg, &vlan_valid, &vlan_id);
+
+    Tins::EthernetII eth = Tins::EthernetII(dep->l2_key.mac_addr, sep->l2_key.mac_addr) /
+        Tins::Dot1Q(vlan_id) /
+        Tins::IP(Tins::IPv4Address(htonl(dip.addr.v4_addr)),
+                 Tins::IPv4Address(htonl(sip.addr.v4_addr))) /
+        l4pdu;
+
+    return inject_eth_pkt(lifq, sep->if_handle, sep->l2seg_handle, eth);
 }

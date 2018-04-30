@@ -255,6 +255,7 @@ typedef struct fwding_info_s {
     uint64_t qid_en:1;
     uint64_t qtype:3;
     uint64_t qid:24;
+    hal::ep_t *dep;
     hal::if_t *dif;
     hal::l2seg_t *dl2seg;
 } fwding_info_t;
@@ -428,8 +429,6 @@ public:
 
     hal_ret_t update_flow(const flow_update_t& flowupd);
 
-    // Get key based on role
-    const hal::flow_key_t& get_key(hal::flow_role_t role);
 
     // Flow has drop action set (installs flow with drop action)
     bool drop_flow() { return drop_flow_; }
@@ -452,9 +451,12 @@ public:
     hal::flow_role_t role() const { return role_; }
     void set_role(hal::flow_role_t role) { role_ = role; }
 
-    // flow key of the current pkts flow
+    // flow key of the current pkt's flow
     const hal::flow_key_t& key() const { return key_; }
     void set_key(const hal::flow_key_t& key) { key_ = key; }
+
+    // Get key based on role (role defualts to current flow's role if not specified)
+    const hal::flow_key_t& get_key(hal::flow_role_t role = hal::FLOW_ROLE_NONE);
 
     // Following are valid only for packets punted to ARM
     const cpu_rxhdr_t* cpu_rxhdr() const { return cpu_rxhdr_; }
