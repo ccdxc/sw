@@ -11,56 +11,65 @@ INTF2=pen-intf2
 #naples host interface
 HOST0=pen-host0
 
-# redirect output to bootstrap.log
-mkdir -p /var/naples/logs
-exec > /var/naples/logs/bootstrap.log
-exec 2>&1
+LOGDIR=/var/naples/logs
 
-set -x
-
-#######################################################################
-# move the tap interfaces inside the naples container to global namespace
-#######################################################################
-pid=$(docker inspect --format '{{.State.Pid}}' naples-sim)
-
-nsenter -t $pid -n ip link show dev $INTF1
-while [ $? -ne 0 ]; do
-    sleep 5
-    nsenter -t $pid -n ip link show dev $INTF1
-done
-
-#nsenter -t $pid -n ip link set $HOST0 netns 1
-nsenter -t $pid -n ip link set $INTF1 netns 1
-nsenter -t $pid -n ip link set $INTF2 netns 1
-
-#######################################################################
+########################################################################
 # Setup intf1 (redirect all the traffic detined to NAT_SUBNET via intf1)
-#######################################################################
-ip link set up dev $INTF1
-
-#interface route for NAT gateway IP
-ip route add $NAT_GWIP/32 dev $INTF1
-
-#static ARP for NAT gateway IP
-ip neigh add 10.101.0.1 lladdr 00:0c:ba:ba:ba:ba dev pen-intf1
-
-#static route for NAT subnet
-ip route add $NAT_SUBNET via $NAT_GWIP
+########################################################################
+function setup_intf1()
+{
+    while true; do
+        sleep 5
+        pid=$(docker inspect --format '{{.State.Pid}}' naples-sim)
+        nsenter -t $pid -n ip link set $INTF1 netns 1 >& /dev/null
+        if [ $? -eq 0 ]; then
+            set -x
+            ip link set up dev $INTF1
+            #interface route for NAT gateway IP
+            ip route add $NAT_GWIP/32 dev $INTF1
+            
+            #static ARP for NAT gateway IP
+            ip neigh add 10.101.0.1 lladdr 00:0c:ba:ba:ba:ba dev pen-intf1
+            
+            #static route for NAT subnet
+            ip route add $NAT_SUBNET via $NAT_GWIP
+            set +x
+        fi
+    done
+}
 
 #######################################################################
 #Setup intf2 (connect it to the other node via linux bridge)
 #######################################################################
+function setup_intf2()
+{
+    while true; do
+        sleep 5
+        pid=$(docker inspect --format '{{.State.Pid}}' naples-sim)
+        nsenter -t $pid -n ip link set $INTF2 netns 1  >& /dev/null
+        if [ $? -eq 0 ]; then
+            set -x
+            brctl addif br0 $INTF2
+            ip link set up dev $INTF2
+            set +x
+        fi
+    done
+}
+
+# redirect output to bootstrap.log
+mkdir -p $LOGDIR
+exec > $LOGDIR/bootstrap.log
+exec 2>&1
+set -x
+
+#setup the bridge
 brctl addbr br0
 brctl stp br0 off
-brctl addif br0 $INTF2
 brctl addif br0 eth1
 ip link set up dev br0
-ip link set up dev $INTF2
 ip link set up dev eth1
 
-#######################################################################
-#Setup host interface (Not used for now)
-#######################################################################
-#ip link set up dev $HOST0
-
+# setup the uplinks in background
+$(setup_intf1 >& $LOGDIR/bootstrap-intf1.log) &
+$(setup_intf2 >& $LOGDIR/bootstrap-intf2.log) &
 
