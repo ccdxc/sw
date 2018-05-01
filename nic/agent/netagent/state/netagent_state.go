@@ -33,19 +33,20 @@ func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID stri
 	}
 
 	nagent := NetAgent{
-		store:       emdb,
-		nodeUUID:    nodeUUID,
-		datapath:    dp,
-		networkDB:   make(map[string]*netproto.Network),
-		endpointDB:  make(map[string]*netproto.Endpoint),
-		secgroupDB:  make(map[string]*netproto.SecurityGroup),
-		tenantDB:    make(map[string]*netproto.Tenant),
-		namespaceDB: make(map[string]*netproto.Namespace),
-		enicDB:      make(map[string]*netproto.Interface),
-		natPoolDB:   make(map[string]*netproto.NatPool),
-		natPolicyDB: make(map[string]*netproto.NatPolicy),
-		routeDB:     make(map[string]*netproto.Route),
-		hwIfDB:      make(map[string]*netproto.Interface),
+		store:        emdb,
+		nodeUUID:     nodeUUID,
+		datapath:     dp,
+		networkDB:    make(map[string]*netproto.Network),
+		endpointDB:   make(map[string]*netproto.Endpoint),
+		secgroupDB:   make(map[string]*netproto.SecurityGroup),
+		tenantDB:     make(map[string]*netproto.Tenant),
+		namespaceDB:  make(map[string]*netproto.Namespace),
+		enicDB:       make(map[string]*netproto.Interface),
+		natPoolDB:    make(map[string]*netproto.NatPool),
+		natPolicyDB:  make(map[string]*netproto.NatPolicy),
+		natBindingDB: make(map[string]*netproto.NatBinding),
+		hwIfDB:       make(map[string]*netproto.Interface),
+		routeDB:      make(map[string]*netproto.Route),
 	}
 
 	c := config.Agent{

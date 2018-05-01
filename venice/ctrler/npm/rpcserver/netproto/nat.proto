@@ -69,7 +69,7 @@ message NatBindingSpec {
 }
 
 message NatBindingStatus {
-    string NatBindingID = 1[(gogoproto.jsontag) = "id,omitempty"];
+    uint64 NatBindingID = 1[(gogoproto.jsontag) = "id,omitempty"];
     string NatIP        = 2[(gogoproto.jsontag) = "nat-ip,omitempty"];
 }
 
@@ -88,12 +88,11 @@ message NatBindingList {
 // Nat binding rpc service
 service NatBindingApi {
     // options for auto generating rest endpoints
-    // ToDo add autogen
-//    option(venice.naplesRestService) = {
-//        Object: "NatBinding",
-//        Method: ["list", "post", "put", "delete"],
-//        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}"
-//    };
+    option(venice.naplesRestService) = {
+        Object: "NatBinding",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}"
+    };
 
     rpc GetNatBinding (api.ObjectMeta) returns (NatBinding) {};
     rpc ListNatBindings (api.ObjectMeta) returns (NatBindingList) {};

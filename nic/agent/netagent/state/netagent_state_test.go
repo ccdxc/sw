@@ -205,14 +205,32 @@ func (dp *mockDatapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) 
 	return nil
 }
 
+// CreateNatBinding creates a NAT Binding in the datapath. Stubbed out to satisfy datapath interface
+func (dp *mockDatapath) CreateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
+
+	return nil
+}
+
 // UpdateRoute updates a Route in the datapath. Stubbed out to satisfy the interface
 func (dp *mockDatapath) UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) error {
 
 	return nil
 }
 
+// UpdateNatBinding updates a NAT Binding in the datapath. Stubbed out to satisfy datapath interface
+func (dp *mockDatapath) UpdateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
+
+	return nil
+}
+
 // DeleteRoute deletes a Route in the datapath. Stubbed out to satisfy the interface
 func (dp *mockDatapath) DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+
+	return nil
+}
+
+// DeleteNatBinding deletes a NAT Binding in the datapath. Stubbed out to satisfy datapath interface
+func (dp *mockDatapath) DeleteNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
 
 	return nil
 }
@@ -1742,7 +1760,6 @@ func TestRouteCreateDelete(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
-	// nat policy
 	rt := netproto.Route{
 		TypeMeta: api.TypeMeta{Kind: "Route"},
 		ObjectMeta: api.ObjectMeta{
@@ -1783,6 +1800,51 @@ func TestRouteCreateDelete(t *testing.T) {
 	Assert(t, err != nil, "deleting non-existing route succeeded", ag)
 }
 
+func TestNatBindingCreateDelete(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+	// namespace
+	nb := netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNatBinding",
+		},
+		Spec: netproto.NatBindingSpec{
+			NatPoolName: "preCreatedNatPool",
+			IPAddress:   "10.1.1.1",
+		},
+	}
+
+	// create nat pool
+	err := ag.CreateNatBinding(&nb)
+	AssertOk(t, err, "Error creating nat pool")
+	natPool, err := ag.FindNatBinding(nb.ObjectMeta)
+	AssertOk(t, err, "Nat Pool was not found in DB")
+	Assert(t, natPool.Name == "testNatBinding", "NatBinding names did not match", natPool)
+
+	// verify duplicate tenant creations succeed
+	err = ag.CreateNatBinding(&nb)
+	AssertOk(t, err, "Error creating duplicate nat pool")
+
+	// verify list api works.
+	nbList := ag.ListNatBinding()
+	Assert(t, len(nbList) == 1, "Incorrect number of nat pools")
+
+	// delete the natpool and verify its gone from db
+	err = ag.DeleteNatBinding(&nb)
+	AssertOk(t, err, "Error deleting nat pool")
+	_, err = ag.FindNatBinding(nb.ObjectMeta)
+	Assert(t, err != nil, "Nat Pool was still found in database after deleting", ag)
+
+	// verify you can not delete non-existing tenant
+	err = ag.DeleteNatBinding(&nb)
+	Assert(t, err != nil, "deleting non-existing nat pool succeeded", ag)
+}
+
 func TestRouteUpdate(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
@@ -1819,4 +1881,41 @@ func TestRouteUpdate(t *testing.T) {
 
 	err = ag.UpdateRoute(&rt)
 	AssertOk(t, err, "Error updating route")
+}
+
+func TestNatBindingUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+	// namespace
+	nb := netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "updateNatBinding",
+		},
+		Spec: netproto.NatBindingSpec{
+			NatPoolName: "preCreatedNatPool",
+			IPAddress:   "10.1.1.1",
+		},
+	}
+
+	// create nat pool
+	err := ag.CreateNatBinding(&nb)
+	AssertOk(t, err, "Error creating nat pool")
+	natPool, err := ag.FindNatBinding(nb.ObjectMeta)
+	AssertOk(t, err, "Tenant was not found in DB")
+	Assert(t, natPool.Name == "updateNatBinding", "Nat Pool names did not match", natPool)
+
+	nbSpec := netproto.NatBindingSpec{
+		NatPoolName: "updateNatPool",
+		IPAddress:   "192.168.1.1",
+	}
+
+	nb.Spec = nbSpec
+
+	err = ag.UpdateNatBinding(&nb)
+	AssertOk(t, err, "Error updating nat pool")
 }

@@ -263,30 +263,56 @@ func (ag *fakeAgent) DeleteNatPolicy(np *netproto.NatPolicy) error {
 
 // CreateRoute creates a Route. Stubbed out to satisfy interface
 func (ag *fakeAgent) CreateRoute(rt *netproto.Route) error {
+	return nil
+}
+
+// CreateNatBinding creates a NAT Binding. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateNatBinding(np *netproto.NatBinding) error {
 
 	return nil
 }
 
 // FindRoute finds a Route. Stubbed out to satisfy interface
 func (ag *fakeAgent) FindRoute(meta api.ObjectMeta) (*netproto.Route, error) {
+	return nil, nil
+}
+
+// FindNatBinding finds a NAT Binding. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindNatBinding(meta api.ObjectMeta) (*netproto.NatBinding, error) {
 
 	return nil, nil
 }
 
 // ListRoute lists a Route. Stubbed out to satisfy interface
 func (ag *fakeAgent) ListRoute() []*netproto.Route {
+	return nil
+}
+
+// ListNatBinding lists a NAT Binding. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListNatBinding() []*netproto.NatBinding {
 
 	return nil
 }
 
 // UpdateRoute updates a Route. Stubbed out to satisfy interface
 func (ag *fakeAgent) UpdateRoute(rt *netproto.Route) error {
+	return nil
+}
+
+// UpdateNatBinding updates a NAT Binding. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateNatBinding(np *netproto.NatBinding) error {
 
 	return nil
 }
 
 // DeleteRoute deletes a Route. Stubbed out to satisfy interface
 func (ag *fakeAgent) DeleteRoute(rt *netproto.Route) error {
+
+	return nil
+}
+
+// DeleteNatBinding deletes a NAT Binding. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteNatBinding(np *netproto.NatBinding) error {
 
 	return nil
 }

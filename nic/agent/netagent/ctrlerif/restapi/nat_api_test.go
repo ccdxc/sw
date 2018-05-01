@@ -15,6 +15,131 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
+func TestNatBindingList(t *testing.T) {
+	t.Parallel()
+	var ok bool
+	var natbindingList []*netproto.NatBinding
+
+	err := netutils.HTTPGet("http://"+agentRestURL+"/api/natbindings/", &natbindingList)
+
+	AssertOk(t, err, "Error getting natbindings from the REST Server")
+	for _, o := range natbindingList {
+		if o.Name == "preCreatedNatBinding" {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		t.Errorf("Could not find preCreatedNatBinding in Response: %v", natbindingList)
+	}
+
+}
+
+func TestNatBindingPost(t *testing.T) {
+	t.Parallel()
+	var resp error
+	var ok bool
+	var natbindingList []*netproto.NatBinding
+
+	postData := netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testPostNatBinding",
+		},
+		Spec: netproto.NatBindingSpec{
+			NatPoolName: "preCreatedNatPool",
+			IPAddress:   "10.1.1.2",
+		},
+	}
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/natbindings/", &postData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natbindings/", &natbindingList)
+
+	AssertOk(t, err, "Error posting natbinding to REST Server")
+	AssertOk(t, getErr, "Error getting natbindings from the REST Server")
+	for _, o := range natbindingList {
+		if o.Name == "testPostNatBinding" {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		t.Errorf("Could not find testPostNatBinding in Response: %v", natbindingList)
+	}
+
+}
+
+func TestNatBindingUpdate(t *testing.T) {
+	t.Parallel()
+	var resp error
+	var natbindingList []*netproto.NatBinding
+
+	var actualNatBindingSpec netproto.NatBindingSpec
+	updatedNatBindingSpec := netproto.NatBindingSpec{
+		NatPoolName: "updatedNatPool",
+		IPAddress:   "192.168.1.2",
+	}
+	putData := netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "preCreatedTenant",
+			Name:      "preCreatedNatBinding",
+			Namespace: "preCreatedNamespace",
+		},
+		Spec: updatedNatBindingSpec,
+	}
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/natbindings/default/default/preCreatedNatBinding", &putData, &resp)
+	AssertOk(t, err, "Error updating natbinding to REST Server")
+
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natbindings/", &natbindingList)
+	AssertOk(t, getErr, "Error getting natbindings from the REST Server")
+	for _, o := range natbindingList {
+		if o.Name == "preCreatedNatBinding" {
+			actualNatBindingSpec = o.Spec
+			break
+		}
+	}
+	AssertEquals(t, updatedNatBindingSpec, actualNatBindingSpec, "Could not validate updated spec.")
+
+}
+
+func TestNatBindingDelete(t *testing.T) {
+	t.Parallel()
+	var resp error
+	var found bool
+	var natbindingList []*netproto.NatBinding
+
+	deleteData := netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testDeleteNatBinding",
+		},
+		Spec: netproto.NatBindingSpec{
+			NatPoolName: "preCreatedNatPool",
+		},
+	}
+	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/natbindings/", &deleteData, &resp)
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/natbindings/default/default/testDeleteNatBinding", &deleteData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natbindings/", &natbindingList)
+
+	AssertOk(t, postErr, "Error posting natbinding to REST Server")
+	AssertOk(t, err, "Error deleting natbinding from REST Server")
+	AssertOk(t, getErr, "Error getting natbindings from the REST Server")
+	for _, o := range natbindingList {
+		if o.Name == "testDeleteNatBinding" {
+			found = true
+			break
+		}
+	}
+	if found {
+		t.Errorf("Found testDeleteNatBinding in Response after deleting: %v", natbindingList)
+	}
+
+}
+
 func TestNatPolicyList(t *testing.T) {
 	t.Parallel()
 	var ok bool

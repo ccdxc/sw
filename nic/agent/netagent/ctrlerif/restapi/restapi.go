@@ -51,6 +51,7 @@ func NewRestServer(agent state.CtrlerIntf, listenURL string) (*RestServer, error
 		"/api/natpools/":    addNatPoolAPIRoutes,
 		"/api/natpolicies/": addNatPolicyAPIRoutes,
 		"/api/routes/":      addRouteAPIRoutes,
+		"/api/natbindings/": addNatBindingAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

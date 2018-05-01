@@ -1513,14 +1513,32 @@ func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 	return nil
 }
 
+// CreateNatBinding creates a NAT Binding in the datapath
+func (hd *Datapath) CreateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
+
+	return nil
+}
+
 // UpdateRoute updates a Route in the datapath
 func (hd *Datapath) UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) error {
 
 	return nil
 }
 
+// UpdateNatBinding updates a NAT Binding in the datapath
+func (hd *Datapath) UpdateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
+
+	return nil
+}
+
 // DeleteRoute deletes a Route in the datapath
 func (hd *Datapath) DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+
+	return nil
+}
+
+// DeleteNatBinding deletes a NAT Binding in the datapath
+func (hd *Datapath) DeleteNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
 
 	return nil
 }

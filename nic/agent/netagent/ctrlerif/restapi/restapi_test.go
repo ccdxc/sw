@@ -212,11 +212,30 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 			Interface: "default-uplink-1",
 		},
 	}
+	nb := netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "preCreatedTenant",
+			Name:      "preCreatedNatBinding",
+			Namespace: "preCreatedNamespace",
+		},
+		Spec: netproto.NatBindingSpec{
+			NatPoolName: "preCreatedNatPool",
+			IPAddress:   "10.1.1.1",
+		},
+	}
+
+	err = nagent.CreateNatBinding(&nb)
+	if err != nil {
+		log.Errorf("Failed to create Nat Binding. {%v}", ns)
+		return
+	}
 
 	err = nagent.CreateRoute(&rt)
 	if err != nil {
 		log.Errorf("Failed to create Route. {%v}", rt)
 		return
+
 	}
 
 	lif := netproto.Interface{

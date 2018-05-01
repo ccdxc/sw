@@ -18,6 +18,7 @@ function create_namespaces {
 }
 
 function create_networks {
+  echo "Creating Networks"
   NETWORK_URL="$NAPLES_AGENT_IP:9007/api/networks/"
 
   curl -d'{"Kind":"Network","meta":{"Name":"kingdom-1","Tenant":"default","Namespace":"kingdom-1"}, "spec":{"IPv4Subnet": "10.1.1.0/24", "IPv4Gateway":"10.1.1.1", "VlanID":100}}' -X POST -H "Content-Type: application/json" $NETWORK_URL
@@ -54,6 +55,15 @@ function create_routes {
   validate_get "kingdom-1" $ROUTE_URL
 
   echo "All Routes created"
+}
+
+function create_nat_bindings {
+  NAT_BINDING_URL="$NAPLES_AGENT_IP:9007/api/natbindings/"
+
+  curl -d'{"Kind":"NatBinding","meta":{"Name":"kingdom-1","Tenant":"default","Namespace":"default"}, "spec":{"nat-pool":"kingdom1-natpool", "ip-address":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $NAT_BINDING_URL
+  validate_get "kindgom-1" $NAT_BINDING_URL
+
+  echo "All Nat Bindings created"
 }
 
 # validate get performs a get on the URL and checks for pattern and exits 1
@@ -117,5 +127,6 @@ create_namespaces
 # create_nat_pools
 # create_nat_policies
 # create_routes
+# create_nat_bindings
 
 exit 0

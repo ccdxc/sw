@@ -17,6 +17,59 @@ import (
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
 
+// addNatBindingAPIRoutes adds NatBinding routes
+func addNatBindingAPIRoutes(r *mux.Router, srv *RestServer) {
+
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.natbindingListHandler))
+
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.natbindingPostHandler))
+
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.natbindingPutHandler))
+
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.natbindingDeleteHandler))
+
+}
+
+func (s *RestServer) natbindingListHandler(r *http.Request) (interface{}, error) {
+	return s.agent.ListNatBinding(), nil
+}
+
+func (s *RestServer) natbindingPostHandler(r *http.Request) (interface{}, error) {
+	var o netproto.NatBinding
+	b, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(b, &o)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, s.agent.CreateNatBinding(&o)
+
+}
+
+func (s *RestServer) natbindingPutHandler(r *http.Request) (interface{}, error) {
+	var o netproto.NatBinding
+	b, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(b, &o)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, s.agent.UpdateNatBinding(&o)
+
+}
+
+func (s *RestServer) natbindingDeleteHandler(r *http.Request) (interface{}, error) {
+	var o netproto.NatBinding
+	b, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(b, &o)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, s.agent.DeleteNatBinding(&o)
+
+}
+
 // addNatPolicyAPIRoutes adds NatPolicy routes
 func addNatPolicyAPIRoutes(r *mux.Router, srv *RestServer) {
 
