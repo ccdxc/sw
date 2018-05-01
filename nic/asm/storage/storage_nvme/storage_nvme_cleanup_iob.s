@@ -19,7 +19,7 @@ storage_nvme_cleanup_iob_start:
 
    // Form the fields needed to be cleaned up in the doorbell q_state
    // in the PHV. p_ndx needs to be set to 1, c_ndx and w_ndx need to
-   // be set to 0 (which is the default value of the PHV.
+   // be set to 0 (which is the default value of the PHV).
    phvwr	p.doorbell_cleanup_q_state_p_ndx, 1
 
    // Issue PHV2MEM DMA commands to cleanup the queue states of various doorbells

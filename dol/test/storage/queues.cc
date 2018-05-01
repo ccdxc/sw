@@ -73,7 +73,8 @@ const static char	*kPvmRoceCqHandler	 = "storage_tx_roce_cq_handler.bin";
 const static char	*kSeqCompSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
 const static char	*kSeqCompStatusDesc0SqHandler = "storage_tx_seq_comp_status_desc0_handler.bin";
 const static char	*kSeqCompStatusDesc1SqHandler = "storage_tx_seq_comp_status_desc1_handler.bin";
-const static char	*kArmQHandler		 = "storage_nvme_pop_arm_q.bin";
+const static char	*kArmQTimeoutHandler		 = "storage_nvme_timeout_iob_addr.bin";
+const static char	*kArmQFreeHandler		 = "storage_nvme_free_iob_addr.bin";
 
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
@@ -166,11 +167,12 @@ uint32_t pvm_nvme_cq_base;
 uint32_t pvm_r2n_cq_base;
 uint32_t pvm_nvme_be_cq_base;
 
+#define MAX_ARM_FREE_IOB_QS	3
 uint32_t arm_q_base;
 uint32_t arm_sq;
 uint32_t arm_cq;
 uint32_t arm_timeout_q;
-uint32_t arm_free_iob_q[3];
+uint32_t arm_free_iob_q[MAX_ARM_FREE_IOB_QS];
 
 void *pndx_data_va;
 uint64_t pndx_data_pa;
@@ -1059,17 +1061,28 @@ arm_queues_setup() {
   arm_sq = 0;
   arm_cq = 1;
   arm_timeout_q = 2;
-  arm_free_iob_q[0] = 3;
-  arm_free_iob_q[1] = 4;
-  arm_free_iob_q[2] = 5;
+  uint32_t arm_free_iob_q_base = 3;
+  for (int i = 0; i < MAX_ARM_FREE_IOB_QS; i++) {
+    arm_free_iob_q[i] = arm_free_iob_q_base + i;
+  }
 
   if (arm_queue_init(arm_sq, NULL, false, 0, 0, 0) < 0) {
     printf("Failed to setup ARM SQ \n");
     return -1;
   }
-  if (arm_queue_init(arm_cq, (char *) kArmQHandler, false, 0, 0, 0) < 0) {
-    printf("Failed to setup ARM CQ \n");
+
+  // TODO: Add completion queue handler
+
+  if (arm_queue_init(arm_timeout_q, (char *) kArmQTimeoutHandler, false, 0, 0, 0) < 0) {
+    printf("Failed to setup ARM timeout Q \n");
     return -1;
+  }
+
+  for (int i = 0; i < MAX_ARM_FREE_IOB_QS; i++) {
+    if (arm_queue_init(arm_free_iob_q[i], (char *) kArmQFreeHandler, false, 0, 0, 0) < 0) {
+      printf("Failed to setup ARM timeout Q \n");
+      return -1;
+    }
   }
   return 0;
 }

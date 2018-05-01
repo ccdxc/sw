@@ -603,11 +603,11 @@ int setup_arm_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     utils::write_bit_fields(q_state, 250, 24, dst_qid);
     utils::write_bit_fields(q_state, 274, 34, dst_qaddr);
   }
-  utils::write_bit_fields(q_state, 306, 32, intr_addr);
-  utils::write_bit_fields(q_state, 338, 32, intr_data);
-  utils::write_bit_fields(q_state, 370, 1, intr_en);
-  utils::write_bit_fields(q_state, 371, 1, phase);
-  utils::write_bit_fields(q_state, 372, 34, iob_ring_base_addr);
+  utils::write_bit_fields(q_state, 308, 32, intr_addr);
+  utils::write_bit_fields(q_state, 340, 32, intr_data);
+  utils::write_bit_fields(q_state, 372, 1, intr_en);
+  utils::write_bit_fields(q_state, 373, 1, phase);
+  utils::write_bit_fields(q_state, 374, 34, iob_ring_base_addr);
 
   //utils::dump(q_state);
 

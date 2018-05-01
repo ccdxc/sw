@@ -31,7 +31,7 @@ storage_nvme_send_sta_free_iob_start:
    QUEUE_PUSH(d.p_ndx, d.num_entries)
 
    // Ring the doorbell for the recipient of the push
-   NVME_SEQ_QUEUE_PUSH_DOORBELL_RING(dma_p2m_8)
+   NVME_SEND_STA_FREE_IOB_DOORBELL_RING(dma_p2m_8)
 
    // Setup the start and end DMA pointers 
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_8_dma_cmd_eop,

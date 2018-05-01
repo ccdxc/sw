@@ -608,6 +608,13 @@
                              NVME_KIVEC_T0_S2S_DST_QTYPE,               \
                              NVME_KIVEC_T0_S2S_DST_QID)                 \
 
+#define NVME_SEND_STA_FREE_IOB_DOORBELL_RING(_dma_cmd_ptr)              \
+   _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,       \
+                             DOORBELL_UPDATE_NONE, d.p_ndx,             \
+                             NVME_KIVEC_ARM_DST7_ARM_LIF,               \
+                             NVME_KIVEC_ARM_DST7_ARM_QTYPE,             \
+                             NVME_KIVEC_ARM_DST7_ARM_QID)               \
+
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
 // priority is used to select the ring. Set the fence bit for the doorbell.
 #define _PRI_QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _p_ndx, _sched,   \

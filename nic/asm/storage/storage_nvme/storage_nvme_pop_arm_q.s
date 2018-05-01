@@ -16,7 +16,7 @@ struct phv_ p;
 
 %%
 
-storage_nvme_pop_r2n_sq_start:
+storage_nvme_pop_arm_q_start:
    // If queue is empty, exit
    QUEUE_EMPTY(d.p_ndx, d.w_ndx, clear_doorbell)
 
