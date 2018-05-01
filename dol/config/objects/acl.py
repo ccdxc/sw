@@ -347,10 +347,10 @@ class AclObject(base.ConfigObjectBase):
 
         for ssn in self.ing_mirror_sessions:
             ssn_spec = reqspec.action.ing_mirror_sessions.add()
-            ssn_spec.session_id = ssn.id
+            ssn_spec.mirrorsession_id = ssn.id
         for ssn in self.egr_mirror_sessions:
             ssn_spec = reqspec.action.egr_mirror_sessions.add()
-            ssn_spec.session_id = ssn.id
+            ssn_spec.mirrorsession_id = ssn.id
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

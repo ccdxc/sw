@@ -56,4 +56,3 @@ private:
 }    // namespace hal
 
 #endif    //__HAL_TELEMETRY_PD_HPP__
-

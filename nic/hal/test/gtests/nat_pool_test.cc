@@ -30,7 +30,6 @@
 #include "nic/hal/svc/rdma_svc.hpp"
 #include "nic/hal/svc/session_svc.hpp"
 #include "nic/hal/svc/wring_svc.hpp"
-#include "nic/hal/svc/telemetry_svc.hpp"
 #include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/quiesce_svc.hpp"
@@ -39,6 +38,7 @@
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
 
+#include "nic/gen/hal/svc/telemetry_svc_gen.hpp"
 #include "nic/gen/hal/svc/nw_svc_gen.hpp"
 #include "nic/gen/hal/svc/tls_proxy_cb_svc_gen.hpp"
 #include "nic/gen/hal/svc/tcp_proxy_cb_svc_gen.hpp"

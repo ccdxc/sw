@@ -417,6 +417,11 @@
 		IpsecCbGetResponse
 		IpsecCbGetResponseMsg
 		SecurityProfileKeyHandle
+		CollectorKeyHandle
+		ExportControlKeyHandle
+		FlowMonitorRuleKeyHandle
+		DropMonitorRuleKeyHandle
+		MirrorSessionKeyHandle
 		VrfKeyHandle
 		NetworkKey
 		NetworkKeyHandle
@@ -912,38 +917,79 @@
 		TcpCbStats
 		TcpCbGetResponse
 		TcpCbGetResponseMsg
-		L4Port
 		CollectorSpec
 		CollectorStatus
-		Collector
-		CollectorConfigMsg
+		CollectorResponse
+		CollectorRequestMsg
 		CollectorResponseMsg
-		ExportControlId
+		CollectorDeleteRequest
+		CollectorDeleteResponse
+		CollectorDeleteRequestMsg
+		CollectorDeleteResponseMsg
+		CollectorGetRequest
+		CollectorGetRequestMsg
+		CollectorStats
+		CollectorGetResponse
+		CollectorGetResponseMsg
 		ExportControlSpec
 		ExportControlStatus
-		ExportControl
-		ExportControlConfigMsg
+		ExportControlResponse
+		ExportControlRequestMsg
 		ExportControlResponseMsg
+		ExportControlDeleteRequest
+		ExportControlDeleteResponse
+		ExportControlDeleteRequestMsg
+		ExportControlDeleteResponseMsg
+		ExportControlGetRequest
+		ExportControlGetRequestMsg
+		ExportControlStats
+		ExportControlGetResponse
+		ExportControlGetResponseMsg
 		MonitorAction
 		FlowMonitorRuleSpec
 		FlowMonitorRuleStatus
-		FlowMonitorRule
-		FlowMonitorRuleConfigMsg
+		FlowMonitorRuleResponse
+		FlowMonitorRuleRequestMsg
 		FlowMonitorRuleResponseMsg
+		FlowMonitorRuleDeleteRequest
+		FlowMonitorRuleDeleteResponse
+		FlowMonitorRuleDeleteRequestMsg
+		FlowMonitorRuleDeleteResponseMsg
+		FlowMonitorRuleGetRequest
+		FlowMonitorRuleGetRequestMsg
+		FlowMonitorRuleStats
+		FlowMonitorRuleGetResponse
+		FlowMonitorRuleGetResponseMsg
 		DropMonitorRuleSpec
 		DropMonitorRuleStatus
-		DropMonitorRule
-		DropMonitorRuleConfigMsg
+		DropMonitorRuleResponse
+		DropMonitorRuleRequestMsg
 		DropMonitorRuleResponseMsg
+		DropMonitorRuleDeleteRequest
+		DropMonitorRuleDeleteResponse
+		DropMonitorRuleDeleteRequestMsg
+		DropMonitorRuleDeleteResponseMsg
+		DropMonitorRuleGetRequest
+		DropMonitorRuleGetRequestMsg
+		DropMonitorRuleStats
+		DropMonitorRuleGetResponse
+		DropMonitorRuleGetResponseMsg
 		RSpanSpec
 		ERSpanSpec
-		MirrorSessionId
 		MirrorSessionSpec
 		MirrorSessionStatus
-		MirrorSession
-		MirrorSessionConfigMsg
-		MirrorSessionDeleteMsg
+		MirrorSessionResponse
+		MirrorSessionRequestMsg
 		MirrorSessionResponseMsg
+		MirrorSessionDeleteRequest
+		MirrorSessionDeleteResponse
+		MirrorSessionDeleteRequestMsg
+		MirrorSessionDeleteResponseMsg
+		MirrorSessionGetRequest
+		MirrorSessionGetRequestMsg
+		MirrorSessionStats
+		MirrorSessionGetResponse
+		MirrorSessionGetResponseMsg
 		TlsCbKeyHandle
 		TlsCbSpec
 		TlsCbRequestMsg

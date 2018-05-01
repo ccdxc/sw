@@ -18,7 +18,7 @@
 #include "nic/p4/iris/include/defines.h"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
-using telemetry::MirrorSessionId;
+using telemetry::MirrorSessionSpec;
 using session::FlowInfo;
 using session::FlowKeyTcpUdpInfo;
 using session::FlowKeyICMPInfo;
@@ -250,7 +250,7 @@ extract_mirror_sessions (const FlowSpec& spec, uint8_t *ingress, uint8_t *egress
     *egress = 0;
     FlowInfo flinfo = spec.flow_data().flow_info();
     for (i = 0; i < flinfo.ing_mirror_sessions_size(); ++i) {
-        uint32_t id = flinfo.ing_mirror_sessions(i).session_id();
+        uint32_t id = flinfo.ing_mirror_sessions(i).mirrorsession_id();
         if (id > 7) {
             return HAL_RET_INVALID_ARG;
         }
@@ -258,7 +258,7 @@ extract_mirror_sessions (const FlowSpec& spec, uint8_t *ingress, uint8_t *egress
         HAL_TRACE_DEBUG("  Adding ingress session {}", id);
     }
     for (i = 0; i < flinfo.egr_mirror_sessions_size(); ++i) {
-        uint32_t id = flinfo.egr_mirror_sessions(i).session_id();
+        uint32_t id = flinfo.egr_mirror_sessions(i).mirrorsession_id();
         if (id > 7) {
             return HAL_RET_INVALID_ARG;
         }

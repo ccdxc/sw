@@ -6,55 +6,37 @@ import "kh.proto";
 package telemetry;
 option go_package="halproto";
 
-// L4Port is a representation of the L4 port defined as a nested type for nullability
-message L4Port {
-    uint32 port = 1;
-}
+// Telemetry sevice definition
+service Telemetry {
+  // Collector operations CRUD operations
+  rpc CollectorCreate (CollectorRequestMsg) returns (CollectorResponseMsg) {}
+  rpc CollectorUpdate (CollectorRequestMsg) returns (CollectorResponseMsg) {}
+  rpc CollectorDelete (CollectorDeleteRequestMsg) returns (CollectorDeleteResponseMsg) {}
+  rpc CollectorGet (CollectorGetRequestMsg) returns (CollectorGetResponseMsg) {}
 
-// CollectorSpec is the configuration specification for a telemetry collector
-message CollectorSpec {
-  types.ObjectMeta  meta              = 1; // Common object meta
-  ExportControlId   export_controlId  = 2; // Controller ID that this Collector is attached to
-  types.EncapInfo   encap             = 3; // VLAN encap to be applied to traffic
-  fixed64           l2seg_handle      = 4; // Hal Handle for the L2 segment (ideally remove encap)
-  types.IPAddress   dest_ip           = 5; // Destination IP of the Collector
-  types.IPAddress   src_ip            = 6; // Source IP to use
-  types.IPProtocol  protocol          = 7; // L4 IP Protocol to use
-  L4Port            dest_port         = 8; // L4 Port for the collector
-  ExportFormat      format            = 9; // Format that the collector expects
-  uint32            template_id       = 10; // Data Template ID used to send to the collector 
-}
+  // ExportConfig CRUD operations
+  rpc ExportControlCreate (ExportControlRequestMsg) returns (ExportControlResponseMsg) {}
+  rpc ExportControlUpdate (ExportControlRequestMsg) returns (ExportControlResponseMsg) {}
+  rpc ExportControlDelete (ExportControlDeleteRequestMsg) returns (ExportControlDeleteResponseMsg) {}
+  rpc ExportControlGet (ExportControlGetRequestMsg) returns (ExportControlGetResponseMsg) {}
 
-// CollectorSpec is the operational status of the collector
-message CollectorStatus {
-  // CollectorStatus Codes
-  enum CollectorStatusCode {
-    SUCCESS             = 0;
-    INVALID_CONFIG      = 1;
-    TEMP_FAILURE        = 2;
-    PERM_FAILURE        = 3;
-  }
-  CollectorStatusCode       code        = 1; // Status code
-  string                    status      = 2; // Status of the collector
-}
+  // FlowMonitorRules CRUD Operations
+  rpc FlowMonitorRuleCreate (FlowMonitorRuleRequestMsg) returns (FlowMonitorRuleResponseMsg) {}
+  rpc FlowMonitorRuleUpdate (FlowMonitorRuleRequestMsg) returns (FlowMonitorRuleResponseMsg) {}
+  rpc FlowMonitorRuleDelete (FlowMonitorRuleDeleteRequestMsg) returns (FlowMonitorRuleDeleteResponseMsg) {}
+  rpc FlowMonitorRuleGet (FlowMonitorRuleGetRequestMsg) returns (FlowMonitorRuleGetResponseMsg)  {}
 
-// Collector is a container that holds both the configuration and the operational 
-//  state of the collector
-message Collector {
-  types.ApiStatus     api_status    = 1;
-  CollectorSpec       spec          = 2; // Configuration Specification 
-  CollectorStatus     status        = 3; // Operational Status
-}
+  // DropMonitorRules CRUD Operations
+  rpc DropMonitorRuleCreate (DropMonitorRuleRequestMsg) returns (DropMonitorRuleResponseMsg) {}
+  rpc DropMonitorRuleUpdate (DropMonitorRuleRequestMsg) returns (DropMonitorRuleResponseMsg) {}
+  rpc DropMonitorRuleDelete (DropMonitorRuleDeleteRequestMsg) returns (DropMonitorRuleDeleteResponseMsg) {}
+  rpc DropMonitorRuleGet (DropMonitorRuleGetRequestMsg) returns (DropMonitorRuleGetResponseMsg)  {}
 
-// CollectorConfigsMsg is used in requests and is a batchable request message
-message CollectorConfigMsg {
-  repeated CollectorSpec request = 1;
-}
-
-// CollectorConfigsMsg message is used as response for API requests.
-message CollectorResponseMsg {
-  types.ApiStatus     status        = 1; // Status of the API request the resulted in this response
-  repeated Collector  response      = 2; // List of collectors
+  // MirrorSession CRUD Operations
+  rpc MirrorSessionCreate (MirrorSessionRequestMsg) returns (MirrorSessionResponseMsg) {}
+  rpc MirrorSessionUpdate (MirrorSessionRequestMsg) returns (MirrorSessionResponseMsg) {}
+  rpc MirrorSessionDelete (MirrorSessionDeleteRequestMsg) returns (MirrorSessionDeleteResponseMsg) {}
+  rpc MirrorSessionGet (MirrorSessionGetRequestMsg) returns (MirrorSessionGetResponseMsg) {}
 }
 
 // ExportFormat is a enumeration of export formats supported
@@ -63,54 +45,172 @@ enum ExportFormat {
   NETFLOWV9 = 1;
 }
 
-// ExportControlId is a identifier for a ExportControl configuration
-message ExportControlId {
-  types.ObjectMeta  meta  = 1; // COmmon object meta
-  uint64            Id    = 2; // Unique ID
-}
-
-// ExportControlId is the configuration specification for Export Control
-message ExportControlSpec {
-  ExportControlId Id                = 1; // Identifier
-  uint32          active_timeout    = 2; // time before which active flows are exported
-  uint32          inactive_timeout  = 3; // time before which in-active flows are exported
-}
-
-// ExportControlStatus is the operational status of the Export Control configuration
-message ExportControlStatus {
-  // Export control status codes
-  enum ExportControlStatusCode {
-    SUCCESS             = 0;
-    INVALID_CONFIG      = 1;
-    TEMP_FAILURE        = 2;
-    PERM_FAILURE        = 3;
-  }
-  ExportControlStatusCode     code      = 1;
-  string                      status    = 2;
-}
-
-// ExportControl is a container for the configuration and the operational status for ExportControl
-message ExportControl {
-  ExportControlSpec     spec    = 1;
-  ExportControlStatus   status  = 2;
-}
-
-// ExportControlConfigMsg is used as input to RPC call for ExportControl. It is a batchable message
-message ExportControlConfigMsg {
-  repeated ExportControlSpec configs = 1; //
-}
-
-// ExportControlResponseMsg is used in responses for operations on the ExportControl configuration.
-message ExportControlResponseMsg {
-  types.ApiStatus         status          = 1;  // Status of the API
-  repeated ExportControl  export_control  = 2;  // List of export control objects. 
-}
-
 // RuleAction is an enumeration of support telemetry actions
 enum RuleAction {
     COLLECT_FLOW_STATS  = 0;
     MIRROR              = 1;
     MIRROR_TO_CPU       = 2;
+}
+
+// CollectorSpec is the configuration specification for a telemetry collector
+message CollectorSpec {
+  types.ObjectMeta      meta              = 1; // Common object meta
+  kh.CollectorKeyHandle key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""]; // Collector key or handle
+  types.EncapInfo       encap             = 3; // VLAN encap to be applied to traffic
+  kh.L2SegmentKeyHandle l2seg_key_handle  = 4 [(gogoproto.moretags) = "venice:ref"]; // Hal Handle for the L2 segment (ideally remove encap)
+  types.IPAddress       dest_ip           = 5 [(gogoproto.moretags) = "venice:mandatory"]; // Destination IP of the Collector
+  types.IPAddress       src_ip            = 6 [(gogoproto.moretags) = "venice:mandatory"]; // Source IP to use
+  types.IPProtocol      protocol          = 7 [(gogoproto.moretags) = "venice:mandatory"]; // L4 IP Protocol to use
+  uint32                dest_port         = 8 [(gogoproto.moretags) = "venice:mandatory"]; // L4 Port for the collector
+  ExportFormat          format            = 9 [(gogoproto.moretags) = "venice:mandatory"]; // Format that the collector expects
+  uint32                template_id       = 10 [(gogoproto.moretags) = "venice:mandatory"]; // Data Template ID used to send to the collector 
+}
+
+// CollectorSpec is the operational status of the collector
+message CollectorStatus {
+  fixed64               handle  = 1; // id of collector returned by HAL
+}
+
+// Collector is a container that holds both the configuration and the operational 
+//  state of the collector
+message CollectorResponse {
+  types.ApiStatus     api_status    = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  CollectorStatus     status        = 2; // Collector status, if api succeeds
+}
+
+// CollectorConfigsMsg is used in requests and is a batchable request message
+message CollectorRequestMsg {
+  repeated CollectorSpec request = 1;
+}
+
+// CollectorConfigsMsg message is used as response for API requests.
+message CollectorResponseMsg {
+  repeated CollectorResponse  response = 1; // batched reponse
+}
+
+// CollectorDeleteRequest is used to delete a collector
+message CollectorDeleteRequest {
+  types.ObjectMeta               meta          = 1; // object meta
+  kh.CollectorKeyHandle          key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""]; // unique identifier
+}
+
+// CollectorDeleteResponse is response to CollectorDeleteRequest
+message CollectorDeleteResponse {
+  types.ApiStatus       api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  kh.CollectorKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// CollectorDeleteRequestMsg is used to delete a batch of collectors
+message CollectorDeleteRequestMsg {
+  repeated CollectorDeleteRequest    request = 1;    // batched delete request
+}
+
+// CollectorDeleteResponseMsg is batched response to CollectorDeleteRequestMsg
+message CollectorDeleteResponseMsg {
+  repeated CollectorDeleteResponse    response = 1;    // batched response
+}
+
+// CollectorGetRequest is used to get information about a collector
+message CollectorGetRequest {
+  types.ObjectMeta        meta                = 1;    // object meta
+  kh.CollectorKeyHandle   key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// CollectorGetRequestMsg is batched GET requests for collectors 
+message CollectorGetRequestMsg {
+  repeated CollectorGetRequest    request = 1;    // batched get request
+}
+
+message CollectorStats {
+}
+
+message CollectorGetResponse {
+  types.ApiStatus   api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  CollectorSpec     spec       = 2;     // Collector configuration
+  CollectorStats    stats      = 3;    // stats
+}
+
+// CollectorGetResponseMsg is batched response to CollectorGetRequestMsg
+message CollectorGetResponseMsg {
+  repeated CollectorGetResponse    response   = 1;    // batch get response
+}
+
+// ExportControlSpec is the configuration specification for Export Control
+message ExportControlSpec {
+  types.ObjectMeta               meta                 = 1; // Common object meta
+  kh.ExportControlKeyHandle      key_or_handle        = 2 [(gogoproto.moretags) = "venice:\"key\""]; // ExportControl key or handle
+  repeated kh.CollectorKeyHandle collector_key_handle = 3; // Collector key or handle
+  uint32                         active_timeout       = 4; // time before which active flows are exported
+  uint32                         inactive_timeout     = 5; // time before which in-active flows are exported
+}
+
+// ExportControlSpec is the operational status of the Export Control object
+message ExportControlStatus {
+  fixed64                   handle  = 1; // id of exportcontrol object returned by HAL
+}
+
+// ExportControl is a container that holds both the configuration and the operational 
+// state
+message ExportControlResponse {
+  types.ApiStatus     api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  ExportControlStatus status     = 2; // ExportControl status, if api succeeds
+}
+
+// ExportControlConfigsMsg is used in requests and is a batchable request message
+message ExportControlRequestMsg {
+  repeated ExportControlSpec request = 1;
+}
+
+// ExportControlConfigsMsg message is used as response for API requests.
+message ExportControlResponseMsg {
+  repeated ExportControlResponse  response = 1; // batched reponse
+}
+
+// ExportControlDeleteRequest is used to delete an export control object
+message ExportControlDeleteRequest {
+  types.ObjectMeta               meta          = 1;  // object meta
+  kh.ExportControlKeyHandle      key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];  // unique identifier
+}
+
+// ExportControlDeleteResponse is response to ExportControlDeleteRequest
+message ExportControlDeleteResponse {
+  types.ApiStatus           api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  kh.ExportControlKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// ExportControlDeleteRequestMsg is used to delete a batch of exportcontrol objects
+message ExportControlDeleteRequestMsg {
+  repeated ExportControlDeleteRequest    request = 1;    // batched delete request
+}
+
+// ExportControlDeleteResponseMsg is batched response to ExportControlDeleteRequestMsg
+message ExportControlDeleteResponseMsg {
+  repeated ExportControlDeleteResponse    response = 1;    // batched response
+}
+
+// ExportControlGetRequest is used to get information about an exportcontrol object
+message ExportControlGetRequest {
+  types.ObjectMeta          meta                = 1;    // object meta
+  kh.ExportControlKeyHandle key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// ExportControlGetRequestMsg is batched GET requests for exportcontrol objects
+message ExportControlGetRequestMsg {
+  repeated ExportControlGetRequest    request = 1;    // batched get request
+}
+
+message ExportControlStats {
+}
+
+message ExportControlGetResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  ExportControlSpec  spec       = 2;     // ExportControl configuration
+  ExportControlStats stats      = 3;    // stats
+}
+
+// ExportControlGetResponseMsg is batched response to ExportControlGetRequestMsg
+message ExportControlGetResponseMsg {
+  repeated ExportControlGetResponse    response   = 1;    // batch get response
 }
 
 // AggregationScheme is an enumeration of aggregation schemes supported
@@ -137,88 +237,168 @@ message MonitorAction {
 
 // FlowMonitorRuleSpec flow monitor rule specification
 message FlowMonitorRuleSpec {
-  types.ObjectMeta  meta              = 1; // Common object meta
-  ExportControlId   export_configId   = 2; // Export control traffic the rule is attached to
-  uint64            source_mac        = 3; // Source MAC of the tuple to match
-  uint64            dest_mac          = 4; // Destination MAC to match
-  uint32            ethertype         = 5; // EtherType to match
-  types.IPProtocol  protocol          = 6; // IP Protocol to match
-  types.IPPrefix    source_ip         = 7; // Source IP prefix to match
-  types.IPPrefix    dest_ip           = 8; // Destination IP prefix to match
-  L4Port            source_l4_port    = 9; // Souce L4 port 
-  L4Port            dest_l4_port      = 10; // Destination L4 port
-  uint64            source_groupid    = 11; // Source Workload GroupID to match
-  uint64            dest_groupid      = 12; // Destination Workload GroupID to match
-  MonitorAction     action            = 13; // Action for flows that meet the match criteria
+  types.ObjectMeta  meta                    = 1; // Common object meta
+  kh.FlowMonitorRuleKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""]; // FlowMonitor key or handle
+  kh.ExportControlKeyHandle   ec_key_handle = 3; // ExportControl key or handle
+  uint64            source_mac              = 4; // Source MAC of the tuple to match
+  uint64            dest_mac                = 5; // Destination MAC to match
+  uint32            ethertype               = 6; // EtherType to match
+  types.IPProtocol  protocol                = 7; // IP Protocol to match
+  types.IPPrefix    source_ip               = 8; // Source IP prefix to match
+  types.IPPrefix    dest_ip                 = 9; // Destination IP prefix to match
+  uint32            source_l4_port          = 10; // Souce L4 port 
+  uint32            dest_l4_port            = 11; // Destination L4 port
+  uint64            source_groupid          = 12; // Source Workload GroupID to match
+  uint64            dest_groupid            = 13; // Destination Workload GroupID to match
+  MonitorAction     action                  = 14; // Action for flows that meet the match criteria
 }
 
 // FlowMonitorRuleStatus is the operational status of the rule
 message FlowMonitorRuleStatus {
-  // FlowMonitorRule status codes
-  enum FlowMonitorRuleStatusCode {
-    SUCCESS             = 0;
-    INVALID_CONFIG      = 1;
-    TEMP_FAILURE        = 2;
-    PERM_FAILURE        = 3;
-  }
-  FlowMonitorRuleStatusCode     code    = 1; // Status code
-  string             status             = 2; // Current operational status
-  uint32             active_flows       = 3; // Number of active Flows that matched this rule
+  fixed64                       handle       = 1; // id of flowmonitor returned by HAL
+  uint32                        active_flows = 2; // Number of active Flows that matched this rule
 }
 
-// FlowMonitorRule is a container for the configuration and operational status
-message FlowMonitorRule {
-  types.ApiStatus         api_status  = 1;
-  FlowMonitorRuleSpec     spec        = 2;
-  FlowMonitorRuleStatus   status      = 3;
+// FlowMonitorRule is a container that holds both the configuration and the operational 
+// state of the flowmonitor
+message FlowMonitorRuleResponse {
+  types.ApiStatus       api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  FlowMonitorRuleStatus status     = 2; // FlowMonitorRule status, if api succeeds
 }
 
-// FlowMonitorRuleConfigMsg is used in api requests for flow monitor configuration
-message FlowMonitorRuleConfigMsg {
+// FlowMonitorRuleConfigsMsg is used in requests and is a batchable request message
+message FlowMonitorRuleRequestMsg {
   repeated FlowMonitorRuleSpec request = 1;
 }
 
-// FlowMonitorRuleResponseMsg is used in responses for flow monitor rule operations
+// FlowMonitorRuleConfigsMsg message is used as response for API requests.
 message FlowMonitorRuleResponseMsg {
-  types.ApiStatus           status     = 1; // Status of the API
-  repeated FlowMonitorRule  response   = 2; // Flow monitor rule responses
+  repeated FlowMonitorRuleResponse  response = 1; // batched reponse
+}
+
+// FlowMonitorRuleDeleteRequest is used to delete a flowmonitor
+message FlowMonitorRuleDeleteRequest {
+  types.ObjectMeta              meta          = 1; // object meta
+  kh.FlowMonitorRuleKeyHandle   key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""]; // unique identifier
+}
+
+// FlowMonitorRuleDeleteResponse is response to FlowMonitorRuleDeleteRequest
+message FlowMonitorRuleDeleteResponse {
+  types.ApiStatus             api_status    = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  kh.FlowMonitorRuleKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// FlowMonitorRuleDeleteRequestMsg is used to delete a batch of flowmonitors
+message FlowMonitorRuleDeleteRequestMsg {
+  repeated FlowMonitorRuleDeleteRequest    request = 1;    // batched delete request
+}
+
+// FlowMonitorRuleDeleteResponseMsg is batched response to FlowMonitorRuleDeleteRequestMsg
+message FlowMonitorRuleDeleteResponseMsg {
+  repeated FlowMonitorRuleDeleteResponse    response = 1;    // batched response
+}
+
+// FlowMonitorRuleGetRequest is used to get information about a flowmonitor
+message FlowMonitorRuleGetRequest {
+  types.ObjectMeta              meta                = 1;    // object meta
+  kh.FlowMonitorRuleKeyHandle   key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// FlowMonitorRuleGetRequestMsg is batched GET requests for flowmonitors 
+message FlowMonitorRuleGetRequestMsg {
+  repeated FlowMonitorRuleGetRequest    request = 1;    // batched get request
+}
+
+message FlowMonitorRuleStats {
+}
+
+message FlowMonitorRuleGetResponse {
+  types.ApiStatus       api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  FlowMonitorRuleSpec   spec       = 2;     // FlowMonitor configuration
+  FlowMonitorRuleStats  stats      = 3;    // stats
+}
+
+// FlowMonitorGetResponseMsg is batched response to FlowMonitorGetRequestMsg
+message FlowMonitorRuleGetResponseMsg {
+  repeated FlowMonitorRuleGetResponse    response   = 1;    // batch get response
 }
 
 // Drop Monitor Rule specification
 message DropMonitorRuleSpec {
-  types.DropReasons   reasons               = 1; // drop reasons
-  repeated uint32     mirror_destinations   = 2; // list of mirror destinations
+  types.ObjectMeta                   meta                = 1; // Common object meta
+  kh.DropMonitorRuleKeyHandle        key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""]; // DropMonitor key or handle
+  repeated kh.MirrorSessionKeyHandle ms_key_handle       = 3 [(gogoproto.moretags) = "venice:constraints={range:0-7}"]; // list of mirror destinations
+  types.DropReasons                  reasons             = 4; // drop reasons
 }
 
 // DropMonitorRuleStatus is the operational status of the rule
 message DropMonitorRuleStatus {
-  // DropMonitorRule status codes
-  enum DropMonitorRuleStatusCode {
-    SUCCESS             = 0;
-    INVALID_CONFIG      = 1;
-    TEMP_FAILURE        = 2;
-    PERM_FAILURE        = 3;
-  }
-  DropMonitorRuleStatusCode     code    = 1; // Status code
-  string             status             = 2; // Current operational status
+  fixed64                       handle       = 1; // id of dropmonitor returned by HAL
+  uint32                        active_flows = 3; // Number of active Flows that matched this rule
 }
 
-// DropMonitorRule is a container for the configuration and operational status
-message DropMonitorRule {
-  types.ApiStatus         api_status  = 1;
-  DropMonitorRuleSpec     spec        = 2;
-  DropMonitorRuleStatus   status      = 3;
+// DropMonitorRule is a container that holds both the configuration and the operational 
+// state of the dropmonitor
+message DropMonitorRuleResponse {
+  types.ApiStatus       api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  DropMonitorRuleStatus status     = 2; // DropMonitorRule status, if api succeeds
 }
 
-// DropMonitorRuleConfigMsg is used in api requests for drop monitor configuration
-message DropMonitorRuleConfigMsg {
+// DropMonitorRuleConfigsMsg is used in requests and is a batchable request message
+message DropMonitorRuleRequestMsg {
   repeated DropMonitorRuleSpec request = 1;
 }
 
-// DropMonitorRuleResponseMsg is used in responses for drop monitor operations
+// DropMonitorRuleConfigsMsg message is used as response for API requests.
 message DropMonitorRuleResponseMsg {
-  types.ApiStatus           status     = 1; // Status of the API
-  repeated DropMonitorRule  response   = 2; // Drop monitor rule responses
+  repeated DropMonitorRuleResponse  response = 1; // batched reponse
+}
+
+// DropMonitorRuleDeleteRequest is used to delete a dropmonitor
+message DropMonitorRuleDeleteRequest {
+  types.ObjectMeta              meta          = 1; // object meta
+  kh.DropMonitorRuleKeyHandle   key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""]; // unique identifier
+}
+
+// DropMonitorRuleDeleteResponse is response to DropMonitorRuleDeleteRequest
+message DropMonitorRuleDeleteResponse {
+  types.ApiStatus             api_status    = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  kh.DropMonitorRuleKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// DropMonitorRuleDeleteRequestMsg is used to delete a batch of dropmonitors
+message DropMonitorRuleDeleteRequestMsg {
+  repeated DropMonitorRuleDeleteRequest    request = 1;    // batched delete request
+}
+
+// DropMonitorRuleDeleteResponseMsg is batched response to DropMonitorRuleDeleteRequestMsg
+message DropMonitorRuleDeleteResponseMsg {
+  repeated DropMonitorRuleDeleteResponse    response = 1;    // batched response
+}
+
+// DropMonitorRuleGetRequest is used to get information about a dropmonitor
+message DropMonitorRuleGetRequest {
+  types.ObjectMeta              meta                = 1;    // object meta
+  kh.DropMonitorRuleKeyHandle   key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+// DropMonitorRuleGetRequestMsg is batched GET requests for dropmonitors 
+message DropMonitorRuleGetRequestMsg {
+  repeated DropMonitorRuleGetRequest    request = 1;    // batched get request
+}
+
+message DropMonitorRuleStats {
+}
+
+message DropMonitorRuleGetResponse {
+  types.ApiStatus       api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  DropMonitorRuleSpec   spec       = 2;     // DropMonitorRule configuration
+  DropMonitorRuleStats  stats      = 3;    // stats
+}
+
+// DropMonitorRuleGetResponseMsg is batched response to DropMonitorRuleGetRequestMsg
+message DropMonitorRuleGetResponseMsg {
+  repeated DropMonitorRuleGetResponse    response   = 1;    // batch get response
 }
 
 // RspanSpec is the configuration specification for RSPAN.
@@ -235,92 +415,84 @@ message ERSpanSpec {
   uint32          span_id     = 4; // Span ID to use
 }
 
-// MirrorSessionId is a key for the SPAN session
-message MirrorSessionId {
-  uint32 session_id = 1 [(gogoproto.moretags) = "venice:range:1-7"];
-}
-
 // MirrorSessionSpec is the configuration specification for mirror config
 message MirrorSessionSpec {
-  types.ObjectMeta  meta            = 1; // Common object meta
-  MirrorSessionId   id              = 2; // Session ID
-  uint32            snaplen         = 3; // maximum  bytes of packet to mirror.
+  types.ObjectMeta          meta            = 1; // Common object meta
+  kh.MirrorSessionKeyHandle key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\",venice:constraints={range:0-7}"]; // MirrorSession key or handle
+  uint32                    snaplen         = 3; // maximum  bytes of packet to mirror.
   oneof destination {
-    kh.InterfaceKeyHandle   local_span_if  = 4; // Local span destination
-    RSpanSpec               rspan_spec     = 5; // VLAN encap to use when configuration is for RSPAN
-    ERSpanSpec              erspan_spec    = 6; // ERSPAN configuration in case of ERSPAN
+    kh.InterfaceKeyHandle   local_span_if   = 4; // Local span destination
+    RSpanSpec               rspan_spec      = 5; // VLAN encap to use when configuration is for RSPAN
+    ERSpanSpec              erspan_spec     = 6; // ERSPAN configuration in case of ERSPAN
   }
 }
 
-// MirrorSessionStatus is the operational status of the SPAN session.
+// MirrorSessionStatus is the operational status of the rule
 message MirrorSessionStatus {
-  // Mirror Session  status codes
-  enum MirrorSessionStatusCode {
-    SUCCESS             = 0;
-    INVALID_CONFIG      = 1;
-    TEMP_FAILURE        = 2;
-    PERM_FAILURE        = 3;
-  }
-  MirrorSessionStatusCode   code            = 1;
-  string                    status          = 2;
-  int32                     active_flows    = 3;
+  fixed64                       handle       = 1; // id of mirrorsession returned by HAL
+  uint32                        active_flows = 2; // Number of active Flows that matched this rule
 }
 
-// MirrorSession is a container of the configuration and the operational status for mirror sessions.
-message MirrorSession {
-  types.ApiStatus       api_status  = 1;
-  MirrorSessionSpec     spec        = 2;
-  MirrorSessionStatus   status      = 3;
+// MirrorSession is a container that holds both the configuration and the operational 
+// state of the mirrorsession
+message MirrorSessionResponse {
+  types.ApiStatus       api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  MirrorSessionStatus   status     = 2; // MirrorSession status, if api succeeds
 }
 
-// MirrorSessionConfigMsg is a batchable message used for request messages for mirror session configuration.
-message  MirrorSessionConfigMsg {
+// MirrorSessionConfigsMsg is used in requests and is a batchable request message
+message MirrorSessionRequestMsg {
   repeated MirrorSessionSpec request = 1;
 }
 
-// MirrorSessionConfigMsg is a batchable message used for request messages for mirror session configuration.
-message  MirrorSessionDeleteMsg {
-  repeated MirrorSessionId request = 1;
-}
-
-// MirrorSessionResponseMsg is used as responses to the MirrorSession configuration APIs
+// MirrorSessionConfigsMsg message is used as response for API requests.
 message MirrorSessionResponseMsg {
-  types.ApiStatus               status    = 1; // Response status of the API
-  repeated MirrorSession        response  = 2; // Operational status of the mirror session
+  repeated MirrorSessionResponse  response = 1; // batched reponse
 }
 
+// MirrorSessionDeleteRequest is used to delete a mirrorsession
+message MirrorSessionDeleteRequest {
+  types.ObjectMeta              meta          = 1; // object meta
+  kh.MirrorSessionKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""]; // unique identifier
+}
 
-service Telemetry {
-  // Collector operations CRUD operations
-  rpc CollectorCreate(CollectorConfigMsg) returns (CollectorResponseMsg) {}
-  rpc CollectorUpdate(CollectorConfigMsg) returns (CollectorResponseMsg) {}
-  rpc CollectorList(ExportControlId) returns (CollectorResponseMsg) {}
-  rpc CollectorDelete(CollectorConfigMsg) returns (CollectorResponseMsg) {}
+// MirrorSessionDeleteResponse is response to MirrorSessionDeleteRequest
+message MirrorSessionDeleteResponse {
+  types.ApiStatus           api_status    = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  kh.MirrorSessionKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
 
-  // ExportConfig CRUD operations
-  rpc ExportControlCreate(ExportControlConfigMsg) returns (ExportControlResponseMsg) {}
-  rpc ExportControlUpdate(ExportControlConfigMsg) returns (ExportControlResponseMsg) {}
-  rpc ExportControlGet(ExportControlId) returns (ExportControlResponseMsg) {}
-  rpc ExportControlDelete(ExportControlId) returns (ExportControlResponseMsg) {}
+// MirrorSessionDeleteRequestMsg is used to delete a batch of mirrorsessions
+message MirrorSessionDeleteRequestMsg {
+  repeated MirrorSessionDeleteRequest    request = 1;    // batched delete request
+}
 
-  // FlowMonitorRules CRUD Operations
-  rpc FlowMonitorRuleCreate(FlowMonitorRuleConfigMsg) returns (FlowMonitorRuleResponseMsg) {}
-  rpc FlowMonitorRuleUpdate(FlowMonitorRuleConfigMsg) returns (FlowMonitorRuleResponseMsg) {}
-  rpc FlowMonitorRuleList(ExportControlId) returns (FlowMonitorRuleResponseMsg)  {}
-  rpc FlowMonitorRuleGet(FlowMonitorRuleConfigMsg) returns (FlowMonitorRuleResponseMsg)  {}
-  rpc FlowMonitorRuleDelete(FlowMonitorRuleConfigMsg) returns (FlowMonitorRuleResponseMsg) {}
+// MirrorSessionDeleteResponseMsg is batched response to MirrorSessionDeleteRequestMsg
+message MirrorSessionDeleteResponseMsg {
+  repeated MirrorSessionDeleteResponse    response = 1;    // batched response
+}
 
-  // DropMonitorRules CRUD Operations
-  rpc DropMonitorRuleCreate(DropMonitorRuleConfigMsg) returns (DropMonitorRuleResponseMsg) {}
-  rpc DropMonitorRuleUpdate(DropMonitorRuleConfigMsg) returns (DropMonitorRuleResponseMsg) {}
-  rpc DropMonitorRuleList(ExportControlId) returns (DropMonitorRuleResponseMsg)  {}
-  rpc DropMonitorRuleGet(DropMonitorRuleConfigMsg) returns (DropMonitorRuleResponseMsg)  {}
-  rpc DropMonitorRuleDelete(DropMonitorRuleConfigMsg) returns (DropMonitorRuleResponseMsg) {}
+// MirrorSessionGetRequest is used to get information about a mirrorsession
+message MirrorSessionGetRequest {
+  types.ObjectMeta              meta                = 1;    // object meta
+  kh.MirrorSessionKeyHandle     key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
 
-  // MirrorSession CRUD Operations
-  rpc MirrorSessionCreate(MirrorSessionConfigMsg) returns (MirrorSessionResponseMsg) {}
-  rpc MirrorSessionUpdate(MirrorSessionConfigMsg) returns (MirrorSessionResponseMsg) {}
-  rpc MirrorSessionGet(MirrorSessionId) returns (MirrorSessionResponseMsg) {}
-  rpc MirrorSessionList(types.Empty) returns (MirrorSessionResponseMsg) {}
-  rpc MirrorSessionDelete(MirrorSessionDeleteMsg) returns (MirrorSessionResponseMsg) {}
+// MirrorSessionGetRequestMsg is batched GET requests for mirrorsessions 
+message MirrorSessionGetRequestMsg {
+  repeated MirrorSessionGetRequest    request = 1;    // batched get request
+}
+
+message MirrorSessionStats {
+}
+
+message MirrorSessionGetResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+  MirrorSessionSpec  spec       = 2;     // MirrorSession configuration
+  MirrorSessionStats stats      = 3;    // stats
+}
+
+// MirrorSessionGetResponseMsg is batched response to MirrorSessionGetRequestMsg
+message MirrorSessionGetResponseMsg {
+  repeated MirrorSessionGetResponse    response   = 1;    // batch get response
 }

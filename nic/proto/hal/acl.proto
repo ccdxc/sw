@@ -6,7 +6,6 @@ syntax = "proto3";
 
 import "types.proto";
 import "kh.proto";
-import "telemetry.proto";
 
 package acl;
 option go_package="halproto";
@@ -178,8 +177,8 @@ enum AclAction {
 
 message AclActionInfo {
   AclAction                          action                 = 1 [(gogoproto.moretags) = "venice:mandatory"];    // forwarding action
-  repeated telemetry.MirrorSessionId ing_mirror_sessions    = 2;    // ingress mirror sessions
-  repeated telemetry.MirrorSessionId egr_mirror_sessions    = 3;    // egress mirror sessions 
+  repeated kh.MirrorSessionKeyHandle ing_mirror_sessions    = 2 [(gogoproto.moretags) = "venice:constraints={range:0-7}"]; // list of mirror destinations
+  repeated kh.MirrorSessionKeyHandle egr_mirror_sessions    = 3 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];// list of mirror destinations
   kh.CoppKeyHandle                   copp_key_handle        = 4 [(gogoproto.moretags) = "venice:ref"];    // copp policer
   kh.InterfaceKeyHandle              redirect_if_key_handle = 5 [(gogoproto.moretags) = "venice:ref,venice:constraints={acl.AclActionInfo.action==acl_pb2.ACL_ACTION_REDIRECT}"];    // redirect interface
                                                                     // TODO: REMOVE

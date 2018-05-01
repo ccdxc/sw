@@ -1122,7 +1122,7 @@ extract_mirror_sessions (const acl::AclActionInfo &ainfo, uint8_t *ingress, uint
     *ingress = 0;
     *egress = 0;
     for (i = 0; i < ainfo.ing_mirror_sessions_size(); ++i) {
-        uint32_t id = ainfo.ing_mirror_sessions(i).session_id();
+        uint32_t id = ainfo.ing_mirror_sessions(i).mirrorsession_id();
         if (id > 7) {
             return HAL_RET_INVALID_ARG;
         }
@@ -1130,7 +1130,7 @@ extract_mirror_sessions (const acl::AclActionInfo &ainfo, uint8_t *ingress, uint
         HAL_TRACE_DEBUG("  Adding ingress session {}", id);
     }
     for (i = 0; i < ainfo.egr_mirror_sessions_size(); ++i) {
-        uint32_t id = ainfo.egr_mirror_sessions(i).session_id();
+        uint32_t id = ainfo.egr_mirror_sessions(i).mirrorsession_id();
         if (id > 7) {
             return HAL_RET_INVALID_ARG;
         }

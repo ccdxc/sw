@@ -20,6 +20,46 @@ message SecurityProfileKeyHandle {
   }
 }
 
+// CollectorKeyHandle is used to operate on a collector either by its key or handle
+message CollectorKeyHandle {
+  oneof key_or_handle {
+    uint64     collector_id     = 1;   // unique collector id allocated by app
+    fixed64    collector_handle = 2;   // collector handle returned by HAL
+  }
+}
+
+// ExportControlKeyHandle is used to operate on a Export Control object either by its key or handle
+message ExportControlKeyHandle {
+  oneof key_or_handle {
+    uint64     exportcontrol_id     = 1;   // unique export control id allocated by app
+    fixed64    exportcontrol_handle = 2;   // export control handle returned by HAL
+  }
+}
+
+// FlowMonitorRuleKeyHandle is used to operate on a FlowMonitorRule object either by its key or handle
+message FlowMonitorRuleKeyHandle {
+  oneof key_or_handle {
+    uint64     flowmonitorrule_id     = 1;   // unique flowmon rule id allocated by app
+    fixed64    flowmonitorrule_handle = 2;   // flowmon handle returned by HAL
+  }
+}
+
+// DropMonitorRuleKeyHandle is used to operate on a DropMonitorRule object either by its key or handle
+message DropMonitorRuleKeyHandle {
+  oneof key_or_handle {
+    uint64     dropmonitorrule_id     = 1;   // unique dropmon rule id allocated by app
+    fixed64    dropmonitorrule_handle = 2;   // dropmon handle returned by HAL
+  }
+}
+
+// MirrorSessionKeyHandle is used to operate on a MirrorSession object either by its key or handle
+message MirrorSessionKeyHandle {
+  oneof key_or_handle {
+    uint64     mirrorsession_id     = 1 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];   // unique mirror session id allocated by app
+    fixed64    mirrorsession_handle = 2;   // mirror session handle returned by HAL
+  }
+}
+
 // VrfKeyHandle is used to operate on a vrf either by its key or handle
 message VrfKeyHandle {
   oneof key_or_handle {

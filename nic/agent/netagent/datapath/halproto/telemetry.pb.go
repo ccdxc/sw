@@ -117,191 +117,24 @@ func (x AggregationScheme) String() string {
 }
 func (AggregationScheme) EnumDescriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{2} }
 
-// CollectorStatus Codes
-type CollectorStatus_CollectorStatusCode int32
-
-const (
-	CollectorStatus_SUCCESS        CollectorStatus_CollectorStatusCode = 0
-	CollectorStatus_INVALID_CONFIG CollectorStatus_CollectorStatusCode = 1
-	CollectorStatus_TEMP_FAILURE   CollectorStatus_CollectorStatusCode = 2
-	CollectorStatus_PERM_FAILURE   CollectorStatus_CollectorStatusCode = 3
-)
-
-var CollectorStatus_CollectorStatusCode_name = map[int32]string{
-	0: "SUCCESS",
-	1: "INVALID_CONFIG",
-	2: "TEMP_FAILURE",
-	3: "PERM_FAILURE",
-}
-var CollectorStatus_CollectorStatusCode_value = map[string]int32{
-	"SUCCESS":        0,
-	"INVALID_CONFIG": 1,
-	"TEMP_FAILURE":   2,
-	"PERM_FAILURE":   3,
-}
-
-func (x CollectorStatus_CollectorStatusCode) String() string {
-	return proto.EnumName(CollectorStatus_CollectorStatusCode_name, int32(x))
-}
-func (CollectorStatus_CollectorStatusCode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{2, 0}
-}
-
-// Export control status codes
-type ExportControlStatus_ExportControlStatusCode int32
-
-const (
-	ExportControlStatus_SUCCESS        ExportControlStatus_ExportControlStatusCode = 0
-	ExportControlStatus_INVALID_CONFIG ExportControlStatus_ExportControlStatusCode = 1
-	ExportControlStatus_TEMP_FAILURE   ExportControlStatus_ExportControlStatusCode = 2
-	ExportControlStatus_PERM_FAILURE   ExportControlStatus_ExportControlStatusCode = 3
-)
-
-var ExportControlStatus_ExportControlStatusCode_name = map[int32]string{
-	0: "SUCCESS",
-	1: "INVALID_CONFIG",
-	2: "TEMP_FAILURE",
-	3: "PERM_FAILURE",
-}
-var ExportControlStatus_ExportControlStatusCode_value = map[string]int32{
-	"SUCCESS":        0,
-	"INVALID_CONFIG": 1,
-	"TEMP_FAILURE":   2,
-	"PERM_FAILURE":   3,
-}
-
-func (x ExportControlStatus_ExportControlStatusCode) String() string {
-	return proto.EnumName(ExportControlStatus_ExportControlStatusCode_name, int32(x))
-}
-func (ExportControlStatus_ExportControlStatusCode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{8, 0}
-}
-
-// FlowMonitorRule status codes
-type FlowMonitorRuleStatus_FlowMonitorRuleStatusCode int32
-
-const (
-	FlowMonitorRuleStatus_SUCCESS        FlowMonitorRuleStatus_FlowMonitorRuleStatusCode = 0
-	FlowMonitorRuleStatus_INVALID_CONFIG FlowMonitorRuleStatus_FlowMonitorRuleStatusCode = 1
-	FlowMonitorRuleStatus_TEMP_FAILURE   FlowMonitorRuleStatus_FlowMonitorRuleStatusCode = 2
-	FlowMonitorRuleStatus_PERM_FAILURE   FlowMonitorRuleStatus_FlowMonitorRuleStatusCode = 3
-)
-
-var FlowMonitorRuleStatus_FlowMonitorRuleStatusCode_name = map[int32]string{
-	0: "SUCCESS",
-	1: "INVALID_CONFIG",
-	2: "TEMP_FAILURE",
-	3: "PERM_FAILURE",
-}
-var FlowMonitorRuleStatus_FlowMonitorRuleStatusCode_value = map[string]int32{
-	"SUCCESS":        0,
-	"INVALID_CONFIG": 1,
-	"TEMP_FAILURE":   2,
-	"PERM_FAILURE":   3,
-}
-
-func (x FlowMonitorRuleStatus_FlowMonitorRuleStatusCode) String() string {
-	return proto.EnumName(FlowMonitorRuleStatus_FlowMonitorRuleStatusCode_name, int32(x))
-}
-func (FlowMonitorRuleStatus_FlowMonitorRuleStatusCode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{14, 0}
-}
-
-// DropMonitorRule status codes
-type DropMonitorRuleStatus_DropMonitorRuleStatusCode int32
-
-const (
-	DropMonitorRuleStatus_SUCCESS        DropMonitorRuleStatus_DropMonitorRuleStatusCode = 0
-	DropMonitorRuleStatus_INVALID_CONFIG DropMonitorRuleStatus_DropMonitorRuleStatusCode = 1
-	DropMonitorRuleStatus_TEMP_FAILURE   DropMonitorRuleStatus_DropMonitorRuleStatusCode = 2
-	DropMonitorRuleStatus_PERM_FAILURE   DropMonitorRuleStatus_DropMonitorRuleStatusCode = 3
-)
-
-var DropMonitorRuleStatus_DropMonitorRuleStatusCode_name = map[int32]string{
-	0: "SUCCESS",
-	1: "INVALID_CONFIG",
-	2: "TEMP_FAILURE",
-	3: "PERM_FAILURE",
-}
-var DropMonitorRuleStatus_DropMonitorRuleStatusCode_value = map[string]int32{
-	"SUCCESS":        0,
-	"INVALID_CONFIG": 1,
-	"TEMP_FAILURE":   2,
-	"PERM_FAILURE":   3,
-}
-
-func (x DropMonitorRuleStatus_DropMonitorRuleStatusCode) String() string {
-	return proto.EnumName(DropMonitorRuleStatus_DropMonitorRuleStatusCode_name, int32(x))
-}
-func (DropMonitorRuleStatus_DropMonitorRuleStatusCode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{19, 0}
-}
-
-// Mirror Session  status codes
-type MirrorSessionStatus_MirrorSessionStatusCode int32
-
-const (
-	MirrorSessionStatus_SUCCESS        MirrorSessionStatus_MirrorSessionStatusCode = 0
-	MirrorSessionStatus_INVALID_CONFIG MirrorSessionStatus_MirrorSessionStatusCode = 1
-	MirrorSessionStatus_TEMP_FAILURE   MirrorSessionStatus_MirrorSessionStatusCode = 2
-	MirrorSessionStatus_PERM_FAILURE   MirrorSessionStatus_MirrorSessionStatusCode = 3
-)
-
-var MirrorSessionStatus_MirrorSessionStatusCode_name = map[int32]string{
-	0: "SUCCESS",
-	1: "INVALID_CONFIG",
-	2: "TEMP_FAILURE",
-	3: "PERM_FAILURE",
-}
-var MirrorSessionStatus_MirrorSessionStatusCode_value = map[string]int32{
-	"SUCCESS":        0,
-	"INVALID_CONFIG": 1,
-	"TEMP_FAILURE":   2,
-	"PERM_FAILURE":   3,
-}
-
-func (x MirrorSessionStatus_MirrorSessionStatusCode) String() string {
-	return proto.EnumName(MirrorSessionStatus_MirrorSessionStatusCode_name, int32(x))
-}
-func (MirrorSessionStatus_MirrorSessionStatusCode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{27, 0}
-}
-
-// L4Port is a representation of the L4 port defined as a nested type for nullability
-type L4Port struct {
-	Port uint32 `protobuf:"varint,1,opt,name=port,proto3" json:"port,omitempty"`
-}
-
-func (m *L4Port) Reset()                    { *m = L4Port{} }
-func (m *L4Port) String() string            { return proto.CompactTextString(m) }
-func (*L4Port) ProtoMessage()               {}
-func (*L4Port) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{0} }
-
-func (m *L4Port) GetPort() uint32 {
-	if m != nil {
-		return m.Port
-	}
-	return 0
-}
-
 // CollectorSpec is the configuration specification for a telemetry collector
 type CollectorSpec struct {
-	Meta            *ObjectMeta      `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	ExportControlId *ExportControlId `protobuf:"bytes,2,opt,name=export_controlId,json=exportControlId" json:"export_controlId,omitempty"`
-	Encap           *EncapInfo       `protobuf:"bytes,3,opt,name=encap" json:"encap,omitempty"`
-	L2SegHandle     uint64           `protobuf:"fixed64,4,opt,name=l2seg_handle,json=l2segHandle,proto3" json:"l2seg_handle,omitempty"`
-	DestIp          *IPAddress       `protobuf:"bytes,5,opt,name=dest_ip,json=destIp" json:"dest_ip,omitempty"`
-	SrcIp           *IPAddress       `protobuf:"bytes,6,opt,name=src_ip,json=srcIp" json:"src_ip,omitempty"`
-	Protocol        IPProtocol       `protobuf:"varint,7,opt,name=protocol,proto3,enum=types.IPProtocol" json:"protocol,omitempty"`
-	DestPort        *L4Port          `protobuf:"bytes,8,opt,name=dest_port,json=destPort" json:"dest_port,omitempty"`
-	Format          ExportFormat     `protobuf:"varint,9,opt,name=format,proto3,enum=telemetry.ExportFormat" json:"format,omitempty"`
-	TemplateId      uint32           `protobuf:"varint,10,opt,name=template_id,json=templateId,proto3" json:"template_id,omitempty"`
+	Meta           *ObjectMeta         `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle    *CollectorKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	Encap          *EncapInfo          `protobuf:"bytes,3,opt,name=encap" json:"encap,omitempty"`
+	L2SegKeyHandle *L2SegmentKeyHandle `protobuf:"bytes,4,opt,name=l2seg_key_handle,json=l2segKeyHandle" json:"l2seg_key_handle,omitempty" venice:ref`
+	DestIp         *IPAddress          `protobuf:"bytes,5,opt,name=dest_ip,json=destIp" json:"dest_ip,omitempty" venice:mandatory`
+	SrcIp          *IPAddress          `protobuf:"bytes,6,opt,name=src_ip,json=srcIp" json:"src_ip,omitempty" venice:mandatory`
+	Protocol       IPProtocol          `protobuf:"varint,7,opt,name=protocol,proto3,enum=types.IPProtocol" json:"protocol,omitempty" venice:mandatory`
+	DestPort       uint32              `protobuf:"varint,8,opt,name=dest_port,json=destPort,proto3" json:"dest_port,omitempty" venice:mandatory`
+	Format         ExportFormat        `protobuf:"varint,9,opt,name=format,proto3,enum=telemetry.ExportFormat" json:"format,omitempty" venice:mandatory`
+	TemplateId     uint32              `protobuf:"varint,10,opt,name=template_id,json=templateId,proto3" json:"template_id,omitempty" venice:mandatory`
 }
 
 func (m *CollectorSpec) Reset()                    { *m = CollectorSpec{} }
 func (m *CollectorSpec) String() string            { return proto.CompactTextString(m) }
 func (*CollectorSpec) ProtoMessage()               {}
-func (*CollectorSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{1} }
+func (*CollectorSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{0} }
 
 func (m *CollectorSpec) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -310,9 +143,9 @@ func (m *CollectorSpec) GetMeta() *ObjectMeta {
 	return nil
 }
 
-func (m *CollectorSpec) GetExportControlId() *ExportControlId {
+func (m *CollectorSpec) GetKeyOrHandle() *CollectorKeyHandle {
 	if m != nil {
-		return m.ExportControlId
+		return m.KeyOrHandle
 	}
 	return nil
 }
@@ -324,11 +157,11 @@ func (m *CollectorSpec) GetEncap() *EncapInfo {
 	return nil
 }
 
-func (m *CollectorSpec) GetL2SegHandle() uint64 {
+func (m *CollectorSpec) GetL2SegKeyHandle() *L2SegmentKeyHandle {
 	if m != nil {
-		return m.L2SegHandle
+		return m.L2SegKeyHandle
 	}
-	return 0
+	return nil
 }
 
 func (m *CollectorSpec) GetDestIp() *IPAddress {
@@ -352,11 +185,11 @@ func (m *CollectorSpec) GetProtocol() IPProtocol {
 	return IPProtocol_IPPROTO_NONE
 }
 
-func (m *CollectorSpec) GetDestPort() *L4Port {
+func (m *CollectorSpec) GetDestPort() uint32 {
 	if m != nil {
 		return m.DestPort
 	}
-	return nil
+	return 0
 }
 
 func (m *CollectorSpec) GetFormat() ExportFormat {
@@ -375,57 +208,41 @@ func (m *CollectorSpec) GetTemplateId() uint32 {
 
 // CollectorSpec is the operational status of the collector
 type CollectorStatus struct {
-	Code   CollectorStatus_CollectorStatusCode `protobuf:"varint,1,opt,name=code,proto3,enum=telemetry.CollectorStatus_CollectorStatusCode" json:"code,omitempty"`
-	Status string                              `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Handle uint64 `protobuf:"fixed64,1,opt,name=handle,proto3" json:"handle,omitempty"`
 }
 
 func (m *CollectorStatus) Reset()                    { *m = CollectorStatus{} }
 func (m *CollectorStatus) String() string            { return proto.CompactTextString(m) }
 func (*CollectorStatus) ProtoMessage()               {}
-func (*CollectorStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{2} }
+func (*CollectorStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{1} }
 
-func (m *CollectorStatus) GetCode() CollectorStatus_CollectorStatusCode {
+func (m *CollectorStatus) GetHandle() uint64 {
 	if m != nil {
-		return m.Code
+		return m.Handle
 	}
-	return CollectorStatus_SUCCESS
-}
-
-func (m *CollectorStatus) GetStatus() string {
-	if m != nil {
-		return m.Status
-	}
-	return ""
+	return 0
 }
 
 // Collector is a container that holds both the configuration and the operational
 //  state of the collector
-type Collector struct {
-	ApiStatus ApiStatus        `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
-	Spec      *CollectorSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
-	Status    *CollectorStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+type CollectorResponse struct {
+	ApiStatus ApiStatus        `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Status    *CollectorStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
 }
 
-func (m *Collector) Reset()                    { *m = Collector{} }
-func (m *Collector) String() string            { return proto.CompactTextString(m) }
-func (*Collector) ProtoMessage()               {}
-func (*Collector) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{3} }
+func (m *CollectorResponse) Reset()                    { *m = CollectorResponse{} }
+func (m *CollectorResponse) String() string            { return proto.CompactTextString(m) }
+func (*CollectorResponse) ProtoMessage()               {}
+func (*CollectorResponse) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{2} }
 
-func (m *Collector) GetApiStatus() ApiStatus {
+func (m *CollectorResponse) GetApiStatus() ApiStatus {
 	if m != nil {
 		return m.ApiStatus
 	}
 	return ApiStatus_API_STATUS_OK
 }
 
-func (m *Collector) GetSpec() *CollectorSpec {
-	if m != nil {
-		return m.Spec
-	}
-	return nil
-}
-
-func (m *Collector) GetStatus() *CollectorStatus {
+func (m *CollectorResponse) GetStatus() *CollectorStatus {
 	if m != nil {
 		return m.Status
 	}
@@ -433,16 +250,16 @@ func (m *Collector) GetStatus() *CollectorStatus {
 }
 
 // CollectorConfigsMsg is used in requests and is a batchable request message
-type CollectorConfigMsg struct {
+type CollectorRequestMsg struct {
 	Request []*CollectorSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
 }
 
-func (m *CollectorConfigMsg) Reset()                    { *m = CollectorConfigMsg{} }
-func (m *CollectorConfigMsg) String() string            { return proto.CompactTextString(m) }
-func (*CollectorConfigMsg) ProtoMessage()               {}
-func (*CollectorConfigMsg) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{4} }
+func (m *CollectorRequestMsg) Reset()                    { *m = CollectorRequestMsg{} }
+func (m *CollectorRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*CollectorRequestMsg) ProtoMessage()               {}
+func (*CollectorRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{3} }
 
-func (m *CollectorConfigMsg) GetRequest() []*CollectorSpec {
+func (m *CollectorRequestMsg) GetRequest() []*CollectorSpec {
 	if m != nil {
 		return m.Request
 	}
@@ -451,69 +268,241 @@ func (m *CollectorConfigMsg) GetRequest() []*CollectorSpec {
 
 // CollectorConfigsMsg message is used as response for API requests.
 type CollectorResponseMsg struct {
-	Status   ApiStatus    `protobuf:"varint,1,opt,name=status,proto3,enum=types.ApiStatus" json:"status,omitempty"`
-	Response []*Collector `protobuf:"bytes,2,rep,name=response" json:"response,omitempty"`
+	Response []*CollectorResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
 func (m *CollectorResponseMsg) Reset()                    { *m = CollectorResponseMsg{} }
 func (m *CollectorResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CollectorResponseMsg) ProtoMessage()               {}
-func (*CollectorResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{5} }
+func (*CollectorResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{4} }
 
-func (m *CollectorResponseMsg) GetStatus() ApiStatus {
-	if m != nil {
-		return m.Status
-	}
-	return ApiStatus_API_STATUS_OK
-}
-
-func (m *CollectorResponseMsg) GetResponse() []*Collector {
+func (m *CollectorResponseMsg) GetResponse() []*CollectorResponse {
 	if m != nil {
 		return m.Response
 	}
 	return nil
 }
 
-// ExportControlId is a identifier for a ExportControl configuration
-type ExportControlId struct {
-	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	Id   uint64      `protobuf:"varint,2,opt,name=Id,proto3" json:"Id,omitempty"`
+// CollectorDeleteRequest is used to delete a collector
+type CollectorDeleteRequest struct {
+	Meta        *ObjectMeta         `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *CollectorKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
 }
 
-func (m *ExportControlId) Reset()                    { *m = ExportControlId{} }
-func (m *ExportControlId) String() string            { return proto.CompactTextString(m) }
-func (*ExportControlId) ProtoMessage()               {}
-func (*ExportControlId) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{6} }
+func (m *CollectorDeleteRequest) Reset()                    { *m = CollectorDeleteRequest{} }
+func (m *CollectorDeleteRequest) String() string            { return proto.CompactTextString(m) }
+func (*CollectorDeleteRequest) ProtoMessage()               {}
+func (*CollectorDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{5} }
 
-func (m *ExportControlId) GetMeta() *ObjectMeta {
+func (m *CollectorDeleteRequest) GetMeta() *ObjectMeta {
 	if m != nil {
 		return m.Meta
 	}
 	return nil
 }
 
-func (m *ExportControlId) GetId() uint64 {
+func (m *CollectorDeleteRequest) GetKeyOrHandle() *CollectorKeyHandle {
 	if m != nil {
-		return m.Id
+		return m.KeyOrHandle
 	}
-	return 0
+	return nil
 }
 
-// ExportControlId is the configuration specification for Export Control
+// CollectorDeleteResponse is response to CollectorDeleteRequest
+type CollectorDeleteResponse struct {
+	ApiStatus   ApiStatus           `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	KeyOrHandle *CollectorKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *CollectorDeleteResponse) Reset()                    { *m = CollectorDeleteResponse{} }
+func (m *CollectorDeleteResponse) String() string            { return proto.CompactTextString(m) }
+func (*CollectorDeleteResponse) ProtoMessage()               {}
+func (*CollectorDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{6} }
+
+func (m *CollectorDeleteResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *CollectorDeleteResponse) GetKeyOrHandle() *CollectorKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// CollectorDeleteRequestMsg is used to delete a batch of collectors
+type CollectorDeleteRequestMsg struct {
+	Request []*CollectorDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *CollectorDeleteRequestMsg) Reset()         { *m = CollectorDeleteRequestMsg{} }
+func (m *CollectorDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*CollectorDeleteRequestMsg) ProtoMessage()    {}
+func (*CollectorDeleteRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{7}
+}
+
+func (m *CollectorDeleteRequestMsg) GetRequest() []*CollectorDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// CollectorDeleteResponseMsg is batched response to CollectorDeleteRequestMsg
+type CollectorDeleteResponseMsg struct {
+	Response []*CollectorDeleteResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *CollectorDeleteResponseMsg) Reset()         { *m = CollectorDeleteResponseMsg{} }
+func (m *CollectorDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*CollectorDeleteResponseMsg) ProtoMessage()    {}
+func (*CollectorDeleteResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{8}
+}
+
+func (m *CollectorDeleteResponseMsg) GetResponse() []*CollectorDeleteResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// CollectorGetRequest is used to get information about a collector
+type CollectorGetRequest struct {
+	Meta        *ObjectMeta         `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *CollectorKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *CollectorGetRequest) Reset()                    { *m = CollectorGetRequest{} }
+func (m *CollectorGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*CollectorGetRequest) ProtoMessage()               {}
+func (*CollectorGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{9} }
+
+func (m *CollectorGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *CollectorGetRequest) GetKeyOrHandle() *CollectorKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// CollectorGetRequestMsg is batched GET requests for collectors
+type CollectorGetRequestMsg struct {
+	Request []*CollectorGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *CollectorGetRequestMsg) Reset()                    { *m = CollectorGetRequestMsg{} }
+func (m *CollectorGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*CollectorGetRequestMsg) ProtoMessage()               {}
+func (*CollectorGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{10} }
+
+func (m *CollectorGetRequestMsg) GetRequest() []*CollectorGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+type CollectorStats struct {
+}
+
+func (m *CollectorStats) Reset()                    { *m = CollectorStats{} }
+func (m *CollectorStats) String() string            { return proto.CompactTextString(m) }
+func (*CollectorStats) ProtoMessage()               {}
+func (*CollectorStats) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{11} }
+
+type CollectorGetResponse struct {
+	ApiStatus ApiStatus       `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Spec      *CollectorSpec  `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Stats     *CollectorStats `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *CollectorGetResponse) Reset()                    { *m = CollectorGetResponse{} }
+func (m *CollectorGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*CollectorGetResponse) ProtoMessage()               {}
+func (*CollectorGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{12} }
+
+func (m *CollectorGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *CollectorGetResponse) GetSpec() *CollectorSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *CollectorGetResponse) GetStats() *CollectorStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// CollectorGetResponseMsg is batched response to CollectorGetRequestMsg
+type CollectorGetResponseMsg struct {
+	Response []*CollectorGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *CollectorGetResponseMsg) Reset()         { *m = CollectorGetResponseMsg{} }
+func (m *CollectorGetResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*CollectorGetResponseMsg) ProtoMessage()    {}
+func (*CollectorGetResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{13}
+}
+
+func (m *CollectorGetResponseMsg) GetResponse() []*CollectorGetResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// ExportControlSpec is the configuration specification for Export Control
 type ExportControlSpec struct {
-	Id              *ExportControlId `protobuf:"bytes,1,opt,name=Id" json:"Id,omitempty"`
-	ActiveTimeout   uint32           `protobuf:"varint,2,opt,name=active_timeout,json=activeTimeout,proto3" json:"active_timeout,omitempty"`
-	InactiveTimeout uint32           `protobuf:"varint,3,opt,name=inactive_timeout,json=inactiveTimeout,proto3" json:"inactive_timeout,omitempty"`
+	Meta               *ObjectMeta             `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle        *ExportControlKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	CollectorKeyHandle []*CollectorKeyHandle   `protobuf:"bytes,3,rep,name=collector_key_handle,json=collectorKeyHandle" json:"collector_key_handle,omitempty"`
+	ActiveTimeout      uint32                  `protobuf:"varint,4,opt,name=active_timeout,json=activeTimeout,proto3" json:"active_timeout,omitempty"`
+	InactiveTimeout    uint32                  `protobuf:"varint,5,opt,name=inactive_timeout,json=inactiveTimeout,proto3" json:"inactive_timeout,omitempty"`
 }
 
 func (m *ExportControlSpec) Reset()                    { *m = ExportControlSpec{} }
 func (m *ExportControlSpec) String() string            { return proto.CompactTextString(m) }
 func (*ExportControlSpec) ProtoMessage()               {}
-func (*ExportControlSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{7} }
+func (*ExportControlSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{14} }
 
-func (m *ExportControlSpec) GetId() *ExportControlId {
+func (m *ExportControlSpec) GetMeta() *ObjectMeta {
 	if m != nil {
-		return m.Id
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *ExportControlSpec) GetKeyOrHandle() *ExportControlKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *ExportControlSpec) GetCollectorKeyHandle() []*CollectorKeyHandle {
+	if m != nil {
+		return m.CollectorKeyHandle
 	}
 	return nil
 }
@@ -532,96 +521,282 @@ func (m *ExportControlSpec) GetInactiveTimeout() uint32 {
 	return 0
 }
 
-// ExportControlStatus is the operational status of the Export Control configuration
+// ExportControlSpec is the operational status of the Export Control object
 type ExportControlStatus struct {
-	Code   ExportControlStatus_ExportControlStatusCode `protobuf:"varint,1,opt,name=code,proto3,enum=telemetry.ExportControlStatus_ExportControlStatusCode" json:"code,omitempty"`
-	Status string                                      `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Handle uint64 `protobuf:"fixed64,1,opt,name=handle,proto3" json:"handle,omitempty"`
 }
 
 func (m *ExportControlStatus) Reset()                    { *m = ExportControlStatus{} }
 func (m *ExportControlStatus) String() string            { return proto.CompactTextString(m) }
 func (*ExportControlStatus) ProtoMessage()               {}
-func (*ExportControlStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{8} }
+func (*ExportControlStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{15} }
 
-func (m *ExportControlStatus) GetCode() ExportControlStatus_ExportControlStatusCode {
+func (m *ExportControlStatus) GetHandle() uint64 {
 	if m != nil {
-		return m.Code
+		return m.Handle
 	}
-	return ExportControlStatus_SUCCESS
+	return 0
 }
 
-func (m *ExportControlStatus) GetStatus() string {
+// ExportControl is a container that holds both the configuration and the operational
+// state
+type ExportControlResponse struct {
+	ApiStatus ApiStatus            `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Status    *ExportControlStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
+}
+
+func (m *ExportControlResponse) Reset()                    { *m = ExportControlResponse{} }
+func (m *ExportControlResponse) String() string            { return proto.CompactTextString(m) }
+func (*ExportControlResponse) ProtoMessage()               {}
+func (*ExportControlResponse) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{16} }
+
+func (m *ExportControlResponse) GetApiStatus() ApiStatus {
 	if m != nil {
-		return m.Status
+		return m.ApiStatus
 	}
-	return ""
+	return ApiStatus_API_STATUS_OK
 }
 
-// ExportControl is a container for the configuration and the operational status for ExportControl
-type ExportControl struct {
-	Spec   *ExportControlSpec   `protobuf:"bytes,1,opt,name=spec" json:"spec,omitempty"`
-	Status *ExportControlStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
-}
-
-func (m *ExportControl) Reset()                    { *m = ExportControl{} }
-func (m *ExportControl) String() string            { return proto.CompactTextString(m) }
-func (*ExportControl) ProtoMessage()               {}
-func (*ExportControl) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{9} }
-
-func (m *ExportControl) GetSpec() *ExportControlSpec {
-	if m != nil {
-		return m.Spec
-	}
-	return nil
-}
-
-func (m *ExportControl) GetStatus() *ExportControlStatus {
+func (m *ExportControlResponse) GetStatus() *ExportControlStatus {
 	if m != nil {
 		return m.Status
 	}
 	return nil
 }
 
-// ExportControlConfigMsg is used as input to RPC call for ExportControl. It is a batchable message
-type ExportControlConfigMsg struct {
-	Configs []*ExportControlSpec `protobuf:"bytes,1,rep,name=configs" json:"configs,omitempty"`
+// ExportControlConfigsMsg is used in requests and is a batchable request message
+type ExportControlRequestMsg struct {
+	Request []*ExportControlSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
 }
 
-func (m *ExportControlConfigMsg) Reset()                    { *m = ExportControlConfigMsg{} }
-func (m *ExportControlConfigMsg) String() string            { return proto.CompactTextString(m) }
-func (*ExportControlConfigMsg) ProtoMessage()               {}
-func (*ExportControlConfigMsg) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{10} }
+func (m *ExportControlRequestMsg) Reset()         { *m = ExportControlRequestMsg{} }
+func (m *ExportControlRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*ExportControlRequestMsg) ProtoMessage()    {}
+func (*ExportControlRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{17}
+}
 
-func (m *ExportControlConfigMsg) GetConfigs() []*ExportControlSpec {
+func (m *ExportControlRequestMsg) GetRequest() []*ExportControlSpec {
 	if m != nil {
-		return m.Configs
+		return m.Request
 	}
 	return nil
 }
 
-// ExportControlResponseMsg is used in responses for operations on the ExportControl configuration.
+// ExportControlConfigsMsg message is used as response for API requests.
 type ExportControlResponseMsg struct {
-	Status        ApiStatus        `protobuf:"varint,1,opt,name=status,proto3,enum=types.ApiStatus" json:"status,omitempty"`
-	ExportControl []*ExportControl `protobuf:"bytes,2,rep,name=export_control,json=exportControl" json:"export_control,omitempty"`
+	Response []*ExportControlResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
 func (m *ExportControlResponseMsg) Reset()         { *m = ExportControlResponseMsg{} }
 func (m *ExportControlResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*ExportControlResponseMsg) ProtoMessage()    {}
 func (*ExportControlResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{11}
+	return fileDescriptorTelemetry, []int{18}
 }
 
-func (m *ExportControlResponseMsg) GetStatus() ApiStatus {
+func (m *ExportControlResponseMsg) GetResponse() []*ExportControlResponse {
 	if m != nil {
-		return m.Status
+		return m.Response
+	}
+	return nil
+}
+
+// ExportControlDeleteRequest is used to delete an export control object
+type ExportControlDeleteRequest struct {
+	Meta        *ObjectMeta             `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *ExportControlKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *ExportControlDeleteRequest) Reset()         { *m = ExportControlDeleteRequest{} }
+func (m *ExportControlDeleteRequest) String() string { return proto.CompactTextString(m) }
+func (*ExportControlDeleteRequest) ProtoMessage()    {}
+func (*ExportControlDeleteRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{19}
+}
+
+func (m *ExportControlDeleteRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *ExportControlDeleteRequest) GetKeyOrHandle() *ExportControlKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// ExportControlDeleteResponse is response to ExportControlDeleteRequest
+type ExportControlDeleteResponse struct {
+	ApiStatus   ApiStatus               `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	KeyOrHandle *ExportControlKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *ExportControlDeleteResponse) Reset()         { *m = ExportControlDeleteResponse{} }
+func (m *ExportControlDeleteResponse) String() string { return proto.CompactTextString(m) }
+func (*ExportControlDeleteResponse) ProtoMessage()    {}
+func (*ExportControlDeleteResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{20}
+}
+
+func (m *ExportControlDeleteResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
 	}
 	return ApiStatus_API_STATUS_OK
 }
 
-func (m *ExportControlResponseMsg) GetExportControl() []*ExportControl {
+func (m *ExportControlDeleteResponse) GetKeyOrHandle() *ExportControlKeyHandle {
 	if m != nil {
-		return m.ExportControl
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// ExportControlDeleteRequestMsg is used to delete a batch of exportcontrol objects
+type ExportControlDeleteRequestMsg struct {
+	Request []*ExportControlDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *ExportControlDeleteRequestMsg) Reset()         { *m = ExportControlDeleteRequestMsg{} }
+func (m *ExportControlDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*ExportControlDeleteRequestMsg) ProtoMessage()    {}
+func (*ExportControlDeleteRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{21}
+}
+
+func (m *ExportControlDeleteRequestMsg) GetRequest() []*ExportControlDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// ExportControlDeleteResponseMsg is batched response to ExportControlDeleteRequestMsg
+type ExportControlDeleteResponseMsg struct {
+	Response []*ExportControlDeleteResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *ExportControlDeleteResponseMsg) Reset()         { *m = ExportControlDeleteResponseMsg{} }
+func (m *ExportControlDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*ExportControlDeleteResponseMsg) ProtoMessage()    {}
+func (*ExportControlDeleteResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{22}
+}
+
+func (m *ExportControlDeleteResponseMsg) GetResponse() []*ExportControlDeleteResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// ExportControlGetRequest is used to get information about an exportcontrol object
+type ExportControlGetRequest struct {
+	Meta        *ObjectMeta             `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *ExportControlKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *ExportControlGetRequest) Reset()         { *m = ExportControlGetRequest{} }
+func (m *ExportControlGetRequest) String() string { return proto.CompactTextString(m) }
+func (*ExportControlGetRequest) ProtoMessage()    {}
+func (*ExportControlGetRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{23}
+}
+
+func (m *ExportControlGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *ExportControlGetRequest) GetKeyOrHandle() *ExportControlKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// ExportControlGetRequestMsg is batched GET requests for exportcontrol objects
+type ExportControlGetRequestMsg struct {
+	Request []*ExportControlGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *ExportControlGetRequestMsg) Reset()         { *m = ExportControlGetRequestMsg{} }
+func (m *ExportControlGetRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*ExportControlGetRequestMsg) ProtoMessage()    {}
+func (*ExportControlGetRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{24}
+}
+
+func (m *ExportControlGetRequestMsg) GetRequest() []*ExportControlGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+type ExportControlStats struct {
+}
+
+func (m *ExportControlStats) Reset()                    { *m = ExportControlStats{} }
+func (m *ExportControlStats) String() string            { return proto.CompactTextString(m) }
+func (*ExportControlStats) ProtoMessage()               {}
+func (*ExportControlStats) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{25} }
+
+type ExportControlGetResponse struct {
+	ApiStatus ApiStatus           `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Spec      *ExportControlSpec  `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Stats     *ExportControlStats `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *ExportControlGetResponse) Reset()         { *m = ExportControlGetResponse{} }
+func (m *ExportControlGetResponse) String() string { return proto.CompactTextString(m) }
+func (*ExportControlGetResponse) ProtoMessage()    {}
+func (*ExportControlGetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{26}
+}
+
+func (m *ExportControlGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *ExportControlGetResponse) GetSpec() *ExportControlSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *ExportControlGetResponse) GetStats() *ExportControlStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// ExportControlGetResponseMsg is batched response to ExportControlGetRequestMsg
+type ExportControlGetResponseMsg struct {
+	Response []*ExportControlGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *ExportControlGetResponseMsg) Reset()         { *m = ExportControlGetResponseMsg{} }
+func (m *ExportControlGetResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*ExportControlGetResponseMsg) ProtoMessage()    {}
+func (*ExportControlGetResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{27}
+}
+
+func (m *ExportControlGetResponseMsg) GetResponse() []*ExportControlGetResponse {
+	if m != nil {
+		return m.Response
 	}
 	return nil
 }
@@ -636,7 +811,7 @@ type MonitorAction struct {
 func (m *MonitorAction) Reset()                    { *m = MonitorAction{} }
 func (m *MonitorAction) String() string            { return proto.CompactTextString(m) }
 func (*MonitorAction) ProtoMessage()               {}
-func (*MonitorAction) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{12} }
+func (*MonitorAction) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{28} }
 
 func (m *MonitorAction) GetAction() []RuleAction {
 	if m != nil {
@@ -661,25 +836,26 @@ func (m *MonitorAction) GetMirrorDestinations() []uint32 {
 
 // FlowMonitorRuleSpec flow monitor rule specification
 type FlowMonitorRuleSpec struct {
-	Meta           *ObjectMeta      `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	ExportConfigId *ExportControlId `protobuf:"bytes,2,opt,name=export_configId,json=exportConfigId" json:"export_configId,omitempty"`
-	SourceMac      uint64           `protobuf:"varint,3,opt,name=source_mac,json=sourceMac,proto3" json:"source_mac,omitempty"`
-	DestMac        uint64           `protobuf:"varint,4,opt,name=dest_mac,json=destMac,proto3" json:"dest_mac,omitempty"`
-	Ethertype      uint32           `protobuf:"varint,5,opt,name=ethertype,proto3" json:"ethertype,omitempty"`
-	Protocol       IPProtocol       `protobuf:"varint,6,opt,name=protocol,proto3,enum=types.IPProtocol" json:"protocol,omitempty"`
-	SourceIp       *IPPrefix        `protobuf:"bytes,7,opt,name=source_ip,json=sourceIp" json:"source_ip,omitempty"`
-	DestIp         *IPPrefix        `protobuf:"bytes,8,opt,name=dest_ip,json=destIp" json:"dest_ip,omitempty"`
-	SourceL4Port   *L4Port          `protobuf:"bytes,9,opt,name=source_l4_port,json=sourceL4Port" json:"source_l4_port,omitempty"`
-	DestL4Port     *L4Port          `protobuf:"bytes,10,opt,name=dest_l4_port,json=destL4Port" json:"dest_l4_port,omitempty"`
-	SourceGroupid  uint64           `protobuf:"varint,11,opt,name=source_groupid,json=sourceGroupid,proto3" json:"source_groupid,omitempty"`
-	DestGroupid    uint64           `protobuf:"varint,12,opt,name=dest_groupid,json=destGroupid,proto3" json:"dest_groupid,omitempty"`
-	Action         *MonitorAction   `protobuf:"bytes,13,opt,name=action" json:"action,omitempty"`
+	Meta          *ObjectMeta               `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle   *FlowMonitorRuleKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	EcKeyHandle   *ExportControlKeyHandle   `protobuf:"bytes,3,opt,name=ec_key_handle,json=ecKeyHandle" json:"ec_key_handle,omitempty"`
+	SourceMac     uint64                    `protobuf:"varint,4,opt,name=source_mac,json=sourceMac,proto3" json:"source_mac,omitempty"`
+	DestMac       uint64                    `protobuf:"varint,5,opt,name=dest_mac,json=destMac,proto3" json:"dest_mac,omitempty"`
+	Ethertype     uint32                    `protobuf:"varint,6,opt,name=ethertype,proto3" json:"ethertype,omitempty"`
+	Protocol      IPProtocol                `protobuf:"varint,7,opt,name=protocol,proto3,enum=types.IPProtocol" json:"protocol,omitempty"`
+	SourceIp      *IPPrefix                 `protobuf:"bytes,8,opt,name=source_ip,json=sourceIp" json:"source_ip,omitempty"`
+	DestIp        *IPPrefix                 `protobuf:"bytes,9,opt,name=dest_ip,json=destIp" json:"dest_ip,omitempty"`
+	SourceL4Port  uint32                    `protobuf:"varint,10,opt,name=source_l4_port,json=sourceL4Port,proto3" json:"source_l4_port,omitempty"`
+	DestL4Port    uint32                    `protobuf:"varint,11,opt,name=dest_l4_port,json=destL4Port,proto3" json:"dest_l4_port,omitempty"`
+	SourceGroupid uint64                    `protobuf:"varint,12,opt,name=source_groupid,json=sourceGroupid,proto3" json:"source_groupid,omitempty"`
+	DestGroupid   uint64                    `protobuf:"varint,13,opt,name=dest_groupid,json=destGroupid,proto3" json:"dest_groupid,omitempty"`
+	Action        *MonitorAction            `protobuf:"bytes,14,opt,name=action" json:"action,omitempty"`
 }
 
 func (m *FlowMonitorRuleSpec) Reset()                    { *m = FlowMonitorRuleSpec{} }
 func (m *FlowMonitorRuleSpec) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleSpec) ProtoMessage()               {}
-func (*FlowMonitorRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{13} }
+func (*FlowMonitorRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{29} }
 
 func (m *FlowMonitorRuleSpec) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -688,9 +864,16 @@ func (m *FlowMonitorRuleSpec) GetMeta() *ObjectMeta {
 	return nil
 }
 
-func (m *FlowMonitorRuleSpec) GetExportConfigId() *ExportControlId {
+func (m *FlowMonitorRuleSpec) GetKeyOrHandle() *FlowMonitorRuleKeyHandle {
 	if m != nil {
-		return m.ExportConfigId
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *FlowMonitorRuleSpec) GetEcKeyHandle() *ExportControlKeyHandle {
+	if m != nil {
+		return m.EcKeyHandle
 	}
 	return nil
 }
@@ -737,18 +920,18 @@ func (m *FlowMonitorRuleSpec) GetDestIp() *IPPrefix {
 	return nil
 }
 
-func (m *FlowMonitorRuleSpec) GetSourceL4Port() *L4Port {
+func (m *FlowMonitorRuleSpec) GetSourceL4Port() uint32 {
 	if m != nil {
 		return m.SourceL4Port
 	}
-	return nil
+	return 0
 }
 
-func (m *FlowMonitorRuleSpec) GetDestL4Port() *L4Port {
+func (m *FlowMonitorRuleSpec) GetDestL4Port() uint32 {
 	if m != nil {
 		return m.DestL4Port
 	}
-	return nil
+	return 0
 }
 
 func (m *FlowMonitorRuleSpec) GetSourceGroupid() uint64 {
@@ -774,28 +957,20 @@ func (m *FlowMonitorRuleSpec) GetAction() *MonitorAction {
 
 // FlowMonitorRuleStatus is the operational status of the rule
 type FlowMonitorRuleStatus struct {
-	Code        FlowMonitorRuleStatus_FlowMonitorRuleStatusCode `protobuf:"varint,1,opt,name=code,proto3,enum=telemetry.FlowMonitorRuleStatus_FlowMonitorRuleStatusCode" json:"code,omitempty"`
-	Status      string                                          `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	ActiveFlows uint32                                          `protobuf:"varint,3,opt,name=active_flows,json=activeFlows,proto3" json:"active_flows,omitempty"`
+	Handle      uint64 `protobuf:"fixed64,1,opt,name=handle,proto3" json:"handle,omitempty"`
+	ActiveFlows uint32 `protobuf:"varint,2,opt,name=active_flows,json=activeFlows,proto3" json:"active_flows,omitempty"`
 }
 
 func (m *FlowMonitorRuleStatus) Reset()                    { *m = FlowMonitorRuleStatus{} }
 func (m *FlowMonitorRuleStatus) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleStatus) ProtoMessage()               {}
-func (*FlowMonitorRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{14} }
+func (*FlowMonitorRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{30} }
 
-func (m *FlowMonitorRuleStatus) GetCode() FlowMonitorRuleStatus_FlowMonitorRuleStatusCode {
+func (m *FlowMonitorRuleStatus) GetHandle() uint64 {
 	if m != nil {
-		return m.Code
+		return m.Handle
 	}
-	return FlowMonitorRuleStatus_SUCCESS
-}
-
-func (m *FlowMonitorRuleStatus) GetStatus() string {
-	if m != nil {
-		return m.Status
-	}
-	return ""
+	return 0
 }
 
 func (m *FlowMonitorRuleStatus) GetActiveFlows() uint32 {
@@ -805,79 +980,265 @@ func (m *FlowMonitorRuleStatus) GetActiveFlows() uint32 {
 	return 0
 }
 
-// FlowMonitorRule is a container for the configuration and operational status
-type FlowMonitorRule struct {
-	ApiStatus ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
-	Spec      *FlowMonitorRuleSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
-	Status    *FlowMonitorRuleStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+// FlowMonitorRule is a container that holds both the configuration and the operational
+// state of the flowmonitor
+type FlowMonitorRuleResponse struct {
+	ApiStatus ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Status    *FlowMonitorRuleStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
 }
 
-func (m *FlowMonitorRule) Reset()                    { *m = FlowMonitorRule{} }
-func (m *FlowMonitorRule) String() string            { return proto.CompactTextString(m) }
-func (*FlowMonitorRule) ProtoMessage()               {}
-func (*FlowMonitorRule) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{15} }
+func (m *FlowMonitorRuleResponse) Reset()         { *m = FlowMonitorRuleResponse{} }
+func (m *FlowMonitorRuleResponse) String() string { return proto.CompactTextString(m) }
+func (*FlowMonitorRuleResponse) ProtoMessage()    {}
+func (*FlowMonitorRuleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{31}
+}
 
-func (m *FlowMonitorRule) GetApiStatus() ApiStatus {
+func (m *FlowMonitorRuleResponse) GetApiStatus() ApiStatus {
 	if m != nil {
 		return m.ApiStatus
 	}
 	return ApiStatus_API_STATUS_OK
 }
 
-func (m *FlowMonitorRule) GetSpec() *FlowMonitorRuleSpec {
-	if m != nil {
-		return m.Spec
-	}
-	return nil
-}
-
-func (m *FlowMonitorRule) GetStatus() *FlowMonitorRuleStatus {
+func (m *FlowMonitorRuleResponse) GetStatus() *FlowMonitorRuleStatus {
 	if m != nil {
 		return m.Status
 	}
 	return nil
 }
 
-// FlowMonitorRuleConfigMsg is used in api requests for flow monitor configuration
-type FlowMonitorRuleConfigMsg struct {
+// FlowMonitorRuleConfigsMsg is used in requests and is a batchable request message
+type FlowMonitorRuleRequestMsg struct {
 	Request []*FlowMonitorRuleSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
 }
 
-func (m *FlowMonitorRuleConfigMsg) Reset()         { *m = FlowMonitorRuleConfigMsg{} }
-func (m *FlowMonitorRuleConfigMsg) String() string { return proto.CompactTextString(m) }
-func (*FlowMonitorRuleConfigMsg) ProtoMessage()    {}
-func (*FlowMonitorRuleConfigMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{16}
+func (m *FlowMonitorRuleRequestMsg) Reset()         { *m = FlowMonitorRuleRequestMsg{} }
+func (m *FlowMonitorRuleRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*FlowMonitorRuleRequestMsg) ProtoMessage()    {}
+func (*FlowMonitorRuleRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{32}
 }
 
-func (m *FlowMonitorRuleConfigMsg) GetRequest() []*FlowMonitorRuleSpec {
+func (m *FlowMonitorRuleRequestMsg) GetRequest() []*FlowMonitorRuleSpec {
 	if m != nil {
 		return m.Request
 	}
 	return nil
 }
 
-// FlowMonitorRuleResponseMsg is used in responses for flow monitor rule operations
+// FlowMonitorRuleConfigsMsg message is used as response for API requests.
 type FlowMonitorRuleResponseMsg struct {
-	Status   ApiStatus          `protobuf:"varint,1,opt,name=status,proto3,enum=types.ApiStatus" json:"status,omitempty"`
-	Response []*FlowMonitorRule `protobuf:"bytes,2,rep,name=response" json:"response,omitempty"`
+	Response []*FlowMonitorRuleResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
 func (m *FlowMonitorRuleResponseMsg) Reset()         { *m = FlowMonitorRuleResponseMsg{} }
 func (m *FlowMonitorRuleResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleResponseMsg) ProtoMessage()    {}
 func (*FlowMonitorRuleResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{17}
+	return fileDescriptorTelemetry, []int{33}
 }
 
-func (m *FlowMonitorRuleResponseMsg) GetStatus() ApiStatus {
+func (m *FlowMonitorRuleResponseMsg) GetResponse() []*FlowMonitorRuleResponse {
 	if m != nil {
-		return m.Status
+		return m.Response
+	}
+	return nil
+}
+
+// FlowMonitorRuleDeleteRequest is used to delete a flowmonitor
+type FlowMonitorRuleDeleteRequest struct {
+	Meta        *ObjectMeta               `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *FlowMonitorRuleKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *FlowMonitorRuleDeleteRequest) Reset()         { *m = FlowMonitorRuleDeleteRequest{} }
+func (m *FlowMonitorRuleDeleteRequest) String() string { return proto.CompactTextString(m) }
+func (*FlowMonitorRuleDeleteRequest) ProtoMessage()    {}
+func (*FlowMonitorRuleDeleteRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{34}
+}
+
+func (m *FlowMonitorRuleDeleteRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *FlowMonitorRuleDeleteRequest) GetKeyOrHandle() *FlowMonitorRuleKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// FlowMonitorRuleDeleteResponse is response to FlowMonitorRuleDeleteRequest
+type FlowMonitorRuleDeleteResponse struct {
+	ApiStatus   ApiStatus                 `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	KeyOrHandle *FlowMonitorRuleKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *FlowMonitorRuleDeleteResponse) Reset()         { *m = FlowMonitorRuleDeleteResponse{} }
+func (m *FlowMonitorRuleDeleteResponse) String() string { return proto.CompactTextString(m) }
+func (*FlowMonitorRuleDeleteResponse) ProtoMessage()    {}
+func (*FlowMonitorRuleDeleteResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{35}
+}
+
+func (m *FlowMonitorRuleDeleteResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
 	}
 	return ApiStatus_API_STATUS_OK
 }
 
-func (m *FlowMonitorRuleResponseMsg) GetResponse() []*FlowMonitorRule {
+func (m *FlowMonitorRuleDeleteResponse) GetKeyOrHandle() *FlowMonitorRuleKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// FlowMonitorRuleDeleteRequestMsg is used to delete a batch of flowmonitors
+type FlowMonitorRuleDeleteRequestMsg struct {
+	Request []*FlowMonitorRuleDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *FlowMonitorRuleDeleteRequestMsg) Reset()         { *m = FlowMonitorRuleDeleteRequestMsg{} }
+func (m *FlowMonitorRuleDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*FlowMonitorRuleDeleteRequestMsg) ProtoMessage()    {}
+func (*FlowMonitorRuleDeleteRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{36}
+}
+
+func (m *FlowMonitorRuleDeleteRequestMsg) GetRequest() []*FlowMonitorRuleDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// FlowMonitorRuleDeleteResponseMsg is batched response to FlowMonitorRuleDeleteRequestMsg
+type FlowMonitorRuleDeleteResponseMsg struct {
+	Response []*FlowMonitorRuleDeleteResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *FlowMonitorRuleDeleteResponseMsg) Reset()         { *m = FlowMonitorRuleDeleteResponseMsg{} }
+func (m *FlowMonitorRuleDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*FlowMonitorRuleDeleteResponseMsg) ProtoMessage()    {}
+func (*FlowMonitorRuleDeleteResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{37}
+}
+
+func (m *FlowMonitorRuleDeleteResponseMsg) GetResponse() []*FlowMonitorRuleDeleteResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// FlowMonitorRuleGetRequest is used to get information about a flowmonitor
+type FlowMonitorRuleGetRequest struct {
+	Meta        *ObjectMeta               `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *FlowMonitorRuleKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *FlowMonitorRuleGetRequest) Reset()         { *m = FlowMonitorRuleGetRequest{} }
+func (m *FlowMonitorRuleGetRequest) String() string { return proto.CompactTextString(m) }
+func (*FlowMonitorRuleGetRequest) ProtoMessage()    {}
+func (*FlowMonitorRuleGetRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{38}
+}
+
+func (m *FlowMonitorRuleGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *FlowMonitorRuleGetRequest) GetKeyOrHandle() *FlowMonitorRuleKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// FlowMonitorRuleGetRequestMsg is batched GET requests for flowmonitors
+type FlowMonitorRuleGetRequestMsg struct {
+	Request []*FlowMonitorRuleGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *FlowMonitorRuleGetRequestMsg) Reset()         { *m = FlowMonitorRuleGetRequestMsg{} }
+func (m *FlowMonitorRuleGetRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*FlowMonitorRuleGetRequestMsg) ProtoMessage()    {}
+func (*FlowMonitorRuleGetRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{39}
+}
+
+func (m *FlowMonitorRuleGetRequestMsg) GetRequest() []*FlowMonitorRuleGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+type FlowMonitorRuleStats struct {
+}
+
+func (m *FlowMonitorRuleStats) Reset()                    { *m = FlowMonitorRuleStats{} }
+func (m *FlowMonitorRuleStats) String() string            { return proto.CompactTextString(m) }
+func (*FlowMonitorRuleStats) ProtoMessage()               {}
+func (*FlowMonitorRuleStats) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{40} }
+
+type FlowMonitorRuleGetResponse struct {
+	ApiStatus ApiStatus             `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Spec      *FlowMonitorRuleSpec  `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Stats     *FlowMonitorRuleStats `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *FlowMonitorRuleGetResponse) Reset()         { *m = FlowMonitorRuleGetResponse{} }
+func (m *FlowMonitorRuleGetResponse) String() string { return proto.CompactTextString(m) }
+func (*FlowMonitorRuleGetResponse) ProtoMessage()    {}
+func (*FlowMonitorRuleGetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{41}
+}
+
+func (m *FlowMonitorRuleGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *FlowMonitorRuleGetResponse) GetSpec() *FlowMonitorRuleSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *FlowMonitorRuleGetResponse) GetStats() *FlowMonitorRuleStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// FlowMonitorGetResponseMsg is batched response to FlowMonitorGetRequestMsg
+type FlowMonitorRuleGetResponseMsg struct {
+	Response []*FlowMonitorRuleGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *FlowMonitorRuleGetResponseMsg) Reset()         { *m = FlowMonitorRuleGetResponseMsg{} }
+func (m *FlowMonitorRuleGetResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*FlowMonitorRuleGetResponseMsg) ProtoMessage()    {}
+func (*FlowMonitorRuleGetResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{42}
+}
+
+func (m *FlowMonitorRuleGetResponseMsg) GetResponse() []*FlowMonitorRuleGetResponse {
 	if m != nil {
 		return m.Response
 	}
@@ -886,14 +1247,37 @@ func (m *FlowMonitorRuleResponseMsg) GetResponse() []*FlowMonitorRule {
 
 // Drop Monitor Rule specification
 type DropMonitorRuleSpec struct {
-	Reasons            *DropReasons `protobuf:"bytes,1,opt,name=reasons" json:"reasons,omitempty"`
-	MirrorDestinations []uint32     `protobuf:"varint,2,rep,packed,name=mirror_destinations,json=mirrorDestinations" json:"mirror_destinations,omitempty"`
+	Meta        *ObjectMeta               `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *DropMonitorRuleKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	MsKeyHandle []*MirrorSessionKeyHandle `protobuf:"bytes,3,rep,name=ms_key_handle,json=msKeyHandle" json:"ms_key_handle,omitempty" venice:constraints={range:0-7}`
+	Reasons     *DropReasons              `protobuf:"bytes,4,opt,name=reasons" json:"reasons,omitempty"`
 }
 
 func (m *DropMonitorRuleSpec) Reset()                    { *m = DropMonitorRuleSpec{} }
 func (m *DropMonitorRuleSpec) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleSpec) ProtoMessage()               {}
-func (*DropMonitorRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{18} }
+func (*DropMonitorRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{43} }
+
+func (m *DropMonitorRuleSpec) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *DropMonitorRuleSpec) GetKeyOrHandle() *DropMonitorRuleKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *DropMonitorRuleSpec) GetMsKeyHandle() []*MirrorSessionKeyHandle {
+	if m != nil {
+		return m.MsKeyHandle
+	}
+	return nil
+}
 
 func (m *DropMonitorRuleSpec) GetReasons() *DropReasons {
 	if m != nil {
@@ -902,111 +1286,290 @@ func (m *DropMonitorRuleSpec) GetReasons() *DropReasons {
 	return nil
 }
 
-func (m *DropMonitorRuleSpec) GetMirrorDestinations() []uint32 {
-	if m != nil {
-		return m.MirrorDestinations
-	}
-	return nil
-}
-
 // DropMonitorRuleStatus is the operational status of the rule
 type DropMonitorRuleStatus struct {
-	Code   DropMonitorRuleStatus_DropMonitorRuleStatusCode `protobuf:"varint,1,opt,name=code,proto3,enum=telemetry.DropMonitorRuleStatus_DropMonitorRuleStatusCode" json:"code,omitempty"`
-	Status string                                          `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Handle      uint64 `protobuf:"fixed64,1,opt,name=handle,proto3" json:"handle,omitempty"`
+	ActiveFlows uint32 `protobuf:"varint,3,opt,name=active_flows,json=activeFlows,proto3" json:"active_flows,omitempty"`
 }
 
 func (m *DropMonitorRuleStatus) Reset()                    { *m = DropMonitorRuleStatus{} }
 func (m *DropMonitorRuleStatus) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleStatus) ProtoMessage()               {}
-func (*DropMonitorRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{19} }
+func (*DropMonitorRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{44} }
 
-func (m *DropMonitorRuleStatus) GetCode() DropMonitorRuleStatus_DropMonitorRuleStatusCode {
+func (m *DropMonitorRuleStatus) GetHandle() uint64 {
 	if m != nil {
-		return m.Code
+		return m.Handle
 	}
-	return DropMonitorRuleStatus_SUCCESS
+	return 0
 }
 
-func (m *DropMonitorRuleStatus) GetStatus() string {
+func (m *DropMonitorRuleStatus) GetActiveFlows() uint32 {
 	if m != nil {
-		return m.Status
+		return m.ActiveFlows
 	}
-	return ""
+	return 0
 }
 
-// DropMonitorRule is a container for the configuration and operational status
-type DropMonitorRule struct {
-	ApiStatus ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
-	Spec      *DropMonitorRuleSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
-	Status    *DropMonitorRuleStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+// DropMonitorRule is a container that holds both the configuration and the operational
+// state of the dropmonitor
+type DropMonitorRuleResponse struct {
+	ApiStatus ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Status    *DropMonitorRuleStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
 }
 
-func (m *DropMonitorRule) Reset()                    { *m = DropMonitorRule{} }
-func (m *DropMonitorRule) String() string            { return proto.CompactTextString(m) }
-func (*DropMonitorRule) ProtoMessage()               {}
-func (*DropMonitorRule) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{20} }
+func (m *DropMonitorRuleResponse) Reset()         { *m = DropMonitorRuleResponse{} }
+func (m *DropMonitorRuleResponse) String() string { return proto.CompactTextString(m) }
+func (*DropMonitorRuleResponse) ProtoMessage()    {}
+func (*DropMonitorRuleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{45}
+}
 
-func (m *DropMonitorRule) GetApiStatus() ApiStatus {
+func (m *DropMonitorRuleResponse) GetApiStatus() ApiStatus {
 	if m != nil {
 		return m.ApiStatus
 	}
 	return ApiStatus_API_STATUS_OK
 }
 
-func (m *DropMonitorRule) GetSpec() *DropMonitorRuleSpec {
-	if m != nil {
-		return m.Spec
-	}
-	return nil
-}
-
-func (m *DropMonitorRule) GetStatus() *DropMonitorRuleStatus {
+func (m *DropMonitorRuleResponse) GetStatus() *DropMonitorRuleStatus {
 	if m != nil {
 		return m.Status
 	}
 	return nil
 }
 
-// DropMonitorRuleConfigMsg is used in api requests for drop monitor configuration
-type DropMonitorRuleConfigMsg struct {
+// DropMonitorRuleConfigsMsg is used in requests and is a batchable request message
+type DropMonitorRuleRequestMsg struct {
 	Request []*DropMonitorRuleSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
 }
 
-func (m *DropMonitorRuleConfigMsg) Reset()         { *m = DropMonitorRuleConfigMsg{} }
-func (m *DropMonitorRuleConfigMsg) String() string { return proto.CompactTextString(m) }
-func (*DropMonitorRuleConfigMsg) ProtoMessage()    {}
-func (*DropMonitorRuleConfigMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{21}
+func (m *DropMonitorRuleRequestMsg) Reset()         { *m = DropMonitorRuleRequestMsg{} }
+func (m *DropMonitorRuleRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*DropMonitorRuleRequestMsg) ProtoMessage()    {}
+func (*DropMonitorRuleRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{46}
 }
 
-func (m *DropMonitorRuleConfigMsg) GetRequest() []*DropMonitorRuleSpec {
+func (m *DropMonitorRuleRequestMsg) GetRequest() []*DropMonitorRuleSpec {
 	if m != nil {
 		return m.Request
 	}
 	return nil
 }
 
-// DropMonitorRuleResponseMsg is used in responses for drop monitor operations
+// DropMonitorRuleConfigsMsg message is used as response for API requests.
 type DropMonitorRuleResponseMsg struct {
-	Status   ApiStatus          `protobuf:"varint,1,opt,name=status,proto3,enum=types.ApiStatus" json:"status,omitempty"`
-	Response []*DropMonitorRule `protobuf:"bytes,2,rep,name=response" json:"response,omitempty"`
+	Response []*DropMonitorRuleResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
 func (m *DropMonitorRuleResponseMsg) Reset()         { *m = DropMonitorRuleResponseMsg{} }
 func (m *DropMonitorRuleResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*DropMonitorRuleResponseMsg) ProtoMessage()    {}
 func (*DropMonitorRuleResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{22}
+	return fileDescriptorTelemetry, []int{47}
 }
 
-func (m *DropMonitorRuleResponseMsg) GetStatus() ApiStatus {
+func (m *DropMonitorRuleResponseMsg) GetResponse() []*DropMonitorRuleResponse {
 	if m != nil {
-		return m.Status
+		return m.Response
+	}
+	return nil
+}
+
+// DropMonitorRuleDeleteRequest is used to delete a dropmonitor
+type DropMonitorRuleDeleteRequest struct {
+	Meta        *ObjectMeta               `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *DropMonitorRuleKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *DropMonitorRuleDeleteRequest) Reset()         { *m = DropMonitorRuleDeleteRequest{} }
+func (m *DropMonitorRuleDeleteRequest) String() string { return proto.CompactTextString(m) }
+func (*DropMonitorRuleDeleteRequest) ProtoMessage()    {}
+func (*DropMonitorRuleDeleteRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{48}
+}
+
+func (m *DropMonitorRuleDeleteRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *DropMonitorRuleDeleteRequest) GetKeyOrHandle() *DropMonitorRuleKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// DropMonitorRuleDeleteResponse is response to DropMonitorRuleDeleteRequest
+type DropMonitorRuleDeleteResponse struct {
+	ApiStatus   ApiStatus                 `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	KeyOrHandle *DropMonitorRuleKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *DropMonitorRuleDeleteResponse) Reset()         { *m = DropMonitorRuleDeleteResponse{} }
+func (m *DropMonitorRuleDeleteResponse) String() string { return proto.CompactTextString(m) }
+func (*DropMonitorRuleDeleteResponse) ProtoMessage()    {}
+func (*DropMonitorRuleDeleteResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{49}
+}
+
+func (m *DropMonitorRuleDeleteResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
 	}
 	return ApiStatus_API_STATUS_OK
 }
 
-func (m *DropMonitorRuleResponseMsg) GetResponse() []*DropMonitorRule {
+func (m *DropMonitorRuleDeleteResponse) GetKeyOrHandle() *DropMonitorRuleKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// DropMonitorRuleDeleteRequestMsg is used to delete a batch of dropmonitors
+type DropMonitorRuleDeleteRequestMsg struct {
+	Request []*DropMonitorRuleDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *DropMonitorRuleDeleteRequestMsg) Reset()         { *m = DropMonitorRuleDeleteRequestMsg{} }
+func (m *DropMonitorRuleDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*DropMonitorRuleDeleteRequestMsg) ProtoMessage()    {}
+func (*DropMonitorRuleDeleteRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{50}
+}
+
+func (m *DropMonitorRuleDeleteRequestMsg) GetRequest() []*DropMonitorRuleDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// DropMonitorRuleDeleteResponseMsg is batched response to DropMonitorRuleDeleteRequestMsg
+type DropMonitorRuleDeleteResponseMsg struct {
+	Response []*DropMonitorRuleDeleteResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *DropMonitorRuleDeleteResponseMsg) Reset()         { *m = DropMonitorRuleDeleteResponseMsg{} }
+func (m *DropMonitorRuleDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*DropMonitorRuleDeleteResponseMsg) ProtoMessage()    {}
+func (*DropMonitorRuleDeleteResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{51}
+}
+
+func (m *DropMonitorRuleDeleteResponseMsg) GetResponse() []*DropMonitorRuleDeleteResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// DropMonitorRuleGetRequest is used to get information about a dropmonitor
+type DropMonitorRuleGetRequest struct {
+	Meta        *ObjectMeta               `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *DropMonitorRuleKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *DropMonitorRuleGetRequest) Reset()         { *m = DropMonitorRuleGetRequest{} }
+func (m *DropMonitorRuleGetRequest) String() string { return proto.CompactTextString(m) }
+func (*DropMonitorRuleGetRequest) ProtoMessage()    {}
+func (*DropMonitorRuleGetRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{52}
+}
+
+func (m *DropMonitorRuleGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *DropMonitorRuleGetRequest) GetKeyOrHandle() *DropMonitorRuleKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// DropMonitorRuleGetRequestMsg is batched GET requests for dropmonitors
+type DropMonitorRuleGetRequestMsg struct {
+	Request []*DropMonitorRuleGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *DropMonitorRuleGetRequestMsg) Reset()         { *m = DropMonitorRuleGetRequestMsg{} }
+func (m *DropMonitorRuleGetRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*DropMonitorRuleGetRequestMsg) ProtoMessage()    {}
+func (*DropMonitorRuleGetRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{53}
+}
+
+func (m *DropMonitorRuleGetRequestMsg) GetRequest() []*DropMonitorRuleGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+type DropMonitorRuleStats struct {
+}
+
+func (m *DropMonitorRuleStats) Reset()                    { *m = DropMonitorRuleStats{} }
+func (m *DropMonitorRuleStats) String() string            { return proto.CompactTextString(m) }
+func (*DropMonitorRuleStats) ProtoMessage()               {}
+func (*DropMonitorRuleStats) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{54} }
+
+type DropMonitorRuleGetResponse struct {
+	ApiStatus ApiStatus             `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Spec      *DropMonitorRuleSpec  `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Stats     *DropMonitorRuleStats `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *DropMonitorRuleGetResponse) Reset()         { *m = DropMonitorRuleGetResponse{} }
+func (m *DropMonitorRuleGetResponse) String() string { return proto.CompactTextString(m) }
+func (*DropMonitorRuleGetResponse) ProtoMessage()    {}
+func (*DropMonitorRuleGetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{55}
+}
+
+func (m *DropMonitorRuleGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *DropMonitorRuleGetResponse) GetSpec() *DropMonitorRuleSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *DropMonitorRuleGetResponse) GetStats() *DropMonitorRuleStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// DropMonitorRuleGetResponseMsg is batched response to DropMonitorRuleGetRequestMsg
+type DropMonitorRuleGetResponseMsg struct {
+	Response []*DropMonitorRuleGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *DropMonitorRuleGetResponseMsg) Reset()         { *m = DropMonitorRuleGetResponseMsg{} }
+func (m *DropMonitorRuleGetResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*DropMonitorRuleGetResponseMsg) ProtoMessage()    {}
+func (*DropMonitorRuleGetResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{56}
+}
+
+func (m *DropMonitorRuleGetResponseMsg) GetResponse() []*DropMonitorRuleGetResponse {
 	if m != nil {
 		return m.Response
 	}
@@ -1022,7 +1585,7 @@ type RSpanSpec struct {
 func (m *RSpanSpec) Reset()                    { *m = RSpanSpec{} }
 func (m *RSpanSpec) String() string            { return proto.CompactTextString(m) }
 func (*RSpanSpec) ProtoMessage()               {}
-func (*RSpanSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{23} }
+func (*RSpanSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{57} }
 
 func (m *RSpanSpec) GetIntf() *InterfaceKeyHandle {
 	if m != nil {
@@ -1049,7 +1612,7 @@ type ERSpanSpec struct {
 func (m *ERSpanSpec) Reset()                    { *m = ERSpanSpec{} }
 func (m *ERSpanSpec) String() string            { return proto.CompactTextString(m) }
 func (*ERSpanSpec) ProtoMessage()               {}
-func (*ERSpanSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{24} }
+func (*ERSpanSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{58} }
 
 func (m *ERSpanSpec) GetDestIp() *IPAddress {
 	if m != nil {
@@ -1079,28 +1642,11 @@ func (m *ERSpanSpec) GetSpanId() uint32 {
 	return 0
 }
 
-// MirrorSessionId is a key for the SPAN session
-type MirrorSessionId struct {
-	SessionId uint32 `protobuf:"varint,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty" venice:range:1-7`
-}
-
-func (m *MirrorSessionId) Reset()                    { *m = MirrorSessionId{} }
-func (m *MirrorSessionId) String() string            { return proto.CompactTextString(m) }
-func (*MirrorSessionId) ProtoMessage()               {}
-func (*MirrorSessionId) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{25} }
-
-func (m *MirrorSessionId) GetSessionId() uint32 {
-	if m != nil {
-		return m.SessionId
-	}
-	return 0
-}
-
 // MirrorSessionSpec is the configuration specification for mirror config
 type MirrorSessionSpec struct {
-	Meta    *ObjectMeta      `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	Id      *MirrorSessionId `protobuf:"bytes,2,opt,name=id" json:"id,omitempty"`
-	Snaplen uint32           `protobuf:"varint,3,opt,name=snaplen,proto3" json:"snaplen,omitempty"`
+	Meta        *ObjectMeta             `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *MirrorSessionKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key",venice:constraints={range:0-7}`
+	Snaplen     uint32                  `protobuf:"varint,3,opt,name=snaplen,proto3" json:"snaplen,omitempty"`
 	// Types that are valid to be assigned to Destination:
 	//	*MirrorSessionSpec_LocalSpanIf
 	//	*MirrorSessionSpec_RspanSpec
@@ -1111,7 +1657,7 @@ type MirrorSessionSpec struct {
 func (m *MirrorSessionSpec) Reset()                    { *m = MirrorSessionSpec{} }
 func (m *MirrorSessionSpec) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionSpec) ProtoMessage()               {}
-func (*MirrorSessionSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{26} }
+func (*MirrorSessionSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{59} }
 
 type isMirrorSessionSpec_Destination interface {
 	isMirrorSessionSpec_Destination()
@@ -1147,9 +1693,9 @@ func (m *MirrorSessionSpec) GetMeta() *ObjectMeta {
 	return nil
 }
 
-func (m *MirrorSessionSpec) GetId() *MirrorSessionId {
+func (m *MirrorSessionSpec) GetKeyOrHandle() *MirrorSessionKeyHandle {
 	if m != nil {
-		return m.Id
+		return m.KeyOrHandle
 	}
 	return nil
 }
@@ -1275,127 +1821,288 @@ func _MirrorSessionSpec_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
-// MirrorSessionStatus is the operational status of the SPAN session.
+// MirrorSessionStatus is the operational status of the rule
 type MirrorSessionStatus struct {
-	Code        MirrorSessionStatus_MirrorSessionStatusCode `protobuf:"varint,1,opt,name=code,proto3,enum=telemetry.MirrorSessionStatus_MirrorSessionStatusCode" json:"code,omitempty"`
-	Status      string                                      `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	ActiveFlows int32                                       `protobuf:"varint,3,opt,name=active_flows,json=activeFlows,proto3" json:"active_flows,omitempty"`
+	Handle      uint64 `protobuf:"fixed64,1,opt,name=handle,proto3" json:"handle,omitempty"`
+	ActiveFlows uint32 `protobuf:"varint,2,opt,name=active_flows,json=activeFlows,proto3" json:"active_flows,omitempty"`
 }
 
 func (m *MirrorSessionStatus) Reset()                    { *m = MirrorSessionStatus{} }
 func (m *MirrorSessionStatus) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionStatus) ProtoMessage()               {}
-func (*MirrorSessionStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{27} }
+func (*MirrorSessionStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{60} }
 
-func (m *MirrorSessionStatus) GetCode() MirrorSessionStatus_MirrorSessionStatusCode {
+func (m *MirrorSessionStatus) GetHandle() uint64 {
 	if m != nil {
-		return m.Code
+		return m.Handle
 	}
-	return MirrorSessionStatus_SUCCESS
+	return 0
 }
 
-func (m *MirrorSessionStatus) GetStatus() string {
-	if m != nil {
-		return m.Status
-	}
-	return ""
-}
-
-func (m *MirrorSessionStatus) GetActiveFlows() int32 {
+func (m *MirrorSessionStatus) GetActiveFlows() uint32 {
 	if m != nil {
 		return m.ActiveFlows
 	}
 	return 0
 }
 
-// MirrorSession is a container of the configuration and the operational status for mirror sessions.
-type MirrorSession struct {
-	ApiStatus ApiStatus            `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
-	Spec      *MirrorSessionSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
-	Status    *MirrorSessionStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+// MirrorSession is a container that holds both the configuration and the operational
+// state of the mirrorsession
+type MirrorSessionResponse struct {
+	ApiStatus ApiStatus            `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Status    *MirrorSessionStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
 }
 
-func (m *MirrorSession) Reset()                    { *m = MirrorSession{} }
-func (m *MirrorSession) String() string            { return proto.CompactTextString(m) }
-func (*MirrorSession) ProtoMessage()               {}
-func (*MirrorSession) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{28} }
+func (m *MirrorSessionResponse) Reset()                    { *m = MirrorSessionResponse{} }
+func (m *MirrorSessionResponse) String() string            { return proto.CompactTextString(m) }
+func (*MirrorSessionResponse) ProtoMessage()               {}
+func (*MirrorSessionResponse) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{61} }
 
-func (m *MirrorSession) GetApiStatus() ApiStatus {
+func (m *MirrorSessionResponse) GetApiStatus() ApiStatus {
 	if m != nil {
 		return m.ApiStatus
 	}
 	return ApiStatus_API_STATUS_OK
 }
 
-func (m *MirrorSession) GetSpec() *MirrorSessionSpec {
-	if m != nil {
-		return m.Spec
-	}
-	return nil
-}
-
-func (m *MirrorSession) GetStatus() *MirrorSessionStatus {
+func (m *MirrorSessionResponse) GetStatus() *MirrorSessionStatus {
 	if m != nil {
 		return m.Status
 	}
 	return nil
 }
 
-// MirrorSessionConfigMsg is a batchable message used for request messages for mirror session configuration.
-type MirrorSessionConfigMsg struct {
+// MirrorSessionConfigsMsg is used in requests and is a batchable request message
+type MirrorSessionRequestMsg struct {
 	Request []*MirrorSessionSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
 }
 
-func (m *MirrorSessionConfigMsg) Reset()                    { *m = MirrorSessionConfigMsg{} }
-func (m *MirrorSessionConfigMsg) String() string            { return proto.CompactTextString(m) }
-func (*MirrorSessionConfigMsg) ProtoMessage()               {}
-func (*MirrorSessionConfigMsg) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{29} }
+func (m *MirrorSessionRequestMsg) Reset()         { *m = MirrorSessionRequestMsg{} }
+func (m *MirrorSessionRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*MirrorSessionRequestMsg) ProtoMessage()    {}
+func (*MirrorSessionRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{62}
+}
 
-func (m *MirrorSessionConfigMsg) GetRequest() []*MirrorSessionSpec {
+func (m *MirrorSessionRequestMsg) GetRequest() []*MirrorSessionSpec {
 	if m != nil {
 		return m.Request
 	}
 	return nil
 }
 
-// MirrorSessionConfigMsg is a batchable message used for request messages for mirror session configuration.
-type MirrorSessionDeleteMsg struct {
-	Request []*MirrorSessionId `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
-}
-
-func (m *MirrorSessionDeleteMsg) Reset()                    { *m = MirrorSessionDeleteMsg{} }
-func (m *MirrorSessionDeleteMsg) String() string            { return proto.CompactTextString(m) }
-func (*MirrorSessionDeleteMsg) ProtoMessage()               {}
-func (*MirrorSessionDeleteMsg) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{30} }
-
-func (m *MirrorSessionDeleteMsg) GetRequest() []*MirrorSessionId {
-	if m != nil {
-		return m.Request
-	}
-	return nil
-}
-
-// MirrorSessionResponseMsg is used as responses to the MirrorSession configuration APIs
+// MirrorSessionConfigsMsg message is used as response for API requests.
 type MirrorSessionResponseMsg struct {
-	Status   ApiStatus        `protobuf:"varint,1,opt,name=status,proto3,enum=types.ApiStatus" json:"status,omitempty"`
-	Response []*MirrorSession `protobuf:"bytes,2,rep,name=response" json:"response,omitempty"`
+	Response []*MirrorSessionResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
 func (m *MirrorSessionResponseMsg) Reset()         { *m = MirrorSessionResponseMsg{} }
 func (m *MirrorSessionResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*MirrorSessionResponseMsg) ProtoMessage()    {}
 func (*MirrorSessionResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{31}
+	return fileDescriptorTelemetry, []int{63}
 }
 
-func (m *MirrorSessionResponseMsg) GetStatus() ApiStatus {
+func (m *MirrorSessionResponseMsg) GetResponse() []*MirrorSessionResponse {
 	if m != nil {
-		return m.Status
+		return m.Response
+	}
+	return nil
+}
+
+// MirrorSessionDeleteRequest is used to delete a mirrorsession
+type MirrorSessionDeleteRequest struct {
+	Meta        *ObjectMeta             `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *MirrorSessionKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *MirrorSessionDeleteRequest) Reset()         { *m = MirrorSessionDeleteRequest{} }
+func (m *MirrorSessionDeleteRequest) String() string { return proto.CompactTextString(m) }
+func (*MirrorSessionDeleteRequest) ProtoMessage()    {}
+func (*MirrorSessionDeleteRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{64}
+}
+
+func (m *MirrorSessionDeleteRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *MirrorSessionDeleteRequest) GetKeyOrHandle() *MirrorSessionKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// MirrorSessionDeleteResponse is response to MirrorSessionDeleteRequest
+type MirrorSessionDeleteResponse struct {
+	ApiStatus   ApiStatus               `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	KeyOrHandle *MirrorSessionKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *MirrorSessionDeleteResponse) Reset()         { *m = MirrorSessionDeleteResponse{} }
+func (m *MirrorSessionDeleteResponse) String() string { return proto.CompactTextString(m) }
+func (*MirrorSessionDeleteResponse) ProtoMessage()    {}
+func (*MirrorSessionDeleteResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{65}
+}
+
+func (m *MirrorSessionDeleteResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
 	}
 	return ApiStatus_API_STATUS_OK
 }
 
-func (m *MirrorSessionResponseMsg) GetResponse() []*MirrorSession {
+func (m *MirrorSessionDeleteResponse) GetKeyOrHandle() *MirrorSessionKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// MirrorSessionDeleteRequestMsg is used to delete a batch of mirrorsessions
+type MirrorSessionDeleteRequestMsg struct {
+	Request []*MirrorSessionDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *MirrorSessionDeleteRequestMsg) Reset()         { *m = MirrorSessionDeleteRequestMsg{} }
+func (m *MirrorSessionDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*MirrorSessionDeleteRequestMsg) ProtoMessage()    {}
+func (*MirrorSessionDeleteRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{66}
+}
+
+func (m *MirrorSessionDeleteRequestMsg) GetRequest() []*MirrorSessionDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// MirrorSessionDeleteResponseMsg is batched response to MirrorSessionDeleteRequestMsg
+type MirrorSessionDeleteResponseMsg struct {
+	Response []*MirrorSessionDeleteResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *MirrorSessionDeleteResponseMsg) Reset()         { *m = MirrorSessionDeleteResponseMsg{} }
+func (m *MirrorSessionDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*MirrorSessionDeleteResponseMsg) ProtoMessage()    {}
+func (*MirrorSessionDeleteResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{67}
+}
+
+func (m *MirrorSessionDeleteResponseMsg) GetResponse() []*MirrorSessionDeleteResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// MirrorSessionGetRequest is used to get information about a mirrorsession
+type MirrorSessionGetRequest struct {
+	Meta        *ObjectMeta             `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *MirrorSessionKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *MirrorSessionGetRequest) Reset()         { *m = MirrorSessionGetRequest{} }
+func (m *MirrorSessionGetRequest) String() string { return proto.CompactTextString(m) }
+func (*MirrorSessionGetRequest) ProtoMessage()    {}
+func (*MirrorSessionGetRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{68}
+}
+
+func (m *MirrorSessionGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *MirrorSessionGetRequest) GetKeyOrHandle() *MirrorSessionKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// MirrorSessionGetRequestMsg is batched GET requests for mirrorsessions
+type MirrorSessionGetRequestMsg struct {
+	Request []*MirrorSessionGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *MirrorSessionGetRequestMsg) Reset()         { *m = MirrorSessionGetRequestMsg{} }
+func (m *MirrorSessionGetRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*MirrorSessionGetRequestMsg) ProtoMessage()    {}
+func (*MirrorSessionGetRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{69}
+}
+
+func (m *MirrorSessionGetRequestMsg) GetRequest() []*MirrorSessionGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+type MirrorSessionStats struct {
+}
+
+func (m *MirrorSessionStats) Reset()                    { *m = MirrorSessionStats{} }
+func (m *MirrorSessionStats) String() string            { return proto.CompactTextString(m) }
+func (*MirrorSessionStats) ProtoMessage()               {}
+func (*MirrorSessionStats) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{70} }
+
+type MirrorSessionGetResponse struct {
+	ApiStatus ApiStatus           `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Spec      *MirrorSessionSpec  `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Stats     *MirrorSessionStats `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *MirrorSessionGetResponse) Reset()         { *m = MirrorSessionGetResponse{} }
+func (m *MirrorSessionGetResponse) String() string { return proto.CompactTextString(m) }
+func (*MirrorSessionGetResponse) ProtoMessage()    {}
+func (*MirrorSessionGetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{71}
+}
+
+func (m *MirrorSessionGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *MirrorSessionGetResponse) GetSpec() *MirrorSessionSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *MirrorSessionGetResponse) GetStats() *MirrorSessionStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// MirrorSessionGetResponseMsg is batched response to MirrorSessionGetRequestMsg
+type MirrorSessionGetResponseMsg struct {
+	Response []*MirrorSessionGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *MirrorSessionGetResponseMsg) Reset()         { *m = MirrorSessionGetResponseMsg{} }
+func (m *MirrorSessionGetResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*MirrorSessionGetResponseMsg) ProtoMessage()    {}
+func (*MirrorSessionGetResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{72}
+}
+
+func (m *MirrorSessionGetResponseMsg) GetResponse() []*MirrorSessionGetResponse {
 	if m != nil {
 		return m.Response
 	}
@@ -1403,46 +2110,82 @@ func (m *MirrorSessionResponseMsg) GetResponse() []*MirrorSession {
 }
 
 func init() {
-	proto.RegisterType((*L4Port)(nil), "telemetry.L4Port")
 	proto.RegisterType((*CollectorSpec)(nil), "telemetry.CollectorSpec")
 	proto.RegisterType((*CollectorStatus)(nil), "telemetry.CollectorStatus")
-	proto.RegisterType((*Collector)(nil), "telemetry.Collector")
-	proto.RegisterType((*CollectorConfigMsg)(nil), "telemetry.CollectorConfigMsg")
+	proto.RegisterType((*CollectorResponse)(nil), "telemetry.CollectorResponse")
+	proto.RegisterType((*CollectorRequestMsg)(nil), "telemetry.CollectorRequestMsg")
 	proto.RegisterType((*CollectorResponseMsg)(nil), "telemetry.CollectorResponseMsg")
-	proto.RegisterType((*ExportControlId)(nil), "telemetry.ExportControlId")
+	proto.RegisterType((*CollectorDeleteRequest)(nil), "telemetry.CollectorDeleteRequest")
+	proto.RegisterType((*CollectorDeleteResponse)(nil), "telemetry.CollectorDeleteResponse")
+	proto.RegisterType((*CollectorDeleteRequestMsg)(nil), "telemetry.CollectorDeleteRequestMsg")
+	proto.RegisterType((*CollectorDeleteResponseMsg)(nil), "telemetry.CollectorDeleteResponseMsg")
+	proto.RegisterType((*CollectorGetRequest)(nil), "telemetry.CollectorGetRequest")
+	proto.RegisterType((*CollectorGetRequestMsg)(nil), "telemetry.CollectorGetRequestMsg")
+	proto.RegisterType((*CollectorStats)(nil), "telemetry.CollectorStats")
+	proto.RegisterType((*CollectorGetResponse)(nil), "telemetry.CollectorGetResponse")
+	proto.RegisterType((*CollectorGetResponseMsg)(nil), "telemetry.CollectorGetResponseMsg")
 	proto.RegisterType((*ExportControlSpec)(nil), "telemetry.ExportControlSpec")
 	proto.RegisterType((*ExportControlStatus)(nil), "telemetry.ExportControlStatus")
-	proto.RegisterType((*ExportControl)(nil), "telemetry.ExportControl")
-	proto.RegisterType((*ExportControlConfigMsg)(nil), "telemetry.ExportControlConfigMsg")
+	proto.RegisterType((*ExportControlResponse)(nil), "telemetry.ExportControlResponse")
+	proto.RegisterType((*ExportControlRequestMsg)(nil), "telemetry.ExportControlRequestMsg")
 	proto.RegisterType((*ExportControlResponseMsg)(nil), "telemetry.ExportControlResponseMsg")
+	proto.RegisterType((*ExportControlDeleteRequest)(nil), "telemetry.ExportControlDeleteRequest")
+	proto.RegisterType((*ExportControlDeleteResponse)(nil), "telemetry.ExportControlDeleteResponse")
+	proto.RegisterType((*ExportControlDeleteRequestMsg)(nil), "telemetry.ExportControlDeleteRequestMsg")
+	proto.RegisterType((*ExportControlDeleteResponseMsg)(nil), "telemetry.ExportControlDeleteResponseMsg")
+	proto.RegisterType((*ExportControlGetRequest)(nil), "telemetry.ExportControlGetRequest")
+	proto.RegisterType((*ExportControlGetRequestMsg)(nil), "telemetry.ExportControlGetRequestMsg")
+	proto.RegisterType((*ExportControlStats)(nil), "telemetry.ExportControlStats")
+	proto.RegisterType((*ExportControlGetResponse)(nil), "telemetry.ExportControlGetResponse")
+	proto.RegisterType((*ExportControlGetResponseMsg)(nil), "telemetry.ExportControlGetResponseMsg")
 	proto.RegisterType((*MonitorAction)(nil), "telemetry.MonitorAction")
 	proto.RegisterType((*FlowMonitorRuleSpec)(nil), "telemetry.FlowMonitorRuleSpec")
 	proto.RegisterType((*FlowMonitorRuleStatus)(nil), "telemetry.FlowMonitorRuleStatus")
-	proto.RegisterType((*FlowMonitorRule)(nil), "telemetry.FlowMonitorRule")
-	proto.RegisterType((*FlowMonitorRuleConfigMsg)(nil), "telemetry.FlowMonitorRuleConfigMsg")
+	proto.RegisterType((*FlowMonitorRuleResponse)(nil), "telemetry.FlowMonitorRuleResponse")
+	proto.RegisterType((*FlowMonitorRuleRequestMsg)(nil), "telemetry.FlowMonitorRuleRequestMsg")
 	proto.RegisterType((*FlowMonitorRuleResponseMsg)(nil), "telemetry.FlowMonitorRuleResponseMsg")
+	proto.RegisterType((*FlowMonitorRuleDeleteRequest)(nil), "telemetry.FlowMonitorRuleDeleteRequest")
+	proto.RegisterType((*FlowMonitorRuleDeleteResponse)(nil), "telemetry.FlowMonitorRuleDeleteResponse")
+	proto.RegisterType((*FlowMonitorRuleDeleteRequestMsg)(nil), "telemetry.FlowMonitorRuleDeleteRequestMsg")
+	proto.RegisterType((*FlowMonitorRuleDeleteResponseMsg)(nil), "telemetry.FlowMonitorRuleDeleteResponseMsg")
+	proto.RegisterType((*FlowMonitorRuleGetRequest)(nil), "telemetry.FlowMonitorRuleGetRequest")
+	proto.RegisterType((*FlowMonitorRuleGetRequestMsg)(nil), "telemetry.FlowMonitorRuleGetRequestMsg")
+	proto.RegisterType((*FlowMonitorRuleStats)(nil), "telemetry.FlowMonitorRuleStats")
+	proto.RegisterType((*FlowMonitorRuleGetResponse)(nil), "telemetry.FlowMonitorRuleGetResponse")
+	proto.RegisterType((*FlowMonitorRuleGetResponseMsg)(nil), "telemetry.FlowMonitorRuleGetResponseMsg")
 	proto.RegisterType((*DropMonitorRuleSpec)(nil), "telemetry.DropMonitorRuleSpec")
 	proto.RegisterType((*DropMonitorRuleStatus)(nil), "telemetry.DropMonitorRuleStatus")
-	proto.RegisterType((*DropMonitorRule)(nil), "telemetry.DropMonitorRule")
-	proto.RegisterType((*DropMonitorRuleConfigMsg)(nil), "telemetry.DropMonitorRuleConfigMsg")
+	proto.RegisterType((*DropMonitorRuleResponse)(nil), "telemetry.DropMonitorRuleResponse")
+	proto.RegisterType((*DropMonitorRuleRequestMsg)(nil), "telemetry.DropMonitorRuleRequestMsg")
 	proto.RegisterType((*DropMonitorRuleResponseMsg)(nil), "telemetry.DropMonitorRuleResponseMsg")
+	proto.RegisterType((*DropMonitorRuleDeleteRequest)(nil), "telemetry.DropMonitorRuleDeleteRequest")
+	proto.RegisterType((*DropMonitorRuleDeleteResponse)(nil), "telemetry.DropMonitorRuleDeleteResponse")
+	proto.RegisterType((*DropMonitorRuleDeleteRequestMsg)(nil), "telemetry.DropMonitorRuleDeleteRequestMsg")
+	proto.RegisterType((*DropMonitorRuleDeleteResponseMsg)(nil), "telemetry.DropMonitorRuleDeleteResponseMsg")
+	proto.RegisterType((*DropMonitorRuleGetRequest)(nil), "telemetry.DropMonitorRuleGetRequest")
+	proto.RegisterType((*DropMonitorRuleGetRequestMsg)(nil), "telemetry.DropMonitorRuleGetRequestMsg")
+	proto.RegisterType((*DropMonitorRuleStats)(nil), "telemetry.DropMonitorRuleStats")
+	proto.RegisterType((*DropMonitorRuleGetResponse)(nil), "telemetry.DropMonitorRuleGetResponse")
+	proto.RegisterType((*DropMonitorRuleGetResponseMsg)(nil), "telemetry.DropMonitorRuleGetResponseMsg")
 	proto.RegisterType((*RSpanSpec)(nil), "telemetry.RSpanSpec")
 	proto.RegisterType((*ERSpanSpec)(nil), "telemetry.ERSpanSpec")
-	proto.RegisterType((*MirrorSessionId)(nil), "telemetry.MirrorSessionId")
 	proto.RegisterType((*MirrorSessionSpec)(nil), "telemetry.MirrorSessionSpec")
 	proto.RegisterType((*MirrorSessionStatus)(nil), "telemetry.MirrorSessionStatus")
-	proto.RegisterType((*MirrorSession)(nil), "telemetry.MirrorSession")
-	proto.RegisterType((*MirrorSessionConfigMsg)(nil), "telemetry.MirrorSessionConfigMsg")
-	proto.RegisterType((*MirrorSessionDeleteMsg)(nil), "telemetry.MirrorSessionDeleteMsg")
+	proto.RegisterType((*MirrorSessionResponse)(nil), "telemetry.MirrorSessionResponse")
+	proto.RegisterType((*MirrorSessionRequestMsg)(nil), "telemetry.MirrorSessionRequestMsg")
 	proto.RegisterType((*MirrorSessionResponseMsg)(nil), "telemetry.MirrorSessionResponseMsg")
+	proto.RegisterType((*MirrorSessionDeleteRequest)(nil), "telemetry.MirrorSessionDeleteRequest")
+	proto.RegisterType((*MirrorSessionDeleteResponse)(nil), "telemetry.MirrorSessionDeleteResponse")
+	proto.RegisterType((*MirrorSessionDeleteRequestMsg)(nil), "telemetry.MirrorSessionDeleteRequestMsg")
+	proto.RegisterType((*MirrorSessionDeleteResponseMsg)(nil), "telemetry.MirrorSessionDeleteResponseMsg")
+	proto.RegisterType((*MirrorSessionGetRequest)(nil), "telemetry.MirrorSessionGetRequest")
+	proto.RegisterType((*MirrorSessionGetRequestMsg)(nil), "telemetry.MirrorSessionGetRequestMsg")
+	proto.RegisterType((*MirrorSessionStats)(nil), "telemetry.MirrorSessionStats")
+	proto.RegisterType((*MirrorSessionGetResponse)(nil), "telemetry.MirrorSessionGetResponse")
+	proto.RegisterType((*MirrorSessionGetResponseMsg)(nil), "telemetry.MirrorSessionGetResponseMsg")
 	proto.RegisterEnum("telemetry.ExportFormat", ExportFormat_name, ExportFormat_value)
 	proto.RegisterEnum("telemetry.RuleAction", RuleAction_name, RuleAction_value)
 	proto.RegisterEnum("telemetry.AggregationScheme", AggregationScheme_name, AggregationScheme_value)
-	proto.RegisterEnum("telemetry.CollectorStatus_CollectorStatusCode", CollectorStatus_CollectorStatusCode_name, CollectorStatus_CollectorStatusCode_value)
-	proto.RegisterEnum("telemetry.ExportControlStatus_ExportControlStatusCode", ExportControlStatus_ExportControlStatusCode_name, ExportControlStatus_ExportControlStatusCode_value)
-	proto.RegisterEnum("telemetry.FlowMonitorRuleStatus_FlowMonitorRuleStatusCode", FlowMonitorRuleStatus_FlowMonitorRuleStatusCode_name, FlowMonitorRuleStatus_FlowMonitorRuleStatusCode_value)
-	proto.RegisterEnum("telemetry.DropMonitorRuleStatus_DropMonitorRuleStatusCode", DropMonitorRuleStatus_DropMonitorRuleStatusCode_name, DropMonitorRuleStatus_DropMonitorRuleStatusCode_value)
-	proto.RegisterEnum("telemetry.MirrorSessionStatus_MirrorSessionStatusCode", MirrorSessionStatus_MirrorSessionStatusCode_name, MirrorSessionStatus_MirrorSessionStatusCode_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1457,33 +2200,30 @@ const _ = grpc.SupportPackageIsVersion4
 
 type TelemetryClient interface {
 	// Collector operations CRUD operations
-	CollectorCreate(ctx context.Context, in *CollectorConfigMsg, opts ...grpc.CallOption) (*CollectorResponseMsg, error)
-	CollectorUpdate(ctx context.Context, in *CollectorConfigMsg, opts ...grpc.CallOption) (*CollectorResponseMsg, error)
-	CollectorList(ctx context.Context, in *ExportControlId, opts ...grpc.CallOption) (*CollectorResponseMsg, error)
-	CollectorDelete(ctx context.Context, in *CollectorConfigMsg, opts ...grpc.CallOption) (*CollectorResponseMsg, error)
+	CollectorCreate(ctx context.Context, in *CollectorRequestMsg, opts ...grpc.CallOption) (*CollectorResponseMsg, error)
+	CollectorUpdate(ctx context.Context, in *CollectorRequestMsg, opts ...grpc.CallOption) (*CollectorResponseMsg, error)
+	CollectorDelete(ctx context.Context, in *CollectorDeleteRequestMsg, opts ...grpc.CallOption) (*CollectorDeleteResponseMsg, error)
+	CollectorGet(ctx context.Context, in *CollectorGetRequestMsg, opts ...grpc.CallOption) (*CollectorGetResponseMsg, error)
 	// ExportConfig CRUD operations
-	ExportControlCreate(ctx context.Context, in *ExportControlConfigMsg, opts ...grpc.CallOption) (*ExportControlResponseMsg, error)
-	ExportControlUpdate(ctx context.Context, in *ExportControlConfigMsg, opts ...grpc.CallOption) (*ExportControlResponseMsg, error)
-	ExportControlGet(ctx context.Context, in *ExportControlId, opts ...grpc.CallOption) (*ExportControlResponseMsg, error)
-	ExportControlDelete(ctx context.Context, in *ExportControlId, opts ...grpc.CallOption) (*ExportControlResponseMsg, error)
+	ExportControlCreate(ctx context.Context, in *ExportControlRequestMsg, opts ...grpc.CallOption) (*ExportControlResponseMsg, error)
+	ExportControlUpdate(ctx context.Context, in *ExportControlRequestMsg, opts ...grpc.CallOption) (*ExportControlResponseMsg, error)
+	ExportControlDelete(ctx context.Context, in *ExportControlDeleteRequestMsg, opts ...grpc.CallOption) (*ExportControlDeleteResponseMsg, error)
+	ExportControlGet(ctx context.Context, in *ExportControlGetRequestMsg, opts ...grpc.CallOption) (*ExportControlGetResponseMsg, error)
 	// FlowMonitorRules CRUD Operations
-	FlowMonitorRuleCreate(ctx context.Context, in *FlowMonitorRuleConfigMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error)
-	FlowMonitorRuleUpdate(ctx context.Context, in *FlowMonitorRuleConfigMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error)
-	FlowMonitorRuleList(ctx context.Context, in *ExportControlId, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error)
-	FlowMonitorRuleGet(ctx context.Context, in *FlowMonitorRuleConfigMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error)
-	FlowMonitorRuleDelete(ctx context.Context, in *FlowMonitorRuleConfigMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error)
+	FlowMonitorRuleCreate(ctx context.Context, in *FlowMonitorRuleRequestMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error)
+	FlowMonitorRuleUpdate(ctx context.Context, in *FlowMonitorRuleRequestMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error)
+	FlowMonitorRuleDelete(ctx context.Context, in *FlowMonitorRuleDeleteRequestMsg, opts ...grpc.CallOption) (*FlowMonitorRuleDeleteResponseMsg, error)
+	FlowMonitorRuleGet(ctx context.Context, in *FlowMonitorRuleGetRequestMsg, opts ...grpc.CallOption) (*FlowMonitorRuleGetResponseMsg, error)
 	// DropMonitorRules CRUD Operations
-	DropMonitorRuleCreate(ctx context.Context, in *DropMonitorRuleConfigMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error)
-	DropMonitorRuleUpdate(ctx context.Context, in *DropMonitorRuleConfigMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error)
-	DropMonitorRuleList(ctx context.Context, in *ExportControlId, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error)
-	DropMonitorRuleGet(ctx context.Context, in *DropMonitorRuleConfigMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error)
-	DropMonitorRuleDelete(ctx context.Context, in *DropMonitorRuleConfigMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error)
+	DropMonitorRuleCreate(ctx context.Context, in *DropMonitorRuleRequestMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error)
+	DropMonitorRuleUpdate(ctx context.Context, in *DropMonitorRuleRequestMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error)
+	DropMonitorRuleDelete(ctx context.Context, in *DropMonitorRuleDeleteRequestMsg, opts ...grpc.CallOption) (*DropMonitorRuleDeleteResponseMsg, error)
+	DropMonitorRuleGet(ctx context.Context, in *DropMonitorRuleGetRequestMsg, opts ...grpc.CallOption) (*DropMonitorRuleGetResponseMsg, error)
 	// MirrorSession CRUD Operations
-	MirrorSessionCreate(ctx context.Context, in *MirrorSessionConfigMsg, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error)
-	MirrorSessionUpdate(ctx context.Context, in *MirrorSessionConfigMsg, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error)
-	MirrorSessionGet(ctx context.Context, in *MirrorSessionId, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error)
-	MirrorSessionList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error)
-	MirrorSessionDelete(ctx context.Context, in *MirrorSessionDeleteMsg, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error)
+	MirrorSessionCreate(ctx context.Context, in *MirrorSessionRequestMsg, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error)
+	MirrorSessionUpdate(ctx context.Context, in *MirrorSessionRequestMsg, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error)
+	MirrorSessionDelete(ctx context.Context, in *MirrorSessionDeleteRequestMsg, opts ...grpc.CallOption) (*MirrorSessionDeleteResponseMsg, error)
+	MirrorSessionGet(ctx context.Context, in *MirrorSessionGetRequestMsg, opts ...grpc.CallOption) (*MirrorSessionGetResponseMsg, error)
 }
 
 type telemetryClient struct {
@@ -1494,7 +2234,7 @@ func NewTelemetryClient(cc *grpc.ClientConn) TelemetryClient {
 	return &telemetryClient{cc}
 }
 
-func (c *telemetryClient) CollectorCreate(ctx context.Context, in *CollectorConfigMsg, opts ...grpc.CallOption) (*CollectorResponseMsg, error) {
+func (c *telemetryClient) CollectorCreate(ctx context.Context, in *CollectorRequestMsg, opts ...grpc.CallOption) (*CollectorResponseMsg, error) {
 	out := new(CollectorResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/CollectorCreate", in, out, c.cc, opts...)
 	if err != nil {
@@ -1503,7 +2243,7 @@ func (c *telemetryClient) CollectorCreate(ctx context.Context, in *CollectorConf
 	return out, nil
 }
 
-func (c *telemetryClient) CollectorUpdate(ctx context.Context, in *CollectorConfigMsg, opts ...grpc.CallOption) (*CollectorResponseMsg, error) {
+func (c *telemetryClient) CollectorUpdate(ctx context.Context, in *CollectorRequestMsg, opts ...grpc.CallOption) (*CollectorResponseMsg, error) {
 	out := new(CollectorResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/CollectorUpdate", in, out, c.cc, opts...)
 	if err != nil {
@@ -1512,17 +2252,8 @@ func (c *telemetryClient) CollectorUpdate(ctx context.Context, in *CollectorConf
 	return out, nil
 }
 
-func (c *telemetryClient) CollectorList(ctx context.Context, in *ExportControlId, opts ...grpc.CallOption) (*CollectorResponseMsg, error) {
-	out := new(CollectorResponseMsg)
-	err := grpc.Invoke(ctx, "/telemetry.Telemetry/CollectorList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *telemetryClient) CollectorDelete(ctx context.Context, in *CollectorConfigMsg, opts ...grpc.CallOption) (*CollectorResponseMsg, error) {
-	out := new(CollectorResponseMsg)
+func (c *telemetryClient) CollectorDelete(ctx context.Context, in *CollectorDeleteRequestMsg, opts ...grpc.CallOption) (*CollectorDeleteResponseMsg, error) {
+	out := new(CollectorDeleteResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/CollectorDelete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -1530,7 +2261,16 @@ func (c *telemetryClient) CollectorDelete(ctx context.Context, in *CollectorConf
 	return out, nil
 }
 
-func (c *telemetryClient) ExportControlCreate(ctx context.Context, in *ExportControlConfigMsg, opts ...grpc.CallOption) (*ExportControlResponseMsg, error) {
+func (c *telemetryClient) CollectorGet(ctx context.Context, in *CollectorGetRequestMsg, opts ...grpc.CallOption) (*CollectorGetResponseMsg, error) {
+	out := new(CollectorGetResponseMsg)
+	err := grpc.Invoke(ctx, "/telemetry.Telemetry/CollectorGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *telemetryClient) ExportControlCreate(ctx context.Context, in *ExportControlRequestMsg, opts ...grpc.CallOption) (*ExportControlResponseMsg, error) {
 	out := new(ExportControlResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/ExportControlCreate", in, out, c.cc, opts...)
 	if err != nil {
@@ -1539,7 +2279,7 @@ func (c *telemetryClient) ExportControlCreate(ctx context.Context, in *ExportCon
 	return out, nil
 }
 
-func (c *telemetryClient) ExportControlUpdate(ctx context.Context, in *ExportControlConfigMsg, opts ...grpc.CallOption) (*ExportControlResponseMsg, error) {
+func (c *telemetryClient) ExportControlUpdate(ctx context.Context, in *ExportControlRequestMsg, opts ...grpc.CallOption) (*ExportControlResponseMsg, error) {
 	out := new(ExportControlResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/ExportControlUpdate", in, out, c.cc, opts...)
 	if err != nil {
@@ -1548,17 +2288,8 @@ func (c *telemetryClient) ExportControlUpdate(ctx context.Context, in *ExportCon
 	return out, nil
 }
 
-func (c *telemetryClient) ExportControlGet(ctx context.Context, in *ExportControlId, opts ...grpc.CallOption) (*ExportControlResponseMsg, error) {
-	out := new(ExportControlResponseMsg)
-	err := grpc.Invoke(ctx, "/telemetry.Telemetry/ExportControlGet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *telemetryClient) ExportControlDelete(ctx context.Context, in *ExportControlId, opts ...grpc.CallOption) (*ExportControlResponseMsg, error) {
-	out := new(ExportControlResponseMsg)
+func (c *telemetryClient) ExportControlDelete(ctx context.Context, in *ExportControlDeleteRequestMsg, opts ...grpc.CallOption) (*ExportControlDeleteResponseMsg, error) {
+	out := new(ExportControlDeleteResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/ExportControlDelete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -1566,7 +2297,16 @@ func (c *telemetryClient) ExportControlDelete(ctx context.Context, in *ExportCon
 	return out, nil
 }
 
-func (c *telemetryClient) FlowMonitorRuleCreate(ctx context.Context, in *FlowMonitorRuleConfigMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error) {
+func (c *telemetryClient) ExportControlGet(ctx context.Context, in *ExportControlGetRequestMsg, opts ...grpc.CallOption) (*ExportControlGetResponseMsg, error) {
+	out := new(ExportControlGetResponseMsg)
+	err := grpc.Invoke(ctx, "/telemetry.Telemetry/ExportControlGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *telemetryClient) FlowMonitorRuleCreate(ctx context.Context, in *FlowMonitorRuleRequestMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error) {
 	out := new(FlowMonitorRuleResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/FlowMonitorRuleCreate", in, out, c.cc, opts...)
 	if err != nil {
@@ -1575,7 +2315,7 @@ func (c *telemetryClient) FlowMonitorRuleCreate(ctx context.Context, in *FlowMon
 	return out, nil
 }
 
-func (c *telemetryClient) FlowMonitorRuleUpdate(ctx context.Context, in *FlowMonitorRuleConfigMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error) {
+func (c *telemetryClient) FlowMonitorRuleUpdate(ctx context.Context, in *FlowMonitorRuleRequestMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error) {
 	out := new(FlowMonitorRuleResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/FlowMonitorRuleUpdate", in, out, c.cc, opts...)
 	if err != nil {
@@ -1584,26 +2324,8 @@ func (c *telemetryClient) FlowMonitorRuleUpdate(ctx context.Context, in *FlowMon
 	return out, nil
 }
 
-func (c *telemetryClient) FlowMonitorRuleList(ctx context.Context, in *ExportControlId, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error) {
-	out := new(FlowMonitorRuleResponseMsg)
-	err := grpc.Invoke(ctx, "/telemetry.Telemetry/FlowMonitorRuleList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *telemetryClient) FlowMonitorRuleGet(ctx context.Context, in *FlowMonitorRuleConfigMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error) {
-	out := new(FlowMonitorRuleResponseMsg)
-	err := grpc.Invoke(ctx, "/telemetry.Telemetry/FlowMonitorRuleGet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *telemetryClient) FlowMonitorRuleDelete(ctx context.Context, in *FlowMonitorRuleConfigMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error) {
-	out := new(FlowMonitorRuleResponseMsg)
+func (c *telemetryClient) FlowMonitorRuleDelete(ctx context.Context, in *FlowMonitorRuleDeleteRequestMsg, opts ...grpc.CallOption) (*FlowMonitorRuleDeleteResponseMsg, error) {
+	out := new(FlowMonitorRuleDeleteResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/FlowMonitorRuleDelete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -1611,7 +2333,16 @@ func (c *telemetryClient) FlowMonitorRuleDelete(ctx context.Context, in *FlowMon
 	return out, nil
 }
 
-func (c *telemetryClient) DropMonitorRuleCreate(ctx context.Context, in *DropMonitorRuleConfigMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error) {
+func (c *telemetryClient) FlowMonitorRuleGet(ctx context.Context, in *FlowMonitorRuleGetRequestMsg, opts ...grpc.CallOption) (*FlowMonitorRuleGetResponseMsg, error) {
+	out := new(FlowMonitorRuleGetResponseMsg)
+	err := grpc.Invoke(ctx, "/telemetry.Telemetry/FlowMonitorRuleGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *telemetryClient) DropMonitorRuleCreate(ctx context.Context, in *DropMonitorRuleRequestMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error) {
 	out := new(DropMonitorRuleResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/DropMonitorRuleCreate", in, out, c.cc, opts...)
 	if err != nil {
@@ -1620,7 +2351,7 @@ func (c *telemetryClient) DropMonitorRuleCreate(ctx context.Context, in *DropMon
 	return out, nil
 }
 
-func (c *telemetryClient) DropMonitorRuleUpdate(ctx context.Context, in *DropMonitorRuleConfigMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error) {
+func (c *telemetryClient) DropMonitorRuleUpdate(ctx context.Context, in *DropMonitorRuleRequestMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error) {
 	out := new(DropMonitorRuleResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/DropMonitorRuleUpdate", in, out, c.cc, opts...)
 	if err != nil {
@@ -1629,26 +2360,8 @@ func (c *telemetryClient) DropMonitorRuleUpdate(ctx context.Context, in *DropMon
 	return out, nil
 }
 
-func (c *telemetryClient) DropMonitorRuleList(ctx context.Context, in *ExportControlId, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error) {
-	out := new(DropMonitorRuleResponseMsg)
-	err := grpc.Invoke(ctx, "/telemetry.Telemetry/DropMonitorRuleList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *telemetryClient) DropMonitorRuleGet(ctx context.Context, in *DropMonitorRuleConfigMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error) {
-	out := new(DropMonitorRuleResponseMsg)
-	err := grpc.Invoke(ctx, "/telemetry.Telemetry/DropMonitorRuleGet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *telemetryClient) DropMonitorRuleDelete(ctx context.Context, in *DropMonitorRuleConfigMsg, opts ...grpc.CallOption) (*DropMonitorRuleResponseMsg, error) {
-	out := new(DropMonitorRuleResponseMsg)
+func (c *telemetryClient) DropMonitorRuleDelete(ctx context.Context, in *DropMonitorRuleDeleteRequestMsg, opts ...grpc.CallOption) (*DropMonitorRuleDeleteResponseMsg, error) {
+	out := new(DropMonitorRuleDeleteResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/DropMonitorRuleDelete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -1656,7 +2369,16 @@ func (c *telemetryClient) DropMonitorRuleDelete(ctx context.Context, in *DropMon
 	return out, nil
 }
 
-func (c *telemetryClient) MirrorSessionCreate(ctx context.Context, in *MirrorSessionConfigMsg, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error) {
+func (c *telemetryClient) DropMonitorRuleGet(ctx context.Context, in *DropMonitorRuleGetRequestMsg, opts ...grpc.CallOption) (*DropMonitorRuleGetResponseMsg, error) {
+	out := new(DropMonitorRuleGetResponseMsg)
+	err := grpc.Invoke(ctx, "/telemetry.Telemetry/DropMonitorRuleGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *telemetryClient) MirrorSessionCreate(ctx context.Context, in *MirrorSessionRequestMsg, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error) {
 	out := new(MirrorSessionResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/MirrorSessionCreate", in, out, c.cc, opts...)
 	if err != nil {
@@ -1665,7 +2387,7 @@ func (c *telemetryClient) MirrorSessionCreate(ctx context.Context, in *MirrorSes
 	return out, nil
 }
 
-func (c *telemetryClient) MirrorSessionUpdate(ctx context.Context, in *MirrorSessionConfigMsg, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error) {
+func (c *telemetryClient) MirrorSessionUpdate(ctx context.Context, in *MirrorSessionRequestMsg, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error) {
 	out := new(MirrorSessionResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/MirrorSessionUpdate", in, out, c.cc, opts...)
 	if err != nil {
@@ -1674,27 +2396,18 @@ func (c *telemetryClient) MirrorSessionUpdate(ctx context.Context, in *MirrorSes
 	return out, nil
 }
 
-func (c *telemetryClient) MirrorSessionGet(ctx context.Context, in *MirrorSessionId, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error) {
-	out := new(MirrorSessionResponseMsg)
-	err := grpc.Invoke(ctx, "/telemetry.Telemetry/MirrorSessionGet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *telemetryClient) MirrorSessionList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error) {
-	out := new(MirrorSessionResponseMsg)
-	err := grpc.Invoke(ctx, "/telemetry.Telemetry/MirrorSessionList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *telemetryClient) MirrorSessionDelete(ctx context.Context, in *MirrorSessionDeleteMsg, opts ...grpc.CallOption) (*MirrorSessionResponseMsg, error) {
-	out := new(MirrorSessionResponseMsg)
+func (c *telemetryClient) MirrorSessionDelete(ctx context.Context, in *MirrorSessionDeleteRequestMsg, opts ...grpc.CallOption) (*MirrorSessionDeleteResponseMsg, error) {
+	out := new(MirrorSessionDeleteResponseMsg)
 	err := grpc.Invoke(ctx, "/telemetry.Telemetry/MirrorSessionDelete", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *telemetryClient) MirrorSessionGet(ctx context.Context, in *MirrorSessionGetRequestMsg, opts ...grpc.CallOption) (*MirrorSessionGetResponseMsg, error) {
+	out := new(MirrorSessionGetResponseMsg)
+	err := grpc.Invoke(ctx, "/telemetry.Telemetry/MirrorSessionGet", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1705,33 +2418,30 @@ func (c *telemetryClient) MirrorSessionDelete(ctx context.Context, in *MirrorSes
 
 type TelemetryServer interface {
 	// Collector operations CRUD operations
-	CollectorCreate(context.Context, *CollectorConfigMsg) (*CollectorResponseMsg, error)
-	CollectorUpdate(context.Context, *CollectorConfigMsg) (*CollectorResponseMsg, error)
-	CollectorList(context.Context, *ExportControlId) (*CollectorResponseMsg, error)
-	CollectorDelete(context.Context, *CollectorConfigMsg) (*CollectorResponseMsg, error)
+	CollectorCreate(context.Context, *CollectorRequestMsg) (*CollectorResponseMsg, error)
+	CollectorUpdate(context.Context, *CollectorRequestMsg) (*CollectorResponseMsg, error)
+	CollectorDelete(context.Context, *CollectorDeleteRequestMsg) (*CollectorDeleteResponseMsg, error)
+	CollectorGet(context.Context, *CollectorGetRequestMsg) (*CollectorGetResponseMsg, error)
 	// ExportConfig CRUD operations
-	ExportControlCreate(context.Context, *ExportControlConfigMsg) (*ExportControlResponseMsg, error)
-	ExportControlUpdate(context.Context, *ExportControlConfigMsg) (*ExportControlResponseMsg, error)
-	ExportControlGet(context.Context, *ExportControlId) (*ExportControlResponseMsg, error)
-	ExportControlDelete(context.Context, *ExportControlId) (*ExportControlResponseMsg, error)
+	ExportControlCreate(context.Context, *ExportControlRequestMsg) (*ExportControlResponseMsg, error)
+	ExportControlUpdate(context.Context, *ExportControlRequestMsg) (*ExportControlResponseMsg, error)
+	ExportControlDelete(context.Context, *ExportControlDeleteRequestMsg) (*ExportControlDeleteResponseMsg, error)
+	ExportControlGet(context.Context, *ExportControlGetRequestMsg) (*ExportControlGetResponseMsg, error)
 	// FlowMonitorRules CRUD Operations
-	FlowMonitorRuleCreate(context.Context, *FlowMonitorRuleConfigMsg) (*FlowMonitorRuleResponseMsg, error)
-	FlowMonitorRuleUpdate(context.Context, *FlowMonitorRuleConfigMsg) (*FlowMonitorRuleResponseMsg, error)
-	FlowMonitorRuleList(context.Context, *ExportControlId) (*FlowMonitorRuleResponseMsg, error)
-	FlowMonitorRuleGet(context.Context, *FlowMonitorRuleConfigMsg) (*FlowMonitorRuleResponseMsg, error)
-	FlowMonitorRuleDelete(context.Context, *FlowMonitorRuleConfigMsg) (*FlowMonitorRuleResponseMsg, error)
+	FlowMonitorRuleCreate(context.Context, *FlowMonitorRuleRequestMsg) (*FlowMonitorRuleResponseMsg, error)
+	FlowMonitorRuleUpdate(context.Context, *FlowMonitorRuleRequestMsg) (*FlowMonitorRuleResponseMsg, error)
+	FlowMonitorRuleDelete(context.Context, *FlowMonitorRuleDeleteRequestMsg) (*FlowMonitorRuleDeleteResponseMsg, error)
+	FlowMonitorRuleGet(context.Context, *FlowMonitorRuleGetRequestMsg) (*FlowMonitorRuleGetResponseMsg, error)
 	// DropMonitorRules CRUD Operations
-	DropMonitorRuleCreate(context.Context, *DropMonitorRuleConfigMsg) (*DropMonitorRuleResponseMsg, error)
-	DropMonitorRuleUpdate(context.Context, *DropMonitorRuleConfigMsg) (*DropMonitorRuleResponseMsg, error)
-	DropMonitorRuleList(context.Context, *ExportControlId) (*DropMonitorRuleResponseMsg, error)
-	DropMonitorRuleGet(context.Context, *DropMonitorRuleConfigMsg) (*DropMonitorRuleResponseMsg, error)
-	DropMonitorRuleDelete(context.Context, *DropMonitorRuleConfigMsg) (*DropMonitorRuleResponseMsg, error)
+	DropMonitorRuleCreate(context.Context, *DropMonitorRuleRequestMsg) (*DropMonitorRuleResponseMsg, error)
+	DropMonitorRuleUpdate(context.Context, *DropMonitorRuleRequestMsg) (*DropMonitorRuleResponseMsg, error)
+	DropMonitorRuleDelete(context.Context, *DropMonitorRuleDeleteRequestMsg) (*DropMonitorRuleDeleteResponseMsg, error)
+	DropMonitorRuleGet(context.Context, *DropMonitorRuleGetRequestMsg) (*DropMonitorRuleGetResponseMsg, error)
 	// MirrorSession CRUD Operations
-	MirrorSessionCreate(context.Context, *MirrorSessionConfigMsg) (*MirrorSessionResponseMsg, error)
-	MirrorSessionUpdate(context.Context, *MirrorSessionConfigMsg) (*MirrorSessionResponseMsg, error)
-	MirrorSessionGet(context.Context, *MirrorSessionId) (*MirrorSessionResponseMsg, error)
-	MirrorSessionList(context.Context, *Empty) (*MirrorSessionResponseMsg, error)
-	MirrorSessionDelete(context.Context, *MirrorSessionDeleteMsg) (*MirrorSessionResponseMsg, error)
+	MirrorSessionCreate(context.Context, *MirrorSessionRequestMsg) (*MirrorSessionResponseMsg, error)
+	MirrorSessionUpdate(context.Context, *MirrorSessionRequestMsg) (*MirrorSessionResponseMsg, error)
+	MirrorSessionDelete(context.Context, *MirrorSessionDeleteRequestMsg) (*MirrorSessionDeleteResponseMsg, error)
+	MirrorSessionGet(context.Context, *MirrorSessionGetRequestMsg) (*MirrorSessionGetResponseMsg, error)
 }
 
 func RegisterTelemetryServer(s *grpc.Server, srv TelemetryServer) {
@@ -1739,7 +2449,7 @@ func RegisterTelemetryServer(s *grpc.Server, srv TelemetryServer) {
 }
 
 func _Telemetry_CollectorCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CollectorConfigMsg)
+	in := new(CollectorRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1751,13 +2461,13 @@ func _Telemetry_CollectorCreate_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/telemetry.Telemetry/CollectorCreate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).CollectorCreate(ctx, req.(*CollectorConfigMsg))
+		return srv.(TelemetryServer).CollectorCreate(ctx, req.(*CollectorRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_CollectorUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CollectorConfigMsg)
+	in := new(CollectorRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1769,31 +2479,13 @@ func _Telemetry_CollectorUpdate_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/telemetry.Telemetry/CollectorUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).CollectorUpdate(ctx, req.(*CollectorConfigMsg))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Telemetry_CollectorList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExportControlId)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TelemetryServer).CollectorList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/telemetry.Telemetry/CollectorList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).CollectorList(ctx, req.(*ExportControlId))
+		return srv.(TelemetryServer).CollectorUpdate(ctx, req.(*CollectorRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_CollectorDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CollectorConfigMsg)
+	in := new(CollectorDeleteRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1805,13 +2497,31 @@ func _Telemetry_CollectorDelete_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/telemetry.Telemetry/CollectorDelete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).CollectorDelete(ctx, req.(*CollectorConfigMsg))
+		return srv.(TelemetryServer).CollectorDelete(ctx, req.(*CollectorDeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Telemetry_CollectorGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CollectorGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TelemetryServer).CollectorGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/telemetry.Telemetry/CollectorGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TelemetryServer).CollectorGet(ctx, req.(*CollectorGetRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_ExportControlCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExportControlConfigMsg)
+	in := new(ExportControlRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1823,13 +2533,13 @@ func _Telemetry_ExportControlCreate_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/telemetry.Telemetry/ExportControlCreate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).ExportControlCreate(ctx, req.(*ExportControlConfigMsg))
+		return srv.(TelemetryServer).ExportControlCreate(ctx, req.(*ExportControlRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_ExportControlUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExportControlConfigMsg)
+	in := new(ExportControlRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1841,31 +2551,13 @@ func _Telemetry_ExportControlUpdate_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/telemetry.Telemetry/ExportControlUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).ExportControlUpdate(ctx, req.(*ExportControlConfigMsg))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Telemetry_ExportControlGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExportControlId)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TelemetryServer).ExportControlGet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/telemetry.Telemetry/ExportControlGet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).ExportControlGet(ctx, req.(*ExportControlId))
+		return srv.(TelemetryServer).ExportControlUpdate(ctx, req.(*ExportControlRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_ExportControlDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExportControlId)
+	in := new(ExportControlDeleteRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1877,13 +2569,31 @@ func _Telemetry_ExportControlDelete_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/telemetry.Telemetry/ExportControlDelete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).ExportControlDelete(ctx, req.(*ExportControlId))
+		return srv.(TelemetryServer).ExportControlDelete(ctx, req.(*ExportControlDeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Telemetry_ExportControlGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExportControlGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TelemetryServer).ExportControlGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/telemetry.Telemetry/ExportControlGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TelemetryServer).ExportControlGet(ctx, req.(*ExportControlGetRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_FlowMonitorRuleCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FlowMonitorRuleConfigMsg)
+	in := new(FlowMonitorRuleRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1895,13 +2605,13 @@ func _Telemetry_FlowMonitorRuleCreate_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/telemetry.Telemetry/FlowMonitorRuleCreate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).FlowMonitorRuleCreate(ctx, req.(*FlowMonitorRuleConfigMsg))
+		return srv.(TelemetryServer).FlowMonitorRuleCreate(ctx, req.(*FlowMonitorRuleRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_FlowMonitorRuleUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FlowMonitorRuleConfigMsg)
+	in := new(FlowMonitorRuleRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1913,49 +2623,13 @@ func _Telemetry_FlowMonitorRuleUpdate_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/telemetry.Telemetry/FlowMonitorRuleUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).FlowMonitorRuleUpdate(ctx, req.(*FlowMonitorRuleConfigMsg))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Telemetry_FlowMonitorRuleList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExportControlId)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TelemetryServer).FlowMonitorRuleList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/telemetry.Telemetry/FlowMonitorRuleList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).FlowMonitorRuleList(ctx, req.(*ExportControlId))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Telemetry_FlowMonitorRuleGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FlowMonitorRuleConfigMsg)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TelemetryServer).FlowMonitorRuleGet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/telemetry.Telemetry/FlowMonitorRuleGet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).FlowMonitorRuleGet(ctx, req.(*FlowMonitorRuleConfigMsg))
+		return srv.(TelemetryServer).FlowMonitorRuleUpdate(ctx, req.(*FlowMonitorRuleRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_FlowMonitorRuleDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FlowMonitorRuleConfigMsg)
+	in := new(FlowMonitorRuleDeleteRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1967,13 +2641,31 @@ func _Telemetry_FlowMonitorRuleDelete_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/telemetry.Telemetry/FlowMonitorRuleDelete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).FlowMonitorRuleDelete(ctx, req.(*FlowMonitorRuleConfigMsg))
+		return srv.(TelemetryServer).FlowMonitorRuleDelete(ctx, req.(*FlowMonitorRuleDeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Telemetry_FlowMonitorRuleGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FlowMonitorRuleGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TelemetryServer).FlowMonitorRuleGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/telemetry.Telemetry/FlowMonitorRuleGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TelemetryServer).FlowMonitorRuleGet(ctx, req.(*FlowMonitorRuleGetRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_DropMonitorRuleCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DropMonitorRuleConfigMsg)
+	in := new(DropMonitorRuleRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1985,13 +2677,13 @@ func _Telemetry_DropMonitorRuleCreate_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/telemetry.Telemetry/DropMonitorRuleCreate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).DropMonitorRuleCreate(ctx, req.(*DropMonitorRuleConfigMsg))
+		return srv.(TelemetryServer).DropMonitorRuleCreate(ctx, req.(*DropMonitorRuleRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_DropMonitorRuleUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DropMonitorRuleConfigMsg)
+	in := new(DropMonitorRuleRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2003,49 +2695,13 @@ func _Telemetry_DropMonitorRuleUpdate_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/telemetry.Telemetry/DropMonitorRuleUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).DropMonitorRuleUpdate(ctx, req.(*DropMonitorRuleConfigMsg))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Telemetry_DropMonitorRuleList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExportControlId)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TelemetryServer).DropMonitorRuleList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/telemetry.Telemetry/DropMonitorRuleList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).DropMonitorRuleList(ctx, req.(*ExportControlId))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Telemetry_DropMonitorRuleGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DropMonitorRuleConfigMsg)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TelemetryServer).DropMonitorRuleGet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/telemetry.Telemetry/DropMonitorRuleGet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).DropMonitorRuleGet(ctx, req.(*DropMonitorRuleConfigMsg))
+		return srv.(TelemetryServer).DropMonitorRuleUpdate(ctx, req.(*DropMonitorRuleRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_DropMonitorRuleDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DropMonitorRuleConfigMsg)
+	in := new(DropMonitorRuleDeleteRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2057,13 +2713,31 @@ func _Telemetry_DropMonitorRuleDelete_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/telemetry.Telemetry/DropMonitorRuleDelete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).DropMonitorRuleDelete(ctx, req.(*DropMonitorRuleConfigMsg))
+		return srv.(TelemetryServer).DropMonitorRuleDelete(ctx, req.(*DropMonitorRuleDeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Telemetry_DropMonitorRuleGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DropMonitorRuleGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TelemetryServer).DropMonitorRuleGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/telemetry.Telemetry/DropMonitorRuleGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TelemetryServer).DropMonitorRuleGet(ctx, req.(*DropMonitorRuleGetRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_MirrorSessionCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MirrorSessionConfigMsg)
+	in := new(MirrorSessionRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2075,13 +2749,13 @@ func _Telemetry_MirrorSessionCreate_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/telemetry.Telemetry/MirrorSessionCreate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).MirrorSessionCreate(ctx, req.(*MirrorSessionConfigMsg))
+		return srv.(TelemetryServer).MirrorSessionCreate(ctx, req.(*MirrorSessionRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_MirrorSessionUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MirrorSessionConfigMsg)
+	in := new(MirrorSessionRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2093,49 +2767,13 @@ func _Telemetry_MirrorSessionUpdate_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/telemetry.Telemetry/MirrorSessionUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).MirrorSessionUpdate(ctx, req.(*MirrorSessionConfigMsg))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Telemetry_MirrorSessionGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MirrorSessionId)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TelemetryServer).MirrorSessionGet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/telemetry.Telemetry/MirrorSessionGet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).MirrorSessionGet(ctx, req.(*MirrorSessionId))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Telemetry_MirrorSessionList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TelemetryServer).MirrorSessionList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/telemetry.Telemetry/MirrorSessionList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).MirrorSessionList(ctx, req.(*Empty))
+		return srv.(TelemetryServer).MirrorSessionUpdate(ctx, req.(*MirrorSessionRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Telemetry_MirrorSessionDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MirrorSessionDeleteMsg)
+	in := new(MirrorSessionDeleteRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2147,7 +2785,25 @@ func _Telemetry_MirrorSessionDelete_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/telemetry.Telemetry/MirrorSessionDelete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TelemetryServer).MirrorSessionDelete(ctx, req.(*MirrorSessionDeleteMsg))
+		return srv.(TelemetryServer).MirrorSessionDelete(ctx, req.(*MirrorSessionDeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Telemetry_MirrorSessionGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MirrorSessionGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TelemetryServer).MirrorSessionGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/telemetry.Telemetry/MirrorSessionGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TelemetryServer).MirrorSessionGet(ctx, req.(*MirrorSessionGetRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2165,12 +2821,12 @@ var _Telemetry_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Telemetry_CollectorUpdate_Handler,
 		},
 		{
-			MethodName: "CollectorList",
-			Handler:    _Telemetry_CollectorList_Handler,
-		},
-		{
 			MethodName: "CollectorDelete",
 			Handler:    _Telemetry_CollectorDelete_Handler,
+		},
+		{
+			MethodName: "CollectorGet",
+			Handler:    _Telemetry_CollectorGet_Handler,
 		},
 		{
 			MethodName: "ExportControlCreate",
@@ -2181,12 +2837,12 @@ var _Telemetry_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Telemetry_ExportControlUpdate_Handler,
 		},
 		{
-			MethodName: "ExportControlGet",
-			Handler:    _Telemetry_ExportControlGet_Handler,
-		},
-		{
 			MethodName: "ExportControlDelete",
 			Handler:    _Telemetry_ExportControlDelete_Handler,
+		},
+		{
+			MethodName: "ExportControlGet",
+			Handler:    _Telemetry_ExportControlGet_Handler,
 		},
 		{
 			MethodName: "FlowMonitorRuleCreate",
@@ -2197,16 +2853,12 @@ var _Telemetry_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Telemetry_FlowMonitorRuleUpdate_Handler,
 		},
 		{
-			MethodName: "FlowMonitorRuleList",
-			Handler:    _Telemetry_FlowMonitorRuleList_Handler,
+			MethodName: "FlowMonitorRuleDelete",
+			Handler:    _Telemetry_FlowMonitorRuleDelete_Handler,
 		},
 		{
 			MethodName: "FlowMonitorRuleGet",
 			Handler:    _Telemetry_FlowMonitorRuleGet_Handler,
-		},
-		{
-			MethodName: "FlowMonitorRuleDelete",
-			Handler:    _Telemetry_FlowMonitorRuleDelete_Handler,
 		},
 		{
 			MethodName: "DropMonitorRuleCreate",
@@ -2217,16 +2869,12 @@ var _Telemetry_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Telemetry_DropMonitorRuleUpdate_Handler,
 		},
 		{
-			MethodName: "DropMonitorRuleList",
-			Handler:    _Telemetry_DropMonitorRuleList_Handler,
+			MethodName: "DropMonitorRuleDelete",
+			Handler:    _Telemetry_DropMonitorRuleDelete_Handler,
 		},
 		{
 			MethodName: "DropMonitorRuleGet",
 			Handler:    _Telemetry_DropMonitorRuleGet_Handler,
-		},
-		{
-			MethodName: "DropMonitorRuleDelete",
-			Handler:    _Telemetry_DropMonitorRuleDelete_Handler,
 		},
 		{
 			MethodName: "MirrorSessionCreate",
@@ -2237,43 +2885,16 @@ var _Telemetry_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Telemetry_MirrorSessionUpdate_Handler,
 		},
 		{
-			MethodName: "MirrorSessionGet",
-			Handler:    _Telemetry_MirrorSessionGet_Handler,
-		},
-		{
-			MethodName: "MirrorSessionList",
-			Handler:    _Telemetry_MirrorSessionList_Handler,
-		},
-		{
 			MethodName: "MirrorSessionDelete",
 			Handler:    _Telemetry_MirrorSessionDelete_Handler,
+		},
+		{
+			MethodName: "MirrorSessionGet",
+			Handler:    _Telemetry_MirrorSessionGet_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "telemetry.proto",
-}
-
-func (m *L4Port) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *L4Port) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Port != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Port))
-	}
-	return i, nil
 }
 
 func (m *CollectorSpec) Marshal() (dAtA []byte, err error) {
@@ -2301,11 +2922,11 @@ func (m *CollectorSpec) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n1
 	}
-	if m.ExportControlId != nil {
+	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.ExportControlId.Size()))
-		n2, err := m.ExportControlId.MarshalTo(dAtA[i:])
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n2, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
@@ -2321,46 +2942,45 @@ func (m *CollectorSpec) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n3
 	}
-	if m.L2SegHandle != 0 {
-		dAtA[i] = 0x21
+	if m.L2SegKeyHandle != nil {
+		dAtA[i] = 0x22
 		i++
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.L2SegHandle))
-		i += 8
-	}
-	if m.DestIp != nil {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.DestIp.Size()))
-		n4, err := m.DestIp.MarshalTo(dAtA[i:])
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.L2SegKeyHandle.Size()))
+		n4, err := m.L2SegKeyHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n4
 	}
-	if m.SrcIp != nil {
-		dAtA[i] = 0x32
+	if m.DestIp != nil {
+		dAtA[i] = 0x2a
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.SrcIp.Size()))
-		n5, err := m.SrcIp.MarshalTo(dAtA[i:])
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.DestIp.Size()))
+		n5, err := m.DestIp.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n5
+	}
+	if m.SrcIp != nil {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.SrcIp.Size()))
+		n6, err := m.SrcIp.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
 	}
 	if m.Protocol != 0 {
 		dAtA[i] = 0x38
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Protocol))
 	}
-	if m.DestPort != nil {
-		dAtA[i] = 0x42
+	if m.DestPort != 0 {
+		dAtA[i] = 0x40
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.DestPort.Size()))
-		n6, err := m.DestPort.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n6
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.DestPort))
 	}
 	if m.Format != 0 {
 		dAtA[i] = 0x48
@@ -2390,21 +3010,16 @@ func (m *CollectorStatus) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Code != 0 {
-		dAtA[i] = 0x8
+	if m.Handle != 0 {
+		dAtA[i] = 0x9
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Code))
-	}
-	if len(m.Status) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.Status)))
-		i += copy(dAtA[i:], m.Status)
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Handle))
+		i += 8
 	}
 	return i, nil
 }
 
-func (m *Collector) Marshal() (dAtA []byte, err error) {
+func (m *CollectorResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2414,7 +3029,7 @@ func (m *Collector) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Collector) MarshalTo(dAtA []byte) (int, error) {
+func (m *CollectorResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2424,30 +3039,20 @@ func (m *Collector) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
 	}
-	if m.Spec != nil {
+	if m.Status != nil {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
-		n7, err := m.Spec.MarshalTo(dAtA[i:])
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Status.Size()))
+		n7, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n7
 	}
-	if m.Status != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Status.Size()))
-		n8, err := m.Status.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n8
-	}
 	return i, nil
 }
 
-func (m *CollectorConfigMsg) Marshal() (dAtA []byte, err error) {
+func (m *CollectorRequestMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2457,7 +3062,7 @@ func (m *CollectorConfigMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CollectorConfigMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *CollectorRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2492,14 +3097,9 @@ func (m *CollectorResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Status != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Status))
-	}
 	if len(m.Response) > 0 {
 		for _, msg := range m.Response {
-			dAtA[i] = 0x12
+			dAtA[i] = 0xa
 			i++
 			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -2512,7 +3112,7 @@ func (m *CollectorResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *ExportControlId) Marshal() (dAtA []byte, err error) {
+func (m *CollectorDeleteRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2522,7 +3122,7 @@ func (m *ExportControlId) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ExportControlId) MarshalTo(dAtA []byte) (int, error) {
+func (m *CollectorDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2531,16 +3131,273 @@ func (m *ExportControlId) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
-		n9, err := m.Meta.MarshalTo(dAtA[i:])
+		n8, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n8
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n9, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n9
 	}
-	if m.Id != 0 {
-		dAtA[i] = 0x10
+	return i, nil
+}
+
+func (m *CollectorDeleteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CollectorDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Id))
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n10, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
+	return i, nil
+}
+
+func (m *CollectorDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CollectorDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *CollectorDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CollectorDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *CollectorGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CollectorGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
+		n11, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n12, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n12
+	}
+	return i, nil
+}
+
+func (m *CollectorGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CollectorGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *CollectorStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CollectorStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *CollectorGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CollectorGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
+		n13, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n13
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Stats.Size()))
+		n14, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n14
+	}
+	return i, nil
+}
+
+func (m *CollectorGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CollectorGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
 	}
 	return i, nil
 }
@@ -2560,23 +3417,45 @@ func (m *ExportControlSpec) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != nil {
+	if m.Meta != nil {
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Id.Size()))
-		n10, err := m.Id.MarshalTo(dAtA[i:])
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
+		n15, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n15
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n16, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n16
+	}
+	if len(m.CollectorKeyHandle) > 0 {
+		for _, msg := range m.CollectorKeyHandle {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
 	}
 	if m.ActiveTimeout != 0 {
-		dAtA[i] = 0x10
+		dAtA[i] = 0x20
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.ActiveTimeout))
 	}
 	if m.InactiveTimeout != 0 {
-		dAtA[i] = 0x18
+		dAtA[i] = 0x28
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.InactiveTimeout))
 	}
@@ -2598,21 +3477,16 @@ func (m *ExportControlStatus) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Code != 0 {
-		dAtA[i] = 0x8
+	if m.Handle != 0 {
+		dAtA[i] = 0x9
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Code))
-	}
-	if len(m.Status) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.Status)))
-		i += copy(dAtA[i:], m.Status)
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Handle))
+		i += 8
 	}
 	return i, nil
 }
 
-func (m *ExportControl) Marshal() (dAtA []byte, err error) {
+func (m *ExportControlResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2622,35 +3496,30 @@ func (m *ExportControl) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ExportControl) MarshalTo(dAtA []byte) (int, error) {
+func (m *ExportControlResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if m.Spec != nil {
-		dAtA[i] = 0xa
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
-		n11, err := m.Spec.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n11
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Status.Size()))
-		n12, err := m.Status.MarshalTo(dAtA[i:])
+		n17, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n17
 	}
 	return i, nil
 }
 
-func (m *ExportControlConfigMsg) Marshal() (dAtA []byte, err error) {
+func (m *ExportControlRequestMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2660,13 +3529,13 @@ func (m *ExportControlConfigMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ExportControlConfigMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *ExportControlRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.Configs) > 0 {
-		for _, msg := range m.Configs {
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
 			dAtA[i] = 0xa
 			i++
 			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
@@ -2695,14 +3564,299 @@ func (m *ExportControlResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Status != 0 {
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *ExportControlDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ExportControlDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
+		n18, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n18
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n19, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n19
+	}
+	return i, nil
+}
+
+func (m *ExportControlDeleteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ExportControlDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Status))
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
 	}
-	if len(m.ExportControl) > 0 {
-		for _, msg := range m.ExportControl {
-			dAtA[i] = 0x12
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n20, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n20
+	}
+	return i, nil
+}
+
+func (m *ExportControlDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ExportControlDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *ExportControlDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ExportControlDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *ExportControlGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ExportControlGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
+		n21, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n21
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n22, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n22
+	}
+	return i, nil
+}
+
+func (m *ExportControlGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ExportControlGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *ExportControlStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ExportControlStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *ExportControlGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ExportControlGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
+		n23, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n23
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Stats.Size()))
+		n24, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n24
+	}
+	return i, nil
+}
+
+func (m *ExportControlGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ExportControlGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
 			i++
 			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -2731,55 +3885,55 @@ func (m *MonitorAction) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.Action) > 0 {
-		dAtA14 := make([]byte, len(m.Action)*10)
-		var j13 int
+		dAtA26 := make([]byte, len(m.Action)*10)
+		var j25 int
 		for _, num := range m.Action {
 			for num >= 1<<7 {
-				dAtA14[j13] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA26[j25] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j13++
+				j25++
 			}
-			dAtA14[j13] = uint8(num)
-			j13++
+			dAtA26[j25] = uint8(num)
+			j25++
 		}
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(j13))
-		i += copy(dAtA[i:], dAtA14[:j13])
+		i = encodeVarintTelemetry(dAtA, i, uint64(j25))
+		i += copy(dAtA[i:], dAtA26[:j25])
 	}
 	if len(m.AggScheme) > 0 {
-		dAtA16 := make([]byte, len(m.AggScheme)*10)
-		var j15 int
+		dAtA28 := make([]byte, len(m.AggScheme)*10)
+		var j27 int
 		for _, num := range m.AggScheme {
 			for num >= 1<<7 {
-				dAtA16[j15] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA28[j27] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j15++
+				j27++
 			}
-			dAtA16[j15] = uint8(num)
-			j15++
+			dAtA28[j27] = uint8(num)
+			j27++
 		}
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(j15))
-		i += copy(dAtA[i:], dAtA16[:j15])
+		i = encodeVarintTelemetry(dAtA, i, uint64(j27))
+		i += copy(dAtA[i:], dAtA28[:j27])
 	}
 	if len(m.MirrorDestinations) > 0 {
-		dAtA18 := make([]byte, len(m.MirrorDestinations)*10)
-		var j17 int
+		dAtA30 := make([]byte, len(m.MirrorDestinations)*10)
+		var j29 int
 		for _, num := range m.MirrorDestinations {
 			for num >= 1<<7 {
-				dAtA18[j17] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA30[j29] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j17++
+				j29++
 			}
-			dAtA18[j17] = uint8(num)
-			j17++
+			dAtA30[j29] = uint8(num)
+			j29++
 		}
 		dAtA[i] = 0x1a
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(j17))
-		i += copy(dAtA[i:], dAtA18[:j17])
+		i = encodeVarintTelemetry(dAtA, i, uint64(j29))
+		i += copy(dAtA[i:], dAtA30[:j29])
 	}
 	return i, nil
 }
@@ -2803,101 +3957,101 @@ func (m *FlowMonitorRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
-		n19, err := m.Meta.MarshalTo(dAtA[i:])
+		n31, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n19
+		i += n31
 	}
-	if m.ExportConfigId != nil {
+	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.ExportConfigId.Size()))
-		n20, err := m.ExportConfigId.MarshalTo(dAtA[i:])
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n32, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n20
+		i += n32
+	}
+	if m.EcKeyHandle != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.EcKeyHandle.Size()))
+		n33, err := m.EcKeyHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n33
 	}
 	if m.SourceMac != 0 {
-		dAtA[i] = 0x18
+		dAtA[i] = 0x20
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.SourceMac))
 	}
 	if m.DestMac != 0 {
-		dAtA[i] = 0x20
+		dAtA[i] = 0x28
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.DestMac))
 	}
 	if m.Ethertype != 0 {
-		dAtA[i] = 0x28
+		dAtA[i] = 0x30
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Ethertype))
 	}
 	if m.Protocol != 0 {
-		dAtA[i] = 0x30
+		dAtA[i] = 0x38
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Protocol))
 	}
 	if m.SourceIp != nil {
-		dAtA[i] = 0x3a
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.SourceIp.Size()))
-		n21, err := m.SourceIp.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n21
-	}
-	if m.DestIp != nil {
 		dAtA[i] = 0x42
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.DestIp.Size()))
-		n22, err := m.DestIp.MarshalTo(dAtA[i:])
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.SourceIp.Size()))
+		n34, err := m.SourceIp.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n22
+		i += n34
 	}
-	if m.SourceL4Port != nil {
+	if m.DestIp != nil {
 		dAtA[i] = 0x4a
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.SourceL4Port.Size()))
-		n23, err := m.SourceL4Port.MarshalTo(dAtA[i:])
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.DestIp.Size()))
+		n35, err := m.DestIp.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n23
+		i += n35
 	}
-	if m.DestL4Port != nil {
-		dAtA[i] = 0x52
+	if m.SourceL4Port != 0 {
+		dAtA[i] = 0x50
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.DestL4Port.Size()))
-		n24, err := m.DestL4Port.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n24
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.SourceL4Port))
+	}
+	if m.DestL4Port != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.DestL4Port))
 	}
 	if m.SourceGroupid != 0 {
-		dAtA[i] = 0x58
+		dAtA[i] = 0x60
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.SourceGroupid))
 	}
 	if m.DestGroupid != 0 {
-		dAtA[i] = 0x60
+		dAtA[i] = 0x68
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.DestGroupid))
 	}
 	if m.Action != nil {
-		dAtA[i] = 0x6a
+		dAtA[i] = 0x72
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Action.Size()))
-		n25, err := m.Action.MarshalTo(dAtA[i:])
+		n36, err := m.Action.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n25
+		i += n36
 	}
 	return i, nil
 }
@@ -2917,26 +4071,21 @@ func (m *FlowMonitorRuleStatus) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Code != 0 {
-		dAtA[i] = 0x8
+	if m.Handle != 0 {
+		dAtA[i] = 0x9
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Code))
-	}
-	if len(m.Status) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.Status)))
-		i += copy(dAtA[i:], m.Status)
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Handle))
+		i += 8
 	}
 	if m.ActiveFlows != 0 {
-		dAtA[i] = 0x18
+		dAtA[i] = 0x10
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.ActiveFlows))
 	}
 	return i, nil
 }
 
-func (m *FlowMonitorRule) Marshal() (dAtA []byte, err error) {
+func (m *FlowMonitorRuleResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2946,7 +4095,7 @@ func (m *FlowMonitorRule) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *FlowMonitorRule) MarshalTo(dAtA []byte) (int, error) {
+func (m *FlowMonitorRuleResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2956,30 +4105,20 @@ func (m *FlowMonitorRule) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
 	}
-	if m.Spec != nil {
+	if m.Status != nil {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
-		n26, err := m.Spec.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n26
-	}
-	if m.Status != nil {
-		dAtA[i] = 0x1a
-		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Status.Size()))
-		n27, err := m.Status.MarshalTo(dAtA[i:])
+		n37, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n27
+		i += n37
 	}
 	return i, nil
 }
 
-func (m *FlowMonitorRuleConfigMsg) Marshal() (dAtA []byte, err error) {
+func (m *FlowMonitorRuleRequestMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2989,7 +4128,7 @@ func (m *FlowMonitorRuleConfigMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *FlowMonitorRuleConfigMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *FlowMonitorRuleRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -3024,14 +4163,299 @@ func (m *FlowMonitorRuleResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Status != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Status))
-	}
 	if len(m.Response) > 0 {
 		for _, msg := range m.Response {
-			dAtA[i] = 0x12
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *FlowMonitorRuleDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowMonitorRuleDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
+		n38, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n38
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n39, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n39
+	}
+	return i, nil
+}
+
+func (m *FlowMonitorRuleDeleteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowMonitorRuleDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n40, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n40
+	}
+	return i, nil
+}
+
+func (m *FlowMonitorRuleDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowMonitorRuleDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *FlowMonitorRuleDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowMonitorRuleDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *FlowMonitorRuleGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowMonitorRuleGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
+		n41, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n41
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n42, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n42
+	}
+	return i, nil
+}
+
+func (m *FlowMonitorRuleGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowMonitorRuleGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *FlowMonitorRuleStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowMonitorRuleStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *FlowMonitorRuleGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowMonitorRuleGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
+		n43, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n43
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Stats.Size()))
+		n44, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n44
+	}
+	return i, nil
+}
+
+func (m *FlowMonitorRuleGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowMonitorRuleGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
 			i++
 			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -3059,32 +4483,47 @@ func (m *DropMonitorRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Reasons != nil {
+	if m.Meta != nil {
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Reasons.Size()))
-		n28, err := m.Reasons.MarshalTo(dAtA[i:])
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
+		n45, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n28
+		i += n45
 	}
-	if len(m.MirrorDestinations) > 0 {
-		dAtA30 := make([]byte, len(m.MirrorDestinations)*10)
-		var j29 int
-		for _, num := range m.MirrorDestinations {
-			for num >= 1<<7 {
-				dAtA30[j29] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j29++
-			}
-			dAtA30[j29] = uint8(num)
-			j29++
-		}
+	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(j29))
-		i += copy(dAtA[i:], dAtA30[:j29])
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n46, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n46
+	}
+	if len(m.MsKeyHandle) > 0 {
+		for _, msg := range m.MsKeyHandle {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if m.Reasons != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Reasons.Size()))
+		n47, err := m.Reasons.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n47
 	}
 	return i, nil
 }
@@ -3104,21 +4543,21 @@ func (m *DropMonitorRuleStatus) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Code != 0 {
-		dAtA[i] = 0x8
+	if m.Handle != 0 {
+		dAtA[i] = 0x9
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Code))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Handle))
+		i += 8
 	}
-	if len(m.Status) > 0 {
-		dAtA[i] = 0x12
+	if m.ActiveFlows != 0 {
+		dAtA[i] = 0x18
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.Status)))
-		i += copy(dAtA[i:], m.Status)
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ActiveFlows))
 	}
 	return i, nil
 }
 
-func (m *DropMonitorRule) Marshal() (dAtA []byte, err error) {
+func (m *DropMonitorRuleResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -3128,7 +4567,7 @@ func (m *DropMonitorRule) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DropMonitorRule) MarshalTo(dAtA []byte) (int, error) {
+func (m *DropMonitorRuleResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -3138,30 +4577,20 @@ func (m *DropMonitorRule) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
 	}
-	if m.Spec != nil {
+	if m.Status != nil {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
-		n31, err := m.Spec.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n31
-	}
-	if m.Status != nil {
-		dAtA[i] = 0x1a
-		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Status.Size()))
-		n32, err := m.Status.MarshalTo(dAtA[i:])
+		n48, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n32
+		i += n48
 	}
 	return i, nil
 }
 
-func (m *DropMonitorRuleConfigMsg) Marshal() (dAtA []byte, err error) {
+func (m *DropMonitorRuleRequestMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -3171,7 +4600,7 @@ func (m *DropMonitorRuleConfigMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DropMonitorRuleConfigMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *DropMonitorRuleRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -3206,14 +4635,299 @@ func (m *DropMonitorRuleResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Status != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Status))
-	}
 	if len(m.Response) > 0 {
 		for _, msg := range m.Response {
-			dAtA[i] = 0x12
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *DropMonitorRuleDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DropMonitorRuleDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
+		n49, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n49
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n50, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n50
+	}
+	return i, nil
+}
+
+func (m *DropMonitorRuleDeleteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DropMonitorRuleDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n51, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n51
+	}
+	return i, nil
+}
+
+func (m *DropMonitorRuleDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DropMonitorRuleDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *DropMonitorRuleDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DropMonitorRuleDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *DropMonitorRuleGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DropMonitorRuleGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
+		n52, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n52
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n53, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n53
+	}
+	return i, nil
+}
+
+func (m *DropMonitorRuleGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DropMonitorRuleGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *DropMonitorRuleStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DropMonitorRuleStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *DropMonitorRuleGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DropMonitorRuleGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
+		n54, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n54
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Stats.Size()))
+		n55, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n55
+	}
+	return i, nil
+}
+
+func (m *DropMonitorRuleGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DropMonitorRuleGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
 			i++
 			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -3245,21 +4959,21 @@ func (m *RSpanSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Intf.Size()))
-		n33, err := m.Intf.MarshalTo(dAtA[i:])
+		n56, err := m.Intf.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n33
+		i += n56
 	}
 	if m.RspanEncap != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.RspanEncap.Size()))
-		n34, err := m.RspanEncap.MarshalTo(dAtA[i:])
+		n57, err := m.RspanEncap.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n34
+		i += n57
 	}
 	return i, nil
 }
@@ -3283,21 +4997,21 @@ func (m *ERSpanSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.DestIp.Size()))
-		n35, err := m.DestIp.MarshalTo(dAtA[i:])
+		n58, err := m.DestIp.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n35
+		i += n58
 	}
 	if m.SrcIp != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.SrcIp.Size()))
-		n36, err := m.SrcIp.MarshalTo(dAtA[i:])
+		n59, err := m.SrcIp.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n36
+		i += n59
 	}
 	if len(m.Dscp) > 0 {
 		dAtA[i] = 0x1a
@@ -3309,29 +5023,6 @@ func (m *ERSpanSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x20
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.SpanId))
-	}
-	return i, nil
-}
-
-func (m *MirrorSessionId) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MirrorSessionId) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.SessionId != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.SessionId))
 	}
 	return i, nil
 }
@@ -3355,21 +5046,21 @@ func (m *MirrorSessionSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
-		n37, err := m.Meta.MarshalTo(dAtA[i:])
+		n60, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n37
+		i += n60
 	}
-	if m.Id != nil {
+	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Id.Size()))
-		n38, err := m.Id.MarshalTo(dAtA[i:])
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n61, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n38
+		i += n61
 	}
 	if m.Snaplen != 0 {
 		dAtA[i] = 0x18
@@ -3377,11 +5068,11 @@ func (m *MirrorSessionSpec) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Snaplen))
 	}
 	if m.Destination != nil {
-		nn39, err := m.Destination.MarshalTo(dAtA[i:])
+		nn62, err := m.Destination.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn39
+		i += nn62
 	}
 	return i, nil
 }
@@ -3392,11 +5083,11 @@ func (m *MirrorSessionSpec_LocalSpanIf) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.LocalSpanIf.Size()))
-		n40, err := m.LocalSpanIf.MarshalTo(dAtA[i:])
+		n63, err := m.LocalSpanIf.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n40
+		i += n63
 	}
 	return i, nil
 }
@@ -3406,11 +5097,11 @@ func (m *MirrorSessionSpec_RspanSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x2a
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.RspanSpec.Size()))
-		n41, err := m.RspanSpec.MarshalTo(dAtA[i:])
+		n64, err := m.RspanSpec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n41
+		i += n64
 	}
 	return i, nil
 }
@@ -3420,11 +5111,11 @@ func (m *MirrorSessionSpec_ErspanSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x32
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.ErspanSpec.Size()))
-		n42, err := m.ErspanSpec.MarshalTo(dAtA[i:])
+		n65, err := m.ErspanSpec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n42
+		i += n65
 	}
 	return i, nil
 }
@@ -3443,26 +5134,21 @@ func (m *MirrorSessionStatus) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Code != 0 {
-		dAtA[i] = 0x8
+	if m.Handle != 0 {
+		dAtA[i] = 0x9
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Code))
-	}
-	if len(m.Status) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.Status)))
-		i += copy(dAtA[i:], m.Status)
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Handle))
+		i += 8
 	}
 	if m.ActiveFlows != 0 {
-		dAtA[i] = 0x18
+		dAtA[i] = 0x10
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.ActiveFlows))
 	}
 	return i, nil
 }
 
-func (m *MirrorSession) Marshal() (dAtA []byte, err error) {
+func (m *MirrorSessionResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -3472,7 +5158,7 @@ func (m *MirrorSession) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MirrorSession) MarshalTo(dAtA []byte) (int, error) {
+func (m *MirrorSessionResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -3482,30 +5168,20 @@ func (m *MirrorSession) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
 	}
-	if m.Spec != nil {
+	if m.Status != nil {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
-		n43, err := m.Spec.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n43
-	}
-	if m.Status != nil {
-		dAtA[i] = 0x1a
-		i++
 		i = encodeVarintTelemetry(dAtA, i, uint64(m.Status.Size()))
-		n44, err := m.Status.MarshalTo(dAtA[i:])
+		n66, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n44
+		i += n66
 	}
 	return i, nil
 }
 
-func (m *MirrorSessionConfigMsg) Marshal() (dAtA []byte, err error) {
+func (m *MirrorSessionRequestMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -3515,37 +5191,7 @@ func (m *MirrorSessionConfigMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MirrorSessionConfigMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *MirrorSessionDeleteMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MirrorSessionDeleteMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *MirrorSessionRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -3580,14 +5226,299 @@ func (m *MirrorSessionResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Status != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(m.Status))
-	}
 	if len(m.Response) > 0 {
 		for _, msg := range m.Response {
-			dAtA[i] = 0x12
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *MirrorSessionDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MirrorSessionDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
+		n67, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n67
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n68, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n68
+	}
+	return i, nil
+}
+
+func (m *MirrorSessionDeleteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MirrorSessionDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n69, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n69
+	}
+	return i, nil
+}
+
+func (m *MirrorSessionDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MirrorSessionDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *MirrorSessionDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MirrorSessionDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *MirrorSessionGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MirrorSessionGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Meta.Size()))
+		n70, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n70
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n71, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n71
+	}
+	return i, nil
+}
+
+func (m *MirrorSessionGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MirrorSessionGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *MirrorSessionStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MirrorSessionStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *MirrorSessionGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MirrorSessionGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
+		n72, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n72
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Stats.Size()))
+		n73, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n73
+	}
+	return i, nil
+}
+
+func (m *MirrorSessionGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MirrorSessionGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
 			i++
 			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -3609,15 +5540,6 @@ func encodeVarintTelemetry(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *L4Port) Size() (n int) {
-	var l int
-	_ = l
-	if m.Port != 0 {
-		n += 1 + sovTelemetry(uint64(m.Port))
-	}
-	return n
-}
-
 func (m *CollectorSpec) Size() (n int) {
 	var l int
 	_ = l
@@ -3625,16 +5547,17 @@ func (m *CollectorSpec) Size() (n int) {
 		l = m.Meta.Size()
 		n += 1 + l + sovTelemetry(uint64(l))
 	}
-	if m.ExportControlId != nil {
-		l = m.ExportControlId.Size()
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
 		n += 1 + l + sovTelemetry(uint64(l))
 	}
 	if m.Encap != nil {
 		l = m.Encap.Size()
 		n += 1 + l + sovTelemetry(uint64(l))
 	}
-	if m.L2SegHandle != 0 {
-		n += 9
+	if m.L2SegKeyHandle != nil {
+		l = m.L2SegKeyHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
 	}
 	if m.DestIp != nil {
 		l = m.DestIp.Size()
@@ -3647,9 +5570,8 @@ func (m *CollectorSpec) Size() (n int) {
 	if m.Protocol != 0 {
 		n += 1 + sovTelemetry(uint64(m.Protocol))
 	}
-	if m.DestPort != nil {
-		l = m.DestPort.Size()
-		n += 1 + l + sovTelemetry(uint64(l))
+	if m.DestPort != 0 {
+		n += 1 + sovTelemetry(uint64(m.DestPort))
 	}
 	if m.Format != 0 {
 		n += 1 + sovTelemetry(uint64(m.Format))
@@ -3663,25 +5585,17 @@ func (m *CollectorSpec) Size() (n int) {
 func (m *CollectorStatus) Size() (n int) {
 	var l int
 	_ = l
-	if m.Code != 0 {
-		n += 1 + sovTelemetry(uint64(m.Code))
-	}
-	l = len(m.Status)
-	if l > 0 {
-		n += 1 + l + sovTelemetry(uint64(l))
+	if m.Handle != 0 {
+		n += 9
 	}
 	return n
 }
 
-func (m *Collector) Size() (n int) {
+func (m *CollectorResponse) Size() (n int) {
 	var l int
 	_ = l
 	if m.ApiStatus != 0 {
 		n += 1 + sovTelemetry(uint64(m.ApiStatus))
-	}
-	if m.Spec != nil {
-		l = m.Spec.Size()
-		n += 1 + l + sovTelemetry(uint64(l))
 	}
 	if m.Status != nil {
 		l = m.Status.Size()
@@ -3690,7 +5604,7 @@ func (m *Collector) Size() (n int) {
 	return n
 }
 
-func (m *CollectorConfigMsg) Size() (n int) {
+func (m *CollectorRequestMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Request) > 0 {
@@ -3705,9 +5619,6 @@ func (m *CollectorConfigMsg) Size() (n int) {
 func (m *CollectorResponseMsg) Size() (n int) {
 	var l int
 	_ = l
-	if m.Status != 0 {
-		n += 1 + sovTelemetry(uint64(m.Status))
-	}
 	if len(m.Response) > 0 {
 		for _, e := range m.Response {
 			l = e.Size()
@@ -3717,15 +5628,114 @@ func (m *CollectorResponseMsg) Size() (n int) {
 	return n
 }
 
-func (m *ExportControlId) Size() (n int) {
+func (m *CollectorDeleteRequest) Size() (n int) {
 	var l int
 	_ = l
 	if m.Meta != nil {
 		l = m.Meta.Size()
 		n += 1 + l + sovTelemetry(uint64(l))
 	}
-	if m.Id != 0 {
-		n += 1 + sovTelemetry(uint64(m.Id))
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *CollectorDeleteResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTelemetry(uint64(m.ApiStatus))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *CollectorDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CollectorDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CollectorGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *CollectorGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CollectorStats) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *CollectorGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTelemetry(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *CollectorGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
 	}
 	return n
 }
@@ -3733,9 +5743,19 @@ func (m *ExportControlId) Size() (n int) {
 func (m *ExportControlSpec) Size() (n int) {
 	var l int
 	_ = l
-	if m.Id != nil {
-		l = m.Id.Size()
+	if m.Meta != nil {
+		l = m.Meta.Size()
 		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if len(m.CollectorKeyHandle) > 0 {
+		for _, e := range m.CollectorKeyHandle {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
 	}
 	if m.ActiveTimeout != 0 {
 		n += 1 + sovTelemetry(uint64(m.ActiveTimeout))
@@ -3749,22 +5769,17 @@ func (m *ExportControlSpec) Size() (n int) {
 func (m *ExportControlStatus) Size() (n int) {
 	var l int
 	_ = l
-	if m.Code != 0 {
-		n += 1 + sovTelemetry(uint64(m.Code))
-	}
-	l = len(m.Status)
-	if l > 0 {
-		n += 1 + l + sovTelemetry(uint64(l))
+	if m.Handle != 0 {
+		n += 9
 	}
 	return n
 }
 
-func (m *ExportControl) Size() (n int) {
+func (m *ExportControlResponse) Size() (n int) {
 	var l int
 	_ = l
-	if m.Spec != nil {
-		l = m.Spec.Size()
-		n += 1 + l + sovTelemetry(uint64(l))
+	if m.ApiStatus != 0 {
+		n += 1 + sovTelemetry(uint64(m.ApiStatus))
 	}
 	if m.Status != nil {
 		l = m.Status.Size()
@@ -3773,11 +5788,11 @@ func (m *ExportControl) Size() (n int) {
 	return n
 }
 
-func (m *ExportControlConfigMsg) Size() (n int) {
+func (m *ExportControlRequestMsg) Size() (n int) {
 	var l int
 	_ = l
-	if len(m.Configs) > 0 {
-		for _, e := range m.Configs {
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
 			l = e.Size()
 			n += 1 + l + sovTelemetry(uint64(l))
 		}
@@ -3788,11 +5803,120 @@ func (m *ExportControlConfigMsg) Size() (n int) {
 func (m *ExportControlResponseMsg) Size() (n int) {
 	var l int
 	_ = l
-	if m.Status != 0 {
-		n += 1 + sovTelemetry(uint64(m.Status))
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
 	}
-	if len(m.ExportControl) > 0 {
-		for _, e := range m.ExportControl {
+	return n
+}
+
+func (m *ExportControlDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *ExportControlDeleteResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTelemetry(uint64(m.ApiStatus))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *ExportControlDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ExportControlDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ExportControlGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *ExportControlGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ExportControlStats) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *ExportControlGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTelemetry(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *ExportControlGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
 			l = e.Size()
 			n += 1 + l + sovTelemetry(uint64(l))
 		}
@@ -3834,8 +5958,12 @@ func (m *FlowMonitorRuleSpec) Size() (n int) {
 		l = m.Meta.Size()
 		n += 1 + l + sovTelemetry(uint64(l))
 	}
-	if m.ExportConfigId != nil {
-		l = m.ExportConfigId.Size()
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.EcKeyHandle != nil {
+		l = m.EcKeyHandle.Size()
 		n += 1 + l + sovTelemetry(uint64(l))
 	}
 	if m.SourceMac != 0 {
@@ -3858,13 +5986,11 @@ func (m *FlowMonitorRuleSpec) Size() (n int) {
 		l = m.DestIp.Size()
 		n += 1 + l + sovTelemetry(uint64(l))
 	}
-	if m.SourceL4Port != nil {
-		l = m.SourceL4Port.Size()
-		n += 1 + l + sovTelemetry(uint64(l))
+	if m.SourceL4Port != 0 {
+		n += 1 + sovTelemetry(uint64(m.SourceL4Port))
 	}
-	if m.DestL4Port != nil {
-		l = m.DestL4Port.Size()
-		n += 1 + l + sovTelemetry(uint64(l))
+	if m.DestL4Port != 0 {
+		n += 1 + sovTelemetry(uint64(m.DestL4Port))
 	}
 	if m.SourceGroupid != 0 {
 		n += 1 + sovTelemetry(uint64(m.SourceGroupid))
@@ -3882,12 +6008,8 @@ func (m *FlowMonitorRuleSpec) Size() (n int) {
 func (m *FlowMonitorRuleStatus) Size() (n int) {
 	var l int
 	_ = l
-	if m.Code != 0 {
-		n += 1 + sovTelemetry(uint64(m.Code))
-	}
-	l = len(m.Status)
-	if l > 0 {
-		n += 1 + l + sovTelemetry(uint64(l))
+	if m.Handle != 0 {
+		n += 9
 	}
 	if m.ActiveFlows != 0 {
 		n += 1 + sovTelemetry(uint64(m.ActiveFlows))
@@ -3895,15 +6017,11 @@ func (m *FlowMonitorRuleStatus) Size() (n int) {
 	return n
 }
 
-func (m *FlowMonitorRule) Size() (n int) {
+func (m *FlowMonitorRuleResponse) Size() (n int) {
 	var l int
 	_ = l
 	if m.ApiStatus != 0 {
 		n += 1 + sovTelemetry(uint64(m.ApiStatus))
-	}
-	if m.Spec != nil {
-		l = m.Spec.Size()
-		n += 1 + l + sovTelemetry(uint64(l))
 	}
 	if m.Status != nil {
 		l = m.Status.Size()
@@ -3912,7 +6030,7 @@ func (m *FlowMonitorRule) Size() (n int) {
 	return n
 }
 
-func (m *FlowMonitorRuleConfigMsg) Size() (n int) {
+func (m *FlowMonitorRuleRequestMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Request) > 0 {
@@ -3927,9 +6045,118 @@ func (m *FlowMonitorRuleConfigMsg) Size() (n int) {
 func (m *FlowMonitorRuleResponseMsg) Size() (n int) {
 	var l int
 	_ = l
-	if m.Status != 0 {
-		n += 1 + sovTelemetry(uint64(m.Status))
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
 	}
+	return n
+}
+
+func (m *FlowMonitorRuleDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *FlowMonitorRuleDeleteResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTelemetry(uint64(m.ApiStatus))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *FlowMonitorRuleDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *FlowMonitorRuleDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *FlowMonitorRuleGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *FlowMonitorRuleGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *FlowMonitorRuleStats) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *FlowMonitorRuleGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTelemetry(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *FlowMonitorRuleGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
 	if len(m.Response) > 0 {
 		for _, e := range m.Response {
 			l = e.Size()
@@ -3942,16 +6169,23 @@ func (m *FlowMonitorRuleResponseMsg) Size() (n int) {
 func (m *DropMonitorRuleSpec) Size() (n int) {
 	var l int
 	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if len(m.MsKeyHandle) > 0 {
+		for _, e := range m.MsKeyHandle {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
 	if m.Reasons != nil {
 		l = m.Reasons.Size()
 		n += 1 + l + sovTelemetry(uint64(l))
-	}
-	if len(m.MirrorDestinations) > 0 {
-		l = 0
-		for _, e := range m.MirrorDestinations {
-			l += sovTelemetry(uint64(e))
-		}
-		n += 1 + sovTelemetry(uint64(l)) + l
 	}
 	return n
 }
@@ -3959,25 +6193,20 @@ func (m *DropMonitorRuleSpec) Size() (n int) {
 func (m *DropMonitorRuleStatus) Size() (n int) {
 	var l int
 	_ = l
-	if m.Code != 0 {
-		n += 1 + sovTelemetry(uint64(m.Code))
+	if m.Handle != 0 {
+		n += 9
 	}
-	l = len(m.Status)
-	if l > 0 {
-		n += 1 + l + sovTelemetry(uint64(l))
+	if m.ActiveFlows != 0 {
+		n += 1 + sovTelemetry(uint64(m.ActiveFlows))
 	}
 	return n
 }
 
-func (m *DropMonitorRule) Size() (n int) {
+func (m *DropMonitorRuleResponse) Size() (n int) {
 	var l int
 	_ = l
 	if m.ApiStatus != 0 {
 		n += 1 + sovTelemetry(uint64(m.ApiStatus))
-	}
-	if m.Spec != nil {
-		l = m.Spec.Size()
-		n += 1 + l + sovTelemetry(uint64(l))
 	}
 	if m.Status != nil {
 		l = m.Status.Size()
@@ -3986,7 +6215,7 @@ func (m *DropMonitorRule) Size() (n int) {
 	return n
 }
 
-func (m *DropMonitorRuleConfigMsg) Size() (n int) {
+func (m *DropMonitorRuleRequestMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Request) > 0 {
@@ -4001,9 +6230,118 @@ func (m *DropMonitorRuleConfigMsg) Size() (n int) {
 func (m *DropMonitorRuleResponseMsg) Size() (n int) {
 	var l int
 	_ = l
-	if m.Status != 0 {
-		n += 1 + sovTelemetry(uint64(m.Status))
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
 	}
+	return n
+}
+
+func (m *DropMonitorRuleDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *DropMonitorRuleDeleteResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTelemetry(uint64(m.ApiStatus))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *DropMonitorRuleDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *DropMonitorRuleDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *DropMonitorRuleGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *DropMonitorRuleGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *DropMonitorRuleStats) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *DropMonitorRuleGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTelemetry(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *DropMonitorRuleGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
 	if len(m.Response) > 0 {
 		for _, e := range m.Response {
 			l = e.Size()
@@ -4048,15 +6386,6 @@ func (m *ERSpanSpec) Size() (n int) {
 	return n
 }
 
-func (m *MirrorSessionId) Size() (n int) {
-	var l int
-	_ = l
-	if m.SessionId != 0 {
-		n += 1 + sovTelemetry(uint64(m.SessionId))
-	}
-	return n
-}
-
 func (m *MirrorSessionSpec) Size() (n int) {
 	var l int
 	_ = l
@@ -4064,8 +6393,8 @@ func (m *MirrorSessionSpec) Size() (n int) {
 		l = m.Meta.Size()
 		n += 1 + l + sovTelemetry(uint64(l))
 	}
-	if m.Id != nil {
-		l = m.Id.Size()
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
 		n += 1 + l + sovTelemetry(uint64(l))
 	}
 	if m.Snaplen != 0 {
@@ -4107,12 +6436,8 @@ func (m *MirrorSessionSpec_ErspanSpec) Size() (n int) {
 func (m *MirrorSessionStatus) Size() (n int) {
 	var l int
 	_ = l
-	if m.Code != 0 {
-		n += 1 + sovTelemetry(uint64(m.Code))
-	}
-	l = len(m.Status)
-	if l > 0 {
-		n += 1 + l + sovTelemetry(uint64(l))
+	if m.Handle != 0 {
+		n += 9
 	}
 	if m.ActiveFlows != 0 {
 		n += 1 + sovTelemetry(uint64(m.ActiveFlows))
@@ -4120,15 +6445,11 @@ func (m *MirrorSessionStatus) Size() (n int) {
 	return n
 }
 
-func (m *MirrorSession) Size() (n int) {
+func (m *MirrorSessionResponse) Size() (n int) {
 	var l int
 	_ = l
 	if m.ApiStatus != 0 {
 		n += 1 + sovTelemetry(uint64(m.ApiStatus))
-	}
-	if m.Spec != nil {
-		l = m.Spec.Size()
-		n += 1 + l + sovTelemetry(uint64(l))
 	}
 	if m.Status != nil {
 		l = m.Status.Size()
@@ -4137,19 +6458,7 @@ func (m *MirrorSession) Size() (n int) {
 	return n
 }
 
-func (m *MirrorSessionConfigMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
-			l = e.Size()
-			n += 1 + l + sovTelemetry(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MirrorSessionDeleteMsg) Size() (n int) {
+func (m *MirrorSessionRequestMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Request) > 0 {
@@ -4164,9 +6473,118 @@ func (m *MirrorSessionDeleteMsg) Size() (n int) {
 func (m *MirrorSessionResponseMsg) Size() (n int) {
 	var l int
 	_ = l
-	if m.Status != 0 {
-		n += 1 + sovTelemetry(uint64(m.Status))
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
 	}
+	return n
+}
+
+func (m *MirrorSessionDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *MirrorSessionDeleteResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTelemetry(uint64(m.ApiStatus))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *MirrorSessionDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MirrorSessionDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MirrorSessionGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *MirrorSessionGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MirrorSessionStats) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MirrorSessionGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTelemetry(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *MirrorSessionGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
 	if len(m.Response) > 0 {
 		for _, e := range m.Response {
 			l = e.Size()
@@ -4188,75 +6606,6 @@ func sovTelemetry(x uint64) (n int) {
 }
 func sozTelemetry(x uint64) (n int) {
 	return sovTelemetry(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *L4Port) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTelemetry
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: L4Port: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: L4Port: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Port", wireType)
-			}
-			m.Port = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Port |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTelemetry(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *CollectorSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -4322,7 +6671,7 @@ func (m *CollectorSpec) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExportControlId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4346,10 +6695,10 @@ func (m *CollectorSpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ExportControlId == nil {
-				m.ExportControlId = &ExportControlId{}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &CollectorKeyHandle{}
 			}
-			if err := m.ExportControlId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4387,15 +6736,38 @@ func (m *CollectorSpec) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 4:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field L2SegHandle", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field L2SegKeyHandle", wireType)
 			}
-			m.L2SegHandle = 0
-			if (iNdEx + 8) > l {
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.L2SegHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
+			if m.L2SegKeyHandle == nil {
+				m.L2SegKeyHandle = &L2SegmentKeyHandle{}
+			}
+			if err := m.L2SegKeyHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DestIp", wireType)
@@ -4482,10 +6854,10 @@ func (m *CollectorSpec) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 8:
-			if wireType != 2 {
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DestPort", wireType)
 			}
-			var msglen int
+			m.DestPort = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTelemetry
@@ -4495,25 +6867,11 @@ func (m *CollectorSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				m.DestPort |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.DestPort == nil {
-				m.DestPort = &L4Port{}
-			}
-			if err := m.DestPort.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Format", wireType)
@@ -4603,53 +6961,15 @@ func (m *CollectorStatus) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Handle", wireType)
 			}
-			m.Code = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Code |= (CollectorStatus_CollectorStatusCode(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
+			m.Handle = 0
+			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Status = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
+			m.Handle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTelemetry(dAtA[iNdEx:])
@@ -4671,7 +6991,7 @@ func (m *CollectorStatus) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Collector) Unmarshal(dAtA []byte) error {
+func (m *CollectorResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4694,10 +7014,10 @@ func (m *Collector) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Collector: wiretype end group for non-group")
+			return fmt.Errorf("proto: CollectorResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Collector: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CollectorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4720,39 +7040,6 @@ func (m *Collector) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Spec == nil {
-				m.Spec = &CollectorSpec{}
-			}
-			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
 			}
@@ -4806,7 +7093,7 @@ func (m *Collector) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CollectorConfigMsg) Unmarshal(dAtA []byte) error {
+func (m *CollectorRequestMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4829,10 +7116,10 @@ func (m *CollectorConfigMsg) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CollectorConfigMsg: wiretype end group for non-group")
+			return fmt.Errorf("proto: CollectorRequestMsg: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CollectorConfigMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CollectorRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4917,25 +7204,6 @@ func (m *CollectorResponseMsg) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			m.Status = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Status |= (ApiStatus(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
 			}
@@ -4961,7 +7229,7 @@ func (m *CollectorResponseMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Response = append(m.Response, &Collector{})
+			m.Response = append(m.Response, &CollectorResponse{})
 			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -4987,7 +7255,7 @@ func (m *CollectorResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ExportControlId) Unmarshal(dAtA []byte) error {
+func (m *CollectorDeleteRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5010,10 +7278,10 @@ func (m *ExportControlId) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ExportControlId: wiretype end group for non-group")
+			return fmt.Errorf("proto: CollectorDeleteRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ExportControlId: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CollectorDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5050,10 +7318,10 @@ func (m *ExportControlId) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
 			}
-			m.Id = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTelemetry
@@ -5063,11 +7331,752 @@ func (m *ExportControlId) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= (uint64(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &CollectorKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CollectorDeleteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CollectorDeleteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CollectorDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &CollectorKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CollectorDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CollectorDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CollectorDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &CollectorDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CollectorDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CollectorDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CollectorDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &CollectorDeleteResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CollectorGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CollectorGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CollectorGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &CollectorKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CollectorGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CollectorGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CollectorGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &CollectorGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CollectorStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CollectorStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CollectorStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CollectorGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CollectorGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CollectorGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &CollectorSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &CollectorStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CollectorGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CollectorGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CollectorGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &CollectorGetResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTelemetry(dAtA[iNdEx:])
@@ -5120,7 +8129,7 @@ func (m *ExportControlSpec) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -5144,14 +8153,78 @@ func (m *ExportControlSpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Id == nil {
-				m.Id = &ExportControlId{}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
 			}
-			if err := m.Id.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &ExportControlKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CollectorKeyHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CollectorKeyHandle = append(m.CollectorKeyHandle, &CollectorKeyHandle{})
+			if err := m.CollectorKeyHandle[len(m.CollectorKeyHandle)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ActiveTimeout", wireType)
 			}
@@ -5170,7 +8243,7 @@ func (m *ExportControlSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InactiveTimeout", wireType)
 			}
@@ -5240,53 +8313,15 @@ func (m *ExportControlStatus) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Handle", wireType)
 			}
-			m.Code = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Code |= (ExportControlStatus_ExportControlStatusCode(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
+			m.Handle = 0
+			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Status = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
+			m.Handle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTelemetry(dAtA[iNdEx:])
@@ -5308,7 +8343,7 @@ func (m *ExportControlStatus) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ExportControl) Unmarshal(dAtA []byte) error {
+func (m *ExportControlResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5331,17 +8366,17 @@ func (m *ExportControl) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ExportControl: wiretype end group for non-group")
+			return fmt.Errorf("proto: ExportControlResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ExportControl: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ExportControlResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
 			}
-			var msglen int
+			m.ApiStatus = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTelemetry
@@ -5351,25 +8386,11 @@ func (m *ExportControl) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Spec == nil {
-				m.Spec = &ExportControlSpec{}
-			}
-			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
@@ -5424,7 +8445,7 @@ func (m *ExportControl) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ExportControlConfigMsg) Unmarshal(dAtA []byte) error {
+func (m *ExportControlRequestMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5447,15 +8468,15 @@ func (m *ExportControlConfigMsg) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ExportControlConfigMsg: wiretype end group for non-group")
+			return fmt.Errorf("proto: ExportControlRequestMsg: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ExportControlConfigMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ExportControlRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Configs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -5479,8 +8500,8 @@ func (m *ExportControlConfigMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Configs = append(m.Configs, &ExportControlSpec{})
-			if err := m.Configs[len(m.Configs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Request = append(m.Request, &ExportControlSpec{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -5535,27 +8556,8 @@ func (m *ExportControlResponseMsg) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			m.Status = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Status |= (ApiStatus(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExportControl", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -5579,8 +8581,851 @@ func (m *ExportControlResponseMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ExportControl = append(m.ExportControl, &ExportControl{})
-			if err := m.ExportControl[len(m.ExportControl)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Response = append(m.Response, &ExportControlResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ExportControlDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ExportControlDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ExportControlDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &ExportControlKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ExportControlDeleteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ExportControlDeleteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ExportControlDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &ExportControlKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ExportControlDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ExportControlDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ExportControlDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &ExportControlDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ExportControlDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ExportControlDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ExportControlDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &ExportControlDeleteResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ExportControlGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ExportControlGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ExportControlGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &ExportControlKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ExportControlGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ExportControlGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ExportControlGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &ExportControlGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ExportControlStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ExportControlStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ExportControlStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ExportControlGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ExportControlGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ExportControlGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &ExportControlSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &ExportControlStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ExportControlGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ExportControlGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ExportControlGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &ExportControlGetResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -5905,7 +9750,7 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExportConfigId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -5929,14 +9774,47 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ExportConfigId == nil {
-				m.ExportConfigId = &ExportControlId{}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &FlowMonitorRuleKeyHandle{}
 			}
-			if err := m.ExportConfigId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EcKeyHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.EcKeyHandle == nil {
+				m.EcKeyHandle = &ExportControlKeyHandle{}
+			}
+			if err := m.EcKeyHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SourceMac", wireType)
 			}
@@ -5955,7 +9833,7 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 4:
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DestMac", wireType)
 			}
@@ -5974,7 +9852,7 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 5:
+		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Ethertype", wireType)
 			}
@@ -5993,7 +9871,7 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 6:
+		case 7:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Protocol", wireType)
 			}
@@ -6012,7 +9890,7 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 7:
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SourceIp", wireType)
 			}
@@ -6045,7 +9923,7 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 8:
+		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DestIp", wireType)
 			}
@@ -6078,11 +9956,11 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 9:
-			if wireType != 2 {
+		case 10:
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SourceL4Port", wireType)
 			}
-			var msglen int
+			m.SourceL4Port = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTelemetry
@@ -6092,30 +9970,16 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				m.SourceL4Port |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.SourceL4Port == nil {
-				m.SourceL4Port = &L4Port{}
-			}
-			if err := m.SourceL4Port.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 10:
-			if wireType != 2 {
+		case 11:
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DestL4Port", wireType)
 			}
-			var msglen int
+			m.DestL4Port = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTelemetry
@@ -6125,26 +9989,12 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				m.DestL4Port |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.DestL4Port == nil {
-				m.DestL4Port = &L4Port{}
-			}
-			if err := m.DestL4Port.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 11:
+		case 12:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SourceGroupid", wireType)
 			}
@@ -6163,7 +10013,7 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 12:
+		case 13:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DestGroupid", wireType)
 			}
@@ -6182,7 +10032,7 @@ func (m *FlowMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 13:
+		case 14:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
 			}
@@ -6266,54 +10116,16 @@ func (m *FlowMonitorRuleStatus) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Handle", wireType)
 			}
-			m.Code = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Code |= (FlowMonitorRuleStatus_FlowMonitorRuleStatusCode(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
+			m.Handle = 0
+			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Status = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
+			m.Handle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ActiveFlows", wireType)
 			}
@@ -6353,7 +10165,7 @@ func (m *FlowMonitorRuleStatus) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *FlowMonitorRule) Unmarshal(dAtA []byte) error {
+func (m *FlowMonitorRuleResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6376,10 +10188,10 @@ func (m *FlowMonitorRule) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: FlowMonitorRule: wiretype end group for non-group")
+			return fmt.Errorf("proto: FlowMonitorRuleResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: FlowMonitorRule: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: FlowMonitorRuleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6402,39 +10214,6 @@ func (m *FlowMonitorRule) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Spec == nil {
-				m.Spec = &FlowMonitorRuleSpec{}
-			}
-			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
 			}
@@ -6488,7 +10267,7 @@ func (m *FlowMonitorRule) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *FlowMonitorRuleConfigMsg) Unmarshal(dAtA []byte) error {
+func (m *FlowMonitorRuleRequestMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6511,10 +10290,10 @@ func (m *FlowMonitorRuleConfigMsg) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: FlowMonitorRuleConfigMsg: wiretype end group for non-group")
+			return fmt.Errorf("proto: FlowMonitorRuleRequestMsg: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: FlowMonitorRuleConfigMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: FlowMonitorRuleRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6599,25 +10378,6 @@ func (m *FlowMonitorRuleResponseMsg) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			m.Status = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Status |= (ApiStatus(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
 			}
@@ -6643,7 +10403,850 @@ func (m *FlowMonitorRuleResponseMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Response = append(m.Response, &FlowMonitorRule{})
+			m.Response = append(m.Response, &FlowMonitorRuleResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowMonitorRuleDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowMonitorRuleDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowMonitorRuleDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &FlowMonitorRuleKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowMonitorRuleDeleteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowMonitorRuleDeleteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowMonitorRuleDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &FlowMonitorRuleKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowMonitorRuleDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowMonitorRuleDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowMonitorRuleDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &FlowMonitorRuleDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowMonitorRuleDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowMonitorRuleDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowMonitorRuleDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &FlowMonitorRuleDeleteResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowMonitorRuleGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowMonitorRuleGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowMonitorRuleGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &FlowMonitorRuleKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowMonitorRuleGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowMonitorRuleGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowMonitorRuleGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &FlowMonitorRuleGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowMonitorRuleStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowMonitorRuleStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowMonitorRuleStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowMonitorRuleGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowMonitorRuleGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowMonitorRuleGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &FlowMonitorRuleSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &FlowMonitorRuleStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowMonitorRuleGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowMonitorRuleGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowMonitorRuleGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &FlowMonitorRuleGetResponse{})
 			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -6700,6 +11303,103 @@ func (m *DropMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &DropMonitorRuleKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsKeyHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsKeyHandle = append(m.MsKeyHandle, &MirrorSessionKeyHandle{})
+			if err := m.MsKeyHandle[len(m.MsKeyHandle)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Reasons", wireType)
 			}
 			var msglen int
@@ -6731,68 +11431,6 @@ func (m *DropMonitorRuleSpec) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
-			if wireType == 0 {
-				var v uint32
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowTelemetry
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= (uint32(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.MirrorDestinations = append(m.MirrorDestinations, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowTelemetry
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= (int(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthTelemetry
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				for iNdEx < postIndex {
-					var v uint32
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowTelemetry
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= (uint32(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.MirrorDestinations = append(m.MirrorDestinations, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field MirrorDestinations", wireType)
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTelemetry(dAtA[iNdEx:])
@@ -6844,53 +11482,34 @@ func (m *DropMonitorRuleStatus) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Handle", wireType)
 			}
-			m.Code = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Code |= (DropMonitorRuleStatus_DropMonitorRuleStatusCode(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
+			m.Handle = 0
+			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Status = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
+			m.Handle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ActiveFlows", wireType)
+			}
+			m.ActiveFlows = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ActiveFlows |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTelemetry(dAtA[iNdEx:])
@@ -6912,7 +11531,7 @@ func (m *DropMonitorRuleStatus) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DropMonitorRule) Unmarshal(dAtA []byte) error {
+func (m *DropMonitorRuleResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6935,10 +11554,10 @@ func (m *DropMonitorRule) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DropMonitorRule: wiretype end group for non-group")
+			return fmt.Errorf("proto: DropMonitorRuleResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DropMonitorRule: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DropMonitorRuleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6961,39 +11580,6 @@ func (m *DropMonitorRule) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Spec == nil {
-				m.Spec = &DropMonitorRuleSpec{}
-			}
-			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
 			}
@@ -7047,7 +11633,7 @@ func (m *DropMonitorRule) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DropMonitorRuleConfigMsg) Unmarshal(dAtA []byte) error {
+func (m *DropMonitorRuleRequestMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -7070,10 +11656,10 @@ func (m *DropMonitorRuleConfigMsg) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DropMonitorRuleConfigMsg: wiretype end group for non-group")
+			return fmt.Errorf("proto: DropMonitorRuleRequestMsg: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DropMonitorRuleConfigMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DropMonitorRuleRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -7158,25 +11744,6 @@ func (m *DropMonitorRuleResponseMsg) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			m.Status = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Status |= (ApiStatus(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
 			}
@@ -7202,7 +11769,850 @@ func (m *DropMonitorRuleResponseMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Response = append(m.Response, &DropMonitorRule{})
+			m.Response = append(m.Response, &DropMonitorRuleResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DropMonitorRuleDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DropMonitorRuleDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DropMonitorRuleDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &DropMonitorRuleKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DropMonitorRuleDeleteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DropMonitorRuleDeleteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DropMonitorRuleDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &DropMonitorRuleKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DropMonitorRuleDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DropMonitorRuleDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DropMonitorRuleDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &DropMonitorRuleDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DropMonitorRuleDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DropMonitorRuleDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DropMonitorRuleDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &DropMonitorRuleDeleteResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DropMonitorRuleGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DropMonitorRuleGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DropMonitorRuleGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &DropMonitorRuleKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DropMonitorRuleGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DropMonitorRuleGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DropMonitorRuleGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &DropMonitorRuleGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DropMonitorRuleStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DropMonitorRuleStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DropMonitorRuleStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DropMonitorRuleGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DropMonitorRuleGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DropMonitorRuleGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &DropMonitorRuleSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &DropMonitorRuleStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DropMonitorRuleGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DropMonitorRuleGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DropMonitorRuleGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &DropMonitorRuleGetResponse{})
 			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -7508,75 +12918,6 @@ func (m *ERSpanSpec) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MirrorSessionId) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTelemetry
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MirrorSessionId: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MirrorSessionId: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SessionId", wireType)
-			}
-			m.SessionId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.SessionId |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTelemetry(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *MirrorSessionSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -7641,7 +12982,7 @@ func (m *MirrorSessionSpec) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -7665,10 +13006,10 @@ func (m *MirrorSessionSpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Id == nil {
-				m.Id = &MirrorSessionId{}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &MirrorSessionKeyHandle{}
 			}
-			if err := m.Id.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -7838,54 +13179,16 @@ func (m *MirrorSessionStatus) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Handle", wireType)
 			}
-			m.Code = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Code |= (MirrorSessionStatus_MirrorSessionStatusCode(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
+			m.Handle = 0
+			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Status = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
+			m.Handle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ActiveFlows", wireType)
 			}
@@ -7899,7 +13202,7 @@ func (m *MirrorSessionStatus) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ActiveFlows |= (int32(b) & 0x7F) << shift
+				m.ActiveFlows |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7925,7 +13228,7 @@ func (m *MirrorSessionStatus) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MirrorSession) Unmarshal(dAtA []byte) error {
+func (m *MirrorSessionResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -7948,10 +13251,901 @@ func (m *MirrorSession) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MirrorSession: wiretype end group for non-group")
+			return fmt.Errorf("proto: MirrorSessionResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MirrorSession: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MirrorSessionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &MirrorSessionStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MirrorSessionRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MirrorSessionRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MirrorSessionRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &MirrorSessionSpec{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MirrorSessionResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MirrorSessionResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MirrorSessionResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &MirrorSessionResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MirrorSessionDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MirrorSessionDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MirrorSessionDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &MirrorSessionKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MirrorSessionDeleteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MirrorSessionDeleteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MirrorSessionDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &MirrorSessionKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MirrorSessionDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MirrorSessionDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MirrorSessionDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &MirrorSessionDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MirrorSessionDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MirrorSessionDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MirrorSessionDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &MirrorSessionDeleteResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MirrorSessionGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MirrorSessionGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MirrorSessionGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &MirrorSessionKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MirrorSessionGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MirrorSessionGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MirrorSessionGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &MirrorSessionGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MirrorSessionStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MirrorSessionStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MirrorSessionStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MirrorSessionGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MirrorSessionGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MirrorSessionGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -8008,7 +14202,7 @@ func (m *MirrorSession) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -8032,10 +14226,10 @@ func (m *MirrorSession) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Status == nil {
-				m.Status = &MirrorSessionStatus{}
+			if m.Stats == nil {
+				m.Stats = &MirrorSessionStats{}
 			}
-			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -8060,7 +14254,7 @@ func (m *MirrorSession) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MirrorSessionConfigMsg) Unmarshal(dAtA []byte) error {
+func (m *MirrorSessionGetResponseMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -8083,194 +14277,13 @@ func (m *MirrorSessionConfigMsg) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MirrorSessionConfigMsg: wiretype end group for non-group")
+			return fmt.Errorf("proto: MirrorSessionGetResponseMsg: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MirrorSessionConfigMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MirrorSessionGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &MirrorSessionSpec{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTelemetry(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MirrorSessionDeleteMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTelemetry
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MirrorSessionDeleteMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MirrorSessionDeleteMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &MirrorSessionId{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTelemetry(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MirrorSessionResponseMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTelemetry
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MirrorSessionResponseMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MirrorSessionResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			m.Status = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Status |= (ApiStatus(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
 			}
@@ -8296,7 +14309,7 @@ func (m *MirrorSessionResponseMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Response = append(m.Response, &MirrorSession{})
+			m.Response = append(m.Response, &MirrorSessionGetResponse{})
 			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -8430,134 +14443,166 @@ var (
 func init() { proto.RegisterFile("telemetry.proto", fileDescriptorTelemetry) }
 
 var fileDescriptorTelemetry = []byte{
-	// 2056 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x58, 0x4f, 0x73, 0xdb, 0xd6,
-	0x11, 0x17, 0x48, 0x8a, 0x24, 0x96, 0x22, 0x09, 0x3d, 0xf9, 0x0f, 0xad, 0x71, 0x64, 0x07, 0x19,
-	0xb7, 0x8a, 0xc6, 0x96, 0x1d, 0xda, 0x75, 0x52, 0xb7, 0x33, 0x1d, 0x9a, 0xa2, 0x2c, 0xb4, 0x12,
-	0xc9, 0x79, 0xa4, 0xdc, 0x8c, 0x0f, 0x41, 0x60, 0xf0, 0x91, 0x42, 0x42, 0x02, 0x28, 0x00, 0x25,
-	0x51, 0x0f, 0x3d, 0xb5, 0xc7, 0x1e, 0x7a, 0xeb, 0xa9, 0x1f, 0xa0, 0xd3, 0x43, 0x3f, 0x41, 0xcf,
-	0x6d, 0x67, 0x3a, 0x93, 0x6b, 0x2f, 0x9d, 0xd6, 0xfd, 0x06, 0xbd, 0xb6, 0x87, 0x0e, 0xde, 0x03,
-	0x40, 0x00, 0x04, 0x48, 0x4a, 0xa6, 0x4f, 0x24, 0x76, 0x7f, 0x6f, 0x77, 0xdf, 0xee, 0xbe, 0x7d,
-	0xbb, 0x0f, 0xaa, 0x0e, 0x19, 0x93, 0x09, 0x71, 0xac, 0x8b, 0x7d, 0xd3, 0x32, 0x1c, 0x03, 0xf1,
-	0x01, 0x61, 0xbb, 0xe4, 0x5c, 0x98, 0xc4, 0x66, 0xf4, 0xed, 0xe2, 0x97, 0x67, 0xec, 0x9f, 0x78,
-	0x1b, 0xf2, 0xc7, 0x4f, 0xba, 0x86, 0xe5, 0x20, 0x04, 0x39, 0xd3, 0xb0, 0x9c, 0x1a, 0x77, 0x97,
-	0xdb, 0x2d, 0x63, 0xfa, 0x5f, 0xfc, 0x5b, 0x16, 0xca, 0x4d, 0x63, 0x3c, 0x26, 0xaa, 0x63, 0x58,
-	0x3d, 0x93, 0xa8, 0xe8, 0x1e, 0xe4, 0x26, 0xc4, 0x51, 0x28, 0xaa, 0x54, 0xdf, 0xdc, 0x67, 0x52,
-	0x3b, 0xaf, 0xbf, 0x20, 0xaa, 0x73, 0x42, 0x1c, 0x05, 0x53, 0x36, 0x6a, 0x81, 0x40, 0xbe, 0x71,
-	0x45, 0xc8, 0xaa, 0xa1, 0x3b, 0x96, 0x31, 0x96, 0x06, 0xb5, 0x0c, 0x5d, 0xb2, 0xbd, 0x3f, 0x35,
-	0xb2, 0x45, 0x21, 0x4d, 0x1f, 0x81, 0xab, 0x24, 0x4a, 0x40, 0xdf, 0x81, 0x75, 0xa2, 0xab, 0x8a,
-	0x59, 0xcb, 0xd2, 0xb5, 0x82, 0xa7, 0xae, 0xe5, 0xd2, 0x24, 0x7d, 0x68, 0x60, 0xc6, 0x46, 0xef,
-	0xc3, 0xc6, 0xb8, 0x6e, 0x93, 0x91, 0x7c, 0xa6, 0xe8, 0x83, 0x31, 0xa9, 0xe5, 0xee, 0x72, 0xbb,
-	0x79, 0x5c, 0xa2, 0xb4, 0x23, 0x4a, 0x42, 0x1f, 0x42, 0x61, 0x40, 0x6c, 0x47, 0xd6, 0xcc, 0xda,
-	0x7a, 0x44, 0x98, 0xd4, 0x6d, 0x0c, 0x06, 0x16, 0xb1, 0x6d, 0x9c, 0x77, 0x01, 0x92, 0x89, 0xbe,
-	0x0b, 0x79, 0xdb, 0x52, 0x5d, 0x64, 0x3e, 0x05, 0xb9, 0x6e, 0x5b, 0xaa, 0x64, 0xa2, 0x07, 0x50,
-	0xa4, 0x5e, 0x54, 0x8d, 0x71, 0xad, 0x70, 0x97, 0xdb, 0xad, 0x04, 0x0e, 0x91, 0xba, 0x5d, 0x8f,
-	0x81, 0x03, 0x08, 0xda, 0x07, 0x9e, 0x9a, 0x40, 0xdd, 0x5c, 0xf4, 0x1d, 0x18, 0x78, 0x83, 0xc5,
-	0x01, 0x17, 0x5d, 0x0c, 0x8d, 0xc8, 0x43, 0xc8, 0x0f, 0x0d, 0x6b, 0xa2, 0x38, 0x35, 0x9e, 0x0a,
-	0xbf, 0x39, 0xe3, 0xba, 0x43, 0xca, 0xc6, 0x1e, 0x0c, 0xdd, 0x81, 0x92, 0x43, 0x26, 0xe6, 0x58,
-	0x71, 0x88, 0xac, 0x0d, 0x6a, 0x40, 0x23, 0x09, 0x3e, 0x49, 0x1a, 0x88, 0x7f, 0xe1, 0xa0, 0x3a,
-	0x8d, 0xa7, 0xa3, 0x38, 0xe7, 0x36, 0x7a, 0x0e, 0x39, 0xd5, 0x18, 0x10, 0x1a, 0xd1, 0x4a, 0x7d,
-	0x3f, 0xa4, 0x23, 0x86, 0x8c, 0x7f, 0x37, 0x8d, 0x01, 0xc1, 0x74, 0x2d, 0xba, 0x01, 0x79, 0x9b,
-	0xd2, 0x68, 0x90, 0x79, 0xec, 0x7d, 0x89, 0xaf, 0x60, 0x2b, 0x61, 0x11, 0x2a, 0x41, 0xa1, 0x77,
-	0xda, 0x6c, 0xb6, 0x7a, 0x3d, 0x61, 0x0d, 0x21, 0xa8, 0x48, 0xed, 0x97, 0x8d, 0x63, 0xe9, 0x40,
-	0x6e, 0x76, 0xda, 0x87, 0xd2, 0x0b, 0x81, 0x43, 0x02, 0x6c, 0xf4, 0x5b, 0x27, 0x5d, 0xf9, 0xb0,
-	0x21, 0x1d, 0x9f, 0xe2, 0x96, 0x90, 0x71, 0x29, 0xdd, 0x16, 0x3e, 0x09, 0x28, 0x59, 0xf1, 0x77,
-	0x1c, 0xf0, 0x81, 0x70, 0xf4, 0x10, 0x40, 0x31, 0x35, 0xd9, 0xb3, 0x82, 0xed, 0xc5, 0x8f, 0x5b,
-	0xc3, 0xd4, 0x98, 0x72, 0xcc, 0x2b, 0xfe, 0x5f, 0x74, 0x1f, 0x72, 0xb6, 0x49, 0x54, 0x2f, 0x2b,
-	0x6b, 0x89, 0xdb, 0x36, 0x89, 0x8a, 0x29, 0x0a, 0xd5, 0x83, 0x0d, 0x66, 0x67, 0xb2, 0x38, 0xb6,
-	0xc3, 0x60, 0xf3, 0x47, 0x80, 0x02, 0x56, 0xd3, 0xd0, 0x87, 0xda, 0xe8, 0xc4, 0x1e, 0xa1, 0x3a,
-	0x14, 0x2c, 0xf2, 0xb3, 0x73, 0x62, 0xbb, 0x27, 0x2d, 0x3b, 0x57, 0xb5, 0x0f, 0x14, 0x2d, 0xb8,
-	0x16, 0x70, 0x30, 0xb1, 0x4d, 0x43, 0xb7, 0x89, 0x2b, 0x6b, 0x37, 0xb0, 0x2a, 0x6d, 0xc3, 0x1e,
-	0x1f, 0x3d, 0x82, 0xa2, 0xe5, 0x2d, 0xac, 0x65, 0xa8, 0xda, 0x6b, 0x49, 0x6a, 0x71, 0x80, 0x12,
-	0x8f, 0xa0, 0x1a, 0x3b, 0x9e, 0xcb, 0x9e, 0xfd, 0x0a, 0x64, 0xbc, 0xd3, 0x9e, 0xc3, 0x19, 0x69,
-	0x20, 0xfe, 0x86, 0x83, 0xcd, 0x88, 0x28, 0x5a, 0x48, 0xf6, 0x28, 0x8a, 0x5b, 0x58, 0x13, 0x32,
-	0x54, 0x71, 0x45, 0x51, 0x1d, 0xed, 0x2b, 0x22, 0x3b, 0xda, 0x84, 0x18, 0xe7, 0x0e, 0x95, 0x5e,
-	0xc6, 0x65, 0x46, 0xed, 0x33, 0x22, 0xfa, 0x10, 0x04, 0x4d, 0x8f, 0x01, 0xb3, 0x14, 0x58, 0xf5,
-	0xe9, 0x1e, 0x54, 0xfc, 0x3b, 0x07, 0x5b, 0x51, 0x9b, 0x98, 0x9f, 0x7e, 0x1c, 0x39, 0x0c, 0x4f,
-	0xd3, 0xec, 0xf2, 0x0e, 0x44, 0x02, 0x6d, 0x89, 0x43, 0xf1, 0x19, 0xdc, 0x4c, 0x59, 0xb8, 0x9a,
-	0x83, 0x71, 0x01, 0xe5, 0x88, 0x7c, 0xf4, 0xc8, 0x4b, 0x75, 0xe6, 0xec, 0xdb, 0xa9, 0x9b, 0x9a,
-	0xa6, 0xfb, 0xd3, 0x88, 0xe9, 0xa5, 0xfa, 0xce, 0x7c, 0x47, 0x04, 0x5b, 0xeb, 0xc2, 0x8d, 0x08,
-	0x7b, 0x9a, 0xf6, 0x4f, 0xa1, 0xa0, 0xd2, 0x0f, 0xdb, 0x4b, 0xfb, 0xf9, 0x66, 0xf8, 0x60, 0xf1,
-	0x57, 0x1c, 0xd4, 0x22, 0xec, 0xab, 0xe5, 0xff, 0x8f, 0xa0, 0x12, 0xbd, 0x8f, 0xbc, 0x53, 0x50,
-	0x4b, 0xb3, 0x02, 0x97, 0x23, 0x77, 0x91, 0xf8, 0x07, 0x0e, 0xca, 0x27, 0x86, 0xae, 0x39, 0x86,
-	0xd5, 0x50, 0x1d, 0xcd, 0xd0, 0xd1, 0x03, 0xc8, 0x2b, 0xf4, 0x1f, 0xdd, 0x50, 0xa5, 0x7e, 0x3d,
-	0x24, 0x0a, 0x9f, 0x8f, 0x09, 0x83, 0x61, 0x0f, 0x84, 0x7e, 0x00, 0xa0, 0x8c, 0x46, 0xb2, 0xad,
-	0x9e, 0x91, 0x09, 0x3b, 0x83, 0x95, 0x88, 0x0f, 0x1a, 0xa3, 0x91, 0x45, 0x46, 0x8a, 0x8b, 0xed,
-	0x51, 0x0c, 0xe6, 0x95, 0xd1, 0x88, 0xfd, 0x45, 0x0f, 0x61, 0x6b, 0xa2, 0x59, 0x96, 0x61, 0xc9,
-	0xee, 0xe5, 0xa0, 0xe9, 0x14, 0xe6, 0xd6, 0xa2, 0xec, 0x6e, 0x19, 0x23, 0xc6, 0x3a, 0x08, 0x71,
-	0xc4, 0xbf, 0xe6, 0x60, 0xeb, 0x70, 0x6c, 0x7c, 0xed, 0x99, 0xec, 0xda, 0x73, 0x99, 0xeb, 0xbb,
-	0x09, 0xd5, 0xa9, 0xbb, 0x86, 0xda, 0x68, 0xa9, 0xdb, 0xbb, 0x12, 0x78, 0x8c, 0xae, 0x40, 0xef,
-	0x01, 0xd8, 0xc6, 0xb9, 0xa5, 0x12, 0x79, 0xa2, 0xa8, 0xf4, 0x20, 0xe6, 0x30, 0xcf, 0x28, 0x27,
-	0x8a, 0x8a, 0x6e, 0x01, 0xbd, 0xe9, 0x28, 0x33, 0x47, 0x99, 0xf4, 0x82, 0x76, 0x59, 0xb7, 0x81,
-	0x27, 0xce, 0x19, 0xb1, 0x5c, 0xeb, 0xe8, 0x6d, 0x5d, 0xc6, 0x53, 0x42, 0xe4, 0xd6, 0xcd, 0x2f,
-	0xbe, 0x75, 0xef, 0x83, 0xa7, 0xd4, 0xbd, 0xd0, 0x0b, 0x74, 0x17, 0xd5, 0x10, 0x9e, 0x0c, 0xb5,
-	0x6f, 0x70, 0x91, 0x21, 0x24, 0x13, 0xed, 0x4e, 0xdb, 0x84, 0x62, 0x32, 0xd6, 0xef, 0x12, 0x3e,
-	0x86, 0x8a, 0x27, 0x77, 0xfc, 0x84, 0x5d, 0xe9, 0x7c, 0xda, 0x95, 0xbe, 0xc1, 0x80, 0x5e, 0xa3,
-	0xf5, 0x18, 0x36, 0xa8, 0x0a, 0x7f, 0x19, 0xa4, 0x2d, 0x03, 0x17, 0xe6, 0x2d, 0xba, 0x17, 0x68,
-	0x1b, 0x59, 0xc6, 0xb9, 0xa9, 0x0d, 0x6a, 0x25, 0xea, 0xb3, 0x32, 0xa3, 0xbe, 0x60, 0x44, 0xb7,
-	0x11, 0xa2, 0xb2, 0x7d, 0xd0, 0x06, 0x05, 0x95, 0x5c, 0x9a, 0x0f, 0x79, 0x14, 0xe4, 0x6d, 0x79,
-	0xe6, 0xea, 0x8b, 0x64, 0xb8, 0x9f, 0xba, 0xe2, 0x2f, 0x33, 0x70, 0x3d, 0x9e, 0x4c, 0xec, 0x58,
-	0xb5, 0x23, 0xe5, 0xf2, 0x59, 0x48, 0x52, 0x22, 0x3e, 0x99, 0xba, 0xb8, 0x64, 0xba, 0xdb, 0xf2,
-	0xea, 0xfa, 0x70, 0x6c, 0x7c, 0x6d, 0x7b, 0x55, 0xbd, 0xc4, 0x68, 0xae, 0x50, 0x5b, 0xfc, 0x1c,
-	0x6e, 0xa5, 0x4a, 0x5f, 0x4d, 0x5d, 0xfd, 0x23, 0x07, 0xd5, 0x98, 0x8a, 0xcb, 0xb7, 0x1d, 0xf5,
-	0x48, 0xdb, 0xb1, 0x33, 0xc7, 0x63, 0xd3, 0x6a, 0xfc, 0x49, 0xac, 0xf9, 0xb8, 0xbb, 0xc8, 0xcf,
-	0x41, 0x3d, 0xee, 0x43, 0x2d, 0x06, 0x98, 0x56, 0xe4, 0x4f, 0xe2, 0x8d, 0xc8, 0x22, 0x63, 0x82,
-	0x76, 0xe4, 0x17, 0xb0, 0x1d, 0xe3, 0x5f, 0xad, 0x28, 0x3f, 0x9d, 0x69, 0x4a, 0xb6, 0xd3, 0x4d,
-	0x08, 0xb5, 0x26, 0x0e, 0x6c, 0x1d, 0x58, 0x86, 0x19, 0xaf, 0x6d, 0xf7, 0xdd, 0x0d, 0x29, 0xb6,
-	0x5b, 0x18, 0x59, 0x79, 0x43, 0x9e, 0x66, 0x17, 0x8c, 0x19, 0x07, 0xfb, 0x90, 0xb4, 0x92, 0x9a,
-	0x49, 0x2d, 0xa9, 0xff, 0xe2, 0xe0, 0x7a, 0x5c, 0xed, 0xa2, 0x53, 0x90, 0x88, 0x4f, 0xa6, 0x2e,
-	0xd1, 0x38, 0x7c, 0x0e, 0xb7, 0x52, 0x97, 0xae, 0x2e, 0xc5, 0x63, 0x2a, 0x56, 0x99, 0xe2, 0x09,
-	0x51, 0x5b, 0x22, 0xc5, 0x13, 0xf7, 0x1c, 0x4e, 0xf1, 0x18, 0x60, 0xc9, 0x14, 0x4f, 0x32, 0x26,
-	0x9c, 0xe2, 0x31, 0xfe, 0xbb, 0x48, 0xf1, 0xb8, 0x8a, 0x69, 0x8a, 0x7f, 0x01, 0x3c, 0xee, 0x99,
-	0x8a, 0xee, 0xb5, 0xca, 0x39, 0x4d, 0x77, 0x86, 0x5e, 0x56, 0xdf, 0xd8, 0xff, 0xf2, 0x6c, 0x5f,
-	0xd2, 0x1d, 0x62, 0x0d, 0x15, 0x95, 0xfc, 0x84, 0x5c, 0xb0, 0x01, 0x17, 0x53, 0x0c, 0xfa, 0x08,
-	0x4a, 0x96, 0x6d, 0x2a, 0xba, 0xcc, 0xe6, 0xe6, 0x4c, 0xca, 0xdc, 0x0c, 0x14, 0x44, 0xbf, 0xc5,
-	0x5f, 0x73, 0x00, 0xad, 0xa9, 0xb6, 0xd0, 0xa0, 0xcc, 0x2d, 0x3d, 0x28, 0x67, 0xe6, 0x0f, 0xca,
-	0x08, 0x72, 0x03, 0x5b, 0x65, 0x63, 0x3c, 0x8f, 0xe9, 0x7f, 0x74, 0x13, 0x0a, 0xd4, 0x50, 0x6d,
-	0x40, 0xaf, 0xff, 0x32, 0xce, 0xbb, 0x9f, 0xd2, 0x40, 0x3c, 0x84, 0xea, 0x09, 0x3d, 0x7e, 0x3d,
-	0x62, 0xdb, 0x9a, 0xa1, 0x4b, 0x03, 0xf4, 0x18, 0xc0, 0x66, 0x1f, 0x2e, 0x9c, 0xbe, 0x50, 0x3c,
-	0xbf, 0xf6, 0x9f, 0x7f, 0xdc, 0x11, 0xbe, 0x22, 0xba, 0xa6, 0x92, 0x67, 0x96, 0xa2, 0x8f, 0xc8,
-	0xb3, 0x8f, 0x1e, 0x7c, 0x8c, 0x79, 0xdb, 0x5f, 0x24, 0xfe, 0x29, 0x03, 0x9b, 0x11, 0x41, 0x97,
-	0xe9, 0x80, 0xf6, 0x20, 0xa3, 0x25, 0x35, 0x3d, 0x31, 0xcb, 0x70, 0x46, 0x1b, 0xa0, 0x1a, 0x14,
-	0x6c, 0x5d, 0x31, 0xc7, 0x44, 0xf7, 0x2e, 0x26, 0xff, 0x13, 0xfd, 0x10, 0xca, 0x63, 0x43, 0x55,
-	0xc6, 0x32, 0xdb, 0xe9, 0x90, 0xee, 0x34, 0x35, 0x84, 0x47, 0x6b, 0xb8, 0x44, 0xe1, 0x6e, 0x2c,
-	0xa4, 0x21, 0xfa, 0x1e, 0xb0, 0x30, 0xc9, 0xf4, 0x38, 0xb1, 0x57, 0x8b, 0xf0, 0xd8, 0x16, 0xc4,
-	0xec, 0x68, 0x0d, 0xf3, 0x14, 0xd9, 0x63, 0x67, 0xa9, 0x44, 0x42, 0xeb, 0xd8, 0x1b, 0x46, 0xb8,
-	0x3b, 0x6d, 0x85, 0x17, 0x02, 0x09, 0x56, 0x3e, 0x2f, 0x43, 0x29, 0x54, 0x0c, 0xc5, 0xff, 0x71,
-	0xb0, 0x15, 0x75, 0xe0, 0xa2, 0x21, 0x29, 0x01, 0x9d, 0x44, 0xbb, 0xe2, 0x8d, 0xbf, 0x1e, 0xbd,
-	0xf1, 0x3f, 0x83, 0x9b, 0x29, 0xb2, 0x57, 0x53, 0x0c, 0x7f, 0xef, 0xb6, 0xfc, 0x61, 0x05, 0x97,
-	0x2f, 0x85, 0x8f, 0x22, 0xa5, 0xf0, 0x76, 0xaa, 0xa7, 0x92, 0x26, 0xaf, 0xec, 0x4c, 0xf9, 0x4c,
-	0xd8, 0x6d, 0x78, 0xf2, 0x8a, 0xb0, 0x23, 0x93, 0x57, 0xb4, 0x08, 0xce, 0x37, 0x23, 0x28, 0x81,
-	0xed, 0x98, 0xc4, 0x03, 0x32, 0x26, 0x0e, 0x2d, 0x7f, 0x4f, 0xe2, 0x12, 0xe7, 0x1d, 0x90, 0x40,
-	0xde, 0xcf, 0xa1, 0x16, 0xe1, 0x5d, 0xad, 0xa0, 0x3e, 0x99, 0x29, 0xa8, 0xb5, 0x34, 0xe5, 0xd3,
-	0x72, 0xba, 0xb7, 0x0b, 0x1b, 0xe1, 0x07, 0x33, 0xc4, 0xc3, 0xba, 0xd4, 0x3d, 0x94, 0x3e, 0x15,
-	0xd6, 0x50, 0x19, 0xf8, 0x76, 0xab, 0x7f, 0x78, 0xdc, 0xf9, 0xe9, 0xcb, 0xef, 0x0b, 0xdc, 0x5e,
-	0x13, 0x60, 0x3a, 0xbc, 0xa1, 0x1b, 0x80, 0x9a, 0x9d, 0xe3, 0xe3, 0x56, 0xb3, 0x2f, 0xbb, 0x08,
-	0xb9, 0xd7, 0x6f, 0xf4, 0xdd, 0x94, 0x02, 0xc8, 0x9f, 0x48, 0x18, 0x77, 0xb0, 0xc0, 0xa1, 0x4d,
-	0x28, 0xb3, 0xff, 0x72, 0xbf, 0x23, 0x37, 0xbb, 0xa7, 0x42, 0x66, 0xef, 0x5b, 0x0e, 0x36, 0x67,
-	0xe6, 0x39, 0x54, 0x84, 0x5c, 0xbb, 0xd3, 0x6e, 0x09, 0x6b, 0x68, 0x03, 0x8a, 0x52, 0xb7, 0xd7,
-	0x39, 0xc5, 0xcd, 0x16, 0x13, 0x20, 0x75, 0x0f, 0x5a, 0xbd, 0xbe, 0xd4, 0x6e, 0xf4, 0xa5, 0x4e,
-	0x5b, 0xc8, 0xb8, 0xf2, 0xa5, 0x6e, 0xb7, 0x21, 0x61, 0x21, 0x8b, 0xaa, 0x50, 0x62, 0x50, 0xb9,
-	0xdb, 0xc1, 0x7d, 0x21, 0x87, 0xae, 0x81, 0x10, 0x42, 0x33, 0xea, 0x3a, 0x4d, 0xf9, 0x16, 0x7e,
-	0x29, 0x35, 0x5b, 0x42, 0x9e, 0xa6, 0x3c, 0x5d, 0x2f, 0xfb, 0xb4, 0x82, 0xbb, 0xcc, 0x93, 0xd3,
-	0x6b, 0x35, 0xe5, 0x17, 0xb8, 0x73, 0xda, 0x15, 0x8a, 0x2e, 0xd2, 0x15, 0x16, 0xa2, 0xf1, 0x2e,
-	0x2d, 0xf8, 0x94, 0xa9, 0x15, 0x50, 0xff, 0xaf, 0x00, 0x7c, 0xdf, 0xf7, 0x33, 0xea, 0x85, 0x9e,
-	0x11, 0x9b, 0x16, 0x51, 0x1c, 0x82, 0xde, 0x4b, 0x7a, 0x4f, 0x0a, 0xb2, 0x70, 0xfb, 0x4e, 0xe2,
-	0x73, 0xd3, 0x34, 0x05, 0xc4, 0xb5, 0x88, 0xd0, 0x53, 0x73, 0xb0, 0x1a, 0xa1, 0xed, 0xd0, 0x03,
-	0xf6, 0xb1, 0x66, 0x3b, 0x68, 0xce, 0x04, 0x7b, 0x59, 0x23, 0xd9, 0x89, 0x58, 0x81, 0x91, 0x72,
-	0xec, 0x31, 0xca, 0x73, 0xe9, 0xfb, 0x69, 0xa6, 0x4e, 0x85, 0x7f, 0x90, 0xfa, 0x7e, 0x31, 0x57,
-	0x81, 0xe7, 0xde, 0xd5, 0x29, 0x38, 0x05, 0x21, 0xc2, 0x7d, 0x41, 0xe6, 0x7b, 0x7a, 0x49, 0xb1,
-	0x9f, 0xc6, 0xec, 0xf6, 0x3c, 0xbe, 0x02, 0xc9, 0x64, 0x66, 0xa4, 0xf5, 0x9c, 0xfe, 0x41, 0xfa,
-	0x08, 0x32, 0xf5, 0xca, 0xbd, 0x39, 0x73, 0xca, 0x02, 0x35, 0x9e, 0xeb, 0x57, 0xab, 0xe6, 0xd5,
-	0xcc, 0x6b, 0xcf, 0xc2, 0x5c, 0x5f, 0x5a, 0xf6, 0x6b, 0x40, 0x31, 0xbe, 0x1b, 0xdc, 0x77, 0xed,
-	0x26, 0x2f, 0xd2, 0x2b, 0x57, 0x13, 0x9f, 0x15, 0x66, 0x83, 0x9e, 0x36, 0x4d, 0x44, 0xd4, 0xa4,
-	0x0f, 0x07, 0x89, 0x6a, 0x12, 0x82, 0xfe, 0xf6, 0x6a, 0x5e, 0xcd, 0x8c, 0xc1, 0x97, 0x0a, 0xfa,
-	0x5c, 0xd9, 0xaf, 0x01, 0xc5, 0xf8, 0xf1, 0xa0, 0xbf, 0x0b, 0x37, 0x25, 0x04, 0xfd, 0xed, 0xd5,
-	0xc8, 0xb1, 0x26, 0x36, 0xa1, 0xb8, 0x26, 0x77, 0x4e, 0x91, 0x52, 0x92, 0xd6, 0xba, 0x24, 0x28,
-	0x48, 0x28, 0xae, 0x6f, 0xa7, 0xe0, 0x14, 0x84, 0x08, 0x37, 0x5e, 0x5c, 0x63, 0x2d, 0xd7, 0xb2,
-	0x62, 0x8f, 0x62, 0xe3, 0x11, 0xcd, 0x9e, 0x0d, 0x7f, 0x54, 0x9c, 0x98, 0xce, 0xc5, 0x55, 0x3d,
-	0xe0, 0xc5, 0x31, 0xd5, 0x03, 0x41, 0x2b, 0xb9, 0xa4, 0x82, 0xe7, 0xdb, 0x7f, 0x7e, 0xb3, 0xc3,
-	0x7d, 0xfb, 0x66, 0x87, 0xfb, 0xe7, 0x9b, 0x1d, 0xee, 0xb7, 0xff, 0xde, 0x59, 0x7b, 0x55, 0x3c,
-	0x53, 0xc6, 0xf4, 0x89, 0xf7, 0x75, 0x9e, 0xfe, 0x3c, 0xfe, 0x7f, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x70, 0xcc, 0x2c, 0x33, 0xfd, 0x1e, 0x00, 0x00,
+	// 2569 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x5a, 0xcd, 0x6f, 0x1b, 0xc7,
+	0x15, 0xd7, 0xea, 0x83, 0x12, 0x1f, 0x45, 0x89, 0x1a, 0xc9, 0x36, 0xad, 0xda, 0xa2, 0xb2, 0xb6,
+	0x6c, 0xd9, 0xf1, 0x57, 0x94, 0x38, 0x75, 0x13, 0xc7, 0x86, 0x44, 0xd3, 0xf6, 0xa2, 0x92, 0xc9,
+	0x0e, 0x69, 0xc7, 0x30, 0x0a, 0xaf, 0xd7, 0xcb, 0x11, 0xc5, 0x98, 0xdc, 0xdd, 0xee, 0xae, 0x92,
+	0x08, 0x45, 0x4f, 0xbd, 0x15, 0x08, 0x0a, 0x14, 0x68, 0xd3, 0xa2, 0xb7, 0x9e, 0x7a, 0x28, 0xd0,
+	0x63, 0x0f, 0x45, 0xef, 0xed, 0xa9, 0xf9, 0x0b, 0x84, 0xc2, 0xfd, 0x0f, 0xd4, 0x9e, 0x8b, 0x62,
+	0x66, 0x96, 0xcb, 0xfd, 0x5e, 0x4a, 0xa1, 0x94, 0x93, 0xc4, 0xd9, 0xf7, 0x35, 0xef, 0xbd, 0x99,
+	0xdf, 0x9b, 0x79, 0x03, 0xb3, 0x36, 0xe9, 0x90, 0x2e, 0xb1, 0xcd, 0xbd, 0x1b, 0x86, 0xa9, 0xdb,
+	0x3a, 0xca, 0xba, 0x03, 0x8b, 0x39, 0x7b, 0xcf, 0x20, 0x16, 0x1f, 0x5f, 0x9c, 0x7a, 0xb3, 0xc3,
+	0xff, 0x13, 0xff, 0x3b, 0x0e, 0xf9, 0xb2, 0xde, 0xe9, 0x10, 0xd5, 0xd6, 0xcd, 0xba, 0x41, 0x54,
+	0xb4, 0x02, 0xe3, 0x5d, 0x62, 0x2b, 0x45, 0x61, 0x59, 0x58, 0xcd, 0xad, 0xcd, 0xdd, 0xe0, 0x7c,
+	0xd5, 0xd7, 0x9f, 0x11, 0xd5, 0xde, 0x22, 0xb6, 0x82, 0xd9, 0x67, 0xb4, 0x09, 0xf9, 0x37, 0x64,
+	0x4f, 0xd6, 0x4d, 0x79, 0x47, 0xd1, 0x9a, 0x1d, 0x52, 0x1c, 0x65, 0xf4, 0xa7, 0x6f, 0xbc, 0xd9,
+	0xb9, 0xe1, 0x0a, 0xfc, 0x21, 0xd9, 0x7b, 0xcc, 0xbe, 0x6e, 0x14, 0x0e, 0xf6, 0x4b, 0xd3, 0x9f,
+	0x13, 0xad, 0xad, 0x92, 0x8f, 0xc4, 0x37, 0x64, 0x4f, 0xc4, 0xb9, 0x37, 0x64, 0xaf, 0x6a, 0xf2,
+	0xcf, 0xe8, 0x12, 0x4c, 0x10, 0x4d, 0x55, 0x8c, 0xe2, 0x18, 0x93, 0x52, 0x70, 0xb4, 0x56, 0xe8,
+	0x98, 0xa4, 0x6d, 0xeb, 0x98, 0x7f, 0x46, 0x35, 0x28, 0x74, 0xd6, 0x2c, 0xd2, 0x92, 0xa9, 0x6e,
+	0x47, 0xf1, 0x78, 0x5f, 0xf1, 0xe6, 0x5a, 0x9d, 0xb4, 0xba, 0x44, 0xb3, 0xfb, 0x8a, 0x67, 0x0e,
+	0xf6, 0x4b, 0xe0, 0x28, 0x36, 0xc9, 0x36, 0x9e, 0x61, 0xfc, 0xee, 0x77, 0x74, 0x1f, 0x26, 0x9b,
+	0xc4, 0xb2, 0xe5, 0xb6, 0x51, 0x9c, 0xf0, 0xe9, 0x96, 0x6a, 0xeb, 0xcd, 0xa6, 0x49, 0x2c, 0x6b,
+	0x63, 0xe1, 0x60, 0xbf, 0x54, 0x70, 0x44, 0x74, 0x15, 0xad, 0xa9, 0xd8, 0xba, 0xb9, 0x87, 0x33,
+	0x94, 0x4d, 0x32, 0xd0, 0x27, 0x90, 0xb1, 0x4c, 0x95, 0xf2, 0x67, 0x0e, 0xc5, 0x3f, 0x61, 0x99,
+	0xaa, 0x64, 0xa0, 0x32, 0x4c, 0xb1, 0x48, 0xa8, 0x7a, 0xa7, 0x38, 0xb9, 0x2c, 0xac, 0xce, 0xb8,
+	0x2e, 0x97, 0x6a, 0x35, 0xe7, 0x43, 0x8c, 0x04, 0x97, 0x11, 0xbd, 0x07, 0x59, 0x36, 0x09, 0x43,
+	0x37, 0xed, 0xe2, 0xd4, 0xb2, 0xb0, 0x9a, 0x8f, 0x63, 0xa1, 0x64, 0x35, 0xdd, 0xb4, 0x51, 0x05,
+	0x32, 0xdb, 0xba, 0xd9, 0x55, 0xec, 0x62, 0x96, 0x69, 0x3d, 0x73, 0xa3, 0x9f, 0x3c, 0x95, 0x2f,
+	0xa9, 0xa0, 0x87, 0xec, 0x73, 0xdc, 0xec, 0x39, 0x33, 0xba, 0x0d, 0x39, 0x9b, 0x74, 0x8d, 0x8e,
+	0x62, 0x13, 0xb9, 0xdd, 0x2c, 0x42, 0x82, 0x6e, 0xe8, 0x11, 0x4a, 0x4d, 0xf1, 0x0a, 0xcc, 0xf6,
+	0xb3, 0xce, 0x56, 0xec, 0x5d, 0x0b, 0x9d, 0x86, 0x8c, 0x13, 0x50, 0x9a, 0x79, 0x19, 0xec, 0xfc,
+	0x12, 0x7f, 0x29, 0xc0, 0x9c, 0x4b, 0x8b, 0x89, 0x65, 0xe8, 0x9a, 0x45, 0xd0, 0x43, 0x00, 0xc5,
+	0x68, 0xcb, 0x16, 0xe3, 0x65, 0x1c, 0x33, 0xae, 0xe7, 0xd7, 0x8d, 0x36, 0x97, 0xb9, 0x71, 0xea,
+	0x60, 0xbf, 0x34, 0xe7, 0x18, 0xd2, 0x27, 0xc7, 0x59, 0xa5, 0x47, 0x81, 0xd6, 0x20, 0xe3, 0xc8,
+	0xe0, 0xf9, 0xbb, 0xe8, 0x71, 0x43, 0xc0, 0x42, 0xec, 0x50, 0x8a, 0x12, 0xcc, 0x7b, 0x0c, 0xfa,
+	0xc9, 0x2e, 0xb1, 0xec, 0x2d, 0xab, 0x85, 0xd6, 0x60, 0xd2, 0xe4, 0xbf, 0x8a, 0xc2, 0xf2, 0xd8,
+	0x6a, 0x6e, 0xad, 0x18, 0x29, 0xcb, 0x20, 0x2a, 0xee, 0x11, 0x8a, 0x35, 0x58, 0x08, 0xcd, 0x8d,
+	0xca, 0xba, 0x03, 0x53, 0xa6, 0xf3, 0xd3, 0x11, 0x76, 0x2e, 0x4a, 0x58, 0x8f, 0x05, 0xbb, 0xd4,
+	0xe2, 0x57, 0x02, 0x9c, 0x76, 0xbf, 0x3f, 0x20, 0x1d, 0x62, 0x13, 0xc7, 0xc6, 0xef, 0x64, 0x65,
+	0x8b, 0x7f, 0x16, 0xe0, 0x4c, 0xc8, 0x9e, 0x21, 0x07, 0x71, 0xb8, 0x16, 0x3f, 0x87, 0xb3, 0xd1,
+	0x0e, 0xa4, 0x81, 0xf9, 0x38, 0x18, 0xe4, 0x77, 0xa2, 0xe2, 0xe2, 0x63, 0xeb, 0x47, 0xfb, 0xc7,
+	0xb0, 0x18, 0xe3, 0x0a, 0x2a, 0xfa, 0x5e, 0x28, 0xe6, 0x62, 0x92, 0xec, 0x50, 0xe4, 0x7f, 0x21,
+	0x78, 0xf2, 0xf2, 0x11, 0xb1, 0xbf, 0xd3, 0xb0, 0x63, 0x4f, 0x16, 0xf6, 0x6d, 0xe1, 0xa9, 0x1d,
+	0xf0, 0xe0, 0x52, 0xd4, 0x2c, 0xfb, 0x3c, 0x7d, 0xf7, 0x15, 0x60, 0xc6, 0xb7, 0x24, 0x2d, 0xf1,
+	0x6f, 0x82, 0x67, 0xfd, 0x30, 0x96, 0x21, 0x67, 0xd6, 0x35, 0x18, 0xb7, 0x0c, 0xa2, 0x3a, 0xbe,
+	0x88, 0x5f, 0xd0, 0x8c, 0x0a, 0xdd, 0x84, 0x09, 0x2a, 0xc2, 0x72, 0x50, 0xec, 0x6c, 0xdc, 0x5e,
+	0x62, 0x61, 0x4e, 0x27, 0x3e, 0xf3, 0xac, 0x0d, 0x8f, 0xf9, 0x3c, 0xd1, 0x82, 0xd9, 0x50, 0x8a,
+	0xf5, 0x53, 0x28, 0x15, 0xfe, 0x38, 0x0a, 0x73, 0x7c, 0x13, 0x2f, 0xeb, 0x9a, 0x6d, 0xea, 0x9d,
+	0xc3, 0x20, 0x7b, 0x2d, 0x3a, 0x11, 0x16, 0x69, 0x22, 0xf8, 0x84, 0x0e, 0x8c, 0xee, 0x8f, 0x61,
+	0x41, 0xed, 0x19, 0xec, 0x45, 0xee, 0x31, 0x36, 0xaf, 0x98, 0x0c, 0xc3, 0x48, 0x0d, 0x8d, 0xa1,
+	0x15, 0x98, 0x51, 0x54, 0xbb, 0xfd, 0x39, 0x91, 0xed, 0x76, 0x97, 0xe8, 0xbb, 0x36, 0x43, 0xff,
+	0x3c, 0xce, 0xf3, 0xd1, 0x06, 0x1f, 0x44, 0x57, 0xa0, 0xd0, 0xd6, 0x02, 0x84, 0x13, 0x8c, 0x70,
+	0xb6, 0x37, 0xee, 0x90, 0x8a, 0xd7, 0x61, 0xde, 0xef, 0xa9, 0x64, 0x34, 0xfa, 0x5a, 0x80, 0x53,
+	0x3e, 0xfa, 0xa1, 0xa7, 0xdc, 0x87, 0x01, 0x44, 0x5a, 0x0a, 0x01, 0xb3, 0xcf, 0x52, 0x17, 0x95,
+	0x7e, 0x04, 0x67, 0x02, 0x86, 0xb9, 0x4b, 0xee, 0xc3, 0xe0, 0x92, 0x3b, 0x17, 0x2b, 0xd3, 0x87,
+	0x4e, 0xcf, 0xa1, 0x18, 0x39, 0x57, 0x2a, 0xf3, 0x6e, 0x28, 0x3f, 0x97, 0xe3, 0x84, 0x46, 0x24,
+	0xe8, 0xaf, 0x05, 0x58, 0xf4, 0xd1, 0x1c, 0x09, 0xa9, 0x86, 0x9e, 0xa9, 0xe2, 0x5f, 0x04, 0xf8,
+	0x5e, 0xa4, 0x5d, 0x43, 0x0e, 0xf2, 0xf0, 0x2d, 0x7f, 0x05, 0xe7, 0xe3, 0x1d, 0x4a, 0x03, 0x76,
+	0x3f, 0x98, 0x04, 0x2b, 0x71, 0xf1, 0x8a, 0x41, 0xaf, 0x26, 0x2c, 0x25, 0xb8, 0x86, 0xaa, 0xd8,
+	0x08, 0xe5, 0xc4, 0xa5, 0x34, 0x1d, 0xa1, 0xcc, 0xf8, 0x95, 0x10, 0xc8, 0xe3, 0xc3, 0x23, 0xd9,
+	0xf0, 0x9d, 0xfb, 0x22, 0x90, 0xad, 0x7e, 0x44, 0xbb, 0x1b, 0xf4, 0xac, 0x18, 0x37, 0xeb, 0x28,
+	0x54, 0x5b, 0x00, 0x14, 0x5a, 0xd6, 0x96, 0xf8, 0x0f, 0x21, 0xb0, 0xf6, 0x8e, 0x03, 0xdd, 0x6e,
+	0xf9, 0xd0, 0x2d, 0x79, 0x53, 0xe0, 0x08, 0xf7, 0xbe, 0x1f, 0xe1, 0xce, 0x27, 0xed, 0x4d, 0x2e,
+	0xca, 0xbd, 0x0c, 0xac, 0xa9, 0x00, 0xd2, 0xdd, 0x0f, 0x65, 0xcd, 0x85, 0x44, 0xff, 0x85, 0x52,
+	0xe6, 0x4f, 0x02, 0xe4, 0xb7, 0x74, 0xad, 0x6d, 0xeb, 0xe6, 0xba, 0x6a, 0xb7, 0x75, 0x0d, 0x5d,
+	0x87, 0x8c, 0xc2, 0xfe, 0x63, 0x02, 0x67, 0xd6, 0x4e, 0x79, 0x04, 0xe2, 0xdd, 0x0e, 0xe1, 0x64,
+	0xd8, 0x21, 0x42, 0x1f, 0x03, 0x28, 0xad, 0x96, 0x6c, 0xa9, 0x3b, 0xa4, 0x4b, 0xb3, 0x85, 0xb2,
+	0x78, 0xbd, 0xb1, 0xde, 0x6a, 0x99, 0xa4, 0xa5, 0x50, 0xda, 0x3a, 0xa3, 0xc1, 0x59, 0xa5, 0xd5,
+	0xe2, 0xff, 0xa2, 0x9b, 0x30, 0xdf, 0x6d, 0x9b, 0xa6, 0x6e, 0xca, 0xf4, 0x6c, 0xd5, 0xd6, 0x18,
+	0x99, 0xc5, 0xb0, 0x2d, 0x8f, 0x11, 0xff, 0xf4, 0xc0, 0xf3, 0x45, 0xfc, 0xcf, 0x38, 0xcc, 0x3f,
+	0xec, 0xe8, 0x5f, 0x38, 0x26, 0x53, 0x7b, 0x0e, 0x03, 0xcf, 0x38, 0x3a, 0xbb, 0xcf, 0xd1, 0xec,
+	0x0e, 0x88, 0x1d, 0x18, 0xa0, 0xef, 0x41, 0x9e, 0xa8, 0x7e, 0x64, 0x4e, 0x59, 0x31, 0x38, 0x47,
+	0xd4, 0x3e, 0x2c, 0x9f, 0x07, 0xb0, 0xf4, 0x5d, 0x53, 0x25, 0x72, 0x57, 0x51, 0x19, 0x24, 0x8f,
+	0xe3, 0x2c, 0x1f, 0xd9, 0x52, 0x54, 0x74, 0x16, 0xd8, 0xb9, 0x93, 0x7d, 0x9c, 0x60, 0x1f, 0xd9,
+	0x99, 0x9b, 0x7e, 0x3a, 0x07, 0x59, 0x62, 0xef, 0x10, 0x93, 0x4e, 0x96, 0x1d, 0xa0, 0xf3, 0xb8,
+	0x3f, 0x80, 0xae, 0x0f, 0x70, 0x38, 0xf6, 0x1c, 0x83, 0xaf, 0x81, 0xa3, 0x94, 0x9e, 0xc6, 0xa7,
+	0xd8, 0x14, 0x66, 0x3d, 0xf4, 0x64, 0xbb, 0xfd, 0x25, 0x9e, 0xe2, 0x14, 0x92, 0x81, 0x56, 0xfb,
+	0x27, 0xff, 0x6c, 0x34, 0x6d, 0xef, 0x88, 0x7f, 0x11, 0x66, 0x1c, 0xb9, 0x9d, 0x0f, 0xf8, 0x19,
+	0x9b, 0x9d, 0x73, 0xf1, 0x34, 0x1f, 0xdd, 0xfc, 0x80, 0x9d, 0xa8, 0x97, 0x61, 0x9a, 0xc9, 0xeb,
+	0xd1, 0xe4, 0x18, 0x0d, 0xd0, 0x31, 0x87, 0x62, 0xc5, 0x95, 0xd3, 0x32, 0xf5, 0x5d, 0xa3, 0xdd,
+	0x2c, 0x4e, 0x33, 0x6f, 0xe4, 0xf9, 0xe8, 0x23, 0x3e, 0x88, 0xde, 0x71, 0x04, 0xf5, 0x88, 0xf2,
+	0x8c, 0x28, 0x47, 0xc7, 0x7a, 0x24, 0xb7, 0xdc, 0x04, 0x9f, 0x09, 0x55, 0xa6, 0xbe, 0xa5, 0xd0,
+	0xcb, 0x71, 0x11, 0xc3, 0xa9, 0x60, 0xd2, 0x25, 0x56, 0x3a, 0xd4, 0x0a, 0xa7, 0x82, 0xda, 0xee,
+	0xe8, 0x5f, 0xf0, 0x6a, 0x24, 0x8f, 0x73, 0x7c, 0x8c, 0x8a, 0xb2, 0xc4, 0xdf, 0x0b, 0x70, 0x26,
+	0x20, 0x74, 0xe8, 0x7b, 0xd4, 0x9d, 0x40, 0x39, 0xe4, 0xad, 0x32, 0x22, 0x27, 0xe4, 0x16, 0x44,
+	0x4f, 0xe1, 0x6c, 0xc8, 0xb8, 0xc1, 0x4e, 0x21, 0x11, 0xab, 0xd3, 0x77, 0x88, 0x8b, 0x99, 0x73,
+	0xfa, 0x21, 0x2e, 0x86, 0xd1, 0xb3, 0x97, 0xfd, 0x4e, 0x80, 0x73, 0x01, 0xaa, 0x23, 0x95, 0x46,
+	0xc7, 0xb0, 0x4b, 0x88, 0x7f, 0x15, 0xe0, 0x7c, 0x8c, 0x6d, 0x43, 0x0e, 0xfa, 0x71, 0x58, 0xdf,
+	0x84, 0x52, 0x92, 0x63, 0x69, 0xf0, 0xd6, 0x83, 0x49, 0x71, 0x39, 0x3e, 0x76, 0x31, 0x45, 0xd2,
+	0x0e, 0x2c, 0x27, 0xba, 0x88, 0xaa, 0x79, 0x10, 0xca, 0x91, 0xd5, 0x74, 0x3d, 0xa1, 0x4c, 0xf9,
+	0x8d, 0x10, 0xca, 0xef, 0xc3, 0x97, 0x4a, 0xc7, 0xe1, 0xe8, 0x97, 0xa1, 0x0c, 0xf6, 0x97, 0x4b,
+	0xf7, 0x82, 0x5e, 0xbe, 0x18, 0x3f, 0xfb, 0xa8, 0x82, 0xe9, 0x34, 0x2c, 0x44, 0x2c, 0x7c, 0x4b,
+	0xfc, 0xa7, 0x10, 0x5a, 0x99, 0xc7, 0x51, 0x34, 0xad, 0xf9, 0x8a, 0xa6, 0xb4, 0x6d, 0x83, 0x97,
+	0x4d, 0xb7, 0xfd, 0x65, 0x53, 0x29, 0x79, 0x0f, 0x73, 0x0b, 0xa7, 0xd7, 0xa1, 0xf5, 0x16, 0x28,
+	0x9d, 0xd6, 0x43, 0x99, 0xb4, 0x92, 0xe2, 0xcb, 0x50, 0x1a, 0xfd, 0x61, 0x14, 0xe6, 0x1f, 0x98,
+	0xba, 0x71, 0x0c, 0xd5, 0x48, 0x40, 0xec, 0xc0, 0xd5, 0xc8, 0x6b, 0xc8, 0x77, 0xad, 0xf0, 0x3d,
+	0x01, 0xab, 0x46, 0xb6, 0x58, 0x3d, 0x55, 0x27, 0x96, 0xd5, 0xd6, 0xb5, 0xbe, 0x44, 0xf1, 0x60,
+	0xbf, 0xb4, 0xe4, 0x48, 0x54, 0x75, 0xcd, 0xb2, 0x4d, 0xa5, 0xad, 0xd9, 0xd6, 0x27, 0x3f, 0x35,
+	0x15, 0xad, 0x45, 0x3e, 0xba, 0x75, 0xfd, 0xfb, 0x3f, 0xc3, 0xb9, 0xae, 0xd5, 0xaf, 0x58, 0xae,
+	0xd1, 0x24, 0x54, 0x2c, 0x5a, 0xa9, 0xf1, 0xfe, 0x01, 0x72, 0x66, 0x48, 0x8d, 0xc6, 0xfc, 0x0b,
+	0xee, 0x91, 0x50, 0xf0, 0x0c, 0xfa, 0xe8, 0x70, 0xe0, 0x39, 0x16, 0x0d, 0x9e, 0x01, 0xa1, 0x27,
+	0x0a, 0x9e, 0x91, 0x13, 0xf2, 0x82, 0x67, 0xc8, 0xb8, 0xc1, 0xc0, 0x33, 0x22, 0x99, 0x7c, 0xe0,
+	0x19, 0x33, 0xe7, 0x74, 0xf0, 0x8c, 0x61, 0x0c, 0x80, 0x67, 0x80, 0x6a, 0xe8, 0xe0, 0x79, 0xc4,
+	0xa4, 0x66, 0xe0, 0x19, 0x63, 0xdb, 0x09, 0x82, 0xe7, 0x51, 0xad, 0x6f, 0x42, 0x29, 0xc9, 0xb1,
+	0xa9, 0xe0, 0x99, 0xc4, 0xec, 0x03, 0xcf, 0x44, 0x17, 0xa5, 0x83, 0x67, 0x22, 0x7b, 0x00, 0x3c,
+	0x03, 0xb4, 0xc3, 0x05, 0xcf, 0xa3, 0x3a, 0xfa, 0x65, 0x28, 0x83, 0x0f, 0x01, 0x9e, 0xb1, 0x9c,
+	0x3e, 0xf0, 0x8c, 0x58, 0xf8, 0x1c, 0x3c, 0xa3, 0xd8, 0x4f, 0x0c, 0x3c, 0xa3, 0xb6, 0x8d, 0x54,
+	0xf0, 0x8c, 0x9a, 0x8a, 0x07, 0x3c, 0xe3, 0x27, 0x94, 0x0e, 0x9e, 0xf1, 0xbc, 0x9e, 0x34, 0xfa,
+	0x0c, 0xb2, 0xb8, 0x6e, 0x28, 0x1a, 0x43, 0xcc, 0xab, 0x30, 0xde, 0xd6, 0xec, 0x6d, 0x27, 0x6b,
+	0xd8, 0xad, 0xb6, 0xa4, 0xd9, 0xc4, 0xdc, 0x56, 0xd4, 0x7e, 0xfc, 0x31, 0xa3, 0x41, 0xef, 0x41,
+	0xce, 0xb4, 0x0c, 0x45, 0x93, 0x79, 0xd7, 0x7b, 0x34, 0xa6, 0xeb, 0x0d, 0x8c, 0x88, 0xfd, 0x16,
+	0xbf, 0x12, 0x00, 0x2a, 0x7d, 0x6d, 0x57, 0xfa, 0xa7, 0x57, 0x21, 0xba, 0xef, 0xec, 0x1e, 0x5f,
+	0x2f, 0xbb, 0x1d, 0xea, 0xd1, 0x18, 0x4a, 0xa7, 0x17, 0x8d, 0x60, 0xbc, 0x69, 0xa9, 0xbc, 0x09,
+	0x9f, 0xc5, 0xec, 0x7f, 0x74, 0x06, 0x26, 0x99, 0xa1, 0xed, 0xa6, 0x73, 0xd5, 0x9e, 0xa1, 0x3f,
+	0xa5, 0xa6, 0xf8, 0xf3, 0x31, 0x98, 0xf3, 0xa1, 0xf1, 0x61, 0xca, 0x06, 0x3d, 0xe1, 0x8a, 0x2e,
+	0x06, 0xe2, 0x6f, 0x1e, 0xec, 0x97, 0xde, 0xf5, 0x2e, 0x9c, 0x6b, 0x69, 0x78, 0xef, 0xad, 0x29,
+	0x8a, 0x30, 0x69, 0x69, 0x8a, 0xd1, 0x21, 0x9a, 0x83, 0xc5, 0xbd, 0x9f, 0xe8, 0x2e, 0xe4, 0x3b,
+	0xba, 0xaa, 0x74, 0x64, 0x3e, 0xcd, 0x6d, 0xef, 0x7b, 0x82, 0x70, 0xfc, 0x1e, 0x8f, 0xe0, 0x1c,
+	0x23, 0xa7, 0x81, 0x90, 0xb6, 0xd1, 0x6d, 0xe0, 0x31, 0x92, 0x59, 0x5a, 0xf3, 0x17, 0x04, 0x0b,
+	0xde, 0xdb, 0xa6, 0x5e, 0xc0, 0x1e, 0x8f, 0xe0, 0x2c, 0xa3, 0x64, 0x6e, 0xba, 0x03, 0x39, 0xe2,
+	0xe1, 0xe3, 0x2f, 0x07, 0xbc, 0xb7, 0x54, 0x15, 0x2f, 0x23, 0x10, 0x97, 0x73, 0x23, 0x0f, 0x39,
+	0xcf, 0x3d, 0x93, 0x58, 0x83, 0x79, 0x7f, 0x10, 0xbe, 0xf5, 0xa1, 0xfe, 0x6b, 0x01, 0x4e, 0xf9,
+	0x44, 0x9e, 0x68, 0x87, 0x23, 0x62, 0x32, 0xde, 0x0e, 0x47, 0xc0, 0xb0, 0xc1, 0x3a, 0x1c, 0xa1,
+	0x2c, 0xf5, 0x75, 0x38, 0x22, 0xe7, 0x9a, 0xde, 0xe1, 0x88, 0x64, 0x0b, 0x74, 0x38, 0x7c, 0x34,
+	0x43, 0xef, 0x70, 0xc4, 0xac, 0x93, 0x01, 0x3a, 0x1c, 0x91, 0x76, 0x9d, 0x60, 0x87, 0xe3, 0x68,
+	0x96, 0xbf, 0x82, 0xf3, 0xf1, 0x0e, 0x4d, 0xed, 0x70, 0xc4, 0xb3, 0xfa, 0x3a, 0x1c, 0x09, 0xae,
+	0x49, 0xef, 0x70, 0x24, 0x30, 0x07, 0x3a, 0x1c, 0x3e, 0xca, 0xe1, 0x76, 0x38, 0x8e, 0xe6, 0xdc,
+	0x17, 0x81, 0x6c, 0x3d, 0x44, 0x87, 0x23, 0x86, 0xcf, 0xd7, 0xe1, 0x08, 0x2d, 0x6b, 0xde, 0xe1,
+	0x08, 0xb3, 0x9e, 0x58, 0x87, 0x23, 0xbc, 0x29, 0xa4, 0x76, 0x38, 0xc2, 0x93, 0xf0, 0x74, 0x38,
+	0xe2, 0xa6, 0x92, 0xde, 0xe1, 0x88, 0xe3, 0xec, 0xa7, 0xcc, 0xd5, 0x55, 0x98, 0xf6, 0xbe, 0xc9,
+	0x42, 0x59, 0x98, 0x90, 0x6a, 0x0f, 0xa5, 0xe7, 0x85, 0x11, 0x94, 0x87, 0xec, 0x93, 0x4a, 0xe3,
+	0xe1, 0x66, 0xf5, 0xd3, 0x67, 0x3f, 0x28, 0x08, 0x57, 0xcb, 0x00, 0xfd, 0x06, 0x07, 0x3a, 0x0d,
+	0xa8, 0x5c, 0xdd, 0xdc, 0xac, 0x94, 0x1b, 0x32, 0xa5, 0x90, 0xeb, 0x8d, 0xf5, 0x46, 0xbd, 0x30,
+	0x82, 0x00, 0x32, 0x5b, 0x12, 0xc6, 0x55, 0x5c, 0x10, 0xd0, 0x1c, 0xe4, 0xf9, 0xff, 0x72, 0xa3,
+	0x2a, 0x97, 0x6b, 0x4f, 0x0b, 0xa3, 0x57, 0xbf, 0x11, 0x60, 0x2e, 0xd4, 0xf3, 0x40, 0x53, 0x30,
+	0xfe, 0xa4, 0xfa, 0xa4, 0x52, 0x18, 0x41, 0xd3, 0x30, 0x25, 0xd5, 0xea, 0xd5, 0xa7, 0xb8, 0x5c,
+	0xe1, 0x02, 0xa4, 0xda, 0x83, 0x4a, 0xbd, 0x21, 0x3d, 0x59, 0x6f, 0x48, 0xd5, 0x27, 0x85, 0x51,
+	0x2a, 0x5f, 0xaa, 0xd5, 0xd6, 0x25, 0x5c, 0x18, 0x43, 0xb3, 0x90, 0xe3, 0xa4, 0x72, 0xad, 0x8a,
+	0x1b, 0x85, 0x71, 0xb4, 0x00, 0x05, 0x0f, 0x35, 0x1f, 0x9d, 0x40, 0x39, 0x98, 0xac, 0x57, 0xf0,
+	0x33, 0xa9, 0x5c, 0x29, 0x64, 0x10, 0x82, 0x19, 0xce, 0x2f, 0xf7, 0xc6, 0x26, 0x29, 0x9b, 0x23,
+	0xa7, 0x5e, 0x29, 0xcb, 0x8f, 0x70, 0xf5, 0x69, 0xad, 0x30, 0x45, 0x29, 0xa9, 0x30, 0xcf, 0x58,
+	0x96, 0x8e, 0xb9, 0x3f, 0x65, 0x66, 0x05, 0xac, 0xfd, 0x6f, 0x16, 0xb2, 0x8d, 0x9e, 0xcb, 0x51,
+	0xc3, 0xf3, 0xfc, 0xac, 0x6c, 0x12, 0xc5, 0x26, 0x68, 0x29, 0xfa, 0x7d, 0x55, 0x6f, 0x09, 0x2c,
+	0x96, 0x92, 0xde, 0x5f, 0x6d, 0x59, 0x2d, 0x71, 0xc4, 0x27, 0xf5, 0xa9, 0xd1, 0x1c, 0x92, 0xd4,
+	0x57, 0x1e, 0xa9, 0x7c, 0x4f, 0x41, 0x17, 0x53, 0xdf, 0x1c, 0x51, 0xd9, 0x2b, 0xe9, 0xaf, 0x87,
+	0xb8, 0x86, 0x4f, 0x61, 0xda, 0xfb, 0x9e, 0x04, 0xbd, 0x93, 0xfc, 0x20, 0x87, 0xca, 0x16, 0x53,
+	0xde, 0xa2, 0xf4, 0x4c, 0xf7, 0xbf, 0xad, 0x70, 0x5c, 0x2d, 0xc6, 0x3f, 0x14, 0x70, 0x15, 0x5c,
+	0x48, 0x7b, 0x4c, 0x10, 0xad, 0xc1, 0x71, 0xfb, 0x10, 0x35, 0x74, 0x02, 0x1a, 0x9c, 0x10, 0xac,
+	0x0e, 0xd4, 0x3c, 0xa7, 0x7a, 0xae, 0x0c, 0xd6, 0x02, 0xe7, 0xda, 0x54, 0x28, 0x04, 0x1b, 0x9e,
+	0x68, 0x25, 0xbd, 0x9b, 0x4c, 0xf5, 0x5c, 0x1a, 0xa0, 0x69, 0xca, 0x95, 0x6c, 0x87, 0x5a, 0x41,
+	0x4e, 0x60, 0x2e, 0x26, 0xb5, 0x2a, 0x22, 0xf3, 0x2a, 0xbe, 0x13, 0x12, 0xa9, 0xc7, 0x09, 0xcf,
+	0x90, 0xf5, 0x98, 0x21, 0x3d, 0x4e, 0x90, 0xae, 0x0e, 0x78, 0x7d, 0x4f, 0xb5, 0xbd, 0x3b, 0xe8,
+	0x15, 0x3c, 0xd7, 0xd9, 0x06, 0x14, 0xbe, 0x5e, 0x45, 0x97, 0x07, 0xb9, 0xc9, 0xa6, 0xda, 0x56,
+	0x07, 0xba, 0xa6, 0x75, 0xdd, 0x18, 0x38, 0x8c, 0x46, 0x84, 0x2b, 0xf6, 0xb2, 0x6e, 0x71, 0x25,
+	0xfd, 0x0a, 0x2d, 0x4e, 0x4f, 0x44, 0xb8, 0x86, 0xa0, 0xc7, 0x0c, 0xe9, 0x89, 0x08, 0x57, 0xca,
+	0x6d, 0x93, 0x2f, 0x5c, 0x69, 0x77, 0x46, 0x3c, 0x5c, 0xe1, 0x03, 0x3d, 0xba, 0x3c, 0xc8, 0xdd,
+	0x49, 0x30, 0x5c, 0x89, 0x97, 0x0a, 0x7c, 0x4b, 0xf2, 0x21, 0x7a, 0xc4, 0xa6, 0x17, 0x73, 0x8a,
+	0x59, 0xbc, 0x90, 0x76, 0xbe, 0x88, 0xd6, 0x10, 0xb1, 0xe9, 0x7d, 0x4b, 0x0d, 0x9d, 0x80, 0x86,
+	0x88, 0x4d, 0x2f, 0xb1, 0x14, 0xf7, 0x6d, 0x7a, 0xc9, 0x25, 0x35, 0xdf, 0xf4, 0x82, 0x35, 0x10,
+	0x5a, 0x49, 0x2f, 0x30, 0x83, 0x9b, 0x5e, 0x42, 0x05, 0x26, 0x8e, 0x6c, 0x2c, 0xfe, 0xfd, 0xed,
+	0x92, 0xf0, 0xcd, 0xdb, 0x25, 0xe1, 0x5f, 0x6f, 0x97, 0x84, 0xdf, 0xfe, 0x7b, 0x69, 0xe4, 0xc5,
+	0xd4, 0x8e, 0xd2, 0x61, 0x4f, 0x07, 0x5e, 0x67, 0xd8, 0x9f, 0xf7, 0xff, 0x1f, 0x00, 0x00, 0xff,
+	0xff, 0x1e, 0x4b, 0x0f, 0xd4, 0x40, 0x31, 0x00, 0x00,
 }

@@ -144,11 +144,32 @@ using gft::GftHeaderGroupTransposition;
 
 using telemetry::Telemetry;
 using telemetry::MirrorSessionSpec;
-using telemetry::MirrorSessionConfigMsg;
+using telemetry::MirrorSessionStatus;
+using telemetry::MirrorSessionResponse;
+using telemetry::MirrorSessionRequestMsg;
 using telemetry::MirrorSessionResponseMsg;
+using telemetry::MirrorSessionDeleteRequest;
+using telemetry::MirrorSessionDeleteResponse;
+using telemetry::MirrorSessionDeleteRequestMsg;
+using telemetry::MirrorSessionDeleteResponseMsg;
+using telemetry::MirrorSessionGetRequest;
+using telemetry::MirrorSessionGetRequestMsg;
+using telemetry::MirrorSessionGetResponse;
+using telemetry::MirrorSessionGetResponseMsg;
+
 using telemetry::CollectorSpec;
-using telemetry::CollectorConfigMsg;
+using telemetry::CollectorStatus;
+using telemetry::CollectorResponse;
+using telemetry::CollectorRequestMsg;
 using telemetry::CollectorResponseMsg;
+using telemetry::CollectorDeleteRequest;
+using telemetry::CollectorDeleteResponse;
+using telemetry::CollectorDeleteRequestMsg;
+using telemetry::CollectorDeleteResponseMsg;
+using telemetry::CollectorGetRequest;
+using telemetry::CollectorGetRequestMsg;
+using telemetry::CollectorGetResponse;
+using telemetry::CollectorGetResponseMsg;
 
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
@@ -996,7 +1017,7 @@ public:
         flow->mutable_flow_data()->mutable_flow_info()->set_flow_action(action);
         if (ing_mirror_session_id) {
             auto msess = flow->mutable_flow_data()->mutable_flow_info()->add_ing_mirror_sessions();
-            msess->set_session_id(ing_mirror_session_id);
+            msess->set_mirrorsession_id(ing_mirror_session_id);
         }
         switch (nat_type) {
         case ::session::NAT_TYPE_NONE:
@@ -1022,7 +1043,7 @@ public:
         flow->mutable_flow_data()->mutable_flow_info()->set_flow_action(action);
         if (ing_mirror_session_id) {
             auto msess = flow->mutable_flow_data()->mutable_flow_info()->add_ing_mirror_sessions();
-            msess->set_session_id(ing_mirror_session_id);
+            msess->set_mirrorsession_id(ing_mirror_session_id);
         }
         switch (nat_type) {
         case ::session::NAT_TYPE_NONE:
@@ -1450,7 +1471,7 @@ public:
 
     uint32_t mirror_session_create(uint32_t vrf_id, uint32_t session_id,
                                    uint32_t sip, uint32_t dip) {
-        MirrorSessionConfigMsg      req_msg;
+        MirrorSessionRequestMsg     req_msg;
         MirrorSessionSpec           *spec;
         MirrorSessionResponseMsg    rsp_msg;
         Status                      status;
@@ -1458,7 +1479,7 @@ public:
 
         spec = req_msg.add_request();
         spec->mutable_meta()->set_vrf_id(vrf_id);
-        spec->mutable_id()->set_session_id(session_id);
+        spec->mutable_key_or_handle()->set_mirrorsession_id(session_id);
         spec->mutable_erspan_spec()->mutable_dest_ip()->set_ip_af(::types::IP_AF_INET);
         spec->mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(sip);
         spec->mutable_erspan_spec()->mutable_src_ip()->set_ip_af(::types::IP_AF_INET);
@@ -1467,10 +1488,7 @@ public:
 
         status = telemetry_stub_->MirrorSessionCreate(&context, req_msg, &rsp_msg);
         if (status.ok()) {
-            assert(rsp_msg.status() == types::API_STATUS_OK);
             assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
-            assert(rsp_msg.response(0).status().code() ==
-                       ::telemetry::MirrorSessionStatus_MirrorSessionStatusCode_SUCCESS);
             std::cout << "Mirror session succeeded, id = " << session_id << std::endl;
         }
 
@@ -1481,15 +1499,15 @@ public:
                                       uint64_t l2seg_handle, uint16_t vlan_encap,
                                       uint32_t sip, uint32_t dip, uint16_t dport,
                                       uint32_t template_id) {
-        CollectorConfigMsg      req_msg;
+        CollectorRequestMsg     req_msg;
         CollectorSpec           *spec;
         CollectorResponseMsg    rsp_msg;
-        Status                      status;
-        ClientContext               context;
+        Status                  status;
+        ClientContext           context;
 
         spec = req_msg.add_request();
         spec->mutable_meta()->set_vrf_id(vrf_id);
-        spec->mutable_export_controlid()->set_id(export_ctrl_id);
+        spec->mutable_key_or_handle()->set_collector_id(export_ctrl_id);
         if (vlan_encap) {
             spec->mutable_encap()->set_encap_type(::types::ENCAP_TYPE_DOT1Q);
             spec->mutable_encap()->set_encap_value(vlan_encap);
@@ -1497,22 +1515,19 @@ public:
             spec->mutable_encap()->set_encap_type(::types::ENCAP_TYPE_DOT1Q);
             spec->mutable_encap()->set_encap_value(0);
         }
-        spec->set_l2seg_handle(l2seg_handle);
+        spec->mutable_l2seg_key_handle()->set_l2segment_handle(l2seg_handle);
         spec->mutable_src_ip()->set_ip_af(::types::IP_AF_INET);
         spec->mutable_src_ip()->set_v4_addr(sip);
         spec->mutable_dest_ip()->set_ip_af(::types::IP_AF_INET);
         spec->mutable_dest_ip()->set_v4_addr(dip);
         spec->set_protocol(::types::IPPROTO_UDP);
-        spec->mutable_dest_port()->set_port(dport);
+        spec->set_dest_port(dport);
         spec->set_format(::telemetry::IPFIX);
         spec->set_template_id(template_id);
 
         status = telemetry_stub_->CollectorCreate(&context, req_msg, &rsp_msg);
         if (status.ok()) {
-            assert(rsp_msg.status() == types::API_STATUS_OK);
             assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
-            assert(rsp_msg.response(0).status().code() ==
-                       ::telemetry::CollectorStatus_CollectorStatusCode_SUCCESS);
             std::cout << "Collector create succeeded" << std::endl;
         } else {
             std::cout << "Collector create failed" << std::endl;

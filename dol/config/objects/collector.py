@@ -68,16 +68,16 @@ class CollectorObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, reqspec):
         #pdb.set_trace()
         reqspec.meta.vrf_id = self.tenant.id
-        reqspec.export_controlId.Id = self.id
+        reqspec.key_or_handle.collector_id = self.id
         reqspec.encap.encap_type = haldefs.common.ENCAP_TYPE_DOT1Q
         reqspec.encap.encap_value = self.vlan
-        reqspec.l2seg_handle = self.l2seg_handle
+        reqspec.l2seg_key_handle.l2segment_handle = self.l2seg_handle
         reqspec.dest_ip.ip_af = haldefs.common.IP_AF_INET
         reqspec.dest_ip.v4_addr = self.dest_ip.getnum()
         reqspec.src_ip.ip_af = haldefs.common.IP_AF_INET
         reqspec.src_ip.v4_addr = self.source_ip.getnum()
         reqspec.protocol = self.protocol
-        reqspec.dest_port.port = self.dport
+        reqspec.dest_port = self.dport
         reqspec.format = self.format
         reqspec.template_id = self.template_id
         return

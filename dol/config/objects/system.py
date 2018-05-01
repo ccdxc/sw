@@ -60,7 +60,9 @@ class SystemObject(base.ConfigObjectBase):
         reqspec.reasons.drop_parse_len_error = True
         reqspec.reasons.drop_hardware_error = True
         for sess in self.mirror_sessions:
-            reqspec.mirror_destinations.append(sess.id)
+            #reqspec.mirror_destinations.append(sess.id)
+            ms = reqspec.ms_key_handle.add()
+            ms.mirrorsession_id = sess.id
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

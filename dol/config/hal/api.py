@@ -517,21 +517,21 @@ def GetSecurityGroupPolicies(objlist):
 def ConfigureSpanSessions(objlist):
     if not IsConfigAllowed(objlist): return
     stub = telemetry_pb2.TelemetryStub(HalChannel)
-    __config(objlist, telemetry_pb2.MirrorSessionConfigMsg,
+    __config(objlist, telemetry_pb2.MirrorSessionRequestMsg,
              stub.MirrorSessionCreate)
     return
 
 def DeleteSpanSessions(objlist):
     if not IsConfigAllowed(objlist): return
     stub = telemetry_pb2.TelemetryStub(HalChannel)
-    __config(objlist, telemetry_pb2.MirrorSessionDeleteMsg,
+    __config(objlist, telemetry_pb2.MirrorSessionDeleteRequestMsg,
              stub.MirrorSessionDelete)
     return
 
 def ConfigureCollectors(objlist):
     if not IsConfigAllowed(objlist): return
     stub = telemetry_pb2.TelemetryStub(HalChannel)
-    __config(objlist, telemetry_pb2.CollectorConfigMsg,
+    __config(objlist, telemetry_pb2.CollectorRequestMsg,
              stub.CollectorCreate)
     return
 
@@ -753,7 +753,7 @@ def GetSystem(objlist):
 def ConfigureDropMonitorRules(objlist):
     if not IsConfigAllowed(objlist): return
     stub = telemetry_pb2.TelemetryStub(HalChannel)
-    __config(objlist, telemetry_pb2.DropMonitorRuleConfigMsg,
+    __config(objlist, telemetry_pb2.DropMonitorRuleRequestMsg,
              stub.DropMonitorRuleCreate)
     return
 

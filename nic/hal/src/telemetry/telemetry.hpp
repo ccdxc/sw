@@ -12,18 +12,74 @@
 
 using telemetry::Telemetry;
 using telemetry::MirrorSessionSpec;
-using telemetry::MirrorSession;
-using telemetry::MirrorSessionId;
 using telemetry::MirrorSessionStatus;
+using telemetry::MirrorSessionResponse;
+using telemetry::MirrorSessionRequestMsg;
+using telemetry::MirrorSessionResponseMsg;
+using telemetry::MirrorSessionDeleteRequest;
+using telemetry::MirrorSessionDeleteResponse;
+using telemetry::MirrorSessionDeleteRequestMsg;
+using telemetry::MirrorSessionDeleteResponseMsg;
+using telemetry::MirrorSessionGetRequest;
+using telemetry::MirrorSessionGetRequestMsg;
+using telemetry::MirrorSessionGetResponse;
+using telemetry::MirrorSessionGetResponseMsg;
+
 using telemetry::CollectorSpec;
-using telemetry::Collector;
-using telemetry::ExportControlId;
-using telemetry::FlowMonitorRule;
+using telemetry::CollectorStatus;
+using telemetry::CollectorResponse;
+using telemetry::CollectorRequestMsg;
+using telemetry::CollectorResponseMsg;
+using telemetry::CollectorDeleteRequest;
+using telemetry::CollectorDeleteResponse;
+using telemetry::CollectorDeleteRequestMsg;
+using telemetry::CollectorDeleteResponseMsg;
+using telemetry::CollectorGetRequest;
+using telemetry::CollectorGetRequestMsg;
+using telemetry::CollectorGetResponse;
+using telemetry::CollectorGetResponseMsg;
+
 using telemetry::FlowMonitorRuleSpec;
 using telemetry::FlowMonitorRuleStatus;
-using telemetry::DropMonitorRule;
+using telemetry::FlowMonitorRuleResponse;
+using telemetry::FlowMonitorRuleRequestMsg;
+using telemetry::FlowMonitorRuleResponseMsg;
+using telemetry::FlowMonitorRuleDeleteRequest;
+using telemetry::FlowMonitorRuleDeleteResponse;
+using telemetry::FlowMonitorRuleDeleteRequestMsg;
+using telemetry::FlowMonitorRuleDeleteResponseMsg;
+using telemetry::FlowMonitorRuleGetRequest;
+using telemetry::FlowMonitorRuleGetRequestMsg;
+using telemetry::FlowMonitorRuleGetResponse;
+using telemetry::FlowMonitorRuleGetResponseMsg;
+
 using telemetry::DropMonitorRuleSpec;
 using telemetry::DropMonitorRuleStatus;
+using telemetry::DropMonitorRuleResponse;
+using telemetry::DropMonitorRuleRequestMsg;
+using telemetry::DropMonitorRuleResponseMsg;
+using telemetry::DropMonitorRuleDeleteRequest;
+using telemetry::DropMonitorRuleDeleteResponse;
+using telemetry::DropMonitorRuleDeleteRequestMsg;
+using telemetry::DropMonitorRuleDeleteResponseMsg;
+using telemetry::DropMonitorRuleGetRequest;
+using telemetry::DropMonitorRuleGetRequestMsg;
+using telemetry::DropMonitorRuleGetResponse;
+using telemetry::DropMonitorRuleGetResponseMsg;
+
+using telemetry::ExportControlSpec;
+using telemetry::ExportControlStatus;
+using telemetry::ExportControlResponse;
+using telemetry::ExportControlRequestMsg;
+using telemetry::ExportControlResponseMsg;
+using telemetry::ExportControlDeleteRequest;
+using telemetry::ExportControlDeleteResponse;
+using telemetry::ExportControlDeleteRequestMsg;
+using telemetry::ExportControlDeleteResponseMsg;
+using telemetry::ExportControlGetRequest;
+using telemetry::ExportControlGetRequestMsg;
+using telemetry::ExportControlGetResponse;
+using telemetry::ExportControlGetResponseMsg;
 
 namespace hal {
 
@@ -84,6 +140,7 @@ typedef struct drop_reason_codes_s {
 
 typedef struct drop_monitor_rule_s {
     hal_spinlock_t slock;
+    uint32_t rule_id;
     drop_reason_codes_t codes;
     bool mirror_destinations[MAX_MIRROR_SESSION_DEST];
 } __PACK__ drop_monitor_rule_t;
@@ -91,6 +148,7 @@ typedef struct drop_monitor_rule_s {
 typedef struct flow_monitor_rule_s {
     hal_spinlock_t slock;
     uint64_t vrf_id;
+    uint32_t rule_id;
     // Flow key fields
     union {
         struct {
@@ -159,18 +217,31 @@ typedef struct collector_config_s {
 
 hal_ret_t hal_telemetry_init_cb(hal_cfg_t *hal_cfg);
 hal_ret_t hal_telemetry_cleanup_cb(void);
-hal_ret_t mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp);
-hal_ret_t mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp);
-hal_ret_t collector_create(CollectorSpec *spec, Collector *resp);
-hal_ret_t collector_update(CollectorSpec *spec, Collector *resp);
-hal_ret_t collector_get(ExportControlId *id, Collector *resp);
-hal_ret_t collector_delete(ExportControlId *id, Collector *resp);
-hal_ret_t flow_monitor_rule_create(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
-hal_ret_t flow_monitor_rule_delete(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
-hal_ret_t flow_monitor_rule_get(FlowMonitorRuleSpec *spec, FlowMonitorRule *rsp);
-hal_ret_t drop_monitor_rule_create(DropMonitorRuleSpec *spec, DropMonitorRule *rsp);
-hal_ret_t drop_monitor_rule_delete(DropMonitorRuleSpec *spec, DropMonitorRule *rsp);
-hal_ret_t drop_monitor_rule_get(DropMonitorRuleSpec *spec, DropMonitorRule *rsp);
+
+hal_ret_t mirror_session_create(MirrorSessionSpec &spec, MirrorSessionResponse *rsp);
+hal_ret_t mirror_session_update(MirrorSessionSpec &spec, MirrorSessionResponse *rsp);
+hal_ret_t mirror_session_delete(MirrorSessionDeleteRequest &spec, MirrorSessionDeleteResponse *rsp);
+hal_ret_t mirror_session_get(MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rsp);
+
+hal_ret_t collector_create(CollectorSpec &spec, CollectorResponse *rsp);
+hal_ret_t collector_update(CollectorSpec &spec, CollectorResponse *rsp);
+hal_ret_t collector_delete(CollectorDeleteRequest &req, CollectorDeleteResponse *rsp);
+hal_ret_t collector_get(CollectorGetRequest &req, CollectorGetResponseMsg *rsp);
+
+hal_ret_t flow_monitor_rule_create(FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp);
+hal_ret_t flow_monitor_rule_update(FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp);
+hal_ret_t flow_monitor_rule_delete(FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDeleteResponse *rsp);
+hal_ret_t flow_monitor_rule_get(FlowMonitorRuleGetRequest &req, FlowMonitorRuleGetResponseMsg *rsp);
+
+hal_ret_t drop_monitor_rule_create(DropMonitorRuleSpec &spec, DropMonitorRuleResponse *rsp);
+hal_ret_t drop_monitor_rule_update(DropMonitorRuleSpec &spec, DropMonitorRuleResponse *rsp);
+hal_ret_t drop_monitor_rule_delete(DropMonitorRuleDeleteRequest &req, DropMonitorRuleDeleteResponse *rsp);
+hal_ret_t drop_monitor_rule_get(DropMonitorRuleGetRequest &req, DropMonitorRuleGetResponseMsg *rsp);
+
+hal_ret_t export_control_create(ExportControlSpec &spec, ExportControlResponse *rsp);
+hal_ret_t export_control_update(ExportControlSpec &spec, ExportControlResponse *rsp);
+hal_ret_t export_control_delete(ExportControlDeleteRequest &req, ExportControlDeleteResponse *rsp);
+hal_ret_t export_control_get(ExportControlGetRequest &req, ExportControlGetResponseMsg *rsp);
 
 }    // namespace
 

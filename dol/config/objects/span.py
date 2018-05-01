@@ -82,7 +82,7 @@ class SpanSessionObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, reqspec):
         if isinstance(reqspec, telemetry_pb2.MirrorSessionSpec):
             reqspec.meta.vrf_id = self.tenant.id
-            reqspec.id.session_id = self.id
+            reqspec.key_or_handle.mirrorsession_id = self.id
             reqspec.snaplen = self.snaplen
             if self.IsLocal():
                 reqspec.local_span_if.if_handle = self.intf.hal_handle
@@ -100,7 +100,7 @@ class SpanSessionObject(base.ConfigObjectBase):
                 reqspec.erspan_spec.dest_ip.ip_af = haldefs.common.IP_AF_INET
                 reqspec.erspan_spec.dest_ip.v4_addr = self.erspan_dest.getnum()
         else:
-            reqspec.session_id = self.id
+            reqspec.key_or_handle.mirrorsession_id = self.id
 
         return
 

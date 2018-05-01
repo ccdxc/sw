@@ -5,8 +5,8 @@
 syntax = "proto3";
 
 import "types.proto";
-import "telemetry.proto";
 import "nwsec.proto";
+import "kh.proto";
 
 package session;
 option go_package="halproto";
@@ -128,8 +128,8 @@ message FlowInfo {
   uint32                             nat_dport            = 6;     // dstination port to NAT to
   fixed64                            nat_dmac             = 7;     // For DSR
   FlowTCPState                       tcp_state            = 8;     // TCP state, if any
-  repeated telemetry.MirrorSessionId ing_mirror_sessions  = 9;    // Mirror sessions to copy the flow to
-  repeated telemetry.MirrorSessionId egr_mirror_sessions  = 10;    // Mirror sessions to copy the flow to
+  repeated kh.MirrorSessionKeyHandle ing_mirror_sessions  = 9  [(gogoproto.moretags) = "venice:constraints={range:0-7}"]; // list of mirror destinations
+  repeated kh.MirrorSessionKeyHandle egr_mirror_sessions  = 10 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];// list of mirror destinations
 }
 
 

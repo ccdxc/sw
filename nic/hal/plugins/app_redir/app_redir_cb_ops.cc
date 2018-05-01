@@ -416,7 +416,7 @@ app_redir_mirror_session_spec_build(MirrorSessionSpec& spec)
 
     HAL_TRACE_DEBUG("{} session {} for if_id {}", __FUNCTION__,
                     MIRROR_SESSION_APP_REDIR_VISIB_ID, app_redir_if_id);
-    spec.mutable_id()->set_session_id(MIRROR_SESSION_APP_REDIR_VISIB_ID);
+    spec.mutable_key_or_handle()->set_mirrorsession_id(MIRROR_SESSION_APP_REDIR_VISIB_ID);
     spec.mutable_local_span_if()->set_interface_id(app_redir_if_id);
     spec.set_snaplen(0);
 }
@@ -428,14 +428,14 @@ app_redir_mirror_session_spec_build(MirrorSessionSpec& spec)
 hal_ret_t
 app_redir_mirror_session_create(mirror_session_id_t &ret_id)
 {
-    MirrorSessionSpec   spec;
-    MirrorSession       rsp;
-    hal_ret_t           ret;
+    MirrorSessionSpec       spec;
+    MirrorSessionResponse   rsp;
+    hal_ret_t               ret;
 
     app_redir_mirror_session_spec_build(spec);
-    ret_id = spec.mutable_id()->session_id();
+    ret_id = spec.key_or_handle().mirrorsession_id();
 
-    ret = mirror_session_create(&spec, &rsp);
+    ret = mirror_session_create(spec, &rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{} failed ret {} rsp: {}",
                       __FUNCTION__, ret, rsp.api_status());
