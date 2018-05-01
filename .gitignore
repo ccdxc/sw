@@ -23,6 +23,7 @@ __pycache__/
 *.rej
 *.so*
 *.a
+*.lo
 *.vscode
 bazel-bin*
 bazel-genfiles*

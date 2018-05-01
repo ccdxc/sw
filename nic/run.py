@@ -143,7 +143,7 @@ def run_rtl(args):
     one_pkt_mode = ""
     if args.model_test:
         model_test = args.model_test
-    flow_stat_tbl_base = 0x108fcf800
+    flow_stat_tbl_base = 0x108faf800
     if args.storage:
         flow_stat_tbl_base += 0x4
     if not args.skipverify:
