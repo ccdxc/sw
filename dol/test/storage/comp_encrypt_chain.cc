@@ -40,24 +40,27 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
     success(false)
 {
     uncomp_buf = new dp_mem_t(1, app_max_size,
-                              DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_);
+                              DP_MEM_ALIGN_PAGE, params.uncomp_mem_type_,
+                              DP_MEM_ALLOC_NO_FILL);
 
     // size of compressed buffers accounts any for compression failure,
     // i.e., must be as large as uncompressed buffer plus cp_hdr_t
     comp_buf = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
-                            DP_MEM_ALIGN_PAGE, params.comp_mem_type_);
+                            DP_MEM_ALIGN_PAGE, params.comp_mem_type_,
+                            DP_MEM_ALLOC_NO_FILL);
     xts_encrypt_buf = new dp_mem_t(1, app_max_size + sizeof(cp_hdr_t),
-                          DP_MEM_ALIGN_PAGE, params.encrypt_mem_type_);
+                          DP_MEM_ALIGN_PAGE, params.encrypt_mem_type_,
+                          DP_MEM_ALLOC_NO_FILL);
     // for comp status, caller can elect to have 2 status buffers, e.g.
     // one in HBM for lower latency P4+ processing, and another in host
     // memory which P4+ will copy into for the application.
     comp_status_buf1 = new dp_mem_t(1, sizeof(cp_status_sha512_t),
                            DP_MEM_ALIGN_SPEC, params.comp_status_mem_type1_,
-                           kMinHostMemAllocSize);
+                           kMinHostMemAllocSize, DP_MEM_ALLOC_NO_FILL);
     if (params.comp_status_mem_type2_ != DP_MEM_TYPE_VOID) {
         comp_status_buf2 = new dp_mem_t(1, sizeof(cp_status_sha512_t),
                                DP_MEM_ALIGN_SPEC, params.comp_status_mem_type2_,
-                               kMinHostMemAllocSize);
+                               kMinHostMemAllocSize, DP_MEM_ALLOC_NO_FILL);
     } else {
         comp_status_buf2 = comp_status_buf1;
     }
@@ -147,8 +150,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
      * Partially overwrite destination buffers to prevent left over
      * data from a previous run
      */
-    comp_buf->fragment_find(0, 64)->fill_thru(0xff);
-    xts_encrypt_buf->fragment_find(0, 64)->fill_thru(0xff);
+    xts_encrypt_buf->fragment_find(0, sizeof(uint64_t))->fill_thru(0xff);
 
     app_blk_size = params.app_blk_size_;
     comp_queue = params.comp_queue_;
@@ -177,8 +179,8 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     chain_params.chain_ent.push_entry.barco_pndx_size =
                            (uint8_t)log2(xts::kXtsPISize);
     chain_params.chain_ent.push_entry.barco_ring_size = (uint8_t)log2(kXtsQueueSize);
-    comp_status_buf1->clear_thru();
-    comp_status_buf2->clear_thru();
+    comp_status_buf1->fragment_find(0, sizeof(uint64_t))->clear_thru();
+    comp_status_buf2->fragment_find(0, sizeof(uint64_t))->clear_thru();
     chain_params.chain_ent.status_hbm_pa = comp_status_buf1->pa();
     if (comp_status_buf1 != comp_status_buf2) {
         chain_params.chain_ent.status_dma_en = 1;
@@ -299,7 +301,7 @@ comp_encrypt_chain_t::verify(void)
     uint32_t    poll_factor = app_blk_size / kCompAppMinSize;
 
     // Poll for comp status
-    if (!comp_status_poll(comp_status_buf2, suppress_info_log)) {
+    if (!comp_status_poll(comp_status_buf2, cp_desc, suppress_info_log)) {
       printf("ERROR: comp_encrypt_chain compression status never came\n");
       return -1;
     }
@@ -316,6 +318,7 @@ comp_encrypt_chain_t::verify(void)
     }
 
     // Verify XTS engine doorbell
+    assert(poll_factor);
     if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
         printf("ERROR: comp_encrypt_chain doorbell from XTS engine never came\n");
         return -1;

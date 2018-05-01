@@ -204,6 +204,7 @@ extern comp_queue_t *cp_hotq;
 extern comp_queue_t *dc_hotq;
 
 bool comp_status_poll(dp_mem_t *status,
+                      const cp_desc_t &d,
                       bool suppress_log = false);
 void compress_cp_desc_template_fill(cp_desc_t &d,
                                     dp_mem_t *src_buf,

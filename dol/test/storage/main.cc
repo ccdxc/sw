@@ -279,6 +279,7 @@ std::vector<acc_scale_test_name_t> acc_scale_test_names = {
     {"decrypt-decompress", ACC_SCALE_TEST_DECRYPT_DECOMP},
     {"compress-hash", ACC_SCALE_TEST_COMP_HASH},
     {"checksum-decompress", ACC_SCALE_TEST_CHKSUM_DECOMP},
+    {"encrypt-only", ACC_SCALE_TEST_ENCRYPT_ONLY},
 };
 
 // Parse and convert the argument string into a bitmap of recognized tests

@@ -13,7 +13,8 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
                    uint32_t spec_line_size,
                    dp_mem_align_t mem_align,
                    dp_mem_type_t mem_type,
-                   uint32_t spec_align_size) :
+                   uint32_t spec_align_size,
+                   dp_mem_alloc_fill_t alloc_fill) :
     mem_type(mem_type),
     cache(nullptr),
     hbm_addr(0),
@@ -99,7 +100,9 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
                 assert(cache);
             }
 
-            all_lines_clear_thru();
+            if (alloc_fill == DP_MEM_ALLOC_FILL_ZERO) {
+                all_lines_clear_thru();
+            }
             break;
 
         case DP_MEM_TYPE_HOST_MEM:
@@ -117,7 +120,9 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
                 assert(cache);
             }
 
-            memset(cache, 0, total_size);
+            if (alloc_fill == DP_MEM_ALLOC_FILL_ZERO) {
+                memset(cache, 0, total_size);
+            }
             break;
 
         default:

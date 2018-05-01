@@ -153,7 +153,7 @@ public:
         app_hash_size_(kCompAppHashBlkSize),
         sha_en_(true),
         sha_type_(COMP_DEDUP_SHA512),
-        integrity_src_(COMP_INTEGRITY_SRC_COMP_DATA),
+        integrity_src_(COMP_INTEGRITY_SRC_UNCOMP_DATA),
         integrity_type_(COMP_INTEGRITY_M_CRC64),
         comp_queue_(nullptr),
         hash_queue_(nullptr),

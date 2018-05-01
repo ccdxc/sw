@@ -178,6 +178,9 @@ uint64_t pndx_data_pa;
 // Forward declaration with default mem_type
 int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size,
                dp_mem_type_t mem_type = DP_MEM_TYPE_HBM);
+int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
+                    uint16_t total_rings, uint16_t host_rings,
+                    dp_mem_type_t mem_type = DP_MEM_TYPE_HBM);
 
 static uint32_t log_2(uint32_t x);
 
@@ -259,13 +262,14 @@ void seq_queue_pdma_num_set(uint64_t& num_pdma_queues) {
 
 void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
                                uint64_t& acc_scale_chain_replica,
-                               uint32_t acc_scale_tests_max_chains) {
+                               uint32_t acc_scale_test_max,
+                               uint32_t acc_scale_test_num_true_chaining_tests) {
     uint32_t max_acc_entries;
     uint32_t max_queues;
     uint32_t max_status_queues;
 
     // acc_scale_tests_max_chains is the only entity not a power of 2.
-    max_queues = log_2(NUM_TO_VAL(acc_scale_chain_replica) * acc_scale_tests_max_chains);
+    max_queues = log_2(NUM_TO_VAL(acc_scale_chain_replica) * acc_scale_test_max);
 
     // Make adjustment for the number of seq SQs needed for accelerator
     // scale testing.
@@ -274,7 +278,9 @@ void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
     // are in power of 2. Total is bumped up to ensure CI != PI
     // during submission
     max_acc_entries = log_2(NUM_TO_VAL(acc_scale_submissions)) + 1;
-    max_status_queues = log_2(NUM_TO_VAL(acc_scale_submissions) * NUM_TO_VAL(max_queues));
+    max_status_queues = log_2(NUM_TO_VAL(acc_scale_submissions) * 
+                              (NUM_TO_VAL(acc_scale_chain_replica) *
+                               acc_scale_test_num_true_chaining_tests));
 
     kSeqNumAccEntries = std::max(kSeqNumAccEntries, max_acc_entries); 
     kSeqNumCompSQs = std::max(kSeqNumCompSQs, max_queues);
@@ -284,11 +290,12 @@ void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
 }
 
 int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
-                    uint16_t total_rings, uint16_t host_rings) {
+                    uint16_t total_rings, uint16_t host_rings,
+                    dp_mem_type_t mem_type) {
 
   // Initialize the queue in the DOL enviroment
   if (queue_init(q_ptr, NUM_TO_VAL(kSeqNumEntries),
-                 NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+                 NUM_TO_VAL(kDefaultEntrySize), mem_type) < 0) {
     printf("Unable to allocate host memory for PVM Seq SQ %d\n", qid);
     return -1;
   }
@@ -924,7 +931,7 @@ seq_queues_setup() {
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumXtsSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumAccEntries),
-                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+                   NUM_TO_VAL(kDefaultEntrySize), DP_MEM_TYPE_HOST_MEM) < 0) {
       printf("Unable to allocate host memory for Seq XTS SQ %d\n", i);
       return -1;
     }
@@ -945,7 +952,8 @@ seq_queues_setup() {
   pvm_seq_xts_status_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumXtsStatusSQs); j++, i++) {
     if (seq_queue_setup(&seq_sqs[i], i, (char *) kSeqXtsStatusSqHandler,
-                        kDefaultTotalRings, kDefaultHostRings) < 0) {
+                        kDefaultTotalRings, kDefaultHostRings,
+                        DP_MEM_TYPE_HOST_MEM) < 0) {
       printf("Failed to setup PVM Seq XTS Status queue %d \n", i);
       return -1;
     }
@@ -968,7 +976,7 @@ seq_queues_setup() {
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumCompSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumAccEntries),
-                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+                   NUM_TO_VAL(kDefaultEntrySize), DP_MEM_TYPE_HOST_MEM) < 0) {
       printf("Unable to allocate host memory for Seq Comp SQ %d\n", i);
       return -1;
     }
@@ -990,7 +998,8 @@ seq_queues_setup() {
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumCompStatusSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumEntries),
-                   NUM_TO_VAL(kSeqCompStatusSQEntrySize)) < 0) {
+                   NUM_TO_VAL(kSeqCompStatusSQEntrySize),
+                   DP_MEM_TYPE_HOST_MEM) < 0) {
       printf("Unable to allocate host memory for PVM Comp Status SQ %d\n", i);
       return -1;
     }

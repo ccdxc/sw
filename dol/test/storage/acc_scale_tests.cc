@@ -22,6 +22,10 @@
 namespace tests {
 
 
+/*************************************************************************************/
+/* Accelerator compression to XTS-encrypt chaining scale                             */
+/*************************************************************************************/
+
 /*
  * Accelerator compression to XTS-encrypt chaining scale
  * Constructor
@@ -201,6 +205,10 @@ comp_encrypt_chain_scale_t::full_verify(void)
     return success ? 0 : -1;
 }
 
+
+/*************************************************************************************/
+/* Accelerator XTS-decrypt to decompression chaining scale                           */
+/*************************************************************************************/
 
 /*
  * Accelerator XTS-decrypt to decompression chaining scale
@@ -401,6 +409,10 @@ decrypt_decomp_chain_scale_t::full_verify(void)
 }
 
 
+/*************************************************************************************/
+/* Accelerator compression to hash chaining scale                                    */
+/*************************************************************************************/
+
 /*
  * Accelerator compression to hash chaining scale
  * Constructor
@@ -596,13 +608,16 @@ comp_hash_chain_scale_t::full_verify(void)
 }
 
 
+/*************************************************************************************/
+/* Accelerator checksum to decompression chaining scale                              */
+/*************************************************************************************/
+
 /*
  * Accelerator checksum to decompression chaining scale
  * Constructor
  */
 chksum_decomp_chain_scale_t::chksum_decomp_chain_scale_t(chksum_decomp_chain_scale_params_t params) :
     scale_test_name(__FUNCTION__),
-    actual_hash_blks(params.actual_hash_blks_),
     destructor_free_buffers(params.destructor_free_buffers_),
     success(false)
 {
@@ -611,6 +626,7 @@ chksum_decomp_chain_scale_t::chksum_decomp_chain_scale_t(chksum_decomp_chain_sca
     dp_mem_t    *decomp_opaque_frag;
     dp_mem_t    *curr_chksum_status_host;
     dp_mem_t    *curr_chksum_opaque_host;
+    uint32_t    max_hash_blks;
     uint32_t    max_opaque_blks;
     uint32_t    i;
 
@@ -619,9 +635,12 @@ chksum_decomp_chain_scale_t::chksum_decomp_chain_scale_t(chksum_decomp_chain_sca
         chksum_decomp_chain_vec.push_back(new chksum_decomp_chain_t(params.cdc_params_));
     }
 
-    // Set up a common exp_opaque_data_buf that can be used to verify both checksum opaque
-    // as well as decomp opaque.
-    max_opaque_blks = std::max(actual_hash_blks, params.num_chains_);
+    // Set up a common exp_opaque_data_buf that can be used to verify both
+    // checksum opaque as well as decomp opaque.
+    max_hash_blks = COMP_HASH_CHAIN_MAX_HASH_BLKS(params.cdc_params_.app_max_size_,
+                                                  sizeof(cp_hdr_t),
+                                                  kCompAppHashBlkSize);
+    max_opaque_blks = std::max(max_hash_blks, params.num_chains_);
     exp_opaque_data_buf = new dp_mem_t(1, max_opaque_blks * sizeof(uint64_t),
                                        DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                        kMinHostMemAllocSize);
@@ -647,10 +666,10 @@ chksum_decomp_chain_scale_t::chksum_decomp_chain_scale_t(chksum_decomp_chain_sca
 
         // Hash is multi-block per chain and requires a vector of status vectors,
         // and a vector of opaque vectors!
-        curr_chksum_status_host = new dp_mem_t(actual_hash_blks, CP_STATUS_PAD_ALIGNED_SIZE,
+        curr_chksum_status_host = new dp_mem_t(max_hash_blks, CP_STATUS_PAD_ALIGNED_SIZE,
                                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                               kMinHostMemAllocSize);
-        curr_chksum_opaque_host = new dp_mem_t(actual_hash_blks, sizeof(uint64_t),
+        curr_chksum_opaque_host = new dp_mem_t(max_hash_blks, sizeof(uint64_t),
                                               DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                               kMinHostMemAllocSize);
         chksum_decomp_chain_vec[i]->pre_push(pre_push.caller_chksum_status_vec(curr_chksum_status_host).
@@ -748,12 +767,18 @@ chksum_decomp_chain_scale_t::push(void)
 int 
 chksum_decomp_chain_scale_t::completion_check(void)
 {
+    int         actual_hash_blks;
     uint32_t    i;
 
     verification_time_advance();
     success = memcmp(decomp_opaque_host_buf->read_thru(),
                      exp_opaque_data_buf->read_thru(),
                      decomp_opaque_host_buf->line_size_get()) == 0;
+    if (success) {
+        actual_hash_blks = push_params.comp_hash_chain_->actual_hash_blks_get(
+                                       COMP_HASH_CHAIN_NON_BLOCKING_RETRIEVE);
+        success = (actual_hash_blks > 0);
+    }
     for (i = 0; success && (i < chksum_decomp_chain_vec.size()); i++) {
         chksum_opaque_host_vec[i]->line_set(0);
         if (memcmp(chksum_opaque_host_vec[i]->read_thru(),
@@ -798,6 +823,181 @@ chksum_decomp_chain_scale_t::full_verify(void)
 }
 
 
+/*************************************************************************************/
+/* Accelerator XTS encrypt only chaining scale                                       */
+/*************************************************************************************/
+
+/*
+ * Accelerator XTS encrypt only chaining chaining scale
+ * Constructor
+ */
+encrypt_only_scale_t::encrypt_only_scale_t(encrypt_only_scale_params_t params) :
+    scale_test_name(__FUNCTION__),
+    destructor_free_buffers(params.destructor_free_buffers_),
+    success(false)
+{
+    encrypt_only_pre_push_params_t pre_push;
+    dp_mem_t    *xts_status_frag;
+    dp_mem_t    *xts_opaque_frag;
+    uint32_t    i;
+
+    // Instantiate unique encrypt_only_t tests one by one, as opposed to
+    // using vector instantiation since it would use the same value for all 
+    // instances which is not what we want.
+    assert(params.num_chains_);
+    for (i = 0; i < params.num_chains_; i++) {
+        encrypt_only_vec.push_back(new encrypt_only_t(params.enc_params_));
+    }
+
+    // Allocate status and opaque tags as a byte streams for fast memcmp.
+    xts_status_host_buf = new dp_mem_t(1,  params.num_chains_ * sizeof(uint64_t),
+                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint64_t));
+    exp_status_data_buf = new dp_mem_t(1, params.num_chains_ * sizeof(uint64_t),
+                                       DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+    xts_opaque_host_buf = new dp_mem_t(1,  params.num_chains_ * sizeof(uint64_t),
+                              DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM, sizeof(uint64_t));
+    exp_opaque_data_buf = new dp_mem_t(1, params.num_chains_ * sizeof(uint64_t),
+                                       DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+
+    exp_opaque_data = 0x7777777777777777;
+    exp_opaque_data_buf->fill_thru(0x77);
+
+    // Other inits
+
+    for (i = 0; i < encrypt_only_vec.size(); i++) {
+        xts_status_frag = xts_status_host_buf->fragment_find(i * sizeof(uint64_t),
+                                                             sizeof(uint64_t));
+        xts_opaque_frag = xts_opaque_host_buf->fragment_find(i * sizeof(uint64_t),
+                                                             sizeof(uint64_t));
+        encrypt_only_vec[i]->pre_push(pre_push.caller_xts_status_buf(xts_status_frag).
+                                               caller_xts_opaque_buf(xts_opaque_frag).
+                                               caller_xts_opaque_data(exp_opaque_data));
+    }
+}
+
+
+/*
+ * Accelerator XTS encrypt only chaining chaining scale
+ * Destructor
+ */
+encrypt_only_scale_t::~encrypt_only_scale_t()
+{
+    uint32_t    i;
+
+    // Only free buffers on successful completion; otherwise,
+    // HW/P4+ might still be trying to access them.
+    
+    printf("%s success %u destructor_free_buffers %u\n",
+           __FUNCTION__, success, destructor_free_buffers);
+    for (i = 0; i < encrypt_only_vec.size(); i++) {
+        delete encrypt_only_vec[i];
+    }
+    encrypt_only_vec.clear();
+
+    if (success && destructor_free_buffers) {
+
+        delete xts_status_host_buf;
+        delete xts_opaque_host_buf;
+        delete exp_status_data_buf;
+        delete exp_opaque_data_buf;
+    }
+}
+
+
+/*
+ * Accelerator XTS encrypt only chaining chaining scale
+ * Establish initial push parameters
+ */
+void
+encrypt_only_scale_t::push_params_set(encrypt_only_push_params_t params)
+{
+    push_params = params;
+}
+
+
+/*
+ * Accelerator XTS encrypt only chaining chaining scale
+ * Initiate the test
+ */
+int 
+encrypt_only_scale_t::push(void)
+{
+    uint32_t    i;
+
+    success = false;
+    xts_opaque_host_buf->clear_thru();
+
+    for (i = 0; i < encrypt_only_vec.size(); i++) {
+        encrypt_only_vec[i]->push(push_params);
+    }
+
+    // Only need to call post_push() once since all submissions went
+    // to the same comp_queue.
+    encrypt_only_vec[i - 1]->post_push();
+
+    run_count++;
+    return 0;
+}
+
+
+/*
+ * Accelerator XTS encrypt only chaining chaining scale
+ * Check for test completion and return 0 if so.
+ *
+ * Note: completion_check() must be non-blocking, i.e., do not use
+ * tests::Poller within this function or any descendant functions.
+ */
+int 
+encrypt_only_scale_t::completion_check(void)
+{
+    verification_time_advance();
+    success = memcmp(xts_opaque_host_buf->read_thru(),
+                     exp_opaque_data_buf->read_thru(),
+                     xts_opaque_host_buf->line_size_get()) == 0;
+    return success ? 0 : -1;
+}
+
+
+/*
+ * Accelerator XTS encrypt only chaining chaining scale
+ * Encryption is the last step in the chain so do a fast verification
+ * of all XTS status entries.
+ */
+int 
+encrypt_only_scale_t::fast_verify(void)
+{
+    success = memcmp(xts_status_host_buf->read_thru(),
+                     exp_status_data_buf->read_thru(),
+                     xts_status_host_buf->line_size_get()) == 0;
+    return success ? 0 : -1;
+}
+
+/*
+ * Accelerator XTS encrypt only chaining chaining scale
+ * Perform a slower but full verification of all chain results.
+ */
+int 
+encrypt_only_scale_t::full_verify(void)
+{
+    uint32_t    i;
+
+    success = true;
+    for (i = 0; i < encrypt_only_vec.size(); i++) {
+        if (encrypt_only_vec[i]->verify()) {
+            printf("ERROR: %s submission #%u failed\n",
+                   __FUNCTION__, i);
+            success = false;
+        }
+    }
+
+    return success ? 0 : -1;
+}
+
+
+/*************************************************************************************/
+/* Accelerator chaining scale test instantiations                                    */
+/*************************************************************************************/
+
 /*
  * Create and return an instance of 
  *   Compression to XTS-encrypt chaining scale
@@ -807,7 +1007,7 @@ acc_comp_encrypt_chain_scale_create(uint32_t num_submissions,
                                     uint32_t app_blk_size,
                                     uint32_t sq_idx,
                                     uint32_t status_sq_start_idx,
-                                    comp_encrypt_chain_t *not_needed)
+                                    void *seed_test_chain)
 {
     comp_encrypt_chain_scale_params_t   cec_scale;
     comp_encrypt_chain_params_t         cec_params;
@@ -843,7 +1043,7 @@ acc_decrypt_decomp_chain_scale_create(uint32_t num_submissions,
                                       uint32_t app_blk_size,
                                       uint32_t sq_idx,
                                       uint32_t status_sq_start_idx,
-                                      comp_encrypt_chain_t *comp_encrypt_chain_seed)
+                                      void *seed_test_chain)
 {
     decrypt_decomp_chain_scale_params_t ddc_scale;
     decrypt_decomp_chain_params_t       ddc_params;
@@ -860,7 +1060,7 @@ acc_decrypt_decomp_chain_scale_create(uint32_t num_submissions,
                                                                          destructor_free_buffers(true).
                                                                          suppress_info_log(true)).
                                                    destructor_free_buffers(true));
-    decrypt_decomp_chain_scale->push_params_set(ddc_push.comp_encrypt_chain(comp_encrypt_chain_seed).
+    decrypt_decomp_chain_scale->push_params_set(ddc_push.comp_encrypt_chain((comp_encrypt_chain_t *)seed_test_chain).
                                                          decomp_queue(dc_queue).
                                                          seq_xts_qid(queues::get_seq_xts_sq(sq_idx)).
                                                          seq_xts_status_qid(queues::get_seq_xts_status_sq(status_sq_start_idx)));
@@ -877,7 +1077,7 @@ acc_comp_hash_chain_scale_create(uint32_t num_submissions,
                                  uint32_t app_blk_size,
                                  uint32_t sq_idx,
                                  uint32_t status_sq_start_idx,
-                                 comp_encrypt_chain_t *not_needed)
+                                 void *seed_test_chain)
 {
     comp_hash_chain_scale_params_t   chc_scale;
     comp_hash_chain_params_t         chc_params;
@@ -916,27 +1116,21 @@ acc_chksum_decomp_chain_scale_create(uint32_t num_submissions,
                                      uint32_t app_blk_size,
                                      uint32_t sq_idx,
                                      uint32_t status_sq_start_idx,
-                                     comp_hash_chain_t *comp_hash_chain_seed)
+                                     void *seed_test_chain)
 {
     chksum_decomp_chain_scale_params_t cdc_scale;
     chksum_decomp_chain_params_t       cdc_params;
     chksum_decomp_chain_push_params_t  cdc_push;
     chksum_decomp_chain_scale_t        *chksum_decomp_chain_scale;
-    int                                actual_hash_blks;
-
-    actual_hash_blks = 
-        comp_hash_chain_seed->actual_hash_blks_get(COMP_HASH_CHAIN_NON_BLOCKING_RETRIEVE);
-    assert(actual_hash_blks > 0);
 
     chksum_decomp_chain_scale = 
         new chksum_decomp_chain_scale_t(cdc_scale.num_chains(num_submissions).
-                                                  actual_hash_blks((uint32_t)actual_hash_blks).
                                                   cdc_params(cdc_params.app_max_size(app_blk_size).
                                                                         uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
                                                                         destructor_free_buffers(true).
                                                                         suppress_info_log(true)).
                                                   destructor_free_buffers(true));
-    chksum_decomp_chain_scale->push_params_set(cdc_push.comp_hash_chain(comp_hash_chain_seed).
+    chksum_decomp_chain_scale->push_params_set(cdc_push.comp_hash_chain((comp_hash_chain_t *)seed_test_chain).
                                                         chksum_queue(dc_queue).
                                                         decomp_queue(dc_hotq).
                                                         push_type(COMP_QUEUE_PUSH_SEQUENCER_DEFER).
@@ -947,25 +1141,66 @@ acc_chksum_decomp_chain_scale_create(uint32_t num_submissions,
 
 
 /*
- * Run the accelerator scale test group which includes
- *   Compression to XTS-encrypt chaining scale
- *   XTS-decrypt to decompression chaining scale
+ * Create and return an instance of 
+ *   XTS-encrypt only chaining scale
+ */
+acc_scale_tests_t * 
+acc_encrypt_only_scale_create(uint32_t num_submissions,
+                              uint32_t app_blk_size,
+                              uint32_t sq_idx,
+                              uint32_t status_sq_start_idx,
+                              void *seed_test_chain)
+{
+    encrypt_only_scale_params_t   enc_scale;
+    encrypt_only_params_t         enc_params;
+    encrypt_only_push_params_t    enc_push;
+    encrypt_only_scale_t          *encrypt_only_scale;
+
+    encrypt_only_scale = 
+        new encrypt_only_scale_t(enc_scale.num_chains(num_submissions).
+                                           enc_params(enc_params.app_max_size(app_blk_size).
+                                                                 unencrypt_mem_type(DP_MEM_TYPE_HOST_MEM).
+                                                                 encrypt_mem_type(DP_MEM_TYPE_HOST_MEM).
+                                                                 destructor_free_buffers(true).
+                                                                 suppress_info_log(true)).
+                                           destructor_free_buffers(true));
+    encrypt_only_scale->push_params_set(enc_push.app_blk_size(app_blk_size).
+                                                 push_type(COMP_QUEUE_PUSH_SEQUENCER_DEFER).
+                                                 seq_xts_qid(queues::get_seq_xts_sq(sq_idx)));
+    return encrypt_only_scale;
+}
+
+
+/*************************************************************************************/
+/* Run Accelerator chaining scale test group                                         */
+/*************************************************************************************/
+
+/*
+ * Run the accelerator scale test group based on the configured run_acc_scale_tests_map.
  */
 int
 acc_scale_tests_push(void)
 {
-    std::vector<std::function<acc_scale_tests_t*(uint32_t,
-                                                 uint32_t,
-                                                 uint32_t,
-                                                 uint32_t,
-                                                 comp_encrypt_chain_t*)>> tests_vec;
-    comp_encrypt_chain_scale_t  *comp_encrypt_chain_scale_seed = nullptr;
-    comp_encrypt_chain_t        *comp_encrypt_chain_seed = nullptr;
-    acc_scale_tests_list_t      tests_list;
-    tests::Poller               poll(FLAGS_long_poll_interval);
+	typedef std::pair<std::function<acc_scale_tests_t*(uint32_t,
+                                                       uint32_t,
+                                                       uint32_t,
+                                                       uint32_t,
+                                                       void*)>,
+                      void*> acc_scale_tests_spec_t;
+
+    std::vector<acc_scale_tests_t*>     seed_tests_vec;
+    std::vector<acc_scale_tests_spec_t> tests_vec;
+
+    comp_encrypt_chain_scale_t  *seed_comp_encrypt_chain_scale = nullptr;
+    comp_encrypt_chain_t        *seed_comp_encrypt_chain = nullptr;
+    comp_hash_chain_scale_t     *seed_comp_hash_chain_scale = nullptr;
+    comp_hash_chain_t           *seed_comp_hash_chain = nullptr;
     uint32_t                    num_submissions = NUM_TO_VAL(FLAGS_acc_scale_submissions);
     uint32_t                    num_replicas = NUM_TO_VAL(FLAGS_acc_scale_chain_replica);
     uint32_t                    app_blk_size = NUM_TO_VAL(FLAGS_acc_scale_blk_size);
+    uint32_t                    poll_factor = app_blk_size / kCompAppMinSize;
+    tests::Poller               poll(FLAGS_long_poll_interval * poll_factor);
+    acc_scale_tests_list_t      tests_list(poll_factor);
     uint32_t                    sq_idx;
     uint32_t                    r, v;
     int                         ret_val;
@@ -976,71 +1211,95 @@ acc_scale_tests_push(void)
      * Note that we'll do all the setup before starting any tests.
      */
     if (run_acc_scale_tests_map & ACC_SCALE_TEST_DECRYPT_DECOMP) {
-        comp_encrypt_chain_scale_seed = (comp_encrypt_chain_scale_t *)
+        seed_comp_encrypt_chain_scale = (comp_encrypt_chain_scale_t *)
                                          acc_comp_encrypt_chain_scale_create(1, app_blk_size,
                                                                              0, 0, nullptr);
-        comp_encrypt_chain_seed = comp_encrypt_chain_scale_seed->chain_get(0);
-        tests_vec.push_back(&acc_decrypt_decomp_chain_scale_create);
+        seed_comp_encrypt_chain = seed_comp_encrypt_chain_scale->chain_get(0);
+        seed_tests_vec.push_back(seed_comp_encrypt_chain_scale);
+        tests_vec.push_back(std::make_pair(&acc_decrypt_decomp_chain_scale_create,
+                                           (void *)seed_comp_encrypt_chain));
+    }
+
+    /*
+     * Checksum-decompress also needs seed data
+     */
+    if (run_acc_scale_tests_map & ACC_SCALE_TEST_CHKSUM_DECOMP) {
+        seed_comp_hash_chain_scale = (comp_hash_chain_scale_t *)
+                                      acc_comp_hash_chain_scale_create(1, app_blk_size,
+                                                                       0, 0, nullptr);
+        seed_comp_hash_chain = seed_comp_hash_chain_scale->chain_get(0);
+        seed_tests_vec.push_back(seed_comp_hash_chain_scale);
+        tests_vec.push_back(std::make_pair(&acc_chksum_decomp_chain_scale_create,
+                                           (void *)seed_comp_hash_chain));
     }
 
     /*
      * Add more tests as selected
      */
     if (run_acc_scale_tests_map & ACC_SCALE_TEST_COMP_ENCRYPT) {
-        tests_vec.push_back(&acc_comp_encrypt_chain_scale_create);
+        tests_vec.push_back(std::make_pair(&acc_comp_encrypt_chain_scale_create,
+                                           nullptr));
     }
     if (run_acc_scale_tests_map & ACC_SCALE_TEST_COMP_HASH) {
-        tests_vec.push_back(&acc_comp_hash_chain_scale_create);
+        tests_vec.push_back(std::make_pair(&acc_comp_hash_chain_scale_create,
+                                           nullptr));
+    }
+    if (run_acc_scale_tests_map & ACC_SCALE_TEST_ENCRYPT_ONLY) {
+        tests_vec.push_back(std::make_pair(&acc_encrypt_only_scale_create,
+                                           nullptr));
     }
 
     /*
-     * Bump up the global constant below if assert fails
-     */
-    assert(tests_vec.size() <= ACC_SCALE_TEST_MAX_TYPES);
-
-    /*
-     * Create and run test list,
+     * Create test list,
      * each chain is replicated by num_replicas times
      */
     sq_idx = 0;
     for (r = 0; r < num_replicas; r++) {
         for (v = 0; v < tests_vec.size(); v++) {
-            tests_list.push(tests_vec[v](num_submissions, app_blk_size,
-                                         sq_idx, (sq_idx * num_submissions),
-                                         comp_encrypt_chain_seed));
+            tests_list.push(tests_vec[v].first(num_submissions, app_blk_size,
+                                               sq_idx, (sq_idx * num_submissions),
+                                               tests_vec[v].second));
             sq_idx++;
         }
     }
 
     /*
-     * Start any seeding tests
+     * Start any seed tests
      */
-    if (comp_encrypt_chain_scale_seed) {
-        comp_encrypt_chain_scale_seed->push();
+    for (v = 0; v < seed_tests_vec.size(); v++) {
+        acc_scale_tests_t *seed_test_chain = seed_tests_vec[v];
+
+        seed_test_chain->push();
 
         /*
-         * Poll for completion of source data generation
+         * Poll for completion of seed data generation
          */
-        auto completion_poll = [&comp_encrypt_chain_scale_seed] () -> int
+        auto completion_poll = [&seed_test_chain] () -> int
         {
-            return comp_encrypt_chain_scale_seed->completion_check();
+            return seed_test_chain->completion_check();
         };
 
         if (poll(completion_poll) || 
-            comp_encrypt_chain_scale_seed->full_verify()) {
+            seed_test_chain->full_verify()) {
 
-            printf("%s seed data creation failed\n", __FUNCTION__);
-            delete comp_encrypt_chain_scale_seed;
+            printf("Seed %s data creation failed\n",
+                   seed_test_chain->scale_test_name_get());
             return -1;
         }
     }
+
 
     /*
      * Now start all the configured scaled tests
      */
     ret_val = tests_list.post_push(__FUNCTION__);
-    if ((ret_val == 0) && comp_encrypt_chain_scale_seed) {
-        delete comp_encrypt_chain_scale_seed;
+    if (ret_val == 0) {
+        if (seed_comp_encrypt_chain_scale) {
+            delete seed_comp_encrypt_chain_scale;
+        }
+        if (seed_comp_hash_chain_scale) {
+            delete seed_comp_hash_chain_scale;
+        }
     }
     return ret_val;
 }
@@ -1050,7 +1309,8 @@ acc_scale_tests_push(void)
  * List of accelerator scale tests
  * Constructor
  */
-acc_scale_tests_list_t::acc_scale_tests_list_t()
+acc_scale_tests_list_t::acc_scale_tests_list_t(uint32_t poll_factor) :
+    poll_factor(poll_factor)
 {
 }
 
@@ -1098,7 +1358,7 @@ acc_scale_tests_list_t::push(acc_scale_tests_t *scale_test)
 int
 acc_scale_tests_list_t::post_push(const char *test_name)
 {
-    tests::Poller       poll(FLAGS_long_poll_interval);
+    tests::Poller       poll(FLAGS_long_poll_interval * poll_factor);
     acc_scale_tests_t   *scale_test;
     std::list<acc_scale_tests_t*>::iterator it;
     int                 verify_result;

@@ -7,6 +7,7 @@
 #include "comp_encrypt_chain.hpp"
 #include "comp_hash_chain.hpp"
 #include "chksum_decomp_chain.hpp"
+#include "encrypt_only.hpp"
 
 /*
  * Accelerator scale tests DOL
@@ -219,6 +220,13 @@ public:
         return scale_test_name;
     }
 
+    // Return a test instance from comp_hash_chain_vec
+    comp_hash_chain_t *chain_get(uint32_t inst)
+    {
+        return inst < comp_hash_chain_vec.size() ?
+               comp_hash_chain_vec[inst] : nullptr;
+    }
+
 private:
     std::vector<comp_hash_chain_t*>  comp_hash_chain_vec;
 
@@ -247,13 +255,11 @@ public:
 
     chksum_decomp_chain_scale_params_t() :
         num_chains_(0),
-        actual_hash_blks_(0),
         destructor_free_buffers_(false)
     {
     }
 
     uint32_t                        num_chains_;
-    uint32_t                        actual_hash_blks_;
     chksum_decomp_chain_params_t    cdc_params_;
     bool                            destructor_free_buffers_;
 
@@ -261,12 +267,6 @@ public:
     num_chains(uint32_t num_chains)
     {
         num_chains_ = num_chains;
-        return *this;
-    }
-    chksum_decomp_chain_scale_params_t&
-    actual_hash_blks(uint32_t actual_hash_blks)
-    {
-        actual_hash_blks_ = actual_hash_blks;
         return *this;
     }
     chksum_decomp_chain_scale_params_t&
@@ -318,7 +318,6 @@ private:
     dp_mem_t        *decomp_opaque_host_buf;
     dp_mem_t        *exp_opaque_data_buf;
     uint32_t        exp_opaque_data;
-    uint32_t        actual_hash_blks;
 
     bool            destructor_free_buffers;
     bool            success;
@@ -402,13 +401,90 @@ private:
 
 
 /*
+ * Emulate named parameters support for encrypt_only_scale_t constructor
+ */
+class encrypt_only_scale_params_t
+{
+public:
+
+    encrypt_only_scale_params_t() :
+        num_chains_(0),
+        destructor_free_buffers_(false)
+    {
+    }
+
+    uint32_t                num_chains_;
+    encrypt_only_params_t   enc_params_;
+    bool                    destructor_free_buffers_;
+
+    encrypt_only_scale_params_t&
+    num_chains(uint32_t num_chains)
+    {
+        num_chains_ = num_chains;
+        return *this;
+    }
+    encrypt_only_scale_params_t&
+    enc_params(encrypt_only_params_t enc_params)
+    {
+        enc_params_ = enc_params;
+        return *this;
+    }
+    encrypt_only_scale_params_t&
+    destructor_free_buffers(bool destructor_free_buffers)
+    {
+        destructor_free_buffers_ = destructor_free_buffers;
+        return *this;
+    }
+};
+
+
+/*
+ * Accelerator XTS-encrypt only scale
+ */
+class encrypt_only_scale_t : public acc_scale_tests_t
+{
+public:
+    encrypt_only_scale_t(encrypt_only_scale_params_t params);
+    ~encrypt_only_scale_t();
+
+    void push_params_set(encrypt_only_push_params_t params);
+
+    virtual int push(void);
+    virtual int completion_check(void);
+    virtual int fast_verify(void);
+    virtual int full_verify(void);
+
+    virtual const char *scale_test_name_get(void)
+    {
+        return scale_test_name;
+    }
+
+private:
+    std::vector<encrypt_only_t*> encrypt_only_vec;
+
+    const char      *scale_test_name;
+    encrypt_only_push_params_t push_params;
+
+    dp_mem_t        *xts_status_host_buf;
+    dp_mem_t        *xts_opaque_host_buf;
+
+    dp_mem_t        *exp_status_data_buf;
+    dp_mem_t        *exp_opaque_data_buf;
+    uint64_t        exp_opaque_data;
+
+    bool            destructor_free_buffers;
+    bool            success;
+};
+
+
+/*
  * List of accelerator scale tests
  */
 class acc_scale_tests_list_t
 {
 public:
 
-    acc_scale_tests_list_t();
+    acc_scale_tests_list_t(uint32_t poll_factor);
     ~acc_scale_tests_list_t();
 
     void push(acc_scale_tests_t *scale_test);
@@ -419,6 +495,8 @@ public:
 private:
     std::list<acc_scale_tests_t*>   tests_list;
     std::list<acc_scale_tests_t*>   compl_list;
+
+    uint32_t                        poll_factor;
 };
 
 

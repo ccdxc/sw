@@ -150,8 +150,14 @@ int run_dc_test(cp_desc_t& desc,
                 comp_queue_push_t push_type = COMP_QUEUE_PUSH_HW_DIRECT,
                 uint32_t seq_comp_qid = 0);
 
-bool comp_status_poll(dp_mem_t *status,
-                      bool suppress_log) {
+bool
+comp_status_poll(dp_mem_t *status,
+                 const cp_desc_t& desc,
+                 bool suppress_log)
+{
+  uint32_t poll_factor;
+  uint32_t datain_len;
+
   auto func = [status, suppress_log] () -> int {
     cp_status_sha512_t *s = (cp_status_sha512_t *)status->read_thru();
     if (s->valid) {
@@ -166,7 +172,11 @@ bool comp_status_poll(dp_mem_t *status,
     }
     return 1;
   };
-  tests::Poller poll(FLAGS_long_poll_interval);
+
+  datain_len = desc.datain_len == 0 ?
+               kCompEngineMaxSize : desc.datain_len;
+  poll_factor = (datain_len + kCompAppMinSize - 1) / kCompAppMinSize;
+  tests::Poller poll(FLAGS_long_poll_interval * poll_factor);
   if (poll(func) == 0)
     return true;
   return false;
@@ -661,7 +671,7 @@ int run_cp_test(cp_desc_t& desc,
 {
     status->clear_thru();
     cp_queue->push(desc, push_type, seq_comp_qid);
-    if (!comp_status_poll(status)) {
+    if (!comp_status_poll(status, desc)) {
       printf("ERROR: status never came\n");
       return -1;
     }
@@ -682,7 +692,7 @@ int run_dc_test(cp_desc_t& desc,
 {
     status->clear_thru();
     dc_queue->push(desc, push_type, seq_comp_qid);
-    if (!comp_status_poll(status)) {
+    if (!comp_status_poll(status, desc)) {
       printf("ERROR: status never came\n");
       return -1;
     }
@@ -707,8 +717,7 @@ void compress_cp_desc_template_fill(cp_desc_t &d,
     d.status_data = 0x1234;
 
     if (invalidate_hdr_buf) {
-        dp_mem_t *cp_hdr = invalidate_hdr_buf->fragment_find(0, sizeof(cp_hdr_t));
-        cp_hdr->clear_thru();
+        invalidate_hdr_buf->fragment_find(0, sizeof(cp_hdr_t))->clear_thru();
     }
 }
 
