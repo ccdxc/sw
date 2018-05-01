@@ -62,6 +62,49 @@ service NatPoolApi {
     rpc WatchNatPools (api.ObjectMeta) returns (stream NatPoolEvent) {};
 }
 
+// nat binding object
+message NatBindingSpec {
+    string NatPoolName   = 1[(gogoproto.jsontag) = "nat-pool,omitempty"];
+    string IPAddress     = 2[(gogoproto.jsontag) = "ip-address,omitempty"];
+}
+
+message NatBindingStatus {
+    string NatBindingID = 1[(gogoproto.jsontag) = "id,omitempty"];
+    string NatIP        = 2[(gogoproto.jsontag) = "nat-ip,omitempty"];
+}
+
+message NatBinding {
+    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    NatBindingSpec   Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    NatBindingStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of nat bindings
+message NatBindingList {
+    repeated NatBinding NatBindings = 1;
+}
+
+// Nat binding rpc service
+service NatBindingApi {
+    // options for auto generating rest endpoints
+    // ToDo add autogen
+//    option(venice.naplesRestService) = {
+//        Object: "NatBinding",
+//        Method: ["list", "post", "put", "delete"],
+//        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}"
+//    };
+
+    rpc GetNatBinding (api.ObjectMeta) returns (NatBinding) {};
+    rpc ListNatBindings (api.ObjectMeta) returns (NatBindingList) {};
+    rpc WatchNatBindings (api.ObjectMeta) returns (stream NatBindingEvent) {};
+}
+
+message NatBindingEvent {
+    api.EventType EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    NatBinding NatBinding         = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nat-binding,omitempty"];
+}
+
 message MatchSelector {
     enum Type
     {

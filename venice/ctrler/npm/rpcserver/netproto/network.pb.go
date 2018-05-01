@@ -56,6 +56,11 @@
 		NatPool
 		NatPoolList
 		NatPoolEvent
+		NatBindingSpec
+		NatBindingStatus
+		NatBinding
+		NatBindingList
+		NatBindingEvent
 		MatchSelector
 		NatRule
 		NatPolicySpec
