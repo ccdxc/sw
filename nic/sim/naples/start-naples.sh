@@ -50,7 +50,7 @@ HAL_WAIT_TIMEOUT=1
 HAL_GRPC_PORT="${HAL_GRPC_PORT:-50054}"
 HAL_SERVER="localhost:$HAL_GRPC_PORT"
 HAL_UP=-1
-MAX_RETRIES=60
+MAX_RETRIES=600
 i=0
 until (( HAL_UP == 0 )) || (( i == MAX_RETRIES ))
 do
@@ -74,7 +74,7 @@ fi
 # start NIC manager and allow it to create uplinks
 echo "Starting nicmgr ..."
 $NIC_DIR/bin/nic_mgr_app
-if [ $? -neq 0]; then
+if [ $? -ne 0 ]; then
     echo "Failed to start nic mgr"
     #exit $?
 fi

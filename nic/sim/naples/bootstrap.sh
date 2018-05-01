@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-#NATR Gateway IP and nat subnet 
+#NAT Gateway IP and nat subnet 
 NAT_GWIP=10.101.0.1      # IP address of the NAT gateway 
 NAT_SUBNET=10.100.0.0/16 # This should match the nat IP pool
 
