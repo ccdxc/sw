@@ -517,7 +517,7 @@ func (s *RPCServer) MonitorHealth() {
 				continue
 			}
 
-			log.Infof("Health watch timer callback, #nics: %d %+v", len(nics), nics)
+			log.Infof("Health watch timer callback, #nics: %d ", len(nics))
 
 			// Iterate on smartNIC objects
 			for _, nic := range nics {
@@ -541,7 +541,7 @@ func (s *RPCServer) MonitorHealth() {
 						if err == nil && time.Since(t) > s.DeadIntvl {
 
 							// update the nic health status to unknown
-							log.Infof("Updating NIC health to unknown, nic: %s", nic.Name)
+							log.Infof("Updating NIC health to unknown, nic: %s DeadIntvl:%d", nic.Name, s.DeadIntvl)
 							lastUpdateTime := nic.Status.Conditions[i].LastTransitionTime
 							nic.Status.Conditions[i].Status = cluster.ConditionStatus_UNKNOWN.String()
 							nic.Status.Conditions[i].LastTransitionTime = time.Now().Format(time.RFC3339)

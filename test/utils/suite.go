@@ -13,10 +13,12 @@ import (
 	"time"
 
 	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
 	"golang.org/x/crypto/ssh"
 
 	"github.com/pensando/sw/api"
 
+	"github.com/pensando/sw/api/generated/cluster"
 	cmdclient "github.com/pensando/sw/api/generated/cluster/grpc/client"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -195,10 +197,15 @@ func (tu *TestUtils) Init() {
 	cmdClient := cmdclient.NewRestCrudClientClusterV1(tu.apiGwAddr)
 	clusterIf := cmdClient.Cluster()
 	obj := api.ObjectMeta{Name: "testCluster"}
-	cl, err := clusterIf.Get(context.Background(), &obj)
-	if err != nil {
-		ginkgo.Fail(fmt.Sprintf("cluster Get err : %s", err))
-	}
+	var cl *cluster.Cluster
+	gomega.Eventually(func() bool {
+		cl, err = clusterIf.Get(context.Background(), &obj)
+		if err == nil {
+			return true
+		}
+		return false
+	}, 45, 2).Should(gomega.BeTrue(), "cluster object should be readable via api gateway but failing with %v", err)
+
 	for _, qn := range cl.Spec.QuorumNodes {
 		tu.QuorumNodes = append(tu.QuorumNodes, qn)
 	}
