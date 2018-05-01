@@ -825,10 +825,6 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
 			EncapValue: nw.Spec.VlanID,
 		},
-		TunnelEncap: &halproto.EncapInfo{
-			EncapType:  halproto.EncapType_ENCAP_TYPE_VXLAN,
-			EncapValue: nw.Spec.VlanID,
-		},
 		VrfKeyHandle: vrfKey,
 	}
 	segReq := halproto.L2SegmentRequestMsg{
