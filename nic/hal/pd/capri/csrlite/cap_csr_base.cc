@@ -42,7 +42,6 @@ void cap_sw_csr_base::init(uint32_t _chip_id, uint32_t _addr_base) {
     set_offset(_addr_base);
 
     if(get_csr_type() == CSR_TYPE_NONE) {set_csr_type(CSR_TYPE_REGISTER);}
-    base__csr_end_addr = (get_width() != 0) ? (get_offset() + ((get_width() +7)/8) -1) : get_offset();
 }
 
 void cap_sw_csr_base::pack(uint8_t *bytes, uint32_t start) {

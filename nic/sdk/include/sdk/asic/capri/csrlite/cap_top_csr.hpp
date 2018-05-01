@@ -346,7 +346,8 @@ class cap_top_csr_helper_t {
 public:
     cap_top_csr_helper_t()=default;
     ~cap_top_csr_helper_t()=default;
-    void init(void);
+    void free(cap_sw_csr_base *item) {delete item;}
+    void init();
 
     struct {
         cap_ppa_csr_helper_t ppa[CAP_PPA_CSR_INST_MAX];
@@ -448,7 +449,7 @@ public:
     } mx;
 };
 
-extern class cap_top_csr_helper_t cap_top_csr_helper; 
+extern class cap_top_csr_helper_t cap_top_csr;
 
 }
 }

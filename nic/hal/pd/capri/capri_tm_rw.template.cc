@@ -30,7 +30,7 @@
 #endif
 
 using namespace hal::utils;
-using sdk::lib::csrlite::cap_top_csr_helper;
+using sdk::lib::csrlite::cap_top_csr;
 using sdk::lib::csrlite::cap_pbc_csr_helper_t;
 
 typedef struct capri_tm_cfg_profile_s {
@@ -1030,7 +1030,7 @@ capri_tm_get_hbm_occupancy(tm_hbm_fifo_type_e fifo_type, uint32_t context)
 static uint32_t 
 capri_tm_get_buffer_occupancy (tm_port_t port, tm_q_t iq)
 {
-    cap_pbc_csr_helper_t &pbc_csr = cap_top_csr_helper.pb.pbc;
+    cap_pbc_csr_helper_t &pbc_csr = cap_top_csr.pb.pbc;
     uint32_t cell_occupancy = 0;
 
     switch(port) {
@@ -1040,19 +1040,22 @@ capri_tm_get_buffer_occupancy (tm_port_t port, tm_q_t iq)
             {
                 // ${pinfo["enum"]}
                 sdk::lib::csrlite::cap_pbcport${p}_csr_sta_account_t *sta_account_reg;
-                sta_account_reg = pbc_csr.port_${p}.sta_account.get_csr_instance(0);
+                sta_account_reg = pbc_csr.port_${p}.sta_account.alloc();
                 sta_account_reg->read();
                 switch (iq) {
 //::        for pg in range(pinfo["pgs"]):
                     case ${pg}:
                         {
-                            cell_occupancy = sta_account_reg->occupancy_${pg};
+                            cell_occupancy = sta_account_reg->occupancy_${pg}();
                             break;
                         }
 //::        #endfor
                     default:
+                        cap_top_csr.free(sta_account_reg);
                         return HAL_RET_ERR;
                 }
+
+                cap_top_csr.free(sta_account_reg);
                 break;
             }
 //:: #endfor
@@ -1884,34 +1887,35 @@ capri_tm_port_program_defaults (void)
 //::    pinfo = port_info[p]
     // ${pinfo["enum"]}
     
-    sdk::lib::csrlite::cap_pbcport${p}_csr_cfg_oq_t *cfg_oq_${p}_reg = 
-        cap_top_csr_helper.pb.pbc.port_${p}.cfg_oq.get_csr_instance(0);
+    sdk::lib::csrlite::cap_pbcport${p}_csr_cfg_oq_t *cfg_oq_${p}_reg =
+            cap_top_csr.pb.pbc.port_${p}.cfg_oq.alloc();
 
     port_type = capri_tm_get_port_type(${pinfo["enum"]});
     cfg_oq_${p}_reg->read();
 //::    if pinfo["type"] == "uplink":
-    cfg_oq_${p}_reg->num_hdr_bytes = 
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ;
+    cfg_oq_${p}_reg->num_hdr_bytes(
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
 //::    #endif
 
     if (tm_sw_init_enabled()) {
-        cfg_oq_${p}_reg->enable = 1;
-        cfg_oq_${p}_reg->rewrite_enable = 1;
+        cfg_oq_${p}_reg->enable(1);
+        cfg_oq_${p}_reg->rewrite_enable(1);
 //::    if pinfo["supports_credits"]:
-        cfg_oq_${p}_reg->flow_control_enable_credits = 
-            tm_asic_profile()->port[port_type].uses_credits ? 1 : 0;
+        cfg_oq_${p}_reg->flow_control_enable_credits(
+            tm_asic_profile()->port[port_type].uses_credits ? 1 : 0);
 //::    #endif
 //::    if pinfo["enum"] == "TM_PORT_INGRESS":
-        cfg_oq_${p}_reg->packing_msb = 
+        cfg_oq_${p}_reg->packing_msb(
             capri_tm_get_max_cell_chunks_for_island(0) >
-            capri_tm_get_max_cell_chunks_for_island(1) ? 1 : 0 ;
+            capri_tm_get_max_cell_chunks_for_island(1) ? 1 : 0);
 //::    #endif
 //::    if pinfo["type"] == "dma" or pinfo["type"] == "uplink":
-        cfg_oq_${p}_reg->flow_control_enable_xoff = 1;
+        cfg_oq_${p}_reg->flow_control_enable_xoff(1);
 //::    #endif
     }
     HAL_TRACE_DEBUG("Writing pbc.port_${p}.cfg_oq {}", *cfg_oq_${p}_reg);
     cfg_oq_${p}_reg->write();
+    cap_top_csr.free(cfg_oq_${p}_reg);
 //:: #endfor
 
     return HAL_RET_OK;
@@ -2650,7 +2654,6 @@ capri_tm_reset_iq_stats(tm_port_t port, tm_q_t iq)
 hal_ret_t
 capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats)
 {
-    cap_pbc_csr_helper_t &pbc_csr = cap_top_csr_helper.pb.pbc;
     sdk::lib::csrlite::cap_pbc_csr_sta_oq_t *sta_oq_reg;
 
     if (!capri_tm_is_valid_port(port)) {
@@ -2659,13 +2662,15 @@ capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats)
         return HAL_RET_INVALID_ARG;
     }
 
-    sta_oq_reg = pbc_csr.sta_oq[port].get_csr_instance(0);
+    sta_oq_reg = cap_top_csr.pb.pbc.sta_oq[port].alloc();
 
     sta_oq_reg->read();
 
     // 16 bits per oq
-    oq_stats->queue_depth = pack_bytes_unpack((uint8_t *)sta_oq_reg->depth_value,
+    oq_stats->queue_depth = pack_bytes_unpack(sta_oq_reg->depth_value(),
                                               oq*16, 16);
+
+    cap_top_csr.free(sta_oq_reg);
     return HAL_RET_OK;
 }
 

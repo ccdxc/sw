@@ -6,7 +6,7 @@ namespace lib {
 namespace csrlite {
 using namespace std;
 
-class cap_top_csr_helper_t cap_top_csr_helper;
+class cap_top_csr_helper_t cap_top_csr;
 
 void cap_top_csr_helper_t::init() {
 

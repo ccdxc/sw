@@ -754,7 +754,7 @@ capri_table_rw_init (void)
     register_chip_inst("cap0", 0, 0);
 
     // Initialize the csr-lite helper
-    sdk::lib::csrlite::cap_top_csr_helper.init();
+    sdk::lib::csrlite::cap_top_csr.init();
 
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();

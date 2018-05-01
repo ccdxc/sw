@@ -75,8 +75,9 @@ public:
     ${hlprclassname}()=default;
     ~${hlprclassname}()=default;
     void init(uint32_t _addr);
-    uint32_t get_byte_size(void);
-    ${csrclassname} *get_csr_instance(uint32_t chip_id);""")
+    uint32_t get_byte_size();
+    ${csrclassname} *alloc(uint32_t chip_id=0);
+    void free(${csrclassname} *inst);""")
     c_helper_headerfile_class_tail = Template("""
 }; //  ${hlprclassname}()
 """)
@@ -91,14 +92,14 @@ class ${classname} : public cap_sw_${base}_base {
     public:
         ${classname}();
         virtual ~${classname}();
+        static uint32_t s_get_width();
+        uint32_t get_width() const override;
         friend std::ostream& operator<<(std::ostream& os, const ${classname}& s);
 
         void init(uint32_t chip_id, uint32_t _addr_base) override;
         void pack(uint8_t *bytes, uint32_t start=0) override;
         void unpack(uint8_t *bytes, uint32_t start=0) override;
-
-        uint32_t get_width() const override;
-        static uint32_t s_get_width();""")
+""")
     c_headerfile_class_tail = Template("""
 }; // ${classname}
 """)
@@ -108,9 +109,19 @@ class ${classname} : public cap_sw_${base}_base {
     c_headerfile_decoder_info = Template("""
         ${field_typename} $field_name;""")
     c_headerfile_field_info = Template("""
-        ${field_typename} ${field_name}${field_array}${field_wide};
+        ${field_typename} __${field_name};
+        ${field_typename} ${field_name}${field_name_sffx}(){return __${field_name};}
+        void ${field_name}${field_name_sffx}(${field_typename} _${field_name}){__${field_name}=_${field_name};}
         void pack_${field_name}(uint8_t *bytes, uint32_t start=0);
-        void unpack_${field_name}(uint8_t *bytes, uint32_t start=0);""")
+        void unpack_${field_name}(uint8_t *bytes, uint32_t start=0);
+""")
+    c_headerfile_field_array_info = Template("""
+        ${field_typename} __${field_name}${field_array}${field_wide};
+        uint8_t *${field_name}${field_name_sffx}(){return (uint8_t*)__${field_name};}
+        void ${field_name}${field_name_sffx}(uint8_t *bytes){memcpy(__${field_name},bytes,sizeof(__${field_name}));}
+        void pack_${field_name}(uint8_t *bytes, uint32_t start=0);
+        void unpack_${field_name}(uint8_t *bytes, uint32_t start=0);
+""")
 
     c_helper_ccfile_init_declare = Template("""
 void ${classname}::init(uint32_t _addr) {
@@ -118,13 +129,18 @@ void ${classname}::init(uint32_t _addr) {
     c_helper_ccfile_init_tail = Template("""
 } // ${hlprclassname}::init()
 
-${csrclassname} *${hlprclassname}::get_csr_instance(uint32_t chip_id) {
-    auto *inst = new ${csrclassname}();
+${csrclassname} *${hlprclassname}::alloc(uint32_t chip_id) {
+    auto inst = new ${csrclassname}();
     if (inst) {
         inst->init(chip_id, base_addr);
     }
     return inst;
-} // ${hlprclassname}::get_csr_instance(void)
+} // ${hlprclassname}::alloc(uint32_t chip_id)
+
+void ${hlprclassname}::free(${csrclassname} *inst) {
+    delete inst;
+} // ${hlprclassname}::free(${csrclassname} *inst)
+
 """)
     c_helper_ccfile_decoder_array_info = Template("""
     for (uint32_t ii = 0; ii < get_depth_${field_name}(); ii++) {
@@ -153,7 +169,7 @@ ${classname}::~${classname}()=default;
 
     c_ccfile_s_width_declare = Template("""
 uint32_t ${classname}::s_get_width() {
-    int _count = 0;""")
+    uint32_t _count = 0;""")
     c_ccfile_s_width_declare_end = Template("""
     return _count;
 }
@@ -165,7 +181,7 @@ uint32_t ${classname}::s_get_width() {
     c_ccfile_s_width_array_impl = Template("""
     _count += ${field_size} * ${field_array}; // ${field_name}""")
     c_ccfile_s_width_impl = Template("""
-    _count += ${field_size}; // ${field_name}""")
+    _count += ${field_size}; // __${field_name}""")
 
     c_ccfile_width_declare = Template("""
 uint32_t ${classname}::get_width() const {
@@ -258,7 +274,7 @@ cpp_int ${classname}::${field_name}(int _idx) const {
 void ${classname}::unpack_${field_name}(uint8_t *bytes, uint32_t start)
 {""")
     c_ccfile_unpack_body = Template("""
-    ${field_name} = hal::utils::pack_bytes_unpack(bytes, start + ${field_start}, ${field_size});""")
+    __${field_name}${field_wide} = hal::utils::pack_bytes_unpack(bytes, start + ${field_start}, ${field_size});""")
     c_ccfile_unpack_tail = Template("""
 }""")
     c_ccfile_unpack_array_head = Template("""
@@ -274,7 +290,7 @@ void ${classname}::unpack_${field_name}(uint8_t *bytes, int _idx)
 void ${classname}::pack_${field_name}(uint8_t *bytes, uint32_t start)
 {""")
     c_ccfile_pack_body = Template("""
-    hal::utils::pack_bytes_pack(bytes, start + ${field_start}, ${field_size}, ${field_name});""")
+    hal::utils::pack_bytes_pack(bytes, start + ${field_start}, ${field_size}, __${field_name}${field_wide});""")
     c_ccfile_pack_tail = Template("""
 }""")
     c_ccfile_pack_array_head = Template("""
@@ -304,11 +320,11 @@ std::ostream& operator<<(std::ostream& os, const ${classname}& s)
 
     c_ccfile_show_array_impl = Template("""
         for(int ii = 0; ii < ${field_array}; ii++) {
-            os << fmt::format("{{${field_name}={}}}", s.${field_name});
+            os << fmt::format("{{${field_name}={0:#x}}}", s.${field_name});
         }""")
 
     c_ccfile_show_impl = Template("""
-    os << fmt::format("{{${field_name}={}}}", s.${field_name});""")
+    os << fmt::format("{{${field_name}${field_bits}={0:#x}}}", s.__${field_name}${field_wide});""")
 
     def set_tot_size(self, indent_level=0):
 
@@ -346,6 +362,12 @@ std::ostream& operator<<(std::ostream& os, const ${classname}& s)
         if self.size != 0:
             wide_str = ''
             array_str = ''
+            name_sffx = ''
+            name_str = self.name
+            if name_str == 'write' or name_str == 'read' or \
+                name_str == 'write_hw' or name_str == 'read_hw' or \
+                name_str == 'read_compare' or name_str == 'get_byte_size':
+                name_sffx = 'xxx'
 
             if self.size > 64:
                 wide_str = '[{0}]'.format(int((self.size + 63) / 64))
@@ -353,9 +375,13 @@ std::ostream& operator<<(std::ostream& os, const ${classname}& s)
             if self.array > 1:
                 array_str = '[{0}]'.format(self.array)
 
-            l_cur_str = '{0}{1}'.format(l_cur_str, self.c_headerfile_field_info.substitute(
-                field_typename='uint64_t', field_name='{0}'.format(self.name),
-                field_wide= wide_str, field_array=array_str))
+            if wide_str == '' and array_str == '':
+                l_cur_str = '{0}{1}'.format(l_cur_str, self.c_headerfile_field_info.substitute(
+                    field_typename='uint64_t', field_name=name_str, field_name_sffx=name_sffx))
+            else:
+                l_cur_str = '{0}{1}'.format(l_cur_str, self.c_headerfile_field_array_info.substitute(
+                    field_typename='uint64_t', field_name=name_str, field_name_sffx=name_sffx,
+                    field_wide= wide_str, field_array=array_str))
 
         if len(self.fields) > 0:
             if self.name != 'root':
@@ -508,7 +534,9 @@ std::ostream& operator<<(std::ostream& os, const ${classname}& s)
                 start = self.start
                 wide = 0
                 index = 0
-                name = '{0}'.format(self.name)
+                bits_str = ''
+                wide_str = ''
+                name_str = '{0}'.format(self.name)
                 while size > 0:
                     chunk = size
                     if chunk > 64:
@@ -516,13 +544,15 @@ std::ostream& operator<<(std::ostream& os, const ${classname}& s)
                         chunk = 64
 
                     if wide > 0:
-                        name = '{0}[{1}]'.format(self.name, str(index))
+                        wide_str = '[{0}]'.format(index)
+                        bits_str = '[{0}:{1}]'.format(str(index*64+chunk-1), str(index*64))
 
-                    show_str = '{0}{1}'.format(show_str, self.c_ccfile_show_impl.substitute(field_name='{0}'.format(name),
-                                                                                            field_array='',
-                                                                                            field_size=self.size))
+                    show_str = '{0}{1}'.format(show_str, self.c_ccfile_show_impl.substitute(field_name=name_str,
+                                                                                            field_wide=wide_str,
+                                                                                            field_bits=bits_str))
                     set_field_str = '{0}{1}'.format(set_field_str,
-                                                    self.c_ccfile_pack_body.substitute(field_name='{0}'.format(name),
+                                                    self.c_ccfile_pack_body.substitute(field_name=name_str,
+                                                                                       field_wide=wide_str,
                                                                                        field_start=start,
                                                                                        field_size=chunk))
                     size -= chunk
@@ -531,13 +561,12 @@ std::ostream& operator<<(std::ostream& os, const ${classname}& s)
                 set_field_str = '{0}{1}'.format(set_field_str, self.c_ccfile_pack_tail.substitute())
 
                 set_field_str = '{0}{1}'.format(set_field_str,
-                                                self.c_ccfile_unpack_head.substitute(field_name='{0}'.format(self.name),
+                                                self.c_ccfile_unpack_head.substitute(field_name=name_str,
                                                                                      classname=p_classname))
                 size = self.size
                 start = self.start
                 wide = 0
                 index = 0
-                name = '{0}'.format(self.name)
                 while size > 0:
                     chunk = size
                     if chunk > 64:
@@ -545,9 +574,11 @@ std::ostream& operator<<(std::ostream& os, const ${classname}& s)
                         chunk = 64
 
                     if wide > 0:
-                        name = '{0}[{1}]'.format(self.name, str(index))
+                        wide_str = '[{0}]'.format(index)
+
                     set_field_str = '{0}{1}'.format(set_field_str,
-                                                    self.c_ccfile_unpack_body.substitute(field_name='{0}'.format(name),
+                                                    self.c_ccfile_unpack_body.substitute(field_name=name_str,
+                                                                                         field_wide=wide_str,
                                                                                          field_start=start,
                                                                                          field_size=chunk))
                     size -= chunk
@@ -558,8 +589,7 @@ std::ostream& operator<<(std::ostream& os, const ${classname}& s)
 
                 init_str = '{0}{1}'.format(init_str,
                                            self.c_ccfile_init_register_set_get.substitute(classname=p_classname,
-                                                                                          field_name='{0}'.format(
-                                                                                          self.name)))
+                                                                                          field_name=name_str))
 
         if len(self.fields) > 0:
             if self.name != 'root':
