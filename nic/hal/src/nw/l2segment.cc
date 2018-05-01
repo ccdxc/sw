@@ -2,6 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
+#include <google/protobuf/util/json_util.h>
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
@@ -311,6 +312,22 @@ l2seg_delete_oifs (l2seg_t *l2seg)
 
     l2seg->base_oif_list_id = OIF_LIST_ID_INVALID;
     return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// dump l2segment spec
+//-----------------------------------------------------------------------------
+static inline void
+l2segment_dump (L2SegmentSpec& spec)
+{
+    std::string    l2seg_cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &l2seg_cfg);
+    HAL_TRACE_DEBUG("L2 segment configuration:");
+    HAL_TRACE_DEBUG("{}", l2seg_cfg.c_str());
 }
 
 //------------------------------------------------------------------------------
@@ -797,6 +814,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 
     HAL_TRACE_DEBUG("L2seg create with id : {}",
                     spec.key_or_handle().segment_id());
+    l2segment_dump(spec);
 
     // validate the request message
     ret = validate_l2segment_create(spec, rsp, app_ctxt);

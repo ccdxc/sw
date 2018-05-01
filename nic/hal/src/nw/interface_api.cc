@@ -289,8 +289,8 @@ if_enicif_get_native_l2seg_clsc_vlan (if_t *pi_if, uint32_t *vlan_id)
     *vlan_id = 0;
 
     if (if_type != intf::IF_TYPE_ENIC) {
-        HAL_TRACE_ERR("{}:native l2seg classic is only for ENIC. if_type:{}",
-                      __FUNCTION__, if_type);
+        HAL_TRACE_ERR("Native l2seg classic is only for ENIC, if_type : {}",
+                      if_type);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -298,16 +298,15 @@ if_enicif_get_native_l2seg_clsc_vlan (if_t *pi_if, uint32_t *vlan_id)
     if (pi_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
         pi_seg = l2seg_lookup_by_handle(pi_if->native_l2seg_clsc);
         if (pi_seg == NULL) {
-            HAL_TRACE_ERR("{}:native l2seg is not present: l2seg_hdl:{}",
-                          __FUNCTION__, pi_if->native_l2seg_clsc);
+            HAL_TRACE_ERR("Native l2seg is not present: l2seg_hdl : {}",
+                          pi_if->native_l2seg_clsc);
             ret = HAL_RET_INVALID_ARG;
             goto end;
         }
 
         // Check if wire encap is vlan
         if (pi_seg->wire_encap.type != types::ENCAP_TYPE_DOT1Q) {
-            HAL_TRACE_ERR("{}:native l2seg classic doesn't have wire encap",
-                          __FUNCTION__);
+            HAL_TRACE_ERR("Native l2seg doesn't have wire encap");
             ret = HAL_RET_INVALID_ARG;
             goto end;
         }
@@ -324,7 +323,7 @@ end:
 // returns uplink if
 //----------------------------------------------------------------------------
 hal_ret_t
-if_enicif_get_pinned_if(if_t *pi_if, if_t **uplink_if)
+if_enicif_get_pinned_if (if_t *pi_if, if_t **uplink_if)
 {
     hal_ret_t           ret     = HAL_RET_OK;
     intf::IfType        if_type = intf::IF_TYPE_NONE;
@@ -337,8 +336,7 @@ if_enicif_get_pinned_if(if_t *pi_if, if_t **uplink_if)
 
     if_type = intf_get_if_type(pi_if);
     if (if_type != intf::IF_TYPE_ENIC) {
-        HAL_TRACE_ERR("{}:pinned if is only for ENIC. if_type:{}",
-                      __FUNCTION__, if_type);
+        HAL_TRACE_ERR("Pinned if is only for ENIC, if_type : {}", if_type);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -350,8 +348,8 @@ if_enicif_get_pinned_if(if_t *pi_if, if_t **uplink_if)
         // Take from lif
         lif = find_lif_by_handle(pi_if->lif_handle);
         if (!lif) {
-            HAL_TRACE_ERR("{}:unable to find lif for lif_hdl:{}",
-                          __FUNCTION__, pi_if->lif_handle);
+            HAL_TRACE_ERR("Unable to find lif for lif_hdl {}",
+                          pi_if->lif_handle);
             ret = HAL_RET_LIF_NOT_FOUND;
             goto end;
         }
@@ -361,14 +359,12 @@ if_enicif_get_pinned_if(if_t *pi_if, if_t **uplink_if)
     if (uplink_hdl != HAL_HANDLE_INVALID) {
         *uplink_if = find_if_by_handle(uplink_hdl);
         if (!*uplink_if) {
-            HAL_TRACE_ERR("{}:unable to find if for if_hdl:{}",
-                          __FUNCTION__, uplink_hdl);
+            HAL_TRACE_ERR("Unable to find if for if_hdl {}", uplink_hdl);
             ret = HAL_RET_IF_NOT_FOUND;
             goto end;
         }
     } else {
-        HAL_TRACE_ERR("{}:no pinned uplink for enic_if_id:{}",
-                      __FUNCTION__, pi_if->if_id);
+        HAL_TRACE_ERR("No pinned uplink for enic_if_id {}", pi_if->if_id);
         ret = HAL_RET_INVALID_OP;
     }
 

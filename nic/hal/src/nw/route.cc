@@ -67,8 +67,7 @@ route_add_to_db (route_t *route, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:adding to route key hash table",
-                    __FUNCTION__);
+    HAL_TRACE_DEBUG("Adding to route cfg db");
     // allocate an entry to establish mapping from l2key to its handle
     entry =
         (hal_handle_id_ht_entry_t *)g_hal_state->
@@ -390,7 +389,7 @@ validate_route_update (RouteSpec& spec, RouteResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("Route spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -720,7 +719,7 @@ validate_route_delete_req (RouteDeleteRequest& req,
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("Route spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
     }
 

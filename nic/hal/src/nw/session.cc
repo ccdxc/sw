@@ -738,16 +738,19 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
         uint8_t  ingress, egress;
         ret = extract_mirror_sessions(args->spec->initiator_flow(), &ingress, &egress);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("session create failure extracting mirror sessions: {}", __FUNCTION__);
+            HAL_TRACE_ERR("session create failure extracting mirror sessions, "
+                          "err : {}", ret);
             return ret;
         }
         args->iflow[0]->ing_mirror_session |= ingress;
         args->iflow[0]->eg_mirror_session |= egress;
 
         if(args->rflow[0] && args->spec->has_responder_flow()) {
-            ret = extract_mirror_sessions(args->spec->responder_flow(), &ingress, &egress);
+            ret = extract_mirror_sessions(args->spec->responder_flow(),
+                                          &ingress, &egress);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("session create failure extracting mirror sessions: {}", __FUNCTION__);
+                HAL_TRACE_ERR("session create failure extracting mirror sessions, "
+                              "err : {}", ret);
                 return ret;
             }
             args->rflow[0]->ing_mirror_session |= ingress;
@@ -1381,8 +1384,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &args.ctime_ns);
 
-    //HAL_TRACE_DEBUG("[{}:{}] timer id {}, bucket: {}",
-    //                __FUNCTION__, __LINE__, timer_id,  bucket);
+    // HAL_TRACE_DEBUG("timer id {}, bucket: {}", timer_id,  bucket);
     for (i = 0; i < HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL; i++) {
         g_hal_state->session_hal_handle_ht()->walk_bucket_safe(bucket,
                                                      session_age_cb, &args);
