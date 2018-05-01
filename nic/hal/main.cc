@@ -51,6 +51,7 @@
 #include "nic/gen/hal/svc/l4lb_svc_gen.hpp"
 #include "nic/gen/hal/svc/nwsec_svc_gen.hpp"
 #include "nic/gen/hal/svc/dos_svc_gen.hpp"
+#include "nic/gen/hal/svc/nat_svc_gen.hpp"
 #include "nic/gen/hal/svc/qos_svc_gen.hpp"
 #include "nic/gen/hal/svc/descriptor_aol_svc_gen.hpp"
 #include "nic/gen/hal/svc/acl_svc_gen.hpp"
@@ -63,7 +64,6 @@
 #include "nic/gen/hal/svc/crypto_apis_svc_gen.hpp"
 #include "nic/gen/hal/svc/multicast_svc_gen.hpp"
 #include "nic/gen/hal/svc/gft_svc_gen.hpp"
-#include "nic/gen/hal/svc/nat_svc_gen.hpp"
 
 #include "nic/hal/lkl/lkl_api.hpp"
 
@@ -89,6 +89,7 @@ svc_reg (const std::string& server_addr,
     L4LbServiceImpl          l4lb_svc;
     NwSecurityServiceImpl    nwsec_svc;
     DosServiceImpl           dos_svc;
+    NatServiceImpl           nat_svc;
     QOSServiceImpl           qos_svc;
     AclServiceImpl           acl_svc;
     TelemetryServiceImpl     telemetry_svc;
@@ -113,7 +114,6 @@ svc_reg (const std::string& server_addr,
     GftServiceImpl           gft_svc;
     SystemServiceImpl        system_svc;
     SoftwarePhvServiceImpl   swphv_svc;
-    NatServiceImpl           nat_svc;
 
     grpc_init();
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
@@ -137,6 +137,7 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&l4lb_svc);
         server_builder.RegisterService(&nwsec_svc);
         server_builder.RegisterService(&dos_svc);
+        server_builder.RegisterService(&nat_svc);
         server_builder.RegisterService(&tlscb_svc);
         server_builder.RegisterService(&tcpcb_svc);
         server_builder.RegisterService(&qos_svc);
@@ -159,7 +160,6 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&multicast_svc);
         server_builder.RegisterService(&system_svc);
         server_builder.RegisterService(&swphv_svc);
-        server_builder.RegisterService(&nat_svc);
     } else if (feature_set == hal::HAL_FEATURE_SET_GFT) {
         server_builder.RegisterService(&vrf_svc);
         server_builder.RegisterService(&if_svc);

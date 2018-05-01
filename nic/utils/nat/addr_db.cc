@@ -1,6 +1,8 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "nic/utils/nat/addr_db.hpp"
+#include "nic/include/hal_mem.hpp"
+#include "nic/include/hal.hpp"
 #include "sdk/slab.hpp"
 
 using sdk::lib::ht;
@@ -45,6 +47,7 @@ addr_db_init (uint32_t db_size)
                               addr_entry_key_hash_func_compute,
                               addr_entry_key_func_compare);
     HAL_ASSERT_RETURN((addr_db_ != NULL), HAL_RET_ERR);
+
     return HAL_RET_OK;
 }
 
@@ -81,6 +84,21 @@ addr_entry_db_remove (addr_entry_key_t *key)
 }
 
 slab  *addr_entry_slab_;
+
+hal_ret_t
+addr_entry_slab_init (void)
+{
+    addr_entry_slab_ =
+        sdk::lib::slab::factory("addr_entry",
+                                hal::HAL_SLAB_ADDR_ENTRY,
+                                sizeof(addr_entry_t),
+                                NAT_MAX_ADDR,
+                                true, true, true, hal::hal_mmgr());
+    HAL_ASSERT_RETURN((addr_entry_slab_ != NULL), HAL_RET_ERR);
+
+    return HAL_RET_OK;
+}
+
 static inline slab *
 addr_entry_slab()
 {

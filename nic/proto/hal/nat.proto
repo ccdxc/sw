@@ -94,7 +94,7 @@ message NatPoolDeleteResponseMsg {
 // NatPoolGetRequest is used to get all the information about a pool
 message NatPoolGetRequest {
   types.ObjectMeta       meta               = 1;    // object meta
-  kh.NatPoolKeyHandle    key_or_handle = 2;    // key or handle (optional)
+  kh.NatPoolKeyHandle    key_or_handle      = 2  [(gogoproto.moretags) = "venice:\"key\""];    // key or handle (optional)
 }
 
 // NatPoolGetRequestMsg is batched GET requests for NAT pools
@@ -227,7 +227,7 @@ message NatPolicyGetResponseMsg {
 message NatMappingSpec {
   types.ObjectMeta          meta            = 1;    // common object meta
   kh.NatMappingKeyHandle    key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];    // key or handle of this object
-  kh.NatPoolKeyHandle       nat_pool        = 3 [(gogoproto.moretags) = "venice:mandatory"];  // NAT pool to allocate mapping from
+  kh.NatPoolKeyHandle       nat_pool        = 3 [(gogoproto.moretags) = "venice:mandatory, venice:ref"];  // NAT pool to allocate mapping from
   bool                      bidir           = 4;    // true if reverse mapping should be added as well
 }
 

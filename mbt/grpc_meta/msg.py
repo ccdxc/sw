@@ -149,10 +149,14 @@ class GrpcReqRspMsg:
         message.prefix_len = prefix_len
 
     @staticmethod
-    def generate_ip_address(message):
-        message.ip_af = random.choice([types_pb2.IP_AF_INET, types_pb2.IP_AF_INET6])
+    def generate_ip_address(message, ip_af=types_pb2.IP_AF_NONE):
         global IPv4GenList
         global IPv6GenList
+
+        if ip_af == types_pb2.IP_AF_NONE:
+            message.ip_af = random.choice([types_pb2.IP_AF_INET, types_pb2.IP_AF_INET6])
+        else:
+            message.ip_af = ip_af
 
         if message.ip_af == types_pb2.IP_AF_INET:
             while True:

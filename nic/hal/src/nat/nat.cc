@@ -368,12 +368,14 @@ nat_pool_init_from_spec (vrf_t *vrf, nat_pool_t *pool, const NatPoolSpec& spec)
             addr_range->num_addrs =
                 addr_range->ip_range.vx_range[0].v4_range.ip_hi -
                     addr_range->ip_range.vx_range[0].v4_range.ip_lo + 1;
+            break;
         case IP_AF_IPV6:
         default:
             continue;
         }
         num_addrs += addr_range->num_addrs;
     }
+    pool->num_free = num_addrs;
     pool->addr_bmap = bitmap::factory(num_addrs, true);
     if (pool->addr_bmap == NULL) {
         HAL_TRACE_ERR("Failed to allocate NAT address tracking bitmap");
@@ -1709,6 +1711,8 @@ nat_mapping_get (NatMappingGetRequest& req, NatMappingGetResponseMsg *rsp)
 hal_ret_t
 hal_nat_init_cb (hal_cfg_t *hal_cfg)
 {
+    utils::nat::addr_db_init(HAL_MAX_NAT_ADDR_MAP);
+    utils::nat::addr_entry_slab_init();
     return HAL_RET_OK;
 }
 

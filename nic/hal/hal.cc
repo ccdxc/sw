@@ -627,9 +627,6 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal_thread_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Spawned all HAL threads");
 
-    // do module initialization
-    hal_module_init(hal_cfg);
-
     // do platform dependent init
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Platform initialization done");
@@ -640,6 +637,9 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // set the forwarding mode
     g_hal_state->set_forwarding_mode(hal_cfg->forwarding_mode);
+
+    // do module initialization
+    hal_module_init(hal_cfg);
 
     // do per module initialization (TODO: this should move to module inits)
     // TODO: needed only in smart nic mode

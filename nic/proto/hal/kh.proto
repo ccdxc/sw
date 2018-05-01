@@ -118,7 +118,7 @@ message L2SegmentKeyHandle {
 
 message SecurityPolicyKey {
   uint64       security_policy_id  = 1;
-  VrfKeyHandle vrf_id_or_handle    = 2;
+  VrfKeyHandle vrf_id_or_handle    = 2 [(gogoproto.moretags) = "venice:ref"];
 }
 
 // SecurityPolicyKeyHandle uniquely identifies a security policy and is used
@@ -271,7 +271,7 @@ message GftExactMatchFlowEntryKeyHandle {
 
 // NAT pool key object
 message NatPoolKey {
-  VrfKeyHandle    vrf_kh  = 1;    // VRF's key or handle
+  VrfKeyHandle    vrf_kh  = 1 [(gogoproto.moretags) = "venice:ref"];    // VRF's key or handle
   uint32          pool_id = 2;    // nat pool id
 }
 
@@ -286,7 +286,7 @@ message NatPoolKeyHandle {
 // Key for the NAT policy
 message NATPolicyKey {
   uint64          nat_policy_id     = 1;    // NAT policy id
-  VrfKeyHandle    vrf_key_or_handle = 2;    // VRF key or handle
+  VrfKeyHandle    vrf_key_or_handle = 2 [(gogoproto.moretags) = "venice:ref"];    // VRF key or handle
 }
 
 // NatPolicyKeyHandle uniquely identifies a NAT policy and is used
@@ -304,7 +304,7 @@ message NatPolicyKeyHandle {
 // instance of service is run. Similarlt, port is not mandatory when only
 // single instance of service is running on a given IP and nothing else
 message Svc {
-  kh.VrfKeyHandle    vrf_kh  = 1;    // VRF key or handle
+  kh.VrfKeyHandle    vrf_kh  = 1 [(gogoproto.moretags) = "venice:ref"];
   types.IPAddress    ip_addr = 2;    // IP address on which service is running
   uint32             port    = 3;    // L4 port on which the service runs on
 }

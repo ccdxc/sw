@@ -173,14 +173,19 @@ addr_list_elem_address_spec_handle (const types::Address& addr,
     addr_list_elem_t *addr_lelem;
 
     if ((ret = addr_list_elem_address_spec_validate(
-            addr, &af)) != HAL_RET_OK)
+            addr, &af)) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Spec validate failure");    
         return NULL;
+    }
 
-    if ((addr_lelem = addr_list_elem_alloc_init(af)) == NULL)
+    if ((addr_lelem = addr_list_elem_alloc_init(af)) == NULL) {
+        HAL_TRACE_ERR("Address list alloc failure");    
         return NULL;
+    }
 
     if ((ret = addr_list_elem_address_spec_extract(
             addr, addr_lelem)) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Spec extract failure");    
         addr_list_elem_uninit_free(addr_lelem);
         return NULL;
     }
