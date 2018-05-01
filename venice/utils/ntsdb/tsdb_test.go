@@ -567,6 +567,33 @@ func TestInitOptsReset(t *testing.T) {
 	time.Sleep(time.Second)
 }
 
+func TestOptionTablePrecision(t *testing.T) {
+	ts.metricServer.ClearMetrics()
+
+	table, err := NewTable(t.Name(), &TableOpts{Precision: time.Millisecond})
+	AssertOk(t, err, "unable to create table")
+	defer table.Delete()
+
+	table.Gauge("cpu_usage").Set(67.6, time.Time{})
+	table.Gauge("disk_usage").Set(31.4, time.Time{})
+	time.Sleep(2 * time.Millisecond)
+	table.Gauge("memory_usage").Set(4.5, time.Time{})
+	time.Sleep(3 * testSendInterval)
+
+	tags := []map[string]string{
+		{"Name": t.Name()},
+		{"Name": t.Name()},
+	}
+	fields := []map[string]interface{}{
+		{"cpu_usage": float64(67.6), "disk_usage": float64(31.4)},
+		{"memory_usage": float64(4.5)},
+	}
+
+	AssertEventually(t, func() (bool, interface{}) {
+		return ts.metricServer.Validate(t.Name(), time.Time{}, tags, fields), nil
+	}, "bundle didn't contain some metrics", "200ms", "2s")
+}
+
 func TestOTablePerf(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 

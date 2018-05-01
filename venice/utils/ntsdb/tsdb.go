@@ -108,7 +108,8 @@ type Table interface {
 
 // TableOpts specifies options for a specific table
 type TableOpts struct {
-	Local bool
+	Local     bool
+	Precision time.Duration
 }
 
 type iTable struct {
@@ -128,7 +129,11 @@ func NewTable(name string, opts *TableOpts) (Table, error) {
 	t.keys = make(map[string]string)
 	t.keys["Name"] = name
 	t.fields = make(map[string]interface{})
+
 	t.opts = *opts
+	if t.opts.Precision == 0 {
+		t.opts.Precision = time.Millisecond
+	}
 
 	global.Lock()
 	defer global.Unlock()

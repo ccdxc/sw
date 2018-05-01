@@ -51,6 +51,57 @@ func TestTableAPI(t *testing.T) {
 	}, "mismatching metrics", "100ms", "2s")
 }
 
+func TestPointsPrecision(t *testing.T) {
+	dbName := t.Name() + "_db"
+	measName := t.Name()
+
+	// setup tsdb, collector
+	ts := NewSuite(1, ":0", testPeriod, t.Name(), dbName)
+	defer ts.TearDown()
+
+	// create tsdb table (change the precision between metrics)
+	table, err := ntsdb.NewTable(t.Name(), &ntsdb.TableOpts{Precision: 3 * time.Millisecond})
+	AssertOk(t, err, "unable to create table")
+	defer table.Delete()
+
+	// push metrics
+	ts1 := time.Now()
+	table.Gauge("cpu_usage").Set(67.6, time.Time{})
+	table.Gauge("disk_usage").Set(31.4, time.Time{})
+	time.Sleep(4 * testSendInterval)
+	ts2 := time.Now()
+	table.Gauge("memory_usage").Set(4.5, time.Time{})
+	time.Sleep(50 * testSendInterval)
+
+	// create expected records
+	tt := collectorinteg.NewTimeTable(measName)
+	tags := map[string]string{
+		"Name": t.Name(),
+	}
+	fields := map[string]interface{}{
+		"cpu_usage":    float64(67.6),
+		"disk_usage":   float64(31.4),
+		"memory_usage": nil,
+	}
+	tt.AddRow(collectorinteg.InfluxTS(ts1, time.Millisecond), tags, fields)
+
+	tags = map[string]string{
+		"Name": t.Name(),
+	}
+	fields = map[string]interface{}{
+		"cpu_usage":    nil,
+		"disk_usage":   nil,
+		"memory_usage": float64(4.5),
+	}
+	tt.AddRow(collectorinteg.InfluxTS(ts2, time.Millisecond), tags, fields)
+
+	// validate
+	AssertEventually(t, func() (bool, interface{}) {
+		return validate(ts, dbName, measName, tt)
+	}, "mismatching metrics", "100ms", "2s")
+
+}
+
 func TestRegression(t *testing.T) {
 	dbName := t.Name() + "_db"
 	measName := t.Name()
@@ -66,14 +117,13 @@ func TestRegression(t *testing.T) {
 	ep.ObjectMeta.Name = "ep1"
 	epm := &endpointMetric{}
 
-	// increase precision to capture accurate count of exported metrics
 	table, err := ntsdb.NewOTable(ep, epm, &ntsdb.TableOpts{})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 	epm.RxPacketSize.SetRanges([]int64{10, 100, 1000, 10000})
-	// intSamples := []int64{9, 99, 999, 9999}
+	intSamples := []int64{9, 99, 999, 9999}
 
-	nIters := 1000
+	nIters := 10000
 	for i := 0; i < nIters; i++ {
 		// minimum 2ms to allow separate points within measurement
 		sleepTime := time.Duration(2+(rand.Int()%10)) * time.Millisecond
@@ -83,12 +133,9 @@ func TestRegression(t *testing.T) {
 		epm.LinkUp.Set(true, ts1)
 		epm.WorkloadName.Set(fmt.Sprintf("test-%d", i), ts1)
 
-		/* TODO: Fix after discussing with vipin. The following are coalesced in a sendInterval.
-			So there is no guarantee that number of metricPoints will match the iters
 		epm.OutgoingConns.Inc()
 		epm.RxPacketSize.AddSample(intSamples[i%4])
 		epm.RxBandwidth.AddSample(rand.Float64())
-		*/
 	}
 
 	f := func() (bool, interface{}) {

@@ -89,6 +89,8 @@ func parseValues(keys []string, values []interface{}) (string, Row) {
 	for ix, k := range keys {
 		if k == "time" {
 			ts = values[ix].(string)
+		} else if values[ix] == nil {
+			row.columns[k] = ""
 		} else {
 			row.columns[k] = fmt.Sprintf("%v", values[ix])
 		}

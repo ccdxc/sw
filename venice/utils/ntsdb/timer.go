@@ -113,14 +113,23 @@ func (table *iTable) getMetricBundles(mb *metric.MetricBundle) {
 			case *iCounter:
 				mfCounter(tf, fields)
 			case *iGauge:
+				if tf.ts.Sub(beginTime) > table.opts.Precision {
+					break collectMetric
+				}
 				if skip := mfGauge(tf, visited, fields); skip {
 					break collectMetric
 				}
 			case *iBool:
+				if tf.ts.Sub(beginTime) > table.opts.Precision {
+					break collectMetric
+				}
 				if skip := mfBool(tf, visited, fields); skip {
 					break collectMetric
 				}
 			case *iString:
+				if tf.ts.Sub(beginTime) > table.opts.Precision {
+					break collectMetric
+				}
 				if skip := mfString(tf, visited, fields); skip {
 					break collectMetric
 				}

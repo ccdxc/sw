@@ -64,7 +64,7 @@ func validate(ts *Suite, dbName, measName string, tt *collectorinteg.TimeTable) 
 	}
 	err = tt.MatchQueryRow(res[0].Series[0])
 	if err != nil {
-		log.Infof("res: %+v, tt: %+v", res, tt)
+		log.Infof("error %s, res: %+v, tt: %+v", err, res[0].Series[0], tt)
 		return false, err
 	}
 	return true, nil
