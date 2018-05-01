@@ -2,6 +2,13 @@
 //:: from collections import OrderedDict
 //:: pddict = _context['pddict']
 //:: #pdb.set_trace()
+//::
+//:: if pddict['p4plus']:
+//::    api_prefix = 'p4pd_' + pddict['p4program']
+//:: else:
+//::    api_prefix = 'p4pd'
+//:: #endif
+//::
 #!/usr/bin/python
 # This file is auto-generated. Changes will be overwritten!
 #
@@ -16,42 +23,10 @@ import ${pddict['cli-name']}_debug_cli as backend
 from   ${pddict['cli-name']} import *
 import ${pddict['cli-name']}
 import os
-//::    tabledict = {}
-//::    tableid = 1
-//::    for table in pddict['tables']:
-//::        if pddict['tables'][table]['type'] == 'Hash':
-//::            tabledict[table] = tableid
-//::            tableid += 1
-//::        #endif
-//::    #endfor
-//::    for table in pddict['tables']:
-//::        if pddict['tables'][table]['type'] == 'Hash_OTcam':
-//::            tabledict[table] = tableid
-//::            tableid += 1
-//::        #endif
-//::    #endfor
-//::    for table in pddict['tables']:
-//::        if pddict['tables'][table]['type'] == 'Ternary':
-//::            tabledict[table] = tableid
-//::            tableid += 1
-//::        #endif
-//::    #endfor
-//::    for table in pddict['tables']:
-//::        if pddict['tables'][table]['type'] == 'Index':
-//::            tabledict[table] = tableid
-//::            tableid += 1
-//::        #endif
-//::    #endfor
-//::    for table in pddict['tables']:
-//::        if pddict['tables'][table]['type'] == 'Mpu':
-//::            tabledict[table] = tableid
-//::            tableid += 1
-//::        #endif
-//::    #endfor
 
 array_cols = 16
 
-p4pd_table_types_enum = [
+${api_prefix}_table_types_enum = [
     'HASH',
     'HASH_OTCAM',
     'TERNARY',
@@ -296,7 +271,7 @@ grpc_server_port = "localhost:50054"
 if 'HAL_GRPC_PORT' in os.environ.keys():
     grpc_server_port = "localhost:" + os.environ['HAL_GRPC_PORT']
 
-${pddict['cli-name']}.p4pd_cli_init(grpc_server_port)
+${pddict['cli-name']}.${api_prefix}_cli_init(grpc_server_port)
 
 if __name__ == '__main__':
     dbg_cli()

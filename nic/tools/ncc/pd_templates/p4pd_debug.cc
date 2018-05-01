@@ -303,7 +303,7 @@ ${api_prefix}_entry_populate(uint32_t  tableid,
 }
 
 void
-p4pd_register_entry_read(std::string block_name, std::string   reg_name, std::string filename)
+${api_prefix}_register_entry_read(std::string block_name, std::string   reg_name, std::string filename)
 {
     RegisterRequestMsg    req_msg;
     RegisterResponseMsg   rsp_msg;
@@ -353,7 +353,7 @@ p4pd_register_entry_read(std::string block_name, std::string   reg_name, std::st
 }
 
 void
-p4pd_register_list(std::string block_name, std::string   reg_name, std::string filename)
+${api_prefix}_register_list(std::string block_name, std::string   reg_name, std::string filename)
 {
     RegisterRequestMsg   req_msg;
     RegisterResponseMsg  rsp_msg;

@@ -4194,11 +4194,16 @@ def capri_p4pd_create_swig_custom_hdr(be):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
+    if be.args.p4_plus:
+        api_prefix = 'p4pd_' + name
+    else:
+        api_prefix = 'p4pd'
+
     content_str = """
 
 /* populates the rsp_msg struct with the response obatined from HAL */
 p4pd_error_t
-p4pd_entry_read(uint32_t  tableid,
+""" + api_prefix + """_entry_read(uint32_t  tableid,
                 uint32_t  index,
                 void      *swkey,
                 void      *swkey_mask,
@@ -4207,7 +4212,7 @@ p4pd_entry_read(uint32_t  tableid,
                 int       *size);
 
 p4pd_error_t
-p4pd_entry_populate(uint32_t  tableid,
+""" + api_prefix + """_entry_populate(uint32_t  tableid,
                     void      *swkey,
                     void      *swkey_mask,
                     void      *actiondata,
@@ -4221,24 +4226,24 @@ void
 free_debug_response_msg (void*);
 
 p4pd_error_t
-p4pd_entry_write(uint32_t tableid,
+""" + api_prefix + """_entry_write(uint32_t tableid,
                  uint32_t index,
                  void     *swkey,
                  void     *swkey_mask,
                  void     *actiondata);
 
 void
-p4pd_register_entry_read(std::string blockname,
+""" + api_prefix + """_register_entry_read(std::string blockname,
                         std::string regname,
                         std::string filename);
 
 void
-p4pd_register_list(std::string blockname,
+""" + api_prefix + """_register_list(std::string blockname,
                    std::string regname,
                    std::string filename);
 
 p4pd_error_t
-p4pd_cli_init(char* grpc_server_port);
+""" + api_prefix + """_cli_init(char* grpc_server_port);
 
 """
 
@@ -4300,6 +4305,15 @@ def capri_p4pd_create_swig_interface(be):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
+    if be.args.p4_plus:
+        prefix = 'p4pd_' + name
+        caps_p4prog = '_' + name.upper() + '_'
+        hdr_name = name + '_'
+    else:
+        prefix = 'p4pd'
+        caps_p4prog = ''
+        hdr_name = ''
+
     content_str = \
 """/* This file is auto-generated. Changes will be overwritten! */
 /* %s.i */""" %(name) + """
@@ -4311,12 +4325,12 @@ def capri_p4pd_create_swig_interface(be):
 %include "std_string.i"
 %{
     #include <thread>
-    #include "nic/gen/"""+ name + """/include/p4pd_swig.h"
+    #include "nic/gen/"""+ name + """/include/""" + hdr_name + """p4pd_swig.h"
     #include""" +' "' + name + """_custom.h"
     extern int capri_init(void);
-    char p4pd_tbl_names[P4TBL_ID_TBLMAX][P4TBL_NAME_MAX_LEN];
-    uint16_t p4pd_tbl_swkey_size[P4TBL_ID_TBLMAX];
-    uint16_t p4pd_tbl_sw_action_data_size[P4TBL_ID_TBLMAX];
+    char """     + prefix + """_tbl_names[P4"""               + caps_p4prog + """TBL_ID_TBLMAX][P4""" + caps_p4prog + """TBL_NAME_MAX_LEN];
+    uint16_t """ + prefix + """_tbl_swkey_size[P4"""          + caps_p4prog + """TBL_ID_TBLMAX];
+    uint16_t """ + prefix + """_tbl_sw_action_data_size[P4""" + caps_p4prog + """TBL_ID_TBLMAX];
 
     namespace hal {
         thread_local std::thread *t_curr_thread;
@@ -4347,8 +4361,8 @@ typedef unsigned long long uint64_t;
 %free(uint16_t);
 %free(uint32_t);
 %free(uint64_t);
-%include "p4pd_swig.h"
-%include"""+' "' +  name + """_custom.h"
+%include"""+' "' + hdr_name + """p4pd_swig.h"
+%include"""+' "' + name     + """_custom.h"
 """
     out_file = out_dir + '%s.i' % (name)
     with open(out_file, "w") as of:

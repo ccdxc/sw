@@ -2,6 +2,21 @@
 //:: from collections import OrderedDict
 //:: pddict = _context['pddict']
 //:: #pdb.set_trace()
+//::
+//:: if pddict['p4plus']:
+//::    api_prefix = 'p4pd_' + pddict['p4program']
+//::    if pddict['p4program'] == 'common_rxdma_actions':
+//::        start_table_base = 101
+//::    elif pddict['p4program'] == 'common_txdma_actions':
+//::        start_table_base = 201
+//::    else:
+//::        start_table_base = 301
+//::    #endif
+//:: else:
+//::    api_prefix = 'p4pd'
+//::	start_table_base = 1
+//:: #endif
+//::
 #!/usr/bin/python
 # This file is auto-generated. Changes will be overwritten!
 #
@@ -13,7 +28,7 @@ import glob
 from   ${pddict['cli-name']} import *
 import ${pddict['cli-name']}
 //::    tabledict = {}
-//::    tableid = 1
+//::    tableid = start_table_base
 //::    for table in pddict['tables']:
 //::        if pddict['tables'][table]['type'] == 'Hash':
 //::            tabledict[table] = tableid
@@ -52,7 +67,7 @@ table_name_to_id_dict['${table}'] = ${tabledict[table]}
 
 array_cols = 16
 
-p4pd_table_types_enum = [
+${api_prefix}_table_types_enum = [
     'HASH',
     'HASH_OTCAM',
     'TERNARY',
@@ -482,10 +497,10 @@ class ${table}():
 
         hwentry_p = ${pddict['cli-name']}.new_uint8_ptr_t()
 
-        ret = ${pddict['cli-name']}.p4pd_entry_create(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, hwentry_p)
+        ret = ${pddict['cli-name']}.${api_prefix}_entry_create(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, hwentry_p)
 
         if ret < 0:
-            print('p4pd_entry_create() returned %d!' % (ret))
+            print('${api_prefix}_entry_create() returned %d!' % (ret))
 
         print('Entry was created successfully')
 
@@ -503,24 +518,24 @@ class ${table}():
             hwkeymask_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
             hwactiondata_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
 
-            ${pddict['cli-name']}.p4pd_hwentry_query(self.table_id, hwkey_len_p, hwkeymask_len_p, hwactiondata_len_p)
+            ${pddict['cli-name']}.${api_prefix}_hwentry_query(self.table_id, hwkey_len_p, hwkeymask_len_p, hwactiondata_len_p)
 
             hwkey_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkey_len_p)+7)/8)
             hwkeymask_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkeymask_len_p)+7)/8)
 
-            ret = ${pddict['cli-name']}.p4pd_hwkey_hwmask_build(self.table_id, self.swkey_p, self.swkey_mask_p, hwkey_p, hwkeymask_p)
+            ret = ${pddict['cli-name']}.${api_prefix}_hwkey_hwmask_build(self.table_id, self.swkey_p, self.swkey_mask_p, hwkey_p, hwkeymask_p)
             if ret < 0:
-                raise RuntimeError('p4pd_hwkey_hwmask_build() returned %d!' % (ret))
+                raise RuntimeError('${api_prefix}_hwkey_hwmask_build() returned %d!' % (ret))
 
 //::        else:
             hwkey_p = None
             hwkeymask_p = None
 //::        #endif
 
-            ret = ${pddict['cli-name']}.p4pd_entry_write(self.table_id, index, hwkey_p, hwkeymask_p, self.actiondata_p)
+            ret = ${pddict['cli-name']}.${api_prefix}_entry_write(self.table_id, index, hwkey_p, hwkeymask_p, self.actiondata_p)
 
             if ret < 0:
-                raise RuntimeError('p4pd_entry_write() returned %d!' % (ret))
+                raise RuntimeError('${api_prefix}_entry_write() returned %d!' % (ret))
 
             print('Entry was written successfully at index %d' % (index))
 
@@ -547,15 +562,15 @@ class ${table}():
         rsp_msg = ${pddict['cli-name']}.allocate_debug_response_msg()
         size    = new_intp()
 
-        ret = ${pddict['cli-name']}.p4pd_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, size)
+        ret = ${pddict['cli-name']}.${api_prefix}_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, size)
         if ret < 0:
-            print('Error: p4pd_entry_read() returned %d!' % (ret))
+            print('Error: ${api_prefix}_entry_read() returned %d!' % (ret))
             return;
 
         for i in range (0, intp_value(size)):
-            ret = ${pddict['cli-name']}.p4pd_entry_populate(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, i)
+            ret = ${pddict['cli-name']}.${api_prefix}_entry_populate(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, i)
             if ret < 0:
-                print('Error: p4pd_entry_populate() returned %d!' % (ret))
+                print('Error: ${api_prefix}_entry_populate() returned %d!' % (ret))
                 return;
 
         delete_intp(size)
@@ -571,25 +586,25 @@ class ${table}():
             #hwkeymask_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
             #hwactiondata_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
 
-            #${pddict['cli-name']}.p4pd_hwentry_query(self.table_id, hwkey_len_p, hwkeymask_len_p, hwactiondata_len_p)
+            #${pddict['cli-name']}.${api_prefix}_hwentry_query(self.table_id, hwkey_len_p, hwkeymask_len_p, hwactiondata_len_p)
 
             #hwkey_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkey_len_p)+7)/8)
             #hwkeymask_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkeymask_len_p)+7)/8)
 
-            #ret = ${pddict['cli-name']}.p4pd_hwkey_hwmask_build(self.table_id, self.swkey_p, self.swkey_mask_p, hwkey_p, hwkeymask_p)
+            #ret = ${pddict['cli-name']}.${api_prefix}_hwkey_hwmask_build(self.table_id, self.swkey_p, self.swkey_mask_p, hwkey_p, hwkeymask_p)
 
             #if ret < 0:
-            #    raise RuntimeError('p4pd_hwkey_hwmask_build() returned %d!' % (ret))
+            #    raise RuntimeError('${api_prefix}_hwkey_hwmask_build() returned %d!' % (ret))
 
 //::        else:
             #hwkey_p = None
             #hwkeymask_p = None
 //::        #endif
 
-            ret = ${pddict['cli-name']}.p4pd_entry_write(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p)
+            ret = ${pddict['cli-name']}.${api_prefix}_entry_write(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p)
 
             if ret < 0:
-                raise RuntimeError('p4pd_entry_write() returned %d!' % (ret))
+                raise RuntimeError('${api_prefix}_entry_write() returned %d!' % (ret))
 
             print('Entry was written successfully at index %d' % (index))
 
@@ -616,15 +631,15 @@ class ${table}():
         rsp_msg = ${pddict['cli-name']}.allocate_debug_response_msg()
         size    = new_intp()
 
-        ret = ${pddict['cli-name']}.p4pd_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, size)
+        ret = ${pddict['cli-name']}.${api_prefix}_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, size)
         if ret < 0:
-            print('Error: p4pd_entry_read() returned %d!' % (ret))
+            print('Error: ${api_prefix}_entry_read() returned %d!' % (ret))
             return;
 
         for i in range (0, intp_value(size)):
-            ret = ${pddict['cli-name']}.p4pd_entry_populate(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, i)
+            ret = ${pddict['cli-name']}.${api_prefix}_entry_populate(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, i)
             if ret < 0:
-                print('Error: p4pd_entry_populate() returned %d!' % (ret))
+                print('Error: ${api_prefix}_entry_populate() returned %d!' % (ret))
                 return;
 
             print ('Index: %d' % i)
@@ -984,7 +999,7 @@ def populate_table(ctx):
         # endfor table
 
 def table_dump():
-    with open("../p4pd/capri_p4_table_map.json") as data_file:
+    with open("../${api_prefix}/capri_p4_table_map.json") as data_file:
         data = json.load(data_file)
         print("=================================================================================")
         print( "{:<30} {:<6} {:<10} {:<10} {:<5} {:<10} {:<7}".format("Table","TblId", "Type", "In/Egress", "Stage", "StageTblID", "Size"))
@@ -995,6 +1010,6 @@ def table_dump():
 
 def populate_register(ctx):
     if (ctx['opn'] == 'read'):
-        ${pddict['cli-name']}.p4pd_register_entry_read(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))
+        ${pddict['cli-name']}.${api_prefix}_register_entry_read(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))
     elif (ctx['opn'] == 'list'):
-        ${pddict['cli-name']}.p4pd_register_list(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))
+        ${pddict['cli-name']}.${api_prefix}_register_list(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))
