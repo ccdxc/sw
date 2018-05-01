@@ -5,11 +5,13 @@
 
 struct req_tx_phv_t p;
 struct cqcb_t d;
-struct smbdc_req_tx_s4_t0_k k;
+struct smbdc_req_tx_s3_t0_k k;
 
 #define IN_P smbdc_req_tx_cqcb_info
 
 %%
+
+    .param    smbdc_req_tx_sqcb_writeback_process
 
 .align
 smbdc_req_tx_cqcb_process:
@@ -36,5 +38,11 @@ smbdc_req_tx_cqcb_process:
 
     //DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 
+    CAPRI_RESET_TABLE_0_ARG()
+
+    SQCB0_ADDR_GET(r2)
+
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_sqcb_writeback_process, r2)
+
     nop.e
-    CAPRI_SET_TABLE_0_VALID(0)
+    nop

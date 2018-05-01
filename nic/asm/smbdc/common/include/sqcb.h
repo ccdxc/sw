@@ -29,8 +29,10 @@
 #define SQCB1_T struct sqcb1_t
 #define SQCB2_T struct sqcb2_t
 
-#define SQCB_SQ_PINDEX_OFFSET        FIELD_OFFSET(sqcb0_t, ring0.pindex)
-#define SQCB_SQ_CINDEX_OFFSET        FIELD_OFFSET(sqcb0_t, ring0.cindex)
+#define SQCB_SQ_PINDEX_OFFSET            FIELD_OFFSET(sqcb0_t, ring0.pindex)
+#define SQCB_SQ_CINDEX_OFFSET            FIELD_OFFSET(sqcb0_t, ring0.cindex)
+#define SQCB_RDMA_CQ_PROXY_PINDEX_OFFSET FIELD_OFFSET(sqcb0_t, ring2.pindex)
+#define SQCB_RDMA_CQ_PROXY_CINDEX_OFFSET FIELD_OFFSET(sqcb0_t, ring2.cindex)
 
 #define SQ_WQE_CONTEXT_TYPE_NONE 0
 #define SQ_WQE_CONTEXT_TYPE_MR   1
@@ -77,9 +79,10 @@ struct sqcb0_t {
     rdma_cq_base_addr             : 34;
     rdma_cq_log_wqe_size          : 5;
     rdma_cq_log_num_wqes          : 5;
-    rdma_cq_processing_in_prog    : 1;
     rdma_cq_msn                   : 24;
+    rdma_cq_processing_in_prog    : 1;
     rdma_cq_processing_busy       : 1;
+    rdma_cq_rsvd_flags            : 6;
     rdma_cq_lif                   : 12;
     rdma_cq_qtype                 : 3;
     rdma_cq_qid                   : 24;
@@ -94,7 +97,7 @@ struct sqcb0_t {
     log_num_wqes                  : 5;  // RO
     sq_in_hbm                     : 1;  // RO
     ring_empty_sched_eval_done    : 1;  // RW S0
-    pad2                          : 38;
+    pad2                          : 32;
 };
 
 #define NUM_ROWS                      7

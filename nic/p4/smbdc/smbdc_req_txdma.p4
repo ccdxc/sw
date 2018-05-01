@@ -53,6 +53,7 @@
 #define tx_table_s2_t0_action smbdc_req_tx_mr_select_process
 #define tx_table_s2_t0_action1 smbdc_req_tx_wqe_context_process
 #define tx_table_s3_t0_action smbdc_req_tx_post_rdma_req_process
+#define tx_table_s4_t0_action smbdc_req_tx_sqcb_writeback_process
 
 #include "../common-p4+/common_txdma.p4"
 
@@ -113,6 +114,12 @@ header_type smbdc_req_tx_rdma_cqe_to_wqe_context_info_t {
     }
 }
 
+header_type smbdc_req_tx_writeback_info_t {
+    fields {
+        pad                              :   160;
+    }
+}
+
 
 header_type smbdc_req_tx_to_stage_t {
     fields {
@@ -124,6 +131,17 @@ header_type smbdc_req_tx_to_stage_s2_t {
     fields {
         cqcb_addr                        :   34;
         pad                              :   94;
+    }
+}
+
+header_type smbdc_req_tx_to_stage_s4_t {
+    fields {
+        incr_proxy_cq_cindex             :   1;
+        incr_rdma_cq_cindex              :   1;
+        incr_sq_unack_pindex             :   1;
+        clear_busy                       :   1;
+        clear_in_progress                :   1;
+        pad                              :   123;
     }
 }
 
@@ -169,9 +187,9 @@ metadata smbdc_req_tx_to_stage_t to_s3_to_stage_scr;
 //To-Stage-4
 @pragma pa_header_union ingress to_stage_4 to_s4_to_stage
 
-metadata smbdc_req_tx_to_stage_t to_s4_to_stage;
+metadata smbdc_req_tx_to_stage_s4_t to_s4_to_stage;
 @pragma scratch_metadata
-metadata smbdc_req_tx_to_stage_t to_s4_to_stage_scr;
+metadata smbdc_req_tx_to_stage_s4_t to_s4_to_stage_scr;
 
 //To-Stage-5
 @pragma pa_header_union ingress to_stage_5 to_s5_to_stage
@@ -198,7 +216,7 @@ metadata smbdc_req_tx_to_stage_t to_s7_to_stage_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_wqe_to_mr_select_info t0_s2s_mr_select_to_rdma_info t0_s2s_rdma_cqe_info t0_s2s_rdma_cqe_to_wqe_context_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_wqe_to_mr_select_info t0_s2s_mr_select_to_rdma_info t0_s2s_rdma_cqe_info t0_s2s_rdma_cqe_to_wqe_context_info t0_s2s_writeback_info
 
 metadata smbdc_req_tx_sqcb_to_wqe_info_t t0_s2s_sqcb_to_wqe_info;
 @pragma scratch_metadata
@@ -219,6 +237,10 @@ metadata smbdc_req_tx_wqe_to_mr_select_info_t t0_s2s_wqe_to_mr_select_info_scr;
 metadata smbdc_req_tx_mr_select_to_rdma_info_t t0_s2s_mr_select_to_rdma_info;
 @pragma scratch_metadata
 metadata smbdc_req_tx_mr_select_to_rdma_info_t t0_s2s_mr_select_to_rdma_info_scr;
+
+metadata smbdc_req_tx_writeback_info_t t0_s2s_writeback_info;
+@pragma scratch_metadata
+metadata smbdc_req_tx_writeback_info_t t0_s2s_writeback_info_scr;
 
 //Table-1
 
@@ -302,4 +324,22 @@ action smbdc_req_tx_wqe_context_process () {
     // stage to stage
     modify_field(t0_s2s_rdma_cqe_to_wqe_context_info_scr.msn, t0_s2s_rdma_cqe_to_wqe_context_info.msn);
     modify_field(t0_s2s_rdma_cqe_to_wqe_context_info_scr.pad, t0_s2s_rdma_cqe_to_wqe_context_info.pad);
+}
+
+action smbdc_req_tx_sqcb_writeback_process () {
+
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s4_to_stage_scr.incr_proxy_cq_cindex, to_s4_to_stage.incr_proxy_cq_cindex);
+    modify_field(to_s4_to_stage_scr.incr_rdma_cq_cindex, to_s4_to_stage.incr_rdma_cq_cindex);
+    modify_field(to_s4_to_stage_scr.incr_sq_unack_pindex, to_s4_to_stage.incr_sq_unack_pindex);
+    modify_field(to_s4_to_stage_scr.clear_busy, to_s4_to_stage.clear_busy);
+    modify_field(to_s4_to_stage_scr.clear_in_progress, to_s4_to_stage.clear_in_progress);
+    modify_field(to_s4_to_stage_scr.pad, to_s4_to_stage.pad);
+
+    // stage to stage
+    modify_field(t0_s2s_writeback_info_scr.pad, t0_s2s_writeback_info.pad);
+
 }

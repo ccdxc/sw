@@ -71,31 +71,28 @@ smbdc_req_tx_sqcb_process:
         nop
 
     .brcase        RDMA_CQ_PROXY_RING_ID
-        seq        c3, RDMA_CQ_PROXY_C_INDEX, RDMA_CQ_PROXY_P_INDEX
+
+        bbeq       d.rdma_cq_processing_busy, 1, give_up
+
+        seq        c3, RDMA_CQ_PROXY_C_INDEX, RDMA_CQ_PROXY_P_INDEX //BD Slot
         bcf        [c3], exit
 
         add        r1, r0, RDMA_CQ_PROXY_C_INDEX
         sll        r2, r1, d.rdma_cq_log_wqe_size
         add        r2, r2, d.rdma_cq_base_addr
 
+        #in_prog flag seems to be un-necessary as of now. will cleanup later
+        tblwr      d.{rdma_cq_processing_in_prog...rdma_cq_processing_busy}, 0x3
+
         CAPRI_RESET_TABLE_0_ARG()
         
-        add            r1, r0, d.sq_unack_pindex
-        sll            r3, r1, LOG_WQE_CONTEXT_SIZE
-        add            r3, r3, d.sq_wqe_context_base_addr
+        add        r1, r0, d.sq_unack_pindex
+        sll        r3, r1, LOG_WQE_CONTEXT_SIZE
+        add        r3, r3, d.sq_wqe_context_base_addr
 
         CAPRI_SET_FIELD2(TO_RDMA_CQE_P, wqe_context_addr, r3)
 
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_rdma_cqe_process, r2)
-
-        tblmincri      RDMA_CQ_PROXY_C_INDEX, d.rdma_cq_log_num_wqes, 1
-
-        //prepare doorbell to set RDMA CQ's cindex. r5 for db_addr and r6 for db_data
-        PREPARE_DOORBELL_WRITE_CINDEX(d.rdma_cq_lif, d.rdma_cq_qtype, d.rdma_cq_qid, d.rdma_cq_ring_id, RDMA_CQ_PROXY_C_INDEX, r5, r6)
-        phvwr          p.db_data, r6
-        DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_ID_RDMA_CQ)
-        DMA_HBM_PHV2MEM_SETUP(r6, db_data, db_data, r5)
-        DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 
         nop.e
         nop
@@ -115,6 +112,7 @@ smbdc_req_tx_sqcb_process:
 
     .brend
 
+give_up:
 exit:
     phvwr   p.common.p4_intr_global_drop, 1
     nop.e
