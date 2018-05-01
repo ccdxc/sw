@@ -12,7 +12,8 @@ INTF2=pen-intf2
 HOST0=pen-host0
 
 # redirect output to bootstrap.log
-exec > /var/log/bootstrap.log
+mkdir -p /var/naples/logs
+exec > /var/naples/logs/bootstrap.log
 exec 2>&1
 
 set -x

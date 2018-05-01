@@ -4,7 +4,7 @@ echo "Bringing up NAPLES services/processes ..."
 
 export VER=v1
 export NIC_DIR=/naples/nic
-export LOG_DIR=/naples/$VER/logs
+export LOG_DIR=/naples/data/logs
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export HAL_LOG_DIR=$LOG_DIR
 export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:$HAL_CONFIG_PATH/sdk:$HAL_CONFIG_PATH/sdk/external:/usr/local/lib:$LD_LIBRARY_PATH
@@ -14,6 +14,12 @@ ulimit -c unlimited
 
 // create directory for logs/traces
 mkdir -p $LOG_DIR
+exec > $LOG_DIR/start-naples.log
+exec 2>&1
+set -x
+
+// Starting the processes from log directory so that cores are saved there.
+cd $LOG_DIR
 
 echo "Starting NAPLES model ..."
 $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
