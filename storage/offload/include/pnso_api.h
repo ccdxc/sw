@@ -324,7 +324,7 @@ struct pnso_hash_or_chksum_tag {
  * service type.
  * @output_data_len: specifies the length of the output buffer processed in
  * bytes depending on the service type.
- * @interim_buf: specifies a temporary scatter/gather buffer list that to
+ * @output_buf: specifies a temporary scatter/gather buffer list that to
  * be used as output buffer for this service. Valid only for non-last
  * services.
  * @num_tags: specifies number of SHAs or checksums.
@@ -339,7 +339,7 @@ struct pnso_service_status {
 	pnso_error_t err;
 	uint8_t svc_type;
 	uint32_t output_data_len;
-	struct pnso_buffer_list *interim_buf;
+	struct pnso_buffer_list *output_buf;
 	uint16_t num_tags;
 	struct pnso_hash_or_chksum_tag *tags;
 };
