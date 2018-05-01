@@ -1,6 +1,6 @@
 #! /bin/bash
 
-set -ex
+set -e
 
 function create_namespaces {
   NAMESPACE_URL="$NAPLES_AGENT_IP:9007/api/namespaces/"
@@ -12,7 +12,7 @@ function create_namespaces {
   validate_get "kingdom-2" $NAMESPACE_URL
 
   curl -d'{"Kind":"Namespace","meta":{"Name":"public","Tenant":"default"}}' -X POST -H "Content-Type: application/json" $NAMESPACE_URL
-  validate_get "kingdom-2" $NAMESPACE_URL
+  validate_get "public" $NAMESPACE_URL
 
   echo "All namespaces created"
 }
@@ -22,6 +22,9 @@ function create_networks {
 
   curl -d'{"Kind":"Network","meta":{"Name":"kingdom-1","Tenant":"default","Namespace":"kingdom-1"}, "spec":{"IPv4Subnet": "10.1.1.0/24", "IPv4Gateway":"10.1.1.1", "VlanID":100}}' -X POST -H "Content-Type: application/json" $NETWORK_URL
   validate_get "kingdom-1" $NETWORK_URL
+
+  curl -d'{"Kind":"Network","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec:":{"IPv4Subet": "20.1.1.0/24", "IPv4Gateway":"20.1.1.1", "VlanID":200}}' -X POST -H "Content-Type: application/json" $NETWORK_URL
+  validate_get "public" $NETWORK_URL
 
   echo "All networks created"
 }
@@ -99,6 +102,8 @@ echo "HNTAP running"
 
 # create objects
 create_namespaces
+
+# ToDo uncomment create_networks once we are able to validate with HAL
 create_networks
 create_nat_pools
 create_nat_policies
