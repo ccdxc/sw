@@ -1361,7 +1361,7 @@ acc_scale_tests_list_t::post_push(const char *test_name)
     tests::Poller       poll(FLAGS_long_poll_interval * poll_factor);
     acc_scale_tests_t   *scale_test;
     std::list<acc_scale_tests_t*>::iterator it;
-    int                 verify_result;
+    int                 verify_result = 0;
 
     /*
      * Start the tests
@@ -1372,19 +1372,12 @@ acc_scale_tests_list_t::post_push(const char *test_name)
     }
 
     /*
-     * Poll for completion of all tests in the list
+     * Resubmit qualified tests that have completed
      */
-    auto completion_poll = [this] () -> int
+    auto qualified_resubmit = [this, &verify_result] () -> void
     {
-        return completion_check();
-    };
-
-    while (!tests_list.empty() || !compl_list.empty()) {
-
-        if (poll(completion_poll)) {
-            printf("test %s timed out\n", test_name);
-            break;
-        }
+        std::list<acc_scale_tests_t*>::iterator it;
+        acc_scale_tests_t   *scale_test;
 
         // Restart any tests that have not exhausted iteration limit
         it = compl_list.begin(); 
@@ -1409,10 +1402,42 @@ acc_scale_tests_list_t::post_push(const char *test_name)
             }
             it = compl_list.erase(it);
         }
+    };
+
+    /*
+     * Poll for completion of tests in the list while resubmitting those
+     * that have completed.
+     */
+    auto completion_poll = [this, qualified_resubmit] () -> int
+    {
+        uint32_t    compl_count;
+
+        assert(compl_list.size() == 0);
+
+        completion_check();
+        compl_count = compl_list.size();
+        qualified_resubmit();
+
+        /*
+         * Return completion done if at least one test completed
+         */
+        return compl_count ? 0 : -1;
+    };
+
+    while (!tests_list.empty()) {
+        if (poll(completion_poll)) {
+            printf("test %s timed out\n", test_name);
+            break;
+        }
+
+        if (verify_result) {
+            break;
+        }
+        usleep(10000);
     }
 
     outstanding_report();
-    return tests_list.empty() && compl_list.empty() ? 0 : -1;
+    return tests_list.empty() ? 0 : -1;
 }
 
 
