@@ -51,14 +51,6 @@ storage_tx_roce_cq_handler_start:
    addi		r7, r6, R2N_BUF_WRITE_REQ_WRID_OFFSET
    DMA_PHV2MEM_SETUP_ADDR64(r2n_data_buff_addr_addr, r2n_data_buff_addr_addr, r7, dma_p2m_3)
 
-   // Step 3: Setup the DMA for setting write request pointer in the SGE
-   // TODO:   Enable this in P4+ in production code.  The reason it can't be done in
-   //         DOL environment is because the P4+ code does not know the VA of the host. 
-   //         In production code, this buffer will be setup with the VA:PA identity 
-   //         mapping of the HBM buffer.
-   addi		r7, r6, R2N_BUF_WRITE_REQ_SGE0_OFFSET
-   //DMA_PHV2MEM_SETUP_ADDR64(r2n_data_buff_addr_addr, r2n_data_buff_addr_addr, r7, dma_p2m_4)
-   
    // Load the table for the next stage
    b		tbl_load
 

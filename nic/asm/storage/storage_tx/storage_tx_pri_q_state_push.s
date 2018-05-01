@@ -38,7 +38,7 @@ check_lo:
 
    // Setup the start and end DMA pointers
 complete_dma:
-   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_3_dma_cmd_eop,
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_4_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
 
    // TODO: Push error handling

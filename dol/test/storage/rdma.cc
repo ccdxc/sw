@@ -606,12 +606,21 @@ void PostTargetRcvBuf1() {
   sqwqe->write_bit_fields(256+64+32, 32, kTargetRcvBuf1LKey); // SGE-lkey
   sqwqe->write_thru();
 
+  // write the local buffer information of the Write descriptor
+  dp_mem_t *write_desc_local = target_rcv_buf_va->fragment_find(offsetof(r2n::r2n_buf_t, write_desc_local), 
+                                                     sizeof(r2n::roce_sq_sge_t));
+  write_desc_local->clear();
+
+  dp_mem_t *write_data_buf = target_rcv_buf_va->fragment_find(kR2NDataBufOffset, kR2NDataSize);
+  printf("Using write_buf VA %lx PA %lx \n", write_data_buf->va(), write_data_buf->pa());
+
+  write_desc_local->write_bit_fields(0, 64, write_data_buf->va()); // SGE-va
+  write_desc_local->write_bit_fields(64, 32, (uint32_t) kR2NDataSize); // SGE-len
+  write_desc_local->write_bit_fields(64+32, 32, kTargetRcvBuf1LKey); // SGE-lkey
+  write_desc_local->write_thru();
+
   target_rq_va->line_advance();
   tests::test_ring_doorbell(g_rdma_hw_lif_id, kRQType, 1, 0, target_rq_va->line_get());
-}
-
-void ResetTargetRcvBufPtr() {
-  target_rcv_buf_va->line_set(0);
 }
 
 void IncrTargetRcvBufPtr() {
@@ -706,19 +715,6 @@ bool PullCQEntry(dp_mem_t *cq_va, uint16_t *cq_cindex, uint32_t ent_size,
     usleep(1000);
   }
   return false;
-}
-
-// Write SGE: local side buffer
-// TODO: Remove the write_data_buf pointer and do this in P4+ in production code
-//       The reason it can't be done in DOL environment is because the P4+ code
-//       does not know the VA of the host. In production code, this buffer will be
-//       setup with the VA:PA identity mapping of the HBM buffer.
-void FillWriteBackLocalBuffer(dp_mem_t *wqe, int base_offset) {
-  dp_mem_t *write_data_buf = target_rcv_buf_va->fragment_find(kR2NDataBufOffset, kR2NDataSize);
-  printf("Using write_buf VA %lx PA %lx \n", write_data_buf->va(), write_data_buf->pa());
-  wqe->write_bit_fields(base_offset+256, 64, write_data_buf->va()); // SGE-va
-  wqe->write_bit_fields(base_offset+256+64, 32, (uint32_t) kR2NDataSize); // SGE-len
-  wqe->write_bit_fields(base_offset+256+64+32, 32, kTargetRcvBuf1LKey); // SGE-lkey
 }
 
 void SendSmallUspaceBuf() {
@@ -938,7 +934,6 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   // Pre-form the (RDMA) write descriptor to point to the data buffer
   uint32_t write_wqe_offset = offsetof(r2n::r2n_buf_t, write_desc) - offsetof(r2n::r2n_buf_t, cmd_buf);
   dp_mem_t *write_wqe = r2n_buf_va->fragment_find(write_wqe_offset, 64);
-  dp_mem_t *write_data_buf = target_rcv_buf_va->fragment_find(kR2NDataBufOffset, kR2NDataSize);
 
   // Start the write WQE formation (WRID will be filled by P4+)
   write_wqe->write_bit_fields(64, 4, 5);  // op_type = OP_TYPE_WRITE_IMM
@@ -958,15 +953,6 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   write_wqe->write_bit_fields(128, 64, r2n_hbm_buf_pa->va()); // va == pa
   write_wqe->write_bit_fields(128+64, 32, (uint32_t) kR2NDataSize); // len
   write_wqe->write_bit_fields(128+64+32, 32, WriteBackBufRKey); // rkey
-
-  // Write SGE: local side buffer
-  // TODO: Remove the write_data_buf pointer and do this in P4+ in production code
-  //       The reason it can't be done in DOL environment is because the P4+ code
-  //       does not know the VA of the host. In production code, this buffer will be
-  //       setup with the VA:PA identity mapping of the HBM buffer.
-  write_wqe->write_bit_fields(256, 64, write_data_buf->va()); // SGE-va
-  write_wqe->write_bit_fields(256+64, 32, (uint32_t) kR2NDataSize); // SGE-len
-  write_wqe->write_bit_fields(256+64+32, 32, kTargetRcvBuf1LKey); // SGE-lkey
   write_wqe->write_thru();
 
   initiator_sq_va->line_advance();
