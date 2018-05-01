@@ -186,7 +186,8 @@ public:
     void pre_push(chksum_decomp_chain_pre_push_params_t params);
     int  push(chksum_decomp_chain_push_params_t params);
     void post_push(void);
-    int  verify(void);
+    int  fast_verify(void);
+    int  full_verify(void);
 
 private:
 

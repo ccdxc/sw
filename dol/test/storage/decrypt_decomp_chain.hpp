@@ -188,7 +188,8 @@ public:
     void pre_push(decrypt_decomp_chain_pre_push_params_t params);
     int  push(decrypt_decomp_chain_push_params_t params);
     void post_push(void);
-    int  verify(void);
+    int  fast_verify(void);
+    int  full_verify(void);
 
     uint32_t dc_output_data_len_get(void)
     {

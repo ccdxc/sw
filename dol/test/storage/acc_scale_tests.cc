@@ -195,7 +195,7 @@ comp_encrypt_chain_scale_t::full_verify(void)
 
     success = true;
     for (i = 0; i < comp_encrypt_chain_vec.size(); i++) {
-        if (comp_encrypt_chain_vec[i]->verify()) {
+        if (comp_encrypt_chain_vec[i]->full_verify()) {
             printf("ERROR: %s submission #%u failed\n",
                    __FUNCTION__, i);
             success = false;
@@ -363,22 +363,13 @@ decrypt_decomp_chain_scale_t::completion_check(void)
 int 
 decrypt_decomp_chain_scale_t::fast_verify(void)
 {
-    cp_status_sha512_t  *st;
     uint32_t            i;
 
     success = true;
     for (i = 0; i < decrypt_decomp_chain_vec.size(); i++) {
-        comp_status_host_buf->line_set(i);
-        st = (cp_status_sha512_t *)comp_status_host_buf->read_thru();
-
-        if (!st->valid) {
-            printf("%s submission #%u: Status valid bit not set\n",
+        if (decrypt_decomp_chain_vec[i]->fast_verify()) {
+            printf("ERROR: %s submission #%u failed\n",
                    __FUNCTION__, i);
-            success = false;
-        }
-        if (st->err) {
-            printf("%s submission #%u status err 0x%x is unexpected\n",
-                   __FUNCTION__, i, st->err);
             success = false;
         }
     }
@@ -398,7 +389,7 @@ decrypt_decomp_chain_scale_t::full_verify(void)
 
     success = true;
     for (i = 0; i < decrypt_decomp_chain_vec.size(); i++) {
-        if (decrypt_decomp_chain_vec[i]->verify()) {
+        if (decrypt_decomp_chain_vec[i]->full_verify()) {
             printf("ERROR: %s submission #%u failed\n",
                    __FUNCTION__, i);
             success = false;
@@ -583,7 +574,18 @@ comp_hash_chain_scale_t::completion_check(void)
 int 
 comp_hash_chain_scale_t::fast_verify(void)
 {
-    return full_verify();
+    uint32_t    i;
+
+    success = true;
+    for (i = 0; i < comp_hash_chain_vec.size(); i++) {
+        if (comp_hash_chain_vec[i]->fast_verify()) {
+            printf("ERROR: %s submission #%u failed\n",
+                   __FUNCTION__, i);
+            success = false;
+        }
+    }
+
+    return success ? 0 : -1;
 }
 
 /*
@@ -597,7 +599,7 @@ comp_hash_chain_scale_t::full_verify(void)
 
     success = true;
     for (i = 0; i < comp_hash_chain_vec.size(); i++) {
-        if (comp_hash_chain_vec[i]->verify()) {
+        if (comp_hash_chain_vec[i]->full_verify()) {
             printf("ERROR: %s submission #%u failed\n",
                    __FUNCTION__, i);
             success = false;
@@ -798,7 +800,18 @@ chksum_decomp_chain_scale_t::completion_check(void)
 int 
 chksum_decomp_chain_scale_t::fast_verify(void)
 {
-    return full_verify();
+    uint32_t    i;
+
+    success = true;
+    for (i = 0; i < chksum_decomp_chain_vec.size(); i++) {
+        if (chksum_decomp_chain_vec[i]->fast_verify()) {
+            printf("ERROR: %s submission #%u failed\n",
+                   __FUNCTION__, i);
+            success = false;
+        }
+    }
+
+    return success ? 0 : -1;
 }
 
 /*
@@ -812,7 +825,7 @@ chksum_decomp_chain_scale_t::full_verify(void)
 
     success = true;
     for (i = 0; i < chksum_decomp_chain_vec.size(); i++) {
-        if (chksum_decomp_chain_vec[i]->verify()) {
+        if (chksum_decomp_chain_vec[i]->full_verify()) {
             printf("ERROR: %s submission #%u failed\n",
                    __FUNCTION__, i);
             success = false;
@@ -983,7 +996,7 @@ encrypt_only_scale_t::full_verify(void)
 
     success = true;
     for (i = 0; i < encrypt_only_vec.size(); i++) {
-        if (encrypt_only_vec[i]->verify()) {
+        if (encrypt_only_vec[i]->full_verify()) {
             printf("ERROR: %s submission #%u failed\n",
                    __FUNCTION__, i);
             success = false;
@@ -1279,6 +1292,10 @@ acc_scale_tests_push(void)
             return seed_test_chain->completion_check();
         };
 
+        /*
+         * Seed data must use full_verify() to ensure validity and
+         * seed state updates such as cp_output_data_len, etc.
+         */
         if (poll(completion_poll) || 
             seed_test_chain->full_verify()) {
 
@@ -1385,7 +1402,8 @@ acc_scale_tests_list_t::post_push(const char *test_name)
 
             // Ensure fast/full verification also passes
             scale_test = *it;
-            verify_result = FLAGS_acc_scale_verify_method == "fast" ?
+            verify_result = FLAGS_with_rtl_skipverify ||
+                            (FLAGS_acc_scale_verify_method == "fast") ?
                             scale_test->fast_verify() : scale_test->full_verify();
             if (verify_result) {
                 break;

@@ -292,35 +292,22 @@ comp_encrypt_chain_t::encrypt_setup(acc_chain_params_t& chain_params)
     xts_ctx.desc_write_seq_xts(xts_desc_buf);
 }
 
+
 /*
- * Test result verification
+ * Test result verification (fast and non-blocking)
+ *
+ * Should only be used when caller has another means to ensure that the test
+ * has completed. The main purpose of this function to quickly verify operational
+ * status, and avoid any lengthy HBM access (such as data comparison) that would
+ * slow down test resubmission in the scaled setup.
  */
 int 
-comp_encrypt_chain_t::verify(void)
+comp_encrypt_chain_t::fast_verify(void)
 {
-    uint32_t    poll_factor = app_blk_size / kCompAppMinSize;
-
-    // Poll for comp status
-    if (!comp_status_poll(comp_status_buf2, cp_desc, suppress_info_log)) {
-      printf("ERROR: comp_encrypt_chain compression status never came\n");
-      return -1;
-    }
-
     // Validate comp status
+    success = false;
     if (compress_status_verify(comp_status_buf2, comp_buf, cp_desc)) {
         printf("ERROR: comp_encrypt_chain compression status verification failed\n");
-        return -1;
-    }
-    last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
-    if (!suppress_info_log) {
-        printf("comp_encrypt_chain: last_cp_output_data_len %u\n",
-               last_cp_output_data_len);
-    }
-
-    // Verify XTS engine doorbell
-    assert(poll_factor);
-    if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
-        printf("ERROR: comp_encrypt_chain doorbell from XTS engine never came\n");
         return -1;
     }
 
@@ -331,12 +318,57 @@ comp_encrypt_chain_t::verify(void)
       return -1;
     }
 
+    if (!suppress_info_log) {
+        printf("Testcase comp_encrypt_chain fast_verify passed\n");
+    }
+    success = true;
+    return 0;
+}
+
+
+/*
+ * Test result verification (full and possibly blocking)
+ *
+ * Should only be used in non-scaled setup.
+ */
+int 
+comp_encrypt_chain_t::full_verify(void)
+{
+    uint32_t    poll_factor = app_blk_size / kCompAppMinSize;
+
+    // Poll for comp status
+    success = false;
+    if (!comp_status_poll(comp_status_buf2, cp_desc, suppress_info_log)) {
+      printf("ERROR: comp_encrypt_chain compression status never came\n");
+      return -1;
+    }
+
+    // Verify XTS engine doorbell
+    assert(poll_factor);
+    if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
+        printf("ERROR: comp_encrypt_chain doorbell from XTS engine never came\n");
+        return -1;
+    }
+
+    /*
+     * Verify individual statuses
+     */
+    if (fast_verify()) {
+        return -1;
+    }
+
+    last_cp_output_data_len = comp_status_output_data_len_get(comp_status_buf2);
+    if (!suppress_info_log) {
+        printf("comp_encrypt_chain: last_cp_output_data_len %u\n",
+               last_cp_output_data_len);
+    }
+
     // Status verification done.
     xts::xts_aol_t *xts_out = (xts::xts_aol_t *)xts_out_aol->read_thru();
     last_encrypt_output_data_len = xts_out->l0;
 
     if (!suppress_info_log) {
-        printf("Testcase comp_encrypt_chain passed: "
+        printf("Testcase comp_encrypt_chain full_verify passed: "
                "last_encrypt_output_data_len %u\n", last_encrypt_output_data_len);
     }
     success = true;

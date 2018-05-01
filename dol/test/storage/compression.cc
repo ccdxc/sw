@@ -1527,7 +1527,7 @@ int compress_output_encrypt_app_min_size() {
                                     seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
                                     seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
     comp_encrypt_chain->post_push();
-    return comp_encrypt_chain->verify();
+    return comp_encrypt_chain->full_verify();
 }
 
 int seq_compress_output_encrypt_app_min_size() {
@@ -1539,7 +1539,7 @@ int seq_compress_output_encrypt_app_min_size() {
                                     seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
                                     seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
     comp_encrypt_chain->post_push();
-    return comp_encrypt_chain->verify();
+    return comp_encrypt_chain->full_verify();
 }
 
 int compress_output_encrypt_app_max_size() {
@@ -1551,7 +1551,7 @@ int compress_output_encrypt_app_max_size() {
                                     seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
                                     seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
     comp_encrypt_chain->post_push();
-    return comp_encrypt_chain->verify();
+    return comp_encrypt_chain->full_verify();
 }
 
 int seq_compress_output_encrypt_app_max_size() {
@@ -1563,7 +1563,7 @@ int seq_compress_output_encrypt_app_max_size() {
                                     seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
                                     seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
     comp_encrypt_chain->post_push();
-    return comp_encrypt_chain->verify();
+    return comp_encrypt_chain->full_verify();
 }
 
 int compress_output_encrypt_app_nominal_size() {
@@ -1575,7 +1575,7 @@ int compress_output_encrypt_app_nominal_size() {
                                     seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
                                     seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
     comp_encrypt_chain->post_push();
-    return comp_encrypt_chain->verify();
+    return comp_encrypt_chain->full_verify();
 }
 
 int seq_compress_output_encrypt_app_nominal_size() {
@@ -1587,7 +1587,7 @@ int seq_compress_output_encrypt_app_nominal_size() {
                                     seq_comp_status_qid(queues::get_seq_comp_status_sq(0)).
                                     seq_xts_status_qid(queues::get_seq_xts_status_sq(0)));
     comp_encrypt_chain->post_push();
-    return comp_encrypt_chain->verify();
+    return comp_encrypt_chain->full_verify();
 }
 
 // Accelerator XTS-decrypt to decompression chaining DOLs.
@@ -1605,7 +1605,7 @@ int seq_decrypt_output_decompress_last_app_blk() {
                                       seq_xts_status_qid(queues::get_seq_xts_status_sq(0)).
                                       seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
     decrypt_decomp_chain->post_push();
-    return decrypt_decomp_chain->verify();
+    return decrypt_decomp_chain->full_verify();
 }
 
 int seq_compress_output_hash_app_max_size() {
@@ -1621,7 +1621,7 @@ int seq_compress_output_hash_app_max_size() {
                                  seq_comp_qid(queues::get_seq_comp_sq(0)).
                                  seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
     comp_hash_chain->post_push();
-    return comp_hash_chain->verify();
+    return comp_hash_chain->full_verify();
 }
 
 int seq_compress_output_hash_app_test_size() {
@@ -1636,7 +1636,7 @@ int seq_compress_output_hash_app_test_size() {
                                  seq_comp_qid(queues::get_seq_comp_sq(0)).
                                  seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
     comp_hash_chain->post_push();
-    return comp_hash_chain->verify();
+    return comp_hash_chain->full_verify();
 }
 
 int seq_compress_output_hash_app_nominal_size() {
@@ -1652,7 +1652,7 @@ int seq_compress_output_hash_app_nominal_size() {
                                  seq_comp_qid(queues::get_seq_comp_sq(0)).
                                  seq_comp_status_qid(queues::get_seq_comp_status_sq(0)));
     comp_hash_chain->post_push();
-    return comp_hash_chain->verify();
+    return comp_hash_chain->full_verify();
 }
 
 // Accelerator checksum to decompression chaining DOLs.
@@ -1668,7 +1668,7 @@ int seq_chksum_decompress_last_app_blk() {
                                      seq_chksum_qid(queues::get_seq_comp_sq(0)).
                                      seq_decomp_qid(queues::get_seq_comp_sq(1)));
     chksum_decomp_chain->post_push();
-    return chksum_decomp_chain->verify();
+    return chksum_decomp_chain->full_verify();
 }
 
 }  // namespace tests
