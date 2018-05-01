@@ -20,7 +20,7 @@
 		gft.proto
 		interface.proto
 		internal.proto
-		ipsec.proto.draft
+		ipsec.proto
 		ipseccb.proto
 		kh.proto
 		l2segment.proto
