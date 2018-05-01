@@ -110,6 +110,7 @@ header_type control_metadata_t {
         parser_inner_eth_offset        : 8;
         parser_payload_offset          : 16;
         udp_opt_bytes                  : 8;
+        same_if_check_failed           : 1;
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;

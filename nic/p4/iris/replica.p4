@@ -27,9 +27,7 @@ action set_replica_rewrites() {
             if ((control_metadata.src_lport == tm_replication_data.lport) or
                 ((tm_replication_data.is_tunnel == TRUE) and
                  (tunnel_metadata.tunnel_terminate == TRUE))) {
-                modify_field(control_metadata.egress_drop_reason,
-                             EGRESS_DROP_PRUNE_SRC_PORT);
-                drop_packet();
+                modify_field(control_metadata.same_if_check_failed, TRUE);
             }
             modify_field(control_metadata.dst_lport, tm_replication_data.lport);
             modify_field(control_metadata.qtype, tm_replication_data.qtype);

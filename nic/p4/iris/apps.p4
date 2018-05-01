@@ -547,6 +547,15 @@ table p4plus_app {
 }
 
 action p4plus_app_prep() {
+    if (control_metadata.same_if_check_failed == TRUE) {
+        if ((control_metadata.p4plus_app_id != P4PLUS_APPTYPE_RDMA) or
+            (flow_lkp_metadata.pkt_type != PACKET_TYPE_MULTICAST)) {
+            modify_field(control_metadata.egress_drop_reason,
+                         EGRESS_DROP_PRUNE_SRC_PORT);
+            drop_packet();
+        }
+    }
+
     if (control_metadata.p4plus_app_id == P4PLUS_APPTYPE_CLASSIC_NIC) {
         f_p4plus_app_classic_nic_prep();
     } else {
