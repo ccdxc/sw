@@ -1,8 +1,8 @@
 # This Makefile is auto-generated. Changes will be overwritten!
-SW_DIR         =  ../..
+SW_DIR         =  ../../
 NIC_DIR        =  $(SW_DIR)/nic
-IRIS_CLI_DIR   =  $(NIC_DIR)/gen/iris/cli
-GFT_CLI_DIR    =  $(NIC_DIR)/gen/gft/cli
+PGM            := iris
+CLI_DIR        =  $(NIC_DIR)/gen/$(PGM)/cli
 TOOLCHAIN_ROOT =  /tool/toolchain/aarch64
 TOOLCHAIN_VER  =  1.1
 TOOLCHAIN_PATH =  $(TOOLCHAIN_ROOT)-$(TOOLCHAIN_VER)
@@ -40,22 +40,19 @@ SHARED_LIBS    += -L$(NIC_DIR)/gen/x86_64/lib
 endif
 SHARED_LIBS    += -lhalproto
 
-default: iris
+default: $(PGM)
 
 swig:
-	swig -c++ -python -I$(NIC_DIR)/gen/iris/include -I$(NIC_DIR)/hal/pd -o $(IRIS_CLI_DIR)/iris_wrap.cc $(IRIS_CLI_DIR)/iris.i
+	swig -c++ -python -I$(NIC_DIR)/gen/$(PGM)/include -I$(NIC_DIR)/hal/pd -o $(CLI_DIR)/$(PGM)_wrap.cc $(CLI_DIR)/$(PGM).i
 
-iris: swig
-	$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(IRIS_CLI_DIR)/_iris.so $(IRIS_CLI_DIR)/iris_wrap.cc $(NIC_DIR)/gen/iris/src/p4pd_debug.cc $(ARCHIVES) $(SHARED_LIBS)
-
-swig_gft:
-	swig -c++ -python -I$(NIC_DIR)/gen/gft/include -I$(NIC_DIR)/hal/pd -o $(GFT_CLI_DIR)/gft_wrap.cc $(GFT_CLI_DIR)/gft.i
-
-gft: swig_gft
-	$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(GFT_CLI_DIR)/_gft.so $(GFT_CLI_DIR)/gft_wrap.cc $(NIC_DIR)/gen/gft/src/p4pd_debug.cc $(ARCHIVES) $(SHARED_LIBS)
+$(PGM): swig
+    ifeq ($(PGM),$(filter $(PGM),iris gft))
+		$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/gen/$(PGM)/src/p4pd_debug.cc        $(ARCHIVES) $(SHARED_LIBS)
+    else
+		$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/gen/$(PGM)/src/$(PGM)_p4pd_debug.cc $(ARCHIVES) $(SHARED_LIBS)
+    endif
 
 clean:
-	rm -f $(IRIS_CLI_DIR)/_iris.so $(IRIS_CLI_DIR)/iris_wrap.cc $(IRIS_CLI_DIR)/iris.py
-	rm -f $(GFT_CLI_DIR)/_gft.so   $(GFT_CLI_DIR)/gft_wrap.cc   $(GFT_CLI_DIR)/gft.py
+	rm -f $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(CLI_DIR)/$(PGM).py
 
 .PHONY: swig

@@ -67,8 +67,11 @@ hal-rtl: p4 platform capsim-master
 ################## GFT ##########################
 #################################################
 
-swig-cli-gft: swig-cli-clean
-	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli gft
+swig-cli-gft-clean:
+	make -C debug_cli clean PGM=gft
+
+swig-cli-gft: swig-cli-gft-clean
+	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=gft
 
 gft: platform capsim-master go-proto
 	$(MAKE) capmodel
