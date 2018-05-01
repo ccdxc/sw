@@ -793,10 +793,10 @@ struct capri_dma_cmd_mem2mem_t {
 #define LOG_DMA_CMD_SIZE_BITS (LOG_DMA_CMD_SIZE + LOG_BITS_PER_BYTE)
 #define DMA_SWITCH_TO_NEXT_FLIT_BITS (DMA_CMD_SIZE_BITS * NUM_DMA_CMDS_PER_FLIT * 2 - DMA_CMD_SIZE_BITS)
 
-#define RXDMA_DMA_CMD_PTR_SET_C(_flit_id, _cf) \
-    phvwr._cf   p.common.p4_rxdma_intr_dma_cmd_ptr, (_flit_id * NUM_DMA_CMDS_PER_FLIT);
-#define RXDMA_DMA_CMD_PTR_SET(_flit_id) \
-    RXDMA_DMA_CMD_PTR_SET_C(_flit_id, c0); \
+#define RXDMA_DMA_CMD_PTR_SET_C(_flit_id, _index, _cf) \
+    phvwr._cf   p.common.p4_rxdma_intr_dma_cmd_ptr, ((_flit_id * NUM_DMA_CMDS_PER_FLIT) + _index);
+#define RXDMA_DMA_CMD_PTR_SET(_flit_id, _index) \
+    RXDMA_DMA_CMD_PTR_SET_C(_flit_id, _index, c0); \
 
 #define TXDMA_DMA_CMD_PTR_SET(_flit_id, _index) \
     phvwr       p.common.p4_txdma_intr_dma_cmd_ptr, (_flit_id * NUM_DMA_CMDS_PER_FLIT + _index)

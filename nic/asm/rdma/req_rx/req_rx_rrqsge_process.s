@@ -20,8 +20,6 @@ struct req_rx_s2_t0_k k;
 #define K_REXMIT_PSN_MSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit0, msn_sbit17_ebit23)
 
 
-#define LOG_PAGE_SIZE  10
-
 %%
     .param    req_rx_rrqlkey_process
     .param    req_rx_sqcb1_write_back_process
@@ -45,9 +43,6 @@ req_rx_rrqsge_process:
     // r3 = K_REMAINING_PAYLOAD_BYTES
     add            r3, r0, K_REMAINING_PAYLOAD_BYTES
 
-    // r5 = num_pages = 0
-    add            r5, r0, r0
-
 sge_loop:
     // sge_remaining_bytes = sge_p->len - current_sge_offset
     CAPRI_TABLE_GET_FIELD(r4, r1, SGE_T, len)
@@ -68,10 +63,7 @@ sge_loop:
     // Fill stage 2 stage data in req_tx_sge_lkey_info_t for next stage
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, sge_va, r6)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, sge_bytes, r4)
-    add            r5, r5, K_DMA_CMD_START_INDEX
-    CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, dma_cmd_start_index, r5)
 
-    CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, log_page_size, LOG_PAGE_SIZE) // TODO page_size ???
     // To start with, set dma_cmd_eop to 0
     //CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, dma_cmd_eop, 0)
 
@@ -89,7 +81,9 @@ sge_loop:
     // set dma_cmd_eop in last dma cmd for the pkt
     CAPRI_SET_FIELD_C(r7, RRQSGE_TO_LKEY_T, dma_cmd_eop, CAPRI_KEY_FIELD(IN_P, dma_cmd_eop), !c4)
 
-    GET_NUM_PAGES(r6, r4, LOG_PAGE_SIZE, r5, r4)
+    add            r4, r0, K_DMA_CMD_START_INDEX
+    add.!c7        r4, r4, MAX_PYLD_DMA_CMDS_PER_SGE 
+    CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, dma_cmd_start_index, r4)
 
     cmov           r6, c7, 0, 1
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, sge_index, r6)

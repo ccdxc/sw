@@ -287,14 +287,13 @@ header_type req_rx_rrqsge_to_lkey_info_t {
     fields {
         sge_va                           :   64;
         sge_bytes                        :   16;
-        log_page_size                    :    5;
         is_atomic                        :    1;
         dma_cmd_eop                      :    1;
         dma_cmd_start_index              :    4;
         sge_index                        :    8;
         cq_dma_cmd_index                 :    8;
         cq_id                            :   24;
-        pad                              :   29;
+        pad                              :   34;
     }
 }
 
@@ -1082,7 +1081,6 @@ action req_rx_rrqlkey_process_t0 () {
     // stage to stage
     modify_field(t0_s2s_rrqsge_to_lkey_info_scr.sge_va, t0_s2s_rrqsge_to_lkey_info.sge_va);
     modify_field(t0_s2s_rrqsge_to_lkey_info_scr.sge_bytes, t0_s2s_rrqsge_to_lkey_info.sge_bytes);
-    modify_field(t0_s2s_rrqsge_to_lkey_info_scr.log_page_size, t0_s2s_rrqsge_to_lkey_info.log_page_size);
     modify_field(t0_s2s_rrqsge_to_lkey_info_scr.is_atomic, t0_s2s_rrqsge_to_lkey_info.is_atomic);
     modify_field(t0_s2s_rrqsge_to_lkey_info_scr.dma_cmd_eop, t0_s2s_rrqsge_to_lkey_info.dma_cmd_eop);
     modify_field(t0_s2s_rrqsge_to_lkey_info_scr.dma_cmd_start_index, t0_s2s_rrqsge_to_lkey_info.dma_cmd_start_index);
@@ -1101,7 +1099,6 @@ action req_rx_rrqlkey_process_t1 () {
     // stage to stage
     modify_field(t1_s2s_rrqsge_to_lkey_info_scr.sge_va, t1_s2s_rrqsge_to_lkey_info.sge_va);
     modify_field(t1_s2s_rrqsge_to_lkey_info_scr.sge_bytes, t1_s2s_rrqsge_to_lkey_info.sge_bytes);
-    modify_field(t1_s2s_rrqsge_to_lkey_info_scr.log_page_size, t1_s2s_rrqsge_to_lkey_info.log_page_size);
     modify_field(t1_s2s_rrqsge_to_lkey_info_scr.is_atomic, t1_s2s_rrqsge_to_lkey_info.is_atomic);
     modify_field(t1_s2s_rrqsge_to_lkey_info_scr.dma_cmd_eop, t1_s2s_rrqsge_to_lkey_info.dma_cmd_eop);
     modify_field(t1_s2s_rrqsge_to_lkey_info_scr.dma_cmd_start_index, t1_s2s_rrqsge_to_lkey_info.dma_cmd_start_index);

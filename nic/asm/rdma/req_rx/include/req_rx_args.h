@@ -16,14 +16,13 @@ struct req_rx_to_stage_t {
 struct req_rx_rrqsge_to_lkey_info_t {
     sge_va                  : 64;
     sge_bytes               : 16;
-    log_page_size           : 5;
     is_atomic               : 1;
     dma_cmd_eop             : 1;
     dma_cmd_start_index     : 4;
     sge_index               : 8;
     cq_dma_cmd_index        : 8;
     cq_id                   : 24;
-    pad                     : 29;
+    pad                     : 34;
 };
 
 struct req_rx_rrqlkey_to_ptseg_info_t {

@@ -12,6 +12,7 @@ struct sqcb1_t d;
 
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_P, header_template_addr_sbit0_ebit2, header_template_addr_sbit27_ebit31)
 #define K_HEADER_TEMPLATE_SIZE CAPRI_KEY_RANGE(IN_P, header_template_size_sbit0_ebit2, header_template_size_sbit3_ebit7)
+#define K_PACKET_LEN_BITS_0_1 CAPRI_KEY_FIELD(IN_TO_S_P, packet_len_sbit8_ebit13)[1:0]
 %%
 
 .align
@@ -77,10 +78,14 @@ hdr_template_done:
 
     // For PAD and ICRC
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_PAD_ICRC)
+    sub            r1, 4, K_PACKET_LEN_BITS_0_1
+    phvwr          p.bth.pad, r1[1:0]
+
     // dma_cmd[0] : addr1 - pad/icrc
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, immeth, immeth, 1)
     // For ICRC, can point to any 4 bytes of PHV so point to immeth to create 4B hdr
     //  space for ICRC Deparser in P4 calculate and fills ICRC here
+    add            r1, 4, r1[1:0]
+    DMA_PHV2PKT_END_LEN_SETUP(r6, r2, immeth, r1)
 
     crestore       [c6, c5], CAPRI_KEY_RANGE(IN_P, roce_opt_ts_enable, roce_opt_mss_enable), 0x3
     #c5 - mss_enable

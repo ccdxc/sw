@@ -10,9 +10,8 @@ struct key_entry_aligned_t d;
 
 #define K_SGE_VA CAPRI_KEY_RANGE(IN_P, sge_va_sbit0_ebit7, sge_va_sbit56_ebit63)
 #define K_SGE_BYTES CAPRI_KEY_RANGE(IN_P, sge_bytes_sbit0_ebit7, sge_bytes_sbit8_ebit15)
-#define K_LOG_PAGE_SIZE CAPRI_KEY_FIELD(IN_P, log_page_size)
-#define K_SGE_INDEX CAPRI_KEY_RANGE(IN_P, sge_index_sbit0_ebit4, sge_index_sbit5_ebit7)
-#define K_DMA_CMD_START_INDEX CAPRI_KEY_RANGE(IN_P, dma_cmd_start_index_sbit0_ebit0, dma_cmd_start_index_sbit1_ebit3)
+#define K_SGE_INDEX CAPRI_KEY_RANGE(IN_P, sge_index_sbit0_ebit1, sge_index_sbit2_ebit7)
+#define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
 
 #define LKEY_TO_PTSEG_T struct req_rx_rrqlkey_to_ptseg_info_t
 

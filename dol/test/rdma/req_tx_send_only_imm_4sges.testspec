@@ -20,7 +20,7 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : 1005
+        payloadsize : 1004
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -28,7 +28,7 @@ packets:
 
     - packet:
         id          : EXP_PKT # Base packet
-        payloadsize : 1005
+        payloadsize : ref://testcase/packets/id=BASE_PKT/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_IMMDT,v6=ETH_IPV6_UDP_BTH_IMMDT
         icrc        : True
         encaps      :   
@@ -100,7 +100,7 @@ buffers:
            slab    : callback://rdma/rdma/GetSlab/id=BUF2
            offset  : 280
            segments:
-               - size    : 222 
+               - size    : 221 
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
                  offset  : 783
 

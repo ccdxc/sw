@@ -11,6 +11,38 @@ feature:
 
 modules:
     - module:
+        name    : RDMA_TX_REQ_PAD_ONLY_PKT
+        enable  : True
+        package : test.rdma
+        module  : req_tx_req_pad_only_pkt
+        spec    : req_tx_req_pad_only_pkt.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_REQ_PAD_LAST_PKT
+        enable  : True
+        package : test.rdma
+        module  : req_tx_req_pad_last_pkt
+        spec    : req_tx_req_pad_last_pkt.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_RSP_PAD_ONLY_PKT
+        enable  : True
+        package : test.rdma
+        module  : req_tx_rsp_pad_only_pkt
+        spec    : req_tx_rsp_pad_only_pkt.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_RSP_PAD_LAST_PKT
+        enable  : True
+        package : test.rdma
+        module  : req_tx_rsp_pad_last_pkt
+        spec    : req_tx_rsp_pad_last_pkt.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_SEND_ONLY_INLINE_16B
         enable  : True
         package : test.rdma

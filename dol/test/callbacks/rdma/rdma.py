@@ -330,3 +330,23 @@ def GetMrSlabLkey(testcase, descriptor, args):
 def GetSlab(testcase, buffers, args):
     if args == None: return None
     return testcase.buffers.Get(args.id).slab_id
+
+def GetPktPayloadSizeWithPad(testcase, packet, args):
+    if args == None:
+        return None
+    pktid = getattr(args, 'pktid')
+    pkt = testcase.packets.Get(args.pktid)
+    padsize = 4 - (pkt.payloadsize % 4)
+    return (pkt.payloadsize + padsize)
+
+def GetPktPayloadDataWithPad(testcase, packet, args):
+    if args == None:
+        return None
+    pktid = getattr(args, 'pktid')
+    pkt = testcase.packets.Get(args.pktid)
+    payload = pkt.headers.payload.fields.data
+    padsize = 4 - (pkt.payloadsize % 4)
+    for x in range(padsize):
+        payload.append(0x0)
+    return payload
+

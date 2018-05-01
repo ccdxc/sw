@@ -36,7 +36,7 @@ packets:
 
     - packet:
         id          : BASE_PKT3 # Base packet
-        payloadsize : 939
+        payloadsize : 940
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -44,7 +44,7 @@ packets:
 
     - packet:
         id          : EXP_PKT1 # Base packet
-        payloadsize : 1024
+        payloadsize : ref://testcase/packets/id=BASE_PKT1/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
@@ -77,7 +77,7 @@ packets:
 
     - packet:
         id          : EXP_PKT2 # Base packet
-        payloadsize : 1024
+        payloadsize : ref://testcase/packets/id=BASE_PKT2/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
@@ -110,7 +110,7 @@ packets:
 
     - packet:
         id          : EXP_PKT3 # Base packet
-        payloadsize : 939
+        payloadsize : ref://testcase/packets/id=BASE_PKT3/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
@@ -188,7 +188,7 @@ buffers:
            slab    : callback://rdma/rdma/GetSlab/id=BUF3
            offset  : 187
            segments:
-               - size    : 232
+               - size    : 233
                  data    : ref://testcase/packets/id=BASE_PKT3/rawbytes
                  offset  : 707
 

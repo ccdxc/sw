@@ -521,11 +521,15 @@ metadata req_tx_sq_to_stage_t to_s5_sq_to_stage;
 metadata req_tx_sq_to_stage_t to_s5_sq_to_stage_scr;
 
 //To-Stage-6
-@pragma pa_header_union ingress to_stage_6 to_s6_bktrack_to_stage
+@pragma pa_header_union ingress to_stage_6 to_s6_bktrack_to_stage to_s6_sq_to_stage
 
 metadata req_tx_bktrack_to_stage_t to_s6_bktrack_to_stage;
 @pragma scratch_metadata
 metadata req_tx_bktrack_to_stage_t to_s6_bktrack_to_stage_scr;
+
+metadata req_tx_sq_to_stage_t to_s6_sq_to_stage;
+@pragma scratch_metadata
+metadata req_tx_sq_to_stage_t to_s6_sq_to_stage_scr;
 
 //To-Stage-7
 @pragma pa_header_union ingress to_stage_7 to_s7_bktrack_to_stage
@@ -1340,6 +1344,12 @@ action req_tx_add_headers_2_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s6_sq_to_stage_scr.wqe_addr, to_s6_sq_to_stage.wqe_addr);
+    modify_field(to_s6_sq_to_stage_scr.spec_cindex, to_s6_sq_to_stage.spec_cindex);
+    modify_field(to_s6_sq_to_stage_scr.header_template_addr, to_s6_sq_to_stage.header_template_addr);
+    modify_field(to_s6_sq_to_stage_scr.packet_len, to_s6_sq_to_stage.packet_len);
+    modify_field(to_s6_sq_to_stage_scr.congestion_mgmt_enable, to_s6_sq_to_stage.congestion_mgmt_enable);
+    modify_field(to_s6_sq_to_stage_scr.fence, to_s6_sq_to_stage.fence);
 
     // stage to stage
     modify_field(t3_s2s_add_hdr_info_scr.hdr_template_inline, t3_s2s_add_hdr_info.hdr_template_inline);

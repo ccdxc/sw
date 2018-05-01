@@ -11,10 +11,13 @@ struct req_tx_s3_t0_k k;
 #define SQCB_WRITE_BACK_SEND_WR_P t2_s2s_sqcb_write_back_info_send_wr
 #define WQE_TO_SGE_P t2_s2s_wqe_to_sge_info
 
-#define LOG_PAGE_SIZE  10
-
 #define IN_P t0_s2s_wqe_to_sge_info
 #define IN_TO_S_P to_s3_sq_to_stage
+
+#define TO_S0_P to_s0_sq_to_stage
+#define TO_S3_P to_s3_sq_to_stage
+#define TO_S4_P to_s4_sq_to_stage
+#define TO_S6_P to_s6_sq_to_stage
 
 #define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit1, current_sge_id_sbit2_ebit7)
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit1, current_sge_offset_sbit26_ebit31)
@@ -23,6 +26,7 @@ struct req_tx_s3_t0_k k;
 #define K_NUM_VALID_SGES CAPRI_KEY_RANGE(IN_P, num_valid_sges_sbit0_ebit1, num_valid_sges_sbit2_ebit7)
 #define K_AH_SIZE CAPRI_KEY_RANGE(IN_P, ah_size_sbit0_ebit1, ah_size_sbit2_ebit7)
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
+#define K_PACKET_LEN CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
 
 %%
     .param    req_tx_sqlkey_process
@@ -48,8 +52,8 @@ req_tx_sqsge_process:
     // r3 = k.args.remaining_payload_bytes
     add            r3, r0, K_REMAINING_PAYLOAD_BYTES
 
-    // r5 = num_pages = 0
-    add            r5, r0, r0
+    // r5 = packet_len
+    add            r5, r0, K_PACKET_LEN
 
 sge_loop:
     // sge_remaining_bytes = sge_p->len - current_sge_offset
@@ -71,8 +75,6 @@ sge_loop:
     // Fill stage 2 stage data in req_tx_sge_lkey_info_t for next stage
     CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, sge_va, r6)
     CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, sge_bytes, r4)
-    add            r5, r5, K_DMA_CMD_START_INDEX
-    CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, dma_cmd_start_index, r5)
 
     // current_sge_offset += transfer_bytes
     add            r2, r2, r4
@@ -85,10 +87,15 @@ sge_loop:
    
     setcf          c4, [!c2 & c3 & c7]
 
-    GET_NUM_PAGES(r6, r4, LOG_PAGE_SIZE, r5, r4)
+    // packet_len += transfer_bytes
+    add            r5, r5, r4
 
     cmov           r6, c7, 0, 1
     CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, sge_index, r6)
+
+    add            r4, r0, K_DMA_CMD_START_INDEX
+    add.!c7        r4, r4, MAX_PYLD_DMA_CMDS_PER_SGE
+    CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, dma_cmd_start_index, r4)
 
     // r6 = hbm_addr_get(PHV_GLOBA_KT_BASE_ADDR_GET())
     KT_BASE_ADDR_GET2(r6, r4)
@@ -126,6 +133,10 @@ sge_loop:
     // sge_index = 1, if looping
     setcf.c4       c7, [!c0] // branch delay slot
 
+    // Pass packet_len to dcqcn_enforce and to add_headers_2 for padding
+    phvwr          CAPRI_PHV_FIELD(TO_S4_P, packet_len), r5
+    phvwr          CAPRI_PHV_FIELD(TO_S6_P, packet_len), r5
+
     // if (index == num_valid_sges)
     srl            r1, r1, LOG_SIZEOF_SGE_T_BITS
     sub            r1, (HBM_NUM_SGES_PER_CACHELINE-1), r1
@@ -147,7 +158,7 @@ sge_loop:
 
     bcf            [!c2 & !c1], iterate_sges
     // num_sges = k.args.current_sge_id + k.args.num_valid_sges
-    add            r5, K_CURRENT_SGE_ID, K_NUM_VALID_SGES // Branch Delay Slot
+    add            r6, K_CURRENT_SGE_ID, K_NUM_VALID_SGES // Branch Delay Slot
 
     // Get Table 0/1 arg base pointer as it was modified to 0/1 K base
     CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(req_tx_phv_t, r7, c7)
@@ -156,10 +167,15 @@ sge_loop:
     cmov           r3, c1, 1, 0
 
     CAPRI_RESET_TABLE_2_ARG()
-    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, in_progress), r4, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, op_type, first), CAPRI_KEY_RANGE(IN_P, op_type, first)
-    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, last_pkt), r3, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, num_sges), r5
-    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), r2, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_id), r1
-    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, ah_size), K_AH_SIZE, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data, op_send_wr_inv_key_or_ah_handle), CAPRI_KEY_RANGE(IN_P, imm_data_sbit0_ebit7, inv_key_or_ah_handle_sbit24_ebit31)
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, in_progress), r4, \
+              CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, op_type, first), CAPRI_KEY_RANGE(IN_P, op_type, first)
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, last_pkt), r3, \
+              CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, num_sges), r6
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), r2, \
+              CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_id), r1
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, ah_size), K_AH_SIZE, \
+              CAPRI_PHV_RANGE(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data, op_send_wr_inv_key_or_ah_handle), \
+              CAPRI_KEY_RANGE(IN_P, imm_data_sbit0_ebit7, inv_key_or_ah_handle_sbit24_ebit31)
     // rest of the fields are initialized to default
 
     mfspr          r1, spr_mpuid
@@ -188,11 +204,18 @@ iterate_sges:
     beqi           r4, REQ_TX_DMA_CMD_PYLD_BASE_END, err_no_dma_cmds
     CAPRI_RESET_TABLE_2_ARG() // Branch Delay Slot
     
-    phvwr CAPRI_PHV_RANGE(WQE_TO_SGE_P, in_progress, inv_key_or_ah_handle), CAPRI_KEY_RANGE(IN_P, in_progress, inv_key_or_ah_handle_sbit24_ebit31)
-    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_id), r1, CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_offset), r2
-    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, remaining_payload_bytes), r3, CAPRI_PHV_FIELD(WQE_TO_SGE_P, dma_cmd_start_index), r4
-    sub            r5, K_NUM_VALID_SGES, 2 
-    phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r5
+    phvwr CAPRI_PHV_RANGE(WQE_TO_SGE_P, in_progress, inv_key_or_ah_handle), \
+          CAPRI_KEY_RANGE(IN_P, in_progress, inv_key_or_ah_handle_sbit24_ebit31)
+    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_id), r1, \
+              CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_offset), r2
+    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, remaining_payload_bytes), r3, \
+              CAPRI_PHV_FIELD(WQE_TO_SGE_P, dma_cmd_start_index), r4
+    sub            r6, K_NUM_VALID_SGES, 2 
+    phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r6
+    // Pass packet_len to stage 0 and stage3 as on recirc sqsge_process
+    // can run in either one of those stages
+    phvwr          CAPRI_PHV_FIELD(TO_S0_P, packet_len), r5
+    phvwr          CAPRI_PHV_FIELD(TO_S3_P, packet_len), r5
 
     mfspr          r1, spr_tbladdr
     add            r1, r1, 2, LOG_SIZEOF_SGE_T

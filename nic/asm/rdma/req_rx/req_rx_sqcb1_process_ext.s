@@ -22,10 +22,18 @@ req_rx_sqcb1_process_ext:
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, flags, CAPRI_APP_DATA_RAW_FLAGS)
 
     // set DMA CMD ptr
-    RXDMA_DMA_CMD_PTR_SET(REQ_RX_DMA_CMD_START_FLIT_ID)
+    RXDMA_DMA_CMD_PTR_SET(REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START_FLIT_CMD_ID)
+    seq            c1, CAPRI_APP_DATA_BTH_PAD, 0
+    bcf            [c1], to_stage_arg
+    // payload_len = app_data_payload_len = bth.padcnt
+    sub            r1, CAPRI_APP_DATA_PAYLOAD_LEN, CAPRI_APP_DATA_BTH_PAD // Branch Delay Slot
 
+    DMA_CMD_STATIC_BASE_GET(r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_SKIP_TO_EOP)
+    DMA_SKIP_CMD_SETUP(r2, 0 /* CMD_EOP */, 1 /* SKIP_TO_EOP */)
+
+to_stage_arg:
     phvwrpair.e CAPRI_PHV_FIELD(TO_S1_P, aeth_msn), CAPRI_APP_DATA_AETH_MSN, \
                 CAPRI_PHV_FIELD(TO_S1_P, bth_psn), CAPRI_APP_DATA_BTH_PSN
     phvwrpair   CAPRI_PHV_FIELD(TO_S1_P, aeth_syndrome), CAPRI_APP_DATA_AETH_SYNDROME, \
-                CAPRI_PHV_FIELD(TO_S1_P, remaining_payload_bytes), CAPRI_APP_DATA_PAYLOAD_LEN
+                CAPRI_PHV_FIELD(TO_S1_P, remaining_payload_bytes), r1
 

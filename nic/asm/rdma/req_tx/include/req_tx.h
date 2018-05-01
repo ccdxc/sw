@@ -157,8 +157,9 @@ struct req_tx_phv_t {
                 struct p4_to_p4plus_roce_header_t p4_to_p4plus;
                 struct roce_options_t roce_options;
             };
+            zero_pad: 24;
             struct rdma_immeth_t immeth;                    //  4B
-            pad5: 64;
+            pad5: 40;
             pad4: 512;
             pad3: 512;
             pad2: 512;

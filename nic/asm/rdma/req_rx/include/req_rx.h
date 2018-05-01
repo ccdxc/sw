@@ -13,15 +13,17 @@
 #define REQ_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid, _cqcb_base_addr_hi, _log_num_cq_entries) \
     EQCB_ADDR_GET(_r, _tmp_r, _eqid, _cqcb_base_addr_hi, _log_num_cq_entries);
 
-#define REQ_RX_DMA_CMD_START_FLIT_ID       8 // flits 8-11 are used for dma cmds
-#define REQ_RX_DMA_CMD_START               0
-#define REQ_RX_DMA_CMD_MSN_CREDITS         0
-#define REQ_RX_DMA_CMD_FC_DB               1
-#define REQ_RX_DMA_CMD_REXMIT_PSN          2
-#define REQ_RX_DMA_CMD_BKTRACK_DB          3
-#define REQ_RX_DMA_CMD_RNR_TIMEOUT         4
-#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 4
-#define REQ_RX_MAX_DMA_CMDS                16
+#define REQ_RX_MAX_DMA_CMDS                20
+#define REQ_RX_DMA_CMD_START_FLIT_ID       7 // flits 8-11 are used for dma cmds
+#define REQ_RX_DMA_CMD_START_FLIT_CMD_ID   2
+#define REQ_RX_DMA_CMD_START               2
+#define REQ_RX_DMA_CMD_MSN_CREDITS         2
+#define REQ_RX_DMA_CMD_FC_DB               3
+#define REQ_RX_DMA_CMD_REXMIT_PSN          4
+#define REQ_RX_DMA_CMD_BKTRACK_DB          5
+#define REQ_RX_DMA_CMD_RNR_TIMEOUT         6
+#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 5
+#define REQ_RX_DMA_CMD_SKIP_TO_EOP         (REQ_RX_MAX_DMA_CMDS - 3)
 #define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 2)
 #define REQ_RX_DMA_CMD_EQ                  (REQ_RX_MAX_DMA_CMDS - 1)
 //wakeup dpath and EQ are mutually exclusive
@@ -30,11 +32,30 @@
 
 // phv 
 struct req_rx_phv_t {
-    // flit 11-8
-    // dma commands
+    // flit 11
+    dma_cmd16               : 128;
+    dma_cmd17               : 128;
+    dma_cmd18               : 128;
+    dma_cmd19               : 128;
 
-    // scratch
-    //
+    // flit 10
+    dma_cmd12               : 128;
+    dma_cmd13               : 128;
+    dma_cmd14               : 128;
+    dma_cmd15               : 128;
+
+    // flit 9
+    dma_cmd8                : 128;
+    dma_cmd9                : 128;
+    dma_cmd10               : 128;
+    dma_cmd11               : 128;
+
+    // flit 8
+    dma_cmd4                : 128;
+    dma_cmd5                : 128;
+    dma_cmd6                : 128;
+    dma_cmd7                : 128;
+
     //flit 7
     wakeup_dpath_data       : 64;
     rexmit_psn              : 24;
@@ -42,7 +63,9 @@ struct req_rx_phv_t {
     err_retry_ctr           : 4;
     rnr_retry_ctr           : 4;
     rnr_timeout             : 8;
-    rsvd3                   : (512 - 152);
+    rsvd3                   : 104;
+    dma_cmd2                : 128;
+    dma_cmd3                : 128;
 
     //flit 6
     rsvd2                   : 24;

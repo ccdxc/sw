@@ -94,7 +94,7 @@ start_recirc_packet:
 
     bcf     [c7], process_ud
     //set DMA cmd ptr
-    RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID) //BD Slot
+    RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID, 0) //BD Slot
 
     //Check if ECN bits are set in Packet and congestion management is enabled.                      
     bbne     d.congestion_mgmt_enable, 1, skip_cnp_receive
@@ -292,7 +292,7 @@ send_in_progress:
 /******  Common logic for ONLY packets (send/write) ******/
 process_only_rd_atomic:
     // for read and atomic, start DMA commands from flit 9 instead of 8
-    RXDMA_DMA_CMD_PTR_SET_C(RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, !c1) //BD Slot
+    RXDMA_DMA_CMD_PTR_SET_C(RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, 0, !c1) //BD Slot
     seq         c7, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
     bbeq        d.disable_speculation, 0, skip_token_id_check
     tbladd.c7   d.token_id, 1  //BD Slot
