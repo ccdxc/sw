@@ -11,14 +11,16 @@ import (
 	"google.golang.org/grpc"
 	. "gopkg.in/check.v1"
 
+	"os"
+
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 const (
-	testGRPCPort     = "50054"
 	halCtlBinaryName = "halctl"
 	// Needed to ensure that halctl binary is installed in local $GOPATH
 	selfPkgName = "github.com/pensando/sw/nic/agent/cmd/halctl"
@@ -45,8 +47,9 @@ var getIfCPUCmdValidShort = []string{"show", "if", "cpu"}
 
 // veniceIntegSuite is the state of integ test
 type halCtlSuite struct {
-	dp      *datapath.Datapath
-	mockSrv *grpc.Server
+	halListener netutils.TestListenAddr
+	dp          *datapath.Datapath
+	mockSrv     *grpc.Server
 }
 
 type mockServer struct{}
@@ -264,15 +267,6 @@ func (m *mockServer) InterfaceGet(context.Context, *halproto.InterfaceGetRequest
 	}
 	return resp, nil
 }
-func (h *halCtlSuite) runMockHALServer(c *C) {
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%v", testGRPCPort))
-	c.Assert(err, IsNil)
-	h.mockSrv = grpc.NewServer()
-	halproto.RegisterVrfServer(h.mockSrv, &mockServer{})
-	halproto.RegisterL2SegmentServer(h.mockSrv, &mockServer{})
-	halproto.RegisterInterfaceServer(h.mockSrv, &mockServer{})
-	h.mockSrv.Serve(lis)
-}
 
 // Hook up gocheck into the "go test" runner.
 func TestHalCtl(t *testing.T) {
@@ -284,8 +278,19 @@ func TestHalCtl(t *testing.T) {
 }
 
 func (h *halCtlSuite) SetUpSuite(c *C) {
-	// Start mock serves which has stubbed out CRUDS with spoof data
-	go h.runMockHALServer(c)
+	lisErr := h.halListener.GetAvailablePort()
+	c.Assert(lisErr, IsNil)
+	os.Setenv("HAL_GRPC_PORT", fmt.Sprintf("%d", h.halListener.Port))
+	log.Infof("Current HAL Port: %d", h.halListener.Port)
+	lis, err := net.Listen("tcp", h.halListener.ListenURL.String())
+	c.Assert(err, IsNil)
+	go func(lis net.Listener) {
+		h.mockSrv = grpc.NewServer()
+		halproto.RegisterVrfServer(h.mockSrv, &mockServer{})
+		halproto.RegisterL2SegmentServer(h.mockSrv, &mockServer{})
+		halproto.RegisterInterfaceServer(h.mockSrv, &mockServer{})
+		h.mockSrv.Serve(lis)
+	}(lis)
 	dp, err := datapath.NewHalDatapath("hal")
 	c.Assert(err, IsNil)
 	h.dp = dp

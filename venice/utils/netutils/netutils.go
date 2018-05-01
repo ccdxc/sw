@@ -21,6 +21,7 @@ var errPortAllocFailed = errors.New("could not find a free port")
 type TestListenAddr struct {
 	sync.Mutex
 	ListenURL net.Addr
+	Port      int
 }
 
 // nameSliceFromMap return slice of DNS names from Map
@@ -210,5 +211,6 @@ func (t *TestListenAddr) GetAvailablePort() error {
 	}
 	defer l.Close()
 	t.ListenURL = l.Addr()
+	t.Port = t.ListenURL.(*net.TCPAddr).Port
 	return nil
 }
