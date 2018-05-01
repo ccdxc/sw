@@ -261,6 +261,36 @@ func (ag *fakeAgent) DeleteNatPolicy(np *netproto.NatPolicy) error {
 	return nil
 }
 
+// CreateRoute creates a Route. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateRoute(rt *netproto.Route) error {
+
+	return nil
+}
+
+// FindRoute finds a Route. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindRoute(meta api.ObjectMeta) (*netproto.Route, error) {
+
+	return nil, nil
+}
+
+// ListRoute lists a Route. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListRoute() []*netproto.Route {
+
+	return nil
+}
+
+// UpdateRoute updates a Route. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateRoute(rt *netproto.Route) error {
+
+	return nil
+}
+
+// DeleteRoute deletes a Route. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteRoute(rt *netproto.Route) error {
+
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network

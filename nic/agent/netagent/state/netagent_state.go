@@ -44,6 +44,7 @@ func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID stri
 		enicDB:      make(map[string]*netproto.Interface),
 		natPoolDB:   make(map[string]*netproto.NatPool),
 		natPolicyDB: make(map[string]*netproto.NatPolicy),
+		routeDB:     make(map[string]*netproto.Route),
 		hwIfDB:      make(map[string]*netproto.Interface),
 	}
 

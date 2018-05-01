@@ -50,6 +50,7 @@ func NewRestServer(agent state.CtrlerIntf, listenURL string) (*RestServer, error
 		"/api/namespaces/":  addNamespaceAPIRoutes,
 		"/api/natpools/":    addNatPoolAPIRoutes,
 		"/api/natpolicies/": addNatPolicyAPIRoutes,
+		"/api/routes/":      addRouteAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

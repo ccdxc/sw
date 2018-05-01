@@ -19,6 +19,7 @@ const (
 	InterfaceID     = "interfaceID"
 	NatPoolID       = "natPoolID"
 	NatPolicyID     = "natPolicyID"
+	RouteID         = "routeID"
 )
 
 // IntfInfo has the interface names to be plumbed into container
@@ -42,6 +43,7 @@ type NetAgent struct {
 	enicDB      map[string]*netproto.Interface     // ENIC interface object db
 	natPoolDB   map[string]*netproto.NatPool       // Nat Pool object DB
 	natPolicyDB map[string]*netproto.NatPolicy     // Nat Policy Object DB
+	routeDB     map[string]*netproto.Route         // Route Object DB
 	hwIfDB      map[string]*netproto.Interface     // Has all the Uplinks and Lifs
 }
 
@@ -91,6 +93,11 @@ type CtrlerIntf interface {
 	ListNatPolicy() []*netproto.NatPolicy                           // lists nat policy
 	UpdateNatPolicy(np *netproto.NatPolicy) error                   // updates a nat policy
 	DeleteNatPolicy(np *netproto.NatPolicy) error                   // deletes a nat policy
+	CreateRoute(rt *netproto.Route) error                           // creates a route
+	FindRoute(meta api.ObjectMeta) (*netproto.Route, error)         // finds a route
+	ListRoute() []*netproto.Route                                   // lists routes
+	UpdateRoute(rt *netproto.Route) error                           // updates a route
+	DeleteRoute(rt *netproto.Route) error                           // deletes a route
 	GetHwInterfaces() error                                         // Gets all the uplinks created on the hal by nic mgr
 }
 
@@ -128,6 +135,9 @@ type NetDatapathAPI interface {
 	CreateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                      // creates a nat policy in the datapath
 	UpdateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                      // updates a nat policy in the datapath
 	DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                      // deletes a nat policy in the datapath
+	CreateRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                              // creates a route
+	UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                              // updates a route
+	DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                              // deletes a route
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths

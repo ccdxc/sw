@@ -1507,6 +1507,24 @@ func (hd *Datapath) DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespa
 	return nil
 }
 
+// CreateRoute creates a Route in the datapath
+func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+
+	return nil
+}
+
+// UpdateRoute updates a Route in the datapath
+func (hd *Datapath) UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+
+	return nil
+}
+
+// DeleteRoute deletes a Route in the datapath
+func (hd *Datapath) DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+
+	return nil
+}
+
 func (hd *Datapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule) (*halproto.SecurityGroupPolicySpec, error) {
 	//var policyRules *halproto.SGPolicy
 	// convert the action

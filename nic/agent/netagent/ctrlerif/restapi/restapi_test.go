@@ -199,6 +199,26 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 		return
 	}
 
+	rt := netproto.Route{
+		TypeMeta: api.TypeMeta{Kind: "Route"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "preCreatedTenant",
+			Name:      "preCreatedRoute",
+			Namespace: "preCreatedNamespace",
+		},
+		Spec: netproto.RouteSpec{
+			IPPrefix:  "192.168.1.0/24",
+			GatewayIP: "192.168.1.1",
+			Interface: "default-uplink-1",
+		},
+	}
+
+	err = nagent.CreateRoute(&rt)
+	if err != nil {
+		log.Errorf("Failed to create Route. {%v}", rt)
+		return
+	}
+
 	lif := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{

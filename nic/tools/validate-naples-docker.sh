@@ -47,6 +47,15 @@ function create_nat_policies {
   echo  "All NatPolicies created"
 }
 
+function create_routes {
+  ROUTE_URL="$NAPLES_AGENT_IP:9007/api/routes/"
+
+  curl -d'{"Kind":"Route","meta":{"Name":"kingdom-1","Tenant":"default","Namespace":"default"}, "spec":{"ip-prefix":"10.1.1.0/24", "interface":"default-uplink-1","gateway-ip":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $ROUTE_URL
+  validate_get "kingdom-1" $ROUTE_URL
+
+  echo "All Routes created"
+}
+
 # validate get performs a get on the URL and checks for pattern and exits 1
 # if the pattern is not found
 function validate_get {
@@ -103,9 +112,10 @@ echo "HNTAP running"
 # create objects
 create_namespaces
 
-# ToDo uncomment create_networks once we are able to validate with HAL
-create_networks
-create_nat_pools
-create_nat_policies
+# Comment out additional objects until debugging
+# create_networks
+# create_nat_pools
+# create_nat_policies
+# create_routes
 
 exit 0

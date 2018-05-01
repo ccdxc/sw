@@ -199,6 +199,24 @@ func (dp *mockDatapath) DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Nam
 	return nil
 }
 
+// CreateRoute creates a Route in the datapath. Stubbed out to satisfy the interface
+func (dp *mockDatapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+
+	return nil
+}
+
+// UpdateRoute updates a Route in the datapath. Stubbed out to satisfy the interface
+func (dp *mockDatapath) UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+
+	return nil
+}
+
+// DeleteRoute deletes a Route in the datapath. Stubbed out to satisfy the interface
+func (dp *mockDatapath) DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+
+	return nil
+}
+
 func (dp *mockDatapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error) {
 	var lifs halproto.LifGetResponseMsg
 	var uplinks halproto.InterfaceGetResponseMsg
@@ -1716,4 +1734,89 @@ func TestNatPolicyUpdate(t *testing.T) {
 
 	err = ag.UpdateNatPolicy(&np)
 	AssertOk(t, err, "Error updating nat policy")
+}
+
+func TestRouteCreateDelete(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// nat policy
+	rt := netproto.Route{
+		TypeMeta: api.TypeMeta{Kind: "Route"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testRoute",
+		},
+		Spec: netproto.RouteSpec{
+			IPPrefix:  "10.1.1.0/24",
+			Interface: "default-uplink-1",
+			GatewayIP: "10.1.1.1",
+		},
+	}
+
+	// create route
+	err := ag.CreateRoute(&rt)
+	AssertOk(t, err, "Error creating nroute")
+	route, err := ag.FindRoute(rt.ObjectMeta)
+	AssertOk(t, err, "Route was not found in DB")
+	Assert(t, route.Name == "testRoute", "Route names did not match", route)
+
+	// verify duplicate route creations succeed
+	err = ag.CreateRoute(&rt)
+	AssertOk(t, err, "Error creating duplicate route")
+
+	// verify list api works.
+	rtList := ag.ListRoute()
+	Assert(t, len(rtList) == 1, "Incorrect number of routes")
+
+	// delete the route and verify its gone from db
+	err = ag.DeleteRoute(&rt)
+	AssertOk(t, err, "Error deleting route")
+	_, err = ag.FindNatPolicy(rt.ObjectMeta)
+	Assert(t, err != nil, "Route was still found in database after deleting", ag)
+
+	// verify you can not delete non-existing tenant
+	err = ag.DeleteRoute(&rt)
+	Assert(t, err != nil, "deleting non-existing route succeeded", ag)
+}
+
+func TestRouteUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// route
+	rt := netproto.Route{
+		TypeMeta: api.TypeMeta{Kind: "Route"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testRoute",
+		},
+		Spec: netproto.RouteSpec{
+			IPPrefix:  "10.1.1.0/24",
+			GatewayIP: "10.1.1.1",
+			Interface: "default-uplink-1",
+		},
+	}
+
+	// create nat policy
+	err := ag.CreateRoute(&rt)
+	AssertOk(t, err, "Error creating route")
+	route, err := ag.FindRoute(rt.ObjectMeta)
+	AssertOk(t, err, "Route not found in DB")
+	Assert(t, route.Name == "testRoute", "Route names did not match", route)
+
+	rtSpec := netproto.RouteSpec{
+		Interface: "default-uplink-3",
+	}
+
+	rt.Spec = rtSpec
+
+	err = ag.UpdateRoute(&rt)
+	AssertOk(t, err, "Error updating route")
 }
