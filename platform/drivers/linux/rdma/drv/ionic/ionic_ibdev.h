@@ -146,6 +146,11 @@ struct ionic_cq {
 
 	u32			tbl_pos;
 	int			tbl_order;
+
+	/* XXX cleanup */
+	u32			lkey;
+
+	struct dentry		*debug;
 };
 
 struct ionic_sq_meta {
@@ -188,6 +193,8 @@ struct ionic_qp {
 	/* XXX cleanup */
 	struct ib_mr		*rq_mr;
 	struct ib_mr		*sq_mr;
+
+	struct dentry		*debug;
 };
 
 struct ionic_ah {
@@ -204,6 +211,8 @@ struct ionic_mr {
 
 	u32			tbl_pos;
 	int			tbl_order;
+
+	struct dentry		*debug;
 };
 
 static inline struct ionic_ibdev *to_ionic_ibdev(struct ib_device *ibdev)

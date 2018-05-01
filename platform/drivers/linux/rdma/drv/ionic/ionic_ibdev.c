@@ -1096,6 +1096,8 @@ static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
 	if (rc)
 		goto err_cmd;
 
+	ionic_dbgfs_add_mr(dev, mr);
+
 	return &mr->ibmr;
 
 err_cmd:
@@ -1132,6 +1134,8 @@ static int ionic_dereg_mr(struct ib_mr *ibmr)
 	rc = ionic_destroy_mr_cmd(dev, mr);
 	if (rc)
 		return rc;
+
+	ionic_dbgfs_rm_mr(mr);
 
 	ionic_put_pgtbl(dev, mr->tbl_pos, mr->tbl_order);
 
@@ -1220,9 +1224,9 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		}
 		/* XXX does it really need lkey and va? */
 		if (1) {
-			u32 lkey, rkey; /* XXX leaks */
-			ionic_get_mrid(dev, &lkey, &rkey);
-			admin.cmd.create_cq.cq_lkey = lkey;
+			u32 rkey;
+			ionic_get_mrid(dev, &cq->lkey, &rkey);
+			admin.cmd.create_cq.cq_lkey = cq->lkey;
 			admin.cmd.create_cq.cq_va = cq->umem->address;
 		}
 	} else {
@@ -1391,6 +1395,8 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 			goto err_resp;
 	}
 
+	ionic_dbgfs_add_cq(dev, cq);
+
 	return &cq->ibcq;
 
 err_resp:
@@ -1417,6 +1423,11 @@ static int ionic_destroy_cq(struct ib_cq *ibcq)
 	rc = ionic_destroy_cq_cmd(dev, cq);
 	if (rc)
 		return rc;
+
+	ionic_dbgfs_rm_cq(cq);
+
+	/* XXX cleanup */
+	ionic_put_mrid(dev, cq->lkey);
 
 	ionic_put_pgtbl(dev, cq->tbl_pos, cq->tbl_order);
 
@@ -1818,6 +1829,8 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 
 	qp->ibqp.qp_num = qp->qpid;
 
+	ionic_dbgfs_add_qp(dev, qp);
+
 	return &qp->ibqp;
 
 err_resp:
@@ -1881,6 +1894,8 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 	rc = ionic_destroy_qp_cmd(dev, qp);
 	if (rc)
 		return rc;
+
+	ionic_dbgfs_rm_qp(qp);
 
 	if (qp->sq_is_hbm) {
 		if (ctx) {

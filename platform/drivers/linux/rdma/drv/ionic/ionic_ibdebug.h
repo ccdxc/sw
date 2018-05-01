@@ -52,6 +52,9 @@
 
 struct ionic_ibdev;
 struct ionic_eq;
+struct ionic_cq;
+struct ionic_mr;
+struct ionic_qp;
 struct dentry;
 
 void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent);
@@ -59,5 +62,14 @@ void ionic_dbgfs_rm_dev(struct ionic_ibdev *dev);
 
 void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq);
 void ionic_dbgfs_rm_eq(struct ionic_eq *eq);
+
+void ionic_dbgfs_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq);
+void ionic_dbgfs_rm_cq(struct ionic_cq *cq);
+
+void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr);
+void ionic_dbgfs_rm_mr(struct ionic_mr *mr);
+
+void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp);
+void ionic_dbgfs_rm_qp(struct ionic_qp *qp);
 
 #endif /* IONIC_IBDEBUG_H */
