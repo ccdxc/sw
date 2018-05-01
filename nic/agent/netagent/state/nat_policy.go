@@ -28,6 +28,12 @@ func (na *NetAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
 		return nil
 	}
 
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	if err != nil {
+		return err
+	}
+
 	np.Status.NatPolicyID, err = na.store.GetNextID(NatPolicyID)
 
 	if err != nil {
@@ -36,14 +42,14 @@ func (na *NetAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateNatPolicy(np)
+	err = na.datapath.CreateNatPolicy(np, ns)
 	if err != nil {
 		log.Errorf("Error creating nat policy in datapath. NatPolicy {%+v}. Err: %v", np, err)
 		return err
 	}
 
 	// save it in db
-	key := objectKey(np.ObjectMeta)
+	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	na.natPolicyDB[key] = np
 	na.Unlock()
@@ -54,18 +60,21 @@ func (na *NetAgent) CreateNatPolicy(np *netproto.NatPolicy) error {
 
 // FindNatPolicy finds a nat policy in local db
 func (na *NetAgent) FindNatPolicy(meta api.ObjectMeta) (*netproto.NatPolicy, error) {
+	typeMeta := api.TypeMeta{
+		Kind: "NatPolicy",
+	}
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta)
-	tn, ok := na.natPolicyDB[key]
+	key := objectKey(meta, typeMeta)
+	np, ok := na.natPolicyDB[key]
 	if !ok {
-		return nil, fmt.Errorf("nat policy not found %v", tn)
+		return nil, fmt.Errorf("nat policy not found %v", np)
 	}
 
-	return tn, nil
+	return np, nil
 }
 
 // ListNatPolicy returns the list of nat policys
@@ -84,6 +93,11 @@ func (na *NetAgent) ListNatPolicy() []*netproto.NatPolicy {
 
 // UpdateNatPolicy updates a nat policy
 func (na *NetAgent) UpdateNatPolicy(np *netproto.NatPolicy) error {
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	if err != nil {
+		return err
+	}
 	existingNp, err := na.FindNatPolicy(np.ObjectMeta)
 	if err != nil {
 		log.Errorf("NatPolicy %v not found", np.ObjectMeta)
@@ -95,8 +109,8 @@ func (na *NetAgent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateNatPolicy(np)
-	key := objectKey(np.ObjectMeta)
+	err = na.datapath.UpdateNatPolicy(np, ns)
+	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	na.natPolicyDB[key] = np
 	na.Unlock()
@@ -106,6 +120,11 @@ func (na *NetAgent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 
 // DeleteNatPolicy deletes a nat policy
 func (na *NetAgent) DeleteNatPolicy(np *netproto.NatPolicy) error {
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	if err != nil {
+		return err
+	}
 
 	existingNatPolicy, err := na.FindNatPolicy(np.ObjectMeta)
 	if err != nil {
@@ -114,13 +133,13 @@ func (na *NetAgent) DeleteNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	// delete it in the datapath
-	err = na.datapath.DeleteNatPolicy(existingNatPolicy)
+	err = na.datapath.DeleteNatPolicy(existingNatPolicy, ns)
 	if err != nil {
 		log.Errorf("Error deleting nat policy {%+v}. Err: %v", np, err)
 	}
 
 	// delete from db
-	key := objectKey(np.ObjectMeta)
+	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	delete(na.natPolicyDB, key)
 	na.Unlock()

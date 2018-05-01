@@ -7,6 +7,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	"fmt"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -26,6 +28,11 @@ func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
 		log.Infof("Received duplicate network create for ep {%+v}", nt)
 		return nil
 	}
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(nt.Tenant, nt.Namespace)
+	if err != nil {
+		return err
+	}
 
 	nt.Status.NetworkID, err = na.store.GetNextID(NetworkID)
 	if err != nil {
@@ -33,30 +40,17 @@ func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
 		return err
 	}
 
-	// find the corresponding tenant
-	tnMeta := api.ObjectMeta{
-		Name:      nt.Tenant,
-		Tenant:    nt.Tenant,
-		Namespace: nt.Namespace,
-	}
-
-	tn, err := na.FindTenant(tnMeta)
-	if err != nil {
-		log.Errorf("Could not find the tenant: {%+v}", err)
-		return err
-	}
-
 	uplinks := na.getUplinks()
 
 	// create it in datapath
-	err = na.datapath.CreateNetwork(nt, uplinks, tn)
+	err = na.datapath.CreateNetwork(nt, uplinks, ns)
 	if err != nil {
 		log.Errorf("Error creating network in datapath. Nw {%+v}. Err: %v", nt, err)
 		return err
 	}
 
 	// save it in db
-	key := objectKey(nt.ObjectMeta)
+	key := objectKey(nt.ObjectMeta, nt.TypeMeta)
 	na.Lock()
 	na.networkDB[key] = nt
 	na.Unlock()
@@ -83,22 +77,31 @@ func (na *NetAgent) ListNetwork() []*netproto.Network {
 
 // FindNetwork dins a network in local db
 func (na *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
+	typeMeta := api.TypeMeta{
+		Kind: "Network",
+	}
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta)
+	key := objectKey(meta, typeMeta)
 	nt, ok := na.networkDB[key]
 	if !ok {
-		return nil, errors.New("Network not found")
+		return nil, fmt.Errorf("network not found %v", nt)
 	}
 
 	return nt, nil
 }
 
-// UpdateNetwork updates a network
+// UpdateNetwork updates a network. ToDo implement network updates in datapath
 func (na *NetAgent) UpdateNetwork(nt *netproto.Network) error {
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(nt.Tenant, nt.Namespace)
+	if err != nil {
+		return err
+	}
+
 	oldNt, err := na.FindNetwork(nt.ObjectMeta)
 	if err != nil {
 		log.Errorf("Network %v not found", nt.ObjectMeta)
@@ -110,8 +113,8 @@ func (na *NetAgent) UpdateNetwork(nt *netproto.Network) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateNetwork(nt)
-	key := objectKey(nt.ObjectMeta)
+	err = na.datapath.UpdateNetwork(nt, ns)
+	key := objectKey(nt.ObjectMeta, nt.TypeMeta)
 	na.Lock()
 	na.networkDB[key] = nt
 	na.Unlock()
@@ -119,38 +122,33 @@ func (na *NetAgent) UpdateNetwork(nt *netproto.Network) error {
 	return err
 }
 
-// DeleteNetwork deletes a network
+// DeleteNetwork deletes a network. ToDo implement network deletes in datapath
 func (na *NetAgent) DeleteNetwork(nt *netproto.Network) error {
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(nt.Tenant, nt.Namespace)
+	if err != nil {
+		return err
+	}
+
 	// check if network already exists
 	nw, err := na.FindNetwork(nt.ObjectMeta)
 	if err != nil {
 		log.Errorf("Network %+v not found", nt.ObjectMeta)
-		return errors.New("Network not found")
+		return errors.New("network not found")
 	}
 
 	// delete the network in datapath
-	err = na.datapath.DeleteNetwork(nw)
+	err = na.datapath.DeleteNetwork(nw, ns)
 	if err != nil {
 		log.Errorf("Error deleting network {%+v}. Err: %v", nt, err)
 	}
 
 	// delete from db
-	key := objectKey(nt.ObjectMeta)
+	key := objectKey(nt.ObjectMeta, nt.TypeMeta)
 	na.Lock()
 	delete(na.networkDB, key)
 	na.Unlock()
 	err = na.store.Delete(nt)
 
 	return err
-}
-
-func (na *NetAgent) getUplinks() (uplinks []*netproto.Interface) {
-	na.Lock()
-	defer na.Unlock()
-	for _, intf := range na.hwIfDB {
-		if intf.Spec.Type == "UPLINK" {
-			uplinks = append(uplinks, intf)
-		}
-	}
-	return
 }

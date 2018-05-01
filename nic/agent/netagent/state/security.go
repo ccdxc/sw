@@ -53,7 +53,7 @@ func (na *NetAgent) delSgRules(sg *netproto.SecurityGroup) error {
 	return nil
 }
 
-// CreateSecurityGroup creates a security group
+// CreateSecurityGroup creates a security group. ToDo Handle creates in datapath
 func (na *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// check if sg already exists
 	oldSg, err := na.FindSecurityGroup(sg.ObjectMeta)
@@ -66,6 +66,12 @@ func (na *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 
 		log.Infof("Received duplicate sg create {%+v}", sg)
 		return nil
+	}
+
+	// find the corresponding namespace
+	_, err = na.FindNamespace(sg.Tenant, sg.Namespace)
+	if err != nil {
+		return err
 	}
 
 	sg.Status.SecurityGroupID, err = na.store.GetNextID(SecurityGroupID)
@@ -90,7 +96,7 @@ func (na *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// save it in db
-	key := objectKey(sg.ObjectMeta)
+	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
 	na.Lock()
 	na.secgroupDB[key] = sg
 	na.Unlock()
@@ -119,12 +125,15 @@ func (na *NetAgent) ListSecurityGroup() []*netproto.SecurityGroup {
 
 // FindSecurityGroup finds a security group
 func (na *NetAgent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGroup, error) {
+	typeMeta := api.TypeMeta{
+		Kind: "SecurityGroup",
+	}
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta)
+	key := objectKey(meta, typeMeta)
 	sg, ok := na.secgroupDB[key]
 	if !ok {
 		return nil, errors.New("Security group not found")
@@ -133,8 +142,13 @@ func (na *NetAgent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGr
 	return sg, nil
 }
 
-// UpdateSecurityGroup updates an existing security group
+// UpdateSecurityGroup updates an existing security group. ToDo implement updates in datapath
 func (na *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
+	// find the corresponding namespace
+	_, err := na.FindNamespace(sg.Tenant, sg.Namespace)
+	if err != nil {
+		return err
+	}
 	// check if sg already exists
 	esg, err := na.FindSecurityGroup(sg.ObjectMeta)
 	if err != nil {
@@ -168,7 +182,7 @@ func (na *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// update it in db
-	key := objectKey(sg.ObjectMeta)
+	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
 	na.Lock()
 	na.secgroupDB[key] = sg
 	na.Unlock()
@@ -177,8 +191,14 @@ func (na *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	return err
 }
 
-// DeleteSecurityGroup deletes a security group
+// DeleteSecurityGroup deletes a security group. ToDo handle deletes in datapath
 func (na *NetAgent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
+	// find the corresponding namespace
+	_, err := na.FindNamespace(sg.Tenant, sg.Namespace)
+	if err != nil {
+		return err
+	}
+
 	// chek if sg already exists
 	sgrp, err := na.FindSecurityGroup(sg.ObjectMeta)
 	if err != nil {
@@ -200,7 +220,7 @@ func (na *NetAgent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// delete from db
-	key := objectKey(sg.ObjectMeta)
+	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
 	na.Lock()
 	delete(na.secgroupDB, key)
 	na.Unlock()

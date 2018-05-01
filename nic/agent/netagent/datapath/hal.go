@@ -364,7 +364,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 }
 
 // CreateRemoteEndpoint creates remote endpoint
-func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplink *netproto.Interface, tn *netproto.Tenant) error {
+func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplink *netproto.Interface, ns *netproto.Namespace) error {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
@@ -437,7 +437,7 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 		EndpointAttrs: &epAttrs,
 		VrfKeyHandle: &halproto.VrfKeyHandle{
 			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-				VrfId: tn.Status.TenantID,
+				VrfId: ns.Status.NamespaceID,
 			},
 		},
 	}
@@ -751,11 +751,11 @@ func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 
 // CreateNetwork creates a l2 segment in datapath if vlan id is specified and a network if IPSubnet is specified.
 // ToDo Investigate if HAL needs network updates and deletes.
-func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, tn *netproto.Tenant) error {
+func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
 	// construct vrf key that gets passed on to hal
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: tn.Status.TenantID,
+			VrfId: ns.Status.NamespaceID,
 		},
 	}
 
@@ -907,7 +907,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 }
 
 // UpdateNetwork updates a network in datapath
-func (hd *Datapath) UpdateNetwork(nw *netproto.Network) error {
+func (hd *Datapath) UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) error {
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
 		Meta: &halproto.ObjectMeta{},
@@ -942,7 +942,7 @@ func (hd *Datapath) UpdateNetwork(nw *netproto.Network) error {
 }
 
 // DeleteNetwork deletes a network from datapath
-func (hd *Datapath) DeleteNetwork(nw *netproto.Network) error {
+func (hd *Datapath) DeleteNetwork(nw *netproto.Network, ns *netproto.Namespace) error {
 	// build the segment message
 	seg := halproto.L2SegmentDeleteRequest{
 		Meta: &halproto.ObjectMeta{},
@@ -1192,7 +1192,7 @@ func (hd *Datapath) UpdateVrf(vrfID uint64) error {
 }
 
 // CreateInterface creates an interface
-func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Interface, tn *netproto.Tenant) error {
+func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Interface, ns *netproto.Namespace) error {
 	var ifSpec *halproto.InterfaceSpec
 	switch intf.Spec.Type {
 	case "LIF":
@@ -1200,7 +1200,7 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 			Request: []*halproto.LifSpec{
 				{
 					Meta: &halproto.ObjectMeta{
-						VrfId: tn.Status.TenantID,
+						VrfId: ns.Status.NamespaceID,
 					},
 					KeyOrHandle: &halproto.LifKeyHandle{
 						KeyOrHandle: &halproto.LifKeyHandle_LifId{
@@ -1216,14 +1216,14 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 			return err
 		}
 		hd.Lock()
-		hd.DB.LifDB[objectKey(&tn.ObjectMeta)] = lifReqMsg
+		hd.DB.LifDB[objectKey(&ns.ObjectMeta)] = lifReqMsg
 		hd.Unlock()
 		return nil
 
 	case "UPLINK":
 		ifSpec = &halproto.InterfaceSpec{
 			Meta: &halproto.ObjectMeta{
-				VrfId: tn.Status.TenantID,
+				VrfId: ns.Status.NamespaceID,
 			},
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
@@ -1236,7 +1236,7 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 	case "ENIC":
 		ifSpec = &halproto.InterfaceSpec{
 			Meta: &halproto.ObjectMeta{
-				VrfId: tn.Status.TenantID,
+				VrfId: ns.Status.NamespaceID,
 			},
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
@@ -1286,13 +1286,13 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 	}
 
 	hd.Lock()
-	hd.DB.InterfaceDB[objectKey(&tn.ObjectMeta)] = ifReqMsg
+	hd.DB.InterfaceDB[objectKey(&ns.ObjectMeta)] = ifReqMsg
 	hd.Unlock()
 	return nil
 }
 
 // DeleteInterface deletes an interface
-func (hd *Datapath) DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+func (hd *Datapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
 	var ifDelReq *halproto.InterfaceDeleteRequest
 	switch intf.Spec.Type {
 	case "LIF":
@@ -1300,7 +1300,7 @@ func (hd *Datapath) DeleteInterface(intf *netproto.Interface, tn *netproto.Tenan
 			Request: []*halproto.LifDeleteRequest{
 				{
 					Meta: &halproto.ObjectMeta{
-						VrfId: tn.Status.TenantID,
+						VrfId: ns.Status.NamespaceID,
 					},
 					KeyOrHandle: &halproto.LifKeyHandle{
 						KeyOrHandle: &halproto.LifKeyHandle_LifId{
@@ -1328,7 +1328,7 @@ func (hd *Datapath) DeleteInterface(intf *netproto.Interface, tn *netproto.Tenan
 	case "UPLINK":
 		ifDelReq = &halproto.InterfaceDeleteRequest{
 			Meta: &halproto.ObjectMeta{
-				VrfId: tn.Status.TenantID,
+				VrfId: ns.Status.NamespaceID,
 			},
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
@@ -1360,7 +1360,7 @@ func (hd *Datapath) DeleteInterface(intf *netproto.Interface, tn *netproto.Tenan
 }
 
 // UpdateInterface updates an interface
-func (hd *Datapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
 	var ifSpec *halproto.InterfaceSpec
 	switch intf.Spec.Type {
 	case "LIF":
@@ -1368,7 +1368,7 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenan
 			Request: []*halproto.LifSpec{
 				{
 					Meta: &halproto.ObjectMeta{
-						VrfId: tn.Status.TenantID,
+						VrfId: ns.Status.NamespaceID,
 					},
 					KeyOrHandle: &halproto.LifKeyHandle{
 						KeyOrHandle: &halproto.LifKeyHandle_LifId{
@@ -1384,14 +1384,14 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenan
 			return err
 		}
 		hd.Lock()
-		hd.DB.LifDB[objectKey(&tn.ObjectMeta)] = lifReqMsg
+		hd.DB.LifDB[objectKey(&ns.ObjectMeta)] = lifReqMsg
 		hd.Unlock()
 		return nil
 
 	case "UPLINK":
 		ifSpec = &halproto.InterfaceSpec{
 			Meta: &halproto.ObjectMeta{
-				VrfId: tn.Status.TenantID,
+				VrfId: ns.Status.NamespaceID,
 			},
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
@@ -1404,7 +1404,7 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenan
 	case "ENIC":
 		ifSpec = &halproto.InterfaceSpec{
 			Meta: &halproto.ObjectMeta{
-				VrfId: tn.Status.TenantID,
+				VrfId: ns.Status.NamespaceID,
 			},
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
@@ -1428,7 +1428,7 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenan
 		return err
 	}
 	hd.Lock()
-	hd.DB.InterfaceDB[objectKey(&tn.ObjectMeta)] = ifReqMsg
+	hd.DB.InterfaceDB[objectKey(&ns.ObjectMeta)] = ifReqMsg
 	hd.Unlock()
 	return nil
 }
@@ -1443,11 +1443,12 @@ func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.Int
 				lifReq,
 			},
 		}
-		//var lifs *halproto.LifGetResponseMsg
+
+		// ToDo Add lif checks once nic mgr is integrated
 		lifs, err := hd.Hal.Ifclient.LifGet(context.Background(), lifReqMsg)
 		if err != nil {
 			log.Errorf("Error getting lifs from the datapath. Err: %v", err)
-			return nil, nil, err
+			return nil, nil, nil
 		}
 
 		// get all interfaces
@@ -1475,37 +1476,37 @@ func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.Int
 }
 
 // CreateNatPool creates a NAT Pool in the datapath
-func (hd *Datapath) CreateNatPool(np *netproto.NatPool) error {
+func (hd *Datapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
 
 	return nil
 }
 
 // UpdateNatPool updates a NAT Pool in the datapath
-func (hd *Datapath) UpdateNatPool(np *netproto.NatPool) error {
+func (hd *Datapath) UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
 
 	return nil
 }
 
 // DeleteNatPool deletes a NAT Pool in the datapath
-func (hd *Datapath) DeleteNatPool(np *netproto.NatPool) error {
+func (hd *Datapath) DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
 
 	return nil
 }
 
 // CreateNatPolicy creates a NAT Policy in the datapath
-func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy) error {
+func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
 
 	return nil
 }
 
 // UpdateNatPolicy updates a NAT Policy in the datapath
-func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy) error {
+func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
 
 	return nil
 }
 
 // DeleteNatPolicy deletes a NAT Policy in the datapath
-func (hd *Datapath) DeleteNatPolicy(np *netproto.NatPolicy) error {
+func (hd *Datapath) DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
 
 	return nil
 }

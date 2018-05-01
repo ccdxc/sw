@@ -5,6 +5,8 @@ package state
 import (
 	"fmt"
 
+	"strings"
+
 	"github.com/pensando/sw/api"
 	config "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
@@ -66,7 +68,7 @@ func NewNetAgent(dp NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID stri
 			emdb.Close()
 			return nil, err
 		}
-		// We need to create a default tenant at startup as HAL expects an actual tenant object to be present before any api calls
+		// We need to create a default tenant and default namespace at startup.
 		err = nagent.createDefaultTenant()
 		if err != nil {
 			emdb.Close()
@@ -110,8 +112,15 @@ func (na *NetAgent) Stop() error {
 }
 
 // objectKey returns object key from object meta
-func objectKey(meta api.ObjectMeta) string {
-	return fmt.Sprintf("%s|%s|%s", meta.Tenant, meta.Namespace, meta.Name)
+func objectKey(meta api.ObjectMeta, T api.TypeMeta) string {
+	switch strings.ToLower(T.Kind) {
+	case "tenant":
+		return fmt.Sprintf("%s", meta.Name)
+	case "namespace":
+		return fmt.Sprintf("%s|%s", meta.Tenant, meta.Name)
+	default:
+		return fmt.Sprintf("%s|%s|%s", meta.Tenant, meta.Namespace, meta.Name)
+	}
 }
 
 // GetAgentID returns UUID of the agent
@@ -123,9 +132,7 @@ func (na *NetAgent) createDefaultTenant() error {
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Name:      "default",
-			Tenant:    "default",
-			Namespace: "default",
+			Name: "default",
 		},
 	}
 	return na.CreateTenant(&tn)

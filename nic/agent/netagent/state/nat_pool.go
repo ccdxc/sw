@@ -28,6 +28,12 @@ func (na *NetAgent) CreateNatPool(np *netproto.NatPool) error {
 		return nil
 	}
 
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	if err != nil {
+		return err
+	}
+
 	np.Status.NatPoolID, err = na.store.GetNextID(NatPoolID)
 
 	if err != nil {
@@ -36,14 +42,14 @@ func (na *NetAgent) CreateNatPool(np *netproto.NatPool) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateNatPool(np)
+	err = na.datapath.CreateNatPool(np, ns)
 	if err != nil {
 		log.Errorf("Error creating nat pool in datapath. NatPool {%+v}. Err: %v", np, err)
 		return err
 	}
 
 	// save it in db
-	key := objectKey(np.ObjectMeta)
+	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	na.natPoolDB[key] = np
 	na.Unlock()
@@ -54,12 +60,15 @@ func (na *NetAgent) CreateNatPool(np *netproto.NatPool) error {
 
 // FindNatPool finds a nat pool in local db
 func (na *NetAgent) FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error) {
+	typeMeta := api.TypeMeta{
+		Kind: "NatPool",
+	}
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta)
+	key := objectKey(meta, typeMeta)
 	tn, ok := na.natPoolDB[key]
 	if !ok {
 		return nil, fmt.Errorf("nat pool not found %v", tn)
@@ -84,6 +93,11 @@ func (na *NetAgent) ListNatPool() []*netproto.NatPool {
 
 // UpdateNatPool updates a nat pool
 func (na *NetAgent) UpdateNatPool(np *netproto.NatPool) error {
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	if err != nil {
+		return err
+	}
 	existingNp, err := na.FindNatPool(np.ObjectMeta)
 	if err != nil {
 		log.Errorf("NatPool %v not found", np.ObjectMeta)
@@ -95,8 +109,8 @@ func (na *NetAgent) UpdateNatPool(np *netproto.NatPool) error {
 		return nil
 	}
 
-	err = na.datapath.UpdateNatPool(np)
-	key := objectKey(np.ObjectMeta)
+	err = na.datapath.UpdateNatPool(np, ns)
+	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	na.natPoolDB[key] = np
 	na.Unlock()
@@ -106,6 +120,11 @@ func (na *NetAgent) UpdateNatPool(np *netproto.NatPool) error {
 
 // DeleteNatPool deletes a nat pool
 func (na *NetAgent) DeleteNatPool(np *netproto.NatPool) error {
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	if err != nil {
+		return err
+	}
 
 	existingNatPool, err := na.FindNatPool(np.ObjectMeta)
 	if err != nil {
@@ -114,13 +133,13 @@ func (na *NetAgent) DeleteNatPool(np *netproto.NatPool) error {
 	}
 
 	// delete it in the datapath
-	err = na.datapath.DeleteNatPool(existingNatPool)
+	err = na.datapath.DeleteNatPool(existingNatPool, ns)
 	if err != nil {
 		log.Errorf("Error deleting nat pool {%+v}. Err: %v", np, err)
 	}
 
 	// delete from db
-	key := objectKey(np.ObjectMeta)
+	key := objectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	delete(na.natPoolDB, key)
 	na.Unlock()

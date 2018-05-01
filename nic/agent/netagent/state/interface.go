@@ -31,6 +31,11 @@ func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
 		return nil
 	}
 
+	ns, err := na.FindNamespace(intf.Tenant, intf.Namespace)
+	if err != nil {
+		return err
+	}
+
 	intfID, err := na.store.GetNextID(InterfaceID)
 
 	if err != nil {
@@ -38,19 +43,6 @@ func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
 		return err
 	}
 	intf.Status.InterfaceID = intfID + maxNumUplinks
-
-	// find the corresponding tenant
-	tnMeta := api.ObjectMeta{
-		Name:      intf.Tenant,
-		Namespace: intf.Namespace,
-		Tenant:    intf.Tenant,
-	}
-
-	tn, err := na.FindTenant(tnMeta)
-	if err != nil {
-		log.Errorf("Could not find the tenant: {%+v}", err)
-		return err
-	}
 
 	// Perform interface associations, currently only ENIC interfaces supported as
 	switch intf.Spec.Type {
@@ -74,14 +66,14 @@ func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
 	}
 
 	// create it in datapath
-	err = na.datapath.CreateInterface(intf, lif, tn)
+	err = na.datapath.CreateInterface(intf, lif, ns)
 	if err != nil {
 		log.Errorf("Error creating interface in datapath. Interface {%+v}. Err: %v", intf, err)
 		return err
 	}
 
 	// save it in db
-	key := objectKey(intf.ObjectMeta)
+	key := objectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
 	na.enicDB[key] = intf
 	na.Unlock()
@@ -92,12 +84,16 @@ func (na *NetAgent) CreateInterface(intf *netproto.Interface) error {
 
 // FindInterface finds an interface in local db
 func (na *NetAgent) FindInterface(meta api.ObjectMeta) (*netproto.Interface, error) {
+	typeMeta := api.TypeMeta{
+		Kind: "Interface",
+	}
+
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta)
+	key := objectKey(meta, typeMeta)
 	tn, ok := na.enicDB[key]
 	if !ok {
 		return nil, fmt.Errorf("interface not found %v", tn)
@@ -122,6 +118,12 @@ func (na *NetAgent) ListInterface() []*netproto.Interface {
 
 // UpdateInterface updates an interface
 func (na *NetAgent) UpdateInterface(intf *netproto.Interface) error {
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(intf.Tenant, intf.Namespace)
+	if err != nil {
+		return err
+	}
+
 	existingIntf, err := na.FindInterface(intf.ObjectMeta)
 	if err != nil {
 		log.Errorf("Interface %v not found", intf.ObjectMeta)
@@ -133,21 +135,8 @@ func (na *NetAgent) UpdateInterface(intf *netproto.Interface) error {
 		return nil
 	}
 
-	// find the corresponding tenant
-	tnMeta := api.ObjectMeta{
-		Name:      intf.Tenant,
-		Namespace: intf.Namespace,
-		Tenant:    intf.Tenant,
-	}
-
-	tn, err := na.FindTenant(tnMeta)
-	if err != nil {
-		log.Errorf("Could not find the tenant: {%+v}", err)
-		return err
-	}
-
-	err = na.datapath.UpdateInterface(intf, tn)
-	key := objectKey(intf.ObjectMeta)
+	err = na.datapath.UpdateInterface(intf, ns)
+	key := objectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
 	na.enicDB[key] = intf
 	na.Unlock()
@@ -157,33 +146,26 @@ func (na *NetAgent) UpdateInterface(intf *netproto.Interface) error {
 
 // DeleteInterface deletes an interface
 func (na *NetAgent) DeleteInterface(intf *netproto.Interface) error {
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(intf.Tenant, intf.Namespace)
+	if err != nil {
+		return err
+	}
+
 	existingIntf, err := na.FindInterface(intf.ObjectMeta)
 	if err != nil {
 		log.Errorf("Interface %+v not found", intf.ObjectMeta)
 		return errors.New("interface not found")
 	}
 
-	// find the corresponding tenant
-	tnMeta := api.ObjectMeta{
-		Name:      intf.Tenant,
-		Namespace: intf.Namespace,
-		Tenant:    intf.Tenant,
-	}
-
-	tn, err := na.FindTenant(tnMeta)
-	if err != nil {
-		log.Errorf("Could not find the tenant: {%+v}", err)
-		return err
-	}
-
 	// delete it in the datapath
-	err = na.datapath.DeleteInterface(existingIntf, tn)
+	err = na.datapath.DeleteInterface(existingIntf, ns)
 	if err != nil {
 		log.Errorf("Error deleting interface {%+v}. Err: %v", intf, err)
 	}
 
 	// delete from db
-	key := objectKey(intf.ObjectMeta)
+	key := objectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
 	delete(na.enicDB, key)
 	na.Unlock()
@@ -217,7 +199,7 @@ func (na *NetAgent) GetHwInterfaces() error {
 				InterfaceID: lif.Spec.KeyOrHandle.GetLifId(),
 			},
 		}
-		key := objectKey(l.ObjectMeta)
+		key := objectKey(l.ObjectMeta, l.TypeMeta)
 		na.Lock()
 		na.hwIfDB[key] = l
 		na.Unlock()
@@ -240,7 +222,7 @@ func (na *NetAgent) GetHwInterfaces() error {
 				InterfaceID: uplink.Spec.KeyOrHandle.GetInterfaceId(),
 			},
 		}
-		key := objectKey(u.ObjectMeta)
+		key := objectKey(u.ObjectMeta, u.TypeMeta)
 		na.Lock()
 		na.hwIfDB[key] = u
 		na.Unlock()
@@ -256,7 +238,10 @@ func (na *NetAgent) findIntfByName(intfName string) (intf *netproto.Interface, o
 		Tenant:    "default",
 		Namespace: "default",
 	}
-	key := objectKey(lifMeta)
+	typeMeta := api.TypeMeta{
+		Kind: "Interface",
+	}
+	key := objectKey(lifMeta, typeMeta)
 	na.Lock()
 	intf, ok = na.hwIfDB[key]
 	na.Unlock()
@@ -274,6 +259,17 @@ func (na *NetAgent) countIntfs(intfName string) (intfCount uint64, err error) {
 	// prevent divide by 0 in calculating %
 	if intfCount == 0 {
 		err = errors.New("lif count was 0")
+	}
+	return
+}
+
+func (na *NetAgent) getUplinks() (uplinks []*netproto.Interface) {
+	na.Lock()
+	defer na.Unlock()
+	for _, intf := range na.hwIfDB {
+		if intf.Spec.Type == "UPLINK" {
+			uplinks = append(uplinks, intf)
+		}
 	}
 	return
 }

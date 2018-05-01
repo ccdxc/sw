@@ -237,7 +237,7 @@ import (
                                                                                    },
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
-                                    TypeMeta: api.TypeMeta{Kind: "Namespace"},
+                                    TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
                                     ObjectMeta: api.ObjectMeta{
                                         Tenant: "preCreatedTenant",
                                         Name:   "preCreated{{title $crudObject}}",
@@ -269,7 +269,7 @@ import (
                                                                        },
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
-                                    TypeMeta: api.TypeMeta{Kind: "Namespace"},
+                                    TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
                                     ObjectMeta: api.ObjectMeta{
                                         Tenant: "default",
                                         Name:   "preCreated{{title $crudObject}}",
@@ -277,7 +277,7 @@ import (
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
                                 }
-                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpolicies/preCreatedTenant/preCreatedNamespace/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpolicies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
 
                                getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpolicies/", &{{lower $crudObject}}List )
@@ -297,7 +297,7 @@ import (
                                                                        NetworkName: "updatedNetwork",
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
-                                    TypeMeta: api.TypeMeta{Kind: "Namespace"},
+                                    TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
                                     ObjectMeta: api.ObjectMeta{
                                         Tenant: "default",
                                         Name:   "preCreated{{title $crudObject}}",
@@ -305,7 +305,7 @@ import (
                                     },
                                     Spec: updated{{title $crudObject}}Spec,
                                 }
-                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpools/preCreatedTenant/preCreatedNamespace/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                               err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpools/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                                AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
 
                                getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpools/", &{{lower $crudObject}}List )

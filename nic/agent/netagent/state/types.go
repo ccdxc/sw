@@ -103,31 +103,31 @@ type PluginIntf interface {
 // NetDatapathAPI is the API provided by datapath modules
 type NetDatapathAPI interface {
 	SetAgent(ag DatapathIntf) error
-	CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) (*IntfInfo, error)                                      // creates a local endpoint in datapath
-	UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error                                                   // updates a local endpoint in datapath
-	DeleteLocalEndpoint(ep *netproto.Endpoint) error                                                                                                        // deletes a local endpoint in datapath
-	CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, uplink *netproto.Interface, tn *netproto.Tenant) error // creates a remote endpoint in datapath
-	UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error                                                  // updates a remote endpoint in datapath
-	DeleteRemoteEndpoint(ep *netproto.Endpoint) error                                                                                                       // deletes a remote endpoint in datapath
-	CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, tn *netproto.Tenant) error                                                           // creates a network
-	UpdateNetwork(nw *netproto.Network) error                                                                                                               // updates a network in datapath
-	DeleteNetwork(nw *netproto.Network) error                                                                                                               // deletes a network from datapath
-	CreateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                   // creates a security group
-	UpdateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                   // updates a security group
-	DeleteSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                   // deletes a security group
-	CreateVrf(vrfID uint64) error                                                                                                                           // creates a vrf
-	DeleteVrf(vrfID uint64) error                                                                                                                           // deletes a vrf
-	UpdateVrf(vrfID uint64) error                                                                                                                           // updates a vrf
-	CreateInterface(intf *netproto.Interface, lif *netproto.Interface, tn *netproto.Tenant) error                                                           // creates an interface
-	UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                                                                    // updates an interface
-	DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                                                                    // deletes an interface
-	ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error)                                                                // Lists all the lifs and uplinks from the datapath state
-	CreateNatPool(np *netproto.NatPool) error                                                                                                               // creates a nat pool in the datapath
-	UpdateNatPool(np *netproto.NatPool) error                                                                                                               // updates a nat pool in the datapath
-	DeleteNatPool(np *netproto.NatPool) error                                                                                                               // deletes a nat pool in the datapath
-	CreateNatPolicy(np *netproto.NatPolicy) error                                                                                                           // creates a nat policy in the datapath
-	UpdateNatPolicy(np *netproto.NatPolicy) error                                                                                                           // updates a nat policy in the datapath
-	DeleteNatPolicy(np *netproto.NatPolicy) error                                                                                                           // deletes a nat policy in the datapath
+	CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) (*IntfInfo, error)                                         // creates a local endpoint in datapath
+	UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error                                                      // updates a local endpoint in datapath
+	DeleteLocalEndpoint(ep *netproto.Endpoint) error                                                                                                           // deletes a local endpoint in datapath
+	CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, uplink *netproto.Interface, ns *netproto.Namespace) error // creates a remote endpoint in datapath
+	UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error                                                     // updates a remote endpoint in datapath
+	DeleteRemoteEndpoint(ep *netproto.Endpoint) error                                                                                                          // deletes a remote endpoint in datapath
+	CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error                                                           // creates a network
+	UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) error                                                                                          // updates a network in datapath
+	DeleteNetwork(nw *netproto.Network, ns *netproto.Namespace) error                                                                                          // deletes a network from datapath
+	CreateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                      // creates a security group
+	UpdateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                      // updates a security group
+	DeleteSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                      // deletes a security group
+	CreateVrf(vrfID uint64) error                                                                                                                              // creates a vrf
+	DeleteVrf(vrfID uint64) error                                                                                                                              // deletes a vrf
+	UpdateVrf(vrfID uint64) error                                                                                                                              // updates a vrf
+	CreateInterface(intf *netproto.Interface, lif *netproto.Interface, ns *netproto.Namespace) error                                                           // creates an interface
+	UpdateInterface(intf *netproto.Interface, ns *netproto.Namespace) error                                                                                    // updates an interface
+	DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error                                                                                    // deletes an interface
+	ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error)                                                                   // Lists all the lifs and uplinks from the datapath state
+	CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                          // creates a nat pool in the datapath
+	UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                          // updates a nat pool in the datapath
+	DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                          // deletes a nat pool in the datapath
+	CreateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                      // creates a nat policy in the datapath
+	UpdateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                      // updates a nat policy in the datapath
+	DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                      // deletes a nat policy in the datapath
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths

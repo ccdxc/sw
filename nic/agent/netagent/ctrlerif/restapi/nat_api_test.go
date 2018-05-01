@@ -95,7 +95,7 @@ func TestNatPolicyUpdate(t *testing.T) {
 		},
 	}
 	putData := netproto.NatPolicy{
-		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Name:      "preCreatedNatPolicy",
@@ -103,7 +103,7 @@ func TestNatPolicyUpdate(t *testing.T) {
 		},
 		Spec: updatedNatPolicySpec,
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpolicies/preCreatedTenant/preCreatedNamespace/preCreatedNatPolicy", &putData, &resp)
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpolicies/default/default/preCreatedNatPolicy", &putData, &resp)
 	AssertOk(t, err, "Error updating natpolicy to REST Server")
 
 	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpolicies/", &natpolicyList)
@@ -222,7 +222,7 @@ func TestNatPoolUpdate(t *testing.T) {
 		NetworkName: "updatedNetwork",
 	}
 	putData := netproto.NatPool{
-		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Name:      "preCreatedNatPool",
@@ -230,7 +230,7 @@ func TestNatPoolUpdate(t *testing.T) {
 		},
 		Spec: updatedNatPoolSpec,
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpools/preCreatedTenant/preCreatedNamespace/preCreatedNatPool", &putData, &resp)
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/natpools/default/default/preCreatedNatPool", &putData, &resp)
 	AssertOk(t, err, "Error updating natpool to REST Server")
 
 	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/natpools/", &natpoolList)

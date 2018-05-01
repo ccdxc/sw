@@ -146,7 +146,7 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 	}
 
 	natPolicy := netproto.NatPolicy{
-		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",

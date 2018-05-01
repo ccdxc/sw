@@ -49,7 +49,7 @@ func (na *NetAgent) EndpointDeleteReq(epinfo *netproto.Endpoint) error {
 // CreateEndpoint creates an endpoint
 func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 	// check if the endpoint already exists and convert it to an update
-	key := objectKey(ep.ObjectMeta)
+	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
 	oldEp, ok := na.endpointDB[key]
 	na.Unlock()
@@ -63,6 +63,12 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 
 		log.Infof("Received duplicate endpoint create for ep {%+v}", ep)
 		return nil, nil
+	}
+
+	// find the corresponding namespace
+	ns, err := na.FindNamespace(ep.Tenant, ep.Namespace)
+	if err != nil {
+		return nil, err
 	}
 
 	// check if we have the network endpoint is referring to
@@ -86,19 +92,6 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 		sgs = append(sgs, sg)
 	}
 
-	// find the corresponding tenant
-	tnMeta := api.ObjectMeta{
-		Tenant:    ep.Tenant,
-		Namespace: ep.Namespace,
-		Name:      ep.Tenant,
-	}
-
-	tn, err := na.FindTenant(tnMeta)
-	if err != nil {
-		log.Errorf("Could not find the tenant: {%+v}", err)
-		return nil, err
-	}
-
 	// call the datapath
 	var intfInfo *IntfInfo
 	if ep.Status.NodeUUID == na.nodeUUID {
@@ -116,7 +109,7 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 			log.Errorf("could not find an uplink")
 			return nil, err
 		}
-		err = na.datapath.CreateRemoteEndpoint(ep, nw, sgs, uplink, tn)
+		err = na.datapath.CreateRemoteEndpoint(ep, nw, sgs, uplink, ns)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
@@ -133,10 +126,15 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 	return intfInfo, err
 }
 
-// UpdateEndpoint updates an endpoint
+// UpdateEndpoint updates an endpoint. ToDo Handle updates in datapath
 func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
+	// find the corresponding namespace
+	_, err := na.FindNamespace(ep.Tenant, ep.Namespace)
+	if err != nil {
+		return err
+	}
 	// check if the endpoint already exists and convert it to an update
-	key := objectKey(ep.ObjectMeta)
+	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
 	oldEp, ok := na.endpointDB[key]
 	na.Unlock()
@@ -197,10 +195,15 @@ func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	return err
 }
 
-// DeleteEndpoint deletes an endpoint
+// DeleteEndpoint deletes an endpoint. ToDo Handle deletes in datapath
 func (na *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
+	// find the corresponding namespace
+	_, err := na.FindNamespace(ep.Tenant, ep.Namespace)
+	if err != nil {
+		return err
+	}
 	// check if we have the endpoint
-	key := objectKey(ep.ObjectMeta)
+	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
 	_, ok := na.endpointDB[key]
 	na.Unlock()
@@ -210,7 +213,6 @@ func (na *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// call the datapath
-	var err error
 	if ep.Status.NodeUUID == na.nodeUUID {
 		err = na.datapath.DeleteLocalEndpoint(ep)
 		if err != nil {

@@ -16,7 +16,8 @@ import (
 
 // CreateNamespace creates a namespace
 func (na *NetAgent) CreateNamespace(ns *netproto.Namespace) error {
-	oldNs, err := na.FindNamespace(ns.ObjectMeta)
+
+	oldNs, err := na.FindNamespace(ns.Tenant, ns.Name)
 	if err == nil {
 		// check if the contents are same
 		if !proto.Equal(oldNs, ns) {
@@ -43,7 +44,7 @@ func (na *NetAgent) CreateNamespace(ns *netproto.Namespace) error {
 	}
 
 	// save it in db
-	key := objectKey(ns.ObjectMeta)
+	key := objectKey(ns.ObjectMeta, ns.TypeMeta)
 	na.Lock()
 	na.namespaceDB[key] = ns
 	na.Unlock()
@@ -53,19 +54,32 @@ func (na *NetAgent) CreateNamespace(ns *netproto.Namespace) error {
 }
 
 // FindNamespace finds a namespace in local db
-func (na *NetAgent) FindNamespace(meta api.ObjectMeta) (*netproto.Namespace, error) {
+func (na *NetAgent) FindNamespace(tenant, namespace string) (*netproto.Namespace, error) {
+	nsTypeMeta := api.TypeMeta{
+		Kind: "Namespace",
+	}
+	meta := api.ObjectMeta{
+		Tenant: tenant,
+		Name:   namespace,
+	}
+	// Find the corresponding tenant
+	_, err := na.FindTenant(meta.Tenant)
+	if err != nil {
+		log.Errorf("Could not find the tenant: {%+v}", meta)
+		return nil, err
+	}
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta)
-	tn, ok := na.namespaceDB[key]
+	key := objectKey(meta, nsTypeMeta)
+	ns, ok := na.namespaceDB[key]
 	if !ok {
-		return nil, fmt.Errorf("namespace not found %v", tn)
+		return nil, fmt.Errorf("namespace not found %v", ns)
 	}
 
-	return tn, nil
+	return ns, nil
 }
 
 // ListNamespace returns the list of namespaces
@@ -84,7 +98,7 @@ func (na *NetAgent) ListNamespace() []*netproto.Namespace {
 
 // UpdateNamespace updates a namespace
 func (na *NetAgent) UpdateNamespace(ns *netproto.Namespace) error {
-	existingNs, err := na.FindNamespace(ns.ObjectMeta)
+	existingNs, err := na.FindNamespace(ns.Tenant, ns.Name)
 	if err != nil {
 		log.Errorf("Namespace %v not found", ns.ObjectMeta)
 		return err
@@ -96,7 +110,7 @@ func (na *NetAgent) UpdateNamespace(ns *netproto.Namespace) error {
 	}
 
 	err = na.datapath.UpdateVrf(ns.Status.NamespaceID)
-	key := objectKey(ns.ObjectMeta)
+	key := objectKey(ns.ObjectMeta, ns.TypeMeta)
 	na.Lock()
 	na.namespaceDB[key] = ns
 	na.Unlock()
@@ -110,7 +124,7 @@ func (na *NetAgent) DeleteNamespace(ns *netproto.Namespace) error {
 		return errors.New("default namespaces can not be deleted")
 	}
 
-	existingNamespace, err := na.FindNamespace(ns.ObjectMeta)
+	existingNamespace, err := na.FindNamespace(ns.Tenant, ns.Name)
 	if err != nil {
 		log.Errorf("Namespace %+v not found", ns.ObjectMeta)
 		return errors.New("namespace not found")
@@ -123,7 +137,7 @@ func (na *NetAgent) DeleteNamespace(ns *netproto.Namespace) error {
 	}
 
 	// delete from db
-	key := objectKey(ns.ObjectMeta)
+	key := objectKey(ns.ObjectMeta, ns.TypeMeta)
 	na.Lock()
 	delete(na.namespaceDB, key)
 	na.Unlock()

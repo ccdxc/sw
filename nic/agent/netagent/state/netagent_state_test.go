@@ -33,16 +33,16 @@ func (dp *mockDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.
 	dp.Lock()
 	defer dp.Unlock()
 
-	key := objectKey(ep.ObjectMeta)
+	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	dp.epdb[key] = ep
 	return nil, nil
 }
 
-func (dp *mockDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, intf *netproto.Interface, tn *netproto.Tenant) error {
+func (dp *mockDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, intf *netproto.Interface, ns *netproto.Namespace) error {
 	dp.Lock()
 	defer dp.Unlock()
 
-	key := objectKey(ep.ObjectMeta)
+	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	dp.epdb[key] = ep
 	return nil
 }
@@ -51,7 +51,7 @@ func (dp *mockDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.
 	dp.Lock()
 	defer dp.Unlock()
 
-	key := objectKey(ep.ObjectMeta)
+	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	dp.epdb[key] = ep
 	return nil
 }
@@ -60,7 +60,7 @@ func (dp *mockDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto
 	dp.Lock()
 	defer dp.Unlock()
 
-	key := objectKey(ep.ObjectMeta)
+	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	dp.epdb[key] = ep
 	return nil
 }
@@ -69,7 +69,7 @@ func (dp *mockDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 	dp.Lock()
 	defer dp.Unlock()
 
-	key := objectKey(ep.ObjectMeta)
+	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	delete(dp.epdb, key)
 	return nil
 }
@@ -78,23 +78,23 @@ func (dp *mockDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 	dp.Lock()
 	defer dp.Unlock()
 
-	key := objectKey(ep.ObjectMeta)
+	key := objectKey(ep.ObjectMeta, ep.TypeMeta)
 	delete(dp.epdb, key)
 	return nil
 }
 
 // CreateNetwork creates a network in datapath
-func (dp *mockDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, tn *netproto.Tenant) error {
+func (dp *mockDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
 	return nil
 }
 
 // UpdateNetwork updates a network in datapath
-func (dp *mockDatapath) UpdateNetwork(nw *netproto.Network) error {
+func (dp *mockDatapath) UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) error {
 	return nil
 }
 
 // DeleteNetwork deletes a network from datapath
-func (dp *mockDatapath) DeleteNetwork(nw *netproto.Network) error {
+func (dp *mockDatapath) DeleteNetwork(nw *netproto.Network, ns *netproto.Namespace) error {
 	return nil
 }
 
@@ -103,7 +103,7 @@ func (dp *mockDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	dp.Lock()
 	defer dp.Unlock()
 
-	key := objectKey(sg.ObjectMeta)
+	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
 	dp.sgdb[key] = sg
 	return nil
 }
@@ -118,7 +118,7 @@ func (dp *mockDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	dp.Lock()
 	defer dp.Unlock()
 
-	key := objectKey(sg.ObjectMeta)
+	key := objectKey(sg.ObjectMeta, sg.TypeMeta)
 	delete(dp.epdb, key)
 	return nil
 }
@@ -149,52 +149,52 @@ func (dp *mockDatapath) UpdateVrf(vrfID uint64) error {
 }
 
 // CreateInterface creates an interface. Stubbed out to satisfy datapath interface.
-func (dp *mockDatapath) CreateInterface(intf *netproto.Interface, lif *netproto.Interface, tn *netproto.Tenant) error {
+func (dp *mockDatapath) CreateInterface(intf *netproto.Interface, lif *netproto.Interface, ns *netproto.Namespace) error {
 	return nil
 }
 
 // DeleteInterface deletes. Stubbed out to satisfy datapath interface.
-func (dp *mockDatapath) DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+func (dp *mockDatapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
 	return nil
 }
 
 // UpdateInterface updates an interface. Stubbed out to satisfy datapath interface.
-func (dp *mockDatapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+func (dp *mockDatapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
 	return nil
 }
 
 // CreateNatPool creates a NAT Pool in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) CreateNatPool(np *netproto.NatPool) error {
+func (dp *mockDatapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
 
 	return nil
 }
 
 // UpdateNatPool updates a NAT Pool in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) UpdateNatPool(np *netproto.NatPool) error {
+func (dp *mockDatapath) UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
 
 	return nil
 }
 
 // DeleteNatPool deletes a NAT Pool in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) DeleteNatPool(np *netproto.NatPool) error {
+func (dp *mockDatapath) DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
 
 	return nil
 }
 
 // CreateNatPolicy creates a NAT Policy in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) CreateNatPolicy(np *netproto.NatPolicy) error {
+func (dp *mockDatapath) CreateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
 
 	return nil
 }
 
 // UpdateNatPolicy updates a NAT Policy in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) UpdateNatPolicy(np *netproto.NatPolicy) error {
+func (dp *mockDatapath) UpdateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
 
 	return nil
 }
 
 // DeleteNatPolicy deletes a NAT Policy in the datapath. Stubbed out to satisfy datapath interface
-func (dp *mockDatapath) DeleteNatPolicy(np *netproto.NatPolicy) error {
+func (dp *mockDatapath) DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
 
 	return nil
 }
@@ -260,7 +260,7 @@ type mockCtrler struct {
 }
 
 func (ctrler *mockCtrler) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, error) {
-	key := objectKey(epinfo.ObjectMeta)
+	key := objectKey(epinfo.ObjectMeta, epinfo.TypeMeta)
 	ctrler.epdb[key] = epinfo
 	return epinfo, nil
 }
@@ -270,7 +270,7 @@ func (ctrler *mockCtrler) EndpointAgeoutNotif(epinfo *netproto.Endpoint) error {
 }
 
 func (ctrler *mockCtrler) EndpointDeleteReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, error) {
-	key := objectKey(epinfo.ObjectMeta)
+	key := objectKey(epinfo.ObjectMeta, epinfo.TypeMeta)
 	delete(ctrler.epdb, key)
 	return epinfo, nil
 }
@@ -373,22 +373,32 @@ func TestNetworkUpdate(t *testing.T) {
 	tn := &netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "updateTenant",
-			Name:      "updateTenant",
-			Namespace: "updateTenant",
+			Name: "updateTenant",
 		},
 	}
 
 	err := ag.CreateTenant(tn)
 	AssertOk(t, err, "Error creating tenant")
 
+	// create backing namespace
+	ns := &netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "updateTenant",
+			Name:   "updateNamespace",
+		},
+	}
+
+	err = ag.CreateNamespace(ns)
+	AssertOk(t, err, "Error Creating Namespace")
+
 	// create network
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "updateTenant",
+			Namespace: "updateNamespace",
 			Name:      "updateNetwork",
-			Namespace: "updateTenant",
 		},
 	}
 
@@ -454,7 +464,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating endpoint")
 
 	// verify both controller and datapath got called
-	key := objectKey(epinfo.ObjectMeta)
+	key := objectKey(epinfo.ObjectMeta, epinfo.TypeMeta)
 	nep, ok := ag.endpointDB[key]
 	Assert(t, ok, "Endpoint was not found in datapath", dp)
 	Assert(t, proto.Equal(nep, ep), "Datapath endpoint did not match", nep)
@@ -571,7 +581,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating endpoint")
 
 	// verify datapath got called
-	key := objectKey(epinfo.ObjectMeta)
+	key := objectKey(epinfo.ObjectMeta, epinfo.TypeMeta)
 	nep, ok := ag.endpointDB[key]
 	Assert(t, ok, "Endpoint was not found in datapath", dp)
 	Assert(t, proto.Equal(nep, &epinfo), "Datapath endpoint did not match", nep)
@@ -655,7 +665,7 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 	Assert(t, (len(sgList) == 1), "Incorrect number of sgs")
 
 	// verify datapath has the security group
-	_, ok := dp.sgdb[objectKey(sg.ObjectMeta)]
+	_, ok := dp.sgdb[objectKey(sg.ObjectMeta, sg.TypeMeta)]
 	Assert(t, ok, "Security group not found in datapath")
 
 	// network message
@@ -804,7 +814,7 @@ func TestEndpointUpdate(t *testing.T) {
 	AssertOk(t, err, "Error updating endpoint")
 
 	// verify endpoint got updated
-	key := objectKey(epinfo.ObjectMeta)
+	key := objectKey(epinfo.ObjectMeta, epinfo.TypeMeta)
 	nep, ok := ag.endpointDB[key]
 	Assert(t, ok, "Endpoint was not found in datapath", dp)
 	Assert(t, proto.Equal(nep, &epupd), "Datapath endpoint did not match", nep)
@@ -867,7 +877,7 @@ func TestSecurityGroupUpdate(t *testing.T) {
 	AssertOk(t, err, "Error creating security group")
 
 	// verify datapath has the security group
-	_, ok := dp.sgdb[objectKey(sg2.ObjectMeta)]
+	_, ok := dp.sgdb[objectKey(sg2.ObjectMeta, sg2.TypeMeta)]
 	Assert(t, ok, "Security group not found in datapath")
 
 	// update first sg
@@ -1003,7 +1013,7 @@ func TestTenantCreateDelete(t *testing.T) {
 	// create tenant
 	err := ag.CreateTenant(&tn)
 	AssertOk(t, err, "Error creating tenant")
-	tnt, err := ag.FindTenant(tn.ObjectMeta)
+	tnt, err := ag.FindTenant(tn.Name)
 	AssertOk(t, err, "Tenant was not found in DB")
 	Assert(t, tnt.Name == "testTenant", "Tenant names did not match", tnt)
 
@@ -1018,7 +1028,7 @@ func TestTenantCreateDelete(t *testing.T) {
 	// delete the network and verify its gone from db
 	err = ag.DeleteTenant(&tn)
 	AssertOk(t, err, "Error deleting network")
-	_, err = ag.FindTenant(tn.ObjectMeta)
+	_, err = ag.FindTenant(tn.Name)
 	Assert(t, err != nil, "Tenant was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
@@ -1045,7 +1055,7 @@ func TestTenantUpdate(t *testing.T) {
 	// create tenant
 	err := ag.CreateTenant(&tn)
 	AssertOk(t, err, "Error creating tenant")
-	tnt, err := ag.FindTenant(tn.ObjectMeta)
+	tnt, err := ag.FindTenant(tn.Name)
 	AssertOk(t, err, "Tenant was not found in DB")
 	Assert(t, tnt.Name == "updateTenant", "Tenant names did not match", tnt)
 
@@ -1428,16 +1438,27 @@ func TestNamespaceCreateDelete(t *testing.T) {
 	ns := netproto.Namespace{
 		TypeMeta: api.TypeMeta{Kind: "Namespace"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "testTenant",
-			Namespace: "default",
-			Name:      "testTenant",
+			Tenant: "testTenant",
+			Name:   "testTenant",
 		},
 	}
 
-	// create tenant
-	err := ag.CreateNamespace(&ns)
+	// create backing tenant
+	tn := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testTenant",
+		},
+	}
+	err := ag.CreateTenant(&tn)
 	AssertOk(t, err, "Error creating tenant")
-	tnt, err := ag.FindNamespace(ns.ObjectMeta)
+
+	existingNS := len(ag.ListNamespace())
+
+	// create namespace
+	err = ag.CreateNamespace(&ns)
+	AssertOk(t, err, "Error creating namespace")
+	tnt, err := ag.FindNamespace(ns.Tenant, ns.Name)
 	AssertOk(t, err, "Tenant was not found in DB")
 	Assert(t, tnt.Name == "testTenant", "Tenant names did not match", tnt)
 
@@ -1447,12 +1468,12 @@ func TestNamespaceCreateDelete(t *testing.T) {
 
 	// verify list api works.
 	nsList := ag.ListNamespace()
-	Assert(t, len(nsList) == 1, "Incorrect number of tenants")
+	Assert(t, len(nsList) == existingNS+1, "Incorrect number of namespace")
 
 	// delete the namespace and verify its gone from db
 	err = ag.DeleteNamespace(&ns)
 	AssertOk(t, err, "Error deleting network")
-	_, err = ag.FindTenant(ns.ObjectMeta)
+	_, err = ag.FindNamespace(ns.Tenant, ns.Name)
 	Assert(t, err != nil, "Tenant was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
@@ -1470,18 +1491,27 @@ func TestNamespaceUpdate(t *testing.T) {
 	ns := netproto.Namespace{
 		TypeMeta: api.TypeMeta{Kind: "Namespace"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "updateTenant",
-			Namespace: "updateTenant",
-			Name:      "updateTenant",
+			Tenant: "updateTenant",
+			Name:   "updateNamespace",
 		},
 	}
 
-	// create tenant
-	err := ag.CreateNamespace(&ns)
+	// create backing tenant
+	tn := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "updateTenant",
+		},
+	}
+	err := ag.CreateTenant(&tn)
+	AssertOk(t, err, "Error creating tenant")
+
+	// create namespace
+	err = ag.CreateNamespace(&ns)
 	AssertOk(t, err, "Error creating namespace")
-	tnt, err := ag.FindNamespace(ns.ObjectMeta)
-	AssertOk(t, err, "Tenant was not found in DB")
-	Assert(t, tnt.Name == "updateTenant", "Namespace names did not match", tnt)
+	namespace, err := ag.FindNamespace(ns.Tenant, ns.Name)
+	AssertOk(t, err, "Namespace was not found in DB")
+	Assert(t, namespace.Name == "updateNamespace", "Namespace names did not match", namespace)
 
 	nsSpec := netproto.NamespaceSpec{
 		Meta: &api.ObjectMeta{

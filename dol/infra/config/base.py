@@ -35,7 +35,7 @@ class ConfigObjectBase(objects.FrameworkObject):
                     items.append(str(item))
                 dict[key] = items
         return dict
-                
+
     def IsFilterMatch(self, filters):
         logger.verbose("IsFilterMatch(): Object %s" % self.GID())
         if filters == None:
@@ -54,7 +54,7 @@ class ConfigObjectBase(objects.FrameworkObject):
             fvalue = self.__dict__[attr]
             if isinstance(fvalue, objects.FrameworkFieldObject):
                 fvalue = fvalue.get()
-            
+
             if value.isdigit(): value = int(value)
             if value == 'None': value = None
             if value == 'True': value = True
@@ -102,7 +102,7 @@ class ConfigObjectBase(objects.FrameworkObject):
                      (utils.GetFunctionName(), self.__class__))
         assert(0)
         return
-        
+
     def Read(self):
         logger.error("Method %s not implemented by class: %s" %\
                      (utils.GetFunctionName(), self.__class__))
@@ -115,11 +115,11 @@ class ConfigObjectBase(objects.FrameworkObject):
 
     def TearDownTestcaseConfig(self, obj):
         return
-    
+
     def ShowTestcaseConfig(self, obj):
         logger.info("%s Config object :  %s" % (type(self).__name__, self.GID()))
         return
-    
+
     def CompareObjectFields(self, other, fields, lgh):
         return utils.CompareObjectFields(self, other, fields, lgh)
 
@@ -142,5 +142,5 @@ class AgentObjectBase:
         self.meta = AgentObjectMeta()
         self.meta.Name = name
         self.meta.Tenant = ten
-        self.meta.Namespace = ten
+        self.meta.Namespace = "default"
         return

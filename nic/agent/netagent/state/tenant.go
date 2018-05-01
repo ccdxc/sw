@@ -16,7 +16,7 @@ import (
 
 // CreateTenant creates a tenant
 func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
-	oldTn, err := na.FindTenant(tn.ObjectMeta)
+	oldTn, err := na.FindTenant(tn.ObjectMeta.Name)
 	if err == nil {
 		// check if the contents are same
 		if !proto.Equal(oldTn, tn) {
@@ -43,23 +43,41 @@ func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
 	}
 
 	// save it in db
-	key := objectKey(tn.ObjectMeta)
+	key := objectKey(tn.ObjectMeta, tn.TypeMeta)
 	na.Lock()
 	na.tenantDB[key] = tn
 	na.Unlock()
 	err = na.store.Write(tn)
+	if err != nil {
+		log.Errorf("Could not persist tenant object to the store. %v", err)
+		return err
+	}
 
-	return err
+	// Create a default namespace for every tenant
+	defaultNS := &netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: tn.Name,
+			Name:   "default",
+		},
+	}
+	return na.CreateNamespace(defaultNS)
 }
 
 // FindTenant finds a tenant in local db
-func (na *NetAgent) FindTenant(meta api.ObjectMeta) (*netproto.Tenant, error) {
+func (na *NetAgent) FindTenant(tenant string) (*netproto.Tenant, error) {
+	meta := api.ObjectMeta{
+		Name: tenant,
+	}
+	typeMeta := api.TypeMeta{
+		Kind: "Tenant",
+	}
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
 	// lookup the database
-	key := objectKey(meta)
+	key := objectKey(meta, typeMeta)
 	tn, ok := na.tenantDB[key]
 	if !ok {
 		return nil, fmt.Errorf("tenant not found %v", tn)
@@ -84,7 +102,7 @@ func (na *NetAgent) ListTenant() []*netproto.Tenant {
 
 // UpdateTenant updates a tenant
 func (na *NetAgent) UpdateTenant(tn *netproto.Tenant) error {
-	existingTn, err := na.FindTenant(tn.ObjectMeta)
+	existingTn, err := na.FindTenant(tn.ObjectMeta.Name)
 	if err != nil {
 		log.Errorf("Tenant %v not found", tn.ObjectMeta)
 		return err
@@ -96,7 +114,7 @@ func (na *NetAgent) UpdateTenant(tn *netproto.Tenant) error {
 	}
 
 	err = na.datapath.UpdateVrf(tn.Status.TenantID)
-	key := objectKey(tn.ObjectMeta)
+	key := objectKey(tn.ObjectMeta, tn.TypeMeta)
 	na.Lock()
 	na.tenantDB[key] = tn
 	na.Unlock()
@@ -110,7 +128,7 @@ func (na *NetAgent) DeleteTenant(tn *netproto.Tenant) error {
 		return errors.New("default tenants can not be deleted")
 	}
 
-	existingTenant, err := na.FindTenant(tn.ObjectMeta)
+	existingTenant, err := na.FindTenant(tn.ObjectMeta.Name)
 	if err != nil {
 		log.Errorf("Tenant %+v not found", tn.ObjectMeta)
 		return errors.New("tenant not found")
@@ -123,7 +141,7 @@ func (na *NetAgent) DeleteTenant(tn *netproto.Tenant) error {
 	}
 
 	// delete from db
-	key := objectKey(tn.ObjectMeta)
+	key := objectKey(tn.ObjectMeta, tn.TypeMeta)
 	na.Lock()
 	delete(na.tenantDB, key)
 	na.Unlock()
