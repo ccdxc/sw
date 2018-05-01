@@ -19,6 +19,7 @@ message EndpointSpec {
     string NetworkName  = 4;
     map<string,string> WorkloadAttributes = 5;
     repeated string SecurityGroups = 6;
+    string Interface = 7;
 }
 
 // endpoint status

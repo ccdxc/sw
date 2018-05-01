@@ -570,6 +570,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
+			Interface:    "default-uplink-1",
 		},
 		Status: netproto.EndpointStatus{
 			IPv4Address: "10.1.1.1/24",

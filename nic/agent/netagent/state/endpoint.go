@@ -102,8 +102,16 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 		}
 
 	} else {
-		uplinkCount, err := na.countIntfs("UPLINK")
-		pinnedUplink, err := na.findPinnedUplink(uplinkCount, ep.Status.IPv4Address)
+		var pinnedUplink string
+		if len(ep.Spec.Interface) > 0 {
+			pinnedUplink = ep.Spec.Interface
+		} else {
+			uplinkCount, err := na.countIntfs("UPLINK")
+			if err != nil {
+				return nil, err
+			}
+			pinnedUplink, err = na.findPinnedUplink(uplinkCount, ep.Status.IPv4Address)
+		}
 		uplink, ok := na.findIntfByName(pinnedUplink)
 		if !ok {
 			log.Errorf("could not find an uplink")
