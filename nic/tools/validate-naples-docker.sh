@@ -45,7 +45,7 @@ function create_networks {
 function create_nat_pools {
   NAT_POOL_URL="$NAPLES_AGENT_IP:9007/api/natpools/"
 
-  curl -d'{"kind":"NatPool","meta":{"name":"kingdom1-natpool","tenant":"default","namespace":"kingdom-1"},"spec":{"IPRange":"10.1.2.1-10.1.2.200"}}' -X POST -H "Content-Type: application/json" $NAT_POOL_URL
+  curl -d'{"kind":"NatPool","meta":{"name":"kingdom1-natpool","tenant":"default","namespace":"kingdom-1"},"spec":{"ip-range":"10.1.2.1-10.1.2.200"}}' -X POST -H "Content-Type: application/json" $NAT_POOL_URL
   validate_get "kingdom1-natpool" $NAT_POOL_URL
 
   echo "All NatPools created"

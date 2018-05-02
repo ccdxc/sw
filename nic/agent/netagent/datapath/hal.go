@@ -32,6 +32,9 @@ const (
 // ErrHALNotOK is returned by HAL gRPC Server on failed requests
 var ErrHALNotOK = errors.New("hal returned non zero error code")
 
+// ErrIPParse is returned on failing to parse hyphen separated IP Range.
+var ErrIPParse = errors.New("hal datapath could not parse the IP")
+
 // Kind holds the HAL Datapath kind. It could either be mock HAL or real HAL.
 type Kind string
 
@@ -135,6 +138,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		hal.Sgclient = halproto.NewNwSecurityClient(hal.client.ClientConn)
 		hal.Sessclient = halproto.NewSessionClient(hal.client.ClientConn)
 		hal.Tnclient = halproto.NewVrfClient(hal.client.ClientConn)
+		hal.Natclient = halproto.NewNatClient(hal.client.ClientConn)
 		haldp.Hal = hal
 		return &haldp, nil
 	}
@@ -148,6 +152,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		MockSgclient:    halproto.NewMockNwSecurityClient(hal.mockCtrl),
 		MockSessclient:  halproto.NewMockSessionClient(hal.mockCtrl),
 		MockTnclient:    halproto.NewMockVrfClient(hal.mockCtrl),
+		MockNatClient:   halproto.NewMockNatClient(hal.mockCtrl),
 	}
 
 	hal.Epclient = hal.MockClients.MockEpclient
@@ -158,6 +163,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 	hal.Sgclient = hal.MockClients.MockSgclient
 	hal.Sessclient = hal.MockClients.MockSessclient
 	hal.Tnclient = hal.MockClients.MockTnclient
+	hal.Natclient = hal.MockClients.MockNatClient
 	haldp.Hal = hal
 	haldp.Hal.setExpectations()
 	return &haldp, nil
@@ -198,6 +204,10 @@ func (hd *Hal) setExpectations() {
 	hd.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockTnclient.EXPECT().VrfUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockTnclient.EXPECT().VrfDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
+	hd.MockClients.MockNatClient.EXPECT().NatPoolCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockNatClient.EXPECT().NatPoolUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockNatClient.EXPECT().NatPoolDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 }
 
 func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {
@@ -1429,51 +1439,94 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Names
 	return nil
 }
 
-// ListInterfaces returns the lisg of lifs and uplinks from the datapath
-func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error) {
-	if hd.Kind == "hal" {
-		lifReq := &halproto.LifGetRequest{}
-		var uplinks halproto.InterfaceGetResponseMsg
-		lifReqMsg := &halproto.LifGetRequestMsg{
-			Request: []*halproto.LifGetRequest{
-				lifReq,
-			},
-		}
-
-		// ToDo Add lif checks once nic mgr is integrated
-		lifs, err := hd.Hal.Ifclient.LifGet(context.Background(), lifReqMsg)
-		if err != nil {
-			log.Errorf("Error getting lifs from the datapath. Err: %v", err)
-			return nil, nil, nil
-		}
-
-		// get all interfaces
-		ifReq := &halproto.InterfaceGetRequest{}
-		ifReqMsg := &halproto.InterfaceGetRequestMsg{
-			Request: []*halproto.InterfaceGetRequest{ifReq},
-		}
-		intfs, err := hd.Hal.Ifclient.InterfaceGet(context.Background(), ifReqMsg)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		// return only the uplinks
-		for _, intf := range intfs.Response {
-			if intf.Spec.Type == halproto.IfType_IF_TYPE_UPLINK {
-				uplinks.Response = append(uplinks.Response, intf)
-			}
-		}
-		return lifs, &uplinks, err
-	}
-
-	// ToDo Remove the List Mock prior to FCS
-	lifs, uplinks, err := generateMockHwState()
-	return lifs, uplinks, err
-}
-
 // CreateNatPool creates a NAT Pool in the datapath
 func (hd *Datapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
 
+	ipRange := strings.Split(np.Spec.IPRange, "-")
+	if len(ipRange) != 2 {
+		log.Errorf("could not parse IP Range from the NAT Pool. {%v}", np)
+		return ErrIPParse
+	}
+
+	startIP := net.ParseIP(ipRange[0])
+	if len(startIP) == 0 {
+		log.Errorf("could not parse IP from {%v}", startIP)
+		return ErrIPParse
+	}
+	endIP := net.ParseIP(ipRange[1])
+	if len(endIP) == 0 {
+		log.Errorf("could not parse IP from {%v}", endIP)
+		return ErrIPParse
+	}
+
+	lowIP := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(startIP),
+		},
+	}
+
+	highIP := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(endIP),
+		},
+	}
+
+	addrRange := &halproto.Address_Range{
+		Range: &halproto.AddressRange{
+			Range: &halproto.AddressRange_Ipv4Range{
+				Ipv4Range: &halproto.IPRange{
+					LowIpaddr:  &lowIP,
+					HighIpaddr: &highIP,
+				},
+			},
+		},
+	}
+
+	natPoolReqMsg := &halproto.NatPoolRequestMsg{
+		Request: []*halproto.NatPoolSpec{
+			{
+				KeyOrHandle: &halproto.NatPoolKeyHandle{
+					KeyOrHandle: &halproto.NatPoolKeyHandle_PoolKey{
+						PoolKey: &halproto.NatPoolKey{
+							VrfKh:  vrfKey,
+							PoolId: np.Status.NatPoolID,
+						},
+					},
+				},
+				Address: []*halproto.Address{
+					{
+						addrRange,
+					},
+				},
+			},
+		},
+	}
+
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Natclient.NatPoolCreate(context.Background(), natPoolReqMsg)
+		if err != nil {
+			log.Errorf("Error creating nat pool. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Natclient.NatPoolCreate(context.Background(), natPoolReqMsg)
+		if err != nil {
+			log.Errorf("Error creating nat pool. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -1541,6 +1594,48 @@ func (hd *Datapath) DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 func (hd *Datapath) DeleteNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
 
 	return nil
+}
+
+// ListInterfaces returns the lisg of lifs and uplinks from the datapath
+func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error) {
+	if hd.Kind == "hal" {
+		lifReq := &halproto.LifGetRequest{}
+		var uplinks halproto.InterfaceGetResponseMsg
+		lifReqMsg := &halproto.LifGetRequestMsg{
+			Request: []*halproto.LifGetRequest{
+				lifReq,
+			},
+		}
+
+		// ToDo Add lif checks once nic mgr is integrated
+		lifs, err := hd.Hal.Ifclient.LifGet(context.Background(), lifReqMsg)
+		if err != nil {
+			log.Errorf("Error getting lifs from the datapath. Err: %v", err)
+			return nil, nil, nil
+		}
+
+		// get all interfaces
+		ifReq := &halproto.InterfaceGetRequest{}
+		ifReqMsg := &halproto.InterfaceGetRequestMsg{
+			Request: []*halproto.InterfaceGetRequest{ifReq},
+		}
+		intfs, err := hd.Hal.Ifclient.InterfaceGet(context.Background(), ifReqMsg)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// return only the uplinks
+		for _, intf := range intfs.Response {
+			if intf.Spec.Type == halproto.IfType_IF_TYPE_UPLINK {
+				uplinks.Response = append(uplinks.Response, intf)
+			}
+		}
+		return lifs, &uplinks, err
+	}
+
+	// ToDo Remove the List Mock prior to FCS
+	lifs, uplinks, err := generateMockHwState()
+	return lifs, uplinks, err
 }
 
 func (hd *Datapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule) (*halproto.SecurityGroupPolicySpec, error) {

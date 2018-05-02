@@ -34,6 +34,8 @@ func (na *NetAgent) CreateNatPool(np *netproto.NatPool) error {
 		return err
 	}
 
+	// validate nat pool message
+
 	np.Status.NatPoolID, err = na.store.GetNextID(NatPoolID)
 
 	if err != nil {

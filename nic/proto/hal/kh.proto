@@ -272,7 +272,7 @@ message GftExactMatchFlowEntryKeyHandle {
 // NAT pool key object
 message NatPoolKey {
   VrfKeyHandle    vrf_kh  = 1 [(gogoproto.moretags) = "venice:ref"];    // VRF's key or handle
-  uint32          pool_id = 2;    // nat pool id
+  uint64          pool_id = 2;    // nat pool id
 }
 
 // NAT pool key/handle object
