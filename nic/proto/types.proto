@@ -352,7 +352,7 @@ message RuleMatch {
       ICMPAppInfo     icmp_info               = 2;     // Matching icmp based apps
       ICMPv6AppInfo   icmpv6_info             = 3;     // Matching icmpv6 based apps 
       RPCAppInfo      rpc_info                = 4;     // Matching rpc based apps
-      MSRPCAppInfo    msrpc_cinfo             = 5;    // Matching msrpc based apps
+      MSRPCAppInfo    msrpc_info              = 5;    // Matching msrpc based apps
       ESPInfo         esp_info                = 6;    // Matching esp based apps
     }
   }

@@ -8,6 +8,7 @@
 #define __NAT_POL_HPP__
 
 #include "sdk/ht.hpp"
+#include "nic/hal/src/utils/rule_match.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using acl::acl_ctx_t;
@@ -62,6 +63,7 @@ typedef struct nat_cfg_rule_action_s {
     hal_handle        dst_nat_pool;
 } nat_cfg_rule_action_t;
 
+#if 0
 typedef struct nat_cfg_rule_match_s {
     dllist_ctxt_t    src_addr_list;
     dllist_ctxt_t    dst_addr_list;
@@ -70,6 +72,7 @@ typedef struct nat_cfg_rule_match_s {
     dllist_ctxt_t    src_sg_list;
     dllist_ctxt_t    dst_sg_list;
 } nat_cfg_rule_match_t;
+#endif
 
 typedef struct nat_cfg_rule_key_s {
     rule_id_t    rule_id;
@@ -77,7 +80,7 @@ typedef struct nat_cfg_rule_key_s {
 
 typedef struct nat_cfg_rule_s {
     nat_cfg_rule_key_t       key;
-    nat_cfg_rule_match_t     match;
+    rule_match_t             match;
     nat_cfg_rule_action_t    action;
 
     // operational

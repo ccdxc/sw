@@ -119,23 +119,18 @@ message NatPoolGetResponseMsg {
   repeated NatPoolGetResponse    response = 1;     // batched get response
 }
 
+message NatRuleAction {
+  NatAction              src_nat_action  = 1;    // action related to the rule
+  NatAction              dst_nat_action  = 2;    // action related to the rule
+  kh.NatPoolKeyHandle    src_nat_pool    = 3;    // src NAT pool
+  kh.NatPoolKeyHandle    dst_nat_pool    = 4;    // dst NAT pool
+}
+
 // NatRuleSpec is the user intent for the NAT rule
 message NatRuleSpec {
-  uint64                         rule_id         = 1;    // rule id
-
-  // NAT rule match conditions
-  repeated types.IPAddressObj    src_address     = 2;    // source address(es)
-  repeated uint32                src_sg          = 3;    // source security group(s)
-  repeated types.IPAddressObj    dst_address     = 4;    // destination address(es)
-  repeated uint32                dst_sg          = 5;    // destination security group(s)
-  repeated types.L4PortRange     dst_port_range  = 6;    // dst port range
-  repeated types.L4PortRange     src_port_range  = 7;    // src port range
-
-  // NAT rule action related attributes
-  NatAction                      src_nat_action  = 8;    // action related to the rule
-  NatAction                      dst_nat_action  = 9;    // action related to the rule
-  kh.NatPoolKeyHandle            src_nat_pool    = 10;   // src NAT pool
-  kh.NatPoolKeyHandle            dst_nat_pool    = 11;   // dst NAT pool
+  uint64             rule_id    = 1;    // rule id
+  types.RuleMatch    match      = 2;    // match conditions 
+  NatRuleAction      action     = 3;    // action related to the rule 
 }
 
 // NatPolicySpec captures the NAT policy which is a group of NAT rules

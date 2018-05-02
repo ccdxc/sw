@@ -9,6 +9,7 @@
 #include "nic/hal/src/utils/addr_list.hpp"
 #include "nic/hal/src/utils/port_list.hpp"
 #include "nic/hal/src/utils/cfg_op_ctxt.hpp"
+#include "nic/hal/src/utils/rule_match.hpp"
 
 using acl::acl_ctx_t;
 using acl::acl_config_t;
@@ -22,7 +23,7 @@ namespace hal {
 //-----------------------------------------------------------------------------
 
 static hal_ret_t
-nat_cfg_rule_action_spec_extract (const nat::NatRuleSpec& spec,
+nat_cfg_rule_action_spec_extract (const nat::NatRuleAction& spec,
                                   nat_cfg_rule_action_t *action)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -32,126 +33,6 @@ nat_cfg_rule_action_spec_extract (const nat::NatRuleSpec& spec,
     // TODO - check for pools
     // action->src_nat_pool = spec.src_nat_pool();
     // action->dst_nat_pool = spec.src_nat_pool();
-
-    return ret;
-}
-
-//-----------------------------------------------------------------------------
-// Rule match routines
-//-----------------------------------------------------------------------------
-
-static inline void
-nat_cfg_rule_match_init (nat_cfg_rule_match_t *match)
-{
-    dllist_reset(&match->src_addr_list);
-    dllist_reset(&match->dst_addr_list);
-    dllist_reset(&match->src_port_list);
-    dllist_reset(&match->dst_port_list);
-    dllist_reset(&match->src_sg_list);
-    dllist_reset(&match->dst_sg_list);
-}
-
-static hal_ret_t
-nat_cfg_rule_match_dst_port_spec_handle (const nat::NatRuleSpec& spec,
-                                         nat_cfg_rule_match_t *match)
-{
-    hal_ret_t ret;
-
-    for (int i = 0; i < spec.dst_port_range_size(); i++) {
-        if ((ret = port_list_elem_l4portrange_spec_handle(
-                spec.dst_port_range(i), &match->dst_port_list)) != HAL_RET_OK)
-            return ret;
-    }
-    return HAL_RET_OK;
-}
-
-static hal_ret_t
-nat_cfg_rule_match_src_port_spec_handle (const nat::NatRuleSpec& spec,
-                                         nat_cfg_rule_match_t *match)
-{
-    hal_ret_t ret;
-
-    for (int i = 0; i < spec.src_port_range_size(); i++) {
-        if ((ret = port_list_elem_l4portrange_spec_handle(
-                spec.src_port_range(i), &match->src_port_list)) != HAL_RET_OK)
-            return ret;
-    }
-    return HAL_RET_OK;
-}
-
-static hal_ret_t
-nat_cfg_rule_match_port_spec_extract (const nat::NatRuleSpec& spec,
-                                       nat_cfg_rule_match_t *match)
-{
-    hal_ret_t ret;
-
-    if ((ret = nat_cfg_rule_match_src_port_spec_handle(
-            spec, match)) != HAL_RET_OK)
-        return ret;
-
-    if ((ret = nat_cfg_rule_match_dst_port_spec_handle(
-            spec, match)) != HAL_RET_OK)
-        return ret;
-
-    return ret;
-}
-
-static hal_ret_t
-nat_cfg_rule_match_dst_addr_spec_handle (const nat::NatRuleSpec& spec,
-                                         nat_cfg_rule_match_t *match)
-{
-    hal_ret_t ret;
-
-    for (int i = 0; i < spec.dst_address_size(); i++) {
-        if ((ret = addr_list_elem_ipaddressobj_spec_handle(
-                spec.dst_address(i), &match->dst_addr_list)) != HAL_RET_OK)
-            return ret;
-    }
-    return HAL_RET_OK;
-}
-
-static hal_ret_t
-nat_cfg_rule_match_src_addr_spec_handle (const nat::NatRuleSpec& spec,
-                                         nat_cfg_rule_match_t *match)
-{
-    hal_ret_t ret;
-
-    for (int i = 0; i < spec.src_address_size(); i++) {
-        if ((ret = addr_list_elem_ipaddressobj_spec_handle(
-                spec.src_address(i), &match->src_addr_list)) != HAL_RET_OK)
-            return ret;
-    }
-    return HAL_RET_OK;
-}
-
-static hal_ret_t
-nat_cfg_rule_match_addr_spec_extract (const nat::NatRuleSpec& spec,
-                                      nat_cfg_rule_match_t *match)
-{
-    hal_ret_t ret;
-
-    if ((ret = nat_cfg_rule_match_src_addr_spec_handle(
-            spec, match)) != HAL_RET_OK)
-        return ret;
-
-    if ((ret = nat_cfg_rule_match_dst_addr_spec_handle(
-            spec, match)) != HAL_RET_OK)
-        return ret;
-
-    return ret;
-}
-
-static hal_ret_t
-nat_cfg_rule_match_spec_extract (const nat::NatRuleSpec& spec,
-                                 nat_cfg_rule_match_t *match)
-{
-    hal_ret_t ret = HAL_RET_OK;
-
-    if ((ret = nat_cfg_rule_match_addr_spec_extract(spec, match)) != HAL_RET_OK)
-        return ret;
-
-    if ((ret = nat_cfg_rule_match_port_spec_extract(spec, match)) != HAL_RET_OK)
-        return ret;
 
     return ret;
 }
@@ -175,7 +56,7 @@ nat_cfg_rule_free (nat_cfg_rule_t *rule)
 static inline void
 nat_cfg_rule_init (nat_cfg_rule_t *rule)
 {
-    nat_cfg_rule_match_init(&rule->match);
+    rule_match_init(&rule->match);
     dllist_reset(&rule->list_ctxt);
 }
 
@@ -224,12 +105,12 @@ nat_cfg_rule_data_spec_extract (const nat::NatRuleSpec& spec,
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    if ((ret = nat_cfg_rule_match_spec_extract(
-           spec, &rule->match)) != HAL_RET_OK)
+    if ((ret = rule_match_spec_extract(
+           spec.match(), &rule->match)) != HAL_RET_OK)
         return ret;
 
     if ((ret = nat_cfg_rule_action_spec_extract(
-           spec, &rule->action)) != HAL_RET_OK)
+           spec.action(), &rule->action)) != HAL_RET_OK)
         return ret;
 
     return ret;
@@ -333,8 +214,9 @@ rule_lib_alloc (void)
 }
 
 hal_ret_t
-rule_lib_handle (nat_cfg_rule_match_t *match, const acl_ctx_t **acl_ctx)
+rule_lib_handle (rule_match_t *match, const acl_ctx_t **acl_ctx)
 {
+#if 0
     int prio = 0;
     ipv4_rule_t *rule;
     hal_ret_t ret = HAL_RET_OK;
@@ -392,6 +274,8 @@ rule_lib_handle (nat_cfg_rule_match_t *match, const acl_ctx_t **acl_ctx)
         }
     }
     return ret;
+#endif
+    return HAL_RET_OK;
 }
 
 static inline const char *
