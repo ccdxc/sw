@@ -1,0 +1,35 @@
+# .bashrc
+
+# User specific aliases and functions
+
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+        . /etc/bashrc
+fi
+
+# setup the locale
+localedef -i en_US -f UTF-8 en_US.UTF-8
+
+# setup all convenientn environment variables
+export PYTHON=/usr/bin/python3
+export NIC_DIR=/naples/nic
+export HAL_CONFIG_PATH=$NIC_DIR/conf/
+export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:$HAL_CONFIG_PATH/sdk:$HAL_CONFIG_PATH/sdk/external:/usr/local/lib:$LD_LIBRARY_PATH
+export MODEL_ZMQ_TYPE_TCP=1
+export ZMQ_SOC_DIR=$NIC_DIR
+export LC_ALL="en_US.UTF-8"
+export LANG="en_US.UTF-8"
+export PYTHONPATH=.:$PYTHONPATH
+export LD_LIBRARY_PATH=$NIC_DIR/lib:$LD_LIBRARY_PATH
+export PATH=$PATH\:$NIC_DIR/bin
+ulimit -c unlimited
+
+# wrapper for our table debug CLI
+function debug_cli
+{
+  $PYTHON $NIC_DIR/cli/debugshell.py repl
+}

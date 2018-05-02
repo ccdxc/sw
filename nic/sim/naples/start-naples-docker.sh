@@ -17,6 +17,6 @@ echo "Loading docker image into registry ..."
 docker load --input naples-docker-$VER.tgz
 
 echo "Running the NAPLES container ..."
-docker run -d --name naples-$VER --privileged -ti -p $AGENT_PORT:$AGENT_PORT --mount type=bind,source=$NAPLES_DIR,target=/naples/data naples:v1
+docker run --rm -d --name naples-$VER --privileged -ti -p $AGENT_PORT:$AGENT_PORT --mount type=bind,source=$NAPLES_DIR,target=/naples/data naples:v1
 
 echo "NAPLES bring up completed"

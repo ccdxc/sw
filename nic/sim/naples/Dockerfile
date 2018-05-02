@@ -13,8 +13,14 @@ RUN yum install -y \
 RUN yum install -y \
     python36u \
     python36u-pip \
+    gdb \
 &&  yum clean all
 
+RUN ln -s /usr/bin/python3.6 /usr/bin/python3
+RUN ln -s /usr/bin/pip3.6 /usr/bin/pip3
+RUN pip3 install click click_repl
+
 ADD nic.tgz /naples/
+COPY bashrc_sim /root/.bashrc
 
 CMD ["/naples/nic/tools/start-naples.sh"]
