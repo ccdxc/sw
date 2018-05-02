@@ -61,8 +61,11 @@ func TestPrio(t *testing.T) {
 	conn.EXPECT().Write([]byte(fmt.Sprintf("<141>1 2018-02-12T16:24:52-08:00 host1 app1 %d msg1 [id1 k1=\"v1\"] noop\n", pid))).Return(5, nil).Times(1)
 	s.Notice("msg1", StrData{"id1": {"k1": "v1"}}, "noop")
 
-	conn.EXPECT().Write([]byte(fmt.Sprintf("<141>1 2018-02-12T16:24:52-08:00 host1 app1 %d msg1 - noop\n", pid))).Return(5, nil).Times(1)
-	s.Notice("msg1", nil, "noop")
+	conn.EXPECT().Write([]byte(fmt.Sprintf("<137>1 2018-02-12T16:24:52-08:00 host1 app1 %d msg1 - noop\n", pid))).Return(5, nil).Times(1)
+	s.Alert("msg1", nil, "noop")
+
+	conn.EXPECT().Write([]byte(fmt.Sprintf("<140>1 2018-02-12T16:24:52-08:00 host1 app1 %d msg1 - noop\n", pid))).Return(5, nil).Times(1)
+	s.Warning("msg1", nil, "noop")
 
 	conn.EXPECT().Close().Times(1)
 	s.Close()

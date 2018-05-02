@@ -17,6 +17,7 @@
 		endpoint.proto
 		eplearn.proto
 		event.proto
+		fwlog.proto
 		gft.proto
 		interface.proto
 		internal.proto
@@ -254,6 +255,7 @@
 		EndpointEvent
 		PortEvent
 		EventResponse
+		FWEvent
 		GftEthFields
 		GftHeaders
 		GftHeaderFields
