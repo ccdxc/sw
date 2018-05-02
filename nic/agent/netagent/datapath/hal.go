@@ -769,6 +769,19 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		},
 	}
 
+	gwIP := net.ParseIP(nw.Spec.IPv4Gateway)
+	if len(gwIP) == 0 {
+		log.Errorf("could not parse IP from {%v}", gwIP)
+		return ErrIPParse
+	}
+
+	halGwIP := &halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(gwIP),
+		},
+	}
+
 	if len(nw.Spec.IPv4Subnet) != 0 {
 		ip, net, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
 		if err != nil {
@@ -796,6 +809,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 
 		halNw := halproto.NetworkSpec{
 			KeyOrHandle: nwKey,
+			GatewayIp:   halGwIP,
 		}
 
 		halNwReq := halproto.NetworkRequestMsg{
