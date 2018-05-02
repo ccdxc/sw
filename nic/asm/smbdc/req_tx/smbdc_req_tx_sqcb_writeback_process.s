@@ -10,6 +10,11 @@ struct smbdc_req_tx_s4_t0_k k;
 #define IN_P t0_s2s_writeback_info
 #define IN_TO_S4_P to_s4_to_stage
 
+#define K_RDMA_CQ_LIF     CAPRI_KEY_RANGE(IN_TO_S4_P, rdma_cq_lif_sbit0_ebit2, rdma_cq_lif_sbit11_ebit11)
+#define K_RDMA_CQ_QTYPE   CAPRI_KEY_FIELD(IN_TO_S4_P, rdma_cq_qtype)
+#define K_RDMA_CQ_QID     CAPRI_KEY_RANGE(IN_TO_S4_P, rdma_cq_qid_sbit0_ebit3, rdma_cq_qid_sbit20_ebit23)
+#define K_RDMA_CQ_RING_ID CAPRI_KEY_FIELD(IN_TO_S4_P, rdma_cq_ring_id)
+
 %%
 
 .align
@@ -36,7 +41,7 @@ smbdc_req_tx_sqcb_writeback_process:
     tblmincri.c5   RDMA_CQ_PROXY_C_INDEX, d.rdma_cq_log_num_wqes, 1 //BD Slot
 
     //prepare doorbell to set RDMA CQ's cindex. r5 for db_addr and r6 for db_data
-    PREPARE_DOORBELL_WRITE_CINDEX(d.rdma_cq_lif, d.rdma_cq_qtype, d.rdma_cq_qid, d.rdma_cq_ring_id, RDMA_CQ_PROXY_C_INDEX, r5, r6)
+    PREPARE_DOORBELL_WRITE_CINDEX(K_RDMA_CQ_LIF, K_RDMA_CQ_QTYPE, K_RDMA_CQ_QID, K_RDMA_CQ_RING_ID, RDMA_CQ_PROXY_C_INDEX, r5, r6)
     phvwr          p.db_data, r6
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_ID_RDMA_CQ)
     DMA_HBM_PHV2MEM_SETUP(r6, db_data, db_data, r5)

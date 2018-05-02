@@ -74,19 +74,10 @@ struct sqcb0_t {
     sq_unack_pindex               : 16;
     sq_wqe_context_base_addr      : 34;
 
-    //rdma cq
-    //assumption: HBM resident
-    rdma_cq_base_addr             : 34;
-    rdma_cq_log_wqe_size          : 5;
-    rdma_cq_log_num_wqes          : 5;
-    rdma_cq_msn                   : 24;
+    //rdma proxy cq
     rdma_cq_processing_in_prog    : 1;
     rdma_cq_processing_busy       : 1;
-    rdma_cq_rsvd_flags            : 6;
-    rdma_cq_lif                   : 12;
-    rdma_cq_qtype                 : 3;
-    rdma_cq_qid                   : 24;
-    rdma_cq_ring_id               : 3;
+    rdma_cq_log_num_wqes          : 5;
 
     //smbdc cq
     cqcb_addr                     : 34;
@@ -97,7 +88,7 @@ struct sqcb0_t {
     log_num_wqes                  : 5;  // RO
     sq_in_hbm                     : 1;  // RO
     ring_empty_sched_eval_done    : 1;  // RW S0
-    pad2                          : 32;
+    pad2                          : 143;
 };
 
 #define NUM_ROWS                      7
@@ -131,10 +122,27 @@ struct sqcb2_t {
     pad                           : 318;
 };
 
+struct sqcb3_t {
+    //rdma cq
+    //assumption: HBM resident
+    rdma_cq_base_addr             : 34;
+    rdma_cq_log_wqe_size          : 5;
+    rdma_cq_log_num_wqes          : 5;
+    rdma_cq_msn                   : 24;
+    rdma_cq_rsvd_flags            : 6;
+    rdma_cq_lif                   : 12;
+    rdma_cq_qtype                 : 3;
+    rdma_cq_qid                   : 24;
+    rdma_cq_ring_id               : 3;
+
+    pad                           : 396;
+};
+
 struct sqcb_t {
     struct sqcb0_t sqcb0;
     struct sqcb1_t sqcb1;
     struct sqcb2_t sqcb2;
+    struct sqcb3_t sqcb3;
 };
 
 #endif //__SQCB_H

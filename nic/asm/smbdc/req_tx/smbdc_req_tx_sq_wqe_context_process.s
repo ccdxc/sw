@@ -5,16 +5,16 @@
 
 struct req_tx_phv_t p;
 struct sq_wqe_context_aligned_t d;
-struct smbdc_req_tx_s2_t0_k k;
+struct smbdc_req_tx_s3_t0_k k;
 
 #define IN_P t0_s2s_rdma_cqe_to_wqe_context_info
-#define IN_TO_S2_P to_s2_to_stage
+#define IN_TO_S3_P to_s3_to_stage
 
 #define TO_CQCB_INFO_P to_s2s_rdma_cqcb_info
 #define TO_S4_P to_s4_to_stage
 
 #define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit7, msn_sbit16_ebit23)
-#define K_CQCB_ADDR CAPRI_KEY_RANGE(IN_TO_S2_P, cqcb_addr_sbit0_ebit31, cqcb_addr_sbit32_ebit33)
+#define K_CQCB_ADDR CAPRI_KEY_RANGE(IN_TO_S3_P, cqcb_addr_sbit0_ebit31, cqcb_addr_sbit32_ebit33)
 
 
 %%

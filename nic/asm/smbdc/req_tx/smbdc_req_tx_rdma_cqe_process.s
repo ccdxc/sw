@@ -5,7 +5,7 @@
 
 struct req_tx_phv_t p;
 struct cqwqe_t d;
-struct smbdc_req_tx_s1_t0_k k;
+struct smbdc_req_tx_s2_t0_k k;
 
 #define CQE_TO_WQE_CTXT_P t0_s2s_rdma_cqe_to_wqe_context_info
 

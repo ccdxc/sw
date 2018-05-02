@@ -9,10 +9,12 @@ struct smbdc_req_tx_s0_t0_k k;
 
 #define SQCB_TO_WQE_P t0_s2s_sqcb_to_wqe_info
 #define TO_RDMA_CQE_P t0_s2s_rdma_cqe_info
+#define TO_RDMA_PROXY_CQCB_P t0_s2s_rdma_proxy_cqcb_info
 
 %%
     .param    smbdc_req_tx_wqe_process
     .param    smbdc_req_tx_rdma_cqe_process
+    .param    smbdc_req_tx_rdma_proxy_cqcb_process
 
 .align
 smbdc_req_tx_sqcb_process:
@@ -77,10 +79,6 @@ smbdc_req_tx_sqcb_process:
         seq        c3, RDMA_CQ_PROXY_C_INDEX, RDMA_CQ_PROXY_P_INDEX //BD Slot
         bcf        [c3], exit
 
-        add        r1, r0, RDMA_CQ_PROXY_C_INDEX
-        sll        r2, r1, d.rdma_cq_log_wqe_size
-        add        r2, r2, d.rdma_cq_base_addr
-
         #in_prog flag seems to be un-necessary as of now. will cleanup later
         tblwr      d.{rdma_cq_processing_in_prog...rdma_cq_processing_busy}, 0x3
 
@@ -90,9 +88,12 @@ smbdc_req_tx_sqcb_process:
         sll        r3, r1, LOG_WQE_CONTEXT_SIZE
         add        r3, r3, d.sq_wqe_context_base_addr
 
-        CAPRI_SET_FIELD2(TO_RDMA_CQE_P, wqe_context_addr, r3)
+        SQCB3_ADDR_GET(r2)
 
-        CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_rdma_cqe_process, r2)
+        CAPRI_SET_FIELD2(TO_RDMA_PROXY_CQCB_P, wqe_context_addr, r3)
+        CAPRI_SET_FIELD2(TO_RDMA_PROXY_CQCB_P, rdma_cq_proxy_cindex, RDMA_CQ_PROXY_C_INDEX)
+
+        CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, smbdc_req_tx_rdma_proxy_cqcb_process, r2)
 
         nop.e
         nop

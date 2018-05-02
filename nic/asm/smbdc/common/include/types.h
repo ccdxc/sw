@@ -14,6 +14,9 @@
 #define SQCB2_ADDR_GET(_r) \
     add     _r, (2 * CB_UNIT_SIZE_BYTES), k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;
 
+#define SQCB3_ADDR_GET(_r) \
+    add     _r, (3 * CB_UNIT_SIZE_BYTES), k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;
+
 //RQCB organization
 //0-256B RQCB0..RQCB3
 //256-320B RESP_RX_STATS
