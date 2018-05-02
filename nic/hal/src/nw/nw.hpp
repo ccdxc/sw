@@ -175,6 +175,7 @@ network_get_ht_cb (void *ht_entry, void *ctxt)
     // fill config spec of this vrf
     rsp->mutable_spec()->mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
     rsp->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
+    rsp->mutable_status()->set_nw_handle(nw->hal_handle);
     rsp->set_api_status(types::API_STATUS_OK);
 
     // always return false here, so that we walk through all hash table

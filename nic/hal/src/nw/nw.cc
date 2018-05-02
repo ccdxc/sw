@@ -1097,7 +1097,9 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
     }
 
     // fill config spec of this vrf
+    response->mutable_spec()->mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
     response->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
+    response->mutable_status()->set_nw_handle(nw->hal_handle);
 
     response->set_api_status(types::API_STATUS_OK);
 	HAL_API_STATS_INC(HAL_API_NETWORK_GET_SUCCESS);
