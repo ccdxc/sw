@@ -34,8 +34,9 @@ hal_ret_t
 hal_stats_init_cb (hal_cfg_t *hal_cfg)
 {
 
-    // no stats functionality in sim mode
-    if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM) {
+    // no stats functionality in sim and rtl mode
+    if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM ||
+        hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_RTL) {
         return HAL_RET_OK;
     }
 

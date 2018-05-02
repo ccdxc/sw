@@ -2,6 +2,7 @@
 
 set -e 
 set -x
+set -o pipefail
 
 cd `dirname $0`
 cd `/bin/pwd`
@@ -51,8 +52,8 @@ do
     cd $ASIC_GEN/capri/verif/top/test
     pcfg cap_top_stream_basic.cfg $CFGFILES -i $ASIC_SRC/capri/verif/top/cfg $ASIC_SRC/capri/verif/common/pknobs $ASIC_SRC/capri/verif/pb/cfg/gen -o $PWD
     export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ASIC_GEN}/capri/verif/common/manifest:${ASIC_GEN}/capri/model/cap_top:${ASIC_GEN}/capri/verif/apis:${ASIC_SRC}/capri/model/capsim-gen/lib"
-    ./cap_sam +plog=info +PLOG_MAX_QUIT_COUNT=0 +model_debug=model_debug.json +CPP_TESTNAME=cap_top_stream_test -f sknobs.out +sam_only=1 +plog_add_scope=csr | tee $RUN_LOG
-    cat $RUN_LOG | perl -ne 'if (/inside cap_pb_eos_sta/) {exit;} else {print $_;}' > $PRE_EOS_LOG
+    ./cap_sam +plog=info +PLOG_MAX_QUIT_COUNT=0 +model_debug=model_debug.json +CPP_TESTNAME=cap_top_stream_test -f sknobs.out +sam_only=1 +plog_add_scope=csr +stream_test=1 | tee $RUN_LOG
+    cat $RUN_LOG | perl -ne 'if (/inside cap_pb_eos_sta/ || $seen) {$seen = 1} else {print $_;}' > $PRE_EOS_LOG
     grep "csr.*write.*byte.*cap0.pb\|inside.*pb" $PRE_EOS_LOG > $PB_LOG
 
     cd $NIC_DIR
