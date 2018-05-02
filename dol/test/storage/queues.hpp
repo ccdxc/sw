@@ -35,12 +35,12 @@ void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
                                uint32_t acc_scale_test_num_true_chaining_tests);
 int arm_queues_setup();
 
-int pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, 
-                     uint32_t roce_qid, dp_mem_t *mem, 
-                     uint32_t num_entries, uint32_t entry_size);
-int pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype,
-                     uint32_t roce_qid, dp_mem_t *mem,
-                     uint32_t num_entries, uint32_t entry_size,
+int pvm_roce_sq_init(uint16_t rsq_lif, uint16_t rsq_qtype, uint32_t rsq_qid, 
+                 uint16_t rrq_lif, uint16_t rrq_qtype, uint32_t rrq_qid, 
+                 dp_mem_t *mem, uint32_t num_entries, uint32_t entry_size,
+                 uint64_t rrq_base_pa, uint8_t post_buf);
+int pvm_roce_cq_init(uint16_t rcq_lif, uint16_t rcq_qtype, uint32_t rcq_qid, 
+                     dp_mem_t *mem, uint32_t num_entries, uint32_t entry_size,
                      uint64_t xlate_addr);
 
 dp_mem_t *nvme_sq_consume_entry(uint16_t qid, uint16_t *index);

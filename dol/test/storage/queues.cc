@@ -1089,8 +1089,10 @@ arm_queues_setup() {
 
 
 int
-pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid, 
-                 dp_mem_t *mem, uint32_t num_entries, uint32_t entry_size) {
+pvm_roce_sq_init(uint16_t rsq_lif, uint16_t rsq_qtype, uint32_t rsq_qid, 
+                 uint16_t rrq_lif, uint16_t rrq_qtype, uint32_t rrq_qid, 
+                 dp_mem_t *mem, uint32_t num_entries, uint32_t entry_size,
+                 uint64_t rrq_base_pa, uint8_t post_buf) {
 
     uint32_t i = pvm_last_sq;
     // Initialize the queue in the DOL enviroment
@@ -1105,8 +1107,9 @@ pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
     if (qstate_if::setup_roce_sq_state(pvm_lif, SQ_TYPE, i, (char *) kPvmRoceSqHandler, 
                                        kDefaultTotalRings, kDefaultHostRings, 
                                        num_entries, pvm_sqs[i].mem->pa(),
-                                       entry_size, false, 0, 0, 0, 
-                                       roce_lif, roce_qtype, roce_qid) < 0) {
+                                       entry_size, true, rrq_lif, rrq_qtype, rrq_qid,
+                                       rsq_lif, rsq_qtype, rsq_qid, rrq_base_pa, 
+                                       post_buf) < 0) {
       printf("Failed to setup PVM ROCE SQ %d state \n", i);
       return -1;
     }
@@ -1115,7 +1118,7 @@ pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
 }
 
 int
-pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid, 
+pvm_roce_cq_init(uint16_t rcq_lif, uint16_t rcq_qtype, uint32_t rcq_qid, 
                  dp_mem_t *mem, uint32_t num_entries, uint32_t entry_size,
                  uint64_t xlate_addr) {
 
@@ -1132,7 +1135,7 @@ pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
     if (qstate_if::setup_roce_cq_state(pvm_lif, CQ_TYPE, i, (char *) kPvmRoceCqHandler, 
                                        kDefaultTotalRings, kDefaultHostRings, 
                                        num_entries, pvm_cqs[i].mem->pa(), entry_size, 
-                                       xlate_addr, roce_lif, roce_qtype, roce_qid) < 0) {
+                                       xlate_addr, rcq_lif, rcq_qtype, rcq_qid) < 0) {
       printf("Failed to setup PVM ROCE CQ %d state \n", i);
       return -1;
     }

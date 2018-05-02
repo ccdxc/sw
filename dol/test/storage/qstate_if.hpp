@@ -40,7 +40,8 @@ int setup_roce_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                         uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
                         uint64_t base_addr, uint64_t entry_size, bool rrq_valid, 
                         uint16_t rrq_lif, uint8_t rrq_qtype, uint32_t rrq_qid, 
-                        uint16_t rsq_lif, uint8_t rsq_qtype, uint32_t rsq_qid);
+                        uint16_t rsq_lif, uint8_t rsq_qtype, uint32_t rsq_qid, 
+                        uint64_t rrq_base_pa, uint8_t post_buf);
 
 int setup_roce_cq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                         uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,

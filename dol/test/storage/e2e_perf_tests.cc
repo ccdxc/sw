@@ -23,7 +23,6 @@
 #include "dol/test/storage/tests.hpp"
 
 extern dp_mem_t *initiator_rcv_buf_va;
-extern dp_mem_t *target_rcv_buf_va;
 extern bool rdma_ring_db;
 extern size_t tcid;
 
@@ -125,12 +124,9 @@ int test_run_perf_rdma_e2e_write() {
   // Save the rolling write data buffer
   rolling_write_data_buf = rdma_get_target_write_data_buf();
 
-  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
+  // Post the Initiator buffers back so that RDMA can reuse them. 
   initiator_rcv_buf_va->line_set(iters_comp);
-  target_rcv_buf_va->line_set(iters_comp);
   for(uint32_t i = 0; i < num_iter; i++) {
-    PostTargetRcvBuf1();
-    IncrTargetRcvBufPtr();
     PostInitiatorRcvBuf1();
     IncrInitiatorRcvBufPtr();
   }

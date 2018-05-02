@@ -57,7 +57,8 @@ check_buf_post:
                 d.{dst_lif...dst_qaddr}
 
    // Setup the R2N buffer to post using mem2mem DMA in DMA commands 1 & 2
-   R2N_BUF_POST_SETUP(d.handle)
+   R2N_BUF_POST_SETUP_CMD(d.handle)
+
    
    // Set the program address and table0 address based on the destination passed 
    // in the WQE to post the R2N buffer to ROCE RQ

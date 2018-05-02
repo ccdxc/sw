@@ -60,6 +60,8 @@
     k.{storage_kivec1_device_addr_sbit0_ebit7...storage_kivec1_device_addr_sbit32_ebit33}
 #define STORAGE_KIVEC1_ROCE_CQ_NEW_CMD          \
     k.storage_kivec1_roce_cq_new_cmd
+#define STORAGE_KIVEC1_ROCE_POST_BUF            \
+    k.storage_kivec1_roce_post_buf
 
 #define STORAGE_KIVEC2_SSD_Q_NUM                \
     k.storage_kivec2_ssd_q_num
@@ -835,12 +837,19 @@
 // Setup the destination of the mem2mem DMA into DMA cmd 2 (just fill
 // the size, address will be filled by the push operation). 
 //
-#define R2N_BUF_POST_SETUP(_addr)                                       \
-   sub      r4, _addr, R2N_BUF_NVME_BE_CMD_OFFSET;                      \
-   addi     r5, r0, ROCE_RQ_WQE_SIZE;                                   \
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r4, r5, r0, r0, dma_m2m_1) \
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_2) \
+#define _R2N_BUF_POST_SETUP(_buf)                                         \
+   addi     r5, r0, ROCE_RQ_WQE_SIZE;                                     \
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, _buf, r5, r0, r0, dma_m2m_1) \
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_2)   \
+
+#define R2N_BUF_POST_SETUP_CMD(_addr)                                     \
+   sub      r4, _addr, R2N_BUF_NVME_BE_CMD_OFFSET;                        \
+   _R2N_BUF_POST_SETUP(r4)                                                \
    
+#define R2N_BUF_POST_SETUP_STATUS(_addr)                                  \
+   sub      r4, _addr, R2N_BUF_STATUS_BUF_OFFSET;                         \
+   _R2N_BUF_POST_SETUP(r4)                                                \
+
 // Setup the compression data buffer DMA based on flat source buffer 
 // and destination SGL (processing one SGL entry in this macro).
 // Notes: These GPRs are used for input/output to/from this macro

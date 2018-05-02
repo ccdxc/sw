@@ -166,13 +166,11 @@ header_type roce_rq_cb_t {
     p_ndx	: 16;	// Producer Index
     c_ndx	: 16;	// Consumer Index
     extra_rings	: 160;	// Additional rings used by ROCE RQ
-    base_addr	: 64;	// Base address of queue entries
-    rsvd0	: 72;	// Data used be ROCE internally
-    pmtu	: 5;	// PMTU size (power of 2 of this value)
+    base_addr	: 32;	// Base address of queue entries
     page_size	: 5;	// Size of each page (power of 2 of this value)
     entry_size	: 5;	// Size of each WQE (power of 2 of this value)
     num_entries	: 5;	// Number of WQE (power of 2 of this value)
-    pad		: 100;	// Align to 64 bytes
+    pad		: 209;	// Align to 64 bytes
   }
 }
 
@@ -207,7 +205,9 @@ header_type pvm_roce_sq_cb_t {
     rsq_lif	: 11;	// PVM's R2N LIF number
     rsq_qtype	: 3;	// PVM's R2N LIF type (within the LIF)
     rsq_qid	: 24;	// PVM's R2N queue number (within the LIF)
-    pad		: 150;	// Align to 64 bytes
+    rrq_base	: 34;	// ROCE RQ queue base address
+    post_buf	: 1;	// Whether a buffer needs to be posted back on ACK
+    pad		: 115;	// Align to 64 bytes
   }
 }
 
@@ -607,7 +607,9 @@ header_type storage_kivec1_t {
     src_qaddr		: 34;	// Source queue state address
     device_addr		: 34;	// Address of the consumer index in the SSD qstate (OR)
 				// Barco ring address
+				// ROCE RQ base address
     roce_cq_new_cmd	: 1;	// If ROCE CQ entry is a new commmand
+    roce_post_buf	: 1;	// Whether a buffer needs to be posted back on ACK
   }
 }
 
@@ -799,6 +801,8 @@ header_type storage_kivec5_t {
   modify_field(sq_cb.rsq_lif, rsq_lif);			\
   modify_field(sq_cb.rsq_qtype, rsq_qtype);		\
   modify_field(sq_cb.rsq_qid, rsq_qid);			\
+  modify_field(sq_cb.rrq_base, rrq_base);		\
+  modify_field(sq_cb.post_buf, post_buf);		\
 
 #define PVM_ROCE_SQ_CB_COPY(sq_cb)			\
   PVM_ROCE_SQ_CB_COPY_STAGE0(sq_cb)			\
@@ -810,8 +814,6 @@ header_type storage_kivec5_t {
   modify_field(rq_cb.c_ndx, c_ndx);			\
   modify_field(rq_cb.extra_rings, extra_rings);		\
   modify_field(rq_cb.base_addr, base_addr);		\
-  modify_field(rq_cb.rsvd0, rsvd0);			\
-  modify_field(rq_cb.pmtu, pmtu);			\
   modify_field(rq_cb.page_size, page_size);		\
   modify_field(rq_cb.entry_size, entry_size);		\
   modify_field(rq_cb.num_entries, num_entries);		\
@@ -881,6 +883,8 @@ header_type storage_kivec5_t {
   modify_field(scratch.src_qid, kivec.src_qid);				\
   modify_field(scratch.src_qaddr, kivec.src_qaddr);			\
   modify_field(scratch.device_addr, kivec.device_addr);			\
+  modify_field(scratch.roce_cq_new_cmd, kivec.roce_cq_new_cmd);		\
+  modify_field(scratch.roce_post_buf, kivec.roce_post_buf);	        \
 
 #define STORAGE_KIVEC2_USE(scratch, kivec)				\
   modify_field(scratch.ssd_q_num, kivec.ssd_q_num);			\

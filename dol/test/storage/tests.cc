@@ -2150,12 +2150,8 @@ int test_run_rdma_e2e_write() {
   // Save the rolling write data buffer
   rolling_write_data_buf = rdma_get_target_write_data_buf();
 
-  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
-  PostTargetRcvBuf1();
+  // Post the Initiator buffers back so that RDMA can reuse them. 
   PostInitiatorRcvBuf1();
-
-  // Increment the Buffer pointers
-  IncrTargetRcvBufPtr();
   IncrInitiatorRcvBufPtr();
 
   return rc;
@@ -2227,12 +2223,8 @@ int test_run_rdma_e2e_read() {
     printf("Failure in retriving status \n");
   }
 
-  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
-  PostTargetRcvBuf1();
+  // Post the Initiator buffers back so that RDMA can reuse them. 
   PostInitiatorRcvBuf1();
-
-  // Increment the Buffer pointers
-  IncrTargetRcvBufPtr();
   IncrInitiatorRcvBufPtr();
 
   return rc;
@@ -2305,12 +2297,8 @@ int test_run_rdma_lif_override() {
     printf("Failure in retriving status \n");
   }
 
-  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
-  PostTargetRcvBuf1();
+  // Post the Initiator buffers back so that RDMA can reuse them. 
   PostInitiatorRcvBuf1();
-
-  // Increment the Buffer pointers
-  IncrTargetRcvBufPtr();
   IncrInitiatorRcvBufPtr();
 
   return rc;
@@ -2431,12 +2419,8 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
   utils::dump(rdma_get_target_write_data_buf()->read_thru(), 128);
 #endif
 
-  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
-  PostTargetRcvBuf1();
+  // Post the Initiator buffers back so that RDMA can reuse them. 
   PostInitiatorRcvBuf1();
-
-  // Increment the Buffer pointers
-  IncrTargetRcvBufPtr();
   IncrInitiatorRcvBufPtr();
 
   return rc;
@@ -2580,12 +2564,8 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
   utils::dump(rdma_get_target_write_data_buf()->read_thru(), 128);
 #endif
 
-  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
-  PostTargetRcvBuf1();
+  // Post the Initiator buffers back so that RDMA can reuse them. 
   PostInitiatorRcvBuf1();
-
-  // Increment the Buffer pointers
-  IncrTargetRcvBufPtr();
   IncrInitiatorRcvBufPtr();
 
   return rc;

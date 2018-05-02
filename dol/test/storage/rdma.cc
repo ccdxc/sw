@@ -554,19 +554,9 @@ void ConnectInitiatorAndTarget(uint32_t qp1, uint32_t qp2, uint64_t mac1,
   assert(status.ok());
 }
 
-void PostTargetRcvBuf1() {
 
-  // Post the offset of the command buffer in the 4K aligned page.
-  // Correspondingly size is also lower by the same offset.
-  uint32_t size = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
-  dp_mem_t *cmd_buf = target_rcv_buf_va->fragment_find(offsetof(r2n::r2n_buf_t, cmd_buf),
-                                                       sizeof(r2n::nvme_be_cmd_t));
-  dp_mem_t *rqwqe = target_rq_va->fragment_find(0, kRQWQESize);
+void FillRQWQE(dp_mem_t *rqwqe, dp_mem_t *cmd_buf, uint32_t size) {
   rqwqe->clear();
-
-  printf("Posting target buffer of size %d VA %lx wrid %lx \n", 
-         size, cmd_buf->va(), cmd_buf->pa());
-
   // Fill the RQ WQE to post the buffer (at the offset)
   rqwqe->write_bit_fields(64, 8, 1);  // num_sges = 1
   rqwqe->write_bit_fields(256, 64, cmd_buf->va()); // sge0->va 
@@ -575,6 +565,26 @@ void PostTargetRcvBuf1() {
   // wrid passed back in cq is the buffer offset passed in
   rqwqe->write_bit_fields(0, 64, cmd_buf->pa());
   rqwqe->write_thru();
+}
+
+void PostTargetRcvBuf1() {
+
+  // Post the offset of the command buffer in the 4K aligned page.
+  // Correspondingly size is also lower by the same offset.
+  uint32_t size = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
+  dp_mem_t *cmd_buf = target_rcv_buf_va->fragment_find(offsetof(r2n::r2n_buf_t, cmd_buf),
+                                                       sizeof(r2n::nvme_be_cmd_t));
+  printf("Posting target buffer of size %d VA %lx wrid %lx \n", 
+         size, cmd_buf->va(), cmd_buf->pa());
+  
+  // Fill the WQE to submit here in DOL infra
+  dp_mem_t *rqwqe = target_rq_va->fragment_find(0, kRQWQESize);
+  FillRQWQE(rqwqe, cmd_buf, size);
+
+  // Pre-form the buf post descriptor to post the buffer to via P4+
+  dp_mem_t *r2n_buf_rqwqe = target_rcv_buf_va->fragment_find(0, kRQWQESize);
+  FillRQWQE(r2n_buf_rqwqe, cmd_buf, size);
+
 
   // Pre-form the Status descriptor to point to the status buffer
   dp_mem_t *sta_buf = target_rcv_buf_va->fragment_find(offsetof(r2n::r2n_buf_t, sta_buf),
@@ -1124,8 +1134,13 @@ int rdma_pvm_qs_init() {
   // Init the initiator SQ 
   if ((rc = queues::pvm_roce_sq_init(g_rdma_hw_lif_id, 
                                      kSQType, 0, // 0 - initiator; 1 - target
+                                     g_rdma_hw_lif_id,
+                                     kRQType, 0, // 0 - initiator; 1 - target
                                      initiator_sq_va,
-                                     kRoceNumEntries, kRoceEntrySize)) < 0) {
+                                     kRoceNumEntries, kRoceEntrySize,
+                                     initiator_rq_va->pa(),
+                                     0 // don't post the buffer
+                                     )) < 0) {
     printf("RDMA Initiator ROCE SQ init failure\n");
     return -1;
   } else {
@@ -1162,8 +1177,13 @@ int rdma_pvm_qs_init() {
   // Init the target SQ 
   if ((rc = queues::pvm_roce_sq_init(g_rdma_hw_lif_id, 
                                      kSQType, 1, // 0 - initiator; 1 - target
+                                     g_rdma_hw_lif_id,
+                                     kRQType, 1, // 0 - initiator; 1 - target
                                      target_sq_va, 
-                                     kRoceNumEntries, kRoceEntrySize)) < 0) {
+                                     kRoceNumEntries, kRoceEntrySize,
+                                     target_rq_va->pa(),
+                                     1 // post the buffer 
+                                     )) < 0) {
     printf("RDMA PVM Target ROCE SQ init failure\n");
     return -1;
   } else {

@@ -18,20 +18,19 @@ struct phv_ p;
 
 storage_tx_pvm_roce_sq_wqe_process_start:
 
+   // If there is no buffer posting requirement on the SQ/CQ, skip the step
+   sne          c1, STORAGE_KIVEC1_ROCE_POST_BUF, 1         
+   bcf          [c1], exit
+   
    // If operation type is send on the target side, then the buffer has to 
    // posted back
-   add          r1, d.op_type, r0
+   add          r1, d.op_type, r0    // delay slot
    indexn       r1, r1, [ROCE_OP_TYPE_SEND, ROCE_OP_TYPE_SEND_INV, ROCE_OP_TYPE_SEND_IMM, ROCE_OP_TYPE_SEND_INV_IMM], 0
    blt.s        r1, r0, exit
    nop   
    
-   // In DOL environment, all buffer posting is done by infrastructure to serialize
-   // operations. Enable the buffer posting in production code when PVM is ready.
-   b		exit
-   nop
-   
    // Setup the R2N buffer to post using mem2mem DMA in DMA commands 1 & 2
-   R2N_BUF_POST_SETUP(d.wrid)
+   R2N_BUF_POST_SETUP_STATUS(d.wrid)
 
    
    // Set the table and the program address for the next stage

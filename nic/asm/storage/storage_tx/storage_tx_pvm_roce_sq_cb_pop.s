@@ -42,6 +42,8 @@ storage_tx_pvm_roce_sq_cb_pop_start:
         	p.storage_kivec1_src_qtype, STAGE0_KIVEC_QTYPE
    phvwrpair    p.storage_kivec1_src_qid, STAGE0_KIVEC_QID, \
    	        p.storage_kivec1_src_qaddr, STAGE0_KIVEC_QADDR
+   phvwrpair	p.storage_kivec1_device_addr, d.rrq_base,   \
+                p.storage_kivec1_roce_post_buf, d.post_buf
    
    // Set the table and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).
