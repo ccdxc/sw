@@ -53,12 +53,16 @@ message ObjectMeta {
 
 // ObjectRef contains identifying information about an object.
 message ObjectRef {
-  // Kind represents the type of the API object.
-  string Kind       = 1 [(gogoproto.jsontag) = "kind"];
+  // Tenant of the object.
+  string Tenant     = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
   // Namespace of the object, for scoped objects.
   string Namespace  = 2 [(gogoproto.jsontag) = "namespace,omitempty"];
+  // Kind represents the type of the API object.
+  string Kind       = 3 [(gogoproto.jsontag) = "kind"];
   // Name of the object, unique within a Namespace for scoped objects.
-  string Name       = 3 [(gogoproto.jsontag) = "name"];
+  string Name       = 4 [(gogoproto.jsontag) = "name"];
+  // URI is a link to accessing the referenced object.
+  string URI        = 5 [(gogoproto.jsontag) = "uri,omitempty"];
 }
 
 message ListWatchOptions {
