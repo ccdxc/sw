@@ -136,7 +136,7 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 			Name:      "preCreatedNatPool",
 		},
 		Spec: netproto.NatPoolSpec{
-			NetworkName: "preCreatedNetwork",
+			IPRange: "10.1.2.1-10.1.2.200",
 		},
 	}
 	err = nagent.CreateNatPool(&natPool)

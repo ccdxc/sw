@@ -1577,7 +1577,7 @@ func TestNatPoolCreateDelete(t *testing.T) {
 			Name:      "testNatPool",
 		},
 		Spec: netproto.NatPoolSpec{
-			NetworkName: "default",
+			IPRange: "10.1.2.1-10.1.2.200",
 		},
 	}
 
@@ -1622,7 +1622,7 @@ func TestNatPoolUpdate(t *testing.T) {
 			Name:      "updateNatPool",
 		},
 		Spec: netproto.NatPoolSpec{
-			NetworkName: "default",
+			IPRange: "10.1.2.1-10.1.2.200",
 		},
 	}
 
@@ -1634,7 +1634,7 @@ func TestNatPoolUpdate(t *testing.T) {
 	Assert(t, natPool.Name == "updateNatPool", "Nat Pool names did not match", natPool)
 
 	npSpec := netproto.NatPoolSpec{
-		NetworkName: "default",
+		IPRange: "192.168.1.1-192.168.1.100",
 	}
 
 	np.Spec = npSpec

@@ -317,7 +317,7 @@ func TestNatPoolPost(t *testing.T) {
 			Name:      "testPostNatPool",
 		},
 		Spec: netproto.NatPoolSpec{
-			NetworkName: "preCreatedNetwork",
+			IPRange: "10.1.2.1-10.1.2.200",
 		},
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/natpools/", &postData, &resp)
@@ -344,7 +344,7 @@ func TestNatPoolUpdate(t *testing.T) {
 
 	var actualNatPoolSpec netproto.NatPoolSpec
 	updatedNatPoolSpec := netproto.NatPoolSpec{
-		NetworkName: "updatedNetwork",
+		IPRange: "192.168.1.1-198.168.1.200",
 	}
 	putData := netproto.NatPool{
 		TypeMeta: api.TypeMeta{Kind: "NatPool"},
@@ -384,7 +384,7 @@ func TestNatPoolDelete(t *testing.T) {
 			Name:      "testDeleteNatPool",
 		},
 		Spec: netproto.NatPoolSpec{
-			NetworkName: "preCreatedNetwork",
+			IPRange: "10.1.2.1-10.1.2.200",
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/natpools/", &deleteData, &resp)

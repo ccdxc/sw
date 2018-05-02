@@ -176,7 +176,7 @@ import (
                                                            Name:   "test{{title .}}{{title $crudObject}}",
                                                        },
                                                        Spec: netproto.{{title $crudObject}}Spec{
-                                                           NetworkName: "preCreatedNetwork",
+                                                           IPRange: "10.1.2.1-10.1.2.200",
 
                                                        },
                                                    }
@@ -328,7 +328,7 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
-                                                                       NetworkName: "updatedNetwork",
+                                                                       IPRange: "192.168.1.1-198.168.1.200",
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
                                     TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
@@ -569,7 +569,7 @@ import (
                                        Name: "test{{title .}}{{title $crudObject}}",
                                    },
                                    Spec:   netproto.{{title $crudObject}}Spec{
-                                       NetworkName: "preCreatedNetwork",
+                                       IPRange: "10.1.2.1-10.1.2.200",
                                    },
                                }
                                postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)

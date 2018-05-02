@@ -13,7 +13,8 @@ import "github.com/pensando/sw/api/meta.proto";
 
 // nat pool
 message NatPoolSpec {
-    string NetworkName   = 1;
+    // Range of IP Addresses for the nat pool
+    string IPRange   = 1 [(gogoproto.jsontag) = "ip-range"];
 }
 
 // nat pool status
