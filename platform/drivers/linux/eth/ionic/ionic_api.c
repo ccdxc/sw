@@ -266,6 +266,9 @@ err_out:
 			 &ctx->cmd, sizeof(ctx->cmd), true);
 
 	if (ctx->side_data) {
+		dynamic_hex_dump("data ", DUMP_PREFIX_OFFSET, 16, 1,
+				 ctx->side_data, ctx->side_data_len, true);
+
 		err = SBD_put(idev, ctx->side_data, ctx->side_data_len);
 		if (err)
 			goto err_out;
