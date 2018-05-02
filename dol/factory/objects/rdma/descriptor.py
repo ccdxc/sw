@@ -272,7 +272,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         if inline_data_vld:
            logger.info("Inline Data: %s " % bytes(inline_data[0:inline_data_len]))
            desc = desc/bytes(inline_data)
-        else:
+        elif (num_sges and (num_sges > 0)):
             for sge in self.spec.fields.sges:
                 sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
                 logger.info("Read Sge[] = va: 0x%x len: %d l_key: %d" % 

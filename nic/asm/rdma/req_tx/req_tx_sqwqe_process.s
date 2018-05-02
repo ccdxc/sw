@@ -84,6 +84,7 @@ set_write_reth:
     phvwr RETH_LEN, d.write.length
 
 send_or_write:
+    seq            c3, d.base.num_sges, 0
     // If UD, add DETH hdr
     seq            c1, CAPRI_KEY_FIELD(phv_global_common, ud_service), 1
     bcf            [!c1], set_sge_arg
@@ -106,7 +107,8 @@ set_sge_arg:
     bcf            [c2], inline_data
     // sge_list_addr = wqe_addr + TX_SGE_OFFSET
     mfspr          r3, spr_tbladdr //Branch Delay Slot
-    add            r3, r3, TXWQE_SGE_OFFSET
+    bcf            [c3], zero_length
+    add            r3, r3, TXWQE_SGE_OFFSET // Branch Delay Slot
 
     // populate stage-2-stage data req_tx_wqe_to_sge_info_t for next stage
     CAPRI_RESET_TABLE_0_ARG()
@@ -181,6 +183,7 @@ inline_data:
     // at same offset. So, though argument passing code is passing read.length, 
     // it should work for inline data as well.
 
+zero_length:
     phvwr CAPRI_PHV_FIELD(TO_S4_P, packet_len), d.send.length
 
     CAPRI_RESET_TABLE_2_ARG()

@@ -43,6 +43,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_SEND_ONLY_ZERO_LENGTH
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_zero_length
+        spec    : req_tx_send_only_zero_length.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_SEND_ONLY_INLINE_16B
         enable  : True
         package : test.rdma
@@ -113,6 +121,14 @@ modules:
         ignore  : False                           
         selectors:
             maxrdmasessions: 1
+
+    - module:
+        name    : RDMA_TX_WRITE_ONLY_ZERO_LENGTH
+        enable  : True
+        package : test.rdma
+        module  : req_tx_write_only_zero_length
+        spec    : req_tx_write_only_zero_length.testspec
+        ignore  : False
 
     - module:
         name    : RDMA_TX_WRITE_ONLY_INLINE_16B
