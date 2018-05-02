@@ -24,4 +24,5 @@ nic/gen/iris/dbg_out/model_debug.json                            /nic/conf/
 nic/obj/agent/netagent                                           /nic/bin/
 nic/obj/halctl                                                   /nic/bin/
 bazel-bin/nic/hal/test/nic_mgr_app                               /nic/bin/
+bazel-bin/dol/test/storage/storage_test                          /nic/bin/
 nic/sim/naples/hntap-cfg.json                                    /nic/conf

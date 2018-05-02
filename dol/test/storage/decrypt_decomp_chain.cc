@@ -85,6 +85,9 @@ decrypt_decomp_chain_t::~decrypt_decomp_chain_t()
 {
     // Only free buffers on successful completion; otherwise,
     // HW/P4+ might still be trying to access them.
+    
+    printf("%s success %u destructor_free_buffers %u\n",
+           __FUNCTION__, success, destructor_free_buffers);
     if (success && destructor_free_buffers) {
         delete uncomp_buf;
         delete xts_decrypt_buf;
@@ -267,10 +270,45 @@ decrypt_decomp_chain_t::decrypt_setup(acc_chain_params_t& chain_params)
 
 
 /*
- * Test result verification
+ * Test result verification (fast and non-blocking)
+ *
+ * Should only be used when caller has another means to ensure that the test
+ * has completed. The main purpose of this function to quickly verify operational
+ * status, and avoid any lengthy HBM access (such as data comparison) that would
+ * slow down test resubmission in the scaled setup.
  */
 int 
-decrypt_decomp_chain_t::verify(void)
+decrypt_decomp_chain_t::fast_verify(void)
+{
+    // Validate XTS status
+    success = false;
+    uint64_t curr_xts_status = *((uint64_t *)xts_status_buf2->read_thru());
+    if (curr_xts_status) {
+      printf("ERROR: decrypt_decomp_chain XTS error 0x%lx\n", curr_xts_status);
+      return -1;
+    }
+
+    // Validate decomp status
+    if (decompress_status_verify(caller_comp_status_buf, cp_desc, app_blk_size)) {
+      printf("ERROR: decrypt_decomp_chain decompression failed\n");
+      return -1;
+    }
+
+    if (!suppress_info_log) {
+        printf("Testcase decrypt_decomp_chain fast_verify passed\n");
+    }
+    success = true;
+    return 0;
+}
+
+
+/*
+ * Test result verification (full and possibly blocking)
+ *
+ * Should only be used in non-scaled setup.
+ */
+int 
+decrypt_decomp_chain_t::full_verify(void)
 {
     uint32_t    poll_factor = app_blk_size / kCompAppMinSize;
 
@@ -287,6 +325,8 @@ decrypt_decomp_chain_t::verify(void)
 
     assert(poll_factor);
     tests::Poller xts_poll(FLAGS_long_poll_interval * poll_factor);
+    success = false;
+
     if (xts_poll(xts_status_poll_func) != 0) {
       uint64_t curr_xts_status = *((uint64_t *)xts_status_buf2->read());
       printf("ERROR: decrypt_decomp_chain XTS decrypt error 0x%lx\n", curr_xts_status);
@@ -299,11 +339,13 @@ decrypt_decomp_chain_t::verify(void)
       return -1;
     }
 
-    // Validate decomp status
-    if (decompress_status_verify(caller_comp_status_buf, cp_desc, app_blk_size)) {
-      printf("ERROR: decrypt_decomp_chain decompression failed\n");
-      return -1;
+    /*
+     * Verify individual statuses
+     */
+    if (fast_verify()) {
+        return -1;
     }
+
     last_dc_output_data_len = comp_status_output_data_len_get(caller_comp_status_buf);
     if (!suppress_info_log) {
         printf("decrypt_decomp_chain: last_dc_output_data_len %u\n",
@@ -315,6 +357,7 @@ decrypt_decomp_chain_t::verify(void)
                                   uncomp_buf->read_thru(),
                                   app_blk_size)) {
         printf("ERROR: decrypt_decomp_chain data verification failed\n");
+        success = false;
         return -1;
     }
 
@@ -323,7 +366,7 @@ decrypt_decomp_chain_t::verify(void)
     last_decrypt_output_data_len = xts_out->l0;
 
     if (!suppress_info_log) {
-        printf("Testcase decrypt_decomp_chain passed: "
+        printf("Testcase decrypt_decomp_chain full_verify passed: "
                "last_decrypt_output_data_len %u\n", last_decrypt_output_data_len);
     }
     success = true;

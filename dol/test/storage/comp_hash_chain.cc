@@ -29,7 +29,6 @@ comp_hash_chain_t::comp_hash_chain_t(comp_hash_chain_params_t params) :
     app_blk_size(0),
     app_hash_size(kCompAppHashBlkSize),
     actual_hash_blks(-1),
-    seq_sgl_pdma(nullptr),
     caller_comp_pad_buf(nullptr),
     caller_hash_status_vec(nullptr),
     caller_hash_opaque_vec(nullptr),
@@ -459,10 +458,54 @@ comp_hash_chain_t::actual_hash_blks_get(comp_hash_chain_retrieve_method_t method
 
 
 /*
- * Test result verification
+ * Test result verification (fast and non-blocking)
+ *
+ * Should only be used when caller has another means to ensure that the test
+ * has completed. The main purpose of this function to quickly verify operational
+ * status, and avoid any lengthy HBM access (such as data comparison) that would
+ * slow down test resubmission in the scaled setup.
  */
 int 
-comp_hash_chain_t::verify(void)
+comp_hash_chain_t::fast_verify(void)
+{
+    cp_desc_t   *hash_desc;
+    uint32_t    block_no;
+
+    success = false;
+    if (actual_hash_blks_get(COMP_HASH_CHAIN_NON_BLOCKING_RETRIEVE) < 0) {
+        return -1;
+    }
+
+    /*
+     * Verify all hash statuses
+     */
+    for (block_no = 0; block_no < (uint32_t)actual_hash_blks; block_no++) {
+        caller_hash_status_vec->line_set(block_no);
+        hash_desc_vec->line_set(block_no);
+        hash_desc = (cp_desc_t *)hash_desc_vec->read_thru();
+
+        if (compress_status_verify(caller_hash_status_vec, comp_buf1, *hash_desc)) {
+            printf("ERROR: comp_hash_chain hash block %u status verification failed\n",
+                   block_no);
+            return -1;
+        }
+    }
+
+    if (!suppress_info_log) {
+        printf("Testcase comp_hash_chain fast_verify passed\n");
+    }
+    success = true;
+    return 0;
+}
+
+
+/*
+ * Test result verification (full and possibly blocking)
+ *
+ * Should only be used in non-scaled setup.
+ */
+int 
+comp_hash_chain_t::full_verify(void)
 {
     cp_desc_t   *hash_desc;
     cp_sgl_t    *hash_sgl;
@@ -475,6 +518,7 @@ comp_hash_chain_t::verify(void)
     uint64_t    accum_link;
     uint64_t    total_accum_data_len;
 
+    success = false;
     if (actual_hash_blks_get(COMP_HASH_CHAIN_BLOCKING_RETRIEVE) < 0) {
         return -1;
     }
@@ -496,12 +540,6 @@ comp_hash_chain_t::verify(void)
 
         if (!comp_status_poll(caller_hash_status_vec, *hash_desc, suppress_info_log)) {
             printf("ERROR: comp_hash_chain block %u hash status never came\n",
-                   block_no);
-            return -1;
-        }
-
-        if (compress_status_verify(caller_hash_status_vec, comp_buf1, *hash_desc)) {
-            printf("ERROR: comp_hash_chain hash block %u status verification failed\n",
                    block_no);
             return -1;
         }
@@ -556,18 +594,26 @@ comp_hash_chain_t::verify(void)
     }
 
     /*
+     * Verify individual statuses
+     */
+    if (fast_verify()) {
+        return -1;
+    }
+
+    /*
      * Validate PDMA transfer capability
      */
     if (comp_buf1 != comp_buf2) {
         if (test_data_verify_and_dump(comp_buf1->read_thru(),
                                       comp_buf2->read_thru(),
                                       last_cp_output_data_len)) {
+            success = false;
             return -1;
         }
     }
 
     if (!suppress_info_log) {
-        printf("Testcase comp_hash_chain passed\n");
+        printf("Testcase comp_hash_chain full_verify passed\n");
     }
     success = true;
     return 0;

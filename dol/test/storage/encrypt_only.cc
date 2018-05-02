@@ -195,25 +195,56 @@ encrypt_only_t::encrypt_setup(uint32_t seq_xts_qid)
 
 
 /*
- * Test result verification
+ * Test result verification (fast and non-blocking)
+ *
+ * Should only be used when caller has another means to ensure that the test
+ * has completed. The main purpose of this function to quickly verify operational
+ * status, and avoid any lengthy HBM access (such as data comparison) that would
+ * slow down test resubmission in the scaled setup.
  */
 int 
-encrypt_only_t::verify(void)
+encrypt_only_t::fast_verify(void)
+{
+    // Validate XTS status
+    uint64_t curr_xts_status = *((uint64_t *)caller_xts_status_buf->read_thru());
+    success = false;
+    if (curr_xts_status) {
+      printf("ERROR: encrypt_only XTS error 0x%lx\n", curr_xts_status);
+      return -1;
+    }
+
+    if (!suppress_info_log) {
+        printf("Testcase encrypt_only fast_verify passed\n");
+    }
+    success = true;
+    return 0;
+}
+
+
+/*
+ * Test result verification (full and possibly blocking)
+ *
+ * Should only be used in non-scaled setup.
+ */
+int 
+encrypt_only_t::full_verify(void)
 {
     uint32_t    poll_factor = app_blk_size / kCompAppMinSize;
 
     // Verify XTS engine doorbell
     assert(poll_factor);
+    success = false;
+
     if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
         printf("ERROR: encrypt_only doorbell from XTS engine never came\n");
         return -1;
     }
 
-    // Validate XTS status
-    uint64_t curr_xts_status = *((uint64_t *)caller_xts_status_buf->read_thru());
-    if (curr_xts_status) {
-      printf("ERROR: encrypt_only XTS error 0x%lx\n", curr_xts_status);
-      return -1;
+    /*
+     * Verify individual statuses
+     */
+    if (fast_verify()) {
+        return -1;
     }
 
     // Status verification done.
@@ -221,7 +252,7 @@ encrypt_only_t::verify(void)
     last_encrypt_output_data_len = xts_out->l0;
 
     if (!suppress_info_log) {
-        printf("Testcase encrypt_only passed: "
+        printf("Testcase encrypt_only full_verify passed: "
                "last_encrypt_output_data_len %u\n", last_encrypt_output_data_len);
     }
     success = true;

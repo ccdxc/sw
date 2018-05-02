@@ -264,7 +264,8 @@ public:
     void pre_push(comp_hash_chain_pre_push_params_t params);
     int  push(comp_hash_chain_push_params_t params);
     void post_push(void);
-    int  verify(void);
+    int  fast_verify(void);
+    int  full_verify(void);
 
     uint32_t app_blk_size_get(void)
     {

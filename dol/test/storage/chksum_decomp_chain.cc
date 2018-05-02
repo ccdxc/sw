@@ -306,10 +306,15 @@ chksum_decomp_chain_t::decomp_setup(void)
 
 
 /*
- * Test result verification
+ * Test result verification (fast and non-blocking)
+ *
+ * Should only be used when caller has another means to ensure that the test
+ * has completed. The main purpose of this function to quickly verify operational
+ * status, and avoid any lengthy HBM access (such as data comparison) that would
+ * slow down test resubmission in the scaled setup.
  */
 int 
-chksum_decomp_chain_t::verify(void)
+chksum_decomp_chain_t::fast_verify(void)
 {
     dp_mem_t            *exp_hash_status_vec;
     cp_status_sha512_t  *exp_chksum_st;
@@ -319,18 +324,12 @@ chksum_decomp_chain_t::verify(void)
     /*
      * Verify all chksum status
      */
+    success = false;
     exp_hash_status_vec = comp_hash_chain->hash_status_vec_get();
     for (block_no = 0; block_no < num_hash_blks; block_no++) {
         cp_desc_t& chksum_desc = chksum_desc_vec.at(block_no);
         caller_chksum_status_vec->line_set(block_no);
         exp_hash_status_vec->line_set(block_no);
-
-        if (!comp_status_poll(caller_chksum_status_vec, chksum_desc,
-                              suppress_info_log)) {
-            printf("ERROR: chksum_decomp_chain block %u checksum status never came\n",
-                   block_no);
-            return -1;
-        }
 
         if (compress_status_verify(caller_chksum_status_vec, nullptr, chksum_desc)) {
             printf("ERROR: chksum_decomp_chain checksum block %u status "
@@ -353,15 +352,59 @@ chksum_decomp_chain_t::verify(void)
     /*
      * Verify decompression status
      */
+    if (decompress_status_verify(caller_decomp_status_buf, dc_desc,
+                                 app_blk_size)) {
+        printf("ERROR: chksum_decomp_chain decompression status "
+               "verification failed\n");
+        return -1;
+    }
+
+    if (!suppress_info_log) {
+        printf("Testcase chksum_decomp_chain fast_verify passed\n");
+    }
+    success = true;
+    return 0;
+}
+
+
+/*
+ * Test result verification (full and possibly blocking)
+ *
+ * Should only be used in non-scaled setup.
+ */
+int 
+chksum_decomp_chain_t::full_verify(void)
+{
+    uint32_t            block_no;
+
+    /*
+     * Poll for all chksum status
+     */
+    success = false;
+    for (block_no = 0; block_no < num_hash_blks; block_no++) {
+        cp_desc_t& chksum_desc = chksum_desc_vec.at(block_no);
+        caller_chksum_status_vec->line_set(block_no);
+
+        if (!comp_status_poll(caller_chksum_status_vec, chksum_desc,
+                              suppress_info_log)) {
+            printf("ERROR: chksum_decomp_chain block %u checksum status never came\n",
+                   block_no);
+            return -1;
+        }
+    }
+
+    /*
+     * Poll decompression status
+     */
     if (!comp_status_poll(caller_decomp_status_buf, dc_desc, suppress_info_log)) {
         printf("ERROR: chksum_decomp_chain decompression status never came\n");
         return -1;
     }
 
-    if (decompress_status_verify(caller_decomp_status_buf, dc_desc,
-                                 app_blk_size)) {
-        printf("ERROR: chksum_decomp_chain decompression status "
-               "verification failed\n");
+    /*
+     * Verify individual statuses
+     */
+    if (fast_verify()) {
         return -1;
     }
 
@@ -371,11 +414,12 @@ chksum_decomp_chain_t::verify(void)
     if (test_data_verify_and_dump(comp_hash_chain->uncomp_buf_get()->read(),
                                   uncomp_buf->read_thru(),
                                   app_blk_size)) {
+        success = false;
         return -1;
     }
 
     if (!suppress_info_log) {
-        printf("Testcase chksum_decomp_chain passed\n");
+        printf("Testcase chksum_decomp_chain full_verify passed\n");
     }
     success = true;
     return 0;
