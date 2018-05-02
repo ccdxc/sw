@@ -355,9 +355,9 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
         rule->dst_groupid_valid = TRUE;
     }
     if (spec.has_action()) {
-        int n = spec.action().mirror_destinations_size();
+        int n = spec.action().ms_key_handle_size();
         for (int i = 0; i < n; i++) {
-            rule->mirror_destinations[i] = spec.action().mirror_destinations(i);
+            rule->mirror_destinations[i] = spec.action().ms_key_handle(i).mirrorsession_id();
         }
     }
 

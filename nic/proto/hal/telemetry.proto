@@ -97,7 +97,7 @@ message CollectorDeleteRequest {
 // CollectorDeleteResponse is response to CollectorDeleteRequest
 message CollectorDeleteResponse {
   types.ApiStatus       api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
-  kh.CollectorKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.CollectorKeyHandle key_or_handle  = 2;
 }
 
 // CollectorDeleteRequestMsg is used to delete a batch of collectors
@@ -139,7 +139,7 @@ message CollectorGetResponseMsg {
 message ExportControlSpec {
   types.ObjectMeta               meta                 = 1; // Common object meta
   kh.ExportControlKeyHandle      key_or_handle        = 2 [(gogoproto.moretags) = "venice:\"key\""]; // ExportControl key or handle
-  repeated kh.CollectorKeyHandle collector_key_handle = 3; // Collector key or handle
+  repeated kh.CollectorKeyHandle collector_key_handle = 3 [(gogoproto.moretags) = "venice:ref"]; // Collector key or handle
   uint32                         active_timeout       = 4; // time before which active flows are exported
   uint32                         inactive_timeout     = 5; // time before which in-active flows are exported
 }
@@ -175,7 +175,7 @@ message ExportControlDeleteRequest {
 // ExportControlDeleteResponse is response to ExportControlDeleteRequest
 message ExportControlDeleteResponse {
   types.ApiStatus           api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
-  kh.ExportControlKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.ExportControlKeyHandle key_or_handle  = 2;
 }
 
 // ExportControlDeleteRequestMsg is used to delete a batch of exportcontrol objects
@@ -230,16 +230,16 @@ enum AggregationScheme {
 
 // MonitorAction defines the action for a flow monitor rule
 message MonitorAction {
-  repeated RuleAction         action                = 1;
-  repeated AggregationScheme  agg_scheme            = 2;
-  repeated uint32             mirror_destinations   = 3;
+  repeated RuleAction                action        = 1;
+  repeated AggregationScheme         agg_scheme    = 2;
+  repeated kh.MirrorSessionKeyHandle ms_key_handle = 3 [(gogoproto.moretags) = "venice:ref"]; // MirrorSession destinations
 }
 
 // FlowMonitorRuleSpec flow monitor rule specification
 message FlowMonitorRuleSpec {
   types.ObjectMeta  meta                    = 1; // Common object meta
   kh.FlowMonitorRuleKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""]; // FlowMonitor key or handle
-  kh.ExportControlKeyHandle   ec_key_handle = 3; // ExportControl key or handle
+  kh.ExportControlKeyHandle   ec_key_handle = 3 [(gogoproto.moretags) = "venice:ref"]; // ExportControl key or handle
   uint64            source_mac              = 4; // Source MAC of the tuple to match
   uint64            dest_mac                = 5; // Destination MAC to match
   uint32            ethertype               = 6; // EtherType to match
@@ -459,7 +459,7 @@ message MirrorSessionDeleteRequest {
 // MirrorSessionDeleteResponse is response to MirrorSessionDeleteRequest
 message MirrorSessionDeleteResponse {
   types.ApiStatus           api_status    = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
-  kh.MirrorSessionKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.MirrorSessionKeyHandle key_or_handle = 2;
 }
 
 // MirrorSessionDeleteRequestMsg is used to delete a batch of mirrorsessions
