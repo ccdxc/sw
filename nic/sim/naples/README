@@ -124,3 +124,31 @@ curl 172.17.0.2:9007/api/natpolicies/ | jq .
   }
 ]
 
+
+## Sample APP
+
+### Start server on Node1 (kingdom1)
+
+1. Create kg1 local subnet
+
+    [vagrant@node1 ~]$ docker network create kg1 --subnet 10.100.1.0/24
+
+2. Start iperf3-server attached to kg1 subent
+
+    [vagrant@node1 ~]$ docker run -it --rm --net=kg1 --name=iperf3-server networkstatic/iperf3 -s
+
+3. Get the IP address of the iperf server 
+    
+    [vagrant@node1 ~]$ docker inspect --format "{{ .NetworkSettings.Networks.kg1.IPAddress }}" iperf3-server
+    10.100.1.2
+    
+### Start client on Node2 (kingdom2) 
+    
+1. creaste kg2 local subnet
+    
+    [vagrant@node2 ~] docker network create kg2 --subnet 10.100.2.0/24
+
+2. Start the client
+
+    [vagrant@node2 ~] docker run  -it --rm --net=kg2 networkstatic/iperf3 -c 10.100.1.2
+
